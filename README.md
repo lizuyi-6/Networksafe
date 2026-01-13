@@ -3,6 +3,8 @@
 [![npm version](https://badge.fury.io/js/api-security-middleware.svg)](https://www.npmjs.com/package/api-security-middleware)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+> ⚠️ **新用户必读：** 如果您是第一次打开此项目，请先查看 [**CONTINUE.md**](./CONTINUE.md) 获取完整的项目上下文和快速开始指南！
+
 🛡️ **Comprehensive security middleware suite for Express.js API applications**
 
 A production-ready collection of security middleware designed to protect your API from common threats including brute force attacks, DDoS, bot traffic, rate limiting issues, and more.
