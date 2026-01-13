@@ -1,0 +1,68 @@
+{
+  "name": "api-security-middleware",
+  "version": "1.0.0",
+  "description": "Comprehensive security middleware suite for Express.js API applications - Anti-bot protection, rate limiting, concurrency control, and authentication security",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "security",
+    "middleware",
+    "express",
+    "api",
+    "rate-limit",
+    "anti-bot",
+    "concurrency",
+    "auth-security",
+    "brute-force",
+    "ddos-protection",
+    "bot-detection",
+    "rate-limiter",
+    "session-management"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/api-security-middleware.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/api-security-middleware/issues"
+  },
+  "homepage": "https://github.com/yourusername/api-security-middleware#readme",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Run tests here...\"",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ioredis": "^5.3.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.4.2",
+    "@types/uuid": "^9.0.2",
+    "typescript": "^5.1.6",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.44.0",
+    "prettier": "^3.0.0"
+  },
+  "peerDependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ]
+}
