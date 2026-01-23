@@ -266,4 +266,11 @@ export class ProxyServer {
   public getApp(): Express {
     return this.app;
   }
+
+  /**
+   * Get HTTP server instance (for Socket.IO)
+   */
+  public getHttpServer(): http.Server | null {
+    return this.httpServer;
+  }
 }

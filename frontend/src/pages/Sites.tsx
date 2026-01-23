@@ -11,24 +11,32 @@ const Sites = () => {
     }, []);
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900">{t('sites.title')}</h1>
-            <div className="glass-panel rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                    <h2 className="font-semibold text-lg text-gray-800">{t('sites.protected_domains')}</h2>
+        <div className="space-y-6 p-6">
+            <h1 className="text-xl font-medium text-zinc-100">{t('sites.title')}</h1>
+            <div className="bg-surface border border-border rounded-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-border bg-black/20">
+                    <h2 className="text-sm font-medium text-zinc-200">{t('sites.protected_domains')}</h2>
                 </div>
-                <div className="p-8">
+                <div className="p-6">
                     {sites.length === 0 ? (
-                        <p className="text-center text-gray-500">{t('sites.no_sites')}</p>
+                        <p className="text-center text-zinc-500 py-8">{t('sites.no_sites')}</p>
                     ) : (
-                        <ul className="space-y-2">
+                        <div className="space-y-3">
                             {sites.map((site: any) => (
-                                <li key={site.id} className="flex justify-between p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
-                                    <span>{site.domain}</span>
-                                    <span className={site.status === 'secure' ? 'text-green-500' : 'text-yellow-500'}>{site.status}</span>
-                                </li>
+                                <div key={site.id} className="flex justify-between items-center p-4 bg-black/20 border border-border rounded hover:border-zinc-700 transition-colors">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-sm font-medium text-zinc-200">{site.domain}</span>
+                                        <span className="text-xs text-zinc-500 font-mono">{site.target}</span>
+                                    </div>
+                                    <span className={`text-xs px-2 py-1 rounded border ${site.status === 'secure'
+                                            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                                            : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                                        }`}>
+                                        {site.status?.toUpperCase() || 'UNKNOWN'}
+                                    </span>
+                                </div>
                             ))}
-                        </ul>
+                        </div>
                     )}
                 </div>
             </div>

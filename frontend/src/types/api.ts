@@ -38,6 +38,18 @@ export interface ClientPerf {
     avg_latency_added: string;
 }
 
+export interface LogItem {
+    id: number;
+    time: string;
+    type: string;
+    level: string;
+    message: string;
+    ip: string;
+    status?: number; // Optional mapping
+    method?: string; // Optional mapping
+    path?: string;   // Optional mapping
+}
+
 export interface AdminPerformance {
     server: ServerPerf;
     clients: ClientPerf;

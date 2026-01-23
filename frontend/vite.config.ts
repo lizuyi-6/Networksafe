@@ -28,14 +28,14 @@ export default defineConfig({
     },
     server: {
         // 启用 HTTPS (如果证书可用)
-        https: httpsConfig,
-        proxy: {
+        // https: httpsConfig,
+        /* proxy: {
             '/api': {
                 // 后端也将使用 HTTPS
                 target: process.env.API_TARGET || (httpsConfig ? 'https://127.0.0.1:3005' : 'http://127.0.0.1:3005'),
                 changeOrigin: true,
                 secure: false, // 允许自签名证书
             }
-        }
+        } */
     }
 })

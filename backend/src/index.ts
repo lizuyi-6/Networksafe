@@ -14,25 +14,19 @@ import scannerRouter from './api/routes/scanner';
  * NewSecurity Backend - Main Entry Point
  */
 
-const app = express();
-const httpServer = createServer(app);
-const io = new SocketIOServer(httpServer, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
-
 // Initialize services
 const proxyServer = new ProxyServer();
+const app = proxyServer.getApp(); // Use the Proxy's express app
 const db = getDatabase();
 
+let io: SocketIOServer; // Defer initialization
+
+// Middleware
 // Middleware
 app.use(helmet());
 app.use(compression());
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Note: express.json/urlencoded are already added by ProxyServer
 
 // API Routes
 const apiRouter = express.Router();
@@ -52,18 +46,12 @@ apiRouter.use('/scanner', scannerRouter);
 
 app.use('/api', apiRouter);
 
-// WebSocket for real-time updates
-io.on('connection', (socket) => {
-  logger.info(`Client connected: ${socket.id}`);
+// WebSocket logic moved to start()
 
-  socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
-  });
-});
 
 // Function to emit real-time events
 export function emitEvent(event: string, data: any) {
-  io.emit(event, data);
+  if (io) io.emit(event, data);
 }
 
 // Load sites from database and start proxy
@@ -89,7 +77,9 @@ async function initializeProxy() {
             enabled: Boolean(site.concurrencyEnabled),
             maxConcurrent: site.concurrencyMax || 5
           }
-        }
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       await proxyServer.addSite(siteConfig);
@@ -111,11 +101,30 @@ async function start() {
     await initializeProxy();
 
     // Start HTTP server
-    await proxyServer.startHttpServer(HTTP_PORT);
+    await proxyServer.startHttpServer(Number(HTTP_PORT));
     logger.info(`HTTP server listening on port ${HTTP_PORT}`);
 
+    // Initialize Socket.IO with the running HTTP server
+    const httpServer = proxyServer.getHttpServer();
+    if (httpServer) {
+      io = new SocketIOServer(httpServer, {
+        cors: {
+          origin: '*',
+          methods: ['GET', 'POST']
+        }
+      });
+
+      io.on('connection', (socket: any) => {
+        logger.info(`Client connected: ${socket.id}`);
+        socket.on('disconnect', () => {
+          logger.info(`Client disconnected: ${socket.id}`);
+        });
+      });
+      logger.info('Socket.IO initialized');
+    }
+
     // Start HTTPS server if sites have SSL enabled
-    await proxyServer.startHttpsServer(HTTPS_PORT);
+    await proxyServer.startHttpsServer(Number(HTTPS_PORT));
 
     logger.info('NewSecurity started successfully');
     logger.info('API available at: http://localhost:' + HTTP_PORT + '/api');
@@ -132,7 +141,6 @@ async function shutdown() {
   try {
     await proxyServer.stop();
     await db.close();
-    httpServer.close();
     logger.info('Shutdown complete');
   } catch (error: any) {
     logger.error('Error during shutdown', { error });

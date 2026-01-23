@@ -1,21 +1,35 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: 'class',
     content: [
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
         extend: {
+            fontFamily: {
+                sans: ['Inter', 'sans-serif'],
+                mono: ['JetBrains Mono', 'monospace'],
+            },
+            fontSize: {
+                xxs: '0.65rem',
+            },
             colors: {
-                border: "hsl(var(--border))",
+                background: '#050505',
+                surface: '#0F0F11',
+                border: '#1F1F23',
+                primary: {
+                    DEFAULT: '#3B82F6',
+                    foreground: '#FFFFFF',
+                },
+                danger: '#EF4444',
+                success: '#10B981',
+                warning: '#F59E0B',
+
+                // Keeping existing variables for compatibility if needed, but new design takes precedence
                 input: "hsl(var(--input))",
                 ring: "hsl(var(--ring))",
-                background: "hsl(var(--background))",
                 foreground: "hsl(var(--foreground))",
-                primary: {
-                    DEFAULT: "hsl(var(--primary))",
-                    foreground: "hsl(var(--primary-foreground))",
-                },
                 secondary: {
                     DEFAULT: "hsl(var(--secondary))",
                     foreground: "hsl(var(--secondary-foreground))",
