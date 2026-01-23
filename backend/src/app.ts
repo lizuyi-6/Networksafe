@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { defaultConfig as config } from '../../src/config';
-import logger from '../../src/utils/logger';
+import { defaultConfig as config } from './config';
+import logger from './utils/logger';
 
 // Import Routes
 import statsRoutes from './api/routes/stats.routes';

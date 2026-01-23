@@ -1,5 +1,5 @@
 import app from './app';
-import logger from '../../src/utils/logger';
+import logger from './utils/logger';
 import https from 'https';
 import http from 'http';
 import fs from 'fs';

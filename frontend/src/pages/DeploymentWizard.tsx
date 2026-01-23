@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Server, Download, Check, FileCode, ChevronRight, Settings } from 'lucide-react';
+import { Server, Download, Check, FileCode, ChevronRight } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../context/LanguageContext';
 

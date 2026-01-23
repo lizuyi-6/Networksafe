@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { SmartFixer } from '../../scanner/smart-fixer';
 import { OptimizationEngine } from '../../scanner/optimization-engine';
-import logger from '../../../utils/logger';
+import logger from '../../utils/logger';
 
 const router = Router();
 const optimizationEngine = new OptimizationEngine();

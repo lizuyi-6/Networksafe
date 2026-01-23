@@ -1,4 +1,4 @@
-import { defaultConfig as config } from '../../../src/config';
+import { defaultConfig as config } from '../config';
 
 interface TrafficStats {
     totalRequests: number;

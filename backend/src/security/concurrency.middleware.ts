@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CONCURRENCY, MONITORING } from './config';
+import { CONCURRENCY, MONITORING } from '../config';
 import logger from '../utils/logger';
 import redisService from './redis.service';
 

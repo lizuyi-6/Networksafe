@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Activity, Users, AlertTriangle, Cpu, HardDrive, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Users, AlertTriangle, Cpu, HardDrive, Zap } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const SuperAdmin = () => {

@@ -1,6 +1,6 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import redisService from './redis.service';
-import { RATE_LIMIT, HTTP_STATUS, REDIS_KEYS } from './config';
+import { RATE_LIMIT, HTTP_STATUS, REDIS_KEYS } from '../config';
 import logger from '../utils/logger';
 
 // Helper function to set rate limit headers
@@ -22,12 +22,12 @@ export const rateLimitMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    if (!req.apiKey) {
+    if (!(req as any).apiKey) {
       next();
       return;
     }
 
-    const { userId, rateLimit } = req.apiKey;
+    const { userId, rateLimit } = (req as any).apiKey;
     const limit = rateLimit.requestsPerMinute;
 
     // Create rate limit keys
@@ -112,7 +112,7 @@ export const rateLimitMiddleware = async (
 
     next();
   } catch (error) {
-    logger.error('Rate limit error', { error, userId: req.apiKey?.userId });
+    logger.error('Rate limit error', { error, userId: (req as any).apiKey?.userId });
     // On Redis error, allow request but log warning
     next();
   }

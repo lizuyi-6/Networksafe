@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Search, AlertTriangle, CheckCircle, XCircle, Terminal } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { Shield, Search, AlertTriangle, CheckCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../context/LanguageContext';
 

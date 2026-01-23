@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchSites } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 
