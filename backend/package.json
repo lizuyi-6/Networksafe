@@ -1,0 +1,44 @@
+{
+  "name": "newsecurity-backend",
+  "version": "1.0.0",
+  "description": "NewSecurity Backend - Security Proxy Gateway",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6",
+    "ioredis": "^5.3.2",
+    "uuid": "^9.0.0",
+    "greenlock-express": "^4.0.3",
+    "le-challenge-fs": "^2.0.9",
+    "le-store-certbot": "^2.0.9",
+    "better-sqlite3": "^9.2.2",
+    "node-nmap": "^4.1.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "ws": "^8.16.0",
+    "axios": "^1.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.16",
+    "@types/uuid": "^9.0.7",
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/cors": "^2.8.17",
+    "@types/compression": "^1.7.5",
+    "@types/ws": "^8.5.10",
+    "@types/node-nmap": "^0.0.4",
+    "typescript": "^5.3.3",
+    "ts-node-dev": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.56.0"
+  }
+}
