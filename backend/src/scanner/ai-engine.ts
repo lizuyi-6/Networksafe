@@ -298,8 +298,9 @@ Response in JSON format:
       case 'anthropic':
         return this.callAnthropic(prompt, model, apiKey);
       case 'ollama':
-case 'zhipu':        return this.callZhipu(prompt, model, apiKey, baseURL);
         return this.callOllama(prompt, model, baseURL);
+      case 'zhipu':
+        return this.callZhipu(prompt, model, apiKey, baseURL);
       default:
         throw new Error(`Unsupported AI provider: ${name}`);
     }
@@ -394,7 +395,7 @@ case 'zhipu':        return this.callZhipu(prompt, model, apiKey, baseURL);
     try {
       // Try to extract JSON from markdown code blocks
       const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
-                       response.match(/```\s*([\s\S]*?)\s*```/);
+        response.match(/```\s*([\s\S]*?)\s*```/);
 
       if (jsonMatch) {
         return JSON.parse(jsonMatch[1]);
@@ -460,7 +461,7 @@ case 'zhipu':        return this.callZhipu(prompt, model, apiKey, baseURL);
       warnings: ['AI analysis unavailable, using rule-based fallback']
     };
   }
-/**   * Call Zhipu AI (BigModel) API   */  private async callZhipu(prompt: string, model: string, apiKey?: string, baseURL?: string): Promise<string> {    const { ZhipuClient } = require("./zhipu-client");    const client = new ZhipuClient(      apiKey || process.env.ZHIPU_API_KEY || "",      baseURL || "https://open.bigmodel.cn/api/anthropic"    );    return await client.generateCompletion(prompt, model);  }
+/**   * Call Zhipu AI (BigModel) API   */  private async callZhipu(prompt: string, model: string, apiKey?: string, baseURL?: string): Promise<string> { const { ZhipuClient } = require("./zhipu-client"); const client = new ZhipuClient(apiKey || process.env.ZHIPU_API_KEY || "", baseURL || "https://open.bigmodel.cn/api/anthropic"); return await client.generateCompletion(prompt, model); }
 }
 
 // Singleton instances for different providers

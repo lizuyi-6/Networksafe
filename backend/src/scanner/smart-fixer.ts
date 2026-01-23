@@ -33,7 +33,7 @@ export interface SmartFixerOptions {
   maxAttempts?: number;
   enableAI?: boolean;
   aiProvider?: {
-    name: 'openai' | 'anthropic' | 'ollama';
+    name: 'openai' | 'anthropic' | 'ollama' | 'zhipu' | 'custom';
     apiKey?: string;
     baseURL?: string;
     model: string;
@@ -187,7 +187,7 @@ export class SmartFixer {
               };
             }
           } catch (error) {
-            logger.error('AI diagnosis failed:', error);
+            logger.error('AI diagnosis failed:', { error });
           }
         }
 

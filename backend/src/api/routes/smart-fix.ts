@@ -179,7 +179,7 @@ router.post('/ai-analyze', async (req: Request, res: Response) => {
     const { AIEngine } = await import('../../scanner/ai-engine');
 
     const aiEngine = new AIEngine({
-      name: process.env.AI_PROVIDER || 'ollama',
+      name: (process.env.AI_PROVIDER || 'ollama') as any,
       apiKey: process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY,
       baseURL: process.env.AI_BASE_URL,
       model: process.env.AI_MODEL || 'llama2'

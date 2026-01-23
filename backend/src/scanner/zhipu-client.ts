@@ -88,7 +88,7 @@ export class ZhipuClient {
    */
   async testConnection(): Promise<boolean> {
     try {
-      const response = await this.generateCompletion('Hello', model = 'glm-4');
+      const response = await this.generateCompletion('Hello', 'glm-4');
       return !!response;
     } catch (error) {
       return false;

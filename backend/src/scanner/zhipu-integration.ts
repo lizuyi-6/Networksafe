@@ -1,5 +1,6 @@
 import { AIEngine, AIProvider } from './ai-engine';
-import logger from '../../utils/logger';
+import { SmartFixer } from './smart-fixer';
+import logger from '../utils/logger';
 
 /**
  * Smart Fixer with Zhipu AI (BigModel) Integration
@@ -22,7 +23,7 @@ export interface SmartFixerOptionsZhipu {
  * Create Smart Fixer optimized for Zhipu AI
  */
 export function createZhipuSmartFixer(apiKey: string, model: string = 'glm-4'): any {
-  const { SmartFixer } = require('./smart-fixer');
+
 
   return new SmartFixer({
     enableAI: true,
