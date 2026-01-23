@@ -336,9 +336,11 @@ export class AuthSecurityService {
     return warnings;
   }
 
-  // Generate session ID for additional security
+  // Generate session ID for additional security (使用加密安全随机数)
   public generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    // 使用 Node.js crypto.randomUUID() 生成 UUID v4
+    // 比 Math.random() 更安全，符合 RFC 4122
+    return require('crypto').randomUUID();
   }
 
   // Validate session

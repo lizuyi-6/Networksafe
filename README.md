@@ -1,4 +1,4 @@
-# API Security Middleware Suite
+# FluxGuard - API Security Middleware
 
 [![npm version](https://badge.fury.io/js/api-security-middleware.svg)](https://www.npmjs.com/package/api-security-middleware)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -23,13 +23,13 @@ A production-ready collection of security middleware designed to protect your AP
 ## 📦 Installation
 
 ```bash
-npm install api-security-middleware
+npm install fluxguard-middleware
 ```
 
 Or with yarn:
 
 ```bash
-yarn add api-security-middleware
+yarn add fluxguard-middleware
 ```
 
 ## 🚀 Quick Start
@@ -41,7 +41,7 @@ import {
   rateLimitMiddleware,
   concurrencyLimit,
   authSecurityService
-} from 'api-security-middleware';
+} from 'fluxguard-middleware';
 import redis from 'ioredis';
 
 const app = express();
@@ -397,5 +397,24 @@ For issues and questions:
 - [Changelog](https://github.com/yourusername/api-security-middleware/blob/main/CHANGELOG.md)
 
 ---
+
+
+## 🐳 Docker Support
+
+FluxGuard includes full Docker support for running the entire stack (Frontend, Backend, and Redis).
+
+### Prerequisites
+- Docker & Docker Compose installed
+
+### Running the Project
+To start all services:
+
+```bash
+docker-compose up --build
+```
+
+Access the application:
+- **Frontend Dashboard**: http://localhost:5173
+- **Backend API**: http://localhost:3005
 
 **Made with ❤️ for secure APIs**

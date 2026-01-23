@@ -1,7 +1,7 @@
 {
-  "name": "api-security-middleware",
+  "name": "fluxguard-middleware",
   "version": "1.0.0",
-  "description": "Comprehensive security middleware suite for Express.js API applications - Anti-bot protection, rate limiting, concurrency control, and authentication security",
+  "description": "FluxGuard - Comprehensive security middleware suite for Express.js API applications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [
@@ -39,19 +39,23 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^4.18.2",
     "ioredis": "^5.3.2",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^4.17.17",
     "@types/node": "^20.4.2",
     "@types/uuid": "^9.0.2",
-    "typescript": "^5.1.6",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.44.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.1.6"
   },
   "peerDependencies": {
     "express": "^4.18.2"

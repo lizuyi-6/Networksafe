@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Microsoft Fluent Design - Light Theme */
+        --background: 0 0% 98%;
+        /* #FAFAFA */
+        --foreground: 222.2 84% 4.9%;
+        /* #020817 */
+
+        --card: 0 0% 100%;
+        /* #FFFFFF */
+        --card-foreground: 222.2 84% 4.9%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+
+        --primary: 206 100% 42%;
+        /* #0078D4 (Microsoft Blue) */
+        --primary-foreground: 210 40% 98%;
+
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 206 100% 42%;
+
+        --radius: 0.5rem;
+    }
+}
+
+@layer utilities {
+    .glass-panel {
+        @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl;
+    }
+
+    .glass-card {
+        @apply bg-white/60 backdrop-blur-md border border-white/40 rounded-xl transition-all duration-300 hover:bg-white/80 hover:border-blue-100 hover:shadow-lg hover:-translate-y-1;
+    }
+
+    .text-gradient {
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-[#0078D4] to-[#00A4EF];
+    }
+
+    .fluent-shadow {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+}
+
+body {
+    @apply bg-[#F3F2F1] text-slate-900 min-h-screen selection:bg-blue-200 selection:text-blue-900;
+    font-family: 'Segoe UI', 'San Francisco', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+}
