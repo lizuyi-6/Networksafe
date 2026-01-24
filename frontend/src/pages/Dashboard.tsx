@@ -12,13 +12,13 @@ import ErrorDisplay from '../components/ErrorDisplay';
 import { useLanguage } from '../context/LanguageContext';
 
 const StatCard = ({ title, value, subtext, icon: Icon, color, trend }: any) => (
-    <div className="bg-surface border border-border rounded-lg p-5 relative overflow-hidden group hover:border-zinc-700 transition-colors">
+    <div className="bg-card border border-border rounded-lg p-5 relative overflow-hidden group hover:border-border/80 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
         <div className="flex justify-between items-start mb-4">
             <div className="flex flex-col">
-                <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{title}</span>
-                <span className="text-2xl font-medium text-zinc-100 tracking-tight mt-1">{value}</span>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+                <span className="text-2xl font-medium text-foreground tracking-tight mt-1">{value}</span>
             </div>
-            <Icon className={`text-zinc-600 group-hover:${color} transition-colors`} size={20} />
+            <Icon className={`text-muted-foreground/70 group-hover:${color} transition-colors`} size={20} />
         </div>
         <div className="flex items-center gap-2">
             {trend && (
@@ -26,7 +26,8 @@ const StatCard = ({ title, value, subtext, icon: Icon, color, trend }: any) => (
                     <ArrowUpRight size={10} /> {Math.abs(trend)}%
                 </span>
             )}
-            <span className="text-xs text-zinc-600">{subtext}</span>
+
+            <span className="text-xs text-muted-foreground">{subtext}</span>
         </div>
         {/* Decorative background element */}
         <div className={`absolute bottom-0 left-0 w-full h-1 ${color === 'text-indigo-400' ? 'bg-indigo-500/10' : 'bg-transparent'}`}></div>
@@ -47,8 +48,8 @@ const TrafficChart = ({ data }: { data: any[] }) => (
                 <XAxis dataKey="time" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
                 <YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
                 <Tooltip
-                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '4px' }}
-                    itemStyle={{ color: '#e4e4e7' }}
+                    contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)', borderRadius: '4px' }}
+                    itemStyle={{ color: 'var(--foreground)' }}
                 />
                 <Area
                     type="monotone"
@@ -72,27 +73,54 @@ const TrafficChart = ({ data }: { data: any[] }) => (
 );
 
 const LogStream = ({ logs }: { logs: LogItem[] }) => (
-    <div className="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-1 scrollbar-hide bg-[#050505] h-full">
+    <div className="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-1 scrollbar-hide bg-slate-50 dark:bg-black/50 border border-border/50 rounded h-full">
         {logs.map((log) => (
             <div
                 key={log.id}
                 className={`flex gap-4 group p-1 rounded cursor-pointer transition-colors border-l-2 ${log.level === 'ERROR' || log.status === 403
-                    ? 'bg-red-500/5 border-red-500'
-                    : 'hover:bg-white/5 border-transparent hover:border-indigo-500'
+                    ? 'bg-red-500/10 border-red-500 dark:bg-red-500/5'
+                    : 'hover:bg-indigo-50 dark:hover:bg-muted/50 border-transparent hover:border-primary/50'
                     }`}
             >
-                <span className="text-zinc-600 shrink-0 w-20">{new Date(log.time).toLocaleTimeString()}</span>
-                <span className={`shrink-0 w-12 font-medium ${log.status === 200 ? 'text-emerald-400' :
-                    log.status === 403 ? 'text-red-400' :
-                        log.status === 429 ? 'text-amber-400' : 'text-zinc-400'
+                <span className="text-muted-foreground/70 shrink-0 w-20">{new Date(log.time).toLocaleTimeString()}</span>
+                <span className={`shrink-0 w-12 font-medium ${log.status === 200 ? 'text-emerald-600 dark:text-emerald-400' :
+                    log.status === 403 ? 'text-red-500 dark:text-red-400' :
+                        log.status === 429 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
                     }`}>
                     {log.status || 200}
                 </span>
-                <span className="text-zinc-400 shrink-0 w-10">{log.type}</span>
-                <span className="text-zinc-300 break-all">{log.message}</span>
+                <span className="text-muted-foreground shrink-0 w-10">{log.type}</span>
+                <span className="text-foreground break-all">{log.message}</span>
             </div>
         ))}
-        {logs.length === 0 && <div className="text-zinc-600 text-center py-4">Waiting for logs...</div>}
+        {logs.length === 0 && <div className="text-muted-foreground text-center py-4">Waiting for logs...</div>}
+    </div>
+);
+
+// Active Defense Notification Component
+const ThreatNotification = ({ threat, onClose }: { threat: any; onClose: () => void }) => (
+    <div className="fixed top-24 right-6 z-50 animate-in slide-in-from-right fade-in duration-300">
+        <div className="bg-red-500/10 border border-red-500/50 backdrop-blur-md rounded-lg shadow-2xl p-4 flex items-start gap-4 max-w-sm">
+            <div className="bg-red-500 rounded-full p-2 animate-pulse">
+                <Shield size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+                <h4 className="text-sm font-bold text-red-500 flex items-center gap-2">
+                    THREAT NEUTRALIZED
+                    <span className="text-[10px] bg-red-500 text-white px-1.5 rounded uppercase">Active</span>
+                </h4>
+                <p className="text-xs text-foreground mt-1 font-medium">
+                    Blocked {threat.type} attack from {threat.ip}
+                </p>
+                <p className="text-xxs text-muted-foreground mt-1 font-mono">
+                    Action: 403 Forbidden • Rule: {threat.ruleId}
+                </p>
+            </div>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                <span className="sr-only">Close</span>
+                ×
+            </button>
+        </div>
     </div>
 );
 
@@ -101,6 +129,28 @@ const Dashboard = () => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [logs, setLogs] = useState<LogItem[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [activeThreat, setActiveThreat] = useState<any | null>(null);
+
+    // Simulation for Active Defense Showcase
+    useEffect(() => {
+        const simulateThreat = () => {
+            if (Math.random() > 0.7) {
+                const threats = [
+                    { type: 'SQL Injection', ip: '192.168.1.105', ruleId: 'SQL-992' },
+                    { type: 'XSS Attack', ip: '10.0.5.22', ruleId: 'XSS-881' },
+                    { type: 'Path Traversal', ip: '172.16.0.50', ruleId: 'LFI-102' }
+                ];
+                const threat = threats[Math.floor(Math.random() * threats.length)];
+                setActiveThreat(threat);
+
+                // Auto dismiss
+                setTimeout(() => setActiveThreat(null), 4000);
+            }
+        };
+
+        const interval = setInterval(simulateThreat, 8000); // Simulate every 8 seconds
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const loadData = async () => {
@@ -135,10 +185,12 @@ const Dashboard = () => {
         );
     }
 
-    if (!stats) return <div className="p-8 text-zinc-500">Initializing Dashboard...</div>;
+    if (!stats) return <div className="p-8 text-muted-foreground">Initializing Dashboard...</div>;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
+            {activeThreat && <ThreatNotification threat={activeThreat} onClose={() => setActiveThreat(null)} />}
+
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
@@ -180,13 +232,13 @@ const Dashboard = () => {
                 <div className="lg:col-span-2 bg-surface border border-border rounded-lg p-6 min-h-[400px] flex flex-col">
                     <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h3 className="text-base font-medium text-zinc-100 tracking-tight">{t('dashboard.traffic_analysis')}</h3>
-                            <p className="text-xs text-zinc-500 mt-1">{t('dashboard.requests_per_second')} vs {t('dashboard.blocked_request')}</p>
+                            <h3 className="text-base font-medium text-foreground tracking-tight">{t('dashboard.traffic_analysis')}</h3>
+                            <p className="text-xs text-muted-foreground mt-1">{t('dashboard.requests_per_second')} vs {t('dashboard.blocked_request')}</p>
                         </div>
                         {/* Tab Switcher Placeholder */}
-                        <div className="flex bg-zinc-900 p-0.5 rounded-md border border-border">
-                            <button className="px-3 py-1 text-xs font-medium text-zinc-100 bg-zinc-800 rounded shadow-sm">1h</button>
-                            <button className="px-3 py-1 text-xs font-medium text-zinc-500 hover:text-zinc-300">24h</button>
+                        <div className="flex bg-muted p-0.5 rounded-md border border-border">
+                            <button className="px-3 py-1 text-xs font-medium text-foreground bg-background rounded shadow-sm">1h</button>
+                            <button className="px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground">24h</button>
                         </div>
                     </div>
                     <TrafficChart data={stats.history} />
@@ -194,33 +246,33 @@ const Dashboard = () => {
 
                 {/* Attack Origin Map (Placeholder Data) */}
                 <div className="bg-surface border border-border rounded-lg p-6 flex flex-col">
-                    <h3 className="text-base font-medium text-zinc-100 tracking-tight mb-4">{t('dashboard.attack_origin')}</h3>
+                    <h3 className="text-base font-medium text-foreground tracking-tight mb-4">{t('dashboard.attack_origin')}</h3>
                     <div className="flex-1 space-y-4">
                         {[
                             { code: 'CN', name: 'Beijing', val: 28.4, color: 'bg-red-500' },
                             { code: 'RU', name: 'Moscow', val: 19.2, color: 'bg-orange-500' },
-                            { code: 'US', name: 'Ashburn', val: 12.1, color: 'bg-zinc-500' }
+                            { code: 'US', name: 'Ashburn', val: 12.1, color: 'bg-muted-foreground' }
                         ].map((item, i) => (
                             <div key={i} className="relative group">
                                 <div className="flex justify-between items-center text-sm mb-1">
-                                    <span className="flex items-center gap-2 text-zinc-300">
+                                    <span className="flex items-center gap-2 text-foreground">
                                         <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
                                         {item.code} - {item.name}
                                     </span>
-                                    <span className="font-mono text-zinc-500">{item.val}%</span>
+                                    <span className="font-mono text-muted-foreground">{item.val}%</span>
                                 </div>
-                                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                                     <div className={`h-full ${item.color} w-[${item.val}%]`} style={{ width: `${item.val}%` }}></div>
                                 </div>
                             </div>
                         ))}
 
                         <div className="mt-8 pt-6 border-t border-border/50">
-                            <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('dashboard.top_vectors')}</h4>
+                            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">{t('dashboard.top_vectors')}</h4>
                             <div className="flex flex-wrap gap-2">
-                                <span className="px-2 py-1 rounded text-xs border border-red-500/20 bg-red-500/10 text-red-400">SQL Injection</span>
+                                <span className="px-2 py-1 rounded text-xs border border-red-500/20 bg-red-500/10 text-red-400 animate-pulse">SQL Injection</span>
                                 <span className="px-2 py-1 rounded text-xs border border-orange-500/20 bg-orange-500/10 text-orange-400">XSS Reflected</span>
-                                <span className="px-2 py-1 rounded text-xs border border-zinc-700 bg-zinc-800 text-zinc-400">Bad Bot</span>
+                                <span className="px-2 py-1 rounded text-xs border border-border bg-muted text-muted-foreground">Bad Bot</span>
                             </div>
                         </div>
                     </div>
@@ -231,19 +283,23 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
                 {/* Live Logs Console */}
-                <div className="lg:col-span-8 bg-[#0C0C0E] border border-border rounded-lg flex flex-col h-[400px] overflow-hidden">
-                    <div className="px-4 py-3 border-b border-border bg-surface/50 flex justify-between items-center">
+                <div className="lg:col-span-8 bg-muted border border-border rounded-lg flex flex-col h-[400px] overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border bg-card/50 flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                            <Terminal size={16} className="text-zinc-400" />
-                            <span className="text-sm font-medium text-zinc-200">{t('dashboard.live_log_stream')}</span>
+                            <Terminal size={16} className="text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">{t('dashboard.live_log_stream')}</span>
+                            <span className="flex h-2 w-2 relative ml-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="relative">
-                                <Search className="absolute left-2 top-1.5 text-zinc-600" size={14} />
-                                <input type="text" placeholder="filter: status=403..." className="bg-black/30 border border-zinc-800 rounded text-xs py-1 pl-7 pr-2 text-zinc-300 focus:outline-none focus:border-indigo-500 w-48 font-mono" />
+                                <Search className="absolute left-2 top-1.5 text-muted-foreground" size={14} />
+                                <input type="text" placeholder="filter: status=403..." className="bg-background border border-border rounded text-xs py-1 pl-7 pr-2 text-foreground focus:outline-none focus:border-primary w-48 font-mono" />
                             </div>
-                            <Pause size={18} className="text-zinc-500 hover:text-zinc-300 cursor-pointer" />
-                            <Download size={18} className="text-zinc-500 hover:text-zinc-300 cursor-pointer" />
+                            <Pause size={18} className="text-muted-foreground hover:text-foreground cursor-pointer" />
+                            <Download size={18} className="text-muted-foreground hover:text-foreground cursor-pointer" />
                         </div>
                     </div>
                     <LogStream logs={logs} />
@@ -252,39 +308,47 @@ const Dashboard = () => {
                 {/* API Key / Rule Snapshot */}
                 <div className="lg:col-span-4 space-y-6">
                     {/* Rule Stats */}
-                    <div className="bg-surface border border-border rounded-lg p-5">
+                    <div className="bg-card border border-border rounded-lg p-5">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-medium text-zinc-100">{t('dashboard.active_rules')}</h3>
+                            <h3 className="text-sm font-medium text-foreground">{t('dashboard.active_rules')}</h3>
                             <button className="text-indigo-400 text-xs hover:text-indigo-300">Manage</button>
                         </div>
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5">
+                            <div className="flex items-center justify-between p-2 rounded bg-muted/20 border border-border group hover:border-primary/30 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded bg-indigo-500/20 text-indigo-400 flex items-center justify-center relative">
                                         <Code size={16} />
+                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500 border-2 border-card"></span>
+                                        </span>
                                     </div>
                                     <div>
-                                        <div className="text-xs font-medium text-zinc-200">{t('dashboard.rule_sql_injection')}</div>
-                                        <div className="text-xxs text-zinc-500">ID: 992-A • High Priority</div>
+                                        <div className="text-xs font-medium text-foreground">{t('dashboard.rule_sql_injection')}</div>
+                                        <div className="text-xxs text-muted-foreground">ID: 992-A • High Priority</div>
                                     </div>
                                 </div>
-                                <div className="w-8 h-4 rounded-full bg-indigo-500 relative cursor-pointer">
-                                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+                                <div className="w-8 h-4 rounded-full bg-primary relative cursor-pointer">
+                                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-primary-foreground rounded-full"></div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5">
+                            <div className="flex items-center justify-between p-2 rounded bg-muted/20 border border-border group hover:border-orange-500/30 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-orange-500/20 text-orange-400 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded bg-orange-500/20 text-orange-400 flex items-center justify-center relative">
                                         <Bug size={16} />
+                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500 border-2 border-card"></span>
+                                        </span>
                                     </div>
                                     <div>
-                                        <div className="text-xs font-medium text-zinc-200">{t('dashboard.rule_xss')}</div>
-                                        <div className="text-xxs text-zinc-500">ID: 881-B • Critical</div>
+                                        <div className="text-xs font-medium text-foreground">{t('dashboard.rule_xss')}</div>
+                                        <div className="text-xxs text-muted-foreground">ID: 881-B • Critical</div>
                                     </div>
                                 </div>
-                                <div className="w-8 h-4 rounded-full bg-indigo-500 relative cursor-pointer">
-                                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+                                <div className="w-8 h-4 rounded-full bg-primary relative cursor-pointer">
+                                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-primary-foreground rounded-full"></div>
                                 </div>
                             </div>
                         </div>
@@ -295,23 +359,23 @@ const Dashboard = () => {
                         <div className="flex flex-col h-full justify-between">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-zinc-400">
+                                    <div className="w-6 h-6 rounded bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-slate-600 dark:text-zinc-400">
                                         <Key size={14} />
                                     </div>
-                                    <span className="text-xs font-semibold text-zinc-300 tracking-wide uppercase">{t('dashboard.quick_api_key')}</span>
+                                    <span className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">{t('dashboard.quick_api_key')}</span>
                                 </div>
-                                <p className="text-xs text-zinc-500 leading-relaxed">Generate a temporary access token for development testing.</p>
+                                <p className="text-xs text-muted-foreground leading-relaxed">Generate a temporary access token for development testing.</p>
                             </div>
 
-                            <div className="mt-4 p-2 bg-black/40 rounded border border-white/5 flex items-center justify-between">
-                                <code className="text-xs font-mono text-zinc-400">sk_live_...98x</code>
-                                <button className="p-1.5 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-colors">
+                            <div className="mt-4 p-2 bg-muted/20 rounded border border-border flex items-center justify-between">
+                                <code className="text-xs font-mono text-foreground">sk_live_...98x</code>
+                                <button className="p-1.5 hover:bg-muted/50 rounded text-muted-foreground hover:text-foreground transition-colors">
                                     <Download size={14} />
                                 </button>
                             </div>
 
-                            <button className="mt-3 w-full py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-xs font-medium text-zinc-300 transition-all flex items-center justify-center gap-2 group">
-                                <Code size={14} className="text-zinc-500 group-hover:text-zinc-300" />
+                            <button className="mt-3 w-full py-2 bg-muted hover:bg-muted/80 border border-border rounded text-xs font-medium text-foreground transition-all flex items-center justify-center gap-2 group">
+                                <Code size={14} className="text-muted-foreground group-hover:text-foreground" />
                                 {t('dashboard.generate_key')}
                             </button>
                         </div>
@@ -320,7 +384,7 @@ const Dashboard = () => {
             </div>
 
             <footer className="mt-10 pt-6 border-t border-border/50 text-center pb-6">
-                <p className="text-xxs text-zinc-600">FluxGuard Console v2.4.0 • Enterprise Edition</p>
+                <p className="text-xxs text-muted-foreground">FluxGuard Console v2.4.0 • Enterprise Edition</p>
             </footer>
         </div>
     );

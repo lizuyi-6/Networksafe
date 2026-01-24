@@ -6,11 +6,61 @@
 
 @layer base {
     :root {
-        /* Using hex in Config, but keeping some vars if needed */
+        /* Light Mode Palette - Vibrant & High Contrast */
+        --background: 210 40% 98%;
+        /* #F0F5FA (Ice Blue Tint) */
+        --surface: 0 0% 100%;
+        /* #FFFFFF (Pure White) */
+        --border: 214 32% 91%;
+        /* #E2E8F0 (Slate-200) */
+
+        --foreground: 222 47% 11%;
+        /* #0F172A (Slate-900) - Very Dark for Text */
+        --muted: 210 40% 96.1%;
+        /* #F1F5F9 */
+        --muted-foreground: 215 16% 47%;
+        /* #64748B (Slate-500) */
+
+        --primary: 221 83% 53%;
+        /* #2563EB (Blue-600) */
+        --primary-foreground: 0 0% 100%;
+
+        --card: 0 0% 100%;
+        /* #FFFFFF */
+        --card-foreground: 222 47% 11%;
+        /* #0F172A */
+
+        --input: 214 32% 91%;
+        --ring: 221 83% 53%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        /* Dark Mode Palette (Matches previous hardcoded values) */
+        --background: 0 0% 2%;
+        /* #050505 */
+        --surface: 240 6% 6%;
+        /* #0F0F11 */
+        --border: 240 6% 13%;
+        /* #1F1F23 */
+
+        --foreground: 240 5% 96%;
+        /* #F4F4F5 */
+        --muted: 240 4% 16%;
+        --muted-foreground: 240 5% 65%;
+        /* #A1A1AA */
+
+        --primary: 217 91% 60%;
+        /* #3B82F6 */
+        --primary-foreground: 0 0% 100%;
+
+        --card: 240 6% 6%;
+        /* #0F0F11 */
+        --card-foreground: 240 5% 96%;
     }
 
     body {
-        @apply bg-background text-zinc-400 font-sans antialiased h-screen w-screen overflow-hidden selection:bg-indigo-500/20 selection:text-indigo-200;
+        @apply bg-background text-foreground font-sans antialiased h-screen w-screen overflow-hidden selection:bg-primary/20 selection:text-primary;
     }
 }
 

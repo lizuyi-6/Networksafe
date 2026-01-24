@@ -1,139 +1,143 @@
-# FluxGuard - API 安全中间件
+# FluxGuard Pro - 智能服务器安全防御平台
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Status: Production](https://img.shields.io/badge/Status-Production-green.svg)]()
+[![Docker: Supported](https://img.shields.io/badge/Docker-Supported-blue.svg)]()
 
-🛡️ **适用于 Express.js API 应用的全方位安全中间件套件**
+🚀 **下一代基于 Agent 的分布式服务器安全防御系统**
 
-FluxGuard 是一个生产就绪的安全中间件集合，旨在保护您的 API 免受常见威胁，包括暴力破解、DDoS 攻击、恶意机器人流量、速率限制滥用等。
+FluxGuard Pro 彻底重构了传统防火墙架构，采用创新的 **"中心化控制 + 分布式执行 + 硬件级部署"** 三位一体防御体系。它不仅是一个软件，更是一套结合了 AI 威胁分析与 ESP32 硬件运维的完整服务器安全解决方案。
 
-## ✨ 主要功能
+---
 
-- 🔐 **反爬虫保护 (Anti-Bot)** - 智能检测并阻止恶意机器人和爬虫
-- ⏱️ **速率限制 (Rate Limiting)** - 基于 Redis 的分布式速率限制，确保原子操作
-- 🚦 **并发控制 (Concurrency Control)** - 防止因并发请求过多导致的资源耗尽
-- 👤 **认证安全 (Auth Security)** - 登录尝试追踪、账户锁定和会话管理
-- 📊 **性能监控 (Performance Monitoring)** - 实时监控内存和 CPU 使用情况并并在异常时预警
-- 🎯 **蜜罐陷阱 (Honeypot)** - 使用不可见的表单字段捕获垃圾邮件机器人
-- 🔒 **自动 IP 封禁** - 对可疑活动进行自动 IP 拦截
-- 🌍 **搜索引擎白名单** - 允许 Google、Bing 等合法搜索引擎爬虫访问
+## 📸 功能概览
 
-## 📦 安装
+### 1. 全局态势感知 (Dashboard)
+系统的核心指挥中心。实时可视化展示全球攻击源分布、当前流量压力、以及各服务器节点的健康状态。
+- **流量分析**: 区分正常用户访问与恶意扫描流量。
+- **实时日志**: 毫秒级展示被拦截的入侵请求详情。
+![Dashboard](docs/assets/dashboard.png)
 
-使用 npm 安装：
+### 2. 分布式 Agent 集群 (Agents)
+集中管理成百上千个分布式 Agent 节点。
+- **主机层防御**: 每一个 Agent 直接驻留于业务服务器，提供操作系统级别的防护。
+- **状态监控**: 实时监控服务器 CPU/内存资源占用与运行健康度。
+![Agents](docs/assets/agents.png)
+
+### 3. 受保护站点列表 (Sites)
+管理所有接入防护的域名与业务服务。
+- **策略下发**: 针对不同业务线配置独立的防护策略与 AI 敏感度。
+- **一键开关**: 紧急情况下可快速开启/关闭特定服务器的防护模块。
+![Sites](docs/assets/sites.png)
+
+### 4. 自动化部署向导 (Deployment)
+傻瓜式生成安装脚本，支持多种 Linux 发行版环境。
+- **多系统支持**: 自动生成适用于 Ubuntu, CentOS, Debian 的 Agent 安装指令。
+- **一键复制**: 运维人员只需复制一行命令即可完成服务器接入。
+![Deployment](docs/assets/deploy.png)
+
+### 5. 硬件网关与 ESP32 工具 (Devices)
+管理 **ESP32 Deployment Dongle** 和其他硬件安全节点。
+- **自动注册**: 运维人员插入 U 盘后，设备自动注册上线。
+- **远程管理**: 支持对分布在各个机房的 ESP32 设备进行远程管理。
+![Devices](docs/assets/devices.png)
+
+### 6. 主动漏洞扫描 (Monitoring)
+内置轻量级漏洞扫描引擎 (基于 Nuclei)。
+- **被动监测**: 持续分析过往流量中的异常模式，发现潜在后门。
+- **主动探测**: 定期扫描目标服务器的常见 CVE 漏洞与配置缺陷。
+![Scanner](docs/assets/scanner.png)
+
+### 7. 审计与历史记录 (History)
+详细记录每一次安全事件与 AI 自动修复操作。
+- **取证溯源**: 保留完整的攻击链路数据供后续审计合规。
+- **自动化报告**: 记录 AI 自动封禁 IP 或修补系统漏洞的操作流水。
+![History](docs/assets/history.png)
+
+### 8. 实时告警中心 (Alerts)
+聚合来自所有节点的安全告警。
+- **分级告警**: 区分 INFO, WARN, CRTICIAL 不同级别的系统威胁。
+- **多渠道推送**: 支持邮件、Slack、Webhook 推送至运维群。
+![Alerts](docs/assets/alerts.png)
+
+### 9. AI 智能配置 (Settings)
+灵活配置 AI 大脑的思考模式。
+- **多模型切换**: 支持拖拽排序，自由组合 Ollama 本地模型与云端 GPT-4/DeepSeek 模型。
+- **隐私优先**: 可设置仅在本地服务器处理敏感数据，保障数据主权。
+![Settings](docs/assets/settings.png)
+
+### 10. 超级管理员控制台 (Admin)
+系统级配置与多租户管理。
+- **密钥管理**: 为不同运维团队颁发独立的访问密钥。
+- **性能配额**: 这里可以限制每个租户的系统资源调用频率。
+![Admin](docs/assets/admin.png)
+
+---
+
+## 🏗️ 核心架构
+
+FluxGuard 采用 **Go + Rust + TypeScript** 混合架构，追求极致性能与安全性。
+
+```mermaid
+graph TD
+    User[外部流量] --> ELB[负载均衡]
+    
+    subgraph "业务集群"
+        App1[Linux Server A] -- 驻留 --> Agent1[Agent Core (Rust)]
+        App2[Linux Server B] -- 驻留 --> Agent2[Agent Core (Rust)]
+    end
+    
+    subgraph "硬件运维层"
+        ESP32[ESP32 Dongle] -- USB Console --> App1
+        ESP32_2[ESP32 Dongle] -- USB Console --> App2
+    end
+    
+    subgraph "控制平面 (Control Plane)"
+        Hub[Platform Core] --> DB[(PostgreSQL)]
+        Hub --> Redis[(Redis Cache)]
+        Hub --> AI[AI Analysis Engine]
+    end
+    
+    Agent1 -- gRPC/WS --> Hub
+    Agent2 -- gRPC/WS --> Hub
+```
+
+---
+
+## 🛠️ ESP32 部署工具 (Deployment Dongle)
+
+FluxGuard 独有的硬件部署方案，让安全运维变得触手可及。
+
+### 硬件清单 (BOM)
+- **主控**: ESP32-WROOM-32 (Type-C)
+- **显示**: 0.96寸 OLED (SSD1306)
+- **交互**: 3x 按键 (OK/Next/Back), 1x RGB LED, 1x 蜂鸣器
+- **通信**: CP2102 USB-TTL
+
+### 使用流程
+1. **插入**: 将 Dongle 插入服务器 USB 口。
+2. **识别**: 设备自动识别 Linux/Windows 环境 (蓝灯亮起)。
+3. **确认**: 使用屏幕与按键确认安装操作 (防误触设计)。
+4. **运行**: 自动执行 Shell 脚本完成 Agent 部署 (绿灯呼吸)。
+
+---
+
+## 🚀 快速启动 (Docker)
 
 ```bash
-npm install fluxguard-middleware
+# 1. 克隆仓库
+git clone https://github.com/your-repo/fluxguard-pro.git
+
+# 2. 启动服务
+docker-compose up -d --build
+
+# 3. 访问控制台
+# 前端: http://localhost:5173
+# 后端: http://localhost:3005
 ```
 
-或者使用 yarn：
-
-```bash
-yarn add fluxguard-middleware
-```
-
-## 🚀 快速开始
-
-```typescript
-import express from 'express';
-import { 
-  antiBotMiddleware, 
-  rateLimitMiddleware, 
-  concurrencyLimit,
-  authSecurityService 
-} from 'fluxguard-middleware';
-import Redis from 'ioredis';
-
-const app = express();
-
-// 初始化 Redis (速率限制和反爬虫功能需要)
-const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-
-// 应用安全中间件
-app.use(antiBotMiddleware.protect);
-app.use(rateLimitMiddleware);
-app.use(concurrencyLimit);
-
-// 业务路由示例
-app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  // 1. 密码强度验证
-  const passwordCheck = authSecurityService.validatePassword(password);
-  if (!passwordCheck.valid) {
-    return res.status(400).json({ error: '密码强度不足', details: passwordCheck.errors });
-  }
-
-  // 2. 检测可疑登录
-  const warnings = await authSecurityService.detectSuspiciousLogin(req, email);
-  if (warnings.length > 0) {
-    console.warn('检测到可疑登录:', { email, warnings });
-  }
-
-  // 3. 检查账户是否锁定
-  if (await authSecurityService.isAccountLocked(email)) {
-    return res.status(429).json({ error: '账户已锁定，请稍后再试' });
-  }
-
-  // 执行登录逻辑...
-});
-
-app.listen(3000, () => {
-  console.log('Server running on port 3000');
-});
-```
-
-## 📚 中间件详情
-
-### 1. 反爬虫中间件 (Anti-Bot)
-通过多种检测方法保护您的 API 免受自动化机器人和爬虫的侵害：
-- User-Agent 分析与异常模式检测
-- 针对已知机器人（如 GoogleBot）的白名单机制
-- 请求速率异常检测（快速滑动窗口）
-- 支持蜜罐字段诱捕
-
-### 2. 分布式速率限制 (Rate Limiting)
-使用 Redis 实现的分布式限流，支持原子操作以防止竞争条件。
-- 支持自定义时间窗口和请求限制
-- 基于用户的限流策略
-- 标准限流响应头 (`X-RateLimit-*`)
-
-### 3. 并发控制
-限制每个用户的并发请求数，防止资源耗尽。
-- 自动清理过期请求
-- 防止内存泄漏
-
-### 4. 认证安全服务
-提供全面的认证安全功能：
-- **密码验证**：检查密码复杂度
-- **暴力破解防护**：自动锁定多次失败的账户
-- **会话管理**：生成和验证安全会话 ID
-
-## 🐳 Docker 支持
-
-本项目包含完整的 Docker 支持，可一键启动所有服务（前端、后端和 Redis）。
-
-**启动命令：**
-```bash
-docker-compose up --build
-```
-
-**服务访问：**
-- **前端控制台**: http://localhost:5173
-- **后端 API**: http://localhost:3005
-
-## ⚙️ 配置
-
-支持通过环境变量进行配置：
-
-```bash
-# 必需配置
-REDIS_URL=redis://localhost:6379
-
-# 可选配置
-NODE_ENV=production
-ALLOWED_ORIGINS=http://localhost:5173
-```
+---
 
 ## 📄 许可证
 
-MIT License
+本项目采用 [MIT 许可证](LICENSE) 开源。

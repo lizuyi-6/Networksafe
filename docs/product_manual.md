@@ -7,14 +7,14 @@ FluxGuard 是下一代 API 安全中间件平台，集成实时流量监控、�
 
 ### 2.1 安全控制台 (Dashboard)
 系统核心概览页面，提供实时安全态势感知。
-![控制台概览](C:/Users/Abraham/.gemini/antigravity/brain/d91e4ebe-2483-405f-a069-c2dcd073e3d8/manual_dashboard_cn_1769184502698.png)
+![控制台概览](file:///C:/Users/Abraham/.gemini/antigravity/brain/8a174ab7-1d9f-4a1b-8ad6-30c93494558a/manual_dashboard_zh_1769233236090.png)
 - **流量监控**：实时展示请求数、拦截威胁数及平均延迟。
 - **威胁分布**：通过可视化图表展示当前系统的主要安全威胁（如 SQL 注入、XSS 等）。
 - **实时日志流**：滚动展示最新的访问日志与安全拦截记录。
 
 ### 2.2 站点管理 (Site Management)
 统一管理所有受保护的 API 站点与微服务。
-![站点管理](C:/Users/Abraham/.gemini/antigravity/brain/d91e4ebe-2483-405f-a069-c2dcd073e3d8/manual_sites_cn_1769184517141.png)
+![站点管理](file:///C:/Users/Abraham/.gemini/antigravity/brain/8a174ab7-1d9f-4a1b-8ad6-30c93494558a/manual_sites_zh_1769233247552.png)
 - **多站点支持**：支持配置多个后端目标服务器。
 - **状态监控**：实时显示各站点的健康状态（安全/警告/危险）。
 - **一键防护**：可针对特定站点快速开启/关闭 SSL、防机器人等模块。
@@ -35,7 +35,7 @@ FluxGuard 是下一代 API 安全中间件平台，集成实时流量监控、�
 
 ### 2.5 警报中心 (Alerts)
 集中的安全事件与系统异常通知中心。
-![警报中心](C:/Users/Abraham/.gemini/antigravity/brain/d91e4ebe-2483-405f-a069-c2dcd073e3d8/manual_alerts_cn_1769184634060.png)
+![警报中心](file:///C:/Users/Abraham/.gemini/antigravity/brain/8a174ab7-1d9f-4a1b-8ad6-30c93494558a/dashboard_chinese_threat_notification_1769233646461.png)
 - **分级告警**：按严重、高危、中等、低危对警报进行分类。
 - **上下文关联**：警报详情包含攻击源 IP、攻击类型（如 SQL 注入）及相关防护规则 ID。
 - **状态管理**：支持对警报进行确认、处理与关闭操作。
@@ -49,13 +49,13 @@ FluxGuard 是下一代 API 安全中间件平台，集成实时流量监控、�
 
 ### 2.7 审计日志 (Audit Logs)
 记录系统内发生的所有重要变更与修复操作。
-![审计日志](C:/Users/Abraham/.gemini/antigravity/brain/d91e4ebe-2483-405f-a069-c2dcd073e3d8/manual_history_cn_1769184614820.png)
+![审计日志](file:///C:/Users/Abraham/.gemini/antigravity/brain/8a174ab7-1d9f-4a1b-8ad6-30c93494558a/manual_logs_zh_1769233267109.png)
 - **操作追溯**：记录谁（User ID）、在什么时间（Time）、做了什么操作。
 - **合规审计**：满足企业安全审计需求。
 
 ### 2.8 系统设置 (Settings)
 全局系统参数配置。
-![系统设置](C:/Users/Abraham/.gemini/antigravity/brain/d91e4ebe-2483-405f-a069-c2dcd073e3d8/manual_settings_cn_1769184673848.png)
+![系统设置](file:///C:/Users/Abraham/.gemini/antigravity/brain/8a174ab7-1d9f-4a1b-8ad6-30c93494558a/manual_settings_zh_1769233278712.png)
 - **AI 模型配置**：设置用于日志分析的本地 LLM 模型参数。
 - **通知渠道**：配置邮件、Slack 或 Webhook 告警通知。
 

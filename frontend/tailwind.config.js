@@ -15,45 +15,28 @@ export default {
                 xxs: '0.65rem',
             },
             colors: {
-                background: '#050505',
-                surface: '#0F0F11',
-                border: '#1F1F23',
+                background: "hsl(var(--background) / <alpha-value>)",
+                surface: "hsl(var(--surface) / <alpha-value>)",
+                border: "hsl(var(--border) / <alpha-value>)",
+                foreground: "hsl(var(--foreground) / <alpha-value>)",
+
                 primary: {
-                    DEFAULT: '#3B82F6',
-                    foreground: '#FFFFFF',
+                    DEFAULT: "hsl(var(--primary) / <alpha-value>)",
+                    foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
                 },
+                muted: {
+                    DEFAULT: "hsl(var(--muted) / <alpha-value>)",
+                    foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
+                },
+                card: {
+                    DEFAULT: "hsl(var(--card) / <alpha-value>)",
+                    foreground: "hsl(var(--card-foreground) / <alpha-value>)",
+                },
+
+                // Functional Colors
                 danger: '#EF4444',
                 success: '#10B981',
                 warning: '#F59E0B',
-
-                // Keeping existing variables for compatibility if needed, but new design takes precedence
-                input: "hsl(var(--input))",
-                ring: "hsl(var(--ring))",
-                foreground: "hsl(var(--foreground))",
-                secondary: {
-                    DEFAULT: "hsl(var(--secondary))",
-                    foreground: "hsl(var(--secondary-foreground))",
-                },
-                destructive: {
-                    DEFAULT: "hsl(var(--destructive))",
-                    foreground: "hsl(var(--destructive-foreground))",
-                },
-                muted: {
-                    DEFAULT: "hsl(var(--muted))",
-                    foreground: "hsl(var(--muted-foreground))",
-                },
-                accent: {
-                    DEFAULT: "hsl(var(--accent))",
-                    foreground: "hsl(var(--accent-foreground))",
-                },
-                popover: {
-                    DEFAULT: "hsl(var(--popover))",
-                    foreground: "hsl(var(--popover-foreground))",
-                },
-                card: {
-                    DEFAULT: "hsl(var(--card))",
-                    foreground: "hsl(var(--card-foreground))",
-                },
             },
         },
     },

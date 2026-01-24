@@ -1,23 +1,46 @@
-import Database from 'better-sqlite3';
+import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
 import path from 'path';
 import fs from 'fs';
 import logger from '../utils/logger';
 
 /**
  * Database Manager
- * Handles SQLite database operations
+ * Handles SQLite database operations using sql.js (pure JavaScript)
  */
 export class DatabaseManager {
-  private db: Database.Database | null = null;
+  private db: SqlJsDatabase | null = null;
   private dbPath: string;
+  private saveInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
     this.dbPath = path.join(dataDir, 'newsecurity.db');
-
     this.ensureDataDir(dataDir);
-    this.connect();
-    this.initSchema();
+  }
+
+  /**
+   * Initialize database (async because sql.js needs to load WASM)
+   */
+  public async init(): Promise<void> {
+    try {
+      const SQL = await initSqlJs();
+
+      // Try to load existing database
+      if (fs.existsSync(this.dbPath)) {
+        const fileBuffer = fs.readFileSync(this.dbPath);
+        this.db = new SQL.Database(fileBuffer);
+        logger.info(`Loaded existing database: ${this.dbPath}`);
+      } else {
+        this.db = new SQL.Database();
+        logger.info(`Created new database: ${this.dbPath}`);
+      }
+
+      this.initSchema();
+      this.startAutoSave();
+    } catch (error: any) {
+      logger.error('Failed to initialize database', { error: error.message });
+      throw error;
+    }
   }
 
   /**
@@ -31,20 +54,6 @@ export class DatabaseManager {
   }
 
   /**
-   * Connect to database
-   */
-  private connect(): void {
-    try {
-      this.db = new Database(this.dbPath);
-      this.db.pragma('journal_mode = WAL');
-      logger.info(`Connected to database: ${this.dbPath}`);
-    } catch (error: any) {
-      logger.error('Failed to connect to database', { error });
-      throw error;
-    }
-  }
-
-  /**
    * Initialize database schema
    */
   private initSchema(): void {
@@ -54,7 +63,7 @@ export class DatabaseManager {
 
     try {
       // Sites table
-      this.db.exec(`
+      this.db.run(`
         CREATE TABLE IF NOT EXISTS sites (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           domain TEXT UNIQUE NOT NULL,
@@ -71,7 +80,7 @@ export class DatabaseManager {
       `);
 
       // Security rules table
-      this.db.exec(`
+      this.db.run(`
         CREATE TABLE IF NOT EXISTS security_rules (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           siteId INTEGER NOT NULL,
@@ -84,7 +93,7 @@ export class DatabaseManager {
       `);
 
       // Scan results table
-      this.db.exec(`
+      this.db.run(`
         CREATE TABLE IF NOT EXISTS scan_results (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           siteId INTEGER,
@@ -98,7 +107,7 @@ export class DatabaseManager {
       `);
 
       // Backups table
-      this.db.exec(`
+      this.db.run(`
         CREATE TABLE IF NOT EXISTS backups (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
@@ -111,7 +120,7 @@ export class DatabaseManager {
       `);
 
       // Monitoring data table (time-series)
-      this.db.exec(`
+      this.db.run(`
         CREATE TABLE IF NOT EXISTS metrics (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           siteId INTEGER NOT NULL,
@@ -123,25 +132,62 @@ export class DatabaseManager {
         )
       `);
 
-      // Create indexes
-      this.db.exec(`
-        CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain);
-        CREATE INDEX IF NOT EXISTS idx_scan_results_siteId ON scan_results(siteId);
-        CREATE INDEX IF NOT EXISTS idx_metrics_siteId ON metrics(siteId);
-        CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp);
+      // Agents table
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS agents (
+          id TEXT PRIMARY KEY,
+          hostname TEXT NOT NULL,
+          platform TEXT,
+          arch TEXT,
+          version TEXT,
+          lastHeartbeat DATETIME,
+          status TEXT DEFAULT 'offline',
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
       `);
+
+      // Create indexes
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_scan_results_siteId ON scan_results(siteId)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_metrics_siteId ON metrics(siteId)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)`);
 
       logger.info('Database schema initialized');
     } catch (error: any) {
-      logger.error('Failed to initialize database schema', { error });
+      logger.error('Failed to initialize database schema', { error: error.message });
       throw error;
+    }
+  }
+
+  /**
+   * Start auto-save interval
+   */
+  private startAutoSave(): void {
+    // Save to disk every 30 seconds
+    this.saveInterval = setInterval(() => {
+      this.save();
+    }, 30000);
+  }
+
+  /**
+   * Save database to disk
+   */
+  public save(): void {
+    if (!this.db) return;
+
+    try {
+      const data = this.db.export();
+      const buffer = Buffer.from(data);
+      fs.writeFileSync(this.dbPath, buffer);
+    } catch (error: any) {
+      logger.error('Failed to save database', { error: error.message });
     }
   }
 
   /**
    * Get database instance
    */
-  public getDb(): Database.Database {
+  public getDb(): SqlJsDatabase {
     if (!this.db) {
       throw new Error('Database not connected');
     }
@@ -149,41 +195,88 @@ export class DatabaseManager {
   }
 
   /**
-   * Close database connection
+   * Execute SQL and return results
    */
-  public close(): void {
-    if (this.db) {
-      this.db.close();
-      this.db = null;
-      logger.info('Database connection closed');
-    }
+  public exec(sql: string): void {
+    if (!this.db) throw new Error('Database not connected');
+    this.db.run(sql);
   }
 
   /**
-   * Backup database
+   * Prepare and run a statement
    */
-  public backup(backupPath: string): void {
-    if (!this.db) {
-      throw new Error('Database not connected');
+  public prepare(sql: string): {
+    run: (...params: any[]) => void;
+    all: (...params: any[]) => any[];
+    get: (...params: any[]) => any;
+  } {
+    if (!this.db) throw new Error('Database not connected');
+
+    const db = this.db;
+
+    return {
+      run: (...params: any[]) => {
+        db.run(sql, params);
+      },
+      all: (...params: any[]) => {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        const results: any[] = [];
+        while (stmt.step()) {
+          results.push(stmt.getAsObject());
+        }
+        stmt.free();
+        return results;
+      },
+      get: (...params: any[]) => {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        const result = stmt.step() ? stmt.getAsObject() : null;
+        stmt.free();
+        return result;
+      }
+    };
+  }
+
+  /**
+   * Close database connection
+   */
+  public close(): void {
+    if (this.saveInterval) {
+      clearInterval(this.saveInterval);
+      this.saveInterval = null;
     }
 
-    try {
-      this.db.backup(backupPath).then(() => {
-        logger.info(`Database backed up to: ${backupPath}`);
-      });
-    } catch (error: any) {
-      logger.error('Failed to backup database', { error });
-      throw error;
+    if (this.db) {
+      this.save(); // Final save
+      this.db.close();
+      this.db = null;
+      logger.info('Database connection closed');
     }
   }
 }
 
 // Singleton instance
 let dbManager: DatabaseManager | null = null;
+let initPromise: Promise<DatabaseManager> | null = null;
+
+export async function initDatabase(): Promise<DatabaseManager> {
+  if (dbManager) return dbManager;
+
+  if (!initPromise) {
+    initPromise = (async () => {
+      dbManager = new DatabaseManager();
+      await dbManager.init();
+      return dbManager;
+    })();
+  }
+
+  return initPromise;
+}
 
 export function getDatabase(): DatabaseManager {
   if (!dbManager) {
-    dbManager = new DatabaseManager();
+    throw new Error('Database not initialized. Call initDatabase() first.');
   }
   return dbManager;
 }
@@ -192,5 +285,6 @@ export function closeDatabase(): void {
   if (dbManager) {
     dbManager.close();
     dbManager = null;
+    initPromise = null;
   }
 }

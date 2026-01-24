@@ -1,34 +1,93 @@
+/**
+ * FluxGuard Control Platform - Main Entry Point
+ * 
+ * 中央管控平台服务器
+ * - 接收 Agent 连接和心跳
+ * - 提供管理 API
+ * - 推送告警到 Dashboard
+ */
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import { ProxyServer } from './proxy/proxy-server';
-import { getDatabase } from './config/database';
+import { initDatabase, closeDatabase } from './config/database';
 import logger from './utils/logger';
-import sitesRouter from './api/routes/sites';
-import scannerRouter from './api/routes/scanner';
-
-/**
- * NewSecurity Backend - Main Entry Point
- */
-
-// Initialize services
-const proxyServer = new ProxyServer();
-const app = proxyServer.getApp(); // Use the Proxy's express app
-const db = getDatabase();
-
-let io: SocketIOServer; // Defer initialization
-
-// Middleware
-// Middleware
-app.use(helmet());
-app.use(compression());
-app.use(cors());
-// Note: express.json/urlencoded are already added by ProxyServer
+import { AgentGateway } from './websocket/agent-gateway';
+import { DeviceGateway } from './websocket/device-gateway';
 
 // API Routes
+import statsRoutes from './api/routes/stats.routes';
+import configRoutes from './api/routes/config.routes';
+import logsRoutes from './api/routes/logs.routes';
+import sitesRoutes from './api/routes/sites.routes';
+import adminRoutes from './api/routes/admin.routes';
+import scannerRouter from './api/routes/scanner';
+import agentsRouter, { setAgentGateway } from './api/routes/agents.routes';
+import devicesRouter from './api/routes/devices.routes';
+import aiEndpointsRouter from './api/routes/ai-endpoints.routes';
+
+// Initialize Express
+const app = express();
+const httpServer = createServer(app);
+
+// Agent Gateway (WebSocket)
+let agentGateway: AgentGateway;
+let deviceGateway: DeviceGateway;
+
+// ============================================
+// 安全中间件配置 (符合 OWASP 规范)
+// ============================================
+
+// CORS 配置
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://localhost:5173',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn(`Blocked CORS request from: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  maxAge: 86400,
+}));
+
+// 安全头
+app.use(helmet({
+  contentSecurityPolicy: false, // 允许 Dashboard 加载
+}));
+
+// 压缩
+app.use(compression());
+
+// 请求体解析
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// 请求日志
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`, {
+    ip: req.ip,
+    userAgent: req.headers['user-agent']?.substring(0, 50),
+  });
+  next();
+});
+
+// ============================================
+// API 路由
+// ============================================
+
 const apiRouter = express.Router();
 
 // Health check
@@ -36,111 +95,78 @@ apiRouter.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '2.0.0',
+    mode: 'control-platform',
+    agents: agentGateway?.getOnlineCount() || 0
   });
 });
 
-// Mount API routes
-apiRouter.use('/sites', sitesRouter);
+// 挂载路由
+apiRouter.use('/stats', statsRoutes);
+apiRouter.use('/config', configRoutes);
+apiRouter.use('/logs', logsRoutes);
+apiRouter.use('/sites', sitesRoutes);
+apiRouter.use('/admin', adminRoutes);
 apiRouter.use('/scanner', scannerRouter);
+apiRouter.use('/agents', agentsRouter);
+apiRouter.use('/devices', devicesRouter);
+apiRouter.use('/ai-endpoints', aiEndpointsRouter);
 
 app.use('/api', apiRouter);
 
-// WebSocket logic moved to start()
+// 错误处理
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  logger.error('Unhandled error', { error: err.message, stack: err.stack });
+  res.status(500).json({ error: 'Internal Server Error' });
+});
 
+// ============================================
+// 服务器启动
+// ============================================
 
-// Function to emit real-time events
-export function emitEvent(event: string, data: any) {
-  if (io) io.emit(event, data);
-}
-
-// Load sites from database and start proxy
-async function initializeProxy() {
-  try {
-    const sites = db.getDb().prepare('SELECT * FROM sites').all();
-
-    logger.info(`Loading ${sites.length} sites into proxy...`);
-
-    for (const site of sites) {
-      const siteConfig = {
-        id: site.id,
-        domain: site.domain,
-        target: site.target,
-        sslEnabled: Boolean(site.sslEnabled),
-        security: {
-          antiBot: Boolean(site.antiBotEnabled),
-          rateLimit: {
-            enabled: Boolean(site.rateLimitEnabled),
-            requestsPerMinute: site.rateLimitRequests || 60
-          },
-          concurrency: {
-            enabled: Boolean(site.concurrencyEnabled),
-            maxConcurrent: site.concurrencyMax || 5
-          }
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      await proxyServer.addSite(siteConfig);
-    }
-
-    logger.info('Proxy initialized successfully');
-  } catch (error: any) {
-    logger.error('Failed to initialize proxy', { error });
-  }
-}
-
-// Start servers
 async function start() {
-  const HTTP_PORT = process.env.HTTP_PORT || 8080;
-  const HTTPS_PORT = process.env.HTTPS_PORT || 8443;
+  const PORT = process.env.PORT || 8080;
 
   try {
-    // Initialize proxy with existing sites
-    await initializeProxy();
+    // 初始化数据库
+    await initDatabase();
+    logger.info('Database initialized');
 
-    // Start HTTP server
-    await proxyServer.startHttpServer(Number(HTTP_PORT));
-    logger.info(`HTTP server listening on port ${HTTP_PORT}`);
+    // 初始化 Agent Gateway (WebSocket)
+    agentGateway = new AgentGateway(httpServer);
 
-    // Initialize Socket.IO with the running HTTP server
-    const httpServer = proxyServer.getHttpServer();
-    if (httpServer) {
-      io = new SocketIOServer(httpServer, {
-        cors: {
-          origin: '*',
-          methods: ['GET', 'POST']
-        }
-      });
+    // 注入到路由
+    setAgentGateway(agentGateway);
 
-      io.on('connection', (socket: any) => {
-        logger.info(`Client connected: ${socket.id}`);
-        socket.on('disconnect', () => {
-          logger.info(`Client disconnected: ${socket.id}`);
-        });
-      });
-      logger.info('Socket.IO initialized');
-    }
+    // 启动 HTTP 服务器
+    httpServer.listen(PORT, () => {
+      logger.info(`FluxGuard Control Platform started`);
+      logger.info(`API: http://localhost:${PORT}/api`);
+      logger.info(`WebSocket: ws://localhost:${PORT}`);
+      logger.info(`Dashboard: http://localhost:5173`);
+    });
 
-    // Start HTTPS server if sites have SSL enabled
-    await proxyServer.startHttpsServer(Number(HTTPS_PORT));
-
-    logger.info('NewSecurity started successfully');
-    logger.info('API available at: http://localhost:' + HTTP_PORT + '/api');
   } catch (error: any) {
-    logger.error('Failed to start servers', { error });
+    logger.error('Failed to start server', { error });
     process.exit(1);
   }
 }
 
-// Graceful shutdown
+// ============================================
+// 优雅关闭
+// ============================================
+
 async function shutdown() {
   logger.info('Shutting down...');
 
   try {
-    await proxyServer.stop();
-    await db.close();
+    if (agentGateway) {
+      agentGateway.close();
+    }
+
+    httpServer.close();
+    closeDatabase();
+
     logger.info('Shutdown complete');
   } catch (error: any) {
     logger.error('Error during shutdown', { error });
@@ -152,11 +178,12 @@ async function shutdown() {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
-// Start the application
+// 启动应用
 start().catch((error) => {
   logger.error('Fatal error', { error });
   process.exit(1);
 });
 
-// Export app for testing
+// 导出用于测试
 export default app;
+export { agentGateway };

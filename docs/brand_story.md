@@ -10,7 +10,7 @@ FluxGuard 不仅仅是一个防火墙，它是为您量身打造的下一代 API
 
 安全不再是黑盒。通过 FluxGuard 的**实时态势感知大屏**，您可以清晰地看到每一条请求的脉动。
 
-![安全控制台](C:/Users/Abraham/.gemini/antigravity/brain/d91e4ebe-2483-405f-a069-c2dcd073e3d8/manual_dashboard_cn_1769184502698.png)
+![安全控制台](file:///C:/Users/Abraham/.gemini/antigravity/brain/8a174ab7-1d9f-4a1b-8ad6-30c93494558a/manual_dashboard_zh_1769233236090.png)
 
 *   **流量可视**：实时的波形图展示着系统的呼吸，每一次峰值变动都清晰可见。
 *   **威胁阻断**：当恶意攻击（如 SQL 注入、XSS）试图入侵时，系统会瞬间拦截并记录。
@@ -22,7 +22,7 @@ FluxGuard 不仅仅是一个防火墙，它是为您量身打造的下一代 API
 
 当风暴来袭，您需要最快的反应速度。**警报中心**将杂乱的信息过滤为关键的情报。
 
-![警报中心](C:/Users/Abraham/.gemini/antigravity/brain/d91e4ebe-2483-405f-a069-c2dcd073e3d8/manual_alerts_cn_1769184634060.png)
+![警报中心](file:///C:/Users/Abraham/.gemini/antigravity/brain/8a174ab7-1d9f-4a1b-8ad6-30c93494558a/dashboard_chinese_threat_notification_1769233646461.png)
 
 *   **分级预警**：从“低风险”的爬虫骚扰到“高危”的数据库注入，我们会用鲜明的色彩标示威胁等级。
 *   **溯源追踪**：不仅告诉您“出事了”，更告诉您“谁干的”——攻击者 IP、攻击手段一目了然。

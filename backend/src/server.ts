@@ -13,7 +13,7 @@ const keyPath = path.resolve(__dirname, '../../certs/localhost.key');
 
 let server: http.Server | https.Server;
 
-if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+if (false && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
     // HTTPS 模式
     const httpsOptions = {
         key: fs.readFileSync(keyPath),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, AlertTriangle, ShieldAlert, AlertCircle, CheckCircle, Clock, XCircle, Filter } from 'lucide-react';
+import { Bell, AlertTriangle, ShieldAlert, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchAlerts } from '../services/api';
 import { motion } from 'framer-motion';
@@ -39,14 +39,14 @@ const Alerts = () => {
 
     const filteredAlerts = filter === 'all' ? alerts : alerts.filter(a => a.severity.toLowerCase() === filter);
 
-    if (loading) return <div className="p-8 text-zinc-500">{t('alerts.loading')}</div>;
+    if (loading) return <div className="p-8 text-muted-foreground">{t('alerts.loading')}</div>;
 
     return (
         <div className="space-y-6 p-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-xl font-medium text-zinc-100">{t('nav.alerts')}</h1>
-                    <p className="text-sm text-zinc-500 mt-1">{t('alerts.subtitle')}</p>
+                    <h1 className="text-xl font-medium text-foreground">{t('nav.alerts')}</h1>
+                    <p className="text-sm text-muted-foreground mt-1">{t('alerts.subtitle')}</p>
                 </div>
                 <div className="flex gap-2">
                     {['all', 'critical', 'high', 'medium'].map(f => (
@@ -54,8 +54,8 @@ const Alerts = () => {
                             key={f}
                             onClick={() => setFilter(f)}
                             className={`px-3 py-1.5 rounded text-xs font-medium capitalize transition-colors ${filter === f
-                                ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
-                                : 'text-zinc-500 hover:text-zinc-300'
+                                ? 'bg-primary text-primary-foreground border border-primary'
+                                : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             {f === 'all' ? t('alerts.filter_all') :
@@ -67,10 +67,10 @@ const Alerts = () => {
                 </div>
             </div>
 
-            <div className="bg-surface border border-border rounded-lg overflow-hidden">
-                <div className="divide-y divide-zinc-800/50">
+            <div className="bg-card border border-border rounded-lg overflow-hidden">
+                <div className="divide-y divide-border/50">
                     {filteredAlerts.length === 0 ? (
-                        <div className="p-12 text-center text-zinc-500">
+                        <div className="p-12 text-center text-muted-foreground">
                             <CheckCircle size={48} className="mx-auto mb-4 text-emerald-500/20" />
                             <p>{t('alerts.no_alerts')}</p>
                         </div>
@@ -81,7 +81,7 @@ const Alerts = () => {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
-                                className="p-4 hover:bg-white/5 transition-colors flex items-start gap-4 group"
+                                className="p-4 hover:bg-muted/30 transition-colors flex items-start gap-4 group"
                             >
                                 <div className={`mt-1 p-2 rounded-lg ${getSeverityColor(alert.severity)} shrink-0`}>
                                     {getIcon(alert.type)}
@@ -89,10 +89,10 @@ const Alerts = () => {
 
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-start mb-1">
-                                        <h3 className="text-sm font-medium text-zinc-200 group-hover:text-indigo-400 transition-colors">
+                                        <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                                             {alert.title}
                                         </h3>
-                                        <div className="flex items-center gap-3 text-xs text-zinc-500">
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                             <span className="flex items-center gap-1">
                                                 <Clock size={12} />
                                                 {alert.time}
@@ -104,20 +104,20 @@ const Alerts = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <p className="text-sm text-zinc-400 leading-relaxed">
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
                                         {alert.message}
                                     </p>
-                                    <div className="mt-2 flex items-center gap-4 text-xs font-mono text-zinc-600">
+                                    <div className="mt-2 flex items-center gap-4 text-xs font-mono text-muted-foreground/60">
                                         <span>{t('alerts.source')}: {alert.source}</span>
                                         <span>{t('alerts.id')}: {alert.id}</span>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="p-1.5 hover:bg-zinc-700 rounded text-zinc-400 hover:text-zinc-200" title="Acknowledge">
+                                    <button className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground" title="Acknowledge">
                                         <CheckCircle size={16} />
                                     </button>
-                                    <button className="p-1.5 hover:bg-zinc-700 rounded text-zinc-400 hover:text-zinc-200" title="Dismiss">
+                                    <button className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground" title="Dismiss">
                                         <XCircle size={16} />
                                     </button>
                                 </div>

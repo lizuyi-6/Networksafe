@@ -48,23 +48,23 @@ server {
 
     return (
         <div className="space-y-6 p-6">
-            <h1 className="text-xl font-medium text-zinc-100">
+            <h1 className="text-xl font-medium text-foreground">
                 {t('deploy.title')}
             </h1>
 
-            <div className="bg-surface border border-border p-8 rounded-lg max-w-4xl mx-auto">
+            <div className="bg-card border border-border p-8 rounded-lg max-w-4xl mx-auto">
                 {/* Steps */}
                 <div className="flex justify-between items-center mb-12 relative">
-                    <div className="absolute top-1/2 left-0 w-full h-px bg-zinc-800 -z-0"></div>
+                    <div className="absolute top-1/2 left-0 w-full h-px bg-border -z-0"></div>
                     {[1, 2, 3].map((s) => (
-                        <div key={s} className="relative z-10 flex flex-col items-center gap-2 bg-[#0A0A0B] px-2">
+                        <div key={s} className="relative z-10 flex flex-col items-center gap-2 bg-card px-2">
                             <div className={clsx(
                                 "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border",
-                                step >= s ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-900/20" : "bg-zinc-800 border-zinc-700 text-zinc-500"
+                                step >= s ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-indigo-900/20" : "bg-muted border-border text-muted-foreground"
                             )}>
                                 {step > s ? <Check size={14} /> : s}
                             </div>
-                            <span className="text-xs text-zinc-500 font-medium whitespace-nowrap">
+                            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
                                 {s === 1 ? t('deploy.step1') : s === 2 ? t('deploy.step2') : t('deploy.step3')}
                             </span>
                         </div>
@@ -74,21 +74,21 @@ server {
                 {/* Step 1: Server Selection */}
                 {step === 1 && (
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                        <h2 className="text-lg font-medium text-zinc-200 mb-6">{t('deploy.select_server')}</h2>
+                        <h2 className="text-lg font-medium text-foreground mb-6">{t('deploy.select_server')}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {(['nginx', 'apache'] as const).map((type) => (
                                 <div
                                     key={type}
                                     onClick={() => setServerType(type)}
                                     className={clsx(
-                                        "cursor-pointer p-6 rounded border transition-all duration-300 flex flex-col items-center gap-4 hover:border-indigo-500/50 hover:bg-white/5",
+                                        "cursor-pointer p-6 rounded border transition-all duration-300 flex flex-col items-center gap-4 hover:border-primary/50 hover:bg-muted/5",
                                         serverType === type
-                                            ? "bg-indigo-500/10 border-indigo-500"
-                                            : "bg-black/20 border-zinc-800"
+                                            ? "bg-primary/10 border-primary"
+                                            : "bg-muted/20 border-border"
                                     )}
                                 >
-                                    <Server size={48} className={serverType === type ? "text-indigo-400" : "text-zinc-600"} />
-                                    <span className="text-base font-medium capitalize text-zinc-300">{type}</span>
+                                    <Server size={48} className={serverType === type ? "text-primary" : "text-muted-foreground"} />
+                                    <span className="text-base font-medium capitalize text-foreground">{type}</span>
                                 </div>
                             ))}
                         </div>
@@ -98,33 +98,33 @@ server {
                 {/* Step 2: Configuration */}
                 {step === 2 && (
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                        <h2 className="text-lg font-medium text-zinc-200">{t('deploy.configure_middleware')}</h2>
+                        <h2 className="text-lg font-medium text-foreground">{t('deploy.configure_middleware')}</h2>
                         <div className="grid grid-cols-1 gap-6">
                             <div>
-                                <label className="block text-xs text-zinc-500 mb-2">{t('deploy.listen_port')}</label>
+                                <label className="block text-xs text-muted-foreground mb-2">{t('deploy.listen_port')}</label>
                                 <input
                                     type="text"
                                     value={config.port}
                                     onChange={e => setConfig({ ...config, port: e.target.value })}
-                                    className="w-full bg-black/20 border border-zinc-700 rounded px-4 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
+                                    className="w-full bg-muted/20 border border-border rounded px-4 py-2 text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-zinc-500 mb-2">{t('deploy.server_name')}</label>
+                                <label className="block text-xs text-muted-foreground mb-2">{t('deploy.server_name')}</label>
                                 <input
                                     type="text"
                                     value={config.serverName}
                                     onChange={e => setConfig({ ...config, serverName: e.target.value })}
-                                    className="w-full bg-black/20 border border-zinc-700 rounded px-4 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
+                                    className="w-full bg-muted/20 border border-border rounded px-4 py-2 text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-zinc-500 mb-2">{t('deploy.rate_limit')}</label>
+                                <label className="block text-xs text-muted-foreground mb-2">{t('deploy.rate_limit')}</label>
                                 <input
                                     type="text"
                                     value={config.rateLimit}
                                     onChange={e => setConfig({ ...config, rateLimit: e.target.value })}
-                                    className="w-full bg-black/20 border border-zinc-700 rounded px-4 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
+                                    className="w-full bg-muted/20 border border-border rounded px-4 py-2 text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
                                 />
                             </div>
                         </div>
@@ -138,24 +138,24 @@ server {
                             <div className="inline-flex p-4 rounded-full bg-emerald-500/10 text-emerald-400 mb-4 border border-emerald-500/20">
                                 <FileCode size={48} />
                             </div>
-                            <h2 className="text-xl font-bold text-zinc-100">{t('deploy.config_ready')}</h2>
-                            <p className="text-zinc-500 text-sm mt-2">{t('deploy.config_desc')}</p>
+                            <h2 className="text-xl font-bold text-foreground">{t('deploy.config_ready')}</h2>
+                            <p className="text-muted-foreground text-sm mt-2">{t('deploy.config_desc')}</p>
                         </div>
 
-                        <div className="bg-black/40 rounded-lg p-6 border border-zinc-800 font-mono text-xs text-indigo-300 overflow-x-auto">
+                        <div className="bg-muted/30 rounded-lg p-6 border border-border font-mono text-xs text-indigo-400 overflow-x-auto">
                             <pre>{generateConfig()}</pre>
                         </div>
                     </motion.div>
                 )}
 
                 {/* Navigation Buttons */}
-                <div className="flex justify-between mt-12 pt-6 border-t border-zinc-800">
+                <div className="flex justify-between mt-12 pt-6 border-t border-border">
                     <button
                         onClick={handleBack}
                         disabled={step === 1}
                         className={clsx(
                             "px-4 py-2 rounded font-medium transition-colors text-sm",
-                            step === 1 ? "text-zinc-700 cursor-not-allowed" : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                            step === 1 ? "text-muted-foreground cursor-not-allowed" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                     >
                         {t('deploy.back')}

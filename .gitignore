@@ -36,3 +36,22 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.egg-info/
+
+# ESP32 / PlatformIO
+.pio/
+.pioenvs/
+.d/
+.ls/
+*.bin
+*.elf
+
+# OS
+Thumbs.db
+Desktop.ini
