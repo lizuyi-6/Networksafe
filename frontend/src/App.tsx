@@ -5,7 +5,6 @@ import {
     Settings,
     Key,
     Server,
-    Shield,
     Users,
     Bell,
     FileText,
@@ -21,6 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { DemoProvider, useDemo } from './context/DemoContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import Logo from './components/Logo';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -33,16 +33,21 @@ import SuperAdmin from './pages/SuperAdmin';
 import Alerts from './pages/Alerts';
 import Agents from './pages/Agents';
 import Devices from './pages/Devices';
+import Landing from './pages/Landing';
+import Login from './pages/Login';
 
 const Sidebar = () => {
     const location = useLocation();
     const { t } = useLanguage();
 
+    // Don't show sidebar on Landing or Login pages
+    if (location.pathname === '/' || location.pathname === '/login') return null;
+
     const navGroups = [
         {
             title: t('nav.platform'),
             items: [
-                { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/' },
+                { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
                 { icon: Users, label: 'Agents', path: '/agents', badge: 3 },
                 { icon: Radio, label: 'Devices', path: '/devices', badge: 2 },
                 { icon: Server, label: t('nav.sites'), path: '/sites' },
@@ -66,12 +71,7 @@ const Sidebar = () => {
             <div>
                 {/* Logo */}
                 <div className="h-16 flex items-center px-6 border-b border-border/50">
-                    <div className="flex items-center gap-2 text-foreground font-medium tracking-tight text-sm">
-                        <div className="w-6 h-6 rounded bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-white">
-                            <Shield size={14} fill="currentColor" />
-                        </div>
-                        FLUXGUARD
-                    </div>
+                    <Logo tier="professional" showText={true} className="scale-90 origin-left" />
                 </div>
 
                 {/* Nav Links */}
@@ -132,6 +132,10 @@ const Header = () => {
     const { t, language, toggleLanguage } = useLanguage();
     const { isDemoMode, toggleDemoMode } = useDemo();
     const { theme, setTheme } = useTheme();
+    const location = useLocation();
+
+    // Don't show header on Landing or Login pages
+    if (location.pathname === '/' || location.pathname === '/login') return null;
 
     return (
         <header className="h-16 border-b border-border/50 flex items-center justify-between px-6 bg-background/80 backdrop-blur-md z-10 sticky top-0">
@@ -191,7 +195,6 @@ const Header = () => {
                 <div className="h-8 w-px bg-border"></div>
 
                 {/* Language Toggle */}
-                {/* Language Toggle Switch */}
                 <div onClick={toggleLanguage} className="flex items-center gap-2 cursor-pointer group">
                     <span className={`text-xs font-medium transition-colors ${language === 'zh' ? 'text-muted-foreground' : 'text-foreground'}`}>EN</span>
                     <div className={`w-8 h-4 rounded-full relative transition-colors ${language === 'zh' ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
@@ -232,7 +235,9 @@ const AnimatedRoutes = () => {
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<PageWrapper><Dashboard /></PageWrapper>} />
+                <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
+                <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
+                <Route path="/dashboard" element={<PageWrapper><Dashboard /></PageWrapper>} />
                 <Route path="/agents" element={<PageWrapper><Agents /></PageWrapper>} />
                 <Route path="/devices" element={<PageWrapper><Devices /></PageWrapper>} />
                 <Route path="/sites" element={<PageWrapper><Sites /></PageWrapper>} />

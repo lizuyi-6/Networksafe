@@ -1,0 +1,6819 @@
+﻿/**
+ * FluxGuard Agent - 杞婚噺绾у畨鍏ㄩ槻鎶や唬鐞?
+ * 
+ * 鍔熻兘:
+ * - 蹇冭烦涓婃姤
+ * - 娴侀噺鐩戞帶
+ * - 鏀诲嚮妫€娴?
+ * - 闃茬伀澧欐帶鍒?
+ * - 涓庝腑澶鎺у钩鍙伴€氫俊
+ */
+
+import os from 'os';
+import { io, Socket } from 'socket.io-client';
+import logger from '../utils/logger';
+import { TrafficMonitor } from './traffic-monitor';
+import { AttackDetector } from './attack-detector';
+import { FirewallController } from './firewall-controller';
+
+export interface AgentConfig {
+    serverUrl: string;       // 涓ぎ绠℃帶骞冲彴鍦板潃
+    agentId?: string;        // Agent 鍞竴鏍囪瘑 (鑷姩鐢熸垚)
+    heartbeatInterval?: number; // 蹇冭烦闂撮殧 (ms)
+}
+
+export interface AgentStatus {
+    agentId: string;
+    hostname: string;
+    platform: string;
+    uptime: number;
+    cpuUsage: number;
+    memoryUsage: number;
+    lastHeartbeat: string;
+    isOnline: boolean;
+}
+
+export class Agent {
+    private config: AgentConfig;
+    private socket: Socket | null = null;
+    private agentId: string;
+    private heartbeatTimer: NodeJS.Timeout | null = null;
+    private trafficMonitor: TrafficMonitor;
+    private attackDetector: AttackDetector;
+    private firewallController: FirewallController;
+
+    constructor(config: AgentConfig) {
+        this.config = {
+            heartbeatInterval: 30000, // 榛樿 30 绉?
+            ...config
+        };
+
+        // 鐢熸垚鍞竴 Agent ID (鍩轰簬涓绘満鍚?+ MAC 鍦板潃)
+        this.agentId = config.agentId || this.generateAgentId();
+
+        // 鍒濆鍖栧瓙妯″潡
+        this.trafficMonitor = new TrafficMonitor();
+        this.attackDetector = new AttackDetector();
+        this.firewallController = new FirewallController();
+    }
+
+    /**
+     * 鐢熸垚鍞竴 Agent ID
+     */
+    private generateAgentId(): string {
+        const hostname = os.hostname();
+        const interfaces = os.networkInterfaces();
+        let mac = 'unknown';
+
+        for (const name of Object.keys(interfaces)) {
+            for (const iface of interfaces[name] || []) {
+                if (!iface.internal && iface.mac !== '00:00:00:00:00:00') {
+                    mac = iface.mac.replace(/:/g, '');
+                    break;
+                }
+            }
+        }
+
+        return `agent-${hostname}-${mac.substring(0, 8)}`;
+    }
+
+    /**
+     * 鍚姩 Agent
+     */
+    async start(): Promise<void> {
+        logger.info(`Starting FluxGuard Agent: ${this.agentId}`);
+
+        // 杩炴帴鍒颁腑澶鎺у钩鍙?
+        await this.connectToServer();
+
+        // 鍚姩蹇冭烦
+        this.startHeartbeat();
+
+        // 鍚姩娴侀噺鐩戞帶
+        await this.trafficMonitor.start((event) => {
+            // 鍒嗘瀽娴侀噺浜嬩欢
+            const threat = this.attackDetector.analyze(event);
+            if (threat) {
+                this.handleThreat(threat);
+            }
+        });
+
+        logger.info('Agent started successfully');
+    }
+
+    /**
+     * 杩炴帴鍒颁腑澶鎺у钩鍙?
+     */
+    private async connectToServer(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            logger.info(`Connecting to server: ${this.config.serverUrl}`);
+
+            this.socket = io(this.config.serverUrl, {
+                auth: { agentId: this.agentId },
+                reconnection: true,
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 5000
+            });
+
+            this.socket.on('connect', () => {
+                logger.info('Connected to control platform');
+                this.registerAgent();
+                resolve();
+            });
+
+            this.socket.on('disconnect', () => {
+                logger.warn('Disconnected from control platform');
+            });
+
+            this.socket.on('connect_error', (error) => {
+                logger.error('Connection error', { error: error.message });
+            });
+
+            // 鐩戝惉鏉ヨ嚜骞冲彴鐨勬寚浠?
+            this.socket.on('command', (command) => {
+                this.handleCommand(command);
+            });
+
+            // 璁剧疆杩炴帴瓒呮椂
+            setTimeout(() => {
+                if (!this.socket?.connected) {
+                    logger.warn('Connection timeout, will retry in background');
+                    resolve(); // 涓嶉樆濉炲惎鍔?
+                }
+            }, 10000);
+        });
+    }
+
+    /**
+     * 鍚戝钩鍙版敞鍐?Agent
+     */
+    private registerAgent(): void {
+        if (!this.socket) return;
+
+        const registration = {
+            agentId: this.agentId,
+            hostname: os.hostname(),
+            platform: os.platform(),
+            arch: os.arch(),
+            cpus: os.cpus().length,
+            totalMemory: os.totalmem(),
+            version: '1.0.0'
+        };
+
+        this.socket.emit('agent:register', registration);
+        logger.info('Agent registered with platform');
+    }
+
+    /**
+     * 鍚姩蹇冭烦
+     */
+    private startHeartbeat(): void {
+        this.heartbeatTimer = setInterval(() => {
+            this.sendHeartbeat();
+        }, this.config.heartbeatInterval);
+
+        // 绔嬪嵆鍙戦€佷竴娆?
+        this.sendHeartbeat();
+    }
+
+    /**
+     * 鍙戦€佸績璺?
+     */
+    private sendHeartbeat(): void {
+        if (!this.socket?.connected) return;
+
+        const status: AgentStatus = {
+            agentId: this.agentId,
+            hostname: os.hostname(),
+            platform: os.platform(),
+            uptime: os.uptime(),
+            cpuUsage: this.getCpuUsage(),
+            memoryUsage: this.getMemoryUsage(),
+            lastHeartbeat: new Date().toISOString(),
+            isOnline: true
+        };
+
+        this.socket.emit('agent:heartbeat', status);
+    }
+
+    /**
+     * 鑾峰彇 CPU 浣跨敤鐜?
+     */
+    private getCpuUsage(): number {
+        const cpus = os.cpus();
+        let totalIdle = 0;
+        let totalTick = 0;
+
+        for (const cpu of cpus) {
+            for (const type in cpu.times) {
+                totalTick += cpu.times[type as keyof typeof cpu.times];
+            }
+            totalIdle += cpu.times.idle;
+        }
+
+        return Math.round((1 - totalIdle / totalTick) * 100);
+    }
+
+    /**
+     * 鑾峰彇鍐呭瓨浣跨敤鐜?
+     */
+    private getMemoryUsage(): number {
+        const total = os.totalmem();
+        const free = os.freemem();
+        return Math.round((1 - free / total) * 100);
+    }
+
+    /**
+     * 澶勭悊鏉ヨ嚜骞冲彴鐨勬寚浠?
+     */
+    private async handleCommand(command: { type: string; payload?: any }): Promise<void> {
+        logger.info(`Received command: ${command.type}`);
+
+        switch (command.type) {
+            case 'scan':
+                // 瑙﹀彂鏈湴鎵弿
+                await this.runLocalScan();
+                break;
+
+            case 'block_ip':
+                // 灏佺 IP
+                if (command.payload?.ip) {
+                    await this.firewallController.blockIP(command.payload.ip);
+                }
+                break;
+
+            case 'unblock_ip':
+                // 瑙ｅ皝 IP
+                if (command.payload?.ip) {
+                    await this.firewallController.unblockIP(command.payload.ip);
+                }
+                break;
+
+            case 'update_rules':
+                // 鏇存柊妫€娴嬭鍒?
+                if (command.payload?.rules) {
+                    this.attackDetector.updateRules(command.payload.rules);
+                }
+                break;
+
+            default:
+                logger.warn(`Unknown command: ${command.type}`);
+        }
+    }
+
+    /**
+     * 澶勭悊妫€娴嬪埌鐨勫▉鑳?
+     */
+    private handleThreat(threat: any): void {
+        logger.warn('Threat detected', { threat });
+
+        // 涓婃姤濞佽儊鍒板钩鍙?
+        if (this.socket?.connected) {
+            this.socket.emit('agent:threat', {
+                agentId: this.agentId,
+                threat,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // 鑷姩闃绘柇 (濡傛灉閰嶇疆浜?
+        if (threat.autoBlock && threat.sourceIP) {
+            this.firewallController.blockIP(threat.sourceIP, threat.blockDuration || 3600);
+        }
+    }
+
+    /**
+     * 杩愯鏈湴鎵弿
+     */
+    private async runLocalScan(): Promise<void> {
+        logger.info('Running local security scan...');
+
+        // 杩欓噷鍙互璋冪敤鐜版湁鐨?Scanner 妯″潡
+        // 缁撴灉閫氳繃 WebSocket 涓婃姤
+
+        if (this.socket?.connected) {
+            this.socket.emit('agent:scan_started', { agentId: this.agentId });
+        }
+
+        // TODO: 闆嗘垚鐜版湁 Scanner
+    }
+
+    /**
+     * 鍋滄 Agent
+     */
+    async stop(): Promise<void> {
+        logger.info('Stopping Agent...');
+
+        if (this.heartbeatTimer) {
+            clearInterval(this.heartbeatTimer);
+        }
+
+        await this.trafficMonitor.stop();
+
+        if (this.socket) {
+            this.socket.disconnect();
+        }
+
+        logger.info('Agent stopped');
+    }
+}
+
+// 鍚姩鍏ュ彛
+export async function startAgent(serverUrl: string): Promise<Agent> {
+    const agent = new Agent({ serverUrl });
+    await agent.start();
+    return agent;
+}
+/**
+ * 鏀诲嚮妫€娴嬪紩鎿?
+ * 
+ * 瀹炴椂鍒嗘瀽娴侀噺锛屾娴嬪悇绫绘敾鍑绘ā寮忥細
+ * - SQL 娉ㄥ叆
+ * - XSS 鏀诲嚮
+ * - 鐩綍閬嶅巻
+ * - 鍛戒护娉ㄥ叆
+ * - 鏆村姏鐮磋В
+ * - DDoS 妯″紡
+ */
+
+import logger from '../utils/logger';
+import { TrafficEvent } from './traffic-monitor';
+
+export interface ThreatAlert {
+    type: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    sourceIP: string;
+    description: string;
+    evidence: string;
+    ruleId: string;
+    autoBlock: boolean;
+    blockDuration?: number; // 绉?
+    timestamp: Date;
+}
+
+interface DetectionRule {
+    id: string;
+    name: string;
+    type: string;
+    severity: ThreatAlert['severity'];
+    patterns: RegExp[];
+    autoBlock: boolean;
+    blockDuration?: number;
+}
+
+export class AttackDetector {
+    private rules: DetectionRule[] = [];
+
+    // IP 璇锋眰璁℃暟鍣?(鐢ㄤ簬妫€娴嬫毚鍔涚牬瑙ｅ拰 DDoS)
+    private ipRequestCount: Map<string, { count: number; firstSeen: number }> = new Map();
+
+    // 娓呯悊璁℃暟鍣ㄧ殑闂撮殧
+    private cleanupInterval: NodeJS.Timeout | null = null;
+
+    constructor() {
+        this.initializeDefaultRules();
+        this.startCleanupTimer();
+    }
+
+    /**
+     * 鍒濆鍖栭粯璁ゆ娴嬭鍒?
+     */
+    private initializeDefaultRules(): void {
+        this.rules = [
+            // SQL 娉ㄥ叆妫€娴?
+            {
+                id: 'SQL-001',
+                name: 'SQL Injection - UNION SELECT',
+                type: 'sql_injection',
+                severity: 'critical',
+                patterns: [
+                    /(\s|%20)union(\s|%20)+select/i,
+                    /(\s|%20)union(\s|%20)+all(\s|%20)+select/i
+                ],
+                autoBlock: true,
+                blockDuration: 3600
+            },
+            {
+                id: 'SQL-002',
+                name: 'SQL Injection - Comment Bypass',
+                type: 'sql_injection',
+                severity: 'high',
+                patterns: [
+                    /'\s*or\s*'1'\s*=\s*'1/i,
+                    /'\s*or\s*1\s*=\s*1/i,
+                    /'\s*--/,
+                    /'\s*#/
+                ],
+                autoBlock: true,
+                blockDuration: 3600
+            },
+            {
+                id: 'SQL-003',
+                name: 'SQL Injection - Stacked Queries',
+                type: 'sql_injection',
+                severity: 'critical',
+                patterns: [
+                    /;\s*(drop|delete|insert|update|create|alter|truncate)/i
+                ],
+                autoBlock: true,
+                blockDuration: 7200
+            },
+
+            // XSS 妫€娴?
+            {
+                id: 'XSS-001',
+                name: 'XSS - Script Tag',
+                type: 'xss',
+                severity: 'high',
+                patterns: [
+                    /<script[^>]*>/i,
+                    /<\/script>/i,
+                    /javascript:/i
+                ],
+                autoBlock: true,
+                blockDuration: 1800
+            },
+            {
+                id: 'XSS-002',
+                name: 'XSS - Event Handler',
+                type: 'xss',
+                severity: 'medium',
+                patterns: [
+                    /on(load|error|click|mouseover|submit|focus|blur)\s*=/i,
+                    /onerror\s*=/i
+                ],
+                autoBlock: false
+            },
+            {
+                id: 'XSS-003',
+                name: 'XSS - Data URI',
+                type: 'xss',
+                severity: 'high',
+                patterns: [
+                    /data:\s*text\/html/i,
+                    /data:\s*application\/javascript/i
+                ],
+                autoBlock: true,
+                blockDuration: 1800
+            },
+
+            // 鐩綍閬嶅巻妫€娴?
+            {
+                id: 'LFI-001',
+                name: 'Path Traversal',
+                type: 'lfi',
+                severity: 'high',
+                patterns: [
+                    /\.\.\//,
+                    /\.\.%2[fF]/,
+                    /%2e%2e%2f/i,
+                    /\.\.\\/,
+                ],
+                autoBlock: true,
+                blockDuration: 3600
+            },
+            {
+                id: 'LFI-002',
+                name: 'Sensitive File Access',
+                type: 'lfi',
+                severity: 'critical',
+                patterns: [
+                    /\/etc\/passwd/i,
+                    /\/etc\/shadow/i,
+                    /\/proc\/self/i,
+                    /web\.config/i,
+                    /\.env/,
+                    /\.git\//
+                ],
+                autoBlock: true,
+                blockDuration: 7200
+            },
+
+            // 鍛戒护娉ㄥ叆妫€娴?
+            {
+                id: 'CMD-001',
+                name: 'Command Injection',
+                type: 'command_injection',
+                severity: 'critical',
+                patterns: [
+                    /;\s*(ls|cat|whoami|id|uname|pwd|wget|curl)/i,
+                    /\|\s*(ls|cat|whoami|id|uname|pwd|wget|curl)/i,
+                    /`[^`]+`/,
+                    /\$\([^)]+\)/
+                ],
+                autoBlock: true,
+                blockDuration: 7200
+            },
+
+            // 鎭舵剰 Bot 妫€娴?
+            {
+                id: 'BOT-001',
+                name: 'Malicious Bot User-Agent',
+                type: 'bad_bot',
+                severity: 'medium',
+                patterns: [
+                    /sqlmap/i,
+                    /nikto/i,
+                    /nessus/i,
+                    /masscan/i,
+                    /zgrab/i,
+                    /python-requests/i,
+                    /libwww-perl/i
+                ],
+                autoBlock: true,
+                blockDuration: 86400
+            }
+        ];
+
+        logger.info(`Loaded ${this.rules.length} detection rules`);
+    }
+
+    /**
+     * 鍒嗘瀽娴侀噺浜嬩欢
+     */
+    analyze(event: TrafficEvent): ThreatAlert | null {
+        // 鏇存柊 IP 璇锋眰璁℃暟
+        this.updateIPCounter(event.sourceIP);
+
+        // 妫€鏌ユ槸鍚︿负 DDoS/鏆村姏鐮磋В
+        const rateThreat = this.checkRateLimit(event.sourceIP);
+        if (rateThreat) {
+            return rateThreat;
+        }
+
+        // 鏋勫缓寰呮娴嬬殑鍐呭
+        const contentToCheck = [
+            event.path || '',
+            event.requestBody || '',
+            event.userAgent || '',
+            event.rawLog || ''
+        ].join(' ');
+
+        // 閬嶅巻瑙勫垯杩涜妫€娴?
+        for (const rule of this.rules) {
+            for (const pattern of rule.patterns) {
+                if (pattern.test(contentToCheck)) {
+                    const threat: ThreatAlert = {
+                        type: rule.type,
+                        severity: rule.severity,
+                        sourceIP: event.sourceIP,
+                        description: rule.name,
+                        evidence: this.extractEvidence(contentToCheck, pattern),
+                        ruleId: rule.id,
+                        autoBlock: rule.autoBlock,
+                        blockDuration: rule.blockDuration,
+                        timestamp: new Date()
+                    };
+
+                    logger.warn(`Attack detected: ${rule.name}`, {
+                        ip: event.sourceIP,
+                        ruleId: rule.id
+                    });
+
+                    return threat;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 鏇存柊 IP 璇锋眰璁℃暟鍣?
+     */
+    private updateIPCounter(ip: string): void {
+        const now = Date.now();
+        const existing = this.ipRequestCount.get(ip);
+
+        if (existing) {
+            existing.count++;
+        } else {
+            this.ipRequestCount.set(ip, { count: 1, firstSeen: now });
+        }
+    }
+
+    /**
+     * 妫€鏌ヨ姹傞€熺巼闄愬埗
+     */
+    private checkRateLimit(ip: string): ThreatAlert | null {
+        const data = this.ipRequestCount.get(ip);
+        if (!data) return null;
+
+        const elapsed = (Date.now() - data.firstSeen) / 1000; // 绉?
+        const ratePerSecond = data.count / Math.max(elapsed, 1);
+
+        // 瓒呰繃 100 璇锋眰/绉?瑙嗕负 DDoS
+        if (ratePerSecond > 100) {
+            return {
+                type: 'ddos',
+                severity: 'critical',
+                sourceIP: ip,
+                description: 'DDoS Attack Detected - High Request Rate',
+                evidence: `${data.count} requests in ${elapsed.toFixed(1)}s (${ratePerSecond.toFixed(1)}/s)`,
+                ruleId: 'DDOS-001',
+                autoBlock: true,
+                blockDuration: 3600,
+                timestamp: new Date()
+            };
+        }
+
+        // 瓒呰繃 30 璇锋眰/绉?瑙嗕负鏆村姏鐮磋В
+        if (ratePerSecond > 30) {
+            return {
+                type: 'brute_force',
+                severity: 'high',
+                sourceIP: ip,
+                description: 'Possible Brute Force Attack',
+                evidence: `${data.count} requests in ${elapsed.toFixed(1)}s (${ratePerSecond.toFixed(1)}/s)`,
+                ruleId: 'BF-001',
+                autoBlock: true,
+                blockDuration: 1800,
+                timestamp: new Date()
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * 鎻愬彇鏀诲嚮璇佹嵁
+     */
+    private extractEvidence(content: string, pattern: RegExp): string {
+        const match = content.match(pattern);
+        if (match) {
+            // 杩斿洖鍖归厤鍐呭鍓嶅悗鍚?20 涓瓧绗?
+            const index = content.indexOf(match[0]);
+            const start = Math.max(0, index - 20);
+            const end = Math.min(content.length, index + match[0].length + 20);
+            return `...${content.substring(start, end)}...`;
+        }
+        return '';
+    }
+
+    /**
+     * 鍚姩娓呯悊璁℃椂鍣?
+     */
+    private startCleanupTimer(): void {
+        // 姣忓垎閽熸竻鐞嗚繃鏈熺殑璁℃暟鍣?
+        this.cleanupInterval = setInterval(() => {
+            const now = Date.now();
+            const expiryTime = 60000; // 1 鍒嗛挓
+
+            for (const [ip, data] of this.ipRequestCount) {
+                if (now - data.firstSeen > expiryTime) {
+                    this.ipRequestCount.delete(ip);
+                }
+            }
+        }, 60000);
+    }
+
+    /**
+     * 鏇存柊妫€娴嬭鍒?
+     */
+    updateRules(newRules: DetectionRule[]): void {
+        this.rules = newRules;
+        logger.info(`Updated detection rules: ${newRules.length} rules loaded`);
+    }
+
+    /**
+     * 娣诲姞鑷畾涔夎鍒?
+     */
+    addRule(rule: DetectionRule): void {
+        this.rules.push(rule);
+        logger.info(`Added detection rule: ${rule.id}`);
+    }
+
+    /**
+     * 鑾峰彇鎵€鏈夎鍒?
+     */
+    getRules(): DetectionRule[] {
+        return [...this.rules];
+    }
+
+    /**
+     * 鍋滄妫€娴嬪櫒
+     */
+    stop(): void {
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+        }
+        this.ipRequestCount.clear();
+    }
+}
+/**
+ * 闃茬伀澧欐帶鍒跺櫒
+ * 
+ * 璋冪敤绯荤粺闃茬伀澧欏伐鍏峰皝绂?瑙ｅ皝 IP:
+ * - Linux: iptables / firewalld / ufw
+ * - Windows: netsh
+ */
+
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import os from 'os';
+import logger from '../utils/logger';
+
+const execAsync = promisify(exec);
+
+interface BlockedIP {
+    ip: string;
+    reason: string;
+    blockedAt: Date;
+    expiresAt?: Date;
+    timerId?: NodeJS.Timeout;
+}
+
+type FirewallBackend = 'iptables' | 'firewalld' | 'ufw' | 'netsh' | 'none';
+
+export class FirewallController {
+    private blockedIPs: Map<string, BlockedIP> = new Map();
+    private backend: FirewallBackend = 'none';
+
+    constructor() {
+        this.detectBackend();
+    }
+
+    /**
+     * 妫€娴嬪彲鐢ㄧ殑闃茬伀澧欏悗绔?
+     */
+    private async detectBackend(): Promise<void> {
+        const platform = os.platform();
+
+        if (platform === 'win32') {
+            this.backend = 'netsh';
+            logger.info('Firewall backend: Windows netsh');
+            return;
+        }
+
+        // Linux: 鎸変紭鍏堢骇妫€娴?
+        try {
+            await execAsync('which firewall-cmd');
+            this.backend = 'firewalld';
+            logger.info('Firewall backend: firewalld');
+            return;
+        } catch { }
+
+        try {
+            await execAsync('which ufw');
+            this.backend = 'ufw';
+            logger.info('Firewall backend: ufw');
+            return;
+        } catch { }
+
+        try {
+            await execAsync('which iptables');
+            this.backend = 'iptables';
+            logger.info('Firewall backend: iptables');
+            return;
+        } catch { }
+
+        logger.warn('No firewall backend detected');
+        this.backend = 'none';
+    }
+
+    /**
+     * 灏佺 IP
+     * @param ip 瑕佸皝绂佺殑 IP 鍦板潃
+     * @param duration 灏佺鏃堕暱 (绉?, 0 琛ㄧず姘镐箙
+     * @param reason 灏佺鍘熷洜
+     */
+    async blockIP(ip: string, duration: number = 3600, reason: string = 'Threat detected'): Promise<boolean> {
+        // 楠岃瘉 IP 鏍煎紡
+        if (!this.isValidIP(ip)) {
+            logger.error(`Invalid IP address: ${ip}`);
+            return false;
+        }
+
+        // 璺宠繃鏈湴鍦板潃
+        if (this.isLocalIP(ip)) {
+            logger.warn(`Skipping local IP: ${ip}`);
+            return false;
+        }
+
+        // 妫€鏌ユ槸鍚﹀凡灏佺
+        if (this.blockedIPs.has(ip)) {
+            logger.info(`IP already blocked: ${ip}`);
+            return true;
+        }
+
+        let success = false;
+
+        try {
+            switch (this.backend) {
+                case 'iptables':
+                    success = await this.blockWithIptables(ip);
+                    break;
+                case 'firewalld':
+                    success = await this.blockWithFirewalld(ip);
+                    break;
+                case 'ufw':
+                    success = await this.blockWithUfw(ip);
+                    break;
+                case 'netsh':
+                    success = await this.blockWithNetsh(ip);
+                    break;
+                default:
+                    logger.warn(`No firewall backend available, IP not blocked: ${ip}`);
+                    // 鍗充娇娌℃湁闃茬伀澧欙紝涔熻褰曞埌鍐呭瓨
+                    success = true;
+            }
+
+            if (success) {
+                const blockedIP: BlockedIP = {
+                    ip,
+                    reason,
+                    blockedAt: new Date(),
+                    expiresAt: duration > 0 ? new Date(Date.now() + duration * 1000) : undefined
+                };
+
+                // 璁剧疆鑷姩瑙ｅ皝璁℃椂鍣?
+                if (duration > 0) {
+                    blockedIP.timerId = setTimeout(() => {
+                        this.unblockIP(ip);
+                    }, duration * 1000);
+                }
+
+                this.blockedIPs.set(ip, blockedIP);
+                logger.info(`Blocked IP: ${ip} for ${duration}s (${reason})`);
+            }
+
+            return success;
+        } catch (error: any) {
+            logger.error(`Failed to block IP: ${ip}`, { error: error.message });
+            return false;
+        }
+    }
+
+    /**
+     * 瑙ｅ皝 IP
+     */
+    async unblockIP(ip: string): Promise<boolean> {
+        const blocked = this.blockedIPs.get(ip);
+        if (!blocked) {
+            logger.info(`IP not in block list: ${ip}`);
+            return true;
+        }
+
+        // 娓呴櫎璁℃椂鍣?
+        if (blocked.timerId) {
+            clearTimeout(blocked.timerId);
+        }
+
+        let success = false;
+
+        try {
+            switch (this.backend) {
+                case 'iptables':
+                    success = await this.unblockWithIptables(ip);
+                    break;
+                case 'firewalld':
+                    success = await this.unblockWithFirewalld(ip);
+                    break;
+                case 'ufw':
+                    success = await this.unblockWithUfw(ip);
+                    break;
+                case 'netsh':
+                    success = await this.unblockWithNetsh(ip);
+                    break;
+                default:
+                    success = true;
+            }
+
+            if (success) {
+                this.blockedIPs.delete(ip);
+                logger.info(`Unblocked IP: ${ip}`);
+            }
+
+            return success;
+        } catch (error: any) {
+            logger.error(`Failed to unblock IP: ${ip}`, { error: error.message });
+            return false;
+        }
+    }
+
+    // === iptables 瀹炵幇 ===
+
+    private async blockWithIptables(ip: string): Promise<boolean> {
+        try {
+            await execAsync(`iptables -A INPUT -s ${ip} -j DROP`);
+            return true;
+        } catch (error: any) {
+            logger.error(`iptables block failed: ${error.message}`);
+            return false;
+        }
+    }
+
+    private async unblockWithIptables(ip: string): Promise<boolean> {
+        try {
+            await execAsync(`iptables -D INPUT -s ${ip} -j DROP`);
+            return true;
+        } catch (error: any) {
+            logger.error(`iptables unblock failed: ${error.message}`);
+            return false;
+        }
+    }
+
+    // === firewalld 瀹炵幇 ===
+
+    private async blockWithFirewalld(ip: string): Promise<boolean> {
+        try {
+            await execAsync(`firewall-cmd --add-rich-rule='rule family="ipv4" source address="${ip}" reject'`);
+            return true;
+        } catch (error: any) {
+            logger.error(`firewalld block failed: ${error.message}`);
+            return false;
+        }
+    }
+
+    private async unblockWithFirewalld(ip: string): Promise<boolean> {
+        try {
+            await execAsync(`firewall-cmd --remove-rich-rule='rule family="ipv4" source address="${ip}" reject'`);
+            return true;
+        } catch (error: any) {
+            logger.error(`firewalld unblock failed: ${error.message}`);
+            return false;
+        }
+    }
+
+    // === ufw 瀹炵幇 ===
+
+    private async blockWithUfw(ip: string): Promise<boolean> {
+        try {
+            await execAsync(`ufw deny from ${ip}`);
+            return true;
+        } catch (error: any) {
+            logger.error(`ufw block failed: ${error.message}`);
+            return false;
+        }
+    }
+
+    private async unblockWithUfw(ip: string): Promise<boolean> {
+        try {
+            await execAsync(`ufw delete deny from ${ip}`);
+            return true;
+        } catch (error: any) {
+            logger.error(`ufw unblock failed: ${error.message}`);
+            return false;
+        }
+    }
+
+    // === Windows netsh 瀹炵幇 ===
+
+    private async blockWithNetsh(ip: string): Promise<boolean> {
+        try {
+            const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;
+            await execAsync(`netsh advfirewall firewall add rule name="${ruleName}" dir=in action=block remoteip=${ip}`);
+            return true;
+        } catch (error: any) {
+            logger.error(`netsh block failed: ${error.message}`);
+            return false;
+        }
+    }
+
+    private async unblockWithNetsh(ip: string): Promise<boolean> {
+        try {
+            const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;
+            await execAsync(`netsh advfirewall firewall delete rule name="${ruleName}"`);
+            return true;
+        } catch (error: any) {
+            logger.error(`netsh unblock failed: ${error.message}`);
+            return false;
+        }
+    }
+
+    // === 杈呭姪鏂规硶 ===
+
+    /**
+     * 楠岃瘉 IP 鏍煎紡
+     */
+    private isValidIP(ip: string): boolean {
+        const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+        return ipv4Regex.test(ip) || ipv6Regex.test(ip);
+    }
+
+    /**
+     * 妫€鏌ユ槸鍚︿负鏈湴 IP
+     */
+    private isLocalIP(ip: string): boolean {
+        return ip === '127.0.0.1' ||
+            ip === '::1' ||
+            ip.startsWith('192.168.') ||
+            ip.startsWith('10.') ||
+            ip.startsWith('172.16.');
+    }
+
+    /**
+     * 鑾峰彇鎵€鏈夎灏佺鐨?IP
+     */
+    getBlockedIPs(): BlockedIP[] {
+        return Array.from(this.blockedIPs.values());
+    }
+
+    /**
+     * 妫€鏌?IP 鏄惁琚皝绂?
+     */
+    isBlocked(ip: string): boolean {
+        return this.blockedIPs.has(ip);
+    }
+
+    /**
+     * 鑾峰彇褰撳墠浣跨敤鐨勯槻鐏鍚庣
+     */
+    getBackend(): FirewallBackend {
+        return this.backend;
+    }
+
+    /**
+     * 娓呴櫎鎵€鏈夊皝绂?
+     */
+    async clearAll(): Promise<void> {
+        for (const ip of this.blockedIPs.keys()) {
+            await this.unblockIP(ip);
+        }
+    }
+}
+/**
+ * Agent 妯″潡瀵煎嚭
+ */
+
+export { Agent, AgentConfig, AgentStatus, startAgent } from './agent';
+export { TrafficMonitor, TrafficEvent, TrafficCallback } from './traffic-monitor';
+export { AttackDetector, ThreatAlert } from './attack-detector';
+export { FirewallController } from './firewall-controller';
+/**
+ * 鏃ュ織閲囬泦妯″潡
+ * 
+ * 閲囬泦绯荤粺鍜屽簲鐢ㄦ棩蹇楋紝妫€娴嬪紓甯告ā寮?
+ */
+
+import fs from 'fs';
+import readline from 'readline';
+import { EventEmitter } from 'events';
+import logger from '../utils/logger';
+
+export interface LogEntry {
+    source: string;
+    timestamp: Date;
+    level: 'debug' | 'info' | 'warn' | 'error' | 'critical';
+    message: string;
+    raw: string;
+    metadata?: Record<string, any>;
+}
+
+export interface LogPattern {
+    name: string;
+    pattern: RegExp;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+}
+
+export class LogCollector extends EventEmitter {
+    private watchers: Map<string, fs.FSWatcher> = new Map();
+    private filePositions: Map<string, number> = new Map();
+    private isRunning: boolean = false;
+
+    // 闇€瑕佹娴嬬殑鍗遍櫓妯″紡
+    private dangerousPatterns: LogPattern[] = [
+        {
+            name: 'SSH Brute Force',
+            pattern: /Failed password for (?:invalid user )?(\S+) from (\S+)/i,
+            severity: 'high',
+            description: 'SSH login failure detected'
+        },
+        {
+            name: 'SSH Root Login',
+            pattern: /Accepted password for root from/i,
+            severity: 'medium',
+            description: 'Root SSH login detected'
+        },
+        {
+            name: 'Sudo Failure',
+            pattern: /sudo:.*authentication failure/i,
+            severity: 'high',
+            description: 'Sudo authentication failure'
+        },
+        {
+            name: 'Kernel Panic',
+            pattern: /Kernel panic/i,
+            severity: 'critical',
+            description: 'Kernel panic detected'
+        },
+        {
+            name: 'OOM Killer',
+            pattern: /Out of memory: Kill process/i,
+            severity: 'high',
+            description: 'Out of memory condition'
+        },
+        {
+            name: 'Disk Error',
+            pattern: /I\/O error|sector error|disk error/i,
+            severity: 'high',
+            description: 'Disk I/O error detected'
+        },
+        {
+            name: 'Service Crash',
+            pattern: /segfault|core dumped|killed/i,
+            severity: 'high',
+            description: 'Service crash detected'
+        },
+        {
+            name: 'PHP Error',
+            pattern: /PHP Fatal error|PHP Parse error/i,
+            severity: 'medium',
+            description: 'PHP error in application'
+        },
+        {
+            name: 'SQL Error',
+            pattern: /SQL syntax error|mysql.*error/i,
+            severity: 'medium',
+            description: 'Database SQL error'
+        },
+        {
+            name: 'Connection Refused',
+            pattern: /Connection refused|ECONNREFUSED/i,
+            severity: 'medium',
+            description: 'Service connection refused'
+        }
+    ];
+
+    // 甯歌鏃ュ織鏂囦欢璺緞
+    private readonly LOG_SOURCES = {
+        syslog: ['/var/log/syslog', '/var/log/messages'],
+        auth: ['/var/log/auth.log', '/var/log/secure'],
+        nginx: ['/var/log/nginx/error.log'],
+        apache: ['/var/log/apache2/error.log', '/var/log/httpd/error_log'],
+        mysql: ['/var/log/mysql/error.log', '/var/log/mariadb/mariadb.log'],
+        postgresql: ['/var/log/postgresql/postgresql.log'],
+        docker: ['/var/log/docker.log'],
+    };
+
+    /**
+     * 鍚姩鏃ュ織閲囬泦
+     */
+    async start(): Promise<void> {
+        if (this.isRunning) {
+            logger.warn('Log collector already running');
+            return;
+        }
+
+        this.isRunning = true;
+        logger.info('Starting log collector...');
+
+        // 鏌ユ壘骞剁洃鎺ф墍鏈夊彲鐢ㄧ殑鏃ュ織鏂囦欢
+        for (const [source, paths] of Object.entries(this.LOG_SOURCES)) {
+            for (const logPath of paths) {
+                if (fs.existsSync(logPath)) {
+                    await this.watchLogFile(logPath, source);
+                    break; // 姣忎釜婧愬彧鐩戞帶绗竴涓壘鍒扮殑鏂囦欢
+                }
+            }
+        }
+
+        // 娣诲姞鑷畾涔夋棩蹇楄矾寰?
+        const customLogPath = process.env.CUSTOM_LOG_PATH;
+        if (customLogPath && fs.existsSync(customLogPath)) {
+            await this.watchLogFile(customLogPath, 'custom');
+        }
+
+        logger.info(`Log collector started, watching ${this.watchers.size} log files`);
+    }
+
+    /**
+     * 鐩戞帶鏃ュ織鏂囦欢
+     */
+    private async watchLogFile(logPath: string, source: string): Promise<void> {
+        try {
+            // 鑾峰彇鏂囦欢褰撳墠澶у皬锛堜粠鏈熬寮€濮嬭鍙栨柊鍐呭锛?
+            const stats = fs.statSync(logPath);
+            this.filePositions.set(logPath, stats.size);
+
+            // 鐩戞帶鏂囦欢鍙樺寲
+            const watcher = fs.watch(logPath, (eventType) => {
+                if (eventType === 'change') {
+                    this.readNewEntries(logPath, source);
+                }
+            });
+
+            this.watchers.set(logPath, watcher);
+            logger.info(`Watching log file: ${logPath} (${source})`);
+
+        } catch (error: any) {
+            logger.error(`Failed to watch log file: ${logPath}`, { error: error.message });
+        }
+    }
+
+    /**
+     * 璇诲彇鏂扮殑鏃ュ織鏉＄洰
+     */
+    private readNewEntries(logPath: string, source: string): void {
+        try {
+            const stats = fs.statSync(logPath);
+            const currentPosition = this.filePositions.get(logPath) || 0;
+
+            // 妫€娴嬫棩蹇楄疆杞?
+            if (stats.size < currentPosition) {
+                this.filePositions.set(logPath, 0);
+                return;
+            }
+
+            if (stats.size === currentPosition) {
+                return; // 鏃犳柊鍐呭
+            }
+
+            // 璇诲彇鏂板唴瀹?
+            const stream = fs.createReadStream(logPath, {
+                start: currentPosition,
+                end: stats.size
+            });
+
+            const rl = readline.createInterface({ input: stream });
+
+            rl.on('line', (line) => {
+                const entry = this.parseLogLine(line, source);
+                if (entry) {
+                    this.processEntry(entry);
+                }
+            });
+
+            this.filePositions.set(logPath, stats.size);
+
+        } catch (error: any) {
+            logger.error(`Failed to read log entries: ${logPath}`, { error: error.message });
+        }
+    }
+
+    /**
+     * 瑙ｆ瀽鏃ュ織琛?
+     */
+    private parseLogLine(line: string, source: string): LogEntry | null {
+        if (!line.trim()) return null;
+
+        // 灏濊瘯瑙ｆ瀽鏃堕棿鎴?
+        let timestamp = new Date();
+        let level: LogEntry['level'] = 'info';
+        let message = line;
+
+        // Syslog 鏍煎紡: "Jan 24 10:30:45 hostname service: message"
+        const syslogMatch = line.match(/^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+(\S+)\s+(\S+?):\s*(.*)$/);
+        if (syslogMatch) {
+            const [, timeStr, , , msg] = syslogMatch;
+            timestamp = new Date(`${new Date().getFullYear()} ${timeStr}`);
+            message = msg;
+        }
+
+        // 妫€娴嬫棩蹇楃骇鍒?
+        const lowerLine = line.toLowerCase();
+        if (lowerLine.includes('error') || lowerLine.includes('fail')) {
+            level = 'error';
+        } else if (lowerLine.includes('warn')) {
+            level = 'warn';
+        } else if (lowerLine.includes('critical') || lowerLine.includes('fatal') || lowerLine.includes('panic')) {
+            level = 'critical';
+        } else if (lowerLine.includes('debug')) {
+            level = 'debug';
+        }
+
+        return {
+            source,
+            timestamp,
+            level,
+            message,
+            raw: line
+        };
+    }
+
+    /**
+     * 澶勭悊鏃ュ織鏉＄洰
+     */
+    private processEntry(entry: LogEntry): void {
+        // 鍙戦€侀€氱敤鏃ュ織浜嬩欢
+        this.emit('log', entry);
+
+        // 妫€娴嬪嵄闄╂ā寮?
+        for (const pattern of this.dangerousPatterns) {
+            const match = entry.raw.match(pattern.pattern);
+            if (match) {
+                const alert = {
+                    type: 'log_pattern',
+                    pattern: pattern.name,
+                    severity: pattern.severity,
+                    description: pattern.description,
+                    entry,
+                    match: match[0],
+                    timestamp: new Date()
+                };
+
+                logger.warn(`Dangerous pattern detected: ${pattern.name}`, {
+                    source: entry.source,
+                    message: entry.message.substring(0, 100)
+                });
+
+                this.emit('alert', alert);
+            }
+        }
+
+        // 鍙戦€佹寜绾у埆鍒嗙被鐨勪簨浠?
+        if (entry.level === 'error' || entry.level === 'critical') {
+            this.emit('error', entry);
+        }
+    }
+
+    /**
+     * 娣诲姞鑷畾涔夋娴嬫ā寮?
+     */
+    addPattern(pattern: LogPattern): void {
+        this.dangerousPatterns.push(pattern);
+        logger.info(`Added log pattern: ${pattern.name}`);
+    }
+
+    /**
+     * 鎵嬪姩娣诲姞鏃ュ織鏂囦欢鐩戞帶
+     */
+    async addLogFile(logPath: string, source: string): Promise<boolean> {
+        if (!fs.existsSync(logPath)) {
+            logger.warn(`Log file not found: ${logPath}`);
+            return false;
+        }
+
+        if (this.watchers.has(logPath)) {
+            logger.warn(`Already watching: ${logPath}`);
+            return false;
+        }
+
+        await this.watchLogFile(logPath, source);
+        return true;
+    }
+
+    /**
+     * 鑾峰彇褰撳墠鐩戞帶鐨勬枃浠跺垪琛?
+     */
+    getWatchedFiles(): string[] {
+        return Array.from(this.watchers.keys());
+    }
+
+    /**
+     * 鍋滄鏃ュ織閲囬泦
+     */
+    stop(): void {
+        this.isRunning = false;
+
+        for (const [path, watcher] of this.watchers) {
+            watcher.close();
+            logger.info(`Stopped watching: ${path}`);
+        }
+
+        this.watchers.clear();
+        this.filePositions.clear();
+
+        logger.info('Log collector stopped');
+    }
+}
+
+// 瀵煎嚭鍗曚緥
+export const logCollector = new LogCollector();
+/**
+ * 娴侀噺鐩戞帶妯″潡
+ * 
+ * 鐩戞帶鏈嶅姟鍣ㄥ叆绔欐祦閲忥紝鍒嗘瀽璇锋眰妯″紡
+ */
+
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs';
+import readline from 'readline';
+import logger from '../utils/logger';
+
+const execAsync = promisify(exec);
+
+export interface TrafficEvent {
+    timestamp: Date;
+    sourceIP: string;
+    destPort: number;
+    method?: string;
+    path?: string;
+    userAgent?: string;
+    requestBody?: string;
+    rawLog?: string;
+}
+
+export type TrafficCallback = (event: TrafficEvent) => void;
+
+export class TrafficMonitor {
+    private isRunning = false;
+    private callback: TrafficCallback | null = null;
+    private logWatcher: fs.FSWatcher | null = null;
+    private logStream: readline.Interface | null = null;
+    private lastLogPosition = 0;
+
+    // 甯歌鏃ュ織璺緞
+    private readonly LOG_PATHS = {
+        nginx: ['/var/log/nginx/access.log', '/var/log/nginx/error.log'],
+        apache: ['/var/log/apache2/access.log', '/var/log/httpd/access_log'],
+        custom: process.env.ACCESS_LOG_PATH
+    };
+
+    /**
+     * 鍚姩娴侀噺鐩戞帶
+     */
+    async start(callback: TrafficCallback): Promise<void> {
+        if (this.isRunning) {
+            logger.warn('Traffic monitor already running');
+            return;
+        }
+
+        this.callback = callback;
+        this.isRunning = true;
+
+        // 灏濊瘯鎵惧埌鍙敤鐨勬棩蹇楁枃浠?
+        const logPath = await this.findAccessLog();
+
+        if (logPath) {
+            await this.watchLogFile(logPath);
+        } else {
+            logger.warn('No access log found, using netstat monitoring');
+            await this.fallbackToNetstat();
+        }
+
+        logger.info('Traffic monitoring started');
+    }
+
+    /**
+     * 鏌ユ壘鍙敤鐨勮闂棩蹇?
+     */
+    private async findAccessLog(): Promise<string | null> {
+        // 浼樺厛浣跨敤鑷畾涔夎矾寰?
+        if (this.LOG_PATHS.custom && fs.existsSync(this.LOG_PATHS.custom)) {
+            return this.LOG_PATHS.custom;
+        }
+
+        // 妫€鏌?Nginx 鏃ュ織
+        for (const path of this.LOG_PATHS.nginx) {
+            if (fs.existsSync(path)) {
+                logger.info(`Found Nginx log: ${path}`);
+                return path;
+            }
+        }
+
+        // 妫€鏌?Apache 鏃ュ織
+        for (const path of this.LOG_PATHS.apache) {
+            if (fs.existsSync(path)) {
+                logger.info(`Found Apache log: ${path}`);
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 鐩戞帶鏃ュ織鏂囦欢
+     */
+    private async watchLogFile(logPath: string): Promise<void> {
+        logger.info(`Watching log file: ${logPath}`);
+
+        // 鑾峰彇褰撳墠鏂囦欢浣嶇疆 (鍙鍙栨柊鍐呭)
+        const stats = fs.statSync(logPath);
+        this.lastLogPosition = stats.size;
+
+        // 浣跨敤 fs.watch 鐩戞帶鏂囦欢鍙樺寲
+        this.logWatcher = fs.watch(logPath, (eventType) => {
+            if (eventType === 'change') {
+                this.readNewLogEntries(logPath);
+            }
+        });
+    }
+
+    /**
+     * 璇诲彇鏂扮殑鏃ュ織鏉＄洰
+     */
+    private readNewLogEntries(logPath: string): void {
+        const stats = fs.statSync(logPath);
+
+        if (stats.size < this.lastLogPosition) {
+            // 鏃ュ織琚疆杞紝浠庡ご寮€濮?
+            this.lastLogPosition = 0;
+        }
+
+        if (stats.size === this.lastLogPosition) {
+            return; // 鏃犳柊鍐呭
+        }
+
+        const stream = fs.createReadStream(logPath, {
+            start: this.lastLogPosition,
+            end: stats.size
+        });
+
+        const rl = readline.createInterface({ input: stream });
+
+        rl.on('line', (line) => {
+            const event = this.parseLogLine(line);
+            if (event && this.callback) {
+                this.callback(event);
+            }
+        });
+
+        this.lastLogPosition = stats.size;
+    }
+
+    /**
+     * 瑙ｆ瀽鏃ュ織琛?
+     */
+    private parseLogLine(line: string): TrafficEvent | null {
+        // 灏濊瘯瑙ｆ瀽 Nginx/Apache Combined Log Format
+        // 鏍煎紡: IP - - [timestamp] "METHOD PATH HTTP/1.1" status size "referer" "user-agent"
+        const combinedLogRegex = /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+) \S+" (\d+) \S+ "[^"]*" "([^"]*)"/;
+
+        const match = line.match(combinedLogRegex);
+        if (match) {
+            return {
+                timestamp: new Date(),
+                sourceIP: match[1],
+                destPort: 80, // 浠庢棩蹇楁棤娉曠洿鎺ヨ幏鍙栫鍙?
+                method: match[3],
+                path: match[4],
+                userAgent: match[6],
+                rawLog: line
+            };
+        }
+
+        // 灏濊瘯瑙ｆ瀽鍏朵粬鏍煎紡
+        // TODO: 鏀寔鏇村鏃ュ織鏍煎紡
+
+        return null;
+    }
+
+    /**
+     * 澶囩敤鏂规锛氫娇鐢?netstat 鐩戞帶
+     */
+    private async fallbackToNetstat(): Promise<void> {
+        // 瀹氭湡鎵ц netstat 鑾峰彇杩炴帴淇℃伅
+        const checkConnections = async () => {
+            if (!this.isRunning) return;
+
+            try {
+                const { stdout } = await execAsync('netstat -tn 2>/dev/null || ss -tn');
+                const connections = this.parseNetstatOutput(stdout);
+
+                for (const conn of connections) {
+                    if (this.callback) {
+                        this.callback(conn);
+                    }
+                }
+            } catch (error) {
+                // 闈欓粯澶勭悊閿欒
+            }
+
+            // 姣?5 绉掓鏌ヤ竴娆?
+            if (this.isRunning) {
+                setTimeout(checkConnections, 5000);
+            }
+        };
+
+        checkConnections();
+    }
+
+    /**
+     * 瑙ｆ瀽 netstat 杈撳嚭
+     */
+    private parseNetstatOutput(output: string): TrafficEvent[] {
+        const events: TrafficEvent[] = [];
+        const lines = output.split('\n');
+
+        for (const line of lines) {
+            // 鍖归厤 ESTABLISHED 杩炴帴
+            const match = line.match(/(\d+\.\d+\.\d+\.\d+):(\d+)\s+(\d+\.\d+\.\d+\.\d+):(\d+)/);
+            if (match) {
+                events.push({
+                    timestamp: new Date(),
+                    sourceIP: match[1],
+                    destPort: parseInt(match[4])
+                });
+            }
+        }
+
+        return events;
+    }
+
+    /**
+     * 鍋滄鐩戞帶
+     */
+    async stop(): Promise<void> {
+        this.isRunning = false;
+
+        if (this.logWatcher) {
+            this.logWatcher.close();
+            this.logWatcher = null;
+        }
+
+        if (this.logStream) {
+            this.logStream.close();
+            this.logStream = null;
+        }
+
+        logger.info('Traffic monitoring stopped');
+    }
+}
+import { Request, Response } from 'express';
+
+export class AdminController {
+    // 妯℃嫙鐢ㄦ埛閿欒鏁版嵁
+    static getErrors(req: Request, res: Response) {
+        const errors = [
+            { userId: 'user_001', errorCode: '10001', message: 'EACCES: permission denied', timestamp: new Date().toISOString() },
+            { userId: 'user_002', errorCode: '11003', message: 'ENOENT: no such file or directory', timestamp: new Date().toISOString() },
+            { userId: 'user_003', errorCode: '10001', message: 'EACCES: permission denied', timestamp: new Date().toISOString() },
+        ];
+        res.json(errors);
+    }
+
+    // 妯℃嫙绯荤粺鎬ц兘鏁版嵁
+    static getPerformance(req: Request, res: Response) {
+        const performance = {
+            server: {
+                cpu: Math.random() * 30 + 10,
+                memory: Math.random() * 40 + 30,
+            },
+            clients: {
+                total_agents: Math.floor(Math.random() * 50) + 10,
+                avg_cpu_overhead: (Math.random() * 2 + 0.5).toFixed(2),
+                avg_latency_added: `${(Math.random() * 5 + 1).toFixed(1)}ms`,
+            },
+        };
+        res.json(performance);
+    }
+
+    // 鎺ユ敹鏃ュ織鐨勭鐐?
+    static submitLogs(req: Request, res: Response) {
+        try {
+            const { data } = req.body;
+
+            if (!data) {
+                return res.status(400).json({ error: '缂哄皯鏁版嵁' });
+            }
+
+            console.log('[ADMIN] 鏀跺埌鏃ュ織:', data);
+
+            res.json({ success: true, message: '鏃ュ織宸叉帴鏀? });
+        } catch (error) {
+            console.error('[ADMIN] 澶勭悊澶辫触:', error);
+            res.status(400).json({ error: '澶勭悊澶辫触' });
+        }
+    }
+}
+import { Router } from 'express';
+import { AdminController } from '../controllers/admin.controller';
+
+const router = Router();
+
+// 妯℃嫙鐢ㄦ埛閿欒鏁版嵁
+router.get('/errors', AdminController.getErrors);
+
+// 妯℃嫙绯荤粺鎬ц兘鏁版嵁
+router.get('/performance', AdminController.getPerformance);
+
+// 鎺ユ敹鏃ュ織鐨勭鐐?
+router.post('/logs', AdminController.submitLogs);
+
+export default router;
+
+/**
+ * Agent 绠＄悊 API 璺敱
+ */
+
+import { Router, Request, Response } from 'express';
+import logger from '../../utils/logger';
+
+const router = Router();
+
+// Agent Gateway 寮曠敤 (灏嗙敱 index.ts 娉ㄥ叆)
+let agentGateway: any = null;
+
+export function setAgentGateway(gateway: any): void {
+    agentGateway = gateway;
+}
+
+/**
+ * GET /api/agents
+ * 鑾峰彇鎵€鏈夊凡杩炴帴鐨?Agent 鍒楄〃
+ */
+router.get('/', (req: Request, res: Response) => {
+    try {
+        if (!agentGateway) {
+            return res.status(503).json({ error: 'Agent gateway not available' });
+        }
+
+        const agents = agentGateway.getAgentList();
+        res.json({
+            success: true,
+            count: agents.length,
+            agents
+        });
+    } catch (error: any) {
+        logger.error('Failed to get agents', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * GET /api/agents/:id
+ * 鑾峰彇鎸囧畾 Agent 璇︽儏
+ */
+router.get('/:id', (req: Request, res: Response) => {
+    try {
+        if (!agentGateway) {
+            return res.status(503).json({ error: 'Agent gateway not available' });
+        }
+
+        const agent = agentGateway.getAgent(req.params.id);
+        if (!agent) {
+            return res.status(404).json({ error: 'Agent not found' });
+        }
+
+        res.json({
+            success: true,
+            agent: {
+                agentId: agent.agentId,
+                registration: agent.registration,
+                lastHeartbeat: agent.lastHeartbeat,
+                status: agent.status,
+                isOnline: true
+            }
+        });
+    } catch (error: any) {
+        logger.error('Failed to get agent', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * POST /api/agents/:id/scan
+ * 瑙﹀彂鎸囧畾 Agent 杩愯瀹夊叏鎵弿
+ */
+router.post('/:id/scan', (req: Request, res: Response) => {
+    try {
+        if (!agentGateway) {
+            return res.status(503).json({ error: 'Agent gateway not available' });
+        }
+
+        const success = agentGateway.sendCommandToAgent(req.params.id, { type: 'scan' });
+
+        if (!success) {
+            return res.status(404).json({ error: 'Agent not found or offline' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Scan command sent'
+        });
+    } catch (error: any) {
+        logger.error('Failed to trigger scan', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * POST /api/agents/:id/block
+ * 閫氳繃鎸囧畾 Agent 灏佺 IP
+ */
+router.post('/:id/block', (req: Request, res: Response) => {
+    try {
+        if (!agentGateway) {
+            return res.status(503).json({ error: 'Agent gateway not available' });
+        }
+
+        const { ip, duration } = req.body;
+
+        if (!ip) {
+            return res.status(400).json({ error: 'IP address required' });
+        }
+
+        const success = agentGateway.sendCommandToAgent(req.params.id, {
+            type: 'block_ip',
+            payload: { ip, duration: duration || 3600 }
+        });
+
+        if (!success) {
+            return res.status(404).json({ error: 'Agent not found or offline' });
+        }
+
+        res.json({
+            success: true,
+            message: `Block command sent for IP: ${ip}`
+        });
+    } catch (error: any) {
+        logger.error('Failed to block IP', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * POST /api/agents/:id/unblock
+ * 閫氳繃鎸囧畾 Agent 瑙ｅ皝 IP
+ */
+router.post('/:id/unblock', (req: Request, res: Response) => {
+    try {
+        if (!agentGateway) {
+            return res.status(503).json({ error: 'Agent gateway not available' });
+        }
+
+        const { ip } = req.body;
+
+        if (!ip) {
+            return res.status(400).json({ error: 'IP address required' });
+        }
+
+        const success = agentGateway.sendCommandToAgent(req.params.id, {
+            type: 'unblock_ip',
+            payload: { ip }
+        });
+
+        if (!success) {
+            return res.status(404).json({ error: 'Agent not found or offline' });
+        }
+
+        res.json({
+            success: true,
+            message: `Unblock command sent for IP: ${ip}`
+        });
+    } catch (error: any) {
+        logger.error('Failed to unblock IP', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * GET /api/agents/stats/summary
+ * 鑾峰彇 Agent 缁熻鎽樿
+ */
+router.get('/stats/summary', (req: Request, res: Response) => {
+    try {
+        if (!agentGateway) {
+            return res.status(503).json({ error: 'Agent gateway not available' });
+        }
+
+        const agents = agentGateway.getAgentList();
+
+        res.json({
+            success: true,
+            summary: {
+                totalAgents: agents.length,
+                onlineAgents: agents.filter((a: any) => a.isOnline).length,
+                offlineAgents: 0, // TODO: 瀹炵幇绂荤嚎璺熻釜
+                lastUpdated: new Date().toISOString()
+            }
+        });
+    } catch (error: any) {
+        logger.error('Failed to get stats', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+export default router;
+/**
+ * FluxGuard - AI 妯″瀷绔偣閰嶇疆 API
+ * 
+ * 涓?ESP32 绂荤嚎妯″紡鎻愪緵澶氭ā鍨嬬鐐归厤缃?
+ * 浼樺厛绾? 鐢ㄦ埛鑷畾涔夋湇鍔″櫒 > 绗旇鏈湰鍦版ā鍨?
+ */
+
+import { Router, Request, Response } from 'express';
+import logger from '../../utils/logger';
+
+const router = Router();
+
+// AI 绔偣閰嶇疆缁撴瀯
+interface AIEndpoint {
+    id: string;
+    name: string;           // 鏄剧ず鍚嶇О
+    url: string;            // API 绔偣 URL
+    modelName: string;      // 妯″瀷鍚嶇О
+    apiKey: string;         // API 瀵嗛挜 (鍔犲瘑瀛樺偍)
+    enabled: boolean;       // 鏄惁鍚敤
+    priority: number;       // 浼樺厛绾?(鏁板瓧瓒婂皬瓒婁紭鍏?
+    timeout: number;        // 瓒呮椂鏃堕棿 (ms)
+    type: 'ollama' | 'openai' | 'custom'; // 绔偣绫诲瀷
+    lastTest?: {
+        success: boolean;
+        latency: number;
+        timestamp: string;
+    };
+}
+
+// 瀛樺偍 (鍐呭瓨 + 鍚庣画鍙寔涔呭寲)
+const endpoints = new Map<string, AIEndpoint>();
+
+// 鍒濆鍖栭粯璁ょ鐐?
+function initDefaults() {
+    // 榛樿绗旇鏈鐐?
+    endpoints.set('default-laptop', {
+        id: 'default-laptop',
+        name: '鏈湴绗旇鏈?(Ollama)',
+        url: 'http://192.168.4.1:5000/api/analyze',
+        modelName: 'llama3',
+        apiKey: '',
+        enabled: true,
+        priority: 100, // 鏈€浣庝紭鍏堢骇 (浣滀负鍏滃簳)
+        timeout: 10000,
+        type: 'ollama'
+    });
+}
+
+initDefaults();
+
+/**
+ * GET /api/ai-endpoints
+ * 鑾峰彇鎵€鏈?AI 绔偣閰嶇疆
+ */
+router.get('/', (_req: Request, res: Response) => {
+    try {
+        const sortedEndpoints = Array.from(endpoints.values())
+            .sort((a, b) => a.priority - b.priority)
+            .map(ep => ({
+                ...ep,
+                apiKey: ep.apiKey ? '******' : '', // 闅愯棌瀵嗛挜
+            }));
+
+        res.json({
+            success: true,
+            endpoints: sortedEndpoints,
+        });
+    } catch (error: any) {
+        logger.error('Failed to get AI endpoints', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * POST /api/ai-endpoints
+ * 娣诲姞鏂扮殑 AI 绔偣
+ */
+router.post('/', (req: Request, res: Response) => {
+    try {
+        const { name, url, modelName, apiKey, type, timeout, priority } = req.body;
+
+        if (!url) {
+            return res.status(400).json({ success: false, error: 'URL is required' });
+        }
+
+        const id = `custom-${Date.now()}`;
+
+        const endpoint: AIEndpoint = {
+            id,
+            name: name || `Custom Endpoint ${endpoints.size}`,
+            url,
+            modelName: modelName || 'default',
+            apiKey: apiKey || '',
+            enabled: true,
+            priority: priority ?? 10,
+            timeout: timeout || 15000,
+            type: type || 'custom',
+        };
+
+        endpoints.set(id, endpoint);
+
+        logger.info('AI endpoint added', { id, url });
+
+        res.json({
+            success: true,
+            endpoint: {
+                ...endpoint,
+                apiKey: endpoint.apiKey ? '******' : '',
+            },
+        });
+    } catch (error: any) {
+        logger.error('Failed to add AI endpoint', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * PUT /api/ai-endpoints/:id
+ * 鏇存柊 AI 绔偣
+ */
+router.put('/:id', (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const endpoint = endpoints.get(id);
+
+        if (!endpoint) {
+            return res.status(404).json({ success: false, error: 'Endpoint not found' });
+        }
+
+        // 鏇存柊瀛楁
+        if (req.body.name) endpoint.name = req.body.name;
+        if (req.body.url) endpoint.url = req.body.url;
+        if (req.body.modelName) endpoint.modelName = req.body.modelName;
+        if (req.body.apiKey) endpoint.apiKey = req.body.apiKey;
+        if (req.body.enabled !== undefined) endpoint.enabled = req.body.enabled;
+        if (req.body.priority !== undefined) endpoint.priority = req.body.priority;
+        if (req.body.timeout) endpoint.timeout = req.body.timeout;
+
+        endpoints.set(id, endpoint);
+
+        logger.info('AI endpoint updated', { id });
+
+        res.json({
+            success: true,
+            endpoint: {
+                ...endpoint,
+                apiKey: endpoint.apiKey ? '******' : '',
+            },
+        });
+    } catch (error: any) {
+        logger.error('Failed to update AI endpoint', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * DELETE /api/ai-endpoints/:id
+ * 鍒犻櫎 AI 绔偣
+ */
+router.delete('/:id', (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        // 涓嶅厑璁稿垹闄ら粯璁ょ鐐?
+        if (id === 'default-laptop') {
+            return res.status(400).json({ success: false, error: 'Cannot delete default endpoint' });
+        }
+
+        if (!endpoints.has(id)) {
+            return res.status(404).json({ success: false, error: 'Endpoint not found' });
+        }
+
+        endpoints.delete(id);
+
+        logger.info('AI endpoint deleted', { id });
+
+        res.json({
+            success: true,
+            message: `Endpoint ${id} deleted`,
+        });
+    } catch (error: any) {
+        logger.error('Failed to delete AI endpoint', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * POST /api/ai-endpoints/:id/test
+ * 娴嬭瘯 AI 绔偣杩為€氭€?
+ */
+router.post('/:id/test', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const endpoint = endpoints.get(id);
+
+        if (!endpoint) {
+            return res.status(404).json({ success: false, error: 'Endpoint not found' });
+        }
+
+        const startTime = Date.now();
+
+        try {
+            // 鍙戦€佹祴璇曡姹?
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), endpoint.timeout);
+
+            const response = await fetch(endpoint.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(endpoint.apiKey && { 'Authorization': `Bearer ${endpoint.apiKey}` }),
+                },
+                body: JSON.stringify({
+                    model: endpoint.modelName,
+                    prompt: 'test connection',
+                    stream: false,
+                }),
+                signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            const latency = Date.now() - startTime;
+            const success = response.ok;
+
+            // 鏇存柊娴嬭瘯缁撴灉
+            endpoint.lastTest = {
+                success,
+                latency,
+                timestamp: new Date().toISOString(),
+            };
+            endpoints.set(id, endpoint);
+
+            res.json({
+                success,
+                latency,
+                status: response.status,
+            });
+        } catch (fetchError: any) {
+            const latency = Date.now() - startTime;
+
+            endpoint.lastTest = {
+                success: false,
+                latency,
+                timestamp: new Date().toISOString(),
+            };
+            endpoints.set(id, endpoint);
+
+            res.json({
+                success: false,
+                latency,
+                error: fetchError.message,
+            });
+        }
+    } catch (error: any) {
+        logger.error('Failed to test AI endpoint', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * GET /api/ai-endpoints/sync-config
+ * 鑾峰彇 ESP32 鍚屾閰嶇疆 (绱у噾鏍煎紡)
+ */
+router.get('/sync-config', (_req: Request, res: Response) => {
+    try {
+        // 鍙繑鍥炲惎鐢ㄧ殑绔偣锛屾寜浼樺厛绾ф帓搴?
+        const enabledEndpoints = Array.from(endpoints.values())
+            .filter(ep => ep.enabled)
+            .sort((a, b) => a.priority - b.priority)
+            .map(ep => ({
+                url: ep.url,
+                model: ep.modelName,
+                key: ep.apiKey,
+            }));
+
+        res.json({
+            success: true,
+            endpoints: enabledEndpoints,
+        });
+    } catch (error: any) {
+        logger.error('Failed to get sync config', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// 瀵煎嚭杈呭姪鍑芥暟
+export function getEndpointList(): AIEndpoint[] {
+    return Array.from(endpoints.values())
+        .filter(ep => ep.enabled)
+        .sort((a, b) => a.priority - b.priority);
+}
+
+export default router;
+/**
+ * Authentication Routes
+ * 
+ * Handles user registration, login, and token management
+ */
+
+import { Router, Response } from 'express';
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import {
+    AuthenticatedRequest,
+    generateTokens,
+    verifyRefreshToken,
+    authenticate
+} from '../../middleware/auth.middleware';
+import { getDatabase } from '../../config/database';
+import logger from '../../utils/logger';
+
+const router = Router();
+
+// Password validation
+const PASSWORD_MIN_LENGTH = 8;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * POST /api/auth/register
+ * Register a new user
+ */
+router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { email, password, username } = req.body;
+
+        // Validate input
+        if (!email || !password || !username) {
+            return res.status(400).json({
+                error: 'Email, password, and username are required',
+                code: 'VALIDATION_ERROR'
+            });
+        }
+
+        if (!EMAIL_REGEX.test(email)) {
+            return res.status(400).json({
+                error: 'Invalid email format',
+                code: 'INVALID_EMAIL'
+            });
+        }
+
+        if (password.length < PASSWORD_MIN_LENGTH) {
+            return res.status(400).json({
+                error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
+                code: 'PASSWORD_TOO_SHORT'
+            });
+        }
+
+        const db = getDatabase();
+
+        // Check if user already exists
+        const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+        if (existingUser) {
+            return res.status(409).json({
+                error: 'Email already registered',
+                code: 'USER_EXISTS'
+            });
+        }
+
+        // Hash password
+        const saltRounds = 12;
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+
+        // Create user
+        const userId = uuidv4();
+        const tenantId = uuidv4(); // Each user gets their own tenant by default
+        const role = 'tenant'; // Default role
+
+        db.prepare(`
+      INSERT INTO users (id, email, username, password_hash, role, tenant_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+    `).run(userId, email, username, passwordHash, role, tenantId);
+
+        // Generate tokens
+        const tokens = generateTokens({
+            userId,
+            email,
+            username,
+            role,
+            tenantId
+        });
+
+        logger.info(`New user registered: ${email}`);
+
+        res.status(201).json({
+            message: 'User registered successfully',
+            user: {
+                userId,
+                email,
+                username,
+                role,
+                tenantId
+            },
+            ...tokens
+        });
+
+    } catch (error: any) {
+        logger.error('Registration error', { error: error.message });
+        res.status(500).json({
+            error: 'Registration failed',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
+/**
+ * POST /api/auth/login
+ * Authenticate user and return tokens
+ */
+router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                error: 'Email and password are required',
+                code: 'VALIDATION_ERROR'
+            });
+        }
+
+        const db = getDatabase();
+
+        // Find user
+        const user = db.prepare(`
+      SELECT id, email, username, password_hash, role, tenant_id, status
+      FROM users WHERE email = ?
+    `).get(email) as any;
+
+        if (!user) {
+            return res.status(401).json({
+                error: 'Invalid credentials',
+                code: 'INVALID_CREDENTIALS'
+            });
+        }
+
+        // Check if account is active
+        if (user.status === 'suspended') {
+            return res.status(403).json({
+                error: 'Account suspended',
+                code: 'ACCOUNT_SUSPENDED'
+            });
+        }
+
+        // Verify password
+        const passwordValid = await bcrypt.compare(password, user.password_hash);
+        if (!passwordValid) {
+            logger.warn(`Failed login attempt for: ${email}`);
+            return res.status(401).json({
+                error: 'Invalid credentials',
+                code: 'INVALID_CREDENTIALS'
+            });
+        }
+
+        // Update last login
+        db.prepare(`UPDATE users SET last_login = datetime('now') WHERE id = ?`).run(user.id);
+
+        // Generate tokens
+        const tokens = generateTokens({
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            tenantId: user.tenant_id
+        });
+
+        logger.info(`User logged in: ${email}`);
+
+        res.json({
+            message: 'Login successful',
+            user: {
+                userId: user.id,
+                email: user.email,
+                username: user.username,
+                role: user.role,
+                tenantId: user.tenant_id
+            },
+            ...tokens
+        });
+
+    } catch (error: any) {
+        logger.error('Login error', { error: error.message });
+        res.status(500).json({
+            error: 'Login failed',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
+/**
+ * POST /api/auth/refresh
+ * Refresh access token using refresh token
+ */
+router.post('/refresh', async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({
+                error: 'Refresh token required',
+                code: 'TOKEN_MISSING'
+            });
+        }
+
+        const decoded = verifyRefreshToken(refreshToken);
+        if (!decoded) {
+            return res.status(401).json({
+                error: 'Invalid or expired refresh token',
+                code: 'TOKEN_INVALID'
+            });
+        }
+
+        const db = getDatabase();
+
+        // Get user info
+        const user = db.prepare(`
+      SELECT id, email, username, role, tenant_id, status
+      FROM users WHERE id = ?
+    `).get(decoded.userId) as any;
+
+        if (!user || user.status === 'suspended') {
+            return res.status(401).json({
+                error: 'User not found or suspended',
+                code: 'USER_INVALID'
+            });
+        }
+
+        // Generate new tokens
+        const tokens = generateTokens({
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            tenantId: user.tenant_id
+        });
+
+        res.json({
+            message: 'Token refreshed',
+            ...tokens
+        });
+
+    } catch (error: any) {
+        logger.error('Token refresh error', { error: error.message });
+        res.status(500).json({
+            error: 'Token refresh failed',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
+/**
+ * GET /api/auth/me
+ * Get current user info (requires authentication)
+ */
+router.get('/me', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    res.json({
+        user: req.user
+    });
+});
+
+/**
+ * POST /api/auth/logout
+ * Logout user (client should discard tokens)
+ */
+router.post('/logout', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    // In a production system, you might want to:
+    // 1. Add token to a blacklist in Redis
+    // 2. Invalidate all refresh tokens for this user
+    // For now, we just acknowledge the logout
+
+    logger.info(`User logged out: ${req.user?.email}`);
+
+    res.json({
+        message: 'Logout successful'
+    });
+});
+
+/**
+ * PUT /api/auth/password
+ * Change user password
+ */
+router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                error: 'Current and new password required',
+                code: 'VALIDATION_ERROR'
+            });
+        }
+
+        if (newPassword.length < PASSWORD_MIN_LENGTH) {
+            return res.status(400).json({
+                error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
+                code: 'PASSWORD_TOO_SHORT'
+            });
+        }
+
+        const db = getDatabase();
+
+        // Get current password hash
+        const user = db.prepare('SELECT password_hash FROM users WHERE id = ?')
+            .get(req.user!.userId) as any;
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Verify current password
+        const passwordValid = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!passwordValid) {
+            return res.status(401).json({
+                error: 'Current password is incorrect',
+                code: 'INVALID_PASSWORD'
+            });
+        }
+
+        // Hash new password
+        const newPasswordHash = await bcrypt.hash(newPassword, 12);
+
+        // Update password
+        db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\') WHERE id = ?')
+            .run(newPasswordHash, req.user!.userId);
+
+        logger.info(`Password changed for user: ${req.user?.email}`);
+
+        res.json({
+            message: 'Password changed successfully'
+        });
+
+    } catch (error: any) {
+        logger.error('Password change error', { error: error.message });
+        res.status(500).json({
+            error: 'Password change failed',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
+export default router;
+import { Router } from 'express';
+
+const router = Router();
+
+router.get('/', (req, res) => {
+    // Mock config
+    res.json({
+        antiBot: {
+            enabled: true,
+            requestThreshold: 100,
+            fastRequestThreshold: 10,
+            blockDuration: 3600,
+        },
+        rateLimit: {
+            requestsPerMinute: 60,
+            windowSeconds: 60,
+        },
+    });
+});
+
+router.post('/', (req, res) => {
+    // Mock save
+    res.json({ success: true, message: 'Configuration saved' });
+});
+
+export default router;
+/**
+ * FluxGuard - ESP32 璁惧绠＄悊 API
+ * 
+ * 鎻愪緵 ESP32 纭欢缃戝叧鐨?REST API 鎺ュ彛
+ */
+
+import { Router, Request, Response } from 'express';
+import logger from '../../utils/logger';
+
+const router = Router();
+
+// 璁惧瀛樺偍 (鍐呭瓨 + 鍚庣画鍙墿灞曞埌鏁版嵁搴?
+interface DeviceInfo {
+    deviceId: string;
+    version: string;
+    chipModel: string;
+    flashSize: number;
+    freeHeap: number;
+    sdkVersion: string;
+    mode: 'online' | 'offline';
+    isOnline: boolean;
+    lastHeartbeat: Date;
+    connectedAgents: string[];
+    status?: {
+        cpuUsage: number;
+        memoryUsage: number;
+        uptime: number;
+        wifiRssi: number;
+    };
+    systemInfo?: {
+        hostname: string;
+        os: string;
+        kernel: string;
+        arch: string;
+    };
+}
+
+const devices = new Map<string, DeviceInfo>();
+
+// 瀵嗙爜鏈?
+const codebook: Record<string, string> = {
+    'E001': 'Connection refused',
+    'E002': 'Permission denied',
+    'E003': 'Out of memory',
+    'E004': 'Disk full',
+    'E005': 'Service unavailable',
+    'S001': 'CPU usage critical (>90%)',
+    'S002': 'Memory usage critical (>85%)',
+    'S003': 'Disk usage critical (>90%)',
+    'A001': 'SQL Injection detected',
+    'A002': 'XSS attempt blocked',
+    'A003': 'Path traversal attempt',
+    'A004': 'Command injection detected',
+    'A005': 'Brute force attack',
+    'A006': 'DDoS pattern detected',
+};
+
+/**
+ * GET /api/devices
+ * 鑾峰彇鎵€鏈?ESP32 璁惧鍒楄〃
+ */
+router.get('/', (_req: Request, res: Response) => {
+    try {
+        const deviceList = Array.from(devices.values()).map(device => ({
+            ...device,
+            lastHeartbeat: device.lastHeartbeat.toISOString(),
+        }));
+
+        res.json({
+            success: true,
+            total: deviceList.length,
+            online: deviceList.filter(d => d.isOnline).length,
+            devices: deviceList,
+        });
+    } catch (error: any) {
+        logger.error('Failed to get devices', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * GET /api/devices/:id
+ * 鑾峰彇鍗曚釜璁惧璇︽儏
+ */
+router.get('/:id', (req: Request, res: Response) => {
+    try {
+        const device = devices.get(req.params.id);
+
+        if (!device) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        res.json({
+            success: true,
+            device: {
+                ...device,
+                lastHeartbeat: device.lastHeartbeat.toISOString(),
+            },
+        });
+    } catch (error: any) {
+        logger.error('Failed to get device', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * POST /api/devices/:id/cmd
+ * 鍙戦€佸懡浠ゅ埌璁惧
+ */
+router.post('/:id/cmd', (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { command, params } = req.body;
+
+        const device = devices.get(id);
+
+        if (!device) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        if (!device.isOnline) {
+            return res.status(400).json({ success: false, error: 'Device is offline' });
+        }
+
+        // 璁板綍鍛戒护鏃ュ織
+        logger.info('Command sent to device', {
+            deviceId: id,
+            command,
+            params
+        });
+
+        // 瀹為檯鍙戦€佸懡浠ら渶瑕侀€氳繃 WebSocket Gateway
+        // 杩欓噷杩斿洖鎴愬姛锛屽疄闄呭彂閫佸湪 device-gateway.ts 涓鐞?
+        res.json({
+            success: true,
+            message: `Command "${command}" queued for device ${id}`,
+        });
+    } catch (error: any) {
+        logger.error('Failed to send command', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * PUT /api/devices/:id
+ * 鏇存柊璁惧閰嶇疆
+ */
+router.put('/:id', (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const device = devices.get(id);
+
+        if (!device) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        // 鏇存柊鍙厤缃瓧娈?
+        if (req.body.connectedAgents) {
+            device.connectedAgents = req.body.connectedAgents;
+        }
+
+        devices.set(id, device);
+
+        logger.info('Device updated', { deviceId: id });
+
+        res.json({
+            success: true,
+            device: {
+                ...device,
+                lastHeartbeat: device.lastHeartbeat.toISOString(),
+            },
+        });
+    } catch (error: any) {
+        logger.error('Failed to update device', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * DELETE /api/devices/:id
+ * 娉ㄩ攢璁惧
+ */
+router.delete('/:id', (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        if (!devices.has(id)) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        devices.delete(id);
+
+        logger.info('Device unregistered', { deviceId: id });
+
+        res.json({
+            success: true,
+            message: `Device ${id} unregistered`,
+        });
+    } catch (error: any) {
+        logger.error('Failed to delete device', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+/**
+ * GET /api/devices/codebook
+ * 鑾峰彇瀵嗙爜鏈?
+ */
+router.get('/codebook', (_req: Request, res: Response) => {
+    res.json({
+        success: true,
+        codebook,
+    });
+});
+
+/**
+ * POST /api/devices/codebook
+ * 鏇存柊瀵嗙爜鏈?
+ */
+router.post('/codebook', (req: Request, res: Response) => {
+    try {
+        const { entries } = req.body;
+
+        if (!entries || typeof entries !== 'object') {
+            return res.status(400).json({ success: false, error: 'Invalid entries' });
+        }
+
+        Object.assign(codebook, entries);
+
+        logger.info('Codebook updated', { entriesAdded: Object.keys(entries).length });
+
+        res.json({
+            success: true,
+            totalEntries: Object.keys(codebook).length,
+        });
+    } catch (error: any) {
+        logger.error('Failed to update codebook', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// 瀵煎嚭璁惧绠＄悊鍑芥暟渚?WebSocket Gateway 浣跨敤
+export function registerDevice(info: Omit<DeviceInfo, 'isOnline' | 'lastHeartbeat' | 'connectedAgents'>): void {
+    const device: DeviceInfo = {
+        ...info,
+        isOnline: true,
+        lastHeartbeat: new Date(),
+        connectedAgents: [],
+    };
+    devices.set(info.deviceId, device);
+    logger.info('Device registered', { deviceId: info.deviceId });
+}
+
+export function updateDeviceStatus(deviceId: string, status: DeviceInfo['status']): void {
+    const device = devices.get(deviceId);
+    if (device) {
+        device.status = status;
+        device.lastHeartbeat = new Date();
+        devices.set(deviceId, device);
+    }
+}
+
+export function setDeviceOffline(deviceId: string): void {
+    const device = devices.get(deviceId);
+    if (device) {
+        device.isOnline = false;
+        devices.set(deviceId, device);
+        logger.info('Device went offline', { deviceId });
+    }
+}
+
+export function getDeviceList(): DeviceInfo[] {
+    return Array.from(devices.values());
+}
+
+export function getCodebook(): Record<string, string> {
+    return codebook;
+}
+
+export default router;
+import { Router } from 'express';
+
+const router = Router();
+
+router.get('/', (req, res) => {
+    // Mock logs
+    res.json([
+        {
+            id: 1,
+            time: new Date().toISOString(),
+            type: 'ANTIBOT',
+            level: 'WARN',
+            message: 'Suspicious User-Agent detected: curl/7.68.0',
+            ip: '192.168.1.100',
+        },
+        {
+            id: 2,
+            time: new Date(Date.now() - 15000).toISOString(),
+            type: 'RATELIMIT',
+            level: 'ERROR',
+            message: 'Rate limit exceeded for user',
+            ip: '10.0.0.55',
+        }
+    ]);
+});
+
+export default router;
+import { Router, Request, Response } from 'express';
+import { OptimizationEngine } from '../../scanner/optimization-engine';
+import logger from '../../utils/logger';
+
+const router = Router();
+const optimizationEngine = new OptimizationEngine();
+
+/**
+ * POST /api/scanner/run
+ * Run server scan
+ */
+router.post('/run', async (req: Request, res: Response) => {
+  try {
+    const options = req.body.options || {};
+
+    logger.info('Starting server scan...');
+
+    const result = await optimizationEngine.runFullScan(options);
+
+    // Save scan result to database
+    const db = require('../../config/database').getDatabase();
+    const stmt = db.getDb().prepare(`
+      INSERT INTO scan_results (siteId, scanType, result, recommendations, status)
+      VALUES (NULL, 'all', ?, ?, 'completed')
+    `);
+
+    const resultId = stmt.run(
+      JSON.stringify(result.systemInfo),
+      JSON.stringify(result.recommendations)
+    ).lastInsertRowid;
+
+    res.json({
+      success: true,
+      data: {
+        id: resultId,
+        ...result
+      }
+    });
+  } catch (error: any) {
+    logger.error('Scan failed', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/scanner/apply
+ * Apply an optimization
+ */
+router.post('/apply', async (req: Request, res: Response) => {
+  try {
+    const { recommendation } = req.body;
+
+    if (!recommendation) {
+      return res.status(400).json({ success: false, error: 'recommendation is required' });
+    }
+
+    logger.info(`Applying optimization: ${recommendation.title}`);
+
+    const result = await optimizationEngine.applyOptimization(recommendation);
+
+    res.json(result);
+  } catch (error: any) {
+    logger.error('Failed to apply optimization', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/scanner/results/:id
+ * Get scan result by ID
+ */
+router.get('/results/:id', async (req: Request, res: Response) => {
+  try {
+    const db = require('../../config/database').getDatabase();
+    const result = db.getDb().prepare('SELECT * FROM scan_results WHERE id = ?').get(req.params.id);
+
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Scan result not found' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...result,
+        result: JSON.parse(result.result),
+        recommendations: JSON.parse(result.recommendations)
+      }
+    });
+  } catch (error: any) {
+    logger.error('Failed to get scan result', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/scanner/report/:id
+ * Generate scan report
+ */
+router.get('/report/:id', async (req: Request, res: Response) => {
+  try {
+    const db = require('../../config/database').getDatabase();
+    const result = db.getDb().prepare('SELECT * FROM scan_results WHERE id = ?').get(req.params.id);
+
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Scan result not found' });
+    }
+
+    const systemInfo = JSON.parse(result.result);
+    const recommendations = JSON.parse(result.recommendations);
+
+    const report = optimizationEngine.generateReport(systemInfo, recommendations);
+
+    res.set('Content-Type', 'text/plain');
+    res.send(report);
+  } catch (error: any) {
+    logger.error('Failed to generate report', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+export default router;
+import { Router } from 'express';
+
+const router = Router();
+
+router.get('/', (req, res) => {
+    res.json([
+        { id: 1, domain: 'api.example.com', status: 'secure' },
+        { id: 2, domain: 'admin.example.com', status: 'warning' },
+    ]);
+});
+
+export default router;
+import { Router, Request, Response } from 'express';
+import { getDatabase } from '../../config/database';
+import logger from '../../utils/logger';
+
+const router = Router();
+
+/**
+ * GET /api/sites
+ * Get all sites
+ */
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const db = getDatabase().getDb();
+    const sites = db.prepare('SELECT * FROM sites ORDER BY createdAt DESC').all();
+
+    // Convert integer booleans
+    const formattedSites = sites.map((site: any) => ({
+      ...site,
+      sslEnabled: Boolean(site.sslEnabled),
+      antiBotEnabled: Boolean(site.antiBotEnabled),
+      rateLimitEnabled: Boolean(site.rateLimitEnabled),
+      concurrencyEnabled: Boolean(site.concurrencyEnabled)
+    }));
+
+    res.json({ success: true, data: formattedSites });
+  } catch (error: any) {
+    logger.error('Failed to get sites', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/sites/:id
+ * Get site by ID
+ */
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const db = getDatabase().getDb();
+    const site = db.prepare('SELECT * FROM sites WHERE id = ?').get(req.params.id);
+
+    if (!site) {
+      return res.status(404).json({ success: false, error: 'Site not found' });
+    }
+
+    res.json({ success: true, data: site });
+  } catch (error: any) {
+    logger.error('Failed to get site', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/sites
+ * Create new site
+ */
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    const { domain, target, sslEnabled = true, security } = req.body;
+
+    if (!domain || !target) {
+      return res.status(400).json({ success: false, error: 'domain and target are required' });
+    }
+
+    const db = getDatabase().getDb();
+
+    const stmt = db.prepare(`
+      INSERT INTO sites (
+        domain, target, sslEnabled,
+        antiBotEnabled, rateLimitEnabled, concurrencyEnabled,
+        rateLimitRequests, concurrencyMax
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const result = stmt.run(
+      domain,
+      target,
+      sslEnabled ? 1 : 0,
+      security?.antiBot ? 1 : 0,
+      security?.rateLimit?.enabled ? 1 : 0,
+      security?.concurrency?.enabled ? 1 : 0,
+      security?.rateLimit?.requestsPerMinute || 60,
+      security?.concurrency?.maxConcurrent || 5
+    );
+
+    logger.info(`Site created: ${domain} -> ${target}`);
+
+    res.json({
+      success: true,
+      data: { id: result.lastInsertRowid, domain, target }
+    });
+  } catch (error: any) {
+    logger.error('Failed to create site', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /api/sites/:id
+ * Update site
+ */
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const { domain, target, sslEnabled, security } = req.body;
+
+    const db = getDatabase().getDb();
+
+    const stmt = db.prepare(`
+      UPDATE sites SET
+        domain = COALESCE(?, domain),
+        target = COALESCE(?, target),
+        sslEnabled = COALESCE(?, sslEnabled),
+        antiBotEnabled = COALESCE(?, antiBotEnabled),
+        rateLimitEnabled = COALESCE(?, rateLimitEnabled),
+        concurrencyEnabled = COALESCE(?, concurrencyEnabled),
+        rateLimitRequests = COALESCE(?, rateLimitRequests),
+        concurrencyMax = COALESCE(?, concurrencyMax),
+        updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `);
+
+    stmt.run(
+      domain,
+      target,
+      sslEnabled !== undefined ? (sslEnabled ? 1 : 0) : null,
+      security?.antiBot !== undefined ? (security.antiBot ? 1 : 0) : null,
+      security?.rateLimit?.enabled !== undefined ? (security.rateLimit.enabled ? 1 : 0) : null,
+      security?.concurrency?.enabled !== undefined ? (security.concurrency.enabled ? 1 : 0) : null,
+      security?.rateLimit?.requestsPerMinute || null,
+      security?.concurrency?.maxConcurrent || null,
+      req.params.id
+    );
+
+    logger.info(`Site updated: ${req.params.id}`);
+
+    res.json({ success: true });
+  } catch (error: any) {
+    logger.error('Failed to update site', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/sites/:id
+ * Delete site
+ */
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const db = getDatabase().getDb();
+    db.prepare('DELETE FROM sites WHERE id = ?').run(req.params.id);
+
+    logger.info(`Site deleted: ${req.params.id}`);
+
+    res.json({ success: true });
+  } catch (error: any) {
+    logger.error('Failed to delete site', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+export default router;
+import { Router, Request, Response } from 'express';
+import { SmartFixer } from '../../scanner/smart-fixer';
+import { OptimizationEngine } from '../../scanner/optimization-engine';
+import logger from '../../utils/logger';
+
+const router = Router();
+const optimizationEngine = new OptimizationEngine();
+
+/**
+ * POST /api/scanner/smart-fix
+ * Fix a problem using AI
+ */
+router.post('/smart-fix', async (req: Request, res: Response) => {
+  try {
+    const { recommendation, context, options } = req.body;
+
+    if (!recommendation) {
+      return res.status(400).json({ success: false, error: 'recommendation is required' });
+    }
+
+    logger.info(`Starting smart fix for: ${recommendation.title}`);
+
+    // Create smart fixer with options
+    const smartFixer = new SmartFixer({
+      enableAI: options?.enableAI !== false,
+      aiProvider: options?.aiProvider || {
+        name: process.env.AI_PROVIDER || 'ollama',
+        apiKey: process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY,
+        baseURL: process.env.AI_BASE_URL,
+        model: process.env.AI_MODEL || 'llama2'
+      },
+      maxAttempts: options?.maxAttempts || 3,
+      executionTimeout: options?.executionTimeout || 60000,
+      enableRealTimeMonitoring: options?.enableRealTimeMonitoring !== false
+    });
+
+    // Run smart fix
+    const result = await smartFixer.fixProblem(recommendation, context);
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    logger.error('Smart fix failed', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/scanner/batch-fix
+ * Fix multiple problems in batch
+ */
+router.post('/batch-fix', async (req: Request, res: Response) => {
+  try {
+    const { recommendations, context, options } = req.body;
+
+    if (!recommendations || !Array.isArray(recommendations)) {
+      return res.status(400).json({ success: false, error: 'recommendations array is required' });
+    }
+
+    logger.info(`Batch fixing ${recommendations.length} problems`);
+
+    const smartFixer = new SmartFixer(options);
+
+    const results = await smartFixer.batchFix(recommendations, context);
+
+    const summary = {
+      total: results.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      totalAttempts: results.reduce((sum, r) => sum + r.attempts.length, 0),
+      totalTime: results.reduce((sum, r) => sum + r.totalTime, 0)
+    };
+
+    logger.info('Batch fix complete', { summary });
+
+    res.json({
+      success: true,
+      data: {
+        results,
+        summary
+      }
+    });
+  } catch (error: any) {
+    logger.error('Batch fix failed', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/scanner/dry-fix
+ * Simulate fixing without executing
+ */
+router.post('/dry-fix', async (req: Request, res: Response) => {
+  try {
+    const { recommendation, context, options } = req.body;
+
+    if (!recommendation) {
+      return res.status(400).json({ success: false, error: 'recommendation is required' });
+    }
+
+    logger.info(`Dry run for: ${recommendation.title}`);
+
+    const smartFixer = new SmartFixer(options);
+
+    const dryRunResult = await smartFixer.dryFix(recommendation, context);
+
+    res.json({
+      success: true,
+      data: dryRunResult
+    });
+  } catch (error: any) {
+    logger.error('Dry fix failed', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/scanner/ai-status
+ * Check AI provider status
+ */
+router.get('/ai-status', async (req: Request, res: Response) => {
+  try {
+    const provider = {
+      name: process.env.AI_PROVIDER || 'ollama',
+      model: process.env.AI_MODEL || 'llama2',
+      baseURL: process.env.AI_BASE_URL || 'http://localhost:11434',
+      configured: !!(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.AI_BASE_URL)
+    };
+
+    // Test connection if configured
+    let status = 'not_configured';
+    let error = null;
+
+    if (provider.configured) {
+      try {
+        if (provider.name === 'ollama') {
+          // Test Ollama connection
+          const axios = require('axios');
+          await axios.get(`${provider.baseURL}/api/tags`, { timeout: 5000 });
+          status = 'available';
+        } else if (provider.name === 'openai' || provider.name === 'anthropic') {
+          // Just check if API key is present
+          status = 'available';
+        }
+      } catch (err: any) {
+        status = 'unavailable';
+        error = err.message;
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        provider,
+        status,
+        error
+      }
+    });
+  } catch (error: any) {
+    logger.error('AI status check failed', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/scanner/ai-analyze
+ * Analyze a problem using AI
+ */
+router.post('/ai-analyze', async (req: Request, res: Response) => {
+  try {
+    const { problem, context } = req.body;
+
+    if (!problem) {
+      return res.status(400).json({ success: false, error: 'problem is required' });
+    }
+
+    const { AIEngine } = await import('../../scanner/ai-engine');
+
+    const aiEngine = new AIEngine({
+      name: (process.env.AI_PROVIDER || 'ollama') as any,
+      apiKey: process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY,
+      baseURL: process.env.AI_BASE_URL,
+      model: process.env.AI_MODEL || 'llama2'
+    });
+
+    const analysis = await aiEngine.analyzeProblem({
+      problem,
+      context: {
+        systemInfo: context?.systemInfo || {},
+        logs: context?.logs || [],
+        configFiles: context?.configFiles || {}
+      }
+    });
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+  } catch (error: any) {
+    logger.error('AI analysis failed', { error });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+export default router;
+import { Router } from 'express';
+import simulationService from '../../services/simulation.service';
+
+const router = Router();
+
+router.get('/', (req, res) => {
+    res.json(simulationService.getStats());
+});
+
+export default router;
+import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
+import path from 'path';
+import fs from 'fs';
+import logger from '../utils/logger';
+
+/**
+ * Database Manager
+ * Handles SQLite database operations using sql.js (pure JavaScript)
+ */
+export class DatabaseManager {
+  private db: SqlJsDatabase | null = null;
+  private dbPath: string;
+  private saveInterval: NodeJS.Timeout | null = null;
+
+  constructor() {
+    const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+    this.dbPath = path.join(dataDir, 'newsecurity.db');
+    this.ensureDataDir(dataDir);
+  }
+
+  /**
+   * Initialize database (async because sql.js needs to load WASM)
+   */
+  public async init(): Promise<void> {
+    try {
+      const SQL = await initSqlJs();
+
+      // Try to load existing database
+      if (fs.existsSync(this.dbPath)) {
+        const fileBuffer = fs.readFileSync(this.dbPath);
+        this.db = new SQL.Database(fileBuffer);
+        logger.info(`Loaded existing database: ${this.dbPath}`);
+      } else {
+        this.db = new SQL.Database();
+        logger.info(`Created new database: ${this.dbPath}`);
+      }
+
+      this.initSchema();
+      this.startAutoSave();
+    } catch (error: any) {
+      logger.error('Failed to initialize database', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Ensure data directory exists
+   */
+  private ensureDataDir(dir: string): void {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      logger.info(`Created data directory: ${dir}`);
+    }
+  }
+
+  /**
+   * Initialize database schema
+   */
+  private initSchema(): void {
+    if (!this.db) {
+      throw new Error('Database not connected');
+    }
+
+    try {
+      // Sites table
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS sites (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          domain TEXT UNIQUE NOT NULL,
+          target TEXT NOT NULL,
+          sslEnabled INTEGER DEFAULT 1,
+          antiBotEnabled INTEGER DEFAULT 1,
+          rateLimitEnabled INTEGER DEFAULT 1,
+          rateLimitRequests INTEGER DEFAULT 60,
+          concurrencyEnabled INTEGER DEFAULT 1,
+          concurrencyMax INTEGER DEFAULT 5,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Security rules table
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS security_rules (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          siteId INTEGER NOT NULL,
+          ruleType TEXT NOT NULL,
+          config TEXT NOT NULL,
+          enabled INTEGER DEFAULT 1,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
+        )
+      `);
+
+      // Scan results table
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS scan_results (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          siteId INTEGER,
+          scanType TEXT NOT NULL,
+          result TEXT NOT NULL,
+          recommendations TEXT,
+          status TEXT DEFAULT 'pending',
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
+        )
+      `);
+
+      // Backups table
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS backups (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          data TEXT NOT NULL,
+          size INTEGER,
+          isAutomatic INTEGER DEFAULT 0,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Monitoring data table (time-series)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS metrics (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          siteId INTEGER NOT NULL,
+          metricType TEXT NOT NULL,
+          value REAL NOT NULL,
+          metadata TEXT,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
+        )
+      `);
+
+      // Agents table
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS agents (
+          id TEXT PRIMARY KEY,
+          hostname TEXT NOT NULL,
+          platform TEXT,
+          arch TEXT,
+          version TEXT,
+          lastHeartbeat DATETIME,
+          status TEXT DEFAULT 'offline',
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Users table (for authentication)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          username TEXT NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT DEFAULT 'viewer' CHECK(role IN ('admin', 'tenant', 'viewer')),
+          tenant_id TEXT,
+          status TEXT DEFAULT 'active' CHECK(status IN ('active', 'suspended', 'pending')),
+          last_login DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // API Keys table (for agent/device authentication)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS api_keys (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          key_hash TEXT UNIQUE NOT NULL,
+          user_id TEXT,
+          tenant_id TEXT,
+          permissions TEXT DEFAULT '["read"]',
+          last_used DATETIME,
+          expires_at DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
+      // Devices table (for ESP32 dongles)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS devices (
+          id TEXT PRIMARY KEY,
+          device_type TEXT DEFAULT 'esp32',
+          mac_address TEXT UNIQUE,
+          firmware_version TEXT,
+          status TEXT DEFAULT 'offline',
+          last_seen DATETIME,
+          config TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Alerts table (for security alerts)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS alerts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT NOT NULL,
+          severity TEXT DEFAULT 'info' CHECK(severity IN ('info', 'warning', 'critical')),
+          source TEXT,
+          message TEXT NOT NULL,
+          details TEXT,
+          acknowledged INTEGER DEFAULT 0,
+          acknowledged_by TEXT,
+          acknowledged_at DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Create indexes
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_scan_results_siteId ON scan_results(siteId)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_metrics_siteId ON metrics(siteId)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts(severity)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts(created_at)`);
+
+      logger.info('Database schema initialized');
+    } catch (error: any) {
+      logger.error('Failed to initialize database schema', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Start auto-save interval
+   */
+  private startAutoSave(): void {
+    // Save to disk every 30 seconds
+    this.saveInterval = setInterval(() => {
+      this.save();
+    }, 30000);
+  }
+
+  /**
+   * Save database to disk
+   */
+  public save(): void {
+    if (!this.db) return;
+
+    try {
+      const data = this.db.export();
+      const buffer = Buffer.from(data);
+      fs.writeFileSync(this.dbPath, buffer);
+    } catch (error: any) {
+      logger.error('Failed to save database', { error: error.message });
+    }
+  }
+
+  /**
+   * Get database instance
+   */
+  public getDb(): SqlJsDatabase {
+    if (!this.db) {
+      throw new Error('Database not connected');
+    }
+    return this.db;
+  }
+
+  /**
+   * Execute SQL and return results
+   */
+  public exec(sql: string): void {
+    if (!this.db) throw new Error('Database not connected');
+    this.db.run(sql);
+  }
+
+  /**
+   * Prepare and run a statement
+   */
+  public prepare(sql: string): {
+    run: (...params: any[]) => void;
+    all: (...params: any[]) => any[];
+    get: (...params: any[]) => any;
+  } {
+    if (!this.db) throw new Error('Database not connected');
+
+    const db = this.db;
+
+    return {
+      run: (...params: any[]) => {
+        db.run(sql, params);
+      },
+      all: (...params: any[]) => {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        const results: any[] = [];
+        while (stmt.step()) {
+          results.push(stmt.getAsObject());
+        }
+        stmt.free();
+        return results;
+      },
+      get: (...params: any[]) => {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        const result = stmt.step() ? stmt.getAsObject() : null;
+        stmt.free();
+        return result;
+      }
+    };
+  }
+
+  /**
+   * Close database connection
+   */
+  public close(): void {
+    if (this.saveInterval) {
+      clearInterval(this.saveInterval);
+      this.saveInterval = null;
+    }
+
+    if (this.db) {
+      this.save(); // Final save
+      this.db.close();
+      this.db = null;
+      logger.info('Database connection closed');
+    }
+  }
+}
+
+// Singleton instance
+let dbManager: DatabaseManager | null = null;
+let initPromise: Promise<DatabaseManager> | null = null;
+
+export async function initDatabase(): Promise<DatabaseManager> {
+  if (dbManager) return dbManager;
+
+  if (!initPromise) {
+    initPromise = (async () => {
+      dbManager = new DatabaseManager();
+      await dbManager.init();
+      return dbManager;
+    })();
+  }
+
+  return initPromise;
+}
+
+export function getDatabase(): DatabaseManager {
+  if (!dbManager) {
+    throw new Error('Database not initialized. Call initDatabase() first.');
+  }
+  return dbManager;
+}
+
+export function closeDatabase(): void {
+  if (dbManager) {
+    dbManager.close();
+    dbManager = null;
+    initPromise = null;
+  }
+}
+// Default Configuration
+
+import { SecurityConfig } from './types';
+
+export const defaultConfig: SecurityConfig = {
+    env: (process.env.NODE_ENV as SecurityConfig['env']) || 'development',
+
+    rateLimit: {
+        requestsPerMinute: 60,
+        windowSeconds: 60,
+    },
+
+    antiBot: {
+        enabled: true,
+        requestThreshold: 100,
+        fastRequestThreshold: 10,
+        blockDuration: 3600,
+        allowKnownBots: true,
+    },
+
+    concurrency: {
+        maxConcurrentRequestsPerUser: 5,
+        maxQueueSize: 20,
+    },
+
+    authSecurity: {
+        maxLoginAttempts: 5,
+        lockoutDuration: 900,
+        attemptWindow: 300,
+        passwordPolicy: {
+            minLength: 8,
+            requireUppercase: true,
+            requireLowercase: true,
+            requireNumbers: true,
+            requireSpecialChars: true,
+            maxLength: 128,
+        },
+    },
+
+    monitoring: {
+        enablePerformanceTracking: true,
+        slowQueryThreshold: 1000,
+        memoryWarningThreshold: 500,
+    },
+};
+
+// HTTP Status Codes
+export const HTTP_STATUS = {
+    OK: 200,
+    CREATED: 201,
+    BAD_REQUEST: 400,
+    UNAUTHORIZED: 401,
+    FORBIDDEN: 403,
+    NOT_FOUND: 404,
+    TOO_MANY_REQUESTS: 429,
+    INTERNAL_SERVER_ERROR: 500,
+};
+
+// Redis Keys
+export const REDIS_KEYS = {
+    RATE_LIMIT_PREFIX: 'ratelimit',
+    REQUEST_COUNT_SUFFIX: 'requests',
+    LIMIT_SUFFIX: 'limit',
+    WINDOW_SUFFIX: 'window',
+    ANTIBOT_PREFIX: 'antibot',
+    AUTH_PREFIX: 'auth',
+};
+
+// Performance Constants
+export const CONCURRENCY = {
+    MAX_CONCURRENT_REQUESTS_PER_USER: 5,
+    MAX_QUEUE_SIZE: 20,
+};
+
+export const MONITORING = {
+    ENABLE_PERFORMANCE_TRACKING: true,
+    SLOW_QUERY_THRESHOLD: 1000,
+    MEMORY_WARNING_THRESHOLD: 500,
+};
+
+export const RATE_LIMIT = {
+    WINDOW_SECONDS: 60,
+    DEFAULT_REQUESTS_PER_MINUTE: 60,
+};
+// Type Definitions for Security Middleware
+
+export interface SecurityConfig {
+    // Environment
+    env: 'development' | 'production' | 'test';
+
+    // Rate Limiting
+    rateLimit: {
+        requestsPerMinute: number;
+        windowSeconds: number;
+    };
+
+    // Anti-Bot
+    antiBot: {
+        enabled: boolean;
+        requestThreshold: number;
+        fastRequestThreshold: number;
+        blockDuration: number;
+        allowKnownBots: boolean;
+    };
+
+    // Concurrency
+    concurrency: {
+        maxConcurrentRequestsPerUser: number;
+        maxQueueSize: number;
+    };
+
+    // Auth Security
+    authSecurity: {
+        maxLoginAttempts: number;
+        lockoutDuration: number;
+        attemptWindow: number;
+        passwordPolicy: PasswordPolicy;
+    };
+
+    // Monitoring
+    monitoring: {
+        enablePerformanceTracking: boolean;
+        slowQueryThreshold: number;
+        memoryWarningThreshold: number;
+    };
+}
+
+export interface PasswordPolicy {
+    minLength: number;
+    requireUppercase: boolean;
+    requireLowercase: boolean;
+    requireNumbers: boolean;
+    requireSpecialChars: boolean;
+    maxLength?: number;
+}
+
+export interface LoginAttempt {
+    email: string;
+    ip: string;
+    success: boolean;
+    timestamp: number;
+}
+
+export interface RequestFingerprint {
+    ip: string;
+    userAgent: string;
+    acceptLanguage: string;
+    acceptEncoding: string;
+}
+
+export interface RateLimitInfo {
+    limit: number;
+    remaining: number;
+    reset: number;
+}
+
+export interface SecurityMetrics {
+    requestsPerMinute: number;
+    blockedRequests: number;
+    activeConnections: number;
+    memoryUsage: number;
+    cpuUsage: number;
+}
+/**
+ * Backup Model
+ */
+
+export interface Backup {
+  id: number;
+  name: string;
+  description: string;
+  data: string; // JSON string
+  createdAt: string;
+  size: number; // in bytes
+  isAutomatic: boolean;
+}
+
+export interface BackupMetadata {
+  version: string;
+  timestamp: number;
+  sitesCount: number;
+  configs: any;
+}
+/**
+ * Scan Result Model
+ */
+
+export interface ScanResult {
+  id: number;
+  siteId: number;
+  scanType: 'port' | 'system' | 'web' | 'all';
+  result: any; // JSON data
+  recommendations: Recommendation[];
+  status: 'pending' | 'completed' | 'failed';
+  createdAt: string;
+}
+
+export interface Recommendation {
+  category: 'security' | 'performance' | 'reliability';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  action: string; // Command or action to take
+  autoApplicable: boolean; // Can be automatically applied
+  risk: string; // Potential risks
+}
+
+export interface ScanOptions {
+  scanPorts?: boolean;
+  scanSystem?: boolean;
+  scanWebServer?: boolean;
+  depth?: 'quick' | 'standard' | 'deep';
+}
+/**
+ * Site Configuration Model
+ */
+
+export interface SiteConfig {
+  id: number;
+  domain: string;
+  target: string; // Backend server URL
+  sslEnabled: boolean;
+  security: {
+    antiBot: boolean;
+    rateLimit: {
+      enabled: boolean;
+      requestsPerMinute: number;
+    };
+    concurrency: {
+      enabled: boolean;
+      maxConcurrent: number;
+    };
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSiteDto {
+  domain: string;
+  target: string;
+  sslEnabled?: boolean;
+  security?: SiteConfig['security'];
+}
+
+export interface UpdateSiteDto {
+  target?: string;
+  sslEnabled?: boolean;
+  security?: Partial<SiteConfig['security']>;
+}
+/**
+ * Database Seed Script
+ * 
+ * Creates demo data for development and testing
+ */
+
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import { initDatabase, getDatabase, closeDatabase } from '../../config/database';
+import logger from '../../utils/logger';
+
+interface SeedOptions {
+    clearExisting?: boolean;
+    verbose?: boolean;
+}
+
+/**
+ * Seed the database with demo data
+ */
+export async function seedDatabase(options: SeedOptions = {}): Promise<void> {
+    const { clearExisting = false, verbose = true } = options;
+
+    try {
+        await initDatabase();
+        const db = getDatabase();
+
+        if (verbose) logger.info('Starting database seeding...');
+
+        // Clear existing data if requested
+        if (clearExisting) {
+            if (verbose) logger.info('Clearing existing data...');
+            db.exec('DELETE FROM alerts');
+            db.exec('DELETE FROM api_keys');
+            db.exec('DELETE FROM scan_results');
+            db.exec('DELETE FROM metrics');
+            db.exec('DELETE FROM security_rules');
+            db.exec('DELETE FROM sites');
+            db.exec('DELETE FROM agents');
+            db.exec('DELETE FROM devices');
+            db.exec('DELETE FROM users');
+        }
+
+        // Create admin user
+        const adminId = uuidv4();
+        const adminTenantId = uuidv4();
+        const adminPasswordHash = await bcrypt.hash('admin123', 12);
+
+        db.prepare(`
+      INSERT OR IGNORE INTO users (id, email, username, password_hash, role, tenant_id, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(adminId, 'admin@fluxguard.local', 'Administrator', adminPasswordHash, 'admin', adminTenantId, 'active');
+
+        if (verbose) logger.info('Created admin user: admin@fluxguard.local / admin123');
+
+        // Create demo tenant user
+        const tenantId = uuidv4();
+        const tenantUserId = uuidv4();
+        const tenantPasswordHash = await bcrypt.hash('demo123', 12);
+
+        db.prepare(`
+      INSERT OR IGNORE INTO users (id, email, username, password_hash, role, tenant_id, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(tenantUserId, 'demo@example.com', 'Demo User', tenantPasswordHash, 'tenant', tenantId, 'active');
+
+        if (verbose) logger.info('Created demo user: demo@example.com / demo123');
+
+        // Create demo sites
+        const sites = [
+            { domain: 'example.com', target: 'http://localhost:8080' },
+            { domain: 'api.example.com', target: 'http://localhost:3000' },
+            { domain: 'admin.example.com', target: 'http://localhost:4000' }
+        ];
+
+        for (const site of sites) {
+            db.prepare(`
+        INSERT OR IGNORE INTO sites (domain, target, sslEnabled, antiBotEnabled, rateLimitEnabled)
+        VALUES (?, ?, 1, 1, 1)
+      `).run(site.domain, site.target);
+        }
+
+        if (verbose) logger.info(`Created ${sites.length} demo sites`);
+
+        // Create demo agents
+        const agents = [
+            { id: uuidv4(), hostname: 'web-server-01', platform: 'linux', arch: 'x64', version: '2.0.0', status: 'online' },
+            { id: uuidv4(), hostname: 'api-server-01', platform: 'linux', arch: 'x64', version: '2.0.0', status: 'online' },
+            { id: uuidv4(), hostname: 'db-server-01', platform: 'linux', arch: 'x64', version: '1.9.5', status: 'offline' }
+        ];
+
+        for (const agent of agents) {
+            db.prepare(`
+        INSERT OR IGNORE INTO agents (id, hostname, platform, arch, version, status, lastHeartbeat)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).run(agent.id, agent.hostname, agent.platform, agent.arch, agent.version, agent.status);
+        }
+
+        if (verbose) logger.info(`Created ${agents.length} demo agents`);
+
+        // Create demo devices (ESP32)
+        const devices = [
+            { id: uuidv4(), mac: 'AA:BB:CC:DD:EE:01', firmware: '1.2.0', status: 'online' },
+            { id: uuidv4(), mac: 'AA:BB:CC:DD:EE:02', firmware: '1.2.0', status: 'offline' }
+        ];
+
+        for (const device of devices) {
+            db.prepare(`
+        INSERT OR IGNORE INTO devices (id, device_type, mac_address, firmware_version, status, last_seen)
+        VALUES (?, 'esp32', ?, ?, ?, datetime('now'))
+      `).run(device.id, device.mac, device.firmware, device.status);
+        }
+
+        if (verbose) logger.info(`Created ${devices.length} demo devices`);
+
+        // Create demo alerts
+        const alerts = [
+            { type: 'intrusion_attempt', severity: 'critical', source: 'web-server-01', message: 'SQL injection attempt detected from 192.168.1.100' },
+            { type: 'brute_force', severity: 'warning', source: 'api-server-01', message: 'Multiple failed login attempts from 10.0.0.5' },
+            { type: 'port_scan', severity: 'info', source: 'web-server-01', message: 'Port scan activity detected from 172.16.0.50' },
+            { type: 'vulnerability', severity: 'critical', source: 'db-server-01', message: 'CVE-2024-1234 vulnerability detected in OpenSSL' }
+        ];
+
+        for (const alert of alerts) {
+            db.prepare(`
+        INSERT INTO alerts (type, severity, source, message)
+        VALUES (?, ?, ?, ?)
+      `).run(alert.type, alert.severity, alert.source, alert.message);
+        }
+
+        if (verbose) logger.info(`Created ${alerts.length} demo alerts`);
+
+        // Create demo API key
+        const apiKeyId = uuidv4();
+        const apiKey = 'fluxguard_' + uuidv4().replace(/-/g, '');
+        const apiKeyHash = await bcrypt.hash(apiKey, 10);
+
+        db.prepare(`
+      INSERT OR IGNORE INTO api_keys (id, name, key_hash, user_id, tenant_id, permissions)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(apiKeyId, 'Demo API Key', apiKeyHash, adminId, adminTenantId, '["read", "write"]');
+
+        if (verbose) {
+            logger.info('Created demo API key');
+            logger.info(`API Key (save this): ${apiKey}`);
+        }
+
+        // Save changes
+        db.save();
+
+        if (verbose) {
+            logger.info('Database seeding completed successfully!');
+            logger.info('---');
+            logger.info('Demo Credentials:');
+            logger.info('  Admin: admin@fluxguard.local / admin123');
+            logger.info('  User:  demo@example.com / demo123');
+        }
+
+    } catch (error: any) {
+        logger.error('Database seeding failed', { error: error.message });
+        throw error;
+    }
+}
+
+/**
+ * Run seeder as standalone script
+ */
+async function main() {
+    console.log('馃尡 FluxGuard Database Seeder\n');
+
+    const clearExisting = process.argv.includes('--clear');
+
+    if (clearExisting) {
+        console.log('鈿狅笍  Warning: --clear flag detected, existing data will be removed!\n');
+    }
+
+    try {
+        await seedDatabase({ clearExisting, verbose: true });
+        console.log('\n鉁?Seeding completed!');
+        process.exit(0);
+    } catch (error) {
+        console.error('\n鉂?Seeding failed:', error);
+        process.exit(1);
+    } finally {
+        closeDatabase();
+    }
+}
+
+// Run if executed directly
+if (require.main === module) {
+    main();
+}
+
+export default seedDatabase;
+
+import { initDatabase, getDatabase } from '../config/database';
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import logger from '../utils/logger';
+
+async function seedDatabase() {
+    try {
+        await initDatabase();
+        const db = getDatabase();
+
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@fluxguard.com';
+        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+        // Check if admin exists
+        const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
+
+        if (existingAdmin) {
+            logger.info('Admin user already exists');
+            return;
+        }
+
+        logger.info('Creating default admin user...');
+
+        const saltRounds = 12;
+        const passwordHash = await bcrypt.hash(adminPassword, saltRounds);
+        const userId = uuidv4();
+        const tenantId = uuidv4();
+
+        db.prepare(`
+      INSERT INTO users (id, email, username, password_hash, role, tenant_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+    `).run(userId, adminEmail, 'Admin', passwordHash, 'admin', tenantId);
+
+        logger.info(`Admin user created: ${adminEmail}`);
+
+    } catch (error) {
+        logger.error('Failed to seed database', { error });
+        process.exit(1);
+    }
+}
+
+// Run if called directly
+if (require.main === module) {
+    seedDatabase().then(() => {
+        logger.info('Seeding complete');
+        process.exit(0);
+    });
+}
+
+export { seedDatabase };
+/**
+ * JWT Authentication Middleware
+ * 
+ * Provides secure authentication for FluxGuard API endpoints
+ */
+
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import logger from '../utils/logger';
+
+// JWT Configuration
+const JWT_SECRET = process.env.JWT_SECRET || 'fluxguard-dev-secret-change-in-production';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+
+/**
+ * Authenticated user payload stored in JWT
+ */
+export interface AuthenticatedUser {
+    userId: string;
+    email: string;
+    username: string;
+    role: 'admin' | 'tenant' | 'viewer';
+    tenantId?: string;
+}
+
+/**
+ * Extended Express Request with user info
+ */
+export interface AuthenticatedRequest extends Request {
+    user?: AuthenticatedUser;
+}
+
+/**
+ * Token pair for authentication
+ */
+export interface TokenPair {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+}
+
+/**
+ * Generate JWT token pair
+ */
+export function generateTokens(user: AuthenticatedUser): TokenPair {
+    const accessToken = jwt.sign(user, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
+    const refreshToken = jwt.sign(
+        { userId: user.userId, type: 'refresh' },
+        JWT_SECRET,
+        { expiresIn: JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
+    );
+
+    // Calculate expiration in seconds
+    const decoded = jwt.decode(accessToken) as jwt.JwtPayload;
+    const expiresIn = (decoded?.exp || 0) - Math.floor(Date.now() / 1000);
+
+    return { accessToken, refreshToken, expiresIn };
+}
+
+/**
+ * Verify and decode JWT token
+ */
+export function verifyToken(token: string): AuthenticatedUser | null {
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
+        return decoded;
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Verify refresh token
+ */
+export function verifyRefreshToken(token: string): { userId: string } | null {
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; type: string };
+        if (decoded.type !== 'refresh') {
+            return null;
+        }
+        return { userId: decoded.userId };
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Authentication middleware - requires valid JWT token
+ */
+export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(401).json({
+            error: 'Authentication required',
+            code: 'AUTH_TOKEN_MISSING'
+        });
+        return;
+    }
+
+    const token = authHeader.split(' ')[1];
+    const user = verifyToken(token);
+
+    if (!user) {
+        res.status(401).json({
+            error: 'Invalid or expired token',
+            code: 'AUTH_TOKEN_INVALID'
+        });
+        return;
+    }
+
+    req.user = user;
+    logger.debug(`Authenticated user: ${user.email}`);
+    next();
+}
+
+/**
+ * Optional authentication - attaches user if token present, continues otherwise
+ */
+export function optionalAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        const user = verifyToken(token);
+        if (user) {
+            req.user = user;
+        }
+    }
+
+    next();
+}
+
+/**
+ * Role-based access control middleware
+ */
+export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'>) {
+    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+        if (!req.user) {
+            res.status(401).json({
+                error: 'Authentication required',
+                code: 'AUTH_REQUIRED'
+            });
+            return;
+        }
+
+        if (!allowedRoles.includes(req.user.role)) {
+            logger.warn(`Access denied for user ${req.user.email} (role: ${req.user.role}), required: ${allowedRoles.join('/')}`);
+            res.status(403).json({
+                error: 'Insufficient permissions',
+                code: 'AUTH_FORBIDDEN',
+                requiredRoles: allowedRoles
+            });
+            return;
+        }
+
+        next();
+    };
+}
+
+/**
+ * Tenant isolation middleware - ensures users can only access their tenant's resources
+ */
+export function requireTenantAccess(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+    if (!req.user) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+    }
+
+    // Admins can access all tenants
+    if (req.user.role === 'admin') {
+        next();
+        return;
+    }
+
+    // Check if requested tenant matches user's tenant
+    const requestedTenantId = req.params.tenantId || req.query.tenantId || req.body?.tenantId;
+
+    if (requestedTenantId && requestedTenantId !== req.user.tenantId) {
+        res.status(403).json({
+            error: 'Cannot access resources from another tenant',
+            code: 'TENANT_MISMATCH'
+        });
+        return;
+    }
+
+    next();
+}
+
+/**
+ * API Key authentication for agent/device communication
+ */
+export function authenticateApiKey(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+    const apiKey = req.headers['x-api-key'] as string;
+
+    if (!apiKey) {
+        res.status(401).json({
+            error: 'API key required',
+            code: 'API_KEY_MISSING'
+        });
+        return;
+    }
+
+    // In production, validate against database
+    // For now, use environment variable
+    const validApiKeys = (process.env.VALID_API_KEYS || 'demo-api-key').split(',');
+
+    if (!validApiKeys.includes(apiKey)) {
+        logger.warn(`Invalid API key attempt: ${apiKey.substring(0, 8)}...`);
+        res.status(401).json({
+            error: 'Invalid API key',
+            code: 'API_KEY_INVALID'
+        });
+        return;
+    }
+
+    // Attach a system user for API key requests
+    req.user = {
+        userId: 'api-key-user',
+        email: 'api@fluxguard.local',
+        username: 'API Client',
+        role: 'tenant'
+    };
+
+    next();
+}
+
+/**
+ * Combined auth - accepts either JWT or API key
+ */
+export function authenticateAny(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+    const authHeader = req.headers.authorization;
+    const apiKey = req.headers['x-api-key'] as string;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        return authenticate(req, res, next);
+    }
+
+    if (apiKey) {
+        return authenticateApiKey(req, res, next);
+    }
+
+    res.status(401).json({
+        error: 'Authentication required (JWT or API key)',
+        code: 'AUTH_REQUIRED'
+    });
+}
+/**
+ * AI Engine - LLM Integration
+ * Integrates with various LLM providers for intelligent problem analysis and fixing
+ */
+
+export interface AIProvider {
+  name: 'openai' | 'anthropic' | 'ollama' | 'zhipu' | 'custom';
+  apiKey?: string;
+  baseURL?: string;
+  model: string;
+}
+
+export interface AIMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface AIAnalysisRequest {
+  problem: {
+    title: string;
+    description: string;
+    category: string;
+    priority: string;
+  };
+  context: {
+    systemInfo: any;
+    logs: string[];
+    configFiles: Record<string, string>;
+    commandOutput?: string;
+    errorOutput?: string;
+  };
+  previousAttempts?: Array<{
+    solution: string;
+    output: string;
+    error: string;
+  }>;
+}
+
+export interface AIAnalysisResponse {
+  diagnosis: {
+    rootCause: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    confidence: number; // 0-1
+  };
+  solutions: Array<{
+    command: string;
+    explanation: string;
+    riskLevel: 'low' | 'medium' | 'high';
+    estimatedSuccess: number; // 0-100
+    prerequisites?: string[]; // Commands to run first
+  }>;
+  alternativeApproaches?: string[];
+  warnings?: string[];
+}
+
+export class AIEngine {
+  private provider: AIProvider;
+
+  constructor(provider: AIProvider) {
+    this.provider = provider;
+  }
+
+  /**
+   * Analyze a problem and suggest solutions using AI
+   */
+  async analyzeProblem(request: AIAnalysisRequest): Promise<AIAnalysisResponse> {
+    const prompt = this.buildAnalysisPrompt(request);
+
+    try {
+      const response = await this.callLLM(prompt);
+
+      return this.parseResponse(response);
+    } catch (error: any) {
+      console.error('AI analysis failed:', error);
+
+      // Fallback to rule-based analysis
+      return this.fallbackAnalysis(request);
+    }
+  }
+
+  /**
+   * Get AI suggestion when a command fails
+   */
+  async diagnoseFailure(
+    originalProblem: any,
+    attemptedSolution: string,
+    commandOutput: string,
+    errorOutput: string
+  ): Promise<{
+    diagnosis: string;
+    alternativeSolution: string;
+    explanation: string;
+  }> {
+    const prompt = `
+Original Problem:
+${JSON.stringify(originalProblem, null, 2)}
+
+Attempted Solution:
+${attemptedSolution}
+
+Command Output:
+${commandOutput}
+
+Error Output:
+${errorOutput}
+
+The command failed. Please:
+1. Diagnose why it failed
+2. Suggest an alternative approach
+3. Explain what went wrong
+
+Provide your response in JSON format:
+{
+  "diagnosis": "why it failed",
+  "alternativeSolution": "alternative command or approach",
+  "explanation": "detailed explanation"
+}
+`;
+
+    try {
+      const response = await this.callLLM(prompt);
+      return JSON.parse(response);
+    } catch (error: any) {
+      console.error('AI diagnosis failed:', error);
+
+      return {
+        diagnosis: 'Command failed with unknown error',
+        alternativeSolution: 'Check system logs for more details',
+        explanation: 'AI analysis unavailable, manual intervention required'
+      };
+    }
+  }
+
+  /**
+   * Monitor execution and provide real-time suggestions
+   */
+  async analyzeExecutionOutput(
+    command: string,
+    output: string,
+    isComplete: boolean
+  ): Promise<{
+    status: 'normal' | 'warning' | 'error' | 'success';
+    message: string;
+    suggestions?: string[];
+    shouldAbort?: boolean;
+  }> {
+    const prompt = `
+Command Being Executed:
+${command}
+
+Current Output:
+${output}
+
+Execution Status: ${isComplete ? 'Complete' : 'In Progress'}
+
+Analyze the output and provide:
+1. Status assessment (normal/warning/error/success)
+2. Brief message explaining what's happening
+3. Suggestions if there are issues
+4. Whether to abort if critical error detected
+
+Response in JSON format:
+{
+  "status": "normal|warning|error|success",
+  "message": "what's happening",
+  "suggestions": ["suggestion1", "suggestion2"],
+  "shouldAbort": false
+}
+`;
+
+    try {
+      const response = await this.callLLM(prompt);
+      return JSON.parse(response);
+    } catch (error: any) {
+      // Simple fallback analysis
+      if (output.toLowerCase().includes('error')) {
+        return {
+          status: 'error',
+          message: 'Error detected in output',
+          suggestions: ['Check error messages', 'Review logs']
+        };
+      }
+
+      return {
+        status: 'normal',
+        message: isComplete ? 'Command completed' : 'Command running...'
+      };
+    }
+  }
+
+  /**
+   * Build prompt for AI analysis
+   */
+  private buildAnalysisPrompt(request: AIAnalysisRequest): string {
+    const { problem, context, previousAttempts } = request;
+
+    let prompt = `You are an expert Linux system administrator and DevOps engineer. Analyze this problem and suggest solutions.
+
+PROBLEM:
+Title: ${problem.title}
+Description: ${problem.description}
+Category: ${problem.category}
+Priority: ${problem.priority}
+
+SYSTEM CONTEXT:
+`;
+
+    // Add system info
+    if (context.systemInfo) {
+      prompt += `
+OS: ${context.systemInfo.platform} ${context.systemInfo.release}
+CPUs: ${context.systemInfo.cpus}
+Memory: ${context.systemInfo.totalMemory}
+Uptime: ${context.systemInfo.uptime}
+`;
+    }
+
+    // Add previous attempts
+    if (previousAttempts && previousAttempts.length > 0) {
+      prompt += `
+PREVIOUS ATTEMPTS (all failed):
+`;
+      previousAttempts.forEach((attempt, i) => {
+        prompt += `
+Attempt ${i + 1}:
+Solution: ${attempt.solution}
+Output: ${attempt.output}
+Error: ${attempt.error}
+`;
+      });
+    }
+
+    // Add relevant logs
+    if (context.logs && context.logs.length > 0) {
+      prompt += `
+RELEVANT LOGS:
+${context.logs.join('\n')}
+`;
+    }
+
+    // Add command output if available
+    if (context.commandOutput) {
+      prompt += `
+COMMAND OUTPUT:
+${context.commandOutput}
+`;
+    }
+
+    if (context.errorOutput) {
+      prompt += `
+ERROR OUTPUT:
+${context.errorOutput}
+`;
+    }
+
+    prompt += `
+Please analyze and provide:
+1. Root cause diagnosis
+2. Severity assessment
+3. Multiple solutions (from safest to most aggressive)
+4. Risk level for each solution
+5. Estimated success rate
+6. Any warnings
+
+Response in JSON format:
+{
+  "diagnosis": {
+    "rootCause": "primary cause",
+    "severity": "low|medium|high|critical",
+    "confidence": 0.85
+  },
+  "solutions": [
+    {
+      "command": "exact command to execute",
+      "explanation": "why this will work",
+      "riskLevel": "low|medium|high",
+      "estimatedSuccess": 85,
+      "prerequisites": ["commands to run first"]
+    }
+  ],
+  "alternativeApproaches": ["alternative 1", "alternative 2"],
+  "warnings": ["warning 1", "warning 2"]
+}
+`;
+
+    return prompt;
+  }
+
+  /**
+   * Call LLM API
+   */
+  private async callLLM(prompt: string): Promise<string> {
+    const { name, apiKey, baseURL, model } = this.provider;
+
+    switch (name) {
+      case 'openai':
+        return this.callOpenAI(prompt, model, apiKey);
+      case 'anthropic':
+        return this.callAnthropic(prompt, model, apiKey);
+      case 'ollama':
+        return this.callOllama(prompt, model, baseURL);
+      case 'zhipu':
+        return this.callZhipu(prompt, model, apiKey, baseURL);
+      default:
+        throw new Error(`Unsupported AI provider: ${name}`);
+    }
+  }
+
+  /**
+   * Call OpenAI API
+   */
+  private async callOpenAI(prompt: string, model: string, apiKey?: string): Promise<string> {
+    const axios = require('axios');
+
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: model || 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert Linux system administrator. Always respond with valid JSON.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 2000
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey || process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    return response.data.choices[0].message.content;
+  }
+
+  /**
+   * Call Anthropic Claude API
+   */
+  private async callAnthropic(prompt: string, model: string, apiKey?: string): Promise<string> {
+    const axios = require('axios');
+
+    const response = await axios.post(
+      'https://api.anthropic.com/v1/messages',
+      {
+        model: model || 'claude-3-sonnet-20240229',
+        max_tokens: 2000,
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ]
+      },
+      {
+        headers: {
+          'x-api-key': apiKey || process.env.ANTHROPIC_API_KEY,
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01'
+        }
+      }
+    );
+
+    return response.data.content[0].text;
+  }
+
+  /**
+   * Call Ollama (local LLM)
+   */
+  private async callOllama(prompt: string, model: string, baseURL?: string): Promise<string> {
+    const axios = require('axios');
+
+    const response = await axios.post(
+      `${baseURL || 'http://localhost:11434'}/api/generate`,
+      {
+        model: model || 'llama2',
+        prompt: prompt,
+        stream: false
+      }
+    );
+
+    return response.data.response;
+  }
+
+  /**
+   * Parse AI response
+   */
+  private parseResponse(response: string): AIAnalysisResponse {
+    try {
+      // Try to extract JSON from markdown code blocks
+      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
+        response.match(/```\s*([\s\S]*?)\s*```/);
+
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[1]);
+      }
+
+      // Try parsing directly
+      return JSON.parse(response);
+    } catch (error) {
+      console.error('Failed to parse AI response:', error);
+      throw new Error('Invalid JSON response from AI');
+    }
+  }
+
+  /**
+   * Fallback analysis when AI is unavailable
+   */
+  private fallbackAnalysis(request: AIAnalysisRequest): AIAnalysisResponse {
+    const { problem } = request;
+
+    // Simple rule-based analysis
+    const solutions: Array<{
+      command: string;
+      explanation: string;
+      riskLevel: 'low' | 'medium' | 'high';
+      estimatedSuccess: number;
+    }> = [];
+
+    // Add common solutions based on problem category
+    if (problem.category === 'security') {
+      if (problem.title.toLowerCase().includes('firewall')) {
+        solutions.push({
+          command: 'sudo ufw enable',
+          explanation: 'Enable UFW firewall',
+          riskLevel: 'low',
+          estimatedSuccess: 90
+        });
+      }
+    }
+
+    if (problem.category === 'performance') {
+      if (problem.title.toLowerCase().includes('file descriptor')) {
+        solutions.push({
+          command: 'ulimit -n 65535',
+          explanation: 'Increase file descriptor limit',
+          riskLevel: 'low',
+          estimatedSuccess: 85
+        });
+      }
+    }
+
+    return {
+      diagnosis: {
+        rootCause: 'Unable to determine without AI',
+        severity: problem.priority === 'critical' ? 'critical' : 'medium',
+        confidence: 0.5
+      },
+      solutions: solutions.length > 0 ? solutions : [{
+        command: '# Manual intervention required',
+        explanation: 'AI analysis unavailable, please review logs',
+        riskLevel: 'medium',
+        estimatedSuccess: 50
+      }],
+      warnings: ['AI analysis unavailable, using rule-based fallback']
+    };
+  }
+/**   * Call Zhipu AI (BigModel) API   */  private async callZhipu(prompt: string, model: string, apiKey?: string, baseURL?: string): Promise<string> { const { ZhipuClient } = require("./zhipu-client"); const client = new ZhipuClient(apiKey || process.env.ZHIPU_API_KEY || "", baseURL || "https://open.bigmodel.cn/api/anthropic"); return await client.generateCompletion(prompt, model); }
+}
+
+// Singleton instances for different providers
+export const createAIEngine = (provider: AIProvider): AIEngine => {
+  return new AIEngine(provider);
+};
+import { spawn, ChildProcess } from 'child_process';
+import { EventEmitter } from 'events';
+import { AIEngine } from './ai-engine';
+
+/**
+ * Execution Monitor
+ * Real-time monitoring of command execution with AI-powered analysis
+ */
+
+export interface ExecutionOptions {
+  timeout?: number; // milliseconds
+  env?: Record<string, string>;
+  cwd?: string;
+  aiEngine?: AIEngine;
+  enableAIMonitoring?: boolean;
+}
+
+export interface ExecutionResult {
+  command: string;
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  duration: number;
+  success: boolean;
+  aiAnalysis?: any;
+}
+
+export interface ExecutionEvent {
+  type: 'start' | 'stdout' | 'stderr' | 'ai-analysis' | 'complete' | 'error' | 'timeout';
+  timestamp: number;
+  data: any;
+}
+
+export class ExecutionMonitor extends EventEmitter {
+  private currentProcess: ChildProcess | null = null;
+  private startTime: number = 0;
+  private stdoutBuffer: string[] = [];
+  private stderrBuffer: string[] = [];
+  private aiAnalysisInterval: NodeJS.Timeout | null = null;
+  private executionId: string;
+
+  constructor() {
+    super();
+    this.executionId = `exec-${Date.now()}`;
+  }
+
+  /**
+   * Execute command with real-time monitoring
+   */
+  async execute(command: string, options: ExecutionOptions = {}): Promise<ExecutionResult> {
+    const {
+      timeout = 300000, // 5 minutes default
+      env = process.env,
+      cwd = process.cwd(),
+      aiEngine,
+      enableAIMonitoring = false
+    } = options;
+
+    return new Promise((resolve, reject) => {
+      this.startTime = Date.now();
+      this.stdoutBuffer = [];
+      this.stderrBuffer = [];
+
+      // Emit start event
+      this.emitEvent('start', { command, executionId: this.executionId });
+
+      // Spawn process
+      const [cmd, ...args] = command.split(/\s+/);
+      this.currentProcess = spawn(cmd, args, {
+        env,
+        cwd,
+        timeout
+      });
+
+      // Setup AI monitoring if enabled
+      if (enableAIMonitoring && aiEngine) {
+        this.startAIMonitoring(command, aiEngine);
+      }
+
+      // Collect stdout
+      this.currentProcess.stdout?.on('data', (data) => {
+        const output = data.toString();
+        this.stdoutBuffer.push(output);
+        this.emitEvent('stdout', { output: output.trim() });
+
+        // Real-time AI analysis on suspicious output
+        if (enableAIMonitoring && aiEngine) {
+          this.analyzeOutputInRealTime(command, output, aiEngine);
+        }
+      });
+
+      // Collect stderr
+      this.currentProcess.stderr?.on('data', (data) => {
+        const error = data.toString();
+        this.stderrBuffer.push(error);
+        this.emitEvent('stderr', { error: error.trim() });
+
+        // AI analysis on errors
+        if (enableAIMonitoring && aiEngine) {
+          this.analyzeErrorInRealTime(command, error, aiEngine);
+        }
+      });
+
+      // Handle process exit
+      this.currentProcess.on('close', async (code) => {
+        this.stopAIMonitoring();
+
+        const duration = Date.now() - this.startTime;
+        const stdout = this.stdoutBuffer.join('\n');
+        const stderr = this.stderrBuffer.join('\n');
+
+        const result: ExecutionResult = {
+          command,
+          exitCode: code,
+          stdout,
+          stderr,
+          duration,
+          success: code === 0
+        };
+
+        // Final AI analysis if enabled
+        if (enableAIMonitoring && aiEngine && !result.success) {
+          try {
+            result.aiAnalysis = await this.analyzeFailure(command, result, aiEngine);
+          } catch (error) {
+            console.error('Final AI analysis failed:', error);
+          }
+        }
+
+        this.emitEvent('complete', result);
+
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(result);
+        }
+      });
+
+      // Handle error
+      this.currentProcess.on('error', (error) => {
+        this.stopAIMonitoring();
+        this.emitEvent('error', { error: error.message });
+        reject({
+          command,
+          exitCode: null,
+          stdout: this.stdoutBuffer.join('\n'),
+          stderr: this.stderrBuffer.join('\n'),
+          duration: Date.now() - this.startTime,
+          success: false,
+          error: error.message
+        });
+      });
+
+      // Handle timeout
+      if (timeout) {
+        setTimeout(() => {
+          if (this.currentProcess && !this.currentProcess.killed) {
+            this.currentProcess.kill('SIGTERM');
+            this.emitEvent('timeout', { timeout });
+            this.stopAIMonitoring();
+          }
+        }, timeout);
+      }
+    });
+  }
+
+  /**
+   * Start periodic AI monitoring
+   */
+  private startAIMonitoring(command: string, aiEngine: AIEngine): void {
+    // Analyze execution every 10 seconds
+    this.aiAnalysisInterval = setInterval(async () => {
+      const currentOutput = this.stdoutBuffer.join('\n');
+      const currentError = this.stderrBuffer.join('\n');
+
+      if (currentOutput || currentError) {
+        try {
+          const analysis = await aiEngine.analyzeExecutionOutput(
+            command,
+            currentOutput + '\n' + currentError,
+            false // Not complete yet
+          );
+
+          this.emitEvent('ai-analysis', analysis);
+
+          // Abort if AI recommends it
+          if (analysis.shouldAbort) {
+            console.warn('AI recommends aborting execution:', analysis.message);
+            this.abortExecution();
+          }
+        } catch (error) {
+          console.error('Real-time AI analysis failed:', error);
+        }
+      }
+    }, 10000);
+  }
+
+  /**
+   * Stop AI monitoring
+   */
+  private stopAIMonitoring(): void {
+    if (this.aiAnalysisInterval) {
+      clearInterval(this.aiAnalysisInterval);
+      this.aiAnalysisInterval = null;
+    }
+  }
+
+  /**
+   * Real-time analysis of output
+   */
+  private async analyzeOutputInRealTime(command: string, output: string, aiEngine: AIEngine): Promise<void> {
+    try {
+      const analysis = await aiEngine.analyzeExecutionOutput(command, output, false);
+
+      if (analysis.status === 'warning' || analysis.status === 'error') {
+        this.emitEvent('ai-analysis', {
+          type: 'warning',
+          message: analysis.message,
+          suggestions: analysis.suggestions
+        });
+      }
+    } catch (error) {
+      // Silently fail for real-time analysis
+      console.debug('Real-time output analysis failed:', error);
+    }
+  }
+
+  /**
+   * Real-time analysis of errors
+   */
+  private async analyzeErrorInRealTime(command: string, error: string, aiEngine: AIEngine): Promise<void> {
+    try {
+      // Check if error looks critical
+      const criticalPatterns = [
+        'permission denied',
+        'access denied',
+        'no space left',
+        'segmentation fault',
+        'killed'
+      ];
+
+      const isCritical = criticalPatterns.some(pattern =>
+        error.toLowerCase().includes(pattern)
+      );
+
+      if (isCritical) {
+        this.emitEvent('ai-analysis', {
+          type: 'critical-error',
+          message: 'Critical error detected',
+          error: error.trim(),
+          shouldAbort: true
+        });
+
+        // Optionally abort on critical errors
+        // this.abortExecution();
+      }
+    } catch (error) {
+      console.debug('Real-time error analysis failed:', error);
+    }
+  }
+
+  /**
+   * Analyze failure after execution completes
+   */
+  private async analyzeFailure(command: string, result: ExecutionResult, aiEngine: AIEngine): Promise<any> {
+    try {
+      return await aiEngine.diagnoseFailure(
+        { command },
+        command,
+        result.stdout,
+        result.stderr
+      );
+    } catch (error) {
+      console.error('Failure analysis failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Abort current execution
+   */
+  abortExecution(): void {
+    if (this.currentProcess && !this.currentProcess.killed) {
+      this.currentProcess.kill('SIGKILL');
+      this.emitEvent('error', { message: 'Execution aborted' });
+    }
+  }
+
+  /**
+   * Get execution ID
+   */
+  getExecutionId(): string {
+    return this.executionId;
+  }
+
+  /**
+   * Check if process is running
+   */
+  isRunning(): boolean {
+    return this.currentProcess !== null && !this.currentProcess.killed;
+  }
+
+  /**
+   * Get current output
+   */
+  getCurrentOutput(): { stdout: string; stderr: string } {
+    return {
+      stdout: this.stdoutBuffer.join('\n'),
+      stderr: this.stderrBuffer.join('\n')
+    };
+  }
+
+  /**
+   * Emit event
+   */
+  private emitEvent(type: string, data: any): void {
+    this.emit('execution-event', {
+      type,
+      timestamp: Date.now(),
+      executionId: this.executionId,
+      ...data
+    } as ExecutionEvent);
+  }
+}
+/**
+ * Nuclei 婕忔礊鎵弿鍣ㄩ泦鎴?
+ * 
+ * 闆嗘垚 ProjectDiscovery Nuclei 杩涜婕忔礊鎵弿
+ * https://github.com/projectdiscovery/nuclei
+ */
+
+import { exec, spawn } from 'child_process';
+import { promisify } from 'util';
+import path from 'path';
+import fs from 'fs/promises';
+import logger from '../utils/logger';
+
+const execAsync = promisify(exec);
+
+export interface VulnerabilityResult {
+    templateId: string;
+    name: string;
+    severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+    host: string;
+    matched: string;
+    timestamp: Date;
+    description?: string;
+    reference?: string[];
+    tags?: string[];
+}
+
+export interface ScanProgress {
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    progress: number; // 0-100
+    templatesTotal: number;
+    templatesCompleted: number;
+    vulnerabilitiesFound: number;
+    startTime: Date;
+    endTime?: Date;
+    error?: string;
+}
+
+export class NucleiScanner {
+    private nucleiPath: string = 'nuclei'; // 榛樿浣跨敤 PATH 涓殑 nuclei
+    private templatesPath: string = '';
+    private outputDir: string = '';
+    private isAvailable: boolean = false;
+
+    constructor(options?: { nucleiPath?: string; templatesPath?: string; outputDir?: string }) {
+        if (options?.nucleiPath) this.nucleiPath = options.nucleiPath;
+        if (options?.templatesPath) this.templatesPath = options.templatesPath;
+        this.outputDir = options?.outputDir || path.join(process.cwd(), 'scan-results');
+    }
+
+    /**
+     * 妫€鏌?Nuclei 鏄惁宸插畨瑁?
+     */
+    async checkAvailability(): Promise<boolean> {
+        try {
+            const { stdout } = await execAsync(`${this.nucleiPath} -version`);
+            logger.info(`Nuclei available: ${stdout.trim()}`);
+            this.isAvailable = true;
+            return true;
+        } catch (error) {
+            logger.warn('Nuclei not found. Install from: https://github.com/projectdiscovery/nuclei');
+            this.isAvailable = false;
+            return false;
+        }
+    }
+
+    /**
+     * 鏇存柊 Nuclei 妯℃澘
+     */
+    async updateTemplates(): Promise<boolean> {
+        try {
+            logger.info('Updating Nuclei templates...');
+            const { stdout } = await execAsync(`${this.nucleiPath} -update-templates`);
+            logger.info(`Templates updated: ${stdout.trim()}`);
+            return true;
+        } catch (error: any) {
+            logger.error('Failed to update templates', { error: error.message });
+            return false;
+        }
+    }
+
+    /**
+     * 杩愯婕忔礊鎵弿
+     * @param target 鐩爣 URL 鎴?IP
+     * @param options 鎵弿閫夐」
+     */
+    async scan(
+        target: string,
+        options?: {
+            severity?: ('critical' | 'high' | 'medium' | 'low' | 'info')[];
+            tags?: string[];
+            templates?: string[];
+            timeout?: number; // 鍒嗛挓
+            rateLimit?: number; // 璇锋眰/绉?
+            onProgress?: (progress: ScanProgress) => void;
+        }
+    ): Promise<VulnerabilityResult[]> {
+        if (!this.isAvailable) {
+            await this.checkAvailability();
+            if (!this.isAvailable) {
+                throw new Error('Nuclei is not installed');
+            }
+        }
+
+        const results: VulnerabilityResult[] = [];
+        const scanId = `scan-${Date.now()}`;
+        const outputFile = path.join(this.outputDir, `${scanId}.json`);
+
+        // 纭繚杈撳嚭鐩綍瀛樺湪
+        await fs.mkdir(this.outputDir, { recursive: true });
+
+        // 鏋勫缓鍛戒护鍙傛暟
+        const args: string[] = [
+            '-target', target,
+            '-json',
+            '-output', outputFile,
+            '-silent'
+        ];
+
+        // 涓ラ噸鎬ц繃婊?
+        if (options?.severity && options.severity.length > 0) {
+            args.push('-severity', options.severity.join(','));
+        }
+
+        // 鏍囩杩囨护
+        if (options?.tags && options.tags.length > 0) {
+            args.push('-tags', options.tags.join(','));
+        }
+
+        // 鎸囧畾妯℃澘
+        if (options?.templates && options.templates.length > 0) {
+            for (const template of options.templates) {
+                args.push('-t', template);
+            }
+        }
+
+        // 閫熺巼闄愬埗
+        if (options?.rateLimit) {
+            args.push('-rate-limit', options.rateLimit.toString());
+        }
+
+        // 瓒呮椂
+        if (options?.timeout) {
+            args.push('-timeout', (options.timeout * 60).toString());
+        }
+
+        // 鑷畾涔夋ā鏉胯矾寰?
+        if (this.templatesPath) {
+            args.push('-t', this.templatesPath);
+        }
+
+        logger.info(`Starting Nuclei scan: ${target}`, { args });
+
+        const progress: ScanProgress = {
+            status: 'running',
+            progress: 0,
+            templatesTotal: 0,
+            templatesCompleted: 0,
+            vulnerabilitiesFound: 0,
+            startTime: new Date()
+        };
+
+        options?.onProgress?.(progress);
+
+        return new Promise((resolve, reject) => {
+            const nucleiProcess = spawn(this.nucleiPath, args, {
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+
+            let stderrData = '';
+
+            nucleiProcess.stdout.on('data', (data: Buffer) => {
+                const lines = data.toString().split('\n').filter(line => line.trim());
+
+                for (const line of lines) {
+                    try {
+                        const result = JSON.parse(line);
+                        if (result.info) {
+                            const vuln: VulnerabilityResult = {
+                                templateId: result['template-id'] || result.templateID,
+                                name: result.info.name,
+                                severity: result.info.severity || 'info',
+                                host: result.host,
+                                matched: result.matched || result['matched-at'],
+                                timestamp: new Date(result.timestamp || Date.now()),
+                                description: result.info.description,
+                                reference: result.info.reference,
+                                tags: result.info.tags
+                            };
+                            results.push(vuln);
+                            progress.vulnerabilitiesFound = results.length;
+                            options?.onProgress?.(progress);
+                        }
+                    } catch {
+                        // 闈?JSON 杈撳嚭锛屽拷鐣?
+                    }
+                }
+            });
+
+            nucleiProcess.stderr.on('data', (data: Buffer) => {
+                stderrData += data.toString();
+
+                // 灏濊瘯瑙ｆ瀽杩涘害淇℃伅
+                const progressMatch = stderrData.match(/Templates: (\d+)\/(\d+)/);
+                if (progressMatch) {
+                    progress.templatesCompleted = parseInt(progressMatch[1]);
+                    progress.templatesTotal = parseInt(progressMatch[2]);
+                    progress.progress = Math.round((progress.templatesCompleted / progress.templatesTotal) * 100);
+                    options?.onProgress?.(progress);
+                }
+            });
+
+            nucleiProcess.on('close', async (code) => {
+                progress.endTime = new Date();
+
+                if (code === 0) {
+                    progress.status = 'completed';
+                    progress.progress = 100;
+                    logger.info(`Nuclei scan completed: ${results.length} vulnerabilities found`);
+
+                    // 灏濊瘯璇诲彇杈撳嚭鏂囦欢鑾峰彇瀹屾暣缁撴灉
+                    try {
+                        const fileContent = await fs.readFile(outputFile, 'utf-8');
+                        const fileResults = fileContent
+                            .split('\n')
+                            .filter(line => line.trim())
+                            .map(line => {
+                                try {
+                                    return JSON.parse(line);
+                                } catch {
+                                    return null;
+                                }
+                            })
+                            .filter(Boolean);
+
+                        // 鍚堝苟缁撴灉
+                        for (const result of fileResults) {
+                            if (!results.find(r => r.templateId === result['template-id'] && r.host === result.host)) {
+                                results.push({
+                                    templateId: result['template-id'],
+                                    name: result.info?.name || 'Unknown',
+                                    severity: result.info?.severity || 'info',
+                                    host: result.host,
+                                    matched: result.matched || result['matched-at'],
+                                    timestamp: new Date(result.timestamp || Date.now()),
+                                    description: result.info?.description,
+                                    reference: result.info?.reference,
+                                    tags: result.info?.tags
+                                });
+                            }
+                        }
+                    } catch {
+                        // 鏂囦欢涓嶅瓨鍦ㄦ垨璇诲彇澶辫触
+                    }
+
+                    options?.onProgress?.(progress);
+                    resolve(results);
+                } else {
+                    progress.status = 'failed';
+                    progress.error = stderrData || `Exit code: ${code}`;
+                    logger.error(`Nuclei scan failed`, { code, stderr: stderrData });
+                    options?.onProgress?.(progress);
+                    reject(new Error(progress.error));
+                }
+            });
+
+            nucleiProcess.on('error', (error) => {
+                progress.status = 'failed';
+                progress.error = error.message;
+                progress.endTime = new Date();
+                options?.onProgress?.(progress);
+                reject(error);
+            });
+        });
+    }
+
+    /**
+     * 蹇€熸壂鎻?- 浠呴珮鍗卞拰涓ラ噸婕忔礊
+     */
+    async quickScan(target: string, onProgress?: (progress: ScanProgress) => void): Promise<VulnerabilityResult[]> {
+        return this.scan(target, {
+            severity: ['critical', 'high'],
+            rateLimit: 100,
+            timeout: 10,
+            onProgress
+        });
+    }
+
+    /**
+     * 瀹屾暣鎵弿 - 鎵€鏈夌骇鍒?
+     */
+    async fullScan(target: string, onProgress?: (progress: ScanProgress) => void): Promise<VulnerabilityResult[]> {
+        return this.scan(target, {
+            severity: ['critical', 'high', 'medium', 'low'],
+            rateLimit: 50,
+            timeout: 60,
+            onProgress
+        });
+    }
+
+    /**
+     * Web 搴旂敤鎵弿 - 涓撴敞浜?Web 婕忔礊
+     */
+    async webAppScan(target: string, onProgress?: (progress: ScanProgress) => void): Promise<VulnerabilityResult[]> {
+        return this.scan(target, {
+            tags: ['xss', 'sqli', 'ssrf', 'lfi', 'rfi', 'rce', 'injection'],
+            severity: ['critical', 'high', 'medium'],
+            rateLimit: 30,
+            timeout: 30,
+            onProgress
+        });
+    }
+
+    /**
+     * CVE 鎵弿 - 宸茬煡婕忔礊妫€娴?
+     */
+    async cveScan(target: string, onProgress?: (progress: ScanProgress) => void): Promise<VulnerabilityResult[]> {
+        return this.scan(target, {
+            tags: ['cve'],
+            severity: ['critical', 'high'],
+            rateLimit: 50,
+            timeout: 30,
+            onProgress
+        });
+    }
+
+    /**
+     * 鑾峰彇鎵弿缁撴灉鎽樿
+     */
+    getSummary(results: VulnerabilityResult[]): {
+        total: number;
+        bySeverity: Record<string, number>;
+        byType: Record<string, number>;
+    } {
+        const bySeverity: Record<string, number> = {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0,
+            info: 0
+        };
+
+        const byType: Record<string, number> = {};
+
+        for (const result of results) {
+            bySeverity[result.severity] = (bySeverity[result.severity] || 0) + 1;
+
+            const type = result.tags?.[0] || 'other';
+            byType[type] = (byType[type] || 0) + 1;
+        }
+
+        return {
+            total: results.length,
+            bySeverity,
+            byType
+        };
+    }
+
+    /**
+     * 妫€鏌ユ槸鍚﹀彲鐢?
+     */
+    getIsAvailable(): boolean {
+        return this.isAvailable;
+    }
+}
+
+// 瀵煎嚭鍗曚緥
+export const nucleiScanner = new NucleiScanner();
+import { PortScanner } from './port-scanner';
+import { SystemScanner } from './system-scanner';
+import { WebScanner } from './web-scanner';
+import { Recommendation, ScanOptions } from '../database/models/scan-result';
+import logger from '../utils/logger';
+
+/**
+ * Optimization Engine
+ * Orchestrates all scanners and generates comprehensive optimization recommendations
+ */
+export class OptimizationEngine {
+  private portScanner: PortScanner;
+  private systemScanner: SystemScanner;
+  private webScanner: WebScanner;
+
+  constructor() {
+    this.portScanner = new PortScanner();
+    this.systemScanner = new SystemScanner();
+    this.webScanner = new WebScanner();
+  }
+
+  /**
+   * Run full server scan
+   */
+  async runFullScan(options: ScanOptions = {}): Promise<{
+    systemInfo: any;
+    recommendations: Recommendation[];
+    summary: {
+      critical: number;
+      high: number;
+      medium: number;
+      low: number;
+    };
+  }> {
+    const allRecommendations: Recommendation[] = [];
+    const systemInfo: any = {};
+
+    logger.info('Starting full server scan...');
+
+    // 1. Port scanning
+    if (options.scanPorts !== false) {
+      logger.info('Running port scan...');
+      const portRecs = await this.portScanner.scanCommonPorts();
+      allRecommendations.push(...portRecs);
+    }
+
+    // 2. System scanning
+    if (options.scanSystem !== false) {
+      logger.info('Running system scan...');
+      const { info, recommendations } = await this.systemScanner.scanSystem();
+      Object.assign(systemInfo, info);
+      allRecommendations.push(...recommendations);
+    }
+
+    // 3. Web server scanning
+    if (options.scanWebServer !== false) {
+      logger.info('Running web server scan...');
+      const { server, recommendations } = await this.webScanner.scanWebServer();
+      systemInfo.webServer = server;
+      allRecommendations.push(...recommendations);
+    }
+
+    // Sort recommendations by priority
+    const sortedRecs = this.sortRecommendations(allRecommendations);
+
+    // Generate summary
+    const summary = this.generateSummary(sortedRecs);
+
+    logger.info('Full server scan complete', { summary });
+
+    return {
+      systemInfo,
+      recommendations: sortedRecs,
+      summary
+    };
+  }
+
+  /**
+   * Apply an optimization
+   */
+  async applyOptimization(recommendation: Recommendation): Promise<{ success: boolean; output?: string; error?: string }> {
+    if (!recommendation.autoApplicable) {
+      return {
+        success: false,
+        error: 'This recommendation cannot be automatically applied'
+      };
+    }
+
+    logger.info(`Applying optimization: ${recommendation.title}`);
+
+    try {
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execAsync = util.promisify(exec);
+
+      // Execute the action
+      const { stdout, stderr } = await execAsync(recommendation.action);
+
+      logger.info(`Optimization applied successfully`, { output: stdout });
+
+      return {
+        success: true,
+        output: stdout || stderr
+      };
+    } catch (error: any) {
+      logger.error(`Failed to apply optimization`, { error });
+
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Sort recommendations by priority
+   */
+  private sortRecommendations(recommendations: Recommendation[]): Recommendation[] {
+    const priorityOrder = {
+      critical: 0,
+      high: 1,
+      medium: 2,
+      low: 3
+    };
+
+    return recommendations.sort((a, b) => {
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+  }
+
+  /**
+   * Generate summary statistics
+   */
+  private generateSummary(recommendations: Recommendation[]): {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  } {
+    return {
+      critical: recommendations.filter(r => r.priority === 'critical').length,
+      high: recommendations.filter(r => r.priority === 'high').length,
+      medium: recommendations.filter(r => r.priority === 'medium').length,
+      low: recommendations.filter(r => r.priority === 'low').length
+    };
+  }
+
+  /**
+   * Get optimization preview (what would be done)
+   */
+  async previewOptimizations(recommendations: Recommendation[]): Promise<{
+    autoApplicable: Recommendation[];
+    manual: Recommendation[];
+  }> {
+    const autoApplicable = recommendations.filter(r => r.autoApplicable);
+    const manual = recommendations.filter(r => !r.autoApplicable);
+
+    return { autoApplicable, manual };
+  }
+
+  /**
+   * Export recommendations as report
+   */
+  generateReport(systemInfo: any, recommendations: Recommendation[]): string {
+    let report = '# NewSecurity Server Optimization Report\n\n';
+    report += `Generated: ${new Date().toISOString()}\n\n`;
+
+    report += '## System Information\n\n';
+    report += `- Platform: ${systemInfo.platform} ${systemInfo.release}\n`;
+    report += `- Architecture: ${systemInfo.arch}\n`;
+    report += `- CPUs: ${systemInfo.cpus}\n`;
+    report += `- Total Memory: ${systemInfo.totalMemory}\n`;
+    report += `- Uptime: ${systemInfo.uptime}\n`;
+    if (systemInfo.webServer) {
+      report += `- Web Server: ${systemInfo.webServer}\n`;
+    }
+    report += '\n';
+
+    report += '## Recommendations\n\n';
+
+    const byPriority = recommendations.reduce((acc, rec) => {
+      if (!acc[rec.priority]) acc[rec.priority] = [];
+      acc[rec.priority].push(rec);
+      return acc;
+    }, {} as Record<string, Recommendation[]>);
+
+    const priorities = ['critical', 'high', 'medium', 'low'];
+
+    for (const priority of priorities) {
+      if (byPriority[priority] && byPriority[priority].length > 0) {
+        report += `### ${priority.toUpperCase()} Priority (${byPriority[priority].length})\n\n`;
+
+        for (const rec of byPriority[priority]) {
+          report += `#### ${rec.title}\n`;
+          report += `- **Category**: ${rec.category}\n`;
+          report += `- **Description**: ${rec.description}\n`;
+          report += `- **Action**: \`${rec.action}\`\n`;
+          report += `- **Risk**: ${rec.risk}\n`;
+          report += `- **Auto-Applicable**: ${rec.autoApplicable ? 'Yes' : 'No'}\n\n`;
+        }
+      }
+    }
+
+    report += '\n---\n';
+    report += 'Generated by NewSecurity v1.0.0\n';
+
+    return report;
+  }
+}
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import logger from '../utils/logger';
+import { Recommendation } from '../database/models/scan-result';
+
+const execAsync = promisify(exec);
+
+/**
+ * Port Scanner
+ * Scans for open ports and services
+ */
+export class PortScanner {
+  /**
+   * Scan common ports
+   */
+  async scanCommonPorts(): Promise<Recommendation[]> {
+    const recommendations: Recommendation[] = [];
+
+    try {
+      // Common ports to scan
+      const commonPorts = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 3306, 3389, 5432, 6379, 8000, 8080, 27017];
+
+      logger.info('Scanning common ports...');
+
+      // Use netstat to check listening ports
+      const { stdout } = await execAsync('netstat -tulpn 2>/dev/null || ss -tulpn 2>/dev/null || lsof -i -P -n | grep LISTEN');
+
+      const openPorts = this.parseOpenPorts(stdout);
+
+      // Check for security issues
+      for (const port of commonPorts) {
+        if (openPorts.includes(port)) {
+          const recommendation = this.analyzePort(port);
+          if (recommendation) {
+            recommendations.push(recommendation);
+          }
+        }
+      }
+
+      logger.info(`Port scan complete. Found ${openPorts.length} open ports`);
+    } catch (error: any) {
+      logger.error('Port scan failed', { error });
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Parse open ports from netstat output
+   */
+  private parseOpenPorts(output: string): number[] {
+    const ports: number[] = [];
+    const lines = output.split('\n');
+
+    for (const line of lines) {
+      // Match port numbers in the output
+      const match = line.match(/:(\d+)\s/);
+      if (match) {
+        const port = parseInt(match[1]);
+        if (!ports.includes(port)) {
+          ports.push(port);
+        }
+      }
+    }
+
+    return ports;
+  }
+
+  /**
+   * Analyze a specific port and generate recommendation
+   */
+  private analyzePort(port: number): Recommendation | null {
+    const securityRisks: Record<number, Recommendation> = {
+      21: {
+        category: 'security',
+        priority: 'medium',
+        title: 'FTP Port (21) is Open',
+        description: 'FTP transmits data in plain text and can be a security risk',
+        action: 'Consider using SFTP (port 22) or FTPS instead',
+        autoApplicable: false,
+        risk: 'Credentials and data can be intercepted'
+      },
+      23: {
+        category: 'security',
+        priority: 'high',
+        title: 'Telnet Port (23) is Open',
+        description: 'Telnet is insecure and transmits data in plain text',
+        action: 'Disable Telnet and use SSH instead',
+        autoApplicable: false,
+        risk: 'Credentials can be easily intercepted'
+      },
+      3306: {
+        category: 'security',
+        priority: 'high',
+        title: 'MySQL Port (3306) Exposed',
+        description: 'MySQL database port is accessible from external network',
+        action: 'Bind MySQL to localhost (127.0.0.1) or configure firewall',
+        autoApplicable: false,
+        risk: 'Database can be attacked from external network'
+      },
+      5432: {
+        category: 'security',
+        priority: 'high',
+        title: 'PostgreSQL Port (5432) Exposed',
+        description: 'PostgreSQL database port is accessible from external network',
+        action: 'Bind PostgreSQL to localhost or configure firewall',
+        autoApplicable: false,
+        risk: 'Database can be attacked from external network'
+      },
+      6379: {
+        category: 'security',
+        priority: 'critical',
+        title: 'Redis Port (6379) Exposed',
+        description: 'Redis has no authentication by default and is exposed',
+        action: 'Bind Redis to localhost, enable authentication, and configure firewall',
+        autoApplicable: false,
+        risk: 'Anyone can access and modify your data'
+      },
+      27017: {
+        category: 'security',
+        priority: 'high',
+        title: 'MongoDB Port (27017) Exposed',
+        description: 'MongoDB port is accessible from external network',
+        action: 'Bind MongoDB to localhost or enable authentication',
+        autoApplicable: false,
+        risk: 'Database can be accessed without proper authentication'
+      }
+    };
+
+    return securityRisks[port] || null;
+  }
+
+  /**
+   * Scan for specific port
+   */
+  async isPortOpen(port: number): Promise<boolean> {
+    try {
+      const { stdout } = await execAsync(`netstat -tulpn 2>/dev/null | grep :${port} || ss -tulpn 2>/dev/null | grep :${port}`);
+      return stdout.trim().length > 0;
+    } catch (error) {
+      return false;
+    }
+  }
+}
+/**
+ * 鎵弿浠诲姟璋冨害鍣?
+ * 
+ * 绠＄悊鎵弿浠诲姟鐨勮皟搴︺€佹墽琛屽拰缁撴灉瀛樺偍
+ */
+
+import { EventEmitter } from 'events';
+import logger from '../utils/logger';
+import { PortScanner } from './port-scanner';
+import { WebScanner } from './web-scanner';
+import { SystemScanner } from './system-scanner';
+import { NucleiScanner, VulnerabilityResult, ScanProgress } from './nuclei-scanner';
+import { getDatabase } from '../config/database';
+
+export interface ScanTask {
+    id: string;
+    agentId?: string;
+    target: string;
+    type: 'port' | 'web' | 'system' | 'nuclei' | 'full';
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    progress: number;
+    createdAt: Date;
+    startedAt?: Date;
+    completedAt?: Date;
+    results?: any;
+    error?: string;
+}
+
+export class ScanScheduler extends EventEmitter {
+    private tasks: Map<string, ScanTask> = new Map();
+    private queue: string[] = [];
+    private isProcessing: boolean = false;
+    private maxConcurrent: number = 3;
+    private runningCount: number = 0;
+
+    // 鎵弿鍣ㄥ疄渚?
+    private portScanner = new PortScanner();
+    private webScanner = new WebScanner();
+    private systemScanner = new SystemScanner();
+    private nucleiScanner = new NucleiScanner();
+
+    constructor() {
+        super();
+        this.initializeDatabase();
+    }
+
+    /**
+     * 鍒濆鍖栨暟鎹簱琛?
+     */
+    private initializeDatabase(): void {
+        try {
+            const db = getDatabase().getDb();
+
+            db.exec(`
+        CREATE TABLE IF NOT EXISTS scan_results (
+          id TEXT PRIMARY KEY,
+          agent_id TEXT,
+          target TEXT NOT NULL,
+          scan_type TEXT NOT NULL,
+          status TEXT NOT NULL,
+          progress INTEGER DEFAULT 0,
+          results TEXT,
+          error TEXT,
+          created_at TEXT NOT NULL,
+          started_at TEXT,
+          completed_at TEXT
+        )
+      `);
+
+            db.exec(`
+        CREATE TABLE IF NOT EXISTS vulnerabilities (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          scan_id TEXT NOT NULL,
+          template_id TEXT,
+          name TEXT NOT NULL,
+          severity TEXT NOT NULL,
+          host TEXT,
+          matched TEXT,
+          description TEXT,
+          timestamp TEXT NOT NULL,
+          FOREIGN KEY (scan_id) REFERENCES scan_results(id)
+        )
+      `);
+
+            logger.info('Scan database tables initialized');
+        } catch (error: any) {
+            logger.error('Failed to initialize scan database', { error: error.message });
+        }
+    }
+
+    /**
+     * 鍒涘缓鎵弿浠诲姟
+     */
+    createTask(
+        target: string,
+        type: ScanTask['type'],
+        agentId?: string
+    ): ScanTask {
+        const task: ScanTask = {
+            id: `scan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            agentId,
+            target,
+            type,
+            status: 'pending',
+            progress: 0,
+            createdAt: new Date()
+        };
+
+        this.tasks.set(task.id, task);
+        this.queue.push(task.id);
+
+        // 淇濆瓨鍒版暟鎹簱
+        this.saveTask(task);
+
+        logger.info(`Scan task created: ${task.id}`, { target, type });
+        this.emit('task:created', task);
+
+        // 灏濊瘯澶勭悊闃熷垪
+        this.processQueue();
+
+        return task;
+    }
+
+    /**
+     * 澶勭悊浠诲姟闃熷垪
+     */
+    private async processQueue(): Promise<void> {
+        if (this.isProcessing || this.runningCount >= this.maxConcurrent) {
+            return;
+        }
+
+        this.isProcessing = true;
+
+        while (this.queue.length > 0 && this.runningCount < this.maxConcurrent) {
+            const taskId = this.queue.shift();
+            if (!taskId) continue;
+
+            const task = this.tasks.get(taskId);
+            if (!task || task.status !== 'pending') continue;
+
+            this.runningCount++;
+            this.executeTask(task).finally(() => {
+                this.runningCount--;
+                this.processQueue();
+            });
+        }
+
+        this.isProcessing = false;
+    }
+
+    /**
+     * 鎵ц鎵弿浠诲姟
+     */
+    private async executeTask(task: ScanTask): Promise<void> {
+        task.status = 'running';
+        task.startedAt = new Date();
+        this.updateTask(task);
+        this.emit('task:started', task);
+
+        try {
+            let results: any;
+
+            switch (task.type) {
+                case 'port':
+                    results = await this.runPortScan(task);
+                    break;
+                case 'web':
+                    results = await this.runWebScan(task);
+                    break;
+                case 'system':
+                    results = await this.runSystemScan(task);
+                    break;
+                case 'nuclei':
+                    results = await this.runNucleiScan(task);
+                    break;
+                case 'full':
+                    results = await this.runFullScan(task);
+                    break;
+            }
+
+            task.status = 'completed';
+            task.progress = 100;
+            task.results = results;
+            task.completedAt = new Date();
+
+            logger.info(`Scan task completed: ${task.id}`);
+            this.emit('task:completed', task);
+
+        } catch (error: any) {
+            task.status = 'failed';
+            task.error = error.message;
+            task.completedAt = new Date();
+
+            logger.error(`Scan task failed: ${task.id}`, { error: error.message });
+            this.emit('task:failed', task);
+        }
+
+        this.updateTask(task);
+    }
+
+    /**
+     * 杩愯绔彛鎵弿
+     */
+    private async runPortScan(task: ScanTask): Promise<any> {
+        task.progress = 10;
+        this.updateTask(task);
+
+        const results = await this.portScanner.scanCommonPorts();
+
+        task.progress = 100;
+        return { recommendations: results };
+    }
+
+    /**
+     * 杩愯 Web 鎵弿
+     */
+    private async runWebScan(task: ScanTask): Promise<any> {
+        task.progress = 10;
+        this.updateTask(task);
+
+        const results = await this.webScanner.scanWebServer();
+
+        task.progress = 100;
+        return results;
+    }
+
+    /**
+     * 杩愯绯荤粺鎵弿
+     */
+    private async runSystemScan(task: ScanTask): Promise<any> {
+        task.progress = 10;
+        this.updateTask(task);
+
+        const results = await this.systemScanner.scanSystem();
+
+        task.progress = 100;
+        return results;
+    }
+
+    /**
+     * 杩愯 Nuclei 鎵弿
+     */
+    private async runNucleiScan(task: ScanTask): Promise<any> {
+        const onProgress = (progress: ScanProgress) => {
+            task.progress = progress.progress;
+            this.updateTask(task);
+            this.emit('task:progress', task, progress);
+        };
+
+        const vulnerabilities = await this.nucleiScanner.quickScan(task.target, onProgress);
+
+        // 淇濆瓨婕忔礊缁撴灉
+        this.saveVulnerabilities(task.id, vulnerabilities);
+
+        return {
+            vulnerabilities,
+            summary: this.nucleiScanner.getSummary(vulnerabilities)
+        };
+    }
+
+    /**
+     * 杩愯瀹屾暣鎵弿
+     */
+    private async runFullScan(task: ScanTask): Promise<any> {
+        const results: any = {
+            port: null,
+            web: null,
+            system: null,
+            nuclei: null
+        };
+
+        // 绔彛鎵弿 (0-25%)
+        task.progress = 5;
+        this.updateTask(task);
+        results.port = await this.portScanner.scanCommonPorts();
+
+        // Web 鎵弿 (25-50%)
+        task.progress = 25;
+        this.updateTask(task);
+        results.web = await this.webScanner.scanWebServer();
+
+        // 绯荤粺鎵弿 (50-75%)
+        task.progress = 50;
+        this.updateTask(task);
+        results.system = await this.systemScanner.scanSystem();
+
+        // Nuclei 鎵弿 (75-100%)
+        task.progress = 75;
+        this.updateTask(task);
+
+        const onProgress = (progress: ScanProgress) => {
+            task.progress = 75 + Math.round(progress.progress * 0.25);
+            this.updateTask(task);
+        };
+
+        try {
+            const vulnerabilities = await this.nucleiScanner.quickScan(task.target, onProgress);
+            results.nuclei = {
+                vulnerabilities,
+                summary: this.nucleiScanner.getSummary(vulnerabilities)
+            };
+            this.saveVulnerabilities(task.id, vulnerabilities);
+        } catch (error: any) {
+            results.nuclei = { error: error.message };
+        }
+
+        return results;
+    }
+
+    /**
+     * 淇濆瓨浠诲姟鍒版暟鎹簱
+     */
+    private saveTask(task: ScanTask): void {
+        try {
+            const db = getDatabase().getDb();
+
+            db.prepare(`
+        INSERT OR REPLACE INTO scan_results 
+        (id, agent_id, target, scan_type, status, progress, results, error, created_at, started_at, completed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+                task.id,
+                task.agentId || null,
+                task.target,
+                task.type,
+                task.status,
+                task.progress,
+                task.results ? JSON.stringify(task.results) : null,
+                task.error || null,
+                task.createdAt.toISOString(),
+                task.startedAt?.toISOString() || null,
+                task.completedAt?.toISOString() || null
+            );
+        } catch (error: any) {
+            logger.error('Failed to save scan task', { error: error.message });
+        }
+    }
+
+    /**
+     * 鏇存柊浠诲姟
+     */
+    private updateTask(task: ScanTask): void {
+        this.tasks.set(task.id, task);
+        this.saveTask(task);
+        this.emit('task:updated', task);
+    }
+
+    /**
+     * 淇濆瓨婕忔礊缁撴灉
+     */
+    private saveVulnerabilities(scanId: string, vulnerabilities: VulnerabilityResult[]): void {
+        try {
+            const db = getDatabase().getDb();
+            const stmt = db.prepare(`
+        INSERT INTO vulnerabilities 
+        (scan_id, template_id, name, severity, host, matched, description, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+            for (const vuln of vulnerabilities) {
+                stmt.run(
+                    scanId,
+                    vuln.templateId,
+                    vuln.name,
+                    vuln.severity,
+                    vuln.host,
+                    vuln.matched,
+                    vuln.description || null,
+                    vuln.timestamp.toISOString()
+                );
+            }
+        } catch (error: any) {
+            logger.error('Failed to save vulnerabilities', { error: error.message });
+        }
+    }
+
+    /**
+     * 鑾峰彇浠诲姟
+     */
+    getTask(taskId: string): ScanTask | undefined {
+        return this.tasks.get(taskId);
+    }
+
+    /**
+     * 鑾峰彇鎵€鏈変换鍔?
+     */
+    getAllTasks(): ScanTask[] {
+        return Array.from(this.tasks.values());
+    }
+
+    /**
+     * 鑾峰彇鍘嗗彶鎵弿缁撴灉
+     */
+    getHistory(limit: number = 50): ScanTask[] {
+        try {
+            const db = getDatabase().getDb();
+            const rows = db.prepare(`
+        SELECT * FROM scan_results 
+        ORDER BY created_at DESC 
+        LIMIT ?
+      `).all(limit);
+
+            return rows.map((row: any) => ({
+                id: row.id,
+                agentId: row.agent_id,
+                target: row.target,
+                type: row.scan_type,
+                status: row.status,
+                progress: row.progress,
+                results: row.results ? JSON.parse(row.results) : null,
+                error: row.error,
+                createdAt: new Date(row.created_at),
+                startedAt: row.started_at ? new Date(row.started_at) : undefined,
+                completedAt: row.completed_at ? new Date(row.completed_at) : undefined
+            }));
+        } catch (error: any) {
+            logger.error('Failed to get scan history', { error: error.message });
+            return [];
+        }
+    }
+
+    /**
+     * 鍙栨秷浠诲姟
+     */
+    cancelTask(taskId: string): boolean {
+        const task = this.tasks.get(taskId);
+        if (!task || task.status !== 'pending') {
+            return false;
+        }
+
+        task.status = 'failed';
+        task.error = 'Cancelled by user';
+        this.updateTask(task);
+
+        // 浠庨槦鍒椾腑绉婚櫎
+        const index = this.queue.indexOf(taskId);
+        if (index > -1) {
+            this.queue.splice(index, 1);
+        }
+
+        return true;
+    }
+}
+
+// 瀵煎嚭鍗曚緥
+export const scanScheduler = new ScanScheduler();
+import { AIEngine, AIAnalysisRequest, AIAnalysisResponse } from './ai-engine';
+import { ExecutionMonitor, ExecutionOptions, ExecutionResult } from './execution-monitor';
+import { Recommendation } from '../database/models/scan-result';
+import logger from '../utils/logger';
+
+/**
+ * Smart Fixer
+ * AI-powered intelligent problem fixing with automatic retry and adaptation
+ */
+
+export interface FixAttempt {
+  attemptNumber: number;
+  solution: any;
+  executionResult: ExecutionResult;
+  aiDiagnosis?: any;
+  timestamp: number;
+}
+
+export interface FixResult {
+  success: boolean;
+  recommendation: Recommendation;
+  attempts: FixAttempt[];
+  finalSolution?: string;
+  totalTime: number;
+  aiInsights?: {
+    originalDiagnosis: any;
+    adaptations: string[];
+    lessonsLearned: string[];
+  };
+}
+
+export interface SmartFixerOptions {
+  maxAttempts?: number;
+  enableAI?: boolean;
+  aiProvider?: {
+    name: 'openai' | 'anthropic' | 'ollama' | 'zhipu' | 'custom';
+    apiKey?: string;
+    baseURL?: string;
+    model: string;
+  };
+  executionTimeout?: number;
+  enableRealTimeMonitoring?: boolean;
+}
+
+export class SmartFixer {
+  private aiEngine: AIEngine | null = null;
+  private options: Required<SmartFixerOptions>;
+
+  constructor(options: SmartFixerOptions = {}) {
+    this.options = {
+      maxAttempts: options.maxAttempts || 3,
+      enableAI: options.enableAI !== false,
+      aiProvider: options.aiProvider || {
+        name: 'ollama',
+        model: 'llama2'
+      },
+      executionTimeout: options.executionTimeout || 60000,
+      enableRealTimeMonitoring: options.enableRealTimeMonitoring !== false
+    };
+
+    if (this.options.enableAI) {
+      this.aiEngine = new AIEngine(this.options.aiProvider);
+    }
+  }
+
+  /**
+   * Fix a problem intelligently with AI guidance
+   */
+  async fixProblem(
+    recommendation: Recommendation,
+    context: any = {}
+  ): Promise<FixResult> {
+    const startTime = Date.now();
+    const attempts: FixAttempt[] = [];
+    const aiInsights: any = {
+      originalDiagnosis: null,
+      adaptations: [],
+      lessonsLearned: []
+    };
+
+    logger.info(`Starting smart fix for: ${recommendation.title}`);
+
+    try {
+      // Step 1: AI Analysis (if enabled)
+      let aiAnalysis: AIAnalysisResponse | null = null;
+
+      if (this.aiEngine) {
+        logger.info('Running AI analysis...');
+
+        const analysisRequest: AIAnalysisRequest = {
+          problem: {
+            title: recommendation.title,
+            description: recommendation.description,
+            category: recommendation.category,
+            priority: recommendation.priority
+          },
+          context: {
+            systemInfo: context.systemInfo,
+            logs: context.logs || [],
+            configFiles: context.configFiles || {}
+          }
+        };
+
+        aiAnalysis = await this.aiEngine.analyzeProblem(analysisRequest);
+        aiInsights.originalDiagnosis = aiAnalysis.diagnosis;
+
+        logger.info('AI Analysis complete', {
+          rootCause: aiAnalysis.diagnosis.rootCause,
+          severity: aiAnalysis.diagnosis.severity,
+          confidence: aiAnalysis.diagnosis.confidence
+        });
+      }
+
+      // Step 2: Try solutions with AI guidance
+      let success = false;
+      let attemptNumber = 0;
+
+      while (!success && attemptNumber < this.options.maxAttempts) {
+        attemptNumber++;
+
+        // Get solution to try
+        const solution = this.selectSolution(attemptNumber, recommendation, aiAnalysis, attempts);
+        logger.info(`Attempt ${attemptNumber}: ${solution.explanation}`);
+
+        // Execute with monitoring
+        const executionResult = await this.executeSolution(solution, attempts);
+
+        const fixAttempt: FixAttempt = {
+          attemptNumber,
+          solution,
+          executionResult,
+          timestamp: Date.now()
+        };
+
+        attempts.push(fixAttempt);
+
+        // Check if successful
+        if (executionResult.success) {
+          success = true;
+          logger.info(`鉁?Fix successful on attempt ${attemptNumber}`);
+
+          aiInsights.lessonsLearned.push(
+            `Solution "${solution.explanation}" successfully fixed the problem`
+          );
+
+          break;
+        }
+
+        // If failed and AI is enabled, get diagnosis
+        if (!success && this.aiEngine && attemptNumber < this.options.maxAttempts) {
+          logger.info('Attempt failed, requesting AI diagnosis...');
+
+          try {
+            const diagnosis = await this.aiEngine.diagnoseFailure(
+              recommendation,
+              solution.command,
+              executionResult.stdout,
+              executionResult.stderr
+            );
+
+            fixAttempt.aiDiagnosis = diagnosis;
+
+            logger.info('AI Diagnosis:', {
+              diagnosis: diagnosis.diagnosis,
+              alternative: diagnosis.alternativeSolution
+            });
+
+            aiInsights.adaptations.push(
+              `Attempt ${attemptNumber} failed: ${diagnosis.diagnosis}. ` +
+              `Trying alternative: ${diagnosis.alternativeSolution}`
+            );
+
+            // Add adaptive solution for next attempt
+            if (attemptNumber < this.options.maxAttempts) {
+              // Store the alternative for next attempt
+              aiAnalysis = {
+                ...aiAnalysis!,
+                solutions: [
+                  {
+                    command: diagnosis.alternativeSolution,
+                    explanation: diagnosis.explanation,
+                    riskLevel: 'medium',
+                    estimatedSuccess: 70,
+                    prerequisites: []
+                  }
+                ]
+              };
+            }
+          } catch (error) {
+            logger.error('AI diagnosis failed:', { error });
+          }
+        }
+
+        // Wait before retry (exponential backoff)
+        if (attemptNumber < this.options.maxAttempts) {
+          const waitTime = Math.pow(2, attemptNumber) * 1000;
+          logger.info(`Waiting ${waitTime}ms before retry...`);
+          await this.sleep(waitTime);
+        }
+      }
+
+      // Prepare result
+      const result: FixResult = {
+        success,
+        recommendation,
+        attempts,
+        finalSolution: success ? attempts[attempts.length - 1].solution.command : undefined,
+        totalTime: Date.now() - startTime
+      };
+
+      if (this.options.enableAI) {
+        result.aiInsights = aiInsights;
+      }
+
+      return result;
+
+    } catch (error: any) {
+      logger.error('Smart fix failed with error:', error);
+
+      return {
+        success: false,
+        recommendation,
+        attempts,
+        totalTime: Date.now() - startTime,
+        aiInsights
+      };
+    }
+  }
+
+  /**
+   * Select solution for current attempt
+   */
+  private selectSolution(
+    attemptNumber: number,
+    recommendation: Recommendation,
+    aiAnalysis: AIAnalysisResponse | null,
+    previousAttempts: FixAttempt[]
+  ): any {
+    // If AI analysis available and has solutions, use AI's solutions
+    if (aiAnalysis && aiAnalysis.solutions && aiAnalysis.solutions.length > 0) {
+      const solutionIndex = Math.min(attemptNumber - 1, aiAnalysis.solutions.length - 1);
+      return aiAnalysis.solutions[solutionIndex];
+    }
+
+    // Fallback to original recommendation
+    return {
+      command: recommendation.action,
+      explanation: recommendation.description,
+      riskLevel: recommendation.priority === 'critical' ? 'high' : 'medium',
+      estimatedSuccess: 70
+    };
+  }
+
+  /**
+   * Execute a solution with monitoring
+   */
+  private async executeSolution(
+    solution: any,
+    previousAttempts: FixAttempt[]
+  ): Promise<ExecutionResult> {
+    const monitor = new ExecutionMonitor();
+
+    // Setup event listeners for real-time monitoring
+    if (this.options.enableRealTimeMonitoring) {
+      monitor.on('execution-event', (event) => {
+        logger.debug('Execution event:', event);
+
+        // Send to WebSocket if available
+        this.emitToWebSocket('execution-event', event);
+      });
+    }
+
+    const options: ExecutionOptions = {
+      timeout: this.options.executionTimeout,
+      aiEngine: this.aiEngine || undefined,
+      enableAIMonitoring: this.options.enableRealTimeMonitoring && !!this.aiEngine
+    };
+
+    try {
+      // Execute prerequisites first
+      if (solution.prerequisites && solution.prerequisites.length > 0) {
+        logger.info('Running prerequisites...');
+
+        for (const prereq of solution.prerequisites) {
+          await monitor.execute(prereq, options);
+        }
+      }
+
+      // Execute main command
+      const result = await monitor.execute(solution.command, options);
+
+      return result;
+    } catch (error: any) {
+      // Execution failed (error is the ExecutionResult)
+      return error as ExecutionResult;
+    }
+  }
+
+  /**
+   * Emit event to WebSocket clients
+   */
+  private emitToWebSocket(event: string, data: any): void {
+    // This would be connected to the WebSocket server in index.ts
+    // For now, just log
+    logger.debug(`WebSocket event [${event}]:`, data);
+  }
+
+  /**
+   * Sleep utility
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Batch fix multiple problems
+   */
+  async batchFix(
+    recommendations: Recommendation[],
+    context: any = {}
+  ): Promise<FixResult[]> {
+    logger.info(`Batch fixing ${recommendations.length} problems...`);
+
+    const results: FixResult[] = [];
+
+    // Sort by priority
+    const sorted = [...recommendations].sort((a, b) => {
+      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+
+    for (const rec of sorted) {
+      logger.info(`Fixing: ${rec.title}`);
+
+      const result = await this.fixProblem(rec, context);
+      results.push(result);
+
+      // Wait between fixes to avoid overwhelming the system
+      await this.sleep(2000);
+    }
+
+    return results;
+  }
+
+  /**
+   * Dry run - simulate fixing without executing
+   */
+  async dryFix(
+    recommendation: Recommendation,
+    context: any = {}
+  ): Promise<{
+    aiAnalysis: AIAnalysisResponse | null;
+    plannedAttempts: any[];
+    estimatedTime: number;
+    risks: string[];
+  }> {
+    logger.info(`Dry run for: ${recommendation.title}`);
+
+    const aiAnalysis = this.aiEngine ?
+      await this.aiEngine.analyzeProblem({
+        problem: {
+          title: recommendation.title,
+          description: recommendation.description,
+          category: recommendation.category,
+          priority: recommendation.priority
+        },
+        context: {
+          systemInfo: context.systemInfo,
+          logs: context.logs || [],
+          configFiles: context.configFiles || {}
+        }
+      }) :
+      null;
+
+    const plannedAttempts = aiAnalysis ?
+      aiAnalysis.solutions.map((sol, idx) => ({
+        attemptNumber: idx + 1,
+        solution: sol,
+        estimatedSuccess: sol.estimatedSuccess
+      })) :
+      [{
+        attemptNumber: 1,
+        solution: {
+          command: recommendation.action,
+          explanation: recommendation.description
+        },
+        estimatedSuccess: 70
+      }];
+
+    const risks: string[] = [];
+
+    if (aiAnalysis && aiAnalysis.warnings) {
+      risks.push(...aiAnalysis.warnings);
+    }
+
+    const estimatedTime = plannedAttempts.length * 30000; // 30s per attempt
+
+    return {
+      aiAnalysis,
+      plannedAttempts,
+      estimatedTime,
+      risks
+    };
+  }
+}

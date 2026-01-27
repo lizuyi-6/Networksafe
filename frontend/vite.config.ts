@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
@@ -19,23 +19,34 @@ const httpsConfig = (() => {
 })();
 
 // https://vitejs.dev/config/
-export default defineConfig({
-    plugins: [react()],
-    resolve: {
-        alias: {
-            "@": path.resolve("./src"),
+export default defineConfig(({ mode }) => {
+    // Load env file based on `mode` in the current working directory.
+    // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+    const env = loadEnv(mode, process.cwd(), '')
+
+    return {
+        plugins: [react()],
+        resolve: {
+            alias: {
+                "@": path.resolve("./src"),
+            },
         },
-    },
-    server: {
-        // 启用 HTTPS (如果证书可用)
-        // https: httpsConfig,
-        /* proxy: {
-            '/api': {
-                // 后端也将使用 HTTPS
-                target: process.env.API_TARGET || (httpsConfig ? 'https://127.0.0.1:3005' : 'http://127.0.0.1:3005'),
-                changeOrigin: true,
-                secure: false, // 允许自签名证书
+        server: {
+            host: true, // Allow external access (0.0.0.0)
+            // 启用 HTTPS (如果证书可用)
+            // https: httpsConfig,
+            proxy: {
+                '/api': {
+                    target: env.VITE_API_TARGET || 'http://127.0.0.1:8080',
+                    changeOrigin: true,
+                    secure: false,
+                },
+                '/socket.io': {
+                    target: env.VITE_API_TARGET || 'http://127.0.0.1:8080',
+                    changeOrigin: true,
+                    ws: true,
+                }
             }
-        } */
+        }
     }
 })

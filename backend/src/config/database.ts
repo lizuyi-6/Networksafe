@@ -146,11 +146,78 @@ export class DatabaseManager {
         )
       `);
 
+      // Users table (for authentication)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          username TEXT NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT DEFAULT 'viewer' CHECK(role IN ('admin', 'tenant', 'viewer')),
+          tenant_id TEXT,
+          status TEXT DEFAULT 'active' CHECK(status IN ('active', 'suspended', 'pending')),
+          last_login DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // API Keys table (for agent/device authentication)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS api_keys (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          key_hash TEXT UNIQUE NOT NULL,
+          user_id TEXT,
+          tenant_id TEXT,
+          permissions TEXT DEFAULT '["read"]',
+          last_used DATETIME,
+          expires_at DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
+      // Devices table (for ESP32 dongles)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS devices (
+          id TEXT PRIMARY KEY,
+          device_type TEXT DEFAULT 'esp32',
+          mac_address TEXT UNIQUE,
+          firmware_version TEXT,
+          status TEXT DEFAULT 'offline',
+          last_seen DATETIME,
+          config TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Alerts table (for security alerts)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS alerts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT NOT NULL,
+          severity TEXT DEFAULT 'info' CHECK(severity IN ('info', 'warning', 'critical')),
+          source TEXT,
+          message TEXT NOT NULL,
+          details TEXT,
+          acknowledged INTEGER DEFAULT 0,
+          acknowledged_by TEXT,
+          acknowledged_at DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       // Create indexes
       this.db.run(`CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain)`);
       this.db.run(`CREATE INDEX IF NOT EXISTS idx_scan_results_siteId ON scan_results(siteId)`);
       this.db.run(`CREATE INDEX IF NOT EXISTS idx_metrics_siteId ON metrics(siteId)`);
       this.db.run(`CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts(severity)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts(created_at)`);
 
       logger.info('Database schema initialized');
     } catch (error: any) {

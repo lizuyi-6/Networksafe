@@ -27,6 +27,7 @@ import scannerRouter from './api/routes/scanner';
 import agentsRouter, { setAgentGateway } from './api/routes/agents.routes';
 import devicesRouter from './api/routes/devices.routes';
 import aiEndpointsRouter from './api/routes/ai-endpoints.routes';
+import authRouter from './api/routes/auth.routes';
 
 // Initialize Express
 const app = express();
@@ -111,6 +112,7 @@ apiRouter.use('/scanner', scannerRouter);
 apiRouter.use('/agents', agentsRouter);
 apiRouter.use('/devices', devicesRouter);
 apiRouter.use('/ai-endpoints', aiEndpointsRouter);
+apiRouter.use('/auth', authRouter);
 
 app.use('/api', apiRouter);
 
@@ -130,7 +132,11 @@ async function start() {
   try {
     // 初始化数据库
     await initDatabase();
-    logger.info('Database initialized');
+    // 自动通过 seed 脚本创建初始数据 (如 admin 用户)
+    const { seedDatabase } = require('./database/init');
+    await seedDatabase();
+
+    logger.info('Database initialized and seeded');
 
     // 初始化 Agent Gateway (WebSocket)
     agentGateway = new AgentGateway(httpServer);

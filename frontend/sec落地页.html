@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FluxGuard Pro | 企业级服务器免疫系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+
+        :root {
+            --primary: #00ff9d;
+            --secondary: #0ea5e9;
+            --bg-dark: #050505;
+            --bg-card: #111;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #e5e5e5;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #00ff9d 0%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid-bg {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* 动画类 */
+        .page-transition {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-pulse {
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(74, 222, 128, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+            }
+        }
+
+        /* 隐藏滚动条 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Toast Notification */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .toast {
+            background: rgba(20, 20, 20, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-success {
+            border-left: 4px solid #00ff9d;
+        }
+
+        .toast-info {
+            border-left: 4px solid #0ea5e9;
+        }
+
+        /* 终端动画 */
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: #00ff9d;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 10;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(0, 255, 157, 0.05) 50%, rgba(0, 0, 0, 0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanline {
+            0% {
+                bottom: 100%;
+            }
+
+            100% {
+                bottom: -100px;
+            }
+        }
+
+        /* 部署卡片激活状态 */
+        .deploy-card.active {
+            border-color: #00ff9d;
+            background: linear-gradient(145deg, rgba(0, 255, 157, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .deploy-card.active .icon-box {
+            background-color: rgba(0, 255, 157, 0.1);
+            color: #00ff9d;
+        }
+    </style>
+</head>
+
+<body class="antialiased overflow-x-hidden">
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- ================= VIEW: LANDING PAGE ================= -->
+    <div id="view-landing" class="page-transition">
+        <!-- Navbar (Same as before) -->
+        <nav
+            class="fixed w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10 transition-all duration-300 hover:bg-black/90">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-2 group cursor-pointer" onclick="window.scrollTo(0,0)">
+                        <div
+                            class="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded flex items-center justify-center font-bold text-black font-mono transform group-hover:rotate-12 transition-transform">
+                            F</div>
+                        <span
+                            class="font-bold text-xl tracking-tight group-hover:text-white transition-colors">FluxGuard<span
+                                class="text-green-400">Pro</span></span>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-8">
+                            <a href="#features"
+                                class="hover:text-green-400 transition-colors px-3 py-2 text-sm font-medium">防御体系</a>
+                            <a href="#deployment"
+                                class="hover:text-green-400 transition-colors px-3 py-2 text-sm font-medium">部署方案</a>
+                            <a href="#pricing"
+                                class="hover:text-green-400 transition-colors px-3 py-2 text-sm font-medium">价格方案</a>
+                            <button onclick="router.navigate('login')"
+                                class="bg-white/10 hover:bg-green-500 hover:text-black px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-green-500/25">控制台登录</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section (Same as before) -->
+        <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 grid-bg min-h-screen flex items-center">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+                <div class="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
+                    <div class="lg:col-span-6 text-center lg:text-left mb-16 lg:mb-0">
+                        <div
+                            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-900/30 border border-green-500/30 text-green-400 text-xs font-mono mb-6">
+                            <span class="w-2 h-2 rounded-full bg-green-500 status-pulse"></span> v22.0 Unibody 硬件现已发布
+                        </div>
+                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+                            让服务器安全<br><span class="gradient-text">像装杀毒软件一样简单</span>
+                        </h1>
+                        <p class="text-lg text-gray-400 mb-8 leading-relaxed">
+                            企业级智能服务器防御平台。分布式 Agent 架构 + AI 智能分析 + 硬件级物理部署，将被动响应转化为主动免疫。
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                            <button onclick="showToast('感谢申请！销售顾问将在 24 小时内联系您。', 'success')"
+                                class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-black font-bold py-3 px-8 rounded-lg shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1">申请
+                                14 天免费试用</button>
+                            <button onclick="window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')"
+                                class="bg-white/5 border border-white/10 hover:bg-white/10 text-white font-medium py-3 px-8 rounded-lg transition-all flex items-center justify-center gap-2 group">
+                                <i data-lucide="play-circle"
+                                    class="w-5 h-5 group-hover:text-green-400 transition-colors"></i> 观看演示 (3min)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-6 relative group">
+                        <div
+                            class="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000 animate-pulse">
+                        </div>
+                        <div
+                            class="relative bg-[#0d1117] rounded-xl border border-gray-700 shadow-2xl overflow-hidden font-mono text-sm leading-relaxed h-[400px] flex flex-col">
+                            <div
+                                class="flex items-center justify-between px-4 py-3 bg-[#161b22] border-b border-gray-700 shrink-0 z-20">
+                                <div class="flex space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <div class="text-gray-400 text-xs font-semibold">admin@fluxguard-dongle:~</div>
+                                <div class="text-gray-600 text-xs">bash</div>
+                            </div>
+                            <div class="scanline"></div>
+                            <div id="terminal-content"
+                                class="p-6 text-gray-300 flex-1 overflow-y-auto no-scrollbar relative font-medium">
+                            </div>
+                            <div
+                                class="absolute bottom-6 right-6 bg-black/90 backdrop-blur-md border border-green-500/30 p-3 rounded-lg flex items-center gap-3 shadow-lg shadow-black/50 z-30">
+                                <div class="relative"><i data-lucide="cpu" class="text-green-400 w-6 h-6"></i><span
+                                        class="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full status-pulse"></span>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-gray-400 uppercase tracking-wider">Hardware Status
+                                    </div>
+                                    <div class="text-green-400 font-bold text-sm tracking-wide">ONLINE • ENCRYPTED</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Grid (Redesigned) -->
+        <section id="features" class="py-20 bg-[#0f0f0f] border-t border-white/5">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold mb-4">三位一体防御体系</h2>
+                    <p class="text-gray-400">从代码层到物理层的全栈安全防护</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div
+                        class="bg-card p-8 rounded-2xl border border-white/5 hover:border-green-500/30 transition-all hover:-translate-y-2 group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i
+                                data-lucide="zap" class="w-24 h-24 text-green-500"></i></div>
+                        <div class="w-12 h-12 bg-green-900/30 rounded-lg flex items-center justify-center mb-6"><i
+                                data-lucide="zap" class="text-green-400 w-6 h-6"></i></div>
+                        <h3 class="text-xl font-bold mb-3 group-hover:text-green-400">主动免疫</h3>
+                        <p class="text-gray-400 text-sm mb-4">分布式 Agent 驻留于业务内部，毫秒级响应威胁，无需等待中央指令。</p>
+                        <ul class="text-xs text-gray-500 space-y-2 font-mono">
+                            <li class="flex items-center gap-2">
+                                <div class="w-1 h-1 bg-green-500 rounded-full"></div> 实时流量镜像
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <div class="w-1 h-1 bg-green-500 rounded-full"></div> 内存马查杀
+                            </li>
+                        </ul>
+                    </div>
+                    <div
+                        class="bg-card p-8 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all hover:-translate-y-2 group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i
+                                data-lucide="brain-circuit" class="w-24 h-24 text-blue-500"></i></div>
+                        <div class="w-12 h-12 bg-blue-900/30 rounded-lg flex items-center justify-center mb-6"><i
+                                data-lucide="brain-circuit" class="text-blue-400 w-6 h-6"></i></div>
+                        <h3 class="text-xl font-bold mb-3 group-hover:text-blue-400">AI 决策大脑</h3>
+                        <p class="text-gray-400 text-sm mb-4">集成 GPT-4 与本地模型，理解攻击意图，自动生成修复策略并阻断。</p>
+                        <ul class="text-xs text-gray-500 space-y-2 font-mono">
+                            <li class="flex items-center gap-2">
+                                <div class="w-1 h-1 bg-blue-500 rounded-full"></div> 攻击溯源分析
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <div class="w-1 h-1 bg-blue-500 rounded-full"></div> 漏洞自动修复
+                            </li>
+                        </ul>
+                    </div>
+                    <div
+                        class="bg-card p-8 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all hover:-translate-y-2 group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i
+                                data-lucide="shield-check" class="w-24 h-24 text-purple-500"></i></div>
+                        <div class="w-12 h-12 bg-purple-900/30 rounded-lg flex items-center justify-center mb-6"><i
+                                data-lucide="shield-check" class="text-purple-400 w-6 h-6"></i></div>
+                        <h3 class="text-xl font-bold mb-3 group-hover:text-purple-400">物理级隔离</h3>
+                        <p class="text-gray-400 text-sm mb-4">物理密钥管理与离线防护。资产自动发现，从物理层保障服务器安全。</p>
+                        <ul class="text-xs text-gray-500 space-y-2 font-mono">
+                            <li class="flex items-center gap-2">
+                                <div class="w-1 h-1 bg-purple-500 rounded-full"></div> 硬件加密存储
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <div class="w-1 h-1 bg-purple-500 rounded-full"></div> 拔出即锁定
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- New Deployment Solutions Section -->
+        <section id="deployment" class="py-20 bg-black relative overflow-hidden">
+            <!-- Background Grid -->
+            <div class="absolute inset-0 grid-bg opacity-30"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold mb-4">灵活的部署架构</h2>
+                    <p class="text-gray-400">无论是公有云还是涉密内网，FluxGuard 都能完美适配</p>
+                </div>
+
+                <div class="lg:grid lg:grid-cols-12 gap-8">
+                    <!-- Left: Interactive Selector -->
+                    <div class="lg:col-span-4 space-y-4">
+                        <div onclick="switchDeploy('saas')" id="btn-saas"
+                            class="deploy-card active cursor-pointer bg-[#111] border border-gray-800 p-6 rounded-xl hover:bg-[#161616] transition-all group">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="icon-box w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 transition-colors">
+                                    <i data-lucide="cloud" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white group-hover:text-green-400 transition-colors">云端托管
+                                        (SaaS)</h4>
+                                    <p class="text-xs text-gray-500 mt-1">适合中小企业，开箱即用</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div onclick="switchDeploy('private')" id="btn-private"
+                            class="deploy-card cursor-pointer bg-[#111] border border-gray-800 p-6 rounded-xl hover:bg-[#161616] transition-all group">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="icon-box w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 transition-colors">
+                                    <i data-lucide="server" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white group-hover:text-green-400 transition-colors">私有化部署
+                                        (On-Premise)</h4>
+                                    <p class="text-xs text-gray-500 mt-1">金融/政企首选，数据不离境</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div onclick="switchDeploy('hybrid')" id="btn-hybrid"
+                            class="deploy-card cursor-pointer bg-[#111] border border-gray-800 p-6 rounded-xl hover:bg-[#161616] transition-all group">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="icon-box w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 transition-colors">
+                                    <i data-lucide="network" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white group-hover:text-green-400 transition-colors">混合云架构
+                                        (Hybrid)</h4>
+                                    <p class="text-xs text-gray-500 mt-1">统一管理多云资产</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Visualizer -->
+                    <div class="lg:col-span-8">
+                        <div
+                            class="bg-[#0d1117] border border-gray-700 rounded-xl p-8 h-full min-h-[400px] relative overflow-hidden flex flex-col justify-center">
+
+                            <!-- SaaS Content -->
+                            <div id="content-saas" class="deploy-content transition-opacity duration-300">
+                                <div class="flex justify-between items-center mb-8">
+                                    <div class="text-center">
+                                        <div
+                                            class="w-16 h-16 mx-auto bg-gray-800 rounded-full flex items-center justify-center border border-gray-600 mb-2">
+                                            <i data-lucide="laptop" class="w-8 h-8 text-gray-400"></i>
+                                        </div>
+                                        <div class="text-xs text-gray-500">您的服务器</div>
+                                    </div>
+
+                                    <!-- Animated Line -->
+                                    <div class="flex-1 h-px bg-gray-700 mx-4 relative">
+                                        <div
+                                            class="absolute top-1/2 left-0 -translate-y-1/2 w-2 h-2 bg-green-500 rounded-full animate-[moveRight_2s_infinite]">
+                                        </div>
+                                        <div class="text-center -mt-6 text-xs text-green-500 font-mono">TLS 1.3 Tunnel
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center relative">
+                                        <div class="absolute -inset-4 bg-green-500/10 blur-xl rounded-full"></div>
+                                        <div
+                                            class="w-20 h-20 mx-auto bg-[#161b22] rounded-full flex items-center justify-center border-2 border-green-500 mb-2 relative z-10">
+                                            <i data-lucide="cloud" class="w-10 h-10 text-green-400"></i>
+                                        </div>
+                                        <div class="text-sm font-bold text-green-400">FluxGuard Cloud</div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mt-8">
+                                    <div class="bg-black/30 p-4 rounded-lg border border-white/5">
+                                        <h5 class="text-sm font-bold text-white mb-2">✅ 优势</h5>
+                                        <ul class="text-xs text-gray-400 space-y-1">
+                                            <li>• 无需维护控制台基础设施</li>
+                                            <li>• 威胁情报实时同步</li>
+                                            <li>• 弹性扩容，按需付费</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-black/30 p-4 rounded-lg border border-white/5">
+                                        <h5 class="text-sm font-bold text-white mb-2">⚡ 部署耗时</h5>
+                                        <div class="text-2xl font-mono text-green-400">30 Seconds</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Private Content (Hidden by default) -->
+                            <div id="content-private" class="deploy-content hidden transition-opacity duration-300">
+                                <div class="border border-green-500/30 bg-green-900/5 rounded-xl p-6 relative">
+                                    <div
+                                        class="absolute top-0 left-4 -translate-y-1/2 bg-[#0d1117] px-2 text-xs text-green-500 border border-green-500/30 rounded">
+                                        企业内网 (Intranet)</div>
+
+                                    <div class="flex justify-around items-center">
+                                        <div class="text-center">
+                                            <div
+                                                class="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-2">
+                                                <i data-lucide="database" class="w-6 h-6 text-purple-400"></i>
+                                            </div>
+                                            <div class="text-xs text-gray-500">业务数据库</div>
+                                        </div>
+                                        <div class="h-px w-16 bg-gray-600"></div>
+                                        <div class="text-center">
+                                            <div
+                                                class="w-16 h-16 mx-auto bg-[#161b22] rounded-lg flex items-center justify-center border border-green-500 mb-2 shadow-[0_0_15px_rgba(0,255,157,0.2)]">
+                                                <i data-lucide="shield" class="w-8 h-8 text-green-400"></i>
+                                            </div>
+                                            <div class="text-xs font-bold text-white">本地控制台</div>
+                                        </div>
+                                        <div class="h-px w-16 bg-gray-600"></div>
+                                        <div class="text-center">
+                                            <div
+                                                class="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-2">
+                                                <i data-lucide="server" class="w-6 h-6 text-blue-400"></i>
+                                            </div>
+                                            <div class="text-xs text-gray-500">应用服务器</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="mt-6 flex items-center gap-4 text-xs text-gray-400 bg-red-900/10 p-3 rounded border border-red-500/20">
+                                    <i data-lucide="lock" class="w-4 h-4 text-red-400"></i>
+                                    <span>物理隔离模式：所有数据留存本地，完全切断外网连接。支持离线 AI 模型。</span>
+                                </div>
+                            </div>
+
+                            <!-- Hybrid Content (Hidden) -->
+                            <div id="content-hybrid" class="deploy-content hidden transition-opacity duration-300">
+                                <div class="flex justify-center items-center gap-8 mb-6">
+                                    <div class="w-32 p-4 border border-gray-700 rounded-lg text-center opacity-50">
+                                        <i data-lucide="cloud" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
+                                        <div class="text-xs">AWS / Azure</div>
+                                    </div>
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center z-10 shadow-lg">
+                                        <i data-lucide="infinity" class="w-6 h-6 text-black"></i>
+                                    </div>
+                                    <div class="w-32 p-4 border border-gray-700 rounded-lg text-center opacity-50">
+                                        <i data-lucide="building" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
+                                        <div class="text-xs">IDC 机房</div>
+                                    </div>
+                                </div>
+                                <p class="text-center text-sm text-gray-300 max-w-md mx-auto">
+                                    通过 <span class="text-green-400">FluxGuard Federation</span>
+                                    协议，统一管理分布在公有云、私有云和边缘节点的资产。单一视图，全局掌控。
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hardware Section (Same as before) -->
+        <section id="hardware" class="py-20 bg-black border-y border-white/10">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <h2 class="text-3xl font-bold mb-8">FluxGuard Deployment Dongle</h2>
+                <div class="relative w-full max-w-4xl mx-auto aspect-video bg-gray-900 rounded-xl overflow-hidden group cursor-pointer"
+                    onclick="showToast('正在跳转至硬件详情页...', 'info')">
+                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+                        class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-700 hover:scale-105">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div
+                            class="bg-black/50 backdrop-blur-md border border-white/10 px-8 py-4 rounded-xl transform group-hover:-translate-y-2 transition-all">
+                            <h3 class="text-2xl font-bold text-white">v22.0 Unibody</h3>
+                            <p class="text-green-400 text-sm mt-1">点击查看工业设计细节</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section (Redesigned) -->
+        <section id="pricing" class="py-20 relative bg-[#0a0a0a]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold mb-4">透明定价，按需订阅</h2>
+                    <p class="text-gray-400">硬件一次性买断，软件服务按需订阅</p>
+                </div>
+
+                <!-- Hardware Pricing -->
+                <div
+                    class="mb-16 bg-[#111] border border-gray-800 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-8 hover:border-green-500/30 transition-colors">
+                    <div class="flex items-center gap-6">
+                        <div
+                            class="w-20 h-20 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
+                            <i data-lucide="cpu" class="w-10 h-10 text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center gap-3">
+                                硬件部署终端
+                                <span
+                                    class="bg-green-900/30 text-green-400 text-xs px-2 py-1 rounded font-mono">v22.0</span>
+                            </h3>
+                            <p class="text-gray-400 text-sm mt-1 max-w-md">工业级碳纤维 ASA 外壳，ESP32-S3 核心，内置物理密钥。一次性购买，终身使用。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-white">¥299</div>
+                            <div class="text-xs text-gray-500">每台设备</div>
+                        </div>
+                        <button
+                            class="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded-lg font-bold transition-all">立即购买</button>
+                    </div>
+                </div>
+
+                <!-- Software Subscription Grid -->
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Starter Plan -->
+                    <div
+                        class="bg-[#111] p-8 rounded-2xl border border-gray-800 hover:border-gray-600 transition-all flex flex-col">
+                        <div class="mb-4">
+                            <h3 class="text-lg font-bold text-gray-300">Starter</h3>
+                            <div class="my-4">
+                                <span class="text-4xl font-bold text-white">¥999</span>
+                                <span class="text-gray-500">/月</span>
+                            </div>
+                            <p class="text-sm text-gray-500">适合小型开发团队或个人工作室</p>
+                        </div>
+                        <ul class="space-y-4 mb-8 flex-1">
+                            <li class="flex gap-3 text-sm text-gray-300"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>管理 <strong>5 台</strong>
+                                    Agent</span></li>
+                            <li class="flex gap-3 text-sm text-gray-300"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>基础 WAF 防护</span></li>
+                            <li class="flex gap-3 text-sm text-gray-300"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>7 天日志存储</span></li>
+                            <li class="flex gap-3 text-sm text-gray-500"><i data-lucide="x"
+                                    class="w-5 h-5 shrink-0"></i> <span>无 AI 分析引擎</span></li>
+                        </ul>
+                        <button onclick="router.navigate('login')"
+                            class="w-full py-3 border border-white/20 rounded-lg hover:bg-white/5 text-white transition-colors">开始试用</button>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div
+                        class="bg-[#1a1a1a] p-8 rounded-2xl border border-green-500/50 relative transform md:-translate-y-4 shadow-xl shadow-green-900/20 flex flex-col">
+                        <div
+                            class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-600 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg shadow-green-600/40">
+                            最具性价比</div>
+                        <div class="mb-4">
+                            <h3 class="text-lg font-bold text-green-400">Professional</h3>
+                            <div class="my-4">
+                                <span class="text-4xl font-bold text-white">¥2,999</span>
+                                <span class="text-gray-500">/月</span>
+                            </div>
+                            <p class="text-sm text-gray-400">适合快速成长的业务系统</p>
+                        </div>
+                        <ul class="space-y-4 mb-8 flex-1">
+                            <li class="flex gap-3 text-sm text-white"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>管理 <strong>20 台</strong>
+                                    Agent</span></li>
+                            <li class="flex gap-3 text-sm text-white"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span><strong>AI 智能分析引擎</strong>
+                                    (GPT-4)</span></li>
+                            <li class="flex gap-3 text-sm text-white"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>Nuclei 自动化漏洞扫描</span></li>
+                            <li class="flex gap-3 text-sm text-white"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>硬件离线授权功能</span></li>
+                        </ul>
+                        <button onclick="router.navigate('login')"
+                            class="w-full py-3 bg-green-600 rounded-lg hover:bg-green-500 text-white font-bold transition-colors shadow-lg hover:shadow-green-500/25">立即订阅</button>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div
+                        class="bg-[#111] p-8 rounded-2xl border border-gray-800 hover:border-gray-600 transition-all flex flex-col">
+                        <div class="mb-4">
+                            <h3 class="text-lg font-bold text-gray-300">Enterprise</h3>
+                            <div class="my-4">
+                                <span class="text-4xl font-bold text-white">询价</span>
+                            </div>
+                            <p class="text-sm text-gray-500">适合对数据合规有严格要求的企业</p>
+                        </div>
+                        <ul class="space-y-4 mb-8 flex-1">
+                            <li class="flex gap-3 text-sm text-gray-300"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span><strong>无限制</strong> Agent
+                                    数量</span></li>
+                            <li class="flex gap-3 text-sm text-gray-300"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>私有化部署 (On-Premise)</span></li>
+                            <li class="flex gap-3 text-sm text-gray-300"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>SLA 技术支持 (7x24h)</span></li>
+                            <li class="flex gap-3 text-sm text-gray-300"><i data-lucide="check"
+                                    class="w-5 h-5 text-green-500 shrink-0"></i> <span>专属客户经理</span></li>
+                        </ul>
+                        <button onclick="showToast('请联系 sales@fluxguard.io 获取报价', 'info')"
+                            class="w-full py-3 border border-white/20 rounded-lg hover:bg-white/5 text-white transition-colors">联系销售</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer (Same as before) -->
+        <footer class="bg-black py-12 border-t border-white/10 text-center text-gray-600 text-sm">
+            <p>&copy; 2026 FluxGuard Security Inc. <a href="#" class="hover:text-white"
+                    onclick="showToast('隐私政策页面正在建设中', 'info')">隐私政策</a></p>
+        </footer>
+    </div>
+
+    <!-- Login & Dashboard Views remain unchanged from previous file -->
+    <!-- ... -->
+    <!-- (I will include them in the final file to ensure it's complete) -->
+
+    <div id="view-login" class="hidden min-h-screen grid-bg flex items-center justify-center p-4">
+        <!-- ... Login Code ... -->
+        <div
+            class="w-full max-w-md bg-[#111] border border-gray-800 rounded-2xl shadow-2xl p-8 relative overflow-hidden page-transition">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-blue-500"></div>
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center gap-2 mb-4">
+                    <div
+                        class="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded flex items-center justify-center font-bold text-black font-mono">
+                        F</div>
+                    <span class="font-bold text-xl tracking-tight text-white">FluxGuard<span
+                            class="text-green-400">Pro</span></span>
+                </div>
+                <h2 class="text-2xl font-bold text-white">控制台登录</h2>
+                <p class="text-gray-500 text-sm mt-2">请输入您的企业账户凭证</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-6">
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-1">EMAIL / USERNAME</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-3 top-3 w-5 h-5 text-gray-500"></i>
+                        <input type="text" value="admin@fluxguard.io"
+                            class="w-full bg-black border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-green-500 transition-colors font-mono text-sm"
+                            placeholder="name@company.com">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-1">PASSWORD</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-3 w-5 h-5 text-gray-500"></i>
+                        <input type="password" value="password"
+                            class="w-full bg-black border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-green-500 transition-colors font-mono text-sm"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <label class="flex items-center text-gray-400 hover:text-white cursor-pointer">
+                        <input type="checkbox"
+                            class="mr-2 rounded bg-gray-800 border-gray-700 text-green-500 focus:ring-0"> 记住设备
+                    </label>
+                    <a href="#" onclick="showToast('请联系您的管理员重置密码', 'info')"
+                        class="text-green-500 hover:text-green-400">忘记密码?</a>
+                </div>
+                <button type="submit"
+                    class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-2 group">
+                    <span id="login-text">安全登录</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <button onclick="router.navigate('landing')"
+                    class="text-xs text-gray-500 hover:text-white transition-colors flex items-center justify-center gap-1 mx-auto">
+                    <i data-lucide="arrow-left" class="w-3 h-3"></i> 返回首页
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-dashboard" class="hidden min-h-screen bg-[#050505] flex page-transition">
+        <!-- ... Dashboard Code ... -->
+        <aside class="w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col hidden md:flex">
+            <div class="h-16 flex items-center px-6 border-b border-white/5">
+                <div
+                    class="w-6 h-6 bg-green-500 rounded flex items-center justify-center font-bold text-black text-xs mr-2">
+                    F</div>
+                <span class="font-bold text-white">Dashboard</span>
+            </div>
+            <nav class="flex-1 p-4 space-y-1">
+                <a href="#"
+                    class="flex items-center gap-3 px-4 py-3 bg-green-900/20 text-green-400 rounded-lg text-sm font-medium border border-green-500/10"><i
+                        data-lucide="layout-dashboard" class="w-4 h-4"></i> 态势感知</a>
+                <a href="#" onclick="showToast('功能开发中...', 'info')"
+                    class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg text-sm font-medium transition-colors"><i
+                        data-lucide="server" class="w-4 h-4"></i> 资产管理</a>
+                <a href="#" onclick="showToast('功能开发中...', 'info')"
+                    class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg text-sm font-medium transition-colors"><i
+                        data-lucide="shield-alert" class="w-4 h-4"></i> 威胁情报</a>
+                <a href="#" onclick="showToast('功能开发中...', 'info')"
+                    class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg text-sm font-medium transition-colors"><i
+                        data-lucide="settings" class="w-4 h-4"></i> 系统设置</a>
+            </nav>
+            <div class="p-4 border-t border-white/5">
+                <div class="flex items-center gap-3 px-4 py-3">
+                    <div
+                        class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 border border-gray-500">
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white">Admin User</div>
+                        <div class="text-[10px] text-green-500">● Online</div>
+                    </div>
+                    <button onclick="router.navigate('landing')" class="ml-auto text-gray-500 hover:text-white"><i
+                            data-lucide="log-out" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto">
+            <header
+                class="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-[#0a0a0a]/50 backdrop-blur">
+                <h1 class="text-lg font-bold text-white">全局安全态势</h1>
+                <div class="flex items-center gap-4">
+                    <button class="text-gray-400 hover:text-white"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div
+                        class="bg-green-500/10 border border-green-500/20 text-green-400 px-3 py-1 rounded text-xs font-mono flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> System Secure
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-8">
+                <!-- Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-[#111] border border-gray-800 p-5 rounded-xl">
+                        <div class="text-gray-500 text-xs font-mono uppercase mb-1">Total Requests</div>
+                        <div class="text-2xl font-bold text-white">24.5M</div>
+                        <div class="text-green-500 text-xs mt-1">↑ 12% vs last hour</div>
+                    </div>
+                    <div class="bg-[#111] border border-gray-800 p-5 rounded-xl">
+                        <div class="text-gray-500 text-xs font-mono uppercase mb-1">Threats Blocked</div>
+                        <div class="text-2xl font-bold text-red-400">1,204</div>
+                        <div class="text-gray-500 text-xs mt-1">SQLi, XSS, Brute-force</div>
+                    </div>
+                    <div class="bg-[#111] border border-gray-800 p-5 rounded-xl">
+                        <div class="text-gray-500 text-xs font-mono uppercase mb-1">Active Agents</div>
+                        <div class="text-2xl font-bold text-blue-400">42</div>
+                        <div class="text-green-500 text-xs mt-1">● All Online</div>
+                    </div>
+                    <div class="bg-[#111] border border-gray-800 p-5 rounded-xl">
+                        <div class="text-gray-500 text-xs font-mono uppercase mb-1">AI Response Time</div>
+                        <div class="text-2xl font-bold text-purple-400">45ms</div>
+                        <div class="text-green-500 text-xs mt-1">Using GPT-4-Turbo</div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 bg-[#111] border border-gray-800 p-6 rounded-xl">
+                        <h3 class="text-sm font-bold text-white mb-4">实时流量监控</h3>
+                        <canvas id="trafficChart" height="200"></canvas>
+                    </div>
+                    <div class="bg-[#111] border border-gray-800 p-6 rounded-xl">
+                        <h3 class="text-sm font-bold text-white mb-4">攻击类型分布</h3>
+                        <canvas id="attackChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Logs Row -->
+                <div class="bg-[#111] border border-gray-800 rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-white">最近安全事件</h3>
+                        <button class="text-xs text-blue-400 hover:text-blue-300">View All</button>
+                    </div>
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-[#161616] text-gray-500 text-xs uppercase font-mono">
+                            <tr>
+                                <th class="px-6 py-3">Time</th>
+                                <th class="px-6 py-3">Level</th>
+                                <th class="px-6 py-3">Source IP</th>
+                                <th class="px-6 py-3">Event</th>
+                                <th class="px-6 py-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-300 divide-y divide-gray-800 font-mono text-xs">
+                            <tr>
+                                <td class="px-6 py-3">10:42:01</td>
+                                <td class="px-6 py-3"><span
+                                        class="bg-red-900/30 text-red-400 px-2 py-0.5 rounded">CRITICAL</span></td>
+                                <td class="px-6 py-3">192.168.1.105</td>
+                                <td class="px-6 py-3">SQL Injection detected in payload</td>
+                                <td class="px-6 py-3 text-green-400">BLOCKED</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3">10:41:55</td>
+                                <td class="px-6 py-3"><span
+                                        class="bg-yellow-900/30 text-yellow-400 px-2 py-0.5 rounded">WARN</span></td>
+                                <td class="px-6 py-3">45.22.19.11</td>
+                                <td class="px-6 py-3">High frequency port scanning</td>
+                                <td class="px-6 py-3 text-blue-400">FLAGGED</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3">10:40:12</td>
+                                <td class="px-6 py-3"><span
+                                        class="bg-green-900/30 text-green-400 px-2 py-0.5 rounded">INFO</span></td>
+                                <td class="px-6 py-3">10.0.0.5</td>
+                                <td class="px-6 py-3">Agent v2.3.1 auto-updated</td>
+                                <td class="px-6 py-3 text-gray-500">SUCCESS</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // 路由逻辑
+        const router = {
+            views: ['landing', 'login', 'dashboard'],
+            navigate(viewId) {
+                // 隐藏所有视图
+                this.views.forEach(id => {
+                    document.getElementById(`view-${id}`).classList.add('hidden');
+                });
+                // 显示目标视图
+                document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+                // 如果进入 Dashboard，初始化图表
+                if (viewId === 'dashboard') initDashboardCharts();
+
+                window.scrollTo(0, 0);
+            }
+        };
+
+        // 部署方案切换逻辑
+        function switchDeploy(mode) {
+            // 按钮样式重置
+            document.querySelectorAll('.deploy-card').forEach(el => el.classList.remove('active'));
+            document.getElementById(`btn-${mode}`).classList.add('active');
+
+            // 内容显示切换
+            document.querySelectorAll('.deploy-content').forEach(el => {
+                el.classList.add('hidden');
+                el.style.opacity = '0';
+            });
+
+            const target = document.getElementById(`content-${mode}`);
+            target.classList.remove('hidden');
+            setTimeout(() => target.style.opacity = '1', 50); // Fade in
+        }
+
+        // 登录逻辑模拟
+        function handleLogin(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = document.getElementById('login-text').innerText;
+
+            // 模拟 Loading
+            btn.disabled = true;
+            document.getElementById('login-text').innerText = "验证中...";
+            btn.classList.add('opacity-75');
+
+            setTimeout(() => {
+                showToast('登录成功！欢迎回来，管理员。', 'success');
+                router.navigate('dashboard');
+                // 重置按钮状态
+                btn.disabled = false;
+                document.getElementById('login-text').innerText = originalText;
+                btn.classList.remove('opacity-75');
+            }, 1500);
+        }
+
+        // Toast 通知逻辑
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = type === 'success' ? `<i data-lucide="check-circle" class="w-5 h-5 text-green-400"></i> ${msg}` : `<i data-lucide="info" class="w-5 h-5 text-blue-400"></i> ${msg}`;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // 动画
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Dashboard 图表 (Chart.js)
+        let chartsInitialized = false;
+        function initDashboardCharts() {
+            if (chartsInitialized) return;
+
+            // 流量图
+            const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+            new Chart(trafficCtx, {
+                type: 'line',
+                data: {
+                    labels: ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25'],
+                    datasets: [{
+                        label: 'Requests/sec',
+                        data: [1200, 1900, 3000, 2500, 2800, 3200],
+                        borderColor: '#00ff9d',
+                        backgroundColor: 'rgba(0, 255, 157, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#333' }, ticks: { color: '#666' } },
+                        x: { grid: { display: false }, ticks: { color: '#666' } }
+                    }
+                }
+            });
+
+            // 攻击分布图
+            const attackCtx = document.getElementById('attackChart').getContext('2d');
+            new Chart(attackCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['SQLi', 'XSS', 'DDoS', 'Scan'],
+                    datasets: [{
+                        data: [30, 20, 15, 35],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#999' } } }
+                }
+            });
+
+            chartsInitialized = true;
+        }
+
+        // 首页终端动画
+        const logs = [
+            { text: "$ ./fluxguard-agent start --hardware-mode", type: "cmd", delay: 800 },
+            { text: "[INIT] Initializing FluxGuard Core v2.3.0...", type: "info", delay: 200 },
+            { text: "[INFO] Hardware Key detected: ESP32-S3-Dongle", type: "blue", delay: 400 },
+            { text: "[NET] Listening on port 8443 (TLS 1.3)", type: "info", delay: 600 },
+            { text: "[WARN] 192.168.1.105 is scanning ports...", type: "warn", delay: 1000 },
+            { text: "[AI] Analyzing behavior (Model: GPT-4)...", type: "ai", delay: 1500 },
+            { text: "[SECURE] IP 192.168.1.105 banned.", type: "success", delay: 800 },
+            { text: "[INFO] System stable. Monitoring active.", type: "blue", delay: 3000 }
+        ];
+
+        async function runTerminal() {
+            const container = document.getElementById('terminal-content');
+            if (!container) return; // 不在首页时不执行
+            container.innerHTML = '';
+
+            for (const log of logs) {
+                const div = document.createElement('div');
+                div.className = "mb-1";
+                if (log.type === 'cmd') div.className += " text-green-400 font-bold";
+                else if (log.type === 'warn') div.className += " text-yellow-400";
+                else if (log.type === 'error') div.className += " text-red-500";
+                else if (log.type === 'success') div.className += " text-green-400";
+                else if (log.type === 'ai') div.className += " text-purple-400";
+                else if (log.type === 'blue') div.className += " text-blue-400";
+                else div.className += " text-gray-500";
+
+                div.innerText = log.text;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+                await new Promise(r => setTimeout(r, log.delay));
+            }
+            setTimeout(runTerminal, 2000);
+        }
+
+        // 初始化
+        setTimeout(runTerminal, 1000);
+
+        // 如果 URL hash 包含 login，直接跳转
+        if (window.location.hash === '#login') router.navigate('login');
+
+        // Added animated arrow logic for deployment section
+        document.write(`<style> @keyframes moveRight { 0% { left: 0; opacity: 0; } 50% { opacity: 1; } 100% { left: 100%; opacity: 0; } } </style>`);
+
+    </script>
+</body>
+
+</html>

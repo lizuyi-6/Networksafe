@@ -64,7 +64,14 @@ const generateMockLogs = (): LogItem[] => {
     });
 };
 
-const isDemoMode = () => localStorage.getItem('demo_mode') === 'true';
+const isDemoMode = () => {
+    // If explicitly set in localStorage, use it
+    const local = localStorage.getItem('demo_mode');
+    if (local !== null) return local === 'true';
+
+    // Default to false unless env var says strictly "true"
+    return import.meta.env.VITE_USE_MOCK === 'true';
+};
 
 // --- API Functions ---
 

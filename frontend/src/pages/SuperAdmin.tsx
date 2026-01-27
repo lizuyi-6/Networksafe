@@ -7,7 +7,7 @@ const SuperAdmin = () => {
     const { t } = useLanguage();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [keys, setKeys] = useState([
+    const [keys] = useState([
         { id: 1, name: 'Prod API Key', prefix: 'sk_prod_', created: '2025-12-01', lastUsed: 'Just now' },
         { id: 2, name: 'Dev API Key', prefix: 'sk_test_', created: '2026-01-15', lastUsed: '2 days ago' },
     ]);

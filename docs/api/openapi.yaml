@@ -1,0 +1,648 @@
+openapi: 3.0.3
+info:
+  title: FluxGuard Pro API
+  description: |
+    **FluxGuard Pro** 智能服务器安全防御平台 API 文档。
+    
+    本 API 提供完整的安全运维管理功能，包括：
+    - 🔐 用户认证与权限管理
+    - 🖥️ 分布式 Agent 管理
+    - 📡 ESP32 硬件设备控制
+    - 🔍 漏洞扫描与安全监控
+    - 📊 实时告警与日志分析
+    
+    ## 认证方式
+    
+    本 API 支持两种认证方式：
+    
+    1. **JWT Token** - 用于 Web 控制台
+       ```
+       Authorization: Bearer <access_token>
+       ```
+    
+    2. **API Key** - 用于 Agent/设备通信
+       ```
+       X-API-Key: <api_key>
+       ```
+    
+  version: 2.0.0
+  contact:
+    name: FluxGuard Support
+    email: support@fluxguard.local
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3005/api
+    description: 本地开发服务器
+  - url: https://api.fluxguard.example.com/api
+    description: 生产服务器
+
+tags:
+  - name: Authentication
+    description: 用户认证相关接口
+  - name: Agents
+    description: 分布式 Agent 管理
+  - name: Devices
+    description: ESP32 硬件设备管理
+  - name: Sites
+    description: 受保护站点管理
+  - name: Scanner
+    description: 漏洞扫描接口
+  - name: Alerts
+    description: 安全告警管理
+  - name: Stats
+    description: 统计与监控数据
+  - name: Admin
+    description: 系统管理接口
+
+paths:
+  # ============================================
+  # Authentication
+  # ============================================
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: 用户注册
+      description: 创建新用户账户
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, username]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: securePassword123
+                username:
+                  type: string
+                  example: John Doe
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: 邮箱已被注册
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: 用户登录
+      description: 使用邮箱和密码登录，获取 JWT Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: 刷新 Token
+      description: 使用 Refresh Token 获取新的 Access Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token 刷新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  expiresIn:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: 获取当前用户信息
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: 用户登出
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+
+  # ============================================
+  # Agents
+  # ============================================
+  /agents:
+    get:
+      tags: [Agents]
+      summary: 获取 Agent 列表
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [online, offline, all]
+          description: 过滤 Agent 状态
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Agent'
+                  total:
+                    type: integer
+
+  /agents/{agentId}:
+    get:
+      tags: [Agents]
+      summary: 获取 Agent 详情
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /agents/{agentId}/command:
+    post:
+      tags: [Agents]
+      summary: 向 Agent 发送命令
+      description: 支持 scan, block_ip, unblock_ip, restart 等命令
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type:
+                  type: string
+                  enum: [scan, block_ip, unblock_ip, restart, update]
+                payload:
+                  type: object
+      responses:
+        '200':
+          description: 命令已发送
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # Devices
+  # ============================================
+  /devices:
+    get:
+      tags: [Devices]
+      summary: 获取设备列表
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+
+  /devices/{deviceId}:
+    get:
+      tags: [Devices]
+      summary: 获取设备详情
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+  # ============================================
+  # Sites
+  # ============================================
+  /sites:
+    get:
+      tags: [Sites]
+      summary: 获取受保护站点列表
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Site'
+    
+    post:
+      tags: [Sites]
+      summary: 添加新站点
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiteCreate'
+      responses:
+        '201':
+          description: 站点创建成功
+
+  # ============================================
+  # Scanner
+  # ============================================
+  /scanner/scan:
+    post:
+      tags: [Scanner]
+      summary: 启动漏洞扫描
+      description: 使用 Nuclei 扫描目标站点
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target]
+              properties:
+                target:
+                  type: string
+                  format: uri
+                  example: https://example.com
+                scanType:
+                  type: string
+                  enum: [quick, full, web, cve]
+                  default: quick
+                severity:
+                  type: array
+                  items:
+                    type: string
+                    enum: [critical, high, medium, low, info]
+      responses:
+        '202':
+          description: 扫描已启动
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scanId:
+                    type: string
+                  status:
+                    type: string
+
+  /scanner/results/{scanId}:
+    get:
+      tags: [Scanner]
+      summary: 获取扫描结果
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: scanId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResult'
+
+  # ============================================
+  # Stats
+  # ============================================
+  /stats/overview:
+    get:
+      tags: [Stats]
+      summary: 获取系统概览统计
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agentsOnline:
+                    type: integer
+                  sitesProtected:
+                    type: integer
+                  threatsBlocked:
+                    type: integer
+                  alertsActive:
+                    type: integer
+
+  /health:
+    get:
+      tags: [Stats]
+      summary: 健康检查
+      description: 无需认证的健康检查端点
+      responses:
+        '200':
+          description: 服务正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+
+# ============================================
+# Components
+# ============================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  parameters:
+    AgentId:
+      name: agentId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Agent 唯一标识符
+
+  responses:
+    Unauthorized:
+      description: 未授权
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        role:
+          type: string
+          enum: [admin, tenant, viewer]
+        tenantId:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          description: Token 过期时间（秒）
+
+    Agent:
+      type: object
+      properties:
+        agentId:
+          type: string
+        hostname:
+          type: string
+        platform:
+          type: string
+        arch:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, warning]
+        lastHeartbeat:
+          type: string
+          format: date-time
+        metrics:
+          type: object
+          properties:
+            cpu:
+              type: number
+            memory:
+              type: number
+            uptime:
+              type: integer
+
+    Device:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        deviceType:
+          type: string
+          example: esp32
+        macAddress:
+          type: string
+        firmwareVersion:
+          type: string
+        status:
+          type: string
+          enum: [online, offline]
+        lastSeen:
+          type: string
+          format: date-time
+
+    Site:
+      type: object
+      properties:
+        id:
+          type: integer
+        domain:
+          type: string
+        target:
+          type: string
+        sslEnabled:
+          type: boolean
+        antiBotEnabled:
+          type: boolean
+        rateLimitEnabled:
+          type: boolean
+
+    SiteCreate:
+      type: object
+      required: [domain, target]
+      properties:
+        domain:
+          type: string
+          example: example.com
+        target:
+          type: string
+          format: uri
+          example: http://localhost:8080
+        sslEnabled:
+          type: boolean
+          default: true
+        antiBotEnabled:
+          type: boolean
+          default: true
+
+    ScanResult:
+      type: object
+      properties:
+        scanId:
+          type: string
+        target:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        vulnerabilities:
+          type: array
+          items:
+            type: object
+            properties:
+              templateId:
+                type: string
+              name:
+                type: string
+              severity:
+                type: string
+                enum: [critical, high, medium, low, info]
+              matched:
+                type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object

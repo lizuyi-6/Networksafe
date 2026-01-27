@@ -76,15 +76,15 @@ FluxGuard Pro 彻底重构了传统防火墙架构，采用创新的 **"中心�
 
 ## 🏗️ 核心架构
 
-FluxGuard 采用 **Go + Rust + TypeScript** 混合架构，追求极致性能与安全性。
+FluxGuard 采用 **TypeScript (Node.js) + React** 全栈架构，结合 ESP32 硬件层，追求开发效率与安全性的平衡。
 
 ```mermaid
 graph TD
     User[外部流量] --> ELB[负载均衡]
     
     subgraph "业务集群"
-        App1[Linux Server A] -- 驻留 --> Agent1[Agent Core (Rust)]
-        App2[Linux Server B] -- 驻留 --> Agent2[Agent Core (Rust)]
+        App1[Linux Server A] -- 驻留 --> Agent1[Agent Core Node.js]
+        App2[Linux Server B] -- 驻留 --> Agent2[Agent Core Node.js]
     end
     
     subgraph "硬件运维层"
@@ -92,14 +92,14 @@ graph TD
         ESP32_2[ESP32 Dongle] -- USB Console --> App2
     end
     
-    subgraph "控制平面 (Control Plane)"
-        Hub[Platform Core] --> DB[(PostgreSQL)]
+    subgraph "控制平面 Control Plane"
+        Hub[Platform Core] --> DB[(SQLite/PostgreSQL)]
         Hub --> Redis[(Redis Cache)]
         Hub --> AI[AI Analysis Engine]
     end
     
-    Agent1 -- gRPC/WS --> Hub
-    Agent2 -- gRPC/WS --> Hub
+    Agent1 -- WebSocket --> Hub
+    Agent2 -- WebSocket --> Hub
 ```
 
 ---
@@ -134,6 +134,11 @@ docker-compose up -d --build
 # 3. 访问控制台
 # 前端: http://localhost:5173
 # 后端: http://localhost:3005
+
+### 🔐 默认账号
+- **用户名**: admin (或 admin@fluxguard.com)
+- **密码**: admin123
+- **说明**: 首次启动时会自动创建该管理员账号。请登录后立即修改密码。
 ```
 
 ---
