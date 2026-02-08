@@ -6,15 +6,21 @@
 
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import {
     AuthenticatedRequest,
     generateTokens,
     verifyRefreshToken,
-    authenticate
+    authenticate,
+    COOKIE_OPTIONS,
+    REFRESH_COOKIE_OPTIONS
 } from '../../middleware/auth.middleware';
 import { getDatabase } from '../../config/database';
+import authSecurityService from '../../security/auth-security.service';
+import redisService from '../../security/redis.service';
 import logger from '../../utils/logger';
+import { authRateLimit } from '../../middleware/rate-limit.middleware';
 
 const router = Router();
 
@@ -25,8 +31,9 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /**
  * POST /api/auth/register
  * Register a new user
+ * SECURITY FIX: Added rate limiting
  */
-router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/register', authRateLimit, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { email, password, username } = req.body;
 
@@ -45,10 +52,13 @@ router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
             });
         }
 
-        if (password.length < PASSWORD_MIN_LENGTH) {
+        // SECURITY FIX CVE-2026-027: Use comprehensive password validation
+        const passwordValidation = authSecurityService.validatePassword(password);
+        if (!passwordValidation.valid) {
             return res.status(400).json({
-                error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
-                code: 'PASSWORD_TOO_SHORT'
+                error: 'Password does not meet security requirements',
+                code: 'PASSWORD_WEAK',
+                details: passwordValidation.errors
             });
         }
 
@@ -57,9 +67,11 @@ router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
         // Check if user already exists
         const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
         if (existingUser) {
-            return res.status(409).json({
-                error: 'Email already registered',
-                code: 'USER_EXISTS'
+            // SECURITY FIX: Use generic error message to prevent user enumeration
+            logger.info(`Registration attempt for existing email: ${email}`);
+            return res.status(400).json({
+                error: 'Registration failed. Please check your input or try a different email.',
+                code: 'REGISTRATION_FAILED'
             });
         }
 
@@ -88,6 +100,10 @@ router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
 
         logger.info(`New user registered: ${email}`);
 
+        // SECURITY FIX: Set tokens as httpOnly cookies
+        res.cookie('accessToken', tokens.accessToken, COOKIE_OPTIONS);
+        res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+
         res.status(201).json({
             message: 'User registered successfully',
             user: {
@@ -97,7 +113,7 @@ router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
                 role,
                 tenantId
             },
-            ...tokens
+            expiresIn: tokens.expiresIn
         });
 
     } catch (error: any) {
@@ -112,16 +128,37 @@ router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
 /**
  * POST /api/auth/login
  * Authenticate user and return tokens
+ * SECURITY FIX CVE-2026-007: Integrated account lockout mechanism
+ * SECURITY FIX RISK-001: Added enhanced rate limiting with IP spoofing detection
  */
-router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/login', authRateLimit, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { email, password } = req.body;
+        const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
 
         if (!email || !password) {
             return res.status(400).json({
                 error: 'Email and password are required',
                 code: 'VALIDATION_ERROR'
             });
+        }
+
+        // SECURITY FIX CVE-2026-007: Check if account is locked
+        const isLocked = await authSecurityService.isAccountLocked(email);
+        if (isLocked) {
+            const lockInfo = await authSecurityService.getLockInfo(email);
+            logger.warn(`Login attempt on locked account: ${email}`);
+            return res.status(403).json({
+                error: 'Account is temporarily locked due to too many failed login attempts',
+                code: 'ACCOUNT_LOCKED',
+                remainingTime: lockInfo.remainingTime
+            });
+        }
+
+        // SECURITY FIX: Check for suspicious login behavior
+        const warnings = await authSecurityService.detectSuspiciousLogin(req, email);
+        if (warnings.length > 0) {
+            logger.warn(`Suspicious login detected for ${email}`, { warnings });
         }
 
         const db = getDatabase();
@@ -132,7 +169,18 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
       FROM users WHERE email = ?
     `).get(email) as any;
 
+        // SECURITY FIX CVE-2026-302: Use dummy hash to prevent timing attacks on user existence
+        // This prevents attackers from determining if an email exists based on response time
+        const dummyHash = '$2b$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+
         if (!user) {
+            // SECURITY FIX CVE-2026-007: Record failed attempt even for non-existent users
+            await authSecurityService.recordLoginAttempt(email, clientIp, false);
+
+            // SECURITY FIX CVE-2026-302: Always run bcrypt.compare to prevent timing leak
+            // Use dummy hash for non-existent user
+            await bcrypt.compare(password, dummyHash);
+
             return res.status(401).json({
                 error: 'Invalid credentials',
                 code: 'INVALID_CREDENTIALS'
@@ -141,6 +189,9 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
 
         // Check if account is active
         if (user.status === 'suspended') {
+            // SECURITY FIX CVE-2026-302: Still run bcrypt.compare to prevent timing leak
+            await bcrypt.compare(password, dummyHash);
+
             return res.status(403).json({
                 error: 'Account suspended',
                 code: 'ACCOUNT_SUSPENDED'
@@ -150,12 +201,17 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
         // Verify password
         const passwordValid = await bcrypt.compare(password, user.password_hash);
         if (!passwordValid) {
+            // SECURITY FIX CVE-2026-007: Record failed login attempt
+            await authSecurityService.recordLoginAttempt(email, clientIp, false);
             logger.warn(`Failed login attempt for: ${email}`);
             return res.status(401).json({
                 error: 'Invalid credentials',
                 code: 'INVALID_CREDENTIALS'
             });
         }
+
+        // SECURITY FIX CVE-2026-007: Record successful login
+        await authSecurityService.recordLoginAttempt(email, clientIp, true);
 
         // Update last login
         db.prepare(`UPDATE users SET last_login = datetime('now') WHERE id = ?`).run(user.id);
@@ -171,16 +227,19 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
 
         logger.info(`User logged in: ${email}`);
 
+        // SECURITY FIX: Set tokens as httpOnly cookies instead of sending in body
+        res.cookie('accessToken', tokens.accessToken, COOKIE_OPTIONS);
+        res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+
+        // SECURITY FIX CVE-2026-028: Reduce exposed user information
         res.json({
             message: 'Login successful',
             user: {
-                userId: user.id,
                 email: user.email,
                 username: user.username,
-                role: user.role,
-                tenantId: user.tenant_id
+                role: user.role
             },
-            ...tokens
+            expiresIn: tokens.expiresIn
         });
 
     } catch (error: any) {
@@ -195,10 +254,13 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
 /**
  * POST /api/auth/refresh
  * Refresh access token using refresh token
+ * SECURITY FIX CVE-2026-009: Only accept refresh token from httpOnly cookie
+ * SECURITY FIX RISK-001: Added rate limiting
  */
-router.post('/refresh', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/refresh', authRateLimit, async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { refreshToken } = req.body;
+        // SECURITY FIX CVE-2026-009: Only get refresh token from httpOnly cookie, NOT from body
+        const refreshToken = req.cookies?.refreshToken;
 
         if (!refreshToken) {
             return res.status(400).json({
@@ -239,9 +301,13 @@ router.post('/refresh', async (req: AuthenticatedRequest, res: Response) => {
             tenantId: user.tenant_id
         });
 
+        // SECURITY FIX: Set new tokens as httpOnly cookies
+        res.cookie('accessToken', tokens.accessToken, COOKIE_OPTIONS);
+        res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+
         res.json({
             message: 'Token refreshed',
-            ...tokens
+            expiresIn: tokens.expiresIn
         });
 
     } catch (error: any) {
@@ -265,19 +331,34 @@ router.get('/me', authenticate, (req: AuthenticatedRequest, res: Response) => {
 
 /**
  * POST /api/auth/logout
- * Logout user (client should discard tokens)
+ * Logout user - SECURITY FIX: Implements token blacklist
  */
-router.post('/logout', authenticate, (req: AuthenticatedRequest, res: Response) => {
-    // In a production system, you might want to:
-    // 1. Add token to a blacklist in Redis
-    // 2. Invalidate all refresh tokens for this user
-    // For now, we just acknowledge the logout
+router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        // SECURITY FIX: Get token from cookie or header
+        const token = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1];
+        if (token) {
+            // Add token to blacklist in Redis
+            const decoded = jwt.decode(token) as jwt.JwtPayload;
+            const ttl = decoded?.exp ? Math.max(0, decoded.exp - Math.floor(Date.now() / 1000)) : 86400;
+            if (ttl > 0) {
+                await redisService.set(`token:blacklist:${token}`, '1', ttl);
+            }
+        }
 
-    logger.info(`User logged out: ${req.user?.email}`);
+        // SECURITY FIX: Clear httpOnly cookies
+        res.clearCookie('accessToken', { path: '/' });
+        res.clearCookie('refreshToken', { path: '/' });
 
-    res.json({
-        message: 'Logout successful'
-    });
+        logger.info(`User logged out: ${req.user?.email}`);
+
+        res.json({
+            message: 'Logout successful'
+        });
+    } catch (error: any) {
+        logger.error('Logout error', { error: error.message });
+        res.json({ message: 'Logout successful' }); // Still return success to client
+    }
 });
 
 /**
@@ -295,10 +376,13 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
             });
         }
 
-        if (newPassword.length < PASSWORD_MIN_LENGTH) {
+        // SECURITY FIX CVE-2026-027: Use comprehensive password validation
+        const passwordValidation = authSecurityService.validatePassword(newPassword);
+        if (!passwordValidation.valid) {
             return res.status(400).json({
-                error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
-                code: 'PASSWORD_TOO_SHORT'
+                error: 'New password does not meet security requirements',
+                code: 'PASSWORD_WEAK',
+                details: passwordValidation.errors
             });
         }
 

@@ -3,6 +3,92 @@ import { SystemScanner } from './system-scanner';
 import { WebScanner } from './web-scanner';
 import { Recommendation, ScanOptions } from '../database/models/scan-result';
 import logger from '../utils/logger';
+import { spawn } from 'child_process';
+
+/**
+ * SECURITY FIX CVE-2026-036: Allowed commands whitelist
+ * Only these commands can be executed automatically
+ */
+const ALLOWED_COMMANDS: Set<string> = new Set([
+  // System management
+  'systemctl',
+  'service',
+  // Firewall
+  'ufw',
+  'firewall-cmd',
+  'iptables',
+  // Package management
+  'apt',
+  'apt-get',
+  'yum',
+  'dnf',
+  // Web servers
+  'nginx',
+  'apache2',
+  'apachectl',
+  // Permissions
+  'chmod',
+  'chown',
+  // Network
+  'sysctl',
+]);
+
+/**
+ * SECURITY FIX CVE-2026-036: Validate command against whitelist
+ */
+function isCommandAllowed(command: string): boolean {
+  const parts = command.trim().split(/\s+/);
+  const baseCommand = parts[0];
+
+  // Check for shell metacharacters that could lead to injection
+  const dangerousChars = /[;&|`$(){}[\]<>'"!#%^*?\n\r\\]/;
+  if (dangerousChars.test(command)) {
+    logger.warn('Command contains dangerous characters', { command });
+    return false;
+  }
+
+  // Check if base command is in whitelist
+  if (!ALLOWED_COMMANDS.has(baseCommand)) {
+    logger.warn('Command not in whitelist', { baseCommand, command });
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * SECURITY FIX CVE-2026-036: Safe command execution using spawn
+ */
+async function safeExecCommand(command: string): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const parts = command.trim().split(/\s+/);
+    const cmd = parts[0];
+    const args = parts.slice(1);
+
+    const proc = spawn(cmd, args, {
+      timeout: 60000,
+      env: { ...process.env, PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' }
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    proc.stdout?.on('data', (data) => { stdout += data.toString(); });
+    proc.stderr?.on('data', (data) => { stderr += data.toString(); });
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr });
+      } else {
+        reject(new Error(`Command exited with code ${code}: ${stderr}`));
+      }
+    });
+
+    proc.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
 
 /**
  * Optimization Engine
@@ -77,6 +163,7 @@ export class OptimizationEngine {
 
   /**
    * Apply an optimization
+   * SECURITY FIX CVE-2026-036: Use command whitelist and safe execution
    */
   async applyOptimization(recommendation: Recommendation): Promise<{ success: boolean; output?: string; error?: string }> {
     if (!recommendation.autoApplicable) {
@@ -88,13 +175,18 @@ export class OptimizationEngine {
 
     logger.info(`Applying optimization: ${recommendation.title}`);
 
-    try {
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execAsync = util.promisify(exec);
+    // SECURITY FIX CVE-2026-036: Validate command against whitelist
+    if (!isCommandAllowed(recommendation.action)) {
+      logger.error(`Command not allowed: ${recommendation.action}`);
+      return {
+        success: false,
+        error: 'Command not in allowed list or contains dangerous characters'
+      };
+    }
 
-      // Execute the action
-      const { stdout, stderr } = await execAsync(recommendation.action);
+    try {
+      // SECURITY FIX CVE-2026-036: Use safe command execution with spawn
+      const { stdout, stderr } = await safeExecCommand(recommendation.action);
 
       logger.info(`Optimization applied successfully`, { output: stdout });
 

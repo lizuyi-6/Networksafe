@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { OptimizationEngine } from '../../scanner/optimization-engine';
+import { authenticate, requireRole } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
 
 const router = Router();
@@ -7,9 +8,9 @@ const optimizationEngine = new OptimizationEngine();
 
 /**
  * POST /api/scanner/run
- * Run server scan
+ * Run server scan - SECURITY FIX: Requires admin authentication
  */
-router.post('/run', async (req: Request, res: Response) => {
+router.post('/run', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
   try {
     const options = req.body.options || {};
 
@@ -44,9 +45,9 @@ router.post('/run', async (req: Request, res: Response) => {
 
 /**
  * POST /api/scanner/apply
- * Apply an optimization
+ * Apply an optimization - SECURITY FIX: Requires admin authentication
  */
-router.post('/apply', async (req: Request, res: Response) => {
+router.post('/apply', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
   try {
     const { recommendation } = req.body;
 
@@ -67,12 +68,18 @@ router.post('/apply', async (req: Request, res: Response) => {
 
 /**
  * GET /api/scanner/results/:id
- * Get scan result by ID
+ * Get scan result by ID - SECURITY FIX: Requires authentication
  */
-router.get('/results/:id', async (req: Request, res: Response) => {
+router.get('/results/:id', authenticate, async (req: Request, res: Response) => {
   try {
+    // SECURITY FIX: Validate ID parameter
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid ID format' });
+    }
+
     const db = require('../../config/database').getDatabase();
-    const result = db.getDb().prepare('SELECT * FROM scan_results WHERE id = ?').get(req.params.id);
+    const result = db.getDb().prepare('SELECT * FROM scan_results WHERE id = ?').get(id);
 
     if (!result) {
       return res.status(404).json({ success: false, error: 'Scan result not found' });
@@ -94,12 +101,18 @@ router.get('/results/:id', async (req: Request, res: Response) => {
 
 /**
  * GET /api/scanner/report/:id
- * Generate scan report
+ * Generate scan report - SECURITY FIX: Requires authentication
  */
-router.get('/report/:id', async (req: Request, res: Response) => {
+router.get('/report/:id', authenticate, async (req: Request, res: Response) => {
   try {
+    // SECURITY FIX: Validate ID parameter
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid ID format' });
+    }
+
     const db = require('../../config/database').getDatabase();
-    const result = db.getDb().prepare('SELECT * FROM scan_results WHERE id = ?').get(req.params.id);
+    const result = db.getDb().prepare('SELECT * FROM scan_results WHERE id = ?').get(id);
 
     if (!result) {
       return res.status(404).json({ success: false, error: 'Scan result not found' });

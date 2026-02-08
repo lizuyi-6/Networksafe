@@ -56,18 +56,18 @@ const DeviceCard = ({
         <div
             onClick={onSelect}
             className={`bg-card border rounded-xl p-5 shadow-sm transition-all cursor-pointer hover:shadow-md ${isSelected
-                    ? 'border-primary ring-2 ring-primary/20'
-                    : 'border-border hover:border-primary/30'
+                ? 'border-primary ring-2 ring-primary/20'
+                : 'border-border hover:border-primary/30'
                 }`}
         >
             {/* Header */}
             <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                     <div className={`p-2.5 rounded-lg ${device.isOnline
-                            ? device.mode === 'online'
-                                ? 'bg-blue-500/10 text-blue-500'
-                                : 'bg-emerald-500/10 text-emerald-500'
-                            : 'bg-muted text-muted-foreground'
+                        ? device.mode === 'online'
+                            ? 'bg-blue-500/10 text-blue-500'
+                            : 'bg-emerald-500/10 text-emerald-500'
+                        : 'bg-muted text-muted-foreground'
                         }`}>
                         <Radio size={20} />
                     </div>
@@ -79,10 +79,10 @@ const DeviceCard = ({
 
                 {/* Status Badge */}
                 <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${device.isOnline
-                        ? device.mode === 'online'
-                            ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                            : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                        : 'bg-muted text-muted-foreground border border-border'
+                    ? device.mode === 'online'
+                        ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                        : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                    : 'bg-muted text-muted-foreground border border-border'
                     }`}>
                     {device.isOnline ? (
                         device.mode === 'online' ? (
@@ -155,6 +155,11 @@ const DeviceCard = ({
                 >
                     <Settings size={12} />
                 </button>
+                <div onClick={(e) => e.stopPropagation()} className="ml-auto">
+                    <a href={`/devices/board-status/${device.deviceId}`} className="px-3 py-2 text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition-all flex items-center gap-1">
+                        <Activity size={12} /> View Status
+                    </a>
+                </div>
             </div>
         </div>
     );

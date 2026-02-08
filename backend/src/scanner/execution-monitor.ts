@@ -3,6 +3,60 @@ import { EventEmitter } from 'events';
 import { AIEngine } from './ai-engine';
 
 /**
+ * SECURITY FIX CVE-2026-034: Safe command parsing
+ * Parse command string into command and arguments array safely
+ */
+function parseCommand(command: string): { cmd: string; args: string[] } {
+  const parts: string[] = [];
+  let current = '';
+  let inQuote = false;
+  let quoteChar = '';
+
+  for (let i = 0; i < command.length; i++) {
+    const char = command[i];
+
+    if ((char === '"' || char === "'") && !inQuote) {
+      inQuote = true;
+      quoteChar = char;
+    } else if (char === quoteChar && inQuote) {
+      inQuote = false;
+      quoteChar = '';
+    } else if (char === ' ' && !inQuote) {
+      if (current.length > 0) {
+        parts.push(current);
+        current = '';
+      }
+    } else {
+      current += char;
+    }
+  }
+
+  if (current.length > 0) {
+    parts.push(current);
+  }
+
+  const [cmd, ...args] = parts;
+  return { cmd: cmd || '', args };
+}
+
+/**
+ * SECURITY FIX CVE-2026-034: Validate command before execution
+ */
+function isCommandSafe(command: string): boolean {
+  // Check for dangerous shell metacharacters
+  const dangerousPatterns = /[;&|`$(){}[\]<>!#%^*?\n\r\\]/;
+
+  // Allow quotes for proper argument parsing
+  const commandWithoutQuotes = command.replace(/["']/g, '');
+
+  if (dangerousPatterns.test(commandWithoutQuotes)) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Execution Monitor
  * Real-time monitoring of command execution with AI-powered analysis
  */
@@ -64,8 +118,23 @@ export class ExecutionMonitor extends EventEmitter {
       // Emit start event
       this.emitEvent('start', { command, executionId: this.executionId });
 
-      // Spawn process
-      const [cmd, ...args] = command.split(/\s+/);
+      // SECURITY FIX CVE-2026-034: Validate command before execution
+      if (!isCommandSafe(command)) {
+        const error = new Error('Command contains dangerous characters');
+        this.emitEvent('error', { error: error.message });
+        reject({
+          command,
+          exitCode: 1,
+          stdout: '',
+          stderr: 'Command rejected: contains dangerous shell metacharacters',
+          duration: 0,
+          success: false
+        });
+        return;
+      }
+
+      // SECURITY FIX CVE-2026-034: Use safe command parsing
+      const { cmd, args } = parseCommand(command);
       this.currentProcess = spawn(cmd, args, {
         env,
         cwd,

@@ -1,15 +1,18 @@
 /**
  * FluxGuard - ESP32 设备 WebSocket 网关
- * 
+ *
  * 处理 ESP32 硬件网关的 WebSocket 连接
  * - 设备注册
  * - 心跳监控
  * - 数据接收
  * - 命令下发
+ *
+ * SECURITY FIX CVE-2026-032/033: Added CORS restrictions and API key validation
  */
 
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import crypto from 'crypto';
 import logger from '../utils/logger';
 import {
     registerDevice,
@@ -22,21 +25,36 @@ interface DeviceSocket extends Socket {
     deviceId?: string;
 }
 
+/**
+ * SECURITY FIX CVE-2026-033: Constant-time API key comparison
+ */
+function secureCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+        crypto.timingSafeEqual(Buffer.from(a), Buffer.from(a));
+        return false;
+    }
+    return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
 export class DeviceGateway {
     private io: Server;
     private deviceSockets: Map<string, DeviceSocket> = new Map();
 
     constructor(httpServer: HttpServer) {
+        // SECURITY FIX CVE-2026-032: Restrict CORS to allowed origins
+        const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
+
         this.io = new Server(httpServer, {
             path: '/ws/device',
             cors: {
-                origin: '*',
+                origin: allowedOrigins,
                 methods: ['GET', 'POST'],
+                credentials: true
             },
         });
 
         this.setupEventHandlers();
-        logger.info('[DeviceGateway] Initialized on /ws/device');
+        logger.info('[DeviceGateway] Initialized on /ws/device with restricted CORS');
     }
 
     private setupEventHandlers() {
@@ -95,8 +113,27 @@ export class DeviceGateway {
             api_key,
         } = data;
 
-        // 验证 API Key (简化版，实际应查数据库)
+        // SECURITY FIX CVE-2026-033: Proper API key validation against configured keys
+        const validApiKeys = process.env.DEVICE_API_KEYS?.split(',').filter(k => k.trim()) || [];
+
+        if (validApiKeys.length === 0) {
+            logger.error('[DeviceGateway] No DEVICE_API_KEYS configured');
+            socket.emit('register_error', { error: 'Server configuration error' });
+            socket.disconnect();
+            return;
+        }
+
         if (!api_key) {
+            logger.warn('[DeviceGateway] Device connection without API key', { device_id });
+            socket.emit('register_error', { error: 'API key required' });
+            socket.disconnect();
+            return;
+        }
+
+        // SECURITY FIX CVE-2026-033: Use constant-time comparison
+        const isValidKey = validApiKeys.some(validKey => secureCompare(api_key, validKey.trim()));
+        if (!isValidKey) {
+            logger.warn('[DeviceGateway] Invalid API key from device', { device_id });
             socket.emit('register_error', { error: 'Invalid API key' });
             socket.disconnect();
             return;

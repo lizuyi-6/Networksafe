@@ -1,464 +1,498 @@
 
-import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-    PlayCircle, Cpu, Zap, BrainCircuit, ShieldCheck, Cloud, Server, Network,
-    Laptop, Database, Shield, Lock, Building, Check, X,
-    CheckCircle, Info
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Logo, { PlanTier } from '../components/Logo';
-
-// --- Types & Data ---
-
-type DeployMode = 'saas' | 'private' | 'hybrid';
-
-const TERMINAL_LOGS = [
-    { text: "$ ./fluxguard-agent start --hardware-mode", type: "cmd", delay: 800 },
-    { text: "[INIT] Initializing FluxGuard Core v2.3.0...", type: "info", delay: 200 },
-    { text: "[INFO] Hardware Key detected: ESP32-S3-Dongle", type: "blue", delay: 400 },
-    { text: "[NET] Listening on port 8443 (TLS 1.3)", type: "info", delay: 600 },
-    { text: "[WARN] 192.168.1.105 is scanning ports...", type: "warn", delay: 1000 },
-    { text: "[AI] Analyzing behavior (Model: GPT-4)...", type: "ai", delay: 1500 },
-    { text: "[SECURE] IP 192.168.1.105 banned.", type: "success", delay: 800 },
-    { text: "[INFO] System stable. Monitoring active.", type: "blue", delay: 3000 }
-];
-
-// --- Components ---
+import { useTranslation } from 'react-i18next';
 
 const Landing = () => {
     const navigate = useNavigate();
-    const [deployMode, setDeployMode] = useState<DeployMode>('saas');
-    const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(null);
-    const [terminalLines, setTerminalLines] = useState<any[]>([]);
-    const [demoTier, setDemoTier] = useState<PlanTier>(null);
-    const terminalRef = useRef<HTMLDivElement>(null);
+    const { t, i18n } = useTranslation();
 
-    // Terminal Animation
-    useEffect(() => {
-        let currentIndex = 0;
-        let timeoutId: NodeJS.Timeout;
-
-        const processLog = () => {
-            if (currentIndex >= TERMINAL_LOGS.length) {
-                // Restart loop after a pause
-                timeoutId = setTimeout(() => {
-                    setTerminalLines([]);
-                    currentIndex = 0;
-                    processLog();
-                }, 5000);
-                return;
-            }
-
-            const log = TERMINAL_LOGS[currentIndex];
-            setTerminalLines(prev => [...prev, log]);
-
-            // Auto scroll
-            if (terminalRef.current) {
-                terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-            }
-
-            currentIndex++;
-            if (currentIndex < TERMINAL_LOGS.length) {
-                timeoutId = setTimeout(processLog, log.delay);
-            }
-        };
-
-        timeoutId = setTimeout(processLog, 1000);
-
-        return () => clearTimeout(timeoutId);
-    }, []);
-
-    const showToast = (msg: string, type: 'success' | 'info' = 'info') => {
-        setToast({ msg, type });
-        setTimeout(() => setToast(null), 3000);
-    };
-
-    const scrollToSection = (id: string) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-        }
+    const changeLanguage = (lng: string) => {
+        i18n.changeLanguage(lng);
     };
 
     return (
-        <div className="bg-[#050505] min-h-screen text-[#e5e5e5] font-sans overflow-x-hidden scroll-smooth selection:bg-green-500/20 selection:text-green-500 relative">
-            {/* Force Dark Mode Override & Visibility */}
+        <div className="text-text-main overflow-x-hidden min-h-screen h-screen overflow-y-auto flex flex-col selection:bg-primary/20 selection:text-primary relative bg-concrete-bg font-sans">
+            {/* Force Light Mode Override for this page as it uses specific colors */}
             <style>{`
-                :root { color-scheme: dark; }
-                body { background-color: #050505 !important; color: #e5e5e5 !important; }
-                * { opacity: 1 !important; visibility: visible !important; } /* DEBUG: Force visibility */
+                :root { color-scheme: light; }
+                body { background-color: #E9ECEF !important; color: #212529 !important; }
+                html { scroll-behavior: smooth; }
             `}</style>
-            {/* Toast */}
-            <AnimatePresence>
-                {toast && (
-                    <motion.div
-                        initial={{ opacity: 0, x: 100 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 100 }}
-                        className={`fixed bottom-5 right-5 z-50 px-6 py-3 rounded-lg backdrop-blur-md border border-white/10 shadow-xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-black/90 border-l-4 border-l-green-500' : 'bg-black/90 border-l-4 border-l-blue-500'}`}
-                    >
-                        {toast.type === 'success' ? <CheckCircle className="w-5 h-5 text-green-400" /> : <Info className="w-5 h-5 text-blue-400" />}
-                        <span className="text-white text-sm font-medium">{toast.msg}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
-            {/* Navbar */}
-            <nav className="fixed w-full z-40 bg-black/80 backdrop-blur-md border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                            <Logo tier={demoTier} />
+            <div className="texture-overlay"></div>
+
+            <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden transform-gpu">
+                <div className="shape-sphere -top-[10%] -right-[5%] w-[600px] h-[600px] opacity-40 mix-blend-multiply bg-gray-200 will-change-transform"></div>
+                <div className="shape-cube bottom-[15%] -left-[5%] floating opacity-30 bg-gray-300 will-change-transform" style={{ animationDelay: '1s' }}></div>
+                <div className="shape-cube top-[35%] right-[5%] floating w-[180px] h-[180px] opacity-40 mix-blend-overlay border-gray-400 will-change-transform" style={{ animationDelay: '2s', transform: 'rotateX(40deg) rotateZ(20deg)' }}></div>
+            </div>
+
+            <header className="fixed top-0 w-full z-50 border-b border-gray-200 shadow-sm transition-all duration-300 bg-white/95 backdrop-blur-md">
+                <div className="max-w-[1400px] mx-auto px-6 h-20 flex items-center justify-between relative z-50">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-gradient-to-br from-obsidian to-obsidian-light p-2 rounded-xl shadow-lg shadow-obsidian/20 border border-gray-500/20 ring-1 ring-black/5">
+                            <span className="material-symbols-outlined text-primary text-xl">shield_lock</span>
                         </div>
-                        <div className="hidden md:flex items-center space-x-8">
-                            <button onClick={() => scrollToSection('features')} className="hover:text-green-400 transition-colors text-sm font-medium">防御体系</button>
-                            <button onClick={() => scrollToSection('deployment')} className="hover:text-green-400 transition-colors text-sm font-medium">部署方案</button>
-                            <button onClick={() => scrollToSection('pricing')} className="hover:text-green-400 transition-colors text-sm font-medium">价格方案</button>
-                            <button onClick={() => navigate('/login')} className="bg-white/10 hover:bg-green-500 hover:text-black px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-green-500/25">控制台登录</button>
+                        <div className="flex flex-col">
+                            <span className="font-bold text-xl tracking-tight text-obsidian leading-none">FluxGuard</span>
+                            <span className="text-[0.6rem] text-text-secondary font-medium tracking-wide uppercase mt-0.5">{t('footer.powered_by')}</span>
                         </div>
                     </div>
-                </div>
-            </nav>
-
-            {/* Hero Section */}
-            <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 grid-bg min-h-screen flex items-center overflow-hidden">
-                {/* Aurora Background Layer */}
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-green-500/10 rounded-full blur-[120px] mix-blend-screen animate-blob opacity-40"></div>
-                    <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen animate-blob animation-delay-2000 opacity-40"></div>
-                    <div className="absolute -bottom-32 left-1/2 w-[800px] h-[800px] bg-purple-500/10 rounded-full blur-[120px] transform -translate-x-1/2 opacity-30"></div>
-                </div>
-                <motion.div
-                    initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-                    whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                    className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full"
-                >
-                    <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
-                        <div className="lg:col-span-6 text-center lg:text-left mb-16 lg:mb-0">
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-900/30 border border-green-500/30 text-green-400 text-xs font-mono mb-6"
+                    <nav className="hidden md:flex items-center gap-1 bg-surface-mid/30 px-2 py-1.5 rounded-full border border-white/40 shadow-inner backdrop-blur-md">
+                        <a className="text-sm font-semibold text-text-secondary hover:text-obsidian hover:bg-surface-light px-5 py-2 rounded-full transition-all" href="#architecture">{t('nav.architecture')}</a>
+                        <a className="text-sm font-semibold text-text-secondary hover:text-obsidian hover:bg-surface-light px-5 py-2 rounded-full transition-all" href="#defense">{t('nav.defense')}</a>
+                        <a className="text-sm font-semibold text-text-secondary hover:text-obsidian hover:bg-surface-light px-5 py-2 rounded-full transition-all" href="#deep-tech">{t('nav.deep_tech')}</a>
+                        <a className="text-sm font-semibold text-text-secondary hover:text-obsidian hover:bg-surface-light px-5 py-2 rounded-full transition-all" href="#pricing">{t('nav.pricing')}</a>
+                    </nav>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center border border-gray-300 rounded-full bg-surface-light px-1 py-1">
+                            <button
+                                onClick={() => changeLanguage('en')}
+                                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${i18n.language === 'en' ? 'bg-primary text-white shadow-sm' : 'text-text-secondary hover:text-obsidian'}`}
                             >
-                                <span className="w-2 h-2 rounded-full bg-green-500 status-pulse"></span> v22.0 Unibody 硬件现已发布
-                            </motion.div>
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight text-white">
-                                让服务器安全<br />
-                                <span className="bg-clip-text text-transparent bg-gradient-to-br from-green-400 to-blue-500">像装杀毒软件一样简单</span>
+                                EN
+                            </button>
+                            <button
+                                onClick={() => changeLanguage('zh')}
+                                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${i18n.language === 'zh' ? 'bg-primary text-white shadow-sm' : 'text-text-secondary hover:text-obsidian'}`}
+                            >
+                                中文
+                            </button>
+                        </div>
+                        <button onClick={() => navigate('/login')} className="text-sm font-bold text-text-secondary hover:text-primary transition-colors">{t('nav.login')}</button>
+                        <button onClick={() => navigate('/login')} className="bg-obsidian hover:bg-black text-white text-sm font-bold px-6 py-2.5 rounded-full transition-all shadow-lg hover:shadow-2xl hover:-translate-y-0.5 border border-white/10 ring-1 ring-white/10">{t('nav.get_started')}</button>
+                    </div>
+                </div>
+            </header>
+
+            <main className="pt-20 relative z-10">
+                <section className="relative min-h-[90vh] flex items-center overflow-visible">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#E9ECEF] via-[#DEE2E6] to-[#CED4DA] z-0 opacity-60"></div>
+                    <div className="max-w-[1400px] mx-auto w-full px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10 py-24">
+                        <div className="space-y-10 pr-8 relative z-20">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 bg-surface-light/80 backdrop-blur-xl shadow-sm ring-1 ring-black/5">
+                                <span className="relative flex h-2.5 w-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary shadow-sm"></span>
+                                </span>
+                                <span className="text-[11px] font-bold tracking-wide uppercase text-obsidian">{t('hero.system_active')}</span>
+                            </div>
+                            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-obsidian drop-shadow-sm">
+                                {t('hero.title_prefix')}<br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-obsidian via-text-secondary to-obsidian" style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.05)' }}>{t('hero.title_highlight')}</span>
                             </h1>
-                            <p className="text-lg text-gray-400 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                                企业级智能服务器防御平台。分布式 Agent 架构 + AI 智能分析 + 硬件级物理部署，将被动响应转化为主动免疫。
+                            <p className="text-xl text-text-secondary max-w-lg font-medium leading-relaxed">
+                                {t('hero.description')}
                             </p>
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                                <button onClick={() => showToast('感谢申请！销售顾问将在 24 小时内联系您。', 'success')} className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-black font-bold py-3 px-8 rounded-lg shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1">
-                                    申请 14 天免费试用
+                            <div className="flex flex-wrap items-center gap-4 pt-4">
+                                <button onClick={() => navigate('/login')} className="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-semibold text-sm transition-all flex items-center gap-3 shadow-[0_10px_20px_rgba(67,97,238,0.3)] hover:shadow-[0_15px_30px_rgba(67,97,238,0.4)] hover:-translate-y-1 border-t border-white/20">
+                                    {t('hero.deploy_system')}
+                                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                 </button>
-                                <button onClick={() => window.open('https://github.com', '_blank')} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white font-medium py-3 px-8 rounded-lg transition-all flex items-center justify-center gap-2 group">
-                                    <PlayCircle className="w-5 h-5 group-hover:text-green-400 transition-colors" /> 观看演示 (3min)
+                                <button className="text-obsidian bg-surface-light hover:bg-white px-8 py-4 font-semibold text-sm transition-all flex items-center gap-2 border border-gray-300 rounded-2xl shadow-sm hover:shadow-lg backdrop-blur-md">
+                                    {t('hero.view_specs')}
                                 </button>
                             </div>
                         </div>
-
-                        {/* Terminal Window */}
-                        <div className="lg:col-span-6 relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000 animate-pulse"></div>
-                            <div className="relative bg-[#0d1117] rounded-xl border border-gray-700 shadow-2xl overflow-hidden font-mono text-sm leading-relaxed h-[400px] flex flex-col">
-                                <div className="flex items-center justify-between px-4 py-3 bg-[#161b22] border-b border-gray-700 shrink-0 z-20">
-                                    <div className="flex space-x-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><div className="w-3 h-3 rounded-full bg-yellow-500"></div><div className="w-3 h-3 rounded-full bg-green-500"></div></div>
-                                    <div className="text-gray-400 text-xs font-semibold">admin@fluxguard-dongle:~</div>
-                                    <div className="text-gray-600 text-xs">bash</div>
-                                </div>
-                                <div className="scanline"></div>
-                                <div ref={terminalRef} className="p-6 text-gray-300 flex-1 overflow-y-auto no-scrollbar relative font-medium">
-                                    {terminalLines.map((log, i) => (
-                                        <div key={i} className={`mb-1 ${log.type === 'cmd' ? 'text-green-400 font-bold' :
-                                            log.type === 'warn' ? 'text-yellow-400' :
-                                                log.type === 'error' ? 'text-red-500' :
-                                                    log.type === 'success' ? 'text-green-400' :
-                                                        log.type === 'ai' ? 'text-purple-400' :
-                                                            log.type === 'blue' ? 'text-blue-400' :
-                                                                'text-gray-500'
-                                            }`}>
-                                            {log.text}
+                        <div className="relative h-[650px] w-full lg:w-[115%] perspective-1000 z-10 lg:-mr-[15%]">
+                            <div className="relative w-full h-full transform transition-transform duration-700 hover:rotate-y-[-2deg] hover:rotate-x-[2deg] will-change-transform">
+                                <div className="absolute inset-4 bg-black/30 rounded-[2.5rem] get-gpu-layer blur-2xl transform translate-y-8 translate-x-4"></div>
+                                <div className="absolute inset-0 rounded-[2rem] overflow-hidden shadow-deep border border-gray-400 bg-gradient-to-br from-[#F8F9FA] to-[#DEE2E6] z-10 ring-1 ring-white/20">
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent z-20 pointer-events-none mix-blend-overlay"></div>
+                                    <div className="relative h-full w-full overflow-hidden bg-gray-100">
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent z-30 pointer-events-none"></div>
+                                        <img alt="Server Hardware" className="w-full h-full object-cover mix-blend-luminosity opacity-90 filter contrast-125 brightness-95 grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAccNeTJCOVIFy_084_iYgRB4UeIFYahezs73z7Oz1kcXffuKolp-ghctKnhUVwyoOsS3DRhxN5qpSB6oKreCghBqrKv8CVugmIYNvk0LSf-SeaX-k4HxEjsT5cziQ3uR_ckCLFJXGdfe0s5cLGqPWi3YJT6UrXoIjCttgUxbmH79v3NaccnSIMhNokb8lWi8ObhQPHqHZcQAdknjVTW0Ovqnt2HgCID_gB2eEKvN5rI8TCjWxOIuJJ8h_DwVxbJhgEjpSu5MvmoC5g" />
+                                    </div>
+                                    <div className="absolute bottom-10 left-10 right-10 glass-heavy p-5 rounded-2xl flex items-center gap-5 z-30 border-t border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.15)] bg-[#F8F9FA]/80">
+                                        <div className="h-12 w-12 bg-gradient-to-br from-gray-100 to-white rounded-full flex items-center justify-center border border-gray-200 shadow-inner">
+                                            <span className="material-symbols-outlined text-primary text-2xl drop-shadow-sm">verified_user</span>
                                         </div>
-                                    ))}
-                                    <motion.span
-                                        animate={{ opacity: [1, 0] }}
-                                        transition={{ repeat: Infinity, duration: 0.8 }}
-                                        className="inline-block w-2 h-4 bg-green-500 ml-1 align-middle"
-                                    />
-                                </div>
-                                <div className="absolute bottom-6 right-6 bg-black/90 backdrop-blur-md border border-green-500/30 p-3 rounded-lg flex items-center gap-3 shadow-lg shadow-black/50 z-30">
-                                    <div className="relative"><Cpu className="text-green-400 w-6 h-6" /><span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full status-pulse"></span></div>
-                                    <div><div className="text-[10px] text-gray-400 uppercase tracking-wider">Hardware Status</div><div className="text-green-400 font-bold text-sm tracking-wide">ONLINE • ENCRYPTED</div></div>
+                                        <div>
+                                            <div className="text-sm font-bold text-obsidian uppercase tracking-wider mb-0.5">System Status Normal</div>
+                                            <div className="flex items-center gap-3 text-xs font-mono text-text-secondary">
+                                                <span className="px-1.5 py-0.5 bg-gray-200 rounded border border-gray-300 text-obsidian font-bold">OK</span>
+                                                <span>Latency: 0.4ms</span>
+                                                <span className="w-1 h-1 rounded-full bg-gray-400"></span>
+                                                <span>Uptime: 99.999%</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </motion.div>
-            </section>
+                </section>
 
-            {/* Hardware Section */}
-            <section id="hardware" className="py-20 bg-black border-y border-white/10">
-                <div className="max-w-7xl mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold mb-8">FluxGuard Deployment Dongle</h2>
-                    <div
-                        className="relative w-full max-w-4xl mx-auto aspect-video bg-gray-900 rounded-xl overflow-hidden group cursor-pointer"
-                        onClick={() => showToast('正在跳转至硬件详情页...', 'info')}
-                    >
-                        <img
-                            src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-                            className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-700 hover:scale-105"
-                            alt="FluxGuard Hardware"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-black/50 backdrop-blur-md border border-white/10 px-8 py-4 rounded-xl transform group-hover:-translate-y-2 transition-all">
-                                <h3 className="text-2xl font-bold text-white">v22.0 Unibody</h3>
-                                <p className="text-green-400 text-sm mt-1">点击查看工业设计细节</p>
+                <section id="defense" className="py-32 relative z-10">
+                    <div className="absolute inset-0 bg-surface-mid/30 transform -skew-y-3 origin-top-left scale-110 border-t border-b border-white/20 shadow-inner z-0"></div>
+                    <div className="max-w-[1400px] mx-auto px-6 relative z-10">
+                        <div className="mb-20 text-center md:text-left">
+                            <h2 className="text-4xl font-bold tracking-tight mb-6 text-obsidian">{t('features.title')}</h2>
+                            <p className="text-text-secondary text-xl font-medium max-w-2xl leading-relaxed">{t('features.description')}</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                            <div className="bg-surface-light p-10 rounded-3xl shadow-soft border border-gray-200 hover:transform hover:-translate-y-3 hover:shadow-deep transition-all duration-500 group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full -mr-8 -mt-8 transition-all group-hover:scale-110"></div>
+                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white to-[#F0F2F5] flex items-center justify-center mb-8 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,1)] border border-gray-200 group-hover:scale-110 transition-transform duration-300">
+                                    <span className="material-symbols-outlined text-primary text-3xl drop-shadow-sm">shield</span>
+                                </div>
+                                <h3 className="text-2xl font-bold text-obsidian mb-4">{t('features.antibot.title')}</h3>
+                                <p className="text-base text-text-secondary leading-relaxed font-medium">
+                                    {t('features.antibot.desc')}
+                                </p>
+                            </div>
+                            <div className="bg-surface-light p-10 rounded-3xl shadow-soft border border-gray-200 hover:transform hover:-translate-y-3 hover:shadow-deep transition-all duration-500 group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full -mr-8 -mt-8 transition-all group-hover:scale-110"></div>
+                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white to-[#F0F2F5] flex items-center justify-center mb-8 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,1)] border border-gray-200 group-hover:scale-110 transition-transform duration-300">
+                                    <span className="material-symbols-outlined text-primary text-3xl drop-shadow-sm">memory</span>
+                                </div>
+                                <h3 className="text-2xl font-bold text-obsidian mb-4">{t('features.neural.title')}</h3>
+                                <p className="text-base text-text-secondary leading-relaxed font-medium">
+                                    {t('features.neural.desc')}
+                                </p>
+                            </div>
+                            <div className="bg-surface-light p-10 rounded-3xl shadow-soft border border-gray-200 hover:transform hover:-translate-y-3 hover:shadow-deep transition-all duration-500 group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full -mr-8 -mt-8 transition-all group-hover:scale-110"></div>
+                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white to-[#F0F2F5] flex items-center justify-center mb-8 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,1)] border border-gray-200 group-hover:scale-110 transition-transform duration-300">
+                                    <span className="material-symbols-outlined text-primary text-3xl drop-shadow-sm">toggle_on</span>
+                                </div>
+                                <h3 className="text-2xl font-bold text-obsidian mb-4">{t('features.breaker.title')}</h3>
+                                <p className="text-base text-text-secondary leading-relaxed font-medium">
+                                    {t('features.breaker.desc')}
+                                </p>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Features Grid */}
-            <section id="features" className="py-20 bg-[#0f0f0f] border-t border-white/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold mb-4 text-white">三位一体防御体系</h2>
-                        <p className="text-gray-400">从代码层到物理层的全栈安全防护</p>
-                    </div>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <FeatureCard
-                            icon={Zap} color="green" title="主动免疫"
-                            desc="分布式 Agent 驻留于业务内部，毫秒级响应威胁，无需等待中央指令。"
-                            items={["实时流量镜像", "内存马查杀"]}
-                        />
-                        <FeatureCard
-                            icon={BrainCircuit} color="blue" title="AI 决策大脑"
-                            desc="集成 GPT-4 与本地模型，理解攻击意图，自动生成修复策略并阻断。"
-                            items={["攻击溯源分析", "漏洞自动修复"]}
-                        />
-                        <FeatureCard
-                            icon={ShieldCheck} color="purple" title="物理级隔离"
-                            desc="物理密钥管理与离线防护。资产自动发现，从物理层保障服务器安全。"
-                            items={["硬件加密存储", "拔出即锁定"]}
-                        />
-                    </div>
-                </div>
-            </section>
-
-            {/* Deployment Solutions */}
-            <section id="deployment" className="py-20 bg-black relative overflow-hidden">
-                <div className="absolute inset-0 grid-bg opacity-30"></div>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold mb-4 text-white">灵活的部署架构</h2>
-                        <p className="text-gray-400">无论是公有云还是涉密内网，FluxGuard 都能完美适配</p>
-                    </div>
-
-                    <div className="lg:grid lg:grid-cols-12 gap-8">
-                        {/* Selector */}
-                        <div className="lg:col-span-4 space-y-4">
-                            <DeployOption active={deployMode === 'saas'} onClick={() => setDeployMode('saas')} icon={Cloud} title="云端托管 (SaaS)" sub="适合中小企业，开箱即用" />
-                            <DeployOption active={deployMode === 'private'} onClick={() => setDeployMode('private')} icon={Server} title="私有化部署 (On-Premise)" sub="金融/政企首选，数据不离境" />
-                            <DeployOption active={deployMode === 'hybrid'} onClick={() => setDeployMode('hybrid')} icon={Network} title="混合云架构 (Hybrid)" sub="统一管理多云资产" />
-                        </div>
-
-                        {/* Visualizer */}
-                        <div className="lg:col-span-8">
-                            <div className="bg-[#0d1117] border border-gray-700 rounded-xl p-8 h-full min-h-[400px] relative overflow-hidden flex flex-col justify-center">
-                                {deployMode === 'saas' && (
-                                    <motion.div animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <div className="flex justify-between items-center mb-8">
-                                            <div className="text-center">
-                                                <div className="w-16 h-16 mx-auto bg-gray-800 rounded-full flex items-center justify-center border border-gray-600 mb-2">
-                                                    <Laptop className="w-8 h-8 text-gray-400" />
+                <section id="deep-tech" className="py-32 relative z-10 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#CED4DA]/20 z-0"></div>
+                    <div className="max-w-[1400px] mx-auto px-6 relative">
+                        <div className="absolute -right-40 top-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] mix-blend-multiply"></div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                            <div className="space-y-8 relative z-10">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/10 shadow-sm backdrop-blur-sm">
+                                    <span className="text-[11px] font-mono text-primary font-bold uppercase tracking-wider">{t('hardware.chipset')}</span>
+                                </div>
+                                <h2 className="text-5xl font-bold tracking-tight text-obsidian">{t('hardware.title')}</h2>
+                                <p className="text-text-secondary text-xl leading-relaxed font-medium">
+                                    {t('hardware.description')}
+                                </p>
+                                <ul className="space-y-6 pt-6">
+                                    <li className="flex items-center gap-5 text-base font-semibold text-text-main border-b border-black/10 pb-4">
+                                        <span className="font-mono text-primary w-24 bg-primary/10 py-1 px-2 rounded text-center text-sm border border-primary/20">AES-256</span>
+                                        {t('hardware.aes')}
+                                    </li>
+                                    <li className="flex items-center gap-5 text-base font-semibold text-text-main border-b border-black/10 pb-4">
+                                        <span className="font-mono text-primary w-24 bg-primary/10 py-1 px-2 rounded text-center text-sm border border-primary/20">RSA-4096</span>
+                                        {t('hardware.rsa')}
+                                    </li>
+                                    <li className="flex items-center gap-5 text-base font-semibold text-text-main border-b border-black/10 pb-4">
+                                        <span className="font-mono text-primary w-24 bg-primary/10 py-1 px-2 rounded text-center text-sm border border-primary/20">TRNG</span>
+                                        {t('hardware.trng')}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="relative group perspective-1000">
+                                <div className="absolute -inset-4 bg-gradient-to-r from-gray-900/10 to-blue-900/10 rounded-[2.5rem] blur-2xl opacity-60 group-hover:opacity-80 transition duration-1000"></div>
+                                <div className="relative glass-heavy rounded-[2rem] overflow-hidden aspect-[4/3] blueprint-grid flex items-center justify-center p-10 transform transition-transform duration-700 hover:scale-[1.02] border border-gray-300 bg-surface-light/50">
+                                    <div className="absolute top-6 left-6 w-4 h-4 rounded-full bg-gradient-to-b from-gray-200 to-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] border border-gray-400">
+                                        <div className="w-full h-[1px] bg-gray-500 absolute top-1/2 left-0 transform -translate-y-1/2 rotate-45 opacity-60"></div>
+                                    </div>
+                                    <div className="absolute top-6 right-6 w-4 h-4 rounded-full bg-gradient-to-b from-gray-200 to-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] border border-gray-400">
+                                        <div className="w-full h-[1px] bg-gray-500 absolute top-1/2 left-0 transform -translate-y-1/2 -rotate-45 opacity-60"></div>
+                                    </div>
+                                    <div className="absolute bottom-6 left-6 w-4 h-4 rounded-full bg-gradient-to-b from-gray-200 to-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] border border-gray-400">
+                                        <div className="w-full h-[1px] bg-gray-500 absolute top-1/2 left-0 transform -translate-y-1/2 rotate-12 opacity-60"></div>
+                                    </div>
+                                    <div className="absolute bottom-6 right-6 w-4 h-4 rounded-full bg-gradient-to-b from-gray-200 to-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] border border-gray-400">
+                                        <div className="w-full h-[1px] bg-gray-500 absolute top-1/2 left-0 transform -translate-y-1/2 -rotate-12 opacity-60"></div>
+                                    </div>
+                                    <div className="relative w-full h-full border border-gray-300 rounded-2xl bg-surface-light/90 shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl p-8 flex flex-col justify-between ring-1 ring-white/60">
+                                        <div className="flex justify-between items-start">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white">
+                                                <span className="material-symbols-outlined text-gray-700 text-3xl">developer_board</span>
+                                            </div>
+                                            <div className="px-3 py-1.5 text-[10px] font-mono text-primary font-bold bg-primary/10 rounded border border-primary/20 shadow-sm">ESP32-S3-WROOM</div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-6 my-6">
+                                            <div className="border border-dashed border-gray-400 rounded-lg p-4 flex flex-col items-center justify-center bg-gray-50/40">
+                                                <span className="text-[10px] font-mono uppercase text-gray-600 mb-2 font-bold tracking-wider">{t('hardware.core_load_0')}</span>
+                                                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                                                    <div className="h-full bg-gradient-to-r from-primary to-primary-dark w-[80%] shadow-[0_0_10px_rgba(67,97,238,0.4)]"></div>
                                                 </div>
-                                                <div className="text-xs text-gray-500">您的服务器</div>
                                             </div>
-                                            <div className="flex-1 h-px bg-gray-700 mx-4 relative">
-                                                <motion.div
-                                                    animate={{ left: ["0%", "100%"] }}
-                                                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-green-500 rounded-full"
-                                                />
-                                                <div className="text-center -mt-6 text-xs text-green-500 font-mono">TLS 1.3 Tunnel</div>
-                                            </div>
-                                            <div className="text-center relative">
-                                                <div className="absolute -inset-4 bg-green-500/10 blur-xl rounded-full"></div>
-                                                <div className="w-20 h-20 mx-auto bg-[#161b22] rounded-full flex items-center justify-center border-2 border-green-500 mb-2 relative z-10">
-                                                    <Cloud className="w-10 h-10 text-green-400" />
+                                            <div className="border border-dashed border-gray-400 rounded-lg p-4 flex flex-col items-center justify-center bg-gray-50/40">
+                                                <span className="text-[10px] font-mono uppercase text-gray-600 mb-2 font-bold tracking-wider">{t('hardware.core_load_1')}</span>
+                                                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                                                    <div className="h-full bg-gradient-to-r from-primary to-primary-dark w-[30%] shadow-[0_0_10px_rgba(67,97,238,0.4)]"></div>
                                                 </div>
-                                                <div className="text-sm font-bold text-green-400">FluxGuard Cloud</div>
                                             </div>
                                         </div>
-                                    </motion.div>
-                                )}
-
-                                {deployMode === 'private' && (
-                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <div className="border border-green-500/30 bg-green-900/5 rounded-xl p-6 relative">
-                                            <div className="absolute top-0 left-4 -translate-y-1/2 bg-[#0d1117] px-2 text-xs text-green-500 border border-green-500/30 rounded">企业内网 (Intranet)</div>
-                                            <div className="flex justify-around items-center">
-                                                <div className="text-center"><div className="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-2"><Database className="w-6 h-6 text-purple-400" /></div><div className="text-xs text-gray-500">业务数据库</div></div>
-                                                <div className="h-px w-16 bg-gray-600"></div>
-                                                <div className="text-center">
-                                                    <div className="w-16 h-16 mx-auto bg-[#161b22] rounded-lg flex items-center justify-center border border-green-500 mb-2 shadow-[0_0_15px_rgba(0,255,157,0.2)]"><Shield className="w-8 h-8 text-green-400" /></div>
-                                                    <div className="text-xs font-bold text-white">本地控制台</div>
-                                                </div>
-                                                <div className="h-px w-16 bg-gray-600"></div>
-                                                <div className="text-center"><div className="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-2"><Server className="w-6 h-6 text-blue-400" /></div><div className="text-xs text-gray-500">应用服务器</div></div>
+                                        <div className="border border-primary/20 rounded-xl p-4 flex items-center justify-between bg-gradient-to-r from-blue-50/20 to-white/40 backdrop-blur-sm shadow-sm">
+                                            <div className="flex flex-col">
+                                                <div className="text-[11px] font-mono font-bold text-primary tracking-wide">{t('hardware.crypto_accel')}</div>
+                                                <div className="text-[10px] text-text-secondary mt-0.5">SHA-256 • AES • RSA</div>
                                             </div>
+                                            <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(67,97,238,0.8)] animate-pulse ring-4 ring-primary/10"></div>
                                         </div>
-                                        <div className="mt-6 flex items-center gap-4 text-xs text-gray-400 bg-red-900/10 p-3 rounded border border-red-500/20">
-                                            <Lock className="w-4 h-4 text-red-400" />
-                                            <span>物理隔离模式：所有数据留存本地，完全切断外网连接。支持离线 AI 模型。</span>
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                {deployMode === 'hybrid' && (
-                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex justify-center items-center gap-8 mb-6">
-                                        <div className="w-32 p-4 border border-gray-700 rounded-lg text-center opacity-50">
-                                            <Cloud className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                            <div className="text-xs">AWS / Azure</div>
-                                        </div>
-                                        <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center z-10 shadow-lg">
-                                            <Zap className="w-6 h-6 text-black" />
-                                        </div>
-                                        <div className="w-32 p-4 border border-gray-700 rounded-lg text-center opacity-50">
-                                            <Building className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                            <div className="text-xs">IDC 机房</div>
-                                        </div>
-                                    </motion.div>
-                                )}
+                                    </div>
+                                    <div className="absolute top-[6%] left-[10%] w-[80%] flex justify-center opacity-70">
+                                        <div className="h-px bg-text-secondary w-full relative top-2.5"></div>
+                                        <span className="bg-surface-light px-2 text-[10px] font-mono text-text-secondary relative z-10 border border-gray-300 rounded shadow-sm">18.00 mm</span>
+                                    </div>
+                                    <div className="absolute right-[3%] top-[15%] h-[70%] flex flex-col justify-center items-center opacity-70">
+                                        <div className="w-px bg-text-secondary h-full relative left-[0.6rem]"></div>
+                                        <span className="bg-surface-light py-1 px-1 text-[10px] font-mono text-text-secondary relative z-10 rotate-90 whitespace-nowrap border border-gray-300 rounded shadow-sm">25.50 mm</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Pricing Section */}
-            <section id="pricing" className="py-20 relative bg-[#0a0a0a]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold mb-4 text-white">透明定价，按需订阅</h2>
-                        <p className="text-gray-400">硬件一次性买断，软件服务按需订阅</p>
+                <section id="architecture" className="py-32 relative z-10">
+                    <div className="absolute inset-x-0 top-10 bottom-0 bg-surface-mid/30 shadow-[0_-20px_60px_rgba(0,0,0,0.03)] backdrop-blur-md z-0 skew-y-1 transform origin-bottom-right border-t border-white/20"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#CED4DA]/20 z-0 pointer-events-none"></div>
+                    <div className="max-w-[1400px] mx-auto px-6 relative z-10">
+                        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+                            <div>
+                                <h2 className="text-4xl font-bold tracking-tight text-obsidian mb-4">{t('infrastructure.title')}</h2>
+                                <p className="text-text-secondary text-xl font-medium max-w-xl">{t('infrastructure.description')}</p>
+                            </div>
+                            <div className="flex items-center gap-6 text-sm font-semibold text-text-secondary bg-surface-light px-6 py-3 rounded-xl border border-gray-300 shadow-lg backdrop-blur-sm">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="relative flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary border border-white"></span>
+                                    </span>
+                                    {t('infrastructure.operational')}
+                                </div>
+                                <div className="h-4 w-px bg-gray-400"></div>
+                                <div className="flex items-center gap-2.5">
+                                    <span className="w-3 h-3 rounded-full bg-gray-400 shadow-inner border border-gray-500"></span>
+                                    {t('infrastructure.maintenance')}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="relative w-full aspect-[2.2/1] bg-black rounded-[2rem] border border-gray-300 overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.05),0_20px_40px_-10px_rgba(0,0,0,0.1)] group">
+                            <img
+                                src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop"
+                                alt="Global Network Infrastructure"
+                                className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+
+                            {/* Overlay Nodes */}
+                            <div className="absolute top-[35%] left-[22%] group cursor-pointer z-30">
+                                <div className="w-4 h-4 bg-primary border-2 border-white rounded-full shadow-[0_0_20px_rgba(67,97,238,0.8)] z-20 relative animate-pulse"></div>
+                                <div className="absolute top-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl rounded-lg text-xs font-mono text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 z-50">
+                                    <span className="font-bold text-primary-light block mb-0.5">US-WEST</span><span className="text-gray-300">Latency: 12ms</span>
+                                </div>
+                            </div>
+                            <div className="absolute top-[28%] left-[48%] group cursor-pointer z-30">
+                                <div className="w-4 h-4 bg-primary border-2 border-white rounded-full shadow-[0_0_20px_rgba(67,97,238,0.8)] z-20 relative animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                                <div className="absolute top-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl rounded-lg text-xs font-mono text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 z-50">
+                                    <span className="font-bold text-primary-light block mb-0.5">EU-CENTRAL</span><span className="text-gray-300">Latency: 24ms</span>
+                                </div>
+                            </div>
+                            <div className="absolute top-[40%] right-[22%] group cursor-pointer z-30">
+                                <div className="w-4 h-4 bg-primary border-2 border-white rounded-full shadow-[0_0_20px_rgba(67,97,238,0.8)] z-20 relative animate-pulse" style={{ animationDelay: '1s' }}></div>
+                                <div className="absolute top-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl rounded-lg text-xs font-mono text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 z-50">
+                                    <span className="font-bold text-primary-light block mb-0.5">ASIA-PAC</span><span className="text-gray-300">Latency: 45ms</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </section>
 
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <PricingCard
-                            title="Starter" price="¥999" sub="适合小型开发团队"
-                            features={[{ t: "管理 5 台 Agent", c: true }, { t: "基础 WAF 防护", c: true }, { t: "7 天日志存储", c: true }, { t: "无 AI 分析引擎", c: false }]}
-                            btnText="开始试用" outline onClick={() => navigate('/login')}
-                            onMouseEnter={() => setDemoTier('starter')}
-                            onMouseLeave={() => setDemoTier(null)}
-                        />
-                        <PricingCard
-                            title="Professional" price="¥2,999" sub="适合快速成长的业务系统"
-                            featured
-                            features={[{ t: "管理 20 台 Agent", c: true }, { t: "AI 智能分析引擎 (GPT-4)", c: true }, { t: "Nuclei 自动化漏洞扫描", c: true }, { t: "硬件离线授权功能", c: true }]}
-                            btnText="立即订阅" onClick={() => navigate('/login')}
-                            onMouseEnter={() => setDemoTier('professional')}
-                            onMouseLeave={() => setDemoTier(null)}
-                        />
-                        <PricingCard
-                            title="Enterprise" price="询价" sub="大规模企业定制"
-                            features={[{ t: "无限制 Agent", c: true }, { t: "私有化部署", c: true }, { t: "7x24h SLA", c: true }, { t: "专属客户经理", c: true }]}
-                            btnText="联系销售" outline onClick={() => showToast('请联系 sales@fluxguard.io')}
-                            onMouseEnter={() => setDemoTier('enterprise')}
-                            onMouseLeave={() => setDemoTier(null)}
-                        />
+                <section className="py-32 relative z-10 overflow-visible">
+                    <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                        <div className="order-2 lg:order-1 relative perspective-1000">
+                            <div className="shape-sphere -left-20 top-0 w-80 h-80 opacity-20 mix-blend-multiply blur-xl bg-gray-400"></div>
+                            <div className="rounded-[2rem] overflow-hidden shadow-deep border border-gray-300 bg-surface-light transform hover:rotate-y-3 hover:rotate-x-2 transition-transform duration-700 relative z-10 group">
+                                <img alt="Interface" className="w-full h-auto object-cover opacity-100 group-hover:scale-105 transition-transform duration-700 grayscale contrast-125" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjfyfMsNDoTUgVhaj7YvAOQbKYlvvM7OZF6-eOoEuQTuzP7G-ptu-3OVL-GVzrFdmi-vxgTUPfnMBVaq7wSXXUh-3edY8m2tLaFaGY3A78ofSdYP6FjNZA_xam2_KfSZXGyVBRvn0VsNuwc99EBtYBe-iHnVpeo7b_L18edzkev8CbQoQOHg7MTs7q1CCCSnIK2evo2owfNjsh8Mc-M-W_1DAVfkwzzWBrz_6zhL4E0XpkZtQ3yfGVbWM2kOhhDfLUQ5iNemOBKkVl" />
+                                <div className="absolute inset-0 bg-gradient-to-tr from-surface-light/20 to-transparent pointer-events-none"></div>
+                                <div className="absolute bottom-6 left-6 right-6 glass-panel p-6 rounded-2xl shadow-lg flex justify-between items-center z-20 border-t border-white/60 bg-surface-light/80">
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-1.5">{t('dashboard.system_status')}</p>
+                                        <p className="text-sm font-mono text-primary font-bold flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)] animate-pulse"></span>
+                                            {t('dashboard.nominal')}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-1.5">{t('dashboard.throughput')}</p>
+                                        <p className="text-sm font-mono text-obsidian font-bold">45.2 TB/s <span className="text-green-600 text-xs ml-1">▲</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="order-1 lg:order-2 space-y-8 relative z-10">
+                            <h2 className="text-4xl font-bold tracking-tight text-obsidian">{t('dashboard.precision_control')}</h2>
+                            <p className="text-text-secondary text-xl leading-relaxed font-medium">
+                                {t('dashboard.description')}
+                            </p>
+                            <div className="space-y-6 pt-6 border-t border-black/10">
+                                <div className="flex items-start gap-5 pt-2 group cursor-default">
+                                    <div className="p-3.5 rounded-2xl bg-surface-light shadow-sm border border-gray-300 group-hover:bg-primary/5 transition-colors duration-300">
+                                        <span className="material-symbols-outlined text-text-secondary group-hover:text-primary transition-colors text-2xl">analytics</span>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-obsidian group-hover:text-primary transition-colors">{t('dashboard.visualization')}</h4>
+                                        <p className="text-base text-text-secondary mt-1 font-medium">{t('dashboard.vis_desc')}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-5 pt-2 group cursor-default">
+                                    <div className="p-3.5 rounded-2xl bg-surface-light shadow-sm border border-gray-300 group-hover:bg-primary/5 transition-colors duration-300">
+                                        <span className="material-symbols-outlined text-text-secondary group-hover:text-primary transition-colors text-2xl">history</span>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-obsidian group-hover:text-primary transition-colors">{t('dashboard.history')}</h4>
+                                        <p className="text-base text-text-secondary mt-1 font-medium">{t('dashboard.history_desc')}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pricing" className="py-32 bg-gradient-to-t from-surface-light to-concrete-bg relative z-10 border-t border-white/30 shadow-[0_-30px_60px_rgba(0,0,0,0.03)]">
+                    <div className="max-w-[1400px] mx-auto px-6">
+                        <div className="text-center mb-20">
+                            <h2 className="text-4xl font-bold tracking-tight text-obsidian">{t('pricing.title')}</h2>
+                            <p className="text-text-secondary mt-4 text-xl font-medium">{t('pricing.description')}</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                            <div className="border border-gray-300 rounded-3xl p-10 bg-surface-light/60 backdrop-blur-lg shadow-soft flex flex-col justify-between hover:bg-surface-light hover:shadow-deep hover:border-gray-400 transition-all duration-300">
+                                <div>
+                                    <h3 className="font-bold text-2xl text-obsidian">{t('pricing.sentry')}</h3>
+                                    <div className="mt-6 flex items-baseline gap-1">
+                                        <span className="text-4xl font-bold text-obsidian tracking-tight">$499</span>
+                                        <span className="text-text-secondary text-sm font-medium">{t('pricing.mo')}</span>
+                                    </div>
+                                    <ul className="mt-8 space-y-4">
+                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
+                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.software_firewall')}
+                                        </li>
+                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
+                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.basic_antibot')}
+                                        </li>
+                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium opacity-50">
+                                            <span className="material-symbols-outlined text-lg">cancel</span> {t('pricing.hardware_key')}
+                                        </li>
+                                    </ul>
+                                </div>
+                                <button onClick={() => navigate('/login')} className="mt-10 w-full py-4 rounded-xl border border-divider text-sm font-bold text-obsidian hover:bg-white hover:shadow-md transition-all">{t('pricing.configure')}</button>
+                            </div>
+                            <div className="border border-primary/20 rounded-3xl p-10 bg-surface-light shadow-glow relative flex flex-col justify-between transform -translate-y-6 hover:-translate-y-8 transition-all duration-300 ring-1 ring-primary/10 z-10">
+                                <div className="absolute top-0 right-0 p-5">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white bg-primary px-3 py-1.5 rounded-full shadow-lg shadow-primary/30">{t('pricing.recommended')}</span>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-2xl text-obsidian flex items-center gap-2">
+                                        {t('pricing.guardian')}
+                                        <span className="flex h-2.5 w-2.5 relative">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                                        </span>
+                                    </h3>
+                                    <div className="mt-6 flex items-baseline gap-1">
+                                        <span className="text-5xl font-bold text-obsidian tracking-tight">$999</span>
+                                        <span className="text-text-secondary text-sm font-medium">{t('pricing.mo')}</span>
+                                    </div>
+                                    <ul className="mt-10 space-y-4">
+                                        <li className="text-sm text-obsidian flex items-center gap-3 font-bold">
+                                            <span className="material-symbols-outlined text-lg text-primary fill-current">verified</span> {t('pricing.hardware_root_trust')}
+                                        </li>
+                                        <li className="text-sm text-obsidian flex items-center gap-3 font-bold">
+                                            <span className="material-symbols-outlined text-lg text-primary fill-current">verified</span> {t('pricing.advanced_ai')}
+                                        </li>
+                                        <li className="text-sm text-obsidian flex items-center gap-3 font-bold">
+                                            <span className="material-symbols-outlined text-lg text-primary fill-current">verified</span> {t('pricing.priority_support')}
+                                        </li>
+                                    </ul>
+                                </div>
+                                <button onClick={() => navigate('/login')} className="mt-10 w-full py-4 rounded-xl bg-primary text-sm font-bold text-white hover:bg-primary-dark transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40">{t('pricing.deploy_now')}</button>
+                            </div>
+                            <div className="border border-gray-300 rounded-3xl p-10 bg-surface-light/60 backdrop-blur-lg shadow-soft flex flex-col justify-between hover:bg-surface-light hover:shadow-deep hover:border-gray-400 transition-all duration-300">
+                                <div>
+                                    <h3 className="font-bold text-2xl text-obsidian">{t('pricing.monolith')}</h3>
+                                    <div className="mt-6 flex items-baseline gap-1">
+                                        <span className="text-4xl font-bold text-obsidian tracking-tight">{t('pricing.custom')}</span>
+                                    </div>
+                                    <ul className="mt-8 space-y-4">
+                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
+                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.dedicated_cluster')}
+                                        </li>
+                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
+                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.physical_breaker')}
+                                        </li>
+                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
+                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.on_premise')}
+                                        </li>
+                                    </ul>
+                                </div>
+                                <button onClick={() => navigate('/login')} className="mt-10 w-full py-4 rounded-xl border border-divider text-sm font-bold text-obsidian hover:bg-white hover:shadow-md transition-all">{t('pricing.contact_sales')}</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <footer className="bg-surface-mid border-t border-white/20 py-20 text-sm relative z-10 shadow-[inset_0_10px_30px_rgba(0,0,0,0.03)]">
+                <div className="max-w-[1400px] mx-auto px-6">
+                    <div className="flex flex-col md:flex-row justify-between gap-16">
+                        <div className="max-w-xs">
+                            <div className="flex items-center gap-3 mb-6">
+                                <span className="material-symbols-outlined text-primary text-3xl">shield_lock</span>
+                                <span className="font-bold text-xl text-obsidian">FluxGuard</span>
+                            </div>
+                            <p className="text-text-secondary leading-relaxed font-medium">
+                                {t('footer.copyright')} <br />
+                                {t('footer.engineered')}
+                            </p>
+                        </div>
+                        <div className="flex gap-20 flex-wrap">
+                            <div>
+                                <h4 className="font-bold text-obsidian mb-6 text-base">{t('footer.product')}</h4>
+                                <ul className="space-y-3 text-text-secondary font-medium">
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.features')}</a></li>
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.security')}</a></li>
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.hardware')}</a></li>
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.enterprise')}</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-obsidian mb-6 text-base">{t('footer.company')}</h4>
+                                <ul className="space-y-3 text-text-secondary font-medium">
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.about')}</a></li>
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.careers')}</a></li>
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.legal')}</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-obsidian mb-6 text-base">{t('footer.support')}</h4>
+                                <ul className="space-y-3 text-text-secondary font-medium">
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.help_center')}</a></li>
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.api_status')}</a></li>
+                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.contact')}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-20 pt-8 border-t border-black/10 flex flex-col md:flex-row justify-between items-center text-xs text-text-secondary font-medium">
+                        <p>{t('footer.all_rights')}</p>
+                        <div className="flex gap-8 mt-4 md:mt-0">
+                            <a className="hover:text-obsidian" href="#">{t('footer.privacy')}</a>
+                            <a className="hover:text-obsidian" href="#">{t('footer.terms')}</a>
+                            <a className="hover:text-obsidian" href="#">{t('footer.sales')}</a>
+                        </div>
                     </div>
                 </div>
-            </section>
-
-            <footer className="bg-black py-12 border-t border-white/10 text-center text-gray-600 text-sm">
-                <p>&copy; 2026 FluxGuard Security Inc. <a href="#" className="hover:text-white" onClick={(e) => { e.preventDefault(); showToast('隐私政策页面正在建设中'); }}>隐私政策</a></p>
             </footer>
         </div>
-    )
-}
-
-// --- Sub Components ---
-
-const FeatureCard = ({ icon: Icon, color, title, desc, items }: any) => {
-    // Map color to tailwind classes roughly
-    const colors: any = {
-        green: { text: 'text-green-400', bg: 'bg-green-900/30', border: 'hover:border-green-500/30' },
-        blue: { text: 'text-blue-400', bg: 'bg-blue-900/30', border: 'hover:border-blue-500/30' },
-        purple: { text: 'text-purple-400', bg: 'bg-purple-900/30', border: 'hover:border-purple-500/30' },
-    };
-    const c = colors[color];
-
-    return (
-        <div className={`bg-[#111] p-8 rounded-2xl border border-white/5 ${c.border} transition-all hover:-translate-y-2 group relative overflow-hidden`}>
-            {/* Background Icon */}
-            <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity`}>
-                <Icon className={`w-24 h-24 ${c.text.replace('400', '500')}`} />
-            </div>
-            <div className={`w-12 h-12 ${c.bg} rounded-lg flex items-center justify-center mb-6`}>
-                <Icon className={`w-6 h-6 ${c.text}`} />
-            </div>
-            <h3 className={`text-xl font-bold mb-3 group-hover:${c.text} text-white`}>{title}</h3>
-            <p className="text-gray-400 text-sm mb-4">{desc}</p>
-            <ul className="text-xs text-gray-500 space-y-2 font-mono">
-                {items.map((it: string, i: number) => (
-                    <li key={i} className="flex items-center gap-2">
-                        <div className={`w-1 h-1 ${c.text.replace('text', 'bg').replace('400', '500')} rounded-full`}></div> {it}
-                    </li>
-                ))}
-            </ul>
-        </div>
-    )
-}
-
-const DeployOption = ({ active, onClick, icon: Icon, title, sub }: any) => (
-    <div onClick={onClick} className={`cursor-pointer border p-6 rounded-xl transition-all group ${active ? 'bg-[#161616] border-green-500' : 'bg-[#111] border-gray-800 hover:bg-[#161616]'}`}>
-        <div className="flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${active ? 'bg-green-900/20 text-green-400' : 'bg-gray-800 text-gray-400'}`}>
-                <Icon className="w-5 h-5" />
-            </div>
-            <div>
-                <h4 className={`font-bold transition-colors ${active ? 'text-green-400' : 'text-white group-hover:text-green-400'}`}>{title}</h4>
-                <p className="text-xs text-gray-500 mt-1">{sub}</p>
-            </div>
-        </div>
-    </div>
-)
-
-const PricingCard = ({ title, price, sub, features, btnText, outline, featured, onClick, onMouseEnter, onMouseLeave }: any) => (
-    <div
-        className={`bg-[#111] p-8 rounded-2xl border transition-all flex flex-col ${featured ? 'border-green-500/50 shadow-xl shadow-green-900/20 transform md:-translate-y-4 bg-[#1a1a1a]' : 'border-gray-800 hover:border-gray-600'}`}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-    >
-        {featured && <div className="ml-auto mr-auto -mt-12 mb-6 bg-green-600 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg shadow-green-600/40 w-fit">最具性价比</div>}
-        <div className="mb-4">
-            <h3 className={`text-lg font-bold ${featured ? 'text-green-400' : 'text-gray-300'}`}>{title}</h3>
-            <div className="my-4">
-                <span className="text-4xl font-bold text-white">{price}</span>
-                {price !== '询价' && <span className="text-gray-500">/月</span>}
-            </div>
-            <p className="text-sm text-gray-500">{sub}</p>
-        </div>
-        <ul className="space-y-4 mb-8 flex-1">
-            {features.map((f: any, i: number) => (
-                <li key={i} className={`flex gap-3 text-sm ${f.c ? (featured ? 'text-white' : 'text-gray-300') : 'text-gray-500'}`}>
-                    {f.c ? <Check className="w-5 h-5 text-green-500 shrink-0" /> : <X className="w-5 h-5 shrink-0" />}
-                    <span dangerouslySetInnerHTML={{ __html: f.t }}></span>
-                </li>
-            ))}
-        </ul>
-        <button onClick={onClick} className={`w-full py-3 rounded-lg font-bold transition-colors ${outline ? 'border border-white/20 hover:bg-white/5 text-white' : 'bg-green-600 hover:bg-green-500 text-white shadow-lg hover:shadow-green-500/25'}`}>
-            {btnText}
-        </button>
-    </div>
-)
+    );
+};
 
 export default Landing;

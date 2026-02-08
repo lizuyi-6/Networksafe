@@ -64,13 +64,29 @@ const generateMockLogs = (): LogItem[] => {
     });
 };
 
-const isDemoMode = () => {
-    // If explicitly set in localStorage, use it
-    const local = localStorage.getItem('demo_mode');
-    if (local !== null) return local === 'true';
+const getAuthHeaders = () => {
+    // SECURITY FIX: No longer sending token in header
+    // Token is now in httpOnly cookie, sent automatically with credentials: 'include'
+    return {
+        'Content-Type': 'application/json'
+    };
+};
 
-    // Default to false unless env var says strictly "true"
-    return import.meta.env.VITE_USE_MOCK === 'true';
+// SECURITY FIX: Fetch options with credentials for httpOnly cookies
+const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
+    return fetch(url, {
+        ...options,
+        credentials: 'include',
+        headers: {
+            ...getAuthHeaders(),
+            ...options.headers
+        }
+    });
+};
+
+const isDemoMode = () => {
+    // Force real mode by default for now
+    return false;
 };
 
 // --- API Functions ---
@@ -78,12 +94,20 @@ const isDemoMode = () => {
 export const fetchStats = async (): Promise<DashboardStats> => {
     if (isDemoMode()) return generateMockStats();
     try {
-        const response = await fetch(`${API_BASE_URL}/stats`);
+        const response = await fetchWithCredentials(`${API_BASE_URL}/stats`);
         if (!response.ok) throw new Error('Fetch failed');
         return response.json();
     } catch (e) {
-        console.warn('Backend unavailable, returning mock stats');
-        return generateMockStats();
+        console.error('Failed to fetch stats:', e);
+        return {
+            totalRequests: 0,
+            currentRPS: 0,
+            blockedRequests: 0,
+            activeConnections: 0,
+            successRate: 0,
+            history: [],
+            threats: []
+        };
     }
 };
 
@@ -91,15 +115,16 @@ export const fetchSites = async () => {
     if (isDemoMode()) {
         return [
             { id: 1, domain: 'api.example.com', target: 'http://localhost:3000', status: 'secure' },
-            { id: 2, domain: 'shop.example.com', target: 'http://localhost:3001', status: 'warning' }, // Matches SQL Injection risk
+            { id: 2, domain: 'shop.example.com', target: 'http://localhost:3001', status: 'warning' },
             { id: 3, domain: 'blog.example.com', target: 'http://localhost:3002', status: 'secure' },
         ];
     }
     try {
-        const response = await fetch(`${API_BASE_URL}/sites`);
-        if (!response.ok) throw new Error('Fetch failed');
+        const response = await fetchWithCredentials(`${API_BASE_URL}/sites`);
+        if (!response.ok) return [];
         return response.json();
     } catch (e) {
+        console.error('Failed to fetch sites:', e);
         return [];
     }
 };
@@ -107,17 +132,17 @@ export const fetchSites = async () => {
 export const fetchLogs = async (): Promise<LogItem[]> => {
     if (isDemoMode()) return generateMockLogs();
     try {
-        const response = await fetch(`${API_BASE_URL}/logs`);
-        if (!response.ok) throw new Error('Fetch failed');
+        const response = await fetchWithCredentials(`${API_BASE_URL}/logs`);
+        if (!response.ok) return [];
         return response.json();
     } catch (e) {
-        return generateMockLogs();
+        console.error('Failed to fetch logs:', e);
+        return [];
     }
 };
 
 export const fetchScannerResults = async () => {
     if (isDemoMode()) {
-        // Aligns with the SQL Injection scenario
         return [
             { id: 1, name: 'SQL Injection Vulnerability', severity: 'Critical', description: 'Unsanitized input in login endpoint allows SQL injection.', status: 'Open' },
             { id: 2, name: 'Weak SSL Configuration', severity: 'Medium', description: 'TLS 1.0 is still enabled on the server.', status: 'Open' },
@@ -125,10 +150,11 @@ export const fetchScannerResults = async () => {
         ];
     }
     try {
-        const response = await fetch(`${API_BASE_URL}/scanner`);
-        if (!response.ok) throw new Error('Fetch failed');
+        const response = await fetchWithCredentials(`${API_BASE_URL}/scanner`);
+        if (!response.ok) return [];
         return response.json();
     } catch (e) {
+        console.error('Failed to fetch scanner results:', e);
         return [];
     }
 };
@@ -147,14 +173,15 @@ export const fetchAdminData = async () => {
         };
     }
     try {
-        const errRes = await fetch(`${API_BASE_URL}/admin/errors`);
-        const perfRes = await fetch(`${API_BASE_URL}/admin/performance`);
+        const errRes = await fetchWithCredentials(`${API_BASE_URL}/admin/errors`);
+        const perfRes = await fetchWithCredentials(`${API_BASE_URL}/admin/performance`);
+
         return {
-            errors: await errRes.json(),
-            performance: await perfRes.json()
+            errors: await errRes.json().catch(() => []),
+            performance: await perfRes.json().catch(() => null)
         }
     } catch (e) {
-        return null; // Handle error gracefully in component
+        return null;
     }
 };
 
@@ -203,10 +230,9 @@ export const fetchAlerts = async () => {
             }
         ];
     }
-    // Real fetch implementation
     try {
-        const response = await fetch(`${API_BASE_URL}/alerts`);
-        if (!response.ok) throw new Error('Fetch failed');
+        const response = await fetchWithCredentials(`${API_BASE_URL}/alerts`);
+        if (!response.ok) return [];
         return response.json();
     } catch (e) {
         return [];

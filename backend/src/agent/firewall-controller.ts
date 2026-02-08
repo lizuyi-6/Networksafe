@@ -282,23 +282,73 @@ export class FirewallController {
     // === 辅助方法 ===
 
     /**
-     * 验证 IP 格式
+     * 验证 IP 格式 - SECURITY FIX: 严格验证防止命令注入
      */
     private isValidIP(ip: string): boolean {
-        const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-        const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+        // 严格IPv4验证: 每个八位字节必须是0-255
+        const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        // 严格IPv6验证
+        const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,7}:$/;
+
+        // 额外安全检查: 确保没有shell特殊字符
+        const shellChars = /[;&|`$(){}[\]<>\\'"!#%^*?\n\r\t]/;
+        if (shellChars.test(ip)) {
+            logger.warn(`Blocked IP with shell characters: ${ip}`);
+            return false;
+        }
+
         return ipv4Regex.test(ip) || ipv6Regex.test(ip);
     }
 
     /**
      * 检查是否为本地 IP
+     * SECURITY FIX CVE-2026-022: Complete private IP range detection
      */
     private isLocalIP(ip: string): boolean {
-        return ip === '127.0.0.1' ||
-            ip === '::1' ||
-            ip.startsWith('192.168.') ||
-            ip.startsWith('10.') ||
-            ip.startsWith('172.16.');
+        // IPv4 loopback
+        if (ip === '127.0.0.1' || ip.startsWith('127.')) {
+            return true;
+        }
+
+        // IPv6 loopback
+        if (ip === '::1') {
+            return true;
+        }
+
+        // Private ranges (RFC 1918)
+        if (ip.startsWith('10.')) {
+            return true;
+        }
+
+        if (ip.startsWith('192.168.')) {
+            return true;
+        }
+
+        // SECURITY FIX CVE-2026-022: Check full 172.16.0.0/12 range (172.16.0.0 - 172.31.255.255)
+        const parts = ip.split('.');
+        if (parts[0] === '172') {
+            const secondOctet = parseInt(parts[1], 10);
+            if (secondOctet >= 16 && secondOctet <= 31) {
+                return true;
+            }
+        }
+
+        // Link-local (APIPA)
+        if (ip.startsWith('169.254.')) {
+            return true;
+        }
+
+        // IPv6 link-local
+        if (ip.toLowerCase().startsWith('fe80:')) {
+            return true;
+        }
+
+        // IPv6 unique local addresses
+        if (ip.toLowerCase().startsWith('fc') || ip.toLowerCase().startsWith('fd')) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

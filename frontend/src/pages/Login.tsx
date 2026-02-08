@@ -10,17 +10,47 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(null);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            setToast({ msg: '登录成功！欢迎回来，管理员。', type: 'success' });
+        const form = e.target as HTMLFormElement;
+        const email = form.email.value;
+        const password = form.password.value;
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // SECURITY FIX: Include cookies in request
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || '登录失败');
+            }
+
+            // SECURITY FIX: Token now stored in httpOnly cookie by server
+            // Only store non-sensitive user info in localStorage
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            setToast({ msg: '登录成功！正在跳转...', type: 'success' });
+
             setTimeout(() => {
-                navigate('/dashboard'); // Go to Dashboard after login
-            }, 1000);
-        }, 1500);
+                navigate('/dashboard');
+            }, 800);
+
+        } catch (error: any) {
+            setToast({ msg: error.message || '登录失败，请检查网络', type: 'info' });
+            // Should be type: 'error' visually but using 'info' style for now as per existing component
+            setTimeout(() => setToast(null), 3000);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const showToast = (msg: string) => {
@@ -67,7 +97,7 @@ const Login = () => {
                             <User className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
                             <input
                                 type="text"
-                                defaultValue="admin@fluxguard.io"
+                                name="email"
                                 className="w-full bg-black border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-green-500 transition-colors font-mono text-sm"
                                 placeholder="name@company.com"
                             />
@@ -79,7 +109,7 @@ const Login = () => {
                             <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
                             <input
                                 type="password"
-                                defaultValue="password"
+                                name="password"
                                 className="w-full bg-black border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-green-500 transition-colors font-mono text-sm"
                                 placeholder="••••••••"
                             />

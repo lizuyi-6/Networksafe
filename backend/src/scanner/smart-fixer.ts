@@ -4,6 +4,47 @@ import { Recommendation } from '../database/models/scan-result';
 import logger from '../utils/logger';
 
 /**
+ * SECURITY FIX CVE-2026-017: Command whitelist for safe execution
+ */
+const ALLOWED_COMMANDS: Set<string> = new Set([
+  // System management
+  'systemctl', 'service',
+  // Firewall
+  'ufw', 'firewall-cmd', 'iptables',
+  // Package management
+  'apt', 'apt-get', 'yum', 'dnf',
+  // Web servers
+  'nginx', 'apache2', 'apachectl',
+  // Permissions
+  'chmod', 'chown',
+  // Network
+  'sysctl',
+]);
+
+/**
+ * SECURITY FIX CVE-2026-017: Validate command against whitelist
+ */
+function isCommandAllowed(command: string): boolean {
+  const parts = command.trim().split(/\s+/);
+  const baseCommand = parts[0];
+
+  // Check for shell metacharacters that could lead to injection
+  const dangerousChars = /[;&|`$(){}[\]<>'"!#%^*?\n\r\\]/;
+  if (dangerousChars.test(command)) {
+    logger.warn('SmartFixer: Command contains dangerous characters', { command });
+    return false;
+  }
+
+  // Check if base command is in whitelist
+  if (!ALLOWED_COMMANDS.has(baseCommand)) {
+    logger.warn('SmartFixer: Command not in whitelist', { baseCommand, command });
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Smart Fixer
  * AI-powered intelligent problem fixing with automatic retry and adaptation
  */
@@ -253,11 +294,25 @@ export class SmartFixer {
 
   /**
    * Execute a solution with monitoring
+   * SECURITY FIX CVE-2026-017: Validate commands before execution
    */
   private async executeSolution(
     solution: any,
     previousAttempts: FixAttempt[]
   ): Promise<ExecutionResult> {
+    // SECURITY FIX CVE-2026-017: Validate command against whitelist
+    if (!isCommandAllowed(solution.command)) {
+      logger.error('SmartFixer: Command rejected by security policy', { command: solution.command });
+      return {
+        command: solution.command,
+        exitCode: 1,
+        stdout: '',
+        stderr: 'Command rejected: not in allowed list or contains dangerous characters',
+        duration: 0,
+        success: false
+      };
+    }
+
     const monitor = new ExecutionMonitor();
 
     // Setup event listeners for real-time monitoring

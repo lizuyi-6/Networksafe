@@ -41,6 +41,7 @@ export function createZhipuSmartFixer(apiKey: string, model: string = 'glm-4'): 
 
 /**
  * Example: Quick fix using Zhipu AI
+ * SECURITY FIX CVE-2026-003: Removed hardcoded API key
  */
 export async function quickFixWithZhipu(
   problem: {
@@ -52,9 +53,15 @@ export async function quickFixWithZhipu(
   },
   context?: any
 ) {
+  // SECURITY FIX CVE-2026-003: API key must come from environment variable
+  const apiKey = process.env.ZHIPU_API_KEY;
+  if (!apiKey) {
+    throw new Error('ZHIPU_API_KEY environment variable is required');
+  }
+
   const fixer = createZhipuSmartFixer(
-    'APIff70dd7b1491414a8e242f36c597f431.CaJ0eB1U2h19GFjA',
-    'glm-4'
+    apiKey,
+    process.env.ZHIPU_MODEL || 'glm-4'
   );
 
   const result = await fixer.fixProblem(problem, context);

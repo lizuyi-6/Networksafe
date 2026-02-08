@@ -1,13 +1,18 @@
 /**
  * FluxGuard - ESP32 设备管理 API
- * 
+ *
  * 提供 ESP32 硬件网关的 REST API 接口
+ * SECURITY FIX CVE-2026-031: Added authentication middleware
  */
 
 import { Router, Request, Response } from 'express';
+import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
 
 const router = Router();
+
+// SECURITY FIX CVE-2026-031: Apply authentication to all routes
+router.use(authenticate);
 
 // 设备存储 (内存 + 后续可扩展到数据库)
 interface DeviceInfo {
@@ -106,8 +111,9 @@ router.get('/:id', (req: Request, res: Response) => {
 /**
  * POST /api/devices/:id/cmd
  * 发送命令到设备
+ * SECURITY FIX: Require admin role for command execution
  */
-router.post('/:id/cmd', (req: Request, res: Response) => {
+router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { command, params } = req.body;
@@ -179,8 +185,9 @@ router.put('/:id', (req: Request, res: Response) => {
 /**
  * DELETE /api/devices/:id
  * 注销设备
+ * SECURITY FIX: Require admin role for device deletion
  */
-router.delete('/:id', (req: Request, res: Response) => {
+router.delete('/:id', requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
     try {
         const { id } = req.params;
 
@@ -216,6 +223,8 @@ router.get('/codebook', (_req: Request, res: Response) => {
 /**
  * POST /api/devices/codebook
  * 更新密码本
+ *
+ * SECURITY FIX: 添加输入验证，防止恶意数据注入
  */
 router.post('/codebook', (req: Request, res: Response) => {
     try {
@@ -223,6 +232,64 @@ router.post('/codebook', (req: Request, res: Response) => {
 
         if (!entries || typeof entries !== 'object') {
             return res.status(400).json({ success: false, error: 'Invalid entries' });
+        }
+
+        // SECURITY: 验证所有 entries
+        const maxEntries = 1000;
+        const currentEntries = Object.keys(codebook).length;
+        const newEntriesCount = Object.keys(entries).length;
+
+        if (currentEntries + newEntriesCount > maxEntries) {
+            return res.status(400).json({
+                success: false,
+                error: `Too many entries. Maximum ${maxEntries} entries allowed.`
+            });
+        }
+
+        // 验证每个 entry 的格式
+        for (const [key, value] of Object.entries(entries)) {
+            // 验证 key: 只允许字母数字和特定符号
+            if (!/^[A-Z0-9_-]+$/.test(key)) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Invalid key format: ${key}. Only uppercase letters, numbers, underscore and hyphen allowed.`
+                });
+            }
+
+            // 验证 value: 字符串且限制长度
+            if (typeof value !== 'string') {
+                return res.status(400).json({
+                    success: false,
+                    error: `Value for key ${key} must be a string`
+                });
+            }
+
+            if (value.length > 500) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Value for key ${key} is too long. Maximum 500 characters allowed.`
+                });
+            }
+
+            // 检查是否包含潜在的恶意内容
+            const dangerousPatterns = [
+                /<script/i,
+                /javascript:/i,
+                /on\w+\s*=/i,
+                /<iframe/i,
+                /<object/i,
+                /<embed/i
+            ];
+
+            for (const pattern of dangerousPatterns) {
+                if (pattern.test(value)) {
+                    logger.warn('Blocked malicious codebook entry', { key, pattern: pattern.source });
+                    return res.status(400).json({
+                        success: false,
+                        error: `Invalid value for key ${key}: potentially malicious content detected`
+                    });
+                }
+            }
         }
 
         Object.assign(codebook, entries);

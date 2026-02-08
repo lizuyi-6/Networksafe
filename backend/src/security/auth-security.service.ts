@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import redisService from './redis.service';
 import logger from '../utils/logger';
 import { Request } from 'express';
@@ -337,8 +338,9 @@ export class AuthSecurityService {
   }
 
   // Generate session ID for additional security
+  // SECURITY FIX: Use cryptographically secure random bytes
   public generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    return crypto.randomBytes(32).toString('hex');
   }
 
   // Validate session

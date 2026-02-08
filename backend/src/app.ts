@@ -1,7 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { defaultConfig as config } from './config';
+import { InputValidator } from './security/input-validator';
 import logger from './utils/logger';
+import { apiRateLimit } from './middleware/rate-limit.middleware';
 
 // Import Routes
 import statsRoutes from './api/routes/stats.routes';
@@ -11,6 +14,7 @@ import sitesRoutes from './api/routes/sites.routes';
 import adminRoutes from './api/routes/admin.routes';
 
 const app = express();
+const inputValidator = new InputValidator();
 
 // ============================================
 // 安全中间件配置 (符合 OWASP 规范)
@@ -25,10 +29,17 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // 允许无 origin 的请求（如服务器间请求）
-        if (!origin) return callback(null, true);
+        // SECURITY FIX: Production environment requires origin header
+        if (!origin && process.env.NODE_ENV === 'production') {
+            logger.warn('Blocked request without Origin header in production');
+            return callback(new Error('Origin header required'));
+        }
+        // Allow no-origin requests in development (Postman, curl, etc.)
+        if (!origin && process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
+        }
 
-        if (allowedOrigins.includes(origin)) {
+        if (allowedOrigins.includes(origin!)) {
             callback(null, true);
         } else {
             logger.warn(`Blocked CORS request from: ${origin}`);
@@ -45,19 +56,51 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
+// SECURITY FIX: Parse cookies for httpOnly token authentication
+app.use(cookieParser());
+
 // 3. 安全 HTTP 头 (手动实现，或安装 helmet)
 app.use((req, res, next) => {
     // 防止点击劫持
     res.setHeader('X-Frame-Options', 'DENY');
     // 防止 MIME 类型嗅探
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    // XSS 过滤
-    res.setHeader('X-XSS-Protection', '1; mode=block');
+    // SECURITY FIX: Replace deprecated X-XSS-Protection with CSP
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
     // 隐藏服务器信息
     res.removeHeader('X-Powered-By');
     // HSTS (仅 HTTPS)
     if (req.secure) {
         res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    next();
+});
+
+// SECURITY FIX: Global input validation middleware
+app.use((req, res, next) => {
+    // Skip validation for certain paths (health check, static assets)
+    if (req.path === '/health' || req.path.startsWith('/static')) {
+        return next();
+    }
+
+    const checkContent = [
+        req.url,
+        JSON.stringify(req.query),
+        JSON.stringify(req.body)
+    ].join(' ');
+
+    const result = inputValidator.validateAll(checkContent);
+    if (!result.isValid) {
+        logger.warn('Input validation failed', {
+            reason: result.reason,
+            ip: req.ip,
+            path: req.path,
+            threatLevel: result.threatLevel
+        });
+        return res.status(400).json({
+            error: 'Invalid input detected',
+            code: 'INPUT_VALIDATION_FAILED'
+        });
     }
     next();
 });
@@ -70,6 +113,10 @@ app.use((req, res, next) => {
     });
     next();
 });
+
+// 5. Apply rate limiting to all API routes
+// SECURITY FIX RISK-001: Comprehensive rate limiting for all endpoints
+app.use('/api/', apiRateLimit);
 
 // Routes
 app.use('/api/stats', statsRoutes);

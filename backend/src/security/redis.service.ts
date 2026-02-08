@@ -5,8 +5,15 @@ import logger from '../utils/logger';
 
 class RedisService {
   private client: Redis | null = null;
+  private disabled: boolean = false;
 
   constructor() {
+    // 测试环境下可以禁用 Redis
+    if (process.env.DISABLE_REDIS === 'true' || process.env.NODE_ENV === 'test') {
+      this.disabled = true;
+      logger.warn('Redis disabled in test environment');
+      return;
+    }
     this.connect();
   }
 
@@ -39,6 +46,9 @@ class RedisService {
   }
 
   getClient(): Redis {
+    if (this.disabled) {
+      throw new Error('Redis is disabled');
+    }
     if (!this.client) {
       throw new Error('Redis client not initialized');
     }
@@ -46,6 +56,7 @@ class RedisService {
   }
 
   async get(key: string): Promise<string | null> {
+    if (this.disabled) return null;
     try {
       return await this.getClient().get(key);
     } catch (error) {
@@ -55,6 +66,7 @@ class RedisService {
   }
 
   async set(key: string, value: string, seconds?: number): Promise<void> {
+    if (this.disabled) return;
     try {
       if (seconds) {
         await this.getClient().setex(key, seconds, value);
@@ -67,6 +79,7 @@ class RedisService {
   }
 
   async del(key: string): Promise<void> {
+    if (this.disabled) return;
     try {
       await this.getClient().del(key);
     } catch (error) {
@@ -75,6 +88,7 @@ class RedisService {
   }
 
   async exists(key: string): Promise<boolean> {
+    if (this.disabled) return false;
     try {
       const result = await this.getClient().exists(key);
       return result === 1;
@@ -84,7 +98,18 @@ class RedisService {
     }
   }
 
+  async incr(key: string): Promise<number> {
+    if (this.disabled) return 0;
+    try {
+      return await this.getClient().incr(key);
+    } catch (error) {
+      logger.error('Redis INCR error', { error, key });
+      return 0;
+    }
+  }
+
   async disconnect(): Promise<void> {
+    if (this.disabled) return;
     if (this.client) {
       await this.client.quit();
       this.client = null;

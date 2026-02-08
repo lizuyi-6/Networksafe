@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { useState, useEffect, ReactNode } from 'react';
 import {
     LayoutDashboard,
     Activity,
@@ -35,6 +36,85 @@ import Agents from './pages/Agents';
 import Devices from './pages/Devices';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
+import BoardStatus from './pages/BoardStatus';
+
+/**
+ * SECURITY FIX CVE-2026-012: Authentication guard for protected routes
+ */
+const PrivateRoute = ({ children }: { children: ReactNode }) => {
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        // Check if user is authenticated by verifying token with backend
+        const checkAuth = async () => {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    credentials: 'include'
+                });
+                setIsAuthenticated(response.ok);
+            } catch {
+                setIsAuthenticated(false);
+            }
+        };
+        checkAuth();
+    }, []);
+
+    // Show loading while checking auth
+    if (isAuthenticated === null) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-background">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return <>{children}</>;
+};
+
+/**
+ * SECURITY FIX CVE-2026-012: Admin-only route guard
+ */
+const AdminRoute = ({ children }: { children: ReactNode }) => {
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const checkRole = async () => {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setUserRole(data.user?.role);
+                }
+            } catch {
+                setUserRole(null);
+            }
+            setIsLoading(false);
+        };
+        checkRole();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-background">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (userRole !== 'admin') {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    return <>{children}</>;
+};
 
 const Sidebar = () => {
     const location = useLocation();
@@ -235,24 +315,39 @@ const AnimatedRoutes = () => {
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
+                {/* Public routes */}
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
                 <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
-                <Route path="/dashboard" element={<PageWrapper><Dashboard /></PageWrapper>} />
-                <Route path="/agents" element={<PageWrapper><Agents /></PageWrapper>} />
-                <Route path="/devices" element={<PageWrapper><Devices /></PageWrapper>} />
-                <Route path="/sites" element={<PageWrapper><Sites /></PageWrapper>} />
-                <Route path="/deploy" element={<PageWrapper><DeploymentWizard /></PageWrapper>} />
-                <Route path="/scanner" element={<PageWrapper><Scanner /></PageWrapper>} />
-                <Route path="/history" element={<PageWrapper><FixHistory /></PageWrapper>} />
-                <Route path="/settings" element={<PageWrapper><SettingsPage /></PageWrapper>} />
-                <Route path="/admin" element={<PageWrapper><SuperAdmin /></PageWrapper>} />
-                <Route path="/alerts" element={<PageWrapper><Alerts /></PageWrapper>} />
+
+                {/* SECURITY FIX CVE-2026-012: Protected routes require authentication */}
+                <Route path="/dashboard" element={<PrivateRoute><PageWrapper><Dashboard /></PageWrapper></PrivateRoute>} />
+                <Route path="/agents" element={<PrivateRoute><PageWrapper><Agents /></PageWrapper></PrivateRoute>} />
+                <Route path="/devices" element={<PrivateRoute><PageWrapper><Devices /></PageWrapper></PrivateRoute>} />
+                <Route path="/sites" element={<PrivateRoute><PageWrapper><Sites /></PageWrapper></PrivateRoute>} />
+                <Route path="/deploy" element={<PrivateRoute><PageWrapper><DeploymentWizard /></PageWrapper></PrivateRoute>} />
+                <Route path="/scanner" element={<PrivateRoute><PageWrapper><Scanner /></PageWrapper></PrivateRoute>} />
+                <Route path="/history" element={<PrivateRoute><PageWrapper><FixHistory /></PageWrapper></PrivateRoute>} />
+                <Route path="/settings" element={<PrivateRoute><PageWrapper><SettingsPage /></PageWrapper></PrivateRoute>} />
+                <Route path="/alerts" element={<PrivateRoute><PageWrapper><Alerts /></PageWrapper></PrivateRoute>} />
+                <Route path="/devices/board-status/:id" element={<PrivateRoute><PageWrapper><BoardStatus /></PageWrapper></PrivateRoute>} />
+
+                {/* Admin-only routes */}
+                <Route path="/admin" element={<PrivateRoute><AdminRoute><PageWrapper><SuperAdmin /></PageWrapper></AdminRoute></PrivateRoute>} />
             </Routes>
         </AnimatePresence>
     );
 };
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
+    const location = useLocation();
+
+    // Standalone pages that manage their own layout/theme
+    const isStandalone = location.pathname === '/' || location.pathname === '/login';
+
+    if (isStandalone) {
+        return <>{children}</>;
+    }
+
     return (
         <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
             <Sidebar />

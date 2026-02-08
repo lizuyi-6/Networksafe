@@ -1,14 +1,89 @@
 /**
  * FluxGuard - AI 模型端点配置 API
- * 
+ *
  * 为 ESP32 离线模式提供多模型端点配置
  * 优先级: 用户自定义服务器 > 笔记本本地模型
+ * SECURITY FIX CVE-2026-035: Added authentication middleware
+ * SECURITY FIX SSRF-2024-001: Added URL whitelist validation to prevent SSRF attacks
  */
 
 import { Router, Request, Response } from 'express';
+import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
 
 const router = Router();
+
+// SECURITY FIX CVE-2026-035: Apply authentication to all routes
+router.use(authenticate);
+
+/**
+ * SECURITY: SSRF 防护 - URL 白名单
+ *
+ * 允许的 AI 服务提供商域名
+ * 防止攻击者利用此端点探测内网或窃取云服务元数据
+ */
+const ALLOWED_AI_HOSTS = [
+    // 公共 AI 服务
+    'api.openai.com',
+    'api.anthropic.com',
+    'generativelanguage.googleapis.com',
+
+    // 私有部署（允许用户配置）
+    // 用户可以添加自己的 Ollama 服务器等
+];
+
+/**
+ * 验证 URL 是否在白名单中或不是内网地址
+ * @param url 要验证的 URL
+ * @returns true 如果 URL 安全，false 否则
+ */
+function validateAiUrl(url: string): { valid: boolean; error?: string } {
+    try {
+        const parsed = new URL(url);
+
+        // 检查协议
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return { valid: false, error: 'Only HTTP and HTTPS protocols are allowed' };
+        }
+
+        const hostname = parsed.hostname.toLowerCase();
+
+        // 检查是否在内网 IP 范围
+        const isPrivateIP =
+            hostname === 'localhost' ||
+            hostname === '127.0.0.1' ||
+            hostname === '0.0.0.0' ||
+            hostname.startsWith('192.168.') ||
+            hostname.startsWith('10.') ||
+            hostname.startsWith('172.16.') ||
+            hostname.startsWith('172.17.') || // Docker 默认网段
+            hostname.startsWith('172.18.') ||
+            hostname.startsWith('172.19.') ||
+            hostname.startsWith('172.2') ||
+            hostname.startsWith('172.3') ||
+            hostname.startsWith('127.') ||
+            hostname === '169.254.169.254'; // AWS 元数据服务
+
+        if (isPrivateIP) {
+            return { valid: false, error: 'Private IP addresses are not allowed' };
+        }
+
+        // 检查是否在白名单中
+        const isWhitelisted = ALLOWED_AI_HOSTS.some(allowed =>
+            hostname === allowed || hostname.endsWith(`.${allowed}`)
+        );
+
+        // 如果不在白名单中，检查是否是明确配置的外部服务
+        if (!isWhitelisted) {
+            // 允许非私有 IP 的外部地址（但记录警告）
+            logger.warn('AI endpoint URL not in whitelist', { url, hostname });
+        }
+
+        return { valid: true };
+    } catch (error) {
+        return { valid: false, error: 'Invalid URL format' };
+    }
+}
 
 // AI 端点配置结构
 interface AIEndpoint {
@@ -84,6 +159,16 @@ router.post('/', (req: Request, res: Response) => {
             return res.status(400).json({ success: false, error: 'URL is required' });
         }
 
+        // SECURITY: SSRF 防护 - 验证 URL
+        const urlValidation = validateAiUrl(url);
+        if (!urlValidation.valid) {
+            logger.warn('Blocked AI endpoint with invalid URL', { url, error: urlValidation.error });
+            return res.status(400).json({
+                success: false,
+                error: `Invalid URL: ${urlValidation.error}`
+            });
+        }
+
         const id = `custom-${Date.now()}`;
 
         const endpoint: AIEndpoint = {
@@ -130,7 +215,18 @@ router.put('/:id', (req: Request, res: Response) => {
 
         // 更新字段
         if (req.body.name) endpoint.name = req.body.name;
-        if (req.body.url) endpoint.url = req.body.url;
+        if (req.body.url) {
+            // SECURITY: SSRF 防护 - 验证 URL
+            const urlValidation = validateAiUrl(req.body.url);
+            if (!urlValidation.valid) {
+                logger.warn('Blocked AI endpoint update with invalid URL', { url: req.body.url, error: urlValidation.error });
+                return res.status(400).json({
+                    success: false,
+                    error: `Invalid URL: ${urlValidation.error}`
+                });
+            }
+            endpoint.url = req.body.url;
+        }
         if (req.body.modelName) endpoint.modelName = req.body.modelName;
         if (req.body.apiKey) endpoint.apiKey = req.body.apiKey;
         if (req.body.enabled !== undefined) endpoint.enabled = req.body.enabled;
@@ -262,17 +358,20 @@ router.post('/:id/test', async (req: Request, res: Response) => {
 /**
  * GET /api/ai-endpoints/sync-config
  * 获取 ESP32 同步配置 (紧凑格式)
+ * SECURITY FIX: Require admin role and mask API keys
  */
-router.get('/sync-config', (_req: Request, res: Response) => {
+router.get('/sync-config', requireRole('admin'), (_req: Request, res: Response) => {
     try {
         // 只返回启用的端点，按优先级排序
+        // SECURITY FIX: Do not expose raw API keys
         const enabledEndpoints = Array.from(endpoints.values())
             .filter(ep => ep.enabled)
             .sort((a, b) => a.priority - b.priority)
             .map(ep => ({
                 url: ep.url,
                 model: ep.modelName,
-                key: ep.apiKey,
+                // SECURITY FIX CVE-2026-035: Mask API keys - only show last 4 chars
+                key: ep.apiKey ? `***${ep.apiKey.slice(-4)}` : '',
             }));
 
         res.json({

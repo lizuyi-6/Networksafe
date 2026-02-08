@@ -1,6 +1,12 @@
 /**
- * FluxGuard Agent - 轻量级安全防护代理
- * 
+ * FluxGuard Agent - SECURE VERSION
+ *
+ * SECURITY FIXES:
+ * - Server-generated agent IDs
+ * - API key authentication
+ * - Command signature verification
+ * - Secure connection handling
+ *
  * 功能:
  * - 心跳上报
  * - 流量监控
@@ -10,6 +16,7 @@
  */
 
 import os from 'os';
+import crypto from 'crypto';
 import { io, Socket } from 'socket.io-client';
 import logger from '../utils/logger';
 import { TrafficMonitor } from './traffic-monitor';
@@ -18,7 +25,9 @@ import { FirewallController } from './firewall-controller';
 
 export interface AgentConfig {
     serverUrl: string;       // 中央管控平台地址
-    agentId?: string;        // Agent 唯一标识 (自动生成)
+    agentId?: string;        // Agent 唯一标识 (服务端生成)
+    apiKey?: string;         // API Key (服务端生成)
+    secretKey?: string;      // Secret Key for command verification (服务端生成)
     heartbeatInterval?: number; // 心跳间隔 (ms)
 }
 
@@ -37,10 +46,13 @@ export class Agent {
     private config: AgentConfig;
     private socket: Socket | null = null;
     private agentId: string;
+    private apiKey: string;
+    private secretKey: string;
     private heartbeatTimer: NodeJS.Timeout | null = null;
     private trafficMonitor: TrafficMonitor;
     private attackDetector: AttackDetector;
     private firewallController: FirewallController;
+    private usedNonces: Set<string> = new Set();
 
     constructor(config: AgentConfig) {
         this.config = {
@@ -48,33 +60,23 @@ export class Agent {
             ...config
         };
 
-        // 生成唯一 Agent ID (基于主机名 + MAC 地址)
-        this.agentId = config.agentId || this.generateAgentId();
+        // SECURITY FIX: Agent ID and keys must be provided by server
+        // No more self-generated IDs!
+        if (!config.agentId || !config.apiKey || !config.secretKey) {
+            throw new Error(
+                'SECURITY ERROR: agentId, apiKey, and secretKey must be provided by server.\n' +
+                'Use the agent registration API to obtain valid credentials.'
+            );
+        }
+
+        this.agentId = config.agentId;
+        this.apiKey = config.apiKey;
+        this.secretKey = config.secretKey;
 
         // 初始化子模块
         this.trafficMonitor = new TrafficMonitor();
         this.attackDetector = new AttackDetector();
         this.firewallController = new FirewallController();
-    }
-
-    /**
-     * 生成唯一 Agent ID
-     */
-    private generateAgentId(): string {
-        const hostname = os.hostname();
-        const interfaces = os.networkInterfaces();
-        let mac = 'unknown';
-
-        for (const name of Object.keys(interfaces)) {
-            for (const iface of interfaces[name] || []) {
-                if (!iface.internal && iface.mac !== '00:00:00:00:00:00') {
-                    mac = iface.mac.replace(/:/g, '');
-                    break;
-                }
-            }
-        }
-
-        return `agent-${hostname}-${mac.substring(0, 8)}`;
     }
 
     /**
@@ -102,14 +104,18 @@ export class Agent {
     }
 
     /**
-     * 连接到中央管控平台
+     * SECURITY FIX: Enhanced connection with API key authentication
      */
     private async connectToServer(): Promise<void> {
         return new Promise((resolve, reject) => {
             logger.info(`Connecting to server: ${this.config.serverUrl}`);
 
             this.socket = io(this.config.serverUrl, {
-                auth: { agentId: this.agentId },
+                auth: {
+                    type: 'agent',
+                    agentId: this.agentId,
+                    apiKey: this.apiKey  // SECURITY FIX: Send API key
+                },
                 reconnection: true,
                 reconnectionAttempts: Infinity,
                 reconnectionDelay: 5000
@@ -117,8 +123,12 @@ export class Agent {
 
             this.socket.on('connect', () => {
                 logger.info('Connected to control platform');
-                this.registerAgent();
+                // No more self-registration - server validates us
                 resolve();
+            });
+
+            this.socket.on('agent:authenticated', (data: { agentId: string; timestamp: number }) => {
+                logger.info('Agent authenticated by server', { agentId: data.agentId });
             });
 
             this.socket.on('disconnect', () => {
@@ -129,9 +139,9 @@ export class Agent {
                 logger.error('Connection error', { error: error.message });
             });
 
-            // 监听来自平台的指令
-            this.socket.on('command', (command) => {
-                this.handleCommand(command);
+            // SECURITY FIX: Listen for signed commands
+            this.socket.on('command', (signedCommand) => {
+                this.handleSignedCommand(signedCommand);
             });
 
             // 设置连接超时
@@ -142,26 +152,6 @@ export class Agent {
                 }
             }, 10000);
         });
-    }
-
-    /**
-     * 向平台注册 Agent
-     */
-    private registerAgent(): void {
-        if (!this.socket) return;
-
-        const registration = {
-            agentId: this.agentId,
-            hostname: os.hostname(),
-            platform: os.platform(),
-            arch: os.arch(),
-            cpus: os.cpus().length,
-            totalMemory: os.totalmem(),
-            version: '1.0.0'
-        };
-
-        this.socket.emit('agent:register', registration);
-        logger.info('Agent registered with platform');
     }
 
     /**
@@ -224,11 +214,81 @@ export class Agent {
     }
 
     /**
-     * 处理来自平台的指令
+     * SECURITY FIX: Verify and handle signed commands
      */
-    private async handleCommand(command: { type: string; payload?: any }): Promise<void> {
-        logger.info(`Received command: ${command.type}`);
+    private async handleSignedCommand(signedCommand: any): Promise<void> {
+        const { command, signature, agentId } = signedCommand;
 
+        // SECURITY FIX: Verify command is for this agent
+        if (agentId !== this.agentId) {
+            logger.error(`Command not for this agent: expected ${this.agentId}, got ${agentId}`);
+            return;
+        }
+
+        // SECURITY FIX: Check nonce (replay protection)
+        if (this.usedNonces.has(command.nonce)) {
+            logger.warn('Replay attack detected - duplicate nonce', { nonce: command.nonce });
+            return;
+        }
+
+        // SECURITY FIX: Verify command signature
+        const message = JSON.stringify(command);
+        const expectedSignature = crypto
+            .createHmac('sha256', this.secretKey)
+            .update(message)
+            .digest('hex');
+
+        // Use constant-time comparison
+        try {
+            const isValid = crypto.timingSafeEqual(
+                Buffer.from(signature, 'hex'),
+                Buffer.from(expectedSignature, 'hex')
+            );
+
+            if (!isValid) {
+                logger.error('Invalid command signature - command rejected', {
+                    commandType: command.type,
+                    timestamp: command.timestamp
+                });
+                return;
+            }
+        } catch {
+            logger.error('Signature verification failed - command rejected');
+            return;
+        }
+
+        // SECURITY FIX: Check timestamp (prevent replay attacks)
+        const now = Date.now();
+        const commandAge = now - command.timestamp;
+        const MAX_AGE = 5 * 60 * 1000; // 5 minutes
+
+        if (commandAge > MAX_AGE) {
+            logger.warn('Stale command rejected', {
+                age: commandAge,
+                timestamp: command.timestamp
+            });
+            return;
+        }
+
+        // Check for future timestamps
+        if (command.timestamp > now + 60000) {
+            logger.warn('Future timestamp in command rejected');
+            return;
+        }
+
+        // Mark nonce as used
+        this.usedNonces.add(command.nonce);
+        setTimeout(() => this.usedNonces.delete(command.nonce), 10 * 60 * 1000);
+
+        // All security checks passed - execute command
+        logger.info(`Executing verified command: ${command.type}`);
+        await this.executeCommand(command);
+    }
+
+    /**
+     * Execute a verified command
+     */
+    private async executeCommand(command: { type: string; payload?: any }): Promise<void> {
         switch (command.type) {
             case 'scan':
                 // 触发本地扫描
@@ -239,6 +299,7 @@ export class Agent {
                 // 封禁 IP
                 if (command.payload?.ip) {
                     await this.firewallController.blockIP(command.payload.ip);
+                    logger.info(`Blocked IP: ${command.payload.ip}`);
                 }
                 break;
 
@@ -246,6 +307,7 @@ export class Agent {
                 // 解封 IP
                 if (command.payload?.ip) {
                     await this.firewallController.unblockIP(command.payload.ip);
+                    logger.info(`Unblocked IP: ${command.payload.ip}`);
                 }
                 break;
 
@@ -253,6 +315,7 @@ export class Agent {
                 // 更新检测规则
                 if (command.payload?.rules) {
                     this.attackDetector.updateRules(command.payload.rules);
+                    logger.info('Updated detection rules');
                 }
                 break;
 

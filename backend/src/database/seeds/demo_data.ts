@@ -40,29 +40,53 @@ export async function seedDatabase(options: SeedOptions = {}): Promise<void> {
             db.exec('DELETE FROM users');
         }
 
+        // SECURITY FIX CVE-2026-037: Admin credentials must come from environment variables
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (!adminEmail || !adminPassword) {
+            throw new Error(
+                'SECURITY ERROR: ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required. ' +
+                'Cannot seed database with default credentials.'
+            );
+        }
+
+        // Validate password strength
+        if (adminPassword.length < 12) {
+            throw new Error('SECURITY ERROR: ADMIN_PASSWORD must be at least 12 characters long.');
+        }
+
         // Create admin user
         const adminId = uuidv4();
         const adminTenantId = uuidv4();
-        const adminPasswordHash = await bcrypt.hash('admin123', 12);
+        const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
 
         db.prepare(`
       INSERT OR IGNORE INTO users (id, email, username, password_hash, role, tenant_id, status)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(adminId, 'admin@fluxguard.local', 'Administrator', adminPasswordHash, 'admin', adminTenantId, 'active');
+    `).run(adminId, adminEmail, 'Administrator', adminPasswordHash, 'admin', adminTenantId, 'active');
 
-        if (verbose) logger.info('Created admin user: admin@fluxguard.local / admin123');
+        if (verbose) logger.info(`Created admin user: ${adminEmail}`);
 
-        // Create demo tenant user
+        // SECURITY FIX CVE-2026-037: Demo user credentials from environment or skip
+        const demoEmail = process.env.DEMO_EMAIL;
+        const demoPassword = process.env.DEMO_PASSWORD;
+
         const tenantId = uuidv4();
         const tenantUserId = uuidv4();
-        const tenantPasswordHash = await bcrypt.hash('demo123', 12);
 
-        db.prepare(`
+        if (demoEmail && demoPassword) {
+            const tenantPasswordHash = await bcrypt.hash(demoPassword, 12);
+
+            db.prepare(`
       INSERT OR IGNORE INTO users (id, email, username, password_hash, role, tenant_id, status)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(tenantUserId, 'demo@example.com', 'Demo User', tenantPasswordHash, 'tenant', tenantId, 'active');
+    `).run(tenantUserId, demoEmail, 'Demo User', tenantPasswordHash, 'tenant', tenantId, 'active');
 
-        if (verbose) logger.info('Created demo user: demo@example.com / demo123');
+            if (verbose) logger.info(`Created demo user: ${demoEmail}`);
+        } else {
+            if (verbose) logger.info('Skipping demo user creation (DEMO_EMAIL/DEMO_PASSWORD not set)');
+        }
 
         // Create demo sites
         const sites = [
@@ -149,9 +173,8 @@ export async function seedDatabase(options: SeedOptions = {}): Promise<void> {
         if (verbose) {
             logger.info('Database seeding completed successfully!');
             logger.info('---');
-            logger.info('Demo Credentials:');
-            logger.info('  Admin: admin@fluxguard.local / admin123');
-            logger.info('  User:  demo@example.com / demo123');
+            logger.info('SECURITY NOTE: Admin credentials were set from environment variables.');
+            logger.info('Ensure ADMIN_EMAIL and ADMIN_PASSWORD are kept secure.');
         }
 
     } catch (error: any) {

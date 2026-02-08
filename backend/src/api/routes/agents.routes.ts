@@ -1,8 +1,10 @@
 /**
  * Agent 管理 API 路由
+ * SECURITY FIX CVE-2026-030: Added authentication middleware
  */
 
 import { Router, Request, Response } from 'express';
+import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
 
 const router = Router();
@@ -14,11 +16,14 @@ export function setAgentGateway(gateway: any): void {
     agentGateway = gateway;
 }
 
+// SECURITY FIX CVE-2026-030: Apply authentication to all routes
+router.use(authenticate);
+
 /**
  * GET /api/agents
  * 获取所有已连接的 Agent 列表
  */
-router.get('/', (req: Request, res: Response) => {
+router.get('/', (req: AuthenticatedRequest, res: Response) => {
     try {
         if (!agentGateway) {
             return res.status(503).json({ error: 'Agent gateway not available' });
@@ -70,8 +75,9 @@ router.get('/:id', (req: Request, res: Response) => {
 /**
  * POST /api/agents/:id/scan
  * 触发指定 Agent 运行安全扫描
+ * SECURITY FIX: Require admin role for scan operations
  */
-router.post('/:id/scan', (req: Request, res: Response) => {
+router.post('/:id/scan', requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
     try {
         if (!agentGateway) {
             return res.status(503).json({ error: 'Agent gateway not available' });
@@ -96,8 +102,9 @@ router.post('/:id/scan', (req: Request, res: Response) => {
 /**
  * POST /api/agents/:id/block
  * 通过指定 Agent 封禁 IP
+ * SECURITY FIX: Require admin role for block operations
  */
-router.post('/:id/block', (req: Request, res: Response) => {
+router.post('/:id/block', requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
     try {
         if (!agentGateway) {
             return res.status(503).json({ error: 'Agent gateway not available' });
@@ -131,8 +138,9 @@ router.post('/:id/block', (req: Request, res: Response) => {
 /**
  * POST /api/agents/:id/unblock
  * 通过指定 Agent 解封 IP
+ * SECURITY FIX: Require admin role for unblock operations
  */
-router.post('/:id/unblock', (req: Request, res: Response) => {
+router.post('/:id/unblock', requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
     try {
         if (!agentGateway) {
             return res.status(503).json({ error: 'Agent gateway not available' });

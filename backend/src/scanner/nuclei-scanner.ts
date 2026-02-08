@@ -49,6 +49,28 @@ export class NucleiScanner {
     }
 
     /**
+     * SECURITY FIX: Validate target URL to prevent command injection
+     * Only allows valid HTTP/HTTPS URLs
+     */
+    private validateTarget(target: string): boolean {
+        try {
+            const url = new URL(target);
+            // Only allow http and https protocols
+            if (!['http:', 'https:'].includes(url.protocol)) {
+                return false;
+            }
+            // Reject URLs with suspicious characters that could be used for injection
+            const suspiciousChars = /[;&|`$(){}[\]<>\\'"]/;
+            if (suspiciousChars.test(target)) {
+                return false;
+            }
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
      * 检查 Nuclei 是否已安装
      */
     async checkAvailability(): Promise<boolean> {
@@ -95,6 +117,11 @@ export class NucleiScanner {
             onProgress?: (progress: ScanProgress) => void;
         }
     ): Promise<VulnerabilityResult[]> {
+        // SECURITY FIX: Validate target before processing
+        if (!this.validateTarget(target)) {
+            throw new Error('Invalid target URL format. Only valid HTTP/HTTPS URLs are allowed.');
+        }
+
         if (!this.isAvailable) {
             await this.checkAvailability();
             if (!this.isAvailable) {

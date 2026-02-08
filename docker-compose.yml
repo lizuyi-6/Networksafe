@@ -5,8 +5,10 @@ services:
     image: redis:alpine
     ports:
       - "6379:6379"
+    # SECURITY FIX CVE-2026-008: Remove default password - require env variable
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD environment variable is required}
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -18,9 +20,12 @@ services:
     ports:
       - "3005:3005"
     environment:
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - PORT=3005
       - ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
+      - VALID_API_KEYS=${VALID_API_KEYS}
+      - DEVICE_API_KEYS=${DEVICE_API_KEYS}
     depends_on:
       redis:
         condition: service_healthy

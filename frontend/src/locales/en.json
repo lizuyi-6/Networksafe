@@ -1,0 +1,105 @@
+{
+    "nav": {
+        "architecture": "Architecture",
+        "defense": "Defense",
+        "deep_tech": "Deep Tech",
+        "pricing": "Pricing",
+        "login": "Log in",
+        "get_started": "Get Started"
+    },
+    "hero": {
+        "system_active": "System Active",
+        "title_prefix": "Graphite-Grade",
+        "title_highlight": "Authority.",
+        "description": "Hardware-rooted security architecture designed for mission-critical infrastructure. Precision engineered for absolute reliability in a concrete world.",
+        "deploy_system": "Deploy System",
+        "view_specs": "View Technical Specs"
+    },
+    "features": {
+        "title": "The Monolith Standard",
+        "description": "Engineered without compromise. Every component serves a singular purpose: absolute security.",
+        "antibot": {
+            "title": "Anti-Bot Shield",
+            "desc": "Pattern recognition algorithms filter traffic with 99.9% accuracy, neutralizing automated threats instantly."
+        },
+        "neural": {
+            "title": "Neural Core",
+            "desc": "Self-learning AI adapts to new attack vectors in real-time, evolving faster than emerging threats."
+        },
+        "breaker": {
+            "title": "Physical Breaker",
+            "desc": "Hardware-level disconnect capability for ultimate failsafe protection during catastrophic scenarios."
+        }
+    },
+    "hardware": {
+        "chipset": "Chipset Architecture v4.2",
+        "title": "Hardware Root of Trust",
+        "description": "At the core of FluxGuard lies the ESP32-S3 secure element. This dedicated microcontroller handles cryptographic operations and key storage, completely isolated from the main application processor.",
+        "aes": "Hardware Acceleration",
+        "rsa": "Secure Boot Validation",
+        "trng": "True Random Number Generator",
+        "core_load_0": "Core 0 Load",
+        "core_load_1": "Core 1 Load",
+        "crypto_accel": "CRYPTO ACCELERATOR"
+    },
+    "infrastructure": {
+        "title": "Global Infrastructure",
+        "description": "Strategically positioned nodes ensuring sub-millisecond latency worldwide.",
+        "operational": "Operational",
+        "maintenance": "Maintenance"
+    },
+    "dashboard": {
+        "precision_control": "Precision Control",
+        "description": "A dashboard stripped of distractions. Visualize network traffic, analyze threats, and deploy countermeasures with a clean, high-fidelity interface designed for clarity.",
+        "visualization": "Real-time Visualization",
+        "vis_desc": "Live traffic monitoring with 3D geographical mapping.",
+        "history": "Historical Analysis",
+        "history_desc": "Access petabytes of logs with zero latency.",
+        "system_status": "System Status",
+        "nominal": "ALL SYSTEMS NOMINAL",
+        "throughput": "Live Throughput"
+    },
+    "pricing": {
+        "title": "Select Your Variant",
+        "description": "Scalable security for organizations of any size.",
+        "sentry": "Sentry",
+        "guardian": "Guardian",
+        "monolith": "Monolith",
+        "configure": "Configure",
+        "deploy_now": "Deploy Now",
+        "contact_sales": "Contact Sales",
+        "software_firewall": "Software Firewall",
+        "basic_antibot": "Basic Anti-Bot",
+        "hardware_key": "Hardware Key",
+        "hardware_root_trust": "Hardware Root of Trust",
+        "advanced_ai": "Advanced AI Engine",
+        "priority_support": "24/7 Priority Support",
+        "dedicated_cluster": "Dedicated Server Cluster",
+        "physical_breaker": "Physical Breaker Access",
+        "on_premise": "On-premise Integration",
+        "recommended": "Recommended",
+        "custom": "Custom",
+        "mo": "/mo"
+    },
+    "footer": {
+        "powered_by": "Powered by Aether Studio",
+        "copyright": "Copyright © 2026 杭州视界奇点科技有限公司",
+        "engineered": "Engineered in California.",
+        "product": "Product",
+        "company": "Company",
+        "support": "Support",
+        "features": "Features",
+        "security": "Security",
+        "enterprise": "Enterprise",
+        "about": "About",
+        "careers": "Careers",
+        "legal": "Legal",
+        "help_center": "Help Center",
+        "api_status": "API Status",
+        "contact": "Contact",
+        "all_rights": "All rights reserved.",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Use",
+        "sales": "Sales Policy"
+    }
+}

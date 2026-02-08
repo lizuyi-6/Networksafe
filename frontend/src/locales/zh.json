@@ -1,0 +1,105 @@
+{
+    "nav": {
+        "architecture": "架构设计",
+        "defense": "主动防御",
+        "deep_tech": "核心技术",
+        "pricing": "产品定价",
+        "login": "登录平台",
+        "get_started": "立即启用"
+    },
+    "hero": {
+        "system_active": "系统运行中",
+        "title_prefix": "坚如磐石的",
+        "title_highlight": "权威保障。",
+        "description": "植根于硬件的信任根安全架构，专为关键基础设施打造。在物理世界中，为追求绝对可靠性而精密铸造。",
+        "deploy_system": "部署系统",
+        "view_specs": "查看技术规格"
+    },
+    "features": {
+        "title": "磐石标准",
+        "description": "工程化设计绝不妥协。每一个组件都为同一个使命而生：绝对安全。",
+        "antibot": {
+            "title": "反自动化攻击护盾",
+            "desc": "模式识别算法以 99.9% 的精准度过滤流量，即时瓦解自动化威胁。"
+        },
+        "neural": {
+            "title": "神经计算核心",
+            "desc": "自学习 AI 实时适应新型攻击向量，进化速度始终领先于新兴威胁。"
+        },
+        "breaker": {
+            "title": "物理熔断机制",
+            "desc": "灾难性场景下的终极故障保护，具备硬件级断网能力。"
+        }
+    },
+    "hardware": {
+        "chipset": "芯片组架构 v4.2",
+        "title": "硬件信任根",
+        "description": "FluxGuard 的核心在于 ESP32-S3 安全元件。这一专用微控制器由主应用处理器完全隔离，独立处理加密操作和密钥存储。",
+        "aes": "AES-256 硬件加速",
+        "rsa": "RSA-4096 安全启动验证",
+        "trng": "TRNG 真随机数仅生成器",
+        "core_load_0": "核心 0 负载",
+        "core_load_1": "核心 1 负载",
+        "crypto_accel": "加密加速器"
+    },
+    "infrastructure": {
+        "title": "全球基础设施网络",
+        "description": "战略性部署全球节点，确保全球毫秒级低延迟响应。",
+        "operational": "运行中",
+        "maintenance": "维护中"
+    },
+    "dashboard": {
+        "precision_control": "精准掌控",
+        "description": "极简主义仪表盘，摒弃一切干扰。通过清晰逼真的界面，可视化网络流量、洞察潜在威胁并部署反制措施。",
+        "visualization": "实时可视化",
+        "vis_desc": "集成 3D 地理映射的实时流量监控。",
+        "history": "历史溯源分析",
+        "history_desc": "零延迟检索 PB 级日志数据。",
+        "system_status": "系统状态",
+        "nominal": "所有系统运行正常",
+        "throughput": "实时吞吐量"
+    },
+    "pricing": {
+        "title": "选择您的方案",
+        "description": "为任何规模的组织提供可扩展的安全防护。",
+        "sentry": "哨兵版 (Sentry)",
+        "guardian": "守护者版 (Guardian)",
+        "monolith": "磐石版 (Monolith)",
+        "configure": "配置",
+        "deploy_now": "立即部署",
+        "contact_sales": "联系销售",
+        "software_firewall": "软件防火墙",
+        "basic_antibot": "基础反爬虫",
+        "hardware_key": "硬件密钥",
+        "hardware_root_trust": "硬件信任根",
+        "advanced_ai": "高级 AI 引擎",
+        "priority_support": "7x24 小时优先支持",
+        "dedicated_cluster": "专用服务器集群",
+        "physical_breaker": "物理熔断器权限",
+        "on_premise": "私有化部署集成",
+        "recommended": "推荐",
+        "custom": "定制",
+        "mo": "/月"
+    },
+    "footer": {
+        "powered_by": "由 Aether Studio 提供技术支持",
+        "copyright": "版权所有 © 2026 杭州视界奇点科技有限公司",
+        "engineered": "源自加州工程设计。",
+        "product": "产品",
+        "company": "公司",
+        "support": "支持",
+        "features": "特性",
+        "security": "安全",
+        "enterprise": "企业",
+        "about": "关于我们",
+        "careers": "加入我们",
+        "legal": "法律条款",
+        "help_center": "帮助中心",
+        "api_status": "API 状态",
+        "contact": "联系我们",
+        "all_rights": "保留所有权利。",
+        "privacy": "隐私政策",
+        "terms": "使用条款",
+        "sales": "销售政策"
+    }
+}
