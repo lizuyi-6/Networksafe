@@ -1,0 +1,17 @@
+﻿backend/src/api/routes/admin.routes.ts
+backend/src/api/routes/agents.routes.ts
+backend/src/api/routes/dashboard.routes.ts
+backend/src/api/routes/devices.routes.ts
+backend/src/api/routes/fix-history.routes.ts
+backend/src/index.ts
+backend/src/websocket/device-gateway.ts
+frontend/src/App.tsx
+frontend/src/components/AIEndpointSettings.tsx
+frontend/src/pages/Agents.tsx
+frontend/src/pages/AttackSimulator.tsx
+frontend/src/pages/BoardStatus.tsx
+frontend/src/pages/Dashboard.tsx
+frontend/src/pages/Devices.tsx
+frontend/src/pages/FixHistory.tsx
+frontend/src/pages/SuperAdmin.tsx
+frontend/src/services/api.ts

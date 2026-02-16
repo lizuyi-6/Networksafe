@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, ReactNode } from 'react';
+import i18n from '../i18n';
 
 type Language = 'en' | 'zh';
 
@@ -9,7 +10,6 @@ interface LanguageContextType {
 }
 
 const translations: Record<string, Record<Language, string>> = {
-    // Sidebar
     'nav.dashboard': { en: 'Dashboard', zh: '控制台' },
     'nav.scanner': { en: 'Scanner', zh: '安全扫描' },
     'nav.sites': { en: 'Sites', zh: '站点管理' },
@@ -20,7 +20,6 @@ const translations: Record<string, Record<Language, string>> = {
     'app.title': { en: 'FluxGuard', zh: 'FluxGuard' },
     'app.protected': { en: 'PROTECTED', zh: '已防护' },
 
-    // Dashboard
     'dashboard.title': { en: 'Security Dashboard', zh: '安全控制台' },
     'dashboard.subtitle': { en: 'Real-time system monitoring', zh: '实时系统监控' },
     'dashboard.system_online': { en: 'SYSTEM ONLINE', zh: '系统在线' },
@@ -35,7 +34,6 @@ const translations: Record<string, Record<Language, string>> = {
     'dashboard.cpu_usage': { en: 'CPU Usage', zh: 'CPU 使用率' },
     'dashboard.memory_usage': { en: 'Memory Usage', zh: '内存使用率' },
 
-    // Scanner
     'scanner.title': { en: 'Security Configuration Scanner', zh: '安全配置扫描器' },
     'scanner.subtitle': { en: 'Automated vulnerability assessment', zh: '自动化漏洞评估' },
     'scanner.ready_title': { en: 'Ready to Scan', zh: '准备扫描' },
@@ -51,12 +49,10 @@ const translations: Record<string, Record<Language, string>> = {
     'scanner.secure_title': { en: 'System Secure', zh: '系统安全' },
     'scanner.secure_desc': { en: 'No threats found.', zh: '未发现威胁。' },
 
-    // Sites
     'sites.title': { en: 'Site Management', zh: '站点管理' },
     'sites.protected_domains': { en: 'Protected Domains', zh: '受保护的域名' },
     'sites.no_sites': { en: 'No sites found.', zh: '未找到站点。' },
 
-    // Deployment
     'deploy.title': { en: 'Deployment Wizard', zh: '部署向导' },
     'deploy.step1': { en: 'Select Server', zh: '选择服务器' },
     'deploy.step2': { en: 'Configuration', zh: '配置参数' },
@@ -72,15 +68,12 @@ const translations: Record<string, Record<Language, string>> = {
     'deploy.next': { en: 'Next Step', zh: '下一步' },
     'deploy.download': { en: 'Download Config', zh: '下载配置' },
 
-    // Fix History
     'history.title': { en: 'Fix History', zh: '修复记录' },
     'history.desc': { en: 'History of fixes applied.', zh: '已应用修复的历史记录。' },
 
-    // Settings
     'settings.title': { en: 'System Settings', zh: '系统设置' },
     'settings.desc': { en: 'System configuration settings.', zh: '系统配置设置。' },
 
-    // Super Admin
     'admin.title': { en: 'Super Admin Console', zh: '超级管理员控制台' },
     'admin.server_cpu': { en: 'Control Server CPU', zh: '控制服务器 CPU' },
     'admin.memory': { en: 'Memory Usage', zh: '内存使用率' },
@@ -88,7 +81,6 @@ const translations: Record<string, Record<Language, string>> = {
     'admin.recent_errors': { en: 'Recent User Errors', zh: '近期用户错误' },
     'admin.client_perf': { en: 'Client Performance Overhead', zh: '客户端性能开销' },
 
-    // New Design Elements
     'nav.platform': { en: 'Platform', zh: '平台' },
     'nav.governance': { en: 'Governance', zh: '治理' },
     'nav.monitoring': { en: 'Monitoring', zh: '监控' },
@@ -117,7 +109,6 @@ const translations: Record<string, Record<Language, string>> = {
     'dashboard.generate_key': { en: 'Generate Key', zh: '生成密钥' },
     'dashboard.manage_keys': { en: 'Manage Keys', zh: '管理密钥' },
 
-    // Alerts Page
     'alerts.subtitle': { en: 'Real-time security and system notifications', zh: '实时安全与系统通知' },
     'alerts.filter_all': { en: 'All', zh: '全部' },
     'alerts.filter_critical': { en: 'Critical', zh: '严重' },
@@ -129,7 +120,6 @@ const translations: Record<string, Record<Language, string>> = {
     'alerts.status_active': { en: 'Active', zh: '活跃' },
     'alerts.loading': { en: 'Loading alerts...', zh: '正在加载警报...' },
 
-    // Admin / API Keys
     'admin.loading': { en: 'Loading...', zh: '加载中...' },
     'admin.unavailable': { en: 'System data unavailable in this mode.', zh: '当前模式下系统数据不可用。' },
     'admin.api_keys_title': { en: 'API Keys', zh: 'API 密钥' },
@@ -147,7 +137,6 @@ const translations: Record<string, Record<Language, string>> = {
     'admin.clients_summary': { en: 'Active Clients Summary', zh: '活跃客户端汇总' },
     'admin.connected_agents': { en: 'Connected Agents', zh: '已连接 Agent' },
 
-    // Board Status
     'board.device_id': { en: 'DEVICE ID', zh: '设备 ID' },
     'board.unknown': { en: 'UNKNOWN', zh: '未知' },
     'board.system_nominal': { en: 'System Nominal', zh: '系统正常' },
@@ -185,10 +174,12 @@ const translations: Record<string, Record<Language, string>> = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-    const [language, setLanguage] = useState<Language>('en');
+    const [language, setLanguage] = useState<Language>((i18n.language as Language) || 'en');
 
     const toggleLanguage = () => {
-        setLanguage(prev => prev === 'en' ? 'zh' : 'en');
+        const newLang = language === 'en' ? 'zh' : 'en';
+        setLanguage(newLang);
+        i18n.changeLanguage(newLang);
     };
 
     const t = (key: string): string => {

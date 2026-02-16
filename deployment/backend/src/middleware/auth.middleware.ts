@@ -203,8 +203,16 @@ export function authenticateApiKey(req: AuthenticatedRequest, res: Response, nex
     }
 
     // In production, validate against database
-    // For now, use environment variable
-    const validApiKeys = (process.env.VALID_API_KEYS || 'demo-api-key').split(',');
+    // For now, require explicit environment variable
+    const validApiKeys = process.env.VALID_API_KEYS?.split(',').filter(k => k.trim()) || [];
+    if (validApiKeys.length === 0) {
+        logger.error('No valid API keys configured in VALID_API_KEYS environment variable');
+        res.status(500).json({
+            error: 'Server configuration error',
+            code: 'API_KEYS_NOT_CONFIGURED'
+        });
+        return;
+    }
 
     if (!validApiKeys.includes(apiKey)) {
         logger.warn(`Invalid API key attempt: ${apiKey.substring(0, 8)}...`);

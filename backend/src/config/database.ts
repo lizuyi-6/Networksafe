@@ -208,6 +208,22 @@ export class DatabaseManager {
         )
       `);
 
+      // Agent registrations table (for probe agent authentication)
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS agent_registrations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          agent_id TEXT NOT NULL UNIQUE,
+          hostname TEXT NOT NULL,
+          api_key_hash TEXT NOT NULL,
+          secret_key TEXT NOT NULL,
+          fingerprint TEXT,
+          platform TEXT,
+          status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'revoked')),
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          last_seen_at DATETIME
+        )
+      `);
+
       // Create indexes
       this.db.run(`CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain)`);
       this.db.run(`CREATE INDEX IF NOT EXISTS idx_scan_results_siteId ON scan_results(siteId)`);
@@ -303,6 +319,22 @@ export class DatabaseManager {
         return result;
       }
     };
+  }
+
+  /**
+   * Run a transaction
+   */
+  public transaction<T>(fn: () => T): T {
+    if (!this.db) throw new Error('Database not connected');
+    this.db.run('BEGIN TRANSACTION');
+    try {
+      const result = fn();
+      this.db.run('COMMIT');
+      return result;
+    } catch (error) {
+      this.db.run('ROLLBACK');
+      throw error;
+    }
   }
 
   /**

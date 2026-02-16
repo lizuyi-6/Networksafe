@@ -34,23 +34,15 @@ interface RateLimitInfo {
   resetTime: number;
 }
 
-/**
- * Enhanced Rate Limiter with IP Spoofing Protection
- */
 export class EnhancedRateLimiter {
   private memoryFallback: Map<string, RateLimitInfo> = new Map();
   private readonly DEFAULT_LIMITS: RateLimitConfig = {
     maxRequests: 100,
-    windowMs: 60000, // 1 minute
+    windowMs: 60000,
   };
 
-  /**
-   * Check rate limit with multi-dimensional validation
-   *
-   * SECURITY FIX: Combines multiple dimensions to prevent IP spoofing bypass
-   */
   async checkRateLimit(params: {
-    identifier: string; // User ID or session ID
+    identifier: string;
     ip: string;
     endpoint?: string;
     config?: Partial<RateLimitConfig>;
@@ -61,28 +53,24 @@ export class EnhancedRateLimiter {
     const now = Date.now();
     const resetTime = now + finalConfig.windowMs;
 
-    // Create multiple keys for different dimensions
     const userKey = `ratelimit:user:${identifier}`;
     const ipKey = `ratelimit:ip:${ip}`;
     const endpointKey = endpoint ? `ratelimit:endpoint:${endpoint}:${identifier}` : null;
     const combinedKey = `ratelimit:combined:${identifier}:${ip}`;
 
     try {
-      // Check all dimensions in parallel
       const results = await Promise.all([
         this.checkDimension(userKey, finalConfig.maxRequests, finalConfig.windowMs),
-        this.checkDimension(ipKey, Math.floor(finalConfig.maxRequests * 2), finalConfig.windowMs), // IP limit is 2x
+        this.checkDimension(ipKey, Math.floor(finalConfig.maxRequests * 2), finalConfig.windowMs),
         endpointKey ? this.checkDimension(endpointKey, Math.floor(finalConfig.maxRequests / 2), finalConfig.windowMs) : null,
         this.checkDimension(combinedKey, finalConfig.maxRequests, finalConfig.windowMs),
       ]);
 
-      // Find the most restrictive limit
       const userResult = results[0];
       const ipResult = results[1];
       const endpointResult = results[2];
       const combinedResult = results[3];
 
-      // Determine which dimension hit the limit
       if (!userResult.allowed) {
         return {
           ...userResult,
@@ -116,12 +104,10 @@ export class EnhancedRateLimiter {
         };
       }
 
-      // All checks passed
       return combinedResult;
 
     } catch (error) {
       logger.error('Rate limit check failed', { error, identifier, ip });
-      // Fail open - allow request if rate limiter fails
       return {
         allowed: true,
         limit: finalConfig.maxRequests,
@@ -131,9 +117,6 @@ export class EnhancedRateLimiter {
     }
   }
 
-  /**
-   * Check a single dimension
-   */
   private async checkDimension(
     key: string,
     limit: number,
@@ -142,12 +125,14 @@ export class EnhancedRateLimiter {
     const now = Date.now();
     const resetTime = now + windowMs;
 
+    if (!redisService.isAvailable()) {
+      return this.checkDimensionMemory(key, limit, windowMs);
+    }
+
     try {
-      // Try Redis first
       const current = await redisService.get(key);
 
       if (current === null) {
-        // First request
         await redisService.set(key, '1', windowMs / 1000);
         await redisService.set(`${key}:reset`, resetTime.toString(), windowMs / 1000);
 
@@ -170,7 +155,6 @@ export class EnhancedRateLimiter {
         };
       }
 
-      // Increment counter
       const newCount = await redisService.incr(key);
       return {
         allowed: true,
@@ -180,15 +164,11 @@ export class EnhancedRateLimiter {
       };
 
     } catch (error) {
-      // Fallback to memory
       logger.warn('Redis rate limit failed, using memory fallback', { error, key });
       return this.checkDimensionMemory(key, limit, windowMs);
     }
   }
 
-  /**
-   * Memory fallback for rate limiting
-   */
   private checkDimensionMemory(
     key: string,
     limit: number,
@@ -198,7 +178,6 @@ export class EnhancedRateLimiter {
     const info = this.memoryFallback.get(key);
 
     if (!info || now > info.resetTime) {
-      // First request or expired
       this.memoryFallback.set(key, {
         count: 1,
         resetTime: now + windowMs,
@@ -230,26 +209,21 @@ export class EnhancedRateLimiter {
     };
   }
 
-  /**
-   * SECURITY FIX: Detect IP spoofing attempts
-   *
-   * Checks for suspicious patterns like:
-   * - Rapid IP changes from same user
-   * - Many requests from different IPs to same user
-   * - IPs from known proxy/VPN ranges
-   */
   async detectIPSpoofing(params: {
     identifier: string;
     ip: string;
   }): Promise<{ suspicious: boolean; reason?: string }> {
     const { identifier, ip } = params;
+
+    if (!redisService.isAvailable()) {
+      return { suspicious: false };
+    }
+
     const key = `ips:user:${identifier}`;
 
     try {
-      // Get recent IPs for this user
       const recentIPs = await redisService.getClient().lrange(key, 0, -1);
 
-      // Check if this IP was recently used
       const ipExists = recentIPs.some((entry: string) => {
         try {
           const data = JSON.parse(entry);
@@ -259,17 +233,14 @@ export class EnhancedRateLimiter {
         }
       });
 
-      // Add current IP
       await redisService.getClient().lpush(key, JSON.stringify({
         ip,
         timestamp: Date.now(),
       }));
 
-      // Keep only last 10 IPs
       await redisService.getClient().ltrim(key, 0, 9);
-      await redisService.getClient().expire(key, 3600); // 1 hour
+      await redisService.getClient().expire(key, 3600);
 
-      // Check for IP rotation
       if (recentIPs.length >= 5) {
         const uniqueIPs = new Set();
         recentIPs.forEach((entry: string) => {
@@ -279,7 +250,6 @@ export class EnhancedRateLimiter {
           } catch {}
         });
 
-        // If user has used 5+ different IPs in last hour, suspicious
         if (uniqueIPs.size >= 5 && !ipExists) {
           logger.error('IP spoofing detected - rapid IP rotation', {
             identifier,
@@ -302,10 +272,10 @@ export class EnhancedRateLimiter {
     }
   }
 
-  /**
-   * Cleanup expired entries from memory fallback
-   */
   cleanup(): void {
+    if (!this.memoryFallback) {
+      return;
+    }
     const now = Date.now();
     for (const [key, info] of this.memoryFallback.entries()) {
       if (now > info.resetTime) {
@@ -314,42 +284,28 @@ export class EnhancedRateLimiter {
     }
   }
 
-  /**
-   * Reset rate limit for a specific identifier (admin function)
-   */
   async resetRateLimit(identifier: string): Promise<void> {
     const pattern = `ratelimit:*:${identifier}*`;
     try {
-      // This would require Redis SCAN operation
-      // For now, just let it expire naturally
-      logger.info('Rate limit reset requested', { identifier });
+      logger.info('Rate limit reset requested', { identifier, pattern });
     } catch (error) {
       logger.error('Failed to reset rate limit', { error, identifier });
     }
   }
 
-  /**
-   * Get rate limit statistics
-   */
   async getStats(identifier: string): Promise<{
     userLimit: { used: number; limit: number };
     ipLimit?: { used: number; limit: number };
   }> {
-    // Implementation for monitoring/management
     return {
       userLimit: { used: 0, limit: 100 },
     };
   }
 }
 
-// Singleton instance
-export default new EnhancedRateLimiter();
+const enhancedRateLimiterInstance = new EnhancedRateLimiter();
+export default enhancedRateLimiterInstance;
 
-// Periodic cleanup of memory fallback
 setInterval(() => {
-  enhancedRateLimiter.cleanup();
-}, 5 * 60 * 1000); // Every 5 minutes
-
-// Export singleton with backward-compatible name
-const enhancedRateLimiter = EnhancedRateLimiter.prototype as any;
-export { enhancedRateLimiter };
+  enhancedRateLimiterInstance.cleanup();
+}, 5 * 60 * 1000);

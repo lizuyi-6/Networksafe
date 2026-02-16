@@ -1,7 +1,7 @@
-/**
- * FluxGuard - ESP32 设备管理 API
+﻿/**
+ * FluxGuard - ESP32 璁惧绠＄悊 API
  *
- * 提供 ESP32 硬件网关的 REST API 接口
+ * 鎻愪緵 ESP32 纭欢缃戝叧鐨?REST API 鎺ュ彛
  * SECURITY FIX CVE-2026-031: Added authentication middleware
  */
 
@@ -14,7 +14,7 @@ const router = Router();
 // SECURITY FIX CVE-2026-031: Apply authentication to all routes
 router.use(authenticate);
 
-// 设备存储 (内存 + 后续可扩展到数据库)
+// 璁惧瀛樺偍 (鍐呭瓨 + 鍚庣画鍙墿灞曞埌鏁版嵁搴?
 interface DeviceInfo {
     deviceId: string;
     version: string;
@@ -40,9 +40,18 @@ interface DeviceInfo {
     };
 }
 
-const devices = new Map<string, DeviceInfo>();
+interface DeviceEvent {
+    id: string;
+    deviceId: string;
+    type: 'register' | 'heartbeat' | 'data' | 'alert' | 'unknown_error' | 'disconnect' | 'command';
+    payload: any;
+    timestamp: string;
+}
 
-// 密码本
+const devices = new Map<string, DeviceInfo>();
+const deviceEvents = new Map<string, DeviceEvent[]>();
+
+// 瀵嗙爜鏈?
 const codebook: Record<string, string> = {
     'E001': 'Connection refused',
     'E002': 'Permission denied',
@@ -62,7 +71,7 @@ const codebook: Record<string, string> = {
 
 /**
  * GET /api/devices
- * 获取所有 ESP32 设备列表
+ * 鑾峰彇鎵€鏈?ESP32 璁惧鍒楄〃
  */
 router.get('/', (_req: Request, res: Response) => {
     try {
@@ -85,8 +94,25 @@ router.get('/', (_req: Request, res: Response) => {
 
 /**
  * GET /api/devices/:id
- * 获取单个设备详情
+ * 鑾峰彇鍗曚釜璁惧璇︽儏
  */
+router.get('/:id/events', (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const limitRaw = Number(req.query.limit || 100);
+        const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(500, limitRaw)) : 100;
+        const events = deviceEvents.get(id) || [];
+
+        res.json({
+            success: true,
+            deviceId: id,
+            events: events.slice(-limit).reverse()
+        });
+    } catch (error: any) {
+        logger.error('Failed to get device events', { error: error.message });
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
 router.get('/:id', (req: Request, res: Response) => {
     try {
         const device = devices.get(req.params.id);
@@ -110,7 +136,7 @@ router.get('/:id', (req: Request, res: Response) => {
 
 /**
  * POST /api/devices/:id/cmd
- * 发送命令到设备
+ * 鍙戦€佸懡浠ゅ埌璁惧
  * SECURITY FIX: Require admin role for command execution
  */
 router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
@@ -128,15 +154,15 @@ router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: R
             return res.status(400).json({ success: false, error: 'Device is offline' });
         }
 
-        // 记录命令日志
+        // 璁板綍鍛戒护鏃ュ織
         logger.info('Command sent to device', {
             deviceId: id,
             command,
             params
         });
 
-        // 实际发送命令需要通过 WebSocket Gateway
-        // 这里返回成功，实际发送在 device-gateway.ts 中处理
+        // 瀹為檯鍙戦€佸懡浠ら渶瑕侀€氳繃 WebSocket Gateway
+        // 杩欓噷杩斿洖鎴愬姛锛屽疄闄呭彂閫佸湪 device-gateway.ts 涓鐞?
         res.json({
             success: true,
             message: `Command "${command}" queued for device ${id}`,
@@ -149,7 +175,7 @@ router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: R
 
 /**
  * PUT /api/devices/:id
- * 更新设备配置
+ * 鏇存柊璁惧閰嶇疆
  */
 router.put('/:id', (req: Request, res: Response) => {
     try {
@@ -160,7 +186,7 @@ router.put('/:id', (req: Request, res: Response) => {
             return res.status(404).json({ success: false, error: 'Device not found' });
         }
 
-        // 更新可配置字段
+        // 鏇存柊鍙厤缃瓧娈?
         if (req.body.connectedAgents) {
             device.connectedAgents = req.body.connectedAgents;
         }
@@ -184,7 +210,7 @@ router.put('/:id', (req: Request, res: Response) => {
 
 /**
  * DELETE /api/devices/:id
- * 注销设备
+ * 娉ㄩ攢璁惧
  * SECURITY FIX: Require admin role for device deletion
  */
 router.delete('/:id', requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
@@ -211,7 +237,7 @@ router.delete('/:id', requireRole('admin'), (req: AuthenticatedRequest, res: Res
 
 /**
  * GET /api/devices/codebook
- * 获取密码本
+ * 鑾峰彇瀵嗙爜鏈?
  */
 router.get('/codebook', (_req: Request, res: Response) => {
     res.json({
@@ -222,9 +248,9 @@ router.get('/codebook', (_req: Request, res: Response) => {
 
 /**
  * POST /api/devices/codebook
- * 更新密码本
+ * 鏇存柊瀵嗙爜鏈?
  *
- * SECURITY FIX: 添加输入验证，防止恶意数据注入
+ * SECURITY FIX: 娣诲姞杈撳叆楠岃瘉锛岄槻姝㈡伓鎰忔暟鎹敞鍏?
  */
 router.post('/codebook', (req: Request, res: Response) => {
     try {
@@ -234,7 +260,7 @@ router.post('/codebook', (req: Request, res: Response) => {
             return res.status(400).json({ success: false, error: 'Invalid entries' });
         }
 
-        // SECURITY: 验证所有 entries
+        // SECURITY: 楠岃瘉鎵€鏈?entries
         const maxEntries = 1000;
         const currentEntries = Object.keys(codebook).length;
         const newEntriesCount = Object.keys(entries).length;
@@ -246,9 +272,9 @@ router.post('/codebook', (req: Request, res: Response) => {
             });
         }
 
-        // 验证每个 entry 的格式
+        // 楠岃瘉姣忎釜 entry 鐨勬牸寮?
         for (const [key, value] of Object.entries(entries)) {
-            // 验证 key: 只允许字母数字和特定符号
+            // 楠岃瘉 key: 鍙厑璁稿瓧姣嶆暟瀛楀拰鐗瑰畾绗﹀彿
             if (!/^[A-Z0-9_-]+$/.test(key)) {
                 return res.status(400).json({
                     success: false,
@@ -256,7 +282,7 @@ router.post('/codebook', (req: Request, res: Response) => {
                 });
             }
 
-            // 验证 value: 字符串且限制长度
+            // 楠岃瘉 value: 瀛楃涓蹭笖闄愬埗闀垮害
             if (typeof value !== 'string') {
                 return res.status(400).json({
                     success: false,
@@ -271,7 +297,7 @@ router.post('/codebook', (req: Request, res: Response) => {
                 });
             }
 
-            // 检查是否包含潜在的恶意内容
+            // 妫€鏌ユ槸鍚﹀寘鍚綔鍦ㄧ殑鎭舵剰鍐呭
             const dangerousPatterns = [
                 /<script/i,
                 /javascript:/i,
@@ -306,7 +332,7 @@ router.post('/codebook', (req: Request, res: Response) => {
     }
 });
 
-// 导出设备管理函数供 WebSocket Gateway 使用
+// 瀵煎嚭璁惧绠＄悊鍑芥暟渚?WebSocket Gateway 浣跨敤
 export function registerDevice(info: Omit<DeviceInfo, 'isOnline' | 'lastHeartbeat' | 'connectedAgents'>): void {
     const device: DeviceInfo = {
         ...info,
@@ -344,4 +370,25 @@ export function getCodebook(): Record<string, string> {
     return codebook;
 }
 
+export function addDeviceEvent(deviceId: string, type: DeviceEvent['type'], payload: any): void {
+    const event: DeviceEvent = {
+        id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+        deviceId,
+        type,
+        payload,
+        timestamp: new Date().toISOString()
+    };
+
+    const rows = deviceEvents.get(deviceId) || [];
+    rows.push(event);
+    if (rows.length > 1000) {
+        rows.splice(0, rows.length - 1000);
+    }
+    deviceEvents.set(deviceId, rows);
+}
+
+
 export default router;
+
+
+

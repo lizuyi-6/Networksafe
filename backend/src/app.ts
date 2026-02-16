@@ -5,6 +5,7 @@ import { defaultConfig as config } from './config';
 import { InputValidator } from './security/input-validator';
 import logger from './utils/logger';
 import { apiRateLimit } from './middleware/rate-limit.middleware';
+import { requestTimingMiddleware } from './middleware/auth.middleware';
 
 // Import Routes
 import statsRoutes from './api/routes/stats.routes';
@@ -12,6 +13,10 @@ import configRoutes from './api/routes/config.routes';
 import logsRoutes from './api/routes/logs.routes';
 import sitesRoutes from './api/routes/sites.routes';
 import adminRoutes from './api/routes/admin.routes';
+import authRoutes from './api/routes/auth.routes';
+import aiSystemRoutes, { initializeAgentSystem } from './routes/ai-system';
+import investigationRoutes from './api/routes/investigation.routes';
+import agentOnboardingRoutes from './api/routes/agent-onboarding.routes';
 
 const app = express();
 const inputValidator = new InputValidator();
@@ -52,6 +57,9 @@ app.use(cors({
     maxAge: 86400, // 预检请求缓存 24 小时
 }));
 
+// Request timing middleware - track request processing time
+app.use(requestTimingMiddleware);
+
 // 2. 请求体大小限制 (防止大请求攻击)
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
@@ -78,8 +86,10 @@ app.use((req, res, next) => {
 
 // SECURITY FIX: Global input validation middleware
 app.use((req, res, next) => {
-    // Skip validation for certain paths (health check, static assets)
-    if (req.path === '/health' || req.path.startsWith('/static')) {
+    // Skip validation for certain paths (health check, static assets, auth routes)
+    if (req.path === '/health' ||
+        req.path.startsWith('/static') ||
+        req.path.startsWith('/api/auth')) {
         return next();
     }
 
@@ -124,6 +134,12 @@ app.use('/api/config', configRoutes);
 app.use('/api/logs', logsRoutes);
 app.use('/api/sites', sitesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api', aiSystemRoutes);
+app.use('/api/investigation', investigationRoutes);
+app.use('/api/agent-onboarding', agentOnboardingRoutes);
+
+export { initializeAgentSystem };
 
 // Health check
 app.get('/health', (req, res) => {

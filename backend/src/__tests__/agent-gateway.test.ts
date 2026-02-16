@@ -136,12 +136,24 @@ describe('AgentGateway', () => {
 
                 agentSocket.emit('agent:heartbeat', status);
 
-                setTimeout(() => {
+                const startedAt = Date.now();
+                const checkHeartbeat = () => {
                     const agent = gateway.getAgent('test-agent-003');
-                    expect(agent).toBeDefined();
-                    expect(agent?.status?.cpuUsage).toBe(25.5);
-                    done();
-                }, 100);
+                    if (agent?.status?.cpuUsage === 25.5) {
+                        expect(agent).toBeDefined();
+                        done();
+                        return;
+                    }
+
+                    if (Date.now() - startedAt > 1500) {
+                        done(new Error(`Heartbeat not reflected in time; latest status: ${JSON.stringify(agent?.status)}`));
+                        return;
+                    }
+
+                    setTimeout(checkHeartbeat, 25);
+                };
+
+                setTimeout(checkHeartbeat, 25);
             });
         });
     });

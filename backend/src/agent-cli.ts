@@ -1,77 +1,115 @@
-/**
- * FluxGuard Agent CLI - 命令行启动入口
- * 
- * 用法:
- *   npm run agent                    # 使用默认服务器地址
- *   npm run agent -- --server=http://your-server:8080
- */
-
+import os from 'os';
 import { startAgent } from './agent';
 import logger from './utils/logger';
 
-// 解析命令行参数
-function parseArgs(): { serverUrl: string } {
+interface CliOptions {
+    serverUrl: string;
+    onboardingCode?: string;
+    hostname?: string;
+    platform?: string;
+    mac?: string;
+}
+
+interface OnboardingExchangeResponse {
+    success: boolean;
+    data?: {
+        agentId?: string;
+        apiKey?: string;
+        secretKey?: string;
+    };
+}
+
+function parseArgs(): CliOptions {
     const args = process.argv.slice(2);
     let serverUrl = process.env.FLUXGUARD_SERVER || 'http://localhost:8080';
+    let onboardingCode = process.env.FLUXGUARD_ONBOARDING_CODE;
+    let hostname = process.env.FLUXGUARD_HOSTNAME;
+    let platform = process.env.FLUXGUARD_PLATFORM;
+    let mac = process.env.FLUXGUARD_MAC;
 
     for (const arg of args) {
         if (arg.startsWith('--server=')) {
             serverUrl = arg.replace('--server=', '');
         }
+        if (arg.startsWith('--onboarding-code=')) {
+            onboardingCode = arg.replace('--onboarding-code=', '');
+        }
+        if (arg.startsWith('--hostname=')) {
+            hostname = arg.replace('--hostname=', '');
+        }
+        if (arg.startsWith('--platform=')) {
+            platform = arg.replace('--platform=', '');
+        }
+        if (arg.startsWith('--mac=')) {
+            mac = arg.replace('--mac=', '');
+        }
     }
 
-    return { serverUrl };
+    return { serverUrl, onboardingCode, hostname, platform, mac };
 }
 
-// 打印启动横幅
-function printBanner(): void {
-    console.log(`
-╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║   ███████╗██╗     ██╗   ██╗██╗  ██╗ ██████╗ ██╗   ██╗     ║
-║   ██╔════╝██║     ██║   ██║╚██╗██╔╝██╔════╝ ██║   ██║     ║
-║   █████╗  ██║     ██║   ██║ ╚███╔╝ ██║  ███╗██║   ██║     ║
-║   ██╔══╝  ██║     ██║   ██║ ██╔██╗ ██║   ██║██║   ██║     ║
-║   ██║     ███████╗╚██████╔╝██╔╝ ██╗╚██████╔╝╚██████╔╝     ║
-║   ╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝      ║
-║                                                           ║
-║                Security Agent v2.0                        ║
-║                                                           ║
-╚═══════════════════════════════════════════════════════════╝
-  `);
+async function exchangeOnboardingCode(options: CliOptions): Promise<void> {
+    if (!options.onboardingCode) return;
+
+    const baseUrl = options.serverUrl.replace(/\/+$/, '');
+    const hostname = options.hostname || os.hostname();
+    const platform = options.platform || process.platform;
+
+    const response = await fetch(`${baseUrl}/api/agent-onboarding/exchange`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+            onboardingCode: options.onboardingCode,
+            hostname,
+            platform,
+            mac: options.mac
+        })
+    });
+
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Onboarding exchange failed: ${response.status} ${text}`);
+    }
+
+    const data = await response.json() as OnboardingExchangeResponse;
+    if (!data?.success || !data?.data?.agentId || !data?.data?.apiKey || !data?.data?.secretKey) {
+        throw new Error('Onboarding exchange returned invalid payload');
+    }
+
+    process.env.FLUXGUARD_AGENT_ID = data.data.agentId;
+    process.env.FLUXGUARD_AGENT_API_KEY = data.data.apiKey;
+    process.env.FLUXGUARD_AGENT_SECRET_KEY = data.data.secretKey;
+    process.env.FLUXGUARD_ONBOARDING_CODE = '';
+
+    console.log(`[onboarding] exchanged code for agentId=${data.data.agentId}`);
 }
 
-// 主函数
 async function main(): Promise<void> {
-    printBanner();
+    const options = parseArgs();
 
-    const { serverUrl } = parseArgs();
-
-    console.log(`[启动] 正在连接到管控平台: ${serverUrl}`);
-    console.log('[提示] 按 Ctrl+C 停止 Agent\n');
+    console.log('FluxGuard Agent CLI');
+    console.log(`server: ${options.serverUrl}`);
 
     try {
-        const agent = await startAgent(serverUrl);
+        await exchangeOnboardingCode(options);
+        const agent = await startAgent(options.serverUrl);
 
-        // 优雅关闭
         process.on('SIGINT', async () => {
-            console.log('\n[停止] 正在关闭 Agent...');
+            console.log('\nstopping agent...');
             await agent.stop();
             process.exit(0);
         });
 
         process.on('SIGTERM', async () => {
-            console.log('\n[停止] 正在关闭 Agent...');
+            console.log('\nstopping agent...');
             await agent.stop();
             process.exit(0);
         });
-
     } catch (error: any) {
-        logger.error('Agent 启动失败', { error: error.message });
-        console.error(`[错误] Agent 启动失败: ${error.message}`);
+        logger.error('Agent startup failed', { error: error.message });
+        console.error(`Agent startup failed: ${error.message}`);
         process.exit(1);
     }
 }
 
-// 运行
 main();

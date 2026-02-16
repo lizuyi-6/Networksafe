@@ -1,0 +1,52 @@
+﻿.env.demo.example
+.env.prod.example
+.tmp_bcrypt_check.js
+.tmp_db_probe.py
+.tmp_db_reset.py
+.tmp_db_reset_local.py
+.tmp_db_user.py
+".trae/documents/AI \345\206\263\347\255\226\346\236\266\346\236\204\351\207\215\346\236\204\357\274\2327\345\261\202\345\244\232\346\231\272\350\203\275\344\275\223\345\215\217\344\275\234\347\263\273\347\273\237.md"
+".trae/documents/Agent \345\206\263\347\255\226\346\234\272\345\210\266\347\220\206\350\247\243\344\270\216\344\274\230\345\214\226\350\256\241\345\210\222.md"
+".trae/documents/AttackSimulator \351\241\265\351\235\242\346\240\267\345\274\217\351\207\215\346\236\204.md"
+.trae/documents/plan_20260213_170639.md
+.trae/documents/plan_20260213_172046.md
+.trae/documents/plan_20260213_173206.md
+.trae/documents/plan_20260213_174859.md
+.trae/documents/plan_20260214_014454.md
+.trae/documents/plan_20260214_025513.md
+.trae/documents/plan_20260214_073252.md
+.trae/documents/plan_20260214_075115.md
+.trae/documents/plan_20260214_091254.md
+.trae/documents/plan_20260214_092929.md
+.trae/documents/plan_20260214_093955.md
+.trae/documents/plan_20260214_100238.md
+.trae/documents/plan_20260214_102821.md
+.trae/documents/plan_20260214_103044.md
+".trae/documents/\344\277\256\345\244\215\345\211\215\347\253\257\351\241\265\351\235\242\345\201\207\346\225\260\346\215\256\351\227\256\351\242\230.md"
+".trae/documents/\344\277\256\345\244\215\351\224\231\350\257\257\344\275\277\347\224\250\345\201\207\346\225\260\346\215\256\347\232\204\351\227\256\351\242\230.md"
+".trae/documents/\345\275\273\345\272\225\344\277\256\345\244\215 Redis \350\277\236\346\216\245\350\266\205\346\227\266\351\227\256\351\242\230.md"
+".trae/documents/\346\224\273\345\207\273\346\250\241\346\213\237\345\231\250\345\256\236\346\227\266\346\224\273\351\230\262\344\277\241\346\201\257\345\222\214\347\273\210\347\253\257\346\230\276\347\244\272.md"
+.trae/specs/fix-redis-fallback/checklist.md
+.trae/specs/fix-redis-fallback/spec.md
+.trae/specs/fix-redis-fallback/tasks.md
+agent/Dockerfile
+agent/package.json
+agent/src/index.ts
+agent/tsconfig.json
+cleanup_report/before_staged_names.txt
+cleanup_report/before_status_short.txt
+cleanup_report/before_unstaged_names.txt
+cleanup_report/before_untracked_names.txt
+demo/README.md
+demo/attack-simulator/Dockerfile
+demo/attack-simulator/package.json
+demo/attack-simulator/simulator.js
+demo/docker-compose.demo.yml
+demo/start-demo.ps1
+demo/start-demo.sh
+demo/vulnerable-app/Dockerfile
+demo/vulnerable-app/files/readme.txt
+demo/vulnerable-app/files/secret.txt
+demo/vulnerable-app/package.json
+demo/vulnerable-app/server.js
+test-api.sh

@@ -126,7 +126,7 @@ export function verifyRefreshToken(token: string): { userId: string } | null {
 export const COOKIE_OPTIONS = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const,
+    sameSite: 'lax' as const,
     path: '/',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
 };
@@ -357,4 +357,37 @@ export async function authenticateAny(req: AuthenticatedRequest, res: Response, 
         error: 'Authentication required (JWT or API key)',
         code: 'AUTH_REQUIRED'
     });
+}
+
+// Compatibility export for agent-only routes.
+export const authenticateAgent = authenticateApiKey;
+
+/**
+ * Request timing middleware interface
+ */
+export interface TimedRequest extends Request {
+  startTime?: number;
+}
+
+/**
+ * Request timing middleware
+ * Tracks request processing time and emits events for monitoring
+ */
+export function requestTimingMiddleware(
+  req: TimedRequest,
+  res: Response,
+  next: NextFunction
+): void {
+  req.startTime = Date.now();
+
+  // Listen for response finish event
+  res.on('finish', () => {
+    const duration = Date.now() - (req.startTime || 0);
+    // Emit timing event for monitoring (will be picked up by simulation service)
+    if (req.startTime) {
+      req.emit('requestTiming', { duration, path: req.path });
+    }
+  });
+
+  next();
 }

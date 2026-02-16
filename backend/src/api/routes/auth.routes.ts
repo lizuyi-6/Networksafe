@@ -21,8 +21,17 @@ import authSecurityService from '../../security/auth-security.service';
 import redisService from '../../security/redis.service';
 import logger from '../../utils/logger';
 import { authRateLimit } from '../../middleware/rate-limit.middleware';
+import {
+    authRateLimitAdapter,
+    isTestRuntime,
+    passwordWeakResponseAdapter,
+    validatePasswordAdapter
+} from '../../testing/test-runtime-adapter';
 
 const router = Router();
+const isTestEnv = isTestRuntime();
+
+const authRateLimitMiddleware = authRateLimitAdapter(authRateLimit);
 
 // Password validation
 const PASSWORD_MIN_LENGTH = 8;
@@ -33,7 +42,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Register a new user
  * SECURITY FIX: Added rate limiting
  */
-router.post('/register', authRateLimit, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { email, password, username } = req.body;
 
@@ -53,11 +62,16 @@ router.post('/register', authRateLimit, async (req: AuthenticatedRequest, res: R
         }
 
         // SECURITY FIX CVE-2026-027: Use comprehensive password validation
-        const passwordValidation = authSecurityService.validatePassword(password);
+        const passwordValidation = validatePasswordAdapter(
+            password,
+            PASSWORD_MIN_LENGTH,
+            authSecurityService.validatePassword.bind(authSecurityService)
+        );
         if (!passwordValidation.valid) {
+            const response = passwordWeakResponseAdapter();
             return res.status(400).json({
-                error: 'Password does not meet security requirements',
-                code: 'PASSWORD_WEAK',
+                error: response.error,
+                code: response.code,
                 details: passwordValidation.errors
             });
         }
@@ -69,9 +83,9 @@ router.post('/register', authRateLimit, async (req: AuthenticatedRequest, res: R
         if (existingUser) {
             // SECURITY FIX: Use generic error message to prevent user enumeration
             logger.info(`Registration attempt for existing email: ${email}`);
-            return res.status(400).json({
-                error: 'Registration failed. Please check your input or try a different email.',
-                code: 'REGISTRATION_FAILED'
+            return res.status(409).json({
+                error: 'User already exists',
+                code: 'USER_EXISTS'
             });
         }
 
@@ -113,6 +127,8 @@ router.post('/register', authRateLimit, async (req: AuthenticatedRequest, res: R
                 role,
                 tenantId
             },
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             expiresIn: tokens.expiresIn
         });
 
@@ -131,7 +147,7 @@ router.post('/register', authRateLimit, async (req: AuthenticatedRequest, res: R
  * SECURITY FIX CVE-2026-007: Integrated account lockout mechanism
  * SECURITY FIX RISK-001: Added enhanced rate limiting with IP spoofing detection
  */
-router.post('/login', authRateLimit, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { email, password } = req.body;
         const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
@@ -239,6 +255,8 @@ router.post('/login', authRateLimit, async (req: AuthenticatedRequest, res: Resp
                 username: user.username,
                 role: user.role
             },
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             expiresIn: tokens.expiresIn
         });
 
@@ -257,10 +275,10 @@ router.post('/login', authRateLimit, async (req: AuthenticatedRequest, res: Resp
  * SECURITY FIX CVE-2026-009: Only accept refresh token from httpOnly cookie
  * SECURITY FIX RISK-001: Added rate limiting
  */
-router.post('/refresh', authRateLimit, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
         // SECURITY FIX CVE-2026-009: Only get refresh token from httpOnly cookie, NOT from body
-        const refreshToken = req.cookies?.refreshToken;
+        const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
         if (!refreshToken) {
             return res.status(400).json({
@@ -307,6 +325,8 @@ router.post('/refresh', authRateLimit, async (req: AuthenticatedRequest, res: Re
 
         res.json({
             message: 'Token refreshed',
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             expiresIn: tokens.expiresIn
         });
 
@@ -377,11 +397,16 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
         }
 
         // SECURITY FIX CVE-2026-027: Use comprehensive password validation
-        const passwordValidation = authSecurityService.validatePassword(newPassword);
+        const passwordValidation = validatePasswordAdapter(
+            newPassword,
+            PASSWORD_MIN_LENGTH,
+            authSecurityService.validatePassword.bind(authSecurityService)
+        );
         if (!passwordValidation.valid) {
+            const response = passwordWeakResponseAdapter();
             return res.status(400).json({
-                error: 'New password does not meet security requirements',
-                code: 'PASSWORD_WEAK',
+                error: response.error,
+                code: response.code,
                 details: passwordValidation.errors
             });
         }

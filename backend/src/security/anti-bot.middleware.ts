@@ -4,7 +4,6 @@ import redisService from './redis.service';
 import logger from '../utils/logger';
 import { defaultConfig as config } from '../config';
 
-// Known bot user agents
 const KNOWN_BOTS = [
   'googlebot',
   'bingbot',
@@ -28,7 +27,6 @@ const KNOWN_BOTS = [
   'semrushbot',
 ];
 
-// Suspicious patterns (scrapers/crawlers)
 const SUSPICIOUS_PATTERNS = [
   /bot/i,
   /spider/i,
@@ -48,7 +46,6 @@ const SUSPICIOUS_PATTERNS = [
   /harvest/i,
 ];
 
-// Honey pot field names (hidden fields that bots might fill)
 const HONEYPOT_FIELD_NAME = 'website_confirm';
 
 interface RequestFingerprint {
@@ -58,12 +55,20 @@ interface RequestFingerprint {
   acceptEncoding: string;
 }
 
-export class AntiBotMiddleware {
-  private readonly REQUEST_THRESHOLD = 100; // requests per minute
-  private readonly FAST_REQUEST_THRESHOLD = 10; // requests in 10 seconds
-  private readonly BLOCK_DURATION = 3600; // 1 hour in seconds
+interface RequestLog {
+  timestamp: number;
+  id: string;
+}
 
-  // Generate request fingerprint
+export class AntiBotMiddleware {
+  private readonly REQUEST_THRESHOLD = 100;
+  private readonly FAST_REQUEST_THRESHOLD = 10;
+  private readonly BLOCK_DURATION = 3600;
+
+  private requestLogsFallback: Map<string, RequestLog[]> = new Map();
+  private blockedIPsFallback: Map<string, { reason: string; blockedAt: string }> = new Map();
+  private lastRequestTimeFallback: Map<string, number> = new Map();
+
   private generateFingerprint(req: Request): RequestFingerprint {
     return {
       ip: req.ip || req.connection.remoteAddress || 'unknown',
@@ -73,46 +78,37 @@ export class AntiBotMiddleware {
     };
   }
 
-  // Check if user agent is a known bot
   private isKnownBot(userAgent: string): boolean {
     return KNOWN_BOTS.some(bot => userAgent.toLowerCase().includes(bot));
   }
 
-  // Check if user agent looks suspicious
   private isSuspiciousUserAgent(userAgent: string): boolean {
-    // Empty user agent is suspicious
     if (!userAgent || userAgent.length < 10) {
       return true;
     }
 
-    // Check against suspicious patterns
     return SUSPICIOUS_PATTERNS.some(pattern => pattern.test(userAgent));
   }
 
-  // Check request rate using sliding window
   private async checkRequestRate(ip: string): Promise<{ allowed: boolean; rate: number }> {
-    const key = `antibot:requests:${ip}`;
     const now = Date.now();
-    const windowStart = now - 60000; // 1 minute window
+    const windowStart = now - 60000;
 
     try {
-      // Add current request timestamp
+      if (!redisService.isAvailable()) {
+        return this.checkRequestRateFallback(ip, now, windowStart);
+      }
+
+      const key = `antibot:requests:${ip}`;
+
       await redisService.getClient().zadd(key, now, uuidv4());
-
-      // Remove old entries outside the window
       await redisService.getClient().zremrangebyscore(key, 0, windowStart);
-
-      // Count requests in the window
       const count = await redisService.getClient().zcard(key);
-
-      // Set expiry
       await redisService.getClient().expire(key, 60);
 
-      // Check fast request rate (10 requests in 10 seconds)
       const fastWindowStart = now - 10000;
       const fastCount = await redisService.getClient().zcount(key, fastWindowStart, now);
 
-      // Determine if allowed
       const allowed = count < this.REQUEST_THRESHOLD && fastCount < this.FAST_REQUEST_THRESHOLD;
 
       return { allowed, rate: count };
@@ -122,22 +118,37 @@ export class AntiBotMiddleware {
     }
   }
 
-  // Check for fast sequential requests (possible automation)
+  private checkRequestRateFallback(ip: string, now: number, windowStart: number): { allowed: boolean; rate: number } {
+    const logs = this.requestLogsFallback.get(ip) || [];
+    const recentLogs = logs.filter(l => l.timestamp > windowStart);
+    recentLogs.push({ timestamp: now, id: uuidv4() });
+    this.requestLogsFallback.set(ip, recentLogs);
+
+    const count = recentLogs.length;
+    const fastWindowStart = now - 10000;
+    const fastCount = recentLogs.filter(l => l.timestamp > fastWindowStart).length;
+
+    const allowed = count < this.REQUEST_THRESHOLD && fastCount < this.FAST_REQUEST_THRESHOLD;
+    return { allowed, rate: count };
+  }
+
   private async checkFastSequentialRequests(ip: string): Promise<boolean> {
-    const key = `antibot:fast:${ip}`;
     const now = Date.now();
 
     try {
+      if (!redisService.isAvailable()) {
+        return this.checkFastSequentialRequestsFallback(ip, now);
+      }
+
+      const key = `antibot:fast:${ip}`;
       const lastRequest = await redisService.get(key);
       if (lastRequest) {
         const timeSinceLastRequest = now - parseInt(lastRequest);
-        // If requests are less than 100ms apart, it's likely automated
         if (timeSinceLastRequest < 100) {
-          return true; // Suspicious
+          return true;
         }
       }
 
-      // Update last request time
       await redisService.set(key, now.toString(), 10);
       return false;
     } catch (error) {
@@ -146,11 +157,21 @@ export class AntiBotMiddleware {
     }
   }
 
-  // Check honeypot field (if present in request body)
+  private checkFastSequentialRequestsFallback(ip: string, now: number): boolean {
+    const lastRequest = this.lastRequestTimeFallback.get(ip);
+    if (lastRequest) {
+      const timeSinceLastRequest = now - lastRequest;
+      if (timeSinceLastRequest < 100) {
+        return true;
+      }
+    }
+    this.lastRequestTimeFallback.set(ip, now);
+    return false;
+  }
+
   private checkHoneypot(req: Request): boolean {
     if (req.body && typeof req.body === 'object') {
       const honeypotValue = req.body[HONEYPOT_FIELD_NAME];
-      // If honeypot field is filled, it's likely a bot
       if (honeypotValue && honeypotValue.toString().trim().length > 0) {
         return true;
       }
@@ -158,10 +179,18 @@ export class AntiBotMiddleware {
     return false;
   }
 
-  // Block IP address
   private async blockIP(ip: string, reason: string): Promise<void> {
-    const key = `antibot:blocked:${ip}`;
     try {
+      if (!redisService.isAvailable()) {
+        this.blockedIPsFallback.set(ip, {
+          reason,
+          blockedAt: new Date().toISOString(),
+        });
+        logger.warn('IP blocked (fallback)', { ip, reason });
+        return;
+      }
+
+      const key = `antibot:blocked:${ip}`;
       await redisService.set(
         key,
         JSON.stringify({
@@ -177,32 +206,31 @@ export class AntiBotMiddleware {
     }
   }
 
-  // Check if IP is blocked
   private async isIPBlocked(ip: string): Promise<boolean> {
-    const key = `antibot:blocked:${ip}`;
     try {
-      const blocked = await redisService.exists(key);
-      return blocked;
+      if (!redisService.isAvailable()) {
+        return this.blockedIPsFallback.has(ip);
+      }
+
+      const key = `antibot:blocked:${ip}`;
+      return await redisService.exists(key);
     } catch (error) {
       logger.error('Error checking blocked IP', { error, ip });
       return false;
     }
   }
 
-  // Main middleware function
   public protect = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const fingerprint = this.generateFingerprint(req);
     const userAgent = fingerprint.userAgent.toLowerCase();
 
     try {
-      // Skip all checks in development/test environment for testing purposes
       if (config.env !== 'production') {
         logger.debug('Skipping anti-bot checks in development environment', { ip: fingerprint.ip });
         next();
         return;
       }
 
-      // Check if IP is already blocked
       const isBlocked = await this.isIPBlocked(fingerprint.ip);
       if (isBlocked) {
         logger.warn('Blocked IP attempted access', { ip: fingerprint.ip });
@@ -213,21 +241,18 @@ export class AntiBotMiddleware {
         return;
       }
 
-      // Allow known good bots (Google, Bing, etc.)
       if (this.isKnownBot(userAgent)) {
         logger.debug('Known bot allowed', { ip: fingerprint.ip, userAgent: fingerprint.userAgent });
         next();
         return;
       }
 
-      // Allow localhost/127.0.0.1/::1 for development
       if (fingerprint.ip === '127.0.0.1' || fingerprint.ip === '::1' || fingerprint.ip === 'localhost') {
         logger.debug('Localhost allowed', { ip: fingerprint.ip });
         next();
         return;
       }
 
-      // Check for suspicious user agent
       if (this.isSuspiciousUserAgent(userAgent)) {
         await this.blockIP(fingerprint.ip, 'Suspicious user agent');
         logger.warn('Suspicious user agent blocked', { ip: fingerprint.ip, userAgent: fingerprint.userAgent });
@@ -238,7 +263,6 @@ export class AntiBotMiddleware {
         return;
       }
 
-      // Check honeypot
       if (this.checkHoneypot(req)) {
         await this.blockIP(fingerprint.ip, 'Honeypot triggered');
         logger.warn('Honeypot triggered', { ip: fingerprint.ip });
@@ -249,7 +273,6 @@ export class AntiBotMiddleware {
         return;
       }
 
-      // Check request rate
       const rateCheck = await this.checkRequestRate(fingerprint.ip);
       if (!rateCheck.allowed) {
         await this.blockIP(fingerprint.ip, `Rate limit exceeded: ${rateCheck.rate} req/min`);
@@ -262,14 +285,11 @@ export class AntiBotMiddleware {
         return;
       }
 
-      // Check for fast sequential requests
       const isFastSequential = await this.checkFastSequentialRequests(fingerprint.ip);
       if (isFastSequential) {
         logger.warn('Fast sequential requests detected', { ip: fingerprint.ip });
-        // Don't block immediately, but log the suspicious activity
       }
 
-      // Check for missing required headers
       if (!req.headers['user-agent'] || !req.headers['accept']) {
         logger.warn('Missing required headers', { ip: fingerprint.ip, headers: req.headers });
         res.status(400).json({
@@ -279,20 +299,16 @@ export class AntiBotMiddleware {
         return;
       }
 
-      // All checks passed
       next();
     } catch (error) {
       logger.error('Error in anti-bot middleware', { error, ip: fingerprint.ip });
-      // Fail open to avoid blocking legitimate traffic on error
       next();
     }
   };
 
-  // Get honeypot field name (for use in forms)
   public static getHoneypotFieldName(): string {
     return HONEYPOT_FIELD_NAME;
   }
 }
 
-// Export singleton instance
 export default new AntiBotMiddleware();

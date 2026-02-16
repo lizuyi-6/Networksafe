@@ -1,11 +1,11 @@
-/**
- * FluxGuard - ESP32 设备 WebSocket 网关
+﻿/**
+ * FluxGuard - ESP32 璁惧 WebSocket 缃戝叧
  *
- * 处理 ESP32 硬件网关的 WebSocket 连接
- * - 设备注册
- * - 心跳监控
- * - 数据接收
- * - 命令下发
+ * 澶勭悊 ESP32 纭欢缃戝叧鐨?WebSocket 杩炴帴
+ * - 璁惧娉ㄥ唽
+ * - 蹇冭烦鐩戞帶
+ * - 鏁版嵁鎺ユ敹
+ * - 鍛戒护涓嬪彂
  *
  * SECURITY FIX CVE-2026-032/033: Added CORS restrictions and API key validation
  */
@@ -19,6 +19,7 @@ import {
     updateDeviceStatus,
     setDeviceOffline,
     getCodebook,
+    addDeviceEvent,
 } from '../api/routes/devices.routes';
 
 interface DeviceSocket extends Socket {
@@ -39,6 +40,7 @@ function secureCompare(a: string, b: string): boolean {
 export class DeviceGateway {
     private io: Server;
     private deviceSockets: Map<string, DeviceSocket> = new Map();
+    private dashboardBroadcaster: ((event: string, data: any) => void) | null = null;
 
     constructor(httpServer: HttpServer) {
         // SECURITY FIX CVE-2026-032: Restrict CORS to allowed origins
@@ -57,41 +59,53 @@ export class DeviceGateway {
         logger.info('[DeviceGateway] Initialized on /ws/device with restricted CORS');
     }
 
+    public setDashboardBroadcaster(fn: (event: string, data: any) => void): void {
+        this.dashboardBroadcaster = fn;
+    }
+
+    private emitToDashboard(event: string, data: any): void {
+        if (this.dashboardBroadcaster) {
+            this.dashboardBroadcaster(event, data);
+            return;
+        }
+        this.io.emit(event, data);
+    }
+
     private setupEventHandlers() {
         this.io.on('connection', (socket: DeviceSocket) => {
             logger.info('[DeviceGateway] New device connection', { socketId: socket.id });
 
-            // 设备注册
+            // 璁惧娉ㄥ唽
             socket.on('register', (data: any) => {
                 this.handleRegister(socket, data);
             });
 
-            // 心跳
+            // 蹇冭烦
             socket.on('heartbeat', (data: any) => {
                 this.handleHeartbeat(socket, data);
             });
 
-            // 数据上报
+            // 鏁版嵁涓婃姤
             socket.on('data', (data: any) => {
                 this.handleData(socket, data);
             });
 
-            // 告警
+            // 鍛婅
             socket.on('alert', (data: any) => {
                 this.handleAlert(socket, data);
             });
 
-            // 未知错误上报
+            // 鏈煡閿欒涓婃姤
             socket.on('unknown_error', (data: any) => {
                 this.handleUnknownError(socket, data);
             });
 
-            // 密码本同步请求
+            // 瀵嗙爜鏈悓姝ヨ姹?
             socket.on('codebook_sync', () => {
                 this.handleCodebookSync(socket);
             });
 
-            // 断开连接
+            // 鏂紑杩炴帴
             socket.on('disconnect', (reason: string) => {
                 this.handleDisconnect(socket, reason);
             });
@@ -99,7 +113,7 @@ export class DeviceGateway {
     }
 
     // ============================================
-    // 事件处理器
+    // 浜嬩欢澶勭悊鍣?
     // ============================================
 
     private handleRegister(socket: DeviceSocket, data: any) {
@@ -142,7 +156,7 @@ export class DeviceGateway {
         socket.deviceId = device_id;
         this.deviceSockets.set(device_id, socket);
 
-        // 注册到设备管理
+        // 娉ㄥ唽鍒拌澶囩鐞?
         registerDevice({
             deviceId: device_id,
             version,
@@ -152,15 +166,20 @@ export class DeviceGateway {
             sdkVersion: sdk_version,
             mode: 'online',
         });
+        addDeviceEvent(device_id, 'register', {
+            version,
+            chipModel: chip_model,
+            sdkVersion: sdk_version
+        });
 
-        // 发送注册成功 + 密码本
+        // 鍙戦€佹敞鍐屾垚鍔?+ 瀵嗙爜鏈?
         socket.emit('register_success', {
             message: 'Device registered successfully',
             codebook: getCodebook(),
         });
 
-        // 广播到 Dashboard
-        this.io.emit('device:online', {
+        // 骞挎挱鍒?Dashboard
+        this.emitToDashboard('device:online', {
             deviceId: device_id,
             version,
             timestamp: new Date().toISOString(),
@@ -176,9 +195,14 @@ export class DeviceGateway {
 
         updateDeviceStatus(socket.deviceId, {
             cpuUsage: data.cpu_usage || 0,
-            memoryUsage: 100 - (free_heap / (4 * 1024 * 1024) * 100), // 假设 4MB 总内存
+            memoryUsage: 100 - (free_heap / (4 * 1024 * 1024) * 100), // 鍋囪 4MB 鎬诲唴瀛?
             uptime,
             wifiRssi: wifi_rssi,
+        });
+        addDeviceEvent(socket.deviceId, 'heartbeat', {
+            uptime,
+            freeHeap: free_heap,
+            wifiRssi: wifi_rssi
         });
 
         socket.emit('heartbeat_ack', { timestamp: Date.now() });
@@ -189,7 +213,7 @@ export class DeviceGateway {
 
         const { payload, timestamp } = data;
 
-        // 解压密码本编码 (如果有)
+        // 瑙ｅ帇瀵嗙爜鏈紪鐮?(濡傛灉鏈?
         let decodedPayload = payload;
         if (typeof payload === 'string') {
             try {
@@ -201,19 +225,20 @@ export class DeviceGateway {
                     decodedPayload = parsed;
                 }
             } catch {
-                // 保持原样
+                // 淇濇寔鍘熸牱
             }
         }
 
-        // 记录日志
+        // 璁板綍鏃ュ織
         logger.info('[DeviceGateway] Data received', {
             deviceId: socket.deviceId,
             timestamp,
             dataSize: JSON.stringify(decodedPayload).length,
         });
 
-        // 广播到 Dashboard
-        this.io.emit('device:data', {
+        // 骞挎挱鍒?Dashboard
+        addDeviceEvent(socket.deviceId, 'data', { payload: decodedPayload });
+        this.emitToDashboard('device:data', {
             deviceId: socket.deviceId,
             data: decodedPayload,
             timestamp: new Date().toISOString(),
@@ -231,8 +256,9 @@ export class DeviceGateway {
             message,
         });
 
-        // 广播到 Dashboard
-        this.io.emit('device:alert', {
+        // 骞挎挱鍒?Dashboard
+        addDeviceEvent(socket.deviceId, 'alert', { alertType: alert_type, message });
+        this.emitToDashboard('device:alert', {
             deviceId: socket.deviceId,
             alertType: alert_type,
             message,
@@ -250,11 +276,12 @@ export class DeviceGateway {
             message,
         });
 
-        // 记录到审计日志
-        // TODO: 保存到数据库，用于后续分析和添加到密码本
+        // 璁板綍鍒板璁℃棩蹇?
+        // TODO: 淇濆瓨鍒版暟鎹簱锛岀敤浜庡悗缁垎鏋愬拰娣诲姞鍒板瘑鐮佹湰
 
-        // 广播到 Dashboard
-        this.io.emit('device:unknown_error', {
+        // 骞挎挱鍒?Dashboard
+        addDeviceEvent(socket.deviceId, 'unknown_error', { message });
+        this.emitToDashboard('device:unknown_error', {
             deviceId: socket.deviceId,
             message,
             timestamp: timestamp || new Date().toISOString(),
@@ -271,8 +298,9 @@ export class DeviceGateway {
             this.deviceSockets.delete(socket.deviceId);
             setDeviceOffline(socket.deviceId);
 
-            // 广播到 Dashboard
-            this.io.emit('device:offline', {
+            // 骞挎挱鍒?Dashboard
+            addDeviceEvent(socket.deviceId, 'disconnect', { reason });
+            this.emitToDashboard('device:offline', {
                 deviceId: socket.deviceId,
                 reason,
                 timestamp: new Date().toISOString(),
@@ -286,11 +314,11 @@ export class DeviceGateway {
     }
 
     // ============================================
-    // 命令下发
+    // 鍛戒护涓嬪彂
     // ============================================
 
     /**
-     * 发送命令到指定设备
+     * 鍙戦€佸懡浠ゅ埌鎸囧畾璁惧
      */
     public sendCommand(deviceId: string, command: string, params?: any): boolean {
         const socket = this.deviceSockets.get(deviceId);
@@ -301,6 +329,7 @@ export class DeviceGateway {
         }
 
         socket.emit('command', { cmd: command, params, timestamp: Date.now() });
+        addDeviceEvent(deviceId, 'command', { command, params });
 
         logger.info('[DeviceGateway] Command sent', {
             deviceId,
@@ -312,7 +341,7 @@ export class DeviceGateway {
     }
 
     /**
-     * 广播命令到所有在线设备
+     * 骞挎挱鍛戒护鍒版墍鏈夊湪绾胯澶?
      */
     public broadcastCommand(command: string, params?: any): number {
         let count = 0;
@@ -320,6 +349,7 @@ export class DeviceGateway {
         this.deviceSockets.forEach((socket, deviceId) => {
             if (socket.connected) {
                 socket.emit('command', { cmd: command, params, timestamp: Date.now() });
+                addDeviceEvent(deviceId, 'command', { command, params });
                 count++;
             }
         });
@@ -333,7 +363,7 @@ export class DeviceGateway {
     }
 
     /**
-     * 获取在线设备数量
+     * 鑾峰彇鍦ㄧ嚎璁惧鏁伴噺
      */
     public getOnlineCount(): number {
         let count = 0;
@@ -344,7 +374,7 @@ export class DeviceGateway {
     }
 
     /**
-     * 关闭网关
+     * 鍏抽棴缃戝叧
      */
     public close() {
         this.io.close();
@@ -353,3 +383,5 @@ export class DeviceGateway {
 }
 
 export default DeviceGateway;
+
+

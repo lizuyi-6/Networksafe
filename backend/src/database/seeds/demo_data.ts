@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { initDatabase, getDatabase, closeDatabase } from '../../config/database';
 import logger from '../../utils/logger';
+import { isDemoMode } from '../../config/app-mode';
 
 interface SeedOptions {
     clearExisting?: boolean;
@@ -21,6 +22,10 @@ export async function seedDatabase(options: SeedOptions = {}): Promise<void> {
     const { clearExisting = false, verbose = true } = options;
 
     try {
+        if (!isDemoMode()) {
+            throw new Error('Demo seed is disabled when APP_MODE is not demo.');
+        }
+
         await initDatabase();
         const db = getDatabase();
 

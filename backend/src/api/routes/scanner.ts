@@ -1,134 +1,231 @@
 import { Router, Request, Response } from 'express';
-import { OptimizationEngine } from '../../scanner/optimization-engine';
-import { authenticate, requireRole } from '../../middleware/auth.middleware';
+import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
+import { scannerTaskService } from '../../services/scanner-task.service';
+import { getDatabase } from '../../config/database';
 
 const router = Router();
-const optimizationEngine = new OptimizationEngine();
+router.use(authenticate, requireRole('admin'));
+
+function tenantOf(req: AuthenticatedRequest): string {
+  return req.user?.tenantId || 'global';
+}
 
 /**
- * POST /api/scanner/run
- * Run server scan - SECURITY FIX: Requires admin authentication
+ * POST /api/scanner/tasks
+ * Create async scan task (URL + host)
  */
-router.post('/run', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
+router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const options = req.body.options || {};
+    const tenantId = tenantOf(req);
+    const urls = Array.isArray(req.body?.targets?.urls) ? req.body.targets.urls : [];
+    const host = req.body?.targets?.host || {
+      mode: 'local',
+      includeSystem: true,
+      includeWeb: true,
+      includePorts: true
+    };
 
-    logger.info('Starting server scan...');
+    const task = await scannerTaskService.createTask({
+      tenantId,
+      createdBy: req.user!.userId,
+      enginePolicy: 'opt_then_nuclei',
+      targets: { urls, host }
+    });
 
-    const result = await optimizationEngine.runFullScan(options);
-
-    // Save scan result to database
-    const db = require('../../config/database').getDatabase();
-    const stmt = db.getDb().prepare(`
-      INSERT INTO scan_results (siteId, scanType, result, recommendations, status)
-      VALUES (NULL, 'all', ?, ?, 'completed')
-    `);
-
-    const resultId = stmt.run(
-      JSON.stringify(result.systemInfo),
-      JSON.stringify(result.recommendations)
-    ).lastInsertRowid;
-
-    res.json({
+    return res.json({
       success: true,
       data: {
-        id: resultId,
-        ...result
+        taskId: task.id,
+        status: task.status,
+        createdAt: task.createdAt
       }
     });
   } catch (error: any) {
-    logger.error('Scan failed', { error });
-    res.status(500).json({ success: false, error: error.message });
+    if (error.code === 'TENANT_TASK_RUNNING') {
+      return res.status(409).json({ success: false, error: error.message });
+    }
+    logger.error('Failed to create scan task', { error: error.message });
+    return res.status(500).json({ success: false, error: 'Failed to create scan task' });
   }
 });
 
 /**
- * POST /api/scanner/apply
- * Apply an optimization - SECURITY FIX: Requires admin authentication
+ * GET /api/scanner/tasks/history
  */
-router.post('/apply', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
-  try {
-    const { recommendation } = req.body;
-
-    if (!recommendation) {
-      return res.status(400).json({ success: false, error: 'recommendation is required' });
-    }
-
-    logger.info(`Applying optimization: ${recommendation.title}`);
-
-    const result = await optimizationEngine.applyOptimization(recommendation);
-
-    res.json(result);
-  } catch (error: any) {
-    logger.error('Failed to apply optimization', { error });
-    res.status(500).json({ success: false, error: error.message });
-  }
+router.get('/tasks/history', (req: AuthenticatedRequest, res: Response) => {
+  const limit = Math.min(parseInt(String(req.query.limit || '20'), 10) || 20, 100);
+  const history = scannerTaskService.getHistory(tenantOf(req), limit);
+  return res.json({ success: true, data: history });
 });
 
 /**
- * GET /api/scanner/results/:id
- * Get scan result by ID - SECURITY FIX: Requires authentication
+ * GET /api/scanner/tasks/:taskId
+ * Get task status
  */
-router.get('/results/:id', authenticate, async (req: Request, res: Response) => {
+router.get('/tasks/:taskId', (req: AuthenticatedRequest, res: Response) => {
+  const task = scannerTaskService.getTask(req.params.taskId);
+  if (!task || task.tenantId !== tenantOf(req)) {
+    return res.status(404).json({ success: false, error: 'Task not found' });
+  }
+  return res.json({
+    success: true,
+    data: {
+      taskId: task.id,
+      status: task.status,
+      phase: task.phase,
+      progress: task.progress,
+      summary: task.summary,
+      error: task.error,
+      createdAt: task.createdAt,
+      startedAt: task.startedAt,
+      completedAt: task.completedAt
+    }
+  });
+});
+
+/**
+ * GET /api/scanner/tasks/:taskId/results
+ * Get task detailed results
+ */
+router.get('/tasks/:taskId/results', (req: AuthenticatedRequest, res: Response) => {
+  const task = scannerTaskService.getTask(req.params.taskId);
+  if (!task || task.tenantId !== tenantOf(req)) {
+    return res.status(404).json({ success: false, error: 'Task not found' });
+  }
+  const result = scannerTaskService.getTaskResults(req.params.taskId);
+  return res.json({ success: true, data: result });
+});
+
+/**
+ * POST /api/scanner/tasks/:taskId/cancel
+ */
+router.post('/tasks/:taskId/cancel', (req: AuthenticatedRequest, res: Response) => {
+  const task = scannerTaskService.getTask(req.params.taskId);
+  if (!task || task.tenantId !== tenantOf(req)) {
+    return res.status(404).json({ success: false, error: 'Task not found' });
+  }
+  const ok = scannerTaskService.cancelTask(req.params.taskId);
+  return res.json({ success: ok });
+});
+
+/**
+ * Backward compatibility endpoint expected by old frontend:
+ * GET /api/scanner
+ */
+router.get('/', (req: AuthenticatedRequest, res: Response) => {
+  const history = scannerTaskService.getHistory(tenantOf(req), 1);
+  if (history.length === 0) {
+    return res.json([]);
+  }
+  const latest = history[0];
+  const result = scannerTaskService.getTaskResults(latest.id);
+  const flattened = [
+    ...(result?.urlFindings || []),
+    ...(result?.hostFindings || []),
+    ...(result?.nucleiFindings || [])
+  ].map((f: any, idx: number) => ({
+    id: idx + 1,
+    name: f.title,
+    severity: String(f.severity || 'Medium').replace(/^./, (m) => m.toUpperCase()),
+    description: f.description || '',
+    status: 'Open'
+  }));
+  res.setHeader('X-Deprecated-Endpoint', 'Use /api/scanner/tasks/* instead');
+  return res.json(flattened);
+});
+
+/**
+ * Backward compatibility: POST /api/scanner/run
+ * Create a task and return task metadata.
+ */
+router.post('/run', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // SECURITY FIX: Validate ID parameter
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id) || id <= 0) {
-      return res.status(400).json({ success: false, error: 'Invalid ID format' });
-    }
-
-    const db = require('../../config/database').getDatabase();
-    const result = db.getDb().prepare('SELECT * FROM scan_results WHERE id = ?').get(id);
-
-    if (!result) {
-      return res.status(404).json({ success: false, error: 'Scan result not found' });
-    }
-
-    res.json({
+    const tenantId = tenantOf(req);
+    const urls = Array.isArray(req.body?.urls) ? req.body.urls : [];
+    const task = await scannerTaskService.createTask({
+      tenantId,
+      createdBy: req.user!.userId,
+      enginePolicy: 'opt_then_nuclei',
+      targets: {
+        urls,
+        host: {
+          mode: 'local',
+          includeSystem: true,
+          includeWeb: true,
+          includePorts: true
+        }
+      }
+    });
+    return res.json({
       success: true,
       data: {
-        ...result,
-        result: JSON.parse(result.result),
-        recommendations: JSON.parse(result.recommendations)
+        taskId: task.id,
+        status: task.status,
+        createdAt: task.createdAt
       }
     });
   } catch (error: any) {
-    logger.error('Failed to get scan result', { error });
-    res.status(500).json({ success: false, error: error.message });
+    if (error.code === 'TENANT_TASK_RUNNING') {
+      return res.status(409).json({ success: false, error: error.message });
+    }
+    logger.error('Failed to run scan', { error: error.message });
+    return res.status(500).json({ success: false, error: 'Failed to start scan' });
   }
 });
 
 /**
- * GET /api/scanner/report/:id
- * Generate scan report - SECURITY FIX: Requires authentication
+ * Keep legacy endpoints but return explicit not supported for now
  */
-router.get('/report/:id', authenticate, async (req: Request, res: Response) => {
-  try {
-    // SECURITY FIX: Validate ID parameter
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id) || id <= 0) {
-      return res.status(400).json({ success: false, error: 'Invalid ID format' });
-    }
+router.post('/apply', (_req: Request, res: Response) => {
+  return res.status(501).json({ success: false, error: 'Use smart-fix endpoints for remediation actions' });
+});
 
-    const db = require('../../config/database').getDatabase();
-    const result = db.getDb().prepare('SELECT * FROM scan_results WHERE id = ?').get(id);
-
-    if (!result) {
-      return res.status(404).json({ success: false, error: 'Scan result not found' });
-    }
-
-    const systemInfo = JSON.parse(result.result);
-    const recommendations = JSON.parse(result.recommendations);
-
-    const report = optimizationEngine.generateReport(systemInfo, recommendations);
-
-    res.set('Content-Type', 'text/plain');
-    res.send(report);
-  } catch (error: any) {
-    logger.error('Failed to generate report', { error });
-    res.status(500).json({ success: false, error: error.message });
+router.get('/results/:id', (req: AuthenticatedRequest, res: Response) => {
+  // Try task id first
+  const task = scannerTaskService.getTask(req.params.id);
+  if (task && task.tenantId === tenantOf(req)) {
+    return res.json({
+      success: true,
+      data: scannerTaskService.getTaskResults(task.id)
+    });
   }
+
+  // Fallback to legacy numeric scan_results table row
+  const numericId = parseInt(req.params.id, 10);
+  if (Number.isFinite(numericId) && numericId > 0) {
+    try {
+      const row = getDatabase().prepare('SELECT * FROM scan_results WHERE id = ?').get(numericId) as any;
+      if (!row) {
+        return res.status(404).json({ success: false, error: 'Scan result not found' });
+      }
+      return res.json({ success: true, data: row });
+    } catch {
+      // ignore
+    }
+  }
+  return res.status(404).json({ success: false, error: 'Scan result not found' });
+});
+
+router.get('/report/:id', (req: AuthenticatedRequest, res: Response) => {
+  const task = scannerTaskService.getTask(req.params.id);
+  if (!task || task.tenantId !== tenantOf(req)) {
+    return res.status(404).json({ success: false, error: 'Task not found' });
+  }
+  const data = scannerTaskService.getTaskResults(task.id);
+  const report = {
+    taskId: task.id,
+    status: task.status,
+    phase: task.phase,
+    summary: data.summary,
+    findings: {
+      url: data.urlFindings.length,
+      host: data.hostFindings.length,
+      nuclei: data.nucleiFindings.length
+    }
+  };
+  res.setHeader('Content-Type', 'application/json');
+  return res.send(JSON.stringify(report, null, 2));
 });
 
 export default router;

@@ -3,7 +3,6 @@ import redisService from './redis.service';
 import { RATE_LIMIT, HTTP_STATUS, REDIS_KEYS } from '../config';
 import logger from '../utils/logger';
 
-// Helper function to set rate limit headers
 function setRateLimitHeaders(
   res: Response,
   limit: number,
@@ -15,7 +14,42 @@ function setRateLimitHeaders(
   res.set('X-RateLimit-Reset', resetTime.toString());
 }
 
-// Rate limit middleware using Redis
+interface RateLimitState {
+  count: number;
+  windowStart: number;
+  limit: number;
+}
+
+const memoryRateLimits: Map<string, RateLimitState> = new Map();
+
+function checkMemoryRateLimit(userId: string, limit: number): { allowed: boolean; remaining: number; resetTime: number } {
+  const now = Date.now();
+  const state = memoryRateLimits.get(userId);
+
+  if (!state || now - state.windowStart >= RATE_LIMIT.WINDOW_SECONDS * 1000) {
+    memoryRateLimits.set(userId, {
+      count: 1,
+      windowStart: now,
+      limit: limit,
+    });
+    return {
+      allowed: true,
+      remaining: limit - 1,
+      resetTime: Math.ceil((now + RATE_LIMIT.WINDOW_SECONDS * 1000) / 1000),
+    };
+  }
+
+  state.count++;
+  const remaining = Math.max(0, limit - state.count);
+  const resetTime = Math.ceil((state.windowStart + RATE_LIMIT.WINDOW_SECONDS * 1000) / 1000);
+
+  return {
+    allowed: state.count <= limit,
+    remaining,
+    resetTime,
+  };
+}
+
 export const rateLimitMiddleware = async (
   req: Request,
   res: Response,
@@ -30,21 +64,41 @@ export const rateLimitMiddleware = async (
     const { userId, rateLimit } = (req as any).apiKey;
     const limit = rateLimit.requestsPerMinute;
 
-    // Create rate limit keys
+    if (!redisService.isAvailable()) {
+      const result = checkMemoryRateLimit(userId, limit);
+
+      if (!result.allowed) {
+        const retryAfter = Math.max(0, result.resetTime - Math.ceil(Date.now() / 1000));
+        setRateLimitHeaders(res, limit, 0, result.resetTime);
+        res.set('Retry-After', retryAfter.toString());
+
+        res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
+          success: false,
+          error: {
+            message: 'Rate limit exceeded. Please retry later.',
+            type: 'rate_limit_exceeded',
+            param: null,
+          },
+        });
+        return;
+      }
+
+      setRateLimitHeaders(res, limit, result.remaining, result.resetTime);
+      next();
+      return;
+    }
+
     const requestCountKey = `${REDIS_KEYS.RATE_LIMIT_PREFIX}:${userId}:${REDIS_KEYS.REQUEST_COUNT_SUFFIX}`;
     const requestLimitKey = `${REDIS_KEYS.RATE_LIMIT_PREFIX}:${userId}:${REDIS_KEYS.LIMIT_SUFFIX}`;
     const windowKey = `${REDIS_KEYS.RATE_LIMIT_PREFIX}:${userId}:${REDIS_KEYS.WINDOW_SUFFIX}`;
 
     const now = Date.now();
 
-    // Use atomic increment with expiry to prevent race conditions
     const client = redisService.getClient();
 
-    // Get current window info
     const currentWindow = await redisService.get(windowKey);
 
     if (!currentWindow) {
-      // Start new window atomically
       const multi = client.multi();
       multi.set(windowKey, now.toString(), 'EX', RATE_LIMIT.WINDOW_SECONDS);
       multi.set(requestCountKey, '1', 'EX', RATE_LIMIT.WINDOW_SECONDS);
@@ -66,7 +120,6 @@ export const rateLimitMiddleware = async (
     const elapsed = now - windowStart;
 
     if (elapsed >= RATE_LIMIT.WINDOW_SECONDS * 1000) {
-      // New window - reset atomically
       const multi = client.multi();
       multi.set(windowKey, now.toString(), 'EX', RATE_LIMIT.WINDOW_SECONDS);
       multi.set(requestCountKey, '1', 'EX', RATE_LIMIT.WINDOW_SECONDS);
@@ -84,7 +137,6 @@ export const rateLimitMiddleware = async (
       return;
     }
 
-    // Atomic increment and check in one operation
     const newCount = await client.incr(requestCountKey);
 
     if (newCount > limit) {
@@ -113,7 +165,6 @@ export const rateLimitMiddleware = async (
     next();
   } catch (error) {
     logger.error('Rate limit error', { error, userId: (req as any).apiKey?.userId });
-    // On Redis error, allow request but log warning
     next();
   }
 };

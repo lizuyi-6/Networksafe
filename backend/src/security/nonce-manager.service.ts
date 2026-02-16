@@ -38,6 +38,12 @@ export class NonceManager {
     const nonceKey = `nonce:${nonce}`;
     const now = Date.now();
     const expiresAt = now + (ttl * 1000);
+    const existingMemoryNonce = this.memoryStore.get(nonceKey);
+
+    if (existingMemoryNonce && Date.now() <= existingMemoryNonce.expiresAt) {
+      logger.warn('Replay attack detected - duplicate nonce (Memory)');
+      return false;
+    }
 
     try {
       // Try Redis first

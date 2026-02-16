@@ -1,214 +1,419 @@
-import { useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Search, AlertTriangle, CheckCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Shield, StopCircle, Activity, Globe, Server, History } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../context/LanguageContext';
-import { fetchScannerResults } from '../services/api';
+import { cancelScanTask, createScanTask, fetchScanHistory, fetchScanTask, fetchScanTaskResults } from '../services/api';
+import { useWebSocket } from '../context/WebSocketContext';
 
-interface ScanLog {
-    id: number;
-    message: string;
-    type: 'info' | 'success' | 'warning' | 'error';
-    timestamp: string;
+type Severity = 'critical' | 'high' | 'medium' | 'low';
+
+interface Finding {
+    target: string;
+    severity: Severity;
+    title: string;
+    description: string;
+    sourceEngine: string;
+    createdAt: string;
 }
 
-interface Vulnerability {
-    id: number;
-    name: string;
-    severity: 'Critical' | 'High' | 'Medium' | 'Low';
-    description: string;
-    status: 'Open' | 'Fixed';
+interface ScanHistoryItem {
+    id: string;
+    status: string;
+    phase: string;
+    progress: number;
+    createdAt: string;
+    completedAt?: string;
 }
 
 const Scanner = () => {
     const { t } = useLanguage();
-    const [isScanning, setIsScanning] = useState(false);
-    const [scanComplete, setScanComplete] = useState(false);
+    const { subscribe, connected } = useWebSocket();
+
+    const [taskId, setTaskId] = useState<string | null>(null);
+    const [status, setStatus] = useState<string>('idle');
+    const [phase, setPhase] = useState<string>('queued');
     const [progress, setProgress] = useState(0);
-    const [logs, setLogs] = useState<ScanLog[]>([]);
-    const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
-    const logIdRef = useRef(0);
+    const [error, setError] = useState<string | null>(null);
+    const [logs, setLogs] = useState<string[]>([]);
+    const [urlFindings, setUrlFindings] = useState<Finding[]>([]);
+    const [hostFindings, setHostFindings] = useState<Finding[]>([]);
+    const [nucleiFindings, setNucleiFindings] = useState<Finding[]>([]);
+    const [urls, setUrls] = useState('http://localhost:3005/api/health');
+    const [includeSystem, setIncludeSystem] = useState(true);
+    const [includeWeb, setIncludeWeb] = useState(true);
+    const [includePorts, setIncludePorts] = useState(true);
+    const [history, setHistory] = useState<ScanHistoryItem[]>([]);
 
-    const addLog = (message: string, type: ScanLog['type'] = 'info') => {
-        const newLog: ScanLog = {
-            id: logIdRef.current++,
-            message,
-            type,
-            timestamp: new Date().toLocaleTimeString(),
-        };
-        setLogs(prev => [...prev, newLog]);
+    const logRef = useRef<HTMLDivElement>(null);
+
+    const isRunning = status === 'pending' || status === 'running';
+
+    const addLog = (message: string) => {
+        const ts = new Date().toLocaleTimeString();
+        setLogs(prev => [...prev, `[${ts}] ${message}`]);
     };
 
-    const startScan = () => {
-        setIsScanning(true);
-        setScanComplete(false);
-        setProgress(0);
-        setLogs([]);
-        setVulnerabilities([]);
+    const loadResult = async (id: string) => {
+        try {
+            const response = await fetchScanTaskResults(id);
+            const data = response?.data || {};
+            setUrlFindings(data.urlFindings || []);
+            setHostFindings(data.hostFindings || []);
+            setNucleiFindings(data.nucleiFindings || []);
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
-        const steps = [
-            { msg: 'Initializing scanner engine...', duration: 500, type: 'info' as const },
-            { msg: 'Checking SSL/TLS configuration...', duration: 800, type: 'info' as const },
-            { msg: 'Analyzing HTTP headers...', duration: 600, type: 'info' as const },
-            { msg: 'Scanning for XSS vulnerabilities...', duration: 1000, type: 'info' as const },
-            { msg: 'Checking SQL injection vectors...', duration: 900, type: 'info' as const },
-            { msg: 'Validating CORS policies...', duration: 700, type: 'info' as const },
-            { msg: 'Checking rate limiting...', duration: 500, type: 'success' as const },
-            { msg: 'Finalizing report...', duration: 400, type: 'success' as const },
-        ];
+    const loadHistory = async () => {
+        try {
+            const rows = await fetchScanHistory(20);
+            setHistory(rows || []);
+        } catch {
+            setHistory([]);
+        }
+    };
 
-        let currentStep = 0;
-        const runStep = () => {
-            if (currentStep >= steps.length) {
-                setIsScanning(false);
-                setScanComplete(true);
-                setProgress(100);
-                addLog('Scan complete!', 'success');
+    const loadTaskFromHistory = async (id: string) => {
+        try {
+            const taskResponse = await fetchScanTask(id);
+            const task = taskResponse?.data;
+            setTaskId(id);
+            setStatus(task?.status || 'idle');
+            setPhase(task?.phase || 'queued');
+            setProgress(task?.progress || 0);
+            setError(task?.error || null);
+            await loadResult(id);
+            addLog(`Loaded task ${id} from history`);
+        } catch (e: any) {
+            setError(e.message || 'Failed to load history task');
+        }
+    };
 
-                // Use API to get results (mock or real)
-                fetchScannerResults().then(results => {
-                    setVulnerabilities(results as any);
-                });
-                return;
+    useEffect(() => {
+        loadHistory();
+    }, []);
+
+    useEffect(() => {
+        if (!taskId) return;
+        const timer = setInterval(async () => {
+            try {
+                const response = await fetchScanTask(taskId);
+                const d = response?.data;
+                setStatus(d?.status || 'idle');
+                setPhase(d?.phase || 'queued');
+                setProgress(d?.progress || 0);
+                if (d?.status === 'completed' || d?.status === 'failed' || d?.status === 'cancelled') {
+                    await loadResult(taskId);
+                    await loadHistory();
+                }
+            } catch {
+                // ignore; ws may still update
             }
+        }, 3000);
+        return () => clearInterval(timer);
+    }, [taskId]);
 
-            const step = steps[currentStep];
-            addLog(step.msg, step.type);
-            setProgress(((currentStep + 1) / steps.length) * 100);
-            currentStep++;
+    useEffect(() => {
+        const unsub = subscribe('*', (evt: any) => {
+            const event = evt.event as string;
+            const payload = evt.payload || {};
+            const incomingTaskId = evt.taskId;
+            if (!taskId || incomingTaskId !== taskId) return;
 
-            setTimeout(runStep, step.duration);
+            if (event === 'scanner:task:started') {
+                setStatus('running');
+                setPhase(payload.phase || 'url-scan');
+                setProgress(payload.progress ?? 0);
+                addLog('Scan task started');
+            }
+            if (event === 'scanner:task:phase') {
+                setPhase(payload.phase || 'queued');
+                if (typeof payload.progress === 'number') setProgress(payload.progress);
+                addLog(`Phase changed: ${payload.phase}`);
+            }
+            if (event === 'scanner:task:progress') {
+                if (typeof payload.progress === 'number') setProgress(payload.progress);
+            }
+            if (event === 'scanner:task:log') {
+                addLog(payload.message || 'task log');
+            }
+            if (event === 'scanner:task:completed') {
+                setStatus('completed');
+                setPhase('done');
+                setProgress(100);
+                addLog('Scan completed');
+                loadResult(taskId);
+                loadHistory();
+            }
+            if (event === 'scanner:task:failed') {
+                setStatus('failed');
+                setPhase('done');
+                setProgress(100);
+                setError(payload.error || 'Scan failed');
+                addLog(`Scan failed: ${payload.error || 'unknown'}`);
+                loadHistory();
+            }
+            if (event === 'scanner:task:cancelled') {
+                setStatus('cancelled');
+                setPhase('done');
+                setProgress(100);
+                addLog('Scan cancelled');
+                loadHistory();
+            }
+        });
+        return () => unsub();
+    }, [subscribe, taskId]);
+
+    useEffect(() => {
+        if (logRef.current) {
+            logRef.current.scrollTop = logRef.current.scrollHeight;
+        }
+    }, [logs]);
+
+    const summary = useMemo(() => {
+        const all = [...urlFindings, ...hostFindings, ...nucleiFindings];
+        return {
+            total: all.length,
+            critical: all.filter(f => f.severity === 'critical').length,
+            high: all.filter(f => f.severity === 'high').length,
+            medium: all.filter(f => f.severity === 'medium').length,
+            low: all.filter(f => f.severity === 'low').length
         };
+    }, [urlFindings, hostFindings, nucleiFindings]);
 
-        setTimeout(runStep, 300);
+    const startScan = async () => {
+        setError(null);
+        setLogs([]);
+        setUrlFindings([]);
+        setHostFindings([]);
+        setNucleiFindings([]);
+        setProgress(0);
+        setStatus('pending');
+        setPhase('queued');
+
+        const urlList = urls
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean);
+
+        try {
+            const response = await createScanTask({
+                enginePolicy: 'opt_then_nuclei',
+                targets: {
+                    urls: urlList,
+                    host: {
+                        mode: 'local',
+                        includeSystem,
+                        includeWeb,
+                        includePorts
+                    }
+                }
+            });
+            const id = response?.data?.taskId;
+            setTaskId(id);
+            addLog(`Task created: ${id}`);
+            loadHistory();
+        } catch (e: any) {
+            setStatus('failed');
+            setError(e.message || 'Failed to create scan task');
+        }
     };
+
+    const stopScan = async () => {
+        if (!taskId) return;
+        try {
+            await cancelScanTask(taskId);
+            addLog('Cancellation requested');
+            loadHistory();
+        } catch (e: any) {
+            setError(e.message || 'Failed to cancel task');
+        }
+    };
+
+    const renderFindingCard = (f: Finding, idx: number) => (
+        <div key={`${f.target}-${f.title}-${idx}`} className="p-3 rounded bg-muted/20 border border-border flex flex-col gap-2 hover:border-border/80 transition-colors">
+            <div className="flex justify-between items-start gap-2">
+                <h4 className="text-sm font-medium text-foreground">{f.title}</h4>
+                <span className={clsx(
+                    'text-[10px] px-1.5 py-0.5 rounded border uppercase tracking-wider',
+                    f.severity === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                        f.severity === 'high' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                            f.severity === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                )}>
+                    {f.severity}
+                </span>
+            </div>
+            <p className="text-xs text-muted-foreground">{f.description}</p>
+            <div className="text-[10px] text-muted-foreground">
+                target: <span className="font-mono">{f.target}</span> | engine: {f.sourceEngine}
+            </div>
+        </div>
+    );
 
     return (
         <div className="space-y-6 p-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-xl font-medium text-foreground">
-                        {t('scanner.title')}
-                    </h1>
-                    <p className="text-muted-foreground text-sm mt-1">{t('scanner.subtitle')}</p>
+                    <h1 className="text-xl font-medium text-foreground">{t('scanner.title')}</h1>
+                    <p className="text-muted-foreground text-sm mt-1">
+                        Live scan tasks with URL + host analysis ({connected ? 'WS connected' : 'polling fallback'})
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    {isRunning ? (
+                        <button
+                            onClick={stopScan}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-medium flex items-center gap-2"
+                        >
+                            <StopCircle size={16} /> Cancel
+                        </button>
+                    ) : (
+                        <button
+                            onClick={startScan}
+                            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-sm font-medium"
+                        >
+                            Start Real Scan
+                        </button>
+                    )}
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Control Panel */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-card border border-border p-8 rounded-lg flex flex-col items-center justify-center min-h-[300px] relative overflow-hidden">
-                        {/* Animated Shield in Background */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.02]">
-                            <Shield size={300} className="text-foreground" />
-                        </div>
-
-                        {!isScanning && !scanComplete && (
-                            <div className="text-center z-10">
-                                <div className="mb-6 inline-flex p-6 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-                                    <Search size={48} />
-                                </div>
-                                <h2 className="text-xl font-medium text-foreground mb-2">{t('scanner.ready_title')}</h2>
-                                <p className="text-muted-foreground mb-8 max-w-md mx-auto text-sm">
-                                    {t('scanner.ready_desc')}
-                                </p>
-                                <button
-                                    onClick={startScan}
-                                    className="px-8 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded font-medium transition-all shadow-lg hover:shadow-primary/20"
-                                >
-                                    {t('scanner.start_btn')}
-                                </button>
-                            </div>
-                        )}
-
-                        {isScanning && (
-                            <div className="w-full max-w-lg z-10">
-                                <div className="flex justify-between text-xs text-muted-foreground mb-2 font-mono">
-                                    <span>{t('scanner.scanning')}</span>
-                                    <span>{Math.round(progress)}%</span>
-                                </div>
-                                <div className="h-1 bg-muted rounded-full overflow-hidden">
-                                    <motion.div
-                                        className="h-full bg-primary"
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${progress}%` }}
-                                        transition={{ duration: 0.5 }}
-                                    />
-                                </div>
-                                <div className="mt-8 bg-muted/30 rounded p-4 font-mono text-xs text-emerald-500 h-48 overflow-y-auto border border-border scrollbar-hide">
-                                    {logs.map(log => (
-                                        <div key={log.id} className="mb-1">
-                                            <span className="opacity-50">[{log.timestamp}]</span>{' '}
-                                            <span className={clsx(
-                                                log.type === 'error' && 'text-red-400',
-                                                log.type === 'warning' && 'text-amber-400',
-                                                log.type === 'success' && 'text-emerald-400'
-                                            )}>{log.message}</span>
-                                        </div>
-                                    ))}
-                                    <div className="animate-pulse">_</div>
-                                </div>
-                            </div>
-                        )}
-
-                        {scanComplete && (
-                            <div className="text-center z-10">
-                                <div className="mb-6 inline-flex p-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
-                                    <CheckCircle size={48} />
-                                </div>
-                                <h2 className="text-xl font-medium text-foreground mb-2">{t('scanner.complete_title')}</h2>
-                                <p className="text-muted-foreground mb-8 text-sm">
-                                    {t('scanner.complete_desc')} <span className="text-foreground font-bold">{vulnerabilities.length}</span> {t('scanner.issues')}
-                                </p>
-                                <button
-                                    onClick={startScan}
-                                    className="px-6 py-2 bg-muted hover:bg-muted/80 text-foreground rounded font-medium transition-all border border-border"
-                                >
-                                    {t('scanner.new_scan_btn')}
-                                </button>
-                            </div>
-                        )}
-                    </div>
+            {error && (
+                <div className="p-3 rounded border border-red-500/30 text-red-300 bg-red-500/10 text-sm">
+                    {error}
                 </div>
+            )}
 
-                {/* Results Panel */}
-                <div className="bg-card border border-border p-6 rounded-lg overflow-hidden h-full">
-                    <h3 className="text-sm font-medium mb-4 flex items-center gap-2 text-foreground">
-                        <AlertTriangle className="text-amber-500" size={16} />
-                        {t('scanner.results_title')}
-                    </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="text-xs text-muted-foreground">Task</div>
+                    <div className="text-sm text-foreground font-mono mt-1 break-all">{taskId || '-'}</div>
+                </div>
+                <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="text-xs text-muted-foreground">Status / Phase</div>
+                    <div className="text-sm text-foreground mt-1">{status} / {phase}</div>
+                </div>
+                <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="text-xs text-muted-foreground">Progress</div>
+                    <div className="text-sm text-foreground mt-1">{progress}%</div>
+                </div>
+                <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="text-xs text-muted-foreground">Findings</div>
+                    <div className="text-sm text-foreground mt-1">{summary.total} (C:{summary.critical} H:{summary.high} M:{summary.medium} L:{summary.low})</div>
+                </div>
+            </div>
+
+            <div className="bg-card border border-border p-5 rounded-lg">
+                <div className="flex items-center gap-2 mb-3 text-foreground text-sm font-medium">
+                    <Activity size={16} /> Scan Inputs
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-xs text-muted-foreground">URL targets (one per line)</label>
+                        <textarea
+                            value={urls}
+                            onChange={e => setUrls(e.target.value)}
+                            rows={5}
+                            className="w-full mt-2 bg-muted/20 border border-border rounded px-3 py-2 text-foreground text-sm font-mono"
+                        />
+                    </div>
                     <div className="space-y-3">
-                        {vulnerabilities.length === 0 && !isScanning ? (
-                            <p className="text-muted-foreground text-center py-10 text-xs">{t('scanner.no_vulns')}</p>
-                        ) : (
-                            vulnerabilities.map(vuln => (
-                                <div key={vuln.id} className="p-3 rounded bg-muted/20 border border-border flex flex-col gap-2 hover:border-border/80 transition-colors">
-                                    <div className="flex justify-between items-start">
-                                        <h4 className="text-sm font-medium text-foreground">{vuln.name}</h4>
-                                        <span className={clsx(
-                                            "text-[10px] px-1.5 py-0.5 rounded border uppercase tracking-wider",
-                                            vuln.severity === 'Critical' ? "bg-red-500/10 text-red-400 border-red-500/20" :
-                                                vuln.severity === 'High' ? "bg-orange-500/10 text-orange-400 border-orange-500/20" :
-                                                    vuln.severity === 'Medium' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                                                        "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                                        )}>
-                                            {vuln.severity}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">{vuln.description}</p>
-                                </div>
-                            ))
-                        )}
-                        {scanComplete && vulnerabilities.length === 0 && (
-                            <div className="p-4 rounded bg-emerald-500/5 border border-emerald-500/10 text-center">
-                                <p className="text-emerald-400 text-sm font-medium">{t('scanner.secure_title')}</p>
-                                <p className="text-emerald-500/60 text-xs">{t('scanner.secure_desc')}</p>
-                            </div>
-                        )}
+                        <div className="text-xs text-muted-foreground">Host scan toggles</div>
+                        <label className="flex items-center gap-2 text-sm text-foreground">
+                            <input type="checkbox" checked={includeSystem} onChange={e => setIncludeSystem(e.target.checked)} />
+                            Include system checks
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-foreground">
+                            <input type="checkbox" checked={includeWeb} onChange={e => setIncludeWeb(e.target.checked)} />
+                            Include web server checks
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-foreground">
+                            <input type="checkbox" checked={includePorts} onChange={e => setIncludePorts(e.target.checked)} />
+                            Include port checks
+                        </label>
                     </div>
                 </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="bg-card border border-border p-4 rounded-lg">
+                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-foreground">
+                        <Globe size={16} /> URL Findings
+                    </h3>
+                    <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                        {urlFindings.length === 0 && <p className="text-xs text-muted-foreground">No URL findings.</p>}
+                        {urlFindings.map(renderFindingCard)}
+                    </div>
+                </div>
+
+                <div className="bg-card border border-border p-4 rounded-lg">
+                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-foreground">
+                        <Server size={16} /> Host Findings
+                    </h3>
+                    <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                        {hostFindings.length === 0 && <p className="text-xs text-muted-foreground">No host findings.</p>}
+                        {hostFindings.map(renderFindingCard)}
+                    </div>
+                </div>
+
+                <div className="bg-card border border-border p-4 rounded-lg">
+                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-foreground">
+                        <Shield size={16} /> Nuclei Findings
+                    </h3>
+                    <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                        {nucleiFindings.length === 0 && <p className="text-xs text-muted-foreground">No nuclei findings.</p>}
+                        {nucleiFindings.map(renderFindingCard)}
+                    </div>
+                </div>
+
+                <div className="bg-card border border-border p-4 rounded-lg">
+                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-foreground">
+                        <History size={16} /> Scan History
+                    </h3>
+                    <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                        {history.length === 0 && <p className="text-xs text-muted-foreground">No scan history.</p>}
+                        {history.map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => loadTaskFromHistory(item.id)}
+                                className="w-full text-left p-3 rounded bg-muted/20 border border-border hover:border-border/80 transition-colors"
+                            >
+                                <div className="text-xs text-foreground font-mono truncate">{item.id}</div>
+                                <div className="text-[11px] text-muted-foreground mt-1">
+                                    {item.status} / {item.phase} / {item.progress}%
+                                </div>
+                                <div className="text-[10px] text-muted-foreground mt-1">
+                                    {new Date(item.createdAt).toLocaleString()}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-card border border-border p-4 rounded-lg">
+                <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-foreground">
+                    <AlertTriangle size={16} /> Task Timeline
+                </h3>
+                <div ref={logRef} className="max-h-44 overflow-y-auto font-mono text-xs bg-muted/20 border border-border rounded p-3">
+                    {logs.length === 0 && <div className="text-muted-foreground">No logs yet.</div>}
+                    {logs.map((log, idx) => (
+                        <motion.div key={idx} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-emerald-400 mb-1">
+                            {log}
+                        </motion.div>
+                    ))}
+                </div>
+                {!isRunning && taskId && status === 'completed' && (
+                    <div className="mt-3 p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm flex items-center gap-2">
+                        <CheckCircle size={16} /> Scan completed with {summary.total} findings.
+                    </div>
+                )}
             </div>
         </div>
     );
 };
+
 export default Scanner;

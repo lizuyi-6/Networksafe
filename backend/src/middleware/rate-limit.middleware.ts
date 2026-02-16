@@ -121,7 +121,7 @@ function getDefaultKey(req: Request): string {
     return `user:${user.userId}`;
   }
 
-  const sessionID = req.sessionID || req.headers['x-session-id'];
+  const sessionID = (req as any).sessionID || req.headers['x-session-id'];
   if (sessionID) {
     return `session:${sessionID}`;
   }

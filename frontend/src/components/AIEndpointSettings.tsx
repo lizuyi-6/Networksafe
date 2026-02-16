@@ -1,18 +1,18 @@
-/**
- * AI 模型端点配置组件
- * 
- * 支持配置多个 AI 模型来源：
- * - 用户笔记本本地模型 (Ollama)
- * - 用户服务器部署的大模型
- * - 第三方 API (OpenAI 兼容)
- */
-
-import { useState, useEffect } from 'react';
+﻿import { useEffect, useState } from 'react';
 import {
     Brain, Plus, Trash2, TestTube,
     Server, Laptop, Globe, Check, X, Loader2,
     ChevronDown, ChevronUp, AlertCircle
 } from 'lucide-react';
+import {
+    fetchAIEndpoints,
+    createAIEndpoint,
+    updateAIEndpoint,
+    deleteAIEndpoint,
+    testAIEndpoint
+} from '../services/api';
+
+type EndpointType = 'ollama' | 'openai' | 'custom';
 
 interface AIEndpoint {
     id: string;
@@ -23,7 +23,7 @@ interface AIEndpoint {
     enabled: boolean;
     priority: number;
     timeout: number;
-    type: 'ollama' | 'openai' | 'custom';
+    type: EndpointType;
     lastTest?: {
         success: boolean;
         latency: number;
@@ -36,7 +36,7 @@ interface AddEndpointFormData {
     url: string;
     modelName: string;
     apiKey: string;
-    type: 'ollama' | 'openai' | 'custom';
+    type: EndpointType;
     priority: number;
 }
 
@@ -45,6 +45,7 @@ const AIEndpointSettings = () => {
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
     const [testingId, setTestingId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState<AddEndpointFormData>({
         name: '',
@@ -55,111 +56,104 @@ const AIEndpointSettings = () => {
         priority: 10,
     });
 
-    // 模拟端点数据
-    useEffect(() => {
-        const mockEndpoints: AIEndpoint[] = [
-            {
-                id: 'default-laptop',
-                name: '本地笔记本 (Ollama)',
-                url: 'http://192.168.4.1:5000/api/analyze',
-                modelName: 'llama3',
-                apiKey: '',
-                enabled: true,
-                priority: 100,
-                timeout: 10000,
-                type: 'ollama',
-                lastTest: {
-                    success: true,
-                    latency: 234,
-                    timestamp: new Date().toISOString(),
-                },
-            },
-        ];
-
-        setTimeout(() => {
-            setEndpoints(mockEndpoints);
+    const loadEndpoints = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const rows = await fetchAIEndpoints();
+            setEndpoints(rows || []);
+        } catch (e: any) {
+            setError(e.message || 'FG-AI-ENDPOINTS-LIST');
+            setEndpoints([]);
+        } finally {
             setLoading(false);
-        }, 500);
+        }
+    };
+
+    useEffect(() => {
+        loadEndpoints();
     }, []);
 
-    const handleAddEndpoint = () => {
+    const handleAddEndpoint = async () => {
         if (!formData.url) return;
-
-        const newEndpoint: AIEndpoint = {
-            id: `custom-${Date.now()}`,
-            name: formData.name || `自定义端点 ${endpoints.length}`,
-            url: formData.url,
-            modelName: formData.modelName || 'default',
-            apiKey: formData.apiKey,
-            enabled: true,
-            priority: formData.priority,
-            timeout: 15000,
-            type: formData.type,
-        };
-
-        setEndpoints(prev => [...prev, newEndpoint]);
-        setShowAddForm(false);
-        setFormData({
-            name: '',
-            url: '',
-            modelName: '',
-            apiKey: '',
-            type: 'ollama',
-            priority: 10,
-        });
+        setError(null);
+        try {
+            await createAIEndpoint({
+                name: formData.name,
+                url: formData.url,
+                modelName: formData.modelName,
+                apiKey: formData.apiKey,
+                type: formData.type,
+                priority: formData.priority
+            });
+            setShowAddForm(false);
+            setFormData({
+                name: '',
+                url: '',
+                modelName: '',
+                apiKey: '',
+                type: 'ollama',
+                priority: 10,
+            });
+            await loadEndpoints();
+        } catch (e: any) {
+            setError(e.message || 'FG-AI-ENDPOINTS-CREATE');
+        }
     };
 
-    const handleDeleteEndpoint = (id: string) => {
-        if (id === 'default-laptop') return;
-        setEndpoints(prev => prev.filter(ep => ep.id !== id));
+    const handleDeleteEndpoint = async (id: string) => {
+        setError(null);
+        try {
+            await deleteAIEndpoint(id);
+            await loadEndpoints();
+        } catch (e: any) {
+            setError(e.message || 'FG-AI-ENDPOINTS-DELETE');
+        }
     };
 
-    const handleToggleEndpoint = (id: string) => {
-        setEndpoints(prev => prev.map(ep =>
-            ep.id === id ? { ...ep, enabled: !ep.enabled } : ep
-        ));
+    const handleToggleEndpoint = async (id: string, enabled: boolean) => {
+        setError(null);
+        try {
+            await updateAIEndpoint(id, { enabled: !enabled });
+            await loadEndpoints();
+        } catch (e: any) {
+            setError(e.message || 'FG-AI-ENDPOINTS-UPDATE');
+        }
     };
 
     const handleTestEndpoint = async (id: string) => {
         setTestingId(id);
-
-        // 模拟测试
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const success = Math.random() > 0.3;
-        const latency = Math.floor(Math.random() * 500) + 100;
-
-        setEndpoints(prev => prev.map(ep =>
-            ep.id === id ? {
-                ...ep,
-                lastTest: {
-                    success,
-                    latency,
-                    timestamp: new Date().toISOString(),
-                },
-            } : ep
-        ));
-
-        setTestingId(null);
+        setError(null);
+        try {
+            await testAIEndpoint(id);
+            await loadEndpoints();
+        } catch (e: any) {
+            setError(e.message || 'FG-AI-ENDPOINTS-TEST');
+        } finally {
+            setTestingId(null);
+        }
     };
 
-    const handlePriorityChange = (id: string, direction: 'up' | 'down') => {
-        setEndpoints(prev => {
-            const sorted = [...prev].sort((a, b) => a.priority - b.priority);
-            const idx = sorted.findIndex(ep => ep.id === id);
+    const handlePriorityChange = async (id: string, direction: 'up' | 'down') => {
+        const sorted = [...endpoints].sort((a, b) => a.priority - b.priority);
+        const idx = sorted.findIndex(ep => ep.id === id);
+        if (idx < 0) return;
 
-            if (direction === 'up' && idx > 0) {
-                const temp = sorted[idx].priority;
-                sorted[idx].priority = sorted[idx - 1].priority;
-                sorted[idx - 1].priority = temp;
-            } else if (direction === 'down' && idx < sorted.length - 1) {
-                const temp = sorted[idx].priority;
-                sorted[idx].priority = sorted[idx + 1].priority;
-                sorted[idx + 1].priority = temp;
-            }
+        const current = sorted[idx];
+        const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (targetIdx < 0 || targetIdx >= sorted.length) return;
 
-            return sorted;
-        });
+        const target = sorted[targetIdx];
+        setError(null);
+        try {
+            await Promise.all([
+                updateAIEndpoint(current.id, { priority: target.priority }),
+                updateAIEndpoint(target.id, { priority: current.priority })
+            ]);
+            await loadEndpoints();
+        } catch (e: any) {
+            setError(e.message || 'FG-AI-ENDPOINTS-PRIORITY');
+        }
     };
 
     const getTypeIcon = (type: string) => {
@@ -174,59 +168,61 @@ const AIEndpointSettings = () => {
 
     return (
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-            {/* Header */}
             <div className="flex justify-between items-center mb-5">
                 <div className="flex items-center gap-2">
                     <Brain size={18} className="text-primary" />
-                    <h3 className="font-semibold text-foreground">AI 模型端点配置</h3>
+                    <h3 className="font-semibold text-foreground">AI Endpoint Settings</h3>
                 </div>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all"
                 >
-                    <Plus size={14} /> 添加端点
+                    <Plus size={14} /> Add Endpoint
                 </button>
             </div>
 
-            {/* Info Banner */}
+            {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4 text-xs text-red-300">
+                    {error}
+                </div>
+            )}
+
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4 flex items-start gap-2">
                 <AlertCircle size={16} className="text-blue-500 mt-0.5" />
                 <div className="text-xs text-blue-700 dark:text-blue-300">
-                    <strong>离线模式 AI 调用优先级:</strong> 按列表顺序尝试调用，失败则自动降级到下一个端点。
-                    建议将延迟最低的服务器放在最前面。
+                    Endpoints are used by priority order. If one fails, the next enabled endpoint is used.
                 </div>
             </div>
 
-            {/* Add Form */}
             {showAddForm && (
                 <div className="bg-muted/30 border border-border rounded-lg p-4 mb-4">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label className="block text-xs text-muted-foreground mb-1">端点名称</label>
+                            <label className="block text-xs text-muted-foreground mb-1">Name</label>
                             <input
                                 type="text"
                                 value={formData.name}
                                 onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                placeholder="例如: 生产服务器模型"
+                                placeholder="Production model endpoint"
                                 className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:border-primary focus:outline-none"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-muted-foreground mb-1">类型</label>
+                            <label className="block text-xs text-muted-foreground mb-1">Type</label>
                             <select
                                 value={formData.type}
-                                onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                                onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as EndpointType }))}
                                 className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:border-primary focus:outline-none"
                             >
                                 <option value="ollama">Ollama</option>
-                                <option value="openai">OpenAI 兼容</option>
-                                <option value="custom">自定义</option>
+                                <option value="openai">OpenAI Compatible</option>
+                                <option value="custom">Custom</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-xs text-muted-foreground mb-1">API 端点 URL *</label>
+                        <label className="block text-xs text-muted-foreground mb-1">Endpoint URL *</label>
                         <input
                             type="text"
                             value={formData.url}
@@ -238,7 +234,7 @@ const AIEndpointSettings = () => {
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label className="block text-xs text-muted-foreground mb-1">模型名称</label>
+                            <label className="block text-xs text-muted-foreground mb-1">Model</label>
                             <input
                                 type="text"
                                 value={formData.modelName}
@@ -248,7 +244,7 @@ const AIEndpointSettings = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-muted-foreground mb-1">API Key (可选)</label>
+                            <label className="block text-xs text-muted-foreground mb-1">API Key</label>
                             <input
                                 type="password"
                                 value={formData.apiKey}
@@ -264,28 +260,27 @@ const AIEndpointSettings = () => {
                             onClick={() => setShowAddForm(false)}
                             className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            取消
+                            Cancel
                         </button>
                         <button
                             onClick={handleAddEndpoint}
                             disabled={!formData.url}
                             className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                            添加
+                            Add
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* Endpoints List */}
             {loading ? (
                 <div className="text-center py-8 text-muted-foreground">
                     <Loader2 size={24} className="mx-auto mb-2 animate-spin" />
-                    加载中...
+                    Loading...
                 </div>
             ) : sortedEndpoints.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                    暂无配置的 AI 端点
+                    No configured AI endpoints.
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -299,7 +294,6 @@ const AIEndpointSettings = () => {
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex items-start gap-3">
-                                    {/* Priority Controls */}
                                     <div className="flex flex-col items-center">
                                         <button
                                             onClick={() => handlePriorityChange(endpoint.id, 'up')}
@@ -322,16 +316,12 @@ const AIEndpointSettings = () => {
                                         <div className="flex items-center gap-2 mb-1">
                                             {getTypeIcon(endpoint.type)}
                                             <span className="font-medium text-foreground">{endpoint.name}</span>
-                                            {endpoint.id === 'default-laptop' && (
-                                                <span className="px-1.5 py-0.5 text-xxs bg-primary/10 text-primary rounded">默认</span>
-                                            )}
                                         </div>
                                         <div className="text-xs text-muted-foreground mb-1">{endpoint.url}</div>
                                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                            <span>模型: {endpoint.modelName}</span>
+                                            <span>Model: {endpoint.modelName}</span>
                                             {endpoint.lastTest && (
-                                                <span className={`flex items-center gap-1 ${endpoint.lastTest.success ? 'text-emerald-500' : 'text-red-500'
-                                                    }`}>
+                                                <span className={`flex items-center gap-1 ${endpoint.lastTest.success ? 'text-emerald-500' : 'text-red-500'}`}>
                                                     {endpoint.lastTest.success ? <Check size={12} /> : <X size={12} />}
                                                     {endpoint.lastTest.latency}ms
                                                 </span>
@@ -340,13 +330,12 @@ const AIEndpointSettings = () => {
                                     </div>
                                 </div>
 
-                                {/* Actions */}
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => handleTestEndpoint(endpoint.id)}
                                         disabled={testingId === endpoint.id}
                                         className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
-                                        title="测试连接"
+                                        title="Test"
                                     >
                                         {testingId === endpoint.id ? (
                                             <Loader2 size={16} className="animate-spin" />
@@ -355,36 +344,28 @@ const AIEndpointSettings = () => {
                                         )}
                                     </button>
                                     <button
-                                        onClick={() => handleToggleEndpoint(endpoint.id)}
+                                        onClick={() => handleToggleEndpoint(endpoint.id, endpoint.enabled)}
                                         className={`p-2 rounded-lg transition-all ${endpoint.enabled
                                             ? 'text-emerald-500 hover:bg-emerald-500/10'
                                             : 'text-muted-foreground hover:bg-muted'
                                             }`}
-                                        title={endpoint.enabled ? '禁用' : '启用'}
+                                        title={endpoint.enabled ? 'Disable' : 'Enable'}
                                     >
                                         {endpoint.enabled ? <Check size={16} /> : <X size={16} />}
                                     </button>
-                                    {endpoint.id !== 'default-laptop' && (
-                                        <button
-                                            onClick={() => handleDeleteEndpoint(endpoint.id)}
-                                            className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                            title="删除"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={() => handleDeleteEndpoint(endpoint.id)}
+                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
-
-            {/* Footer */}
-            <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
-                <strong>调用逻辑:</strong> 按优先级顺序尝试每个启用的端点，首个成功响应将被采用。
-                如果所有自定义端点失败，将回退到本地笔记本模型。
-            </div>
         </div>
     );
 };

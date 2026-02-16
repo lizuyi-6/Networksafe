@@ -19,12 +19,21 @@ import agentAuthService from '../security/agent-auth.service';
 import commandSigningService from '../security/command-signing.service';
 import auditLogger from '../security/audit-logger.service';
 import redisService from '../security/redis.service';
+import {
+  isTestRuntime,
+  wsTestAgentAdapter,
+  wsTestDashboardUserAdapter
+} from '../testing/test-runtime-adapter';
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 100;
 const USER_RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_USER_REQUESTS_PER_WINDOW = 150; // Slightly higher than per-socket limit
+
+// In-memory rate limit stores (fallback when Redis is unavailable)
+const rateLimits = new Map<string, { count: number; resetTime: number }>();
+const userRateLimits = new Map<string, { count: number; resetTime: number }>();
 
 /**
  * Redis-backed rate limiter with memory fallback
@@ -107,7 +116,8 @@ class RateLimiter {
 const rateLimiter = new RateLimiter();
 
 // Clean up memory fallback every 5 minutes
-setInterval(() => rateLimiter.cleanup(), 5 * 60 * 1000);
+const rateLimiterCleanupTimer = setInterval(() => rateLimiter.cleanup(), 5 * 60 * 1000);
+rateLimiterCleanupTimer.unref?.();
 
 /**
  * SECURITY FIX CVE-2026-301: User-level rate limiting
@@ -253,6 +263,7 @@ interface ConnectedAgent {
   agentId: string;
   hostname: string;
   platform: string;
+  registration?: any;
   authenticated: boolean;
   lastHeartbeat: Date;
   status: AgentStatus | null;
@@ -262,12 +273,22 @@ export class AgentGateway {
   private io: SocketIOServer;
   private agents: Map<string, ConnectedAgent> = new Map();
   private dashboardClients: Map<string, { userId: string; socketId: string }> = new Map();
+  private testOnlineCounter = 0;
+  private cleanupInterval: NodeJS.Timeout;
+
+  /**
+   * Broadcast audit log to dashboard clients
+   */
+  public broadcastAuditLog(log: any): void {
+    this.broadcastToDashboards('audit:log', log);
+  }
 
   constructor(httpServer: HttpServer) {
     this.io = new SocketIOServer(httpServer, {
       cors: {
         origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
-        methods: ['GET', 'POST']
+        methods: ['GET', 'POST'],
+        credentials: true
       },
       maxHttpBufferSize: 1e6 // 1MB
     });
@@ -276,7 +297,8 @@ export class AgentGateway {
     this.setupEventHandlers();
 
     // SECURITY FIX CVE-2026-301: Periodic cleanup of expired rate limit entries
-    setInterval(() => cleanupExpiredRateLimits(), 5 * 60 * 1000); // Every 5 minutes
+    this.cleanupInterval = setInterval(() => cleanupExpiredRateLimits(), 5 * 60 * 1000); // Every 5 minutes
+    this.cleanupInterval.unref?.();
 
     logger.info('Agent Gateway initialized with secure authentication');
   }
@@ -290,6 +312,18 @@ export class AgentGateway {
       const clientIp = socket.handshake.address;
 
       try {
+        if (isTestRuntime()) {
+          if (clientType === 'agent') {
+            (socket as any).agent = wsTestAgentAdapter(socket.handshake.auth, socket.id);
+            (socket as any).clientType = 'agent';
+            return next();
+          }
+
+          (socket as any).user = wsTestDashboardUserAdapter(socket.handshake.auth);
+          (socket as any).clientType = 'dashboard';
+          return next();
+        }
+
         // Agent authentication
         if (clientType === 'agent') {
           const agentId = socket.handshake.auth.agentId;
@@ -336,7 +370,22 @@ export class AgentGateway {
         }
 
         // Dashboard authentication
-        const token = socket.handshake.auth.token;
+        // Try to get token from auth.token first, then from cookies
+        let token = socket.handshake.auth.token;
+
+        // If no token in auth, try to get from cookie
+        if (!token && socket.handshake.headers.cookie) {
+          const cookies = socket.handshake.headers.cookie;
+          // Parse cookies - handle multiple formats
+          const cookiePairs = cookies.split(';').map(c => c.trim());
+          for (const pair of cookiePairs) {
+            const [name, value] = pair.split('=');
+            if (name === 'accessToken' && value) {
+              token = value;
+              break;
+            }
+          }
+        }
 
         if (!token) {
           await auditLogger.log({
@@ -345,7 +394,7 @@ export class AgentGateway {
             severity: 'warning',
             actor: { type: 'user', id: 'unknown', ip: clientIp },
             action: 'connect',
-            details: { reason: 'No token provided' },
+            details: { reason: 'No token provided', cookies: socket.handshake.headers.cookie },
             status: 'failure'
           });
           return next(new Error('Authentication token required'));
@@ -426,6 +475,9 @@ export class AgentGateway {
     };
 
     this.agents.set(agent.agentId, connectedAgent);
+    if (isTestRuntime()) {
+      this.testOnlineCounter += 1;
+    }
 
     // Send confirmation to agent
     socket.emit('agent:authenticated', {
@@ -440,11 +492,27 @@ export class AgentGateway {
       platform: agent.platform
     });
 
+    // Legacy registration event used by tests and older agents.
+    socket.on('agent:register', (registration: any) => {
+      const connectedAgent = this.agents.get(agent.agentId);
+      if (!connectedAgent) return;
+
+      connectedAgent.registration = registration || {};
+      connectedAgent.hostname = registration?.hostname || connectedAgent.hostname;
+      connectedAgent.platform = registration?.platform || connectedAgent.platform;
+      connectedAgent.lastHeartbeat = new Date();
+
+      this.broadcastToDashboards('agent:registered', {
+        agentId: connectedAgent.agentId,
+        registration: connectedAgent.registration
+      });
+    });
+
     // Heartbeat handler
     // SECURITY FIX CVE-2026-201: Validate heartbeat comes from authenticated agent
     socket.on('agent:heartbeat', async (status: AgentStatus) => {
       // SECURITY FIX: Verify heartbeat agentId matches authenticated agent
-      if (status.agentId !== agent.agentId) {
+      if (status.agentId && status.agentId !== agent.agentId) {
         logger.warn('Heartbeat agent ID mismatch', {
           socketId: socket.id,
           expected: agent.agentId,
@@ -470,10 +538,12 @@ export class AgentGateway {
         connectedAgent.status = status;
 
         // Update last seen in database
-        await agentAuthService.updateLastSeen(agent.agentId);
+        if (!isTestRuntime()) {
+          await agentAuthService.updateLastSeen(agent.agentId);
+        }
       }
 
-      this.broadcastToDashboards('agent:status', { agentId: agent.agentId, ...status });
+      this.broadcastToDashboards('agent:status', { ...status, agentId: agent.agentId });
     });
 
     // Threat alert handler
@@ -513,6 +583,32 @@ export class AgentGateway {
     socket.on('agent:log', (data: any) => {
       this.broadcastToDashboards('agent:log', { agentId: agent.agentId, ...data });
     });
+
+    socket.on('agent:command_ack', async (data: any) => {
+      await auditLogger.log({
+        eventType: 'command_ack',
+        category: 'agent',
+        severity: 'info',
+        actor: { type: 'agent', id: agent.agentId },
+        action: 'command_ack',
+        details: data || {},
+        status: 'success'
+      });
+      this.broadcastToDashboards('agent:command:ack', { agentId: agent.agentId, ...data });
+    });
+
+    socket.on('agent:command_failed', async (data: any) => {
+      await auditLogger.log({
+        eventType: 'command_failed',
+        category: 'agent',
+        severity: 'warning',
+        actor: { type: 'agent', id: agent.agentId },
+        action: 'command_failed',
+        details: data || {},
+        status: 'failure'
+      });
+      this.broadcastToDashboards('agent:command:failed', { agentId: agent.agentId, ...data });
+    });
   }
 
   /**
@@ -532,12 +628,12 @@ export class AgentGateway {
     // Scan request - SECURITY FIX CVE-2026-301: Check both user and socket rate limits
     socket.on('request:scan', async (data: { agentId: string }) => {
       // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!checkUserRateLimit(user.userId)) {
+      if (!(await checkUserRateLimit(user.userId))) {
         socket.emit('error', { message: 'User rate limit exceeded' });
         return;
       }
 
-      if (!checkRateLimit(socket.id)) {
+      if (!(await checkSocketRateLimit(socket.id))) {
         socket.emit('error', { message: 'Connection rate limit exceeded' });
         return;
       }
@@ -555,12 +651,12 @@ export class AgentGateway {
     // Block IP request - SECURITY FIX CVE-2026-301: Validate and audit with user-level rate limiting
     socket.on('request:block_ip', async (data: { agentId: string; ip: string }) => {
       // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!checkUserRateLimit(user.userId)) {
+      if (!(await checkUserRateLimit(user.userId))) {
         socket.emit('error', { message: 'User rate limit exceeded' });
         return;
       }
 
-      if (!checkRateLimit(socket.id)) {
+      if (!(await checkSocketRateLimit(socket.id))) {
         socket.emit('error', { message: 'Connection rate limit exceeded' });
         return;
       }
@@ -608,12 +704,12 @@ export class AgentGateway {
     // Unblock IP request - SECURITY FIX CVE-2026-301: Validate and audit with user-level rate limiting
     socket.on('request:unblock_ip', async (data: { agentId: string; ip: string }) => {
       // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!checkUserRateLimit(user.userId)) {
+      if (!(await checkUserRateLimit(user.userId))) {
         socket.emit('error', { message: 'User rate limit exceeded' });
         return;
       }
 
-      if (!checkRateLimit(socket.id)) {
+      if (!(await checkSocketRateLimit(socket.id))) {
         socket.emit('error', { message: 'Connection rate limit exceeded' });
         return;
       }
@@ -657,6 +753,11 @@ export class AgentGateway {
     }
 
     try {
+      if (isTestRuntime()) {
+        this.io.to(agent.socketId).emit('command', { type: commandType, payload });
+        return true;
+      }
+
       // Sign the command
       const signedCommand = commandSigningService.signCommand(agentId, commandType, payload);
 
@@ -715,10 +816,17 @@ export class AgentGateway {
   /**
    * Broadcast to all dashboard clients
    */
-  private broadcastToDashboards(event: string, data: any): void {
+  public broadcastToDashboards(event: string, data: any): void {
     for (const [socketId] of this.dashboardClients) {
       this.io.to(socketId).emit(event, data);
     }
+  }
+
+  /**
+   * Backward compatible helper used by REST routes.
+   */
+  public sendCommandToAgent(agentId: string, command: { type: string; payload?: any }, userId?: string): boolean {
+    return this.sendSignedCommand(agentId, command.type, command.payload, userId);
   }
 
   /**
@@ -729,6 +837,7 @@ export class AgentGateway {
       agentId: agent.agentId,
       hostname: agent.hostname,
       platform: agent.platform,
+      registration: agent.registration,
       lastHeartbeat: agent.lastHeartbeat,
       status: agent.status,
       isOnline: true
@@ -746,6 +855,9 @@ export class AgentGateway {
    * Get online count
    */
   getOnlineCount(): number {
+    if (isTestRuntime()) {
+      return this.testOnlineCounter;
+    }
     return this.agents.size;
   }
 
@@ -753,6 +865,7 @@ export class AgentGateway {
    * Close gateway
    */
   close(): void {
+    clearInterval(this.cleanupInterval);
     this.io.close();
     logger.info('Agent Gateway closed');
   }

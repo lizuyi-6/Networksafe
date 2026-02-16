@@ -55,6 +55,15 @@ function createFingerprint(info: { hostname: string; platform: string; mac?: str
  */
 export class AgentAuthService {
   private readonly CACHE_TTL = 3600; // 1 hour
+  private agentRegistrationColumns: Set<string> | null = null;
+
+  private getAgentRegistrationColumns(): Set<string> {
+    if (this.agentRegistrationColumns) return this.agentRegistrationColumns;
+    const db = getDatabase();
+    const rows = db.prepare(`PRAGMA table_info(agent_registrations)`).all() as any[];
+    this.agentRegistrationColumns = new Set(rows.map((r) => String(r.name)));
+    return this.agentRegistrationColumns;
+  }
 
   /**
    * Register a new agent (admin operation)
@@ -78,7 +87,7 @@ export class AgentAuthService {
 
     // SECURITY FIX CVE-2026-101: Use transaction to prevent race condition
     // This prevents duplicate hostname registrations under high concurrency
-    const registrationSuccess = db.transaction(() => {
+    const registrationSuccess = db.transaction<{ registration: AgentRegistration; apiKey: string } | null>(() => {
       // Check for existing hostname (within transaction)
       const existing = db.prepare(`
         SELECT agent_id FROM agent_registrations WHERE hostname = ?
@@ -115,25 +124,44 @@ export class AgentAuthService {
       };
 
       // SECURITY FIX CVE-2026-100: Parameterized query - hostname already sanitized
-      db.prepare(`
-        INSERT INTO agent_registrations (
-          agent_id, hostname, api_key_hash, secret_key, fingerprint,
-          platform, status, created_at, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        registration.agentId,
-        registration.hostname,
-        hashApiKey(registration.apiKey),
-        registration.secretKey,
-        JSON.stringify(registration.fingerprint),
-        registration.platform,
-        registration.status,
-        registration.createdAt,
-        info.tenantId || null
-      );
+      const cols = this.getAgentRegistrationColumns();
+      if (cols.has('tenant_id')) {
+        db.prepare(`
+          INSERT INTO agent_registrations (
+            agent_id, hostname, api_key_hash, secret_key, fingerprint,
+            platform, status, created_at, tenant_id
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          registration.agentId,
+          registration.hostname,
+          this.hashApiKey(registration.apiKey),
+          registration.secretKey,
+          JSON.stringify(registration.fingerprint),
+          registration.platform,
+          registration.status,
+          registration.createdAt,
+          info.tenantId || null
+        );
+      } else {
+        db.prepare(`
+          INSERT INTO agent_registrations (
+            agent_id, hostname, api_key_hash, secret_key, fingerprint,
+            platform, status, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          registration.agentId,
+          registration.hostname,
+          this.hashApiKey(registration.apiKey),
+          registration.secretKey,
+          JSON.stringify(registration.fingerprint),
+          registration.platform,
+          registration.status,
+          registration.createdAt
+        );
+      }
 
       return { registration, apiKey };
-    })(true); // Execute transaction immediately with deferred=false
+    });
 
     // Check if transaction was successful
     if (!registrationSuccess || typeof registrationSuccess === 'symbol') {
@@ -143,18 +171,8 @@ export class AgentAuthService {
     }
 
     const { registration, apiKey } = registrationSuccess as { registration: AgentRegistration; apiKey: string };
-      agentId,
-      sanitizedHostname, // Use sanitized value
-      this.hashApiKey(apiKey),
-      secretKey,
-      fingerprint,
-      info.platform,
-      'approved',
-      registration.createdAt,
-      info.tenantId || 'default'
-    );
 
-    logger.info(`Agent registered: ${agentId} (${sanitizedHostname})`);
+    logger.info(`Agent registered: ${registration.agentId} (${sanitizedHostname})`);
 
     return registration;
   }
@@ -248,9 +266,9 @@ export class AgentAuthService {
    */
   revokeAgent(agentId: string): boolean {
     const db = getDatabase();
-    const result = db.prepare(`
+    db.prepare(`
       UPDATE agent_registrations
-      SET status = 'revoked', updated_at = datetime('now')
+      SET status = 'revoked'
       WHERE agent_id = ?
     `).run(agentId);
 
@@ -258,7 +276,7 @@ export class AgentAuthService {
     redisService.del(`agent:auth:${agentId}`);
 
     logger.warn(`Agent revoked: ${agentId}`);
-    return result.changes > 0;
+    return true;
   }
 
   /**

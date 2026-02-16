@@ -6,9 +6,9 @@ import logger from '../utils/logger';
 class RedisService {
   private client: Redis | null = null;
   private disabled: boolean = false;
+  private connectionReady: boolean = false;
 
   constructor() {
-    // 测试环境下可以禁用 Redis
     if (process.env.DISABLE_REDIS === 'true' || process.env.NODE_ENV === 'test') {
       this.disabled = true;
       logger.warn('Redis disabled in test environment');
@@ -23,24 +23,45 @@ class RedisService {
 
       this.client = new Redis(redisUrl, {
         retryStrategy: (times) => {
+          if (times > 10) {
+            logger.warn('Redis connection retry limit reached, stopping retries');
+            return null;
+          }
           const delay = Math.min(times * 50, 2000);
           return delay;
         },
-        maxRetriesPerRequest: 3,
+        maxRetriesPerRequest: 1,
+        commandTimeout: 1000,
+        connectTimeout: 1000,
       });
 
       this.client.on('connect', () => {
+        this.connectionReady = true;
         logger.info('Redis connected successfully');
       });
 
+      this.client.on('ready', () => {
+        this.connectionReady = true;
+        logger.info('Redis ready for operations');
+      });
+
       this.client.on('error', (error) => {
-        logger.error('Redis connection error', { error });
+        this.connectionReady = false;
+        logger.error('Redis connection error', { error: error.message });
       });
 
       this.client.on('close', () => {
+        this.connectionReady = false;
         logger.warn('Redis connection closed');
       });
+
+      this.client.on('end', () => {
+        this.connectionReady = false;
+        logger.warn('Redis connection ended');
+      });
+
     } catch (error) {
+      this.connectionReady = false;
       logger.error('Failed to initialize Redis', { error });
     }
   }
@@ -56,7 +77,7 @@ class RedisService {
   }
 
   async get(key: string): Promise<string | null> {
-    if (this.disabled) return null;
+    if (this.disabled || !this.connectionReady) return null;
     try {
       return await this.getClient().get(key);
     } catch (error) {
@@ -66,7 +87,7 @@ class RedisService {
   }
 
   async set(key: string, value: string, seconds?: number): Promise<void> {
-    if (this.disabled) return;
+    if (this.disabled || !this.connectionReady) return;
     try {
       if (seconds) {
         await this.getClient().setex(key, seconds, value);
@@ -79,7 +100,7 @@ class RedisService {
   }
 
   async del(key: string): Promise<void> {
-    if (this.disabled) return;
+    if (this.disabled || !this.connectionReady) return;
     try {
       await this.getClient().del(key);
     } catch (error) {
@@ -88,7 +109,7 @@ class RedisService {
   }
 
   async exists(key: string): Promise<boolean> {
-    if (this.disabled) return false;
+    if (this.disabled || !this.connectionReady) return false;
     try {
       const result = await this.getClient().exists(key);
       return result === 1;
@@ -99,7 +120,7 @@ class RedisService {
   }
 
   async incr(key: string): Promise<number> {
-    if (this.disabled) return 0;
+    if (this.disabled || !this.connectionReady) return 0;
     try {
       return await this.getClient().incr(key);
     } catch (error) {
@@ -113,7 +134,16 @@ class RedisService {
     if (this.client) {
       await this.client.quit();
       this.client = null;
+      this.connectionReady = false;
     }
+  }
+
+  isAvailable(): boolean {
+    return !this.disabled && this.client !== null && this.connectionReady;
+  }
+
+  isDisabled(): boolean {
+    return this.disabled;
   }
 }
 

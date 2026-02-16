@@ -1,0 +1,91 @@
+﻿ M backend.Dockerfile
+ M backend/.env.example
+ M backend/data/newsecurity.db
+ M backend/jest.config.js
+ M backend/package.json
+ M backend/src/agent-cli.ts
+ M backend/src/agent/agent.ts
+ M backend/src/api/controllers/admin.controller.ts
+ M backend/src/api/routes/admin.routes.ts
+ M backend/src/api/routes/agents.routes.ts
+ M backend/src/api/routes/devices.routes.ts
+ M backend/src/api/routes/logs.routes.ts
+ M backend/src/api/routes/scanner.ts
+ M backend/src/api/routes/sites.routes.ts
+ M backend/src/app.ts
+ M backend/src/config/database.ts
+ M backend/src/database/init.ts
+ M backend/src/database/seeds/demo_data.ts
+ M backend/src/index.ts
+ M backend/src/middleware/auth.middleware.ts
+ M backend/src/middleware/rate-limit.middleware.ts
+ M backend/src/security/agent-auth.service.ts
+ M backend/src/security/anti-bot.middleware.ts
+ M backend/src/security/audit-logger.service.ts
+ M backend/src/security/auth-security.service.ts
+ M backend/src/security/command-signing.service.ts
+ M backend/src/security/enhanced-rate-limiter.service.ts
+ M backend/src/security/ratelimit.middleware.ts
+ M backend/src/security/redis.service.ts
+ M backend/src/server.ts
+ M backend/src/services/simulation.service.ts
+ M backend/src/websocket/agent-gateway.ts
+ M backend/src/websocket/device-gateway.ts
+ M backend/tsconfig.json
+ M deployment/backend/src/middleware/auth.middleware.ts
+ M docker-compose.yml
+ M frontend/.env.development
+ M frontend/package.json
+ M frontend/src/App.tsx
+ M frontend/src/components/AIEndpointSettings.tsx
+ M frontend/src/context/DemoContext.tsx
+ M frontend/src/context/LanguageContext.tsx
+ M frontend/src/locales/en.json
+ M frontend/src/locales/zh.json
+ M frontend/src/pages/Agents.tsx
+ M frontend/src/pages/BoardStatus.tsx
+ M frontend/src/pages/Dashboard.tsx
+ M frontend/src/pages/DeploymentWizard.tsx
+ M frontend/src/pages/Devices.tsx
+ M frontend/src/pages/FixHistory.tsx
+ M frontend/src/pages/Scanner.tsx
+ M frontend/src/pages/SuperAdmin.tsx
+ M frontend/src/services/api.ts
+ M frontend/src/types/api.ts
+ M frontend/vite.config.ts
+?? .trae/
+?? .trash_cleanup_20260215_204305/
+?? .trash_cleanup_20260215_204345/
+?? .trash_cleanup_20260215_204422/
+?? backend/Dockerfile
+?? backend/scripts/
+?? backend/src/ai-agents/
+?? backend/src/api/controllers/investigation.controller.ts
+?? backend/src/api/routes/agent-onboarding.routes.ts
+?? backend/src/api/routes/alerts.routes.ts
+?? backend/src/api/routes/dashboard.routes.ts
+?? backend/src/api/routes/deployments.routes.ts
+?? backend/src/api/routes/fix-history.routes.ts
+?? backend/src/api/routes/investigation.routes.ts
+?? backend/src/api/routes/system.routes.ts
+?? backend/src/api/routes/traffic.routes.ts
+?? backend/src/config/app-mode.ts
+?? backend/src/routes/
+?? backend/src/scanner/openai-compatible-client.ts
+?? backend/src/services/investigation.service.ts
+?? backend/src/services/scanner-task.service.ts
+?? backend/src/traffic-interceptor/
+?? backend/src/utils/ip-analyzer.ts
+?? backend/tsconfig.build.json
+?? cleanup_report/
+?? deployment/production/
+?? docs/agent-onboarding.md
+?? docs/implementation-guide/
+?? docs/implementation-progress/
+?? frontend/src/config/
+?? frontend/src/context/AttackStatusContext.tsx
+?? frontend/src/context/WebSocketContext.tsx
+?? frontend/src/pages/AgentMonitor.tsx
+?? frontend/src/pages/AttackSimulator.tsx
+?? frontend/src/pages/TrafficInterceptor.tsx
+?? scripts/verify-demo-separation.ps1

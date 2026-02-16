@@ -37,14 +37,39 @@ export default defineConfig(({ mode }) => {
             // https: httpsConfig,
             proxy: {
                 '/api': {
-                    target: env.VITE_API_TARGET || 'http://127.0.0.1:8080',
+                    target: env.VITE_API_TARGET || 'http://127.0.0.1:3005',
                     changeOrigin: true,
                     secure: false,
+                    configure: (proxy, options) => {
+                        proxy.on('error', (err, req, res) => {
+                            console.log('Proxy error:', err.message, 'for', req.url);
+                            console.log('Target:', options.target);
+                        });
+                        proxy.on('proxyReq', (proxyReq, req, _res) => {
+                            console.log('Proxying request:', req.method, req.url, 'to', options.target);
+                            if (req.headers.cookie) {
+                                proxyReq.setHeader('cookie', req.headers.cookie);
+                            }
+                        });
+                        proxy.on('proxyRes', (proxyRes, req, res) => {
+                            console.log('Proxy response:', proxyRes.statusCode, 'for', req.url);
+                        });
+                    }
                 },
                 '/socket.io': {
-                    target: env.VITE_API_TARGET || 'http://127.0.0.1:8080',
+                    target: env.VITE_API_TARGET || 'http://127.0.0.1:3005',
                     changeOrigin: true,
                     ws: true,
+                    configure: (proxy, _options) => {
+                        proxy.on('error', (err, _req, _res) => {
+                            console.log('proxy error', err);
+                        });
+                        proxy.on('proxyReqWs', (proxyReq, req, socket) => {
+                            socket.on('error', (err) => {
+                                console.log('socket error', err);
+                            });
+                        });
+                    }
                 }
             }
         }

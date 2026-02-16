@@ -1,0 +1,13 @@
+{
+  "name": "attack-simulator",
+  "version": "1.0.0",
+  "description": "Attack simulator for FluxGuard testing",
+  "main": "simulator.js",
+  "scripts": {
+    "start": "node simulator.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "chalk": "^4.1.2"
+  }
+}

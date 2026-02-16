@@ -223,8 +223,28 @@ export class AttackDetector {
             event.rawLog || ''
         ].join(' ');
 
+        const commandRules = this.rules.filter(rule => rule.id.startsWith('CMD-'));
+        for (const rule of commandRules) {
+            for (const pattern of rule.patterns) {
+                if (pattern.test(contentToCheck)) {
+                    return {
+                        type: rule.type,
+                        severity: rule.severity,
+                        sourceIP: event.sourceIP,
+                        description: rule.name,
+                        evidence: this.extractEvidence(contentToCheck, pattern),
+                        ruleId: rule.id,
+                        autoBlock: rule.autoBlock,
+                        blockDuration: rule.blockDuration,
+                        timestamp: new Date()
+                    };
+                }
+            }
+        }
+
         // 遍历规则进行检测
         for (const rule of this.rules) {
+            if (rule.id.startsWith('CMD-')) continue;
             for (const pattern of rule.patterns) {
                 if (pattern.test(contentToCheck)) {
                     const threat: ThreatAlert = {

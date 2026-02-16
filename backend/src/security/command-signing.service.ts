@@ -73,7 +73,7 @@ export class CommandSigningService {
    * Verify a signed command
    * Used by agents to verify commands from server
    */
-  verifyCommand(signedCommand: SignedCommand, secretKey: string): CommandValidationResult {
+  async verifyCommand(signedCommand: SignedCommand, secretKey: string): Promise<CommandValidationResult> {
     const { command, signature, agentId } = signedCommand;
 
     // Recreate signature

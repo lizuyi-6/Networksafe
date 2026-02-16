@@ -31,6 +31,17 @@ export interface AgentConfig {
     heartbeatInterval?: number; // 心跳间隔 (ms)
 }
 
+interface SignedCommandInput {
+    command: {
+        type: string;
+        payload?: any;
+        timestamp: number;
+        nonce: string;
+    };
+    signature: string;
+    agentId: string;
+}
+
 export interface AgentStatus {
     agentId: string;
     hostname: string;
@@ -216,7 +227,7 @@ export class Agent {
     /**
      * SECURITY FIX: Verify and handle signed commands
      */
-    private async handleSignedCommand(signedCommand: any): Promise<void> {
+    private async handleSignedCommand(signedCommand: SignedCommandInput): Promise<void> {
         const { command, signature, agentId } = signedCommand;
 
         // SECURITY FIX: Verify command is for this agent
@@ -282,7 +293,28 @@ export class Agent {
 
         // All security checks passed - execute command
         logger.info(`Executing verified command: ${command.type}`);
-        await this.executeCommand(command);
+        try {
+            await this.executeCommand(command);
+            if (this.socket?.connected) {
+                this.socket.emit('agent:command_ack', {
+                    agentId: this.agentId,
+                    commandType: command.type,
+                    nonce: command.nonce,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        } catch (error: any) {
+            if (this.socket?.connected) {
+                this.socket.emit('agent:command_failed', {
+                    agentId: this.agentId,
+                    commandType: command.type,
+                    nonce: command.nonce,
+                    error: error.message || 'Command execution failed',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            throw error;
+        }
     }
 
     /**
@@ -383,7 +415,14 @@ export class Agent {
 
 // 启动入口
 export async function startAgent(serverUrl: string): Promise<Agent> {
-    const agent = new Agent({ serverUrl });
+    const agentId = process.env.FLUXGUARD_AGENT_ID || process.env.AGENT_ID;
+    const apiKey = process.env.FLUXGUARD_AGENT_API_KEY || process.env.AGENT_API_KEY;
+    const secretKey = process.env.FLUXGUARD_AGENT_SECRET_KEY || process.env.AGENT_SECRET_KEY;
+    const heartbeatInterval = process.env.FLUXGUARD_HEARTBEAT_INTERVAL_MS
+        ? Number(process.env.FLUXGUARD_HEARTBEAT_INTERVAL_MS)
+        : undefined;
+
+    const agent = new Agent({ serverUrl, agentId, apiKey, secretKey, heartbeatInterval });
     await agent.start();
     return agent;
 }

@@ -1,0 +1,151 @@
+version: '3.8'
+
+networks:
+  fluxguard-net:
+    driver: bridge
+
+volumes:
+  demo-data:
+  ollama-data:
+
+services:
+  redis:
+    image: redis:alpine
+    command: redis-server --appendonly yes --requirepass demo_password_123
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "demo_password_123", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - fluxguard-net
+
+  vulnerable-app:
+    build:
+      context: ./vulnerable-app
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=development
+    networks:
+      - fluxguard-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+      - "8081:8080"
+    environment:
+      - APP_MODE=demo
+      - DEMO_AUTO_SEED=true
+      - ENABLE_ATTACK_SIM=true
+      - DATA_DIR=/app/data/demo
+      - REDIS_URL=redis://:demo_password_123@redis:6379
+      - PORT=3005
+      - NODE_ENV=production
+      - JWT_SECRET=demo_jwt_secret_for_testing_only_32chars
+      - AUDIT_LOG_SECRET=demo_audit_log_secret_for_testing_32chars
+      - DATABASE_PATH=/app/data/demo.db
+      - DISABLE_REDIS=false
+      - AI_LOCAL_PROVIDER=ollama
+      - AI_LOCAL_MODEL=llama3:8b
+      - AI_CLOUD_PROVIDER=zhipu
+      - AI_CLOUD_MODEL=glm-4
+      - OLLAMA_URL=http://ollama:11434
+      - ZHIPU_API_KEY=${ZHIPU_API_KEY:-}
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://dashboard:5173
+    volumes:
+      - demo-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+      vulnerable-app:
+        condition: service_started
+    networks:
+      - fluxguard-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3005/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - fluxguard-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  dashboard:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5175:5173"
+    environment:
+      - VITE_API_TARGET=http://backend:3005
+      - VITE_API_URL=http://localhost:3005
+      - VITE_APP_MODE=demo
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - fluxguard-net
+
+  probe-agent:
+    build:
+      context: ../agent
+      dockerfile: Dockerfile
+    environment:
+      - BACKEND_URL=http://backend:3005
+      - AGENT_ID=probe-agent-01
+      - HOSTNAME=fluxguard-probe
+      - AGENT_API_KEY=probe_agent_demo_key_32_characters
+      - HEARTBEAT_INTERVAL=30000
+      - METRICS_INTERVAL=10000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - fluxguard-net
+    restart: unless-stopped
+
+  attack-simulator:
+    build:
+      context: ./attack-simulator
+      dockerfile: Dockerfile
+    environment:
+      - TARGET_URL=http://vulnerable-app:8080
+      - DEFENSE_URL=http://backend:3005
+    depends_on:
+      - vulnerable-app
+      - backend
+    networks:
+      - fluxguard-net
+    profiles:
+      - attack

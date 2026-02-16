@@ -1,27 +1,107 @@
 import { Router } from 'express';
+import { getTrafficStats, getAgentSystem } from '../../routes/ai-system';
+import logger from '../../utils/logger';
+import { isDemoMode } from '../../config/app-mode';
 
 const router = Router();
 
+interface LogItem {
+    id: number;
+    time: string;
+    type: string;
+    level: string;
+    message: string;
+    ip: string;
+    status?: number;
+    method?: string;
+    path?: string;
+}
+
+let logCounter = 0;
+const recentLogs: LogItem[] = [];
+
+export const addLog = (log: Omit<LogItem, 'id' | 'time'>) => {
+    const newLog: LogItem = {
+        ...log,
+        id: ++logCounter,
+        time: new Date().toISOString()
+    };
+    recentLogs.unshift(newLog);
+    if (recentLogs.length > 100) {
+        recentLogs.pop();
+    }
+    return newLog;
+};
+
 router.get('/', (req, res) => {
-    // Mock logs
-    res.json([
-        {
-            id: 1,
-            time: new Date().toISOString(),
-            type: 'ANTIBOT',
-            level: 'WARN',
-            message: 'Suspicious User-Agent detected: curl/7.68.0',
-            ip: '192.168.1.100',
-        },
-        {
-            id: 2,
-            time: new Date(Date.now() - 15000).toISOString(),
-            type: 'RATELIMIT',
-            level: 'ERROR',
-            message: 'Rate limit exceeded for user',
-            ip: '10.0.0.55',
+    try {
+        const trafficStats = getTrafficStats();
+        const agentSystem = getAgentSystem();
+        const logs: LogItem[] = [...recentLogs];
+
+        if (agentSystem && agentSystem.isInitialized()) {
+            const probeReport = agentSystem.getProbeReport();
+            const alerts = probeReport.alerts || [];
+
+            alerts.forEach((alert: any, index: number) => {
+                logs.push({
+                    id: logCounter + index + 1,
+                    time: alert.timestamp || new Date().toISOString(),
+                    type: alert.metadata?.threatType || 'Security',
+                    level: alert.severity === 'critical' ? 'ERROR' : 'WARN',
+                    message: alert.message || 'Security event detected',
+                    ip: alert.metadata?.sourceIP || 'unknown',
+                    status: 403,
+                    method: alert.metadata?.method || 'POST',
+                    path: alert.metadata?.path || '/api/unknown'
+                });
+            });
         }
-    ]);
+
+        trafficStats.activeFlows.forEach((flow: any, index: number) => {
+            if (flow.state === 'BLOCKED') {
+                logs.push({
+                    id: logCounter + 1000 + index,
+                    time: flow.lastActivity || new Date().toISOString(),
+                    type: flow.attackName || 'Blocked',
+                    level: 'WARN',
+                    message: `Blocked request from ${flow.sourceIP}`,
+                    ip: flow.sourceIP,
+                    status: 403,
+                    method: 'POST',
+                    path: '/api/protected'
+                });
+            }
+        });
+
+        if (logs.length === 0 && isDemoMode()) {
+            logs.push(
+                {
+                    id: 1,
+                    time: new Date().toISOString(),
+                    type: 'System',
+                    level: 'INFO',
+                    message: 'FluxGuard security system is running',
+                    ip: 'system'
+                },
+                {
+                    id: 2,
+                    time: new Date(Date.now() - 5000).toISOString(),
+                    type: 'Health',
+                    level: 'INFO',
+                    message: 'All monitoring services active',
+                    ip: 'system'
+                }
+            );
+        }
+
+        logs.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+        res.json(logs.slice(0, 50));
+    } catch (error: any) {
+        logger.error('Failed to get logs', { error: error.message });
+        res.json([]);
+    }
 });
 
 export default router;

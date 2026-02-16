@@ -21,8 +21,13 @@ export interface LoginAttempt {
 
 export class AuthSecurityService {
   private readonly MAX_LOGIN_ATTEMPTS = 5;
-  private readonly LOCKOUT_DURATION = 900; // 15 minutes in seconds
-  private readonly ATTEMPT_WINDOW = 300; // 5 minutes in seconds
+  private readonly LOCKOUT_DURATION = 900;
+  private readonly ATTEMPT_WINDOW = 300;
+
+  private loginAttemptsFallback: Map<string, LoginAttempt[]> = new Map();
+  private lockedAccountsFallback: Map<string, { reason: string; lockedAt: string }> = new Map();
+  private sessionsFallback: Map<string, string> = new Map();
+  private concurrentSessionsFallback: Map<string, Set<string>> = new Map();
 
   private readonly PASSWORD_POLICY: PasswordPolicy = {
     minLength: 8,
@@ -42,18 +47,16 @@ export class AuthSecurityService {
   ];
 
   private readonly SUSPICIOUS_PATTERNS = [
-    /1234.*56/, // Sequential numbers
-    /abcd.*ef/, // Sequential letters
-    /qwerty.*uiop/, // Keyboard patterns
-    /(.+)\1{2,}/, // Repeated characters (aaa111)
+    /1234.*56/,
+    /abcd.*ef/,
+    /qwerty.*uiop/,
+    /(.+)\1{2,}/,
   ];
 
-  // Check password strength
   public validatePassword(password: string): { valid: boolean; errors: string[]; strength: string } {
     const errors: string[] = [];
     let strength = 'weak';
 
-    // Check length
     if (password.length < this.PASSWORD_POLICY.minLength) {
       errors.push(`Password must be at least ${this.PASSWORD_POLICY.minLength} characters long`);
     } else if (password.length >= 12) {
@@ -62,38 +65,31 @@ export class AuthSecurityService {
       strength = 'medium';
     }
 
-    // Check max length
     if (this.PASSWORD_POLICY.maxLength && password.length > this.PASSWORD_POLICY.maxLength) {
       errors.push(`Password must not exceed ${this.PASSWORD_POLICY.maxLength} characters`);
     }
 
-    // Check uppercase
     if (this.PASSWORD_POLICY.requireUppercase && !/[A-Z]/.test(password)) {
       errors.push('Password must contain at least one uppercase letter');
     }
 
-    // Check lowercase
     if (this.PASSWORD_POLICY.requireLowercase && !/[a-z]/.test(password)) {
       errors.push('Password must contain at least one lowercase letter');
     }
 
-    // Check numbers
     if (this.PASSWORD_POLICY.requireNumbers && !/\d/.test(password)) {
       errors.push('Password must contain at least one number');
     }
 
-    // Check special characters
     if (this.PASSWORD_POLICY.requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
       errors.push('Password must contain at least one special character');
     }
 
-    // Check against common passwords
     if (this.COMMON_PASSWORDS.includes(password.toLowerCase())) {
       errors.push('Password is too common');
       strength = 'weak';
     }
 
-    // Check for suspicious patterns
     for (const pattern of this.SUSPICIOUS_PATTERNS) {
       if (pattern.test(password)) {
         errors.push('Password contains predictable patterns');
@@ -109,26 +105,28 @@ export class AuthSecurityService {
     };
   }
 
-  // Record login attempt
   public async recordLoginAttempt(email: string, ip: string, success: boolean): Promise<void> {
-    const key = `auth:attempts:${email.toLowerCase()}`;
+    const key = email.toLowerCase();
 
     try {
       const attempt: LoginAttempt = {
-        email: email.toLowerCase(),
+        email: key,
         ip,
         success,
         timestamp: Date.now(),
       };
 
-      // Add attempt to Redis list
-      await redisService.getClient().lpush(key, JSON.stringify(attempt));
+      if (!redisService.isAvailable()) {
+        this.recordLoginAttemptFallback(key, attempt);
+        return;
+      }
 
-      // Remove old attempts outside the window
+      const redisKey = `auth:attempts:${key}`;
+      await redisService.getClient().lpush(redisKey, JSON.stringify(attempt));
+
       const cutoffTime = Date.now() - (this.ATTEMPT_WINDOW * 1000);
-      const attempts = await redisService.getClient().lrange(key, 0, -1);
+      const attempts = await redisService.getClient().lrange(redisKey, 0, -1);
 
-      // Filter and keep only recent attempts
       const recentAttempts = attempts
         .map(a => {
           try {
@@ -139,16 +137,13 @@ export class AuthSecurityService {
         })
         .filter((a: LoginAttempt | null) => a !== null && a.timestamp > cutoffTime) as LoginAttempt[];
 
-      // Clear and repopulate with recent attempts
-      await redisService.del(key);
+      await redisService.del(redisKey);
       for (const a of recentAttempts.reverse()) {
-        await redisService.getClient().rpush(key, JSON.stringify(a));
+        await redisService.getClient().rpush(redisKey, JSON.stringify(a));
       }
 
-      // Set expiry
-      await redisService.getClient().expire(key, this.ATTEMPT_WINDOW);
+      await redisService.getClient().expire(redisKey, this.ATTEMPT_WINDOW);
 
-      // If failed attempt, check if we need to lock the account
       if (!success) {
         await this.checkAndLockAccount(email, ip);
       }
@@ -157,12 +152,35 @@ export class AuthSecurityService {
     }
   }
 
-  // Check and lock account if too many failed attempts
+  private recordLoginAttemptFallback(key: string, attempt: LoginAttempt): void {
+    const attempts = this.loginAttemptsFallback.get(key) || [];
+    const cutoffTime = Date.now() - (this.ATTEMPT_WINDOW * 1000);
+    const recentAttempts = attempts.filter(a => a.timestamp > cutoffTime);
+    recentAttempts.unshift(attempt);
+    this.loginAttemptsFallback.set(key, recentAttempts);
+
+    if (!attempt.success) {
+      const failedAttempts = recentAttempts.filter(a => !a.success);
+      if (failedAttempts.length >= this.MAX_LOGIN_ATTEMPTS) {
+        this.lockedAccountsFallback.set(key, {
+          reason: `Too many failed login attempts (${this.MAX_LOGIN_ATTEMPTS})`,
+          lockedAt: new Date().toISOString(),
+        });
+        logger.error('Account locked (fallback)', { email: key, attempts: failedAttempts.length });
+      }
+    }
+  }
+
   private async checkAndLockAccount(email: string, ip: string): Promise<void> {
-    const key = `auth:attempts:${email.toLowerCase()}`;
+    const key = email.toLowerCase();
 
     try {
-      const attempts = await redisService.getClient().lrange(key, 0, -1);
+      if (!redisService.isAvailable()) {
+        return;
+      }
+
+      const redisKey = `auth:attempts:${key}`;
+      const attempts = await redisService.getClient().lrange(redisKey, 0, -1);
       const failedAttempts = attempts
         .map(a => {
           try {
@@ -174,8 +192,7 @@ export class AuthSecurityService {
         .filter((a: LoginAttempt | null): a is LoginAttempt => a !== null && !a.success);
 
       if (failedAttempts.length >= this.MAX_LOGIN_ATTEMPTS) {
-        // Lock the account
-        const lockKey = `auth:locked:${email.toLowerCase()}`;
+        const lockKey = `auth:locked:${key}`;
         await redisService.set(
           lockKey,
           JSON.stringify({
@@ -197,29 +214,40 @@ export class AuthSecurityService {
     }
   }
 
-  // Check if account is locked
   public async isAccountLocked(email: string): Promise<boolean> {
-    const key = `auth:locked:${email.toLowerCase()}`;
+    const key = email.toLowerCase();
 
     try {
-      return await redisService.exists(key);
+      if (!redisService.isAvailable()) {
+        return this.lockedAccountsFallback.has(key);
+      }
+
+      return await redisService.exists(`auth:locked:${key}`);
     } catch (error) {
       logger.error('Error checking account lock', { error, email });
       return false;
     }
   }
 
-  // Get lock information
   public async getLockInfo(email: string): Promise<{ locked: boolean; reason?: string; remainingTime?: number }> {
-    const key = `auth:locked:${email.toLowerCase()}`;
+    const key = email.toLowerCase();
 
     try {
-      const lockData = await redisService.get(key);
+      if (!redisService.isAvailable()) {
+        const lock = this.lockedAccountsFallback.get(key);
+        if (lock) {
+          return { locked: true, reason: lock.reason, remainingTime: this.LOCKOUT_DURATION };
+        }
+        return { locked: false };
+      }
+
+      const redisKey = `auth:locked:${key}`;
+      const lockData = await redisService.get(redisKey);
       if (!lockData) {
         return { locked: false };
       }
 
-      const ttl = await redisService.getClient().ttl(key);
+      const ttl = await redisService.getClient().ttl(redisKey);
       const lock = JSON.parse(lockData);
 
       return {
@@ -233,23 +261,30 @@ export class AuthSecurityService {
     }
   }
 
-  // Unlock account (admin only or after lockout period)
   public async unlockAccount(email: string): Promise<void> {
-    const key = `auth:locked:${email.toLowerCase()}`;
+    const key = email.toLowerCase();
 
     try {
-      await redisService.del(key);
+      if (!redisService.isAvailable()) {
+        this.lockedAccountsFallback.delete(key);
+        logger.info('Account unlocked (fallback)', { email });
+        return;
+      }
+
+      await redisService.del(`auth:locked:${key}`);
       logger.info('Account unlocked', { email });
     } catch (error) {
       logger.error('Error unlocking account', { error, email });
     }
   }
 
-  // Check IP for multiple failed login attempts (possible brute force)
   public async checkIPBruteForce(ip: string): Promise<boolean> {
-    const key = `auth:ip:attempts:${ip}`;
-
     try {
+      if (!redisService.isAvailable()) {
+        return false;
+      }
+
+      const key = `auth:ip:attempts:${ip}`;
       const attempts = await redisService.getClient().lrange(key, 0, -1);
       const recentAttempts = attempts
         .map(a => {
@@ -265,7 +300,6 @@ export class AuthSecurityService {
           return timeSinceAttempt < (this.ATTEMPT_WINDOW * 1000);
         });
 
-      // If more than 10 failed attempts from same IP, it's suspicious
       const failedAttempts = recentAttempts.filter((a: LoginAttempt) => !a.success);
       if (failedAttempts.length > 10) {
         logger.error('Possible brute force attack detected', {
@@ -282,12 +316,17 @@ export class AuthSecurityService {
     }
   }
 
-  // Get failed login attempts for monitoring
   public async getFailedAttempts(email: string): Promise<LoginAttempt[]> {
-    const key = `auth:attempts:${email.toLowerCase()}`;
+    const key = email.toLowerCase();
 
     try {
-      const attempts = await redisService.getClient().lrange(key, 0, -1);
+      if (!redisService.isAvailable()) {
+        const attempts = this.loginAttemptsFallback.get(key) || [];
+        return attempts.filter(a => !a.success);
+      }
+
+      const redisKey = `auth:attempts:${key}`;
+      const attempts = await redisService.getClient().lrange(redisKey, 0, -1);
       return attempts
         .map(a => {
           try {
@@ -303,32 +342,26 @@ export class AuthSecurityService {
     }
   }
 
-  // Detect suspicious login behavior
   public async detectSuspiciousLogin(req: Request, email: string): Promise<string[]> {
     const warnings: string[] = [];
     const ip = req.ip || req.connection.remoteAddress || 'unknown';
 
-    // Check if account is locked
     const isLocked = await this.isAccountLocked(email);
     if (isLocked) {
       const lockInfo = await this.getLockInfo(email);
       warnings.push(`Account is locked: ${lockInfo.reason}`);
     }
 
-    // Check IP for brute force
     const isBruteForce = await this.checkIPBruteForce(ip);
     if (isBruteForce) {
       warnings.push('Multiple failed login attempts detected from your IP');
     }
 
-    // Check for unusual login time (optional)
     const hour = new Date().getHours();
     if (hour >= 2 && hour <= 5) {
-      // Logins between 2-5 AM are suspicious
       warnings.push('Unusual login time detected');
     }
 
-    // Check User-Agent consistency (optional enhancement)
     const userAgent = req.headers['user-agent'];
     if (!userAgent || userAgent.length < 10) {
       warnings.push('Invalid User-Agent');
@@ -337,17 +370,18 @@ export class AuthSecurityService {
     return warnings;
   }
 
-  // Generate session ID for additional security
-  // SECURITY FIX: Use cryptographically secure random bytes
   public generateSessionId(): string {
     return crypto.randomBytes(32).toString('hex');
   }
 
-  // Validate session
   public async validateSession(userId: string, sessionId: string): Promise<boolean> {
-    const key = `auth:session:${userId}`;
-
     try {
+      if (!redisService.isAvailable()) {
+        const storedSessionId = this.sessionsFallback.get(userId);
+        return storedSessionId === sessionId;
+      }
+
+      const key = `auth:session:${userId}`;
       const storedSessionId = await redisService.get(key);
       return storedSessionId === sessionId;
     } catch (error) {
@@ -356,23 +390,29 @@ export class AuthSecurityService {
     }
   }
 
-  // Invalidate session (logout)
   public async invalidateSession(userId: string): Promise<void> {
-    const key = `auth:session:${userId}`;
-
     try {
-      await redisService.del(key);
+      if (!redisService.isAvailable()) {
+        this.sessionsFallback.delete(userId);
+        logger.info('Session invalidated (fallback)', { userId });
+        return;
+      }
+
+      await redisService.del(`auth:session:${userId}`);
       logger.info('Session invalidated', { userId });
     } catch (error) {
       logger.error('Error invalidating session', { error, userId });
     }
   }
 
-  // Check for concurrent sessions
   public async checkConcurrentSessions(userId: string, maxSessions: number = 3): Promise<boolean> {
-    const key = `auth:concurrent:${userId}`;
-
     try {
+      if (!redisService.isAvailable()) {
+        const sessions = this.concurrentSessionsFallback.get(userId);
+        return !sessions || sessions.size < maxSessions;
+      }
+
+      const key = `auth:concurrent:${userId}`;
       const sessionCount = await redisService.getClient().scard(key);
       return sessionCount < maxSessions;
     } catch (error) {
@@ -381,15 +421,21 @@ export class AuthSecurityService {
     }
   }
 
-  // Add session
   public async addSession(userId: string, sessionId: string, deviceInfo: Record<string, unknown>): Promise<void> {
-    const key = `auth:concurrent:${userId}`;
-
     try {
-      await redisService.getClient().sadd(key, sessionId);
-      await redisService.getClient().expire(key, 86400); // 24 hours
+      if (!redisService.isAvailable()) {
+        if (!this.concurrentSessionsFallback.has(userId)) {
+          this.concurrentSessionsFallback.set(userId, new Set());
+        }
+        this.concurrentSessionsFallback.get(userId)!.add(sessionId);
+        this.sessionsFallback.set(sessionId, userId);
+        return;
+      }
 
-      // Store session details
+      const key = `auth:concurrent:${userId}`;
+      await redisService.getClient().sadd(key, sessionId);
+      await redisService.getClient().expire(key, 86400);
+
       const sessionKey = `auth:session:${sessionId}`;
       await redisService.set(
         sessionKey,
@@ -405,12 +451,19 @@ export class AuthSecurityService {
     }
   }
 
-  // Remove session
   public async removeSession(userId: string, sessionId: string): Promise<void> {
-    const key = `auth:concurrent:${userId}`;
-    const sessionKey = `auth:session:${sessionId}`;
-
     try {
+      if (!redisService.isAvailable()) {
+        const sessions = this.concurrentSessionsFallback.get(userId);
+        if (sessions) {
+          sessions.delete(sessionId);
+        }
+        this.sessionsFallback.delete(sessionId);
+        return;
+      }
+
+      const key = `auth:concurrent:${userId}`;
+      const sessionKey = `auth:session:${sessionId}`;
       await redisService.getClient().srem(key, sessionId);
       await redisService.del(sessionKey);
     } catch (error) {

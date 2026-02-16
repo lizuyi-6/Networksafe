@@ -96,7 +96,11 @@ export function sanitizeObject(obj: any, maxDepth: number = 10): any {
     );
 
     if (isSensitive) {
-      sanitized[key] = '***REDACTED***';
+      if (lowerKey.includes('apikey') || lowerKey.includes('api_key')) {
+        sanitized[key] = partiallyRedactSecret(value);
+      } else {
+        sanitized[key] = '***REDACTED***';
+      }
     } else if (maxDepth > 0 && typeof value === 'object') {
       sanitized[key] = sanitizeObject(value, maxDepth - 1);
     } else {
@@ -271,6 +275,13 @@ function partiallyRedactIP(ip: string): string {
   if (parts.length !== 4) return '***REDACTED***';
 
   return `${parts[0]}.${parts[1]}.*.*`;
+}
+
+function partiallyRedactSecret(value: unknown): string {
+  if (typeof value !== 'string' || value.length <= 8) {
+    return '***REDACTED***';
+  }
+  return `${value.slice(0, 4)}...${value.slice(-4)}`;
 }
 
 export default {

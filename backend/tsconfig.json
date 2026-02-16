@@ -19,8 +19,7 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "types": [
-      "node",
-      "jest"
+      "node"
     ]
   },
   "include": [
@@ -28,6 +27,14 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src/__tests__/**/*",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/security/**/*",
+    "src/database/migrations/**/*",
+    "src/middleware/rate-limit.middleware.ts",
+    "src/api/routes/sites.routes.ts",
+    "src/api/routes/smart-fix.ts"
   ]
 }

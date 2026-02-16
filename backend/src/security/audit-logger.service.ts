@@ -352,7 +352,13 @@ export class AuditLogger {
       }
 
       // Create backup data structure
-      const backup = {
+      const backup: {
+        exportedAt: string;
+        version: string;
+        recordCount: number;
+        logs: any[];
+        checksum?: string;
+      } = {
         exportedAt: new Date().toISOString(),
         version: '1.0',
         recordCount: logs.length,
@@ -580,12 +586,11 @@ export class AuditLogger {
       }
 
       // Delete old logs
-      const deleteResult = db.prepare(
+      db.prepare(
         'DELETE FROM audit_log WHERE timestamp < ?'
       ).run(cutoffIso);
 
       logger.info(`Audit log rotation complete`, {
-        deletedCount: deleteResult.changes,
         backupPath: backupResult.filePath
       });
 
@@ -596,7 +601,6 @@ export class AuditLogger {
         actor: { type: 'system', id: 'audit-service' },
         action: 'rotate_logs',
         details: {
-          deletedCount: deleteResult.changes,
           backupPath: backupResult.filePath,
           cutoffDate: cutoffIso
         },
@@ -605,7 +609,6 @@ export class AuditLogger {
 
       return {
         success: true,
-        archivedCount: deleteResult.changes,
         backupPath: backupResult.filePath
       };
     } catch (error: any) {

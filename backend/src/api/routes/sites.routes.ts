@@ -1,23 +1,73 @@
 import { Router, Request, Response } from 'express';
-import { authenticate, AuthenticatedRequest } from '../middleware/auth.middleware';
+import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { getDatabase } from '../../config/database';
+import logger from '../../utils/logger';
 
 const router = Router();
 
-/**
- * GET /api/sites/
- * 获取站点列表
- *
- * 🔒 SECURITY: 需要认证（修复 CVE-2024-XXXX）
- * 之前: 无认证，任何人都可以访问
- * 修复后: 需要有效的 JWT Token 或 API Key
- */
-router.get('/', authenticate, (req: AuthenticatedRequest, res: Response) => {
-    // 实际应用中应该从数据库查询，并根据用户租户 ID 过滤
-    // 这里返回模拟数据用于演示
-    res.json([
-        { id: 1, domain: 'api.example.com', status: 'secure' },
-        { id: 2, domain: 'admin.example.com', status: 'warning' },
-    ]);
+router.use(authenticate);
+
+router.get('/', (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const db = getDatabase().getDb();
+        const user = req.user!;
+
+        let sites;
+        if (user.role === 'admin') {
+            sites = db.prepare('SELECT * FROM sites ORDER BY createdAt DESC').all();
+        } else {
+            sites = db.prepare('SELECT * FROM sites WHERE tenantId = ? ORDER BY createdAt DESC').all(user.tenantId);
+        }
+
+        if (!sites || sites.length === 0) {
+            return res.json([]);
+        }
+
+        const formattedSites = sites.map((site: any) => ({
+            id: site.id,
+            domain: site.domain,
+            target: site.target,
+            status: site.sslEnabled ? 'secure' : 'warning',
+            sslEnabled: Boolean(site.sslEnabled),
+            antiBotEnabled: Boolean(site.antiBotEnabled),
+            rateLimitEnabled: Boolean(site.rateLimitEnabled),
+            concurrencyEnabled: Boolean(site.concurrencyEnabled)
+        }));
+
+        res.json(formattedSites);
+    } catch (error: any) {
+        logger.error('Failed to get sites', { error: error.message });
+        res.json([]);
+    }
+});
+
+router.get('/:id', (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const db = getDatabase().getDb();
+        const user = req.user!;
+
+        let site;
+        if (user.role === 'admin') {
+            site = db.prepare('SELECT * FROM sites WHERE id = ?').get(req.params.id);
+        } else {
+            site = db.prepare('SELECT * FROM sites WHERE id = ? AND tenantId = ?').get(req.params.id, user.tenantId);
+        }
+
+        if (!site) {
+            return res.status(404).json({ error: 'Site not found' });
+        }
+
+        res.json({
+            id: (site as any).id,
+            domain: (site as any).domain,
+            target: (site as any).target,
+            status: (site as any).sslEnabled ? 'secure' : 'warning',
+            sslEnabled: Boolean((site as any).sslEnabled)
+        });
+    } catch (error: any) {
+        logger.error('Failed to get site', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 export default router;

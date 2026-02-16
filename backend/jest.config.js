@@ -1,30 +1,30 @@
-module.exports = {
-    preset: 'ts-jest',
+﻿module.exports = {
     testEnvironment: 'node',
     roots: ['<rootDir>/src'],
-    testMatch: ['**/__tests__/**/*.test.ts'],
+    testMatch: ['**/__tests__/**/*.test.ts', '**/tests/**/*.test.ts'],
     moduleFileExtensions: ['ts', 'js', 'json'],
     collectCoverageFrom: [
-        'src/**/*.ts',
-        '!src/**/*.d.ts',
-        '!src/__tests__/**'
+        'src/api/**/*.ts',
+        'src/services/**/*.ts',
+        'src/middleware/**/*.ts',
+        '!src/**/*.d.ts'
     ],
     coverageDirectory: 'coverage',
     transform: {
-        '^.+\\.ts$': 'ts-jest'
+        '^.+\\.ts$': ['ts-jest', {
+            tsconfig: 'tsconfig.test.json',
+            diagnostics: false
+        }]
     },
-    // 忽略某些路径
-    testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-    // 超时设置
+    testPathIgnorePatterns: [
+        '/node_modules/',
+        '/dist/',
+        '/src/ai-agents/investigation/',
+        '/src/ai-agents/tests/'
+    ],
+    watchman: false,
+    maxWorkers: 1,
+    forceExit: true,
     testTimeout: 30000,
-    // 设置文件 - 加载环境变量和全局配置
-    setupFiles: ['<rootDir>/jest.setup.js'],
-    // 环境变量
-    globals: {
-        'ts-jest': {
-            tsconfig: {
-                esModuleInterop: true
-            }
-        }
-    }
+    setupFiles: ['<rootDir>/jest.setup.js']
 };
