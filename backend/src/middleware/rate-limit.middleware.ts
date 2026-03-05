@@ -10,6 +10,8 @@ import { Request, Response, NextFunction } from 'express';
 import enhancedRateLimiter from '../security/enhanced-rate-limiter.service';
 import logger from '../utils/logger';
 
+const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
+
 export interface RateLimitMiddlewareOptions {
   maxRequests?: number;
   windowMs?: number;
@@ -24,7 +26,7 @@ export interface RateLimitMiddlewareOptions {
  */
 function defaultHandler(req: Request, res: Response): void {
   res.status(429).json({
-    error: 'Too many requests',
+    error: 'backend.too_many_requests',
     code: 'RATE_LIMIT_EXCEEDED',
     retryAfter: 60, // seconds
   });
@@ -76,7 +78,7 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
         });
 
         res.status(429).json({
-          error: 'Request blocked - suspicious activity detected',
+          error: 'backend.request_blocked_suspicious_activity_detected',
           code: 'IP_SPOOFING_DETECTED',
         });
         return;
@@ -133,16 +135,22 @@ function getDefaultKey(req: Request): string {
  * Get client IP address with proxy support
  */
 function getClientIP(req: Request): string {
+  if (TRUST_PROXY) {
+    const forwardedFor = req.headers['x-forwarded-for'] as string;
+    if (forwardedFor) {
+      return forwardedFor.split(',')[0].trim();
+    }
+    const realIp = req.headers['x-real-ip'] as string;
+    if (realIp) {
+      return realIp.trim();
+    }
+  }
   return (
-    req.headers['x-forwarded-for'] as string ||
-    req.headers['x-real-ip'] as string ||
-    req.connection.remoteAddress ||
     req.socket.remoteAddress ||
-    (req.connection as any).socket?.remoteAddress ||
+    (req.connection as any)?.socket?.remoteAddress ||
+    req.connection?.remoteAddress ||
     'unknown'
-  )
-    .split(',')[0]
-    .trim();
+  ).trim();
 }
 
 /**
@@ -155,7 +163,7 @@ export const authRateLimit = rateLimit({
   windowMs: 60000,
   handler: (req, res) => {
     res.status(429).json({
-      error: 'Too many authentication attempts. Please try again later.',
+      error: 'backend.too_many_authentication_attempts_please_try_again_later',
       code: 'AUTH_RATE_LIMIT_EXCEEDED',
       retryAfter: 60,
     });
@@ -180,7 +188,7 @@ export const adminRateLimit = rateLimit({
   windowMs: 60000,
   handler: (req, res) => {
     res.status(429).json({
-      error: 'Too many admin operations. Please slow down.',
+      error: 'backend.too_many_admin_operations_please_slow_down',
       code: 'ADMIN_RATE_LIMIT_EXCEEDED',
       retryAfter: 60,
     });
@@ -193,7 +201,7 @@ export const wsRateLimit = rateLimit({
   windowMs: 60000,
   handler: (req, res) => {
     res.status(429).json({
-      error: 'Too many WebSocket connection attempts.',
+      error: 'backend.too_many_websocket_connection_attempts',
       code: 'WS_RATE_LIMIT_EXCEEDED',
       retryAfter: 60,
     });

@@ -42,7 +42,7 @@ describe('Authentication API', () => {
                 });
 
             expect(response.status).toBe(201);
-            expect(response.body.message).toBe('User registered successfully');
+            expect(response.body.message).toBe('backend.user_registered_successfully');
             expect(response.body.user).toBeDefined();
             expect(response.body.user.email).toBe('test@example.com');
             expect(response.body.accessToken).toBeDefined();
@@ -144,7 +144,7 @@ describe('Authentication API', () => {
                 });
 
             expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Login successful');
+            expect(response.body.message).toBe('backend.login_successful');
             expect(response.body.user).toBeDefined();
             expect(response.body.accessToken).toBeDefined();
             expect(response.body.refreshToken).toBeDefined();
@@ -249,7 +249,7 @@ describe('Authentication API', () => {
                 .send({ refreshToken });
 
             expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Token refreshed');
+            expect(response.body.message).toBe('backend.token_refreshed');
             expect(response.body.accessToken).toBeDefined();
             expect(response.body.refreshToken).toBeDefined();
         });
@@ -294,7 +294,7 @@ describe('Authentication API', () => {
                 .set('Authorization', `Bearer ${accessToken}`);
 
             expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Logout successful');
+            expect(response.body.message).toBe('backend.logout_successful');
         });
 
         it('should reject logout without token', async () => {
@@ -330,7 +330,7 @@ describe('Authentication API', () => {
                 });
 
             expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Password changed successfully');
+            expect(response.body.message).toBe('backend.password_changed_successfully');
 
             // Verify new password works
             const loginResponse = await request(app)

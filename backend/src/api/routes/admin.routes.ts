@@ -56,7 +56,7 @@ router.post('/api-keys', authenticate, requireRole('admin'), async (req: Authent
                 success: false,
                 error: {
                     code: 'FG-AUTH-401',
-                    message: 'Unauthorized',
+                    message: 'backend.unauthorized',
                     timestamp: new Date().toISOString()
                 }
             });
@@ -108,6 +108,89 @@ router.delete('/api-keys/:id', authenticate, requireRole('admin'), (req: Authent
                 timestamp: new Date().toISOString()
             }
         });
+    }
+});
+
+router.get('/users', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res) => {
+    try {
+        const db = getDatabase();
+        // Return users without password_hash
+        const rows = db.prepare(`
+            SELECT id, email, username, role, plan, tenant_id, status, last_login, created_at 
+            FROM users 
+            ORDER BY created_at DESC
+        `).all();
+
+        res.json({ success: true, users: rows });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: 'backend.failed_to_list_users' });
+    }
+});
+
+router.put('/users/:id/plan', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res) => {
+    try {
+        const { id } = req.params;
+        const { plan } = req.body;
+
+        if (!['starter', 'pro', 'ultra'].includes(plan)) {
+            return res.status(400).json({ success: false, error: 'backend.invalid_plan' });
+        }
+
+        const db = getDatabase();
+        const existingInfo = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
+        if (!existingInfo) {
+            return res.status(404).json({ success: false, error: 'backend.user_not_found' });
+        }
+        db.prepare('UPDATE users SET plan = ?, updated_at = datetime(\'now\') WHERE id = ?').run(plan, id);
+
+        res.json({ success: true, message: 'backend.plan_updated' });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: 'backend.failed_to_update_user_plan' });
+    }
+});
+
+router.put('/users/:id/role', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+
+        if (!['admin', 'tenant', 'viewer'].includes(role)) {
+            return res.status(400).json({ success: false, error: 'backend.invalid_role' });
+        }
+
+        const db = getDatabase();
+        const existingInfo = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
+        if (!existingInfo) {
+            return res.status(404).json({ success: false, error: 'backend.user_not_found' });
+        }
+        db.prepare('UPDATE users SET role = ?, updated_at = datetime(\'now\') WHERE id = ?').run(role, id);
+
+        res.json({ success: true, message: 'backend.role_updated' });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: 'backend.failed_to_update_user_role' });
+    }
+});
+
+router.put('/users/:id/status', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!['active', 'suspended', 'pending'].includes(status)) {
+            return res.status(400).json({ success: false, error: 'backend.invalid_status' });
+        }
+
+        const db = getDatabase();
+        const existingInfo = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
+        if (!existingInfo) {
+            return res.status(404).json({ success: false, error: 'backend.user_not_found' });
+        }
+
+        db.prepare('UPDATE users SET status = ?, updated_at = datetime(\'now\') WHERE id = ?').run(status, id);
+
+        res.json({ success: true, message: 'backend.status_updated' });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: 'backend.failed_to_update_user_status' });
     }
 });
 

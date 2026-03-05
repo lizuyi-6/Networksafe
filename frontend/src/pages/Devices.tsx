@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import {
     Cpu, HardDrive, Wifi, WifiOff, Radio,
     RefreshCw, Terminal, Power, Settings,
@@ -41,6 +42,7 @@ const DeviceCard = ({
     onSelect: () => void;
     isSelected: boolean;
 }) => {
+    const { t } = useLanguage();
     return (
         <div
             onClick={onSelect}
@@ -69,7 +71,7 @@ const DeviceCard = ({
                         : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                     : 'bg-muted text-muted-foreground border border-border'}`}>
                     {device.isOnline ? (
-                        device.mode === 'online' ? <><Wifi size={12} /> Cloud</> : <><WifiOff size={12} /> Offline</>
+                        device.mode === 'online' ? <><Wifi size={12} /> {t('devices.cloud_mode')}</> : <><WifiOff size={12} /> {t('devices.no_agents')}</>
                     ) : (
                         <><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></span> Disconnected</>
                     )}
@@ -81,23 +83,23 @@ const DeviceCard = ({
                     <div className="bg-muted/30 rounded-lg p-2 text-center">
                         <Cpu size={14} className="mx-auto mb-1 text-muted-foreground" />
                         <div className="text-sm font-medium text-foreground">{device.status.cpuUsage}%</div>
-                        <div className="text-xxs text-muted-foreground">CPU</div>
+                        <div className="text-xxs text-muted-foreground">{t('devices.cpu')}</div>
                     </div>
                     <div className="bg-muted/30 rounded-lg p-2 text-center">
                         <HardDrive size={14} className="mx-auto mb-1 text-muted-foreground" />
                         <div className="text-sm font-medium text-foreground">{device.status.memoryUsage.toFixed(0)}%</div>
-                        <div className="text-xxs text-muted-foreground">Memory</div>
+                        <div className="text-xxs text-muted-foreground">{t('devices.memory')}</div>
                     </div>
                     <div className="bg-muted/30 rounded-lg p-2 text-center">
                         <Activity size={14} className="mx-auto mb-1 text-muted-foreground" />
                         <div className="text-sm font-medium text-foreground">{device.status.wifiRssi}dBm</div>
-                        <div className="text-xxs text-muted-foreground">Signal</div>
+                        <div className="text-xxs text-muted-foreground">{t('devices.signal')}</div>
                     </div>
                 </div>
             )}
 
             <div className="flex items-center justify-between text-sm mb-4">
-                <span className="text-muted-foreground">Connected Agents</span>
+                <span className="text-muted-foreground">{t('devices.connected_agents')}</span>
                 <span className="font-medium text-foreground flex items-center gap-1"><Server size={14} className="text-primary" />{device.connectedAgents.length}</span>
             </div>
 
@@ -133,6 +135,7 @@ const DeviceCard = ({
 };
 
 const Devices = () => {
+    const { t } = useLanguage();
     const [devices, setDevices] = useState<Device[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
@@ -184,8 +187,8 @@ const Devices = () => {
         <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-foreground tracking-tight">Hardware Gateway Management</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Manage ESP32 edge gateways and their connected agents</p>
+                    <h2 className="text-2xl font-bold text-foreground tracking-tight">{t('devices.title')}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">{t('devices.title')}</p>
                 </div>
                 <div className="flex gap-3">
                     <button onClick={fetchDevices} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-card border border-border text-foreground rounded-lg hover:bg-muted/50 hover:border-primary/30 transition-all shadow-sm">
@@ -198,19 +201,19 @@ const Devices = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-primary/10 text-primary rounded-lg"><Radio size={18} /></div><span className="text-sm font-medium text-muted-foreground">Total Gateways</span></div>
+                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-primary/10 text-primary rounded-lg"><Radio size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.total_gateways')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{devices.length}</div>
                 </div>
                 <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg"><Wifi size={18} /></div><span className="text-sm font-medium text-muted-foreground">Online</span></div>
+                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg"><Wifi size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.online')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{onlineCount}</div>
                 </div>
                 <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg"><Globe size={18} /></div><span className="text-sm font-medium text-muted-foreground">Cloud Mode</span></div>
+                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg"><Globe size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.cloud_mode')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{cloudCount}</div>
                 </div>
                 <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-orange-500/10 text-orange-500 rounded-lg"><Server size={18} /></div><span className="text-sm font-medium text-muted-foreground">Total Agents</span></div>
+                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-orange-500/10 text-orange-500 rounded-lg"><Server size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.total_agents')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{devices.reduce((acc, d) => acc + d.connectedAgents.length, 0)}</div>
                 </div>
             </div>
@@ -222,7 +225,7 @@ const Devices = () => {
                         {loading ? (
                             <div className="text-center py-12 text-muted-foreground">Loading gateways...</div>
                         ) : devices.length === 0 ? (
-                            <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-border/50">No gateways registered</div>
+                            <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-border/50">{t('devices.no_gateways')}</div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {devices.map(device => (
@@ -239,12 +242,12 @@ const Devices = () => {
                             <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
                                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Terminal size={16} className="text-primary" /> Device Details</h3>
                                 <dl className="space-y-3 text-sm">
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">Device ID</dt><dd className="font-medium text-foreground">{selectedDeviceData.deviceId}</dd></div>
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">Chip Model</dt><dd className="font-medium text-foreground">{selectedDeviceData.chipModel}</dd></div>
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">Flash Size</dt><dd className="font-medium text-foreground">{(selectedDeviceData.flashSize / 1024 / 1024).toFixed(0)} MB</dd></div>
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">Free Heap</dt><dd className="font-medium text-foreground">{(selectedDeviceData.freeHeap / 1024).toFixed(0)} KB</dd></div>
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">SDK Version</dt><dd className="font-medium text-foreground">{selectedDeviceData.sdkVersion}</dd></div>
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">Last Heartbeat</dt><dd className="font-medium text-foreground">{new Date(selectedDeviceData.lastHeartbeat).toLocaleTimeString()}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.device_id')}</dt><dd className="font-medium text-foreground">{selectedDeviceData.deviceId}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.chip_model')}</dt><dd className="font-medium text-foreground">{selectedDeviceData.chipModel}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.flash_size')}</dt><dd className="font-medium text-foreground">{(selectedDeviceData.flashSize / 1024 / 1024).toFixed(0)} MB</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.free_heap')}</dt><dd className="font-medium text-foreground">{(selectedDeviceData.freeHeap / 1024).toFixed(0)} KB</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.sdk_version')}</dt><dd className="font-medium text-foreground">{selectedDeviceData.sdkVersion}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.last_heartbeat')}</dt><dd className="font-medium text-foreground">{new Date(selectedDeviceData.lastHeartbeat).toLocaleTimeString()}</dd></div>
                                 </dl>
                             </div>
                             <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
@@ -255,11 +258,11 @@ const Devices = () => {
                                             <li key={agent} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg"><span className="text-sm font-medium text-foreground">{agent}</span><ChevronRight size={16} className="text-muted-foreground" /></li>
                                         ))}
                                     </ul>
-                                ) : <p className="text-sm text-muted-foreground text-center py-4">No agents connected</p>}
+                                ) : <p className="text-sm text-muted-foreground text-center py-4">{t('devices.no_agents')}</p>}
                             </div>
                         </>
                     ) : (
-                        <div className="bg-card border border-border rounded-xl p-5 shadow-sm text-center py-12"><Shield size={32} className="mx-auto mb-3 text-muted-foreground" /><p className="text-muted-foreground">Select a device to view details</p></div>
+                        <div className="bg-card border border-border rounded-xl p-5 shadow-sm text-center py-12"><Shield size={32} className="mx-auto mb-3 text-muted-foreground" /><p className="text-muted-foreground">{t('devices.select_device')}</p></div>
                     )}
                 </div>
             </div>

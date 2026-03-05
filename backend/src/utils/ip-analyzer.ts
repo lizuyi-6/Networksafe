@@ -50,9 +50,7 @@ export class IPAnalyzer {
     };
 
     constructor() {
-        if (isDemoMode()) {
-            this.initializeDefaultStats();
-        }
+        // 不再初始化默认统计数据，确保数据真实
     }
 
     /**
@@ -120,9 +118,7 @@ export class IPAnalyzer {
         this.attacks.clear();
         this.countryStats = {};
         this.totalAttacks = 0;
-        if (isDemoMode()) {
-            this.initializeDefaultStats();
-        }
+        // 不再初始化默认统计数据，确保数据真实
     }
 
     /**

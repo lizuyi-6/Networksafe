@@ -75,7 +75,7 @@ export const rateLimitMiddleware = async (
         res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
           success: false,
           error: {
-            message: 'Rate limit exceeded. Please retry later.',
+            message: 'backend.rate_limit_exceeded_please_retry_later',
             type: 'rate_limit_exceeded',
             param: null,
           },
@@ -149,7 +149,7 @@ export const rateLimitMiddleware = async (
       res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
         success: false,
         error: {
-          message: 'Rate limit exceeded. Please retry later.',
+          message: 'backend.rate_limit_exceeded_please_retry_later',
           type: 'rate_limit_exceeded',
           param: null,
         },

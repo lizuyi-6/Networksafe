@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Code Analysis Agent
  *
  * Specializes in analyzing code to identify bugs, vulnerabilities, and code quality issues.
@@ -6,14 +6,15 @@
 
 import { BaseInvestigationAgent } from './base-investigation.agent';
 import { InvestigationContext, InvestigationAgentType, Finding } from '../types';
+import { AgentConfig, MessageBus } from '../../core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 export class CodeAnalysisAgent extends BaseInvestigationAgent {
   private projectRoot: string;
 
-  constructor(coordinator: any) {
-    super(InvestigationAgentType.CODE_ANALYSIS, [
+  constructor(config: AgentConfig, messageBus: MessageBus) {
+    super(config, messageBus, InvestigationAgentType.CODE_ANALYSIS, [
       'static_analysis',
       'code_review',
       'bug_detection',
@@ -25,9 +26,23 @@ export class CodeAnalysisAgent extends BaseInvestigationAgent {
   }
 
   /**
+   * Get system prompt for AI model
+   */
+  public getSystemPrompt(): string {
+    return `You are a Code Analysis Agent specializing in:
+- Static code analysis and pattern detection
+- Bug identification and root cause analysis
+- Security vulnerability scanning
+- Code quality assessment
+- Dependency analysis
+
+Your goal is to identify code issues that could cause bugs or security problems.`;
+  }
+
+  /**
    * Analyze code for issues
    */
-  public async analyze(context: InvestigationContext): Promise<any> {
+  public async analyzeInvestigation(context: InvestigationContext): Promise<any> {
     console.log('[CodeAnalysisAgent] Starting code analysis...');
 
     const findings: Finding[] = [];
@@ -118,7 +133,7 @@ export class CodeAnalysisAgent extends BaseInvestigationAgent {
       // Check for TODO/FIXME comments
       if (line.includes('TODO') || line.includes('FIXME')) {
         findings.push({
-          type: 'code',
+          type: 'configuration',
           severity: 'low',
           description: `Found incomplete code marker at line ${lineNumber}`,
           location: `${filePath}:${lineNumber}`,
@@ -130,7 +145,7 @@ export class CodeAnalysisAgent extends BaseInvestigationAgent {
       // Check for console.log in production code
       if (line.includes('console.log') && !line.includes('//')) {
         findings.push({
-          type: 'code',
+          type: 'configuration',
           severity: 'low',
           description: `Found console.log statement at line ${lineNumber}`,
           location: `${filePath}:${lineNumber}`,
@@ -201,7 +216,7 @@ export class CodeAnalysisAgent extends BaseInvestigationAgent {
 
       if (avgComplexity > 20) {
         findings.push({
-          type: 'code',
+          type: 'performance',
           severity: 'medium',
           description: `File ${filePath} has high average cyclomatic complexity: ${avgComplexity.toFixed(2)}`,
           location: filePath,
@@ -358,3 +373,4 @@ export class CodeAnalysisAgent extends BaseInvestigationAgent {
       `(${critical} critical, ${high} high, ${medium} medium).`;
   }
 }
+

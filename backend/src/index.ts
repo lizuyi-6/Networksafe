@@ -25,13 +25,14 @@ import configRoutes from './api/routes/config.routes';
 import logsRoutes from './api/routes/logs.routes';
 import sitesRoutes from './api/routes/sites.routes';
 import adminRoutes from './api/routes/admin.routes';
-import scannerRouter from './api/routes/scanner';
+import scannerRouter from './api/routes/scanner.routes';
+import smartFixRouter from './api/routes/smart-fix.routes';
 import deploymentsRouter from './api/routes/deployments.routes';
 import agentsRouter, { setAgentGateway } from './api/routes/agents.routes';
 import devicesRouter from './api/routes/devices.routes';
 import aiEndpointsRouter from './api/routes/ai-endpoints.routes';
 import authRouter from './api/routes/auth.routes';
-import aiSystemRouter, { initializeAgentSystem, setAgentGateway as setAISystemAgentGateway } from './routes/ai-system';
+import aiSystemRouter, { initializeAgentSystem, setAgentGateway as setAISystemAgentGateway } from './api/routes/ai-system.routes';
 import trafficRouter from './api/routes/traffic.routes';
 import alertsRouter from './api/routes/alerts.routes';
 import systemRouter from './api/routes/system.routes';
@@ -124,6 +125,7 @@ apiRouter.use('/logs', logsRoutes);
 apiRouter.use('/sites', sitesRoutes);
 apiRouter.use('/admin', adminRoutes);
 apiRouter.use('/scanner', scannerRouter);
+apiRouter.use('/smart-fix', smartFixRouter);
 apiRouter.use('/deployments', deploymentsRouter);
 apiRouter.use('/agents', agentsRouter);
 apiRouter.use('/devices', devicesRouter);
@@ -143,7 +145,7 @@ app.use('/api', apiRouter);
 // 错误处理
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error', { error: err.message, stack: err.stack });
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(500).json({ error: 'backend.internal_server_error' });
 });
 
 // ============================================
@@ -182,12 +184,12 @@ async function start() {
 
     // 初始化多智能体系统
     try {
-        await initializeAgentSystem();
-        logger.info('Multi-Agent Decision System initialized');
+      await initializeAgentSystem();
+      logger.info('Multi-Agent Decision System initialized');
     } catch (agentError: any) {
-        logger.warn('Multi-Agent System initialization failed, continuing without AI agents', { 
-            error: agentError.message 
-        });
+      logger.warn('Multi-Agent System initialization failed, continuing without AI agents', {
+        error: agentError.message
+      });
     }
 
     // 启动 HTTP 服务器

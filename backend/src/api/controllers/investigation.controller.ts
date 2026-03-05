@@ -100,7 +100,7 @@ export class InvestigationController {
       if (!status || status.status === 'not_found') {
         res.status(404).json({
           success: false,
-          error: 'Investigation not found'
+          error: 'backend.investigation_not_found'
         });
         return;
       }
@@ -139,7 +139,7 @@ export class InvestigationController {
       if (!status || status.status === 'not_found') {
         res.status(404).json({
           success: false,
-          error: 'Investigation not found'
+          error: 'backend.investigation_not_found'
         });
         return;
       }
@@ -150,7 +150,7 @@ export class InvestigationController {
           data: {
             investigationId,
             status: 'in_progress',
-            message: 'Investigation still in progress'
+            message: 'backend.investigation_still_in_progress'
           }
         });
         return;
@@ -158,7 +158,7 @@ export class InvestigationController {
 
       res.status(404).json({
         success: false,
-        error: 'Investigation result not found'
+        error: 'backend.investigation_result_not_found'
       });
     } catch (error) {
       console.error('[InvestigationController] Failed to get investigation result:', error);
@@ -211,7 +211,7 @@ export class InvestigationController {
       // TODO: Implement cancellation logic in coordinator
       res.status(501).json({
         success: false,
-        error: 'Investigation cancellation not yet implemented'
+        error: 'backend.investigation_cancellation_not_yet_implemented'
       });
     } catch (error) {
       console.error('[InvestigationController] Failed to cancel investigation:', error);

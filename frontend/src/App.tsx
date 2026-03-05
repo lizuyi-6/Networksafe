@@ -19,7 +19,8 @@ import {
     Shield,
     Zap,
     CheckCircle,
-    XCircle
+    XCircle,
+    UserCog
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,6 +31,8 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusContext';
 import Logo from './components/Logo';
+import DemoBanner from './components/DemoBanner';
+import { fetchSystemBadges } from './services/api';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -39,6 +42,7 @@ import Scanner from './pages/Scanner';
 import FixHistory from './pages/FixHistory';
 import SettingsPage from './pages/Settings';
 import SuperAdmin from './pages/SuperAdmin';
+import AdminUsers from './pages/AdminUsers';
 import Alerts from './pages/Alerts';
 import Agents from './pages/Agents';
 import Devices from './pages/Devices';
@@ -48,6 +52,7 @@ import BoardStatus from './pages/BoardStatus';
 import AgentMonitor from './pages/AgentMonitor';
 import TrafficInterceptor from './pages/TrafficInterceptor';
 import AttackSimulator from './pages/AttackSimulator';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 /**
  * SECURITY FIX CVE-2026-012: Authentication guard for protected routes
@@ -132,10 +137,12 @@ const Sidebar = () => {
     const { t } = useLanguage();
     const { status: attackStatus } = useAttackStatus();
     const { attackSimEnabled } = useDemo();
-    const [profile, setProfile] = useState<{ name: string; role: string; initials: string }>({
+    const [badges, setBadges] = useState({ agents: 0, alerts: 0, devices: 0 });
+    const [profile, setProfile] = useState<{ name: string; role: string; initials: string; plan: string }>({
         name: 'Unknown User',
         role: 'N/A',
-        initials: '??'
+        initials: '??',
+        plan: 'starter'
     });
 
     // Don't show sidebar on Landing or Login pages
@@ -143,16 +150,17 @@ const Sidebar = () => {
 
     const platformItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
-        { icon: Users, label: 'Agents', path: '/agents', badge: 3 },
-        { icon: Brain, label: 'AI Monitor', path: '/agent-monitor' },
-        { icon: Network, label: 'Traffic', path: '/traffic' },
-        ...(attackSimEnabled ? [{ icon: Shield, label: 'Attack Sim', path: '/attack-sim' }] : []),
-        { icon: Radio, label: 'Devices', path: '/devices', badge: 2 },
+        { icon: Users, label: t('nav.agents'), path: '/agents', badge: badges.agents > 0 ? badges.agents : undefined },
+        { icon: Brain, label: t('nav.agent_monitor'), path: '/agent-monitor' },
+        { icon: Network, label: t('nav.traffic_interceptor'), path: '/traffic' },
+        ...(attackSimEnabled ? [{ icon: Shield, label: t('nav.attack_simulator'), path: '/attack-sim' }] : []),
+        { icon: Radio, label: t('nav.devices'), path: '/devices', badge: badges.devices > 0 ? badges.devices : undefined },
         { icon: Server, label: t('nav.sites'), path: '/sites' },
         { icon: Rocket, label: t('nav.deployment'), path: '/deploy' },
         { icon: Activity, label: t('nav.monitoring'), path: '/scanner' },
         { icon: Settings, label: t('nav.settings'), path: '/settings' },
         { icon: Key, label: t('nav.keys'), path: '/admin' },
+        ...(profile.role === 'admin' ? [{ icon: UserCog, label: t('nav.super_admin'), path: '/super-admin' }] : []),
     ];
 
     const navGroups = [
@@ -164,14 +172,33 @@ const Sidebar = () => {
             title: t('nav.governance'),
             items: [
                 { icon: FileText, label: t('nav.audit'), path: '/history' },
-                { icon: Bell, label: t('nav.alerts'), path: '/alerts', badge: 3 },
+                { icon: Bell, label: t('nav.alerts'), path: '/alerts', badge: badges.alerts > 0 ? badges.alerts : undefined },
             ]
         }
     ];
 
-    const progressPercent = attackStatus.total > 0 
-        ? Math.round((attackStatus.completed / attackStatus.total) * 100) 
+    const progressPercent = attackStatus.total > 0
+        ? Math.round((attackStatus.completed / attackStatus.total) * 100)
         : 0;
+
+    useEffect(() => {
+        const loadBadges = async () => {
+            try {
+                const data = await fetchSystemBadges();
+                setBadges({
+                    agents: data.agents || 0,
+                    alerts: data.alerts || 0,
+                    devices: data.devices || 0
+                });
+            } catch (e) {
+                // silenty fail
+            }
+        };
+
+        loadBadges();
+        const badgeInterval = setInterval(loadBadges, 10000); // 10s poll
+        return () => clearInterval(badgeInterval);
+    }, []);
 
     useEffect(() => {
         fetch('/api/auth/me', { credentials: 'include' })
@@ -186,11 +213,12 @@ const Sidebar = () => {
                 setProfile({
                     name,
                     role: user.role || 'N/A',
-                    initials
+                    initials,
+                    plan: user.plan || 'starter'
                 });
             })
             .catch(() => {
-                setProfile({ name: 'Unknown User', role: 'N/A', initials: '??' });
+                setProfile({ name: 'Unknown User', role: 'N/A', initials: '??', plan: 'starter' });
             });
     }, []);
 
@@ -199,7 +227,15 @@ const Sidebar = () => {
             <div>
                 {/* Logo */}
                 <div className="h-16 flex items-center px-6 border-b border-border/50">
-                    <Logo tier="professional" showText={true} className="scale-90 origin-left" />
+                    <Logo
+                        tier={
+                            profile.plan === 'pro' ? 'professional' :
+                                profile.plan === 'ultra' ? 'enterprise' :
+                                    (profile.plan as any || 'starter')
+                        }
+                        showText={true}
+                        className="scale-90 origin-left"
+                    />
                 </div>
 
                 {/* Nav Links */}
@@ -253,12 +289,12 @@ const Sidebar = () => {
                             <div className="p-3 rounded-lg bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Zap className="w-4 h-4 text-orange-400 animate-pulse" />
-                                    <span className="text-xs font-medium text-orange-400">Attack Simulation</span>
+                                    <span className="text-xs font-medium text-orange-400">{t('nav.attack_simulation')}</span>
                                 </div>
-                                
+
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-xs">
-                                        <span className="text-gray-400">Progress</span>
+                                        <span className="text-gray-400">{t('nav.attack_sim_progress')}</span>
                                         <span className="text-white font-medium">{attackStatus.completed}/{attackStatus.total}</span>
                                     </div>
                                     <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
@@ -268,7 +304,7 @@ const Sidebar = () => {
                                             className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
                                         />
                                     </div>
-                                    
+
                                     <div className="flex items-center justify-between pt-1">
                                         <div className="flex items-center gap-1">
                                             <CheckCircle className="w-3 h-3 text-green-400" />
@@ -279,7 +315,7 @@ const Sidebar = () => {
                                             <span className="text-xs text-red-400">{attackStatus.allowed}</span>
                                         </div>
                                     </div>
-                                    
+
                                     {attackStatus.currentAttack && (
                                         <div className="text-xs text-gray-400 truncate pt-1 border-t border-gray-700/50">
                                             {attackStatus.currentAttack}
@@ -367,7 +403,7 @@ const Header = () => {
                     <>
                         {/* Demo Mode Toggle */}
                         <div onClick={toggleDemoMode} className="flex items-center gap-2 cursor-pointer group">
-                            <span className={`text-xs font-medium transition-colors ${isDemoMode ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>Demo</span>
+                            <span className={`text-xs font-medium transition-colors ${isDemoMode ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>{t('nav.demo_mode')}</span>
                             <div className={`w-8 h-4 rounded-full relative transition-colors ${isDemoMode ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
                                 <div className={`absolute top-0.5 w-3 h-3 rounded-full shadow-sm transition-all ${isDemoMode ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
                             </div>
@@ -421,6 +457,7 @@ const AnimatedRoutes = () => {
                 {/* Public routes */}
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
                 <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
+                <Route path="/privacy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
 
                 {/* SECURITY FIX CVE-2026-012: Protected routes require authentication */}
                 <Route path="/dashboard" element={<PrivateRoute><PageWrapper><Dashboard /></PageWrapper></PrivateRoute>} />
@@ -433,8 +470,8 @@ const AnimatedRoutes = () => {
                         !modeResolved
                             ? <PrivateRoute><PageWrapper><div className="p-8 text-muted-foreground">Loading mode...</div></PageWrapper></PrivateRoute>
                             : attackSimEnabled
-                            ? <PrivateRoute><PageWrapper><AttackSimulator /></PageWrapper></PrivateRoute>
-                            : <Navigate to="/dashboard" replace />
+                                ? <PrivateRoute><PageWrapper><AttackSimulator /></PageWrapper></PrivateRoute>
+                                : <Navigate to="/dashboard" replace />
                     }
                 />
                 <Route path="/devices" element={<PrivateRoute><PageWrapper><Devices /></PageWrapper></PrivateRoute>} />
@@ -448,6 +485,7 @@ const AnimatedRoutes = () => {
 
                 {/* Admin-only routes */}
                 <Route path="/admin" element={<PrivateRoute><AdminRoute><PageWrapper><SuperAdmin /></PageWrapper></AdminRoute></PrivateRoute>} />
+                <Route path="/super-admin" element={<PrivateRoute><AdminRoute><PageWrapper><AdminUsers /></PageWrapper></AdminRoute></PrivateRoute>} />
             </Routes>
         </AnimatePresence>
     );
@@ -457,7 +495,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
 
     // Standalone pages that manage their own layout/theme
-    const isStandalone = location.pathname === '/' || location.pathname === '/login';
+    const isStandalone = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy';
 
     if (isStandalone) {
         return <>{children}</>;
@@ -467,6 +505,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
             <Sidebar />
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+                <DemoBanner />
                 <Header />
                 <div className="flex-1 overflow-y-auto scrollbar-hide">
                     {children}
@@ -478,7 +517,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
     return (
-        <ThemeProvider defaultTheme="dark" storageKey="fluxguard-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="aetherguard-theme">
             <DemoProvider>
                 <LanguageProvider>
                     <WebSocketProvider>

@@ -37,13 +37,13 @@ export function validatePasswordAdapter(
 export function passwordWeakResponseAdapter() {
   if (isTestRuntime()) {
     return {
-      error: 'Password too short',
+      error: 'backend.password_too_short',
       code: 'PASSWORD_TOO_SHORT'
     };
   }
 
   return {
-    error: 'Password does not meet security requirements',
+    error: 'backend.password_does_not_meet_security_requirements',
     code: 'PASSWORD_WEAK'
   };
 }

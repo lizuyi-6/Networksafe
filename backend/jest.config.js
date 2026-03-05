@@ -26,5 +26,5 @@
     maxWorkers: 1,
     forceExit: true,
     testTimeout: 30000,
-    setupFiles: ['<rootDir>/jest.setup.js']
+    setupFiles: ['<rootDir>/jest.setup.js', '<rootDir>/jest.setup.db.js']
 };

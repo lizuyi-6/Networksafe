@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Solution Agent
  *
  * Specializes in generating solutions and remediation strategies based on root cause analysis.
@@ -7,10 +7,11 @@
 
 import { BaseInvestigationAgent } from './base-investigation.agent';
 import { InvestigationContext, InvestigationAgentType, Solution, CodeChange } from '../types';
+import { AgentConfig, MessageBus } from '../../core';
 
 export class SolutionAgent extends BaseInvestigationAgent {
-  constructor(coordinator: any) {
-    super(InvestigationAgentType.SOLUTION, [
+  constructor(config: AgentConfig, messageBus: MessageBus) {
+    super(config, messageBus, InvestigationAgentType.SOLUTION, [
       'solution_generation',
       'remediation_planning',
       'risk_assessment',
@@ -21,9 +22,23 @@ export class SolutionAgent extends BaseInvestigationAgent {
   }
 
   /**
+   * Get system prompt for AI model
+   */
+  public getSystemPrompt(): string {
+    return `You are a Solution Agent specializing in:
+- Generating comprehensive remediation strategies
+- Risk assessment for proposed solutions
+- Implementation guidance and best practices
+- Workaround identification when hotfixes aren't possible
+- Solution prioritization based on impact and effort
+
+Your goal is to provide actionable solutions with clear risk assessment.`;
+  }
+
+  /**
    * Generate solutions based on investigation context
    */
-  public async analyze(context: InvestigationContext): Promise<any> {
+  public async analyzeInvestigation(context: InvestigationContext): Promise<any> {
     console.log('[SolutionAgent] Starting solution generation...');
 
     // Get preliminary root cause if available
@@ -220,7 +235,7 @@ export class SolutionAgent extends BaseInvestigationAgent {
       description: 'Implement workaround until external issue is resolved',
       implementation: '1. Add retry logic\n2. Implement fallback mechanism\n3. Add monitoring for external service\n4. Escalate to external provider',
       estimatedEffort: '2-4 hours',
-      risk: 'low',
+      risk: 'low' as const,
       sideEffects: ['May degrade performance', 'Requires monitoring']
     });
 
@@ -237,7 +252,7 @@ export class SolutionAgent extends BaseInvestigationAgent {
       description: 'Temporary workaround while proper fix is implemented',
       implementation: '1. Implement temporary fix\n2. Add monitoring\n3. Document workaround\n4. Schedule proper fix',
       estimatedEffort: '1-2 hours',
-      risk: 'low',
+      risk: 'low' as const,
       sideEffects: ['Not a permanent solution', 'Should be replaced with proper fix']
     };
 
@@ -313,3 +328,4 @@ export class SolutionAgent extends BaseInvestigationAgent {
       `Recommended approach: Start with immediate priority, low-risk solutions.`;
   }
 }
+

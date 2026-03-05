@@ -19,7 +19,17 @@ async function bootstrapDatabase() {
         const db = getDatabase();
 
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@fluxguard.com';
-        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+        
+        // SECURITY FIX: Require ADMIN_PASSWORD to be set - no fallback allowed
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        if (!adminPassword) {
+            throw new Error('ADMIN_PASSWORD environment variable is required - cannot start with default weak password');
+        }
+        
+        // Validate password strength
+        if (adminPassword.length < 12) {
+            throw new Error('ADMIN_PASSWORD must be at least 12 characters long');
+        }
 
         // Check if admin exists
         const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);

@@ -1,0 +1,28 @@
+# Dependencies and build artifacts
+**/node_modules
+dist
+backend/dist
+.git
+
+# Secrets — never copy into image
+.env
+.env.*
+!.env.example
+
+# Logs and temp files
+*.log
+coverage
+tsc_out.txt
+tsc_output.txt
+build_out.txt
+
+# Runtime data (mounted as volumes)
+backend/data
+scan-results
+
+# Dev-only files
+.idea
+.vscode
+*.md
+frontend/node_modules
+frontend/dist

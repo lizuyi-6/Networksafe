@@ -4,6 +4,7 @@ type JsonSchema = {
   body?: {
     type?: string;
     required?: string[];
+    properties?: Record<string, any>;
   };
 };
 

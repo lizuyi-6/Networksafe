@@ -1,16 +1,15 @@
-import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
+import Database, { Database as BetterSqliteDatabase } from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import logger from '../utils/logger';
 
 /**
  * Database Manager
- * Handles SQLite database operations using sql.js (pure JavaScript)
+ * Handles SQLite database operations using better-sqlite3 (native Node.js binding)
  */
 export class DatabaseManager {
-  private db: SqlJsDatabase | null = null;
+  private db: BetterSqliteDatabase | null = null;
   private dbPath: string;
-  private saveInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
@@ -19,24 +18,21 @@ export class DatabaseManager {
   }
 
   /**
-   * Initialize database (async because sql.js needs to load WASM)
+   * Initialize database (synchronous with better-sqlite3)
    */
-  public async init(): Promise<void> {
+  public init(): void {
     try {
-      const SQL = await initSqlJs();
+      // Open database in WAL mode for better write performance
+      this.db = new Database(this.dbPath);
 
-      // Try to load existing database
-      if (fs.existsSync(this.dbPath)) {
-        const fileBuffer = fs.readFileSync(this.dbPath);
-        this.db = new SQL.Database(fileBuffer);
-        logger.info(`Loaded existing database: ${this.dbPath}`);
-      } else {
-        this.db = new SQL.Database();
-        logger.info(`Created new database: ${this.dbPath}`);
-      }
+      // Enable WAL mode for real-time persistence
+      this.db.pragma('journal_mode = WAL');
+      // Enable foreign keys
+      this.db.pragma('foreign_keys = ON');
+
+      logger.info(`Database opened: ${this.dbPath} (WAL mode enabled)`);
 
       this.initSchema();
-      this.startAutoSave();
     } catch (error: any) {
       logger.error('Failed to initialize database', { error: error.message });
       throw error;
@@ -63,7 +59,7 @@ export class DatabaseManager {
 
     try {
       // Sites table
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS sites (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           domain TEXT UNIQUE NOT NULL,
@@ -74,13 +70,14 @@ export class DatabaseManager {
           rateLimitRequests INTEGER DEFAULT 60,
           concurrencyEnabled INTEGER DEFAULT 1,
           concurrencyMax INTEGER DEFAULT 5,
+          tenant_id TEXT,
           createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
           updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
 
       // Security rules table
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS security_rules (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           siteId INTEGER NOT NULL,
@@ -93,7 +90,7 @@ export class DatabaseManager {
       `);
 
       // Scan results table
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS scan_results (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           siteId INTEGER,
@@ -107,7 +104,7 @@ export class DatabaseManager {
       `);
 
       // Backups table
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS backups (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
@@ -120,7 +117,7 @@ export class DatabaseManager {
       `);
 
       // Monitoring data table (time-series)
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS metrics (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           siteId INTEGER NOT NULL,
@@ -133,7 +130,7 @@ export class DatabaseManager {
       `);
 
       // Agents table
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS agents (
           id TEXT PRIMARY KEY,
           hostname TEXT NOT NULL,
@@ -147,13 +144,14 @@ export class DatabaseManager {
       `);
 
       // Users table (for authentication)
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS users (
           id TEXT PRIMARY KEY,
           email TEXT UNIQUE NOT NULL,
           username TEXT NOT NULL,
           password_hash TEXT NOT NULL,
           role TEXT DEFAULT 'viewer' CHECK(role IN ('admin', 'tenant', 'viewer')),
+          plan TEXT DEFAULT 'starter' CHECK(plan IN ('starter', 'pro', 'ultra')),
           tenant_id TEXT,
           status TEXT DEFAULT 'active' CHECK(status IN ('active', 'suspended', 'pending')),
           last_login DATETIME,
@@ -162,8 +160,29 @@ export class DatabaseManager {
         )
       `);
 
+      // Auto-migrate: add 'plan' column to existing 'users' table if it doesn't have one
+      try {
+        this.db.exec(`ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'starter' CHECK(plan IN ('starter', 'pro', 'ultra'))`);
+        logger.info('Database migration applied: added plan column to users');
+      } catch (e: any) {
+        // We expect an error if the column already exists
+        if (!(e.message && e.message.includes('duplicate column name'))) {
+          logger.warn('Error during database soft migration', { error: e.message });
+        }
+      }
+
+      // Auto-migrate: add 'tenant_id' column to existing 'sites' table if it doesn't have one
+      try {
+        this.db.exec(`ALTER TABLE sites ADD COLUMN tenant_id TEXT`);
+        logger.info('Database migration applied: added tenant_id column to sites');
+      } catch (e: any) {
+        if (!(e.message && e.message.includes('duplicate column name'))) {
+          logger.warn('Error during database soft migration', { error: e.message });
+        }
+      }
+
       // API Keys table (for agent/device authentication)
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS api_keys (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
@@ -179,7 +198,7 @@ export class DatabaseManager {
       `);
 
       // Devices table (for ESP32 dongles)
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS devices (
           id TEXT PRIMARY KEY,
           device_type TEXT DEFAULT 'esp32',
@@ -193,7 +212,7 @@ export class DatabaseManager {
       `);
 
       // Alerts table (for security alerts)
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS alerts (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           type TEXT NOT NULL,
@@ -209,7 +228,7 @@ export class DatabaseManager {
       `);
 
       // Agent registrations table (for probe agent authentication)
-      this.db.run(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS agent_registrations (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           agent_id TEXT NOT NULL UNIQUE,
@@ -224,16 +243,25 @@ export class DatabaseManager {
         )
       `);
 
+      // System configuration table (for seed version, settings, etc.)
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS system_config (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       // Create indexes
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain)`);
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_scan_results_siteId ON scan_results(siteId)`);
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_metrics_siteId ON metrics(siteId)`);
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)`);
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id)`);
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id)`);
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts(severity)`);
-      this.db.run(`CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts(created_at)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_scan_results_siteId ON scan_results(siteId)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_metrics_siteId ON metrics(siteId)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts(severity)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts(created_at)`);
 
       logger.info('Database schema initialized');
     } catch (error: any) {
@@ -243,80 +271,165 @@ export class DatabaseManager {
   }
 
   /**
-   * Start auto-save interval
+   * Get database instance with sql.js compatible API
+   * Returns a wrapped database that supports run(), step(), getAsObject(), free()
    */
-  private startAutoSave(): void {
-    // Save to disk every 30 seconds
-    this.saveInterval = setInterval(() => {
-      this.save();
-    }, 30000);
-  }
-
-  /**
-   * Save database to disk
-   */
-  public save(): void {
-    if (!this.db) return;
-
-    try {
-      const data = this.db.export();
-      const buffer = Buffer.from(data);
-      fs.writeFileSync(this.dbPath, buffer);
-    } catch (error: any) {
-      logger.error('Failed to save database', { error: error.message });
-    }
-  }
-
-  /**
-   * Get database instance
-   */
-  public getDb(): SqlJsDatabase {
+  public getDb(): any {
     if (!this.db) {
       throw new Error('Database not connected');
     }
-    return this.db;
+
+    const db = this.db;
+
+    // Return a wrapped database with sql.js-compatible API
+    return {
+      // Direct database operations
+      exec: (sql: string) => db.exec(sql),
+      run: (sql: string, params?: any[]) => {
+        if (params && params.length > 0) {
+          db.prepare(sql).run(...params);
+        } else {
+          db.exec(sql);
+        }
+      },
+
+      // Statement creation with sql.js-compatible API
+      prepare: (sql: string) => {
+        const stmt = db.prepare(sql);
+        let boundParams: any[] = [];
+        let hasStepped = false;
+        let cachedRow: any = null;
+
+        return {
+          // Bind parameters
+          bind: (params: any[]) => {
+            boundParams = params;
+            hasStepped = false;
+            cachedRow = null;
+          },
+
+          // Step through results (simulated for better-sqlite3)
+          step: () => {
+            if (!hasStepped) {
+              cachedRow = stmt.get(...boundParams);
+              hasStepped = true;
+            }
+            return cachedRow !== undefined && cachedRow !== null;
+          },
+
+          // Get current row as object
+          getAsObject: () => {
+            if (cachedRow === null || cachedRow === undefined) {
+              cachedRow = stmt.get(...boundParams);
+            }
+            // Convert array to object using column names if available
+            const columns = stmt.columns ? stmt.columns() : [];
+            if (Array.isArray(cachedRow) && columns.length > 0) {
+              const obj: any = {};
+              columns.forEach((col: any, i: number) => {
+                obj[col.name] = cachedRow[i];
+              });
+              return obj;
+            }
+            return cachedRow;
+          },
+
+          // Free statement (no-op in better-sqlite3)
+          free: () => {
+            // No-op - better-sqlite3 handles this automatically
+          },
+
+          // Also provide direct run/all/get for convenience
+          run: (...params: any[]) => stmt.run(...params),
+          all: (...params: any[]) => stmt.all(...params),
+          get: (...params: any[]) => stmt.get(...params)
+        };
+      }
+    };
   }
 
   /**
-   * Execute SQL and return results
+   * Execute SQL with parameters (sql.js compatible API)
    */
-  public exec(sql: string): void {
+  public run(sql: string, params?: any[]): void {
     if (!this.db) throw new Error('Database not connected');
-    this.db.run(sql);
+    if (params && params.length > 0) {
+      this.db.prepare(sql).run(...params);
+    } else {
+      this.db.exec(sql);
+    }
   }
 
   /**
-   * Prepare and run a statement
+   * Execute SQL (for DDL statements)
+   */
+  public exec(sql: string, params?: any[]): void {
+    if (!this.db) throw new Error('Database not connected');
+    if (params && params.length > 0) {
+      this.db.prepare(sql).run(...params);
+    } else {
+      this.db.exec(sql);
+    }
+  }
+
+  /**
+   * Prepare and run a statement (compatible API with sql.js)
    */
   public prepare(sql: string): {
     run: (...params: any[]) => void;
     all: (...params: any[]) => any[];
     get: (...params: any[]) => any;
+    free: () => void;
+    bind: (params: any[]) => void;
+    step: () => boolean;
+    getAsObject: () => any;
   } {
     if (!this.db) throw new Error('Database not connected');
 
-    const db = this.db;
+    const stmt = this.db.prepare(sql);
+    let boundParams: any[] = [];
+    let hasStepped = false;
+    let cachedRow: any = null;
 
     return {
       run: (...params: any[]) => {
-        db.run(sql, params);
+        stmt.run(...params);
       },
       all: (...params: any[]) => {
-        const stmt = db.prepare(sql);
-        stmt.bind(params);
-        const results: any[] = [];
-        while (stmt.step()) {
-          results.push(stmt.getAsObject());
-        }
-        stmt.free();
-        return results;
+        return stmt.all(...params);
       },
       get: (...params: any[]) => {
-        const stmt = db.prepare(sql);
-        stmt.bind(params);
-        const result = stmt.step() ? stmt.getAsObject() : null;
-        stmt.free();
-        return result;
+        return stmt.get(...params);
+      },
+      free: () => {
+        // No-op for better-sqlite3, statements are freed automatically
+        // Kept for backward compatibility
+      },
+      bind: (params: any[]) => {
+        boundParams = params;
+        hasStepped = false;
+        cachedRow = null;
+      },
+      step: () => {
+        // better-sqlite3 doesn't need step() - just get the row
+        if (!hasStepped) {
+          cachedRow = stmt.get(...boundParams);
+          hasStepped = true;
+        }
+        return cachedRow !== undefined && cachedRow !== null;
+      },
+      getAsObject: () => {
+        // Return the cached row or get a new one
+        if (cachedRow === null || cachedRow === undefined) {
+          cachedRow = stmt.get(...boundParams);
+        }
+        // Convert array to object if needed
+        if (Array.isArray(cachedRow)) {
+          // For SELECT * queries, we need column names
+          // This is a simplification - the actual usage may vary
+          return cachedRow;
+        }
+        return cachedRow;
       }
     };
   }
@@ -326,28 +439,42 @@ export class DatabaseManager {
    */
   public transaction<T>(fn: () => T): T {
     if (!this.db) throw new Error('Database not connected');
-    this.db.run('BEGIN TRANSACTION');
+    return this.db.transaction(fn)();
+  }
+
+  /**
+   * Save database to disk (no-op with WAL mode - real-time persistence)
+   * Kept for backward compatibility
+   */
+  public save(): void {
+    // With WAL mode, data is persisted in real-time
+    // This method is kept for backward compatibility
+    if (!this.db) return;
+
     try {
-      const result = fn();
-      this.db.run('COMMIT');
-      return result;
-    } catch (error) {
-      this.db.run('ROLLBACK');
-      throw error;
+      // Checkpoint to ensure data is written to main database
+      this.db.pragma('wal_checkpoint(TRUNCATE)');
+    } catch (error: any) {
+      logger.error('Failed to checkpoint database', { error: error.message });
     }
+  }
+
+  /**
+   * Backup database to specified path
+   */
+  public backup(backupPath: string): void {
+    if (!this.db) throw new Error('Database not connected');
+    this.db.backup(backupPath);
+    logger.info(`Database backed up to: ${backupPath}`);
   }
 
   /**
    * Close database connection
    */
   public close(): void {
-    if (this.saveInterval) {
-      clearInterval(this.saveInterval);
-      this.saveInterval = null;
-    }
-
     if (this.db) {
-      this.save(); // Final save
+      // Close WAL before closing
+      this.db.pragma('wal_checkpoint(TRUNCATE)');
       this.db.close();
       this.db = null;
       logger.info('Database connection closed');
@@ -357,20 +484,13 @@ export class DatabaseManager {
 
 // Singleton instance
 let dbManager: DatabaseManager | null = null;
-let initPromise: Promise<DatabaseManager> | null = null;
 
-export async function initDatabase(): Promise<DatabaseManager> {
+export function initDatabase(): DatabaseManager {
   if (dbManager) return dbManager;
 
-  if (!initPromise) {
-    initPromise = (async () => {
-      dbManager = new DatabaseManager();
-      await dbManager.init();
-      return dbManager;
-    })();
-  }
-
-  return initPromise;
+  dbManager = new DatabaseManager();
+  dbManager.init();
+  return dbManager;
 }
 
 export function getDatabase(): DatabaseManager {
@@ -384,6 +504,5 @@ export function closeDatabase(): void {
   if (dbManager) {
     dbManager.close();
     dbManager = null;
-    initPromise = null;
   }
 }

@@ -1,492 +1,566 @@
-
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import heroImage from '../assets/hero-visualization.png';
+import logoImage from '../assets/logo.png';
 
 const Landing = () => {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({ container: containerRef });
+
+    // Parallax mappings
+    const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+    const cardY = useTransform(scrollYProgress, [0, 1], ["0%", "-10%"]);
 
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
     };
 
+    // Simulated terminal logs
+    const [terminalLines, setTerminalLines] = useState<string[]>([
+        "> SEC_SYS initializing...",
+        "> Loading 7-Layer Decision System..."
+    ]);
+
+    useEffect(() => {
+        const logs = [
+            "> Multi-Agent consensus: SECURE.",
+            "> Attack Simulator ready (30+ vectors).",
+            "> Intercepting traffic on edge nodes.",
+            "> [WARN] 3 SQLi attempts blocked.",
+            "> [INFO] AI Analyst validating request...",
+        ];
+        let idx = 0;
+        const interval = setInterval(() => {
+            if (idx < logs.length) {
+                setTerminalLines(prev => [...prev.slice(-3), logs[idx]]);
+                idx++;
+            } else {
+                idx = 0;
+            }
+        }, 3500);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Advanced Spring Animations
+    const fadeUpSpring = {
+        hidden: { opacity: 0, y: 50 },
+        visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100, damping: 20 } }
+    };
+
+    const staggerContainer = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.15 }
+        }
+    };
+
+    const floating = {
+        animate: {
+            y: [0, -15, 0],
+            transition: {
+                duration: 5,
+                ease: "easeInOut" as const,
+                repeat: Infinity
+            }
+        }
+    };
+
     return (
-        <div className="text-text-main overflow-x-hidden min-h-screen h-screen overflow-y-auto flex flex-col selection:bg-primary/20 selection:text-primary relative bg-concrete-bg font-sans">
-            {/* Force Light Mode Override for this page as it uses specific colors */}
+        <div ref={containerRef} className="h-screen overflow-y-auto text-gray-800 overflow-x-hidden min-h-screen relative bg-[#F8FAFC] font-sans selection:bg-blue-500/20 selection:text-blue-700">
+            {/* Light Mode Override */}
             <style>{`
                 :root { color-scheme: light; }
-                body { background-color: #E9ECEF !important; color: #212529 !important; }
                 html { scroll-behavior: smooth; }
             `}</style>
 
-            <div className="texture-overlay"></div>
+            {/* Parallax Clean Tech Background */}
+            <motion.div className="fixed inset-0 z-0 pointer-events-none opacity-40 will-change-transform" style={{ y: bgY }}>
+                <div className="absolute inset-0"
+                    style={{
+                        backgroundImage: 'linear-gradient(rgba(14, 165, 233, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14, 165, 233, 0.05) 1px, transparent 1px)',
+                        backgroundSize: '40px 40px'
+                    }}>
+                </div>
+            </motion.div>
 
-            <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden transform-gpu">
-                <div className="shape-sphere -top-[10%] -right-[5%] w-[600px] h-[600px] opacity-40 mix-blend-multiply bg-gray-200 will-change-transform"></div>
-                <div className="shape-cube bottom-[15%] -left-[5%] floating opacity-30 bg-gray-300 will-change-transform" style={{ animationDelay: '1s' }}></div>
-                <div className="shape-cube top-[35%] right-[5%] floating w-[180px] h-[180px] opacity-40 mix-blend-overlay border-gray-400 will-change-transform" style={{ animationDelay: '2s', transform: 'rotateX(40deg) rotateZ(20deg)' }}></div>
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                <div className="absolute top-0 right-[-10%] w-[800px] h-[800px] bg-sky-200/50 rounded-full blur-[120px] mix-blend-multiply"></div>
+                <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-100/60 rounded-full blur-[150px] mix-blend-multiply"></div>
             </div>
 
-            <header className="fixed top-0 w-full z-50 border-b border-gray-200 shadow-sm transition-all duration-300 bg-white/95 backdrop-blur-md">
+            <header className="fixed top-0 w-full z-50 border-b border-gray-200/50 transition-all duration-300 bg-white/80 backdrop-blur-xl">
                 <div className="max-w-[1400px] mx-auto px-6 h-20 flex items-center justify-between relative z-50">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-gradient-to-br from-obsidian to-obsidian-light p-2 rounded-xl shadow-lg shadow-obsidian/20 border border-gray-500/20 ring-1 ring-black/5">
-                            <span className="material-symbols-outlined text-primary text-xl">shield_lock</span>
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+                        <div className="relative group-hover:scale-105 transition-transform duration-300">
+                            <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                            <img src={logoImage} alt="AetherGuard Logo" className="h-11 w-11 object-contain relative z-10 drop-shadow-sm rounded-xl" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="font-bold text-xl tracking-tight text-obsidian leading-none">FluxGuard</span>
-                            <span className="text-[0.6rem] text-text-secondary font-medium tracking-wide uppercase mt-0.5">{t('footer.powered_by')}</span>
+                            <span className="font-bold text-xl tracking-tight text-slate-900 leading-none group-hover:text-blue-600 transition-colors">AetherGuard</span>
+                            <span className="text-[0.6rem] text-slate-500 font-bold tracking-wide uppercase mt-0.5">{t('footer.powered_by')}</span>
                         </div>
                     </div>
-                    <nav className="hidden md:flex items-center gap-1 bg-surface-mid/30 px-2 py-1.5 rounded-full border border-white/40 shadow-inner backdrop-blur-md">
-                        <a className="text-sm font-semibold text-text-secondary hover:text-obsidian hover:bg-surface-light px-5 py-2 rounded-full transition-all" href="#architecture">{t('nav.architecture')}</a>
-                        <a className="text-sm font-semibold text-text-secondary hover:text-obsidian hover:bg-surface-light px-5 py-2 rounded-full transition-all" href="#defense">{t('nav.defense')}</a>
-                        <a className="text-sm font-semibold text-text-secondary hover:text-obsidian hover:bg-surface-light px-5 py-2 rounded-full transition-all" href="#deep-tech">{t('nav.deep_tech')}</a>
-                        <a className="text-sm font-semibold text-text-secondary hover:text-obsidian hover:bg-surface-light px-5 py-2 rounded-full transition-all" href="#pricing">{t('nav.pricing')}</a>
+
+                    <nav className="hidden md:flex items-center gap-2 bg-slate-100/80 px-2 py-1.5 rounded-full border border-gray-200 backdrop-blur-md">
+                        <a className="text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-white px-5 py-2 rounded-full transition-all shadow-sm" href="#architecture">{t('nav.architecture')}</a>
+                        <a className="text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-white px-5 py-2 rounded-full transition-all" href="#defense">{t('nav.defense')}</a>
+                        <a className="text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-white px-5 py-2 rounded-full transition-all" href="#deep-tech">{t('nav.deep_tech')}</a>
+                        <a className="text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-white px-5 py-2 rounded-full transition-all" href="#pricing">{t('nav.pricing')}</a>
                     </nav>
+
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center border border-gray-300 rounded-full bg-surface-light px-1 py-1">
+                        <div className="flex items-center border border-gray-200 rounded-full bg-slate-50 px-1 py-1 shadow-inner">
                             <button
                                 onClick={() => changeLanguage('en')}
-                                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${i18n.language === 'en' ? 'bg-primary text-white shadow-sm' : 'text-text-secondary hover:text-obsidian'}`}
+                                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${i18n.language === 'en' ? 'bg-white text-blue-600 shadow-sm border border-gray-100' : 'text-slate-500 hover:text-slate-700'}`}
                             >
                                 EN
                             </button>
                             <button
                                 onClick={() => changeLanguage('zh')}
-                                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${i18n.language === 'zh' ? 'bg-primary text-white shadow-sm' : 'text-text-secondary hover:text-obsidian'}`}
+                                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${i18n.language === 'zh' ? 'bg-white text-blue-600 shadow-sm border border-gray-100' : 'text-slate-500 hover:text-slate-700'}`}
                             >
                                 中文
                             </button>
                         </div>
-                        <button onClick={() => navigate('/login')} className="text-sm font-bold text-text-secondary hover:text-primary transition-colors">{t('nav.login')}</button>
-                        <button onClick={() => navigate('/login')} className="bg-obsidian hover:bg-black text-white text-sm font-bold px-6 py-2.5 rounded-full transition-all shadow-lg hover:shadow-2xl hover:-translate-y-0.5 border border-white/10 ring-1 ring-white/10">{t('nav.get_started')}</button>
+                        <button onClick={() => navigate('/login')} className="text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">{t('nav.login')}</button>
+                        <button onClick={() => navigate('/login')} className="bg-slate-900 hover:bg-blue-600 text-white text-sm font-bold px-6 py-2.5 rounded-full transition-all shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_25px_rgba(37,99,235,0.3)] hover:-translate-y-0.5">{t('nav.get_started')}</button>
                     </div>
                 </div>
             </header>
 
-            <main className="pt-20 relative z-10">
-                <section className="relative min-h-[90vh] flex items-center overflow-visible">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#E9ECEF] via-[#DEE2E6] to-[#CED4DA] z-0 opacity-60"></div>
-                    <div className="max-w-[1400px] mx-auto w-full px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10 py-24">
-                        <div className="space-y-10 pr-8 relative z-20">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 bg-surface-light/80 backdrop-blur-xl shadow-sm ring-1 ring-black/5">
+            <main className="pt-20 relative z-10 flex-col flex">
+                {/* Hero Section */}
+                <section className="relative min-h-[90vh] flex flex-col justify-center overflow-visible pb-10">
+                    <div className="max-w-[1400px] mx-auto w-full px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10 pt-20">
+
+                        <motion.div
+                            className="space-y-10 pr-8 relative z-20"
+                            initial="hidden"
+                            animate="visible"
+                            variants={staggerContainer}
+                        >
+                            <motion.div variants={fadeUpSpring} className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-blue-200/50 bg-blue-50/80 backdrop-blur-xl shadow-sm cursor-pointer group hover:bg-blue-100/80 transition-colors">
                                 <span className="relative flex h-2.5 w-2.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary shadow-sm"></span>
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]"></span>
                                 </span>
-                                <span className="text-[11px] font-bold tracking-wide uppercase text-obsidian">{t('hero.system_active')}</span>
-                            </div>
-                            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-obsidian drop-shadow-sm">
-                                {t('hero.title_prefix')}<br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-obsidian via-text-secondary to-obsidian" style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.05)' }}>{t('hero.title_highlight')}</span>
-                            </h1>
-                            <p className="text-xl text-text-secondary max-w-lg font-medium leading-relaxed">
+                                <span className="text-[11px] font-bold tracking-wide uppercase text-blue-700">{t('hero.multi_agent_online')}</span>
+                                <span className="material-symbols-outlined text-[14px] text-blue-500 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                            </motion.div>
+
+                            <motion.h1 variants={fadeUpSpring} className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05] text-slate-900">
+                                {t('hero.title_prefix')} <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">
+                                    {t('hero.title_highlight')}
+                                </span>
+                            </motion.h1>
+
+                            <motion.p variants={fadeUpSpring} className="text-xl text-slate-600 max-w-lg font-medium leading-relaxed">
                                 {t('hero.description')}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-4 pt-4">
-                                <button onClick={() => navigate('/login')} className="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-semibold text-sm transition-all flex items-center gap-3 shadow-[0_10px_20px_rgba(67,97,238,0.3)] hover:shadow-[0_15px_30px_rgba(67,97,238,0.4)] hover:-translate-y-1 border-t border-white/20">
+                            </motion.p>
+
+                            <motion.div variants={fadeUpSpring} className="flex flex-wrap items-center gap-4 pt-4">
+                                <button onClick={() => navigate('/login')} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all flex items-center gap-3 shadow-[0_8px_20px_rgba(37,99,235,0.25)] hover:shadow-[0_12px_25px_rgba(37,99,235,0.4)] hover:-translate-y-1">
                                     {t('hero.deploy_system')}
-                                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                    <span className="material-symbols-outlined text-sm">rocket_launch</span>
                                 </button>
-                                <button className="text-obsidian bg-surface-light hover:bg-white px-8 py-4 font-semibold text-sm transition-all flex items-center gap-2 border border-gray-300 rounded-2xl shadow-sm hover:shadow-lg backdrop-blur-md">
+                                <button onClick={() => document.getElementById('defense')?.scrollIntoView()} className="text-slate-700 bg-white hover:bg-slate-50 px-8 py-4 font-semibold text-sm transition-all border border-gray-200 rounded-2xl shadow-sm hover:shadow-md hover:border-gray-300">
                                     {t('hero.view_specs')}
                                 </button>
-                            </div>
-                        </div>
-                        <div className="relative h-[650px] w-full lg:w-[115%] perspective-1000 z-10 lg:-mr-[15%]">
-                            <div className="relative w-full h-full transform transition-transform duration-700 hover:rotate-y-[-2deg] hover:rotate-x-[2deg] will-change-transform">
-                                <div className="absolute inset-4 bg-black/30 rounded-[2.5rem] get-gpu-layer blur-2xl transform translate-y-8 translate-x-4"></div>
-                                <div className="absolute inset-0 rounded-[2rem] overflow-hidden shadow-deep border border-gray-400 bg-gradient-to-br from-[#F8F9FA] to-[#DEE2E6] z-10 ring-1 ring-white/20">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent z-20 pointer-events-none mix-blend-overlay"></div>
-                                    <div className="relative h-full w-full overflow-hidden bg-gray-100">
-                                        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent z-30 pointer-events-none"></div>
-                                        <img alt="Server Hardware" className="w-full h-full object-cover mix-blend-luminosity opacity-90 filter contrast-125 brightness-95 grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAccNeTJCOVIFy_084_iYgRB4UeIFYahezs73z7Oz1kcXffuKolp-ghctKnhUVwyoOsS3DRhxN5qpSB6oKreCghBqrKv8CVugmIYNvk0LSf-SeaX-k4HxEjsT5cziQ3uR_ckCLFJXGdfe0s5cLGqPWi3YJT6UrXoIjCttgUxbmH79v3NaccnSIMhNokb8lWi8ObhQPHqHZcQAdknjVTW0Ovqnt2HgCID_gB2eEKvN5rI8TCjWxOIuJJ8h_DwVxbJhgEjpSu5MvmoC5g" />
-                                    </div>
-                                    <div className="absolute bottom-10 left-10 right-10 glass-heavy p-5 rounded-2xl flex items-center gap-5 z-30 border-t border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.15)] bg-[#F8F9FA]/80">
-                                        <div className="h-12 w-12 bg-gradient-to-br from-gray-100 to-white rounded-full flex items-center justify-center border border-gray-200 shadow-inner">
-                                            <span className="material-symbols-outlined text-primary text-2xl drop-shadow-sm">verified_user</span>
+                            </motion.div>
+                        </motion.div>
+
+                        <motion.div
+                            className="relative h-[650px] w-full lg:w-[115%] perspective-1000 z-10 lg:-mr-[15%]"
+                            initial="hidden"
+                            animate="visible"
+                            variants={fadeUpSpring}
+                            style={{ y: cardY }}
+                        >
+                            <motion.div animate={floating.animate} className="relative w-full h-full transform transition-transform duration-700 hover:rotate-y-[-2deg] hover:rotate-x-[2deg] will-change-transform">
+                                {/* Soft Shadow behind the card */}
+                                <div className="absolute inset-4 bg-blue-600/15 rounded-[2.5rem] blur-3xl transform translate-y-12 translate-x-4"></div>
+
+                                <div className="absolute inset-0 rounded-[2rem] overflow-hidden border border-white bg-white/60 backdrop-blur-xl z-10 shadow-[0_20px_60px_rgba(0,0,0,0.08)] ring-1 ring-slate-900/5 flex flex-col">
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-50 to-white/5 z-20 pointer-events-none mix-blend-overlay"></div>
+
+                                    <div className="relative h-full w-full overflow-hidden bg-slate-50 flex-1">
+                                        <div className="absolute inset-0 opacity-10" style={{
+                                            backgroundImage: 'linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px)',
+                                            backgroundSize: '20px 20px'
+                                        }}></div>
+                                        <div className="w-full h-full flex flex-col pt-12">
+                                            {/* Top terminal bar */}
+                                            <div className="absolute top-0 left-0 right-0 h-10 bg-white border-b border-gray-100 flex items-center px-4 gap-2 z-30">
+                                                <div className="w-3 h-3 rounded-full bg-rose-400"></div>
+                                                <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                                                <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+                                                <div className="ml-auto px-6 py-1 bg-slate-100 rounded-md flex items-center gap-2 border border-slate-200">
+                                                    <span className="material-symbols-outlined text-[12px] text-slate-400">lock</span>
+                                                    <span className="text-[10px] font-mono text-slate-500 font-bold tracking-wide">guard.aether.local</span>
+                                                </div>
+                                            </div>
+
+                                            <img alt="Server Visualization" className="w-full h-full object-cover opacity-90 filter contrast-[1.05]" src={heroImage} />
                                         </div>
-                                        <div>
-                                            <div className="text-sm font-bold text-obsidian uppercase tracking-wider mb-0.5">System Status Normal</div>
-                                            <div className="flex items-center gap-3 text-xs font-mono text-text-secondary">
-                                                <span className="px-1.5 py-0.5 bg-gray-200 rounded border border-gray-300 text-obsidian font-bold">OK</span>
-                                                <span>Latency: 0.4ms</span>
-                                                <span className="w-1 h-1 rounded-full bg-gray-400"></span>
-                                                <span>Uptime: 99.999%</span>
+                                    </div>
+
+                                    {/* Glassmorphism Status Terminal (Upgraded) */}
+                                    <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md border border-white p-5 rounded-2xl flex items-start gap-4 z-30 shadow-[0_15px_30px_rgba(0,0,0,0.1)] ring-1 ring-slate-200">
+                                        <div className="h-10 w-10 mt-1 bg-slate-900 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+                                            <span className="material-symbols-outlined text-white text-xl">terminal</span>
+                                        </div>
+                                        <div className="flex-1 w-full overflow-hidden">
+                                            <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                                {t('hero.live_subsystem')}
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            </div>
+                                            <div className="font-mono text-[11px] text-slate-600 flex flex-col gap-1">
+                                                {terminalLines.map((line, idx) => (
+                                                    <motion.div
+                                                        key={`term-line-${line || 'empty'}-${idx}`}
+                                                        initial={{ opacity: 0, x: -10 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        className={line?.includes('[WARN]') ? 'text-amber-600 font-bold' : line?.includes('SECURE') ? 'text-blue-600 font-bold' : ''}
+                                                    >
+                                                        {line || ''}
+                                                    </motion.div>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </motion.div>
+                        </motion.div>
+                    </div>
+
+                    {/* Stats/Trust Bar */}
+                    <div className="max-w-[1400px] mx-auto px-6 w-full mt-10 relative z-20">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.3 }}
+                            className="bg-white/60 backdrop-blur-md border border-gray-200 rounded-2xl p-6 flex justify-around flex-wrap gap-8 py-8 shadow-sm"
+                        >
+                            <div className="flex flex-col items-center">
+                                <div className="text-3xl font-extrabold text-blue-600">{t('stats.layer')}</div>
+                                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mt-1">{t('stats.multi_agent')}</div>
                             </div>
-                        </div>
+                            <div className="flex flex-col items-center">
+                                <div className="text-3xl font-extrabold text-indigo-600">30+</div>
+                                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mt-1">{t('stats.attack_vectors')}</div>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <div className="text-3xl font-extrabold text-violet-600">&lt;5ms</div>
+                                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mt-1">{t('stats.latency')}</div>
+                            </div>
+                        </motion.div>
                     </div>
                 </section>
 
-                <section id="defense" className="py-32 relative z-10">
-                    <div className="absolute inset-0 bg-surface-mid/30 transform -skew-y-3 origin-top-left scale-110 border-t border-b border-white/20 shadow-inner z-0"></div>
+                {/* Features Section - REAL Features from code */}
+                <section id="defense" className="py-32 relative z-10 border-t border-gray-100 bg-white">
+                    <div className="absolute inset-0 bg-gradient-to-b from-slate-50/50 to-white transform -skew-y-2 origin-top-left -z-10"></div>
                     <div className="max-w-[1400px] mx-auto px-6 relative z-10">
-                        <div className="mb-20 text-center md:text-left">
-                            <h2 className="text-4xl font-bold tracking-tight mb-6 text-obsidian">{t('features.title')}</h2>
-                            <p className="text-text-secondary text-xl font-medium max-w-2xl leading-relaxed">{t('features.description')}</p>
-                        </div>
+                        <motion.div
+                            className="mb-20 text-center md:text-left"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                        >
+                            <h2 className="text-4xl font-bold tracking-tight mb-6 text-slate-900">{t('features.title')}</h2>
+                            <p className="text-slate-500 text-xl font-medium max-w-2xl leading-relaxed">{t('features.description')}</p>
+                        </motion.div>
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                            <div className="bg-surface-light p-10 rounded-3xl shadow-soft border border-gray-200 hover:transform hover:-translate-y-3 hover:shadow-deep transition-all duration-500 group relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full -mr-8 -mt-8 transition-all group-hover:scale-110"></div>
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white to-[#F0F2F5] flex items-center justify-center mb-8 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,1)] border border-gray-200 group-hover:scale-110 transition-transform duration-300">
-                                    <span className="material-symbols-outlined text-primary text-3xl drop-shadow-sm">shield</span>
-                                </div>
-                                <h3 className="text-2xl font-bold text-obsidian mb-4">{t('features.antibot.title')}</h3>
-                                <p className="text-base text-text-secondary leading-relaxed font-medium">
-                                    {t('features.antibot.desc')}
-                                </p>
+                            {[
+                                {
+                                    icon: 'psychology',
+                                    title: t('features.multi_agent.title') || 'Multi-Agent Collaboration',
+                                    desc: t('features.multi_agent.desc') || 'Heterogeneous AI models working together.',
+                                    color: 'blue'
+                                },
+                                {
+                                    icon: 'swords',
+                                    title: t('features.simulator.title') || 'Live Attack Simulator',
+                                    desc: t('features.simulator.desc') || 'Built-in red-team simulator.',
+                                    color: 'indigo'
+                                },
+                                {
+                                    icon: 'radar',
+                                    title: t('features.traffic.title') || 'Traffic Interceptor',
+                                    desc: t('features.traffic.desc') || 'Global traffic scrubbing engine.',
+                                    color: 'violet'
+                                }
+                            ].map((feat, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    variants={fadeUpSpring}
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={{ once: true, margin: "-50px" }}
+                                    transition={{ delay: idx * 0.15 }}
+                                    className="bg-white p-10 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_20px_40px_rgba(37,99,235,0.08)] hover:-translate-y-2 hover:border-blue-100 transition-all duration-500 group relative overflow-hidden"
+                                >
+                                    {/* Hover Glow Effect */}
+                                    <div className={`absolute top-0 right-0 w-48 h-48 bg-${feat.color}-500/10 blur-3xl opacity-0 group-hover:opacity-100 rounded-full -mr-10 -mt-10 transition-all duration-500 scale-50 group-hover:scale-100`}></div>
+
+                                    <div className={`w-14 h-14 rounded-2xl bg-${feat.color}-50 flex items-center justify-center mb-8 border border-${feat.color}-100 group-hover:scale-110 transition-transform duration-300 shadow-sm relative z-10`}>
+                                        <span className={`material-symbols-outlined text-${feat.color}-600 text-3xl`}>{feat.icon}</span>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-4 relative z-10">{feat.title}</h3>
+                                    <p className="text-base text-slate-600 leading-relaxed font-medium relative z-10">
+                                        {feat.desc}
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* School of Athens Section */}
+                <section id="athens" className="py-32 relative z-10 border-t border-gray-100 bg-slate-50 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 -z-10"></div>
+                    <div className="max-w-[1400px] mx-auto px-6 relative z-10">
+                        <motion.div
+                            className="text-center mb-20"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                        >
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-lg border border-blue-200 bg-blue-50/80 shadow-sm">
+                                <span className="text-[11px] font-mono text-blue-700 font-bold uppercase tracking-wider">{t('athens.subtitle')}</span>
                             </div>
-                            <div className="bg-surface-light p-10 rounded-3xl shadow-soft border border-gray-200 hover:transform hover:-translate-y-3 hover:shadow-deep transition-all duration-500 group relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full -mr-8 -mt-8 transition-all group-hover:scale-110"></div>
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white to-[#F0F2F5] flex items-center justify-center mb-8 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,1)] border border-gray-200 group-hover:scale-110 transition-transform duration-300">
-                                    <span className="material-symbols-outlined text-primary text-3xl drop-shadow-sm">memory</span>
-                                </div>
-                                <h3 className="text-2xl font-bold text-obsidian mb-4">{t('features.neural.title')}</h3>
-                                <p className="text-base text-text-secondary leading-relaxed font-medium">
-                                    {t('features.neural.desc')}
-                                </p>
-                            </div>
-                            <div className="bg-surface-light p-10 rounded-3xl shadow-soft border border-gray-200 hover:transform hover:-translate-y-3 hover:shadow-deep transition-all duration-500 group relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full -mr-8 -mt-8 transition-all group-hover:scale-110"></div>
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white to-[#F0F2F5] flex items-center justify-center mb-8 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,1)] border border-gray-200 group-hover:scale-110 transition-transform duration-300">
-                                    <span className="material-symbols-outlined text-primary text-3xl drop-shadow-sm">toggle_on</span>
-                                </div>
-                                <h3 className="text-2xl font-bold text-obsidian mb-4">{t('features.breaker.title')}</h3>
-                                <p className="text-base text-text-secondary leading-relaxed font-medium">
-                                    {t('features.breaker.desc')}
-                                </p>
+                            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6 text-slate-900">{t('athens.title')}</h2>
+                            <p className="text-slate-600 text-xl font-medium max-w-3xl mx-auto leading-relaxed">{t('athens.description')}</p>
+                        </motion.div>
+
+                        <div className="relative">
+                            {/* Visual Timeline Bar */}
+                            <div className="absolute left-[38px] md:left-1/2 md:-translate-x-1/2 top-10 bottom-10 w-1.5 bg-gradient-to-b from-blue-200 via-indigo-300 to-blue-200 rounded-full opacity-60"></div>
+
+                            <div className="space-y-12">
+                                {[1, 2, 3, 4, 5, 6, 7].map((layer, index) => (
+                                    <motion.div
+                                        key={`layer-${layer}`}
+                                        initial={{ opacity: 0, y: 40 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true, margin: "-100px" }}
+                                        transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
+                                        className={`relative flex flex-col md:flex-row items-center gap-8 md:gap-16 group ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
+                                    >
+                                        <div className={`flex-1 w-full ${index % 2 === 1 ? 'md:text-right' : 'md:text-left'} hidden md:block opacity-0 group-hover:opacity-100 transition-opacity duration-500`}>
+                                            <span className="text-9xl font-black text-slate-100 tracking-tighter absolute top-1/2 -translate-y-1/2 [text-shadow:_2px_2px_10px_rgb(0_0_0_/_3%)] pointer-events-none select-none left-0 right-0 z-0">L0{layer}</span>
+                                        </div>
+
+                                        <div className="w-[80px] h-[80px] shrink-0 bg-white border-4 border-slate-50 rounded-full flex items-center justify-center shadow-xl group-hover:bg-blue-600 group-hover:border-blue-100 group-hover:scale-110 transition-all duration-500 z-10 relative">
+                                            <div className="absolute inset-0 rounded-full bg-blue-400 opacity-0 group-hover:animate-ping transition-opacity duration-300"></div>
+                                            <span className="text-3xl font-black text-slate-300 group-hover:text-white transition-colors relative z-20">{layer}</span>
+                                        </div>
+
+                                        <div className="bg-white/80 backdrop-blur-md p-8 md:p-10 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-gray-100 flex-1 hover:shadow-[0_20px_50px_rgba(37,99,235,0.08)] hover:border-blue-200 hover:bg-white transition-all duration-500 transform group-hover:-translate-y-2 relative z-10 w-full overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full -mr-16 -mt-16 transition-transform duration-500 group-hover:scale-150"></div>
+                                            <h3 className="text-2xl font-extrabold text-slate-900 mb-4 group-hover:text-blue-600 transition-colors">{t(`athens.layer${layer}_title`)}</h3>
+                                            <p className="text-lg text-slate-600 leading-relaxed font-medium group-hover:text-slate-700 transition-colors">{t(`athens.layer${layer}_desc`)}</p>
+                                        </div>
+                                    </motion.div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section id="deep-tech" className="py-32 relative z-10 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#CED4DA]/20 z-0"></div>
+                {/* Deep Tech Section (Hardware ESP32) */}
+                <section id="deep-tech" className="py-32 relative z-10 overflow-hidden bg-slate-50">
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
                     <div className="max-w-[1400px] mx-auto px-6 relative">
-                        <div className="absolute -right-40 top-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] mix-blend-multiply"></div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                            <div className="space-y-8 relative z-10">
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/10 shadow-sm backdrop-blur-sm">
-                                    <span className="text-[11px] font-mono text-primary font-bold uppercase tracking-wider">{t('hardware.chipset')}</span>
+
+                            <motion.div
+                                className="space-y-8 relative z-10"
+                                initial={{ opacity: 0, x: -30 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                            >
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 shadow-sm">
+                                    <span className="text-[11px] font-mono text-indigo-600 font-bold uppercase tracking-wider">{t('hardware.chipset')}</span>
                                 </div>
-                                <h2 className="text-5xl font-bold tracking-tight text-obsidian">{t('hardware.title')}</h2>
-                                <p className="text-text-secondary text-xl leading-relaxed font-medium">
+                                <h2 className="text-5xl font-bold tracking-tight text-slate-900">{t('hardware.title')}</h2>
+                                <p className="text-slate-600 text-xl leading-relaxed font-medium">
                                     {t('hardware.description')}
                                 </p>
                                 <ul className="space-y-6 pt-6">
-                                    <li className="flex items-center gap-5 text-base font-semibold text-text-main border-b border-black/10 pb-4">
-                                        <span className="font-mono text-primary w-24 bg-primary/10 py-1 px-2 rounded text-center text-sm border border-primary/20">AES-256</span>
+                                    <li className="flex items-center gap-5 text-base font-bold text-slate-800 border-b border-gray-200 pb-4">
+                                        <span className="font-mono text-blue-700 w-24 bg-blue-50 py-1 px-2 rounded text-center text-sm border border-blue-100">AES-256</span>
                                         {t('hardware.aes')}
                                     </li>
-                                    <li className="flex items-center gap-5 text-base font-semibold text-text-main border-b border-black/10 pb-4">
-                                        <span className="font-mono text-primary w-24 bg-primary/10 py-1 px-2 rounded text-center text-sm border border-primary/20">RSA-4096</span>
+                                    <li className="flex items-center gap-5 text-base font-bold text-slate-800 border-b border-gray-200 pb-4">
+                                        <span className="font-mono text-blue-700 w-24 bg-blue-50 py-1 px-2 rounded text-center text-sm border border-blue-100">RSA-4096</span>
                                         {t('hardware.rsa')}
                                     </li>
-                                    <li className="flex items-center gap-5 text-base font-semibold text-text-main border-b border-black/10 pb-4">
-                                        <span className="font-mono text-primary w-24 bg-primary/10 py-1 px-2 rounded text-center text-sm border border-primary/20">TRNG</span>
-                                        {t('hardware.trng')}
-                                    </li>
                                 </ul>
-                            </div>
-                            <div className="relative group perspective-1000">
-                                <div className="absolute -inset-4 bg-gradient-to-r from-gray-900/10 to-blue-900/10 rounded-[2.5rem] blur-2xl opacity-60 group-hover:opacity-80 transition duration-1000"></div>
-                                <div className="relative glass-heavy rounded-[2rem] overflow-hidden aspect-[4/3] blueprint-grid flex items-center justify-center p-10 transform transition-transform duration-700 hover:scale-[1.02] border border-gray-300 bg-surface-light/50">
-                                    <div className="absolute top-6 left-6 w-4 h-4 rounded-full bg-gradient-to-b from-gray-200 to-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] border border-gray-400">
-                                        <div className="w-full h-[1px] bg-gray-500 absolute top-1/2 left-0 transform -translate-y-1/2 rotate-45 opacity-60"></div>
-                                    </div>
-                                    <div className="absolute top-6 right-6 w-4 h-4 rounded-full bg-gradient-to-b from-gray-200 to-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] border border-gray-400">
-                                        <div className="w-full h-[1px] bg-gray-500 absolute top-1/2 left-0 transform -translate-y-1/2 -rotate-45 opacity-60"></div>
-                                    </div>
-                                    <div className="absolute bottom-6 left-6 w-4 h-4 rounded-full bg-gradient-to-b from-gray-200 to-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] border border-gray-400">
-                                        <div className="w-full h-[1px] bg-gray-500 absolute top-1/2 left-0 transform -translate-y-1/2 rotate-12 opacity-60"></div>
-                                    </div>
-                                    <div className="absolute bottom-6 right-6 w-4 h-4 rounded-full bg-gradient-to-b from-gray-200 to-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] border border-gray-400">
-                                        <div className="w-full h-[1px] bg-gray-500 absolute top-1/2 left-0 transform -translate-y-1/2 -rotate-12 opacity-60"></div>
-                                    </div>
-                                    <div className="relative w-full h-full border border-gray-300 rounded-2xl bg-surface-light/90 shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl p-8 flex flex-col justify-between ring-1 ring-white/60">
-                                        <div className="flex justify-between items-start">
-                                            <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white">
-                                                <span className="material-symbols-outlined text-gray-700 text-3xl">developer_board</span>
-                                            </div>
-                                            <div className="px-3 py-1.5 text-[10px] font-mono text-primary font-bold bg-primary/10 rounded border border-primary/20 shadow-sm">ESP32-S3-WROOM</div>
+                            </motion.div>
+
+                            <motion.div
+                                className="relative group perspective-1000"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                            >
+                                <div className="absolute -inset-4 bg-indigo-100/50 backdrop-blur-md rounded-[2.5rem] opacity-60 group-hover:opacity-100 transition duration-1000"></div>
+                                <div className="relative border border-white bg-white/90 backdrop-blur-xl rounded-[2rem] overflow-hidden aspect-[4/3] p-10 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.05)] ring-1 ring-slate-100 group-hover:border-blue-100 hover:shadow-[0_25px_60px_rgba(37,99,235,0.1)] transition-all">
+
+                                    <div className="flex justify-between items-start z-10">
+                                        <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center shadow-sm">
+                                            <span className="material-symbols-outlined text-slate-700 text-3xl">developer_board</span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-6 my-6">
-                                            <div className="border border-dashed border-gray-400 rounded-lg p-4 flex flex-col items-center justify-center bg-gray-50/40">
-                                                <span className="text-[10px] font-mono uppercase text-gray-600 mb-2 font-bold tracking-wider">{t('hardware.core_load_0')}</span>
-                                                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
-                                                    <div className="h-full bg-gradient-to-r from-primary to-primary-dark w-[80%] shadow-[0_0_10px_rgba(67,97,238,0.4)]"></div>
-                                                </div>
-                                            </div>
-                                            <div className="border border-dashed border-gray-400 rounded-lg p-4 flex flex-col items-center justify-center bg-gray-50/40">
-                                                <span className="text-[10px] font-mono uppercase text-gray-600 mb-2 font-bold tracking-wider">{t('hardware.core_load_1')}</span>
-                                                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
-                                                    <div className="h-full bg-gradient-to-r from-primary to-primary-dark w-[30%] shadow-[0_0_10px_rgba(67,97,238,0.4)]"></div>
+                                        <div className="px-3 py-1.5 text-[10px] font-mono text-indigo-700 bg-indigo-50 border border-indigo-100 shadow-sm rounded flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                            ESP32-S3 CORE
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6 my-6 z-10">
+                                        <div className="border border-dashed border-gray-300 rounded-lg p-4 bg-slate-50 flex flex-col items-center">
+                                            <span className="text-[10px] font-mono uppercase text-slate-500 mb-2 font-bold tracking-wider text-center">{t('hardware.core_load_0')}</span>
+                                            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mt-1 shadow-inner">
+                                                <div className="h-full bg-blue-500 w-[65%] shadow-sm relative overflow-hidden">
+                                                    <div className="absolute inset-0 bg-white/20 w-1/2 -skew-x-12 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="border border-primary/20 rounded-xl p-4 flex items-center justify-between bg-gradient-to-r from-blue-50/20 to-white/40 backdrop-blur-sm shadow-sm">
-                                            <div className="flex flex-col">
-                                                <div className="text-[11px] font-mono font-bold text-primary tracking-wide">{t('hardware.crypto_accel')}</div>
-                                                <div className="text-[10px] text-text-secondary mt-0.5">SHA-256 • AES • RSA</div>
+                                        <div className="border border-dashed border-gray-300 rounded-lg p-4 bg-slate-50 flex flex-col items-center">
+                                            <span className="text-[10px] font-mono uppercase text-slate-500 mb-2 font-bold tracking-wider text-center">{t('hardware.core_load_1')}</span>
+                                            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mt-1 shadow-inner">
+                                                <div className="h-full bg-violet-500 w-[42%] shadow-sm relative overflow-hidden">
+                                                    <div className="absolute inset-0 bg-white/20 w-1/2 -skew-x-12 translate-x-[-100%] animate-[shimmer_2s_infinite_0.5s]"></div>
+                                                </div>
                                             </div>
-                                            <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(67,97,238,0.8)] animate-pulse ring-4 ring-primary/10"></div>
                                         </div>
                                     </div>
-                                    <div className="absolute top-[6%] left-[10%] w-[80%] flex justify-center opacity-70">
-                                        <div className="h-px bg-text-secondary w-full relative top-2.5"></div>
-                                        <span className="bg-surface-light px-2 text-[10px] font-mono text-text-secondary relative z-10 border border-gray-300 rounded shadow-sm">18.00 mm</span>
-                                    </div>
-                                    <div className="absolute right-[3%] top-[15%] h-[70%] flex flex-col justify-center items-center opacity-70">
-                                        <div className="w-px bg-text-secondary h-full relative left-[0.6rem]"></div>
-                                        <span className="bg-surface-light py-1 px-1 text-[10px] font-mono text-text-secondary relative z-10 rotate-90 whitespace-nowrap border border-gray-300 rounded shadow-sm">25.50 mm</span>
+
+                                    <div className="border border-blue-100 rounded-xl p-4 flex items-center justify-between bg-blue-50 z-10">
+                                        <div className="flex flex-col">
+                                            <div className="text-[11px] font-mono font-bold text-blue-700 tracking-wide">{t('hardware.crypto_accel')}</div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5 font-medium">SHA-256 • Hardware TRNG</div>
+                                        </div>
+                                        <div className="w-4 h-4 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] animate-ping"></div>
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
                     </div>
                 </section>
 
-                <section id="architecture" className="py-32 relative z-10">
-                    <div className="absolute inset-x-0 top-10 bottom-0 bg-surface-mid/30 shadow-[0_-20px_60px_rgba(0,0,0,0.03)] backdrop-blur-md z-0 skew-y-1 transform origin-bottom-right border-t border-white/20"></div>
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#CED4DA]/20 z-0 pointer-events-none"></div>
+                {/* CTA Map / Architecture Section */}
+                <section id="architecture" className="py-32 relative z-10 border-t border-gray-200 bg-white">
                     <div className="max-w-[1400px] mx-auto px-6 relative z-10">
                         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-                            <div>
-                                <h2 className="text-4xl font-bold tracking-tight text-obsidian mb-4">{t('infrastructure.title')}</h2>
-                                <p className="text-text-secondary text-xl font-medium max-w-xl">{t('infrastructure.description')}</p>
-                            </div>
-                            <div className="flex items-center gap-6 text-sm font-semibold text-text-secondary bg-surface-light px-6 py-3 rounded-xl border border-gray-300 shadow-lg backdrop-blur-sm">
-                                <div className="flex items-center gap-2.5">
-                                    <span className="relative flex h-3 w-3">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary border border-white"></span>
-                                    </span>
-                                    {t('infrastructure.operational')}
-                                </div>
-                                <div className="h-4 w-px bg-gray-400"></div>
-                                <div className="flex items-center gap-2.5">
-                                    <span className="w-3 h-3 rounded-full bg-gray-400 shadow-inner border border-gray-500"></span>
-                                    {t('infrastructure.maintenance')}
-                                </div>
-                            </div>
+                            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
+                                <h2 className="text-4xl font-bold tracking-tight text-slate-900 mb-4">{t('infrastructure.title')}</h2>
+                                <p className="text-slate-600 text-xl font-medium max-w-xl">{t('infrastructure.description')}</p>
+                            </motion.div>
+                            <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+                                <button onClick={() => navigate('/login')} className="bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md flex items-center gap-2">
+                                    {t('infrastructure.simulate_btn')} <span className="material-symbols-outlined text-[18px]">bolt</span>
+                                </button>
+                            </motion.div>
                         </div>
-                        <div className="relative w-full aspect-[2.2/1] bg-black rounded-[2rem] border border-gray-300 overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.05),0_20px_40px_-10px_rgba(0,0,0,0.1)] group">
+
+                        <motion.div
+                            className="relative w-full aspect-[2.2/1] bg-slate-900 rounded-[2rem] border border-gray-200 overflow-hidden shadow-2xl group"
+                            variants={fadeUpSpring}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true }}
+                        >
                             <img
                                 src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop"
                                 alt="Global Network Infrastructure"
-                                className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
+                                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 group-hover:opacity-80 transition-all duration-1000 mix-blend-screen"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent z-10 mix-blend-multiply"></div>
 
-                            {/* Overlay Nodes */}
-                            <div className="absolute top-[35%] left-[22%] group cursor-pointer z-30">
-                                <div className="w-4 h-4 bg-primary border-2 border-white rounded-full shadow-[0_0_20px_rgba(67,97,238,0.8)] z-20 relative animate-pulse"></div>
-                                <div className="absolute top-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl rounded-lg text-xs font-mono text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 z-50">
-                                    <span className="font-bold text-primary-light block mb-0.5">US-WEST</span><span className="text-gray-300">Latency: 12ms</span>
+                            {/* Map Nodes */}
+                            <div className="absolute top-[35%] left-[22%] group/node cursor-pointer z-30">
+                                <div className="w-3 h-3 bg-blue-400 border-2 border-white rounded-full shadow-[0_0_15px_rgba(59,130,246,0.8)] z-20 relative animate-pulse"></div>
+                                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-white backdrop-blur-md border border-gray-200 rounded-md shadow-[0_10px_30px_rgba(0,0,0,0.15)] text-xs font-mono whitespace-nowrap opacity-0 group-hover/node:opacity-100 transition-opacity">
+                                    <span className="font-bold text-slate-900">US-WEST</span> <span className="text-slate-500">(12ms)</span>
                                 </div>
                             </div>
-                            <div className="absolute top-[28%] left-[48%] group cursor-pointer z-30">
-                                <div className="w-4 h-4 bg-primary border-2 border-white rounded-full shadow-[0_0_20px_rgba(67,97,238,0.8)] z-20 relative animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                                <div className="absolute top-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl rounded-lg text-xs font-mono text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 z-50">
-                                    <span className="font-bold text-primary-light block mb-0.5">EU-CENTRAL</span><span className="text-gray-300">Latency: 24ms</span>
+                            <div className="absolute top-[28%] left-[48%] group/node cursor-pointer z-30">
+                                <div className="w-3 h-3 bg-blue-400 border-2 border-white rounded-full shadow-[0_0_15px_rgba(59,130,246,0.8)] z-20 relative animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-white backdrop-blur-md border border-gray-200 rounded-md shadow-[0_10px_30px_rgba(0,0,0,0.15)] text-xs font-mono whitespace-nowrap opacity-0 group-hover/node:opacity-100 transition-opacity">
+                                    <span className="font-bold text-slate-900">EU-CENTRAL</span> <span className="text-slate-500">(24ms)</span>
                                 </div>
                             </div>
-                            <div className="absolute top-[40%] right-[22%] group cursor-pointer z-30">
-                                <div className="w-4 h-4 bg-primary border-2 border-white rounded-full shadow-[0_0_20px_rgba(67,97,238,0.8)] z-20 relative animate-pulse" style={{ animationDelay: '1s' }}></div>
-                                <div className="absolute top-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl rounded-lg text-xs font-mono text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 z-50">
-                                    <span className="font-bold text-primary-light block mb-0.5">ASIA-PAC</span><span className="text-gray-300">Latency: 45ms</span>
+                            <div className="absolute top-[40%] right-[22%] group/node cursor-pointer z-30">
+                                <div className="w-3 h-3 bg-emerald-400 border-2 border-white rounded-full shadow-[0_0_15px_rgba(16,185,129,0.8)] z-20 relative animate-pulse" style={{ animationDelay: '0.8s' }}></div>
+                                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-white backdrop-blur-md border border-gray-200 rounded-md shadow-[0_10px_30px_rgba(0,0,0,0.15)] text-xs font-mono whitespace-nowrap opacity-0 group-hover/node:opacity-100 transition-opacity">
+                                    <span className="font-bold text-slate-900">ASIA-PAC</span> <span className="text-slate-500">(45ms)</span>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
                 </section>
 
-                <section className="py-32 relative z-10 overflow-visible">
-                    <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                        <div className="order-2 lg:order-1 relative perspective-1000">
-                            <div className="shape-sphere -left-20 top-0 w-80 h-80 opacity-20 mix-blend-multiply blur-xl bg-gray-400"></div>
-                            <div className="rounded-[2rem] overflow-hidden shadow-deep border border-gray-300 bg-surface-light transform hover:rotate-y-3 hover:rotate-x-2 transition-transform duration-700 relative z-10 group">
-                                <img alt="Interface" className="w-full h-auto object-cover opacity-100 group-hover:scale-105 transition-transform duration-700 grayscale contrast-125" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjfyfMsNDoTUgVhaj7YvAOQbKYlvvM7OZF6-eOoEuQTuzP7G-ptu-3OVL-GVzrFdmi-vxgTUPfnMBVaq7wSXXUh-3edY8m2tLaFaGY3A78ofSdYP6FjNZA_xam2_KfSZXGyVBRvn0VsNuwc99EBtYBe-iHnVpeo7b_L18edzkev8CbQoQOHg7MTs7q1CCCSnIK2evo2owfNjsh8Mc-M-W_1DAVfkwzzWBrz_6zhL4E0XpkZtQ3yfGVbWM2kOhhDfLUQ5iNemOBKkVl" />
-                                <div className="absolute inset-0 bg-gradient-to-tr from-surface-light/20 to-transparent pointer-events-none"></div>
-                                <div className="absolute bottom-6 left-6 right-6 glass-panel p-6 rounded-2xl shadow-lg flex justify-between items-center z-20 border-t border-white/60 bg-surface-light/80">
-                                    <div>
-                                        <p className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-1.5">{t('dashboard.system_status')}</p>
-                                        <p className="text-sm font-mono text-primary font-bold flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)] animate-pulse"></span>
-                                            {t('dashboard.nominal')}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-1.5">{t('dashboard.throughput')}</p>
-                                        <p className="text-sm font-mono text-obsidian font-bold">45.2 TB/s <span className="text-green-600 text-xs ml-1">▲</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="order-1 lg:order-2 space-y-8 relative z-10">
-                            <h2 className="text-4xl font-bold tracking-tight text-obsidian">{t('dashboard.precision_control')}</h2>
-                            <p className="text-text-secondary text-xl leading-relaxed font-medium">
-                                {t('dashboard.description')}
-                            </p>
-                            <div className="space-y-6 pt-6 border-t border-black/10">
-                                <div className="flex items-start gap-5 pt-2 group cursor-default">
-                                    <div className="p-3.5 rounded-2xl bg-surface-light shadow-sm border border-gray-300 group-hover:bg-primary/5 transition-colors duration-300">
-                                        <span className="material-symbols-outlined text-text-secondary group-hover:text-primary transition-colors text-2xl">analytics</span>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-lg font-bold text-obsidian group-hover:text-primary transition-colors">{t('dashboard.visualization')}</h4>
-                                        <p className="text-base text-text-secondary mt-1 font-medium">{t('dashboard.vis_desc')}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-5 pt-2 group cursor-default">
-                                    <div className="p-3.5 rounded-2xl bg-surface-light shadow-sm border border-gray-300 group-hover:bg-primary/5 transition-colors duration-300">
-                                        <span className="material-symbols-outlined text-text-secondary group-hover:text-primary transition-colors text-2xl">history</span>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-lg font-bold text-obsidian group-hover:text-primary transition-colors">{t('dashboard.history')}</h4>
-                                        <p className="text-base text-text-secondary mt-1 font-medium">{t('dashboard.history_desc')}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="pricing" className="py-32 bg-gradient-to-t from-surface-light to-concrete-bg relative z-10 border-t border-white/30 shadow-[0_-30px_60px_rgba(0,0,0,0.03)]">
-                    <div className="max-w-[1400px] mx-auto px-6">
-                        <div className="text-center mb-20">
-                            <h2 className="text-4xl font-bold tracking-tight text-obsidian">{t('pricing.title')}</h2>
-                            <p className="text-text-secondary mt-4 text-xl font-medium">{t('pricing.description')}</p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-                            <div className="border border-gray-300 rounded-3xl p-10 bg-surface-light/60 backdrop-blur-lg shadow-soft flex flex-col justify-between hover:bg-surface-light hover:shadow-deep hover:border-gray-400 transition-all duration-300">
-                                <div>
-                                    <h3 className="font-bold text-2xl text-obsidian">{t('pricing.sentry')}</h3>
-                                    <div className="mt-6 flex items-baseline gap-1">
-                                        <span className="text-4xl font-bold text-obsidian tracking-tight">$499</span>
-                                        <span className="text-text-secondary text-sm font-medium">{t('pricing.mo')}</span>
-                                    </div>
-                                    <ul className="mt-8 space-y-4">
-                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
-                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.software_firewall')}
-                                        </li>
-                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
-                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.basic_antibot')}
-                                        </li>
-                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium opacity-50">
-                                            <span className="material-symbols-outlined text-lg">cancel</span> {t('pricing.hardware_key')}
-                                        </li>
-                                    </ul>
-                                </div>
-                                <button onClick={() => navigate('/login')} className="mt-10 w-full py-4 rounded-xl border border-divider text-sm font-bold text-obsidian hover:bg-white hover:shadow-md transition-all">{t('pricing.configure')}</button>
-                            </div>
-                            <div className="border border-primary/20 rounded-3xl p-10 bg-surface-light shadow-glow relative flex flex-col justify-between transform -translate-y-6 hover:-translate-y-8 transition-all duration-300 ring-1 ring-primary/10 z-10">
-                                <div className="absolute top-0 right-0 p-5">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white bg-primary px-3 py-1.5 rounded-full shadow-lg shadow-primary/30">{t('pricing.recommended')}</span>
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-2xl text-obsidian flex items-center gap-2">
-                                        {t('pricing.guardian')}
-                                        <span className="flex h-2.5 w-2.5 relative">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-                                        </span>
-                                    </h3>
-                                    <div className="mt-6 flex items-baseline gap-1">
-                                        <span className="text-5xl font-bold text-obsidian tracking-tight">$999</span>
-                                        <span className="text-text-secondary text-sm font-medium">{t('pricing.mo')}</span>
-                                    </div>
-                                    <ul className="mt-10 space-y-4">
-                                        <li className="text-sm text-obsidian flex items-center gap-3 font-bold">
-                                            <span className="material-symbols-outlined text-lg text-primary fill-current">verified</span> {t('pricing.hardware_root_trust')}
-                                        </li>
-                                        <li className="text-sm text-obsidian flex items-center gap-3 font-bold">
-                                            <span className="material-symbols-outlined text-lg text-primary fill-current">verified</span> {t('pricing.advanced_ai')}
-                                        </li>
-                                        <li className="text-sm text-obsidian flex items-center gap-3 font-bold">
-                                            <span className="material-symbols-outlined text-lg text-primary fill-current">verified</span> {t('pricing.priority_support')}
-                                        </li>
-                                    </ul>
-                                </div>
-                                <button onClick={() => navigate('/login')} className="mt-10 w-full py-4 rounded-xl bg-primary text-sm font-bold text-white hover:bg-primary-dark transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40">{t('pricing.deploy_now')}</button>
-                            </div>
-                            <div className="border border-gray-300 rounded-3xl p-10 bg-surface-light/60 backdrop-blur-lg shadow-soft flex flex-col justify-between hover:bg-surface-light hover:shadow-deep hover:border-gray-400 transition-all duration-300">
-                                <div>
-                                    <h3 className="font-bold text-2xl text-obsidian">{t('pricing.monolith')}</h3>
-                                    <div className="mt-6 flex items-baseline gap-1">
-                                        <span className="text-4xl font-bold text-obsidian tracking-tight">{t('pricing.custom')}</span>
-                                    </div>
-                                    <ul className="mt-8 space-y-4">
-                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
-                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.dedicated_cluster')}
-                                        </li>
-                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
-                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.physical_breaker')}
-                                        </li>
-                                        <li className="text-sm text-text-secondary flex items-center gap-3 font-medium">
-                                            <span className="material-symbols-outlined text-lg text-green-600">check_circle</span> {t('pricing.on_premise')}
-                                        </li>
-                                    </ul>
-                                </div>
-                                <button onClick={() => navigate('/login')} className="mt-10 w-full py-4 rounded-xl border border-divider text-sm font-bold text-obsidian hover:bg-white hover:shadow-md transition-all">{t('pricing.contact_sales')}</button>
-                            </div>
-                        </div>
+                {/* Final Call To Action */}
+                <section className="py-24 bg-white border-t border-gray-200 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-blue-50/50"></div>
+                    <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+                        <motion.h2
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="text-4xl font-extrabold text-slate-900 mb-6"
+                        >
+                            {t('cta.title')}
+                        </motion.h2>
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 }}
+                            className="text-xl text-slate-600 mb-10 font-medium"
+                        >
+                            {t('cta.desc')}
+                        </motion.p>
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ type: "spring", delay: 0.2 }}
+                            onClick={() => navigate('/login')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all shadow-[0_10px_25px_rgba(37,99,235,0.3)] hover:shadow-[0_15px_30px_rgba(37,99,235,0.4)] hover:-translate-y-1"
+                        >
+                            {t('cta.btn')}
+                        </motion.button>
                     </div>
                 </section>
             </main>
 
-            <footer className="bg-surface-mid border-t border-white/20 py-20 text-sm relative z-10 shadow-[inset_0_10px_30px_rgba(0,0,0,0.03)]">
+            <footer className="bg-slate-50 border-t border-gray-200 py-12 text-sm relative z-10">
                 <div className="max-w-[1400px] mx-auto px-6">
-                    <div className="flex flex-col md:flex-row justify-between gap-16">
-                        <div className="max-w-xs">
-                            <div className="flex items-center gap-3 mb-6">
-                                <span className="material-symbols-outlined text-primary text-3xl">shield_lock</span>
-                                <span className="font-bold text-xl text-obsidian">FluxGuard</span>
-                            </div>
-                            <p className="text-text-secondary leading-relaxed font-medium">
-                                {t('footer.copyright')} <br />
-                                {t('footer.engineered')}
-                            </p>
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-3">
+                            <img src={logoImage} alt="AetherGuard Logo" className="h-8 w-8 object-contain opacity-90 grayscale hover:grayscale-0 transition-all duration-300 rounded-lg" />
+                            <span className="font-extrabold text-slate-900 tracking-wide text-lg">AetherGuard</span>
                         </div>
-                        <div className="flex gap-20 flex-wrap">
-                            <div>
-                                <h4 className="font-bold text-obsidian mb-6 text-base">{t('footer.product')}</h4>
-                                <ul className="space-y-3 text-text-secondary font-medium">
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.features')}</a></li>
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.security')}</a></li>
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.hardware')}</a></li>
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.enterprise')}</a></li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-obsidian mb-6 text-base">{t('footer.company')}</h4>
-                                <ul className="space-y-3 text-text-secondary font-medium">
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.about')}</a></li>
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.careers')}</a></li>
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.legal')}</a></li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-obsidian mb-6 text-base">{t('footer.support')}</h4>
-                                <ul className="space-y-3 text-text-secondary font-medium">
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.help_center')}</a></li>
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.api_status')}</a></li>
-                                    <li><a className="hover:text-primary transition-colors" href="#">{t('footer.contact')}</a></li>
-                                </ul>
-                            </div>
+                        <div className="text-slate-500 text-xs text-center md:text-left font-medium">
+                            © 2026 Aether Studio. All rights reserved. Secure Cloud Architecture.
                         </div>
-                    </div>
-                    <div className="mt-20 pt-8 border-t border-black/10 flex flex-col md:flex-row justify-between items-center text-xs text-text-secondary font-medium">
-                        <p>{t('footer.all_rights')}</p>
-                        <div className="flex gap-8 mt-4 md:mt-0">
-                            <a className="hover:text-obsidian" href="#">{t('footer.privacy')}</a>
-                            <a className="hover:text-obsidian" href="#">{t('footer.terms')}</a>
-                            <a className="hover:text-obsidian" href="#">{t('footer.sales')}</a>
+                        <div className="flex gap-6 text-slate-500 text-xs font-semibold">
+                            <a href="/privacy" className="hover:text-blue-600 transition-colors">{t('landing.privacy')}</a>
+                            <a href="#" className="hover:text-blue-600 transition-colors">{t('landing.terms')}</a>
                         </div>
                     </div>
                 </div>

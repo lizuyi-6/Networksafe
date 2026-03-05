@@ -20,9 +20,11 @@ class RedisService {
   private connect(): void {
     try {
       const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+      const enableTls = process.env.REDIS_TLS === 'true';
+      const password = process.env.REDIS_PASSWORD;
 
-      this.client = new Redis(redisUrl, {
-        retryStrategy: (times) => {
+      const redisOptions: any = {
+        retryStrategy: (times: number) => {
           if (times > 10) {
             logger.warn('Redis connection retry limit reached, stopping retries');
             return null;
@@ -33,7 +35,19 @@ class RedisService {
         maxRetriesPerRequest: 1,
         commandTimeout: 1000,
         connectTimeout: 1000,
-      });
+      };
+
+      if (password) {
+        redisOptions.password = password;
+      }
+
+      if (enableTls) {
+        redisOptions.tls = {
+          rejectUnauthorized: process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false',
+        };
+      }
+
+      this.client = new Redis(redisUrl, redisOptions);
 
       this.client.on('connect', () => {
         this.connectionReady = true;
@@ -144,6 +158,25 @@ class RedisService {
 
   isDisabled(): boolean {
     return this.disabled;
+  }
+
+  async healthCheck(): Promise<{ healthy: boolean; latency?: number; error?: string }> {
+    if (this.disabled) {
+      return { healthy: false, error: 'Redis is disabled' };
+    }
+
+    if (!this.client || !this.connectionReady) {
+      return { healthy: false, error: 'Redis client not connected' };
+    }
+
+    try {
+      const start = Date.now();
+      await this.client.ping();
+      const latency = Date.now() - start;
+      return { healthy: true, latency };
+    } catch (error: any) {
+      return { healthy: false, error: error.message || 'Unknown error' };
+    }
   }
 }
 

@@ -55,7 +55,7 @@ router.get('/:id', (req: AuthenticatedRequest, res: Response) => {
                 success: false,
                 error: {
                     code: 'FG-FIX-HISTORY-404',
-                    message: 'History record not found',
+                    message: 'backend.history_record_not_found',
                     timestamp: new Date().toISOString()
                 }
             });

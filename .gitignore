@@ -55,3 +55,22 @@ venv/
 # OS
 Thumbs.db
 Desktop.ini
+
+# Database
+*.db
+*.sqlite
+
+# Archives
+*.tar.gz
+*.zip
+
+# Temporary/Debug scripts (keep README and docs)
+*-log.txt
+*_log.txt
+*.log
+error.txt
+*.tmp
+*.temp
+
+# Project specific
+.nul

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Bug Reproduction Agent
  *
  * Specializes in reproducing bugs by analyzing user reports, system state, and test scenarios.
@@ -6,10 +6,11 @@
 
 import { BaseInvestigationAgent } from './base-investigation.agent';
 import { InvestigationContext, InvestigationAgentType, Finding, ReproductionGuide } from '../types';
+import { AgentConfig, MessageBus } from '../../core';
 
 export class BugReproductionAgent extends BaseInvestigationAgent {
-  constructor(coordinator: any) {
-    super(InvestigationAgentType.BUG_REPRODUCTION, [
+  constructor(config: AgentConfig, messageBus: MessageBus) {
+    super(config, messageBus, InvestigationAgentType.BUG_REPRODUCTION, [
       'test_case_generation',
       'scenario_analysis',
       'reproduction_step_identification',
@@ -20,9 +21,23 @@ export class BugReproductionAgent extends BaseInvestigationAgent {
   }
 
   /**
+   * Get system prompt for AI model
+   */
+  public getSystemPrompt(): string {
+    return `You are a Bug Reproduction Agent specializing in:
+- Analyzing bug reports and user feedback
+- Generating detailed reproduction steps
+- Identifying prerequisites and environment requirements
+- Validating bugs against system state
+- Creating test scenarios
+
+Your goal is to help developers reproduce bugs quickly and accurately.`;
+  }
+
+  /**
    * Analyze bug and attempt to generate reproduction steps
    */
-  public async analyze(context: InvestigationContext): Promise<any> {
+  public async analyzeInvestigation(context: InvestigationContext): Promise<any> {
     console.log('[BugReproductionAgent] Starting bug reproduction analysis...');
 
     const findings: Finding[] = [];
@@ -341,3 +356,4 @@ export class BugReproductionAgent extends BaseInvestigationAgent {
       `reproducibility score: ${(validation.reproducibilityScore * 100).toFixed(0)}%.`;
   }
 }
+

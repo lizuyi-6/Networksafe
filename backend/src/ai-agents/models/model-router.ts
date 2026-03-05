@@ -15,6 +15,7 @@ import { AIEngine } from '../../scanner/ai-engine';
 import { ZhipuClient } from '../../scanner/zhipu-client';
 import { OpenAICompatibleClient, createDashScopeClient } from '../../scanner/openai-compatible-client';
 import logger from '../../utils/logger';
+import { PLATFORM_API_CONFIG } from '../../utils/model-access';
 
 export interface ModelRouterConfig {
     localModel: {
@@ -40,9 +41,9 @@ const DEFAULT_CONFIG: ModelRouterConfig = {
     },
     cloudModel: {
         provider: 'dashscope',
-        model: 'qwen3-coder-480b-a35b-instruct',
-        apiKey: process.env.DASHSCOPE_API_KEY || process.env.ZHIPU_API_KEY || '',
-        baseURL: process.env.DASHSCOPE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+        model: 'qwen3-max-2026-01-23',
+        apiKey: PLATFORM_API_CONFIG.apiKey,
+        baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
     },
     escalationThreshold: 0.6,
     maxLocalLatency: 5000
@@ -175,7 +176,7 @@ export class ModelRouter {
 
     private needsCloudEscalation(response: ModelResponse): boolean {
         const content = response.content.toLowerCase();
-        
+
         const uncertaintyIndicators = [
             'uncertain', 'unclear', 'cannot determine', 'insufficient information',
             'requires further', 'needs review', 'ambiguous'
@@ -263,13 +264,13 @@ export class ModelRouter {
 
     private updateLatencyStats(tier: ModelTier, latency: number): void {
         if (tier === 'local' || tier === 'hybrid') {
-            this.requestStats.avgLocalLatency = 
-                (this.requestStats.avgLocalLatency * (this.requestStats.local - 1) + latency) / 
+            this.requestStats.avgLocalLatency =
+                (this.requestStats.avgLocalLatency * (this.requestStats.local - 1) + latency) /
                 this.requestStats.local;
         }
         if (tier === 'cloud' || tier === 'hybrid') {
-            this.requestStats.avgCloudLatency = 
-                (this.requestStats.avgCloudLatency * (this.requestStats.cloud - 1) + latency) / 
+            this.requestStats.avgCloudLatency =
+                (this.requestStats.avgCloudLatency * (this.requestStats.cloud - 1) + latency) /
                 this.requestStats.cloud;
         }
     }
@@ -277,8 +278,8 @@ export class ModelRouter {
     getStats(): typeof this.requestStats & { localRatio: number } {
         return {
             ...this.requestStats,
-            localRatio: this.requestStats.total > 0 
-                ? this.requestStats.local / this.requestStats.total 
+            localRatio: this.requestStats.total > 0
+                ? this.requestStats.local / this.requestStats.total
                 : 0
         };
     }

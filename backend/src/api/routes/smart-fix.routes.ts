@@ -58,12 +58,12 @@ class AIPromptValidator {
    */
   static validatePrompt(prompt: string): { valid: boolean; error?: string; sanitized?: string } {
     if (!prompt || typeof prompt !== 'string') {
-      return { valid: false, error: 'Prompt must be a non-empty string' };
+      return { valid: false, error: 'backend.prompt_must_be_a_non_empty_string' };
     }
 
     // Check length limits
     if (prompt.length > 10000) {
-      return { valid: false, error: 'Prompt is too long. Maximum 10000 characters allowed.' };
+      return { valid: false, error: 'backend.prompt_is_too_long_maximum_10000_characters_allowed' };
     }
 
     // Check for dangerous patterns
@@ -76,7 +76,7 @@ class AIPromptValidator {
 
         return {
           valid: false,
-          error: 'Prompt contains potentially malicious content. Request rejected for security reasons.'
+          error: 'backend.prompt_contains_potentially_malicious_content_request_rejected_for_security_reasons'
         };
       }
     }
@@ -127,7 +127,7 @@ router.post('/smart-fix', async (req: AuthenticatedRequest, res: Response) => {
     const { recommendation, context, options } = req.body;
 
     if (!recommendation) {
-      return res.status(400).json({ success: false, error: 'recommendation is required' });
+      return res.status(400).json({ success: false, error: 'backend.recommendation_is_required' });
     }
 
     logger.info(`Starting smart fix for: ${recommendation.title}`);
@@ -168,7 +168,7 @@ router.post('/batch-fix', async (req: Request, res: Response) => {
     const { recommendations, context, options } = req.body;
 
     if (!recommendations || !Array.isArray(recommendations)) {
-      return res.status(400).json({ success: false, error: 'recommendations array is required' });
+      return res.status(400).json({ success: false, error: 'backend.recommendations_array_is_required' });
     }
 
     logger.info(`Batch fixing ${recommendations.length} problems`);
@@ -209,7 +209,7 @@ router.post('/dry-fix', async (req: Request, res: Response) => {
     const { recommendation, context, options } = req.body;
 
     if (!recommendation) {
-      return res.status(400).json({ success: false, error: 'recommendation is required' });
+      return res.status(400).json({ success: false, error: 'backend.recommendation_is_required' });
     }
 
     logger.info(`Dry run for: ${recommendation.title}`);
@@ -286,7 +286,7 @@ router.post('/ai-analyze', async (req: Request, res: Response) => {
     const { problem, context } = req.body;
 
     if (!problem) {
-      return res.status(400).json({ success: false, error: 'problem is required' });
+      return res.status(400).json({ success: false, error: 'backend.problem_is_required' });
     }
 
     // SECURITY: Validate problem description for prompt injection
@@ -331,7 +331,12 @@ router.post('/ai-analyze', async (req: Request, res: Response) => {
     });
 
     const analysis = await aiEngine.analyzeProblem({
-      problem: sanitizedProblem,
+      problem: {
+        title: 'User Reported Issue',
+        description: sanitizedProblem,
+        category: 'general',
+        priority: 'medium'
+      },
       context: {
         systemInfo: context?.systemInfo || {},
         logs: context?.logs || [],

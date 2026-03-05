@@ -146,7 +146,7 @@ export async function testDashScope(apiKey: string): Promise<{
 
     return {
       success: true,
-      message: 'DashScope connection successful',
+      message: 'backend.dashscope_connection_successful',
       latency
     };
   } catch (error: any) {

@@ -5,7 +5,7 @@
  */
 
 import { BugInvestigationTeam } from './index';
-import { BugReport, InvestigationContext } from './types';
+import { BugReport, InvestigationContext, InvestigationResult } from './types';
 
 // ============================================
 // Example 1: Basic Bug Investigation
@@ -41,7 +41,7 @@ async function basicInvestigationExample() {
         timestamp: new Date('2024-01-15T10:30:00Z'),
         level: 'error',
         service: 'payment-service',
-        message: 'Request timeout: Operation timed out after 30000ms',
+        message: 'backend.request_timeout_operation_timed_out_after_30000ms',
         metadata: {
           requestId: 'req-123',
           userId: 'user-456'
@@ -52,7 +52,7 @@ async function basicInvestigationExample() {
         timestamp: new Date('2024-01-15T10:30:05Z'),
         level: 'warn',
         service: 'payment-service',
-        message: 'Database query took 25000ms',
+        message: 'backend.database_query_took_25000ms',
         metadata: {
           query: 'SELECT * FROM payments WHERE status = "pending"',
           duration: 25000
@@ -73,7 +73,7 @@ async function basicInvestigationExample() {
         },
         status: 'error',
         error: {
-          message: 'Operation timed out'
+          message: 'backend.operation_timed_out'
         }
       }
     ],
@@ -140,7 +140,7 @@ async function securityInvestigationExample() {
         timestamp: new Date(),
         level: 'error',
         service: 'api-gateway',
-        message: 'Potential SQL injection detected',
+        message: 'backend.potential_sql_injection_detected',
         metadata: {
           query: 'SELECT * FROM users WHERE name = \'\' OR "1"="1\'',
           ip: '192.168.1.100'
@@ -201,7 +201,7 @@ async function memoryLeakInvestigationExample() {
         timestamp: new Date(),
         level: 'error',
         service: 'websocket-gateway',
-        message: 'OutOfMemoryError: JavaScript heap out of memory',
+        message: 'backend.outofmemoryerror_javascript_heap_out_of_memory',
         metadata: {
           heapUsed: '4096MB',
           heapTotal: '4096MB',
@@ -271,7 +271,7 @@ async function crashInvestigationExample() {
         timestamp: new Date(),
         level: 'fatal',
         service: 'api-server',
-        message: 'UnhandledPromiseRejection: SyntaxError: Unexpected token }',
+        message: 'backend.unhandledpromiserejection_syntaxerror_unexpected_token',
         metadata: {
           stackTrace: 'at JSON.parse (<anonymous>)\n' +
                      'at parseBody (/app/src/middleware/body-parser.ts:42:15)',
@@ -378,7 +378,7 @@ async function batchInvestigationExample() {
 
   // Investigate in parallel (with concurrency limit)
   const maxConcurrent = 3;
-  const results = [];
+  const results: InvestigationResult[] = [];
 
   for (let i = 0; i < bugReports.length; i += maxConcurrent) {
     const batch = bugReports.slice(i, i + maxConcurrent);
@@ -426,7 +426,7 @@ async function apiIntegrationExample() {
         timestamp: new Date().toISOString(),
         level: 'error',
         service: 'api-server',
-        message: 'Request timeout',
+        message: 'backend.request_timeout',
         traceId: 'trace-123'
       }
     ]

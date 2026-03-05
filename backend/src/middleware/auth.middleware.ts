@@ -35,6 +35,7 @@ export interface AuthenticatedUser {
     email: string;
     username: string;
     role: 'admin' | 'tenant' | 'viewer';
+    plan?: 'starter' | 'pro' | 'ultra';
     tenantId?: string;
 }
 
@@ -88,21 +89,45 @@ export function verifyToken(token: string): AuthenticatedUser | null {
 /**
  * Async version of verifyToken that checks Redis blacklist
  * SECURITY FIX CVE-2026-001: Check if token is blacklisted before accepting
+ * SECURITY FIX: Fail secure when Redis is unavailable - reject tokens if we can't verify blacklist
  */
 export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser | null> {
-    try {
-        // First check if token is blacklisted
-        const isBlacklisted = await redisService.exists(`token:blacklist:${token}`);
-        if (isBlacklisted) {
-            logger.warn('Attempted use of blacklisted token');
-            return null;
-        }
+    let isRedisAvailable = false;
 
-        const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
-        return decoded;
+    // First verify JWT is valid
+    let decoded: AuthenticatedUser;
+    try {
+        decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
     } catch (error) {
         return null;
     }
+
+    // Try to check blacklist - fail secure if Redis unavailable
+    try {
+        isRedisAvailable = redisService.isAvailable();
+    } catch (error) {
+        isRedisAvailable = false;
+    }
+
+    if (isRedisAvailable) {
+        try {
+            const isBlacklisted = await redisService.exists(`token:blacklist:${token}`);
+            if (isBlacklisted) {
+                logger.warn('Attempted use of blacklisted token');
+                return null;
+            }
+        } catch (error) {
+            // Redis error during blacklist check - fail secure
+            logger.error('Token blacklist check failed due to Redis error, rejecting token for security');
+            return null;
+        }
+    } else {
+        // Redis unavailable - fail secure by rejecting the token
+        logger.warn('Redis unavailable, rejecting token for security (fail-secure)');
+        return null;
+    }
+
+    return decoded;
 }
 
 /**
@@ -122,11 +147,12 @@ export function verifyRefreshToken(token: string): { userId: string } | null {
 
 /**
  * SECURITY FIX: Cookie configuration for httpOnly tokens
+ * SECURITY FIX: Changed sameSite from 'lax' to 'strict' for better security
  */
 export const COOKIE_OPTIONS = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
+    sameSite: 'strict' as const,
     path: '/',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
 };
@@ -155,7 +181,7 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
 
     if (!token) {
         res.status(401).json({
-            error: 'Authentication required',
+            error: 'backend.authentication_required',
             code: 'AUTH_TOKEN_MISSING'
         });
         return;
@@ -166,7 +192,7 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
 
     if (!user) {
         res.status(401).json({
-            error: 'Invalid or expired token',
+            error: 'backend.invalid_or_expired_token',
             code: 'AUTH_TOKEN_INVALID'
         });
         return;
@@ -210,7 +236,7 @@ export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'
     return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
         if (!req.user) {
             res.status(401).json({
-                error: 'Authentication required',
+                error: 'backend.authentication_required',
                 code: 'AUTH_REQUIRED'
             });
             return;
@@ -219,7 +245,7 @@ export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'
         if (!allowedRoles.includes(req.user.role)) {
             logger.warn(`Access denied for user ${req.user.email} (role: ${req.user.role}), required: ${allowedRoles.join('/')}`);
             res.status(403).json({
-                error: 'Insufficient permissions',
+                error: 'backend.insufficient_permissions',
                 code: 'AUTH_FORBIDDEN',
                 requiredRoles: allowedRoles
             });
@@ -236,7 +262,7 @@ export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'
  */
 export function requireTenantAccess(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
     if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
+        res.status(401).json({ error: 'backend.authentication_required' });
         return;
     }
 
@@ -261,7 +287,7 @@ export function requireTenantAccess(req: AuthenticatedRequest, res: Response, ne
 
     if (requestedTenantId !== req.user.tenantId) {
         res.status(403).json({
-            error: 'Cannot access resources from another tenant',
+            error: 'backend.cannot_access_resources_from_another_tenant',
             code: 'TENANT_MISMATCH'
         });
         return;
@@ -291,13 +317,14 @@ function constantTimeCompare(a: string, b: string): boolean {
 /**
  * API Key authentication for agent/device communication
  * SECURITY FIX CVE-2026-011: Use constant-time comparison
+ * SECURITY FIX CVE-2026-012: Add tenant isolation for API keys
  */
 export function authenticateApiKey(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
     const apiKey = req.headers['x-api-key'] as string;
 
     if (!apiKey) {
         res.status(401).json({
-            error: 'API key required',
+            error: 'backend.api_key_required',
             code: 'API_KEY_MISSING'
         });
         return;
@@ -309,7 +336,7 @@ export function authenticateApiKey(req: AuthenticatedRequest, res: Response, nex
     if (!validApiKeys || validApiKeys.length === 0) {
         logger.error('No valid API keys configured in VALID_API_KEYS environment variable');
         res.status(500).json({
-            error: 'Server configuration error',
+            error: 'backend.server_configuration_error',
             code: 'API_KEYS_NOT_CONFIGURED'
         });
         return;
@@ -321,21 +348,52 @@ export function authenticateApiKey(req: AuthenticatedRequest, res: Response, nex
     if (!isValidKey) {
         logger.warn('Invalid API key attempt', { ip: req.ip });
         res.status(401).json({
-            error: 'Invalid API key',
+            error: 'backend.invalid_api_key',
             code: 'API_KEY_INVALID'
         });
         return;
     }
 
-    // Attach a system user for API key requests
+    // SECURITY FIX CVE-2026-012: Extract tenant ID from API key pattern or use default
+    // Format: key_tenantId_suffix or use API_KEY_TENANT_ID env var
+    const apiKeyTenantId = extractTenantIdFromApiKey(apiKey);
+
+    // Attach a system user for API key requests with tenant isolation
     req.user = {
         userId: 'api-key-user',
         email: 'api@fluxguard.local',
         username: 'API Client',
-        role: 'tenant'
+        role: 'tenant',
+        plan: 'ultra',
+        tenantId: apiKeyTenantId
     };
 
     next();
+}
+
+/**
+ * SECURITY FIX CVE-2026-012: Extract tenant ID from API key or environment
+ */
+function extractTenantIdFromApiKey(apiKey: string): string {
+    // Check if there's a configured tenant ID for API keys
+    const configuredTenantId = process.env.API_KEY_TENANT_ID;
+    if (configuredTenantId) {
+        return configuredTenantId;
+    }
+
+    // Try to extract tenant ID from API key pattern (e.g., "key_tenant123_suffix")
+    // Default pattern: the API key may contain tenant info after a delimiter
+    const parts = apiKey.split('_');
+    if (parts.length >= 2) {
+        // Use second part as tenant ID if it looks like a valid ID
+        const potentialTenantId = parts[1];
+        if (potentialTenantId && potentialTenantId.length >= 8) {
+            return potentialTenantId;
+        }
+    }
+
+    // Fallback to a default tenant ID
+    return 'default-tenant';
 }
 
 /**
@@ -354,7 +412,7 @@ export async function authenticateAny(req: AuthenticatedRequest, res: Response, 
     }
 
     res.status(401).json({
-        error: 'Authentication required (JWT or API key)',
+        error: 'backend.authentication_required_jwt_or_api_key',
         code: 'AUTH_REQUIRED'
     });
 }

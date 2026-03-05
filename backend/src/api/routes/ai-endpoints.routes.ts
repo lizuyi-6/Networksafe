@@ -10,6 +10,17 @@
 import { Router, Request, Response } from 'express';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
+import axios from 'axios';
+import {
+    PLATFORM_API_CONFIG,
+    PLATFORM_MODELS,
+    getModelsForTier,
+    canUseModel,
+    canUseCustomEndpoint,
+    normalizePlan,
+    getDefaultModel,
+    PlanTier
+} from '../../utils/model-access';
 
 const router = Router();
 
@@ -43,7 +54,7 @@ function validateAiUrl(url: string): { valid: boolean; error?: string } {
 
         // 检查协议
         if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-            return { valid: false, error: 'Only HTTP and HTTPS protocols are allowed' };
+            return { valid: false, error: 'backend.only_http_and_https_protocols_are_allowed' };
         }
 
         const hostname = parsed.hostname.toLowerCase();
@@ -65,7 +76,7 @@ function validateAiUrl(url: string): { valid: boolean; error?: string } {
             hostname === '169.254.169.254'; // AWS 元数据服务
 
         if (isPrivateIP) {
-            return { valid: false, error: 'Private IP addresses are not allowed' };
+            return { valid: false, error: 'backend.private_ip_addresses_are_not_allowed' };
         }
 
         // 检查是否在白名单中
@@ -81,7 +92,7 @@ function validateAiUrl(url: string): { valid: boolean; error?: string } {
 
         return { valid: true };
     } catch (error) {
-        return { valid: false, error: 'Invalid URL format' };
+        return { valid: false, error: 'backend.invalid_url_format' };
     }
 }
 
@@ -124,6 +135,140 @@ function initDefaults() {
 
 initDefaults();
 
+// ============================================
+// 订阅层级感知的模型管理接口
+// 必须放在 /:id 参数化路由之前！
+// ============================================
+
+/**
+ * GET /api/ai-endpoints/models
+ * 获取当前用户可用的 AI 模型列表（基于订阅层级）
+ */
+router.get('/models', (req: Request, res: Response) => {
+    try {
+        const userPlan = normalizePlan((req as any).user?.plan);
+        const availableModels = getModelsForTier(userPlan);
+        const defaultModel = getDefaultModel(userPlan);
+
+        const allModelsWithAccess = PLATFORM_MODELS.map(m => ({
+            id: m.id,
+            name: m.name,
+            description: m.description,
+            category: m.category,
+            maxTokens: m.maxTokens,
+            available: availableModels.some(am => am.id === m.id),
+            minTier: m.minTier,
+            isDefault: m.id === defaultModel.id,
+        }));
+
+        res.json({
+            success: true,
+            plan: userPlan,
+            canCustomize: canUseCustomEndpoint(userPlan),
+            models: allModelsWithAccess,
+            defaultModelId: defaultModel.id,
+        });
+    } catch (error: any) {
+        logger.error('Failed to get models list', { error: error.message });
+        res.status(500).json({ success: false, error: 'backend.internal_server_error' });
+    }
+});
+
+/**
+ * POST /api/ai-endpoints/chat
+ * 代理聊天接口
+ */
+router.post('/chat', async (req: Request, res: Response) => {
+    try {
+        const userPlan = normalizePlan((req as any).user?.plan);
+        const { modelId, messages } = req.body;
+
+        if (!modelId || !messages || !Array.isArray(messages)) {
+            return res.status(400).json({
+                success: false,
+                error: 'backend.invalid_chat_request',
+                message: '请提供 modelId 和 messages 数组'
+            });
+        }
+
+        if (!canUseModel(userPlan, modelId)) {
+            return res.status(403).json({
+                success: false,
+                error: 'backend.model_access_denied',
+                message: `您的订阅等级 (${userPlan}) 无权使用模型 ${modelId}，请升级订阅`
+            });
+        }
+
+        const modelInfo = PLATFORM_MODELS.find(m => m.id === modelId);
+        if (!modelInfo) {
+            return res.status(400).json({
+                success: false,
+                error: 'backend.unknown_model',
+                message: `未知的模型 ID: ${modelId}`
+            });
+        }
+
+        logger.info('AI chat proxy request', {
+            user: (req as any).user?.email,
+            plan: userPlan,
+            model: modelId,
+            messageCount: messages.length
+        });
+
+        const startTime = Date.now();
+
+        const response = await axios.post(
+            `${PLATFORM_API_CONFIG.baseURL}/v1/chat/completions`,
+            {
+                model: modelId,
+                messages: messages.map((m: any) => ({
+                    role: m.role || 'user',
+                    content: m.content
+                })),
+                max_tokens: modelInfo.maxTokens,
+                temperature: 0.7,
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${PLATFORM_API_CONFIG.apiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                timeout: PLATFORM_API_CONFIG.timeout,
+            }
+        );
+
+        const latency = Date.now() - startTime;
+        const content = response.data?.choices?.[0]?.message?.content || '';
+        const usage = response.data?.usage;
+
+        logger.info('AI chat proxy success', {
+            model: modelId,
+            latency,
+            tokens: usage?.total_tokens
+        });
+
+        res.json({
+            success: true,
+            content,
+            model: modelId,
+            usage: usage || null,
+            latency,
+        });
+    } catch (error: any) {
+        const errMsg = error.response?.data?.error?.message || error.message || 'Unknown error';
+        logger.error('AI chat proxy error', {
+            error: errMsg,
+            status: error.response?.status,
+        });
+
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: 'backend.ai_chat_error',
+            message: errMsg,
+        });
+    }
+});
+
 /**
  * GET /api/ai-endpoints
  * 获取所有 AI 端点配置
@@ -143,7 +288,7 @@ router.get('/', (_req: Request, res: Response) => {
         });
     } catch (error: any) {
         logger.error('Failed to get AI endpoints', { error: error.message });
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(500).json({ success: false, error: 'backend.internal_server_error' });
     }
 });
 
@@ -153,10 +298,20 @@ router.get('/', (_req: Request, res: Response) => {
  */
 router.post('/', (req: Request, res: Response) => {
     try {
+        // 层级校验：只有 Enterprise 用户才能添加自定义端点
+        const userPlan = normalizePlan((req as any).user?.plan);
+        if (!canUseCustomEndpoint(userPlan)) {
+            return res.status(403).json({
+                success: false,
+                error: 'backend.custom_endpoints_require_enterprise',
+                message: '自定义模型端点仅对企业订阅用户开放'
+            });
+        }
+
         const { name, url, modelName, apiKey, type, timeout, priority } = req.body;
 
         if (!url) {
-            return res.status(400).json({ success: false, error: 'URL is required' });
+            return res.status(400).json({ success: false, error: 'backend.url_is_required' });
         }
 
         // SECURITY: SSRF 防护 - 验证 URL
@@ -196,7 +351,7 @@ router.post('/', (req: Request, res: Response) => {
         });
     } catch (error: any) {
         logger.error('Failed to add AI endpoint', { error: error.message });
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(500).json({ success: false, error: 'backend.internal_server_error' });
     }
 });
 
@@ -210,7 +365,7 @@ router.put('/:id', (req: Request, res: Response) => {
         const endpoint = endpoints.get(id);
 
         if (!endpoint) {
-            return res.status(404).json({ success: false, error: 'Endpoint not found' });
+            return res.status(404).json({ success: false, error: 'backend.endpoint_not_found' });
         }
 
         // 更新字段
@@ -246,7 +401,7 @@ router.put('/:id', (req: Request, res: Response) => {
         });
     } catch (error: any) {
         logger.error('Failed to update AI endpoint', { error: error.message });
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(500).json({ success: false, error: 'backend.internal_server_error' });
     }
 });
 
@@ -260,11 +415,11 @@ router.delete('/:id', (req: Request, res: Response) => {
 
         // 不允许删除默认端点
         if (id === 'default-laptop') {
-            return res.status(400).json({ success: false, error: 'Cannot delete default endpoint' });
+            return res.status(400).json({ success: false, error: 'backend.cannot_delete_default_endpoint' });
         }
 
         if (!endpoints.has(id)) {
-            return res.status(404).json({ success: false, error: 'Endpoint not found' });
+            return res.status(404).json({ success: false, error: 'backend.endpoint_not_found' });
         }
 
         endpoints.delete(id);
@@ -277,7 +432,7 @@ router.delete('/:id', (req: Request, res: Response) => {
         });
     } catch (error: any) {
         logger.error('Failed to delete AI endpoint', { error: error.message });
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(500).json({ success: false, error: 'backend.internal_server_error' });
     }
 });
 
@@ -291,7 +446,7 @@ router.post('/:id/test', async (req: Request, res: Response) => {
         const endpoint = endpoints.get(id);
 
         if (!endpoint) {
-            return res.status(404).json({ success: false, error: 'Endpoint not found' });
+            return res.status(404).json({ success: false, error: 'backend.endpoint_not_found' });
         }
 
         const startTime = Date.now();
@@ -351,7 +506,7 @@ router.post('/:id/test', async (req: Request, res: Response) => {
         }
     } catch (error: any) {
         logger.error('Failed to test AI endpoint', { error: error.message });
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(500).json({ success: false, error: 'backend.internal_server_error' });
     }
 });
 
@@ -380,9 +535,10 @@ router.get('/sync-config', requireRole('admin'), (_req: Request, res: Response) 
         });
     } catch (error: any) {
         logger.error('Failed to get sync config', { error: error.message });
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(500).json({ success: false, error: 'backend.internal_server_error' });
     }
 });
+
 
 // 导出辅助函数
 export function getEndpointList(): AIEndpoint[] {

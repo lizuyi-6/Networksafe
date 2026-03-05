@@ -781,4 +781,49 @@ export class InputValidator {
     validateCommand(input: string): ValidationResult {
         return this.cmdDetector.detect(input);
     }
+
+    /**
+     * Validate Express request body, query params, and route params
+     * SECURITY FIX CVE-2026-014: Added for request validation
+     */
+    validateRequest(req: { body?: any; query?: any; params?: any }): { isValid: boolean; errors?: string[] } {
+        const errors: string[] = [];
+
+        // Validate body
+        if (req.body) {
+            const bodyStr = JSON.stringify(req.body);
+            const result = this.validateAll(bodyStr);
+            if (!result.isValid) {
+                errors.push(`Body: ${result.reason || 'Invalid input'}`);
+            }
+        }
+
+        // Validate query params
+        if (req.query) {
+            for (const [key, value] of Object.entries(req.query)) {
+                if (typeof value === 'string') {
+                    const result = this.validateAll(value);
+                    if (!result.isValid) {
+                        errors.push(`Query param '${key}': ${result.reason || 'Invalid input'}`);
+                    }
+                }
+            }
+        }
+
+        // Validate route params
+        if (req.params) {
+            for (const [key, value] of Object.entries(req.params)) {
+                if (typeof value === 'string') {
+                    const result = this.validateAll(value);
+                    if (!result.isValid) {
+                        errors.push(`Route param '${key}': ${result.reason || 'Invalid input'}`);
+                    }
+                }
+            }
+        }
+
+        return errors.length > 0
+            ? { isValid: false, errors }
+            : { isValid: true };
+    }
 }

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import os from 'os';
-import { getAgentSystem } from '../../routes/ai-system';
+import { getAgentSystem } from '../routes/ai-system.routes';
 import logger from '../../utils/logger';
 import { isDemoMode } from '../../config/app-mode';
 
@@ -25,28 +25,11 @@ export class AdminController {
                     }));
             }
 
-            if (errors.length === 0 && isDemoMode()) {
-                errors = [
-                    { 
-                        userId: 'system', 
-                        errorCode: 'NO_ERRORS', 
-                        message: 'No critical errors in the last 24 hours', 
-                        timestamp: new Date().toISOString() 
-                    }
-                ];
-            }
-
+            // 无论是否是演示模式，都返回真实数据
             res.json(errors);
         } catch (error: any) {
             logger.error('Failed to get errors', { error: error.message });
-            res.json(isDemoMode() ? [
-                { 
-                    userId: 'system', 
-                    errorCode: 'NO_ERRORS', 
-                    message: 'No critical errors in the last 24 hours', 
-                    timestamp: new Date().toISOString() 
-                }
-            ] : []);
+            res.json([]);
         }
     }
 
@@ -79,7 +62,7 @@ export class AdminController {
 
                 const probeReport = agentSystem.getProbeReport();
                 const agents = probeReport.agents || [];
-                
+
                 if (agents.length > 0) {
                     const totalCpu = agents.reduce((sum: number, a: any) => sum + (a.cpuUsage || 0), 0);
                     const totalLatency = agents.reduce((sum: number, a: any) => sum + (a.responseTime || 0), 0);
@@ -126,17 +109,17 @@ export class AdminController {
             const { data } = req.body;
 
             if (!data) {
-                return res.status(400).json({ error: 'Missing data' });
+                return res.status(400).json({ error: 'backend.missing_data' });
             }
 
             logger.info('[ADMIN] Received logs', { data });
 
-            res.json({ success: true, message: 'Logs received' });
+            res.json({ success: true, message: 'backend.logs_received' });
         } catch (error) {
             logger.error('[ADMIN] Processing failed', {
                 error: error instanceof Error ? error.message : String(error)
             });
-            res.status(400).json({ error: 'Processing failed' });
+            res.status(400).json({ error: 'backend.processing_failed' });
         }
     }
 }

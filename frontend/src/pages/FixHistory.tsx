@@ -45,9 +45,9 @@ const FixHistory = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-card border border-border rounded-lg p-4">
                     {loading ? (
-                        <div className="text-muted-foreground">Loading...</div>
+                        <div className="text-muted-foreground">{t('history.loading')}</div>
                     ) : rows.length === 0 ? (
-                        <div className="text-muted-foreground">No history records.</div>
+                        <div className="text-muted-foreground">{t('history.no_records')}</div>
                     ) : (
                         <div className="space-y-2">
                             {rows.map((row) => (
@@ -66,7 +66,7 @@ const FixHistory = () => {
                 </div>
 
                 <div className="bg-card border border-border rounded-lg p-4">
-                    <h3 className="font-medium text-foreground mb-3">Detail</h3>
+                    <h3 className="font-medium text-foreground mb-3">{t('history.detail')}</h3>
                     {selected ? (
                         <div className="space-y-2 text-xs">
                             <div><span className="text-muted-foreground">id:</span> <span className="font-mono break-all">{selected.id}</span></div>
@@ -77,7 +77,7 @@ const FixHistory = () => {
                             <div><span className="text-muted-foreground">findings:</span> {(selected.findings || []).length}</div>
                         </div>
                     ) : (
-                        <div className="text-xs text-muted-foreground">Select one record to view detail.</div>
+                        <div className="text-xs text-muted-foreground">{t('history.select_record')}</div>
                     )}
                 </div>
             </div>

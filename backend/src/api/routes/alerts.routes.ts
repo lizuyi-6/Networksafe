@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import { getAgentSystem } from '../../routes/ai-system';
+import { getAgentSystem } from './ai-system.routes';
 import logger from '../../utils/logger';
 import { isDemoMode } from '../../config/app-mode';
 
@@ -51,7 +51,7 @@ router.get('/', (req: AuthenticatedRequest, res: Response) => {
             const systemAlerts = probeReport.alerts || [];
 
             systemAlerts.forEach((alert: any, index: number) => {
-                const existingAlert = alerts.find(a => 
+                const existingAlert = alerts.find(a =>
                     a.message.includes(alert.metadata?.threatType || '') ||
                     a.title.includes(alert.metadata?.threatType || '')
                 );
@@ -72,16 +72,12 @@ router.get('/', (req: AuthenticatedRequest, res: Response) => {
             });
         }
 
-        if (alerts.length === 0 && isDemoMode()) {
-            alerts = generateDefaultAlerts();
-        }
-
+        // 无论是否是演示模式，都返回真实数据
         alerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
         res.json(alerts.slice(0, 50));
     } catch (error: any) {
         logger.error('Failed to fetch alerts', { error: error.message });
-        res.json(isDemoMode() ? generateDefaultAlerts() : []);
+        res.json([]);
     }
 });
 
@@ -92,7 +88,7 @@ router.post('/:id/acknowledge', (req: AuthenticatedRequest, res: Response) => {
         alert.status = 'acknowledged';
         res.json({ success: true, alert });
     } else {
-        res.status(404).json({ error: 'Alert not found' });
+        res.status(404).json({ error: 'backend.alert_not_found' });
     }
 });
 
@@ -103,7 +99,7 @@ router.post('/:id/resolve', (req: AuthenticatedRequest, res: Response) => {
         alert.status = 'resolved';
         res.json({ success: true, alert });
     } else {
-        res.status(404).json({ error: 'Alert not found' });
+        res.status(404).json({ error: 'backend.alert_not_found' });
     }
 });
 
@@ -131,20 +127,5 @@ function getTimeAgo(timestamp: string): string {
     return `${diffDays} days ago`;
 }
 
-function generateDefaultAlerts(): Alert[] {
-    return [
-        {
-            id: 'ALT-DEMO-001',
-            title: 'System Initialized',
-            message: 'FluxGuard security system has been initialized successfully. All monitoring services are active.',
-            severity: 'Low',
-            type: 'system',
-            source: 'System',
-            time: 'Just now',
-            status: 'active',
-            timestamp: new Date().toISOString()
-        }
-    ];
-}
 
 export default router;

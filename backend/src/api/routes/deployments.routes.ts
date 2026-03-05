@@ -1,7 +1,11 @@
 import { Router, Response } from 'express';
 import { createHash, randomUUID } from 'crypto';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
+import { InputValidator } from '../../security/input-validator';
 import { getDatabase } from '../../config/database';
+
+// SECURITY FIX CVE-2026-014: Add input validation to deployments routes
+const inputValidator = new InputValidator();
 
 const router = Router();
 router.use(authenticate, requireRole('admin'));
@@ -85,15 +89,25 @@ function validateProfile(profile: any): { ok: boolean; errors: string[] } {
 }
 
 router.post('/generate', (req: AuthenticatedRequest, res: Response) => {
+  // SECURITY FIX CVE-2026-014: Validate input before processing
+  const validationResult = inputValidator.validateRequest(req);
+  if (!validationResult.isValid) {
+    return res.status(400).json({
+      success: false,
+      error: 'backend.invalid_input',
+      details: validationResult.errors
+    });
+  }
+
   ensureSchema();
   const serverType = req.body?.serverType;
   const profile = req.body?.profile || {};
   const validation = validateProfile(profile);
   if (!validation.ok) {
-    return res.status(400).json({ success: false, error: 'Invalid profile', details: validation.errors });
+    return res.status(400).json({ success: false, error: 'backend.invalid_profile', details: validation.errors });
   }
   if (serverType !== 'nginx' && serverType !== 'apache') {
-    return res.status(400).json({ success: false, error: 'serverType must be nginx or apache' });
+    return res.status(400).json({ success: false, error: 'backend.servertype_must_be_nginx_or_apache' });
   }
 
   const configText = serverType === 'nginx' ? renderNginx(profile) : renderApache(profile);
@@ -112,6 +126,16 @@ router.post('/generate', (req: AuthenticatedRequest, res: Response) => {
 });
 
 router.post('/save', (req: AuthenticatedRequest, res: Response) => {
+  // SECURITY FIX CVE-2026-014: Validate input before processing
+  const validationResult = inputValidator.validateRequest(req);
+  if (!validationResult.isValid) {
+    return res.status(400).json({
+      success: false,
+      error: 'backend.invalid_input',
+      details: validationResult.errors
+    });
+  }
+
   ensureSchema();
   const serverType = req.body?.serverType;
   const profile = req.body?.profile || {};
@@ -121,10 +145,10 @@ router.post('/save', (req: AuthenticatedRequest, res: Response) => {
   const name = req.body?.name || null;
 
   if (serverType !== 'nginx' && serverType !== 'apache') {
-    return res.status(400).json({ success: false, error: 'serverType must be nginx or apache' });
+    return res.status(400).json({ success: false, error: 'backend.servertype_must_be_nginx_or_apache' });
   }
   if (!configText || !envSnippet) {
-    return res.status(400).json({ success: false, error: 'configText and envSnippet are required' });
+    return res.status(400).json({ success: false, error: 'backend.configtext_and_envsnippet_are_required' });
   }
 
   const db = getDatabase();
@@ -176,7 +200,7 @@ router.get('/:id/download', (req: AuthenticatedRequest, res: Response) => {
     WHERE id = ? AND tenant_id = ?
   `).get(req.params.id, tenantOf(req)) as any;
   if (!row) {
-    return res.status(404).json({ success: false, error: 'Deployment profile not found' });
+    return res.status(404).json({ success: false, error: 'backend.deployment_profile_not_found' });
   }
 
   if (format === 'conf') {

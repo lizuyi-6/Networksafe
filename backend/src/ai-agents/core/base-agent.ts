@@ -18,6 +18,9 @@ import {
 import { MessageBus } from './message-bus';
 import logger from '../../utils/logger';
 
+// Re-export AgentMessage for convenience
+export type { AgentMessage };
+
 export abstract class BaseAgent {
     protected config: AgentConfig;
     protected identity: AgentIdentity;

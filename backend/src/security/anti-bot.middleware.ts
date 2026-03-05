@@ -235,8 +235,8 @@ export class AntiBotMiddleware {
       if (isBlocked) {
         logger.warn('Blocked IP attempted access', { ip: fingerprint.ip });
         res.status(429).json({
-          error: 'Too many requests',
-          message: 'Your access has been temporarily restricted due to suspicious activity',
+          error: 'backend.too_many_requests',
+          message: 'backend.your_access_has_been_temporarily_restricted_due_to_suspicious_activity',
         });
         return;
       }
@@ -257,8 +257,8 @@ export class AntiBotMiddleware {
         await this.blockIP(fingerprint.ip, 'Suspicious user agent');
         logger.warn('Suspicious user agent blocked', { ip: fingerprint.ip, userAgent: fingerprint.userAgent });
         res.status(403).json({
-          error: 'Access denied',
-          message: 'Your request appears to be automated',
+          error: 'backend.access_denied',
+          message: 'backend.your_request_appears_to_be_automated',
         });
         return;
       }
@@ -267,8 +267,8 @@ export class AntiBotMiddleware {
         await this.blockIP(fingerprint.ip, 'Honeypot triggered');
         logger.warn('Honeypot triggered', { ip: fingerprint.ip });
         res.status(403).json({
-          error: 'Access denied',
-          message: 'Invalid request',
+          error: 'backend.access_denied',
+          message: 'backend.invalid_request',
         });
         return;
       }
@@ -278,8 +278,8 @@ export class AntiBotMiddleware {
         await this.blockIP(fingerprint.ip, `Rate limit exceeded: ${rateCheck.rate} req/min`);
         logger.warn('Rate limit exceeded', { ip: fingerprint.ip, rate: rateCheck.rate });
         res.status(429).json({
-          error: 'Too many requests',
-          message: 'Rate limit exceeded. Please slow down.',
+          error: 'backend.too_many_requests',
+          message: 'backend.rate_limit_exceeded_please_slow_down',
           retryAfter: this.BLOCK_DURATION,
         });
         return;
@@ -293,8 +293,8 @@ export class AntiBotMiddleware {
       if (!req.headers['user-agent'] || !req.headers['accept']) {
         logger.warn('Missing required headers', { ip: fingerprint.ip, headers: req.headers });
         res.status(400).json({
-          error: 'Bad request',
-          message: 'Invalid request headers',
+          error: 'backend.bad_request',
+          message: 'backend.invalid_request_headers',
         });
         return;
       }

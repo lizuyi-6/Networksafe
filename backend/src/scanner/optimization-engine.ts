@@ -169,7 +169,7 @@ export class OptimizationEngine {
     if (!recommendation.autoApplicable) {
       return {
         success: false,
-        error: 'This recommendation cannot be automatically applied'
+        error: 'backend.this_recommendation_cannot_be_automatically_applied'
       };
     }
 
@@ -180,7 +180,7 @@ export class OptimizationEngine {
       logger.error(`Command not allowed: ${recommendation.action}`);
       return {
         success: false,
-        error: 'Command not in allowed list or contains dangerous characters'
+        error: 'backend.command_not_in_allowed_list_or_contains_dangerous_characters'
       };
     }
 

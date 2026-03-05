@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import {
     Server, Activity, Wifi, WifiOff,
     RefreshCw, Scan, AlertTriangle,
@@ -44,6 +45,7 @@ const formatUptime = (seconds: number): string => {
 };
 
 const Agents = () => {
+    const { t } = useLanguage();
     const [agents, setAgents] = useState<Agent[]>([]);
     const [threats, setThreats] = useState<ThreatEvent[]>([]);
     const [loading, setLoading] = useState(true);
@@ -101,8 +103,8 @@ const Agents = () => {
         <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-foreground tracking-tight">Agent Command Center</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Real-time monitoring and control of distributed security agents</p>
+                    <h2 className="text-2xl font-bold text-foreground tracking-tight">{t('agents.title')}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">{t('agents.title')}</p>
                 </div>
                 <button
                     onClick={() => { fetchAgents(); fetchThreats(); }}
@@ -118,19 +120,19 @@ const Agents = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <div className="text-sm text-muted-foreground">Total Agents</div>
+                    <div className="text-sm text-muted-foreground">{t('agents.total_agents')}</div>
                     <div className="text-3xl font-bold text-foreground">{agents.length}</div>
                 </div>
                 <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <div className="text-sm text-muted-foreground">Active Nodes</div>
+                    <div className="text-sm text-muted-foreground">{t('agents.active_nodes')}</div>
                     <div className="text-3xl font-bold text-foreground">{onlineCount}</div>
                 </div>
                 <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <div className="text-sm text-muted-foreground">Threats</div>
+                    <div className="text-sm text-muted-foreground">{t('agents.threats')}</div>
                     <div className="text-3xl font-bold text-foreground">{threats.length}</div>
                 </div>
                 <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <div className="text-sm text-muted-foreground">Uptime Rate</div>
+                    <div className="text-sm text-muted-foreground">{t('agents.uptime_rate')}</div>
                     <div className="text-3xl font-bold text-foreground">{Math.round((onlineCount / (agents.length || 1)) * 100)}%</div>
                 </div>
             </div>
@@ -141,7 +143,7 @@ const Agents = () => {
                     {loading ? (
                         <div className="text-center py-12 text-muted-foreground">Loading fleet data...</div>
                     ) : agents.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground">No agents connected</div>
+                        <div className="text-center py-12 text-muted-foreground">{t('agents.no_agents')}</div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {agents.map(agent => (
@@ -166,17 +168,17 @@ const Agents = () => {
                                         <div className="text-center p-2 bg-muted/30 rounded">
                                             <Cpu size={14} className="mx-auto text-muted-foreground mb-1" />
                                             <div className="text-sm font-medium text-foreground">{agent.status?.cpuUsage ?? '--'}%</div>
-                                            <div className="text-xxs text-muted-foreground">CPU</div>
+                                            <div className="text-xxs text-muted-foreground">{t('agents.cpu')}</div>
                                         </div>
                                         <div className="text-center p-2 bg-muted/30 rounded">
                                             <HardDrive size={14} className="mx-auto text-muted-foreground mb-1" />
                                             <div className="text-sm font-medium text-foreground">{agent.status?.memoryUsage ?? '--'}%</div>
-                                            <div className="text-xxs text-muted-foreground">Memory</div>
+                                            <div className="text-xxs text-muted-foreground">{t('agents.memory')}</div>
                                         </div>
                                         <div className="text-center p-2 bg-muted/30 rounded">
                                             <Clock size={14} className="mx-auto text-muted-foreground mb-1" />
                                             <div className="text-sm font-medium text-foreground">{agent.status?.uptime ? formatUptime(agent.status.uptime) : '--'}</div>
-                                            <div className="text-xxs text-muted-foreground">Uptime</div>
+                                            <div className="text-xxs text-muted-foreground">{t('agents.uptime')}</div>
                                         </div>
                                     </div>
 

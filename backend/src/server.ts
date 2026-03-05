@@ -5,7 +5,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { AgentGateway } from './websocket/agent-gateway';
-import { setAgentGateway } from './routes/ai-system';
+import { setAgentGateway } from './api/routes/ai-system.routes';
 
 const PORT = process.env.PORT || 3005;
 

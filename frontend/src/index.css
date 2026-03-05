@@ -1,60 +1,74 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap');
+
+@font-face {
+    font-family: 'HarmonyOS Sans';
+    src: url('/fonts/HarmonyOS_Sans_Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-    :root {
-        /* Enforcing Dark Mode Palette by Default */
-        --background: 0 0% 2%;
-        /* #050505 */
-        --surface: 240 6% 6%;
-        /* #0F0F11 */
-        --border: 240 6% 13%;
-        /* #1F1F23 */
+    :root,
+    .light {
+        --background: 0 0% 100%;
+        --surface: 0 0% 98%;
+        --border: 240 5.9% 90%;
 
-        --foreground: 240 5% 96%;
-        /* #F4F4F5 */
-        --muted: 240 4% 16%;
-        --muted-foreground: 240 5% 65%;
-        /* #A1A1AA */
+        --foreground: 240 10% 4%;
+        --muted: 240 4.8% 95.9%;
+        --muted-foreground: 240 3.8% 46.1%;
 
         --primary: 217 91% 60%;
-        /* #3B82F6 */
+        --primary-foreground: 0 0% 100%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 240 10% 4%;
+
+        --input: 240 5.9% 90%;
+        --ring: 217 91% 60%;
+        --radius: 0.5rem;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 10% 4%;
+
+        --accent: 240 4.8% 95.9%;
+        --accent-foreground: 240 5.9% 10%;
+    }
+
+    .dark {
+        --background: 0 0% 2%;
+        --surface: 240 6% 6%;
+        --border: 240 6% 13%;
+
+        --foreground: 240 5% 96%;
+        --muted: 240 4% 16%;
+        --muted-foreground: 240 5% 65%;
+
+        --primary: 217 91% 60%;
         --primary-foreground: 0 0% 100%;
 
         --card: 240 6% 6%;
-        /* #0F0F11 */
         --card-foreground: 240 5% 96%;
 
         --input: 240 6% 13%;
         --ring: 217 91% 60%;
-        --radius: 0.5rem;
-    }
 
-    .dark {
-        /* Dark Mode Palette (Matches previous hardcoded values) */
-        --background: 0 0% 2%;
-        /* #050505 */
-        --surface: 240 6% 6%;
-        /* #0F0F11 */
-        --border: 240 6% 13%;
-        /* #1F1F23 */
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
 
-        --foreground: 240 5% 96%;
-        /* #F4F4F5 */
-        --muted: 240 4% 16%;
-        --muted-foreground: 240 5% 65%;
-        /* #A1A1AA */
+        --popover: 240 6% 6%;
+        --popover-foreground: 240 5% 96%;
 
-        --primary: 217 91% 60%;
-        /* #3B82F6 */
-        --primary-foreground: 0 0% 100%;
-
-        --card: 240 6% 6%;
-        /* #0F0F11 */
-        --card-foreground: 240 5% 96%;
+        --accent: 240 4% 16%;
+        --accent-foreground: 240 5% 96%;
     }
 
     body {
@@ -275,7 +289,7 @@
     }
 
     .map-dots {
-        background-image: radial-gradient(#6C757D 1.5px, transparent 1.5px);
+        background-image: radial-gradient(hsl(var(--muted-foreground) / 0.5) 1.5px, transparent 1.5px);
         background-size: 15px 15px;
     }
 }

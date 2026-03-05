@@ -38,7 +38,7 @@ router.get('/', authenticate, requireRole('admin'), (req: AuthenticatedRequest, 
     logger.error('Failed to list agents', { error });
     res.status(500).json({
       success: false,
-      error: 'Failed to list agents'
+      error: 'backend.failed_to_list_agents'
     });
   }
 });
@@ -56,7 +56,7 @@ router.post('/register', authenticate, requireRole('admin'), (req: Authenticated
     if (!hostname || !platform) {
       return res.status(400).json({
         success: false,
-        error: 'hostname and platform are required'
+        error: 'backend.hostname_and_platform_are_required'
       });
     }
 
@@ -104,7 +104,7 @@ router.post('/register', authenticate, requireRole('admin'), (req: Authenticated
     logger.error('Failed to register agent', { error });
     res.status(500).json({
       success: false,
-      error: 'Failed to register agent'
+      error: 'backend.failed_to_register_agent'
     });
   }
 });
@@ -123,7 +123,7 @@ router.delete('/:agentId', authenticate, requireRole('admin'), (req: Authenticat
     if (!success) {
       return res.status(404).json({
         success: false,
-        error: 'Agent not found'
+        error: 'backend.agent_not_found'
       });
     }
 
@@ -142,13 +142,13 @@ router.delete('/:agentId', authenticate, requireRole('admin'), (req: Authenticat
 
     res.json({
       success: true,
-      message: 'Agent revoked successfully'
+      message: 'backend.agent_revoked_successfully'
     });
   } catch (error: any) {
     logger.error('Failed to revoke agent', { error });
     res.status(500).json({
       success: false,
-      error: 'Failed to revoke agent'
+      error: 'backend.failed_to_revoke_agent'
     });
   }
 });
@@ -177,7 +177,7 @@ router.get('/audit/logs', authenticate, requireRole('admin'), (req: Authenticate
     logger.error('Failed to get audit logs', { error });
     res.status(500).json({
       success: false,
-      error: 'Failed to get audit logs'
+      error: 'backend.failed_to_get_audit_logs'
     });
   }
 });
@@ -200,7 +200,7 @@ router.get('/audit/verify/:logId', authenticate, requireRole('admin'), (req: Aut
     logger.error('Failed to verify audit log', { error });
     res.status(500).json({
       success: false,
-      error: 'Failed to verify audit log'
+      error: 'backend.failed_to_verify_audit_log'
     });
   }
 });

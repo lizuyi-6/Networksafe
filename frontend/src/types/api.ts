@@ -21,6 +21,13 @@ export interface DashboardStats {
     avgProcessingTime?: number;
     processingSamples?: number;
     attackOrigins?: AttackOrigin[];
+    requestsTrend?: number;
+    blockedTrend?: number;
+    p99Latency?: number;
+    cpuUsage?: number;
+    memoryUsage?: number;
+    diskUsage?: number;
+    networkUsage?: number;
 }
 
 export interface AttackOrigin {

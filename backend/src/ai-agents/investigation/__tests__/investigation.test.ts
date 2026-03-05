@@ -86,7 +86,7 @@ describe('Bug Investigation Agent Team', () => {
             timestamp: new Date(),
             level: 'error',
             service: 'test-service',
-            message: 'Test error message'
+            message: 'backend.test_error_message'
           }
         ],
         traces: [],
@@ -172,7 +172,7 @@ describe('Bug Investigation Agent Team', () => {
             timestamp: new Date(),
             level: 'error',
             service: 'payment-service',
-            message: 'OutOfMemoryError: JavaScript heap out of memory',
+            message: 'backend.outofmemoryerror_javascript_heap_out_of_memory',
             metadata: { heapUsed: '2048MB', heapTotal: '4096MB' }
           }
         ],

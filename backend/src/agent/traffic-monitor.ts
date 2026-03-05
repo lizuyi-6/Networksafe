@@ -25,12 +25,45 @@ export interface TrafficEvent {
 
 export type TrafficCallback = (event: TrafficEvent) => void;
 
+/**
+ * Data source type for traffic monitoring
+ */
+export type TrafficDataSource = 'log_file' | 'netstat' | 'none';
+
+/**
+ * Traffic monitor status
+ */
+export interface TrafficMonitorStatus {
+    isRunning: boolean;
+    dataSource: TrafficDataSource;
+    logPath: string | null;
+    lastActivity: Date | null;
+    stats: {
+        eventsProcessed: number;
+        errors: number;
+        startTime: Date | null;
+    };
+}
+
 export class TrafficMonitor {
     private isRunning = false;
     private callback: TrafficCallback | null = null;
     private logWatcher: fs.FSWatcher | null = null;
     private logStream: readline.Interface | null = null;
     private lastLogPosition = 0;
+
+    // Data source tracking
+    private dataSource: TrafficDataSource = 'none';
+    private currentLogPath: string | null = null;
+
+    // Statistics
+    private eventsProcessed = 0;
+    private errors = 0;
+    private startTime: Date | null = null;
+    private lastActivity: Date | null = null;
+
+    // Status reporting
+    private statusReportInterval: NodeJS.Timeout | null = null;
 
     // 常见日志路径
     private readonly LOG_PATHS = {
@@ -50,18 +83,30 @@ export class TrafficMonitor {
 
         this.callback = callback;
         this.isRunning = true;
+        this.startTime = new Date();
 
         // 尝试找到可用的日志文件
         const logPath = await this.findAccessLog();
 
         if (logPath) {
+            this.dataSource = 'log_file';
+            this.currentLogPath = logPath;
             await this.watchLogFile(logPath);
+            logger.info(`Traffic monitoring started using log file: ${logPath}`);
         } else {
+            this.dataSource = 'netstat';
+            this.currentLogPath = null;
             logger.warn('No access log found, using netstat monitoring');
             await this.fallbackToNetstat();
         }
 
-        logger.info('Traffic monitoring started');
+        // Start status reporting
+        this.startStatusReporting();
+
+        logger.info('Traffic monitoring started', {
+            dataSource: this.dataSource,
+            logPath: this.currentLogPath
+        });
     }
 
     /**
@@ -136,6 +181,8 @@ export class TrafficMonitor {
             const event = this.parseLogLine(line);
             if (event && this.callback) {
                 this.callback(event);
+                this.eventsProcessed++;
+                this.lastActivity = new Date();
             }
         });
 
@@ -184,9 +231,12 @@ export class TrafficMonitor {
                 for (const conn of connections) {
                     if (this.callback) {
                         this.callback(conn);
+                        this.eventsProcessed++;
+                        this.lastActivity = new Date();
                     }
                 }
             } catch (error) {
+                this.errors++;
                 // 静默处理错误
             }
 
@@ -226,6 +276,12 @@ export class TrafficMonitor {
      */
     async stop(): Promise<void> {
         this.isRunning = false;
+        this.dataSource = 'none';
+
+        if (this.statusReportInterval) {
+            clearInterval(this.statusReportInterval);
+            this.statusReportInterval = null;
+        }
 
         if (this.logWatcher) {
             this.logWatcher.close();
@@ -237,6 +293,52 @@ export class TrafficMonitor {
             this.logStream = null;
         }
 
-        logger.info('Traffic monitoring stopped');
+        logger.info('Traffic monitoring stopped', {
+            eventsProcessed: this.eventsProcessed,
+            errors: this.errors,
+            duration: this.startTime ? Date.now() - this.startTime.getTime() : 0
+        });
+    }
+
+    /**
+     * Get current status
+     */
+    getStatus(): TrafficMonitorStatus {
+        return {
+            isRunning: this.isRunning,
+            dataSource: this.dataSource,
+            logPath: this.currentLogPath,
+            lastActivity: this.lastActivity,
+            stats: {
+                eventsProcessed: this.eventsProcessed,
+                errors: this.errors,
+                startTime: this.startTime
+            }
+        };
+    }
+
+    /**
+     * Get current data source
+     */
+    getDataSource(): TrafficDataSource {
+        return this.dataSource;
+    }
+
+    /**
+     * Start periodic status reporting
+     */
+    private startStatusReporting(): void {
+        // Report status every 60 seconds
+        this.statusReportInterval = setInterval(() => {
+            if (!this.isRunning) return;
+
+            const status = this.getStatus();
+            logger.info('Traffic monitor status report', {
+                dataSource: status.dataSource,
+                eventsProcessed: status.stats.eventsProcessed,
+                errors: status.stats.errors,
+                lastActivity: status.lastActivity?.toISOString()
+            });
+        }, 60000);
     }
 }

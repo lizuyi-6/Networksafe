@@ -1,5 +1,5 @@
 import { defaultConfig as config } from '../config';
-import { getAgentSystem } from '../routes/ai-system';
+import { getAgentSystem } from '../api/routes/ai-system.routes';
 import os from 'os';
 import { EventEmitter } from 'events';
 import IPAnalyzer from '../utils/ip-analyzer';
@@ -99,11 +99,11 @@ class SimulationService extends EventEmitter {
 
     private updateStats() {
         const agentSystem = getAgentSystem();
-        
+
         this.stats.currentRPS = Math.floor(this.requestCount / 2);
         this.stats.totalRequests += this.requestCount;
         this.stats.blockedRequests += this.blockedCount;
-        
+
         this.requestCount = 0;
         this.blockedCount = 0;
 
@@ -115,9 +115,7 @@ class SimulationService extends EventEmitter {
 
         const loadAvg = os.loadavg();
         const estimatedConnections = Math.max(0, Math.floor(loadAvg[0] * 10));
-        this.stats.activeConnections = isDemoMode()
-            ? estimatedConnections + Math.floor(Math.random() * 5)
-            : estimatedConnections;
+        this.stats.activeConnections = estimatedConnections;
 
         const now = new Date();
         const newPoint = {
@@ -134,7 +132,7 @@ class SimulationService extends EventEmitter {
         if (agentSystem && agentSystem.isInitialized()) {
             const probeReport = agentSystem.getProbeReport();
             const alerts = probeReport.alerts || [];
-            
+
             const threatCounts: Record<string, number> = {};
             alerts.forEach(alert => {
                 const type = alert.metadata?.threatType || 'Other';
@@ -157,10 +155,9 @@ class SimulationService extends EventEmitter {
             };
         }
 
-        if (this.stats.threats.length === 0 && isDemoMode()) {
-            this.stats.threats = [
-                { name: 'No Threats Detected', value: 100, color: '#22c55e' }
-            ];
+        // 无论是否是演示模式，威胁列表为空时都保持为空
+        if (this.stats.threats.length === 0) {
+            this.stats.threats = [];
         }
     }
 

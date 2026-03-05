@@ -14,9 +14,22 @@ import logsRoutes from './api/routes/logs.routes';
 import sitesRoutes from './api/routes/sites.routes';
 import adminRoutes from './api/routes/admin.routes';
 import authRoutes from './api/routes/auth.routes';
-import aiSystemRoutes, { initializeAgentSystem } from './routes/ai-system';
+import aiSystemRoutes, { initializeAgentSystem } from './api/routes/ai-system.routes';
 import investigationRoutes from './api/routes/investigation.routes';
 import agentOnboardingRoutes from './api/routes/agent-onboarding.routes';
+import scannerRoutes from './api/routes/scanner.routes';
+import deploymentsRoutes from './api/routes/deployments.routes';
+import alertsRoutes from './api/routes/alerts.routes';
+import aiEndpointsRoutes from './api/routes/ai-endpoints.routes';
+import dashboardRoutes from './api/routes/dashboard.routes';
+import agentsRoutes from './api/routes/agents.routes';
+import devicesRoutes from './api/routes/devices.routes';
+import fixHistoryRoutes from './api/routes/fix-history.routes';
+import smartFixRoutes from './api/routes/smart-fix.routes';
+import trafficRoutes from './api/routes/traffic.routes';
+import attackRoutes from './api/routes/attack.routes';
+import seedRoutes from './api/routes/seed.routes';
+import pipelineRoutes from './api/routes/pipeline.routes';
 
 const app = express();
 const inputValidator = new InputValidator();
@@ -108,7 +121,7 @@ app.use((req, res, next) => {
             threatLevel: result.threatLevel
         });
         return res.status(400).json({
-            error: 'Invalid input detected',
+            error: 'backend.invalid_input_detected',
             code: 'INPUT_VALIDATION_FAILED'
         });
     }
@@ -135,9 +148,22 @@ app.use('/api/logs', logsRoutes);
 app.use('/api/sites', sitesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api', aiSystemRoutes);
+app.use('/api/ai-system', aiSystemRoutes);
 app.use('/api/investigation', investigationRoutes);
 app.use('/api/agent-onboarding', agentOnboardingRoutes);
+app.use('/api/scanner', scannerRoutes);
+app.use('/api/deployments', deploymentsRoutes);
+app.use('/api/alerts', alertsRoutes);
+app.use('/api/ai-endpoints', aiEndpointsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/agents', agentsRoutes);
+app.use('/api/devices', devicesRoutes);
+app.use('/api/fix-history', fixHistoryRoutes);
+app.use('/api/smart-fix', smartFixRoutes);
+app.use('/api/traffic', trafficRoutes);
+app.use('/api/attack', attackRoutes);
+app.use('/api/seed', seedRoutes);
+app.use('/api/pipeline', pipelineRoutes);
 
 export { initializeAgentSystem };
 
@@ -150,7 +176,7 @@ app.get('/health', (req, res) => {
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     // 不暴露错误详情给客户端
     logger.error('Unhandled error', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'backend.internal_server_error' });
 });
 
 export default app;

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Root Cause Agent
  *
  * Specializes in identifying the root cause of bugs by analyzing all available evidence
@@ -7,10 +7,11 @@
 
 import { BaseInvestigationAgent } from './base-investigation.agent';
 import { InvestigationContext, InvestigationAgentType, Finding, RootCause } from '../types';
+import { AgentConfig, MessageBus } from '../../core';
 
 export class RootCauseAgent extends BaseInvestigationAgent {
-  constructor(coordinator: any) {
-    super(InvestigationAgentType.ROOT_CAUSE, [
+  constructor(config: AgentConfig, messageBus: MessageBus) {
+    super(config, messageBus, InvestigationAgentType.ROOT_CAUSE, [
       'root_cause_analysis',
       'correlation_analysis',
       'causal_inference',
@@ -21,9 +22,23 @@ export class RootCauseAgent extends BaseInvestigationAgent {
   }
 
   /**
+   * Get system prompt for AI model
+   */
+  public getSystemPrompt(): string {
+    return `You are a Root Cause Analysis Agent specializing in:
+- Correlating evidence from multiple investigation sources
+- Identifying causal relationships between events
+- Root cause determination through systematic analysis
+- Contributing factor identification
+- Evidence synthesis and pattern recognition
+
+Your goal is to determine the fundamental cause of bugs by analyzing all available evidence.`;
+  }
+
+  /**
    * Analyze evidence to determine root cause
    */
-  public async analyze(context: InvestigationContext): Promise<any> {
+  public async analyzeInvestigation(context: InvestigationContext): Promise<any> {
     console.log('[RootCauseAgent] Starting root cause analysis...');
 
     const findings: Finding[] = [];
@@ -58,7 +73,7 @@ export class RootCauseAgent extends BaseInvestigationAgent {
     const rootCause = this.determineRootCause(validatedRootCauses, aiAnalysis, correlations);
 
     findings.push({
-      type: rootCause.category === 'code' ? 'code' : 'configuration',
+      type: rootCause.category === 'code' ? 'configuration' : 'configuration',
       severity: context.bugReport.severity,
       description: `Root cause identified: ${rootCause.description}`,
       location: rootCause.location.file ?
@@ -481,3 +496,4 @@ export class RootCauseAgent extends BaseInvestigationAgent {
       `Contributing factors: ${contributingFactors.length} identified.`;
   }
 }
+

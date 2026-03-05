@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import { authenticate, requireRole } from '../../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/', (req, res) => {
+router.get('/', authenticate, (req, res) => {
     // Mock config
     res.json({
         antiBot: {
@@ -18,9 +19,9 @@ router.get('/', (req, res) => {
     });
 });
 
-router.post('/', (req, res) => {
+router.post('/', authenticate, requireRole('admin'), (req, res) => {
     // Mock save
-    res.json({ success: true, message: 'Configuration saved' });
+    res.json({ success: true, message: 'backend.configuration_saved' });
 });
 
 export default router;

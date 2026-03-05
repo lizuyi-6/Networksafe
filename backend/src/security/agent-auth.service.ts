@@ -10,6 +10,54 @@ import { getDatabase } from '../config/database';
 import logger from '../utils/logger';
 import redisService from './redis.service';
 
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '';
+// SECURITY FIX CVE-2026-013: Use environment variable for salt or generate random salt
+const ENCRYPTION_SALT = process.env.ENCRYPTION_SALT || '';
+const ALGORITHM = 'aes-256-gcm';
+const IV_LENGTH = 12;
+const AUTH_TAG_LENGTH = 16;
+const KEY_LENGTH = 32;
+
+function getEncryptionKey(): Buffer {
+  if (!ENCRYPTION_KEY) {
+    throw new Error('ENCRYPTION_KEY environment variable is not set');
+  }
+
+  // SECURITY FIX: Require ENCRYPTION_SALT to be set - no fallback allowed
+  if (!ENCRYPTION_SALT) {
+    throw new Error('ENCRYPTION_SALT environment variable is required - no fallback allowed');
+  }
+  
+  const key = crypto.scryptSync(ENCRYPTION_KEY, ENCRYPTION_SALT, KEY_LENGTH);
+  return key;
+}
+
+function encryptSecretKey(plaintext: string): string {
+  const key = getEncryptionKey();
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag();
+  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+}
+
+function decryptSecretKey(encryptedData: string): string {
+  const key = getEncryptionKey();
+  const parts = encryptedData.split(':');
+  if (parts.length !== 3) {
+    throw new Error('Invalid encrypted data format');
+  }
+  const iv = Buffer.from(parts[0], 'hex');
+  const authTag = Buffer.from(parts[1], 'hex');
+  const encrypted = parts[2];
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+
 export interface AgentRegistration {
   agentId: string;
   hostname: string;
@@ -125,6 +173,7 @@ export class AgentAuthService {
 
       // SECURITY FIX CVE-2026-100: Parameterized query - hostname already sanitized
       const cols = this.getAgentRegistrationColumns();
+      const encryptedSecretKey = encryptSecretKey(registration.secretKey);
       if (cols.has('tenant_id')) {
         db.prepare(`
           INSERT INTO agent_registrations (
@@ -135,7 +184,7 @@ export class AgentAuthService {
           registration.agentId,
           registration.hostname,
           this.hashApiKey(registration.apiKey),
-          registration.secretKey,
+          encryptedSecretKey,
           JSON.stringify(registration.fingerprint),
           registration.platform,
           registration.status,
@@ -152,7 +201,7 @@ export class AgentAuthService {
           registration.agentId,
           registration.hostname,
           this.hashApiKey(registration.apiKey),
-          registration.secretKey,
+          encryptedSecretKey,
           JSON.stringify(registration.fingerprint),
           registration.platform,
           registration.status,
@@ -258,7 +307,16 @@ export class AgentAuthService {
       WHERE agent_id = ? AND status = 'approved'
     `).get(agentId) as any;
 
-    return result?.secret_key || null;
+    if (!result?.secret_key) {
+      return null;
+    }
+
+    try {
+      return decryptSecretKey(result.secret_key);
+    } catch (error) {
+      logger.error('Failed to decrypt secret key', { error, agentId });
+      return null;
+    }
   }
 
   /**

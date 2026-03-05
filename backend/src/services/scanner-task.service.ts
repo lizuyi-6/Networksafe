@@ -273,7 +273,7 @@ class ScannerTaskService {
     const available = await this.nucleiScanner.checkAvailability();
     if (!available) {
       task.summary.nuclei = 'skipped';
-      this.emitEvent(task, 'scanner:task:log', { level: 'info', message: 'Nuclei unavailable, skipping nuclei phase' });
+      this.emitEvent(task, 'scanner:task:log', { level: 'info', message: 'backend.nuclei_unavailable_skipping_nuclei_phase' });
       return;
     }
     task.summary.nuclei = 'running';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import logoImg from '../assets/logo_new.png';
+import logoImg from '../assets/logo.png';
 
 // Types for the subscription tiers
 export type PlanTier = 'starter' | 'professional' | 'enterprise' | null;
@@ -34,7 +34,7 @@ const Logo: React.FC<LogoProps> = ({ tier, className = "", showText = true }) =>
             <div className="relative group w-10 h-10 transition-transform group-hover:scale-110 duration-300">
                 <img
                     src={logoImg}
-                    alt="FluxGuard Logo"
+                    alt="AetherGuard Logo"
                     className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]"
                 />
 
@@ -49,7 +49,7 @@ const Logo: React.FC<LogoProps> = ({ tier, className = "", showText = true }) =>
                     <div className="flex items-center gap-2">
                         {showText && (
                             <span className="font-bold text-xl tracking-tight text-white group-hover:text-green-50 transition-colors">
-                                FluxGuard
+                                AetherGuard
                             </span>
                         )}
 

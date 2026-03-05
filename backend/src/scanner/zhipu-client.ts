@@ -127,7 +127,7 @@ export async function testZhipuAI(apiKey: string): Promise<{
 
     return {
       success: true,
-      message: 'Zhipu AI connection successful',
+      message: 'backend.zhipu_ai_connection_successful',
       latency
     };
   } catch (error: any) {

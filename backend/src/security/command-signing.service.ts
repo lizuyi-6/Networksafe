@@ -94,13 +94,13 @@ export class CommandSigningService {
         logger.warn(`Invalid command signature from ${agentId}`);
         return {
           valid: false,
-          error: 'Invalid signature'
+          error: 'backend.invalid_signature'
         };
       }
     } catch {
       return {
         valid: false,
-        error: 'Signature verification failed'
+        error: 'backend.signature_verification_failed'
       };
     }
 
@@ -117,7 +117,7 @@ export class CommandSigningService {
       });
       return {
         valid: false,
-        error: 'Command expired'
+        error: 'backend.command_expired'
       };
     }
 
@@ -126,7 +126,7 @@ export class CommandSigningService {
       logger.warn(`Future timestamp in command from ${agentId}`);
       return {
         valid: false,
-        error: 'Invalid timestamp'
+        error: 'backend.invalid_timestamp'
       };
     }
 
@@ -138,7 +138,7 @@ export class CommandSigningService {
       logger.warn(`Replay attack detected - duplicate nonce from ${agentId}`);
       return {
         valid: false,
-        error: 'Duplicate nonce'
+        error: 'backend.duplicate_nonce'
       };
     }
 

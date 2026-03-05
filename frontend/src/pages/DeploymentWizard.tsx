@@ -196,7 +196,7 @@ const DeploymentWizard = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-muted-foreground mb-2">Upstream</label>
+                                    <label className="block text-xs text-muted-foreground mb-2">{t('wizard.upstream')}</label>
                                     <input
                                         type="text"
                                         value={config.upstream}
@@ -250,7 +250,7 @@ const DeploymentWizard = () => {
                                     ((step === 1 && !serverType) || loading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20'
                                 )}
                             >
-                                {loading ? 'Generating...' : t('deploy.next')} <ChevronRight size={16} />
+                                {loading ? t('wizard.generating') : t('deploy.next')} <ChevronRight size={16} />
                             </button>
                         ) : (
                             <div className="flex gap-2">
@@ -259,7 +259,7 @@ const DeploymentWizard = () => {
                                     disabled={saving || !generated}
                                     className="px-4 py-2 bg-primary hover:bg-primary/90 rounded font-medium text-white flex items-center gap-2 text-sm disabled:opacity-60"
                                 >
-                                    <Save size={16} /> {saving ? 'Saving...' : 'Save Version'}
+                                    <Save size={16} /> {saving ? t('wizard.saving') : t('wizard.save_version')}
                                 </button>
                                 <a
                                     href={savedId ? getDeploymentDownloadUrl(savedId, 'bundle') : '#'}
@@ -268,7 +268,7 @@ const DeploymentWizard = () => {
                                         !savedId && 'opacity-50 pointer-events-none'
                                     )}
                                 >
-                                    <Download size={16} /> {t('deploy.download')}
+                                    <Download size={16} /> {t('wizard.download')}
                                 </a>
                             </div>
                         )}
@@ -276,10 +276,10 @@ const DeploymentWizard = () => {
                 </div>
 
                 <div className="bg-card border border-border rounded-lg p-5">
-                    <h3 className="text-sm font-medium text-foreground mb-4">Deployment History</h3>
+                    <h3 className="text-sm font-medium text-foreground mb-4">{t('wizard.deployment_history')}</h3>
                     <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
                         {history.length === 0 && (
-                            <div className="text-xs text-muted-foreground">No saved deployment profiles.</div>
+                            <div className="text-xs text-muted-foreground">{t('wizard.no_profiles')}</div>
                         )}
                         {history.map((row: any) => (
                             <div key={row.id} className="p-3 rounded border border-border bg-muted/20">
@@ -292,7 +292,7 @@ const DeploymentWizard = () => {
                                         href={getDeploymentDownloadUrl(row.id, 'bundle')}
                                         className="text-xs text-primary hover:underline"
                                     >
-                                        Download
+                                        {t('wizard.download')}
                                     </a>
                                 </div>
                                 <div className="text-[10px] text-muted-foreground mt-2 font-mono break-all">{row.checksum}</div>

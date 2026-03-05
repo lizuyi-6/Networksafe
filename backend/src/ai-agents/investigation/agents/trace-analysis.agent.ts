@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Trace Analysis Agent
  *
  * Specializes in analyzing distributed traces to identify performance bottlenecks,
@@ -7,10 +7,11 @@
 
 import { BaseInvestigationAgent } from './base-investigation.agent';
 import { InvestigationContext, InvestigationAgentType, Finding } from '../types';
+import { AgentConfig, MessageBus } from '../../core';
 
 export class TraceAnalysisAgent extends BaseInvestigationAgent {
-  constructor(coordinator: any) {
-    super(InvestigationAgentType.TRACE_ANALYSIS, [
+  constructor(config: AgentConfig, messageBus: MessageBus) {
+    super(config, messageBus, InvestigationAgentType.TRACE_ANALYSIS, [
       'performance_analysis',
       'bottleneck_detection',
       'failure_analysis',
@@ -21,9 +22,23 @@ export class TraceAnalysisAgent extends BaseInvestigationAgent {
   }
 
   /**
+   * Get system prompt for AI model
+   */
+  public getSystemPrompt(): string {
+    return `You are a Trace Analysis Agent specializing in:
+- Performance bottleneck identification in distributed systems
+- Failure point analysis from trace data
+- Service dependency mapping
+- Latency analysis and optimization recommendations
+- Trace correlation and pattern detection
+
+Your goal is to identify performance and reliability issues from trace data.`;
+  }
+
+  /**
    * Analyze traces for performance and failure issues
    */
-  public async analyze(context: InvestigationContext): Promise<any> {
+  public async analyzeInvestigation(context: InvestigationContext): Promise<any> {
     console.log('[TraceAnalysisAgent] Starting trace analysis...');
 
     const traces = context.systemState.traces;
@@ -327,3 +342,4 @@ export class TraceAnalysisAgent extends BaseInvestigationAgent {
       `Found ${findings.length} issues.`;
   }
 }
+

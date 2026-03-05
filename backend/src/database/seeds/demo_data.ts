@@ -142,10 +142,10 @@ export async function seedDatabase(options: SeedOptions = {}): Promise<void> {
 
         // Create demo alerts
         const alerts = [
-            { type: 'intrusion_attempt', severity: 'critical', source: 'web-server-01', message: 'SQL injection attempt detected from 192.168.1.100' },
-            { type: 'brute_force', severity: 'warning', source: 'api-server-01', message: 'Multiple failed login attempts from 10.0.0.5' },
-            { type: 'port_scan', severity: 'info', source: 'web-server-01', message: 'Port scan activity detected from 172.16.0.50' },
-            { type: 'vulnerability', severity: 'critical', source: 'db-server-01', message: 'CVE-2024-1234 vulnerability detected in OpenSSL' }
+            { type: 'intrusion_attempt', severity: 'critical', source: 'web-server-01', message: 'backend.sql_injection_attempt_detected_from_192_168_1_100' },
+            { type: 'brute_force', severity: 'warning', source: 'api-server-01', message: 'backend.multiple_failed_login_attempts_from_10_0_0_5' },
+            { type: 'port_scan', severity: 'info', source: 'web-server-01', message: 'backend.port_scan_activity_detected_from_172_16_0_50' },
+            { type: 'vulnerability', severity: 'critical', source: 'db-server-01', message: 'backend.cve_2024_1234_vulnerability_detected_in_openssl' }
         ];
 
         for (const alert of alerts) {

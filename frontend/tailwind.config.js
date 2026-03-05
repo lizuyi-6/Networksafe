@@ -8,7 +8,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', 'sans-serif'],
+                sans: ['"HarmonyOS Sans"', 'sans-serif'],
                 mono: ['JetBrains Mono', 'monospace'],
             },
             fontSize: {

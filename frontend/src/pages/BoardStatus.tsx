@@ -66,14 +66,14 @@ const BoardStatus = () => {
     }, [id]);
 
     return (
-        <div className="bg-[#05080f] font-display text-slate-200 overflow-hidden h-screen w-full flex flex-col selection:bg-blue-500 selection:text-white relative">
-            <header className="relative z-20 flex items-center justify-between px-6 py-3 bg-[#0b0f17]/80 backdrop-blur-md border-b border-white/10 shrink-0 h-16">
+        <div className="bg-background font-display text-foreground overflow-hidden h-screen w-full flex flex-col selection:bg-blue-500 selection:text-white relative">
+            <header className="relative z-20 flex items-center justify-between px-6 py-3 bg-surface/80 backdrop-blur-md border-b border-border shrink-0 h-16">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/devices')} className="p-1.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all">
-                        <ArrowLeft size={20} className="text-slate-400" />
+                    <button onClick={() => navigate('/devices')} className="p-1.5 rounded bg-muted border border-border hover:bg-accent hover:border-border transition-all">
+                        <ArrowLeft size={20} className="text-muted-foreground" />
                     </button>
                     <div>
-                        <h1 className="text-lg font-bold tracking-tight text-white leading-none uppercase">FluxGuard <span className="text-xs text-slate-500 font-normal ml-2">{t('board.device_id')}: {id || t('board.unknown')}</span></h1>
+                        <h1 className="text-lg font-bold tracking-tight text-foreground leading-none uppercase">AetherGuard <span className="text-xs text-muted-foreground font-normal ml-2">{t('board.device_id')}: {id || t('board.unknown')}</span></h1>
                         <div className="flex items-center gap-2 mt-0.5">
                             <span className={`w-1.5 h-1.5 rounded-full ${device?.isOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                             <span className="text-[10px] uppercase tracking-widest text-emerald-500 font-mono">{device?.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
@@ -81,12 +81,12 @@ const BoardStatus = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-6">
-                    <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-slate-400">
+                    <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-muted-foreground">
                         <div className="flex items-center gap-2"><Cpu size={14} /><span>CPU: {device?.status?.cpuUsage ?? 0}%</span></div>
                         <div className="flex items-center gap-2"><Activity size={14} /><span>RSSI: {device?.status?.wifiRssi ?? 0}dBm</span></div>
                     </div>
-                    <div className="h-8 w-px bg-white/10"></div>
-                    <button onClick={toggleLanguage} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-mono text-slate-300 transition-all">
+                    <div className="h-8 w-px bg-border"></div>
+                    <button onClick={toggleLanguage} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border hover:bg-accent text-xs font-mono text-foreground transition-all">
                         <Globe size={12} />
                         {language === 'en' ? 'EN' : '中文'}
                     </button>
@@ -95,17 +95,17 @@ const BoardStatus = () => {
 
             <main className="relative z-10 flex-1 p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0 overflow-hidden">
                 <section className="lg:col-span-4 flex flex-col gap-4 h-full min-h-0">
-                    <div className="flex justify-between items-end pb-2 border-b border-white/10">
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">Device Metrics</h2>
-                        <span className="text-[10px] font-mono text-blue-500">Real Data</span>
+                    <div className="flex justify-between items-end pb-2 border-b border-border">
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{t('board.device_metrics')}</h2>
+                        <span className="text-[10px] font-mono text-blue-500">{t('board.real_data')}</span>
                     </div>
-                    <div className="bg-card/20 border border-white/10 rounded-lg p-4 space-y-3 text-sm">
-                        <div className="flex justify-between"><span className="text-slate-400">Chip</span><span>{device?.chipModel || '-'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-400">Version</span><span>{device?.version || '-'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-400">Mode</span><span>{device?.mode || '-'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-400">Memory</span><span>{device?.status?.memoryUsage ?? 0}%</span></div>
-                        <div className="flex justify-between"><span className="text-slate-400">Free Heap</span><span>{device?.freeHeap ?? 0}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-400">Last Heartbeat</span><span>{device?.lastHeartbeat ? new Date(device.lastHeartbeat).toLocaleString() : '-'}</span></div>
+                    <div className="bg-card/20 border border-border rounded-lg p-4 space-y-3 text-sm">
+                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.chip')}</span><span>{device?.chipModel || '-'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.version')}</span><span>{device?.version || '-'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.mode')}</span><span>{device?.mode || '-'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.memory')}</span><span>{device?.status?.memoryUsage ?? 0}%</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.free_heap')}</span><span>{device?.freeHeap ?? 0}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.last_heartbeat')}</span><span>{device?.lastHeartbeat ? new Date(device.lastHeartbeat).toLocaleString() : '-'}</span></div>
                     </div>
                     {error && (
                         <div className="p-3 rounded border border-red-500/30 bg-red-500/10 text-red-300 text-xs">{error}</div>
@@ -113,15 +113,15 @@ const BoardStatus = () => {
                 </section>
 
                 <section className="lg:col-span-8 flex flex-col h-full min-h-0">
-                    <div className="flex justify-between items-end pb-2 border-b border-white/10">
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">Event Stream</h2>
-                        <span className="text-[10px] font-mono text-slate-500">/api/devices/{id}/events</span>
+                    <div className="flex justify-between items-end pb-2 border-b border-border">
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{t('board.event_stream')}</h2>
+                        <span className="text-[10px] font-mono text-muted-foreground">/api/devices/{id}/events</span>
                     </div>
-                    <div className="flex-1 bg-black/80 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden flex flex-col font-mono text-xs relative shadow-2xl">
-                        <div className="bg-[#1c1f27] px-4 py-2 flex items-center gap-2 border-b border-white/5">
-                            <div className="ml-auto text-[10px] text-slate-500">real-time event feed</div>
+                    <div className="flex-1 bg-muted/80 backdrop-blur-xl border border-border rounded-lg overflow-hidden flex flex-col font-mono text-xs relative shadow-2xl">
+                        <div className="bg-muted px-4 py-2 flex items-center gap-2 border-b border-border">
+                            <div className="ml-auto text-[10px] text-muted-foreground">real-time event feed</div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 text-slate-300">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 text-foreground">
                             {logs.length > 0 ? logs.map((log, i) => (
                                 <div key={i} className="flex gap-2"><span>{log}</span></div>
                             )) : (

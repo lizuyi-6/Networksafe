@@ -6,12 +6,13 @@
  * - Windows: netsh
  */
 
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 import os from 'os';
 import logger from '../utils/logger';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 interface BlockedIP {
     ip: string;
@@ -189,11 +190,15 @@ export class FirewallController {
         }
     }
 
-    // === iptables 实现 ===
+    // === iptables 实现 - SECURITY FIX: 使用 execFile 防止命令注入 ===
 
     private async blockWithIptables(ip: string): Promise<boolean> {
         try {
-            await execAsync(`iptables -A INPUT -s ${ip} -j DROP`);
+            // 使用 execFile 代替 exec，防止命令注入
+            // 参数作为数组传递，不进行 shell 解析
+            const args = ['-A', 'INPUT', '-s', ip, '-j', 'DROP'];
+            await execFileAsync('iptables', args);
+            logger.info(`iptables: Blocked IP ${ip}`);
             return true;
         } catch (error: any) {
             logger.error(`iptables block failed: ${error.message}`);
@@ -203,7 +208,9 @@ export class FirewallController {
 
     private async unblockWithIptables(ip: string): Promise<boolean> {
         try {
-            await execAsync(`iptables -D INPUT -s ${ip} -j DROP`);
+            const args = ['-D', 'INPUT', '-s', ip, '-j', 'DROP'];
+            await execFileAsync('iptables', args);
+            logger.info(`iptables: Unblocked IP ${ip}`);
             return true;
         } catch (error: any) {
             logger.error(`iptables unblock failed: ${error.message}`);
@@ -211,11 +218,17 @@ export class FirewallController {
         }
     }
 
-    // === firewalld 实现 ===
+    // === firewalld 实现 - SECURITY FIX: 使用 execFile 防止命令注入 ===
 
     private async blockWithFirewalld(ip: string): Promise<boolean> {
         try {
-            await execAsync(`firewall-cmd --add-rich-rule='rule family="ipv4" source address="${ip}" reject'`);
+            // 使用参数化命令执行
+            const args = [
+                '--add-rich-rule',
+                `rule family="ipv4" source address="${ip}" reject`
+            ];
+            await execFileAsync('firewall-cmd', args);
+            logger.info(`firewalld: Blocked IP ${ip}`);
             return true;
         } catch (error: any) {
             logger.error(`firewalld block failed: ${error.message}`);
@@ -225,7 +238,12 @@ export class FirewallController {
 
     private async unblockWithFirewalld(ip: string): Promise<boolean> {
         try {
-            await execAsync(`firewall-cmd --remove-rich-rule='rule family="ipv4" source address="${ip}" reject'`);
+            const args = [
+                '--remove-rich-rule',
+                `rule family="ipv4" source address="${ip}" reject`
+            ];
+            await execFileAsync('firewall-cmd', args);
+            logger.info(`firewalld: Unblocked IP ${ip}`);
             return true;
         } catch (error: any) {
             logger.error(`firewalld unblock failed: ${error.message}`);
@@ -233,11 +251,14 @@ export class FirewallController {
         }
     }
 
-    // === ufw 实现 ===
+    // === ufw 实现 - SECURITY FIX: 使用 execFile 防止命令注入 ===
 
     private async blockWithUfw(ip: string): Promise<boolean> {
         try {
-            await execAsync(`ufw deny from ${ip}`);
+            // 使用参数化命令执行
+            const args = ['deny', 'from', ip];
+            await execFileAsync('ufw', args);
+            logger.info(`ufw: Blocked IP ${ip}`);
             return true;
         } catch (error: any) {
             logger.error(`ufw block failed: ${error.message}`);
@@ -247,7 +268,9 @@ export class FirewallController {
 
     private async unblockWithUfw(ip: string): Promise<boolean> {
         try {
-            await execAsync(`ufw delete deny from ${ip}`);
+            const args = ['delete', 'deny', 'from', ip];
+            await execFileAsync('ufw', args);
+            logger.info(`ufw: Unblocked IP ${ip}`);
             return true;
         } catch (error: any) {
             logger.error(`ufw unblock failed: ${error.message}`);
@@ -255,12 +278,26 @@ export class FirewallController {
         }
     }
 
-    // === Windows netsh 实现 ===
+    // === Windows netsh 实现 - SECURITY FIX: 使用 execFile 防止命令注入 ===
 
     private async blockWithNetsh(ip: string): Promise<boolean> {
         try {
+            // 生成安全的规则名称
             const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;
-            await execAsync(`netsh advfirewall firewall add rule name="${ruleName}" dir=in action=block remoteip=${ip}`);
+
+            // 使用参数化命令执行
+            const args = [
+                'advfirewall',
+                'firewall',
+                'add',
+                'rule',
+                `name=${ruleName}`,
+                'dir=in',
+                'action=block',
+                `remoteip=${ip}`
+            ];
+            await execFileAsync('netsh', args);
+            logger.info(`netsh: Blocked IP ${ip}`);
             return true;
         } catch (error: any) {
             logger.error(`netsh block failed: ${error.message}`);
@@ -271,7 +308,16 @@ export class FirewallController {
     private async unblockWithNetsh(ip: string): Promise<boolean> {
         try {
             const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;
-            await execAsync(`netsh advfirewall firewall delete rule name="${ruleName}"`);
+
+            const args = [
+                'advfirewall',
+                'firewall',
+                'delete',
+                'rule',
+                `name=${ruleName}`
+            ];
+            await execFileAsync('netsh', args);
+            logger.info(`netsh: Unblocked IP ${ip}`);
             return true;
         } catch (error: any) {
             logger.error(`netsh unblock failed: ${error.message}`);

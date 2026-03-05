@@ -156,7 +156,7 @@ export const concurrencyLimit = async (
     res.status(429).json({
       success: false,
       error: {
-        message: 'Too many concurrent requests. Please retry later.',
+        message: 'backend.too_many_concurrent_requests_please_retry_later',
         type: 'concurrency_limit_exceeded',
       },
     });

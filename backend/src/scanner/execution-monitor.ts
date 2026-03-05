@@ -315,7 +315,7 @@ export class ExecutionMonitor extends EventEmitter {
       if (isCritical) {
         this.emitEvent('ai-analysis', {
           type: 'critical-error',
-          message: 'Critical error detected',
+          message: 'backend.critical_error_detected',
           error: error.trim(),
           shouldAbort: true
         });
@@ -351,7 +351,7 @@ export class ExecutionMonitor extends EventEmitter {
   abortExecution(): void {
     if (this.currentProcess && !this.currentProcess.killed) {
       this.currentProcess.kill('SIGKILL');
-      this.emitEvent('error', { message: 'Execution aborted' });
+      this.emitEvent('error', { message: 'backend.execution_aborted' });
     }
   }
 

@@ -39,7 +39,7 @@ const Scanner = () => {
     const [urlFindings, setUrlFindings] = useState<Finding[]>([]);
     const [hostFindings, setHostFindings] = useState<Finding[]>([]);
     const [nucleiFindings, setNucleiFindings] = useState<Finding[]>([]);
-    const [urls, setUrls] = useState('http://localhost:3005/api/health');
+    const [urls, setUrls] = useState('');
     const [includeSystem, setIncludeSystem] = useState(true);
     const [includeWeb, setIncludeWeb] = useState(true);
     const [includePorts, setIncludePorts] = useState(true);
@@ -289,7 +289,7 @@ const Scanner = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 <div className="bg-card border border-border rounded-lg p-4">
-                    <div className="text-xs text-muted-foreground">Task</div>
+                    <div className="text-xs text-muted-foreground">{t('scanner.task')}</div>
                     <div className="text-sm text-foreground font-mono mt-1 break-all">{taskId || '-'}</div>
                 </div>
                 <div className="bg-card border border-border rounded-lg p-4">
@@ -297,11 +297,11 @@ const Scanner = () => {
                     <div className="text-sm text-foreground mt-1">{status} / {phase}</div>
                 </div>
                 <div className="bg-card border border-border rounded-lg p-4">
-                    <div className="text-xs text-muted-foreground">Progress</div>
+                    <div className="text-xs text-muted-foreground">{t('scanner.progress')}</div>
                     <div className="text-sm text-foreground mt-1">{progress}%</div>
                 </div>
                 <div className="bg-card border border-border rounded-lg p-4">
-                    <div className="text-xs text-muted-foreground">Findings</div>
+                    <div className="text-xs text-muted-foreground">{t('scanner.findings')}</div>
                     <div className="text-sm text-foreground mt-1">{summary.total} (C:{summary.critical} H:{summary.high} M:{summary.medium} L:{summary.low})</div>
                 </div>
             </div>
@@ -321,7 +321,7 @@ const Scanner = () => {
                         />
                     </div>
                     <div className="space-y-3">
-                        <div className="text-xs text-muted-foreground">Host scan toggles</div>
+                        <div className="text-xs text-muted-foreground">{t('scanner.host_scan_toggles')}</div>
                         <label className="flex items-center gap-2 text-sm text-foreground">
                             <input type="checkbox" checked={includeSystem} onChange={e => setIncludeSystem(e.target.checked)} />
                             Include system checks

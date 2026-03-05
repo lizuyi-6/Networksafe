@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
+import { requirePlanQuota } from '../../middleware/plan.middleware';
 import { getDatabase } from '../../config/database';
 import agentAuthService from '../../security/agent-auth.service';
 import logger from '../../utils/logger';
@@ -52,7 +53,7 @@ function ensureSchema(): void {
   `);
 }
 
-router.post('/codes', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
+router.post('/codes', authenticate, requireRole('admin', 'tenant'), requirePlanQuota('agent'), (req: AuthenticatedRequest, res: Response) => {
   try {
     ensureSchema();
     const ttlMinutes = Math.max(1, Math.min(Number(req.body?.ttlMinutes || 10), 60 * 24));
@@ -105,11 +106,11 @@ router.post('/codes', authenticate, requireRole('admin'), (req: AuthenticatedReq
     });
   } catch (error: any) {
     logger.error('Failed to create onboarding code', { error: error.message });
-    return res.status(500).json({ success: false, error: 'Failed to create onboarding code' });
+    return res.status(500).json({ success: false, error: 'backend.failed_to_create_onboarding_code' });
   }
 });
 
-router.get('/codes', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
+router.get('/codes', authenticate, requireRole('admin', 'tenant'), (req: AuthenticatedRequest, res: Response) => {
   try {
     ensureSchema();
     const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 200);
@@ -121,17 +122,18 @@ router.get('/codes', authenticate, requireRole('admin'), (req: AuthenticatedRequ
       rows = db.prepare(`
         SELECT id, tenant_id, created_by, max_uses, used_count, status, expected_hostname, expected_tags_json, expires_at, created_at, used_at, used_by_agent_id
         FROM agent_onboarding_codes
-        WHERE status = ?
+        WHERE status = ? AND (tenant_id = ? OR ? = 'admin')
         ORDER BY created_at DESC
         LIMIT ?
-      `).all(status, limit) as any[];
+      `).all(status, req.user!.tenantId, req.user!.role, limit) as any[];
     } else {
       rows = db.prepare(`
         SELECT id, tenant_id, created_by, max_uses, used_count, status, expected_hostname, expected_tags_json, expires_at, created_at, used_at, used_by_agent_id
         FROM agent_onboarding_codes
+        WHERE tenant_id = ? OR ? = 'admin'
         ORDER BY created_at DESC
         LIMIT ?
-      `).all(limit) as any[];
+      `).all(req.user!.tenantId, req.user!.role, limit) as any[];
     }
 
     const now = Date.now();
@@ -157,7 +159,7 @@ router.get('/codes', authenticate, requireRole('admin'), (req: AuthenticatedRequ
     return res.json({ success: true, data: normalized });
   } catch (error: any) {
     logger.error('Failed to list onboarding codes', { error: error.message });
-    return res.status(500).json({ success: false, error: 'Failed to list onboarding codes' });
+    return res.status(500).json({ success: false, error: 'backend.failed_to_list_onboarding_codes' });
   }
 });
 
@@ -170,7 +172,7 @@ router.post('/exchange', (req: AuthenticatedRequest, res: Response) => {
     const mac = typeof req.body?.mac === 'string' ? req.body.mac : undefined;
 
     if (!onboardingCode || !hostname || !platform) {
-      return res.status(400).json({ success: false, error: 'onboardingCode, hostname and platform are required' });
+      return res.status(400).json({ success: false, error: 'backend.onboardingcode_hostname_and_platform_are_required' });
     }
 
     const db = getDatabase();
@@ -182,21 +184,21 @@ router.post('/exchange', (req: AuthenticatedRequest, res: Response) => {
     `).get(hashCode(onboardingCode)) as any;
 
     if (!row) {
-      return res.status(404).json({ success: false, error: 'Onboarding code not found' });
+      return res.status(404).json({ success: false, error: 'backend.onboarding_code_not_found' });
     }
     if (row.status !== 'active') {
-      return res.status(409).json({ success: false, error: 'Onboarding code is not active' });
+      return res.status(409).json({ success: false, error: 'backend.onboarding_code_is_not_active' });
     }
     if (new Date(row.expires_at).getTime() <= Date.now()) {
       db.prepare(`UPDATE agent_onboarding_codes SET status = 'expired' WHERE id = ?`).run(row.id);
-      return res.status(410).json({ success: false, error: 'Onboarding code expired' });
+      return res.status(410).json({ success: false, error: 'backend.onboarding_code_expired' });
     }
     if (Number(row.used_count || 0) >= Number(row.max_uses || 1)) {
       db.prepare(`UPDATE agent_onboarding_codes SET status = 'used' WHERE id = ?`).run(row.id);
-      return res.status(409).json({ success: false, error: 'Onboarding code already used' });
+      return res.status(409).json({ success: false, error: 'backend.onboarding_code_already_used' });
     }
     if (row.expected_hostname && row.expected_hostname !== hostname) {
-      return res.status(409).json({ success: false, error: 'Hostname does not match onboarding policy' });
+      return res.status(409).json({ success: false, error: 'backend.hostname_does_not_match_onboarding_policy' });
     }
 
     const registration = agentAuthService.registerAgent({
@@ -244,27 +246,27 @@ router.post('/exchange', (req: AuthenticatedRequest, res: Response) => {
     });
   } catch (error: any) {
     logger.error('Failed to exchange onboarding code', { error: error.message });
-    return res.status(500).json({ success: false, error: 'Failed to exchange onboarding code' });
+    return res.status(500).json({ success: false, error: 'backend.failed_to_exchange_onboarding_code' });
   }
 });
 
-router.get('/agents', authenticate, requireRole('admin'), (_req: AuthenticatedRequest, res: Response) => {
+router.get('/agents', authenticate, requireRole('admin', 'tenant'), (_req: AuthenticatedRequest, res: Response) => {
   try {
     const agents = agentAuthService.listAgents();
     return res.json({ success: true, data: agents });
   } catch (error: any) {
     logger.error('Failed to list registered agents', { error: error.message });
-    return res.status(500).json({ success: false, error: 'Failed to list registered agents' });
+    return res.status(500).json({ success: false, error: 'backend.failed_to_list_registered_agents' });
   }
 });
 
-router.post('/revoke/:agentId', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
+router.post('/revoke/:agentId', authenticate, requireRole('admin', 'tenant'), (req: AuthenticatedRequest, res: Response) => {
   try {
     ensureSchema();
     const agentId = req.params.agentId;
     const ok = agentAuthService.revokeAgent(agentId);
     if (!ok) {
-      return res.status(404).json({ success: false, error: 'Agent not found' });
+      return res.status(404).json({ success: false, error: 'backend.agent_not_found' });
     }
 
     getDatabase().prepare(`
@@ -283,7 +285,7 @@ router.post('/revoke/:agentId', authenticate, requireRole('admin'), (req: Authen
     return res.json({ success: true, data: { agentId, revoked: true } });
   } catch (error: any) {
     logger.error('Failed to revoke agent credential', { error: error.message });
-    return res.status(500).json({ success: false, error: 'Failed to revoke agent credential' });
+    return res.status(500).json({ success: false, error: 'backend.failed_to_revoke_agent_credential' });
   }
 });
 

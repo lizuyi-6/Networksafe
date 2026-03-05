@@ -1,4 +1,4 @@
-# FluxGuard Pro - 智能服务器安全防御平台
+# AetherGuard - 智能服务器安全防御平台
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Status: Production](https://img.shields.io/badge/Status-Production-green.svg)]()
@@ -6,7 +6,7 @@
 
 🚀 **下一代基于 Agent 的分布式服务器安全防御系统**
 
-FluxGuard Pro 彻底重构了传统防火墙架构，采用创新的 **"中心化控制 + 分布式执行 + 硬件级部署"** 三位一体防御体系。它不仅是一个软件，更是一套结合了 AI 威胁分析与 ESP32 硬件运维的完整服务器安全解决方案。
+AetherGuard 彻底重构了传统防火墙架构，采用创新的 **"中心化控制 + 分布式执行 + 硬件级部署"** 三位一体防御体系。它不仅是一个软件，更是一套结合了 AI 威胁分析与 ESP32 硬件运维的完整服务器安全解决方案。
 
 ---
 
@@ -76,7 +76,7 @@ FluxGuard Pro 彻底重构了传统防火墙架构，采用创新的 **"中心�
 
 ## 🏗️ 核心架构
 
-FluxGuard 采用 **TypeScript (Node.js) + React** 全栈架构，结合 ESP32 硬件层，追求开发效率与安全性的平衡。
+AetherGuard 采用 **TypeScript (Node.js) + React** 全栈架构，结合 ESP32 硬件层，追求开发效率与安全性的平衡。
 
 ```mermaid
 graph TD
@@ -106,7 +106,7 @@ graph TD
 
 ## 🛠️ ESP32 部署工具 (Deployment Dongle)
 
-FluxGuard 独有的硬件部署方案，让安全运维变得触手可及。
+AetherGuard 独有的硬件部署方案，让安全运维变得触手可及。
 
 ### 硬件清单 (BOM)
 - **主控**: ESP32-WROOM-32 (Type-C)
@@ -126,17 +126,17 @@ FluxGuard 独有的硬件部署方案，让安全运维变得触手可及。
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/your-repo/fluxguard-pro.git
+git clone https://github.com/your-repo/aetherguard.git
 
 # 2. 启动服务
-docker-compose up -d --build
+docker compose up -d --build
 
 # 3. 访问控制台
-# 前端: http://localhost:5173
+# 前端: http://localhost:8080
 # 后端: http://localhost:3005
 
 ### 🔐 默认账号
-- **用户名**: admin (或 admin@fluxguard.com)
+- **用户名**: admin (或 admin@aetherguard.com)
 - **密码**: admin123
 - **说明**: 首次启动时会自动创建该管理员账号。请登录后立即修改密码。
 ```
@@ -146,3 +146,5 @@ docker-compose up -d --build
 ## 📄 许可证
 
 本项目采用 [MIT 许可证](LICENSE) 开源。
+
+> 杭州视界奇点科技有限公司 · Aether Studio 出品

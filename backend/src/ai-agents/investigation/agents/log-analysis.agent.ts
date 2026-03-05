@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Log Analysis Agent
  *
  * Specializes in analyzing logs to identify patterns, errors, and anomalies.
@@ -6,10 +6,11 @@
 
 import { BaseInvestigationAgent } from './base-investigation.agent';
 import { InvestigationContext, InvestigationAgentType, Finding } from '../types';
+import { AgentConfig, MessageBus } from '../../core';
 
 export class LogAnalysisAgent extends BaseInvestigationAgent {
-  constructor(coordinator: any) {
-    super(InvestigationAgentType.LOG_ANALYSIS, [
+  constructor(config: AgentConfig, messageBus: MessageBus) {
+    super(config, messageBus, InvestigationAgentType.LOG_ANALYSIS, [
       'log_pattern_recognition',
       'error_detection',
       'anomaly_detection',
@@ -20,9 +21,23 @@ export class LogAnalysisAgent extends BaseInvestigationAgent {
   }
 
   /**
+   * Get system prompt for AI model
+   */
+  public getSystemPrompt(): string {
+    return `You are a Log Analysis Agent specializing in:
+- Log pattern recognition and anomaly detection
+- Error identification and root cause analysis
+- Log correlation across services
+- Severity assessment
+- Service health monitoring from logs
+
+Your goal is to identify patterns and issues from system logs.`;
+  }
+
+  /**
    * Analyze logs for patterns and issues
    */
-  public async analyze(context: InvestigationContext): Promise<any> {
+  public async analyzeInvestigation(context: InvestigationContext): Promise<any> {
     console.log('[LogAnalysisAgent] Starting log analysis...');
 
     const preprocessedContext = this.preprocessContext(context);
@@ -281,3 +296,4 @@ export class LogAnalysisAgent extends BaseInvestigationAgent {
       `Found ${findings.length} issues (${criticalFindings} critical).`;
   }
 }
+

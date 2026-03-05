@@ -4,6 +4,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { EventEmitter } from 'events';
 import {
     AgentMessage,
     AgentRole,
@@ -28,7 +29,10 @@ interface PendingRequest {
     timeout: NodeJS.Timeout;
 }
 
-export class MessageBus {
+const MESSAGE_EVENT = 'message_queued';
+const SHUTDOWN_EVENT = 'shutdown';
+
+export class MessageBus extends EventEmitter {
     private subscriptions: Map<AgentRole, Subscription[]> = new Map();
     private messageQueue: MessageEnvelope[] = [];
     private pendingModelRequests: Map<string, PendingRequest> = new Map();
@@ -37,8 +41,13 @@ export class MessageBus {
     private maxQueueSize: number = 10000;
     private defaultTTL: number = 60000;
     private maxRetries: number = 3;
+    private processingPromise: Promise<void> | null = null;
+    private processingTimeout: NodeJS.Timeout | null = null;
+    private readonly PROCESSING_TIMEOUT_MS: number = 30000;
 
     constructor() {
+        super();
+        this.setMaxListeners(100);
         this.startProcessing();
     }
 
@@ -84,6 +93,8 @@ export class MessageBus {
 
         this.messageQueue.push(envelope);
         logger.debug(`Message published: ${message.type} from ${message.from} to ${message.to}`);
+        
+        this.emit(MESSAGE_EVENT);
     }
 
     async publishDirect(role: AgentRole, message: AgentMessage): Promise<void> {
@@ -152,26 +163,63 @@ export class MessageBus {
 
     private startProcessing(): void {
         this.isProcessing = true;
-        this.processQueue();
+        this.processingPromise = this.processQueue();
     }
 
     private async processQueue(): Promise<void> {
         while (this.isProcessing) {
-            if (this.messageQueue.length === 0) {
-                await this.sleep(10);
-                continue;
+            while (this.messageQueue.length > 0) {
+                const envelope = this.messageQueue.shift();
+                if (!envelope) continue;
+
+                if (this.isExpired(envelope)) {
+                    logger.debug(`Message expired: ${envelope.message.id}`);
+                    continue;
+                }
+
+                await this.deliverMessage(envelope);
             }
 
-            const envelope = this.messageQueue.shift();
-            if (!envelope) continue;
+            if (!this.isProcessing) break;
 
-            if (this.isExpired(envelope)) {
-                logger.debug(`Message expired: ${envelope.message.id}`);
-                continue;
+            try {
+                await this.waitForNewMessage();
+            } catch (error) {
+                if (this.isProcessing) {
+                    logger.debug('Message queue wait interrupted, continuing processing');
+                }
+                break;
             }
-
-            await this.deliverMessage(envelope);
         }
+    }
+
+    private waitForNewMessage(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                this.removeListener(MESSAGE_EVENT, onMessage);
+                this.removeListener(SHUTDOWN_EVENT, onShutdown);
+                if (this.isProcessing) {
+                    resolve();
+                } else {
+                    reject(new Error('Shutdown'));
+                }
+            }, this.PROCESSING_TIMEOUT_MS);
+
+            const onMessage = () => {
+                clearTimeout(timeoutId);
+                this.removeListener(SHUTDOWN_EVENT, onShutdown);
+                resolve();
+            };
+
+            const onShutdown = () => {
+                clearTimeout(timeoutId);
+                this.removeListener(MESSAGE_EVENT, onMessage);
+                reject(new Error('Shutdown'));
+            };
+
+            this.once(MESSAGE_EVENT, onMessage);
+            this.once(SHUTDOWN_EVENT, onShutdown);
+        });
     }
 
     private async deliverMessage(envelope: MessageEnvelope): Promise<void> {
@@ -212,12 +260,15 @@ export class MessageBus {
         return age > envelope.ttl;
     }
 
-    private sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     shutdown(): void {
         this.isProcessing = false;
+        this.emit(SHUTDOWN_EVENT);
+        
+        if (this.processingTimeout) {
+            clearTimeout(this.processingTimeout);
+            this.processingTimeout = null;
+        }
+
         this.subscriptions.clear();
         this.messageQueue = [];
 
@@ -226,6 +277,8 @@ export class MessageBus {
             pending.reject(new Error('Message bus shutdown'));
         }
         this.pendingModelRequests.clear();
+
+        this.removeAllListeners();
 
         logger.info('Message bus shutdown complete');
     }

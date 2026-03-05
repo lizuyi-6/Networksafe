@@ -473,7 +473,7 @@ export class AuditLogger {
         return {
           valid: false,
           integrityCheck: 'error',
-          error: 'Invalid backup structure'
+          error: 'backend.invalid_backup_structure'
         };
       }
 
@@ -493,7 +493,7 @@ export class AuditLogger {
           valid: false,
           recordCount: backup.recordCount,
           integrityCheck: 'failed',
-          error: 'Checksum verification failed - backup may be corrupted or tampered'
+          error: 'backend.checksum_verification_failed_backup_may_be_corrupted_or_tampered'
         };
       }
 
@@ -581,7 +581,7 @@ export class AuditLogger {
       if (!backupResult.success) {
         return {
           success: false,
-          error: 'Failed to create backup before rotation'
+          error: 'backend.failed_to_create_backup_before_rotation'
         };
       }
 

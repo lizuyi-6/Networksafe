@@ -15,6 +15,7 @@ import {
   InvestigationAgentType,
   InvestigationSummary
 } from './types';
+import { AgentConfig, MessageBus } from '../core';
 import { BugReproductionAgent } from './agents/bug-reproduction.agent';
 import { CodeAnalysisAgent } from './agents/code-analysis.agent';
 import { LogAnalysisAgent } from './agents/log-analysis.agent';
@@ -23,28 +24,50 @@ import { RootCauseAgent } from './agents/root-cause.agent';
 import { SolutionAgent } from './agents/solution.agent';
 
 export class InvestigationCoordinator extends EventEmitter {
-  private agents: Map<InvestigationAgentType, any>;
+  private agents: Map<string, any>;
   private activeInvestigations: Map<string, InvestigationContext>;
   private taskQueue: AgentTask[];
   private completedTasks: Map<string, AgentTask>;
+  private messageBus: MessageBus;
 
-  constructor() {
+  constructor(messageBus?: MessageBus) {
     super();
     this.agents = new Map();
     this.activeInvestigations = new Map();
     this.taskQueue = [];
     this.completedTasks = new Map();
+    this.messageBus = messageBus || new MessageBus();
     this.initializeAgents();
   }
 
   private initializeAgents(): void {
+    // Create base agent config for investigation agents
+    const baseConfig: AgentConfig = {
+      identity: {
+        id: 'investigation-coordinator',
+        role: 'orchestrator',
+        team: 'analyst',
+        name: 'Investigation Coordinator',
+        description: 'Coordinates bug investigation across multiple specialized agents',
+        capabilities: ['coordination', 'task_distribution', 'result_aggregation']
+      },
+      modelConfig: {
+        provider: 'ollama',
+        model: 'llama3:8b',
+        temperature: 0.3,
+        maxTokens: 2000
+      },
+      timeout: 30000,
+      maxRetries: 2
+    };
+
     // Initialize specialized investigation agents
-    this.agents.set(InvestigationAgentType.BUG_REPRODUCTION, new BugReproductionAgent(this));
-    this.agents.set(InvestigationAgentType.CODE_ANALYSIS, new CodeAnalysisAgent(this));
-    this.agents.set(InvestigationAgentType.LOG_ANALYSIS, new LogAnalysisAgent(this));
-    this.agents.set(InvestigationAgentType.TRACE_ANALYSIS, new TraceAnalysisAgent(this));
-    this.agents.set(InvestigationAgentType.ROOT_CAUSE, new RootCauseAgent(this));
-    this.agents.set(InvestigationAgentType.SOLUTION, new SolutionAgent(this));
+    this.agents.set(InvestigationAgentType.BUG_REPRODUCTION, new BugReproductionAgent(baseConfig, this.messageBus));
+    this.agents.set(InvestigationAgentType.CODE_ANALYSIS, new CodeAnalysisAgent(baseConfig, this.messageBus));
+    this.agents.set(InvestigationAgentType.LOG_ANALYSIS, new LogAnalysisAgent(baseConfig, this.messageBus));
+    this.agents.set(InvestigationAgentType.TRACE_ANALYSIS, new TraceAnalysisAgent(baseConfig, this.messageBus));
+    this.agents.set(InvestigationAgentType.ROOT_CAUSE, new RootCauseAgent(baseConfig, this.messageBus));
+    this.agents.set(InvestigationAgentType.SOLUTION, new SolutionAgent(baseConfig, this.messageBus));
 
     console.log('[InvestigationCoordinator] All investigation agents initialized');
   }

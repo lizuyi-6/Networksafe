@@ -49,14 +49,14 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
         // Validate input
         if (!email || !password || !username) {
             return res.status(400).json({
-                error: 'Email, password, and username are required',
+                error: 'backend.email_password_and_username_are_required',
                 code: 'VALIDATION_ERROR'
             });
         }
 
         if (!EMAIL_REGEX.test(email)) {
             return res.status(400).json({
-                error: 'Invalid email format',
+                error: 'backend.invalid_email_format',
                 code: 'INVALID_EMAIL'
             });
         }
@@ -84,7 +84,7 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
             // SECURITY FIX: Use generic error message to prevent user enumeration
             logger.info(`Registration attempt for existing email: ${email}`);
             return res.status(409).json({
-                error: 'User already exists',
+                error: 'backend.user_already_exists',
                 code: 'USER_EXISTS'
             });
         }
@@ -97,11 +97,12 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
         const userId = uuidv4();
         const tenantId = uuidv4(); // Each user gets their own tenant by default
         const role = 'tenant'; // Default role
+        const plan = 'starter'; // Default plan
 
         db.prepare(`
-      INSERT INTO users (id, email, username, password_hash, role, tenant_id, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-    `).run(userId, email, username, passwordHash, role, tenantId);
+      INSERT INTO users (id, email, username, password_hash, role, plan, tenant_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).run(userId, email, username, passwordHash, role, plan, tenantId);
 
         // Generate tokens
         const tokens = generateTokens({
@@ -109,6 +110,7 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
             email,
             username,
             role,
+            plan,
             tenantId
         });
 
@@ -119,12 +121,13 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
         res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
 
         res.status(201).json({
-            message: 'User registered successfully',
+            message: 'backend.user_registered_successfully',
             user: {
                 userId,
                 email,
                 username,
                 role,
+                plan,
                 tenantId
             },
             accessToken: tokens.accessToken,
@@ -135,7 +138,7 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
     } catch (error: any) {
         logger.error('Registration error', { error: error.message });
         res.status(500).json({
-            error: 'Registration failed',
+            error: 'backend.registration_failed',
             code: 'INTERNAL_ERROR'
         });
     }
@@ -154,7 +157,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
 
         if (!email || !password) {
             return res.status(400).json({
-                error: 'Email and password are required',
+                error: 'backend.email_and_password_are_required',
                 code: 'VALIDATION_ERROR'
             });
         }
@@ -165,7 +168,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             const lockInfo = await authSecurityService.getLockInfo(email);
             logger.warn(`Login attempt on locked account: ${email}`);
             return res.status(403).json({
-                error: 'Account is temporarily locked due to too many failed login attempts',
+                error: 'backend.account_is_temporarily_locked_due_to_too_many_failed_login_attempts',
                 code: 'ACCOUNT_LOCKED',
                 remainingTime: lockInfo.remainingTime
             });
@@ -181,7 +184,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
 
         // Find user
         const user = db.prepare(`
-      SELECT id, email, username, password_hash, role, tenant_id, status
+      SELECT id, email, username, password_hash, role, plan, tenant_id, status
       FROM users WHERE email = ?
     `).get(email) as any;
 
@@ -198,7 +201,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             await bcrypt.compare(password, dummyHash);
 
             return res.status(401).json({
-                error: 'Invalid credentials',
+                error: 'backend.invalid_credentials',
                 code: 'INVALID_CREDENTIALS'
             });
         }
@@ -209,7 +212,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             await bcrypt.compare(password, dummyHash);
 
             return res.status(403).json({
-                error: 'Account suspended',
+                error: 'backend.account_suspended',
                 code: 'ACCOUNT_SUSPENDED'
             });
         }
@@ -221,7 +224,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             await authSecurityService.recordLoginAttempt(email, clientIp, false);
             logger.warn(`Failed login attempt for: ${email}`);
             return res.status(401).json({
-                error: 'Invalid credentials',
+                error: 'backend.invalid_credentials',
                 code: 'INVALID_CREDENTIALS'
             });
         }
@@ -238,6 +241,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             email: user.email,
             username: user.username,
             role: user.role,
+            plan: user.plan || 'starter',
             tenantId: user.tenant_id
         });
 
@@ -249,11 +253,12 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
 
         // SECURITY FIX CVE-2026-028: Reduce exposed user information
         res.json({
-            message: 'Login successful',
+            message: 'backend.login_successful',
             user: {
                 email: user.email,
                 username: user.username,
-                role: user.role
+                role: user.role,
+                plan: user.plan || 'starter'
             },
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
@@ -263,7 +268,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
     } catch (error: any) {
         logger.error('Login error', { error: error.message });
         res.status(500).json({
-            error: 'Login failed',
+            error: 'backend.login_failed',
             code: 'INTERNAL_ERROR'
         });
     }
@@ -274,6 +279,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
  * Refresh access token using refresh token
  * SECURITY FIX CVE-2026-009: Only accept refresh token from httpOnly cookie
  * SECURITY FIX RISK-001: Added rate limiting
+ * SECURITY FIX: Added refresh token blacklist check to prevent reuse of revoked tokens
  */
 router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -282,15 +288,30 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
 
         if (!refreshToken) {
             return res.status(400).json({
-                error: 'Refresh token required',
+                error: 'backend.refresh_token_required',
                 code: 'TOKEN_MISSING'
             });
+        }
+
+        // SECURITY FIX: Check if refresh token is blacklisted (revoked)
+        try {
+            const isBlacklisted = await redisService.exists(`refresh:blacklist:${refreshToken}`);
+            if (isBlacklisted) {
+                logger.warn('Attempted use of blacklisted refresh token');
+                return res.status(401).json({
+                    error: 'backend.token_revoked',
+                    code: 'TOKEN_REVOKED'
+                });
+            }
+        } catch (redisError) {
+            // If Redis unavailable, log warning but continue (fail-open for refresh is acceptable)
+            logger.warn('Could not check refresh token blacklist, Redis unavailable');
         }
 
         const decoded = verifyRefreshToken(refreshToken);
         if (!decoded) {
             return res.status(401).json({
-                error: 'Invalid or expired refresh token',
+                error: 'backend.invalid_or_expired_refresh_token',
                 code: 'TOKEN_INVALID'
             });
         }
@@ -299,13 +320,13 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
 
         // Get user info
         const user = db.prepare(`
-      SELECT id, email, username, role, tenant_id, status
+      SELECT id, email, username, role, plan, tenant_id, status
       FROM users WHERE id = ?
     `).get(decoded.userId) as any;
 
         if (!user || user.status === 'suspended') {
             return res.status(401).json({
-                error: 'User not found or suspended',
+                error: 'backend.user_not_found_or_suspended',
                 code: 'USER_INVALID'
             });
         }
@@ -316,6 +337,7 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
             email: user.email,
             username: user.username,
             role: user.role,
+            plan: user.plan || 'starter',
             tenantId: user.tenant_id
         });
 
@@ -324,7 +346,7 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
         res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
 
         res.json({
-            message: 'Token refreshed',
+            message: 'backend.token_refreshed',
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             expiresIn: tokens.expiresIn
@@ -333,7 +355,7 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
     } catch (error: any) {
         logger.error('Token refresh error', { error: error.message });
         res.status(500).json({
-            error: 'Token refresh failed',
+            error: 'backend.token_refresh_failed',
             code: 'INTERNAL_ERROR'
         });
     }
@@ -351,18 +373,28 @@ router.get('/me', authenticate, (req: AuthenticatedRequest, res: Response) => {
 
 /**
  * POST /api/auth/logout
- * Logout user - SECURITY FIX: Implements token blacklist
+ * Logout user - SECURITY FIX: Implements token blacklist including refresh tokens
  */
 router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Response) => {
     try {
         // SECURITY FIX: Get token from cookie or header
         const token = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1];
         if (token) {
-            // Add token to blacklist in Redis
+            // Add access token to blacklist in Redis
             const decoded = jwt.decode(token) as jwt.JwtPayload;
             const ttl = decoded?.exp ? Math.max(0, decoded.exp - Math.floor(Date.now() / 1000)) : 86400;
             if (ttl > 0) {
                 await redisService.set(`token:blacklist:${token}`, '1', ttl);
+            }
+        }
+
+        // SECURITY FIX: Also blacklist the refresh token to prevent token reuse
+        const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+        if (refreshToken) {
+            const refreshDecoded = jwt.decode(refreshToken) as jwt.JwtPayload;
+            const refreshTtl = refreshDecoded?.exp ? Math.max(0, refreshDecoded.exp - Math.floor(Date.now() / 1000)) : 7 * 86400;
+            if (refreshTtl > 0) {
+                await redisService.set(`refresh:blacklist:${refreshToken}`, '1', refreshTtl);
             }
         }
 
@@ -373,11 +405,11 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
         logger.info(`User logged out: ${req.user?.email}`);
 
         res.json({
-            message: 'Logout successful'
+            message: 'backend.logout_successful'
         });
     } catch (error: any) {
         logger.error('Logout error', { error: error.message });
-        res.json({ message: 'Logout successful' }); // Still return success to client
+        res.json({ message: 'backend.logout_successful' }); // Still return success to client
     }
 });
 
@@ -391,7 +423,7 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
 
         if (!currentPassword || !newPassword) {
             return res.status(400).json({
-                error: 'Current and new password required',
+                error: 'backend.current_and_new_password_required',
                 code: 'VALIDATION_ERROR'
             });
         }
@@ -418,14 +450,14 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
             .get(req.user!.userId) as any;
 
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: 'backend.user_not_found' });
         }
 
         // Verify current password
         const passwordValid = await bcrypt.compare(currentPassword, user.password_hash);
         if (!passwordValid) {
             return res.status(401).json({
-                error: 'Current password is incorrect',
+                error: 'backend.current_password_is_incorrect',
                 code: 'INVALID_PASSWORD'
             });
         }
@@ -440,13 +472,13 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
         logger.info(`Password changed for user: ${req.user?.email}`);
 
         res.json({
-            message: 'Password changed successfully'
+            message: 'backend.password_changed_successfully'
         });
 
     } catch (error: any) {
         logger.error('Password change error', { error: error.message });
         res.status(500).json({
-            error: 'Password change failed',
+            error: 'backend.password_change_failed',
             code: 'INTERNAL_ERROR'
         });
     }

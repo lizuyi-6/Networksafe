@@ -176,7 +176,7 @@ Response in JSON format:
       if (output.toLowerCase().includes('error')) {
         return {
           status: 'error',
-          message: 'Error detected in output',
+          message: 'backend.error_detected_in_output',
           suggestions: ['Check error messages', 'Review logs']
         };
       }

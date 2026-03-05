@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import { getTrafficStats } from '../../routes/ai-system';
+import { getTrafficStats } from './ai-system.routes';
 
 const router = Router();
 

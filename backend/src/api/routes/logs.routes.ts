@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { getTrafficStats, getAgentSystem } from '../../routes/ai-system';
+import { authenticate } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
+import { getTrafficStats, getAgentSystem } from './ai-system.routes';
 import { isDemoMode } from '../../config/app-mode';
 
 const router = Router();
@@ -33,7 +34,7 @@ export const addLog = (log: Omit<LogItem, 'id' | 'time'>) => {
     return newLog;
 };
 
-router.get('/', (req, res) => {
+router.get('/', authenticate, (req, res) => {
     try {
         const trafficStats = getTrafficStats();
         const agentSystem = getAgentSystem();
@@ -74,29 +75,8 @@ router.get('/', (req, res) => {
             }
         });
 
-        if (logs.length === 0 && isDemoMode()) {
-            logs.push(
-                {
-                    id: 1,
-                    time: new Date().toISOString(),
-                    type: 'System',
-                    level: 'INFO',
-                    message: 'FluxGuard security system is running',
-                    ip: 'system'
-                },
-                {
-                    id: 2,
-                    time: new Date(Date.now() - 5000).toISOString(),
-                    type: 'Health',
-                    level: 'INFO',
-                    message: 'All monitoring services active',
-                    ip: 'system'
-                }
-            );
-        }
-
+        // 无论是否是演示模式，都返回真实数据
         logs.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-
         res.json(logs.slice(0, 50));
     } catch (error: any) {
         logger.error('Failed to get logs', { error: error.message });

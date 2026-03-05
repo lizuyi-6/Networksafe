@@ -1,47 +1,87 @@
 services:
+
+  # ─────────────────────────────────────────────
+  # Redis
+  # ─────────────────────────────────────────────
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     ports:
-      - "6379:6379"
-    # SECURITY FIX CVE-2026-008: Remove default password - require env variable
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD environment variable is required}
+      - "${REDIS_PORT:-6379}:6379"
+    command: >
+      redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
 
+  # ─────────────────────────────────────────────
+  # Backend
+  # ─────────────────────────────────────────────
   backend:
     build:
       context: .
       dockerfile: backend.Dockerfile
     ports:
-      - "3005:3005"
+      - "${BACKEND_PORT:-3005}:3005"
+    env_file:
+      - .env
     environment:
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - NODE_ENV=production
       - PORT=3005
-      - DATA_DIR=/app/data/prod
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - DATA_DIR=/app/data
       - APP_MODE=production
       - DEMO_AUTO_SEED=false
       - ENABLE_ATTACK_SIM=false
-      - ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
-      - VALID_API_KEYS=${VALID_API_KEYS}
-      - DEVICE_API_KEYS=${DEVICE_API_KEYS}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost,http://127.0.0.1}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - AUDIT_LOG_SECRET=${AUDIT_LOG_SECRET:?AUDIT_LOG_SECRET is required}
+      - VALID_API_KEYS=${VALID_API_KEYS:-}
+      - DEVICE_API_KEYS=${DEVICE_API_KEYS:-}
+    volumes:
+      # Persist SQLite database and scan results across restarts
+      - backend_data:/app/data
+      - scan_results:/app/scan-results
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
 
+  # ─────────────────────────────────────────────
+  # Frontend (Nginx)
+  # ─────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_TARGET=http://backend:3005
-      - VITE_APP_MODE=production
+      - "${FRONTEND_PORT:-8080}:80"
     depends_on:
-      - backend
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/index.html" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+# ─────────────────────────────────────────────
+# Named Volumes (data persists across container restarts)
+# ─────────────────────────────────────────────
+volumes:
+  redis_data:
+  backend_data:
+  scan_results:

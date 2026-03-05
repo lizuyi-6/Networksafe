@@ -1,12 +1,16 @@
 
 import { useLanguage } from '../context/LanguageContext';
 import AIEndpointSettings from '../components/AIEndpointSettings';
+import ModelSelector from '../components/ModelSelector';
 
 const Settings = () => {
     const { t } = useLanguage();
     return (
         <div className="space-y-6 p-6 max-w-[1200px] mx-auto">
             <h1 className="text-2xl font-bold text-foreground">{t('settings.title')}</h1>
+
+            {/* AI 模型中心 (订阅层级感知) */}
+            <ModelSelector />
 
             {/* AI 模型端点配置 */}
             <AIEndpointSettings />
