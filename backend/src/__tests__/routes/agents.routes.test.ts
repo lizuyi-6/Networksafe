@@ -33,10 +33,18 @@ jest.mock('../../api/routes/alerts.routes', () => ({
 }));
 
 jest.mock('../../utils/logger', () => ({
+  __esModule: true,
   default: {
     error: jest.fn(),
     info: jest.fn(),
     warn: jest.fn()
+  }
+}));
+
+jest.mock('../../security/audit-logger.service', () => ({
+  __esModule: true,
+  default: {
+    log: jest.fn().mockResolvedValue(undefined)
   }
 }));
 

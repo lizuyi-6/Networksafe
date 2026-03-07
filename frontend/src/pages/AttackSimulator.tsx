@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -30,62 +31,63 @@ import {
     Upload,
     Cpu,
 } from 'lucide-react';
-import { fetchAttackTypes, runAttackSimulation, fetchAttackHistory } from '../services/api';
+import { fetchAttackTypes, getAttackRunRouteId, runAttackSimulation, fetchAttackHistory } from '../services/api';
 import type { AttackType, AttackResult, AttackSimulationReport } from '../types/api';
 import { useDemo } from '../context/DemoContext';
 import { useWebSocket } from '../context/WebSocketContext';
+import { ConsoleEmptyState, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
 
 const ATTACK_CATEGORIES_CONFIG = [
-    { id: 'sql_injection', icon: Database, color: 'text-red-400', bgColor: 'bg-red-500/10', borderColor: 'border-red-500/30' },
-    { id: 'xss', icon: Code, color: 'text-orange-400', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500/30' },
-    { id: 'path_traversal', icon: FolderOpen, color: 'text-yellow-400', bgColor: 'bg-yellow-500/10', borderColor: 'border-yellow-500/30' },
-    { id: 'command_injection', icon: TerminalSquare, color: 'text-purple-400', bgColor: 'bg-purple-500/10', borderColor: 'border-purple-500/30' },
-    { id: 'rate_abuse', icon: Gauge, color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' },
-    { id: 'csrf', icon: Shield, color: 'text-pink-400', bgColor: 'bg-pink-500/10', borderColor: 'border-pink-500/30' },
-    { id: 'ssrf', icon: Activity, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/30' },
-    { id: 'xxe', icon: FolderOpen, color: 'text-lime-400', bgColor: 'bg-lime-500/10', borderColor: 'border-lime-500/30' },
-    { id: 'dos', icon: Zap, color: 'text-rose-400', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-500/30' },
-    { id: 'ldap_injection', icon: Users, color: 'text-indigo-400', bgColor: 'bg-indigo-500/10', borderColor: 'border-indigo-500/30' },
-    { id: 'nosql_injection', icon: Database, color: 'text-violet-400', bgColor: 'bg-violet-500/10', borderColor: 'border-violet-500/30' },
-    { id: 'http_smuggling', icon: Terminal, color: 'text-fuchsia-400', bgColor: 'bg-fuchsia-500/10', borderColor: 'border-fuchsia-500/30' },
-    { id: 'ssti', icon: Code, color: 'text-teal-400', bgColor: 'bg-teal-500/10', borderColor: 'border-teal-500/30' },
-    { id: 'deserialization', icon: TerminalSquare, color: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/30' },
-    { id: 'privilege_escalation', icon: Shield, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/30' },
-    { id: 'man_in_the_middle', icon: Activity, color: 'text-sky-400', bgColor: 'bg-sky-500/10', borderColor: 'border-sky-500/30' },
-    { id: 'dns_hijacking', icon: Zap, color: 'text-stone-400', bgColor: 'bg-stone-500/10', borderColor: 'border-stone-500/30' },
-    { id: 'cache_poisoning', icon: Database, color: 'text-neutral-400', bgColor: 'bg-neutral-500/10', borderColor: 'border-neutral-500/30' },
-    { id: 'clickjacking', icon: FolderOpen, color: 'text-zinc-400', bgColor: 'bg-zinc-500/10', borderColor: 'border-zinc-500/30' },
-    { id: 'replay_attack', icon: Clock, color: 'text-red-300', bgColor: 'bg-red-400/10', borderColor: 'border-red-400/30' },
-    { id: 'session_fixation', icon: Shield, color: 'text-orange-300', bgColor: 'bg-orange-400/10', borderColor: 'border-orange-400/30' },
-    { id: 'user_enumeration', icon: Users, color: 'text-yellow-300', bgColor: 'bg-yellow-400/10', borderColor: 'border-yellow-400/30' },
-    { id: 'cors_misconfig', icon: Terminal, color: 'text-green-300', bgColor: 'bg-green-400/10', borderColor: 'border-green-400/30' },
-    { id: 'host_header_injection', icon: Code, color: 'text-blue-300', bgColor: 'bg-blue-400/10', borderColor: 'border-blue-400/30' },
-    { id: 'auth_bypass', icon: TerminalSquare, color: 'text-purple-300', bgColor: 'bg-purple-400/10', borderColor: 'border-purple-400/30' },
-    { id: 'file_upload', icon: Upload, color: 'text-pink-300', bgColor: 'bg-pink-400/10', borderColor: 'border-pink-400/30' },
-    { id: 'file_inclusion', icon: FolderOpen, color: 'text-cyan-300', bgColor: 'bg-cyan-400/10', borderColor: 'border-cyan-400/30' },
-    { id: 'jwt_attacks', icon: Key, color: 'text-lime-300', bgColor: 'bg-lime-400/10', borderColor: 'border-lime-400/30' },
-    { id: 'password_reset_abuse', icon: Shield, color: 'text-rose-300', bgColor: 'bg-rose-400/10', borderColor: 'border-rose-400/30' },
-    { id: 'graphql_injection', icon: Code, color: 'text-indigo-300', bgColor: 'bg-indigo-400/10', borderColor: 'border-indigo-400/30' },
-    { id: 'websocket_attacks', icon: Wifi, color: 'text-violet-300', bgColor: 'bg-violet-400/10', borderColor: 'border-violet-400/30' },
-    { id: 'api_security', icon: AlertCircle, color: 'text-fuchsia-300', bgColor: 'bg-fuchsia-400/10', borderColor: 'border-fuchsia-400/30' },
-    { id: 'container_escape', icon: Cpu, color: 'text-teal-300', bgColor: 'bg-teal-400/10', borderColor: 'border-teal-400/30' },
-    { id: 'kubernetes_attack', icon: Server, color: 'text-amber-300', bgColor: 'bg-amber-400/10', borderColor: 'border-amber-400/30' },
-    { id: 'cloud_infrastructure', icon: Cloud, color: 'text-emerald-300', bgColor: 'bg-emerald-400/10', borderColor: 'border-emerald-400/30' }
+    { id: 'sql_injection', icon: Database, color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-500/20' },
+    { id: 'xss', icon: Code, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500/20' },
+    { id: 'path_traversal', icon: FolderOpen, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+    { id: 'command_injection', icon: TerminalSquare, color: 'text-violet-600 dark:text-violet-400', bgColor: 'bg-violet-500/10', borderColor: 'border-violet-500/20' },
+    { id: 'rate_abuse', icon: Gauge, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20' },
+    { id: 'csrf', icon: Shield, color: 'text-pink-600 dark:text-pink-400', bgColor: 'bg-pink-500/10', borderColor: 'border-pink-500/20' },
+    { id: 'ssrf', icon: Activity, color: 'text-cyan-600 dark:text-cyan-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/20' },
+    { id: 'xxe', icon: FolderOpen, color: 'text-lime-600 dark:text-lime-400', bgColor: 'bg-lime-500/10', borderColor: 'border-lime-500/20' },
+    { id: 'dos', icon: Zap, color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-500/20' },
+    { id: 'ldap_injection', icon: Users, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-500/10', borderColor: 'border-indigo-500/20' },
+    { id: 'nosql_injection', icon: Database, color: 'text-violet-600 dark:text-violet-400', bgColor: 'bg-violet-500/10', borderColor: 'border-violet-500/20' },
+    { id: 'http_smuggling', icon: Terminal, color: 'text-fuchsia-600 dark:text-fuchsia-400', bgColor: 'bg-fuchsia-500/10', borderColor: 'border-fuchsia-500/20' },
+    { id: 'ssti', icon: Code, color: 'text-teal-600 dark:text-teal-400', bgColor: 'bg-teal-500/10', borderColor: 'border-teal-500/20' },
+    { id: 'deserialization', icon: TerminalSquare, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+    { id: 'privilege_escalation', icon: Shield, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+    { id: 'man_in_the_middle', icon: Activity, color: 'text-sky-600 dark:text-sky-400', bgColor: 'bg-sky-500/10', borderColor: 'border-sky-500/20' },
+    { id: 'dns_hijacking', icon: Zap, color: 'text-stone-600 dark:text-stone-400', bgColor: 'bg-stone-500/10', borderColor: 'border-stone-500/20' },
+    { id: 'cache_poisoning', icon: Database, color: 'text-neutral-600 dark:text-neutral-400', bgColor: 'bg-neutral-500/10', borderColor: 'border-neutral-500/20' },
+    { id: 'clickjacking', icon: FolderOpen, color: 'text-zinc-600 dark:text-zinc-400', bgColor: 'bg-zinc-500/10', borderColor: 'border-zinc-500/20' },
+    { id: 'replay_attack', icon: Clock, color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-500/20' },
+    { id: 'session_fixation', icon: Shield, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500/20' },
+    { id: 'user_enumeration', icon: Users, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+    { id: 'cors_misconfig', icon: Terminal, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+    { id: 'host_header_injection', icon: Code, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20' },
+    { id: 'auth_bypass', icon: TerminalSquare, color: 'text-violet-600 dark:text-violet-400', bgColor: 'bg-violet-500/10', borderColor: 'border-violet-500/20' },
+    { id: 'file_upload', icon: Upload, color: 'text-pink-600 dark:text-pink-400', bgColor: 'bg-pink-500/10', borderColor: 'border-pink-500/20' },
+    { id: 'file_inclusion', icon: FolderOpen, color: 'text-cyan-600 dark:text-cyan-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/20' },
+    { id: 'jwt_attacks', icon: Key, color: 'text-lime-600 dark:text-lime-400', bgColor: 'bg-lime-500/10', borderColor: 'border-lime-500/20' },
+    { id: 'password_reset_abuse', icon: Shield, color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-500/20' },
+    { id: 'graphql_injection', icon: Code, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-500/10', borderColor: 'border-indigo-500/20' },
+    { id: 'websocket_attacks', icon: Wifi, color: 'text-violet-600 dark:text-violet-400', bgColor: 'bg-violet-500/10', borderColor: 'border-violet-500/20' },
+    { id: 'api_security', icon: AlertCircle, color: 'text-fuchsia-600 dark:text-fuchsia-400', bgColor: 'bg-fuchsia-500/10', borderColor: 'border-fuchsia-500/20' },
+    { id: 'container_escape', icon: Cpu, color: 'text-teal-600 dark:text-teal-400', bgColor: 'bg-teal-500/10', borderColor: 'border-teal-500/20' },
+    { id: 'kubernetes_attack', icon: Server, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+    { id: 'cloud_infrastructure', icon: Cloud, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' }
 ];
 
 const SEVERITY_STYLES = {
-    critical: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/50', glow: 'shadow-red-500/20' },
-    high: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/50', glow: 'shadow-orange-500/20' },
-    medium: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/50', glow: 'shadow-yellow-500/20' },
-    low: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/50', glow: 'shadow-blue-500/20' }
+    critical: { bg: 'bg-rose-500/10', text: 'text-rose-600 dark:text-rose-400', border: 'border-rose-500/25' },
+    high: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-500/25' },
+    medium: { bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-500/25' },
+    low: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-500/25' }
 };
 
 const AGENT_STYLES = {
-    socrates: { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', name: 'Socrates' },
-    plato: { color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30', name: 'Plato' },
-    aristotle: { color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/30', name: 'Aristotle' },
-    orchestrator: { color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/30', name: 'Orchestrator' },
-    system: { color: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/30', name: 'System' }
+    socrates: { color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', name: 'Socrates' },
+    plato: { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', name: 'Plato' },
+    aristotle: { color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20', name: 'Aristotle' },
+    orchestrator: { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', name: 'Orchestrator' },
+    system: { color: 'text-muted-foreground', bg: 'bg-muted/40', border: 'border-border', name: 'System' }
 };
 
 interface AgentAnalysis {
@@ -160,7 +162,7 @@ export default function AttackSimulator() {
 
             switch (event) {
                 case 'attack:simulation:start':
-                    addLocalTerminalLog(`Starting simulation: ${eventData.totalAttacks} attacks`);
+                    addLocalTerminalLog(`开始演练：${eventData.totalAttacks} 项攻击`);
                     setAttackProgress(eventData.attacks.map((a: any) => ({
                         attackId: a.id,
                         attackName: a.name,
@@ -174,7 +176,7 @@ export default function AttackSimulator() {
                     break;
 
                 case 'attack:start':
-                    addLocalTerminalLog(`Starting attack: ${eventData.attackName}`);
+                    addLocalTerminalLog(`开始执行攻击：${eventData.attackName}`);
                     setAttackProgress(prev => prev.map((p, i) => 
                         i === eventData.attackIndex 
                             ? { ...p, status: 'analyzing' }
@@ -192,7 +194,7 @@ export default function AttackSimulator() {
                     break;
 
                 case 'attack:result':
-                    addLocalTerminalLog(`Result: ${eventData.attackName} - ${eventData.blocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}`);
+                    addLocalTerminalLog(`结果：${eventData.attackName} - ${eventData.blocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}`);
                     setAttackProgress(prev => prev.map((p, i) => 
                         i === eventData.attackIndex
                             ? { ...p, status: 'complete', result: eventData }
@@ -446,7 +448,7 @@ export default function AttackSimulator() {
             addLocalTerminalLog(`   ${t('attackSimulator.blocked')}: ${result.blocked}`);
             addLocalTerminalLog(`   ${t('attackSimulator.allowed')}: ${result.allowed}`);
         } else {
-            addLocalTerminalLog('Simulation failed - No data available');
+            addLocalTerminalLog('演练失败，未返回结果数据');
         }
 
         setIsRunning(false);
@@ -474,138 +476,149 @@ export default function AttackSimulator() {
     };
 
     return (
-        <motion.div 
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="p-6 space-y-6 min-h-[calc(100vh-80px)]"
-        >
-            <motion.div variants={itemVariants} className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full" />
-                        <div className="relative p-3 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-xl border border-red-500/30">
-                            <Shield className="w-8 h-8 text-red-400" />
-                        </div>
+        <motion.div initial="hidden" animate="visible" variants={containerVariants} className="mx-auto min-h-screen max-w-[1600px] space-y-6 p-6 pb-12">
+            <motion.div variants={itemVariants} className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10">
+                        <Shield className="h-6 w-6 text-rose-600 dark:text-rose-400" />
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">{t('attackSimulator.title')}</h1>
-                        <p className="text-gray-400 text-sm">{t('attackSimulator.subtitle')}</p>
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('attackSimulator.title')}</h1>
+                        <p className="text-sm text-muted-foreground">{t('attackSimulator.subtitle')}</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                    <motion.div 
-                        animate={{ scale: wsConnected ? [1, 1.05, 1] : 1 }}
-                        transition={{ repeat: wsConnected ? Infinity : 0, duration: 2 }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
-                            wsConnected 
-                                ? 'bg-green-500/10 text-green-400 border border-green-500/30' 
-                                : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                <div className="flex flex-wrap items-center gap-3">
+                    <div
+                        className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${
+                            wsConnected
+                                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                : 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400'
                         }`}
                     >
-                        <Activity className="w-4 h-4" />
+                        <Activity className="h-4 w-4" />
                         {wsConnected ? t('attackSimulator.liveConnected') : t('attackSimulator.disconnected')}
-                    </motion.div>
+                    </div>
                     <button
                         onClick={selectAll}
-                        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 transition-all text-sm text-white"
+                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"
                     >
                         {selectedAttacks.length === attackTypes.length ? t('attackSimulator.deselectAll') : t('attackSimulator.selectAll')}
                     </button>
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                    <button
                         onClick={runSimulation}
                         disabled={isRunning}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 rounded-lg font-medium text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {isRunning ? (
-                            <>
-                                <RefreshCw className="w-4 h-4 animate-spin" />
-                                {t('attackSimulator.running')}
-                            </>
-                        ) : (
-                            <>
-                                <Play className="w-4 h-4" />
-                                {t('attackSimulator.runSimulation')}
-                            </>
-                        )}
-                    </motion.button>
+                        {isRunning ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                        {isRunning ? t('attackSimulator.running') : t('attackSimulator.runSimulation')}
+                    </button>
                 </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <motion.div variants={itemVariants} className="lg:col-span-3">
-                    <div className="bg-gray-900/80 backdrop-blur border border-gray-700/50 rounded-2xl overflow-hidden">
-                        <div className="p-4 border-b border-gray-700/50 bg-gradient-to-r from-gray-800 to-transparent">
-                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <Zap className="w-5 h-5 text-yellow-400" />
-                                {t('attackSimulator.attackTypes')}
-                            </h2>
-                            <p className="text-xs text-gray-400 mt-1">{selectedAttacks.length} {t('attackSimulator.selected')}</p>
-                        </div>
-                        <div className="p-3 space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto">
-                            {ATTACK_CATEGORIES.map(category => {
-                                const categoryAttacks = attackTypes.filter(a => a.category === category.id);
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard
+                    icon={Zap}
+                    label={t('attackSimulator.attackTypes')}
+                    value={attackTypes.length}
+                    hint={`${selectedAttacks.length} ${t('attackSimulator.selected')}`}
+                    tone="warning"
+                />
+                <ConsoleStatCard
+                    icon={Users}
+                    label={t('attackSimulator.liveAttackAnalysis')}
+                    value={attackProgress.length}
+                    hint={`${attackProgress.filter((item) => item.status === 'complete').length} ${t('attackSimulator.completed')}`}
+                    tone="primary"
+                />
+                <ConsoleStatCard
+                    icon={Terminal}
+                    label={t('attackSimulator.terminal')}
+                    value={terminalLogs.length}
+                    hint={terminalLogs.length > 0 ? terminalLogs[terminalLogs.length - 1] : t('attackSimulator.waitingSimulation')}
+                    tone="neutral"
+                />
+                <ConsoleStatCard
+                    icon={BarChart3}
+                    label={t('attackSimulator.blockRate')}
+                    value={report ? `${getBlockRate()}%` : '--'}
+                    hint={report ? `${report.blocked}/${report.total}` : t('attackSimulator.selectAndRun')}
+                    tone="success"
+                />
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <motion.div variants={itemVariants} className="lg:col-span-4 xl:col-span-3">
+                    <ConsolePanel
+                        title={t('attackSimulator.attackTypes')}
+                        subtitle={`${selectedAttacks.length} ${t('attackSimulator.selected')}`}
+                        icon={Zap}
+                        iconTone="warning"
+                    >
+                        <div className="max-h-[calc(100vh-340px)] space-y-3 overflow-y-auto pr-1">
+                            {ATTACK_CATEGORIES.map((category) => {
+                                const categoryAttacks = attackTypes.filter((attack) => attack.category === category.id);
                                 const isExpanded = expandedCategories.includes(category.id);
-                                const selectedInCategory = categoryAttacks.filter(a => selectedAttacks.includes(a.id)).length;
+                                const selectedInCategory = categoryAttacks.filter((attack) => selectedAttacks.includes(attack.id)).length;
                                 const Icon = category.icon;
-                                
+
                                 return (
-                                    <div key={category.id} className={`rounded-xl overflow-hidden ${category.borderColor} border`}>
+                                    <div key={category.id} className={`overflow-hidden rounded-xl border ${category.borderColor}`}>
                                         <button
                                             onClick={() => toggleCategory(category.id)}
-                                            className={`w-full flex items-center justify-between p-3 ${category.bgColor} hover:brightness-110 transition-all`}
+                                            className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30 ${category.bgColor}`}
                                         >
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${category.borderColor} ${category.bgColor}`}>
+                                                    <Icon className={`h-4 w-4 ${category.color}`} />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className={`truncate text-sm font-semibold ${category.color}`}>{category.name}</div>
+                                                    <div className="text-xs text-muted-foreground">{categoryAttacks.length} 项攻击</div>
+                                                </div>
+                                            </div>
                                             <div className="flex items-center gap-2">
-                                                <Icon className={`w-4 h-4 ${category.color}`} />
-                                                <span className={`font-medium text-sm ${category.color}`}>{category.name}</span>
                                                 {selectedInCategory > 0 && (
-                                                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/10 text-white">
+                                                    <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-semibold text-foreground">
                                                         {selectedInCategory}
                                                     </span>
                                                 )}
+                                                {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                                             </div>
-                                            {isExpanded ? (
-                                                <ChevronDown className="w-4 h-4 text-gray-400" />
-                                            ) : (
-                                                <ChevronRight className="w-4 h-4 text-gray-400" />
-                                            )}
                                         </button>
-                                        <AnimatePresence>
+                                        <AnimatePresence initial={false}>
                                             {isExpanded && (
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: 'auto', opacity: 1 }}
                                                     exit={{ height: 0, opacity: 0 }}
                                                     transition={{ duration: 0.2 }}
-                                                    className="overflow-hidden"
+                                                    className="overflow-hidden border-t border-border bg-muted/15"
                                                 >
-                                                    <div className="p-2 space-y-1 bg-gray-950/50">
-                                                        {categoryAttacks.map(attack => {
+                                                    <div className="space-y-2 p-3">
+                                                        {categoryAttacks.map((attack) => {
                                                             const isSelected = selectedAttacks.includes(attack.id);
                                                             const severityStyle = getSeverityStyle(attack.severity);
-                                                            
+
                                                             return (
-                                                                <motion.button
+                                                                <button
                                                                     key={attack.id}
-                                                                    whileHover={{ x: 2 }}
-                                                                    whileTap={{ scale: 0.98 }}
                                                                     onClick={() => toggleAttack(attack.id)}
-                                                                    className={`w-full text-left p-2.5 rounded-lg border transition-all ${
+                                                                    className={`w-full rounded-xl border p-3 text-left transition-colors ${
                                                                         isSelected
-                                                                            ? `${severityStyle.bg} ${severityStyle.border} ${severityStyle.text}`
-                                                                            : 'bg-gray-800/50 border-gray-700/50 text-gray-300 hover:border-gray-600'
+                                                                            ? `${severityStyle.bg} ${severityStyle.border}`
+                                                                            : 'border-border bg-card hover:bg-muted/20'
                                                                     }`}
                                                                 >
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span className="text-sm font-medium">{attack.name}</span>
-                                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold ${severityStyle.bg} ${severityStyle.text}`}>
+                                                                    <div className="flex items-start justify-between gap-3">
+                                                                        <div className="min-w-0">
+                                                                            <p className="truncate text-sm font-medium text-foreground">{attack.name}</p>
+                                                                            <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground">{attack.description}</p>
+                                                                        </div>
+                                                                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${severityStyle.bg} ${severityStyle.border} ${severityStyle.text}`}>
                                                                             {getSeverityName(attack.severity)}
                                                                         </span>
                                                                     </div>
-                                                                    <p className="text-[10px] text-gray-500 mt-1 truncate font-mono">{attack.description}</p>
-                                                                </motion.button>
+                                                                </button>
                                                             );
                                                         })}
                                                     </div>
@@ -616,183 +629,144 @@ export default function AttackSimulator() {
                                 );
                             })}
                         </div>
-                    </div>
+                    </ConsolePanel>
                 </motion.div>
 
-                <motion.div variants={itemVariants} className="lg:col-span-9 space-y-6">
-                    <div className="bg-gray-900/80 backdrop-blur border border-gray-700/50 rounded-2xl overflow-hidden">
-                        <div className="p-4 border-b border-gray-700/50 bg-gradient-to-r from-gray-800 to-transparent flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Users className="w-5 h-5 text-blue-400" />
-                                <h2 className="text-lg font-semibold text-white">{t('attackSimulator.liveAttackAnalysis')}</h2>
-                            </div>
-                            {attackProgress.length > 0 && (
-                                <div className="flex items-center gap-2 text-sm text-gray-400">
-                                    <span>{attackProgress.filter(p => p.status === 'complete').length}/{attackProgress.length}</span>
-                                    <span>{t('attackSimulator.completed')}</span>
-                                </div>
-                            )}
-                        </div>
-                        <div className="p-4 max-h-[400px] overflow-y-auto">
+                <motion.div variants={itemVariants} className="space-y-6 lg:col-span-8 xl:col-span-9">
+                    <ConsolePanel
+                        title={t('attackSimulator.liveAttackAnalysis')}
+                        subtitle={attackProgress.length > 0 ? `${attackProgress.filter((item) => item.status === 'complete').length}/${attackProgress.length} ${t('attackSimulator.completed')}` : undefined}
+                        icon={Users}
+                        iconTone="primary"
+                    >
+                        <div className="max-h-[440px] space-y-3 overflow-y-auto pr-1">
                             {attackProgress.length > 0 ? (
-                                <div className="space-y-3">
-                                    {attackProgress.map((progress, index) => {
-                                        const isBlocked = progress.result?.blocked;
-                                        const statusColor = progress.status === 'complete' 
-                                            ? (isBlocked ? 'green' : 'red')
-                                            : progress.status === 'analyzing' ? 'yellow' : 'gray';
-                                        
-                                        return (
-                                            <motion.div
-                                                key={progress.attackId}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                className={`relative p-4 rounded-xl border transition-all ${
-                                                    statusColor === 'green' ? 'bg-green-500/5 border-green-500/30' :
-                                                    statusColor === 'red' ? 'bg-red-500/5 border-red-500/30' :
-                                                    statusColor === 'yellow' ? 'bg-yellow-500/5 border-yellow-500/30' :
-                                                    'bg-gray-800/30 border-gray-700/50'
-                                                }`}
-                                            >
-                                                <div className="flex items-start gap-4">
-                                                    <div className={`relative flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                                                        statusColor === 'green' ? 'bg-green-500/20' :
-                                                        statusColor === 'red' ? 'bg-red-500/20' :
-                                                        statusColor === 'yellow' ? 'bg-yellow-500/20' :
-                                                        'bg-gray-500/20'
-                                                    }`}>
-                                                        {progress.status === 'analyzing' && (
-                                                            <div className="absolute inset-0 rounded-xl animate-ping bg-yellow-500/20" />
-                                                        )}
-                                                        {progress.status === 'complete' ? (
-                                                            isBlocked ? (
-                                                                <CheckCircle className="w-5 h-5 text-green-400" />
-                                                            ) : (
-                                                                <XCircle className="w-5 h-5 text-red-400" />
-                                                            )
-                                                        ) : progress.status === 'analyzing' ? (
-                                                            <RefreshCw className="w-5 h-5 text-yellow-400 animate-spin" />
-                                                        ) : (
-                                                            <Clock className="w-5 h-5 text-gray-400" />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center justify-between">
-                                                            <div>
-                                                                <p className="text-white font-medium">{progress.attackName}</p>
-                                                                <p className="text-xs text-gray-400">{getCategoryName(progress.category)}</p>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                {progress.status === 'complete' && progress.result && (
-                                                                    <>
-                                                                        <p className={`text-sm font-bold ${
-                                                                            isBlocked ? 'text-green-400' : 'text-red-400'
-                                                                        }`}>
-                                                                            {isBlocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}
-                                                                        </p>
-                                                                        <p className="text-xs text-gray-400">{progress.result.responseTime}ms</p>
-                                                                    </>
-                                                                )}
-                                                                {progress.status === 'analyzing' && (
-                                                                    <p className="text-sm text-yellow-400 animate-pulse">{t('attackSimulator.analyzing')}</p>
-                                                                )}
-                                                                {progress.status === 'pending' && (
-                                                                    <p className="text-sm text-gray-400">{t('attackSimulator.pending')}</p>
-                                                                )}
-                                                            </div>
+                                attackProgress.map((progress, index) => {
+                                    const isBlocked = progress.result?.blocked;
+                                    const statusClasses =
+                                        progress.status === 'complete'
+                                            ? isBlocked
+                                                ? 'border-emerald-500/20 bg-emerald-500/10'
+                                                : 'border-rose-500/20 bg-rose-500/10'
+                                            : progress.status === 'analyzing'
+                                              ? 'border-amber-500/20 bg-amber-500/10'
+                                              : 'border-border bg-muted/10';
+
+                                    return (
+                                        <motion.div
+                                            key={progress.attackId}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            className={`rounded-xl border p-4 ${statusClasses}`}
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <div
+                                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                                                        progress.status === 'complete'
+                                                            ? isBlocked
+                                                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                                                                : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                                                            : progress.status === 'analyzing'
+                                                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                                              : 'bg-muted text-muted-foreground'
+                                                    }`}
+                                                >
+                                                    {progress.status === 'complete' ? (
+                                                        isBlocked ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />
+                                                    ) : progress.status === 'analyzing' ? (
+                                                        <RefreshCw className="h-5 w-5 animate-spin" />
+                                                    ) : (
+                                                        <Clock className="h-5 w-5" />
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-semibold text-foreground">{progress.attackName}</p>
+                                                            <p className="text-xs text-muted-foreground">{getCategoryName(progress.category)}</p>
                                                         </div>
-                                                        
-                                                        {progress.analyses.length > 0 && (
-                                                            <div className="mt-3 space-y-2">
-                                                                {progress.analyses.map((analysis, ai) => {
-                                                                    const agentStyle = getAgentStyle(analysis.agent);
-                                                                    return (
-                                                                        <motion.div
-                                                                            key={ai}
-                                                                            initial={{ opacity: 0, x: -10 }}
-                                                                            animate={{ opacity: 1, x: 0 }}
-                                                                            transition={{ delay: ai * 0.1 }}
-                                                                            className={`flex items-start gap-2 p-2 rounded-lg ${agentStyle.bg} ${agentStyle.border} border`}
-                                                                        >
-                                                                            <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${agentStyle.bg}`}>
-                                                                                <Bot className={`w-3 h-3 ${agentStyle.color}`} />
+                                                        <div className="text-left sm:text-right">
+                                                            {progress.status === 'complete' && progress.result && (
+                                                                <>
+                                                                    <p className={`text-sm font-semibold ${isBlocked ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                                                        {isBlocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground">{progress.result.responseTime}ms</p>
+                                                                </>
+                                                            )}
+                                                            {progress.status === 'analyzing' && <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{t('attackSimulator.analyzing')}</p>}
+                                                            {progress.status === 'pending' && <p className="text-sm text-muted-foreground">{t('attackSimulator.pending')}</p>}
+                                                        </div>
+                                                    </div>
+
+                                                    {progress.analyses.length > 0 && (
+                                                        <div className="mt-3 space-y-2">
+                                                            {progress.analyses.map((analysis, analysisIndex) => {
+                                                                const agentStyle = getAgentStyle(analysis.agent);
+                                                                return (
+                                                                    <motion.div
+                                                                        key={`${progress.attackId}-${analysisIndex}`}
+                                                                        initial={{ opacity: 0, x: -10 }}
+                                                                        animate={{ opacity: 1, x: 0 }}
+                                                                        transition={{ delay: analysisIndex * 0.05 }}
+                                                                        className={`rounded-lg border px-3 py-2 ${agentStyle.bg} ${agentStyle.border}`}
+                                                                    >
+                                                                        <div className="flex items-start gap-3">
+                                                                            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${agentStyle.bg}`}>
+                                                                                <Bot className={`h-3.5 w-3.5 ${agentStyle.color}`} />
                                                                             </div>
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <span className={`text-xs font-medium ${agentStyle.color}`}>
-                                                                                        {agentStyle.name}
-                                                                                    </span>
-                                                                                </div>
-                                                                                <p className="text-xs text-gray-300 mt-0.5">{analysis.message}</p>
+                                                                            <div className="min-w-0 flex-1">
+                                                                                <div className={`text-xs font-semibold ${agentStyle.color}`}>{agentStyle.name}</div>
+                                                                                <p className="mt-1 text-xs leading-5 text-foreground">{analysis.message}</p>
                                                                                 {analysis.verdict && (
-                                                                                    <div className="mt-2 p-2 bg-black/20 rounded text-xs space-y-1">
-                                                                                        <p>
-                                                                                            <span className="text-white font-medium">{t('attackSimulator.decision')}: </span>
-                                                                                            <span className={analysis.verdict === 'block' ? 'text-red-400' : 'text-green-400'}>
-                                                                                                {analysis.verdict === 'block' ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}
-                                                                                            </span>
-                                                                                            {analysis.confidence && (
-                                                                                                <span className="text-gray-400"> ({(analysis.confidence * 100).toFixed(0)}%)</span>
-                                                                                            )}
-                                                                                        </p>
+                                                                                    <div className="mt-2 rounded-md border border-border bg-card/80 px-2.5 py-2 text-xs">
+                                                                                        <span className="font-medium text-foreground">{t('attackSimulator.decision')}: </span>
+                                                                                        <span className={analysis.verdict === 'block' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>
+                                                                                            {analysis.verdict === 'block' ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}
+                                                                                        </span>
+                                                                                        {analysis.confidence && <span className="text-muted-foreground"> ({(analysis.confidence * 100).toFixed(0)}%)</span>}
                                                                                     </div>
                                                                                 )}
                                                                             </div>
-                                                                        </motion.div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                                        </div>
+                                                                    </motion.div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })
                             ) : (
-                                <div className="text-center py-16">
-                                    <div className="relative inline-block">
-                                        <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full" />
-                                        <Zap className="relative w-16 h-16 text-gray-600 mx-auto" />
-                                    </div>
-                                    <p className="text-gray-400 mt-4">{t('attackSimulator.selectAndRun')}</p>
-                                </div>
+                                <ConsoleEmptyState title={t('attackSimulator.selectAndRun')} description="选中攻击并执行后，这里会显示分析过程与判定结果。" />
                             )}
                         </div>
-                    </div>
+                    </ConsolePanel>
 
-                    <div className="bg-gray-900/80 backdrop-blur border border-gray-700/50 rounded-2xl overflow-hidden">
-                        <div className="p-4 border-b border-gray-700/50 bg-gradient-to-r from-gray-800 to-transparent flex items-center gap-2">
-                            <Terminal className="w-5 h-5 text-gray-400" />
-                            <h2 className="text-lg font-semibold text-white">{t('attackSimulator.terminal')}</h2>
-                        </div>
-                        <div className="relative">
-                            <div className="absolute inset-0 pointer-events-none bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.1)_2px,rgba(0,0,0,0.1)_4px)]" />
-                            <div 
-                                ref={terminalRef}
-                                className="relative h-48 p-4 font-mono text-sm overflow-y-auto bg-black/40"
-                            >
+                    <ConsolePanel title={t('attackSimulator.terminal')} subtitle="执行日志流" icon={Terminal} iconTone="neutral">
+                        <div className="rounded-xl border border-border bg-muted/20">
+                            <div className="border-b border-border px-4 py-3 text-xs text-muted-foreground">终端输出</div>
+                            <div ref={terminalRef} className="h-52 overflow-y-auto bg-background/80 px-4 py-4 font-mono text-sm">
                                 {terminalLogs.length > 0 ? (
-                                    terminalLogs.map((log, i) => (
-                                        <motion.div
-                                            key={i}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="text-gray-300 leading-relaxed"
-                                        >
-                                            <span className="text-green-400">$</span> {log}
-                                        </motion.div>
-                                    ))
+                                    <div className="space-y-2">
+                                        {terminalLogs.map((log, index) => (
+                                            <motion.div key={`${log}-${index}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="leading-relaxed text-foreground">
+                                                <span className="text-emerald-600 dark:text-emerald-400">$</span> {log}
+                                            </motion.div>
+                                        ))}
+                                    </div>
                                 ) : (
-                                    <div className="text-gray-500 flex items-center gap-2">
-                                        <span className="text-green-400">$</span> {t('attackSimulator.waitingSimulation')}
-                                        <span className="animate-pulse">_</span>
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <span className="text-emerald-600 dark:text-emerald-400">$</span>
+                                        {t('attackSimulator.waitingSimulation')}
                                     </div>
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </ConsolePanel>
                 </motion.div>
             </div>
 
@@ -802,122 +776,118 @@ export default function AttackSimulator() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+                        className="grid grid-cols-1 gap-6 lg:grid-cols-12"
                     >
                         <div className="lg:col-span-4">
-                            <div className="bg-gray-900/80 backdrop-blur border border-gray-700/50 rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                                    <BarChart3 className="w-5 h-5 text-blue-400" />
-                                    {t('attackSimulator.results')}
-                                </h2>
-                                
-                                <div className="grid grid-cols-3 gap-3 mb-6">
-                                    <div className="text-center p-4 bg-white/5 rounded-xl border border-gray-700/50">
-                                        <p className="text-3xl font-bold text-white">{report.total}</p>
-                                        <p className="text-xs text-gray-400 mt-1">{t('attackSimulator.total')}</p>
+                            <ConsolePanel title={t('attackSimulator.results')} subtitle="最近一次演练汇总" icon={BarChart3} iconTone="primary">
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="rounded-xl border border-border bg-muted/20 p-4 text-center">
+                                        <p className="text-3xl font-bold tracking-tight text-foreground">{report.total}</p>
+                                        <p className="mt-1 text-xs text-muted-foreground">{t('attackSimulator.total')}</p>
                                     </div>
-                                    <div className="text-center p-4 bg-green-500/10 rounded-xl border border-green-500/30">
-                                        <p className="text-3xl font-bold text-green-400">{report.blocked}</p>
-                                        <p className="text-xs text-green-400/70 mt-1">{t('attackSimulator.blocked')}</p>
+                                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
+                                        <p className="text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">{report.blocked}</p>
+                                        <p className="mt-1 text-xs text-emerald-600/80 dark:text-emerald-400/80">{t('attackSimulator.blocked')}</p>
                                     </div>
-                                    <div className="text-center p-4 bg-red-500/10 rounded-xl border border-red-500/30">
-                                        <p className="text-3xl font-bold text-red-400">{report.allowed}</p>
-                                        <p className="text-xs text-red-400/70 mt-1">{t('attackSimulator.allowed')}</p>
+                                    <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-center">
+                                        <p className="text-3xl font-bold tracking-tight text-rose-600 dark:text-rose-400">{report.allowed}</p>
+                                        <p className="mt-1 text-xs text-rose-600/80 dark:text-rose-400/80">{t('attackSimulator.allowed')}</p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-400">{t('attackSimulator.blockRate')}</span>
-                                        <span className="text-white font-medium">{getBlockRate()}%</span>
+                                <div className="mt-6 space-y-3">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground">{t('attackSimulator.blockRate')}</span>
+                                        <span className="font-medium text-foreground">{getBlockRate()}%</span>
                                     </div>
-                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-2 overflow-hidden rounded-full bg-muted">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${getBlockRate()}%` }}
                                             transition={{ duration: 0.5 }}
-                                            className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+                                            className="h-full rounded-full bg-emerald-500"
                                         />
                                     </div>
                                 </div>
-                            </div>
+                            </ConsolePanel>
                         </div>
 
                         <div className="lg:col-span-8">
-                            <div className="bg-gray-900/80 backdrop-blur border border-gray-700/50 rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                    <AlertTriangle className="w-5 h-5 text-yellow-400" />
-                                    {t('attackSimulator.attackResults')}
-                                </h2>
-                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                            <ConsolePanel title={t('attackSimulator.attackResults')} subtitle="逐项攻击判定日志" icon={AlertTriangle} iconTone="warning">
+                                <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                                     {report.results.map((result, i) => (
                                         <motion.div
                                             key={i}
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: i * 0.05 }}
-                                            className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                                                result.blocked 
-                                                    ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10' 
-                                                    : 'bg-red-500/5 border-red-500/20 hover:bg-red-500/10'
+                                            className={`flex items-center justify-between rounded-xl border p-3 ${
+                                                result.blocked
+                                                    ? 'border-emerald-500/20 bg-emerald-500/10'
+                                                    : 'border-rose-500/20 bg-rose-500/10'
                                             }`}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                                    result.blocked ? 'bg-green-500/20' : 'bg-red-500/20'
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                                    result.blocked
+                                                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                                                        : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
                                                 }`}>
-                                                    {result.blocked ? (
-                                                        <CheckCircle className="w-4 h-4 text-green-400" />
-                                                    ) : (
-                                                        <XCircle className="w-4 h-4 text-red-400" />
-                                                    )}
+                                                    {result.blocked ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
                                                 </div>
-                                                <div>
-                                                    <p className="text-white text-sm font-medium">{result.attackName}</p>
-                                                    <p className="text-xs text-gray-400">{getCategoryName(result.category)}</p>
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-medium text-foreground">{result.attackName}</p>
+                                                    <p className="text-xs text-muted-foreground">{getCategoryName(result.category)}</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-sm font-bold ${result.blocked ? 'text-green-400' : 'text-red-400'}`}>
+                                                <p className={`text-sm font-semibold ${result.blocked ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                     {result.blocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}
                                                 </p>
-                                                <p className="text-xs text-gray-400">{result.responseTime}ms</p>
+                                                <p className="text-xs text-muted-foreground">{result.responseTime}ms</p>
                                             </div>
                                         </motion.div>
                                     ))}
                                 </div>
-                            </div>
+                            </ConsolePanel>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {history.length > 0 && (
-                <motion.div variants={itemVariants} className="bg-gray-900/80 backdrop-blur border border-gray-700/50 rounded-2xl p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-purple-400" />
-                        {t('attackSimulator.recentSimulations')}
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {history.slice(0, 6).map((item, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: i * 0.05 }}
-                                className="p-4 bg-white/5 rounded-xl border border-gray-700/50 hover:border-gray-600 transition-all"
-                            >
-                                <p className="text-xs text-gray-400 mb-2">
-                                    {new Date(item.startTime).toLocaleString()}
-                                </p>
-                                <div className="flex items-center gap-4 text-sm">
-                                    <span className="text-white font-medium">{item.total} {t('attackSimulator.attacks')}</span>
-                                    <span className="text-green-400">{item.blocked} {t('attackSimulator.blocked')}</span>
-                                    <span className="text-red-400">{item.allowed} {t('attackSimulator.allowed')}</span>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                <motion.div variants={itemVariants}>
+                    <ConsolePanel title={t('attackSimulator.recentSimulations')} subtitle="最近完成的演练批次" icon={Clock} iconTone="neutral">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            {history.slice(0, 6).map((item, i) => (
+                                <motion.div
+                                    key={item.id || i}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className="rounded-xl border border-border bg-muted/15 p-4"
+                                >
+                                    <p className="text-xs text-muted-foreground">{new Date(item.startTime).toLocaleString()}</p>
+                                    <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+                                        <span className="font-medium text-foreground">
+                                            {item.total} {t('attackSimulator.attacks')}
+                                        </span>
+                                        <span className="text-emerald-600 dark:text-emerald-400">
+                                            {item.blocked} {t('attackSimulator.blocked')}
+                                        </span>
+                                        <span className="text-rose-600 dark:text-rose-400">
+                                            {item.allowed} {t('attackSimulator.allowed')}
+                                        </span>
+                                    </div>
+                                    <div className="mt-3 flex justify-end">
+                                        <Link to={`/attack-sim/runs/${getAttackRunRouteId(item)}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
+                                            查看详情
+                                        </Link>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </ConsolePanel>
                 </motion.div>
             )}
         </motion.div>

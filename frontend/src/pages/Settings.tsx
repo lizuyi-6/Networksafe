@@ -1,26 +1,19 @@
-
 import { useLanguage } from '../context/LanguageContext';
 import AIEndpointSettings from '../components/AIEndpointSettings';
 import ModelSelector from '../components/ModelSelector';
+import { ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
 
 const Settings = () => {
     const { t } = useLanguage();
     return (
-        <div className="space-y-6 p-6 max-w-[1200px] mx-auto">
-            <h1 className="text-2xl font-bold text-foreground">{t('settings.title')}</h1>
-
-            {/* AI 模型中心 (订阅层级感知) */}
+        <ConsolePage title={t('settings.title')} subtitle="统一管理模型、AI 端点与系统配置项">
             <ModelSelector />
-
-            {/* AI 模型端点配置 */}
             <AIEndpointSettings />
 
-            {/* 其他设置 */}
-            <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="font-semibold text-foreground mb-4">其他设置</h3>
-                <p className="text-muted-foreground">{t('settings.desc')}</p>
-            </div>
-        </div>
+            <ConsolePanel title="其他设置" subtitle="保留系统级配置说明" className="max-w-[1200px]">
+                <p className="text-sm text-muted-foreground">{t('settings.desc')}</p>
+            </ConsolePanel>
+        </ConsolePage>
     );
 };
 export default Settings;

@@ -22,6 +22,7 @@ jest.mock('../../security/enhanced-rate-limiter.service', () => ({
 }));
 
 jest.mock('../../utils/logger', () => ({
+  __esModule: true,
   default: {
     error: jest.fn(),
     warn: jest.fn(),
@@ -30,6 +31,7 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 describe('Rate Limit Middleware', () => {
+  const originalTrustProxy = process.env.TRUST_PROXY;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
@@ -38,6 +40,7 @@ describe('Rate Limit Middleware', () => {
   let mockSetHeader: jest.Mock;
 
   beforeEach(() => {
+    process.env.TRUST_PROXY = 'true';
     mockSetHeader = jest.fn();
     mockJson = jest.fn();
     mockStatus = jest.fn(() => ({ json: mockJson }));
@@ -55,6 +58,14 @@ describe('Rate Limit Middleware', () => {
     };
     mockNext = jest.fn();
     jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    if (originalTrustProxy === undefined) {
+      delete process.env.TRUST_PROXY;
+    } else {
+      process.env.TRUST_PROXY = originalTrustProxy;
+    }
   });
 
   describe('rateLimit', () => {

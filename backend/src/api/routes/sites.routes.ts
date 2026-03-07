@@ -5,6 +5,8 @@ import { requirePlanQuota } from '../../middleware/plan.middleware';
 import logger from '../../utils/logger';
 import dns from 'dns';
 import { promisify } from 'util';
+import { securityOperationsService } from '../../services/security-operations.service';
+import auditLogger from '../../security/audit-logger.service';
 
 const router = Router();
 const dnsLookup = promisify(dns.lookup);
@@ -25,6 +27,115 @@ export function setDatabase(db: DatabaseManager | null): void {
  */
 function getDb(): DatabaseManager {
   return injectedDb || getDatabase();
+}
+
+function safeAuditLog(payload: any): void {
+  Promise.resolve(auditLogger.log(payload)).catch((error: any) => {
+    logger.warn('Audit log unavailable for site route', { error: error?.message });
+  });
+}
+
+function getSiteExternalRefs(site: any): string[] {
+  const refs = new Set<string>();
+  if (site?.id !== undefined && site?.id !== null) {
+    refs.add(String(site.id));
+  }
+  if (site?.domain) {
+    const domain = String(site.domain);
+    refs.add(domain);
+    refs.add(`https://${domain}`);
+    refs.add(`http://${domain}`);
+  }
+  if (site?.target) {
+    refs.add(String(site.target));
+    try {
+      refs.add(new URL(String(site.target)).hostname);
+    } catch {
+      // ignore invalid URLs here; validation already happens on writes
+    }
+  }
+  return Array.from(refs);
+}
+
+function hydrateSiteSecurity(tenantId: string, site: any) {
+  try {
+    const refs = getSiteExternalRefs(site);
+    const host = (() => {
+      try {
+        return site?.target ? new URL(String(site.target)).hostname : undefined;
+      } catch {
+        return undefined;
+      }
+    })();
+
+    securityOperationsService.upsertAsset({
+      tenantId,
+      assetType: 'site',
+      externalRef: String(site.id),
+      displayName: site.domain || `site-${site.id}`,
+      primaryAddress: host,
+      status: 'protected',
+      metadata: {
+        domain: site.domain,
+        target: site.target,
+        sslEnabled: Boolean(site.sslEnabled)
+      }
+    });
+
+    if (site?.domain) {
+      securityOperationsService.upsertAsset({
+        tenantId,
+        assetType: 'domain',
+        externalRef: String(site.domain),
+        displayName: String(site.domain),
+        primaryAddress: host,
+        status: 'observed',
+        metadata: { siteId: site.id, target: site.target }
+      });
+    }
+
+    if (host) {
+      securityOperationsService.upsertAsset({
+        tenantId,
+        assetType: 'host',
+        externalRef: host,
+        displayName: host,
+        primaryAddress: host,
+        status: 'observed',
+        metadata: { siteId: site.id, domain: site.domain }
+      });
+    }
+
+    const context = securityOperationsService.getOperationalContextForExternalRefs(
+      tenantId,
+      refs,
+      ['site', 'domain', 'url', 'host']
+    );
+
+    return {
+      refs,
+      context,
+      primaryAsset:
+        context.assets.find((asset) => asset.assetType === 'site' && asset.externalRef === String(site.id)) ||
+        context.assets.find((asset) => asset.assetType === 'domain' && asset.externalRef === String(site.domain || '')) ||
+        context.assets[0] ||
+        null
+    };
+  } catch {
+    return {
+      refs: getSiteExternalRefs(site),
+      context: {
+        assets: [],
+        findings: [],
+        alerts: [],
+        actions: [],
+        trafficSessions: [],
+        serviceExposure: [],
+        scanRuns: []
+      },
+      primaryAsset: null
+    };
+  }
 }
 
 // SECURITY FIX: Apply authentication to all routes
@@ -132,13 +243,28 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
     }
 
     // Convert integer booleans
-    const formattedSites = sites.map((site: any) => ({
-      ...site,
-      sslEnabled: Boolean(site.sslEnabled),
-      antiBotEnabled: Boolean(site.antiBotEnabled),
-      rateLimitEnabled: Boolean(site.rateLimitEnabled),
-      concurrencyEnabled: Boolean(site.concurrencyEnabled)
-    }));
+    const formattedSites = sites.map((site: any) => {
+      const normalized = {
+        ...site,
+        sslEnabled: Boolean(site.sslEnabled),
+        antiBotEnabled: Boolean(site.antiBotEnabled),
+        rateLimitEnabled: Boolean(site.rateLimitEnabled),
+        concurrencyEnabled: Boolean(site.concurrencyEnabled)
+      };
+      const security = hydrateSiteSecurity(user.role === 'admin' ? (site.tenant_id || user.tenantId || 'global') : (user.tenantId || 'global'), normalized);
+
+      return {
+        ...normalized,
+        securitySummary: {
+          asset: security.primaryAsset,
+          alerts: security.context.alerts.slice(0, 3),
+          findings: security.context.findings.slice(0, 3),
+          actions: security.context.actions.slice(0, 3),
+          recentScans: security.context.scanRuns.slice(0, 3),
+          serviceExposure: security.context.serviceExposure.slice(0, 5)
+        }
+      };
+    });
 
     res.json({ success: true, data: formattedSites });
   } catch (error: any) {
@@ -169,7 +295,31 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
       return res.status(404).json({ success: false, error: 'backend.site_not_found' });
     }
 
-    res.json({ success: true, data: site });
+    const tenantId = user.role === 'admin' ? (site.tenant_id || user.tenantId || 'global') : (user.tenantId || 'global');
+    const security = hydrateSiteSecurity(tenantId, site);
+
+    res.json({
+      success: true,
+      data: {
+        ...site,
+        securityOverview: {
+          asset: security.primaryAsset,
+          assets: security.context.assets,
+          findings: security.context.findings,
+          alerts: security.context.alerts,
+          actions: security.context.actions,
+          scans: security.context.scanRuns,
+          trafficSessions: security.context.trafficSessions,
+          serviceExposure: security.context.serviceExposure
+        },
+        relatedAlerts: security.context.alerts,
+        relatedFindings: security.context.findings,
+        relatedActions: security.context.actions,
+        relatedScans: security.context.scanRuns,
+        relatedFlows: security.context.trafficSessions,
+        serviceExposure: security.context.serviceExposure
+      }
+    });
   } catch (error: any) {
     logger.error('Failed to get site', { error });
     res.status(500).json({ success: false, error: 'backend.internal_server_error' });
@@ -220,6 +370,17 @@ router.post('/', requirePlanQuota('site'), async (req: AuthenticatedRequest, res
     );
 
     logger.info(`Site created: ${domain} -> ${target}`, { userId: user.userId, tenantId: user.tenantId });
+    safeAuditLog({
+      tenantId: user.tenantId,
+      eventType: 'site_created',
+      category: 'system',
+      severity: 'warning',
+      actor: { type: 'user', id: user.userId, email: user.email, ip: req.ip },
+      target: { type: 'server', id: domain },
+      action: 'create_site',
+      details: { domain, target, sslEnabled },
+      status: 'success'
+    });
 
     // Retrieve the newly created site by unique domain
     const newSite = db.prepare('SELECT id FROM sites WHERE domain = ?').get(domain) as { id: number } | null;
@@ -293,6 +454,22 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
     );
 
     logger.info(`Site updated: ${req.params.id}`, { userId: user.userId });
+    safeAuditLog({
+      tenantId: user.tenantId,
+      eventType: 'site_updated',
+      category: 'system',
+      severity: 'warning',
+      actor: { type: 'user', id: user.userId, email: user.email, ip: req.ip },
+      target: { type: 'server', id: String(req.params.id) },
+      action: 'update_site',
+      details: {
+        siteId: req.params.id,
+        domain: domain || existingSite.domain,
+        target: target || existingSite.target,
+        sslEnabled: typeof sslEnabled === 'boolean' ? sslEnabled : existingSite.sslEnabled
+      },
+      status: 'success'
+    });
 
     res.json({ success: true });
   } catch (error: any) {
@@ -324,6 +501,17 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
     }
 
     logger.info(`Site deleted: ${req.params.id}`, { userId: user.userId });
+    safeAuditLog({
+      tenantId: user.tenantId,
+      eventType: 'site_deleted',
+      category: 'system',
+      severity: 'critical',
+      actor: { type: 'user', id: user.userId, email: user.email, ip: req.ip },
+      target: { type: 'server', id: String(req.params.id) },
+      action: 'delete_site',
+      details: { siteId: req.params.id },
+      status: 'success'
+    });
 
     res.json({ success: true });
   } catch (error: any) {

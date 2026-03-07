@@ -4,6 +4,7 @@ import { InputValidator } from '../../security/input-validator';
 import logger from '../../utils/logger';
 import { scannerTaskService } from '../../services/scanner-task.service';
 import { getDatabase } from '../../config/database';
+import { securityOperationsService } from '../../services/security-operations.service';
 import * as dns from 'dns';
 import { promisify } from 'util';
 
@@ -17,6 +18,73 @@ router.use(authenticate, requireRole('admin'));
 
 function tenantOf(req: AuthenticatedRequest): string {
   return req.user?.tenantId || 'global';
+}
+
+async function getHistoryForView(tenantId: string, limit: number) {
+  const service = scannerTaskService as any;
+  if (typeof service.getHistoryView === 'function') {
+    return await service.getHistoryView(tenantId, limit);
+  }
+  return service.getHistory(tenantId, limit);
+}
+
+async function getTaskForView(taskId: string) {
+  const service = scannerTaskService as any;
+  if (typeof service.getTaskView === 'function') {
+    return await service.getTaskView(taskId);
+  }
+  return service.getTask(taskId);
+}
+
+async function getTaskResultsForView(taskId: string) {
+  const service = scannerTaskService as any;
+  if (typeof service.getTaskResultsView === 'function') {
+    return await service.getTaskResultsView(taskId);
+  }
+  return service.getTaskResults(taskId);
+}
+
+function stringArray(input: any): string[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+  return input
+    .filter((value) => typeof value === 'string')
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function buildTargetsFromRequest(body: any, filteredUrls: string[]) {
+  const hostInput = body?.targets?.host;
+  const host = hostInput && hostInput.mode === 'local'
+    ? {
+        mode: 'local' as const,
+        includeSystem: Boolean(hostInput.includeSystem),
+        includeWeb: Boolean(hostInput.includeWeb),
+        includePorts: Boolean(hostInput.includePorts)
+      }
+    : undefined;
+
+  return {
+    urls: filteredUrls,
+    domains: stringArray(body?.targets?.domains),
+    ips: stringArray(body?.targets?.ips),
+    cidrs: stringArray(body?.targets?.cidrs),
+    assetIds: stringArray(body?.targets?.assetIds),
+    deviceIds: stringArray(body?.targets?.deviceIds),
+    agentIds: stringArray(body?.targets?.agentIds),
+    items: Array.isArray(body?.targets?.items)
+      ? body.targets.items
+          .filter((item: any) => item && typeof item.kind === 'string' && typeof item.value === 'string')
+          .map((item: any) => ({
+            kind: item.kind,
+            value: String(item.value).trim(),
+            label: typeof item.label === 'string' ? item.label : undefined,
+            metadata: item.metadata && typeof item.metadata === 'object' ? item.metadata : undefined
+          }))
+      : [],
+    host
+  };
 }
 
 const MAX_URLS = 100;
@@ -135,13 +203,6 @@ router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
 
     const tenantId = tenantOf(req);
     const urls = Array.isArray(req.body?.targets?.urls) ? req.body.targets.urls : [];
-    const host = req.body?.targets?.host || {
-      mode: 'local',
-      includeSystem: true,
-      includeWeb: true,
-      includePorts: true
-    };
-
     const urlValidation = await validateUrls(urls);
     if (!urlValidation.valid) {
       return res.status(400).json({ success: false, error: urlValidation.error });
@@ -151,7 +212,7 @@ router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
       tenantId,
       createdBy: req.user!.userId,
       enginePolicy: 'opt_then_nuclei',
-      targets: { urls: urlValidation.filteredUrls, host }
+      targets: buildTargetsFromRequest(req.body, urlValidation.filteredUrls)
     });
 
     return res.json({
@@ -163,9 +224,6 @@ router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
       }
     });
   } catch (error: any) {
-    if (error.code === 'TENANT_TASK_RUNNING') {
-      return res.status(409).json({ success: false, error: error.message });
-    }
     logger.error('Failed to create scan task', { error: error.message });
     return res.status(500).json({ success: false, error: 'backend.failed_to_create_scan_task' });
   }
@@ -174,9 +232,9 @@ router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
 /**
  * GET /api/scanner/tasks/history
  */
-router.get('/tasks/history', (req: AuthenticatedRequest, res: Response) => {
+router.get('/tasks/history', async (req: AuthenticatedRequest, res: Response) => {
   const limit = Math.min(parseInt(String(req.query.limit || '20'), 10) || 20, 100);
-  const history = scannerTaskService.getHistory(tenantOf(req), limit);
+  const history = await getHistoryForView(tenantOf(req), limit);
   return res.json({ success: true, data: history });
 });
 
@@ -184,8 +242,8 @@ router.get('/tasks/history', (req: AuthenticatedRequest, res: Response) => {
  * GET /api/scanner/tasks/:taskId
  * Get task status
  */
-router.get('/tasks/:taskId', (req: AuthenticatedRequest, res: Response) => {
-  const task = scannerTaskService.getTask(req.params.taskId);
+router.get('/tasks/:taskId', async (req: AuthenticatedRequest, res: Response) => {
+  const task = await getTaskForView(req.params.taskId);
   if (!task || task.tenantId !== tenantOf(req)) {
     return res.status(404).json({ success: false, error: 'backend.task_not_found' });
   }
@@ -209,20 +267,20 @@ router.get('/tasks/:taskId', (req: AuthenticatedRequest, res: Response) => {
  * GET /api/scanner/tasks/:taskId/results
  * Get task detailed results
  */
-router.get('/tasks/:taskId/results', (req: AuthenticatedRequest, res: Response) => {
-  const task = scannerTaskService.getTask(req.params.taskId);
+router.get('/tasks/:taskId/results', async (req: AuthenticatedRequest, res: Response) => {
+  const task = await getTaskForView(req.params.taskId);
   if (!task || task.tenantId !== tenantOf(req)) {
     return res.status(404).json({ success: false, error: 'backend.task_not_found' });
   }
-  const result = scannerTaskService.getTaskResults(req.params.taskId);
+  const result = await getTaskResultsForView(req.params.taskId);
   return res.json({ success: true, data: result });
 });
 
 /**
  * POST /api/scanner/tasks/:taskId/cancel
  */
-router.post('/tasks/:taskId/cancel', (req: AuthenticatedRequest, res: Response) => {
-  const task = scannerTaskService.getTask(req.params.taskId);
+router.post('/tasks/:taskId/cancel', async (req: AuthenticatedRequest, res: Response) => {
+  const task = await getTaskForView(req.params.taskId);
   if (!task || task.tenantId !== tenantOf(req)) {
     return res.status(404).json({ success: false, error: 'backend.task_not_found' });
   }
@@ -230,17 +288,57 @@ router.post('/tasks/:taskId/cancel', (req: AuthenticatedRequest, res: Response) 
   return res.json({ success: ok });
 });
 
+router.post('/tasks/:taskId/retry', async (req: AuthenticatedRequest, res: Response) => {
+  const task = await getTaskForView(req.params.taskId);
+  if (!task || task.tenantId !== tenantOf(req)) {
+    return res.status(404).json({ success: false, error: 'backend.task_not_found' });
+  }
+
+  try {
+    const retryTask = await scannerTaskService.retryTask(req.params.taskId, req.user?.userId);
+    if (!retryTask) {
+      return res.status(404).json({ success: false, error: 'backend.task_not_found' });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        taskId: retryTask.id,
+        status: retryTask.status,
+        createdAt: retryTask.createdAt
+      }
+    });
+  } catch (error: any) {
+    logger.error('Failed to retry scan task', { error: error.message, taskId: req.params.taskId });
+    return res.status(500).json({ success: false, error: 'backend.failed_to_retry_scan_task' });
+  }
+});
+
+router.post('/findings/:findingId/actions', async (req: AuthenticatedRequest, res: Response) => {
+  const action = await securityOperationsService.createActionFromFindingView(
+    tenantOf(req),
+    req.params.findingId,
+    req.user?.email || req.user?.userId || 'unknown'
+  );
+
+  if (!action) {
+    return res.status(404).json({ success: false, error: 'backend.finding_not_found' });
+  }
+
+  return res.json({ success: true, data: action });
+});
+
 /**
  * Backward compatibility endpoint expected by old frontend:
  * GET /api/scanner
  */
-router.get('/', (req: AuthenticatedRequest, res: Response) => {
-  const history = scannerTaskService.getHistory(tenantOf(req), 1);
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+  const history = await getHistoryForView(tenantOf(req), 1);
   if (history.length === 0) {
     return res.json([]);
   }
   const latest = history[0];
-  const result = scannerTaskService.getTaskResults(latest.id);
+  const result = await getTaskResultsForView(latest.id);
   const flattened = [
     ...(result?.urlFindings || []),
     ...(result?.hostFindings || []),
@@ -308,13 +406,13 @@ router.post('/apply', (_req: Request, res: Response) => {
   return res.status(501).json({ success: false, error: 'backend.use_smart_fix_endpoints_for_remediation_actions' });
 });
 
-router.get('/results/:id', (req: AuthenticatedRequest, res: Response) => {
+router.get('/results/:id', async (req: AuthenticatedRequest, res: Response) => {
   // Try task id first
-  const task = scannerTaskService.getTask(req.params.id);
+  const task = await getTaskForView(req.params.id);
   if (task && task.tenantId === tenantOf(req)) {
     return res.json({
       success: true,
-      data: scannerTaskService.getTaskResults(task.id)
+      data: await getTaskResultsForView(task.id)
     });
   }
 
@@ -334,12 +432,12 @@ router.get('/results/:id', (req: AuthenticatedRequest, res: Response) => {
   return res.status(404).json({ success: false, error: 'backend.scan_result_not_found' });
 });
 
-router.get('/report/:id', (req: AuthenticatedRequest, res: Response) => {
-  const task = scannerTaskService.getTask(req.params.id);
+router.get('/report/:id', async (req: AuthenticatedRequest, res: Response) => {
+  const task = await getTaskForView(req.params.id);
   if (!task || task.tenantId !== tenantOf(req)) {
     return res.status(404).json({ success: false, error: 'backend.task_not_found' });
   }
-  const data = scannerTaskService.getTaskResults(task.id);
+  const data = await getTaskResultsForView(task.id);
   const report = {
     taskId: task.id,
     status: task.status,

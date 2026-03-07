@@ -4,10 +4,11 @@
  */
 import { Router } from 'express';
 import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import { getTrafficStats, getAgentSystem } from './ai-system.routes';
+import { getTrafficStats, getAgentGateway, getAgentSystem } from './ai-system.routes';
 import { getAlerts } from './alerts.routes';
 import { getDeviceList } from './devices.routes';
 import { SystemStats } from '../../utils/system-stats';
+import { securityOperationsService } from '../../services/security-operations.service';
 
 const router = Router();
 
@@ -47,7 +48,7 @@ function sampleHistory(total: number, blocked: number): void {
 // SECURITY FIX CVE-2026-039: Apply authentication
 router.use(authenticate);
 
-router.get('/', (req: AuthenticatedRequest, res) => {
+router.get('/', async (req: AuthenticatedRequest, res) => {
     try {
         const ts = getTrafficStats();
 
@@ -63,8 +64,10 @@ router.get('/', (req: AuthenticatedRequest, res) => {
 
         // Adjust health based on system alerts and offline devices
         const agentGateway = getAgentSystem() as any;
-        const alerts = getAlerts().filter(a => a.status === 'active');
+        const tenantId = req.user?.tenantId || 'global';
+        const alerts = (await getAlerts(tenantId)).filter(a => a.status !== 'resolved' && a.status !== 'suppressed');
         const devices = getDeviceList();
+        const opsSummary = await securityOperationsService.getDashboardSummaryView(tenantId);
 
         const offlineDevices = devices.filter(d => !d.isOnline).length;
         const totalDevices = devices.length;
@@ -126,7 +129,8 @@ router.get('/', (req: AuthenticatedRequest, res) => {
             cpuUsage: sys.cpuUsage,
             memoryUsage: sys.memoryUsage,
             diskUsage: sys.diskUsage,
-            networkUsage: sys.networkUsageMb
+            networkUsage: sys.networkUsageMb,
+            securityOperations: opsSummary
         });
     } catch (err: any) {
         res.json({
@@ -145,33 +149,59 @@ router.get('/', (req: AuthenticatedRequest, res) => {
             cpuUsage: 0,
             memoryUsage: 0,
             diskUsage: 0,
-            networkUsage: 0
+            networkUsage: 0,
+            securityOperations: {
+                openCriticalFindings: 0,
+                highRiskFindings: 0,
+                activeAlerts: 0,
+                runningScans: 0,
+                queuedScans: 0,
+                pendingActions: 0,
+                failedValidations: 0,
+                assetsAtRisk: 0,
+                observedSessions: 0,
+                trafficAnomalies: 0,
+                recentActions: [],
+                recentValidations: []
+            }
         });
     }
 });
 
-router.get('/badges', (req: AuthenticatedRequest, res) => {
+router.get('/badges', async (req: AuthenticatedRequest, res) => {
     try {
-        const alerts = getAlerts();
-        const activeAlertsCount = alerts.filter(a => a.status === 'active').length;
+        const tenantId = req.user?.tenantId || 'global';
+        const alerts = await getAlerts(tenantId);
+        const activeAlertsCount = alerts.filter(a => a.status !== 'resolved' && a.status !== 'suppressed').length;
 
         const devices = getDeviceList();
         const onlineDevicesCount = devices.filter(d => d.isOnline).length;
 
         const agentSystem = getAgentSystem();
-        let agentsCount = 0;
+        const runtimeAgents = getAgentGateway()?.getAgentList?.() || [];
+        let agentsCount = runtimeAgents.filter((agent: any) => agent.isOnline).length;
         if (agentSystem && agentSystem.isInitialized()) {
             const probeReport = agentSystem.getProbeReport();
-            agentsCount = probeReport.agents?.length || 0;
+            agentsCount = Math.max(agentsCount, probeReport.agents?.length || 0);
         }
+        const summary = await securityOperationsService.getDashboardSummaryView(tenantId);
+        const trafficThreats = await securityOperationsService.summarizeThreatsView(tenantId);
+        const trafficSessions = await securityOperationsService.listTrafficSessionsView(tenantId, 200);
+        const recentTrafficSessions = trafficSessions.filter((flow: any) => {
+            const activity = new Date(flow.last_activity || flow.lastActivity || 0).getTime();
+            return Number.isFinite(activity) && Date.now() - activity <= 24 * 60 * 60 * 1000;
+        }).length;
 
         res.json({
             alerts: activeAlertsCount,
             devices: onlineDevicesCount,
-            agents: agentsCount
+            agents: agentsCount,
+            agentMonitor: summary.runningScans + summary.pendingActions + summary.failedValidations + summary.queuedScans + summary.trafficAnomalies,
+            traffic: Math.max(summary.trafficAnomalies, recentTrafficSessions, trafficThreats.reduce((sum, item) => sum + item.count, 0)),
+            scanner: summary.runningScans + summary.highRiskFindings + summary.pendingActions
         });
     } catch (err: any) {
-        res.json({ alerts: 0, devices: 0, agents: 0 });
+        res.json({ alerts: 0, devices: 0, agents: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
     }
 });
 

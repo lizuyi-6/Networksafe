@@ -17,6 +17,55 @@ import {
   TestDataFixtures
 } from '../../testing';
 
+let currentDb: any = null;
+
+function toRouteDbAdapter(sqlDb: any): any {
+  return {
+    run: (sql: string, params?: any[]) => {
+      if (params && params.length > 0) {
+        sqlDb.run(sql, params);
+      } else {
+        sqlDb.run(sql);
+      }
+    },
+    exec: (sql: string) => {
+      sqlDb.run(sql);
+    },
+    prepare: (sql: string) => ({
+      all: (...params: any[]) => {
+        const stmt = sqlDb.prepare(sql);
+        if (params.length > 0) {
+          stmt.bind(params);
+        }
+        const rows: any[] = [];
+        while (stmt.step()) {
+          rows.push(stmt.getAsObject());
+        }
+        stmt.free();
+        return rows;
+      },
+      get: (...params: any[]) => {
+        const stmt = sqlDb.prepare(sql);
+        if (params.length > 0) {
+          stmt.bind(params);
+        }
+        const row = stmt.step() ? stmt.getAsObject() : null;
+        stmt.free();
+        return row;
+      },
+      run: (...params: any[]) => {
+        if (params.length > 0) {
+          sqlDb.run(sql, params);
+        } else {
+          sqlDb.run(sql);
+        }
+        const changes = typeof sqlDb.getRowsModified === 'function' ? sqlDb.getRowsModified() : 0;
+        return { changes };
+      }
+    })
+  };
+}
+
 // Mock only the modules that are external dependencies or have side effects
 jest.mock('../../middleware/auth.middleware', () => ({
   authenticate: jest.fn((req: any, _res: any, next: any) => {
@@ -36,6 +85,15 @@ jest.mock('../../middleware/plan.middleware', () => ({
   requirePlanQuota: jest.fn(() => (req: any, _res: any, next: any) => next())
 }));
 
+jest.mock('../../config/database', () => ({
+  getDatabase: jest.fn(() => {
+    if (!currentDb) {
+      throw new Error('Test database not initialized');
+    }
+    return currentDb;
+  })
+}));
+
 // Mock DNS for SSRF tests
 jest.mock('dns', () => ({
   ...jest.requireActual('dns'),
@@ -50,6 +108,10 @@ jest.mock('dns', () => ({
       callback(null, { address: '104.16.132.229' });
     } else if (hostname === 'updated.com') {
       callback(null, { address: '104.16.133.229' });
+    } else if (hostname === 'backend.newsite.com') {
+      callback(null, { address: '104.16.132.229' });
+    } else if (hostname === 'backend.updated.com') {
+      callback(null, { address: '104.16.133.229' });
     } else {
       callback(new Error('DNS lookup failed'), null);
     }
@@ -57,6 +119,7 @@ jest.mock('dns', () => ({
 }));
 
 jest.mock('../../utils/logger', () => ({
+  __esModule: true,
   default: {
     error: jest.fn(),
     info: jest.fn(),
@@ -76,6 +139,7 @@ describe('Sites Routes', () => {
         tenantId: 'tenant-001'
       }
     });
+    currentDb = toRouteDbAdapter(ctx.db);
 
     // Create Express app
     app = express();
@@ -84,6 +148,7 @@ describe('Sites Routes', () => {
   });
 
   afterAll(() => {
+    currentDb = null;
     destroyTestContext(ctx);
   });
 
@@ -297,7 +362,7 @@ describe('Sites Routes', () => {
           site.rateLimitRequests,
           site.concurrencyEnabled ? 1 : 0,
           site.concurrencyMax,
-          site.tenant_id
+          site.tenant_id ?? null
         ]
       );
 

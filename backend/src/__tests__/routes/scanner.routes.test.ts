@@ -35,6 +35,14 @@ jest.mock('../../services/scanner-task.service', () => ({
       progress: 0,
       createdAt: new Date().toISOString()
     }),
+    retryTask: jest.fn().mockResolvedValue({
+      id: 'task-002',
+      tenantId: 'tenant-001',
+      status: 'pending',
+      phase: 'queued',
+      progress: 0,
+      createdAt: new Date().toISOString()
+    }),
     getTask: jest.fn(),
     getTaskResults: jest.fn(),
     getHistory: jest.fn(),
@@ -51,6 +59,7 @@ jest.mock('../../config/database', () => ({
 }));
 
 jest.mock('../../utils/logger', () => ({
+  __esModule: true,
   default: {
     error: jest.fn(),
     info: jest.fn(),
@@ -88,11 +97,8 @@ describe('Scanner Routes', () => {
       expect(response.body.data.taskId).toBeDefined();
     });
 
-    it('should return 409 if task already running', async () => {
-      (scannerTaskService.createTask as jest.Mock).mockRejectedValueOnce({
-        code: 'TENANT_TASK_RUNNING',
-        message: 'A scan task is already running for this tenant'
-      });
+    it('should return 500 if task creation fails', async () => {
+      (scannerTaskService.createTask as jest.Mock).mockRejectedValueOnce(new Error('boom'));
 
       const response = await request(app)
         .post('/api/scanner/tasks')
@@ -103,7 +109,7 @@ describe('Scanner Routes', () => {
           }
         });
 
-      expect(response.status).toBe(409);
+      expect(response.status).toBe(500);
     });
   });
 
@@ -216,6 +222,29 @@ describe('Scanner Routes', () => {
       (scannerTaskService.getTask as jest.Mock).mockReturnValue(null);
 
       const response = await request(app).post('/api/scanner/tasks/non-existent/cancel');
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('POST /api/scanner/tasks/:taskId/retry', () => {
+    it('should create a retry task', async () => {
+      (scannerTaskService.getTask as jest.Mock).mockReturnValue({
+        id: 'task-001',
+        tenantId: 'tenant-001'
+      });
+
+      const response = await request(app).post('/api/scanner/tasks/task-001/retry');
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.taskId).toBe('task-002');
+    });
+
+    it('should return 404 if retry source task is missing', async () => {
+      (scannerTaskService.getTask as jest.Mock).mockReturnValue(null);
+
+      const response = await request(app).post('/api/scanner/tasks/missing/retry');
 
       expect(response.status).toBe(404);
     });

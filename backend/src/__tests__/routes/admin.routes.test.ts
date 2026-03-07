@@ -24,11 +24,12 @@ jest.mock('../../middleware/auth.middleware', () => ({
   AuthenticatedRequest: jest.fn()
 }));
 
-jest.mock('../routes/ai-system.routes', () => ({
+jest.mock('../../api/routes/ai-system.routes', () => ({
   getAgentSystem: jest.fn(() => null)
 }));
 
 jest.mock('../../utils/logger', () => ({
+  __esModule: true,
   default: {
     error: jest.fn(),
     info: jest.fn(),
@@ -37,6 +38,7 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 const mockDb = {
+  exec: jest.fn(),
   prepare: jest.fn(() => ({
     all: jest.fn(() => [
       { id: 'key-001', name: 'Test Key', created_at: '2024-01-01', last_used: '2024-01-02' }
@@ -64,6 +66,7 @@ jest.mock('uuid', () => ({
 }));
 
 jest.mock('crypto', () => ({
+  ...jest.requireActual('crypto'),
   randomBytes: jest.fn(() => Buffer.from('randombyteshexstring12345678', 'utf8'))
 }));
 

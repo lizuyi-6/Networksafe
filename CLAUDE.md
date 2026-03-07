@@ -54,10 +54,17 @@ npm run build
 # Lint
 npm run lint
 
+# Type check (TypeScript validation)
+npx tsc --noEmit
+
+# Security audit
+npm audit --audit-level=high
+
 # Tests
 npm test                          # Run all tests
 npm run test:coverage             # With coverage
 npm run test:agents               # AI agents tests only
+npm run demo:agents               # Run AI agents demo locally
 
 # Database seeding (demo data)
 npm run seed                      # Seed demo data
@@ -83,9 +90,19 @@ npm run build
 # Lint
 npm run lint
 
+# Type check (TypeScript validation)
+npx tsc --noEmit
+
+# Security audit
+npm audit --audit-level=high
+
 # Preview production build
 npm run preview
 ```
+
+### TypeScript Version
+
+- **Node.js**: v18+ (CI uses Node 18)
 
 ### Key Environment Variables
 
@@ -218,8 +235,14 @@ The `ai-agents/` module implements a multi-agent decision system for AI-powered 
 ## Testing Guidelines
 
 ```bash
+# Run all tests
+npm test
+
 # Run specific test file
 npx jest src/__tests__/agent-gateway.test.ts
+
+# Run tests matching a pattern
+npm test -- --testPathPattern="controller"
 
 # Run tests in watch mode (development)
 npx jest --watch

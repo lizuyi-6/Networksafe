@@ -3,6 +3,8 @@ import { createHash, randomUUID } from 'crypto';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
 import { InputValidator } from '../../security/input-validator';
 import { getDatabase } from '../../config/database';
+import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
+import auditLogger from '../../security/audit-logger.service';
 
 // SECURITY FIX CVE-2026-014: Add input validation to deployments routes
 const inputValidator = new InputValidator();
@@ -36,6 +38,140 @@ function ensureSchema(): void {
       created_at TEXT NOT NULL
     )
   `);
+}
+
+async function getDeploymentRow(id: string, tenantId: string) {
+  if (postgresShadowStoreService.canServeReads()) {
+    return await postgresShadowStoreService.queryOne<any>(`
+      SELECT *
+      FROM deployment_profiles
+      WHERE id = $1 AND tenant_id = $2
+      LIMIT 1
+    `, [id, tenantId]);
+  }
+
+  return getDatabase().prepare(`
+    SELECT *
+    FROM deployment_profiles
+    WHERE id = ? AND tenant_id = ?
+  `).get(id, tenantId) as any;
+}
+
+async function listDeploymentRows(tenantId: string, siteId: string | null, limit: number) {
+  if (postgresShadowStoreService.canServeReads()) {
+    if (siteId) {
+      return await postgresShadowStoreService.queryAll<any>(`
+        SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
+        FROM deployment_profiles
+        WHERE tenant_id = $1 AND site_id = $2
+        ORDER BY created_at DESC
+        LIMIT $3
+      `, [tenantId, siteId, limit]);
+    }
+    return await postgresShadowStoreService.queryAll<any>(`
+      SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
+      FROM deployment_profiles
+      WHERE tenant_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `, [tenantId, limit]);
+  }
+
+  const db = getDatabase();
+  if (siteId) {
+    return db.prepare(`
+      SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
+      FROM deployment_profiles
+      WHERE tenant_id = ? AND site_id = ?
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).all(tenantId, siteId, limit) as any[];
+  }
+
+  return db.prepare(`
+    SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
+    FROM deployment_profiles
+    WHERE tenant_id = ?
+    ORDER BY created_at DESC
+    LIMIT ?
+  `).all(tenantId, limit) as any[];
+}
+
+async function getNextVersion(tenantId: string, serverType: string, siteId: string | null) {
+  if (postgresShadowStoreService.canServeReads()) {
+    const row = await postgresShadowStoreService.queryOne<any>(`
+      SELECT MAX(version) AS "maxVersion"
+      FROM deployment_profiles
+      WHERE tenant_id = $1 AND server_type = $2 AND ((site_id = $3) OR ($3 IS NULL AND site_id IS NULL))
+    `, [tenantId, serverType, siteId]);
+    return (Number(row?.maxVersion || 0) || 0) + 1;
+  }
+
+  const row = getDatabase().prepare(`
+    SELECT MAX(version) as maxVersion
+    FROM deployment_profiles
+    WHERE tenant_id = ? AND server_type = ? AND (site_id = ? OR (? IS NULL AND site_id IS NULL))
+  `).get(tenantId, serverType, siteId, siteId) as any;
+  return (Number(row?.maxVersion || 0) || 0) + 1;
+}
+
+async function persistDeployment(row: Record<string, any>) {
+  if (postgresShadowStoreService.canServeReads()) {
+    await postgresShadowStoreService.execute(`
+      INSERT INTO deployment_profiles
+      (id, tenant_id, site_id, server_type, name, profile_json, config_text, env_snippet, checksum, version, created_by, created_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      ON CONFLICT (id)
+      DO UPDATE SET
+        tenant_id = EXCLUDED.tenant_id,
+        site_id = EXCLUDED.site_id,
+        server_type = EXCLUDED.server_type,
+        name = EXCLUDED.name,
+        profile_json = EXCLUDED.profile_json,
+        config_text = EXCLUDED.config_text,
+        env_snippet = EXCLUDED.env_snippet,
+        checksum = EXCLUDED.checksum,
+        version = EXCLUDED.version,
+        created_by = EXCLUDED.created_by,
+        created_at = EXCLUDED.created_at
+    `, [
+      row.id,
+      row.tenant_id,
+      row.site_id,
+      row.server_type,
+      row.name,
+      row.profile_json,
+      row.config_text,
+      row.env_snippet,
+      row.checksum,
+      row.version,
+      row.created_by,
+      row.created_at
+    ]);
+  }
+
+  getDatabase().prepare(`
+    INSERT OR REPLACE INTO deployment_profiles
+    (id, tenant_id, site_id, server_type, name, profile_json, config_text, env_snippet, checksum, version, created_by, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    row.id,
+    row.tenant_id,
+    row.site_id,
+    row.server_type,
+    row.name,
+    row.profile_json,
+    row.config_text,
+    row.env_snippet,
+    row.checksum,
+    row.version,
+    row.created_by,
+    row.created_at
+  );
+
+  if (!postgresShadowStoreService.canServeReads()) {
+    void postgresShadowStoreService.upsert('deployment_profiles', row);
+  }
 }
 
 function renderNginx(profile: any): string {
@@ -125,62 +261,56 @@ router.post('/generate', (req: AuthenticatedRequest, res: Response) => {
   });
 });
 
-router.post('/save', (req: AuthenticatedRequest, res: Response) => {
-  // SECURITY FIX CVE-2026-014: Validate input before processing
-  const validationResult = inputValidator.validateRequest(req);
-  if (!validationResult.isValid) {
-    return res.status(400).json({
-      success: false,
-      error: 'backend.invalid_input',
-      details: validationResult.errors
-    });
-  }
-
+router.post('/save', async (req: AuthenticatedRequest, res: Response) => {
+  try {
   ensureSchema();
   const serverType = req.body?.serverType;
   const profile = req.body?.profile || {};
-  const configText = req.body?.configText;
-  const envSnippet = req.body?.envSnippet;
   const siteId = req.body?.siteId || null;
   const name = req.body?.name || null;
 
   if (serverType !== 'nginx' && serverType !== 'apache') {
     return res.status(400).json({ success: false, error: 'backend.servertype_must_be_nginx_or_apache' });
   }
-  if (!configText || !envSnippet) {
-    return res.status(400).json({ success: false, error: 'backend.configtext_and_envsnippet_are_required' });
+  const validation = validateProfile(profile);
+  if (!validation.ok) {
+    return res.status(400).json({ success: false, error: 'backend.invalid_profile', details: validation.errors });
   }
+  const configText = serverType === 'nginx' ? renderNginx(profile) : renderApache(profile);
+  const envSnippet = renderEnvSnippet(profile);
 
-  const db = getDatabase();
   const tenantId = tenantOf(req);
-  const versionRow = db.prepare(`
-    SELECT MAX(version) as maxVersion
-    FROM deployment_profiles
-    WHERE tenant_id = ? AND server_type = ? AND (site_id = ? OR (? IS NULL AND site_id IS NULL))
-  `).get(tenantId, serverType, siteId, siteId) as any;
-  const version = (Number(versionRow?.maxVersion || 0) || 0) + 1;
+  const version = await getNextVersion(tenantId, serverType, siteId);
   const checksum = createHash('sha256').update(`${configText}\n${envSnippet}`).digest('hex');
   const id = randomUUID();
   const createdAt = nowISO();
 
-  db.prepare(`
-    INSERT INTO deployment_profiles
-    (id, tenant_id, site_id, server_type, name, profile_json, config_text, env_snippet, checksum, version, created_by, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
+  await persistDeployment({
     id,
-    tenantId,
-    siteId,
-    serverType,
+    tenant_id: tenantId,
+    site_id: siteId,
+    server_type: serverType,
     name,
-    JSON.stringify(profile),
-    configText,
-    envSnippet,
+    profile_json: JSON.stringify(profile),
+    config_text: configText,
+    env_snippet: envSnippet,
     checksum,
     version,
-    req.user!.userId,
-    createdAt
-  );
+    created_by: req.user!.userId,
+    created_at: createdAt
+  });
+
+  await auditLogger.log({
+    tenantId,
+    eventType: 'deployment_profile_saved',
+    category: 'system',
+    severity: 'warning',
+    actor: { type: 'user', id: req.user!.userId, email: req.user?.email, ip: req.ip },
+    target: { type: 'site', id: siteId || id },
+    action: 'save_deployment_profile',
+    details: { deploymentId: id, serverType, version, checksum, name },
+    status: 'success'
+  });
 
   return res.json({
     success: true,
@@ -190,18 +320,31 @@ router.post('/save', (req: AuthenticatedRequest, res: Response) => {
       createdAt
     }
   });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_save_deployment_profile' });
+  }
 });
 
-router.get('/:id/download', (req: AuthenticatedRequest, res: Response) => {
+router.get('/:id/download', async (req: AuthenticatedRequest, res: Response) => {
+  try {
   ensureSchema();
   const format = String(req.query.format || 'bundle');
-  const row = getDatabase().prepare(`
-    SELECT * FROM deployment_profiles
-    WHERE id = ? AND tenant_id = ?
-  `).get(req.params.id, tenantOf(req)) as any;
+  const row = await getDeploymentRow(req.params.id, tenantOf(req));
   if (!row) {
     return res.status(404).json({ success: false, error: 'backend.deployment_profile_not_found' });
   }
+
+  void auditLogger.log({
+    tenantId: tenantOf(req),
+    eventType: 'deployment_profile_downloaded',
+    category: 'system',
+    severity: 'info',
+    actor: { type: 'user', id: req.user!.userId, email: req.user?.email, ip: req.ip },
+    target: { type: 'site', id: String(row.site_id || row.id) },
+    action: 'download_deployment_profile',
+    details: { deploymentId: row.id, format },
+    status: 'success'
+  });
 
   if (format === 'conf') {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -218,34 +361,23 @@ router.get('/:id/download', (req: AuthenticatedRequest, res: Response) => {
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="deployment-${row.id}-bundle.txt"`);
   return res.send(bundle);
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_download_deployment_profile' });
+  }
 });
 
-router.get('/history/list', (req: AuthenticatedRequest, res: Response) => {
+router.get('/history/list', async (req: AuthenticatedRequest, res: Response) => {
+  try {
   ensureSchema();
   const limit = Math.min(parseInt(String(req.query.limit || '20'), 10) || 20, 200);
   const siteId = (req.query.siteId as string) || null;
   const tenantId = tenantOf(req);
-  const db = getDatabase();
-  let rows: any[];
-  if (siteId) {
-    rows = db.prepare(`
-      SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
-      FROM deployment_profiles
-      WHERE tenant_id = ? AND site_id = ?
-      ORDER BY created_at DESC
-      LIMIT ?
-    `).all(tenantId, siteId, limit) as any[];
-  } else {
-    rows = db.prepare(`
-      SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
-      FROM deployment_profiles
-      WHERE tenant_id = ?
-      ORDER BY created_at DESC
-      LIMIT ?
-    `).all(tenantId, limit) as any[];
-  }
+  const rows = await listDeploymentRows(tenantId, siteId, limit);
 
   return res.json({ success: true, data: rows });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_load_deployment_history' });
+  }
 });
 
 export default router;

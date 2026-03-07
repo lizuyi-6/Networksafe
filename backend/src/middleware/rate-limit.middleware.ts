@@ -10,8 +10,6 @@ import { Request, Response, NextFunction } from 'express';
 import enhancedRateLimiter from '../security/enhanced-rate-limiter.service';
 import logger from '../utils/logger';
 
-const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
-
 export interface RateLimitMiddlewareOptions {
   maxRequests?: number;
   windowMs?: number;
@@ -135,7 +133,8 @@ function getDefaultKey(req: Request): string {
  * Get client IP address with proxy support
  */
 function getClientIP(req: Request): string {
-  if (TRUST_PROXY) {
+  const trustProxy = process.env.TRUST_PROXY === 'true';
+  if (trustProxy) {
     const forwardedFor = req.headers['x-forwarded-for'] as string;
     if (forwardedFor) {
       return forwardedFor.split(',')[0].trim();
@@ -159,7 +158,7 @@ function getClientIP(req: Request): string {
 
 // Strict rate limiter for authentication endpoints
 export const authRateLimit = rateLimit({
-  maxRequests: 5, // 5 requests per minute
+  maxRequests: 15, // 15 requests per minute (increased from 5 for cold start scenarios)
   windowMs: 60000,
   handler: (req, res) => {
     res.status(429).json({

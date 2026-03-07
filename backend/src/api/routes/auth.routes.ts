@@ -13,12 +13,13 @@ import {
     generateTokens,
     verifyRefreshToken,
     authenticate,
-    COOKIE_OPTIONS,
-    REFRESH_COOKIE_OPTIONS
+    buildCookieOptions,
+    buildRefreshCookieOptions
 } from '../../middleware/auth.middleware';
 import { getDatabase } from '../../config/database';
 import authSecurityService from '../../security/auth-security.service';
 import redisService from '../../security/redis.service';
+import auditLogger from '../../security/audit-logger.service';
 import logger from '../../utils/logger';
 import { authRateLimit } from '../../middleware/rate-limit.middleware';
 import {
@@ -115,10 +116,21 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
         });
 
         logger.info(`New user registered: ${email}`);
+        await auditLogger.log({
+            tenantId,
+            eventType: 'user_registered',
+            category: 'auth',
+            severity: 'info',
+            actor: { type: 'user', id: userId, email, ip: clientIpFromRequest(req) },
+            action: 'register',
+            target: { type: 'user', id: userId },
+            details: { email, username, role, plan },
+            status: 'success'
+        });
 
         // SECURITY FIX: Set tokens as httpOnly cookies
-        res.cookie('accessToken', tokens.accessToken, COOKIE_OPTIONS);
-        res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+        res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
+        res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
 
         res.status(201).json({
             message: 'backend.user_registered_successfully',
@@ -195,6 +207,15 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         if (!user) {
             // SECURITY FIX CVE-2026-007: Record failed attempt even for non-existent users
             await authSecurityService.recordLoginAttempt(email, clientIp, false);
+            await auditLogger.log({
+                eventType: 'failed_login',
+                category: 'auth',
+                severity: 'warning',
+                actor: { type: 'user', id: email, email, ip: clientIp },
+                action: 'login',
+                details: { reason: 'user_not_found' },
+                status: 'failure'
+            });
 
             // SECURITY FIX CVE-2026-302: Always run bcrypt.compare to prevent timing leak
             // Use dummy hash for non-existent user
@@ -210,6 +231,17 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         if (user.status === 'suspended') {
             // SECURITY FIX CVE-2026-302: Still run bcrypt.compare to prevent timing leak
             await bcrypt.compare(password, dummyHash);
+            await auditLogger.log({
+                tenantId: user.tenant_id || undefined,
+                eventType: 'suspended_login_attempt',
+                category: 'auth',
+                severity: 'warning',
+                actor: { type: 'user', id: user.id, email: user.email, ip: clientIp },
+                action: 'login',
+                target: { type: 'user', id: user.id },
+                details: { status: user.status },
+                status: 'failure'
+            });
 
             return res.status(403).json({
                 error: 'backend.account_suspended',
@@ -222,6 +254,17 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         if (!passwordValid) {
             // SECURITY FIX CVE-2026-007: Record failed login attempt
             await authSecurityService.recordLoginAttempt(email, clientIp, false);
+            await auditLogger.log({
+                tenantId: user.tenant_id || undefined,
+                eventType: 'failed_login',
+                category: 'auth',
+                severity: 'warning',
+                actor: { type: 'user', id: user.id, email: user.email, ip: clientIp },
+                action: 'login',
+                target: { type: 'user', id: user.id },
+                details: { reason: 'invalid_password' },
+                status: 'failure'
+            });
             logger.warn(`Failed login attempt for: ${email}`);
             return res.status(401).json({
                 error: 'backend.invalid_credentials',
@@ -234,6 +277,17 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
 
         // Update last login
         db.prepare(`UPDATE users SET last_login = datetime('now') WHERE id = ?`).run(user.id);
+        await auditLogger.log({
+            tenantId: user.tenant_id || undefined,
+            eventType: 'login',
+            category: 'auth',
+            severity: 'info',
+            actor: { type: 'user', id: user.id, email: user.email, ip: clientIp },
+            target: { type: 'user', id: user.id },
+            action: 'login',
+            details: { role: user.role, plan: user.plan || 'starter' },
+            status: 'success'
+        });
 
         // Generate tokens
         const tokens = generateTokens({
@@ -248,8 +302,8 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         logger.info(`User logged in: ${email}`);
 
         // SECURITY FIX: Set tokens as httpOnly cookies instead of sending in body
-        res.cookie('accessToken', tokens.accessToken, COOKIE_OPTIONS);
-        res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+        res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
+        res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
 
         // SECURITY FIX CVE-2026-028: Reduce exposed user information
         res.json({
@@ -342,8 +396,8 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
         });
 
         // SECURITY FIX: Set new tokens as httpOnly cookies
-        res.cookie('accessToken', tokens.accessToken, COOKIE_OPTIONS);
-        res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+        res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
+        res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
 
         res.json({
             message: 'backend.token_refreshed',
@@ -403,6 +457,17 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
         res.clearCookie('refreshToken', { path: '/' });
 
         logger.info(`User logged out: ${req.user?.email}`);
+        await auditLogger.log({
+            tenantId: req.user?.tenantId,
+            eventType: 'logout',
+            category: 'auth',
+            severity: 'info',
+            actor: { type: 'user', id: req.user?.userId || 'unknown', email: req.user?.email, ip: clientIpFromRequest(req) },
+            target: { type: 'user', id: req.user?.userId || 'unknown' },
+            action: 'logout',
+            details: {},
+            status: 'success'
+        });
 
         res.json({
             message: 'backend.logout_successful'
@@ -470,6 +535,17 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
             .run(newPasswordHash, req.user!.userId);
 
         logger.info(`Password changed for user: ${req.user?.email}`);
+        await auditLogger.log({
+            tenantId: req.user?.tenantId,
+            eventType: 'password_changed',
+            category: 'auth',
+            severity: 'warning',
+            actor: { type: 'user', id: req.user!.userId, email: req.user?.email, ip: clientIpFromRequest(req) },
+            target: { type: 'user', id: req.user!.userId },
+            action: 'change_password',
+            details: {},
+            status: 'success'
+        });
 
         res.json({
             message: 'backend.password_changed_successfully'
@@ -485,3 +561,7 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
 });
 
 export default router;
+
+function clientIpFromRequest(req: AuthenticatedRequest): string {
+    return req.ip || req.connection?.remoteAddress || 'unknown';
+}

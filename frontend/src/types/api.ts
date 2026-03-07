@@ -28,6 +28,7 @@ export interface DashboardStats {
     memoryUsage?: number;
     diskUsage?: number;
     networkUsage?: number;
+    securityOperations?: DashboardSecuritySummary;
 }
 
 export interface AttackOrigin {
@@ -102,6 +103,13 @@ export interface MultiAgentSystemStats {
         pendingRequests: number;
     };
     synthesis: AgentStats;
+    operations?: {
+        activeAlerts: number;
+        runningScans: number;
+        pendingActions: number;
+        failedValidations: number;
+        assetsAtRisk: number;
+    };
     health: {
         status: 'healthy' | 'degraded' | 'unhealthy';
         details: Record<string, string>;
@@ -140,6 +148,8 @@ export interface TrafficStats {
     avgProcessingTime: number;
     cpuUsage: number;
     memoryUsage: number;
+    diskUsage?: number;
+    networkUsage?: number;
 }
 
 export interface FlowInfo {
@@ -154,6 +164,9 @@ export interface FlowInfo {
     byteCount: number;
     startTime: string;
     lastActivity: string;
+    verdict?: string;
+    attackName?: string;
+    category?: string;
 }
 
 export interface ProtocolDistribution {
@@ -184,12 +197,15 @@ export interface AttackResult {
     category: string;
     severity: string;
     blocked: boolean;
+    detected?: boolean;
     responseTime: number;
     statusCode?: number;
     error?: string;
+    verdict?: string;
 }
 
 export interface AttackSimulationReport {
+    id?: string;
     total: number;
     blocked: number;
     allowed: number;
@@ -197,4 +213,82 @@ export interface AttackSimulationReport {
     results: AttackResult[];
     startTime: string;
     endTime: string;
+    detected?: number;
+    detectionRate?: string;
+    blockRate?: string;
+}
+
+export interface DetailTimelineItem {
+    title: string;
+    description?: string;
+    timestamp?: string;
+}
+
+export interface SecurityFinding {
+    findingId: string;
+    assetId?: string;
+    sourceType: string;
+    sourceRef: string;
+    target: string;
+    category: string;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    status: 'open' | 'acknowledged' | 'investigating' | 'resolved' | 'suppressed' | 'ignored';
+    title: string;
+    description: string;
+    evidence: Record<string, any>;
+    remediation: Record<string, any>;
+    occurrenceCount: number;
+    firstSeenAt: string;
+    lastSeenAt: string;
+}
+
+export interface ScanAssetGroup {
+    assetId?: string;
+    target: string;
+    category: string;
+    severities: Record<string, number>;
+    findings: SecurityFinding[];
+}
+
+export interface DashboardSecuritySummary {
+    openCriticalFindings: number;
+    highRiskFindings?: number;
+    activeAlerts: number;
+    runningScans: number;
+    queuedScans?: number;
+    pendingActions: number;
+    failedValidations: number;
+    assetsAtRisk: number;
+    observedSessions?: number;
+    trafficAnomalies?: number;
+    recentActions: {
+        actionId: string;
+        title: string;
+        status: string;
+        createdAt: string;
+        updatedAt: string;
+    }[];
+    recentValidations: {
+        validationRunId: string;
+        attackName: string;
+        verdict: string;
+        severity: string;
+        completedAt: string;
+    }[];
+}
+
+export interface AlertRecord {
+    id: string;
+    title: string;
+    message: string;
+    severity: 'Critical' | 'High' | 'Medium' | 'Low';
+    type: 'security' | 'performance' | 'system';
+    source: string;
+    time: string;
+    status: 'open' | 'acknowledged' | 'investigating' | 'resolved' | 'suppressed';
+    timestamp: string;
+    assetId?: string;
+    findingId?: string;
+    investigationId?: string;
+    metadata?: Record<string, any>;
 }

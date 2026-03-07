@@ -30,9 +30,9 @@ import { DemoProvider, useDemo } from './context/DemoContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusContext';
+import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
 import Logo from './components/Logo';
-import DemoBanner from './components/DemoBanner';
-import { fetchSystemBadges } from './services/api';
+import { fetchSystemBadges, isRequestAbortError } from './services/api';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -46,37 +46,59 @@ import AdminUsers from './pages/AdminUsers';
 import Alerts from './pages/Alerts';
 import Agents from './pages/Agents';
 import Devices from './pages/Devices';
+import AlertDetail from './pages/AlertDetail';
+import AgentDetail from './pages/AgentDetail';
+import AttackRunDetail from './pages/AttackRunDetail';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import BoardStatus from './pages/BoardStatus';
 import AgentMonitor from './pages/AgentMonitor';
+import FixHistoryDetail from './pages/FixHistoryDetail';
+import ScannerRunDetail from './pages/ScannerRunDetail';
+import SiteDetail from './pages/SiteDetail';
 import TrafficInterceptor from './pages/TrafficInterceptor';
+import TrafficSessionDetail from './pages/TrafficSessionDetail';
 import AttackSimulator from './pages/AttackSimulator';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 
 /**
  * SECURITY FIX CVE-2026-012: Authentication guard for protected routes
+ * Improved cold start handling
  */
 const PrivateRoute = ({ children }: { children: ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    const [backendReady, setBackendReady] = useState(false);
 
     useEffect(() => {
-        // Check if user is authenticated by verifying token with backend
-        const checkAuth = async () => {
+        // Check backend readiness first (lightweight health check)
+        const checkBackend = async () => {
             try {
-                const response = await fetch('/api/auth/me', {
-                    credentials: 'include'
+                const healthResponse = await fetch('/api/health', {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(3000) // 3 second timeout
                 });
-                setIsAuthenticated(response.ok);
+                if (healthResponse.ok) {
+                    setBackendReady(true);
+                    // Now check authentication
+                    const authResponse = await fetch('/api/auth/me', {
+                        credentials: 'include',
+                        signal: AbortSignal.timeout(5000) // 5 second timeout
+                    });
+                    setIsAuthenticated(authResponse.ok);
+                } else {
+                    setIsAuthenticated(false);
+                }
             } catch {
+                // Backend not ready - don't block UI, show login
+                setBackendReady(true); // Allow access to check auth
                 setIsAuthenticated(false);
             }
         };
-        checkAuth();
+        checkBackend();
     }, []);
 
-    // Show loading while checking auth
-    if (isAuthenticated === null) {
+    // Show loading while checking backend and auth
+    if (!backendReady || isAuthenticated === null) {
         return (
             <div className="flex items-center justify-center h-screen bg-background">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -94,6 +116,7 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
 
 /**
  * SECURITY FIX CVE-2026-012: Admin-only route guard
+ * Improved cold start handling
  */
 const AdminRoute = ({ children }: { children: ReactNode }) => {
     const [userRole, setUserRole] = useState<string | null>(null);
@@ -103,7 +126,8 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
         const checkRole = async () => {
             try {
                 const response = await fetch('/api/auth/me', {
-                    credentials: 'include'
+                    credentials: 'include',
+                    signal: AbortSignal.timeout(5000)
                 });
                 if (response.ok) {
                     const data = await response.json();
@@ -137,7 +161,8 @@ const Sidebar = () => {
     const { t } = useLanguage();
     const { status: attackStatus } = useAttackStatus();
     const { attackSimEnabled } = useDemo();
-    const [badges, setBadges] = useState({ agents: 0, alerts: 0, devices: 0 });
+    const { liveModeEnabled } = useLiveMode();
+    const [badges, setBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
     const [profile, setProfile] = useState<{ name: string; role: string; initials: string; plan: string }>({
         name: 'Unknown User',
         role: 'N/A',
@@ -151,13 +176,13 @@ const Sidebar = () => {
     const platformItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
         { icon: Users, label: t('nav.agents'), path: '/agents', badge: badges.agents > 0 ? badges.agents : undefined },
-        { icon: Brain, label: t('nav.agent_monitor'), path: '/agent-monitor' },
-        { icon: Network, label: t('nav.traffic_interceptor'), path: '/traffic' },
+        { icon: Brain, label: t('nav.agent_monitor'), path: '/agent-monitor', badge: badges.agentMonitor > 0 ? badges.agentMonitor : undefined },
+        { icon: Network, label: t('nav.traffic_interceptor'), path: '/traffic', badge: badges.traffic > 0 ? badges.traffic : undefined },
         ...(attackSimEnabled ? [{ icon: Shield, label: t('nav.attack_simulator'), path: '/attack-sim' }] : []),
         { icon: Radio, label: t('nav.devices'), path: '/devices', badge: badges.devices > 0 ? badges.devices : undefined },
         { icon: Server, label: t('nav.sites'), path: '/sites' },
         { icon: Rocket, label: t('nav.deployment'), path: '/deploy' },
-        { icon: Activity, label: t('nav.monitoring'), path: '/scanner' },
+        { icon: Activity, label: t('nav.monitoring'), path: '/scanner', badge: badges.scanner > 0 ? badges.scanner : undefined },
         { icon: Settings, label: t('nav.settings'), path: '/settings' },
         { icon: Key, label: t('nav.keys'), path: '/admin' },
         ...(profile.role === 'admin' ? [{ icon: UserCog, label: t('nav.super_admin'), path: '/super-admin' }] : []),
@@ -182,48 +207,88 @@ const Sidebar = () => {
         : 0;
 
     useEffect(() => {
+        let disposed = false;
+        let activeController: AbortController | null = null;
+
         const loadBadges = async () => {
+            const controller = new AbortController();
+            activeController?.abort();
+            activeController = controller;
+
             try {
-                const data = await fetchSystemBadges();
+                const data = await fetchSystemBadges(controller.signal);
+                if (disposed || controller.signal.aborted) {
+                    return;
+                }
                 setBadges({
                     agents: data.agents || 0,
                     alerts: data.alerts || 0,
-                    devices: data.devices || 0
+                    devices: data.devices || 0,
+                    agentMonitor: data.agentMonitor || 0,
+                    traffic: data.traffic || 0,
+                    scanner: data.scanner || 0,
                 });
             } catch (e) {
-                // silenty fail
+                if (!isRequestAbortError(e, controller.signal)) {
+                    // ignore badge polling failures here; page-level fallbacks already handle empty badges
+                }
             }
         };
 
-        loadBadges();
-        const badgeInterval = setInterval(loadBadges, 10000); // 10s poll
-        return () => clearInterval(badgeInterval);
-    }, []);
+        void loadBadges();
+        if (!liveModeEnabled) {
+            return () => {
+                disposed = true;
+                activeController?.abort();
+            };
+        }
+
+        const badgeInterval = setInterval(() => {
+            void loadBadges();
+        }, 4000);
+
+        return () => {
+            disposed = true;
+            activeController?.abort();
+            clearInterval(badgeInterval);
+        };
+    }, [liveModeEnabled]);
 
     useEffect(() => {
-        fetch('/api/auth/me', { credentials: 'include' })
+        const controller = new AbortController();
+
+        fetch('/api/auth/me', { credentials: 'include', signal: controller.signal })
             .then(async (r) => {
                 if (!r.ok) throw new Error(`FG-AUTH-ME-${r.status}`);
                 return r.json();
             })
             .then((data) => {
+                if (controller.signal.aborted) {
+                    return;
+                }
+
                 const user = data?.user || {};
-                const name = user.username || user.email || 'Unknown User';
+                const name = user.username || user.email || '未命名用户';
                 const initials = String(name).split(/\s+/).map((x: string) => x[0] || '').join('').slice(0, 2).toUpperCase() || '??';
                 setProfile({
                     name,
-                    role: user.role || 'N/A',
+                    role: user.role || '未设置角色',
                     initials,
                     plan: user.plan || 'starter'
                 });
             })
-            .catch(() => {
-                setProfile({ name: 'Unknown User', role: 'N/A', initials: '??', plan: 'starter' });
+            .catch((error) => {
+                if (isRequestAbortError(error, controller.signal)) {
+                    return;
+                }
+                setProfile({ name: '未命名用户', role: '未设置角色', initials: '??', plan: 'starter' });
             });
+
+        return () => controller.abort();
     }, []);
 
     return (
-        <aside className="w-64 border-r border-border flex flex-col justify-between bg-surface/50 backdrop-blur-xl z-20 hidden md:flex">
+        <aside className="z-20 hidden w-64 flex-col justify-between border-r border-border bg-card md:flex">
             <div>
                 {/* Logo */}
                 <div className="h-16 flex items-center px-6 border-b border-border/50">
@@ -261,8 +326,8 @@ const Sidebar = () => {
                                                 className={isActive ? 'text-primary' : 'group-hover:text-foreground'}
                                             />
                                             <span className="font-normal">{item.label}</span>
-                                            {item.label === 'Monitoring' && (
-                                                <span className="ml-auto flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+                                            {item.path === '/scanner' && (
+                                                <span className="ml-auto flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                             )}
                                             {item.badge && (
                                                 <span className="ml-auto text-xxs bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20">{item.badge}</span>
@@ -286,38 +351,38 @@ const Sidebar = () => {
                             exit={{ opacity: 0, height: 0 }}
                             className="overflow-hidden"
                         >
-                            <div className="p-3 rounded-lg bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20">
+                            <div className="rounded-lg border border-border bg-muted/20 p-3">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <Zap className="w-4 h-4 text-orange-400 animate-pulse" />
-                                    <span className="text-xs font-medium text-orange-400">{t('nav.attack_simulation')}</span>
+                                    <Zap className="h-4 w-4 text-amber-500" />
+                                    <span className="text-xs font-medium text-foreground">{t('nav.attack_simulation')}</span>
                                 </div>
 
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-xs">
-                                        <span className="text-gray-400">{t('nav.attack_sim_progress')}</span>
-                                        <span className="text-white font-medium">{attackStatus.completed}/{attackStatus.total}</span>
+                                        <span className="text-muted-foreground">{t('nav.attack_sim_progress')}</span>
+                                        <span className="font-medium text-foreground">{attackStatus.completed}/{attackStatus.total}</span>
                                     </div>
-                                    <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${progressPercent}%` }}
-                                            className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
+                                            className="h-full rounded-full bg-amber-500"
                                         />
                                     </div>
 
                                     <div className="flex items-center justify-between pt-1">
                                         <div className="flex items-center gap-1">
-                                            <CheckCircle className="w-3 h-3 text-green-400" />
-                                            <span className="text-xs text-green-400">{attackStatus.blocked}</span>
+                                            <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                            <span className="text-xs text-emerald-600 dark:text-emerald-400">{attackStatus.blocked}</span>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <XCircle className="w-3 h-3 text-red-400" />
-                                            <span className="text-xs text-red-400">{attackStatus.allowed}</span>
+                                            <XCircle className="h-3 w-3 text-rose-500" />
+                                            <span className="text-xs text-rose-600 dark:text-rose-400">{attackStatus.allowed}</span>
                                         </div>
                                     </div>
 
                                     {attackStatus.currentAttack && (
-                                        <div className="text-xs text-gray-400 truncate pt-1 border-t border-gray-700/50">
+                                        <div className="truncate border-t border-border/60 pt-1 text-xs text-muted-foreground">
                                             {attackStatus.currentAttack}
                                         </div>
                                     )}
@@ -328,7 +393,7 @@ const Sidebar = () => {
                 </AnimatePresence>
 
                 {/* User Profile */}
-                <a href="#" className="flex items-center gap-3 px-2 py-2 text-sm hover:text-foreground transition-colors">
+                <Link to="/settings" className="flex items-center gap-3 px-2 py-2 text-sm hover:text-foreground transition-colors">
                     <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-medium text-xs">
                         {profile.initials}
                     </div>
@@ -337,7 +402,7 @@ const Sidebar = () => {
                         <span className="text-xxs text-muted-foreground">{profile.role}</span>
                     </div>
                     <Settings size={18} className="ml-auto hover:rotate-90 transition-transform duration-500 text-muted-foreground hover:text-foreground" />
-                </a>
+                </Link>
             </div>
         </aside>
     );
@@ -345,32 +410,30 @@ const Sidebar = () => {
 
 const Header = () => {
     const { t, language, toggleLanguage } = useLanguage();
-    const { isDemoMode, toggleDemoMode, canToggleDemoMode } = useDemo();
+    const { isDemoMode, toggleDemoMode, isSwitchingDemoMode } = useDemo();
     const { theme, setTheme } = useTheme();
+    const { liveModeEnabled, toggleLiveMode } = useLiveMode();
     const location = useLocation();
 
     // Don't show header on Landing or Login pages
     if (location.pathname === '/' || location.pathname === '/login') return null;
 
     return (
-        <header className="h-16 border-b border-border/50 flex items-center justify-between px-6 bg-background/80 backdrop-blur-md z-10 sticky top-0">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="hover:text-foreground cursor-pointer transition-colors">{t('header.overview')}</span>
-                <span className="text-muted-foreground/50">/</span>
-                <span className="text-foreground font-medium">{t('nav.dashboard')}</span>
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-border/50 bg-background px-3 md:px-6">
+            <div className="min-w-0 flex items-center gap-3 text-sm text-muted-foreground overflow-hidden">
+                <span className="hover:text-foreground cursor-pointer transition-colors truncate">{t('header.overview')}</span>
+                <span className="text-muted-foreground/50 shrink-0">/</span>
+                <span className="text-foreground font-medium truncate">{t('nav.dashboard')}</span>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4 shrink-0">
                 {/* Status Indicator */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span className="text-xs font-medium text-emerald-500 tracking-tight">{t('header.system_healthy')}</span>
+                <div className="flex items-center gap-2 rounded-full border border-emerald-500/10 bg-emerald-500/5 px-3 py-1.5">
+                    <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                    <span className="hidden lg:inline text-xs font-medium text-emerald-500 tracking-tight">{t('header.system_healthy')}</span>
                 </div>
 
-                <div className="h-8 w-px bg-border"></div>
+                <div className="hidden sm:block h-8 w-px bg-border"></div>
 
                 {/* Theme Toggle */}
                 <div className="flex items-center gap-1 bg-muted border border-border rounded-full p-0.5">
@@ -397,20 +460,23 @@ const Header = () => {
                     </button>
                 </div>
 
-                <div className="h-8 w-px bg-border"></div>
+                <div className="hidden sm:block h-8 w-px bg-border"></div>
 
-                {canToggleDemoMode && (
-                    <>
-                        {/* Demo Mode Toggle */}
-                        <div onClick={toggleDemoMode} className="flex items-center gap-2 cursor-pointer group">
-                            <span className={`text-xs font-medium transition-colors ${isDemoMode ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>{t('nav.demo_mode')}</span>
-                            <div className={`w-8 h-4 rounded-full relative transition-colors ${isDemoMode ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
-                                <div className={`absolute top-0.5 w-3 h-3 rounded-full shadow-sm transition-all ${isDemoMode ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
-                            </div>
-                        </div>
-                        <div className="h-8 w-px bg-border"></div>
-                    </>
-                )}
+                <button
+                    type="button"
+                    data-testid="demo-mode-toggle"
+                    aria-pressed={isDemoMode}
+                    onClick={toggleDemoMode}
+                    disabled={isSwitchingDemoMode}
+                    className={`flex items-center gap-2 group shrink-0 whitespace-nowrap ${isSwitchingDemoMode ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                    <span className={`text-xs font-medium transition-colors ${isDemoMode ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>{t('nav.demo_mode')}</span>
+                    <div className={`w-8 h-4 rounded-full relative transition-colors border ${isDemoMode ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 rounded-full shadow-sm transition-all ${isDemoMode ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
+                    </div>
+                </button>
+
+                <div className="hidden sm:block h-8 w-px bg-border"></div>
 
                 {/* Language Toggle */}
                 <div onClick={toggleLanguage} className="flex items-center gap-2 cursor-pointer group">
@@ -424,12 +490,12 @@ const Header = () => {
                 <div className="h-8 w-px bg-border"></div>
 
                 {/* Custom Switch (Auto Refresh) */}
-                <div className="flex items-center gap-2 group cursor-pointer">
+                <button type="button" onClick={toggleLiveMode} className="flex items-center gap-2 group cursor-pointer">
                     <span className="text-xs font-medium group-hover:text-foreground transition-colors text-muted-foreground">{t('header.live')}</span>
-                    <div className="w-9 h-5 rounded-full bg-muted border border-border relative transition-colors group-hover:border-primary/50">
-                        <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-primary shadow-sm transition-transform"></div>
+                    <div className={`w-9 h-5 rounded-full border relative transition-colors ${liveModeEnabled ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border group-hover:border-primary/50'}`}>
+                        <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-sm transition-all ${liveModeEnabled ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
                     </div>
-                </div>
+                </button>
             </div>
         </header>
     )
@@ -478,10 +544,17 @@ const AnimatedRoutes = () => {
                 <Route path="/sites" element={<PrivateRoute><PageWrapper><Sites /></PageWrapper></PrivateRoute>} />
                 <Route path="/deploy" element={<PrivateRoute><PageWrapper><DeploymentWizard /></PageWrapper></PrivateRoute>} />
                 <Route path="/scanner" element={<PrivateRoute><PageWrapper><Scanner /></PageWrapper></PrivateRoute>} />
+                <Route path="/scanner/runs/:id" element={<PrivateRoute><PageWrapper><ScannerRunDetail /></PageWrapper></PrivateRoute>} />
                 <Route path="/history" element={<PrivateRoute><PageWrapper><FixHistory /></PageWrapper></PrivateRoute>} />
+                <Route path="/history/:id" element={<PrivateRoute><PageWrapper><FixHistoryDetail /></PageWrapper></PrivateRoute>} />
                 <Route path="/settings" element={<PrivateRoute><PageWrapper><SettingsPage /></PageWrapper></PrivateRoute>} />
                 <Route path="/alerts" element={<PrivateRoute><PageWrapper><Alerts /></PageWrapper></PrivateRoute>} />
+                <Route path="/alerts/:id" element={<PrivateRoute><PageWrapper><AlertDetail /></PageWrapper></PrivateRoute>} />
+                <Route path="/agents/:id" element={<PrivateRoute><PageWrapper><AgentDetail /></PageWrapper></PrivateRoute>} />
                 <Route path="/devices/board-status/:id" element={<PrivateRoute><PageWrapper><BoardStatus /></PageWrapper></PrivateRoute>} />
+                <Route path="/sites/:id" element={<PrivateRoute><PageWrapper><SiteDetail /></PageWrapper></PrivateRoute>} />
+                <Route path="/traffic/sessions/:id" element={<PrivateRoute><PageWrapper><TrafficSessionDetail /></PageWrapper></PrivateRoute>} />
+                <Route path="/attack-sim/runs/:id" element={<PrivateRoute><PageWrapper><AttackRunDetail /></PageWrapper></PrivateRoute>} />
 
                 {/* Admin-only routes */}
                 <Route path="/admin" element={<PrivateRoute><AdminRoute><PageWrapper><SuperAdmin /></PageWrapper></AdminRoute></PrivateRoute>} />
@@ -505,7 +578,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
             <Sidebar />
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-                <DemoBanner />
                 <Header />
                 <div className="flex-1 overflow-y-auto scrollbar-hide">
                     {children}
@@ -518,19 +590,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 const App = () => {
     return (
         <ThemeProvider defaultTheme="dark" storageKey="aetherguard-theme">
-            <DemoProvider>
-                <LanguageProvider>
-                    <WebSocketProvider>
-                        <AttackStatusProvider>
-                            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                                <Layout>
-                                    <AnimatedRoutes />
-                                </Layout>
-                            </BrowserRouter>
-                        </AttackStatusProvider>
-                    </WebSocketProvider>
-                </LanguageProvider>
-            </DemoProvider>
+            <LiveModeProvider>
+                <DemoProvider>
+                    <LanguageProvider>
+                        <WebSocketProvider>
+                            <AttackStatusProvider>
+                                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                                    <Layout>
+                                        <AnimatedRoutes />
+                                    </Layout>
+                                </BrowserRouter>
+                            </AttackStatusProvider>
+                        </WebSocketProvider>
+                    </LanguageProvider>
+                </DemoProvider>
+            </LiveModeProvider>
         </ThemeProvider>
     );
 };

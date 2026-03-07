@@ -62,31 +62,42 @@ describe('ScannerTaskService', () => {
 
   describe('createTask', () => {
     it('should create a new scan task', async () => {
-      const task = await scannerTaskService.createTask(defaultInput);
+      const task = await scannerTaskService.createTask({
+        ...defaultInput,
+        tenantId: 'tenant-create-test'
+      });
 
       expect(task).toBeDefined();
       expect(task.id).toBeDefined();
-      expect(task.tenantId).toBe('tenant-001');
+      expect(task.tenantId).toBe('tenant-create-test');
       expect(task.status).toBe('pending');
       expect(task.phase).toBe('queued');
       expect(task.progress).toBe(0);
     });
 
     it('should create task with correct summary', async () => {
-      const task = await scannerTaskService.createTask(defaultInput);
+      const task = await scannerTaskService.createTask({
+        ...defaultInput,
+        tenantId: 'tenant-summary-test'
+      });
 
       expect(task.summary).toBeDefined();
       expect(task.summary.urlTargets).toBe(1);
       expect(task.summary.hostEnabled).toBe(true);
     });
 
-    it('should throw error if task already running for tenant', async () => {
-      // Create first task
-      await scannerTaskService.createTask(defaultInput);
+    it('should queue additional tasks for the same tenant instead of rejecting them', async () => {
+      const duplicateTenantInput = {
+        ...defaultInput,
+        tenantId: 'tenant-duplicate-test'
+      };
+      const first = await scannerTaskService.createTask(duplicateTenantInput);
+      const second = await scannerTaskService.createTask(duplicateTenantInput);
 
-      // Try to create second task for same tenant
-      await expect(scannerTaskService.createTask(defaultInput))
-        .rejects.toThrow('A scan task is already running for this tenant');
+      expect(first.id).toBeDefined();
+      expect(second.id).toBeDefined();
+      expect(second.id).not.toBe(first.id);
+      expect(second.status).toBe('pending');
     });
   });
 

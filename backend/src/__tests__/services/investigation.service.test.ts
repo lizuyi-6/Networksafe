@@ -12,11 +12,10 @@ jest.mock('../../config/database', () => {
   const mockDb = {
     run: jest.fn(),
     prepare: jest.fn(() => ({
-      bind: jest.fn(() => ({
-        step: jest.fn(() => false),
-        getAsObject: jest.fn(() => null),
-        free: jest.fn()
-      }))
+      bind: jest.fn(),
+      step: jest.fn(() => false),
+      getAsObject: jest.fn(() => null),
+      free: jest.fn()
     }))
   };
 

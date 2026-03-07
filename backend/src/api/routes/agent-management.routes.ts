@@ -11,6 +11,26 @@ import logger from '../../utils/logger';
 
 const router = Router();
 
+const getAuditLogsForView = async (filter: Parameters<typeof auditLogger.getLogs>[0]) => {
+  const auditLoggerWithViews = auditLogger as typeof auditLogger & {
+    getLogsView?: (filter: Parameters<typeof auditLogger.getLogs>[0]) => Promise<ReturnType<typeof auditLogger.getLogs>>;
+  };
+  if (typeof auditLoggerWithViews.getLogsView === 'function') {
+    return await auditLoggerWithViews.getLogsView(filter);
+  }
+  return auditLogger.getLogs(filter);
+};
+
+const verifyAuditLogForView = async (logId: string) => {
+  const auditLoggerWithViews = auditLogger as typeof auditLogger & {
+    verifyIntegrityView?: (logId: string) => Promise<boolean>;
+  };
+  if (typeof auditLoggerWithViews.verifyIntegrityView === 'function') {
+    return await auditLoggerWithViews.verifyIntegrityView(logId);
+  }
+  return auditLogger.verifyIntegrity(logId);
+};
+
 /**
  * GET /api/admin/agents
  * List all registered agents
@@ -158,11 +178,11 @@ router.delete('/:agentId', authenticate, requireRole('admin'), (req: Authenticat
  * Get audit logs
  * SECURITY: Admin only
  */
-router.get('/audit/logs', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
+router.get('/audit/logs', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { category, actorId, targetId, limit } = req.query;
 
-    const logs = auditLogger.getLogs({
+    const logs = await getAuditLogsForView({
       category: category as string,
       actorId: actorId as string,
       targetId: targetId as string,
@@ -187,10 +207,10 @@ router.get('/audit/logs', authenticate, requireRole('admin'), (req: Authenticate
  * Verify audit log integrity
  * SECURITY: Admin only
  */
-router.get('/audit/verify/:logId', authenticate, requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
+router.get('/audit/verify/:logId', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { logId } = req.params;
-    const isValid = auditLogger.verifyIntegrity(logId);
+    const isValid = await verifyAuditLogForView(logId);
 
     res.json({
       success: true,

@@ -1,0 +1,104 @@
+{
+  "vulnerabilities": [
+    {
+      "id": "VULN-001",
+      "title": "硬编码生产环境密钥",
+      "severity": "Critical",
+      "cvss": 9.8,
+      "location": "/mnt/x/want/fsce/.env",
+      "description": "生产环境的.env文件包含真实的JWT_SECRET、Redis密码和API密钥，这些密钥被提交到代码仓库中。攻击者可使用泄露的JWT_SECRET伪造任意用户令牌，直接获取系统完全控制权。",
+      "poc": "JWT_SECRET=FluxGuardJwtSecret_for_prod_2026_very_long_1234567890\nREDIS_PASSWORD=FluxGuardRedis123!\nVALID_API_KEYS=prod-api-key\nDEVICE_API_KEYS=prod-device-key",
+      "remediation": "1. 立即撤销所有泄露的密钥\n2. 从Git历史记录中完全删除.env文件\n3. 使用GitHub密钥扫描工具检查是否被泄露\n4. 启用密钥轮换机制\n5. 使用Vault等密钥管理系统"
+    },
+    {
+      "id": "VULN-002",
+      "title": "JWT密钥泄露导致令牌伪造",
+      "severity": "Critical",
+      "cvss": 9.1,
+      "location": "/mnt/x/want/fsce/backend/src/middleware/auth.middleware.ts:61-62",
+      "description": "JWT签名密钥硬编码在环境变量中，且在生产环境泄露。攻击者可以使用该密钥伪造任意用户的JWT令牌，包括管理员账户，完全绕过身份验证机制。",
+      "poc": "const jwt = require('jsonwebtoken');\nconst token = jwt.sign({ userId: 'admin', role: 'admin' }, 'FluxGuardJwtSecret_for_prod_2026_very_long_1234567890');\nconsole.log(token);",
+      "remediation": "1. 立即更换JWT_SECRET\n2. 使用非对称加密(RSA/ECDSA)替代HMAC\n3. 实施令牌撤销机制\n4. 添加JWT密钥版本控制"
+    },
+    {
+      "id": "VULN-003",
+      "title": "Redis密码泄露",
+      "severity": "High",
+      "cvss": 8.5,
+      "location": "/mnt/x/want/fsce/.env",
+      "description": "Redis缓存密码硬编码在配置文件中。攻击者可使用泄露的密码直接连接Redis服务器，窃取会话数据、JWT黑名单缓存和其他敏感信息。",
+      "poc": "redis-cli -h <target> -p 6379 AUTH FluxGuardRedis123!\nKEYS *\nGET session:*",
+      "remediation": "1. 立即更改Redis密码\n2. 配置Redis仅监听localhost\n3. 启用Redis ACL访问控制\n4. 使用Redis TLS加密连接"
+    },
+    {
+      "id": "VULN-004",
+      "title": "命令注入漏洞 - iptables规则添加",
+      "severity": "High",
+      "cvss": 8.4,
+      "location": "/mnt/x/want/fsce/backend/src/agent/firewall-controller.ts:196",
+      "description": "firewall-controller.ts中的blockWithIptables方法直接将用户输入的IP地址拼接到iptables命令中执行。虽然存在IP格式验证，但如果验证被绕过或存在缺陷，攻击者可注入任意系统命令。",
+      "poc": "// 如果IP验证被绕过\nPOST /api/firewall/block\n{\n  \"ip\": \"192.168.1.1; cat /etc/passwd > /tmp/stolen.txt\",\n  \"duration\": 3600\n}\n\n// 执行的命令:\n// iptables -A INPUT -s 192.168.1.1; cat /etc/passwd > /tmp/stolen.txt -j DROP",
+      "remediation": "1. 使用参数化命令替代字符串拼接\n2. 使用iptables Node.js库(如node-iptables)\n3. 强化IP验证逻辑\n4. 使用execFile/spawn传递参数数组而非shell字符串"
+    },
+    {
+      "id": "VULN-005",
+      "title": "命令注入漏洞 - 系统扫描器",
+      "severity": "High",
+      "cvss": 8.4,
+      "location": "/mnt/x/want/fsce/backend/src/scanner/system-scanner.ts",
+      "description": "SystemScanner类中多处使用execAsync执行系统命令，包括apt、yum、ulimit等命令。部分命令将外部输入（如文件路径、IP地址）拼接到命令字符串中，存在命令注入风险。",
+      "poc": "// system-scanner.ts 中的危险代码模式\nconst { stdout } = await execAsync('cat /etc/nginx/nginx.conf');\n\n// 如果攻击者可以控制文件路径变量:\n// path = '/etc/passwd; rm -rf / --no-preserve-root'",
+      "remediation": "1. 对所有用户输入进行严格验证\n2. 使用参数化API替代shell字符串\n3. 使用沙箱执行环境\n4. 实施最小权限原则"
+    },
+    {
+      "id": "VULN-006",
+      "title": "硬编码开发环境凭证",
+      "severity": "High",
+      "cvss": 7.8,
+      "location": "/mnt/x/want/fsce/backend/.env",
+      "description": "开发环境配置文件中包含硬编码的管理员和演示账户凭证。如果生产环境错误地使用了这些配置，或者开发环境可被外部访问，攻击者可使用这些凭证登录系统。",
+      "poc": "ADMIN_EMAIL=admin@fluxguard.dev\nADMIN_PASSWORD=DevAdmin123456!\nDEMO_EMAIL=demo@fluxguard.dev\nDEMO_PASSWORD=DevDemo123456!",
+      "remediation": "1. 从仓库中移除.env文件\n2. 使用.env.example作为模板\n3. 实施强密码策略\n4. 定期轮换所有凭证"
+    },
+    {
+      "id": "VULN-007",
+      "title": "跨站脚本攻击(XSS) - innerHTML使用",
+      "severity": "Medium",
+      "cvss": 6.8,
+      "location": "/mnt/x/want/fsce/frontend/js/app.js:277,300,321,431,467,490",
+      "description": "前端JavaScript代码多处使用innerHTML直接插入包含用户可控数据的内容。如果这些数据未经过充分过滤，攻击者可注入恶意脚本，窃取用户会话或执行未授权操作。",
+      "poc": "// 如果event.message包含恶意脚本\nevent.message = \"<img src=x onerror=alert(document.cookie)>\";\n\ntr.innerHTML = `\n    <td>${event.timestamp}</td>\n    <td>${event.type}</td>\n    <td>${event.severity}</td>\n    <td>${event.message}</td>  // XSS触发点\n`;",
+      "remediation": "1. 使用textContent替代innerHTML\n2. 使用框架内置的转义机制(如React的JSX)\n3. 实施内容安全策略(CSP)\n4. 对所有用户输入进行HTML实体编码"
+    },
+    {
+      "id": "VULN-008",
+      "title": "API密钥硬编码",
+      "severity": "Medium",
+      "cvss": 6.5,
+      "location": "/mnt/x/want/fsce/.env",
+      "description": "生产环境API密钥硬编码在环境变量中。虽然这是常见的做法，但密钥不应提交到代码仓库。攻击者可使用这些密钥直接访问设备API端点。",
+      "poc": "VALID_API_KEYS=prod-api-key\nDEVICE_API_KEYS=prod-device-key\n\n// 使用泄露的API密钥:\nGET /api/devices\nX-API-Key: prod-api-key",
+      "remediation": "1. 轮换所有API密钥\n2. 使用API密钥管理系统\n3. 实施API密钥分级(只读/读写)\n4. 添加API密钥使用监控和告警"
+    },
+    {
+      "id": "VULN-009",
+      "title": "路径遍历 - 日志文件解析",
+      "severity": "Medium",
+      "cvss": 5.8,
+      "location": "/mnt/x/want/fsce/backend/src/agent/traffic-monitor.ts:72-74",
+      "description": "流量监控模块允许通过环境变量配置自定义日志路径。如果攻击者能够控制这个环境变量，可能导致路径遍历漏洞，读取系统上的任意文件。",
+      "poc": "// traffic-monitor.ts\nif (this.LOG_PATHS.custom && fs.existsSync(this.LOG_PATHS.custom)) {\n    return this.LOG_PATHS.custom;\n}\n\n// 攻击场景:\n// 1. 攻击者注入环境变量: ACCESS_LOG_PATH=/etc/passwd\n// 2. 系统读取该文件作为访问日志",
+      "remediation": "1. 对自定义日志路径进行白名单验证\n2. 限制只能读取特定目录下的文件\n3. 使用chroot或容器隔离日志访问\n4. 验证文件类型确保是真正的日志文件"
+    },
+    {
+      "id": "VULN-010",
+      "title": "信息泄露 - 详细错误信息",
+      "severity": "Low",
+      "cvss": 4.3,
+      "location": "多处",
+      "description": "系统中的多个位置返回详细的错误信息，包括文件路径、内部IP地址、数据库错误详情等。这些信息可帮助攻击者进行进一步的针对性攻击。",
+      "poc": "// 示例泄露信息\n{\n    \"error\": \"Database connection failed\",\n    \"details\": \"ECONNREFUSED 192.168.1.100:5432\",\n    \"stack\": \"Error at /app/src/database/connection.ts:45\"\n}",
+      "remediation": "1. 在生产环境禁用详细错误信息\n2. 使用统一的错误码替代详细描述\n3. 在日志中记录详细信息但向客户端返回简化信息\n4. 审查所有API端点的错误响应"
+    }
+  ]
+}

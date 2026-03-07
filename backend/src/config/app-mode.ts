@@ -7,7 +7,15 @@ const normalizeMode = (value?: string): AppMode => {
   return 'production';
 };
 
-export const APP_MODE: AppMode = normalizeMode(process.env.APP_MODE);
+const INITIAL_APP_MODE: AppMode = normalizeMode(process.env.APP_MODE);
+export let APP_MODE: AppMode = INITIAL_APP_MODE;
+
+export const getAppMode = (): AppMode => APP_MODE;
+
+export const setAppMode = (mode: AppMode): AppMode => {
+  APP_MODE = mode;
+  return APP_MODE;
+};
 
 export const isDemoMode = (): boolean => APP_MODE === 'demo';
 

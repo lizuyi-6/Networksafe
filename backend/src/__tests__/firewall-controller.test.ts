@@ -9,6 +9,8 @@ describe('FirewallController', () => {
 
     beforeEach(() => {
         controller = new FirewallController();
+        // Keep unit tests deterministic and avoid touching host firewall.
+        (controller as any).backend = 'none';
     });
 
     afterEach(async () => {

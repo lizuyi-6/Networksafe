@@ -6,7 +6,6 @@
  */
 
 import express, { Application } from 'express';
-import Database, { Database as SqlJsDatabase } from 'better-sqlite3';
 import { TestDatabaseManager } from './test-database-manager';
 import { TestDataFixtures, SeedOptions } from './test-data-fixtures';
 import request from 'supertest';
@@ -23,7 +22,7 @@ export interface TestContextOptions {
   /**
    * Custom Express application setup
    */
-  setupApp?: (app: Application, db: SqlJsDatabase) => void;
+  setupApp?: (app: Application, db: any) => void;
 
   /**
    * Test ID (auto-generated if not provided)
@@ -38,7 +37,7 @@ export interface TestContext {
   /**
    * Database instance
    */
-  db: SqlJsDatabase;
+  db: any;
 
   /**
    * Test fixtures helper
@@ -66,6 +65,163 @@ export interface TestContext {
   seededData?: ReturnType<typeof TestDataFixtures.seedTestData>;
 }
 
+function execSql(db: any, sql: string, params?: any[]): void {
+  if (params && params.length > 0 && typeof db.run === 'function') {
+    db.run(sql, params);
+    return;
+  }
+  if (typeof db.run === 'function') {
+    db.run(sql);
+    return;
+  }
+  if (typeof db.exec === 'function') {
+    db.exec(sql);
+    return;
+  }
+  throw new Error('Unsupported test database interface');
+}
+
+function ensureTestSchema(db: any): void {
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS sites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      domain TEXT UNIQUE NOT NULL,
+      target TEXT NOT NULL,
+      sslEnabled INTEGER DEFAULT 1,
+      antiBotEnabled INTEGER DEFAULT 1,
+      rateLimitEnabled INTEGER DEFAULT 1,
+      rateLimitRequests INTEGER DEFAULT 60,
+      concurrencyEnabled INTEGER DEFAULT 1,
+      concurrencyMax INTEGER DEFAULT 5,
+      tenant_id TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      username TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'viewer',
+      plan TEXT DEFAULT 'starter',
+      tenant_id TEXT,
+      status TEXT DEFAULT 'active',
+      last_login DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS agents (
+      id TEXT PRIMARY KEY,
+      hostname TEXT NOT NULL,
+      platform TEXT,
+      arch TEXT,
+      version TEXT,
+      lastHeartbeat DATETIME,
+      status TEXT DEFAULT 'offline',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS alerts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      severity TEXT DEFAULT 'info',
+      source TEXT,
+      message TEXT NOT NULL,
+      details TEXT,
+      acknowledged INTEGER DEFAULT 0,
+      acknowledged_by TEXT,
+      acknowledged_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS devices (
+      id TEXT PRIMARY KEY,
+      device_type TEXT DEFAULT 'esp32',
+      mac_address TEXT UNIQUE,
+      firmware_version TEXT,
+      status TEXT DEFAULT 'offline',
+      last_seen DATETIME,
+      config TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      key_hash TEXT UNIQUE NOT NULL,
+      user_id TEXT,
+      tenant_id TEXT,
+      permissions TEXT DEFAULT '["read"]',
+      last_used DATETIME,
+      expires_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS metrics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      siteId INTEGER NOT NULL,
+      metricType TEXT NOT NULL,
+      value REAL NOT NULL,
+      metadata TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS scan_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      siteId INTEGER,
+      scanType TEXT NOT NULL,
+      result TEXT NOT NULL,
+      recommendations TEXT,
+      status TEXT DEFAULT 'pending',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS security_rules (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      siteId INTEGER NOT NULL,
+      ruleType TEXT NOT NULL,
+      config TEXT NOT NULL,
+      enabled INTEGER DEFAULT 1,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS agent_registrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      agent_id TEXT NOT NULL UNIQUE,
+      hostname TEXT NOT NULL,
+      api_key_hash TEXT NOT NULL,
+      secret_key TEXT NOT NULL,
+      fingerprint TEXT,
+      platform TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_seen_at DATETIME
+    )
+  `);
+  execSql(db, `
+    CREATE TABLE IF NOT EXISTS backups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      data TEXT NOT NULL,
+      size INTEGER,
+      isAutomatic INTEGER DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
 /**
  * Create a complete test context
  *
@@ -81,6 +237,9 @@ export async function createTestContext(options: TestContextOptions = {}): Promi
 
   // Create isolated database
   const db = TestDatabaseManager.createIsolatedDatabase(testId);
+  // Keep context DB alive across test cases in this suite; it will be cleaned in destroyTestContext().
+  TestDatabaseManager.setCurrentTestId(null);
+  ensureTestSchema(db);
 
   // Create Express app
   const app = express();
@@ -112,7 +271,8 @@ export async function createTestContext(options: TestContextOptions = {}): Promi
  *
  * @param ctx - Test context to destroy
  */
-export function destroyTestContext(ctx: TestContext): void {
+export function destroyTestContext(ctx?: TestContext): void {
+  if (!ctx) return;
   // Clean up database
   TestDatabaseManager.cleanupDatabase(ctx.testId);
 }

@@ -7,8 +7,8 @@ echo "==========================================="
 
 # Install dependencies (Node.js 20.x, Nginx)
 echo "--> Installing OS dependencies..."
-curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
-yum install -y nodejs nginx
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs nginx
 
 echo "--> Installing PM2 globally..."
 npm install -g pm2
@@ -51,7 +51,7 @@ pm2 startup | grep "sudo env" | sh || true
 # Setup Frontend
 echo "--> Setting up frontend..."
 cp -r $APP_DIR/frontend/dist/* /var/www/aetherguard/
-chown -R nginx:nginx /var/www/aetherguard
+chown -R www-data:www-data /var/www/aetherguard
 
 # Configure Nginx
 echo "--> Configuring Nginx..."

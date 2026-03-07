@@ -1,0 +1,70 @@
+[TAILING] Tailing last 50 lines for [fluxguard-agent] process (change the value with --lines option)
+/root/.pm2/logs/fluxguard-agent-error-2.log last 50 lines:
+2|fluxguar | [2026-02-22T08:29:05.634Z] [ERROR] Connection error {"error":"backend.invalid_agent_credentials"}
+2|fluxguar | [2026-02-22T08:29:15.542Z] [WARN] Connection timeout, will retry in background
+2|fluxguar | [2026-02-22T08:55:47.244Z] [ERROR] Connection error {"error":"backend.invalid_agent_credentials"}
+2|fluxguar | [2026-02-22T08:55:56.567Z] [WARN] Connection timeout, will retry in background
+2|fluxguar | [2026-02-22T09:04:11.843Z] [WARN] Attack detected: Malicious Bot User-Agent {"ip":"20.163.33.22","ruleId":"BOT-001"}
+2|fluxguar | [2026-02-22T09:04:11.857Z] [WARN] Threat detected {"threat":{"type":"bad_bot","severity":"medium","sourceIP":"20.163.33.22","description":"Malicious Bot User-Agent","evidence":".../  Mozilla/5.0 zgrab/0.x 20.163.33.22 - ...","ruleId":"BOT-001","autoBlock":true,"blockDuration":86400,"timestamp":{}}}
+2|fluxguar | [2026-02-22T09:04:16.598Z] [ERROR] firewalld block failed: Command failed: firewall-cmd --add-rich-rule rule family="ipv4" source address="20.163.33.22" reject
+2|fluxguar | FirewallD is not running
+2|fluxguar | 
+2|fluxguar | [2026-02-22T09:19:09.396Z] [ERROR] Connection error {"error":"backend.invalid_agent_credentials"}
+2|fluxguar | [2026-02-22T09:19:19.345Z] [WARN] Connection timeout, will retry in background
+2|fluxguar | [2026-02-22T09:27:36.813Z] [ERROR] Connection error {"error":"backend.invalid_agent_credentials"}
+2|fluxguar | [2026-02-22T09:27:46.728Z] [WARN] Connection timeout, will retry in background
+2|fluxguar | [2026-02-22T09:30:40.358Z] [ERROR] Connection error {"error":"backend.invalid_agent_credentials"}
+2|fluxguar | [2026-02-22T09:30:50.297Z] [WARN] Connection timeout, will retry in background
+
+/root/.pm2/logs/fluxguard-agent-out-2.log last 50 lines:
+2|fluxguar | [2026-02-22T09:19:19.347Z] [INFO] Watching log file: /var/log/nginx/access.log
+2|fluxguar | [2026-02-22T09:19:19.349Z] [INFO] Traffic monitoring started
+2|fluxguar | [2026-02-22T09:19:19.349Z] [INFO] Agent started successfully
+2|fluxguar | 
+2|fluxguar | stopping agent...
+2|fluxguar | [2026-02-22T09:27:35.940Z] [INFO] Stopping Agent...
+2|fluxguar | [2026-02-22T09:27:35.941Z] [INFO] Traffic monitoring stopped
+2|fluxguar | [2026-02-22T09:27:35.941Z] [INFO] Agent stopped
+2|fluxguar | FluxGuard Agent CLI
+2|fluxguar | server: http://127.0.0.1:3005
+2|fluxguar | [2026-02-22T09:27:36.670Z] [INFO] Loaded 10 detection rules
+2|fluxguar | [2026-02-22T09:27:36.701Z] [INFO] Starting FluxGuard Agent: probe-agent-01
+2|fluxguar | [2026-02-22T09:27:36.702Z] [INFO] Connecting to server: http://127.0.0.1:3005
+2|fluxguar | [2026-02-22T09:27:36.739Z] [INFO] Firewall backend: firewalld
+2|fluxguar | [2026-02-22T09:27:46.730Z] [INFO] Found Nginx log: /var/log/nginx/access.log
+2|fluxguar | [2026-02-22T09:27:46.730Z] [INFO] Watching log file: /var/log/nginx/access.log
+2|fluxguar | [2026-02-22T09:27:46.732Z] [INFO] Traffic monitoring started
+2|fluxguar | [2026-02-22T09:27:46.732Z] [INFO] Agent started successfully
+2|fluxguar | 
+2|fluxguar | stopping agent...
+2|fluxguar | [2026-02-22T09:30:39.779Z] [INFO] Stopping Agent...
+2|fluxguar | [2026-02-22T09:30:39.780Z] [INFO] Traffic monitoring stopped
+2|fluxguar | [2026-02-22T09:30:39.781Z] [INFO] Agent stopped
+2|fluxguar | FluxGuard Agent CLI
+2|fluxguar | server: http://127.0.0.1:3005
+2|fluxguar | [2026-02-22T09:30:40.272Z] [INFO] Loaded 10 detection rules
+2|fluxguar | [2026-02-22T09:30:40.281Z] [INFO] Starting FluxGuard Agent: probe-agent-01
+2|fluxguar | [2026-02-22T09:30:40.281Z] [INFO] Connecting to server: http://127.0.0.1:3005
+2|fluxguar | [2026-02-22T09:30:40.304Z] [INFO] Firewall backend: firewalld
+2|fluxguar | [2026-02-22T09:30:50.299Z] [INFO] Found Nginx log: /var/log/nginx/access.log
+2|fluxguar | [2026-02-22T09:30:50.300Z] [INFO] Watching log file: /var/log/nginx/access.log
+2|fluxguar | [2026-02-22T09:30:50.302Z] [INFO] Traffic monitoring started
+2|fluxguar | [2026-02-22T09:30:50.302Z] [INFO] Agent started successfully
+2|fluxguar | 
+2|fluxguar | stopping agent...
+2|fluxguar | [2026-02-22T09:34:18.554Z] [INFO] Stopping Agent...
+2|fluxguar | [2026-02-22T09:34:18.555Z] [INFO] Traffic monitoring stopped
+2|fluxguar | [2026-02-22T09:34:18.556Z] [INFO] Agent stopped
+2|fluxguar | FluxGuard Agent CLI
+2|fluxguar | server: http://127.0.0.1:3005
+2|fluxguar | [2026-02-22T09:34:19.023Z] [INFO] Loaded 10 detection rules
+2|fluxguar | [2026-02-22T09:34:19.032Z] [INFO] Starting FluxGuard Agent: probe-agent-01
+2|fluxguar | [2026-02-22T09:34:19.032Z] [INFO] Connecting to server: http://127.0.0.1:3005
+2|fluxguar | [2026-02-22T09:34:19.069Z] [INFO] Firewall backend: firewalld
+2|fluxguar | [2026-02-22T09:34:19.135Z] [INFO] Connected to control platform
+2|fluxguar | [2026-02-22T09:34:19.136Z] [INFO] Agent authenticated by server {"agentId":"probe-agent-01"}
+2|fluxguar | [2026-02-22T09:34:19.151Z] [INFO] Found Nginx log: /var/log/nginx/access.log
+2|fluxguar | [2026-02-22T09:34:19.151Z] [INFO] Watching log file: /var/log/nginx/access.log
+2|fluxguar | [2026-02-22T09:34:19.153Z] [INFO] Traffic monitoring started
+2|fluxguar | [2026-02-22T09:34:19.153Z] [INFO] Agent started successfully
+

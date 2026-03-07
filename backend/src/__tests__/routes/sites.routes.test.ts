@@ -53,7 +53,12 @@ jest.mock('../../config/database', () => ({
         }
         return null;
       }),
-      run: jest.fn(() => ({ changes: 1 }))
+      run: jest.fn((id: string | number) => {
+        if (String(id) === '999') {
+          return { changes: 0 };
+        }
+        return { changes: 1 };
+      })
     }))
   }))
 }));
@@ -66,6 +71,10 @@ jest.mock('dns', () => ({
       callback(null, { address: '127.0.0.1' });
     } else if (hostname === 'private.local') {
       callback(null, { address: '192.168.1.1' });
+    } else if (hostname === 'backend.newsite.com') {
+      callback(null, { address: '104.16.132.229' });
+    } else if (hostname === 'backend.updated.com') {
+      callback(null, { address: '104.16.133.229' });
     } else {
       callback(new Error('DNS lookup failed'), null);
     }
@@ -73,6 +82,7 @@ jest.mock('dns', () => ({
 }));
 
 jest.mock('../../utils/logger', () => ({
+  __esModule: true,
   default: {
     error: jest.fn(),
     info: jest.fn(),

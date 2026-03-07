@@ -1,5 +1,9 @@
 {
+  "scripts": {
+    "build:ppt": "node scripts/generate-aetherguard-pitch-ppt.mjs"
+  },
   "dependencies": {
-    "playwright": "^1.58.2"
+    "playwright": "^1.58.2",
+    "pptxgenjs": "^4.0.1"
   }
 }

@@ -6,10 +6,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger';
 import { getDatabase } from '../config/database';
+import { postgresShadowStoreService } from '../services/postgres-shadow-store.service';
 
 export interface AuditEvent {
   id: string;
   timestamp: string;
+  tenantId?: string;
   eventType: string;
   category: 'auth' | 'agent' | 'command' | 'firewall' | 'system';
   severity: 'info' | 'warning' | 'critical';
@@ -17,10 +19,11 @@ export interface AuditEvent {
     type: 'user' | 'agent' | 'system' | 'api';
     id: string;
     ip?: string;
+    email?: string;
   };
   action: string;
   target?: {
-    type: 'agent' | 'server' | 'user' | 'rule';
+    type: 'agent' | 'server' | 'user' | 'rule' | 'device' | 'site' | 'scan' | 'action' | 'tenant';
     id: string;
   };
   details: Record<string, any>;
@@ -37,6 +40,7 @@ export class AuditLogger {
   private readonly auditSecret: string;
   private readonly backupRetentionDays: number;
   private readonly maxDatabaseSize: number;
+  private schemaReady = false;
 
   constructor() {
     // SECURITY FIX CVE-2026-103: Require AUDIT_LOG_SECRET at startup
@@ -67,10 +71,88 @@ export class AuditLogger {
     this.startPeriodicBackupCheck();
   }
 
+  private ensureSchema(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    const db = getDatabase();
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id TEXT PRIMARY KEY,
+        timestamp TEXT NOT NULL,
+        tenant_id TEXT,
+        event_type TEXT NOT NULL,
+        category TEXT NOT NULL,
+        severity TEXT NOT NULL,
+        actor_type TEXT NOT NULL,
+        actor_id TEXT NOT NULL,
+        actor_email TEXT,
+        actor_ip TEXT,
+        action TEXT NOT NULL,
+        target_type TEXT,
+        target_id TEXT,
+        details_json TEXT NOT NULL,
+        status TEXT NOT NULL,
+        signature TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp DESC);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_category ON audit_log(category);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_actor_id ON audit_log(actor_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_target_id ON audit_log(target_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_tenant_id ON audit_log(tenant_id, timestamp DESC);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_status ON audit_log(status, timestamp DESC);
+    `);
+
+    const softMigrations = [
+      `ALTER TABLE audit_log ADD COLUMN tenant_id TEXT`,
+      `ALTER TABLE audit_log ADD COLUMN actor_email TEXT`
+    ];
+
+    for (const sql of softMigrations) {
+      try {
+        db.exec(sql);
+      } catch (error: any) {
+        if (!(error?.message || '').includes('duplicate column name')) {
+          logger.warn('Audit log soft migration failed', { sql, error: error?.message });
+        }
+      }
+    }
+
+    this.schemaReady = true;
+  }
+
+  private mapAuditRow(row: any): AuditEvent {
+    return {
+      id: row.id,
+      timestamp: row.timestamp,
+      tenantId: row.tenant_id || undefined,
+      eventType: row.event_type,
+      category: row.category,
+      severity: row.severity,
+      actor: {
+        type: row.actor_type,
+        id: row.actor_id,
+        ip: row.actor_ip || undefined,
+        email: row.actor_email || undefined
+      },
+      action: row.action,
+      target: row.target_type ? {
+        type: row.target_type,
+        id: row.target_id
+      } : undefined,
+      details: JSON.parse(row.details_json),
+      status: row.status,
+      signature: row.signature
+    };
+  }
+
   /**
    * Log a security event
    */
   async log(event: Omit<AuditEvent, 'id' | 'timestamp' | 'signature'>): Promise<string> {
+    this.ensureSchema();
     const auditEvent: AuditEvent = {
       id: uuidv4(),
       timestamp: new Date().toISOString(),
@@ -84,21 +166,67 @@ export class AuditLogger {
     try {
       const db = getDatabase();
 
+      if (postgresShadowStoreService.canServeReads()) {
+        await postgresShadowStoreService.execute(`
+          INSERT INTO audit_log (
+            id, timestamp, tenant_id, event_type, category, severity,
+            actor_type, actor_id, actor_email, actor_ip, action, target_type, target_id,
+            details_json, status, signature
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+          ON CONFLICT (id)
+          DO UPDATE SET
+            timestamp = EXCLUDED.timestamp,
+            tenant_id = EXCLUDED.tenant_id,
+            event_type = EXCLUDED.event_type,
+            category = EXCLUDED.category,
+            severity = EXCLUDED.severity,
+            actor_type = EXCLUDED.actor_type,
+            actor_id = EXCLUDED.actor_id,
+            actor_email = EXCLUDED.actor_email,
+            actor_ip = EXCLUDED.actor_ip,
+            action = EXCLUDED.action,
+            target_type = EXCLUDED.target_type,
+            target_id = EXCLUDED.target_id,
+            details_json = EXCLUDED.details_json,
+            status = EXCLUDED.status,
+            signature = EXCLUDED.signature
+        `, [
+          auditEvent.id,
+          auditEvent.timestamp,
+          auditEvent.tenantId || null,
+          auditEvent.eventType,
+          auditEvent.category,
+          auditEvent.severity,
+          auditEvent.actor.type,
+          auditEvent.actor.id,
+          auditEvent.actor.email || null,
+          auditEvent.actor.ip || null,
+          auditEvent.action,
+          auditEvent.target?.type || null,
+          auditEvent.target?.id || null,
+          JSON.stringify(auditEvent.details),
+          auditEvent.status,
+          auditEvent.signature
+        ]);
+      }
+
       // Store in database
       db.prepare(`
         INSERT INTO audit_log (
-          id, timestamp, event_type, category, severity,
-          actor_type, actor_id, actor_ip, action, target_type, target_id,
+          id, timestamp, tenant_id, event_type, category, severity,
+          actor_type, actor_id, actor_email, actor_ip, action, target_type, target_id,
           details_json, status, signature
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         auditEvent.id,
         auditEvent.timestamp,
+        auditEvent.tenantId || null,
         auditEvent.eventType,
         auditEvent.category,
         auditEvent.severity,
         auditEvent.actor.type,
         auditEvent.actor.id,
+        auditEvent.actor.email || null,
         auditEvent.actor.ip || null,
         auditEvent.action,
         auditEvent.target?.type || null,
@@ -107,6 +235,24 @@ export class AuditLogger {
         auditEvent.status,
         auditEvent.signature
       );
+      void postgresShadowStoreService.upsert('audit_log', {
+        id: auditEvent.id,
+        timestamp: auditEvent.timestamp,
+        tenant_id: auditEvent.tenantId || null,
+        event_type: auditEvent.eventType,
+        category: auditEvent.category,
+        severity: auditEvent.severity,
+        actor_type: auditEvent.actor.type,
+        actor_id: auditEvent.actor.id,
+        actor_email: auditEvent.actor.email || null,
+        actor_ip: auditEvent.actor.ip || null,
+        action: auditEvent.action,
+        target_type: auditEvent.target?.type || null,
+        target_id: auditEvent.target?.id || null,
+        details_json: JSON.stringify(auditEvent.details),
+        status: auditEvent.status,
+        signature: auditEvent.signature
+      });
 
       // Also log to standard logger
       this.logToStandardLogger(auditEvent);
@@ -250,6 +396,7 @@ export class AuditLogger {
    * SECURITY FIX CVE-2026-103: Use class property instead of environment variable
    */
   verifyIntegrity(logId: string): boolean {
+    this.ensureSchema();
     const db = getDatabase();
     const log = db.prepare('SELECT * FROM audit_log WHERE id = ?').get(logId) as any;
 
@@ -265,20 +412,53 @@ export class AuditLogger {
     return log.signature === expected;
   }
 
+  async verifyIntegrityView(logId: string): Promise<boolean> {
+    if (!postgresShadowStoreService.canServeReads()) {
+      return this.verifyIntegrity(logId);
+    }
+
+    const log = await postgresShadowStoreService.queryOne<any>(
+      'SELECT * FROM audit_log WHERE id = $1 LIMIT 1',
+      [logId]
+    );
+
+    if (!log) {
+      return false;
+    }
+
+    const crypto = require('crypto');
+    const data = `${log.id}|${log.timestamp}|${log.event_type}|${log.action}|${log.status}`;
+    const expected = crypto.createHmac('sha256', this.auditSecret).update(data).digest('hex');
+    return log.signature === expected;
+  }
+
   /**
    * Get audit logs for an entity
    */
   getLogs(filter: {
+    tenantId?: string;
     category?: string;
     actorId?: string;
     targetId?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+    page?: number;
     limit?: number;
   }): AuditEvent[] {
+    this.ensureSchema();
     const db = getDatabase();
-    const { limit = 100 } = filter;
+    const page = Math.max(1, Number(filter.page || 1));
+    const limit = Math.max(1, Math.min(Number(filter.limit || 100), 500));
+    const offset = (page - 1) * limit;
 
     let query = 'SELECT * FROM audit_log WHERE 1=1';
     const params: any[] = [];
+
+    if (filter.tenantId) {
+      query += ' AND tenant_id = ?';
+      params.push(filter.tenantId);
+    }
 
     if (filter.category) {
       query += ' AND category = ?';
@@ -295,31 +475,97 @@ export class AuditLogger {
       params.push(filter.targetId);
     }
 
-    query += ' ORDER BY timestamp DESC LIMIT ?';
-    params.push(limit);
+    if (filter.status) {
+      query += ' AND status = ?';
+      params.push(filter.status);
+    }
+
+    if (filter.from) {
+      query += ' AND timestamp >= ?';
+      params.push(filter.from);
+    }
+
+    if (filter.to) {
+      query += ' AND timestamp <= ?';
+      params.push(filter.to);
+    }
+
+    query += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
 
     const results = db.prepare(query).all(...params) as any[];
 
     return results.map(r => ({
-      id: r.id,
-      timestamp: r.timestamp,
-      eventType: r.event_type,
-      category: r.category,
-      severity: r.severity,
-      actor: {
-        type: r.actor_type,
-        id: r.actor_id,
-        ip: r.actor_ip
-      },
-      action: r.action,
-      target: r.target_type ? {
-        type: r.target_type,
-        id: r.target_id
-      } : undefined,
-      details: JSON.parse(r.details_json),
-      status: r.status,
-      signature: r.signature
+      ...this.mapAuditRow(r)
     }));
+  }
+
+  async getLogsView(filter: {
+    tenantId?: string;
+    category?: string;
+    actorId?: string;
+    targetId?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<AuditEvent[]> {
+    if (!postgresShadowStoreService.canServeReads()) {
+      return this.getLogs(filter);
+    }
+
+    const page = Math.max(1, Number(filter.page || 1));
+    const limit = Math.max(1, Math.min(Number(filter.limit || 100), 500));
+    const offset = (page - 1) * limit;
+
+    let query = 'SELECT * FROM audit_log WHERE 1=1';
+    const params: any[] = [];
+
+    const push = (clause: string, value: any) => {
+      params.push(value);
+      query += ` AND ${clause.replace('?', `$${params.length}`)}`;
+    };
+
+    if (filter.tenantId) {
+      push('tenant_id = ?', filter.tenantId);
+    }
+    if (filter.category) {
+      push('category = ?', filter.category);
+    }
+    if (filter.actorId) {
+      push('actor_id = ?', filter.actorId);
+    }
+    if (filter.targetId) {
+      push('target_id = ?', filter.targetId);
+    }
+    if (filter.status) {
+      push('status = ?', filter.status);
+    }
+    if (filter.from) {
+      push('timestamp >= ?', filter.from);
+    }
+    if (filter.to) {
+      push('timestamp <= ?', filter.to);
+    }
+
+    params.push(limit, offset);
+    query += ` ORDER BY timestamp DESC LIMIT $${params.length - 1} OFFSET $${params.length}`;
+
+    const results = await postgresShadowStoreService.queryAll<any>(query, params);
+    return results.map((row) => this.mapAuditRow(row));
+  }
+
+  async getLogByIdView(logId: string): Promise<AuditEvent | null> {
+    if (!postgresShadowStoreService.canServeReads()) {
+      return this.getLogs({ limit: 500 }).find((item) => item.id === logId) || null;
+    }
+
+    const row = await postgresShadowStoreService.queryOne<any>(
+      'SELECT * FROM audit_log WHERE id = $1 LIMIT 1',
+      [logId]
+    );
+    return row ? this.mapAuditRow(row) : null;
   }
 
   /**

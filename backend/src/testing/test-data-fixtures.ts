@@ -5,7 +5,6 @@
  * All test data is generated with sensible defaults and can be customized.
  */
 
-import Database, { Database as SqlJsDatabase } from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 

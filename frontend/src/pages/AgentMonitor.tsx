@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useLiveMode } from '../context/LiveModeContext';
 import {
     Brain,
     Activity,
@@ -15,444 +16,364 @@ import {
     BarChart3,
     Clock,
     ShieldAlert,
-    Network
+    Network,
 } from 'lucide-react';
 import { fetchAgentSystemStats, fetchAgentHealth } from '../services/api';
 import type { MultiAgentSystemStats, AgentHeartbeat } from '../types/api';
+import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
 
 const AGENT_ROLES = {
-    socrates: { name: 'Socrates', team: 'Red Team', teamKey: 'agentMonitor.redTeam', color: 'text-rose-500 dark:text-rose-400', bg: 'bg-rose-500/20', border: 'border-rose-500/30', glow: 'shadow-[0_0_15px_rgba(244,63,94,0.3)]', icon: '🔴' },
-    plato: { name: 'Plato', team: 'Blue Team', teamKey: 'agentMonitor.blueTeam', color: 'text-cyan-500 dark:text-cyan-400', bg: 'bg-cyan-500/20', border: 'border-cyan-500/30', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.3)]', icon: '🔵' },
-    aristotle: { name: 'Aristotle', team: 'Analyst', teamKey: 'agentMonitor.analyst', color: 'text-emerald-500 dark:text-emerald-400', bg: 'bg-emerald-500/20', border: 'border-emerald-500/30', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.3)]', icon: '🟢' },
-    arbitrator: { name: 'Arbitrator', team: 'Decision', teamKey: 'agentMonitor.decision', color: 'text-purple-500 dark:text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-500/30', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.3)]', icon: '🟣' }
+    socrates: { name: 'Socrates', teamKey: 'agentMonitor.redTeam', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', icon: 'SO' },
+    plato: { name: 'Plato', teamKey: 'agentMonitor.blueTeam', color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', icon: 'PL' },
+    aristotle: { name: 'Aristotle', teamKey: 'agentMonitor.analyst', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: 'AR' },
+    arbitrator: { name: 'Arbitrator', teamKey: 'agentMonitor.decision', color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20', icon: 'AB' },
 };
 
 export default function AgentMonitor() {
     const { t } = useTranslation();
+    const { liveModeEnabled } = useLiveMode();
     const [stats, setStats] = useState<MultiAgentSystemStats | null>(null);
     const [health, setHealth] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [autoRefresh, setAutoRefresh] = useState(true);
 
-    const LAYER_INFO = [
+    const layerInfo = [
         { id: 1, nameKey: 'agentMonitor.layers.collaboration', icon: Users },
         { id: 2, nameKey: 'agentMonitor.layers.rolePlaying', icon: Brain },
         { id: 3, nameKey: 'agentMonitor.layers.sceneTraversal', icon: Network },
         { id: 4, nameKey: 'agentMonitor.layers.capability', icon: Zap },
         { id: 5, nameKey: 'agentMonitor.layers.debate', icon: MessageSquare },
         { id: 6, nameKey: 'agentMonitor.layers.heterogeneous', icon: Activity },
-        { id: 7, nameKey: 'agentMonitor.layers.synthesis', icon: ShieldAlert }
+        { id: 7, nameKey: 'agentMonitor.layers.synthesis', icon: ShieldAlert },
     ];
 
     useEffect(() => {
         loadData();
 
-        if (autoRefresh) {
+        if (autoRefresh && liveModeEnabled) {
             const interval = setInterval(loadData, 5000);
             return () => clearInterval(interval);
         }
-    }, [autoRefresh]);
+    }, [autoRefresh, liveModeEnabled]);
 
     const loadData = async () => {
         setLoading(true);
         try {
-            const [statsData, healthData] = await Promise.all([
-                fetchAgentSystemStats(),
-                fetchAgentHealth()
-            ]);
+            const [statsData, healthData] = await Promise.all([fetchAgentSystemStats(), fetchAgentHealth()]);
             setStats(statsData);
             setHealth(healthData);
         } catch (e) {
-            console.error("Failed to load agent data", e);
+            console.error('Failed to load agent data', e);
         }
         setLoading(false);
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusTone = (status: string) => {
         switch (status) {
-            case 'healthy': return 'text-emerald-500 dark:text-emerald-400';
-            case 'degraded': return 'text-amber-500 dark:text-amber-400';
-            case 'unhealthy': return 'text-rose-500 dark:text-rose-400';
-            default: return 'text-muted-foreground';
+            case 'healthy':
+                return 'text-emerald-600 dark:text-emerald-400';
+            case 'degraded':
+                return 'text-amber-600 dark:text-amber-400';
+            case 'unhealthy':
+                return 'text-rose-600 dark:text-rose-400';
+            default:
+                return 'text-muted-foreground';
         }
     };
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'healthy': return <CheckCircle className="w-6 h-6 text-emerald-500 dark:text-emerald-400" drop-shadow="0 0 10px rgba(16,185,129,0.5)" />;
-            case 'degraded': return <AlertTriangle className="w-6 h-6 text-amber-500 dark:text-amber-400" drop-shadow="0 0 10px rgba(245,158,11,0.5)" />;
-            case 'unhealthy': return <XCircle className="w-6 h-6 text-rose-500 dark:text-rose-400" drop-shadow="0 0 10px rgba(244,63,94,0.5)" />;
-            default: return <Activity className="w-6 h-6 text-muted-foreground" />;
+            case 'healthy':
+                return <CheckCircle className="h-6 w-6 text-emerald-500" />;
+            case 'degraded':
+                return <AlertTriangle className="h-6 w-6 text-amber-500" />;
+            case 'unhealthy':
+                return <XCircle className="h-6 w-6 text-rose-500" />;
+            default:
+                return <Activity className="h-6 w-6 text-muted-foreground" />;
         }
     };
 
     const getStatusText = (status: string) => {
         switch (status) {
-            case 'healthy': return t('agentMonitor.healthy');
-            case 'degraded': return t('agentMonitor.degraded');
-            case 'unhealthy': return t('agentMonitor.unhealthy');
-            default: return t('agentMonitor.unknown');
+            case 'healthy':
+                return t('agentMonitor.healthy');
+            case 'degraded':
+                return t('agentMonitor.degraded');
+            case 'unhealthy':
+                return t('agentMonitor.unhealthy');
+            default:
+                return t('agentMonitor.unknown');
         }
     };
 
     return (
-        <div className="p-6 md:p-8 space-y-8 relative min-h-screen pb-12 overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none -z-10">
-                <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/10 blur-[150px] animate-blob" />
-                <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-600/10 blur-[150px] animate-blob animation-delay-2000" />
-                <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] rounded-full bg-emerald-600/5 blur-[120px] animate-blob animation-delay-4000" />
-
-                {/* Cyber grid background */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
-            </div>
-
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-purple-500/20 border border-purple-500/30 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.3)] backdrop-blur-md dark:bg-purple-500/20 dark:border-purple-500/30">
-                        <Brain className="w-10 h-10 text-purple-500 dark:text-purple-400" />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-bold text-foreground tracking-tight">{t('agentMonitor.title')}</h1>
-                        <p className="text-muted-foreground mt-1 font-medium">{t('agentMonitor.subtitle')}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4 bg-card/50 backdrop-blur-md p-2 rounded-xl border border-border">
-                    <label className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer px-3">
+        <ConsolePage
+            title={t('agentMonitor.title')}
+            subtitle={t('agentMonitor.subtitle')}
+            actions={
+                <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-2 shadow-sm">
+                    <label className="flex cursor-pointer items-center gap-2 px-3 text-sm font-medium text-foreground">
                         <input
                             type="checkbox"
                             checked={autoRefresh}
                             onChange={(e) => setAutoRefresh(e.target.checked)}
-                            className="w-4 h-4 rounded bg-background border-border text-purple-500 focus:ring-purple-500/50"
+                            className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/30"
                         />
                         {t('agentMonitor.autoRefresh')}
                     </label>
                     <button
                         onClick={loadData}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-500 hover:to-indigo-500 transition-all text-white font-medium shadow-[0_0_15px_rgba(147,51,234,0.4)]"
+                        className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                     >
-                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                         {t('agentMonitor.refresh')}
                     </button>
                 </div>
+            }
+        >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard
+                    icon={ShieldAlert}
+                    label={t('agentMonitor.systemHealth')}
+                    value={getStatusText(health?.status || 'unknown').toUpperCase()}
+                    hint={health?.details && Object.keys(health.details).length > 0 ? Object.keys(health.details).join(', ') : '监控已启用'}
+                    tone={health?.status === 'healthy' ? 'success' : health?.status === 'unhealthy' ? 'danger' : 'warning'}
+                />
+                <ConsoleStatCard
+                    icon={Users}
+                    label={t('agentMonitor.activeAgents')}
+                    value={stats?.orchestrator.registeredAgents || 0}
+                    hint="当前已注册的编排节点"
+                    tone="primary"
+                />
+                <ConsoleStatCard
+                    icon={MessageSquare}
+                    label={t('agentMonitor.queueSize')}
+                    value={stats?.messageBus.queueSize || 0}
+                    hint="当前消息总线排队深度"
+                    tone="neutral"
+                />
+                <ConsoleStatCard
+                    icon={BarChart3}
+                    label={t('agentMonitor.caseFiles')}
+                    value={stats?.synthesis.totalCaseFiles || 0}
+                    hint="已保留的综合研判案卷"
+                    tone="warning"
+                />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-card/40 backdrop-blur-xl border border-border rounded-2xl p-6 shadow-lg relative overflow-hidden group"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent pointer-events-none dark:from-white/5" />
-                    <div className="flex items-center justify-between relative z-10 mb-4">
-                        <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{t('agentMonitor.systemHealth')}</span>
-                        <div className="p-2 rounded-lg bg-muted/50 border border-border/50 group-hover:bg-muted transition-colors">
-                            {getStatusIcon(health?.status || 'unknown')}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                <ConsoleStatCard
+                    icon={AlertTriangle}
+                    label="活跃告警"
+                    value={stats?.operations?.activeAlerts || 0}
+                    hint="来自扫描、流量与验证链路"
+                    tone="danger"
+                />
+                <ConsoleStatCard
+                    icon={RefreshCw}
+                    label="进行中扫描"
+                    value={stats?.operations?.runningScans || 0}
+                    hint="当前仍在执行的扫描任务"
+                    tone="warning"
+                />
+                <ConsoleStatCard
+                    icon={Zap}
+                    label="待执行动作"
+                    value={stats?.operations?.pendingActions || 0}
+                    hint="处置动作与队列积压"
+                    tone="primary"
+                />
+                <ConsoleStatCard
+                    icon={XCircle}
+                    label="验证失败"
+                    value={stats?.operations?.failedValidations || 0}
+                    hint="未拦截或误报的演练运行"
+                    tone="danger"
+                />
+                <ConsoleStatCard
+                    icon={ShieldAlert}
+                    label="高风险资产"
+                    value={stats?.operations?.assetsAtRisk || 0}
+                    hint="当前需要优先关注的资产"
+                    tone="warning"
+                />
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-7">
+                    <ConsolePanel title={t('agentMonitor.layerArchitecture')} subtitle="七层协同决策链路" icon={Brain} iconTone="primary">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                            {layerInfo.map((layer, index) => {
+                                const Icon = layer.icon;
+                                return (
+                                    <motion.div
+                                        key={layer.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.05 * index }}
+                                        className="rounded-xl border border-border bg-muted/15 p-4"
+                                    >
+                                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground">
+                                            <Icon size={18} />
+                                        </div>
+                                        <div className="text-xl font-bold tracking-tight text-foreground">L{layer.id}</div>
+                                        <div className="mt-1 text-xs font-medium leading-5 text-muted-foreground">{t(layer.nameKey)}</div>
+                                    </motion.div>
+                                );
+                            })}
                         </div>
-                    </div>
-                    <div className="flex flex-col gap-2 relative z-10 mt-1">
-                        <div className="flex items-end gap-3">
-                            <p className={`text-4xl font-black ${getStatusColor(health?.status || 'unknown')} tracking-tighter`}>
-                                {getStatusText(health?.status || 'unknown').toUpperCase()}
-                            </p>
-                            {health?.status === 'healthy' && (
-                                <span className="flex h-3 w-3 relative mb-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                                </span>
-                            )}
+                    </ConsolePanel>
+                </div>
+
+                <div className="lg:col-span-5">
+                    <ConsolePanel title={t('agentMonitor.messageBusStats')} subtitle="调度与传输运行指标" icon={Clock} iconTone="neutral">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.queueSize || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.queueSize')}</p>
+                            </div>
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.subscriptionCount || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.subscriptions')}</p>
+                            </div>
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.pendingRequests || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.pendingRequests')}</p>
+                            </div>
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.orchestrator.activeTasks || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.activeTasks')}</p>
+                            </div>
                         </div>
-                        {health?.details && Object.keys(health.details).length > 0 && health.status !== 'healthy' && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                className="mt-2 text-xs font-mono bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-300 p-2 rounded-lg"
-                            >
-                                {Object.entries(health.details).map(([key, value]) => (
-                                    <div key={key} className="truncate">
-                                        <span className="font-bold opacity-75">{key}:</span> {String(value)}
-                                    </div>
-                                ))}
-                            </motion.div>
+                    </ConsolePanel>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <ConsolePanel title={t('agentMonitor.agentHeartbeats')} subtitle="各节点活动与响应遥测" icon={Users} iconTone="primary">
+                    <div className="space-y-3">
+                        {stats?.agents?.length ? (
+                            stats.agents.map((agent: AgentHeartbeat, index: number) => {
+                                const roleInfo =
+                                    AGENT_ROLES[agent.role as keyof typeof AGENT_ROLES] || {
+                                        name: agent.role,
+                                        teamKey: 'agentMonitor.unknown',
+                                        color: 'text-muted-foreground',
+                                        bg: 'bg-muted/20',
+                                        border: 'border-border',
+                                        icon: '--',
+                                    };
+
+                                return (
+                                    <motion.div
+                                        key={agent.agentId}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.05 * index }}
+                                        className="flex flex-col justify-between gap-4 rounded-xl border border-border bg-muted/15 p-4 sm:flex-row sm:items-center"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`flex h-10 w-10 items-center justify-center rounded-lg border text-[11px] font-bold tracking-wide ${roleInfo.bg} ${roleInfo.border} ${roleInfo.color}`}>
+                                                {roleInfo.icon}
+                                            </div>
+                                            <div>
+                                                <p className={`text-sm font-semibold ${roleInfo.color}`}>{roleInfo.name}</p>
+                                                <p className="text-xs text-muted-foreground">{t(roleInfo.teamKey)}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-4 text-center">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">{t('agentMonitor.tasks')}</p>
+                                                <p className="mt-1 text-lg font-bold font-mono text-foreground">{agent.tasksCompleted}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">{t('agentMonitor.latency')}</p>
+                                                <p className="mt-1 text-lg font-bold font-mono text-foreground">
+                                                    {agent.responseTime}
+                                                    <span className="ml-1 text-xs text-muted-foreground">ms</span>
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">{t('agentMonitor.status')}</p>
+                                                <p className={`mt-1 text-xs font-bold uppercase ${getStatusTone(agent.status)}`}>{agent.status}</p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })
+                        ) : (
+                            <ConsoleEmptyState title={t('agentMonitor.noAgents')} description="当前环境还没有可用的心跳数据。" />
                         )}
                     </div>
-                </motion.div>
+                </ConsolePanel>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="bg-card/40 backdrop-blur-xl border border-border rounded-2xl p-6 shadow-lg relative overflow-hidden group"
-                >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-3xl rounded-full" />
-                    <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 relative z-10">
-                        <div className="p-2 rounded-lg bg-cyan-500/20 text-cyan-500 dark:text-cyan-400 group-hover:scale-110 transition-transform">
-                            <Users className="w-5 h-5" />
+                <ConsolePanel title={t('agentMonitor.synthesisStats')} subtitle="学习结果与模式沉淀" icon={TrendingUp} iconTone="success">
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-4">
+                            <span className="text-sm text-muted-foreground">{t('agentMonitor.totalCaseFiles')}</span>
+                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis.totalCaseFiles || 0}</span>
                         </div>
-                        {t('agentMonitor.activeAgents')}
-                    </div>
-                    <p className="text-4xl font-black text-foreground tracking-tighter relative z-10">
-                        {stats?.orchestrator.registeredAgents || 0}
-                    </p>
-                </motion.div>
+                        <div className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-4">
+                            <span className="text-sm text-muted-foreground">{t('agentMonitor.lessonsLearned')}</span>
+                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis.totalLessons || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-4">
+                            <span className="text-sm text-muted-foreground">{t('agentMonitor.policyUpdates')}</span>
+                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis.totalPolicyUpdates || 0}</span>
+                        </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="bg-card/40 backdrop-blur-xl border border-border rounded-2xl p-6 shadow-lg relative overflow-hidden group"
-                >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full" />
-                    <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 relative z-10">
-                        <div className="p-2 rounded-lg bg-purple-500/20 text-purple-500 dark:text-purple-400 group-hover:scale-110 transition-transform">
-                            <MessageSquare className="w-5 h-5" />
-                        </div>
-                        {t('agentMonitor.queueSize')}
+                        {stats?.synthesis.topPatterns?.length ? (
+                            <div className="border-t border-border pt-4">
+                                <p className="mb-3 text-xs font-medium text-muted-foreground">{t('agentMonitor.topPatterns')}</p>
+                                <div className="space-y-2">
+                                    {stats.synthesis.topPatterns.slice(0, 5).map((pattern, index) => (
+                                        <div key={`${pattern.pattern}-${index}`} className="flex items-center justify-between rounded-lg border border-border bg-muted/15 px-3 py-2">
+                                            <span className="truncate pr-4 text-sm font-medium text-foreground">{pattern.pattern}</span>
+                                            <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">{pattern.frequency}x</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <ConsoleEmptyState title="暂无综合模式" description="案卷积累后，这里会展示高频归纳模式。" />
+                        )}
                     </div>
-                    <p className="text-4xl font-black text-foreground tracking-tighter relative z-10">
-                        {stats?.messageBus.queueSize || 0}
-                    </p>
-                </motion.div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-card/40 backdrop-blur-xl border border-border rounded-2xl p-6 shadow-lg relative overflow-hidden group"
-                >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl rounded-full" />
-                    <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 relative z-10">
-                        <div className="p-2 rounded-lg bg-amber-500/20 text-amber-500 dark:text-amber-400 group-hover:scale-110 transition-transform">
-                            <BarChart3 className="w-5 h-5" />
-                        </div>
-                        {t('agentMonitor.caseFiles')}
-                    </div>
-                    <p className="text-4xl font-black text-foreground tracking-tighter relative z-10">
-                        {stats?.synthesis.totalCaseFiles || 0}
-                    </p>
-                </motion.div>
+                </ConsolePanel>
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 }}
-                className="bg-card/40 backdrop-blur-xl border border-border rounded-2xl p-8 shadow-lg relative overflow-hidden text-center"
-            >
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
-                <h2 className="text-xl font-bold text-foreground mb-8 flex items-center justify-center gap-3 relative z-10">
-                    <div className="p-2 rounded-full bg-amber-500/20 text-amber-500 dark:text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                        <Zap className="w-6 h-6" />
-                    </div>
-                    {t('agentMonitor.layerArchitecture')}
-                </h2>
-
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
-                    {/* Layer Connection Line */}
-                    <div className="hidden md:block absolute top-1/2 left-10 right-10 h-1 bg-muted -z-10 transform -translate-y-1/2">
-                        <div className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-rose-500 opacity-50 w-full animate-pulse"></div>
-                    </div>
-
-                    {LAYER_INFO.map((layer, index) => {
-                        const Icon = layer.icon;
-                        return (
-                            <motion.div
-                                key={layer.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 + (index * 0.1) }}
-                                whileHover={{ y: -5, scale: 1.05 }}
-                                className="w-full md:w-auto flex-1 bg-card/80 rounded-xl p-4 border border-border hover:border-indigo-500/50 transition-all shadow-lg group relative"
-                            >
-                                <div className="absolute -inset-0.5 bg-gradient-to-b from-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl blur" />
-                                <div className="relative z-10 flex flex-col items-center">
-                                    <div className="w-10 h-10 rounded-full bg-muted border border-border flex items-center justify-center mb-3 group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 transition-colors group-hover:text-indigo-400 text-muted-foreground">
-                                        <Icon size={18} />
-                                    </div>
-                                    <div className="text-2xl font-black text-foreground tracking-tighter mb-1">L{layer.id}</div>
-                                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center h-8 flex items-center justify-center leading-tight">{t(layer.nameKey)}</div>
+            <ConsolePanel title={t('agentMonitor.systemHealth')} subtitle="系统健康与降级节点说明" icon={ShieldAlert} iconTone="warning">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            {getStatusIcon(health?.status || 'unknown')}
+                            <div>
+                                <div className={`text-2xl font-bold tracking-tight ${getStatusTone(health?.status || 'unknown')}`}>
+                                    {getStatusText(health?.status || 'unknown').toUpperCase()}
                                 </div>
-                            </motion.div>
-                        );
-                    })}
-                </div>
-            </motion.div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="bg-card/40 backdrop-blur-xl border border-border rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden"
-                >
-                    <div className="absolute -left-10 -top-10 w-40 h-40 bg-cyan-500/10 blur-3xl rounded-full" />
-                    <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3 relative z-10">
-                        <div className="p-2 rounded-full bg-cyan-500/20 text-cyan-500 dark:text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]">
-                            <Users className="w-6 h-6" />
+                                <p className="text-sm text-muted-foreground">当前协同编排健康快照</p>
+                            </div>
                         </div>
-                        {t('agentMonitor.agentHeartbeats')}
-                    </h2>
-
-                    <div className="space-y-4 relative z-10">
-                        {stats?.agents?.map((agent: AgentHeartbeat, index: number) => {
-                            const roleInfo = AGENT_ROLES[agent.role as keyof typeof AGENT_ROLES] ||
-                                { name: agent.role, team: 'Unknown', teamKey: 'agentMonitor.unknown', color: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/30', glow: '', icon: '⚪' };
-
-                            return (
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.6 + (index * 0.1) }}
-                                    key={agent.agentId}
-                                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-card/50 rounded-xl border ${roleInfo.border} hover:bg-muted/30 transition-colors group relative overflow-hidden`}
-                                >
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${roleInfo.bg} opacity-50`} />
-
-                                    <div className="flex items-center gap-4 mb-4 sm:mb-0 ml-2">
-                                        <div className={`w-12 h-12 rounded-xl ${roleInfo.bg} ${roleInfo.border} border flex items-center justify-center text-2xl group-hover:scale-110 transition-transform ${roleInfo.glow}`}>
-                                            {roleInfo.icon}
-                                        </div>
-                                        <div>
-                                            <p className={`font-bold text-lg ${roleInfo.color} tracking-tight`}>
-                                                {roleInfo.name}
-                                            </p>
-                                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-0.5">{t(roleInfo.teamKey)}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between sm:justify-end gap-6 sm:gap-8 px-2 sm:px-0 bg-muted/50 sm:bg-transparent rounded-lg p-3 sm:p-0">
-                                        <div className="text-center">
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('agentMonitor.tasks')}</p>
-                                            <div className="flex items-center gap-1.5 justify-center">
-                                                <p className="text-xl font-bold text-foreground font-mono">{agent.tasksCompleted}</p>
-                                                {agent.status === 'healthy' && (
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('agentMonitor.latency')}</p>
-                                            <p className="text-xl font-bold text-foreground font-mono">{agent.responseTime}<span className="text-xs text-muted-foreground ml-0.5">ms</span></p>
-                                        </div>
-                                        <div className="text-center hidden sm:block">
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('agentMonitor.status')}</p>
-                                            <p className={`text-sm font-bold uppercase ${getStatusColor(agent.status)}`}>
-                                                {agent.status}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            );
-                        }) || (
-                                <div className="text-center text-muted-foreground py-10 font-bold border border-dashed border-border rounded-xl bg-card/30">
-                                    {t('agentMonitor.noAgents')}
-                                </div>
-                            )}
                     </div>
-                </motion.div>
 
-                <div className="space-y-6 flex flex-col">
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.6 }}
-                        className="bg-card/40 backdrop-blur-xl border border-border rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden flex-1"
-                    >
-                        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-500/10 blur-3xl rounded-full" />
-                        <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3 relative z-10">
-                            <div className="p-2 rounded-full bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                                <TrendingUp className="w-6 h-6" />
-                            </div>
-                            {t('agentMonitor.synthesisStats')}
-                        </h2>
-
-                        <div className="space-y-3 relative z-10">
-                            <div className="flex justify-between items-center p-4 bg-card/50 rounded-xl border border-border/50 hover:border-emerald-500/30 transition-colors">
-                                <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{t('agentMonitor.totalCaseFiles')}</span>
-                                <span className="text-2xl font-black text-foreground font-mono">
-                                    {stats?.synthesis.totalCaseFiles || 0}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center p-4 bg-card/50 rounded-xl border border-border/50 hover:border-emerald-500/30 transition-colors">
-                                <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{t('agentMonitor.lessonsLearned')}</span>
-                                <span className="text-2xl font-black text-foreground font-mono">
-                                    {stats?.synthesis.totalLessons || 0}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center p-4 bg-card/50 rounded-xl border border-border/50 hover:border-emerald-500/30 transition-colors">
-                                <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{t('agentMonitor.policyUpdates')}</span>
-                                <span className="text-2xl font-black text-foreground font-mono">
-                                    {stats?.synthesis.totalPolicyUpdates || 0}
-                                </span>
-                            </div>
-
-                            {stats?.synthesis.topPatterns && stats.synthesis.topPatterns.length > 0 && (
-                                <div className="mt-6 pt-6 border-t border-border">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">{t('agentMonitor.topPatterns')}</p>
-                                    <div className="space-y-2">
-                                        {stats.synthesis.topPatterns.slice(0, 5).map((pattern, i) => (
-                                            <div
-                                                key={i}
-                                                className="flex justify-between items-center p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg group"
-                                            >
-                                                <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-300 truncate pr-4">
-                                                    {pattern.pattern}
-                                                </span>
-                                                <span className="text-xs font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/20 px-2 py-1 rounded">
-                                                    {pattern.frequency}x
-                                                </span>
-                                            </div>
-                                        ))}
+                    {health?.details && Object.keys(health.details).length > 0 ? (
+                        <div className="w-full rounded-xl border border-border bg-muted/15 p-4 md:max-w-md">
+                            <div className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground">详细信息</div>
+                            <div className="space-y-1 font-mono text-xs text-foreground">
+                                {Object.entries(health.details).map(([key, value]) => (
+                                    <div key={key} className="truncate">
+                                        <span className="text-muted-foreground">{key}:</span> {String(value)}
                                     </div>
-                                </div>
-                            )}
+                                ))}
+                            </div>
                         </div>
-                    </motion.div>
+                    ) : (
+                        <div className="rounded-xl border border-border bg-muted/15 px-4 py-3 text-sm text-muted-foreground">当前未发现降级子系统。</div>
+                    )}
                 </div>
-            </div>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-                className="bg-card/40 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-6 md:p-8 shadow-[0_0_30px_rgba(99,102,241,0.15)] relative overflow-hidden"
-            >
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-cyan-500/5 pointer-events-none" />
-                <h2 className="text-xl font-bold text-foreground mb-6 flex items-center justify-center md:justify-start gap-3 relative z-10">
-                    <div className="p-2 rounded-full bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.3)]">
-                        <Clock className="w-6 h-6" />
-                    </div>
-                    {t('agentMonitor.messageBusStats')}
-                </h2>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
-                    <div className="text-center p-6 bg-card/60 rounded-xl border border-border/50 hover:border-indigo-500/30 hover:bg-muted/80 transition-all group">
-                        <p className="text-4xl font-black text-foreground font-mono mb-2 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
-                            {stats?.messageBus.queueSize || 0}
-                        </p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('agentMonitor.queueSize')}</p>
-                    </div>
-                    <div className="text-center p-6 bg-card/60 rounded-xl border border-border/50 hover:border-purple-500/30 hover:bg-muted/80 transition-all group">
-                        <p className="text-4xl font-black text-foreground font-mono mb-2 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors">
-                            {stats?.messageBus.subscriptionCount || 0}
-                        </p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('agentMonitor.subscriptions')}</p>
-                    </div>
-                    <div className="text-center p-6 bg-card/60 rounded-xl border border-border/50 hover:border-rose-500/30 hover:bg-muted/80 transition-all group">
-                        <p className="text-4xl font-black text-foreground font-mono mb-2 group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">
-                            {stats?.messageBus.pendingRequests || 0}
-                        </p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('agentMonitor.pendingRequests')}</p>
-                    </div>
-                    <div className="text-center p-6 bg-card/60 rounded-xl border border-border/50 hover:border-cyan-500/30 hover:bg-muted/80 transition-all group">
-                        <p className="text-4xl font-black text-foreground font-mono mb-2 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors">
-                            {stats?.orchestrator.activeTasks || 0}
-                        </p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('agentMonitor.activeTasks')}</p>
-                    </div>
-                </div>
-            </motion.div>
-
-        </div>
+            </ConsolePanel>
+        </ConsolePage>
     );
 }

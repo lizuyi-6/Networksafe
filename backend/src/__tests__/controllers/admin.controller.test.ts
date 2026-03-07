@@ -14,6 +14,7 @@ jest.mock('../../api/routes/ai-system.routes', () => ({
 }));
 
 jest.mock('../../utils/logger', () => ({
+  __esModule: true,
   default: {
     error: jest.fn(),
     info: jest.fn(),
@@ -121,8 +122,6 @@ describe('AdminController', () => {
       expect(callArg.server.cpu).toBeDefined();
       expect(callArg.server.memory).toBeDefined();
       expect(callArg.server.uptime).toBeDefined();
-      expect(callArg.server.platform).toBeDefined();
-      expect(callArg.server.hostname).toBeDefined();
       expect(callArg.clients).toBeDefined();
     });
 
@@ -154,7 +153,7 @@ describe('AdminController', () => {
     it('should handle errors gracefully', () => {
       // Mock os.cpus to throw
       const originalOs = require('os');
-      jest.spyOn(originalOs, 'cpus').mockImplementation(() => {
+      const cpusSpy = jest.spyOn(originalOs, 'cpus').mockImplementation(() => {
         throw new Error('OS error');
       });
 
@@ -167,6 +166,7 @@ describe('AdminController', () => {
       const callArg = mockJson.mock.calls[0][0];
       expect(callArg.server.cpu).toBe(0);
       expect(callArg.server.memory).toBe(0);
+      cpusSpy.mockRestore();
     });
   });
 

@@ -1,11 +1,9 @@
-﻿import { useEffect, useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import {
-    Server, Activity, Wifi, WifiOff,
-    RefreshCw, Scan, AlertTriangle,
-    Cpu, HardDrive, Clock
-} from 'lucide-react';
-import { fetchRecentAgentThreats } from '../services/api';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useLiveMode } from '../context/LiveModeContext';
+import { AlertTriangle, Clock, Cpu, HardDrive, RefreshCw, Scan, Server, Wifi, WifiOff } from 'lucide-react';
+import { fetchAgentsList, fetchRecentAgentThreats, triggerAgentScan } from '../services/api';
+import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
 
 interface Agent {
     agentId: string;
@@ -18,44 +16,28 @@ interface Agent {
         memoryUsage: number;
         uptime: number;
     };
-    registration?: {
-        arch: string;
-        cpus: number;
-        totalMemory: number;
-        version: string;
-    };
-}
-
-interface ThreatEvent {
-    id?: string;
-    title?: string;
-    message?: string;
-    severity: string;
-    source?: string;
-    timestamp: string;
 }
 
 const formatUptime = (seconds: number): string => {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${mins}m`;
-    return `${mins}m`;
+    if (days > 0) return `${days}天 ${hours}小时`;
+    if (hours > 0) return `${hours}小时 ${mins}分钟`;
+    return `${mins}分钟`;
 };
 
 const Agents = () => {
-    const { t } = useLanguage();
+    const { liveModeEnabled } = useLiveMode();
     const [agents, setAgents] = useState<Agent[]>([]);
-    const [threats, setThreats] = useState<ThreatEvent[]>([]);
+    const [threats, setThreats] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [actionMessage, setActionMessage] = useState<string | null>(null);
 
     const fetchAgents = async () => {
         try {
-            const response = await fetch('/api/agents', { credentials: 'include' });
-            if (!response.ok) throw new Error(`FG-AGENTS-LIST-${response.status}`);
-            const data = await response.json();
+            const data = await fetchAgentsList();
             setAgents(data?.agents || []);
         } catch (e: any) {
             setAgents([]);
@@ -77,158 +59,111 @@ const Agents = () => {
 
     const triggerScan = async (agentId: string) => {
         try {
-            const response = await fetch(`/api/agents/${agentId}/scan`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error(`FG-AGENT-SCAN-${response.status}`);
-        } catch (e) {
-            console.error(e);
+            const response = await triggerAgentScan(agentId);
+            setActionMessage(response?.message || `Scan queued for ${agentId}`);
+            await fetchThreats();
+        } catch (e: any) {
+            setError(e.message || 'FG-AGENT-SCAN');
         }
     };
 
     useEffect(() => {
         fetchAgents();
         fetchThreats();
+        if (!liveModeEnabled) {
+            return;
+        }
         const interval = setInterval(() => {
             fetchAgents();
             fetchThreats();
         }, 10000);
         return () => clearInterval(interval);
-    }, []);
+    }, [liveModeEnabled]);
 
-    const onlineCount = agents.filter(a => a.isOnline).length;
+    const onlineCount = agents.filter((a) => a.isOnline).length;
 
     return (
-        <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-foreground tracking-tight">{t('agents.title')}</h2>
-                    <p className="text-sm text-muted-foreground mt-1">{t('agents.title')}</p>
-                </div>
-                <button
-                    onClick={() => { fetchAgents(); fetchThreats(); }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-card border border-border text-foreground rounded-lg hover:bg-muted/50 hover:border-primary/30 transition-all shadow-sm"
-                >
-                    <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
-                </button>
+        <ConsolePage
+            title="智能体"
+            subtitle="统一查看智能体在线状态、资源占用与近期威胁事件。"
+            actions={<button onClick={() => { fetchAgents(); fetchThreats(); }} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />刷新</button>}
+        >
+            {actionMessage && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-600 dark:text-emerald-300">{actionMessage}</div>}
+            {error && <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard icon={Server} label="总智能体" value={agents.length} hint="已注册智能体总数" tone="primary" />
+                <ConsoleStatCard icon={Wifi} label="在线节点" value={onlineCount} hint="当前在线节点数量" tone="success" />
+                <ConsoleStatCard icon={AlertTriangle} label="近期威胁" value={threats.length} hint="最近相关安全事件数" tone="danger" />
+                <ConsoleStatCard icon={Clock} label="在线率" value={`${Math.round((onlineCount / (agents.length || 1)) * 100)}%`} hint="在线健康比例" tone="warning" />
             </div>
 
-            {error && (
-                <div className="p-3 rounded border border-red-500/30 text-red-300 bg-red-500/10 text-sm">{error}</div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <div className="text-sm text-muted-foreground">{t('agents.total_agents')}</div>
-                    <div className="text-3xl font-bold text-foreground">{agents.length}</div>
-                </div>
-                <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <div className="text-sm text-muted-foreground">{t('agents.active_nodes')}</div>
-                    <div className="text-3xl font-bold text-foreground">{onlineCount}</div>
-                </div>
-                <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <div className="text-sm text-muted-foreground">{t('agents.threats')}</div>
-                    <div className="text-3xl font-bold text-foreground">{threats.length}</div>
-                </div>
-                <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <div className="text-sm text-muted-foreground">{t('agents.uptime_rate')}</div>
-                    <div className="text-3xl font-bold text-foreground">{Math.round((onlineCount / (agents.length || 1)) * 100)}%</div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5 shadow-sm">
-                    <h3 className="font-semibold text-foreground mb-5 flex items-center gap-2"><Server size={16} className="text-primary" /> Active Fleet</h3>
-                    {loading ? (
-                        <div className="text-center py-12 text-muted-foreground">Loading fleet data...</div>
-                    ) : agents.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground">{t('agents.no_agents')}</div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {agents.map(agent => (
-                                <div key={agent.agentId} className="bg-card border border-border rounded-lg p-5 hover:border-primary/50 transition-all">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-lg ${agent.isOnline ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
-                                                <Server className={agent.isOnline ? 'text-emerald-500' : 'text-red-500'} size={20} />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                    <ConsolePanel title="智能体机群" subtitle="每个卡片都支持执行动作和进入详情页。" icon={Server} iconTone="primary">
+                        {loading ? (
+                            <ConsoleEmptyState title="正在加载智能体数据" />
+                        ) : agents.length === 0 ? (
+                            <ConsoleEmptyState title="当前没有可显示的智能体节点" />
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                {agents.map((agent) => (
+                                    <div key={agent.agentId} className="rounded-xl border border-border bg-muted/15 p-5">
+                                        <div className="mb-4 flex items-start justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`rounded-lg p-2 ${agent.isOnline ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'}`}>
+                                                    <Server size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-medium text-foreground">{agent.hostname || agent.agentId}</h3>
+                                                    <p className="font-mono text-xs text-muted-foreground">{agent.agentId}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h3 className="font-medium text-foreground">{agent.hostname || agent.agentId}</h3>
-                                                <p className="text-xs text-muted-foreground font-mono">{agent.agentId}</p>
-                                            </div>
+                                            <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${agent.isOnline ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                                {agent.isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
+                                                {agent.isOnline ? '在线' : '离线'}
+                                            </span>
                                         </div>
-                                        <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded ${agent.isOnline ? 'text-emerald-500 bg-emerald-500/10' : 'text-red-500 bg-red-500/10'}`}>
-                                            {agent.isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
-                                            {agent.isOnline ? 'Online' : 'Offline'}
-                                        </span>
-                                    </div>
 
-                                    <div className="grid grid-cols-3 gap-4 mb-4">
-                                        <div className="text-center p-2 bg-muted/30 rounded">
-                                            <Cpu size={14} className="mx-auto text-muted-foreground mb-1" />
-                                            <div className="text-sm font-medium text-foreground">{agent.status?.cpuUsage ?? '--'}%</div>
-                                            <div className="text-xxs text-muted-foreground">{t('agents.cpu')}</div>
+                                        <div className="mb-4 grid grid-cols-3 gap-4">
+                                            <div className="rounded-lg bg-card p-2 text-center"><Cpu size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.cpuUsage ?? '--'}%</div><div className="text-[11px] text-muted-foreground">CPU</div></div>
+                                            <div className="rounded-lg bg-card p-2 text-center"><HardDrive size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.memoryUsage ?? '--'}%</div><div className="text-[11px] text-muted-foreground">内存</div></div>
+                                            <div className="rounded-lg bg-card p-2 text-center"><Clock size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.uptime ? formatUptime(agent.status.uptime) : '--'}</div><div className="text-[11px] text-muted-foreground">运行时长</div></div>
                                         </div>
-                                        <div className="text-center p-2 bg-muted/30 rounded">
-                                            <HardDrive size={14} className="mx-auto text-muted-foreground mb-1" />
-                                            <div className="text-sm font-medium text-foreground">{agent.status?.memoryUsage ?? '--'}%</div>
-                                            <div className="text-xxs text-muted-foreground">{t('agents.memory')}</div>
-                                        </div>
-                                        <div className="text-center p-2 bg-muted/30 rounded">
-                                            <Clock size={14} className="mx-auto text-muted-foreground mb-1" />
-                                            <div className="text-sm font-medium text-foreground">{agent.status?.uptime ? formatUptime(agent.status.uptime) : '--'}</div>
-                                            <div className="text-xxs text-muted-foreground">{t('agents.uptime')}</div>
+
+                                        <div className="flex gap-2">
+                                            <button onClick={() => triggerScan(agent.agentId)} disabled={!agent.isOnline} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"><Scan size={14} />发起扫描</button>
+                                            <Link to={`/agents/${agent.agentId}`} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/30">查看详情</Link>
                                         </div>
                                     </div>
-
-                                    <button
-                                        onClick={() => triggerScan(agent.agentId)}
-                                        disabled={!agent.isOnline}
-                                        className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                    >
-                                        <Scan size={14} /> Scan
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                ))}
+                            </div>
+                        )}
+                    </ConsolePanel>
                 </div>
 
-                <div className="bg-card border border-border rounded-xl p-5 shadow-sm max-h-[500px] flex flex-col">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-semibold text-foreground flex items-center gap-2"><AlertTriangle size={16} className="text-orange-500" /> Security Alerts</h3>
-                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Live</span>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-                        {threats.map((event: any, idx: number) => (
-                            <div key={event.id || idx} className="p-3 rounded-lg border bg-orange-500/5 border-orange-500/20">
+                <ConsolePanel title="安全事件" subtitle="近期与智能体相关的事件" icon={AlertTriangle} iconTone="warning">
+                    <div className="space-y-3">
+                        {threats.length > 0 ? threats.map((event: any, idx: number) => (
+                            <div key={event.id || idx} className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-2">
-                                        <AlertTriangle size={16} />
-                                        <span className="font-medium text-sm">{event.title || 'Security Event'}</span>
+                                        <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400" />
+                                        <span className="text-sm font-medium text-foreground">{event.title || '安全事件'}</span>
                                     </div>
-                                    <span className="text-xxs uppercase font-bold">{event.severity || 'medium'}</span>
+                                    <span className="text-[11px] font-bold uppercase text-amber-600 dark:text-amber-400">{event.severity || 'medium'}</span>
                                 </div>
-                                <div className="mt-2 text-xs space-y-1 opacity-80">
+                                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                                     <div>{event.message || '-'}</div>
-                                    <div>Source: {event.source || '-'}</div>
-                                    <div>Time: {new Date(event.timestamp).toLocaleString()}</div>
+                                    <div>来源：{event.source || '-'}</div>
+                                    <div>时间：{new Date(event.timestamp).toLocaleString()}</div>
                                 </div>
                             </div>
-                        ))}
-                        {threats.length === 0 && (
-                            <div className="text-center py-8 text-muted-foreground text-sm">No active threats detected.</div>
-                        )}
+                        )) : <ConsoleEmptyState title="暂无活动威胁" description="最近没有检测到新的智能体安全事件。" />}
                     </div>
-
-                    <div className="mt-4 p-3 rounded border border-border bg-muted/20 text-xs text-muted-foreground flex items-center gap-2">
-                        <Activity size={14} /> Node distribution is disabled until real geo telemetry is available.
-                    </div>
-                </div>
+                </ConsolePanel>
             </div>
-        </div>
+        </ConsolePage>
     );
 };
 

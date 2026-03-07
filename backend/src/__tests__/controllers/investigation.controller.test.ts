@@ -9,19 +9,21 @@ import { InvestigationController } from '../../api/controllers/investigation.con
 import { BugInvestigationTeam } from '../../ai-agents/investigation';
 import { InvestigationService } from '../../services/investigation.service';
 
+const mockTeam = {
+  investigate: jest.fn().mockResolvedValue({
+    investigationId: 'inv-001',
+    rootCause: 'Test root cause',
+    confidence: 0.85
+  }),
+  getInvestigationStatus: jest.fn(),
+  getActiveInvestigations: jest.fn(() => []),
+  getAgentCapabilities: jest.fn(() => [])
+};
+
 // Mock dependencies
 jest.mock('../../ai-agents/investigation', () => ({
   BugInvestigationTeam: {
-    getInstance: jest.fn(() => ({
-      investigate: jest.fn().mockResolvedValue({
-        investigationId: 'inv-001',
-        rootCause: 'Test root cause',
-        confidence: 0.85
-      }),
-      getInvestigationStatus: jest.fn(),
-      getActiveInvestigations: jest.fn(() => []),
-      getAgentCapabilities: jest.fn(() => [])
-    })),
+    getInstance: jest.fn(() => mockTeam),
     createBugReport: jest.fn(() => ({
       id: 'bug-001',
       title: 'Test Bug',
@@ -64,6 +66,16 @@ describe('InvestigationController', () => {
     };
     mockNext = jest.fn();
     jest.clearAllMocks();
+    mockTeam.investigate.mockResolvedValue({
+      investigationId: 'inv-001',
+      rootCause: 'Test root cause',
+      confidence: 0.85
+    });
+    mockTeam.getInvestigationStatus.mockReset();
+    mockTeam.getActiveInvestigations.mockReset();
+    mockTeam.getAgentCapabilities.mockReset();
+    mockTeam.getActiveInvestigations.mockReturnValue([]);
+    mockTeam.getAgentCapabilities.mockReturnValue([]);
   });
 
   describe('startInvestigation', () => {

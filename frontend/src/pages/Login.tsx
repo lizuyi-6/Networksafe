@@ -1,26 +1,88 @@
-
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { useDemo } from '../context/DemoContext';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, ArrowRight, ArrowLeft, CheckCircle, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../components/Logo';
 
+type ToastState = {
+    msg: string;
+    type: 'success' | 'info';
+};
+
+type DevLoginPreset = {
+    id: string;
+    label: string;
+    detail: string;
+    email: string;
+    password: string;
+};
+
+const DEV_LOGIN_PRESETS: DevLoginPreset[] = [
+    {
+        id: 'admin',
+        label: 'Admin',
+        detail: 'Ultra admin',
+        email: 'dev-admin@aetherguard.local',
+        password: 'DevAdmin!2026',
+    },
+    {
+        id: 'starter',
+        label: 'Starter',
+        detail: 'Starter tenant',
+        email: 'starter@aetherguard.local',
+        password: 'DevStarter!2026',
+    },
+    {
+        id: 'pro',
+        label: 'Pro',
+        detail: 'Pro tenant',
+        email: 'pro@aetherguard.local',
+        password: 'DevPro!2026',
+    },
+    {
+        id: 'ultra',
+        label: 'Ultra',
+        detail: 'Ultra tenant',
+        email: 'ultra@aetherguard.local',
+        password: 'DevUltra!2026',
+    },
+];
+
+const canShowDevLogin = () => {
+    if (typeof window === 'undefined') return false;
+
+    const host = window.location.hostname.toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
+};
+
 const Login = () => {
     const navigate = useNavigate();
     const { t } = useLanguage();
-    const { resolvedTheme } = useTheme();
+    useTheme();
+    const { refreshDemoState } = useDemo();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(null);
+    const [isDevModeOpen, setIsDevModeOpen] = useState(false);
+    const [toast, setToast] = useState<ToastState | null>(null);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const showToast = (msg: string, type: ToastState['type'] = 'info') => {
+        setToast({ msg, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    const handleApplyPreset = (preset: DevLoginPreset) => {
+        setEmail(preset.email);
+        setPassword(preset.password);
+        showToast(`${preset.label} credentials filled`);
+    };
+
+    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
-
-        const form = e.target as HTMLFormElement;
-        const email = form.email.value;
-        const password = form.password.value;
 
         try {
             const response = await fetch('/api/auth/login', {
@@ -28,129 +90,252 @@ const Login = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include', // SECURITY FIX: Include cookies in request
+                credentials: 'include',
                 body: JSON.stringify({ email, password }),
             });
 
             let data;
             try {
                 data = await response.json();
-            } catch (jsonError) {
-                throw new Error(response.ok ? '无法解析服务器返回的响应' : `服务器错误 (${response.status}): 请检查后端是否处于运行状态`);
+            } catch {
+                if (response.status >= 502) {
+                    throw new Error('Service temporarily unavailable. Check backend status and retry.');
+                }
+
+                throw new Error(
+                    response.ok
+                        ? 'Unable to parse the server response.'
+                        : `Server error (${response.status}). Check whether the backend is running.`,
+                );
             }
 
             if (!response.ok) {
-                throw new Error(data?.error || '登录失败');
+                throw new Error(data?.error || 'Login failed');
             }
 
-            // SECURITY FIX: Token now stored in httpOnly cookie by server
-            // Only store non-sensitive user info in localStorage
             localStorage.setItem('user', JSON.stringify(data.user));
+            showToast('Login succeeded. Redirecting...', 'success');
 
-            setToast({ msg: '登录成功！正在跳转...', type: 'success' });
+            await refreshDemoState();
 
             setTimeout(() => {
                 navigate('/dashboard');
             }, 800);
-
         } catch (error: any) {
-            let errorMsg = error.message || '登录失败，请检查网络';
+            let errorMsg = error.message || 'Login failed. Check your network connection.';
             if (errorMsg.includes('invalid_credentials') || errorMsg.includes('401')) {
-                errorMsg = '邮箱或密码错误，请检查后重试';
+                errorMsg = 'Incorrect email or password.';
             }
-            setToast({ msg: errorMsg, type: 'info' });
-            setTimeout(() => setToast(null), 3000);
+            showToast(errorMsg);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const showToast = (msg: string) => {
-        setToast({ msg, type: 'info' });
-        setTimeout(() => setToast(null), 3000);
-    };
-
     return (
-        <div className="h-screen overflow-y-auto overflow-x-hidden grid-bg flex items-center justify-center p-4 font-sans bg-background text-foreground">
-            {/* Toast */}
+        <div className="min-h-screen overflow-x-hidden overflow-y-auto bg-background text-foreground">
             <AnimatePresence>
                 {toast && (
                     <motion.div
                         initial={{ opacity: 0, x: 100 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 100 }}
-                        className={`fixed bottom-5 right-5 z-50 px-6 py-3 rounded-lg backdrop-blur-md border shadow-xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-card border-l-4 border-l-green-500' : 'bg-card border-l-4 border-l-blue-500'}`}
+                        className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-xl border px-5 py-3 shadow-sm ${
+                            toast.type === 'success' ? 'border-emerald-500/25 bg-card' : 'border-border bg-card'
+                        }`}
                     >
-                        {toast.type === 'success' ? <CheckCircle className="w-5 h-5 text-green-400" /> : <Info className="w-5 h-5 text-blue-400" />}
-                        <span className="text-foreground text-sm font-medium">{toast.msg}</span>
+                        {toast.type === 'success' ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <Info className="h-5 w-5 text-primary" />}
+                        <span className="text-sm font-medium text-foreground">{toast.msg}</span>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-md border rounded-2xl shadow-2xl p-8 relative overflow-hidden bg-card border-border"
-            >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-blue-500"></div>
-
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 mb-4">
-                        <Logo />
-                    </div>
-                    <h2 className="text-2xl font-bold text-foreground">控制台登录</h2>
-                    <p className="text-sm mt-2 text-muted-foreground">请输入您的企业账户凭证</p>
-                </div>
-
-                <form onSubmit={handleLogin} className="space-y-6">
-                    <div>
-                        <label className="block text-xs font-mono mb-1 text-muted-foreground">EMAIL / USERNAME</label>
-                        <div className="relative">
-                            <User className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-                            <input
-                                type="text"
-                                name="email"
-                                className="w-full rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-green-500 transition-colors font-mono bg-background border border-border text-foreground"
-                                placeholder="name@company.com"
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-mono mb-1 text-muted-foreground">{t('login.password_label')}</label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-                            <input
-                                type="password"
-                                name="password"
-                                className="w-full rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-green-500 transition-colors font-mono bg-background border border-border text-foreground"
-                                placeholder="••••••••"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs">
-                        <label className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground">
-                            <input type="checkbox" className="mr-2 rounded text-green-500 focus:ring-0" /> 记住设备
-                        </label>
-                        <a href="#" onClick={(e) => { e.preventDefault(); showToast('请联系您的管理员重置密码'); }} className="text-green-500 hover:text-green-400">忘记密码?</a>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-2 group ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
+            <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-8 md:px-8">
+                <div className="grid w-full gap-6 lg:grid-cols-[1.25fr_460px]">
+                    <motion.section
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="hidden overflow-hidden rounded-3xl border border-border bg-card shadow-sm lg:flex"
                     >
-                        <span>{isLoading ? '验证中...' : '安全登录'}</span>
-                        {!isLoading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
-                    </button>
-                </form>
+                        <div className="flex flex-1 flex-col justify-between p-8 xl:p-10">
+                            <div className="space-y-8">
+                                <div className="flex items-center justify-between gap-4">
+                                    <Logo className="origin-left" />
+                                    <span className="rounded-full border border-border bg-muted/30 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                        Operations Console
+                                    </span>
+                                </div>
+                                <div className="space-y-4">
+                                    <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-foreground">
+                                        Security operations for gateways, agents, scans, and response workflows.
+                                    </h1>
+                                    <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+                                        Sign in to the same monitoring console used for device health, alert handling, deployment, and incident history.
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Gateways</div>
+                                        <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">24</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">Field inspection points online</div>
+                                    </div>
+                                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Agents</div>
+                                        <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">7</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">Inference and response roles available</div>
+                                    </div>
+                                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Alerts</div>
+                                        <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">3</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">Items currently awaiting review</div>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div className="mt-6 text-center">
-                    <button onClick={() => navigate('/')} className="text-xs flex items-center justify-center gap-1 mx-auto transition-colors text-muted-foreground hover:text-foreground">
-                        <ArrowLeft className="w-3 h-3" /> 返回首页
-                    </button>
+                            <div className="rounded-2xl border border-border bg-muted/15 p-5">
+                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Workspace Notes</div>
+                                <div className="mt-3 grid gap-3 text-sm text-muted-foreground">
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />
+                                        <p>Device telemetry and board status use the same console shell after sign-in.</p>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-1 h-2 w-2 rounded-full bg-amber-500" />
+                                        <p>Demo mode and development presets remain available without changing the authentication flow.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.section>
+
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8"
+                    >
+                        <div className="mb-8 space-y-4">
+                            <div className="inline-flex items-center gap-2 lg:hidden">
+                                <Logo />
+                            </div>
+                            <div className="space-y-2">
+                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Account Access</div>
+                                <h2 className="text-2xl font-bold tracking-tight text-foreground">Control console login</h2>
+                                <p className="text-sm text-muted-foreground">Sign in with your enterprise account.</p>
+                            </div>
+                        </div>
+
+                        {canShowDevLogin() && (
+                            <div className="mb-6 rounded-2xl border border-border bg-muted/15 p-4">
+                                <button
+                                    type="button"
+                                    data-testid="dev-login-toggle"
+                                    onClick={() => setIsDevModeOpen((open) => !open)}
+                                    className="flex w-full items-center justify-between gap-3 text-left"
+                                >
+                                    <div>
+                                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Dev Access</div>
+                                        <div className="mt-1 text-sm text-foreground">Fill local test accounts instantly.</div>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">{isDevModeOpen ? 'Hide' : 'Show'}</span>
+                                </button>
+
+                                <AnimatePresence initial={false}>
+                                    {isDevModeOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="grid grid-cols-2 gap-2 pt-4">
+                                                {DEV_LOGIN_PRESETS.map((preset) => (
+                                                    <button
+                                                        key={preset.id}
+                                                        type="button"
+                                                        data-testid={`dev-preset-${preset.id}`}
+                                                        onClick={() => handleApplyPreset(preset)}
+                                                        className="rounded-xl border border-border bg-card px-3 py-3 text-left transition-colors hover:border-primary/25 hover:bg-muted/20"
+                                                    >
+                                                        <div className="text-sm font-semibold text-foreground">{preset.label}</div>
+                                                        <div className="text-xs text-muted-foreground">{preset.detail}</div>
+                                                        <div className="mt-2 break-all font-mono text-[11px] text-muted-foreground">{preset.email}</div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleLogin} className="space-y-6">
+                            <div>
+                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Email / Username</label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                                    <input
+                                        type="text"
+                                        name="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        autoComplete="username"
+                                        className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
+                                        placeholder="name@company.com"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.password_label')}</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        autoComplete="current-password"
+                                        className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
+                                        placeholder="........"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs">
+                                <label className="flex cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground">
+                                    <input type="checkbox" className="mr-2 rounded text-primary focus:ring-0" /> Remember this device
+                                </label>
+                                <a
+                                    href="#"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        showToast('Contact your administrator to reset the password.');
+                                    }}
+                                    className="text-primary hover:opacity-80"
+                                >
+                                    Forgot password?
+                                </a>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className={`group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 ${
+                                    isLoading ? 'cursor-not-allowed opacity-75' : ''
+                                }`}
+                            >
+                                <span>{isLoading ? 'Signing in...' : 'Secure Login'}</span>
+                                {!isLoading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+                            </button>
+                        </form>
+
+                        <div className="mt-6 text-center">
+                            <button onClick={() => navigate('/')} className="mx-auto flex items-center justify-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                                <ArrowLeft className="h-3 w-3" /> Back to home
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };

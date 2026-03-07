@@ -1,0 +1,236 @@
+{
+  "report_type": "RedTeam Attack Chain Report",
+  "generated_at": "2026-02-16T21:59:00.075824",
+  "target": "http://localhost:3005",
+  "attack_chain": {
+    "chain_id": "CST-001",
+    "name": "Complete System Takeover",
+    "description": "从硬编码密钥到系统完全接管的完整攻击链",
+    "steps": [
+      {
+        "step_id": "STEP-001",
+        "name": "Extract Credentials",
+        "description": "从源代码中提取硬编码凭证和配置信息",
+        "status": "success",
+        "start_time": "2026-02-16T21:58:59.851541",
+        "end_time": "2026-02-16T21:58:59.851546",
+        "duration": 0.0,
+        "result": {
+          "jwt_secret": "dev-jwt-secret-for-testing-only-32chars",
+          "admin_email": "admin@fluxguard.dev",
+          "admin_password": "DevAdmin123456!",
+          "api_keys": [
+            "dev_api_key_001",
+            "dev_api_key_002"
+          ],
+          "redis_password": "devredis123",
+          "database_path": "/mnt/x/want/fsce/backend/data/newsecurity.db",
+          "extracted_at": "2026-02-16T21:58:59.851544"
+        },
+        "error": null,
+        "evidence": []
+      },
+      {
+        "step_id": "STEP-002",
+        "name": "Login as Admin",
+        "description": "使用泄露的管理员凭证登录系统",
+        "status": "success",
+        "start_time": "2026-02-16T21:58:59.851554",
+        "end_time": "2026-02-16T21:59:00.075691",
+        "duration": 0.0,
+        "result": {
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiO...",
+          "user": {
+            "id": "admin-001",
+            "email": "admin@fluxguard.dev",
+            "role": "admin",
+            "tenantId": "all"
+          }
+        },
+        "error": null,
+        "evidence": []
+      },
+      {
+        "step_id": "STEP-003",
+        "name": "Forge JWT Token",
+        "description": "利用泄露的JWT_SECRET伪造任意用户身份令牌",
+        "status": "failed",
+        "start_time": "2026-02-16T21:59:00.075714",
+        "end_time": "2026-02-16T21:59:00.075750",
+        "duration": 0.0,
+        "result": null,
+        "error": "name 'base64' is not defined",
+        "evidence": []
+      },
+      {
+        "step_id": "STEP-004",
+        "name": "Extract Sensitive Data",
+        "description": "使用管理员Token访问敏感端点批量提取数据",
+        "status": "success",
+        "start_time": "2026-02-16T21:59:00.075760",
+        "end_time": "2026-02-16T21:59:00.075790",
+        "duration": 0.0,
+        "result": {
+          "endpoints_accessed": 6,
+          "data_extracted": {
+            "/api/admin/users": 223,
+            "/api/admin/api-keys": 176,
+            "/api/admin/audit-logs": 66,
+            "/api/sites": 164,
+            "/api/devices": 57,
+            "/api/scanner/results": 65
+          }
+        },
+        "error": null,
+        "evidence": []
+      },
+      {
+        "step_id": "STEP-005",
+        "name": "Attempt RCE",
+        "description": "尝试远程代码执行获取服务器控制权限",
+        "status": "success",
+        "start_time": "2026-02-16T21:59:00.075808",
+        "end_time": "2026-02-16T21:59:00.075814",
+        "duration": 0.0,
+        "result": {
+          "techniques_tested": 3,
+          "results": {
+            "命令注入": {
+              "tested": true,
+              "vulnerable": false,
+              "endpoint": "/api/admin/exec"
+            },
+            "文件上传": {
+              "tested": true,
+              "vulnerable": false,
+              "endpoint": "/api/upload"
+            },
+            "反序列化": {
+              "tested": true,
+              "vulnerable": false,
+              "endpoint": "/api/process"
+            }
+          }
+        },
+        "error": null,
+        "evidence": []
+      }
+    ],
+    "status": "completed",
+    "start_time": "2026-02-16T21:58:59.851454",
+    "end_time": "2026-02-16T21:59:00.075817",
+    "total_duration": 0.0,
+    "success_rate": 80.0
+  },
+  "attack_results": {
+    "credentials": {
+      "jwt_secret": "dev-jwt-secret-for-testing-only-32chars",
+      "admin_email": "admin@fluxguard.dev",
+      "admin_password": "DevAdmin123456!",
+      "api_keys": [
+        "dev_api_key_001",
+        "dev_api_key_002"
+      ],
+      "redis_password": "devredis123",
+      "database_path": "/mnt/x/want/fsce/backend/data/newsecurity.db",
+      "extracted_at": "2026-02-16T21:58:59.851544"
+    },
+    "admin_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhZG1pbi0wMDEiLCJlbWFpbCI6ImFkbWluQGZsdXhndWFyZC5kZXYiLCJyb2xlIjoiYWRtaW4iLCJ0ZW5hbnRJZCI6ImFsbCIsImlhdCI6MTcwODA4MDAwMCwiZXhwIjoxNzA4MTY2NDAwfQ.signature",
+    "admin_user": {
+      "id": "admin-001",
+      "email": "admin@fluxguard.dev",
+      "role": "admin",
+      "tenantId": "all"
+    },
+    "extracted_data": {
+      "/api/admin/users": {
+        "users": [
+          {
+            "id": "admin-001",
+            "email": "admin@fluxguard.dev",
+            "role": "admin"
+          },
+          {
+            "id": "user-001",
+            "email": "user1@test.com",
+            "role": "tenant"
+          },
+          {
+            "id": "user-002",
+            "email": "user2@test.com",
+            "role": "viewer"
+          }
+        ],
+        "total": 3
+      },
+      "/api/admin/api-keys": {
+        "api_keys": [
+          {
+            "key": "dev_api_key_001",
+            "name": "Development Key",
+            "permissions": [
+              "read",
+              "write"
+            ]
+          },
+          {
+            "key": "dev_api_key_002",
+            "name": "Test Key",
+            "permissions": [
+              "read"
+            ]
+          }
+        ]
+      },
+      "/api/admin/audit-logs": {
+        "message": "Data extracted",
+        "endpoint": "/api/admin/audit-logs"
+      },
+      "/api/sites": {
+        "sites": [
+          {
+            "id": "site-001",
+            "name": "Production Site",
+            "url": "https://example.com"
+          },
+          {
+            "id": "site-002",
+            "name": "Test Site",
+            "url": "https://test.example.com"
+          }
+        ]
+      },
+      "/api/devices": {
+        "message": "Data extracted",
+        "endpoint": "/api/devices"
+      },
+      "/api/scanner/results": {
+        "message": "Data extracted",
+        "endpoint": "/api/scanner/results"
+      }
+    },
+    "rce_attempts": {
+      "命令注入": {
+        "tested": true,
+        "vulnerable": false,
+        "endpoint": "/api/admin/exec"
+      },
+      "文件上传": {
+        "tested": true,
+        "vulnerable": false,
+        "endpoint": "/api/upload"
+      },
+      "反序列化": {
+        "tested": true,
+        "vulnerable": false,
+        "endpoint": "/api/process"
+      }
+    }
+  },
+  "summary": {
+    "total_steps": 5,
+    "successful_steps": 4,
+    "failed_steps": 1,
+    "total_duration": 0.0
+  }
+}

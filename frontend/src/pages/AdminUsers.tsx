@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import {
     fetchAdminUsersList,
@@ -87,6 +88,7 @@ export default function AdminUsers() {
                             <th className="px-6 py-4 font-medium">{t('admin_users.user_plan')}</th>
                             <th className="px-6 py-4 font-medium">{t('admin_users.user_status')}</th>
                             <th className="px-6 py-4 font-medium hidden md:table-cell">{t('admin_users.user_last_login')}</th>
+                            <th className="px-6 py-4 font-medium">监察</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -134,6 +136,15 @@ export default function AdminUsers() {
                                 </td>
                                 <td className="px-6 py-4 text-xs text-muted-foreground hidden md:table-cell">
                                     {u.last_login ? new Date(u.last_login).toLocaleString() : t('admin_users.status_suspended')}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <Link
+                                        data-testid={`admin-user-activity-${u.id}`}
+                                        to={`/admin?tab=timeline&tenant=${encodeURIComponent(u.tenant_id || '')}&user=${encodeURIComponent(u.id)}`}
+                                        className="inline-flex rounded border border-border px-3 py-2 text-xs text-foreground transition-colors hover:bg-muted/40"
+                                    >
+                                        查看活动
+                                    </Link>
                                 </td>
                             </tr>
                         ))}

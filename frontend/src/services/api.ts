@@ -1,4 +1,5 @@
 import i18n from '../i18n';
+import { isDemoModeActive } from '../config/demo-mode';
 import {
     DashboardStats,
     LogItem,
@@ -6,10 +7,103 @@ import {
     TrafficStats,
     FlowInfo,
     AttackType,
-    AttackSimulationReport
+    AttackSimulationReport,
+    AlertRecord,
+    SecurityFinding,
+    ScanAssetGroup
 } from '../types/api';
+import {
+    cancelDemoScanTask,
+    createDemoAIEndpoint,
+    createDemoAdminApiKey,
+    createDemoAgentOnboardingCode,
+    createDemoScanTask,
+    getDemoDeviceConfig,
+    deleteDemoAdminApiKey,
+    deleteDemoAIEndpoint,
+    generateDemoDeploymentConfig,
+    getDemoActiveFlows,
+    getDemoAdminApiKeys,
+    getDemoAdminOversightEvidence,
+    getDemoAdminOversightExport,
+    getDemoAdminOversightSummary,
+    getDemoAdminOversightTenants,
+    getDemoAdminOversightTimeline,
+    getDemoAdminUsers,
+    getDemoAgentHealth,
+    getDemoAgentOnboardingCodes,
+    getDemoAgents,
+    getDemoAIEndpoints,
+    getDemoAgentSystemStats,
+    getDemoAlerts,
+    getDemoAttackHistory,
+    getDemoAttackTypes,
+    getDemoDashboardRulesSummary,
+    getDemoDeploymentHistory,
+    getDemoDeviceDetail,
+    getDemoDeviceEvents,
+    getDemoDevices,
+    getDemoDownloadUrl,
+    getDemoFixHistory,
+    getDemoFixHistoryDetail,
+    getDemoLogs,
+    getDemoProtocolDistribution,
+    getDemoRegisteredAgents,
+    getDemoRecentAgentThreats,
+    getDemoScanHistory,
+    getDemoScanTask,
+    getDemoScanTaskResults,
+    getDemoSites,
+    getDemoStats,
+    getDemoSystemBadges,
+    getDemoThreatDetections,
+    getDemoTrafficStats,
+    revokeDemoAgentCredential,
+    runDemoAttackSimulation,
+    saveDemoDeviceConfig,
+    sendDemoDeviceCommand,
+    saveDemoDeploymentConfig,
+    testDemoAIEndpoint,
+    updateDemoAlertStatus,
+    updateDemoAdminUser,
+    verifyDemoAdminAuditLog,
+    updateDemoAIEndpoint
+} from './demo-data';
 
 export const API_BASE_URL = '/api';
+const shouldUseDemoData = (): boolean => isDemoModeActive();
+
+const demoState = {
+    statsOffset: { totalRequests: 0, threatsBlocked: 0 },
+    trafficOffset: { packetsProcessed: 0, packetsAllowed: 0, packetsBlocked: 0, packetsInspected: 0, bytesProcessed: 0, activeConnections: 0 },
+    agentOffset: { queueSize: 0, totalCaseFiles: 0, lessonsLearned: 0, policyUpdates: 0, totalMessages: 0 }
+};
+
+const applyDemoJitter = () => {
+    if (!isDemoModeActive()) return;
+    if (Math.random() > 0.1) { // 90% chance to bounce
+        const reqInc = Math.floor(Math.random() * 120) + 10;
+        const threatInc = Math.random() > 0.7 ? Math.floor(Math.random() * 5) + 1 : 0;
+
+        demoState.statsOffset.totalRequests += reqInc;
+        demoState.statsOffset.threatsBlocked += threatInc;
+
+        demoState.trafficOffset.packetsProcessed += reqInc * 15;
+        demoState.trafficOffset.packetsAllowed += (reqInc - threatInc) * 15;
+        demoState.trafficOffset.packetsBlocked += threatInc * 15;
+        demoState.trafficOffset.packetsInspected += reqInc * 15;
+        demoState.trafficOffset.bytesProcessed += reqInc * 1024 * (Math.random() * 8 + 2);
+
+        const connChange = Math.floor(Math.random() * 31) - 15;
+        demoState.trafficOffset.activeConnections += connChange;
+
+        demoState.agentOffset.queueSize = Math.max(0, demoState.agentOffset.queueSize + Math.floor(Math.random() * 7) - 3);
+        demoState.agentOffset.totalCaseFiles += threatInc;
+        if (Math.random() > 0.7) demoState.agentOffset.lessonsLearned += 1;
+        if (Math.random() > 0.8) demoState.agentOffset.policyUpdates += 1;
+        demoState.agentOffset.totalMessages += Math.floor(Math.random() * 150) + 30;
+    }
+};
 
 
 const getAuthHeaders = () => {
@@ -32,33 +126,230 @@ const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
     });
 };
 
+type LegacyScanFinding = {
+    target?: string;
+    severity?: 'critical' | 'high' | 'medium' | 'low';
+    title?: string;
+    description?: string;
+    sourceEngine?: string;
+    createdAt?: string;
+};
+
+const normalizeLegacyScannerFindings = (data: {
+    findings?: SecurityFinding[];
+    urlFindings?: LegacyScanFinding[];
+    hostFindings?: LegacyScanFinding[];
+    nucleiFindings?: LegacyScanFinding[];
+} | null | undefined): SecurityFinding[] => {
+    if (Array.isArray(data?.findings) && data.findings.length > 0) {
+        return data.findings;
+    }
+
+    const merged = [...(data?.urlFindings || []), ...(data?.hostFindings || []), ...(data?.nucleiFindings || [])];
+    return merged.map((finding, index) => ({
+        findingId: `legacy-${index}`,
+        assetId: undefined,
+        sourceType: 'scanner',
+        sourceRef: '',
+        target: finding.target || 'unknown',
+        category: finding.sourceEngine || 'scanner',
+        severity: finding.severity || 'medium',
+        status: 'open',
+        title: finding.title || 'Untitled finding',
+        description: finding.description || '',
+        evidence: {},
+        remediation: {},
+        occurrenceCount: 1,
+        firstSeenAt: finding.createdAt || new Date().toISOString(),
+        lastSeenAt: finding.createdAt || new Date().toISOString()
+    }));
+};
+
+const buildScanAssetGroups = (findings: SecurityFinding[]): ScanAssetGroup[] => (
+    findings.reduce<ScanAssetGroup[]>((groups, finding) => {
+        const existing = groups.find((group) => group.assetId === finding.assetId && group.target === finding.target);
+        if (existing) {
+            existing.findings.push(finding);
+            existing.severities[finding.severity] = (existing.severities[finding.severity] || 0) + 1;
+            return groups;
+        }
+
+        groups.push({
+            assetId: finding.assetId,
+            target: finding.target,
+            category: finding.category,
+            findings: [finding],
+            severities: { [finding.severity]: 1 }
+        });
+        return groups;
+    }, [])
+);
+
+const normalizeScanTaskResultsPayload = <T extends { data?: any }>(payload: T): T => {
+    if (!payload?.data) {
+        return payload;
+    }
+
+    const findings = normalizeLegacyScannerFindings(payload.data);
+    const assetGroups = Array.isArray(payload.data.assetGroups) && payload.data.assetGroups.length > 0
+        ? payload.data.assetGroups
+        : buildScanAssetGroups(findings);
+
+    return {
+        ...payload,
+        data: {
+            ...payload.data,
+            findings,
+            assetGroups
+        }
+    };
+};
+
+export const isRequestAbortError = (error: unknown, signal?: AbortSignal) => {
+    if (signal?.aborted) {
+        return true;
+    }
+
+    if (!error || typeof error !== 'object') {
+        return false;
+    }
+
+    const value = error as { name?: string; message?: string };
+    const message = `${value.name || ''} ${value.message || ''}`.toLowerCase();
+    return value.name === 'AbortError' || /abort|aborted|cancelled|canceled/.test(message);
+};
+
+export type SystemMode = 'production' | 'demo';
+
+export interface SystemModeResponse {
+    appMode: SystemMode;
+    demoEnabled: boolean;
+    attackSimEnabled: boolean;
+    canToggleMode?: boolean;
+}
+
+export interface SystemBadges {
+    agents: number;
+    alerts: number;
+    devices: number;
+    agentMonitor: number;
+    traffic: number;
+    scanner: number;
+}
+
+export interface ActionResponse {
+    success: boolean;
+    message?: string;
+    status?: string;
+    updatedAt?: string;
+    refreshHints?: string[];
+    jobId?: string;
+    historyId?: string;
+    [key: string]: any;
+}
+
+export interface DeviceConfigurationPayload {
+    displayName: string;
+    group: string;
+    site: string;
+    networkProfile: string;
+    scanProfile: string;
+    notes: string;
+    commandPermissions: string[];
+    tags: string[];
+    updatedAt?: string;
+}
+
+export const getAttackRunRouteId = (report: { id?: string; startTime?: string }) =>
+    encodeURIComponent(report.id || report.startTime || 'unknown');
+
+export const fetchSystemMode = async (): Promise<SystemModeResponse> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/system/mode`);
+    if (!response.ok) {
+        throw new Error(`FG-SYSTEM-MODE-${response.status}`);
+    }
+    return response.json();
+};
+
+export const switchSystemMode = async (appMode: SystemMode, options?: {
+    seedDemoData?: boolean;
+    clearExisting?: boolean;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/system/mode`, {
+        method: 'POST',
+        body: JSON.stringify({
+            appMode,
+            seedDemoData: options?.seedDemoData ?? false,
+            clearExisting: options?.clearExisting ?? false
+        })
+    });
+    if (!response.ok) {
+        let message = `FG-SYSTEM-MODE-SWITCH-${response.status}`;
+        try {
+            const data = await response.json();
+            message = data?.message || data?.error || message;
+        } catch {
+            // ignore parse error
+        }
+        throw new Error(message);
+    }
+    return response.json();
+};
 
 // --- API Functions ---
 
-export const fetchStats = async (): Promise<DashboardStats | null> => {
+export const fetchStats = async (signal?: AbortSignal): Promise<DashboardStats | null> => {
     try {
-        const response = await fetchWithCredentials(`${API_BASE_URL}/stats`);
+        if (shouldUseDemoData()) {
+            return getDemoStats();
+        }
+
+        const response = await fetchWithCredentials(`${API_BASE_URL}/stats`, { signal });
         if (!response.ok) throw new Error(i18n.t('api.fetch_failed'));
-        return response.json();
+        const data = await response.json();
+
+        if (isDemoModeActive() && data?.overview) {
+            applyDemoJitter();
+            data.overview.totalRequests += demoState.statsOffset.totalRequests;
+            data.overview.threatsBlocked += demoState.statsOffset.threatsBlocked;
+            data.overview.activeConnections = Math.max(0, data.overview.activeConnections + demoState.trafficOffset.activeConnections);
+            if (data.performance) {
+                data.performance.requestsPerSecond = Math.floor(Math.random() * 600) + 150;
+                data.performance.averageLatency = Math.floor(Math.random() * 45) + 12;
+            }
+        }
+        return data;
     } catch (e) {
-        console.error('Failed to fetch stats:', e);
+        if (!isRequestAbortError(e, signal)) {
+            console.error('Failed to fetch stats:', e);
+        }
         return null;
     }
 };
 
-export const fetchSystemBadges = async () => {
+export const fetchSystemBadges = async (signal?: AbortSignal): Promise<SystemBadges> => {
     try {
-        const response = await fetchWithCredentials(`${API_BASE_URL}/stats/badges`);
-        if (!response.ok) return { agents: 0, alerts: 0, devices: 0 };
+        if (shouldUseDemoData()) {
+            return getDemoSystemBadges();
+        }
+
+        const response = await fetchWithCredentials(`${API_BASE_URL}/stats/badges`, { signal });
+        if (!response.ok) return { agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 };
         return response.json();
     } catch (e) {
-        console.error('Failed to fetch system badges:', e);
-        return { agents: 0, alerts: 0, devices: 0 };
+        if (!isRequestAbortError(e, signal)) {
+            console.warn('Failed to fetch system badges:', e);
+        }
+        return { agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 };
     }
 };
 
 export const fetchSites = async () => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoSites();
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/sites`);
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_sites'));
         const json = await response.json();
@@ -69,13 +360,19 @@ export const fetchSites = async () => {
     }
 };
 
-export const fetchLogs = async (): Promise<LogItem[] | null> => {
+export const fetchLogs = async (signal?: AbortSignal): Promise<LogItem[] | null> => {
     try {
-        const response = await fetchWithCredentials(`${API_BASE_URL}/logs`);
+        if (shouldUseDemoData()) {
+            return getDemoLogs();
+        }
+
+        const response = await fetchWithCredentials(`${API_BASE_URL}/logs`, { signal });
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_logs'));
         return response.json();
     } catch (e) {
-        console.error('Failed to fetch logs:', e);
+        if (!isRequestAbortError(e, signal)) {
+            console.error('Failed to fetch logs:', e);
+        }
         return null;
     }
 };
@@ -103,6 +400,10 @@ export const generateDeploymentConfig = async (payload: {
     };
     siteId?: string;
 }) => {
+    if (shouldUseDemoData()) {
+        return generateDemoDeploymentConfig(payload);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/generate`, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -121,6 +422,10 @@ export const saveDeploymentConfig = async (payload: {
     siteId?: string;
     name?: string;
 }) => {
+    if (shouldUseDemoData()) {
+        return saveDemoDeploymentConfig(payload);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/save`, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -132,6 +437,10 @@ export const saveDeploymentConfig = async (payload: {
 };
 
 export const fetchDeploymentHistory = async (siteId?: string, limit: number = 20) => {
+    if (shouldUseDemoData()) {
+        return getDemoDeploymentHistory(limit);
+    }
+
     const qs = new URLSearchParams();
     qs.set('limit', String(limit));
     if (siteId) qs.set('siteId', siteId);
@@ -144,6 +453,10 @@ export const fetchDeploymentHistory = async (siteId?: string, limit: number = 20
 };
 
 export const getDeploymentDownloadUrl = (deploymentId: string, format: 'conf' | 'env' | 'bundle' = 'bundle') => {
+    if (shouldUseDemoData()) {
+        return getDemoDownloadUrl(deploymentId, format);
+    }
+
     return `${API_BASE_URL}/deployments/${deploymentId}/download?format=${format}`;
 };
 
@@ -161,6 +474,10 @@ export const createScanTask = async (payload: {
     };
     enginePolicy: 'opt_then_nuclei';
 }) => {
+    if (shouldUseDemoData()) {
+        return createDemoScanTask();
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/scanner/tasks`, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -180,6 +497,10 @@ export const createScanTask = async (payload: {
 };
 
 export const fetchScanTask = async (taskId: string) => {
+    if (shouldUseDemoData()) {
+        return getDemoScanTask(taskId);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/scanner/tasks/${taskId}`);
     if (!response.ok) {
         throw new Error(i18n.t('api.failed_to_fetch_scan_task'));
@@ -188,14 +509,22 @@ export const fetchScanTask = async (taskId: string) => {
 };
 
 export const fetchScanTaskResults = async (taskId: string) => {
+    if (shouldUseDemoData()) {
+        return normalizeScanTaskResultsPayload(getDemoScanTaskResults(taskId));
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/scanner/tasks/${taskId}/results`);
     if (!response.ok) {
         throw new Error(i18n.t('api.failed_to_fetch_scan_task_results'));
     }
-    return response.json();
+    return normalizeScanTaskResultsPayload(await response.json());
 };
 
 export const cancelScanTask = async (taskId: string) => {
+    if (shouldUseDemoData()) {
+        return cancelDemoScanTask(taskId);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/scanner/tasks/${taskId}/cancel`, {
         method: 'POST'
     });
@@ -206,16 +535,20 @@ export const cancelScanTask = async (taskId: string) => {
 };
 
 export const fetchScanHistory = async (limit: number = 20) => {
+    if (shouldUseDemoData()) {
+        return getDemoScanHistory(limit);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/scanner/tasks/history?limit=${limit}`);
     if (!response.ok) return [];
     const data = await response.json();
     return data?.data || [];
 };
 
-export const fetchAdminData = async () => {
+export const fetchAdminData = async (signal?: AbortSignal) => {
     try {
-        const errRes = await fetchWithCredentials(`${API_BASE_URL}/admin/errors`);
-        const perfRes = await fetchWithCredentials(`${API_BASE_URL}/admin/performance`);
+        const errRes = await fetchWithCredentials(`${API_BASE_URL}/admin/errors`, { signal });
+        const perfRes = await fetchWithCredentials(`${API_BASE_URL}/admin/performance`, { signal });
 
         if (!errRes.ok || !perfRes.ok) {
             throw new Error(i18n.t('api.failed_to_fetch_admin_data'));
@@ -226,20 +559,155 @@ export const fetchAdminData = async () => {
             performance: await perfRes.json()
         };
     } catch (e) {
-        console.error('Failed to fetch admin data:', e);
+        if (!isRequestAbortError(e, signal)) {
+            console.warn('Failed to fetch admin data:', e);
+        }
         return null;
     }
 };
 
-export const fetchAlerts = async () => {
+export const fetchAlerts = async (signal?: AbortSignal): Promise<AlertRecord[]> => {
     try {
-        const response = await fetchWithCredentials(`${API_BASE_URL}/alerts`);
+        if (shouldUseDemoData()) {
+            return getDemoAlerts() as AlertRecord[];
+        }
+
+        const response = await fetchWithCredentials(`${API_BASE_URL}/alerts`, { signal });
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_alerts'));
         return response.json();
     } catch (e) {
-        console.error('Failed to fetch alerts:', e);
-        return null;
+        if (!isRequestAbortError(e, signal)) {
+            console.error('Failed to fetch alerts:', e);
+        }
+        return [];
     }
+};
+
+export const fetchAlertDetail = async (alertId: string) => {
+    if (shouldUseDemoData()) {
+        const alert = getDemoAlerts().find((item: any) => item.id === alertId);
+        if (!alert) {
+            throw new Error('FG-ALERT-DETAIL-404');
+        }
+        return {
+            success: true,
+            data: {
+                summary: alert,
+                asset: null,
+                evidence: [],
+                timeline: [{ title: 'Alert created', description: alert.message, timestamp: alert.timestamp }],
+                relatedAssets: [],
+                relatedAlerts: [],
+                relatedScans: getDemoScanHistory(10).slice(0, 3),
+                relatedActions: [],
+                relatedSessions: getDemoActiveFlows().slice(0, 3),
+                metadata: (alert as any).metadata || {}
+            }
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/alerts/${encodeURIComponent(alertId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-ALERT-DETAIL-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchSiteDetail = async (siteId: string) => {
+    if (shouldUseDemoData()) {
+        const site = getDemoSites().find((item) => item.id === siteId);
+        if (!site) {
+            throw new Error('FG-SITE-DETAIL-404');
+        }
+        return {
+            success: true,
+            data: {
+                ...site,
+                securityOverview: null,
+                relatedAlerts: getDemoAlerts().filter((alert: any) => String(alert.source || '').toLowerCase().includes(site.domain.split('.')[0])).slice(0, 5),
+                relatedFlows: getDemoActiveFlows().slice(0, 5)
+            }
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/sites/${encodeURIComponent(siteId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-SITE-DETAIL-${response.status}`);
+    }
+    return response.json();
+};
+
+export const acknowledgeAlert = async (alertId: string) => {
+    if (shouldUseDemoData()) {
+        return updateDemoAlertStatus(alertId, 'acknowledged');
+    }
+    const response = await fetchWithCredentials(`${API_BASE_URL}/alerts/${encodeURIComponent(alertId)}/acknowledge`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        throw new Error(`FG-ALERT-ACK-${response.status}`);
+    }
+    return response.json();
+};
+
+export const createScanRemediationAction = async (findingId: string) => {
+    if (shouldUseDemoData()) {
+        return {
+            success: true,
+            data: {
+                actionId: `demo-action-${Date.now().toString(36)}`,
+                title: 'Demo remediation action',
+                status: 'pending'
+            }
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/scanner/findings/${encodeURIComponent(findingId)}/actions`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        throw new Error(`FG-SCAN-ACTION-${response.status}`);
+    }
+    return response.json();
+};
+
+export const investigateAlert = async (alertId: string) => {
+    if (shouldUseDemoData()) {
+        return updateDemoAlertStatus(alertId, 'investigating');
+    }
+    const response = await fetchWithCredentials(`${API_BASE_URL}/alerts/${encodeURIComponent(alertId)}/investigate`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        throw new Error(`FG-ALERT-INVESTIGATE-${response.status}`);
+    }
+    return response.json();
+};
+
+export const resolveAlert = async (alertId: string) => {
+    if (shouldUseDemoData()) {
+        return updateDemoAlertStatus(alertId, 'resolved');
+    }
+    const response = await fetchWithCredentials(`${API_BASE_URL}/alerts/${encodeURIComponent(alertId)}/resolve`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        throw new Error(`FG-ALERT-RESOLVE-${response.status}`);
+    }
+    return response.json();
+};
+
+export const suppressAlert = async (alertId: string) => {
+    if (shouldUseDemoData()) {
+        return updateDemoAlertStatus(alertId, 'suppressed');
+    }
+    const response = await fetchWithCredentials(`${API_BASE_URL}/alerts/${encodeURIComponent(alertId)}/suppress`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        throw new Error(`FG-ALERT-SUPPRESS-${response.status}`);
+    }
+    return response.json();
 };
 
 // --- Multi-Agent System API ---
@@ -247,9 +715,25 @@ export const fetchAlerts = async () => {
 
 export const fetchAgentSystemStats = async (): Promise<MultiAgentSystemStats | null> => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoAgentSystemStats();
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/ai-system/agents/stats`);
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_agent_stats'));
-        return response.json();
+        const data = await response.json();
+
+        if (isDemoModeActive() && data) {
+            applyDemoJitter();
+            data.queueSize = (data.queueSize || 0) + demoState.agentOffset.queueSize;
+            data.totalCaseFiles = (data.totalCaseFiles || 0) + demoState.agentOffset.totalCaseFiles;
+            data.lessonsLearned = (data.lessonsLearned || 0) + demoState.agentOffset.lessonsLearned;
+            data.policyUpdates = (data.policyUpdates || 0) + demoState.agentOffset.policyUpdates;
+            data.totalMessages = (data.totalMessages || 0) + demoState.agentOffset.totalMessages;
+            data.activeTasks = Math.floor(Math.random() * 15) + 3;
+            data.avgLatency = Math.floor(Math.random() * 80) + 40;
+        }
+        return data;
     } catch (e) {
         console.error('Failed to fetch agent system stats:', e);
         return null;
@@ -258,6 +742,10 @@ export const fetchAgentSystemStats = async (): Promise<MultiAgentSystemStats | n
 
 export const fetchAgentHealth = async () => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoAgentHealth();
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/ai-system/agents/health`);
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_agent_health'));
         return response.json();
@@ -271,9 +759,28 @@ export const fetchAgentHealth = async () => {
 
 export const fetchTrafficStats = async (): Promise<TrafficStats | null> => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoTrafficStats();
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/traffic/stats`);
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_traffic_stats'));
-        return response.json();
+        const data = await response.json();
+
+        if (isDemoModeActive() && data) {
+            applyDemoJitter();
+            data.packetsProcessed = (data.packetsProcessed || 0) + demoState.trafficOffset.packetsProcessed;
+            data.packetsAllowed = (data.packetsAllowed || 0) + demoState.trafficOffset.packetsAllowed;
+            data.packetsBlocked = (data.packetsBlocked || 0) + demoState.trafficOffset.packetsBlocked;
+            data.packetsInspected = (data.packetsInspected || 0) + demoState.trafficOffset.packetsInspected;
+            data.bytesProcessed = (data.bytesProcessed || 0) + demoState.trafficOffset.bytesProcessed;
+            data.activeConnections = Math.max(0, (data.activeConnections || 0) + demoState.trafficOffset.activeConnections);
+            data.averageProcessingTime = Math.random() * 1.5 + 0.5;
+            data.droppedPackets = Math.floor(Math.random() * 10);
+            data.bufferOverflows = Math.random() > 0.95 ? 1 : 0;
+            data.cpuUsage = Math.floor(Math.random() * 40) + 20;
+        }
+        return data;
     } catch (e) {
         console.error('Failed to fetch traffic stats:', e);
         return null;
@@ -282,6 +789,10 @@ export const fetchTrafficStats = async (): Promise<TrafficStats | null> => {
 
 export const fetchActiveFlows = async (): Promise<FlowInfo[]> => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoActiveFlows();
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/traffic/flows`);
         if (!response.ok) return [];
         return response.json();
@@ -291,8 +802,42 @@ export const fetchActiveFlows = async (): Promise<FlowInfo[]> => {
     }
 };
 
+export const fetchTrafficSessionDetail = async (sessionId: string) => {
+    if (shouldUseDemoData()) {
+        const flow = getDemoActiveFlows().find((item) => item.id === sessionId);
+        if (!flow) {
+            throw new Error('FG-TRAFFIC-DETAIL-404');
+        }
+        return {
+            success: true,
+            data: {
+                summary: flow,
+                metadata: {
+                    category: flow.category || 'traffic-session',
+                    attackName: flow.attackName || null
+                },
+                relatedAssets: [],
+                timeline: [
+                    { title: 'Session started', description: `${flow.sourceIP}:${flow.sourcePort} -> ${flow.destIP}:${flow.destPort}`, timestamp: flow.startTime },
+                    { title: 'Last activity', description: flow.state, timestamp: flow.lastActivity }
+                ]
+            }
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/traffic/flows/${encodeURIComponent(sessionId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-TRAFFIC-DETAIL-${response.status}`);
+    }
+    return response.json();
+};
+
 export const fetchProtocolDistribution = async () => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoProtocolDistribution();
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/traffic/protocols`);
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_protocol_distribution'));
         return response.json();
@@ -304,6 +849,10 @@ export const fetchProtocolDistribution = async () => {
 
 export const fetchThreatDetections = async () => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoThreatDetections();
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/traffic/threats`);
         if (!response.ok) return [];
         return response.json();
@@ -319,6 +868,10 @@ export const fetchThreatDetections = async () => {
 
 export const fetchAttackTypes = async (): Promise<AttackType[]> => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoAttackTypes();
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/attack/types`);
         if (!response.ok) return [];
         return response.json();
@@ -330,6 +883,10 @@ export const fetchAttackTypes = async (): Promise<AttackType[]> => {
 
 export const runAttackSimulation = async (attackIds?: string[]): Promise<AttackSimulationReport | null> => {
     try {
+        if (shouldUseDemoData()) {
+            return runDemoAttackSimulation(attackIds);
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/attack/simulate`, {
             method: 'POST',
             body: JSON.stringify({ attackIds })
@@ -344,13 +901,51 @@ export const runAttackSimulation = async (attackIds?: string[]): Promise<AttackS
 
 export const fetchAttackHistory = async (): Promise<AttackSimulationReport[]> => {
     try {
+        if (shouldUseDemoData()) {
+            return getDemoAttackHistory().map((report) => ({
+                ...report,
+                id: report.id || report.startTime
+            }));
+        }
+
         const response = await fetchWithCredentials(`${API_BASE_URL}/attack/history`);
         if (!response.ok) return [];
-        return response.json();
+        const data = await response.json();
+        return (data || []).map((report: any) => ({
+            ...report,
+            id: report.id || report.startTime
+        }));
     } catch (e) {
         console.error('Failed to fetch attack history:', e);
         return [];
     }
+};
+
+export const fetchAttackRunDetail = async (runId: string) => {
+    if (shouldUseDemoData()) {
+        const report = getDemoAttackHistory().find((item) => (item.id || item.startTime) === runId);
+        if (!report) {
+            throw new Error('FG-ATTACK-RUN-404');
+        }
+        return {
+            success: true,
+            data: {
+                id: report.id || report.startTime,
+                summary: report,
+                timeline: [
+                    { title: 'Simulation started', timestamp: report.startTime },
+                    { title: 'Simulation completed', timestamp: report.endTime }
+                ],
+                result: report
+            }
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/attack/history/${encodeURIComponent(runId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-ATTACK-RUN-DETAIL-${response.status}`);
+    }
+    return response.json();
 };
 
 // --- Agent Onboarding API ---
@@ -361,6 +956,10 @@ export const createAgentOnboardingCode = async (payload: {
     ttlMinutes?: number;
     maxUses?: number;
 }) => {
+    if (shouldUseDemoData()) {
+        return createDemoAgentOnboardingCode(payload || {});
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/codes`, {
         method: 'POST',
         body: JSON.stringify(payload || {})
@@ -378,6 +977,16 @@ export const exchangeAgentOnboardingCode = async (payload: {
     platform: string;
     mac?: string;
 }) => {
+    if (shouldUseDemoData()) {
+        return {
+            success: true,
+            data: {
+                agentId: `agent-exchange-${Date.now().toString(36)}`,
+                approved: true
+            }
+        };
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/exchange`, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -390,6 +999,10 @@ export const exchangeAgentOnboardingCode = async (payload: {
 };
 
 export const revokeAgentCredential = async (agentId: string, reason?: string) => {
+    if (shouldUseDemoData()) {
+        return revokeDemoAgentCredential(agentId);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/revoke/${agentId}`, {
         method: 'POST',
         body: JSON.stringify({ reason })
@@ -401,11 +1014,15 @@ export const revokeAgentCredential = async (agentId: string, reason?: string) =>
     return response.json();
 };
 
-export const fetchAgentOnboardingCodes = async (status?: 'active' | 'used' | 'expired' | 'revoked', limit: number = 50) => {
+export const fetchAgentOnboardingCodes = async (status?: 'active' | 'used' | 'expired' | 'revoked', limit: number = 50, signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoAgentOnboardingCodes(status, limit);
+    }
+
     const qs = new URLSearchParams();
     qs.set('limit', String(limit));
     if (status) qs.set('status', status);
-    const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/codes?${qs.toString()}`);
+    const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/codes?${qs.toString()}`, { signal });
     if (!response.ok) {
         return [];
     }
@@ -413,8 +1030,12 @@ export const fetchAgentOnboardingCodes = async (status?: 'active' | 'used' | 'ex
     return data?.data || [];
 };
 
-export const fetchRegisteredAgents = async () => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/agents`);
+export const fetchRegisteredAgents = async (signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoRegisteredAgents();
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/agents`, { signal });
     if (!response.ok) {
         return [];
     }
@@ -425,6 +1046,10 @@ export const fetchRegisteredAgents = async () => {
 // --- AI Endpoints API ---
 
 export const fetchAIEndpoints = async () => {
+    if (shouldUseDemoData()) {
+        return getDemoAIEndpoints();
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/ai-endpoints`);
     if (!response.ok) {
         throw new Error(`FG-AI-ENDPOINTS-LIST-${response.status}`);
@@ -442,6 +1067,10 @@ export const createAIEndpoint = async (payload: {
     priority?: number;
     timeout?: number;
 }) => {
+    if (shouldUseDemoData()) {
+        return createDemoAIEndpoint(payload);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/ai-endpoints`, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -454,6 +1083,10 @@ export const createAIEndpoint = async (payload: {
 };
 
 export const updateAIEndpoint = async (id: string, payload: Record<string, any>) => {
+    if (shouldUseDemoData()) {
+        return updateDemoAIEndpoint(id, payload);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/ai-endpoints/${id}`, {
         method: 'PUT',
         body: JSON.stringify(payload)
@@ -466,6 +1099,10 @@ export const updateAIEndpoint = async (id: string, payload: Record<string, any>)
 };
 
 export const deleteAIEndpoint = async (id: string) => {
+    if (shouldUseDemoData()) {
+        return deleteDemoAIEndpoint(id);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/ai-endpoints/${id}`, {
         method: 'DELETE'
     });
@@ -477,6 +1114,10 @@ export const deleteAIEndpoint = async (id: string) => {
 };
 
 export const testAIEndpoint = async (id: string) => {
+    if (shouldUseDemoData()) {
+        return testDemoAIEndpoint(id);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/ai-endpoints/${id}/test`, {
         method: 'POST'
     });
@@ -530,6 +1171,16 @@ export interface ChatResponse {
 }
 
 export const sendChatMessage = async (modelId: string, messages: ChatMessage[]): Promise<ChatResponse> => {
+    if (shouldUseDemoData()) {
+        return {
+            success: true,
+            content: `Demo response from ${modelId}: simulated chat completed.`,
+            model: modelId,
+            usage: { prompt_tokens: 128, completion_tokens: 64, total_tokens: 192 },
+            latency: 245
+        };
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/ai-endpoints/chat`, {
         method: 'POST',
         body: JSON.stringify({ modelId, messages })
@@ -543,8 +1194,12 @@ export const sendChatMessage = async (modelId: string, messages: ChatMessage[]):
 
 // --- Admin API Keys ---
 
-export const fetchAdminApiKeys = async () => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/api-keys`);
+export const fetchAdminApiKeys = async (signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminApiKeys();
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/api-keys`, { signal });
     if (!response.ok) {
         throw new Error(`FG-ADMIN-APIKEYS-LIST-${response.status}`);
     }
@@ -553,6 +1208,10 @@ export const fetchAdminApiKeys = async () => {
 };
 
 export const createAdminApiKey = async (name: string) => {
+    if (shouldUseDemoData()) {
+        return createDemoAdminApiKey(name);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/admin/api-keys`, {
         method: 'POST',
         body: JSON.stringify({ name })
@@ -565,6 +1224,10 @@ export const createAdminApiKey = async (name: string) => {
 };
 
 export const deleteAdminApiKey = async (id: string) => {
+    if (shouldUseDemoData()) {
+        return deleteDemoAdminApiKey(id);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/admin/api-keys/${id}`, {
         method: 'DELETE'
     });
@@ -577,8 +1240,12 @@ export const deleteAdminApiKey = async (id: string) => {
 
 // --- Dashboard / Agents / Devices ---
 
-export const fetchDashboardRulesSummary = async () => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/dashboard/rules/summary`);
+export const fetchDashboardRulesSummary = async (signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoDashboardRulesSummary();
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/dashboard/rules/summary`, { signal });
     if (!response.ok) {
         throw new Error(`FG-DASHBOARD-RULES-${response.status}`);
     }
@@ -587,6 +1254,10 @@ export const fetchDashboardRulesSummary = async () => {
 };
 
 export const fetchRecentAgentThreats = async (limit: number = 50) => {
+    if (shouldUseDemoData()) {
+        return getDemoRecentAgentThreats(limit);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/agents/threats/recent?limit=${limit}`);
     if (!response.ok) {
         throw new Error(`FG-AGENT-THREATS-${response.status}`);
@@ -596,6 +1267,10 @@ export const fetchRecentAgentThreats = async (limit: number = 50) => {
 };
 
 export const fetchDeviceEvents = async (deviceId: string, limit: number = 100) => {
+    if (shouldUseDemoData()) {
+        return getDemoDeviceEvents(deviceId, limit);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/devices/${encodeURIComponent(deviceId)}/events?limit=${limit}`);
     if (!response.ok) {
         throw new Error(`FG-DEVICE-EVENTS-${response.status}`);
@@ -607,6 +1282,10 @@ export const fetchDeviceEvents = async (deviceId: string, limit: number = 100) =
 // --- Fix History ---
 
 export const fetchFixHistory = async (limit: number = 50) => {
+    if (shouldUseDemoData()) {
+        return getDemoFixHistory(limit);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/fix-history?limit=${limit}`);
     if (!response.ok) {
         throw new Error(`FG-FIX-HISTORY-${response.status}`);
@@ -616,6 +1295,10 @@ export const fetchFixHistory = async (limit: number = 50) => {
 };
 
 export const fetchFixHistoryDetail = async (id: string) => {
+    if (shouldUseDemoData()) {
+        return getDemoFixHistoryDetail(id);
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/fix-history/${encodeURIComponent(id)}`);
     if (!response.ok) {
         throw new Error(`FG-FIX-HISTORY-DETAIL-${response.status}`);
@@ -624,13 +1307,349 @@ export const fetchFixHistoryDetail = async (id: string) => {
     return data?.data || null;
 };
 
-export const fetchAdminUsersList = async () => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users`);
+export const fetchAdminUsersList = async (signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminUsers();
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users`, { signal });
     if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_admin_users'));
     return response.json();
 };
 
+export const fetchAdminOversightTenants = async (signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminOversightTenants();
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/tenants`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-TENANTS-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.tenants || [];
+};
+
+export const fetchAdminOversightSummary = async (tenantId: string, userId?: string, signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminOversightSummary(tenantId, userId);
+    }
+
+    const qs = new URLSearchParams();
+    if (userId) qs.set('userId', userId);
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/tenants/${encodeURIComponent(tenantId)}/summary${qs.toString() ? `?${qs.toString()}` : ''}`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-SUMMARY-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.data || null;
+};
+
+export const fetchAdminOversightTimeline = async (params: {
+    tenantId: string;
+    userId?: string;
+    category?: string;
+    from?: string;
+    to?: string;
+    limit?: number;
+}, signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminOversightTimeline(params);
+    }
+
+    const qs = new URLSearchParams();
+    if (params.userId) qs.set('userId', params.userId);
+    if (params.category) qs.set('category', params.category);
+    if (params.from) qs.set('from', params.from);
+    if (params.to) qs.set('to', params.to);
+    if (params.limit) qs.set('limit', String(params.limit));
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/tenants/${encodeURIComponent(params.tenantId)}/timeline?${qs.toString()}`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-TIMELINE-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.data || [];
+};
+
+export const fetchAdminOversightUserTimeline = async (userId: string, params: {
+    tenantId?: string;
+    category?: string;
+    from?: string;
+    to?: string;
+    limit?: number;
+}, signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminOversightTimeline({
+            tenantId: params.tenantId || 'tenant-alpha',
+            userId,
+            category: params.category,
+            from: params.from,
+            to: params.to,
+            limit: params.limit
+        });
+    }
+
+    const qs = new URLSearchParams();
+    if (params.category) qs.set('category', params.category);
+    if (params.from) qs.set('from', params.from);
+    if (params.to) qs.set('to', params.to);
+    if (params.limit) qs.set('limit', String(params.limit));
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/users/${encodeURIComponent(userId)}/timeline?${qs.toString()}`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-USER-TIMELINE-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.data || [];
+};
+
+export const fetchAdminOversightEvidence = async (params: {
+    tenantId: string;
+    userId?: string;
+    category?: string;
+    from?: string;
+    to?: string;
+    limit?: number;
+}, signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminOversightEvidence(params);
+    }
+
+    const qs = new URLSearchParams();
+    if (params.userId) qs.set('userId', params.userId);
+    if (params.category) qs.set('category', params.category);
+    if (params.from) qs.set('from', params.from);
+    if (params.to) qs.set('to', params.to);
+    if (params.limit) qs.set('limit', String(params.limit));
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/tenants/${encodeURIComponent(params.tenantId)}/evidence?${qs.toString()}`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-EVIDENCE-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.data || [];
+};
+
+export const fetchAdminOversightEventDetail = async (tenantId: string, eventId: string) => {
+    if (shouldUseDemoData()) {
+        return { success: true, data: { summary: { eventId }, timeline: [], evidence: [], relatedAssets: [], relatedAlerts: [], relatedActions: [] } };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/tenants/${encodeURIComponent(tenantId)}/events/${encodeURIComponent(eventId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-EVENT-${response.status}`);
+    }
+    return response.json();
+};
+
+export const verifyAdminAuditLog = async (logId: string) => {
+    if (shouldUseDemoData()) {
+        return verifyDemoAdminAuditLog(logId);
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/audit/verify/${encodeURIComponent(logId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-AUDIT-VERIFY-${response.status}`);
+    }
+    return response.json();
+};
+
+export const createAdminOversightExport = async (payload: {
+    tenantId: string;
+    filters?: Record<string, any>;
+}) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminOversightExport(payload);
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/exports`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-EXPORT-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchAdminOversightExports = async (tenantId: string, signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        const summary = getDemoAdminOversightSummary(tenantId);
+        return summary?.recentExports || [];
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/tenants/${encodeURIComponent(tenantId)}/exports`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-EXPORTS-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.data || [];
+};
+
+export const fetchAdminOversightExport = async (exportId: string) => {
+    if (shouldUseDemoData()) {
+        return getDemoAdminOversightExport({ exportId });
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/tenant-oversight/exports/${encodeURIComponent(exportId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-ADMIN-OVERSIGHT-EXPORT-DETAIL-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.data || null;
+};
+
+export const fetchAgentsList = async () => {
+    if (shouldUseDemoData()) {
+        const agents = getDemoAgents();
+        return { success: true, count: agents.length, agents };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/agents`);
+    if (!response.ok) {
+        throw new Error(`FG-AGENTS-LIST-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchAgentDetail = async (agentId: string) => {
+    if (shouldUseDemoData()) {
+        const agent = getDemoAgents().find((item) => item.agentId === agentId);
+        if (!agent) {
+            throw new Error('FG-AGENT-DETAIL-404');
+        }
+        return {
+            success: true,
+            data: {
+                summary: agent,
+                capabilities: agent.registration || {},
+                recentThreats: getDemoRecentAgentThreats(10),
+                timeline: [
+                    {
+                        title: 'Last heartbeat',
+                        description: agent.isOnline ? 'Agent reported healthy telemetry.' : 'Agent heartbeat is stale.',
+                        timestamp: agent.lastHeartbeat
+                    }
+                ]
+            }
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/agents/${encodeURIComponent(agentId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-AGENT-DETAIL-${response.status}`);
+    }
+    return response.json();
+};
+
+export const triggerAgentScan = async (agentId: string) => {
+    if (shouldUseDemoData()) {
+        return { success: true, simulated: true, message: `Simulated scan queued for ${agentId}` };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/agents/${encodeURIComponent(agentId)}/scan`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        throw new Error(`FG-AGENT-SCAN-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchScannerRunDetail = async (taskId: string) => {
+    const [task, results] = await Promise.all([
+        fetchScanTask(taskId),
+        fetchScanTaskResults(taskId)
+    ]);
+
+    return {
+        success: true,
+        data: {
+            summary: task?.data || null,
+            result: results?.data || null
+        }
+    };
+};
+
+export const fetchDevicesList = async (signal?: AbortSignal) => {
+    if (shouldUseDemoData()) {
+        const devices = getDemoDevices();
+        return {
+            success: true,
+            total: devices.length,
+            online: devices.filter((device) => device.isOnline).length,
+            devices
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/devices`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-DEVICES-LIST-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchDeviceDetail = async (deviceId: string) => {
+    if (shouldUseDemoData()) {
+        const device = getDemoDeviceDetail(deviceId);
+        if (!device) {
+            throw new Error('FG-DEVICE-DETAIL-404');
+        }
+        return { success: true, device };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/devices/${encodeURIComponent(deviceId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-DEVICE-DETAIL-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchDeviceConfig = async (deviceId: string) => {
+    if (shouldUseDemoData()) {
+        return getDemoDeviceConfig(deviceId);
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/devices/${encodeURIComponent(deviceId)}/config`);
+    if (!response.ok) {
+        throw new Error(`FG-DEVICE-CONFIG-${response.status}`);
+    }
+    return response.json();
+};
+
+export const saveDeviceConfig = async (deviceId: string, payload: Partial<DeviceConfigurationPayload>) => {
+    if (shouldUseDemoData()) {
+        return saveDemoDeviceConfig(deviceId, payload);
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/devices/${encodeURIComponent(deviceId)}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-DEVICE-SAVE-${response.status}`);
+    }
+    return response.json();
+};
+
+export const sendDeviceCommand = async (deviceId: string, command: string): Promise<ActionResponse> => {
+    if (shouldUseDemoData()) {
+        return sendDemoDeviceCommand(deviceId, command);
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/devices/${encodeURIComponent(deviceId)}/cmd`, {
+        method: 'POST',
+        body: JSON.stringify({ command })
+    });
+    if (!response.ok) {
+        throw new Error(`FG-DEVICE-CMD-${response.status}`);
+    }
+    return response.json();
+};
+
 export const updateAdminUserPlan = async (userId: string, plan: string) => {
+    if (shouldUseDemoData()) {
+        return updateDemoAdminUser(userId, { plan: plan as 'starter' | 'pro' | 'ultra' });
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/plan`, {
         method: 'PUT',
         body: JSON.stringify({ plan })
@@ -640,6 +1659,10 @@ export const updateAdminUserPlan = async (userId: string, plan: string) => {
 };
 
 export const updateAdminUserRole = async (userId: string, role: string) => {
+    if (shouldUseDemoData()) {
+        return updateDemoAdminUser(userId, { role: role as 'admin' | 'tenant' | 'viewer' });
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/role`, {
         method: 'PUT',
         body: JSON.stringify({ role })
@@ -649,6 +1672,10 @@ export const updateAdminUserRole = async (userId: string, role: string) => {
 };
 
 export const updateAdminUserStatus = async (userId: string, status: string) => {
+    if (shouldUseDemoData()) {
+        return updateDemoAdminUser(userId, { status: status as 'active' | 'suspended' });
+    }
+
     const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/status`, {
         method: 'PUT',
         body: JSON.stringify({ status })

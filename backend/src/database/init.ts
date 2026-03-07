@@ -13,6 +13,64 @@ function generateSecretKey(): string {
     return crypto.randomBytes(32).toString('hex');
 }
 
+type SeedUser = {
+    email: string;
+    username: string;
+    password: string;
+    role: 'admin' | 'tenant' | 'viewer';
+    plan: 'starter' | 'pro' | 'ultra';
+};
+
+const DEV_LOGIN_PRESETS: SeedUser[] = [
+    {
+        email: 'dev-admin@aetherguard.local',
+        username: 'Dev Admin',
+        password: 'DevAdmin!2026',
+        role: 'admin',
+        plan: 'ultra'
+    },
+    {
+        email: 'starter@aetherguard.local',
+        username: 'Starter User',
+        password: 'DevStarter!2026',
+        role: 'tenant',
+        plan: 'starter'
+    },
+    {
+        email: 'pro@aetherguard.local',
+        username: 'Pro User',
+        password: 'DevPro!2026',
+        role: 'tenant',
+        plan: 'pro'
+    },
+    {
+        email: 'ultra@aetherguard.local',
+        username: 'Ultra User',
+        password: 'DevUltra!2026',
+        role: 'tenant',
+        plan: 'ultra'
+    }
+];
+
+async function ensureUser(db: any, user: SeedUser): Promise<void> {
+    const existingUser = db.prepare('SELECT id, tenant_id FROM users WHERE email = ?').get(user.email) as { id?: string; tenant_id?: string } | undefined;
+    const passwordHash = await bcrypt.hash(user.password, 12);
+
+    if (existingUser?.id) {
+        db.prepare(`
+            UPDATE users
+            SET username = ?, password_hash = ?, role = ?, plan = ?, status = 'active', updated_at = datetime('now')
+            WHERE id = ?
+        `).run(user.username, passwordHash, user.role, user.plan, existingUser.id);
+        return;
+    }
+
+    db.prepare(`
+        INSERT INTO users (id, email, username, password_hash, role, plan, tenant_id, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'), datetime('now'))
+    `).run(uuidv4(), user.email, user.username, passwordHash, user.role, user.plan, uuidv4());
+}
+
 async function bootstrapDatabase() {
     try {
         await initDatabase();
@@ -38,18 +96,25 @@ async function bootstrapDatabase() {
             logger.info('Admin user already exists');
         } else {
             logger.info('Creating default admin user...');
-
-            const saltRounds = 12;
-            const passwordHash = await bcrypt.hash(adminPassword, saltRounds);
-            const userId = uuidv4();
-            const tenantId = uuidv4();
-
-            db.prepare(`
-                INSERT INTO users (id, email, username, password_hash, role, tenant_id, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-            `).run(userId, adminEmail, 'Admin', passwordHash, 'admin', tenantId);
-
+            await ensureUser(db, {
+                email: adminEmail,
+                username: 'Admin',
+                password: adminPassword,
+                role: 'admin',
+                plan: 'ultra'
+            });
             logger.info(`Admin user created: ${adminEmail}`);
+        }
+
+        const enableDevLoginPresets =
+            process.env.ENABLE_DEV_LOGIN_PRESETS === 'true' ||
+            process.env.NODE_ENV !== 'production';
+
+        if (enableDevLoginPresets) {
+            for (const preset of DEV_LOGIN_PRESETS) {
+                await ensureUser(db, preset);
+            }
+            logger.info('Development login presets ensured');
         }
 
         // Create default probe agent registration

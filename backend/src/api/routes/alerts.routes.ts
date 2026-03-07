@@ -1,131 +1,285 @@
-import { Router, Request, Response } from 'express';
+import { Response, Router } from 'express';
 import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { getAgentSystem } from './ai-system.routes';
 import logger from '../../utils/logger';
-import { isDemoMode } from '../../config/app-mode';
+import { securityOperationsService } from '../../services/security-operations.service';
+import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
+import { getDatabase } from '../../config/database';
 
 const router = Router();
 
 router.use(authenticate);
 
-interface Alert {
-    id: string;
-    title: string;
-    message: string;
-    severity: 'Critical' | 'High' | 'Medium' | 'Low';
-    type: 'security' | 'performance' | 'system';
-    source: string;
-    time: string;
-    status: 'active' | 'acknowledged' | 'resolved';
-    timestamp: string;
+type AlertPayload = {
+  title: string;
+  message: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low';
+  type: 'security' | 'performance' | 'system';
+  source: string;
+  status?: 'open' | 'acknowledged' | 'investigating' | 'resolved' | 'suppressed';
+  assetRef?: string;
+};
+
+function tenantOf(req: AuthenticatedRequest): string {
+  return req.user?.tenantId || 'global';
 }
 
-let alertStore: Alert[] = [];
+function severityToInternal(severity: string): 'critical' | 'high' | 'medium' | 'low' {
+  const normalized = severity.toLowerCase();
+  if (normalized === 'critical' || normalized === 'high' || normalized === 'medium' || normalized === 'low') {
+    return normalized;
+  }
+  return 'medium';
+}
 
-export const addAlert = (alert: Omit<Alert, 'id' | 'time' | 'timestamp'>) => {
-    const newAlert: Alert = {
-        ...alert,
-        id: `ALT-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-        time: 'Just now',
-        timestamp: new Date().toISOString()
-    };
-    alertStore.unshift(newAlert);
-    if (alertStore.length > 100) {
-        alertStore = alertStore.slice(0, 100);
+export const addAlert = (alert: AlertPayload & { tenantId?: string }) => {
+  const tenantId = alert.tenantId || 'global';
+  const asset = alert.assetRef
+    ? securityOperationsService.upsertAsset({
+        tenantId,
+        assetType: 'host',
+        externalRef: alert.assetRef,
+        displayName: alert.assetRef,
+        primaryAddress: alert.assetRef
+      })
+    : null;
+
+  return securityOperationsService.createAlert({
+    tenantId,
+    assetId: asset?.assetId,
+    sourceType: 'system',
+    sourceRef: alert.source,
+    title: alert.title,
+    message: alert.message,
+    severity: severityToInternal(alert.severity),
+    alertType: alert.type,
+    metadata: {
+      injectedBy: 'alerts.addAlert'
     }
-    logger.info('New alert generated', { alertId: newAlert.id, title: alert.title });
-    return newAlert;
+  });
 };
 
-export const getAlerts = (): Alert[] => {
-    return alertStore;
-};
+export const getAlerts = async (tenantId = 'global') => securityOperationsService.listAlertsView(tenantId, { limit: 100 });
 
-router.get('/', (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const agentSystem = getAgentSystem();
-        let alerts: Alert[] = [...alertStore];
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const tenantId = tenantOf(req);
+    const alerts = await securityOperationsService.listAlertsView(tenantId, {
+      severity: String(req.query.severity || 'all'),
+      status: String(req.query.status || 'all'),
+      limit: Math.min(Number(req.query.limit || 50), 200)
+    });
 
-        if (agentSystem && agentSystem.isInitialized()) {
-            const probeReport = agentSystem.getProbeReport();
-            const systemAlerts = probeReport.alerts || [];
+    const agentSystem = getAgentSystem();
+    if (agentSystem && agentSystem.isInitialized()) {
+      const probeReport = agentSystem.getProbeReport();
+      const systemAlerts = probeReport.alerts || [];
 
-            systemAlerts.forEach((alert: any, index: number) => {
-                const existingAlert = alerts.find(a =>
-                    a.message.includes(alert.metadata?.threatType || '') ||
-                    a.title.includes(alert.metadata?.threatType || '')
-                );
-
-                if (!existingAlert) {
-                    alerts.push({
-                        id: `SYS-${Date.now()}-${index}`,
-                        title: `${alert.metadata?.threatType || 'Threat'} Detected`,
-                        message: alert.message || `Security event detected from ${alert.metadata?.sourceIP || 'unknown source'}`,
-                        severity: mapSeverity(alert.severity),
-                        type: 'security',
-                        source: alert.metadata?.ruleId || 'AI System',
-                        time: getTimeAgo(alert.timestamp),
-                        status: 'active',
-                        timestamp: alert.timestamp || new Date().toISOString()
-                    });
-                }
-            });
+      for (const systemAlert of systemAlerts.slice(0, 20)) {
+        if (!systemAlert?.message) {
+          continue;
         }
 
-        // 无论是否是演示模式，都返回真实数据
-        alerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        res.json(alerts.slice(0, 50));
-    } catch (error: any) {
-        logger.error('Failed to fetch alerts', { error: error.message });
-        res.json([]);
+        addAlert({
+          tenantId,
+          title: `${systemAlert.metadata?.threatType || 'Threat'} detected`,
+          message: systemAlert.message,
+          severity: (systemAlert.severity || 'medium').charAt(0).toUpperCase() + (systemAlert.severity || 'medium').slice(1) as AlertPayload['severity'],
+          type: 'security',
+          source: systemAlert.metadata?.ruleId || 'AI System',
+          assetRef: systemAlert.metadata?.sourceIP
+        });
+      }
     }
+
+    res.json(await securityOperationsService.listAlertsView(tenantId, { limit: 100 }));
+  } catch (error: any) {
+    logger.error('Failed to fetch alerts', { error: error.message });
+    res.json([]);
+  }
 });
 
-router.post('/:id/acknowledge', (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const alert = alertStore.find(a => a.id === id);
-    if (alert) {
-        alert.status = 'acknowledged';
-        res.json({ success: true, alert });
-    } else {
-        res.status(404).json({ error: 'backend.alert_not_found' });
+router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const tenantId = tenantOf(req);
+    const alert = await securityOperationsService.getAlertByIdView(tenantId, req.params.id);
+
+    if (!alert) {
+      return res.status(404).json({ success: false, error: 'backend.alert_not_found' });
     }
+
+    const parseJson = (value: any, fallback: any = {}) => {
+      if (!value || typeof value !== 'string') {
+        return fallback;
+      }
+      try {
+        return JSON.parse(value);
+      } catch {
+        return fallback;
+      }
+    };
+
+    const alertRow = postgresShadowStoreService.canServeReads()
+      ? await postgresShadowStoreService.queryOne<any>(`
+          SELECT * FROM sec_alerts
+          WHERE tenant_id = $1 AND alert_id = $2
+          LIMIT 1
+        `, [tenantId, req.params.id])
+      : getDatabase().prepare(`
+          SELECT * FROM sec_alerts
+          WHERE tenant_id = ? AND alert_id = ?
+          LIMIT 1
+        `).get(tenantId, req.params.id) as any;
+
+    const relatedFindings = alert.findingId
+      ? [await securityOperationsService.getFindingByIdView(tenantId, alert.findingId)].filter(Boolean)
+      : [];
+    const relatedActions = postgresShadowStoreService.canServeReads()
+      ? await postgresShadowStoreService.queryAll<any>(`
+          SELECT * FROM sec_actions
+          WHERE tenant_id = $1 AND (alert_id = $2 OR finding_id = $3)
+          ORDER BY updated_at DESC
+          LIMIT 20
+        `, [tenantId, req.params.id, alert.findingId || null])
+      : getDatabase().prepare(`
+          SELECT * FROM sec_actions
+          WHERE tenant_id = ? AND (alert_id = ? OR finding_id = ?)
+          ORDER BY updated_at DESC
+          LIMIT 20
+        `).all(tenantId, req.params.id, alert.findingId || null) as any[];
+    const relatedSessions = postgresShadowStoreService.canServeReads()
+      ? await postgresShadowStoreService.queryAll<any>(`
+          SELECT * FROM sec_traffic_sessions
+          WHERE tenant_id = $1
+          ORDER BY last_activity DESC
+          LIMIT 20
+        `, [tenantId])
+      : getDatabase().prepare(`
+          SELECT * FROM sec_traffic_sessions
+          WHERE tenant_id = ?
+          ORDER BY last_activity DESC
+          LIMIT 20
+        `).all(tenantId) as any[];
+
+    const assetContext = await securityOperationsService.getOperationalContextForAssetIdsView(
+      tenantId,
+      alert.assetId ? [alert.assetId] : [],
+      10
+    );
+    const asset = alert.assetId
+      ? await securityOperationsService.getAssetByIdView(tenantId, alert.assetId)
+      : null;
+    const relatedFindingIds = new Set(relatedFindings.map((finding: any) => finding?.findingId).filter(Boolean));
+    const correlatedAlerts = assetContext.alerts.filter((item: any) =>
+      item.id !== alert.id && (!item.findingId || relatedFindingIds.size === 0 || relatedFindingIds.has(item.findingId))
+    );
+    const correlatedActions = [
+      ...relatedActions.map((row: any) => ({
+        actionId: row.action_id,
+        title: row.title,
+        status: row.status,
+        operator: row.operator,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        runLog: parseJson(row.run_log_json, [])
+      })),
+      ...assetContext.actions.filter((row: any) =>
+        row.alertId === alert.id ||
+        (row.findingId && relatedFindingIds.has(row.findingId))
+      )
+    ].filter((item: any, index: number, arr: any[]) =>
+      arr.findIndex((candidate: any) => candidate.actionId === item.actionId) === index
+    );
+
+    res.json({
+      success: true,
+      data: {
+        summary: alert,
+        asset,
+        evidence: relatedFindings.map((finding: any) => ({
+          findingId: finding.findingId,
+          title: finding.title,
+          severity: finding.severity,
+          description: finding.description,
+          evidence: finding.evidence,
+          remediation: finding.remediation
+        })),
+        timeline: [
+          {
+            title: 'Alert created',
+            description: alert.message,
+            timestamp: alert.timestamp
+          },
+          ...(alert.investigationId ? [{
+            title: 'Investigation assigned',
+            description: `Investigation ${alert.investigationId} attached`,
+            timestamp: alert.timestamp
+          }] : [])
+        ],
+        relatedAssets: asset ? [asset] : [],
+        relatedAlerts: correlatedAlerts,
+        relatedScans: assetContext.scanRuns.length > 0
+          ? assetContext.scanRuns
+          : relatedFindings.map((finding: any) => ({
+              sourceType: finding.sourceType,
+              sourceRef: finding.sourceRef,
+              target: finding.target
+            })),
+        relatedActions: correlatedActions,
+        relatedSessions: relatedSessions
+          .filter((row: any) => {
+            const metadata = parseJson(row.metadata_json, {});
+            return metadata?.decision || row.source_asset_id === alert.assetId || row.dest_asset_id === alert.assetId;
+          })
+          .slice(0, 5)
+          .map((row: any) => ({
+            sessionId: row.session_id,
+            sourceIP: row.source_ip,
+            destIP: row.dest_ip,
+            protocol: row.protocol,
+            state: row.state,
+            lastActivity: row.last_activity,
+            metadata: parseJson(row.metadata_json, {})
+          })),
+        metadata: parseJson(alertRow?.metadata_json, {})
+      }
+    });
+  } catch (error: any) {
+    logger.error('Failed to fetch alert detail', { error: error.message });
+    res.status(500).json({ success: false, error: 'backend.failed_to_fetch_alert_detail' });
+  }
 });
 
-router.post('/:id/resolve', (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const alert = alertStore.find(a => a.id === id);
-    if (alert) {
-        alert.status = 'resolved';
-        res.json({ success: true, alert });
-    } else {
-        res.status(404).json({ error: 'backend.alert_not_found' });
-    }
+router.post('/:id/acknowledge', async (req: AuthenticatedRequest, res: Response) => {
+  const alert = await securityOperationsService.transitionAlertView(tenantOf(req), req.params.id, 'acknowledged', req.user?.email || req.user?.userId || 'unknown');
+  if (!alert) {
+    return res.status(404).json({ error: 'backend.alert_not_found' });
+  }
+  res.json({ success: true, alert });
 });
 
-function mapSeverity(severity: string): 'Critical' | 'High' | 'Medium' | 'Low' {
-    switch (severity?.toLowerCase()) {
-        case 'critical': return 'Critical';
-        case 'high': return 'High';
-        case 'medium': return 'Medium';
-        case 'low': return 'Low';
-        default: return 'Medium';
-    }
-}
+router.post('/:id/investigate', async (req: AuthenticatedRequest, res: Response) => {
+  const alert = await securityOperationsService.transitionAlertView(tenantOf(req), req.params.id, 'investigating', req.user?.email || req.user?.userId || 'unknown');
+  if (!alert) {
+    return res.status(404).json({ error: 'backend.alert_not_found' });
+  }
+  res.json({ success: true, alert });
+});
 
-function getTimeAgo(timestamp: string): string {
-    const now = Date.now();
-    const then = new Date(timestamp).getTime();
-    const diffMs = now - then;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+router.post('/:id/resolve', async (req: AuthenticatedRequest, res: Response) => {
+  const alert = await securityOperationsService.transitionAlertView(tenantOf(req), req.params.id, 'resolved', req.user?.email || req.user?.userId || 'unknown');
+  if (!alert) {
+    return res.status(404).json({ error: 'backend.alert_not_found' });
+  }
+  res.json({ success: true, alert });
+});
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} mins ago`;
-    if (diffHours < 24) return `${diffHours} hours ago`;
-    return `${diffDays} days ago`;
-}
-
+router.post('/:id/suppress', async (req: AuthenticatedRequest, res: Response) => {
+  const alert = await securityOperationsService.transitionAlertView(tenantOf(req), req.params.id, 'suppressed', req.user?.email || req.user?.userId || 'unknown');
+  if (!alert) {
+    return res.status(404).json({ error: 'backend.alert_not_found' });
+  }
+  res.json({ success: true, alert });
+});
 
 export default router;

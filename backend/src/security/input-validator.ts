@@ -154,6 +154,12 @@ export class SQLSemanticAnalyzer {
      * 检测危险的SQL关键字组合
      */
     private detectKeywordCombinations(input: string): ValidationResult {
+        // Skip validation for email addresses (common false positive)
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (emailPattern.test(input.trim())) {
+            return { isValid: true };
+        }
+
         const dangerousPatterns = [
             // UNION 攻击
             { pattern: /\bunion\s+select\b/i, threat: 'SQL Injection - UNION SELECT', level: 'critical' as const },
@@ -782,6 +788,33 @@ export class InputValidator {
         return this.cmdDetector.detect(input);
     }
 
+    private validateValueRecursive(
+        value: unknown,
+        sourceLabel: string,
+        errors: string[]
+    ): void {
+        if (typeof value === 'string') {
+            const result = this.validateAll(value);
+            if (!result.isValid) {
+                errors.push(`${sourceLabel}: ${result.reason || 'Invalid input'}`);
+            }
+            return;
+        }
+
+        if (Array.isArray(value)) {
+            value.forEach((item, index) => {
+                this.validateValueRecursive(item, `${sourceLabel}[${index}]`, errors);
+            });
+            return;
+        }
+
+        if (value && typeof value === 'object') {
+            for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+                this.validateValueRecursive(nested, `${sourceLabel}.${key}`, errors);
+            }
+        }
+    }
+
     /**
      * Validate Express request body, query params, and route params
      * SECURITY FIX CVE-2026-014: Added for request validation
@@ -791,35 +824,17 @@ export class InputValidator {
 
         // Validate body
         if (req.body) {
-            const bodyStr = JSON.stringify(req.body);
-            const result = this.validateAll(bodyStr);
-            if (!result.isValid) {
-                errors.push(`Body: ${result.reason || 'Invalid input'}`);
-            }
+            this.validateValueRecursive(req.body, 'Body', errors);
         }
 
         // Validate query params
         if (req.query) {
-            for (const [key, value] of Object.entries(req.query)) {
-                if (typeof value === 'string') {
-                    const result = this.validateAll(value);
-                    if (!result.isValid) {
-                        errors.push(`Query param '${key}': ${result.reason || 'Invalid input'}`);
-                    }
-                }
-            }
+            this.validateValueRecursive(req.query, 'Query', errors);
         }
 
         // Validate route params
         if (req.params) {
-            for (const [key, value] of Object.entries(req.params)) {
-                if (typeof value === 'string') {
-                    const result = this.validateAll(value);
-                    if (!result.isValid) {
-                        errors.push(`Route param '${key}': ${result.reason || 'Invalid input'}`);
-                    }
-                }
-            }
+            this.validateValueRecursive(req.params, 'Route param', errors);
         }
 
         return errors.length > 0

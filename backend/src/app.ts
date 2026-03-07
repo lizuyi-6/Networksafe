@@ -61,7 +61,8 @@ app.use(cors({
             callback(null, true);
         } else {
             logger.warn(`Blocked CORS request from: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
+            // Return proper response instead of throwing to avoid 500 error
+            return callback(null, false);
         }
     },
     credentials: true,

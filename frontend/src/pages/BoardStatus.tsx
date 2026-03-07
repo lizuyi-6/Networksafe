@@ -1,8 +1,9 @@
-﻿import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Activity, Cpu, Globe } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Activity, ArrowLeft, Clock3, Cpu, MemoryStick, Router } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { fetchDeviceEvents } from '../services/api';
+import { fetchDeviceDetail, fetchDeviceEvents } from '../services/api';
+import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
 
 interface DeviceInfo {
     deviceId: string;
@@ -23,7 +24,7 @@ interface DeviceInfo {
 const BoardStatus = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { t, language, toggleLanguage } = useLanguage();
+    const { t } = useLanguage();
 
     const [device, setDevice] = useState<DeviceInfo | null>(null);
     const [logs, setLogs] = useState<string[]>([]);
@@ -32,10 +33,9 @@ const BoardStatus = () => {
     const loadDevice = async () => {
         if (!id) return;
         try {
-            const response = await fetch(`/api/devices/${encodeURIComponent(id)}`, { credentials: 'include' });
-            if (!response.ok) throw new Error(`FG-DEVICE-DETAIL-${response.status}`);
-            const data = await response.json();
+            const data = await fetchDeviceDetail(id);
             setDevice(data?.device || null);
+            setError(null);
         } catch (e: any) {
             setError(e.message || 'FG-DEVICE-DETAIL-ERR');
         }
@@ -46,7 +46,7 @@ const BoardStatus = () => {
         try {
             const events = await fetchDeviceEvents(id, 80);
             const mapped = (events || []).map((ev: any) => {
-                const ts = new Date(ev.timestamp).toLocaleTimeString('en-GB');
+                const ts = new Date(ev.timestamp).toLocaleTimeString('zh-CN', { hour12: false });
                 return `[${ts}] ${ev.type}: ${JSON.stringify(ev.payload || {})}`;
             });
             setLogs(mapped);
@@ -65,73 +65,129 @@ const BoardStatus = () => {
         return () => clearInterval(interval);
     }, [id]);
 
+    const uptimeText = useMemo(() => {
+        const uptime = device?.status?.uptime ?? 0;
+        const hours = Math.floor(uptime / 3600);
+        const minutes = Math.floor((uptime % 3600) / 60);
+        return `${hours}h ${minutes}m`;
+    }, [device?.status?.uptime]);
+
     return (
-        <div className="bg-background font-display text-foreground overflow-hidden h-screen w-full flex flex-col selection:bg-blue-500 selection:text-white relative">
-            <header className="relative z-20 flex items-center justify-between px-6 py-3 bg-surface/80 backdrop-blur-md border-b border-border shrink-0 h-16">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/devices')} className="p-1.5 rounded bg-muted border border-border hover:bg-accent hover:border-border transition-all">
-                        <ArrowLeft size={20} className="text-muted-foreground" />
+        <ConsolePage
+            title={device?.deviceId || id || t('board.unknown')}
+            subtitle={`${t('board.device_id')}: ${id || t('board.unknown')}`}
+            actions={
+                <>
+                    <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">
+                        <span className={`h-2 w-2 rounded-full ${device?.isOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                        <span className={device?.isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
+                            {device?.isOnline ? '在线' : '离线'}
+                        </span>
+                    </div>
+                    <button
+                        onClick={() => navigate('/devices')}
+                        className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"
+                    >
+                        <ArrowLeft size={14} />
+                        返回设备列表
                     </button>
-                    <div>
-                        <h1 className="text-lg font-bold tracking-tight text-foreground leading-none uppercase">AetherGuard <span className="text-xs text-muted-foreground font-normal ml-2">{t('board.device_id')}: {id || t('board.unknown')}</span></h1>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${device?.isOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                            <span className="text-[10px] uppercase tracking-widest text-emerald-500 font-mono">{device?.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
-                        </div>
-                    </div>
-                </div>
-                <div className="flex items-center gap-6">
-                    <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-muted-foreground">
-                        <div className="flex items-center gap-2"><Cpu size={14} /><span>CPU: {device?.status?.cpuUsage ?? 0}%</span></div>
-                        <div className="flex items-center gap-2"><Activity size={14} /><span>RSSI: {device?.status?.wifiRssi ?? 0}dBm</span></div>
-                    </div>
-                    <div className="h-8 w-px bg-border"></div>
-                    <button onClick={toggleLanguage} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border hover:bg-accent text-xs font-mono text-foreground transition-all">
-                        <Globe size={12} />
-                        {language === 'en' ? 'EN' : '中文'}
-                    </button>
-                </div>
-            </header>
+                </>
+            }
+        >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard icon={Cpu} label="CPU" value={`${device?.status?.cpuUsage ?? 0}%`} hint={device?.chipModel || '-'} tone="primary" />
+                <ConsoleStatCard
+                    icon={MemoryStick}
+                    label={t('board.memory')}
+                    value={`${device?.status?.memoryUsage ?? 0}%`}
+                    hint={`${t('board.free_heap')}: ${device?.freeHeap ?? 0}`}
+                    tone="warning"
+                />
+                <ConsoleStatCard
+                    icon={Activity}
+                    label="Wi-Fi RSSI"
+                    value={`${device?.status?.wifiRssi ?? 0} dBm`}
+                    hint={t('board.last_heartbeat')}
+                    tone={device?.isOnline ? 'success' : 'danger'}
+                />
+                <ConsoleStatCard
+                    icon={Clock3}
+                    label="Uptime"
+                    value={uptimeText}
+                    hint={device?.lastHeartbeat ? new Date(device.lastHeartbeat).toLocaleString() : '-'}
+                    tone="neutral"
+                />
+            </div>
 
-            <main className="relative z-10 flex-1 p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0 overflow-hidden">
-                <section className="lg:col-span-4 flex flex-col gap-4 h-full min-h-0">
-                    <div className="flex justify-between items-end pb-2 border-b border-border">
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{t('board.device_metrics')}</h2>
-                        <span className="text-[10px] font-mono text-blue-500">{t('board.real_data')}</span>
-                    </div>
-                    <div className="bg-card/20 border border-border rounded-lg p-4 space-y-3 text-sm">
-                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.chip')}</span><span>{device?.chipModel || '-'}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.version')}</span><span>{device?.version || '-'}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.mode')}</span><span>{device?.mode || '-'}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.memory')}</span><span>{device?.status?.memoryUsage ?? 0}%</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.free_heap')}</span><span>{device?.freeHeap ?? 0}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">{t('board.last_heartbeat')}</span><span>{device?.lastHeartbeat ? new Date(device.lastHeartbeat).toLocaleString() : '-'}</span></div>
-                    </div>
-                    {error && (
-                        <div className="p-3 rounded border border-red-500/30 bg-red-500/10 text-red-300 text-xs">{error}</div>
-                    )}
-                </section>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-4">
+                    <ConsolePanel title={t('board.device_metrics')} subtitle="网关运行时指标" icon={Router} iconTone="primary">
+                        <div className="space-y-3 text-sm">
+                            <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+                                <span className="text-muted-foreground">{t('board.chip')}</span>
+                                <span className="font-medium text-foreground">{device?.chipModel || '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+                                <span className="text-muted-foreground">{t('board.version')}</span>
+                                <span className="font-medium text-foreground">{device?.version || '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+                                <span className="text-muted-foreground">{t('board.mode')}</span>
+                                <span className="font-medium text-foreground">{device?.mode || '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+                                <span className="text-muted-foreground">{t('board.last_heartbeat')}</span>
+                                <span className="text-right font-medium text-foreground">
+                                    {device?.lastHeartbeat ? new Date(device.lastHeartbeat).toLocaleString() : '-'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-muted-foreground">{t('board.real_data')}</span>
+                                <span className="rounded-full border border-border bg-muted/30 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    /api/devices/{id}
+                                </span>
+                            </div>
+                        </div>
 
-                <section className="lg:col-span-8 flex flex-col h-full min-h-0">
-                    <div className="flex justify-between items-end pb-2 border-b border-border">
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{t('board.event_stream')}</h2>
-                        <span className="text-[10px] font-mono text-muted-foreground">/api/devices/{id}/events</span>
-                    </div>
-                    <div className="flex-1 bg-muted/80 backdrop-blur-xl border border-border rounded-lg overflow-hidden flex flex-col font-mono text-xs relative shadow-2xl">
-                        <div className="bg-muted px-4 py-2 flex items-center gap-2 border-b border-border">
-                            <div className="ml-auto text-[10px] text-muted-foreground">real-time event feed</div>
+                        {error && (
+                            <div className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-600 dark:text-rose-300">
+                                {error}
+                            </div>
+                        )}
+                    </ConsolePanel>
+                </div>
+
+                <div className="lg:col-span-8">
+                    <ConsolePanel
+                        title={t('board.event_stream')}
+                        subtitle="设备最近事件流"
+                        icon={Activity}
+                        iconTone="warning"
+                        headerAction={<span className="text-xs text-muted-foreground">/api/devices/{id}/events</span>}
+                    >
+                        <div className="rounded-xl border border-border bg-muted/20">
+                            <div className="flex items-center justify-between border-b border-border px-4 py-3 text-xs text-muted-foreground">
+                                <span className="font-medium text-foreground">实时事件流</span>
+                                <span>最近 80 条</span>
+                            </div>
+                            <div className="max-h-[560px] overflow-y-auto px-4 py-4">
+                                {logs.length > 0 ? (
+                                    <div className="space-y-2 font-mono text-xs leading-6 text-foreground">
+                                        {logs.map((log, index) => (
+                                            <div key={`${log}-${index}`} className="rounded-lg border border-border/70 bg-background/70 px-3 py-2">
+                                                {log}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <ConsoleEmptyState title="暂无事件" description="设备上报遥测后，这里会显示事件消息。" />
+                                )}
+                            </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 text-foreground">
-                            {logs.length > 0 ? logs.map((log, i) => (
-                                <div key={i} className="flex gap-2"><span>{log}</span></div>
-                            )) : (
-                                <div className="opacity-60">No events available.</div>
-                            )}
-                        </div>
-                    </div>
-                </section>
-            </main>
-        </div>
+                    </ConsolePanel>
+                </div>
+            </div>
+        </ConsolePage>
     );
 };
 

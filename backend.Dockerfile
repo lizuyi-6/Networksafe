@@ -1,10 +1,35 @@
-FROM node:18-alpine
+# ============================================================
+# Stage 1: Builder
+# ============================================================
+FROM node:20-alpine AS builder
 
 WORKDIR /app/backend
 
-# Install system dependencies
-# Nuclei needs ca-certificates
-# python3, make, g++ are often needed for native node modules
+# Install build-time native deps
+RUN apk add --no-cache python3 make g++
+
+# Copy manifests first for layer caching
+COPY backend/package*.json ./
+RUN npm config set registry https://registry.npmmirror.com/ && \
+    npm ci
+
+# Copy source and build
+COPY backend/ ./
+# Prevent stale local build artifacts from leaking into image
+RUN rm -rf dist
+# Force copy tsconfig to ensure latest version
+COPY backend/tsconfig.build.json ./tsconfig.build.json
+# Run strict TypeScript build; fail fast on compile errors
+RUN npx tsc --project tsconfig.build.json --skipLibCheck
+# Sanity check compiled output
+RUN mkdir -p dist && ls -la dist/
+
+# ============================================================
+# Stage 2: Production Runner
+# ============================================================
+FROM node:20-alpine AS runner
+
+# Install runtime system deps
 RUN apk add --no-cache \
     wget \
     tar \
@@ -12,38 +37,43 @@ RUN apk add --no-cache \
     git \
     python3 \
     make \
-    g++
+    g++ \
+    dumb-init
 
-# Install Nuclei (ProjectDiscovery)
+# Install Nuclei (ProjectDiscovery) — skip gracefully if download fails
 ENV NUCLEI_VERSION=3.1.8
-RUN if wget -q -O nuclei.tar.gz https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_amd64.tar.gz; then \
-    tar -xzvf nuclei.tar.gz && \
-    mv nuclei /usr/local/bin/ && \
-    rm nuclei.tar.gz && \
-    chmod +x /usr/local/bin/nuclei; \
-    else \
-    echo "Skipping Nuclei install: download failed"; \
-    fi
+RUN wget -q -O nuclei.tar.gz \
+    "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_amd64.tar.gz" \
+    && tar -xzf nuclei.tar.gz nuclei \
+    && mv nuclei /usr/local/bin/ \
+    && chmod +x /usr/local/bin/nuclei \
+    && rm nuclei.tar.gz \
+    || echo "Nuclei download failed — skipping"
 
-# Copy backend dependency manifest first for layer caching
+WORKDIR /app/backend
+
+# Install ONLY production dependencies
 COPY backend/package*.json ./
+RUN npm config set registry https://registry.npmmirror.com/ && \
+    npm ci --omit=dev
 
-# Install backend dependencies
-RUN npm config set registry https://registry.npmmirror.com/
-RUN npm install
+# Copy compiled output from builder
+COPY --from=builder /app/backend/dist ./dist
 
-# Copy backend source code
-COPY backend ./
+# Persistent data directories (mount as volumes in production)
+RUN mkdir -p /app/data /app/scan-results /app/artifacts /app/backend/data
 
-# Create data directory for persistence
-RUN mkdir -p /app/data /app/scan-results /app/backend/data
+# Drop root — run as non-privileged user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN chown -R appuser:appgroup /app
+USER appuser
 
-# Expose port
 EXPOSE 3005
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Give the app plenty of time to start (DB init + WASM load can be slow)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3005/api/health || exit 1
 
-# Run server using tsx directly from backend workspace
-CMD ["npx", "tsx", "src/index.ts"]
+# Use dumb-init to handle PID 1 signals correctly
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["node", "dist/index.js"]

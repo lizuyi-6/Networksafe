@@ -5,7 +5,6 @@
  * Each test gets its own database to ensure complete isolation.
  */
 
-import Database, { Database as BetterSqliteDatabase } from 'better-sqlite3';
 import logger from '../utils/logger';
 
 /**
@@ -15,23 +14,26 @@ import logger from '../utils/logger';
  * Each test can request its own database instance using a unique test ID.
  */
 export class TestDatabaseManager {
-  private static instances: Map<string, BetterSqliteDatabase> = new Map();
+  private static instances: Map<string, any> = new Map();
   private static currentTestId: string | null = null;
+  private static SqlJs: any = null;
 
   /**
    * Create a new in-memory database for a test
    */
-  public static createTestDatabase(testId: string): BetterSqliteDatabase {
+  public static createTestDatabase(testId: string): any {
+    if (!this.SqlJs) {
+      throw new Error('TestDatabaseManager not initialized. Call init() first.');
+    }
+
     // Close existing instance for this test if any
     if (this.instances.has(testId)) {
       this.closeTestDatabase(testId);
     }
 
-    // Create new in-memory database
-    const db = new Database(':memory:');
-
-    // Enable foreign keys
-    db.pragma('foreign_keys = ON');
+    // Create new in-memory sql.js database
+    const db = new this.SqlJs.Database();
+    db.run('PRAGMA foreign_keys = ON');
 
     this.instances.set(testId, db);
     this.currentTestId = testId;
@@ -44,7 +46,7 @@ export class TestDatabaseManager {
   /**
    * Get the current test database
    */
-  public static getTestDatabase(): BetterSqliteDatabase | null {
+  public static getTestDatabase(): any | null {
     if (!this.currentTestId) {
       return null;
     }
@@ -54,7 +56,7 @@ export class TestDatabaseManager {
   /**
    * Get database by test ID
    */
-  public static getDatabaseById(testId: string): BetterSqliteDatabase | null {
+  public static getDatabaseById(testId: string): any | null {
     return this.instances.get(testId) || null;
   }
 
@@ -64,7 +66,9 @@ export class TestDatabaseManager {
   public static closeTestDatabase(testId: string): void {
     const db = this.instances.get(testId);
     if (db) {
-      db.close();
+      if (typeof db.close === 'function') {
+        db.close();
+      }
       this.instances.delete(testId);
       logger.debug(`Closed test database: ${testId}`);
     }
@@ -75,7 +79,9 @@ export class TestDatabaseManager {
    */
   public static closeAll(): void {
     for (const [testId, db] of this.instances) {
-      db.close();
+      if (typeof db.close === 'function') {
+        db.close();
+      }
       logger.debug(`Closed test database: ${testId}`);
     }
     this.instances.clear();
@@ -85,7 +91,7 @@ export class TestDatabaseManager {
   /**
    * Set current test ID
    */
-  public static setCurrentTestId(testId: string): void {
+  public static setCurrentTestId(testId: string | null): void {
     this.currentTestId = testId;
   }
 
@@ -100,14 +106,16 @@ export class TestDatabaseManager {
    * Initialize the test database manager (no-op for better-sqlite3)
    */
   public static async init(): Promise<void> {
-    // No initialization needed for better-sqlite3
+    if (this.SqlJs) return;
+    const initSqlJs = require('sql.js');
+    this.SqlJs = await initSqlJs();
     logger.debug('TestDatabaseManager initialized');
   }
 
   /**
    * Create an isolated database for a test (alias for createTestDatabase)
    */
-  public static createIsolatedDatabase(testId: string): BetterSqliteDatabase {
+  public static createIsolatedDatabase(testId: string): any {
     return this.createTestDatabase(testId);
   }
 
@@ -116,5 +124,23 @@ export class TestDatabaseManager {
    */
   public static cleanupDatabase(testId: string): void {
     this.closeTestDatabase(testId);
+  }
+
+  /**
+   * Clean up all test databases (compatibility alias for closeAll)
+   */
+  public static cleanupAll(): void {
+    this.closeAll();
+  }
+
+  /**
+   * Test manager stats used by jest setup hooks
+   */
+  public static getStats(): { currentTestId: string | null; activeInstances: number; testIds: string[] } {
+    return {
+      currentTestId: this.currentTestId,
+      activeInstances: this.instances.size,
+      testIds: Array.from(this.instances.keys())
+    };
   }
 }

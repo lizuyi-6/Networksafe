@@ -1,5 +1,6 @@
-import { createContext, useState, useContext, ReactNode, useEffect, useRef } from 'react';
-import { canUseDemoMode, getStoredDemoMode, setRuntimeDemoMode, setStoredDemoMode } from '../config/demo-mode';
+import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { getCurrentDemoUserKey, getStoredDemoMode, setRuntimeDemoMode, setStoredDemoMode } from '../config/demo-mode';
+import { fetchSystemMode } from '../services/api';
 
 /**
  * Data source type
@@ -11,7 +12,7 @@ export type DataSource = 'api' | 'local';
 interface DemoContextType {
     isDemoMode: boolean;
     toggleDemoMode: () => void;
-    canToggleDemoMode: boolean;
+    isSwitchingDemoMode: boolean;
     attackSimEnabled: boolean;
     modeResolved: boolean;
     /**
@@ -19,92 +20,81 @@ interface DemoContextType {
      * This ensures demo mode uses the same data pipeline as production
      */
     dataSource: DataSource;
+    refreshDemoState: () => Promise<void>;
 }
 
 const DemoContext = createContext<DemoContextType | undefined>(undefined);
 
 export const DemoProvider = ({ children }: { children: ReactNode }) => {
-    const [canToggleDemoMode, setCanToggleDemoMode] = useState<boolean>(canUseDemoMode());
     const [isDemoMode, setIsDemoMode] = useState<boolean>(() => getStoredDemoMode());
+    const [isSwitchingDemoMode, setIsSwitchingDemoMode] = useState<boolean>(false);
     const [attackSimEnabled, setAttackSimEnabled] = useState<boolean>(false);
     const [modeResolved, setModeResolved] = useState<boolean>(false);
     const [dataSource, setDataSource] = useState<DataSource>('api');
-    const initializedRef = useRef(false);
-    const isDemoModeRef = useRef(getStoredDemoMode());
+
+    const syncLocalDemoState = () => {
+        const userKey = getCurrentDemoUserKey();
+        const localDemoEnabled = getStoredDemoMode(userKey);
+        setIsDemoMode(localDemoEnabled);
+        setRuntimeDemoMode(localDemoEnabled);
+        return localDemoEnabled;
+    };
+
+    const refreshDemoState = async () => {
+        const localDemoEnabled = syncLocalDemoState();
+
+        try {
+            const data = await fetchSystemMode();
+            setAttackSimEnabled(data.attackSimEnabled === true);
+            setIsDemoMode(localDemoEnabled);
+            setRuntimeDemoMode(localDemoEnabled);
+            setDataSource('api');
+            setModeResolved(true);
+        } catch {
+            setAttackSimEnabled(false);
+
+            if (!getCurrentDemoUserKey()) {
+                setIsDemoMode(false);
+                setRuntimeDemoMode(false);
+            }
+
+            setDataSource('local');
+            setModeResolved(true);
+        }
+    };
 
     useEffect(() => {
-        if (initializedRef.current) return;
-        initializedRef.current = true;
-
-        let mounted = true;
-        setRuntimeDemoMode(false);
-
-        // Fetch backend mode status
-        // IMPORTANT: Demo mode data still comes from API (backend demo data)
-        // This ensures consistent data pipeline between demo and production
-        fetch('/api/system/mode', { credentials: 'include' })
-            .then(r => {
-                if (!r.ok) throw new Error(`mode endpoint unavailable: ${r.status}`);
-                return r.json();
-            })
-            .then(data => {
-                if (!mounted) return;
-                const backendDemoEnabled = data.appMode === 'demo' && data.demoEnabled === true;
-                const allowDemo = canUseDemoMode() && backendDemoEnabled;
-                const allowAttackSim = data.attackSimEnabled === true;
-                setCanToggleDemoMode(allowDemo);
-                setAttackSimEnabled(allowAttackSim);
-
-                // Data source is always 'api' - demo mode uses backend demo data
-                // This is the key change: demo mode does NOT use local mock data
-                setDataSource('api');
-
-                if (!allowDemo) {
-                    setIsDemoMode(false);
-                    isDemoModeRef.current = false;
-                    setRuntimeDemoMode(false);
-                    if (typeof window !== 'undefined') {
-                        localStorage.removeItem('demo_mode');
-                    }
-                } else {
-                    setRuntimeDemoMode(isDemoModeRef.current);
-                }
-                setModeResolved(true);
-            })
-            .catch(() => {
-                if (!mounted) return;
-                setCanToggleDemoMode(false);
-                setAttackSimEnabled(false);
-                setIsDemoMode(false);
-                isDemoModeRef.current = false;
-                setRuntimeDemoMode(false);
-                // Fallback to local data source when API is unavailable
-                setDataSource('local');
-                if (typeof window !== 'undefined') {
-                    localStorage.removeItem('demo_mode');
-                }
-                setModeResolved(true);
-            });
-
-        return () => {
-            mounted = false;
-        };
+        syncLocalDemoState();
+        setIsSwitchingDemoMode(false);
+        void refreshDemoState();
     }, []);
 
     const toggleDemoMode = () => {
-        if (!canToggleDemoMode) return;
-        setIsDemoMode(prev => {
-            const newValue = !prev;
-            isDemoModeRef.current = newValue;
-            setStoredDemoMode(newValue);
-            setRuntimeDemoMode(newValue);
-            window.location.reload();
-            return newValue;
-        });
+        if (isSwitchingDemoMode) return;
+        setIsSwitchingDemoMode(true);
+
+        const nextDemoMode = !isDemoMode;
+        setIsDemoMode(nextDemoMode);
+        setRuntimeDemoMode(nextDemoMode);
+        setStoredDemoMode(nextDemoMode);
+        setDataSource('api');
+        setModeResolved(true);
+
+        void Promise.resolve().finally(() => {
+                setIsSwitchingDemoMode(false);
+            });
     };
 
     return (
-        <DemoContext.Provider value={{ isDemoMode, toggleDemoMode, canToggleDemoMode, attackSimEnabled, modeResolved, dataSource }}>
+        <DemoContext.Provider value={{
+            isDemoMode,
+            toggleDemoMode,
+            isSwitchingDemoMode,
+            attackSimEnabled,
+            modeResolved,
+            dataSource,
+            refreshDemoState
+        }}>
             {children}
         </DemoContext.Provider>
     );

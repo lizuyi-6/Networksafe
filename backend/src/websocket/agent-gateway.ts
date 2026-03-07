@@ -27,6 +27,7 @@ import {
   wsTestDashboardUserAdapter
 } from '../testing/test-runtime-adapter';
 import { v4 as uuidv4 } from 'uuid';
+import { commandDispatcherService } from '../services/command-dispatcher.service';
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
@@ -270,6 +271,8 @@ interface ConnectedAgent {
   authenticated: boolean;
   lastHeartbeat: Date;
   status: AgentStatus | null;
+  isSynthetic?: boolean;
+  commandHandler?: (command: { type: string; payload?: any; userId?: string; metadata?: any }) => boolean;
 }
 
 export class AgentGateway {
@@ -674,6 +677,7 @@ export class AgentGateway {
         details: data || {},
         status: 'success'
       });
+      commandDispatcherService.handleAgentCommandAck(agent.agentId, data || {});
       this.broadcastToDashboards('agent:command:ack', { agentId: agent.agentId, ...data });
     });
 
@@ -687,6 +691,7 @@ export class AgentGateway {
         details: data || {},
         status: 'failure'
       });
+      commandDispatcherService.handleAgentCommandFailure(agent.agentId, data || {});
       this.broadcastToDashboards('agent:command:failed', { agentId: agent.agentId, ...data });
     });
   }
@@ -824,7 +829,7 @@ export class AgentGateway {
    * SECURITY FIX: Send signed command to agent
    * SECURITY FIX CVE-200: Remove sensitive information from logs
    */
-  private sendSignedCommand(agentId: string, commandType: string, payload?: any, userId?: string): boolean {
+  private sendSignedCommand(agentId: string, commandType: string, payload?: any, userId?: string, metadata?: any): boolean {
     const agent = this.agents.get(agentId);
 
     if (!agent) {
@@ -832,9 +837,42 @@ export class AgentGateway {
       return false;
     }
 
+    if (agent.status?.isOnline === false) {
+      logger.warn(`Agent is offline: ${agentId}`);
+      return false;
+    }
+
     try {
+      if (agent.commandHandler) {
+        const accepted = agent.commandHandler({
+          type: commandType,
+          payload,
+          userId,
+          metadata
+        });
+
+        if (!accepted) {
+          logger.warn(`Synthetic agent rejected command ${commandType}`, { agentId });
+          return false;
+        }
+
+        logger.info(`Command accepted by synthetic agent ${agentId}: ${commandType}`);
+        this.broadcastToDashboards('agent:command:ack', {
+          agentId,
+          actionId: metadata?.actionId || payload?.actionId,
+          tenantId: metadata?.tenantId || 'global',
+          message: `Synthetic agent accepted ${commandType}.`
+        });
+        commandDispatcherService.handleAgentCommandAck(agentId, {
+          actionId: metadata?.actionId || payload?.actionId,
+          tenantId: metadata?.tenantId || 'global',
+          message: `Synthetic agent accepted ${commandType}.`
+        });
+        return true;
+      }
+
       if (isTestRuntime()) {
-        this.io.to(agent.socketId).emit('command', { type: commandType, payload });
+        this.io.to(agent.socketId).emit('command', { type: commandType, payload, metadata });
         return true;
       }
 
@@ -842,7 +880,7 @@ export class AgentGateway {
       const signedCommand = commandSigningService.signCommand(agentId, commandType, payload);
 
       // Send signed command
-      this.io.to(agent.socketId).emit('command', signedCommand);
+      this.io.to(agent.socketId).emit('command', { ...signedCommand, metadata });
 
       // SECURITY FIX CVE-200: Don't log nonce or timestamp in production
       logger.info(`Command sent to ${agentId}: ${commandType}`);
@@ -905,8 +943,69 @@ export class AgentGateway {
   /**
    * Backward compatible helper used by REST routes.
    */
-  public sendCommandToAgent(agentId: string, command: { type: string; payload?: any }, userId?: string): boolean {
-    return this.sendSignedCommand(agentId, command.type, command.payload, userId);
+  public sendCommandToAgent(agentId: string, command: { type: string; payload?: any; metadata?: any }, userId?: string): boolean {
+    return this.sendSignedCommand(agentId, command.type, command.payload, userId, command.metadata);
+  }
+
+  public upsertSyntheticAgent(input: {
+    agentId: string;
+    hostname: string;
+    platform: string;
+    registration?: any;
+    lastHeartbeat?: Date;
+    status?: AgentStatus | null;
+    commandHandler?: (command: { type: string; payload?: any; userId?: string; metadata?: any }) => boolean;
+  }): void {
+    const existing = this.agents.get(input.agentId);
+    const nextAgent: ConnectedAgent = {
+      socketId: existing?.socketId || `synthetic:${input.agentId}`,
+      agentId: input.agentId,
+      hostname: input.hostname,
+      platform: input.platform,
+      registration: input.registration ?? existing?.registration,
+      authenticated: true,
+      lastHeartbeat: input.lastHeartbeat || existing?.lastHeartbeat || new Date(),
+      status: input.status ?? existing?.status ?? null,
+      isSynthetic: true,
+      commandHandler: input.commandHandler ?? existing?.commandHandler
+    };
+
+    const isNew = !existing;
+    this.agents.set(input.agentId, nextAgent);
+
+    if (isNew) {
+      logger.info(`Synthetic agent registered: ${input.agentId}`);
+      this.broadcastToDashboards('agent:online', {
+        agentId: nextAgent.agentId,
+        hostname: nextAgent.hostname,
+        platform: nextAgent.platform,
+        synthetic: true
+      });
+    }
+
+    if (nextAgent.status) {
+      this.broadcastToDashboards('agent:status', {
+        ...nextAgent.status,
+        agentId: nextAgent.agentId,
+        synthetic: true
+      });
+    }
+
+    this.broadcastToDashboards('agents:list', this.getAgentList());
+  }
+
+  public removeSyntheticAgent(agentId: string): void {
+    const agent = this.agents.get(agentId);
+    if (!agent || !agent.isSynthetic) {
+      return;
+    }
+
+    this.agents.delete(agentId);
+    this.broadcastToDashboards('agent:offline', {
+      agentId,
+      synthetic: true
+    });
+    this.broadcastToDashboards('agents:list', this.getAgentList());
   }
 
   /**
@@ -920,7 +1019,8 @@ export class AgentGateway {
       registration: agent.registration,
       lastHeartbeat: agent.lastHeartbeat,
       status: agent.status,
-      isOnline: true
+      isOnline: agent.status?.isOnline ?? true,
+      synthetic: Boolean(agent.isSynthetic)
     }));
   }
 
@@ -938,7 +1038,7 @@ export class AgentGateway {
     if (isTestRuntime()) {
       return this.testOnlineCounter;
     }
-    return this.agents.size;
+    return this.getAgentList().filter((agent) => agent.isOnline).length;
   }
 
   /**

@@ -1,0 +1,23 @@
+﻿
+> fluxguard-backend@1.0.0 build
+> tsc --project tsconfig.build.json
+
+node.exe : 'tsc' 不是内部或外部命令
+，也不是可运行的程序
+所在位置 行:1 字符: 1
++ & "C:\nvm4w\nodejs/node.
+exe" "C:\nvm4w\nodejs/node
+_modules/npm/bin/np ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: ('  
+  tsc' 不是内部或外部命令，也不是可运行   
+ 的程序:String) [], Remot    
+eException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+或批处理文件。

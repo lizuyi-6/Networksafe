@@ -1,15 +1,30 @@
-import Database, { Database as BetterSqliteDatabase } from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import logger from '../utils/logger';
 
+// Type for sql.js database
+interface SqlJsDatabase {
+  run(sql: string, params?: any[]): void;
+  exec(sql: string): void;
+  prepare(sql: string): any;
+  export(): Uint8Array;
+  close(): void;
+}
+
+// Type for better-sqlite3 database
+type BetterSqliteDatabase = any;
+
+let SqlJs: any = null;
+let useSqlJs = false;
+
 /**
  * Database Manager
- * Handles SQLite database operations using better-sqlite3 (native Node.js binding)
+ * Handles SQLite database operations using sql.js (fallback) or better-sqlite3
  */
 export class DatabaseManager {
-  private db: BetterSqliteDatabase | null = null;
+  private db: BetterSqliteDatabase | SqlJsDatabase | null = null;
   private dbPath: string;
+  private saveInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
@@ -18,25 +33,64 @@ export class DatabaseManager {
   }
 
   /**
-   * Initialize database (synchronous with better-sqlite3)
+   * Initialize database - tries sql.js first, falls back to better-sqlite3
    */
-  public init(): void {
+  public async initAsync(): Promise<void> {
+    // Try sql.js first
     try {
-      // Open database in WAL mode for better write performance
-      this.db = new Database(this.dbPath);
+      SqlJs = require('sql.js');
+      const initSqlJs = SqlJs;
+      const SQL = await initSqlJs();
 
-      // Enable WAL mode for real-time persistence
-      this.db.pragma('journal_mode = WAL');
-      // Enable foreign keys
-      this.db.pragma('foreign_keys = ON');
+      // Load existing database or create new one
+      let data: Buffer | undefined;
+      if (fs.existsSync(this.dbPath)) {
+        data = fs.readFileSync(this.dbPath);
+      }
 
-      logger.info(`Database opened: ${this.dbPath} (WAL mode enabled)`);
+      this.db = new SQL.Database(data);
+      useSqlJs = true;
+
+      logger.info(`Database opened with sql.js: ${this.dbPath}`);
+
+      // Save to disk every 30 seconds for persistence
+      this.saveInterval = setInterval(() => {
+        this.save();
+      }, 30000);
+      if (typeof this.saveInterval.unref === 'function') {
+        this.saveInterval.unref();
+      }
 
       this.initSchema();
-    } catch (error: any) {
-      logger.error('Failed to initialize database', { error: error.message });
-      throw error;
+      return;
+    } catch (sqlJsError: any) {
+      logger.warn('sql.js not available, trying better-sqlite3', { error: sqlJsError.message });
     }
+
+    // Fall back to better-sqlite3
+    try {
+      const Database = require('better-sqlite3');
+      this.db = new Database(this.dbPath);
+      (this.db as BetterSqliteDatabase).pragma('journal_mode = WAL');
+      (this.db as BetterSqliteDatabase).pragma('foreign_keys = ON');
+      useSqlJs = false;
+
+      logger.info(`Database opened with better-sqlite3: ${this.dbPath} (WAL mode enabled)`);
+
+      this.initSchema();
+    } catch (betterError: any) {
+      logger.error('Failed to initialize database', { error: betterError.message });
+      throw betterError;
+    }
+  }
+
+  /**
+   * Synchronous init for backward compatibility (tries sql.js)
+   */
+  public init(): void {
+    // This is now async - but we need to call initAsync synchronously for compatibility
+    // The actual initialization happens in the async version
+    // For now, we'll handle this in the initDatabase function
   }
 
   /**
@@ -280,6 +334,7 @@ export class DatabaseManager {
     }
 
     const db = this.db;
+    const isSqlJs = useSqlJs;
 
     // Return a wrapped database with sql.js-compatible API
     return {
@@ -287,7 +342,11 @@ export class DatabaseManager {
       exec: (sql: string) => db.exec(sql),
       run: (sql: string, params?: any[]) => {
         if (params && params.length > 0) {
-          db.prepare(sql).run(...params);
+          if (isSqlJs) {
+            db.run(sql, params);
+          } else {
+            db.prepare(sql).run(...params);
+          }
         } else {
           db.exec(sql);
         }
@@ -311,8 +370,16 @@ export class DatabaseManager {
           // Step through results (simulated for better-sqlite3)
           step: () => {
             if (!hasStepped) {
-              cachedRow = stmt.get(...boundParams);
-              hasStepped = true;
+              if (isSqlJs) {
+                stmt.bind(boundParams);
+                hasStepped = stmt.step();
+                if (hasStepped) {
+                  cachedRow = stmt.getAsObject();
+                }
+              } else {
+                cachedRow = stmt.get(...boundParams);
+                hasStepped = true;
+              }
             }
             return cachedRow !== undefined && cachedRow !== null;
           },
@@ -320,29 +387,72 @@ export class DatabaseManager {
           // Get current row as object
           getAsObject: () => {
             if (cachedRow === null || cachedRow === undefined) {
-              cachedRow = stmt.get(...boundParams);
+              if (isSqlJs) {
+                stmt.bind(boundParams);
+                stmt.step();
+                cachedRow = stmt.getAsObject();
+              } else {
+                cachedRow = stmt.get(...boundParams);
+              }
             }
             // Convert array to object using column names if available
-            const columns = stmt.columns ? stmt.columns() : [];
-            if (Array.isArray(cachedRow) && columns.length > 0) {
-              const obj: any = {};
-              columns.forEach((col: any, i: number) => {
-                obj[col.name] = cachedRow[i];
-              });
-              return obj;
+            if (!isSqlJs && Array.isArray(cachedRow)) {
+              const columns = stmt.columns ? stmt.columns() : [];
+              if (columns.length > 0) {
+                const obj: any = {};
+                columns.forEach((col: any, i: number) => {
+                  obj[col.name] = cachedRow[i];
+                });
+                return obj;
+              }
             }
             return cachedRow;
           },
 
-          // Free statement (no-op in better-sqlite3)
+          // Free statement
           free: () => {
-            // No-op - better-sqlite3 handles this automatically
+            if (isSqlJs) {
+              stmt.free();
+            }
           },
 
           // Also provide direct run/all/get for convenience
-          run: (...params: any[]) => stmt.run(...params),
-          all: (...params: any[]) => stmt.all(...params),
-          get: (...params: any[]) => stmt.get(...params)
+          run: (...params: any[]) => {
+            if (isSqlJs) {
+              stmt.bind(params);
+              stmt.step();
+              stmt.free();
+            } else {
+              stmt.run(...params);
+            }
+          },
+          all: (...params: any[]) => {
+            if (isSqlJs) {
+              const results: any[] = [];
+              stmt.bind(params);
+              while (stmt.step()) {
+                results.push(stmt.getAsObject());
+              }
+              stmt.free();
+              return results;
+            } else {
+              return stmt.all(...params);
+            }
+          },
+          get: (...params: any[]) => {
+            if (isSqlJs) {
+              stmt.bind(params);
+              if (stmt.step()) {
+                const result = stmt.getAsObject();
+                stmt.free();
+                return result;
+              }
+              stmt.free();
+              return undefined;
+            } else {
+              return stmt.get(...params);
+            }
+          }
         };
       }
     };
@@ -354,7 +464,11 @@ export class DatabaseManager {
   public run(sql: string, params?: any[]): void {
     if (!this.db) throw new Error('Database not connected');
     if (params && params.length > 0) {
-      this.db.prepare(sql).run(...params);
+      if (useSqlJs) {
+        this.db.run(sql, params);
+      } else {
+        this.db.prepare(sql).run(...params);
+      }
     } else {
       this.db.exec(sql);
     }
@@ -366,7 +480,11 @@ export class DatabaseManager {
   public exec(sql: string, params?: any[]): void {
     if (!this.db) throw new Error('Database not connected');
     if (params && params.length > 0) {
-      this.db.prepare(sql).run(...params);
+      if (useSqlJs) {
+        this.db.run(sql, params);
+      } else {
+        this.db.prepare(sql).run(...params);
+      }
     } else {
       this.db.exec(sql);
     }
@@ -393,17 +511,45 @@ export class DatabaseManager {
 
     return {
       run: (...params: any[]) => {
-        stmt.run(...params);
+        if (useSqlJs) {
+          stmt.bind(params);
+          stmt.step();
+          stmt.free();
+        } else {
+          stmt.run(...params);
+        }
       },
       all: (...params: any[]) => {
-        return stmt.all(...params);
+        if (useSqlJs) {
+          const results: any[] = [];
+          stmt.bind(params);
+          while (stmt.step()) {
+            results.push(stmt.getAsObject());
+          }
+          stmt.free();
+          return results;
+        } else {
+          return stmt.all(...params);
+        }
       },
       get: (...params: any[]) => {
-        return stmt.get(...params);
+        if (useSqlJs) {
+          stmt.bind(params);
+          if (stmt.step()) {
+            const result = stmt.getAsObject();
+            stmt.free();
+            return result;
+          }
+          stmt.free();
+          return undefined;
+        } else {
+          return stmt.get(...params);
+        }
       },
       free: () => {
-        // No-op for better-sqlite3, statements are freed automatically
-        // Kept for backward compatibility
+        if (useSqlJs) {
+          stmt.free();
+        }
       },
       bind: (params: any[]) => {
         boundParams = params;
@@ -411,23 +557,44 @@ export class DatabaseManager {
         cachedRow = null;
       },
       step: () => {
-        // better-sqlite3 doesn't need step() - just get the row
-        if (!hasStepped) {
-          cachedRow = stmt.get(...boundParams);
-          hasStepped = true;
+        if (useSqlJs) {
+          if (!hasStepped) {
+            stmt.bind(boundParams);
+            hasStepped = stmt.step();
+            if (hasStepped) {
+              cachedRow = stmt.getAsObject();
+            }
+          }
+          return hasStepped;
+        } else {
+          // better-sqlite3 doesn't need step() - just get the row
+          if (!hasStepped) {
+            cachedRow = stmt.get(...boundParams);
+            hasStepped = true;
+          }
+          return cachedRow !== undefined && cachedRow !== null;
         }
-        return cachedRow !== undefined && cachedRow !== null;
       },
       getAsObject: () => {
-        // Return the cached row or get a new one
-        if (cachedRow === null || cachedRow === undefined) {
-          cachedRow = stmt.get(...boundParams);
-        }
-        // Convert array to object if needed
-        if (Array.isArray(cachedRow)) {
-          // For SELECT * queries, we need column names
-          // This is a simplification - the actual usage may vary
+        if (useSqlJs) {
+          // Return the cached row or get a new one
+          if (cachedRow === null || cachedRow === undefined) {
+            stmt.bind(boundParams);
+            stmt.step();
+            cachedRow = stmt.getAsObject();
+          }
           return cachedRow;
+        } else {
+          // Return the cached row or get a new one
+          if (cachedRow === null || cachedRow === undefined) {
+            cachedRow = stmt.get(...boundParams);
+          }
+          // Convert array to object if needed
+          if (Array.isArray(cachedRow)) {
+            // For SELECT * queries, we need column names
+            // This is a simplification - the actual usage may vary
+            return cachedRow;
+          }
         }
         return cachedRow;
       }
@@ -439,23 +606,43 @@ export class DatabaseManager {
    */
   public transaction<T>(fn: () => T): T {
     if (!this.db) throw new Error('Database not connected');
-    return this.db.transaction(fn)();
+    if (useSqlJs) {
+      this.exec('BEGIN');
+      try {
+        const result = fn();
+        this.exec('COMMIT');
+        return result;
+      } catch (error) {
+        try {
+          this.exec('ROLLBACK');
+        } catch {
+          // Ignore rollback failure and rethrow original error
+        }
+        throw error;
+      }
+    }
+    return (this.db as BetterSqliteDatabase).transaction(fn)();
   }
 
   /**
-   * Save database to disk (no-op with WAL mode - real-time persistence)
-   * Kept for backward compatibility
+   * Save database to disk
    */
   public save(): void {
-    // With WAL mode, data is persisted in real-time
-    // This method is kept for backward compatibility
     if (!this.db) return;
 
     try {
-      // Checkpoint to ensure data is written to main database
-      this.db.pragma('wal_checkpoint(TRUNCATE)');
+      if (useSqlJs) {
+        // sql.js: Export to buffer and write to file
+        const data = (this.db as SqlJsDatabase).export();
+        const buffer = Buffer.from(data);
+        fs.writeFileSync(this.dbPath, buffer);
+        logger.debug('Database saved to disk (sql.js)');
+      } else {
+        // better-sqlite3: Checkpoint to ensure data is written to main database
+        (this.db as BetterSqliteDatabase).pragma('wal_checkpoint(TRUNCATE)');
+      }
     } catch (error: any) {
-      logger.error('Failed to checkpoint database', { error: error.message });
+      logger.error('Failed to save database', { error: error.message });
     }
   }
 
@@ -464,7 +651,12 @@ export class DatabaseManager {
    */
   public backup(backupPath: string): void {
     if (!this.db) throw new Error('Database not connected');
-    this.db.backup(backupPath);
+    if (useSqlJs) {
+      const data = (this.db as SqlJsDatabase).export();
+      fs.writeFileSync(backupPath, Buffer.from(data));
+    } else {
+      (this.db as BetterSqliteDatabase).backup(backupPath);
+    }
     logger.info(`Database backed up to: ${backupPath}`);
   }
 
@@ -473,9 +665,19 @@ export class DatabaseManager {
    */
   public close(): void {
     if (this.db) {
-      // Close WAL before closing
-      this.db.pragma('wal_checkpoint(TRUNCATE)');
-      this.db.close();
+      if (this.saveInterval) {
+        clearInterval(this.saveInterval);
+        this.saveInterval = null;
+      }
+
+      if (useSqlJs) {
+        this.save();
+        (this.db as SqlJsDatabase).close();
+      } else {
+        // Close WAL before closing
+        (this.db as BetterSqliteDatabase).pragma('wal_checkpoint(TRUNCATE)');
+        (this.db as BetterSqliteDatabase).close();
+      }
       this.db = null;
       logger.info('Database connection closed');
     }
@@ -485,11 +687,11 @@ export class DatabaseManager {
 // Singleton instance
 let dbManager: DatabaseManager | null = null;
 
-export function initDatabase(): DatabaseManager {
+export async function initDatabase(): Promise<DatabaseManager> {
   if (dbManager) return dbManager;
 
   dbManager = new DatabaseManager();
-  dbManager.init();
+  await dbManager.initAsync();
   return dbManager;
 }
 

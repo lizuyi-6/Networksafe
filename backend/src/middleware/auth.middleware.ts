@@ -122,9 +122,18 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
             return null;
         }
     } else {
-        // Redis unavailable - fail secure by rejecting the token
-        logger.warn('Redis unavailable, rejecting token for security (fail-secure)');
-        return null;
+        // Fail secure by default. Development bypass must be explicitly enabled.
+        const allowInsecureBypass =
+            process.env.NODE_ENV === 'test' ||
+            (process.env.ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN === 'true' &&
+             process.env.NODE_ENV !== 'production');
+
+        if (!allowInsecureBypass) {
+            logger.warn('Redis unavailable, rejecting token for security (fail-secure)');
+            return null;
+        }
+
+        logger.warn('Redis unavailable, allowing token due to ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN=true');
     }
 
     return decoded;
@@ -149,18 +158,27 @@ export function verifyRefreshToken(token: string): { userId: string } | null {
  * SECURITY FIX: Cookie configuration for httpOnly tokens
  * SECURITY FIX: Changed sameSite from 'lax' to 'strict' for better security
  */
-export const COOKIE_OPTIONS = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const,
-    path: '/',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
+const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+const isHttpsRequest = (req: Request): boolean => {
+    const forwardedProto = req.headers['x-forwarded-proto'];
+    const proto = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto;
+    return req.secure || proto === 'https';
 };
 
-export const REFRESH_COOKIE_OPTIONS = {
-    ...COOKIE_OPTIONS,
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-};
+export const buildCookieOptions = (req: Request) => ({
+    httpOnly: true,
+    secure: isHttpsRequest(req),
+    sameSite: 'strict' as const,
+    path: '/',
+    maxAge: COOKIE_MAX_AGE // 24 hours
+});
+
+export const buildRefreshCookieOptions = (req: Request) => ({
+    ...buildCookieOptions(req),
+    maxAge: REFRESH_COOKIE_MAX_AGE // 7 days
+});
 
 /**
  * Authentication middleware - requires valid JWT token

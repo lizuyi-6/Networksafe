@@ -1,44 +1,35 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import {
-    Brain, Lock, Sparkles,
-    Crown, Loader2, AlertTriangle
-} from 'lucide-react';
+import { Brain, Lock, Sparkles, Crown, Loader2, AlertTriangle } from 'lucide-react';
 import { fetchAvailableModels, AIModelInfo } from '../services/api';
 
-// ========================
-// 辅助函数
-// ========================
 const getCategoryIcon = (model: AIModelInfo) => {
     if (model.id.includes('glm') || model.id.includes('kimi')) {
-        return <Sparkles className="w-3.5 h-3.5" />;
+        return <Sparkles className="h-3.5 w-3.5" />;
     }
-    return <Brain className="w-3.5 h-3.5" />;
+    return <Brain className="h-3.5 w-3.5" />;
 };
 
 const getCategoryLabel = (model: AIModelInfo) => {
     if (model.id.includes('glm') || model.id.includes('kimi')) {
-        return '第三方';
+        return 'Specialized';
     }
-    return '千问系列';
+    return 'General';
 };
 
 const getTierBadge = (tier: string) => {
     switch (tier) {
         case 'starter':
-            return <span className="px-1.5 py-0.5 text-[9px] font-bold bg-gray-700 text-gray-300 rounded-full">STARTER</span>;
+            return <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground">STARTER</span>;
         case 'pro':
-            return <span className="px-1.5 py-0.5 text-[9px] font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-full">PRO</span>;
+            return <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-bold text-blue-600 dark:text-blue-400">PRO</span>;
         case 'ultra':
-            return <span className="px-1.5 py-0.5 text-[9px] font-bold bg-gradient-to-r from-purple-600 to-red-500 text-white rounded-full">ULTRA</span>;
+            return <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-bold text-rose-600 dark:text-rose-400">ULTRA</span>;
         default:
             return null;
     }
 };
 
-// ========================
-// 主组件
-// ========================
 const ModelSelector = () => {
     const [models, setModels] = useState<AIModelInfo[]>([]);
     const [plan, setPlan] = useState<string>('starter');
@@ -57,64 +48,65 @@ const ModelSelector = () => {
             setCanCustomize(data.canCustomize);
             setSelectedModelId(data.defaultModelId);
         } catch (err: any) {
-            setError(err.message || '加载模型列表失败');
+            setError(err.message || 'Failed to load model catalog');
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => { loadModels(); }, [loadModels]);
+    useEffect(() => {
+        loadModels();
+    }, [loadModels]);
 
     if (loading) {
         return (
-            <div className="bg-card/50 backdrop-blur-md border border-border rounded-2xl p-8 flex items-center justify-center gap-3">
-                <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
-                <span className="text-muted-foreground">加载 AI 模型配置...</span>
+            <div className="flex items-center justify-center gap-3 rounded-2xl border border-border bg-card p-8">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-sm text-muted-foreground">Loading AI model configuration...</span>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="bg-card/50 backdrop-blur-md border border-red-500/30 rounded-2xl p-6">
-                <div className="flex items-center gap-2 text-red-400">
-                    <AlertTriangle className="w-5 h-5" />
+            <div className="rounded-2xl border border-rose-500/20 bg-card p-6">
+                <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                    <AlertTriangle className="h-5 w-5" />
                     <span>{error}</span>
                 </div>
-                <button onClick={loadModels} className="mt-3 px-4 py-1.5 bg-red-500/20 text-red-300 rounded-lg text-sm hover:bg-red-500/30 transition">
-                    重试
+                <button onClick={loadModels} className="mt-3 rounded-lg border border-border bg-muted px-4 py-1.5 text-sm text-foreground transition-colors hover:bg-muted/80">
+                    Retry
                 </button>
             </div>
         );
     }
 
     return (
-        <div className="bg-card/50 backdrop-blur-md border border-border rounded-2xl overflow-hidden">
-            {/* 标题栏 */}
-            <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="flex items-center justify-between gap-4 border-b border-border bg-muted/20 px-6 py-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                        <Brain className="w-5 h-5 text-purple-400" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-primary">
+                        <Brain className="h-5 w-5" />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-foreground text-lg">AI 模型中心</h3>
+                        <h3 className="text-lg font-semibold text-foreground">AI Model Center</h3>
                         <p className="text-xs text-muted-foreground">
-                            当前订阅: {getTierBadge(plan)}
-                            <span className="ml-2 text-muted-foreground/60">
-                                · {models.filter(m => m.available).length}/{models.length} 个模型可用
+                            Current plan: {getTierBadge(plan)}
+                            <span className="ml-2">
+                                {models.filter((model) => model.available).length}/{models.length} models available
                             </span>
                         </p>
                     </div>
                 </div>
                 {canCustomize && (
-                    <span className="px-3 py-1 text-xs bg-gradient-to-r from-purple-600/20 to-red-500/20 text-purple-300 rounded-full border border-purple-500/30 flex items-center gap-1">
-                        <Crown className="w-3 h-3" /> 自定义模型已解锁
+                    <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+                        <Crown className="h-3 w-3" />
+                        Custom model policy enabled
                     </span>
                 )}
             </div>
 
-            {/* 模型网格 */}
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 p-6 sm:grid-cols-2 lg:grid-cols-3">
                 {models.map((model, idx) => {
                     const isSelected = model.id === selectedModelId;
                     const isLocked = !model.available;
@@ -127,57 +119,35 @@ const ModelSelector = () => {
                             transition={{ delay: idx * 0.05 }}
                             onClick={() => !isLocked && setSelectedModelId(model.id)}
                             disabled={isLocked}
-                            className={`
-                                relative group text-left p-4 rounded-xl border transition-all duration-200
-                                ${isLocked
-                                    ? 'opacity-50 cursor-not-allowed border-border/30 bg-card/20'
+                            className={`relative rounded-xl border p-4 text-left transition-colors ${
+                                isLocked
+                                    ? 'cursor-not-allowed border-border bg-muted/15 opacity-60'
                                     : isSelected
-                                        ? 'border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.15)]'
-                                        : 'border-border/50 bg-card/30 hover:border-blue-500/30 hover:bg-blue-500/5 cursor-pointer'
-                                }
-                            `}
+                                      ? 'border-primary/25 bg-primary/5'
+                                      : 'border-border bg-card hover:bg-muted/20'
+                            }`}
                         >
-                            {/* 选中指示器 */}
-                            {isSelected && (
-                                <motion.div
-                                    layoutId="model-indicator"
-                                    className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-blue-500"
-                                    initial={false}
-                                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                                >
-                                    <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-60" />
-                                </motion.div>
-                            )}
+                            {isSelected && <div className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-primary" />}
 
-                            {/* 锁定图标 */}
                             {isLocked && (
-                                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gray-700/60 flex items-center justify-center">
-                                    <Lock className="w-3 h-3 text-gray-400" />
+                                <div className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted">
+                                    <Lock className="h-3 w-3 text-muted-foreground" />
                                 </div>
                             )}
 
-                            {/* 模型名称 */}
-                            <div className="flex items-center gap-2 mb-1.5">
-                                <span className="font-semibold text-sm text-foreground">{model.name}</span>
+                            <div className="mb-1.5 flex items-center gap-2">
+                                <span className="text-sm font-semibold text-foreground">{model.name}</span>
                             </div>
 
-                            {/* 描述 */}
-                            <p className="text-xs text-muted-foreground line-clamp-2 mb-2.5">
-                                {model.description}
-                            </p>
+                            <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{model.description}</p>
 
-                            {/* 标签行 */}
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
-                                    ${(model.id.includes('glm') || model.id.includes('kimi')) ? 'bg-purple-500/15 text-purple-400' : 'bg-blue-500/15 text-blue-400'}
-                                `}>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                                     {getCategoryIcon(model)}
                                     {getCategoryLabel(model)}
                                 </span>
                                 {getTierBadge(model.minTier)}
-                                {isLocked && (
-                                    <span className="text-[10px] text-yellow-500/80 ml-auto">需升级</span>
-                                )}
+                                {isLocked && <span className="ml-auto text-[10px] text-amber-600 dark:text-amber-400">Upgrade required</span>}
                             </div>
                         </motion.button>
                     );
