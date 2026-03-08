@@ -3,6 +3,14 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Globe, Shield, Workflow } from 'lucide-react';
 import { fetchSiteDetail } from '../services/api';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
+import StructuredDataView from '../components/StructuredDataView';
+
+const formatBytes = (value?: number) => {
+    if (!value) return '0 B';
+    if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+    if (value >= 1024) return `${(value / 1024).toFixed(1)} KB`;
+    return `${value} B`;
+};
 
 const SiteDetail = () => {
     const { id = '' } = useParams();
@@ -43,7 +51,39 @@ const SiteDetail = () => {
                             ) : <ConsoleEmptyState title="暂无关联告警" />}
                         </ConsolePanel>
                         <ConsolePanel title="关联流量与暴露面" subtitle="最近关联的流量与资产上下文" icon={Workflow} iconTone="warning">
-                            <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-muted/15 p-3 text-xs text-muted-foreground">{JSON.stringify({ flows: detail.relatedFlows || [], overview: detail.securityOverview || null }, null, 2)}</pre>
+                            <div className="space-y-4">
+                                {(detail.relatedFlows || []).length > 0 ? (
+                                    <div className="space-y-3">
+                                        {(detail.relatedFlows || []).map((flow: any) => (
+                                            <div key={flow.id} className="rounded-lg border border-border bg-muted/15 p-4">
+                                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                                    <div>
+                                                        <div className="font-medium text-foreground">
+                                                            {flow.sourceIP}:{flow.sourcePort} → {flow.destIP}:{flow.destPort}
+                                                        </div>
+                                                        <div className="mt-1 text-xs text-muted-foreground">
+                                                            {String(flow.protocol || '').toUpperCase()} · {flow.state || 'unknown'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right text-xs text-muted-foreground">
+                                                        <div>报文 {flow.packetCount ?? 0}</div>
+                                                        <div>流量 {formatBytes(flow.byteCount)}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <ConsoleEmptyState title="暂无关联流量" description="站点产生或命中的观测会话会展示在这里。" />
+                                )}
+
+                                {detail.securityOverview ? (
+                                    <div className="rounded-lg border border-border bg-muted/15 p-4">
+                                        <div className="mb-3 text-sm font-medium text-foreground">安全概览</div>
+                                        <StructuredDataView value={detail.securityOverview} emptyLabel="暂无安全概览数据" />
+                                    </div>
+                                ) : null}
+                            </div>
                         </ConsolePanel>
                     </div>
                 </div>

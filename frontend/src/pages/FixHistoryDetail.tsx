@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, History, Wrench } from 'lucide-react';
 import { fetchFixHistoryDetail } from '../services/api';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
+import StructuredDataView from '../components/StructuredDataView';
 
 const FixHistoryDetail = () => {
     const { id = '' } = useParams();
@@ -32,7 +33,7 @@ const FixHistoryDetail = () => {
                     </div>
                     <div className="space-y-6 xl:col-span-8">
                         <ConsolePanel title="修复摘要" subtitle="结果统计与剩余工作" icon={Wrench} iconTone="warning">
-                            <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-muted/15 p-3 text-xs text-muted-foreground">{JSON.stringify(detail.summary || {}, null, 2)}</pre>
+                            <StructuredDataView value={detail.summary || {}} emptyLabel="暂无修复摘要" />
                         </ConsolePanel>
                         <ConsolePanel title="发现项" subtitle="本次记录关联的风险与修复对象" icon={History} iconTone="neutral">
                             {(detail.findings || []).length > 0 ? (

@@ -23,6 +23,7 @@ import {
     ProductFrame,
     StoryCard,
 } from '../components/LandingPrimitives';
+import { COMPANY_NAME_CN, COMPANY_NAME_EN } from '../config/branding';
 import { getLandingCopy, type LandingLanguage } from './landingContent';
 
 const pressureIcons = [Radar, Workflow, Wrench];
@@ -568,6 +569,7 @@ const Landing = () => {
                     <div className="space-y-2">
                         <Logo showText={true} className="origin-left scale-90" />
                         <div className="text-sm text-muted-foreground">{content.footer.tagline}</div>
+                        <div className="text-xs text-muted-foreground">{COMPANY_NAME_CN} · {COMPANY_NAME_EN}</div>
                         <div className="text-xs text-muted-foreground">{content.footer.copyright}</div>
                     </div>
                     <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">

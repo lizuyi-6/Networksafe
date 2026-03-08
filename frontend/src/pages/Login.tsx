@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Lock, ArrowRight, ArrowLeft, CheckCircle, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../components/Logo';
+import { COMPANY_NAME_CN, COMPANY_NAME_EN } from '../config/branding';
 
 type ToastState = {
     msg: string;
@@ -160,7 +161,10 @@ const Login = () => {
                         <div className="flex flex-1 flex-col justify-between p-8 xl:p-10">
                             <div className="space-y-8">
                                 <div className="flex items-center justify-between gap-4">
-                                    <Logo className="origin-left" />
+                                    <div className="space-y-1">
+                                        <Logo className="origin-left" />
+                                        <div className="text-xs text-muted-foreground">{COMPANY_NAME_CN}</div>
+                                    </div>
                                     <span className="rounded-full border border-border bg-muted/30 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                                         Operations Console
                                     </span>
@@ -329,6 +333,9 @@ const Login = () => {
                         </form>
 
                         <div className="mt-6 text-center">
+                            <div className="mb-3 text-xs text-muted-foreground">
+                                {COMPANY_NAME_CN} · {COMPANY_NAME_EN}
+                            </div>
                             <button onClick={() => navigate('/')} className="mx-auto flex items-center justify-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
                                 <ArrowLeft className="h-3 w-3" /> Back to home
                             </button>

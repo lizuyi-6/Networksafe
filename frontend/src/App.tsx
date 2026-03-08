@@ -32,6 +32,7 @@ import { WebSocketProvider } from './context/WebSocketContext';
 import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusContext';
 import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
 import Logo from './components/Logo';
+import { COMPANY_NAME_CN } from './config/branding';
 import { fetchSystemBadges, isRequestAbortError } from './services/api';
 
 // Pages
@@ -291,16 +292,19 @@ const Sidebar = () => {
         <aside className="z-20 hidden w-64 flex-col justify-between border-r border-border bg-card md:flex">
             <div>
                 {/* Logo */}
-                <div className="h-16 flex items-center px-6 border-b border-border/50">
-                    <Logo
-                        tier={
-                            profile.plan === 'pro' ? 'professional' :
-                                profile.plan === 'ultra' ? 'enterprise' :
-                                    (profile.plan as any || 'starter')
-                        }
-                        showText={true}
-                        className="scale-90 origin-left"
-                    />
+                <div className="border-b border-border/50 px-6 py-3">
+                    <div className="space-y-1">
+                        <Logo
+                            tier={
+                                profile.plan === 'pro' ? 'professional' :
+                                    profile.plan === 'ultra' ? 'enterprise' :
+                                        (profile.plan as any || 'starter')
+                            }
+                            showText={true}
+                            className="origin-left scale-90"
+                        />
+                        <div className="pl-1 text-[11px] text-muted-foreground">{COMPANY_NAME_CN}</div>
+                    </div>
                 </div>
 
                 {/* Nav Links */}

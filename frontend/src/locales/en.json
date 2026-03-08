@@ -730,8 +730,8 @@
         "loading": "Loading"
     },
     "settings": {
-        "desc": "Desc",
-        "title": "Title"
+        "desc": "Manage model selection, AI endpoint priority, and platform-wide configuration in one place.",
+        "title": "System Settings"
     },
     "sites": {
         "title": "Title",

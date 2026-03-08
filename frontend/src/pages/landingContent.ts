@@ -645,4 +645,9 @@ const content: Record<LandingLanguage, LandingCopy> = {
     },
 };
 
+content.en.footer.tagline = 'Built by Hangzhou Vision Singularity Technology Co., Ltd.';
+content.en.footer.copyright = 'Copyright 2026 AetherGuard · Hangzhou Vision Singularity Technology Co., Ltd. All rights reserved.';
+content.zh.footer.tagline = '杭州视界奇点科技有限公司出品';
+content.zh.footer.copyright = 'Copyright 2026 AetherGuard · 杭州视界奇点科技有限公司。保留所有权利。';
+
 export const getLandingCopy = (language: LandingLanguage) => content[language];

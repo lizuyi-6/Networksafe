@@ -732,7 +732,7 @@
         "revoke": "撤销"
     },
     "settings": {
-        "desc": "settings.desc",
+        "desc": "集中管理模型选择、AI 端点优先级与系统级配置。",
         "title": "系统设置",
         "general": "通用设置",
         "security": "安全设置",

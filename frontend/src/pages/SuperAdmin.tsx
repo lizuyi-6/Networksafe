@@ -23,6 +23,7 @@ import {
     verifyAdminAuditLog,
 } from '../services/api';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
+import StructuredDataView from '../components/StructuredDataView';
 
 type Tab = 'overview' | 'timeline' | 'evidence' | 'exports';
 type ApiKey = { id: string; name: string; prefix: string; created: string; lastUsed: string };
@@ -30,7 +31,11 @@ type CodeRow = { id: string; status: 'active' | 'used' | 'expired' | 'revoked'; 
 type AgentRow = { agentId: string; hostname: string; platform: string; status: 'pending' | 'approved' | 'revoked' };
 
 const parseTab = (value: string | null): Tab => (value === 'timeline' || value === 'evidence' || value === 'exports' ? value : 'overview');
-const fmt = (value?: string | null) => (value ? new Date(value).toLocaleString() : 'Not available');
+const fmt = (value?: string | null) => {
+    if (!value) return 'Not available';
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
+};
 const statusLabel: Record<string, string> = { active: 'Active', used: 'Used', expired: 'Expired', revoked: 'Revoked', pending: 'Pending', approved: 'Approved' };
 const oversightCategories = [['all', 'All events'], ['auth', 'Authentication'], ['system', 'System'], ['scanner', 'Scanning'], ['alert', 'Alerts'], ['action', 'Actions'], ['validation', 'Validation'], ['deployment', 'Deployment']] as const;
 const rangeOptions = [['1', '24 hours'], ['7', '7 days'], ['30', '30 days'], ['90', '90 days']] as const;
@@ -43,6 +48,54 @@ const downloadText = (filename: string, content: string, type: string) => {
     anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
+};
+
+const OversightDetailView = ({ item }: { item: any }) => {
+    if (!item) {
+        return null;
+    }
+
+    return (
+        <div className="space-y-4" data-testid="oversight-detail-panel">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-border bg-muted/10 p-3">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Time</div>
+                    <div className="mt-2 text-sm text-foreground">{fmt(item.timestamp || item.requestedAt || item.createdAt)}</div>
+                </div>
+                <div className="rounded-lg border border-border bg-muted/10 p-3">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Status</div>
+                    <div className="mt-2 text-sm text-foreground">{item.status || item.integrity || 'Not available'}</div>
+                </div>
+                <div className="rounded-lg border border-border bg-muted/10 p-3">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Category</div>
+                    <div className="mt-2 text-sm text-foreground">{item.category || 'Not available'}</div>
+                </div>
+                <div className="rounded-lg border border-border bg-muted/10 p-3">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Action</div>
+                    <div className="mt-2 text-sm text-foreground">{item.action || item.id || 'Not available'}</div>
+                </div>
+            </div>
+
+            {item.actor ? (
+                <div className="rounded-lg border border-border bg-muted/10 p-4">
+                    <div className="mb-3 text-sm font-medium text-foreground">Actor</div>
+                    <StructuredDataView value={item.actor} emptyLabel="Actor unavailable" />
+                </div>
+            ) : null}
+
+            {item.target ? (
+                <div className="rounded-lg border border-border bg-muted/10 p-4">
+                    <div className="mb-3 text-sm font-medium text-foreground">Target</div>
+                    <StructuredDataView value={item.target} emptyLabel="Target unavailable" />
+                </div>
+            ) : null}
+
+            <div className="rounded-lg border border-border bg-muted/10 p-4">
+                <div className="mb-3 text-sm font-medium text-foreground">Details</div>
+                <StructuredDataView value={item.details || item} emptyLabel="No detail payload available" />
+            </div>
+        </div>
+    );
 };
 
 export default function SuperAdmin() {
@@ -280,7 +333,7 @@ export default function SuperAdmin() {
                             <div className="overflow-x-auto"><table data-testid="oversight-timeline-table" className="w-full text-sm"><thead className="bg-muted/30 text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Time</th><th className="px-3 py-2">Category</th><th className="px-3 py-2">Action</th><th className="px-3 py-2">Status</th><th className="px-3 py-2">Actor</th><th className="px-3 py-2">Details</th></tr></thead><tbody className="divide-y divide-border/50">{timeline.map((item) => <tr key={item.id}><td className="px-3 py-2 text-muted-foreground">{fmt(item.timestamp)}</td><td className="px-3 py-2 text-foreground">{item.category}</td><td className="px-3 py-2 text-foreground">{item.action}</td><td className="px-3 py-2 text-foreground">{item.status}</td><td className="px-3 py-2 text-muted-foreground">{item.actor?.email || item.actor?.id || 'system'}</td><td className="px-3 py-2"><button data-testid="oversight-timeline-detail" onClick={() => setDetail(item)} className="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/40">View detail</button></td></tr>)}</tbody></table></div>
                         </ConsolePanel>
                         <ConsolePanel title="Event Detail" subtitle="Use this side panel to inspect the selected timeline event.">
-                            {detail ? <pre data-testid="oversight-detail-panel" className="max-h-[520px] overflow-auto rounded-xl border border-border bg-black/70 p-4 text-xs text-slate-200">{JSON.stringify(detail, null, 2)}</pre> : <ConsoleEmptyState title="Select a timeline event" description="Pick any row from the left table to inspect its details." />}
+                            {detail ? <OversightDetailView item={detail} /> : <ConsoleEmptyState title="Select a timeline event" description="Pick any row from the left table to inspect its details." />}
                         </ConsolePanel>
                     </div>}
 
@@ -289,7 +342,7 @@ export default function SuperAdmin() {
                             <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-muted/30 text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Time</th><th className="px-3 py-2">Action</th><th className="px-3 py-2">Actor</th><th className="px-3 py-2">Status</th><th className="px-3 py-2">Integrity</th><th className="px-3 py-2">Actions</th></tr></thead><tbody className="divide-y divide-border/50">{evidence.map((item) => <tr key={item.logId}><td className="px-3 py-2 text-muted-foreground">{fmt(item.timestamp)}</td><td className="px-3 py-2 text-foreground">{item.action}</td><td className="px-3 py-2 text-muted-foreground">{item.actor?.email || item.actor?.id || 'system'}</td><td className="px-3 py-2 text-foreground">{item.status}</td><td className="px-3 py-2 text-foreground">{integrity[item.logId] || item.integrity}</td><td className="px-3 py-2"><div className="flex gap-2"><button onClick={() => verify(item.logId)} className="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/40">Verify</button><button onClick={() => setDetail(item)} className="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/40">View detail</button></div></td></tr>)}</tbody></table></div>
                         </ConsolePanel>
                         <ConsolePanel title="Evidence Detail" subtitle="Raw evidence and audit context for the selected entry.">
-                            {detail ? <pre className="max-h-[520px] overflow-auto rounded-xl border border-border bg-black/70 p-4 text-xs text-slate-200">{JSON.stringify(detail, null, 2)}</pre> : <ConsoleEmptyState title="Select an evidence row" description="Use the left table to inspect the signed log payload." />}
+                            {detail ? <OversightDetailView item={detail} /> : <ConsoleEmptyState title="Select an evidence row" description="Use the left table to inspect the signed log payload." />}
                         </ConsolePanel>
                     </div>}
 
