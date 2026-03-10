@@ -80,6 +80,7 @@ const devices = new Map<string, DeviceInfo>();
 const deviceEvents = new Map<string, DeviceEvent[]>();
 const deviceConfigs = new Map<string, DeviceConfig>();
 const deviceCommands = new Map<string, DeviceCommandRecord[]>();
+let deviceCommandTransport: ((deviceId: string, command: string, params?: Record<string, any>) => Promise<boolean> | boolean) | null = null;
 
 function safeAuditLog(payload: any): void {
     Promise.resolve(auditLogger.log(payload)).catch((error: any) => {
@@ -113,7 +114,7 @@ function buildDefaultConfig(device: DeviceInfo): DeviceConfig {
         networkProfile: device.mode === 'online' ? 'cloud-mesh' : 'standalone-buffer',
         scanProfile: device.isOnline ? 'balanced' : 'offline-recovery',
         notes: `${device.chipModel} running firmware ${device.version}`,
-        commandPermissions: ['collect', 'reboot', 'sync-config'],
+        commandPermissions: ['collect', 'reboot', 'sync-config', 'ota_update'],
         tags: [device.chipModel.toLowerCase(), device.mode, device.isOnline ? 'online' : 'offline'],
         updatedAt: new Date().toISOString()
     };
@@ -146,7 +147,13 @@ export function getDeviceById(deviceId: string): DeviceInfo | undefined {
     return devices.get(deviceId);
 }
 
-export function executeDeviceCommandInternal(input: {
+export function setDeviceCommandTransport(
+    transport: ((deviceId: string, command: string, params?: Record<string, any>) => Promise<boolean> | boolean) | null
+): void {
+    deviceCommandTransport = transport;
+}
+
+export async function executeDeviceCommandInternal(input: {
     deviceId: string;
     command: string;
     params?: Record<string, any>;
@@ -154,7 +161,7 @@ export function executeDeviceCommandInternal(input: {
     actorEmail?: string;
     actorIp?: string;
     actionId?: string;
-}): { success: boolean; record?: DeviceCommandRecord; message: string; reason?: string } {
+}): Promise<{ success: boolean; record?: DeviceCommandRecord; message: string; reason?: string }> {
     const device = devices.get(input.deviceId);
     if (!device) {
         return { success: false, message: 'Device not found.', reason: 'device_not_found' };
@@ -167,6 +174,13 @@ export function executeDeviceCommandInternal(input: {
 
     if (!device.isOnline) {
         return { success: false, message: 'Device is offline.', reason: 'device_offline' };
+    }
+
+    if (deviceCommandTransport) {
+        const accepted = await Promise.resolve(deviceCommandTransport(input.deviceId, input.command, input.params || {}));
+        if (!accepted) {
+            return { success: false, message: `Device gateway rejected command ${input.command}.`, reason: 'device_gateway_rejected' };
+        }
     }
 
     const now = new Date().toISOString();

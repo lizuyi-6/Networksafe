@@ -18,7 +18,12 @@ type DeviceCommandAdapter = {
     actorEmail?: string;
     actorIp?: string;
     actionId?: string;
-  }): {
+  }): Promise<{
+    success: boolean;
+    record?: any;
+    message: string;
+    reason?: string;
+  }> | {
     success: boolean;
     record?: any;
     message: string;
@@ -433,7 +438,7 @@ class CommandDispatcherService {
       ]
     });
 
-    const result = this.deviceAdapter.executeCommand({
+    const result = await this.deviceAdapter.executeCommand({
       deviceId: input.deviceId,
       command: input.commandType,
       params: input.payload || {},

@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { motion, Variants } from 'framer-motion';
 
 type Tone = 'primary' | 'success' | 'warning' | 'danger' | 'neutral';
 
@@ -9,6 +10,21 @@ const toneClasses: Record<Tone, string> = {
     warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     danger: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
     neutral: 'bg-muted/60 text-muted-foreground border-border',
+};
+
+const fadeUpVariants: Variants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } }
+};
+
+const staggerContainerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.08
+        }
+    }
 };
 
 export const ConsolePage = ({
@@ -24,16 +40,21 @@ export const ConsolePage = ({
     children: ReactNode;
     className?: string;
 }) => (
-    <div className={`p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen pb-12 ${className}`}>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className={`p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen pb-12 ${className}`}
+    >
+        <motion.div variants={fadeUpVariants} className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
                 {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
             </div>
             {actions && <div className="flex items-center gap-3 flex-wrap">{actions}</div>}
-        </div>
+        </motion.div>
         {children}
-    </div>
+    </motion.div>
 );
 
 export const ConsolePanel = ({
@@ -53,16 +74,22 @@ export const ConsolePanel = ({
     children: ReactNode;
     className?: string;
 }) => (
-    <section className={`bg-card border border-border rounded-xl shadow-sm overflow-hidden ${className}`}>
+    <motion.section
+        variants={fadeUpVariants}
+        className={`bg-card text-card-foreground border border-border shadow-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md hover:border-border/80 ${className}`}
+    >
         {(title || headerAction) && (
             <div className="px-5 py-4 border-b border-border bg-muted/20 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                     {title && (
                         <div className="flex items-center gap-3 min-w-0">
                             {Icon && (
-                                <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${toneClasses[iconTone]}`}>
+                                <motion.div
+                                    whileHover={{ scale: 1.05, rotate: 5 }}
+                                    className={`w-9 h-9 rounded-lg border flex items-center justify-center ${toneClasses[iconTone]}`}
+                                >
                                     <Icon size={16} />
-                                </div>
+                                </motion.div>
                             )}
                             <div className="min-w-0">
                                 <h2 className="text-base font-semibold text-foreground truncate">{title}</h2>
@@ -75,7 +102,7 @@ export const ConsolePanel = ({
             </div>
         )}
         <div className="p-5">{children}</div>
-    </section>
+    </motion.section>
 );
 
 export const ConsoleStatCard = ({
@@ -91,20 +118,27 @@ export const ConsoleStatCard = ({
     hint?: ReactNode;
     tone?: Tone;
 }) => (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+    <motion.div
+        variants={fadeUpVariants}
+        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+        className="bg-card text-card-foreground border border-border rounded-xl p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30 group"
+    >
         <div className="flex items-start justify-between gap-4">
             <div className="space-y-2 min-w-0">
                 <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{label}</p>
-                <div className="text-3xl font-bold text-foreground tracking-tight">{value}</div>
-                {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+                <div className="text-3xl font-bold text-foreground tracking-tight line-clamp-1">{value}</div>
+                {hint && <p className="text-xs text-muted-foreground line-clamp-1">{hint}</p>}
             </div>
             {Icon && (
-                <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${toneClasses[tone]}`}>
+                <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-colors duration-300 ${toneClasses[tone]} group-hover:bg-primary/20`}
+                >
                     <Icon size={18} />
-                </div>
+                </motion.div>
             )}
         </div>
-    </div>
+    </motion.div>
 );
 
 export const ConsoleEmptyState = ({
@@ -114,8 +148,13 @@ export const ConsoleEmptyState = ({
     title: string;
     description?: string;
 }) => (
-    <div className="rounded-xl border border-dashed border-border bg-muted/10 px-6 py-12 text-center">
+    <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="rounded-xl border border-dashed border-border bg-muted/10 px-6 py-12 text-center"
+    >
         <p className="text-sm font-medium text-foreground">{title}</p>
         {description && <p className="text-xs text-muted-foreground mt-2">{description}</p>}
-    </div>
+    </motion.div>
 );

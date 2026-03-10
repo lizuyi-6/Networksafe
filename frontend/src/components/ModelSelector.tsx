@@ -117,15 +117,15 @@ const ModelSelector = () => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
+                            whileHover={isLocked ? {} : { y: -4, scale: 1.01, transition: { duration: 0.2 } }}
                             onClick={() => !isLocked && setSelectedModelId(model.id)}
                             disabled={isLocked}
-                            className={`relative rounded-xl border p-4 text-left transition-colors ${
-                                isLocked
+                            className={`relative rounded-xl border p-4 text-left transition-colors ${isLocked
                                     ? 'cursor-not-allowed border-border bg-muted/15 opacity-60'
                                     : isSelected
-                                      ? 'border-primary/25 bg-primary/5'
-                                      : 'border-border bg-card hover:bg-muted/20'
-                            }`}
+                                        ? 'border-primary/25 bg-primary/5'
+                                        : 'border-border bg-card hover:bg-muted/20 hover:shadow-lg hover:border-primary/30'
+                                }`}
                         >
                             {isSelected && <div className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-primary" />}
 

@@ -202,6 +202,20 @@ export interface AttackResult {
     statusCode?: number;
     error?: string;
     verdict?: string;
+    aiAnalysis?: {
+        enabled?: boolean;
+        usedAI?: boolean;
+        engine?: string;
+        route?: 'cloud' | 'local' | 'unknown' | 'error';
+        provider?: string | null;
+        model?: string | null;
+        error?: string;
+        modelRouterDelta?: {
+            total: number;
+            local: number;
+            cloud: number;
+        };
+    };
 }
 
 export interface AttackSimulationReport {
@@ -216,6 +230,12 @@ export interface AttackSimulationReport {
     detected?: number;
     detectionRate?: string;
     blockRate?: string;
+    aiAnalysis?: {
+        aiBackedCount: number;
+        cloudCount: number;
+        localCount: number;
+        errorCount: number;
+    };
 }
 
 export interface DetailTimelineItem {

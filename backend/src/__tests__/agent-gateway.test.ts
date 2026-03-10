@@ -9,6 +9,16 @@ import { Server as SocketIOServer } from 'socket.io';
 import { io as SocketIOClient, Socket as ClientSocket } from 'socket.io-client';
 import { AgentGateway } from '../websocket/agent-gateway';
 
+jest.mock('../security/audit-logger.service', () => ({
+    __esModule: true,
+    default: {
+        log: jest.fn(),
+        logAgent: jest.fn(),
+        logCommand: jest.fn(),
+        logFirewall: jest.fn()
+    }
+}));
+
 describe('AgentGateway', () => {
     let httpServer: HttpServer;
     let gateway: AgentGateway;

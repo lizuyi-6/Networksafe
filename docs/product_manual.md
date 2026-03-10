@@ -1,7 +1,9 @@
-# FluxGuard 产品使用手册
+﻿# FluxGuard 产品使用手册
 
 ## 1. 产品概述
 FluxGuard 是下一代 API 安全中间件平台，集成实时流量监控、自动化漏洞扫描、智能威胁防御与可视化管理于一体。系统采用现代化微服务架构，支持 Docker 容器化部署，并内置 AI 驱动的错误分析引擎。
+
+> Validation Note (2026-03-08): Deployment target generation now covers `nginx`, `apache`, `caddy`, `docker_compose`, `binary_agent`, and `k8s_daemonset`, but only Docker runtime is fully validated in this workspace. Notification outbox, audit archive with object lock, and device OTA/physical-confirmation smoke are validated. Historical performance and hardware production claims should be treated as unvalidated unless they are repeated in `docs/reports/validated-capability-status-2026-03-08.md`.
 
 ## 2. 核心功能模块
 
@@ -92,3 +94,4 @@ FluxGuard 支持通过 ESP32 单片机扩展物理层面的可视化与控制能
 
 ### 4.2 接入方式
 FluxGuard 后端提供标准的 WebSocket 接口，ESP32 可通过 WiFi 连接并订阅 `/ws/status` 频道，实时获取系统状态数据包并驱动外设动作。
+

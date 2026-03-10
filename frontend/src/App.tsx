@@ -61,6 +61,9 @@ import TrafficInterceptor from './pages/TrafficInterceptor';
 import TrafficSessionDetail from './pages/TrafficSessionDetail';
 import AttackSimulator from './pages/AttackSimulator';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import Promo from './pages/Promo';
+import PromoFilm from './pages/PromoFilm';
 
 /**
  * SECURITY FIX CVE-2026-012: Authentication guard for protected routes
@@ -171,8 +174,8 @@ const Sidebar = () => {
         plan: 'starter'
     });
 
-    // Don't show sidebar on Landing or Login pages
-    if (location.pathname === '/' || location.pathname === '/login') return null;
+    // Don't show sidebar on standalone public pages
+    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film') return null;
 
     const platformItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
@@ -419,8 +422,8 @@ const Header = () => {
     const { liveModeEnabled, toggleLiveMode } = useLiveMode();
     const location = useLocation();
 
-    // Don't show header on Landing or Login pages
-    if (location.pathname === '/' || location.pathname === '/login') return null;
+    // Don't show header on standalone public pages
+    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film') return null;
 
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-border/50 bg-background px-3 md:px-6">
@@ -526,8 +529,11 @@ const AnimatedRoutes = () => {
             <Routes location={location} key={location.pathname}>
                 {/* Public routes */}
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
+                <Route path="/promo" element={<Promo />} />
+                <Route path="/promo-film" element={<PromoFilm />} />
                 <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
                 <Route path="/privacy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
+                <Route path="/terms" element={<PageWrapper><TermsOfService /></PageWrapper>} />
 
                 {/* SECURITY FIX CVE-2026-012: Protected routes require authentication */}
                 <Route path="/dashboard" element={<PrivateRoute><PageWrapper><Dashboard /></PageWrapper></PrivateRoute>} />
@@ -572,7 +578,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
 
     // Standalone pages that manage their own layout/theme
-    const isStandalone = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy';
+    const isStandalone =
+        location.pathname === '/' ||
+        location.pathname === '/login' ||
+        location.pathname === '/privacy' ||
+        location.pathname === '/terms' ||
+        location.pathname === '/promo' ||
+        location.pathname === '/promo-film';
 
     if (isStandalone) {
         return <>{children}</>;
@@ -593,21 +605,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
     return (
-        <ThemeProvider defaultTheme="dark" storageKey="aetherguard-theme">
+        <ThemeProvider defaultTheme="light" storageKey="aetherguard-theme-v2">
             <LiveModeProvider>
-                <DemoProvider>
-                    <LanguageProvider>
-                        <WebSocketProvider>
-                            <AttackStatusProvider>
-                                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <DemoProvider>
+                        <LanguageProvider>
+                            <WebSocketProvider>
+                                <AttackStatusProvider>
                                     <Layout>
                                         <AnimatedRoutes />
                                     </Layout>
-                                </BrowserRouter>
-                            </AttackStatusProvider>
-                        </WebSocketProvider>
-                    </LanguageProvider>
-                </DemoProvider>
+                                </AttackStatusProvider>
+                            </WebSocketProvider>
+                        </LanguageProvider>
+                    </DemoProvider>
+                </BrowserRouter>
             </LiveModeProvider>
         </ThemeProvider>
     );

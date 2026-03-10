@@ -15,6 +15,10 @@ type ShadowTable =
   | 'agent_credentials_audit'
   | 'deployment_profiles'
   | 'platform_config'
+  | 'ai_endpoints'
+  | 'notification_deliveries'
+  | 'audit_segments'
+  | 'benchmark_runs'
   | 'admin_dispute_exports'
   | 'scan_tasks'
   | 'scan_events'
@@ -247,10 +251,127 @@ const TABLES: Record<ShadowTable, TableConfig> = {
         anti_bot_block_duration INTEGER NOT NULL,
         rate_limit_requests_per_minute INTEGER NOT NULL,
         rate_limit_window_seconds INTEGER NOT NULL,
+        notifications_json TEXT NOT NULL DEFAULT '{}',
+        ai_routing_json TEXT NOT NULL DEFAULT '{}',
+        privacy_mode TEXT NOT NULL DEFAULT 'off',
+        audit_archive_json TEXT NOT NULL DEFAULT '{}',
+        fastpath_json TEXT NOT NULL DEFAULT '{}',
+        deployment_defaults_json TEXT NOT NULL DEFAULT '{}',
+        device_gateway_json TEXT NOT NULL DEFAULT '{}',
         updated_by TEXT,
         updated_at TEXT NOT NULL,
         created_at TEXT NOT NULL
       );
+      ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS notifications_json TEXT NOT NULL DEFAULT '{}';
+      ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS ai_routing_json TEXT NOT NULL DEFAULT '{}';
+      ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS privacy_mode TEXT NOT NULL DEFAULT 'off';
+      ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS audit_archive_json TEXT NOT NULL DEFAULT '{}';
+      ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS fastpath_json TEXT NOT NULL DEFAULT '{}';
+      ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS deployment_defaults_json TEXT NOT NULL DEFAULT '{}';
+      ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS device_gateway_json TEXT NOT NULL DEFAULT '{}';
+    `,
+    backfill: 'replace'
+  },
+  ai_endpoints: {
+    conflict: ['id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS ai_endpoints (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
+        model_name TEXT NOT NULL,
+        api_key TEXT NOT NULL,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        priority INTEGER NOT NULL DEFAULT 10,
+        timeout INTEGER NOT NULL DEFAULT 15000,
+        type TEXT NOT NULL DEFAULT 'custom',
+        purpose TEXT NOT NULL DEFAULT 'deep_analysis',
+        last_test_json TEXT,
+        created_by TEXT,
+        updated_by TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      ALTER TABLE ai_endpoints ADD COLUMN IF NOT EXISTS purpose TEXT NOT NULL DEFAULT 'deep_analysis';
+      CREATE INDEX IF NOT EXISTS idx_shadow_ai_endpoints_tenant_priority ON ai_endpoints(tenant_id, priority ASC, updated_at DESC);
+    `,
+    backfill: 'replace'
+  },
+  notification_deliveries: {
+    conflict: ['id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS notification_deliveries (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        alert_id TEXT,
+        channel_id TEXT NOT NULL,
+        channel_type TEXT NOT NULL,
+        channel_label TEXT NOT NULL,
+        status TEXT NOT NULL,
+        severity TEXT NOT NULL,
+        target TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        response_json TEXT,
+        error TEXT,
+        attempt_count INTEGER NOT NULL DEFAULT 1,
+        dedupe_key TEXT,
+        next_attempt_at TEXT,
+        terminal_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      ALTER TABLE notification_deliveries ADD COLUMN IF NOT EXISTS dedupe_key TEXT;
+      ALTER TABLE notification_deliveries ADD COLUMN IF NOT EXISTS next_attempt_at TEXT;
+      ALTER TABLE notification_deliveries ADD COLUMN IF NOT EXISTS terminal_at TEXT;
+      CREATE INDEX IF NOT EXISTS idx_shadow_notification_deliveries_tenant ON notification_deliveries(tenant_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_shadow_notification_deliveries_due ON notification_deliveries(status, next_attempt_at, created_at);
+    `,
+    backfill: 'replace'
+  },
+  audit_segments: {
+    conflict: ['id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS audit_segments (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        segment_key TEXT NOT NULL,
+        chain_hash TEXT NOT NULL,
+        object_key TEXT,
+        lock_mode TEXT NOT NULL DEFAULT 'hash_chain',
+        status TEXT NOT NULL DEFAULT 'pending',
+        version_id TEXT,
+        retention_until TEXT,
+        object_lock_enabled INTEGER NOT NULL DEFAULT 0,
+        verify_status TEXT NOT NULL DEFAULT 'pending',
+        metadata_json TEXT,
+        created_at TEXT NOT NULL,
+        verified_at TEXT
+      );
+      ALTER TABLE audit_segments ADD COLUMN IF NOT EXISTS version_id TEXT;
+      ALTER TABLE audit_segments ADD COLUMN IF NOT EXISTS retention_until TEXT;
+      ALTER TABLE audit_segments ADD COLUMN IF NOT EXISTS object_lock_enabled INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE audit_segments ADD COLUMN IF NOT EXISTS verify_status TEXT NOT NULL DEFAULT 'pending';
+      CREATE INDEX IF NOT EXISTS idx_shadow_audit_segments_tenant ON audit_segments(tenant_id, created_at DESC);
+    `,
+    backfill: 'replace'
+  },
+  benchmark_runs: {
+    conflict: ['id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS benchmark_runs (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        scenario TEXT NOT NULL,
+        qps DOUBLE PRECISION,
+        p95_latency_ms DOUBLE PRECISION,
+        agent_cpu_pct DOUBLE PRECISION,
+        agent_memory_mb DOUBLE PRECISION,
+        local_ai_latency_ms DOUBLE PRECISION,
+        metadata_json TEXT,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_shadow_benchmark_runs_tenant ON benchmark_runs(tenant_id, created_at DESC);
     `,
     backfill: 'replace'
   },
@@ -476,7 +597,7 @@ const TABLES: Record<ShadowTable, TableConfig> = {
     backfill: 'upsert'
   },
   sec_assets: {
-    conflict: ['asset_id'],
+    conflict: ['asset_key'],
     ddl: `
       CREATE TABLE IF NOT EXISTS sec_assets (
         asset_id TEXT PRIMARY KEY,
@@ -500,7 +621,7 @@ const TABLES: Record<ShadowTable, TableConfig> = {
     backfill: 'upsert'
   },
   sec_findings: {
-    conflict: ['finding_id'],
+    conflict: ['fingerprint'],
     ddl: `
       CREATE TABLE IF NOT EXISTS sec_findings (
         finding_id TEXT PRIMARY KEY,

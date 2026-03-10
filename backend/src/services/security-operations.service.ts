@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import { postgresShadowStoreService } from './postgres-shadow-store.service';
+import { notificationDispatcherService } from './notification-dispatcher.service';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 type FindingStatus = 'open' | 'acknowledged' | 'investigating' | 'resolved' | 'suppressed' | 'ignored';
@@ -803,7 +804,9 @@ class SecurityOperationsService {
 
     this.recalculateAssetRisk(input.tenantId, input.assetId);
     this.shadowGet('sec_alerts', 'SELECT * FROM sec_alerts WHERE alert_id = ? LIMIT 1', alertId);
-    return this.getAlertById(input.tenantId, alertId)!;
+    const created = this.getAlertById(input.tenantId, alertId)!;
+    void notificationDispatcherService.dispatchAlert(input.tenantId, created);
+    return created;
   }
 
   listAlerts(tenantId: string, filters?: { severity?: string; status?: string; limit?: number }): AlertRecord[] {

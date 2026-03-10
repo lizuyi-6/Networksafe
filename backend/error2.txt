@@ -1,6 +1,0 @@
-src/websocket/agent-gateway.ts(582,36): error TS2341: Property 'probeAgent' is private and only accessible within class 'MultiAgentDecisionSystem'.
-src/websocket/agent-gateway.ts(585,46): error TS2341: Property 'probeAgent' is private and only accessible within class 'MultiAgentDecisionSystem'.
-src/websocket/agent-gateway.ts(589,24): error TS2341: Property 'probeAgent' is private and only accessible within class 'MultiAgentDecisionSystem'.
-src/websocket/agent-gateway.ts(590,32): error TS2339: Property 'agentId' does not exist on type 'AgentHeartbeat | { tasksCompleted: number; }'.
-  Property 'agentId' does not exist on type '{ tasksCompleted: number; }'.
-src/websocket/agent-gateway.ts(629,13): error TS2353: Object literal may only specify known properties, and 'targetIP' does not exist in type 'TrafficRequest'.

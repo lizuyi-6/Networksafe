@@ -9,10 +9,14 @@ import {
     createAIEndpoint,
     updateAIEndpoint,
     deleteAIEndpoint,
-    testAIEndpoint
+    testAIEndpoint,
+    verifyPlatformAI
 } from '../services/api';
+import type { PlatformAIProofError } from '../services/api';
+import { motion, Variants } from 'framer-motion';
 
 type EndpointType = 'ollama' | 'openai' | 'custom';
+type EndpointPurpose = 'hot_path' | 'deep_analysis';
 
 interface AIEndpoint {
     id: string;
@@ -24,6 +28,7 @@ interface AIEndpoint {
     priority: number;
     timeout: number;
     type: EndpointType;
+    purpose?: EndpointPurpose;
     lastTest?: {
         success: boolean;
         latency: number;
@@ -37,15 +42,49 @@ interface AddEndpointFormData {
     modelName: string;
     apiKey: string;
     type: EndpointType;
+    purpose: EndpointPurpose;
     priority: number;
 }
 
-const AIEndpointSettings = () => {
+const staggerContainer: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const itemVariant: Variants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+};
+
+const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
     const [endpoints, setEndpoints] = useState<AIEndpoint[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
     const [testingId, setTestingId] = useState<string | null>(null);
+    const [verifyingPlatform, setVerifyingPlatform] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [platformProof, setPlatformProof] = useState<{
+        success: boolean;
+        content: string;
+        model: string;
+        latency: number;
+        route?: string;
+        provider?: string;
+        upstreamPath?: string;
+        requestId?: string;
+    } | null>(null);
+    const [platformProofError, setPlatformProofError] = useState<{
+        message: string;
+        provider?: string;
+        upstreamStatus?: number;
+        upstreamPath?: string;
+        requestId?: string;
+    } | null>(null);
 
     const [formData, setFormData] = useState<AddEndpointFormData>({
         name: '',
@@ -53,6 +92,7 @@ const AIEndpointSettings = () => {
         modelName: '',
         apiKey: '',
         type: 'ollama',
+        purpose: 'deep_analysis',
         priority: 10,
     });
 
@@ -84,6 +124,7 @@ const AIEndpointSettings = () => {
                 modelName: formData.modelName,
                 apiKey: formData.apiKey,
                 type: formData.type,
+                purpose: formData.purpose,
                 priority: formData.priority
             });
             setShowAddForm(false);
@@ -93,9 +134,11 @@ const AIEndpointSettings = () => {
                 modelName: '',
                 apiKey: '',
                 type: 'ollama',
+                purpose: 'deep_analysis',
                 priority: 10,
             });
             await loadEndpoints();
+            onChanged?.();
         } catch (e: any) {
             setError(e.message || 'FG-AI-ENDPOINTS-CREATE');
         }
@@ -106,6 +149,7 @@ const AIEndpointSettings = () => {
         try {
             await deleteAIEndpoint(id);
             await loadEndpoints();
+            onChanged?.();
         } catch (e: any) {
             setError(e.message || 'FG-AI-ENDPOINTS-DELETE');
         }
@@ -116,6 +160,7 @@ const AIEndpointSettings = () => {
         try {
             await updateAIEndpoint(id, { enabled: !enabled });
             await loadEndpoints();
+            onChanged?.();
         } catch (e: any) {
             setError(e.message || 'FG-AI-ENDPOINTS-UPDATE');
         }
@@ -131,6 +176,28 @@ const AIEndpointSettings = () => {
             setError(e.message || 'FG-AI-ENDPOINTS-TEST');
         } finally {
             setTestingId(null);
+        }
+    };
+
+    const handleVerifyPlatformAI = async () => {
+        setVerifyingPlatform(true);
+        setError(null);
+        setPlatformProofError(null);
+        try {
+            const result = await verifyPlatformAI();
+            setPlatformProof(result);
+        } catch (e: any) {
+            const typedError = e as PlatformAIProofError;
+            setPlatformProof(null);
+            setPlatformProofError({
+                message: typedError.message || 'FG-AI-PLATFORM-VERIFY',
+                provider: typedError.diagnostics?.provider,
+                upstreamStatus: typedError.diagnostics?.upstreamStatus,
+                upstreamPath: typedError.diagnostics?.upstreamPath,
+                requestId: typedError.diagnostics?.requestId
+            });
+        } finally {
+            setVerifyingPlatform(false);
         }
     };
 
@@ -151,6 +218,7 @@ const AIEndpointSettings = () => {
                 updateAIEndpoint(target.id, { priority: current.priority })
             ]);
             await loadEndpoints();
+            onChanged?.();
         } catch (e: any) {
             setError(e.message || 'FG-AI-ENDPOINTS-PRIORITY');
         }
@@ -194,8 +262,59 @@ const AIEndpointSettings = () => {
                 </div>
             </div>
 
+            <div className="border border-border rounded-lg p-4 mb-4 bg-muted/20">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <div className="text-sm font-medium text-foreground">Built-in Platform AI Proof</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                            Runs one deterministic cloud-model check and expects <span className="font-mono">AETHERGUARD_REMOTE_AI_OK</span>.
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleVerifyPlatformAI}
+                        disabled={verifyingPlatform}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                    >
+                        {verifyingPlatform ? <Loader2 size={14} className="animate-spin" /> : <TestTube size={14} />}
+                        Verify Platform AI
+                    </button>
+                </div>
+
+                {platformProof && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
+                        <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
+                            <Check size={12} />
+                            Platform route returned a live response.
+                        </div>
+                        <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                            <div>Model: <span className="text-foreground">{platformProof.model}</span></div>
+                            <div>Latency: <span className="text-foreground">{platformProof.latency}ms</span></div>
+                            {platformProof.route && <div>Route: <span className="text-foreground">{platformProof.route}</span></div>}
+                            {platformProof.provider && <div>Provider: <span className="text-foreground">{platformProof.provider}</span></div>}
+                            {platformProof.upstreamPath && <div>Path: <span className="font-mono text-foreground">{platformProof.upstreamPath}</span></div>}
+                            {platformProof.requestId && <div>Request ID: <span className="font-mono text-foreground">{platformProof.requestId}</span></div>}
+                        </div>
+                        <div className="mt-3 rounded-md border border-border bg-background/80 px-3 py-2 text-xs font-mono text-foreground break-all">
+                            {platformProof.content}
+                        </div>
+                    </motion.div>
+                )}
+
+                {platformProofError && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-3 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300">
+                        <div className="font-medium">{platformProofError.message}</div>
+                        <div className="mt-2 space-y-1 text-rose-700/80 dark:text-rose-300/80">
+                            {platformProofError.provider && <div>Provider: {platformProofError.provider}</div>}
+                            {platformProofError.upstreamStatus && <div>Status: {platformProofError.upstreamStatus}</div>}
+                            {platformProofError.upstreamPath && <div>Path: <span className="font-mono">{platformProofError.upstreamPath}</span></div>}
+                            {platformProofError.requestId && <div>Request ID: <span className="font-mono">{platformProofError.requestId}</span></div>}
+                        </div>
+                    </motion.div>
+                )}
+            </div>
+
             {showAddForm && (
-                <div className="bg-muted/30 border border-border rounded-lg p-4 mb-4">
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-muted/30 border border-border rounded-lg p-4 mb-4 overflow-hidden">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label className="block text-xs text-muted-foreground mb-1">Name</label>
@@ -219,6 +338,18 @@ const AIEndpointSettings = () => {
                                 <option value="custom">Custom</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-xs text-muted-foreground mb-1">Purpose</label>
+                        <select
+                            value={formData.purpose}
+                            onChange={e => setFormData(prev => ({ ...prev, purpose: e.target.value as EndpointPurpose }))}
+                            className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:border-primary focus:outline-none"
+                        >
+                            <option value="deep_analysis">deep_analysis</option>
+                            <option value="hot_path">hot_path</option>
+                        </select>
                     </div>
 
                     <div className="mb-4">
@@ -270,7 +401,7 @@ const AIEndpointSettings = () => {
                             Add
                         </button>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {loading ? (
@@ -283,12 +414,14 @@ const AIEndpointSettings = () => {
                     No configured AI endpoints.
                 </div>
             ) : (
-                <div className="space-y-3">
+                <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
                     {sortedEndpoints.map((endpoint, index) => (
-                        <div
+                        <motion.div
+                            variants={itemVariant}
+                            whileHover={{ scale: 1.01 }}
                             key={endpoint.id}
                             className={`border rounded-lg p-4 transition-all ${endpoint.enabled
-                                ? 'border-border bg-card'
+                                ? 'border-border bg-card hover:border-primary/40'
                                 : 'border-border/50 bg-muted/20 opacity-60'
                                 }`}
                         >
@@ -298,7 +431,7 @@ const AIEndpointSettings = () => {
                                         <button
                                             onClick={() => handlePriorityChange(endpoint.id, 'up')}
                                             disabled={index === 0}
-                                            className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                            className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
                                         >
                                             <ChevronUp size={14} />
                                         </button>
@@ -306,7 +439,7 @@ const AIEndpointSettings = () => {
                                         <button
                                             onClick={() => handlePriorityChange(endpoint.id, 'down')}
                                             disabled={index === sortedEndpoints.length - 1}
-                                            className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                            className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
                                         >
                                             <ChevronDown size={14} />
                                         </button>
@@ -316,6 +449,9 @@ const AIEndpointSettings = () => {
                                         <div className="flex items-center gap-2 mb-1">
                                             {getTypeIcon(endpoint.type)}
                                             <span className="font-medium text-foreground">{endpoint.name}</span>
+                                            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                                {endpoint.purpose || 'deep_analysis'}
+                                            </span>
                                         </div>
                                         <div className="text-xs text-muted-foreground mb-1">{endpoint.url}</div>
                                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -362,9 +498,9 @@ const AIEndpointSettings = () => {
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             )}
         </div>
     );

@@ -32,6 +32,20 @@ services:
       - minio_data:/data
     restart: unless-stopped
 
+  minio-init:
+    image: minio/mc:RELEASE.2025-02-21T16-00-46Z
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-aetherguard} ${S3_SECRET_KEY:-AetherGuardArtifactSecret2026}; do sleep 2; done &&
+      mc mb --ignore-existing local/${S3_BUCKET:-aetherguard-artifacts} &&
+      mc mb --ignore-existing --with-lock local/${AUDIT_ARCHIVE_BUCKET:-aetherguard-audit-lock} &&
+      mc retention set --default COMPLIANCE 30d local/${AUDIT_ARCHIVE_BUCKET:-aetherguard-audit-lock} &&
+      mc retention info --default local/${AUDIT_ARCHIVE_BUCKET:-aetherguard-audit-lock}
+      "
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -50,6 +64,24 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  fastpath:
+    build:
+      context: .
+      dockerfile: rust-fastpath/Dockerfile
+    environment:
+      - FASTPATH_TRANSPORT=${FASTPATH_TRANSPORT:-unix}
+      - FASTPATH_SOCKET_PATH=${FASTPATH_SOCKET_PATH:-/var/run/aetherguard-fastpath/aetherguard-fastpath.sock}
+      - RUST_LOG=${FASTPATH_LOG_LEVEL:-info}
+    volumes:
+      - fastpath_run:/var/run/aetherguard-fastpath
+    healthcheck:
+      test: [ "CMD", "aetherguard-fastpath", "self-check" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
   # ─────────────────────────────────────────────
   # Backend
   # ─────────────────────────────────────────────
@@ -60,7 +92,8 @@ services:
     ports:
       - "${BACKEND_PORT:-3005}:3005"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - NODE_ENV=production
       - PORT=3005
@@ -73,7 +106,7 @@ services:
       - ARTIFACTS_DIR=/app/artifacts
       - APP_MODE=production
       - DEMO_AUTO_SEED=false
-      - ENABLE_ATTACK_SIM=false
+      - ENABLE_ATTACK_SIM=true
       - ENABLE_DEV_LOGIN_PRESETS=true
       - ENABLE_RUNTIME_EMULATOR=${ENABLE_RUNTIME_EMULATOR:-false}
       - SQLITE_FALLBACK_ENABLED=${SQLITE_FALLBACK_ENABLED:-true}
@@ -81,25 +114,38 @@ services:
       - SHADOW_DATABASE_URL=${SHADOW_DATABASE_URL:-postgres://aetherguard:AetherGuardPgShadow2026@postgres:5432/aetherguard}
       - S3_ENDPOINT=${S3_ENDPOINT:-http://minio:9000}
       - S3_BUCKET=${S3_BUCKET:-aetherguard-artifacts}
+      - AUDIT_ARCHIVE_BUCKET=${AUDIT_ARCHIVE_BUCKET:-aetherguard-audit-lock}
       - S3_REGION=${S3_REGION:-us-east-1}
       - S3_ACCESS_KEY=${S3_ACCESS_KEY:-aetherguard}
       - S3_SECRET_KEY=${S3_SECRET_KEY:-AetherGuardArtifactSecret2026}
+      - FASTPATH_URL=${FASTPATH_URL:-http://fastpath:8081}
+      - FASTPATH_TRANSPORT=${FASTPATH_TRANSPORT:-unix}
+      - FASTPATH_SOCKET_PATH=${FASTPATH_SOCKET_PATH:-/var/run/aetherguard-fastpath/aetherguard-fastpath.sock}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost,http://127.0.0.1}
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - AUDIT_LOG_SECRET=${AUDIT_LOG_SECRET:?AUDIT_LOG_SECRET is required}
       - VALID_API_KEYS=${VALID_API_KEYS:-}
-      - DEVICE_API_KEYS=${DEVICE_API_KEYS:-}
+      - DEVICE_API_KEYS=${DEVICE_API_KEYS:-dev-device-key-2026}
+      - DEVICE_COMMAND_SECRET=${DEVICE_COMMAND_SECRET:-AetherGuardDeviceCommandSecret2026}
+      - PLATFORM_API_PROTOCOL=${PLATFORM_API_PROTOCOL:-openai-compatible}
+      - PLATFORM_API_BASE_URL=${PLATFORM_API_BASE_URL:-https://coding.dashscope.aliyuncs.com/v1}
+      - PLATFORM_API_TIMEOUT=${PLATFORM_API_TIMEOUT:-120000}
     volumes:
       # Persist SQLite database and scan results across restarts
       - backend_data:/app/data
       - scan_results:/app/scan-results
       - artifacts_data:/app/artifacts
+      - fastpath_run:/var/run/aetherguard-fastpath
     depends_on:
       redis:
         condition: service_healthy
       minio:
         condition: service_started
+      minio-init:
+        condition: service_completed_successfully
       postgres:
+        condition: service_healthy
+      fastpath:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/api/health" ]
@@ -139,3 +185,4 @@ volumes:
   artifacts_data:
   minio_data:
   postgres_data:
+  fastpath_run:

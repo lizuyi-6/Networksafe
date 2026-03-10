@@ -13,6 +13,20 @@ apt-get install -y nodejs nginx
 echo "--> Installing PM2 globally..."
 npm install -g pm2
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BACKEND_ARCHIVE="$SCRIPT_DIR/artifacts/releases/backend-dist.tar.gz"
+FRONTEND_ARCHIVE="$SCRIPT_DIR/artifacts/releases/frontend-dist.tar.gz"
+
+if [ ! -f "$BACKEND_ARCHIVE" ]; then
+    echo "Missing backend archive: $BACKEND_ARCHIVE"
+    exit 1
+fi
+
+if [ ! -f "$FRONTEND_ARCHIVE" ]; then
+    echo "Missing frontend archive: $FRONTEND_ARCHIVE"
+    exit 1
+fi
+
 # Setup directories
 APP_DIR="/opt/aetherguard"
 mkdir -p $APP_DIR/backend
@@ -21,9 +35,9 @@ mkdir -p /var/www/aetherguard
 
 # Extract artifacts
 echo "--> Extracting backend..."
-tar -xzf backend-dist.tar.gz -C $APP_DIR/backend/
+tar -xzf "$BACKEND_ARCHIVE" -C $APP_DIR/backend/
 echo "--> Extracting frontend..."
-tar -xzf frontend-dist.tar.gz -C $APP_DIR/frontend/
+tar -xzf "$FRONTEND_ARCHIVE" -C $APP_DIR/frontend/
 
 # Setup Backend
 echo "--> Setting up backend..."

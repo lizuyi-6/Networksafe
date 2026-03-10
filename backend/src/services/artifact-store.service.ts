@@ -1,10 +1,16 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { CreateBucketCommand, HeadBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  CreateBucketCommand,
+  GetObjectCommand,
+  HeadBucketCommand,
+  PutObjectCommand,
+  S3Client
+} from '@aws-sdk/client-s3';
 import logger from '../utils/logger';
 import { getArtifactStoreMode } from '../config/platform-runtime';
 
-interface ArtifactWriteResult {
+export interface ArtifactWriteResult {
   artifactRef: string;
   location: string;
 }
@@ -21,6 +27,9 @@ interface ArtifactStoreDescription {
 interface ArtifactStore {
   readonly mode: ArtifactStoreModeName;
   writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult>;
+  writeText(scope: string, key: string, payload: string, contentType?: string): Promise<ArtifactWriteResult>;
+  writeBinary(scope: string, key: string, payload: Buffer, contentType?: string): Promise<ArtifactWriteResult>;
+  readText(artifactRef: string, fallbackLocation?: string): Promise<string>;
   describe(): ArtifactStoreDescription;
 }
 
@@ -32,22 +41,91 @@ function sanitizeKey(value: string): string {
   return String(value || '').replace(/[^a-zA-Z0-9._/-]/g, '_').replace(/\/+/g, '/').replace(/^\/|\/$/g, '') || 'artifact';
 }
 
+function parseLocalArtifactRef(artifactRef: string): string | null {
+  const prefix = 'artifact://local/';
+  if (!artifactRef.startsWith(prefix)) {
+    return null;
+  }
+  return artifactRef.slice(prefix.length);
+}
+
+function parseS3ArtifactRef(artifactRef: string): { bucket: string; key: string } | null {
+  const prefix = 'artifact://s3/';
+  if (!artifactRef.startsWith(prefix)) {
+    return null;
+  }
+
+  const remainder = artifactRef.slice(prefix.length);
+  const slashIndex = remainder.indexOf('/');
+  if (slashIndex <= 0) {
+    return null;
+  }
+
+  return {
+    bucket: remainder.slice(0, slashIndex),
+    key: remainder.slice(slashIndex + 1)
+  };
+}
+
+async function streamToString(stream: any): Promise<string> {
+  if (!stream) {
+    return '';
+  }
+  if (typeof stream.transformToString === 'function') {
+    return stream.transformToString();
+  }
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
 class LocalArtifactStore implements ArtifactStore {
   readonly mode = 'local' as const;
 
   constructor(private readonly baseDir: string) {}
 
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
+    return this.writeText(scope, `${key}.json`, JSON.stringify(payload, null, 2), 'application/json');
+  }
+
+  async writeText(scope: string, key: string, payload: string, _contentType = 'text/plain; charset=utf-8'): Promise<ArtifactWriteResult> {
     const safeScope = sanitizeScope(scope);
     const safeKey = sanitizeKey(key);
     const targetDir = path.join(this.baseDir, safeScope);
-    const targetPath = path.join(targetDir, `${safeKey}.json`);
+    const targetPath = path.join(targetDir, safeKey);
     await fs.mkdir(targetDir, { recursive: true });
-    await fs.writeFile(targetPath, JSON.stringify(payload, null, 2), 'utf8');
+    await fs.writeFile(targetPath, payload, 'utf8');
     return {
-      artifactRef: `artifact://local/${safeScope}/${safeKey}.json`,
+      artifactRef: `artifact://local/${safeScope}/${safeKey}`,
       location: targetPath
     };
+  }
+
+  async writeBinary(scope: string, key: string, payload: Buffer, _contentType = 'application/octet-stream'): Promise<ArtifactWriteResult> {
+    const safeScope = sanitizeScope(scope);
+    const safeKey = sanitizeKey(key);
+    const targetDir = path.join(this.baseDir, safeScope);
+    const targetPath = path.join(targetDir, safeKey);
+    await fs.mkdir(targetDir, { recursive: true });
+    await fs.writeFile(targetPath, payload);
+    return {
+      artifactRef: `artifact://local/${safeScope}/${safeKey}`,
+      location: targetPath
+    };
+  }
+
+  async readText(artifactRef: string, fallbackLocation?: string): Promise<string> {
+    const relativePath = parseLocalArtifactRef(artifactRef);
+    if (relativePath) {
+      return fs.readFile(path.join(this.baseDir, relativePath), 'utf8');
+    }
+    if (fallbackLocation) {
+      return fs.readFile(fallbackLocation, 'utf8');
+    }
+    throw new Error('backend.unsupported_local_artifact_ref');
   }
 
   describe(): ArtifactStoreDescription {
@@ -106,17 +184,21 @@ class S3ArtifactStore implements ArtifactStore {
   }
 
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
+    return this.writeText(scope, `${key}.json`, JSON.stringify(payload, null, 2), 'application/json');
+  }
+
+  async writeText(scope: string, key: string, payload: string, contentType = 'text/plain; charset=utf-8'): Promise<ArtifactWriteResult> {
     const safeScope = sanitizeScope(scope);
     const safeKey = sanitizeKey(key);
-    const objectKey = `${safeScope}/${safeKey}.json`;
+    const objectKey = `${safeScope}/${safeKey}`;
 
     try {
       await this.ensureBucket();
       await this.client.send(new PutObjectCommand({
         Bucket: this.bucket,
         Key: objectKey,
-        Body: JSON.stringify(payload, null, 2),
-        ContentType: 'application/json'
+        Body: payload,
+        ContentType: contentType
       }));
       return {
         artifactRef: `artifact://s3/${this.bucket}/${objectKey}`,
@@ -129,7 +211,66 @@ class S3ArtifactStore implements ArtifactStore {
         key: objectKey,
         error: error?.message
       });
-      return this.fallbackStore.writeJson(scope, key, payload);
+      return this.fallbackStore.writeText(scope, key, payload, contentType);
+    }
+  }
+
+  async writeBinary(scope: string, key: string, payload: Buffer, contentType = 'application/octet-stream'): Promise<ArtifactWriteResult> {
+    const safeScope = sanitizeScope(scope);
+    const safeKey = sanitizeKey(key);
+    const objectKey = `${safeScope}/${safeKey}`;
+
+    try {
+      await this.ensureBucket();
+      await this.client.send(new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: objectKey,
+        Body: payload,
+        ContentType: contentType
+      }));
+      return {
+        artifactRef: `artifact://s3/${this.bucket}/${objectKey}`,
+        location: `s3://${this.bucket}/${objectKey}`
+      };
+    } catch (error: any) {
+      logger.warn('Failed to persist binary artifact to S3-compatible store, falling back to local disk', {
+        bucket: this.bucket,
+        endpoint: this.endpoint,
+        key: objectKey,
+        error: error?.message
+      });
+      return this.fallbackStore.writeBinary(scope, key, payload, contentType);
+    }
+  }
+
+  async readText(artifactRef: string, fallbackLocation?: string): Promise<string> {
+    const parsed = parseS3ArtifactRef(artifactRef);
+
+    if (!parsed) {
+      if (fallbackLocation) {
+        return this.fallbackStore.readText('', fallbackLocation);
+      }
+      throw new Error('backend.unsupported_s3_artifact_ref');
+    }
+
+    try {
+      await this.ensureBucket();
+      const response = await this.client.send(new GetObjectCommand({
+        Bucket: parsed.bucket,
+        Key: parsed.key
+      }));
+      return await streamToString(response.Body);
+    } catch (error: any) {
+      logger.warn('Failed to read artifact from S3-compatible store, falling back to local disk when available', {
+        bucket: parsed.bucket,
+        endpoint: this.endpoint,
+        key: parsed.key,
+        error: error?.message
+      });
+      if (fallbackLocation) {
+        return this.fallbackStore.readText('', fallbackLocation);
+      }
+      throw error;
     }
   }
 
@@ -187,6 +328,23 @@ class ArtifactStoreService {
 
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
     return this.getStore().writeJson(scope, key, payload);
+  }
+
+  async writeText(scope: string, key: string, payload: string, contentType?: string): Promise<ArtifactWriteResult> {
+    return this.getStore().writeText(scope, key, payload, contentType);
+  }
+
+  async writeBinary(scope: string, key: string, payload: Buffer, contentType?: string): Promise<ArtifactWriteResult> {
+    return this.getStore().writeBinary(scope, key, payload, contentType);
+  }
+
+  async readText(artifactRef: string, fallbackLocation?: string): Promise<string> {
+    return this.getStore().readText(artifactRef, fallbackLocation);
+  }
+
+  async readJson<T>(artifactRef: string, fallbackLocation?: string): Promise<T> {
+    const raw = await this.readText(artifactRef, fallbackLocation);
+    return JSON.parse(raw) as T;
   }
 
   describe(): ArtifactStoreDescription {

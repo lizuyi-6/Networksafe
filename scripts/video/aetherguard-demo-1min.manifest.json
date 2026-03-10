@@ -1,0 +1,323 @@
+{
+  "id": "aetherguard-demo-1min",
+  "title": "AetherGuard Promo Film",
+  "renderMode": "hybrid-browser-film",
+  "theme": "light",
+  "lightScope": "package-only",
+  "uiShareTarget": {
+    "min": 0.1,
+    "max": 0.15
+  },
+  "frontendUrl": "http://localhost:8080",
+  "backendUrl": "http://localhost:3005",
+  "captureFps": 30,
+  "compositionFps": 60,
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "promo": {
+    "route": "/promo-film",
+    "durationSec": 60
+  },
+  "output": {
+    "artifactsDir": "artifacts/video/aetherguard-demo-1min",
+    "docsDir": "docs/video/aetherguard-demo-1min",
+    "landscape": {
+      "width": 1920,
+      "height": 1080
+    },
+    "vertical": {
+      "width": 1080,
+      "height": 1920
+    }
+  },
+  "brand": {
+    "productName": "AetherGuard",
+    "shieldImage": "frontend/public/shield-logo.png",
+    "palette": {
+      "stage": "#F3F5F7",
+      "surface": "#FFFFFF",
+      "surfaceSoft": "#F8FAFC",
+      "line": "#D9E1EA",
+      "text": "#0F172A",
+      "textSoft": "#64748B",
+      "blue": "#3B82F6",
+      "cyan": "#06B6D4",
+      "mint": "#10B981",
+      "amber": "#F59E0B"
+    }
+  },
+  "capture": {
+    "locale": "zh-CN",
+    "themeStorageKey": "aetherguard-theme-v2",
+    "forceTheme": "light",
+    "disableDemoMode": true,
+    "credentials": [
+      {
+        "emailEnv": "ADMIN_EMAIL",
+        "passwordEnv": "ADMIN_PASSWORD",
+        "fallbackEmail": "admin@aetherguard.local"
+      },
+      {
+        "email": "dev-admin@aetherguard.local",
+        "password": "DevAdmin!2026"
+      }
+    ]
+  },
+  "audio": {
+    "voiceoverPath": "docs/video/aetherguard-demo-1min/voiceover.final.wav",
+    "musicOverridePath": "docs/video/aetherguard-demo-1min/music.final.wav",
+    "proceduralMusic": true,
+    "musicGainDb": -18,
+    "voiceoverDuckDb": -10
+  },
+  "assets": [
+    {
+      "id": "dashboard-signal",
+      "kind": "video",
+      "route": "/dashboard",
+      "durationSec": 2.4,
+      "waitMs": 1200,
+      "fallbackImage": "docs/assets/dashboard.png",
+      "actions": [
+        { "type": "wait", "ms": 600 }
+      ]
+    },
+    {
+      "id": "alerts-priority",
+      "kind": "video",
+      "route": "/alerts",
+      "durationSec": 2.2,
+      "waitMs": 1200,
+      "fallbackImage": "docs/assets/alerts.png",
+      "actions": [
+        { "type": "wait", "ms": 500 }
+      ]
+    },
+    {
+      "id": "agent-monitor-focus",
+      "kind": "video",
+      "route": "/agent-monitor",
+      "durationSec": 2.6,
+      "waitMs": 1400,
+      "fallbackImage": "docs/screenshots/05-agent-monitor.png",
+      "actions": [
+        { "type": "wait", "ms": 500 }
+      ]
+    },
+    {
+      "id": "history-trace",
+      "kind": "video",
+      "route": "/history",
+      "durationSec": 2.4,
+      "waitMs": 1200,
+      "fallbackImage": "docs/assets/history.png",
+      "actions": [
+        { "type": "wait", "ms": 500 }
+      ]
+    },
+    {
+      "id": "deployment-command",
+      "kind": "video",
+      "route": "/deploy",
+      "durationSec": 2.2,
+      "waitMs": 1200,
+      "fallbackImage": "docs/assets/deploy.png",
+      "actions": [
+        { "type": "wait", "ms": 500 }
+      ]
+    },
+    {
+      "id": "devices-edge",
+      "kind": "video",
+      "route": "/devices",
+      "durationSec": 2.2,
+      "waitMs": 1200,
+      "fallbackImage": "docs/assets/devices.png",
+      "actions": [
+        { "type": "wait", "ms": 500 }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "intro",
+      "layout": "intro",
+      "durationSec": 8,
+      "kicker": "AetherGuard",
+      "ghostWord": "AETHER",
+      "backgroundPreset": "dawn",
+      "headline": "让安全先被看见",
+      "subcopy": "把风险、判断、证据和边缘动作，收进同一条控制回路。",
+      "caption": "让安全先被看见。把风险、判断、证据和边缘动作，收进同一条控制回路。",
+      "motionPreset": "intro-float",
+      "transitionIn": "none",
+      "transitionOut": "soft-fade",
+      "objectCards": []
+    },
+    {
+      "id": "risk",
+      "layout": "stage-left",
+      "durationSec": 10,
+      "kicker": "Risk",
+      "ghostWord": "RISK",
+      "backgroundPreset": "signal",
+      "headline": "先看见真正的风险",
+      "subcopy": "把最值得关注的信号，推到视线中心。",
+      "caption": "先看见真正的风险。把最值得关注的信号，推到视线中心。",
+      "motionPreset": "single-panel",
+      "transitionIn": "soft-fade",
+      "transitionOut": "soft-fade",
+      "objectCards": [
+        {
+          "assetId": "dashboard-signal",
+          "label": "Risk",
+          "title": "Threat pressure",
+          "copy": "Live control signal",
+          "variant": "panel",
+          "accent": "cyan",
+          "startSec": 1.4,
+          "endSec": 8.6,
+          "landscape": { "x": 0.53, "y": 0.16, "w": 0.34, "h": 0.48 },
+          "vertical": { "x": 0.08, "y": 0.48, "w": 0.84, "h": 0.24 },
+          "focusLandscape": { "x": 0.68, "y": 0.22, "zoom": 1.72 },
+          "focusVertical": { "x": 0.68, "y": 0.2, "zoom": 1.86 }
+        }
+      ]
+    },
+    {
+      "id": "decision",
+      "layout": "stage-left",
+      "durationSec": 12,
+      "kicker": "Decision",
+      "ghostWord": "DECISION",
+      "backgroundPreset": "decision",
+      "headline": "不是命中规则，是做出判断",
+      "subcopy": "噪音先被压下，真正需要动作的事件才被推出。",
+      "caption": "不是命中规则，是做出判断。噪音先被压下，真正需要动作的事件才被推出。",
+      "motionPreset": "pair-handoff",
+      "transitionIn": "soft-fade",
+      "transitionOut": "soft-fade",
+      "objectCards": [
+        {
+          "assetId": "alerts-priority",
+          "label": "Signal",
+          "title": "Priority alert",
+          "copy": "Noise reduced",
+          "variant": "pill",
+          "accent": "amber",
+          "startSec": 1.4,
+          "endSec": 6.8,
+          "landscape": { "x": 0.54, "y": 0.19, "w": 0.28, "h": 0.15 },
+          "vertical": { "x": 0.08, "y": 0.45, "w": 0.84, "h": 0.1 },
+          "focusLandscape": { "x": 0.58, "y": 0.2, "zoom": 1.7 },
+          "focusVertical": { "x": 0.58, "y": 0.18, "zoom": 1.92 }
+        },
+        {
+          "assetId": "agent-monitor-focus",
+          "label": "Decision",
+          "title": "Agent consensus",
+          "copy": "Seven layers align",
+          "variant": "panel",
+          "accent": "blue",
+          "startSec": 4.2,
+          "endSec": 10.2,
+          "landscape": { "x": 0.52, "y": 0.39, "w": 0.36, "h": 0.3 },
+          "vertical": { "x": 0.08, "y": 0.62, "w": 0.84, "h": 0.2 },
+          "focusLandscape": { "x": 0.62, "y": 0.2, "zoom": 1.82 },
+          "focusVertical": { "x": 0.62, "y": 0.2, "zoom": 1.98 }
+        }
+      ]
+    },
+    {
+      "id": "record",
+      "layout": "stage-right",
+      "durationSec": 12,
+      "kicker": "Record",
+      "ghostWord": "RECORD",
+      "backgroundPreset": "trace",
+      "headline": "每一次动作，都留下证据",
+      "subcopy": "记录、时间线和复盘线索，被压缩成一条可追溯链路。",
+      "caption": "每一次动作，都留下证据。记录、时间线和复盘线索，被压缩成一条可追溯链路。",
+      "motionPreset": "stack-rise",
+      "transitionIn": "soft-fade",
+      "transitionOut": "soft-fade",
+      "objectCards": [
+        {
+          "assetId": "history-trace",
+          "label": "Record",
+          "title": "Audit trail",
+          "copy": "Replayable evidence",
+          "variant": "stack",
+          "accent": "mint",
+          "startSec": 1.6,
+          "endSec": 9.6,
+          "landscape": { "x": 0.11, "y": 0.29, "w": 0.36, "h": 0.3 },
+          "vertical": { "x": 0.08, "y": 0.52, "w": 0.84, "h": 0.21 },
+          "focusLandscape": { "x": 0.56, "y": 0.21, "zoom": 1.82 },
+          "focusVertical": { "x": 0.58, "y": 0.2, "zoom": 1.96 }
+        }
+      ]
+    },
+    {
+      "id": "edge",
+      "layout": "stage-left",
+      "durationSec": 10,
+      "kicker": "Edge",
+      "ghostWord": "EDGE",
+      "backgroundPreset": "edge",
+      "headline": "从控制台，延伸到边缘",
+      "subcopy": "命令推出去之后，确认信号会从设备一侧回来。",
+      "caption": "从控制台，延伸到边缘。命令推出去之后，确认信号会从设备一侧回来。",
+      "motionPreset": "edge-handoff",
+      "transitionIn": "soft-fade",
+      "transitionOut": "soft-fade",
+      "objectCards": [
+        {
+          "assetId": "deployment-command",
+          "label": "Push",
+          "title": "Deploy command",
+          "copy": "One move",
+          "variant": "pill",
+          "accent": "blue",
+          "startSec": 1.2,
+          "endSec": 6.8,
+          "landscape": { "x": 0.13, "y": 0.58, "w": 0.37, "h": 0.14 },
+          "vertical": { "x": 0.08, "y": 0.5, "w": 0.84, "h": 0.1 },
+          "focusLandscape": { "x": 0.6, "y": 0.22, "zoom": 1.86 },
+          "focusVertical": { "x": 0.6, "y": 0.2, "zoom": 2.0 }
+        },
+        {
+          "assetId": "devices-edge",
+          "label": "Edge",
+          "title": "Board confirm",
+          "copy": "Physical handshake",
+          "variant": "panel",
+          "accent": "cyan",
+          "startSec": 4.4,
+          "endSec": 8.8,
+          "landscape": { "x": 0.56, "y": 0.25, "w": 0.29, "h": 0.25 },
+          "vertical": { "x": 0.14, "y": 0.68, "w": 0.72, "h": 0.16 },
+          "focusLandscape": { "x": 0.58, "y": 0.2, "zoom": 1.8 },
+          "focusVertical": { "x": 0.58, "y": 0.18, "zoom": 1.92 }
+        }
+      ]
+    },
+    {
+      "id": "outro",
+      "layout": "outro",
+      "durationSec": 8,
+      "kicker": "AetherGuard",
+      "ghostWord": "CONTROL",
+      "backgroundPreset": "calm",
+      "headline": "看见风险，做出判断，留下证据，扩展到边缘",
+      "subcopy": "A security control loop.",
+      "caption": "看见风险，做出判断，留下证据，扩展到边缘。",
+      "motionPreset": "outro-calm",
+      "transitionIn": "soft-fade",
+      "transitionOut": "none",
+      "objectCards": []
+    }
+  ]
+}

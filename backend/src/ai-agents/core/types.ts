@@ -23,6 +23,7 @@ export interface AgentConfig {
     identity: AgentIdentity;
     modelConfig: ModelConfig;
     timeout: number;
+    modelTimeout?: number;
     maxRetries: number;
 }
 

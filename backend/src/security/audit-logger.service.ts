@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger';
 import { getDatabase } from '../config/database';
 import { postgresShadowStoreService } from '../services/postgres-shadow-store.service';
+import { auditSegmentService } from '../services/audit-segment.service';
 
 export interface AuditEvent {
   id: string;
@@ -907,6 +908,25 @@ export class AuditLogger {
   private startPeriodicBackupCheck(): void {
     // Check every 24 hours
     const checkInterval = 24 * 60 * 60 * 1000;
+    const archiveIntervalMinutes = Math.max(15, parseInt(process.env.AUDIT_SEGMENT_ARCHIVE_INTERVAL_MINUTES || '60', 10) || 60);
+    const archiveInterval = archiveIntervalMinutes * 60 * 1000;
+
+    const runSegmentArchiver = async () => {
+      try {
+        const result = await auditSegmentService.archivePending({
+          maxSegments: parseInt(process.env.AUDIT_SEGMENT_MAX_BATCHES || '5', 10) || 5,
+          maxLogsPerSegment: parseInt(process.env.AUDIT_SEGMENT_MAX_RECORDS || '250', 10) || 250
+        });
+
+        if (result.archivedCount > 0) {
+          logger.info('Periodic audit segment archival completed', {
+            archivedCount: result.archivedCount
+          });
+        }
+      } catch (error) {
+        logger.error('Periodic audit segment archival failed', { error });
+      }
+    };
 
     setInterval(async () => {
       try {
@@ -921,7 +941,17 @@ export class AuditLogger {
       }
     }, checkInterval);
 
-    logger.info('Periodic audit log backup check started');
+    setTimeout(() => {
+      void runSegmentArchiver();
+    }, 15 * 1000);
+
+    setInterval(() => {
+      void runSegmentArchiver();
+    }, archiveInterval);
+
+    logger.info('Periodic audit log backup check started', {
+      segmentArchiveIntervalMinutes: archiveIntervalMinutes
+    });
   }
 }
 

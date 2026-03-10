@@ -1,7 +1,0 @@
-﻿.trae/documents/AI 决策架构重构：7层多智能体协作系统.md
-.trae/documents/Agent 决策机制理解与优化计划.md
-.trae/documents/AttackSimulator 页面样式重构.md
-.trae/documents/修复前端页面假数据问题.md
-.trae/documents/修复错误使用假数据的问题.md
-.trae/documents/彻底修复 Redis 连接超时问题.md
-.trae/documents/攻击模拟器实时攻防信息和终端显示.md

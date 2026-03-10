@@ -19,10 +19,11 @@ async function startServer() {
 
     const certPath = path.resolve(__dirname, '../../certs/localhost.crt');
     const keyPath = path.resolve(__dirname, '../../certs/localhost.key');
+    const enableLocalHttps = process.env.ENABLE_LOCAL_HTTPS === 'true';
 
     let server: http.Server | https.Server;
 
-    if (false && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+    if (enableLocalHttps && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
         const httpsOptions = {
             key: fs.readFileSync(keyPath),
             cert: fs.readFileSync(certPath),

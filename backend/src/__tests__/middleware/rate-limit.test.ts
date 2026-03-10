@@ -7,6 +7,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { rateLimit, authRateLimit, apiRateLimit } from '../../middleware/rate-limit.middleware';
 import enhancedRateLimiter from '../../security/enhanced-rate-limiter.service';
+import { apiRateLimitEngineService } from '../../services/api-rate-limit-engine.service';
 
 // Mock dependencies
 jest.mock('../../security/enhanced-rate-limiter.service', () => ({
@@ -21,6 +22,13 @@ jest.mock('../../security/enhanced-rate-limiter.service', () => ({
   })
 }));
 
+jest.mock('../../services/api-rate-limit-engine.service', () => ({
+  apiRateLimitEngineService: {
+    check: jest.fn().mockResolvedValue(null)
+  },
+  hashRateLimitFingerprint: jest.fn((value: string) => `hashed:${value}`)
+}));
+
 jest.mock('../../utils/logger', () => ({
   __esModule: true,
   default: {
@@ -32,6 +40,7 @@ jest.mock('../../utils/logger', () => ({
 
 describe('Rate Limit Middleware', () => {
   const originalTrustProxy = process.env.TRUST_PROXY;
+  const originalApiRateLimitEngine = process.env.API_RATE_LIMIT_ENGINE;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
@@ -41,6 +50,7 @@ describe('Rate Limit Middleware', () => {
 
   beforeEach(() => {
     process.env.TRUST_PROXY = 'true';
+    delete process.env.API_RATE_LIMIT_ENGINE;
     mockSetHeader = jest.fn();
     mockJson = jest.fn();
     mockStatus = jest.fn(() => ({ json: mockJson }));
@@ -58,6 +68,7 @@ describe('Rate Limit Middleware', () => {
     };
     mockNext = jest.fn();
     jest.clearAllMocks();
+    (apiRateLimitEngineService.check as jest.Mock).mockResolvedValue(null);
   });
 
   afterAll(() => {
@@ -65,6 +76,11 @@ describe('Rate Limit Middleware', () => {
       delete process.env.TRUST_PROXY;
     } else {
       process.env.TRUST_PROXY = originalTrustProxy;
+    }
+    if (originalApiRateLimitEngine === undefined) {
+      delete process.env.API_RATE_LIMIT_ENGINE;
+    } else {
+      process.env.API_RATE_LIMIT_ENGINE = originalApiRateLimitEngine;
     }
   });
 
@@ -81,6 +97,30 @@ describe('Rate Limit Middleware', () => {
       expect(mockNext).toHaveBeenCalled();
       expect(mockSetHeader).toHaveBeenCalledWith('X-RateLimit-Limit', '100');
       expect(mockSetHeader).toHaveBeenCalledWith('X-RateLimit-Remaining', '99');
+    });
+
+    it('should allow redis lua decisions without local fallback', async () => {
+      process.env.API_RATE_LIMIT_ENGINE = 'redis-lua';
+      (apiRateLimitEngineService.check as jest.Mock).mockResolvedValueOnce({
+        allowed: true,
+        remaining: 88,
+        resetAtMs: Date.now() + 60000,
+        decisionSource: 'redis-lua-api-rate-limit',
+        riskFlags: []
+      });
+
+      const middleware = rateLimit({ maxRequests: 100, windowMs: 60000 });
+
+      await middleware(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(enhancedRateLimiter.checkRateLimit).not.toHaveBeenCalled();
+      expect(enhancedRateLimiter.detectIPSpoofing).not.toHaveBeenCalled();
+      expect(mockSetHeader).toHaveBeenCalledWith('X-RateLimit-Remaining', '88');
     });
 
     it('should block requests exceeding limit', async () => {
@@ -106,9 +146,14 @@ describe('Rate Limit Middleware', () => {
     });
 
     it('should block suspicious IP (IP spoofing)', async () => {
-      (enhancedRateLimiter.detectIPSpoofing as jest.Mock).mockResolvedValueOnce({
-        suspicious: true,
-        reason: 'IP mismatch detected'
+      process.env.API_RATE_LIMIT_ENGINE = 'redis-lua';
+      (apiRateLimitEngineService.check as jest.Mock).mockResolvedValueOnce({
+        allowed: false,
+        remaining: 0,
+        resetAtMs: Date.now() + 60000,
+        decisionSource: 'redis-lua-api-rate-limit',
+        riskFlags: ['ip_header_mismatch'],
+        reason: 'Rapid IP rotation detected'
       });
 
       const middleware = rateLimit();
@@ -121,6 +166,24 @@ describe('Rate Limit Middleware', () => {
 
       expect(mockNext).not.toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(429);
+      expect(enhancedRateLimiter.detectIPSpoofing).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to legacy limiter when redis lua engine is unavailable', async () => {
+      process.env.API_RATE_LIMIT_ENGINE = 'redis-lua';
+      (apiRateLimitEngineService.check as jest.Mock).mockResolvedValueOnce(null);
+
+      const middleware = rateLimit({ maxRequests: 100, windowMs: 60000 });
+
+      await middleware(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(enhancedRateLimiter.detectIPSpoofing).toHaveBeenCalled();
+      expect(enhancedRateLimiter.checkRateLimit).toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalled();
     });
 
     it('should use custom key generator', async () => {

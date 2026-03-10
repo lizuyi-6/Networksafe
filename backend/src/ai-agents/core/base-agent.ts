@@ -106,7 +106,7 @@ export abstract class BaseAgent {
     }
 
     protected async callModel(prompt: string, context?: Record<string, any>): Promise<ModelResponse> {
-        const startTime = Date.now();
+        const timeoutMs = this.config.modelTimeout ?? this.config.timeout;
 
         try {
             const response = await this.messageBus.requestModel({
@@ -115,13 +115,16 @@ export abstract class BaseAgent {
                 context: context || {},
                 tier: this.determineModelTier(),
                 priority: 'medium',
-                timeout: this.config.timeout,
+                timeout: timeoutMs,
                 sanitizationLevel: 'basic'
             });
 
             return response;
         } catch (error: any) {
-            logger.error(`Model call failed for ${this.identity.name}`, { error: error.message });
+            logger.error(`Model call failed for ${this.identity.name}`, {
+                error: error.message,
+                timeoutMs
+            });
             throw error;
         }
     }

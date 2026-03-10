@@ -48,7 +48,11 @@ import { commandDispatcherService } from './services/command-dispatcher.service'
 import { artifactStoreService } from './services/artifact-store.service';
 import { jobQueueService } from './services/job-queue.service';
 import { postgresShadowStoreService } from './services/postgres-shadow-store.service';
-import { getDeviceById, executeDeviceCommandInternal } from './api/routes/devices.routes';
+import { getDeviceById, executeDeviceCommandInternal, setDeviceCommandTransport } from './api/routes/devices.routes';
+import { notificationDispatcherService } from './services/notification-dispatcher.service';
+import { deviceControlService } from './services/device-control.service';
+import { apiTrafficShadowMiddleware } from './middleware/api-traffic-shadow.middleware';
+import { apiRateLimit } from './middleware/rate-limit.middleware';
 
 // Initialize Express
 const app = express();
@@ -99,8 +103,15 @@ app.use(compression());
 app.use(cookieParser());
 
 // 请求体解析
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+const captureRawBody = (req: express.Request, _res: express.Response, buffer: Buffer): void => {
+  if (buffer.length > 0) {
+    (req as any).rawBody = Buffer.from(buffer);
+  }
+};
+
+app.use(express.json({ limit: '25mb', verify: captureRawBody }));
+app.use(express.urlencoded({ extended: true, limit: '1mb', verify: captureRawBody }));
+app.use(express.text({ type: 'text/*', limit: '1mb', verify: captureRawBody }));
 
 // 请求日志
 app.use((req, res, next) => {
@@ -116,6 +127,7 @@ app.use((req, res, next) => {
 // ============================================
 
 const apiRouter = express.Router();
+apiRouter.use(apiRateLimit);
 
 // Health check
 apiRouter.get('/health', (req, res) => {
@@ -143,6 +155,7 @@ apiRouter.get('/health', (req, res) => {
 
 // 挂载路由
 if (runtime.apiEnabled) {
+  apiRouter.use(apiTrafficShadowMiddleware);
   apiRouter.use('/stats', statsRoutes);
   apiRouter.use('/config', configRoutes);
   apiRouter.use('/logs', logsRoutes);
@@ -202,8 +215,10 @@ async function start() {
       deviceGateway.setDashboardBroadcaster((event, data) => {
         agentGateway?.broadcastToDashboards(event, data);
       });
+      deviceControlService.setGatewayEmitter((deviceId, command, params) => deviceGateway!.sendCommand(deviceId, command, params));
 
       // 注入到路由
+      setAgentGateway(agentGateway);
       setAgentGateway(agentGateway);
       setAISystemAgentGateway(agentGateway);
       commandDispatcherService.setAgentGateway(agentGateway);
@@ -211,6 +226,7 @@ async function start() {
         getDevice: getDeviceById,
         executeCommand: executeDeviceCommandInternal
       });
+      setDeviceCommandTransport((deviceId, command, params) => deviceGateway!.sendCommand(deviceId, command, params));
       scannerTaskService.setBroadcaster((event, data) => {
         agentGateway?.broadcastToDashboards(event, data);
       });
@@ -224,12 +240,16 @@ async function start() {
       setAISystemAgentGateway(null as any);
       commandDispatcherService.setAgentGateway(null);
       commandDispatcherService.setDeviceAdapter(null);
+      setDeviceCommandTransport(null);
+      deviceControlService.setGatewayEmitter(null);
       scannerTaskService.setBroadcaster(() => undefined);
     }
 
     if (runtime.workerEnabled) {
       await scannerTaskService.startWorker();
     }
+
+    notificationDispatcherService.startWorker();
 
     if (runtime.schedulerEnabled) {
       postgresShadowStoreService.startResyncLoop();

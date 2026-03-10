@@ -8,6 +8,10 @@
 
 import { Request, Response, NextFunction } from 'express';
 import enhancedRateLimiter from '../security/enhanced-rate-limiter.service';
+import {
+  apiRateLimitEngineService,
+  hashRateLimitFingerprint
+} from '../services/api-rate-limit-engine.service';
 import logger from '../utils/logger';
 
 export interface RateLimitMiddlewareOptions {
@@ -43,26 +47,61 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // Generate identifier for rate limiting
       const identifier = keyGenerator
         ? keyGenerator(req)
         : getDefaultKey(req);
-
-      // Get IP address (with proxy support)
       const ip = getClientIP(req);
+      const sessionId = String((req as any).sessionID || req.headers['x-session-id'] || '');
+      const forwardedFor = String(req.headers['x-forwarded-for'] || '').trim();
+      const realIp = String(req.headers['x-real-ip'] || '').trim();
+      const endpoint = `${req.method}:${req.path}`;
+      const fingerprint = hashRateLimitFingerprint(buildRequestFingerprint(req, ip));
 
-      // Check rate limit with multi-dimensional validation
-      const result = await enhancedRateLimiter.checkRateLimit({
-        identifier,
-        ip,
-        endpoint: `${req.method}:${req.path}`,
-        config: {
+      if (isApiRateLimitEngineEnabled()) {
+        const engineResult = await apiRateLimitEngineService.check({
+          identifier,
+          ip,
+          endpoint,
           maxRequests,
           windowMs,
-        },
-      });
+          fingerprint,
+          forwardedFor,
+          realIp,
+          sessionId,
+          protocol: 'http'
+        });
 
-      // Detect IP spoofing
+        if (engineResult) {
+          res.setHeader('X-RateLimit-Limit', maxRequests.toString());
+          res.setHeader('X-RateLimit-Remaining', engineResult.remaining.toString());
+          res.setHeader('X-RateLimit-Reset', Math.floor(engineResult.resetAtMs / 1000).toString());
+
+          if (!engineResult.allowed) {
+            if (isRapidIpRotation(engineResult.reason)) {
+              logger.error('IP spoofing detected, blocking request', {
+                identifier,
+                ip,
+                reason: engineResult.reason,
+                riskFlags: engineResult.riskFlags
+              });
+
+              res.status(429).json({
+                error: 'backend.request_blocked_suspicious_activity_detected',
+                code: 'IP_SPOOFING_DETECTED',
+              });
+              return;
+            }
+
+            const retryAfter = Math.ceil((engineResult.resetAtMs - Date.now()) / 1000);
+            res.setHeader('Retry-After', Math.max(retryAfter, 1).toString());
+            return handler(req, res);
+          }
+
+          next();
+          return;
+        }
+      }
+
       const spoofingCheck = await enhancedRateLimiter.detectIPSpoofing({
         identifier,
         ip,
@@ -81,8 +120,16 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
         });
         return;
       }
+      const result = await enhancedRateLimiter.checkRateLimit({
+        identifier,
+        ip,
+        endpoint,
+        config: {
+          maxRequests,
+          windowMs,
+        },
+      });
 
-      // Set rate limit headers
       res.setHeader('X-RateLimit-Limit', result.limit.toString());
       res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
       res.setHeader('X-RateLimit-Reset', Math.floor(result.resetTime.getTime() / 1000).toString());
@@ -95,7 +142,6 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
           reason: result.reason,
         });
 
-        // Retry-After header (seconds)
         const retryAfter = Math.ceil((result.resetTime.getTime() - Date.now()) / 1000);
         res.setHeader('Retry-After', retryAfter.toString());
 
@@ -109,6 +155,14 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
       next();
     }
   };
+}
+
+function buildRequestFingerprint(req: Request, ip: string): string {
+  const forwardedFor = String(req.headers['x-forwarded-for'] || '').trim();
+  const realIp = String(req.headers['x-real-ip'] || '').trim();
+  const userAgent = String(req.headers['user-agent'] || '').trim();
+  const acceptLanguage = String(req.headers['accept-language'] || '').trim();
+  return [ip, forwardedFor, realIp, userAgent, acceptLanguage].join('|');
 }
 
 /**
@@ -150,6 +204,15 @@ function getClientIP(req: Request): string {
     req.connection?.remoteAddress ||
     'unknown'
   ).trim();
+}
+
+function isApiRateLimitEngineEnabled(): boolean {
+  const raw = String(process.env.API_RATE_LIMIT_ENGINE || '').trim().toLowerCase();
+  return raw === 'redis-lua' || raw === 'true' || raw === '1';
+}
+
+function isRapidIpRotation(reason?: string): boolean {
+  return String(reason || '').toLowerCase().includes('rapid ip rotation');
 }
 
 /**

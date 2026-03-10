@@ -18,7 +18,8 @@ import { Server, Socket } from 'socket.io';
 import crypto from 'crypto';
 import logger from '../utils/logger';
 import auditLogger from '../security/audit-logger.service';
-import redisService from '../security/redis.service';
+import { deviceControlService } from '../services/device-control.service';
+import { socketRateLimitService } from '../services/socket-rate-limit.service';
 import {
     registerDevice,
     updateDeviceStatus,
@@ -55,106 +56,55 @@ const MAX_REQUESTS_PER_WINDOW = 100;
 const DEVICE_RATE_LIMIT_WINDOW = 60000;
 const MAX_DEVICE_REQUESTS_PER_WINDOW = 100;
 
-interface RateLimitEntry {
-    count: number;
-    resetTime: number;
-}
+async function checkDeviceRateLimit(deviceId: string, socket: DeviceSocket): Promise<boolean> {
+    const result = await socketRateLimitService.check({
+        tenantId: 'global',
+        key: `device:${deviceId}`,
+        windowMs: DEVICE_RATE_LIMIT_WINDOW,
+        limit: MAX_DEVICE_REQUESTS_PER_WINDOW,
+        sourceIp: socket.handshake.address,
+        sessionId: socket.id,
+        headers: socket.handshake.headers as Record<string, any>,
+        protocol: 'ws-device'
+    });
 
-class RateLimiter {
-    private memoryFallback: Map<string, RateLimitEntry> = new Map();
-
-    async checkLimit(key: string, limit: number, window: number): Promise<boolean> {
-        const now = Date.now();
-        const resetTime = now + window;
-
-        try {
-            const current = await redisService.get(`ratelimit:device:${key}`);
-
-            if (current === null) {
-                await redisService.set(`ratelimit:device:${key}`, '1', window / 1000);
-                await redisService.set(`ratelimit:device:${key}:reset`, resetTime.toString(), window / 1000);
-                return true;
-            }
-
-            const count = parseInt(current, 10);
-
-            if (count >= limit) {
-                logger.warn(`[DeviceGateway] Rate limit exceeded for ${key}`, { count, limit });
-                return false;
-            }
-
-            await redisService.incr(`ratelimit:device:${key}`);
-            return true;
-        } catch (error) {
-            return this.checkLimitMemory(key, limit, window);
-        }
-    }
-
-    private checkLimitMemory(key: string, limit: number, window: number): boolean {
-        const now = Date.now();
-        const limits = this.memoryFallback.get(key);
-
-        if (!limits || now > limits.resetTime) {
-            this.memoryFallback.set(key, { count: 1, resetTime: now + window });
-            return true;
-        }
-
-        if (limits.count >= limit) {
-            logger.warn(`[DeviceGateway] Rate limit exceeded (memory) for ${key}`);
-            return false;
-        }
-
-        limits.count++;
-        return true;
-    }
-
-    cleanup(): void {
-        const now = Date.now();
-        for (const [key, limits] of this.memoryFallback.entries()) {
-            if (now > limits.resetTime) {
-                this.memoryFallback.delete(key);
-            }
-        }
-    }
-}
-
-const rateLimiter = new RateLimiter();
-
-const rateLimiterCleanupTimer = setInterval(() => rateLimiter.cleanup(), 5 * 60 * 1000);
-rateLimiterCleanupTimer.unref?.();
-
-async function checkDeviceRateLimit(deviceId: string): Promise<boolean> {
-    const withinLimit = await rateLimiter.checkLimit(
-        `device:${deviceId}`,
-        MAX_DEVICE_REQUESTS_PER_WINDOW,
-        DEVICE_RATE_LIMIT_WINDOW
-    );
-
-    if (!withinLimit) {
+    if (!result.allowed) {
         await auditLogger.log({
             eventType: 'rate_limit_exceeded',
             category: 'agent',
             severity: 'warning',
             actor: { type: 'agent', id: deviceId },
             action: 'rate_limit_check',
-            details: { limit: MAX_DEVICE_REQUESTS_PER_WINDOW, window: DEVICE_RATE_LIMIT_WINDOW },
+            details: {
+                limit: MAX_DEVICE_REQUESTS_PER_WINDOW,
+                window: DEVICE_RATE_LIMIT_WINDOW,
+                decisionSource: result.decisionSource,
+                riskFlags: result.riskFlags
+            },
             status: 'failure'
         });
     }
 
-    return withinLimit;
+    return result.allowed;
 }
 
-async function checkSocketRateLimit(socketId: string): Promise<boolean> {
-    return rateLimiter.checkLimit(
-        `socket:${socketId}`,
-        MAX_REQUESTS_PER_WINDOW,
-        RATE_LIMIT_WINDOW
-    );
+async function checkSocketRateLimit(socket: DeviceSocket): Promise<boolean> {
+    const result = await socketRateLimitService.check({
+        tenantId: 'global',
+        key: `socket:${socket.id}`,
+        windowMs: RATE_LIMIT_WINDOW,
+        limit: MAX_REQUESTS_PER_WINDOW,
+        sourceIp: socket.handshake.address,
+        sessionId: socket.id,
+        headers: socket.handshake.headers as Record<string, any>,
+        protocol: 'ws-device'
+    });
+    return result.allowed;
 }
 
 export class DeviceGateway {
     private io: Server;
+    private aliasServers: Server[] = [];
     private deviceSockets: Map<string, DeviceSocket> = new Map();
     private dashboardBroadcaster: ((event: string, data: any) => void) | null = null;
     private readonly commandSigningSecret: string;
@@ -172,21 +122,29 @@ export class DeviceGateway {
 
         const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
 
-        this.io = new Server(httpServer, {
-            path: '/ws/device',
+        this.io = this.createServer(httpServer, allowedOrigins, '/ws/device');
+        this.aliasServers = [this.createServer(httpServer, allowedOrigins, '/ws/status')];
+
+        this.setupEventHandlers(this.io);
+        for (const server of this.aliasServers) {
+            this.setupEventHandlers(server);
+        }
+        
+        this.cleanupInterval = setInterval(() => this.cleanupUsedNonces(), 5 * 60 * 1000);
+        this.cleanupInterval.unref?.();
+        
+        logger.info('[DeviceGateway] Initialized on /ws/device and /ws/status with restricted CORS, rate limiting, and command signing');
+    }
+
+    private createServer(httpServer: HttpServer, allowedOrigins: string[], path: string): Server {
+        return new Server(httpServer, {
+            path,
             cors: {
                 origin: allowedOrigins,
                 methods: ['GET', 'POST'],
                 credentials: true
             },
         });
-
-        this.setupEventHandlers();
-        
-        this.cleanupInterval = setInterval(() => this.cleanupUsedNonces(), 5 * 60 * 1000);
-        this.cleanupInterval.unref?.();
-        
-        logger.info('[DeviceGateway] Initialized on /ws/device with restricted CORS, rate limiting, and command signing');
     }
 
     private cleanupUsedNonces(): void {
@@ -248,8 +206,8 @@ export class DeviceGateway {
         this.io.emit(event, data);
     }
 
-    private setupEventHandlers() {
-        this.io.on('connection', (socket: DeviceSocket) => {
+    private setupEventHandlers(server: Server) {
+        server.on('connection', (socket: DeviceSocket) => {
             logger.info('[DeviceGateway] New device connection', { socketId: socket.id });
 
             socket.on('register', (data: any) => {
@@ -270,6 +228,14 @@ export class DeviceGateway {
 
             socket.on('unknown_error', (data: any) => {
                 this.handleUnknownError(socket, data);
+            });
+
+            socket.on('ota_status', (data: any) => {
+                this.handleOtaStatus(socket, data);
+            });
+
+            socket.on('physical_confirmation_ack', (data: any) => {
+                this.handlePhysicalConfirmationAck(socket, data);
             });
 
             socket.on('codebook_sync', () => {
@@ -293,7 +259,7 @@ export class DeviceGateway {
             api_key,
         } = data;
 
-        if (!(await checkSocketRateLimit(socket.id))) {
+        if (!(await checkSocketRateLimit(socket))) {
             socket.emit('register_error', { error: 'backend.rate_limit_exceeded' });
             socket.disconnect();
             return;
@@ -378,7 +344,7 @@ export class DeviceGateway {
     private async handleHeartbeat(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
 
-        if (!(await checkDeviceRateLimit(socket.deviceId))) {
+        if (!(await checkDeviceRateLimit(socket.deviceId, socket))) {
             socket.emit('heartbeat_error', { error: 'backend.rate_limit_exceeded' });
             return;
         }
@@ -403,13 +369,14 @@ export class DeviceGateway {
     private async handleData(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
 
-        if (!(await checkDeviceRateLimit(socket.deviceId))) {
+        if (!(await checkDeviceRateLimit(socket.deviceId, socket))) {
             return;
         }
 
-        const { payload, timestamp } = data;
+        const payload = data?.payload ?? data ?? {};
+        const timestamp = data?.timestamp;
 
-        let decodedPayload = payload;
+        let decodedPayload: any = payload;
         if (typeof payload === 'string') {
             try {
                 const parsed = JSON.parse(payload);
@@ -426,13 +393,19 @@ export class DeviceGateway {
         logger.info('[DeviceGateway] Data received', {
             deviceId: socket.deviceId,
             timestamp,
-            dataSize: JSON.stringify(decodedPayload).length,
+            dataSize: (() => {
+                try {
+                    return JSON.stringify(decodedPayload ?? {}).length;
+                } catch {
+                    return 0;
+                }
+            })(),
         });
 
-        addDeviceEvent(socket.deviceId, 'data', { payload: decodedPayload });
+        addDeviceEvent(socket.deviceId, 'data', { payload: decodedPayload ?? {} });
         this.emitToDashboard('device:data', {
             deviceId: socket.deviceId,
-            data: decodedPayload,
+            data: decodedPayload ?? {},
             timestamp: new Date().toISOString(),
         });
     }
@@ -440,7 +413,7 @@ export class DeviceGateway {
     private async handleAlert(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
 
-        if (!(await checkDeviceRateLimit(socket.deviceId))) {
+        if (!(await checkDeviceRateLimit(socket.deviceId, socket))) {
             return;
         }
 
@@ -496,6 +469,34 @@ export class DeviceGateway {
             deviceId: socket.deviceId,
             message,
             timestamp: timestamp || new Date().toISOString(),
+        });
+    }
+
+    private async handleOtaStatus(socket: DeviceSocket, data: any) {
+        if (!socket.deviceId) return;
+        addDeviceEvent(socket.deviceId, 'command', {
+            action: 'ota_status',
+            ...data
+        });
+        await deviceControlService.handleOtaStatus(socket.deviceId, data || {});
+        this.emitToDashboard('device:ota_status', {
+            deviceId: socket.deviceId,
+            ...data,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    private async handlePhysicalConfirmationAck(socket: DeviceSocket, data: any) {
+        if (!socket.deviceId) return;
+        addDeviceEvent(socket.deviceId, 'command', {
+            action: 'physical_confirmation_ack',
+            ...data
+        });
+        await deviceControlService.handlePhysicalConfirmationAck(socket.deviceId, data || {});
+        this.emitToDashboard('device:physical_confirmation', {
+            deviceId: socket.deviceId,
+            ...data,
+            timestamp: new Date().toISOString()
         });
     }
 
@@ -618,6 +619,9 @@ export class DeviceGateway {
     public close() {
         clearInterval(this.cleanupInterval);
         this.io.close();
+        for (const server of this.aliasServers) {
+            server.close();
+        }
         logger.info('[DeviceGateway] Closed');
     }
 }

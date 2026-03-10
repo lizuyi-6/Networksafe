@@ -1,4 +1,14 @@
-# AetherGuard - 智能服务器安全防御平台
+﻿# AetherGuard - 智能服务器安全防御平台
+
+## Validated Status (2026-03-08)
+
+This repository now includes a stronger capability baseline, but the validated status is mixed rather than "all strong claims passed".
+
+- Verified in the current workspace: Docker runtime, object-lock audit archive, notification outbox with retry tracking, persistent AI endpoint/config routing, `caddy` / `docker_compose` / `binary_agent` / `k8s_daemonset` bundle generation, Rust fastpath sidecar wiring, `/ws/device` plus `/ws/status` compatibility, OTA plus physical-confirmation smoke flow for `esp32-smoke`.
+- Current benchmark evidence in this workspace does not justify the historical strongest claims. Latest smoke benchmark recorded about `1329.79 QPS`, `p95 21ms`, `agent CPU 6.22%`, `agent memory 99.64MB`, and no local Ollama latency because `127.0.0.1:11434` was unavailable.
+- Physical ESP32 board flashing, external Linux binary install/rollback, and `100,000+ QPS` / `<10ms local AI` / `<2% CPU` / `<50MB` remain unvalidated here.
+
+See [`docs/reports/validated-capability-status-2026-03-08.md`](docs/reports/validated-capability-status-2026-03-08.md) for the current evidence-backed status.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Status: Production](https://img.shields.io/badge/Status-Production-green.svg)]()
@@ -148,3 +158,4 @@ docker compose up -d --build
 本项目采用 [MIT 许可证](LICENSE) 开源。
 
 > 杭州视界奇点科技有限公司 · Aether Studio 出品
+

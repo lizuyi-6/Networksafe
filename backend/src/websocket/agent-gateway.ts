@@ -18,7 +18,6 @@ import { verifyTokenAsync, AuthenticatedRequest } from '../middleware/auth.middl
 import agentAuthService from '../security/agent-auth.service';
 import commandSigningService from '../security/command-signing.service';
 import auditLogger from '../security/audit-logger.service';
-import redisService from '../security/redis.service';
 import { getTrafficStats, getAgentSystem } from '../api/routes/ai-system.routes';
 import { TrafficRequest } from '../ai-agents';
 import {
@@ -28,6 +27,7 @@ import {
 } from '../testing/test-runtime-adapter';
 import { v4 as uuidv4 } from 'uuid';
 import { commandDispatcherService } from '../services/command-dispatcher.service';
+import { socketRateLimitService } from '../services/socket-rate-limit.service';
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
@@ -35,130 +35,58 @@ const MAX_REQUESTS_PER_WINDOW = 100;
 const USER_RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_USER_REQUESTS_PER_WINDOW = 150; // Slightly higher than per-socket limit
 
-// In-memory rate limit stores (fallback when Redis is unavailable)
-const rateLimits = new Map<string, { count: number; resetTime: number }>();
-const userRateLimits = new Map<string, { count: number; resetTime: number }>();
-
-/**
- * Redis-backed rate limiter with memory fallback
- * SECURITY FIX: Persistent rate limiting that survives server restarts
- */
-class RateLimiter {
-  private memoryFallback: Map<string, { count: number; resetTime: number }> = new Map();
-
-  /**
-   * Check and update rate limit for a key
-   * @returns true if within limit, false if exceeded
-   */
-  async checkLimit(key: string, limit: number, window: number): Promise<boolean> {
-    const now = Date.now();
-    const resetTime = now + window;
-
-    try {
-      // Try Redis first
-      const current = await redisService.get(`ratelimit:${key}`);
-
-      if (current === null) {
-        // First request or expired
-        await redisService.set(`ratelimit:${key}`, '1', window / 1000);
-        await redisService.set(`ratelimit:${key}:reset`, resetTime.toString(), window / 1000);
-        return true;
-      }
-
-      const count = parseInt(current, 10);
-
-      if (count >= limit) {
-        logger.warn(`Rate limit exceeded for ${key}`, { count, limit });
-        return false;
-      }
-
-      // Increment counter
-      await redisService.incr(`ratelimit:${key}`);
-      return true;
-    } catch (error) {
-      // Fallback to memory if Redis fails
-      logger.warn('Redis rate limit failed, using memory fallback', { error });
-      return this.checkLimitMemory(key, limit, window);
-    }
-  }
-
-  /**
-   * Memory fallback for rate limiting
-   */
-  private checkLimitMemory(key: string, limit: number, window: number): boolean {
-    const now = Date.now();
-    const limits = this.memoryFallback.get(key);
-
-    if (!limits || now > limits.resetTime) {
-      this.memoryFallback.set(key, { count: 1, resetTime: now + window });
-      return true;
-    }
-
-    if (limits.count >= limit) {
-      logger.warn(`Rate limit exceeded (memory) for ${key}`);
-      return false;
-    }
-
-    limits.count++;
-    return true;
-  }
-
-  /**
-   * Clean up expired entries from memory fallback
-   */
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, limits] of this.memoryFallback.entries()) {
-      if (now > limits.resetTime) {
-        this.memoryFallback.delete(key);
-      }
-    }
-  }
-}
-
-// Global rate limiter instance
-const rateLimiter = new RateLimiter();
-
-// Clean up memory fallback every 5 minutes
-const rateLimiterCleanupTimer = setInterval(() => rateLimiter.cleanup(), 5 * 60 * 1000);
-rateLimiterCleanupTimer.unref?.();
-
 /**
  * SECURITY FIX CVE-2026-301: User-level rate limiting
  * Prevents bypass by opening multiple connections
  * Now uses Redis-backed rate limiter
  */
-async function checkUserRateLimit(userId: string): Promise<boolean> {
-  const withinLimit = await rateLimiter.checkLimit(
-    `user:${userId}`,
-    MAX_USER_REQUESTS_PER_WINDOW,
-    USER_RATE_LIMIT_WINDOW
-  );
+async function checkUserRateLimit(userId: string, socket: Socket): Promise<boolean> {
+  const result = await socketRateLimitService.check({
+    tenantId: 'global',
+    key: `user:${userId}`,
+    windowMs: USER_RATE_LIMIT_WINDOW,
+    limit: MAX_USER_REQUESTS_PER_WINDOW,
+    sourceIp: socket.handshake.address,
+    sessionId: socket.id,
+    headers: socket.handshake.headers as Record<string, any>,
+    protocol: 'ws-agent'
+  });
 
-  if (!withinLimit) {
+  if (!result.allowed) {
     auditLogger.log({
       eventType: 'rate_limit_exceeded',
       category: 'auth',
       severity: 'warning',
       actor: { type: 'user', id: userId },
       action: 'rate_limit_check',
-      details: { limit: MAX_USER_REQUESTS_PER_WINDOW, window: USER_RATE_LIMIT_WINDOW },
+      details: {
+        limit: MAX_USER_REQUESTS_PER_WINDOW,
+        window: USER_RATE_LIMIT_WINDOW,
+        decisionSource: result.decisionSource,
+        riskFlags: result.riskFlags
+      },
       status: 'failure'
     });
   }
 
-  return withinLimit;
+  return result.allowed;
 }
 
 /**
  * Socket-level rate limiting (for individual connections)
  */
-async function checkSocketRateLimit(socketId: string): Promise<boolean> {
-  return rateLimiter.checkLimit(
-    `socket:${socketId}`,
-    MAX_REQUESTS_PER_WINDOW,
-    RATE_LIMIT_WINDOW
-  );
+async function checkSocketRateLimit(socket: Socket): Promise<boolean> {
+  const result = await socketRateLimitService.check({
+    tenantId: 'global',
+    key: `socket:${socket.id}`,
+    windowMs: RATE_LIMIT_WINDOW,
+    limit: MAX_REQUESTS_PER_WINDOW,
+    sourceIp: socket.handshake.address,
+    sessionId: socket.id,
+    headers: socket.handshake.headers as Record<string, any>,
+    protocol: 'ws-agent'
+  });
+  return result.allowed;
 }
 
 /**
@@ -219,49 +147,6 @@ function containsShellMetacharacters(input: string): boolean {
   return dangerousChars.test(input);
 }
 
-/**
- * SECURITY FIX: Rate limiting check
- */
-function checkRateLimit(clientId: string): boolean {
-  const now = Date.now();
-  const limits = rateLimits.get(clientId);
-
-  if (!limits || now > limits.resetTime) {
-    rateLimits.set(clientId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-
-  if (limits.count >= MAX_REQUESTS_PER_WINDOW) {
-    logger.warn(`Rate limit exceeded for ${clientId}`);
-    return false;
-  }
-
-  limits.count++;
-  return true;
-}
-
-/**
- * SECURITY FIX CVE-2026-301: Cleanup expired rate limit entries
- * Prevents memory leaks from accumulated stale entries
- */
-function cleanupExpiredRateLimits(): void {
-  const now = Date.now();
-
-  // Clean socket-level rate limits
-  for (const [clientId, limits] of rateLimits.entries()) {
-    if (now > limits.resetTime) {
-      rateLimits.delete(clientId);
-    }
-  }
-
-  // Clean user-level rate limits
-  for (const [userId, limits] of userRateLimits.entries()) {
-    if (now > limits.resetTime) {
-      userRateLimits.delete(userId);
-    }
-  }
-}
-
 interface ConnectedAgent {
   socketId: string;
   agentId: string;
@@ -280,7 +165,6 @@ export class AgentGateway {
   private agents: Map<string, ConnectedAgent> = new Map();
   private dashboardClients: Map<string, { userId: string; socketId: string }> = new Map();
   private testOnlineCounter = 0;
-  private cleanupInterval: NodeJS.Timeout;
 
   /**
    * Broadcast audit log to dashboard clients
@@ -301,10 +185,6 @@ export class AgentGateway {
 
     this.setupAuthentication();
     this.setupEventHandlers();
-
-    // SECURITY FIX CVE-2026-301: Periodic cleanup of expired rate limit entries
-    this.cleanupInterval = setInterval(() => cleanupExpiredRateLimits(), 5 * 60 * 1000); // Every 5 minutes
-    this.cleanupInterval.unref?.();
 
     logger.info('Agent Gateway initialized with secure authentication');
   }
@@ -713,12 +593,12 @@ export class AgentGateway {
     // Scan request - SECURITY FIX CVE-2026-301: Check both user and socket rate limits
     socket.on('request:scan', async (data: { agentId: string }) => {
       // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!(await checkUserRateLimit(user.userId))) {
+      if (!(await checkUserRateLimit(user.userId, socket))) {
         socket.emit('error', { message: 'backend.user_rate_limit_exceeded' });
         return;
       }
 
-      if (!(await checkSocketRateLimit(socket.id))) {
+      if (!(await checkSocketRateLimit(socket))) {
         socket.emit('error', { message: 'backend.connection_rate_limit_exceeded' });
         return;
       }
@@ -736,12 +616,12 @@ export class AgentGateway {
     // Block IP request - SECURITY FIX CVE-2026-301: Validate and audit with user-level rate limiting
     socket.on('request:block_ip', async (data: { agentId: string; ip: string }) => {
       // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!(await checkUserRateLimit(user.userId))) {
+      if (!(await checkUserRateLimit(user.userId, socket))) {
         socket.emit('error', { message: 'backend.user_rate_limit_exceeded' });
         return;
       }
 
-      if (!(await checkSocketRateLimit(socket.id))) {
+      if (!(await checkSocketRateLimit(socket))) {
         socket.emit('error', { message: 'backend.connection_rate_limit_exceeded' });
         return;
       }
@@ -789,12 +669,12 @@ export class AgentGateway {
     // Unblock IP request - SECURITY FIX CVE-2026-301: Validate and audit with user-level rate limiting
     socket.on('request:unblock_ip', async (data: { agentId: string; ip: string }) => {
       // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!(await checkUserRateLimit(user.userId))) {
+      if (!(await checkUserRateLimit(user.userId, socket))) {
         socket.emit('error', { message: 'backend.user_rate_limit_exceeded' });
         return;
       }
 
-      if (!(await checkSocketRateLimit(socket.id))) {
+      if (!(await checkSocketRateLimit(socket))) {
         socket.emit('error', { message: 'backend.connection_rate_limit_exceeded' });
         return;
       }
@@ -1045,7 +925,6 @@ export class AgentGateway {
    * Close gateway
    */
   close(): void {
-    clearInterval(this.cleanupInterval);
     this.io.close();
     logger.info('Agent Gateway closed');
   }

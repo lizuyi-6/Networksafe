@@ -4,6 +4,7 @@
     "description": "E2E tests for FluxGuard Pro",
     "scripts": {
         "test": "playwright test",
+        "test:release": "playwright test tests/smoke.spec.ts tests/dev-login.spec.ts tests/site-walkthrough.spec.ts tests/visual-smoke.spec.ts --project=chromium",
         "test:ui": "playwright test --ui",
         "test:debug": "playwright test --debug",
         "codegen": "playwright codegen"

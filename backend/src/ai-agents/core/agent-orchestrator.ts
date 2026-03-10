@@ -80,6 +80,7 @@ export class AgentOrchestrator {
     private createAgentConfigs(): Record<AgentRole, AgentConfig> {
         const baseConfig = {
             timeout: this.config.timeouts.analysis,
+            modelTimeout: this.config.timeouts.modelResponse,
             maxRetries: 3
         };
 

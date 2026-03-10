@@ -3,3 +3,4 @@
  */
 
 export { AgentGateway } from './agent-gateway';
+export { DeviceGateway } from './device-gateway';

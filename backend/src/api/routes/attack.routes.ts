@@ -6,6 +6,7 @@ import { isAttackSimulatorEnabled } from '../../config/app-mode';
 import { getAgentSystem, getTrafficStats, getAgentGateway } from './ai-system.routes';
 import { securityOperationsService } from '../../services/security-operations.service';
 import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { PLATFORM_API_CONFIG } from '../../utils/model-access';
 
 const router = Router();
 router.use(authenticate);
@@ -77,6 +78,7 @@ router.post('/simulate', async (req: Request, res: Response) => {
         detected: boolean;
         responseTime: number;
         decision?: any;
+        aiAnalysis?: Record<string, any>;
     }
     const results: AttackResult[] = [];
 
@@ -94,6 +96,19 @@ router.post('/simulate', async (req: Request, res: Response) => {
         let detected = false;
         let responseTime = Math.floor(Math.random() * 100) + 10;
         let decision: any = null;
+        let aiAnalysis: Record<string, any> = {
+            enabled: Boolean(multiAgentSystem),
+            usedAI: false,
+            engine: 'multi_agent',
+            route: 'unknown',
+            provider: null,
+            model: null,
+            modelRouterDelta: {
+                total: 0,
+                local: 0,
+                cloud: 0
+            }
+        };
 
         trafficStats.packetsProcessed++;
         trafficStats.packetsInspected++;
@@ -142,6 +157,8 @@ router.post('/simulate', async (req: Request, res: Response) => {
 
         if (multiAgentSystem && multiAgentSystem.isInitialized()) {
             try {
+                const modelRouterStatsBefore = multiAgentSystem.getStats().modelRouter;
+                const multiAgentConfig = multiAgentSystem.getConfig();
                 const trafficRequest: TrafficRequest = {
                     id: uuidv4(),
                     method: 'POST',
@@ -180,6 +197,41 @@ router.post('/simulate', async (req: Request, res: Response) => {
                 });
 
                 decision = await multiAgentSystem.analyze(trafficRequest);
+                const modelRouterStatsAfter = multiAgentSystem.getStats().modelRouter;
+                const statsDelta = {
+                    total: Math.max(0, modelRouterStatsAfter.total - modelRouterStatsBefore.total),
+                    local: Math.max(0, modelRouterStatsAfter.local - modelRouterStatsBefore.local),
+                    cloud: Math.max(0, modelRouterStatsAfter.cloud - modelRouterStatsBefore.cloud)
+                };
+                const routeUsed = statsDelta.cloud > 0 && statsDelta.local > 0
+                    ? 'hybrid'
+                    : statsDelta.cloud > 0
+                        ? 'cloud'
+                        : statsDelta.local > 0
+                            ? 'local'
+                            : 'unknown';
+
+                aiAnalysis = {
+                    enabled: true,
+                    usedAI: statsDelta.total > 0,
+                    engine: 'multi_agent',
+                    route: routeUsed,
+                    provider: routeUsed === 'cloud'
+                        ? PLATFORM_API_CONFIG.providerId
+                        : routeUsed === 'hybrid'
+                            ? `local+${PLATFORM_API_CONFIG.providerId}`
+                        : routeUsed === 'local'
+                            ? 'local-model'
+                            : null,
+                    model: routeUsed === 'cloud'
+                        ? multiAgentConfig.models.cloud.model
+                        : routeUsed === 'hybrid'
+                            ? `${multiAgentConfig.models.local.model}+${multiAgentConfig.models.cloud.model}`
+                        : routeUsed === 'local'
+                            ? multiAgentConfig.models.local.model
+                            : null,
+                    modelRouterDelta: statsDelta
+                };
 
                 blocked = decision.verdict === 'block';
                 detected = decision.verdict !== 'allow';
@@ -198,6 +250,14 @@ router.post('/simulate', async (req: Request, res: Response) => {
 
             } catch (error: any) {
                 logger.warn(`Attack simulation failed for ${attack.id}`, { error: error.message });
+                aiAnalysis = {
+                    ...aiAnalysis,
+                    enabled: true,
+                    usedAI: false,
+                    route: 'error',
+                    provider: PLATFORM_API_CONFIG.providerId,
+                    error: error.message
+                };
                 broadcastEvent('agent:analysis', {
                     attackId: attack.id,
                     agent: 'system',
@@ -251,7 +311,8 @@ router.post('/simulate', async (req: Request, res: Response) => {
                 attackName: attack.name,
                 category: attack.category,
                 severity: attack.severity,
-                decision
+                decision,
+                aiAnalysis
             }
         });
 
@@ -276,7 +337,8 @@ router.post('/simulate', async (req: Request, res: Response) => {
             result: {
                 simulationId,
                 decision,
-                payload: attack.payload
+                payload: attack.payload,
+                aiAnalysis
             }
         });
 
@@ -297,7 +359,8 @@ router.post('/simulate', async (req: Request, res: Response) => {
                     attackId: attack.id,
                     simulationId,
                     responseTime,
-                    decision
+                    decision,
+                    aiAnalysis
                 },
                 remediation: {
                     title: 'Review policy coverage for this attack path',
@@ -317,7 +380,8 @@ router.post('/simulate', async (req: Request, res: Response) => {
             blocked,
             detected,
             responseTime,
-            decision
+            decision,
+            aiAnalysis
         };
         results.push(result);
 
@@ -358,7 +422,13 @@ router.post('/simulate', async (req: Request, res: Response) => {
             : '0%',
         blockRate: results.length > 0
             ? (results.filter(r => r.blocked).length / results.length * 100).toFixed(1) + '%'
-            : '0%'
+            : '0%',
+        aiAnalysis: {
+            aiBackedCount: results.filter((item) => item.aiAnalysis?.usedAI).length,
+            cloudCount: results.filter((item) => item.aiAnalysis?.route === 'cloud').length,
+            localCount: results.filter((item) => item.aiAnalysis?.route === 'local').length,
+            errorCount: results.filter((item) => item.aiAnalysis?.route === 'error').length
+        }
     };
 
     broadcastEvent('attack:simulation:complete', report);
@@ -392,7 +462,8 @@ router.get('/history', async (req: AuthenticatedRequest, res: Response) => {
                 blocked: run.blocked,
                 detected: run.detected,
                 responseTime: run.responseTime,
-                verdict: run.verdict
+                verdict: run.verdict,
+                aiAnalysis: run.result?.aiAnalysis
             }
         ],
         startTime: run.startedAt,

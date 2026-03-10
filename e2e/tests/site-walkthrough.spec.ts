@@ -1,6 +1,7 @@
 import { test } from '@playwright/test';
 import {
     assertNoDemoAuxiliaryCopy,
+    assertFooterLegalLinks,
     assertRenderedPage,
     createIssueMonitor,
     ensureDemoMode,
@@ -13,23 +14,32 @@ import {
 test.describe('Site walkthrough', () => {
     test('browses public pages, protected pages, and demo pages without display issues', async ({ page, baseURL }) => {
         test.setTimeout(240000);
+        const resolvedBaseUrl = baseURL || 'http://127.0.0.1:8080';
+        const monitor = createIssueMonitor(page, resolvedBaseUrl);
 
         const publicPages = [
             { route: '/', selector: 'body' },
             { route: '/login', selector: 'form' },
             { route: '/privacy', selector: 'body' },
+            { route: '/terms', selector: 'main' },
         ];
 
         for (const publicPage of publicPages) {
+            const snapshot = monitor.snapshot();
             await visitPublicPage(page, publicPage.route, publicPage.selector);
+            if (publicPage.route === '/') {
+                await assertFooterLegalLinks(page);
+            }
+            await monitor.assertNoNewIssues(snapshot, publicPage.route);
         }
 
-        await loginAsAdmin(page);
+        {
+            const snapshot = monitor.snapshot();
+            await loginAsAdmin(page);
+            await monitor.assertNoNewIssues(snapshot, 'login');
+        }
         await ensureDemoMode(page, false);
         await assertRenderedPage(page, '/dashboard');
-
-        const resolvedBaseUrl = baseURL || 'http://127.0.0.1:8080';
-        const monitor = createIssueMonitor(page, resolvedBaseUrl);
 
         const protectedRoutes = [
             { route: '/dashboard', label: 'dashboard' },

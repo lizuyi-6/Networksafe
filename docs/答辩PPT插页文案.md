@@ -1,5 +1,7 @@
 # AetherGuard 项目答辩 PPT 插页文案
 
+> Validation Note (2026-03-08): When preparing the defense deck, use `docs/reports/validated-capability-status-2026-03-08.md` as the source of truth for current capability claims. The strongest historical claims around `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, and fully proven physical hardware rollout should not be presented as completed in the current workspace.
+
 以下文案按 `P1` 到 `P15` 顺序编排，可直接拆分插入答辩 PPT。每页均采用“1 段主文案 + 3-5 个要点”的中密度结构，便于与架构图、流程图、对比图或数据图配合排版。
 
 ## P1 产品介绍

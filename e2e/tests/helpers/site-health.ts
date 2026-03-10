@@ -25,8 +25,8 @@ type Credentials = {
 
 type DevPreset = 'admin' | 'starter' | 'pro' | 'ultra';
 
-const DEFAULT_EMAIL = 'admin@aetherguard.local';
-const DEFAULT_PASSWORD = 'admin123456789012345';
+const DEFAULT_EMAIL = 'dev-admin@aetherguard.local';
+const DEFAULT_PASSWORD = 'DevAdmin!2026';
 const DEMO_AUXILIARY_TEXT = /Demo Data|demo data|演示数据|Data Source|demonstration data|本地沙箱写入/i;
 const DEV_PRESET_CREDENTIALS: Record<DevPreset, Credentials> = {
     admin: {
@@ -121,7 +121,8 @@ export const createIssueMonitor = (page: Page, baseUrl: string) => {
         const url = response.url();
         if (!url.startsWith(origin)) return;
         const pathname = new URL(url).pathname;
-        if (!pathname.startsWith('/api/')) return;
+        const resourceType = response.request().resourceType();
+        if (!pathname.startsWith('/api/') && !pathname.startsWith('/socket.io/') && resourceType !== 'document') return;
         if (response.status() < 400) return;
         issues.responseErrors.push(`${response.request().method()} ${pathname} -> ${response.status()}`);
     });
@@ -130,7 +131,8 @@ export const createIssueMonitor = (page: Page, baseUrl: string) => {
         const url = request.url();
         if (!url.startsWith(origin)) return;
         const pathname = new URL(url).pathname;
-        if (!pathname.startsWith('/api/')) return;
+        const resourceType = request.resourceType();
+        if (!pathname.startsWith('/api/') && !pathname.startsWith('/socket.io/') && resourceType !== 'document') return;
 
         const failureText = request.failure()?.errorText || 'request failed';
         if (/ERR_ABORTED|NS_BINDING_ABORTED|Request was cancelled/i.test(failureText)) return;
@@ -198,6 +200,16 @@ export const assertRenderedPage = async (page: Page, label: string, selector: st
 export const visitPublicPage = async (page: Page, route: string, selector: string) => {
     await page.goto(route);
     await assertRenderedPage(page, route, selector);
+};
+
+export const assertFooterLegalLinks = async (page: Page) => {
+    const privacyLink = page.locator('footer a[href="/privacy"]').first();
+    const termsLink = page.locator('footer a[href="/terms"]').first();
+
+    await expect(privacyLink, 'footer should expose privacy policy').toBeVisible();
+    await expect(termsLink, 'footer should expose terms of service').toBeVisible();
+    await expect(privacyLink).not.toHaveAttribute('href', '#');
+    await expect(termsLink).not.toHaveAttribute('href', '#');
 };
 
 export const visitSidebarPage = async (page: Page, route: string, label: string) => {

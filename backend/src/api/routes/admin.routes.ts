@@ -8,6 +8,10 @@ import crypto from 'crypto';
 import auditLogger from '../../security/audit-logger.service';
 import { tenantOversightService } from '../../services/tenant-oversight.service';
 import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
+import { auditSegmentService } from '../../services/audit-segment.service';
+import { benchmarkService } from '../../services/benchmark.service';
+import { deviceControlService } from '../../services/device-control.service';
+import { getDeviceById } from './devices.routes';
 
 const router = Router();
 
@@ -207,6 +211,187 @@ router.get('/audit/verify/:logId', authenticate, requireRole('admin'), async (re
         res.json({ success: true, valid });
     } catch (error: any) {
         res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_verify_audit_log' });
+    }
+});
+
+router.get('/audit/segments', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const tenantId = req.query.tenantId ? String(req.query.tenantId) : undefined;
+        const limit = req.query.limit ? Number(req.query.limit) : 50;
+        const segments = await auditSegmentService.listSegments({ tenantId, limit });
+        await logAdminOversight(req, 'oversight_view_audit_segments', {
+            tenantId: tenantId || null,
+            resultCount: segments.length,
+            limit
+        }, tenantId);
+        res.json({ success: true, segments });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_get_audit_segments' });
+    }
+});
+
+router.post('/audit/archive', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const tenantId = req.body?.tenantId ? String(req.body.tenantId) : undefined;
+        const before = req.body?.before ? String(req.body.before) : undefined;
+        const maxSegments = req.body?.maxSegments ? Number(req.body.maxSegments) : undefined;
+        const maxLogsPerSegment = req.body?.maxLogsPerSegment ? Number(req.body.maxLogsPerSegment) : undefined;
+        const result = await auditSegmentService.archivePending({
+            tenantId,
+            before,
+            maxSegments,
+            maxLogsPerSegment
+        });
+        await logAdminOversight(req, 'oversight_archive_audit_segments', {
+            tenantId: tenantId || null,
+            before: before || null,
+            archivedCount: result.archivedCount,
+            maxSegments: maxSegments || null,
+            maxLogsPerSegment: maxLogsPerSegment || null
+        }, tenantId);
+        res.json({ success: true, data: result });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_archive_audit_segments' });
+    }
+});
+
+router.post('/audit/segments/:segmentId/verify', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const result = await auditSegmentService.verifySegment(req.params.segmentId);
+        await logAdminOversight(req, 'oversight_verify_audit_segment', {
+            segmentId: req.params.segmentId,
+            valid: result.valid,
+            chainValid: result.chainValid,
+            contentValid: result.contentValid,
+            linkageValid: result.linkageValid,
+            objectLockValid: result.objectLockValid
+        }, result.segment?.tenantId);
+        res.json({ success: true, data: result });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_verify_audit_segment' });
+    }
+});
+
+router.post('/benchmarks/run', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const tenantId = req.user?.tenantId || 'global';
+        const scenario = req.body?.scenario ? String(req.body.scenario) : 'full-suite';
+        const profile = req.body?.profile ? String(req.body.profile) : 'dev-smoke';
+        const run = await benchmarkService.runScenario(tenantId, scenario, profile);
+        await logAdminOversight(req, 'oversight_run_benchmark', {
+            benchmarkId: run.id,
+            scenario: run.scenario,
+            profile: run.profile
+        }, tenantId);
+        res.json({ success: true, run });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_run_benchmark' });
+    }
+});
+
+router.get('/benchmarks/history', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const tenantId = req.user?.tenantId || 'global';
+        const limit = req.query.limit ? Number(req.query.limit) : 20;
+        const runs = await benchmarkService.listHistory(tenantId, limit);
+        res.json({ success: true, runs });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_list_benchmarks' });
+    }
+});
+
+router.get('/benchmarks/:id/report', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const tenantId = req.user?.tenantId || 'global';
+        const run = await benchmarkService.getRun(tenantId, req.params.id);
+        if (!run) {
+            return res.status(404).json({ success: false, error: 'backend.benchmark_not_found' });
+        }
+        res.json({ success: true, run });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_get_benchmark_report' });
+    }
+});
+
+router.post('/devices/firmware', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const tenantId = req.user?.tenantId || 'global';
+        const fileName = String(req.body?.fileName || '').trim();
+        const version = String(req.body?.version || '').trim();
+        const channel = String(req.body?.channel || 'stable').trim();
+        const contentBase64 = String(req.body?.contentBase64 || '').trim();
+        const notes = req.body?.notes ? String(req.body.notes) : undefined;
+
+        if (!fileName || !version || !contentBase64) {
+            return res.status(400).json({ success: false, error: 'backend.invalid_firmware_payload' });
+        }
+
+        const firmware = await deviceControlService.uploadFirmware({
+            tenantId,
+            fileName,
+            version,
+            channel,
+            contentBase64,
+            notes,
+            actorId: req.user?.userId || 'unknown',
+            actorEmail: req.user?.email,
+            actorIp: req.ip
+        });
+
+        res.json({ success: true, firmware });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_upload_firmware' });
+    }
+});
+
+router.post('/devices/:id/ota', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const device = getDeviceById(req.params.id);
+        if (!device) {
+            return res.status(404).json({ success: false, error: 'backend.device_not_found' });
+        }
+
+        const firmwareId = String(req.body?.firmwareId || '').trim();
+        if (!firmwareId) {
+            return res.status(400).json({ success: false, error: 'backend.firmware_id_required' });
+        }
+
+        const job = await deviceControlService.triggerOta({
+            tenantId: req.user?.tenantId || 'global',
+            deviceId: req.params.id,
+            firmwareId,
+            actorId: req.user?.userId || 'unknown',
+            actorEmail: req.user?.email,
+            actorIp: req.ip
+        });
+
+        res.json({ success: true, job });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_trigger_ota' });
+    }
+});
+
+router.post('/devices/:id/confirm-required-action', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const device = getDeviceById(req.params.id);
+        if (!device) {
+            return res.status(404).json({ success: false, error: 'backend.device_not_found' });
+        }
+
+        const commandType = String(req.body?.commandType || 'reboot').trim();
+        const session = await deviceControlService.createPhysicalConfirmation({
+            tenantId: req.user?.tenantId || 'global',
+            deviceId: req.params.id,
+            commandType,
+            payload: req.body?.payload && typeof req.body.payload === 'object' ? req.body.payload : {},
+            actorId: req.user?.userId || 'unknown',
+            actorEmail: req.user?.email,
+            actorIp: req.ip
+        });
+
+        res.json({ success: true, session });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_create_confirmation_session' });
     }
 });
 

@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getCurrentDemoUserKey, getStoredDemoMode, setRuntimeDemoMode, setStoredDemoMode } from '../config/demo-mode';
-import { fetchSystemMode } from '../services/api';
+import { fetchSystemMode, switchSystemMode } from '../services/api';
 
 /**
  * Data source type
@@ -26,6 +27,7 @@ interface DemoContextType {
 const DemoContext = createContext<DemoContextType | undefined>(undefined);
 
 export const DemoProvider = ({ children }: { children: ReactNode }) => {
+    const location = useLocation();
     const [isDemoMode, setIsDemoMode] = useState<boolean>(() => getStoredDemoMode());
     const [isSwitchingDemoMode, setIsSwitchingDemoMode] = useState<boolean>(false);
     const [attackSimEnabled, setAttackSimEnabled] = useState<boolean>(false);
@@ -66,8 +68,20 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         syncLocalDemoState();
         setIsSwitchingDemoMode(false);
+        const isPublicRoute =
+            location.pathname === '/' ||
+            location.pathname === '/login' ||
+            location.pathname === '/privacy' ||
+            location.pathname === '/terms';
+
+        if (isPublicRoute) {
+            setAttackSimEnabled(false);
+            setModeResolved(true);
+            return;
+        }
+
         void refreshDemoState();
-    }, []);
+    }, [location.pathname]);
 
     const toggleDemoMode = () => {
         if (isSwitchingDemoMode) return;
@@ -80,7 +94,16 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
         setDataSource('api');
         setModeResolved(true);
 
-        void Promise.resolve().finally(() => {
+        void Promise.resolve()
+            .then(async () => {
+                try {
+                    await switchSystemMode(nextDemoMode ? 'demo' : 'production');
+                    await refreshDemoState();
+                } catch {
+                    // Keep the local toggle working even when the backend mode switch is unavailable.
+                }
+            })
+            .finally(() => {
                 setIsSwitchingDemoMode(false);
             });
     };

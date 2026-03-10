@@ -130,11 +130,13 @@ export class EnhancedRateLimiter {
     }
 
     try {
-      const current = await redisService.get(key);
+      const client = redisService.getClient();
+      const current = await client.get(key);
 
       if (current === null) {
-        await redisService.set(key, '1', windowMs / 1000);
-        await redisService.set(`${key}:reset`, resetTime.toString(), windowMs / 1000);
+        const ttlSeconds = Math.max(Math.ceil(windowMs / 1000), 1);
+        await client.setex(key, ttlSeconds, '1');
+        await client.setex(`${key}:reset`, ttlSeconds, resetTime.toString());
 
         return {
           allowed: true,
@@ -155,7 +157,7 @@ export class EnhancedRateLimiter {
         };
       }
 
-      const newCount = await redisService.incr(key);
+      const newCount = await client.incr(key);
       return {
         allowed: true,
         limit,

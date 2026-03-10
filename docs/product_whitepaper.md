@@ -1,10 +1,12 @@
-# FluxGuard Pro 产品白皮书
+﻿# FluxGuard Pro 产品白皮书
 ## 下一代智能服务器免疫防御系统
 
 **发布日期**: 2026年1月
 **面向对象**: 企业决策者、IT 安全主管、系统架构师
 
 ---
+
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
 
 ## 1. 产品愿景
 
@@ -13,6 +15,8 @@
 **FluxGuard Pro** (前身为 API Security Middleware) 正是为解决这一痛点而生。我们重新定义了服务器安全——**从 "被动拦截" 进化为 "主动免疫"**。通过独创的 **"Agent-Inside"** 技术，我们的防御引擎直接驻留在业务服务器内部，结合本地化 AI 分析与 ESP32 硬件运维工具，构建了一套从代码层到物理层的全方位防御体系。
 
 ---
+
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
 
 ## 2. 核心价值主张
 
@@ -24,6 +28,8 @@
 | **规则死板** | **AI 动态分析** | 自适应未知的 0-Day 攻击模式 |
 
 ---
+
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
 
 ## 3. 十大核心功能模块详解
 
@@ -71,6 +77,8 @@ FluxGuard 独有的硬件创新。通过 **ESP32 Deployment Dongle**，我们实
 
 ---
 
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
+
 ## 4. 硬件创新：ESP32 Deployment Dongle
 
 FluxGuard Pro 不仅仅是软件。我们引入了标准化的硬件运维工具，将复杂的服务器初始化工作封装在一个 U 盘大小的设备中。
@@ -80,6 +88,8 @@ FluxGuard Pro 不仅仅是软件。我们引入了标准化的硬件运维工具
 - **离线能力**: 内置 Codebook 压缩协议，支持在弱网环境下高效传输指令。
 
 ---
+
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
 
 ## 5. 技术规格
 
@@ -93,9 +103,12 @@ FluxGuard Pro 不仅仅是软件。我们引入了标准化的硬件运维工具
 
 ---
 
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
+
 ### 📞 立即联系我们
 
 **FluxGuard Security Team**
 致力于为构建更安全的数字世界提供基础设施级保护。
 
 如需预约演示或申请 POC 测试，请访问我们的开发者门户或联系销售代表。
+

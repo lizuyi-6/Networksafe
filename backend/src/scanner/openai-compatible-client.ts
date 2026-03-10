@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getPlatformCloudBaseUrl } from '../utils/model-access';
 
 export interface OpenAICompatibleConfig {
   apiKey: string;
@@ -121,10 +122,14 @@ export class OpenAICompatibleClient {
   }
 }
 
-export function createDashScopeClient(apiKey: string, model: string = 'qwen3-coder-480b-a35b-instruct'): OpenAICompatibleClient {
+export function createDashScopeClient(
+  apiKey: string,
+  model: string = 'qwen3-coder-480b-a35b-instruct',
+  baseURL: string = getPlatformCloudBaseUrl()
+): OpenAICompatibleClient {
   return new OpenAICompatibleClient({
     apiKey,
-    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    baseURL,
     model,
     temperature: 0.2,
     maxTokens: 4000

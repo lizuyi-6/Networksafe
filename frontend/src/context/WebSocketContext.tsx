@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 
 interface WebSocketContextType {
@@ -13,6 +14,7 @@ interface WebSocketContextType {
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
 export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
+    const location = useLocation();
     const [connected, setConnected] = useState(false);
     const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
     const socketRef = useRef<Socket | null>(null);
@@ -70,12 +72,23 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     }, [addTerminalLog]);
 
     useEffect(() => {
+        const isPublicRoute =
+            location.pathname === '/' ||
+            location.pathname === '/login' ||
+            location.pathname === '/privacy' ||
+            location.pathname === '/terms';
         const userStr = localStorage.getItem('user');
-        if (!userStr) {
+        const shouldConnect = !isPublicRoute && Boolean(userStr);
+
+        if (!shouldConnect) {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            setConnected(false);
             return;
         }
 
-        // Re-enable WebSocket for real-time log streaming
         connectSocket();
 
         const handleStorageChange = (e: StorageEvent) => {
@@ -98,7 +111,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
                 socketRef.current.disconnect();
             }
         };
-    }, [connectSocket]);
+    }, [connectSocket, location.pathname]);
 
     const subscribe = useCallback((event: string, callback: (data: any) => void) => {
         if (!subscribersRef.current.has(event)) {

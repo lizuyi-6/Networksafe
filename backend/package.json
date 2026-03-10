@@ -7,6 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "agent": "ts-node-dev --respawn --transpile-only src/agent-cli.ts",
     "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.build.json",
     "start": "node dist/index.js",
     "lint": "eslint src/**/*.ts",
     "test": "cross-env NODE_ENV=test JWT_SECRET=test-jwt-secret-minimum-32-characters-long AUDIT_LOG_SECRET=test-audit-log-secret-minimum-32-characters DISABLE_REDIS=true jest",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1004.0",
+    "@types/nodemailer": "^7.0.11",
     "axios": "^1.6.5",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.0.0",
@@ -35,6 +37,7 @@
     "jsonwebtoken": "^9.0.2",
     "le-challenge-fs": "^2.0.9",
     "le-store-certbot": "^2.0.9",
+    "nodemailer": "^8.0.1",
     "pg": "^8.20.0",
     "socket.io": "^4.7.4",
     "sql.js": "^1.14.1",

@@ -71,6 +71,27 @@
 // 缓冲区
 #define RX_BUFFER_SIZE      2048
 #define JSON_BUFFER_SIZE    1024
+#define TX_BUFFER_SIZE      512
+
+// WiFi / WebSocket / local control plane defaults
+#define WIFI_SSID           "AetherGuard-Setup"
+#define WIFI_PASSWORD       "aetherguard123"
+#define LOCAL_HOST          "192.168.4.1"
+#define LOCAL_PORT          8080
+#define SERVER_HOST         "192.168.4.1"
+#define SERVER_PORT         3005
+#define SERVER_PATH         "/ws/status"
+#define SERVER_USE_SSL      0
+#define WIFI_CONNECT_TIMEOUT 15000
+
+// Device identity defaults
+#define DEVICE_ID           "ESP32-001"
+#define DEVICE_VERSION      "1.0.0"
+#define API_KEY             "demo-device-key"
+
+// Legacy aliases used by collector/transport modules
+#define SERIAL_RX_PIN       TARGET_RX_PIN
+#define SERIAL_TX_PIN       TARGET_TX_PIN
 
 // DEBUG
 #define ENABLE_DEBUG        1

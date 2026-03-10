@@ -7,7 +7,7 @@ import {
     TrafficRequest,
     MultiAgentConfig
 } from '../../ai-agents';
-import { PLATFORM_API_CONFIG } from '../../utils/model-access';
+import { PLATFORM_API_CONFIG, getPlatformCloudBaseUrl } from '../../utils/model-access';
 import logger from '../../utils/logger';
 import { isAttackSimulatorEnabled, isDemoMode } from '../../config/app-mode';
 import { authenticate } from '../../middleware/auth.middleware';
@@ -191,7 +191,7 @@ export const initializeAgentSystem = async (): Promise<void> => {
                 model: 'qwen3-max-2026-01-23',
                 temperature: 0.2,
                 maxTokens: 4000,
-                baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+                baseURL: getPlatformCloudBaseUrl(),
                 apiKey: PLATFORM_API_CONFIG.apiKey
             }
         }

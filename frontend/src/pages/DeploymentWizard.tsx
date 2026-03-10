@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Server, Download, Check, FileCode, ChevronRight, Save } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../context/LanguageContext';
-import { fetchDeploymentHistory, generateDeploymentConfig, getDeploymentDownloadUrl, saveDeploymentConfig } from '../services/api';
+import { DeploymentTarget, fetchDeploymentHistory, generateDeploymentConfig, getDeploymentDownloadUrl, saveDeploymentConfig } from '../services/api';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
 
 interface GeneratedConfig {
@@ -13,13 +13,15 @@ interface GeneratedConfig {
     warnings: string[];
 }
 
+const deploymentTargets: DeploymentTarget[] = ['nginx', 'apache', 'caddy', 'docker_compose', 'binary_agent', 'k8s_daemonset'];
+
 const DeploymentWizard = () => {
     const { t } = useLanguage();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [serverType, setServerType] = useState<'nginx' | 'apache' | null>(null);
+    const [serverType, setServerType] = useState<DeploymentTarget | null>(null);
     const [generated, setGenerated] = useState<GeneratedConfig | null>(null);
     const [savedId, setSavedId] = useState<string | null>(null);
     const [history, setHistory] = useState<any[]>([]);
@@ -134,7 +136,7 @@ const DeploymentWizard = () => {
                         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                             <h2 className="mb-6 text-lg font-medium text-foreground">{t('deploy.select_server')}</h2>
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                {(['nginx', 'apache'] as const).map((type) => (
+                                {deploymentTargets.map((type) => (
                                     <div
                                         key={type}
                                         onClick={() => setServerType(type)}

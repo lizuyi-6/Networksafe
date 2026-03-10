@@ -693,6 +693,11 @@ export default function AttackSimulator() {
                                                                         {isBlocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}
                                                                     </p>
                                                                     <p className="text-xs text-muted-foreground">{progress.result.responseTime}ms</p>
+                                                                    {progress.result.aiAnalysis?.usedAI && (
+                                                                        <p className="text-[11px] text-muted-foreground">
+                                                                            AI {progress.result.aiAnalysis.route || 'unknown'} via {progress.result.aiAnalysis.provider || progress.result.aiAnalysis.engine || 'model-router'}
+                                                                        </p>
+                                                                    )}
                                                                 </>
                                                             )}
                                                             {progress.status === 'analyzing' && <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{t('attackSimulator.analyzing')}</p>}
@@ -808,6 +813,28 @@ export default function AttackSimulator() {
                                             className="h-full rounded-full bg-emerald-500"
                                         />
                                     </div>
+                                    {report.aiAnalysis && (
+                                        <div className="rounded-xl border border-border bg-background/70 p-3 text-xs text-muted-foreground space-y-1">
+                                            <div className="flex items-center justify-between">
+                                                <span>AI-backed decisions</span>
+                                                <span className="font-medium text-foreground">{report.aiAnalysis.aiBackedCount}/{report.total}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span>Cloud routes</span>
+                                                <span className="font-medium text-foreground">{report.aiAnalysis.cloudCount}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span>Local routes</span>
+                                                <span className="font-medium text-foreground">{report.aiAnalysis.localCount}</span>
+                                            </div>
+                                            {report.aiAnalysis.errorCount > 0 && (
+                                                <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
+                                                    <span>AI route errors</span>
+                                                    <span className="font-medium">{report.aiAnalysis.errorCount}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </ConsolePanel>
                         </div>
@@ -838,6 +865,11 @@ export default function AttackSimulator() {
                                                 <div className="min-w-0">
                                                     <p className="truncate text-sm font-medium text-foreground">{result.attackName}</p>
                                                     <p className="text-xs text-muted-foreground">{getCategoryName(result.category)}</p>
+                                                    {result.aiAnalysis?.usedAI && (
+                                                        <p className="text-[11px] text-muted-foreground">
+                                                            AI {result.aiAnalysis.route || 'unknown'} via {result.aiAnalysis.provider || result.aiAnalysis.engine || 'model-router'}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="text-right">

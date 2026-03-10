@@ -248,6 +248,122 @@ export interface ActionResponse {
     [key: string]: any;
 }
 
+export type DeploymentTarget =
+    | 'nginx'
+    | 'apache'
+    | 'caddy'
+    | 'docker_compose'
+    | 'binary_agent'
+    | 'k8s_daemonset';
+
+export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
+export type NotificationChannelType = 'email' | 'smtp' | 'slack_webhook' | 'generic_webhook';
+export type AIRoutingMode = 'cloud_only' | 'local_preferred' | 'local_only' | 'hybrid_verify';
+export type PrivacyMode = 'off' | 'strict';
+
+export interface NotificationChannelConfig {
+    id: string;
+    name: string;
+    type: NotificationChannelType;
+    enabled: boolean;
+    target: string;
+    minimumSeverity: SeverityLevel;
+    headers: Record<string, string>;
+    smtp: {
+        host: string;
+        port: number;
+        secure: boolean;
+        username: string;
+        password: string;
+        from: string;
+    };
+}
+
+export interface PlatformConfigResponse {
+    antiBot: {
+        enabled: boolean;
+        requestThreshold: number;
+        fastRequestThreshold: number;
+        blockDuration: number;
+    };
+    rateLimit: {
+        requestsPerMinute: number;
+        windowSeconds: number;
+    };
+    notifications: {
+        enabled: boolean;
+        dedupeWindowSeconds: number;
+        retryDelaysSeconds: number[];
+        channels: NotificationChannelConfig[];
+    };
+    aiRouting: {
+        mode: AIRoutingMode;
+        localEndpointId: string | null;
+        localHotPathEndpointId: string | null;
+        cloudEndpointId: string | null;
+        fallbackAllowed: boolean;
+        redactionEnabled: boolean;
+    };
+    privacyMode: PrivacyMode;
+    auditArchive: {
+        bucket: string;
+        retentionDays: number;
+        objectLockRequired: boolean;
+        verifyIntervalMinutes: number;
+    };
+    fastpath: {
+        enabled: boolean;
+        baseUrl: string;
+        transport: 'tcp' | 'unix';
+        socketPath: string | null;
+        timeoutMs: number;
+        fallbackEnabled: boolean;
+        configCacheTtlMs: number;
+    };
+    deploymentDefaults: {
+        serverType: DeploymentTarget;
+        profileTemplates: Record<DeploymentTarget, {
+            port: number;
+            serverName: string;
+            rateLimit: number;
+            upstream: string;
+            namespace: string;
+            image: string;
+        }>;
+    };
+    deviceGateway: {
+        primaryPath: string;
+        aliases: string[];
+        syncMaskApiKeys: boolean;
+        firmwareLocalHost: string;
+        wifiSSID: string;
+        localPort: number;
+        firmwareChannel: string;
+        firmwareRetentionDays: number;
+        statusAliasEnabled: boolean;
+    };
+}
+
+export interface NotificationDelivery {
+    id: string;
+    alertId?: string;
+    channelId: string;
+    channelType: NotificationChannelType;
+    channelLabel: string;
+    status: 'queued' | 'sending' | 'retrying' | 'sent' | 'failed' | 'skipped';
+    severity: SeverityLevel;
+    target: string;
+    payload: Record<string, any>;
+    response: Record<string, any>;
+    error?: string;
+    attemptCount: number;
+    dedupeKey?: string;
+    nextAttemptAt?: string;
+    terminalAt?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface DeviceConfigurationPayload {
     displayName: string;
     group: string;
@@ -391,17 +507,19 @@ export const fetchScannerResults = async () => {
 // --- Deployment Wizard API ---
 
 export const generateDeploymentConfig = async (payload: {
-    serverType: 'nginx' | 'apache';
+    serverType: DeploymentTarget;
     profile: {
         port: number;
         serverName: string;
         rateLimit: number;
         upstream: string;
+        namespace?: string;
+        image?: string;
     };
     siteId?: string;
 }) => {
     if (shouldUseDemoData()) {
-        return generateDemoDeploymentConfig(payload);
+        return generateDemoDeploymentConfig(payload as any);
     }
 
     const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/generate`, {
@@ -415,7 +533,7 @@ export const generateDeploymentConfig = async (payload: {
 };
 
 export const saveDeploymentConfig = async (payload: {
-    serverType: 'nginx' | 'apache';
+    serverType: DeploymentTarget;
     profile: Record<string, any>;
     configText: string;
     envSnippet: string;
@@ -423,7 +541,7 @@ export const saveDeploymentConfig = async (payload: {
     name?: string;
 }) => {
     if (shouldUseDemoData()) {
-        return saveDemoDeploymentConfig(payload);
+        return saveDemoDeploymentConfig(payload as any);
     }
 
     const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/save`, {
@@ -458,6 +576,142 @@ export const getDeploymentDownloadUrl = (deploymentId: string, format: 'conf' | 
     }
 
     return `${API_BASE_URL}/deployments/${deploymentId}/download?format=${format}`;
+};
+
+const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
+    antiBot: {
+        enabled: true,
+        requestThreshold: 100,
+        fastRequestThreshold: 10,
+        blockDuration: 3600
+    },
+    rateLimit: {
+        requestsPerMinute: 60,
+        windowSeconds: 60
+    },
+    notifications: {
+        enabled: true,
+        dedupeWindowSeconds: 300,
+        retryDelaysSeconds: [30, 300, 900],
+        channels: []
+    },
+    aiRouting: {
+        mode: 'cloud_only',
+        localEndpointId: 'default-laptop',
+        localHotPathEndpointId: null,
+        cloudEndpointId: null,
+        fallbackAllowed: true,
+        redactionEnabled: true
+    },
+    privacyMode: 'off',
+    auditArchive: {
+        bucket: 'aetherguard-audit-lock',
+        retentionDays: 30,
+        objectLockRequired: true,
+        verifyIntervalMinutes: 60
+    },
+    fastpath: {
+        enabled: true,
+        baseUrl: 'http://fastpath:8081',
+        transport: 'tcp',
+        socketPath: '/var/run/aetherguard-fastpath.sock',
+        timeoutMs: 1500,
+        fallbackEnabled: true,
+        configCacheTtlMs: 30000
+    },
+    deploymentDefaults: {
+        serverType: 'nginx',
+        profileTemplates: {
+            nginx: { port: 8080, serverName: 'api.example.com', rateLimit: 100, upstream: 'http://backend:3005', namespace: 'aetherguard', image: 'ghcr.io/aetherguard/agent:latest' },
+            apache: { port: 8080, serverName: 'api.example.com', rateLimit: 100, upstream: 'http://backend:3005', namespace: 'aetherguard', image: 'ghcr.io/aetherguard/agent:latest' },
+            caddy: { port: 8080, serverName: 'api.example.com', rateLimit: 100, upstream: 'http://backend:3005', namespace: 'aetherguard', image: 'ghcr.io/aetherguard/agent:latest' },
+            docker_compose: { port: 8080, serverName: 'api.example.com', rateLimit: 100, upstream: 'http://backend:3005', namespace: 'aetherguard', image: 'ghcr.io/aetherguard/agent:latest' },
+            binary_agent: { port: 8080, serverName: 'api.example.com', rateLimit: 100, upstream: 'http://backend:3005', namespace: 'aetherguard', image: 'ghcr.io/aetherguard/agent:latest' },
+            k8s_daemonset: { port: 8080, serverName: 'api.example.com', rateLimit: 100, upstream: 'http://backend:3005', namespace: 'aetherguard', image: 'ghcr.io/aetherguard/agent:latest' }
+        }
+    },
+    deviceGateway: {
+        primaryPath: '/ws/device',
+        aliases: ['/ws/status'],
+        syncMaskApiKeys: true,
+        firmwareLocalHost: '192.168.4.1',
+        wifiSSID: 'AetherGuard-Setup',
+        localPort: 8080,
+        firmwareChannel: 'stable',
+        firmwareRetentionDays: 30,
+        statusAliasEnabled: true
+    }
+});
+
+export const fetchPlatformConfig = async (): Promise<PlatformConfigResponse> => {
+    if (shouldUseDemoData()) {
+        return getDefaultPlatformConfig();
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/config`);
+    if (!response.ok) {
+        throw new Error(`FG-CONFIG-GET-${response.status}`);
+    }
+    return response.json();
+};
+
+export const savePlatformConfig = async (payload: PlatformConfigResponse) => {
+    if (shouldUseDemoData()) {
+        return { success: true, config: payload };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/config`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || `FG-CONFIG-SAVE-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchNotificationDeliveries = async (limit: number = 20): Promise<NotificationDelivery[]> => {
+    if (shouldUseDemoData()) {
+        return [];
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/config/notifications/deliveries?limit=${limit}`);
+    if (!response.ok) {
+        throw new Error(`FG-NOTIFICATION-DELIVERIES-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.deliveries || [];
+};
+
+export const testNotificationChannel = async (channelId: string): Promise<NotificationDelivery> => {
+    if (shouldUseDemoData()) {
+        return {
+            id: `demo-${channelId}`,
+            channelId,
+            channelType: 'generic_webhook',
+            channelLabel: 'Demo Channel',
+            status: 'sent',
+            severity: 'high',
+            target: 'https://example.com/demo',
+            payload: {},
+            response: {},
+            attemptCount: 1,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/config/notifications/test`, {
+        method: 'POST',
+        body: JSON.stringify({ channelId })
+    });
+    if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || `FG-NOTIFICATION-TEST-${response.status}`);
+    }
+    const data = await response.json();
+    return data?.delivery;
 };
 
 // --- Scanner Task API ---
@@ -868,48 +1122,51 @@ export const fetchThreatDetections = async () => {
 
 export const fetchAttackTypes = async (): Promise<AttackType[]> => {
     try {
-        if (shouldUseDemoData()) {
-            return getDemoAttackTypes();
-        }
-
         const response = await fetchWithCredentials(`${API_BASE_URL}/attack/types`);
-        if (!response.ok) return [];
+        if (!response.ok) {
+            if (shouldUseDemoData()) {
+                return getDemoAttackTypes();
+            }
+            return [];
+        }
         return response.json();
     } catch (e) {
         console.error('Failed to fetch attack types:', e);
-        return [];
+        return shouldUseDemoData() ? getDemoAttackTypes() : [];
     }
 };
 
 export const runAttackSimulation = async (attackIds?: string[]): Promise<AttackSimulationReport | null> => {
     try {
-        if (shouldUseDemoData()) {
-            return runDemoAttackSimulation(attackIds);
-        }
-
         const response = await fetchWithCredentials(`${API_BASE_URL}/attack/simulate`, {
             method: 'POST',
             body: JSON.stringify({ attackIds })
         });
-        if (!response.ok) throw new Error(i18n.t('api.failed_to_run_attack_simulation'));
+        if (!response.ok) {
+            if (shouldUseDemoData()) {
+                return runDemoAttackSimulation(attackIds);
+            }
+            throw new Error(i18n.t('api.failed_to_run_attack_simulation'));
+        }
         return response.json();
     } catch (e) {
         console.error('Failed to run attack simulation:', e);
-        return null;
+        return shouldUseDemoData() ? runDemoAttackSimulation(attackIds) : null;
     }
 };
 
 export const fetchAttackHistory = async (): Promise<AttackSimulationReport[]> => {
     try {
-        if (shouldUseDemoData()) {
-            return getDemoAttackHistory().map((report) => ({
-                ...report,
-                id: report.id || report.startTime
-            }));
-        }
-
         const response = await fetchWithCredentials(`${API_BASE_URL}/attack/history`);
-        if (!response.ok) return [];
+        if (!response.ok) {
+            if (shouldUseDemoData()) {
+                return getDemoAttackHistory().map((report) => ({
+                    ...report,
+                    id: report.id || report.startTime
+                }));
+            }
+            return [];
+        }
         const data = await response.json();
         return (data || []).map((report: any) => ({
             ...report,
@@ -917,12 +1174,44 @@ export const fetchAttackHistory = async (): Promise<AttackSimulationReport[]> =>
         }));
     } catch (e) {
         console.error('Failed to fetch attack history:', e);
-        return [];
+        return shouldUseDemoData()
+            ? getDemoAttackHistory().map((report) => ({
+                ...report,
+                id: report.id || report.startTime
+            }))
+            : [];
     }
 };
 
 export const fetchAttackRunDetail = async (runId: string) => {
-    if (shouldUseDemoData()) {
+    try {
+        const response = await fetchWithCredentials(`${API_BASE_URL}/attack/history/${encodeURIComponent(runId)}`);
+        if (!response.ok) {
+            if (shouldUseDemoData()) {
+                const report = getDemoAttackHistory().find((item) => (item.id || item.startTime) === runId);
+                if (!report) {
+                    throw new Error('FG-ATTACK-RUN-404');
+                }
+                return {
+                    success: true,
+                    data: {
+                        id: report.id || report.startTime,
+                        summary: report,
+                        timeline: [
+                            { title: 'Simulation started', timestamp: report.startTime },
+                            { title: 'Simulation completed', timestamp: report.endTime }
+                        ],
+                        result: report
+                    }
+                };
+            }
+            throw new Error(`FG-ATTACK-RUN-DETAIL-${response.status}`);
+        }
+        return response.json();
+    } catch (error) {
+        if (!shouldUseDemoData()) {
+            throw error;
+        }
         const report = getDemoAttackHistory().find((item) => (item.id || item.startTime) === runId);
         if (!report) {
             throw new Error('FG-ATTACK-RUN-404');
@@ -940,12 +1229,6 @@ export const fetchAttackRunDetail = async (runId: string) => {
             }
         };
     }
-
-    const response = await fetchWithCredentials(`${API_BASE_URL}/attack/history/${encodeURIComponent(runId)}`);
-    if (!response.ok) {
-        throw new Error(`FG-ATTACK-RUN-DETAIL-${response.status}`);
-    }
-    return response.json();
 };
 
 // --- Agent Onboarding API ---
@@ -1064,6 +1347,7 @@ export const createAIEndpoint = async (payload: {
     modelName?: string;
     apiKey?: string;
     type?: 'ollama' | 'openai' | 'custom';
+    purpose?: 'hot_path' | 'deep_analysis';
     priority?: number;
     timeout?: number;
 }) => {
@@ -1168,6 +1452,20 @@ export interface ChatResponse {
     model: string;
     usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number } | null;
     latency: number;
+    route?: string;
+    purpose?: 'hot_path' | 'deep_analysis';
+    provider?: string;
+    upstreamPath?: string;
+    requestId?: string;
+}
+
+export interface PlatformAIProofError extends Error {
+    diagnostics?: {
+        provider?: string;
+        upstreamStatus?: number;
+        upstreamPath?: string;
+        requestId?: string;
+    };
 }
 
 export const sendChatMessage = async (modelId: string, messages: ChatMessage[]): Promise<ChatResponse> => {
@@ -1177,7 +1475,9 @@ export const sendChatMessage = async (modelId: string, messages: ChatMessage[]):
             content: `Demo response from ${modelId}: simulated chat completed.`,
             model: modelId,
             usage: { prompt_tokens: 128, completion_tokens: 64, total_tokens: 192 },
-            latency: 245
+            latency: 245,
+            route: 'demo',
+            purpose: 'deep_analysis'
         };
     }
 
@@ -1438,6 +1738,33 @@ export const fetchAdminOversightEventDetail = async (tenantId: string, eventId: 
         throw new Error(`FG-ADMIN-OVERSIGHT-EVENT-${response.status}`);
     }
     return response.json();
+};
+
+export const verifyPlatformAI = async (): Promise<ChatResponse> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/ai-endpoints/chat`, {
+        method: 'POST',
+        body: JSON.stringify({
+            modelId: 'qwen3-max-2026-01-23',
+            purpose: 'deep_analysis',
+            messages: [
+                { role: 'system', content: 'You are a concise security assistant.' },
+                { role: 'user', content: 'Reply with exactly the text: AETHERGUARD_REMOTE_AI_OK' }
+            ]
+        })
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        const error = new Error(data.message || `FG-AI-VERIFY-${response.status}`) as PlatformAIProofError;
+        error.diagnostics = {
+            provider: data.provider,
+            upstreamStatus: data.upstreamStatus,
+            upstreamPath: data.upstreamPath,
+            requestId: data.requestId
+        };
+        throw error;
+    }
+    return data;
 };
 
 export const verifyAdminAuditLog = async (logId: string) => {
