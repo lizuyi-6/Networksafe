@@ -1,8 +1,11 @@
-/*
- * FluxGuard Enclosure - CLIP (Adjustable PCB Clamp)
+﻿/*
+ * AetherGuard Enclosure - CLIP (Legacy Reference)
  * Print: Lying flat on side (pre-rotated 90°)
  * Supports: None needed
  * CRITICAL: Layer lines parallel to flex arms = long life!
+ *
+ * Legacy helper from the retired unibody concept.
+ * The current serial deployer shell uses chassis/top_plate/bottom_cover.
  */
 
 // --- Parameters ---

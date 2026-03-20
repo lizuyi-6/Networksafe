@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import {
     fetchAdminApiKeys,
+    fetchCurrentUserSession,
     fetchDashboardRulesSummary,
     fetchLogs,
     fetchStats,
@@ -215,11 +216,8 @@ export default function Dashboard() {
 
         const loadSideData = async () => {
             try {
-                const meRes = await fetch('/api/auth/me', {
-                    credentials: 'include',
-                    signal: controller.signal,
-                });
-                const role = meRes.ok ? (await meRes.json()).user?.role || 'viewer' : 'viewer';
+                const user = await fetchCurrentUserSession(controller.signal);
+                const role = user?.role || 'viewer';
                 if (disposed) return;
                 setUserRole(role);
 

@@ -1,8 +1,8 @@
-# FluxGuard Pro CVE-2026-022 Attack Chain Documentation
+﻿# AetherGuard CVE-2026-022 Attack Chain Documentation
 
 ## Executive Summary
 
-This document details a critical command injection vulnerability (CVE-2026-022) in FluxGuard Pro's enhanced-firewall-controller.ts. The vulnerability allows authenticated attackers to execute arbitrary system commands with CVSS score 9.8 (Critical).
+This document details a critical command injection vulnerability (CVE-2026-022) in AetherGuard's enhanced-firewall-controller.ts. The vulnerability allows authenticated attackers to execute arbitrary system commands with CVSS score 9.8 (Critical).
 
 ## Vulnerability Details
 
@@ -101,7 +101,7 @@ private async unblockWithUfw(ip: string): Promise<boolean> {
 ```typescript
 private async blockWithNetsh(ip: string): Promise<boolean> {
     try {
-        const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;  // VULNERABLE
+        const ruleName = `AetherGuard_Block_${ip.replace(/\./g, '_')}`;  // VULNERABLE
         await execAsync(`netsh advfirewall firewall add rule name="${ruleName}" dir=in action=block remoteip=${ip}`);  // VULNERABLE
         return true;
     } catch (error: any) {
@@ -115,7 +115,7 @@ private async blockWithNetsh(ip: string): Promise<boolean> {
 ```typescript
 private async unblockWithNetsh(ip: string): Promise<boolean> {
     try {
-        const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;  // VULNERABLE
+        const ruleName = `AetherGuard_Block_${ip.replace(/\./g, '_')}`;  // VULNERABLE
         await execAsync(`netsh advfirewall firewall delete rule name="${ruleName}"`);  // VULNERABLE
         return true;
     } catch (error: any) {
@@ -130,7 +130,7 @@ private async unblockWithNetsh(ip: string): Promise<boolean> {
 ### Phase 1: Initial Access
 
 #### Step 1: Reconnaissance
-- Identify target FluxGuard Pro instance
+- Identify target AetherGuard instance
 - Enumerate API endpoints
 - Identify agent nodes
 
@@ -140,7 +140,7 @@ private async unblockWithNetsh(ip: string): Promise<boolean> {
 # Login with admin credentials
 TOKEN=$(curl -X POST http://target/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@fluxguard.local","password":"password"}' | jq -r '.token')
+  -d '{"email":"admin@AetherGuard.local","password":"password"}' | jq -r '.token')
 ```
 
 **Method B: JWT Token Theft (CVE-2026-XXX)**
@@ -233,7 +233,7 @@ CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H
 ### Log Sources
 
 1. **Application Logs**
-   - Audit logs from FluxGuard Pro
+   - Audit logs from AetherGuard
    - Agent command execution logs
    - API access logs
 
@@ -251,12 +251,12 @@ CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H
 
 #### SIEM Rule: Command Injection Indicator
 ```yaml
-title: FluxGuard CVE-2026-022 Exploit Detection
+title: AetherGuard CVE-2026-022 Exploit Detection
 status: experimental
 description: Detects command injection attempts via firewall controller
 logsource:
   category: application
-  product: fluxguard
+  product: AetherGuard
 detection:
   selection:
     - request.url|contains:
@@ -277,7 +277,7 @@ level: critical
 
 #### Splunk Query: Suspicious Agent Activity
 ```spl
-index=fluxguard sourcetype=auditlog action="block_ip" OR action="unblock_ip"
+index=AetherGuard sourcetype=auditlog action="block_ip" OR action="unblock_ip"
 | rex field=ip "(?<injected_command>\s*[;|&`$].*)"
 | where isnotnull(injected_command)
 | stats count by ip, agentId, userId, injected_command
@@ -287,17 +287,17 @@ index=fluxguard sourcetype=auditlog action="block_ip" OR action="unblock_ip"
 
 #### Falco Rule: Unexpected Child Process
 ```yaml
-- rule: FluxGuard Unexpected Child Process
-  desc: Detect when FluxGuard agent spawns unexpected child processes
+- rule: AetherGuard Unexpected Child Process
+  desc: Detect when AetherGuard agent spawns unexpected child processes
   condition: >
     spawned_process
-    and parent_process.name contains "fluxguard"
+    and parent_process.name contains "AetherGuard"
     and (proc.name in ("bash", "sh", "python", "perl", "ruby", "nc", "netcat")
          or proc.args contains ";"
          or proc.args contains "&&"
          or proc.args contains "$")
   output: >
-    Unexpected child process spawned by FluxGuard agent
+    Unexpected child process spawned by AetherGuard agent
     user=%user.name parent=%proc.pname command=%proc.cmdline
   priority: CRITICAL
 ```
@@ -358,7 +358,7 @@ index=fluxguard sourcetype=auditlog action="block_ip" OR action="unblock_ip"
 
 2. **Deploy Security Patches**
    - Apply vendor-supplied patches
-   - Update all FluxGuard Pro instances
+   - Update all AetherGuard instances
    - Verify patch effectiveness
 
 3. **Enhance Monitoring**
@@ -424,7 +424,7 @@ T+00:35 - Lateral movement initiated
   "actor": {
     "type": "user",
     "id": "admin",
-    "email": "admin@fluxguard.local"
+    "email": "admin@AetherGuard.local"
   },
   "target": {
     "type": "agent",

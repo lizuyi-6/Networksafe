@@ -102,7 +102,7 @@ const severityWeight: Record<Severity, number> = {
 class SecurityOperationsService {
   private schemaReady = false;
 
-  private ensureSchema(): void {
+  prepare(): void {
     if (this.schemaReady) {
       return;
     }
@@ -228,6 +228,19 @@ class SecurityOperationsService {
     this.schemaReady = true;
   }
 
+  private assertPrepared(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+      return;
+    }
+
+    throw new Error('Security operations schema not initialized. Call securityOperationsService.prepare() during bootstrap.');
+  }
+
   private now(): string {
     return new Date().toISOString();
   }
@@ -321,7 +334,7 @@ class SecurityOperationsService {
     status?: string;
     metadata?: Record<string, any>;
   }): AssetSummary {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const now = this.now();
     const key = this.assetKey(input.tenantId, input.assetType, input.externalRef);
@@ -375,7 +388,7 @@ class SecurityOperationsService {
   }
 
   listAssets(tenantId: string, limit = 100): AssetSummary[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const rows = db.prepare(`
       SELECT * FROM sec_assets
@@ -387,7 +400,7 @@ class SecurityOperationsService {
   }
 
   getAssetById(tenantId: string, assetId: string): AssetSummary | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const row = db.prepare(`
       SELECT * FROM sec_assets
@@ -406,7 +419,7 @@ class SecurityOperationsService {
       `,
       [tenantId, assetId],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_assets
@@ -419,7 +432,7 @@ class SecurityOperationsService {
   }
 
   getAssetByExternalRef(tenantId: string, assetType: AssetType, externalRef: string): AssetSummary | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const key = this.assetKey(tenantId, assetType, externalRef);
     const row = db.prepare('SELECT * FROM sec_assets WHERE asset_key = ? LIMIT 1').get(key) as any;
@@ -442,7 +455,7 @@ class SecurityOperationsService {
     createAlert?: boolean;
     alertType?: 'security' | 'performance' | 'system';
   }): FindingRecord {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const now = this.now();
     const severity = this.normalizeSeverity(input.severity);
@@ -554,7 +567,7 @@ class SecurityOperationsService {
   }
 
   resolveFindingByFingerprint(tenantId: string, fingerprint: string, actor = 'system'): FindingRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const existing = db.prepare(`
       SELECT *
@@ -640,7 +653,7 @@ class SecurityOperationsService {
   }
 
   listFindingsBySource(tenantId: string, sourceType: string, sourceRef: string): FindingRecord[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const rows = db.prepare(`
       SELECT * FROM sec_findings
@@ -673,7 +686,7 @@ class SecurityOperationsService {
       `,
       [tenantId, sourceType, sourceRef],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_findings
@@ -693,7 +706,7 @@ class SecurityOperationsService {
   }
 
   getFindingById(tenantId: string, findingId: string): FindingRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const row = db.prepare(`
       SELECT * FROM sec_findings
@@ -712,7 +725,7 @@ class SecurityOperationsService {
       `,
       [tenantId, findingId],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_findings
@@ -738,7 +751,7 @@ class SecurityOperationsService {
       `,
       [tenantId, uniqueFingerprints],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_findings
@@ -763,7 +776,7 @@ class SecurityOperationsService {
     alertType: 'security' | 'performance' | 'system';
     metadata?: Record<string, any>;
   }): AlertRecord {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const now = this.now();
 
@@ -810,7 +823,7 @@ class SecurityOperationsService {
   }
 
   listAlerts(tenantId: string, filters?: { severity?: string; status?: string; limit?: number }): AlertRecord[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const clauses = ['tenant_id = ?'];
     const params: any[] = [tenantId];
@@ -882,7 +895,7 @@ class SecurityOperationsService {
   }
 
   getAlertById(tenantId: string, alertId: string): AlertRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const row = db.prepare(`
       SELECT * FROM sec_alerts
@@ -901,7 +914,7 @@ class SecurityOperationsService {
       `,
       [tenantId, alertId],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_alerts
@@ -914,7 +927,7 @@ class SecurityOperationsService {
   }
 
   transitionAlert(tenantId: string, alertId: string, status: AlertStatus, actor: string): AlertRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const existing = db.prepare(`
       SELECT * FROM sec_alerts
@@ -1031,7 +1044,7 @@ class SecurityOperationsService {
   }
 
   createActionFromFinding(tenantId: string, findingId: string, operator: string): ActionRunRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const finding = this.getFindingById(tenantId, findingId);
     if (!finding) {
       return null;
@@ -1174,7 +1187,7 @@ class SecurityOperationsService {
     alertId?: string;
     runLog?: Record<string, any>[];
   }): ActionRunRecord {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const now = this.now();
     const actionId = input.actionId || randomUUID();
@@ -1212,7 +1225,7 @@ class SecurityOperationsService {
     rollbackNotes?: string;
     appendLog?: Record<string, any>[];
   }): ActionRunRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const existing = db.prepare(`
       SELECT *
@@ -1250,7 +1263,7 @@ class SecurityOperationsService {
   }
 
   listActions(tenantId: string, limit = 20): ActionRunRecord[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const rows = db.prepare(`
       SELECT * FROM sec_actions
@@ -1271,7 +1284,7 @@ class SecurityOperationsService {
       `,
       [tenantId, limit],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_actions
@@ -1285,7 +1298,7 @@ class SecurityOperationsService {
   }
 
   getActionById(tenantId: string, actionId: string): ActionRunRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const row = db.prepare(`
       SELECT * FROM sec_actions
@@ -1309,7 +1322,7 @@ class SecurityOperationsService {
     completedAt: string;
     result: Record<string, any>;
   }): ValidationRunRecord {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const validationRunId = randomUUID();
 
@@ -1339,7 +1352,7 @@ class SecurityOperationsService {
   }
 
   listValidationRuns(tenantId: string, limit = 20): ValidationRunRecord[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const rows = db.prepare(`
       SELECT * FROM sec_validations
@@ -1360,7 +1373,7 @@ class SecurityOperationsService {
       `,
       [tenantId, limit],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_validations
@@ -1390,7 +1403,7 @@ class SecurityOperationsService {
     sourceAssetId?: string;
     destAssetId?: string;
   }): void {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const existing = db.prepare('SELECT session_id FROM sec_traffic_sessions WHERE session_id = ?').get(input.sessionId) as any;
 
@@ -1437,7 +1450,7 @@ class SecurityOperationsService {
   }
 
   listTrafficSessions(tenantId: string, limit = 50): any[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     return db.prepare(`
       SELECT * FROM sec_traffic_sessions
@@ -1457,7 +1470,7 @@ class SecurityOperationsService {
       `,
       [tenantId, limit],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_traffic_sessions
@@ -1470,7 +1483,7 @@ class SecurityOperationsService {
   }
 
   summarizeThreats(tenantId: string): Array<{ type: string; count: number; severity: Severity }> {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const rows = db.prepare(`
       SELECT category AS type, severity, COUNT(*) AS count
@@ -1498,7 +1511,7 @@ class SecurityOperationsService {
       `,
       [tenantId],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT category AS type, severity, COUNT(*) AS count
@@ -1531,7 +1544,7 @@ class SecurityOperationsService {
     recentActions: ActionRunRecord[];
     recentValidations: ValidationRunRecord[];
   } {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const recentWindowStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -1787,7 +1800,7 @@ class SecurityOperationsService {
   }
 
   listAssetsByExternalRefs(tenantId: string, externalRefs: string[], assetTypes?: AssetType[]): AssetSummary[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const refs = Array.from(new Set(externalRefs.map((item) => String(item || '').trim()).filter(Boolean)));
     if (refs.length === 0) {
       return [];
@@ -1851,7 +1864,7 @@ class SecurityOperationsService {
     serviceExposure: any[];
     scanRuns: any[];
   } {
-    this.ensureSchema();
+    this.assertPrepared();
     const uniqueAssetIds = Array.from(new Set(assetIds.map((item) => String(item || '').trim()).filter(Boolean)));
     if (uniqueAssetIds.length === 0) {
       return {
@@ -2104,7 +2117,7 @@ class SecurityOperationsService {
   }
 
   getTrafficSessionById(tenantId: string, sessionId: string): any | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const row = db.prepare(`
       SELECT * FROM sec_traffic_sessions
@@ -2130,7 +2143,7 @@ class SecurityOperationsService {
       `,
       [tenantId, sessionId],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_traffic_sessions
@@ -2144,7 +2157,7 @@ class SecurityOperationsService {
   }
 
   getValidationRunById(tenantId: string, validationRunId: string): ValidationRunRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const row = db.prepare(`
       SELECT * FROM sec_validations
@@ -2164,7 +2177,7 @@ class SecurityOperationsService {
       `,
       [tenantId, validationRunId],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_validations
@@ -2178,7 +2191,7 @@ class SecurityOperationsService {
   }
 
   listValidationRunsByAttackId(tenantId: string, attackId: string, limit = 20): ValidationRunRecord[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const rows = db.prepare(`
       SELECT * FROM sec_validations
@@ -2200,7 +2213,7 @@ class SecurityOperationsService {
       `,
       [tenantId, attackId, limit],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM sec_validations
@@ -2422,3 +2435,4 @@ class SecurityOperationsService {
 }
 
 export const securityOperationsService = new SecurityOperationsService();
+

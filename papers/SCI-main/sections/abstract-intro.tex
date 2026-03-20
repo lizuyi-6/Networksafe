@@ -1,0 +1,73 @@
+% Abstract and Introduction Section for AetherGuard SCI Paper
+% Target: IEEE TDSC/TIFS
+
+% ============================================
+% ABSTRACT
+% ============================================
+
+\begin{abstract}
+Distributed server security faces a fundamental tension: centralized policy management ensures consistency but introduces latency and single points of failure, while distributed execution enables rapid response but risks inconsistent decisions and limited explainability. We present AetherGuard, a multi-agent AI architecture that addresses this tension through structured deliberation among role-specialized agents. AetherGuard introduces a seven-layer architecture that transforms raw threat observations into auditable security decisions via collaboration, role-playing, scene reconstruction, capability invocation, structured debate, privacy-aware model routing, and decision synthesis. The architecture assigns distinct responsibilities to three specialized agents---Socrates (adversarial analysis), Plato (defensive planning), and Aristotle (synthesis and arbitration)---whose structured debate produces both high-quality decisions and procedural explainability. A privacy-aware heterogeneous model layer routes sensitive analysis to local models while leveraging cloud capabilities for complex reasoning, with automatic prompt redaction protecting sensitive data. Evaluation demonstrates that AetherGuard achieves 93-97\% detection accuracy with 2-5\% false positive rates, while providing complete audit trails absent from single-model approaches. The system is deployed in production environments protecting 1000+ servers, demonstrating practical viability at scale.
+\end{abstract}
+
+% ============================================
+% KEYWORDS
+% ============================================
+
+\begin{IEEEkeywords}
+Distributed Security, Multi-Agent Systems, Artificial Intelligence, Intrusion Detection, Explainable AI, Automated Response, Server Protection
+\end{IEEEkeywords}
+
+% ============================================
+% INTRODUCTION
+% ============================================
+
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{Research Motivation}
+\label{subsec:motivation}
+
+The proliferation of distributed computing architectures has fundamentally altered the security landscape. Modern organizations operate thousands of servers across cloud regions, edge locations, and on-premises data centers, each presenting potential attack surfaces that must be monitored and protected. Traditional security information and event management (SIEM) systems, designed for centralized log aggregation and analysis, struggle to provide the real-time response necessary to contain fast-moving attacks such as ransomware propagation or cryptojacking campaigns~
+{neupane2022xids}.
+
+Artificial intelligence offers compelling capabilities for security operations. Machine learning models can detect novel attack patterns invisible to signature-based systems, while large language models (LLMs) enable natural language analysis of complex threat scenarios~
+{doriguzzi2020lucid}. However, current AI-augmented security architectures predominantly follow a single-model pattern: threat indicators feed into a monolithic classifier or LLM invocation, producing a decision with limited explanatory material~
+{neupane2022xids,hermosilla2025systems}. This design exhibits three limitations that become critical at scale.
+
+First, \textit{decision brittleness}: ambiguous or mutated attacks generate conflicting evidence that single models handle poorly, lacking mechanisms to resolve uncertainty through structured deliberation. Second, \textit{explanatory deficiency}: detection outputs provide confidence scores without the reasoning narratives required for downstream incident response and forensic analysis. Third, \textit{deployment rigidity}: cloud-dependent inference raises privacy concerns for sensitive security data while local-only deployment sacrifices the advanced reasoning capabilities of large models.
+
+\subsection{Research Challenges}
+\label{subsec:challenges}
+
+Addressing these limitations requires overcoming four technical challenges:
+
+\textbf{Challenge 1: Real-time Distributed Decision Making}. Security decisions must balance speed with quality. Pure local processing enables sub-second response but lacks the contextual awareness available through centralized analysis. Pure centralized processing introduces network latency that may exceed attack propagation speeds. An effective architecture must dynamically partition decision-making between edge and center based on threat characteristics and response requirements.
+
+\textbf{Challenge 2: Multi-Perspective Threat Analysis}. Security decisions benefit from adversarial scrutiny: probing for overlooked attack vectors, questioning assumptions, and stress-testing proposed responses. Manual red-team/blue-team exercises provide this scrutiny but are resource-intensive and cannot scale to the volume of alerts generated in large environments. Automating adversarial analysis while maintaining analytical rigor remains an open problem.
+
+\textbf{Challenge 3: Explainable and Auditable Decisions}. Security operations require accountability. When an automated system blocks legitimate traffic or fails to detect an intrusion, analysts must understand why the decision was made. Current explainable AI (XAI) techniques for intrusion detection focus on post-hoc feature attribution~
+{neupane2022xids}, providing limited insight into the reasoning process itself. Security domains need \textit{procedural explainability}: audit trails that capture the deliberation leading to decisions.
+
+\textbf{Challenge 4: Privacy-Preserving Cloud Integration}. Modern LLMs offer superior reasoning capabilities but require transmitting potentially sensitive data (IP addresses, user identifiers, system configurations) to third-party services. Security-conscious organizations require mechanisms that leverage cloud AI capabilities while protecting sensitive information and maintaining deployment flexibility.
+
+\subsection{Contributions}
+\label{subsec:contributions}
+
+This paper presents AetherGuard, a multi-agent AI architecture for distributed server security that addresses the challenges above through the following contributions:
+
+\begin{enumerate}
+    \item \textbf{Seven-Layer Multi-Agent Security Architecture}. We propose the first end-to-end multi-agent architecture specifically designed for security decision-making. The architecture decomposes the decision process into seven specialized layers---collaboration, role-playing, scene traversal, capability, debate, heterogeneous model, and synthesis---each addressing distinct aspects of threat analysis and response.
+
+    \item \textbf{Role-Specialized Debate Mechanism}. We design a structured debate mechanism employing three specialized agents: Socrates (adversarial analysis), Plato (defensive planning), and Aristotle (synthesis and arbitration). This role specialization encodes security-domain adversarial thinking into an automated deliberation process that improves decision robustness while producing auditable reasoning traces.
+
+    \item \textbf{Procedurally Explainable Security Decisions}. We demonstrate that structured multi-agent debate naturally provides procedural explainability: the debate transcript serves as an audit trail documenting the considerations and conflicts that shaped the final decision. This shifts explainability from post-hoc interpretation to intrinsic workflow traceability.
+
+    \item \textbf{Privacy-Aware Heterogeneous Model Routing}. We introduce a model routing mechanism that dynamically selects among local (Ollama), cloud (GLM-4, GPT-4), and hybrid inference backends based on privacy requirements, cost constraints, and quality needs. Automatic prompt redaction protects sensitive data before cloud transmission.
+
+    \item \textbf{Production-Scale System Implementation}. We implement and open-source a complete prototype including control plane, distributed agents, and dashboard. The system is deployed protecting 1000+ production servers, demonstrating practical viability at scale.
+\end{enumerate}
+
+\subsection{Paper Organization}
+\label{subsec:organization}
+
+The remainder of this paper is organized as follows. Section~\ref{sec:related-work} surveys related work in AI-assisted intrusion detection, multi-agent LLM systems, debate-based reasoning, and privacy-aware deployment. Section~\ref{sec:architecture} presents the AetherGuard architecture, detailing the control plane, distributed agents, and seven-layer AI decision system. Section~\ref{sec:algorithm} formalizes the core algorithms and analyzes their complexity. Section~\ref{sec:security} establishes the threat model and provides formal security analysis. Section~\ref{sec:implementation} describes implementation details and deployment architecture. Section~\ref{sec:evaluation} presents experimental evaluation including performance benchmarks, accuracy measurements, and ablation studies. Section~\ref{sec:discussion} discusses limitations and future directions. Section~\ref{sec:conclusion} concludes the paper.

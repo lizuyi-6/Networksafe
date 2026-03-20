@@ -1,7 +1,7 @@
-version: '3.8'
+﻿version: '3.8'
 
 networks:
-  fluxguard-network:
+  AetherGuard-network:
     driver: bridge
 
 volumes:
@@ -11,15 +11,15 @@ volumes:
 services:
   redis:
     image: redis:7-alpine
-    container_name: fluxguard-redis
+    container_name: AetherGuard-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-fluxguard_redis_secret_2024}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-AetherGuard_redis_secret_2024}
     volumes:
       - redis-data:/data
     networks:
-      - fluxguard-network
+      - AetherGuard-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-fluxguard_redis_secret_2024}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-AetherGuard_redis_secret_2024}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
     build:
       context: ../../backend
       dockerfile: Dockerfile
-    container_name: fluxguard-backend
+    container_name: AetherGuard-backend
     restart: unless-stopped
     ports:
       - "3010:3005"
@@ -44,9 +44,9 @@ services:
       - ENABLE_ATTACK_SIM=false
       - DATA_DIR=/app/data/prod
       - PORT=3005
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-fluxguard_redis_secret_2024}@redis:6379
-      - JWT_SECRET=${JWT_SECRET:-fluxguard_jwt_secret_production_2024_minimum_32_chars}
-      - AUDIT_LOG_SECRET=${AUDIT_LOG_SECRET:-fluxguard_audit_secret_production_2024_32chars}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-AetherGuard_redis_secret_2024}@redis:6379
+      - JWT_SECRET=${JWT_SECRET:-AetherGuard_jwt_secret_production_2024_minimum_32_chars}
+      - AUDIT_LOG_SECRET=${AUDIT_LOG_SECRET:-AetherGuard_audit_secret_production_2024_32chars}
       - DATABASE_PATH=/app/data/production.db
       - DISABLE_REDIS=false
       - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://localhost:3005,http://localhost:8888,http://frontend,http://nginx
@@ -57,7 +57,7 @@ services:
     volumes:
       - backend-data:/app/data
     networks:
-      - fluxguard-network
+      - AetherGuard-network
     depends_on:
       redis:
         condition: service_healthy
@@ -77,12 +77,12 @@ services:
     build:
       context: ../../frontend
       dockerfile: ../deployment/production/frontend.Dockerfile
-    container_name: fluxguard-frontend
+    container_name: AetherGuard-frontend
     restart: unless-stopped
     ports:
       - "8888:80"
     networks:
-      - fluxguard-network
+      - AetherGuard-network
     depends_on:
       backend:
         condition: service_healthy
@@ -96,18 +96,18 @@ services:
     build:
       context: ../../agent
       dockerfile: Dockerfile
-    container_name: fluxguard-probe-agent
+    container_name: AetherGuard-probe-agent
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       - BACKEND_URL=http://backend:3005
       - AGENT_ID=probe-agent-01
-      - HOSTNAME=fluxguard-probe
+      - HOSTNAME=AetherGuard-probe
       - AGENT_API_KEY=probe_agent_production_key_32_characters
       - HEARTBEAT_INTERVAL=30000
       - METRICS_INTERVAL=10000
     networks:
-      - fluxguard-network
+      - AetherGuard-network
     depends_on:
       backend:
         condition: service_healthy

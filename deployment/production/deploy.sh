@@ -1,6 +1,6 @@
-#!/bin/bash
+﻿#!/bin/bash
 
-# FluxGuard Production Deployment Script
+# AetherGuardduction Deployment Script
 # Usage: ./deploy.sh [command]
 # Commands: start, stop, restart, status, logs, build, clean
 
@@ -33,7 +33,7 @@ check_docker() {
 }
 
 start_deployment() {
-    print_header "Starting FluxGuard Production Deployment"
+    print_header "Starting AetherGuardduction Deployment"
     
     if [ ! -f "$SCRIPT_DIR/.env" ]; then
         echo -e "${YELLOW}Creating .env file from .env.example...${NC}"
@@ -59,7 +59,7 @@ start_deployment() {
 }
 
 stop_deployment() {
-    print_header "Stopping FluxGuard Production Deployment"
+    print_header "Stopping AetherGuardduction Deployment"
     cd "$SCRIPT_DIR"
     docker-compose -f docker-compose.prod.yml down
     echo -e "${GREEN}Deployment stopped.${NC}"
@@ -72,7 +72,7 @@ restart_deployment() {
 }
 
 show_status() {
-    print_header "FluxGuard Deployment Status"
+    print_header "AetherGuard Deployment Status"
     cd "$SCRIPT_DIR"
     docker-compose -f docker-compose.prod.yml ps
     
@@ -103,14 +103,14 @@ show_logs() {
 }
 
 build_images() {
-    print_header "Building FluxGuard Docker Images"
+    print_header "Building AetherGuard Docker Images"
     cd "$SCRIPT_DIR"
     docker-compose -f docker-compose.prod.yml build --no-cache
     echo -e "${GREEN}Images built successfully.${NC}"
 }
 
 clean_deployment() {
-    print_header "Cleaning Up FluxGuard Deployment"
+    print_header "Cleaning Up AetherGuard Deployment"
     cd "$SCRIPT_DIR"
     docker-compose -f docker-compose.prod.yml down -v --rmi local
     echo -e "${GREEN}Deployment cleaned up.${NC}"

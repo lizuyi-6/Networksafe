@@ -12,6 +12,7 @@
 
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
+import { isIPv4, isIPv6 } from 'net';
 import logger from '../utils/logger';
 import { AgentStatus, ThreatAlert } from '../agent';
 import { verifyTokenAsync, AuthenticatedRequest } from '../middleware/auth.middleware';
@@ -19,15 +20,31 @@ import agentAuthService from '../security/agent-auth.service';
 import commandSigningService from '../security/command-signing.service';
 import auditLogger from '../security/audit-logger.service';
 import { getTrafficStats, getAgentSystem } from '../api/routes/ai-system.routes';
-import { TrafficRequest } from '../ai-agents';
 import {
   isTestRuntime,
   wsTestAgentAdapter,
   wsTestDashboardUserAdapter
 } from '../testing/test-runtime-adapter';
-import { v4 as uuidv4 } from 'uuid';
 import { commandDispatcherService } from '../services/command-dispatcher.service';
 import { socketRateLimitService } from '../services/socket-rate-limit.service';
+import { detectionPipelineService } from '../services/detection-pipeline.service';
+import type { TenantContext } from '../core/tenant/tenant-context';
+import {
+  buildPlatformTenantContext,
+  resolveAgentTenantContext,
+  resolveUserTenantContext,
+  PLATFORM_TENANT_ID
+} from '../core/tenant/tenant-context';
+import type {
+  AgentClientToServerEvents,
+  AgentServerToClientEvents
+} from './socket-events';
+import {
+  validateAgentHeartbeatPayload,
+  validateAgentRegisterPayload,
+  validateDashboardAgentCommandPayload,
+  validateDashboardIpCommandPayload
+} from './socket-payload-validator';
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
@@ -35,14 +52,21 @@ const MAX_REQUESTS_PER_WINDOW = 100;
 const USER_RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_USER_REQUESTS_PER_WINDOW = 150; // Slightly higher than per-socket limit
 
+function isDetectionBootstrapError(error: any): boolean {
+  const message = String(error?.message || '').toLowerCase();
+  return message.includes('database not initialized')
+    || message.includes('call initdatabase() first')
+    || message.includes('detection pipeline storage not initialized');
+}
+
 /**
  * SECURITY FIX CVE-2026-301: User-level rate limiting
  * Prevents bypass by opening multiple connections
  * Now uses Redis-backed rate limiter
  */
-async function checkUserRateLimit(userId: string, socket: Socket): Promise<boolean> {
+async function checkUserRateLimit(userId: string, tenantId: string, socket: Socket): Promise<boolean> {
   const result = await socketRateLimitService.check({
-    tenantId: 'global',
+    tenantId,
     key: `user:${userId}`,
     windowMs: USER_RATE_LIMIT_WINDOW,
     limit: MAX_USER_REQUESTS_PER_WINDOW,
@@ -75,9 +99,9 @@ async function checkUserRateLimit(userId: string, socket: Socket): Promise<boole
 /**
  * Socket-level rate limiting (for individual connections)
  */
-async function checkSocketRateLimit(socket: Socket): Promise<boolean> {
+async function checkSocketRateLimit(socket: Socket, tenantId: string): Promise<boolean> {
   const result = await socketRateLimitService.check({
-    tenantId: 'global',
+    tenantId,
     key: `socket:${socket.id}`,
     windowMs: RATE_LIMIT_WINDOW,
     limit: MAX_REQUESTS_PER_WINDOW,
@@ -93,8 +117,6 @@ async function checkSocketRateLimit(socket: Socket): Promise<boolean> {
  * SECURITY FIX CVE-2026-300: Enhanced IP address validation
  * Uses Node's built-in net module for comprehensive validation
  */
-import { isIPv4, isIPv6 } from 'net';
-
 function isValidIPAddress(ip: string): boolean {
   if (!ip || typeof ip !== 'string') {
     return false;
@@ -152,6 +174,7 @@ interface ConnectedAgent {
   agentId: string;
   hostname: string;
   platform: string;
+  tenantId: string;
   registration?: any;
   authenticated: boolean;
   lastHeartbeat: Date;
@@ -160,17 +183,23 @@ interface ConnectedAgent {
   commandHandler?: (command: { type: string; payload?: any; userId?: string; metadata?: any }) => boolean;
 }
 
+interface DashboardClient {
+  userId: string;
+  socketId: string;
+  tenantId: string;
+}
+
 export class AgentGateway {
-  private io: SocketIOServer;
+  private io: SocketIOServer<AgentClientToServerEvents, AgentServerToClientEvents>;
   private agents: Map<string, ConnectedAgent> = new Map();
-  private dashboardClients: Map<string, { userId: string; socketId: string }> = new Map();
+  private dashboardClients: Map<string, DashboardClient> = new Map();
   private testOnlineCounter = 0;
 
   /**
    * Broadcast audit log to dashboard clients
    */
   public broadcastAuditLog(log: any): void {
-    this.broadcastToDashboards('audit:log', log);
+    this.broadcastToDashboards('audit:log', log, { tenantId: log?.tenantId });
   }
 
   constructor(httpServer: HttpServer) {
@@ -200,13 +229,21 @@ export class AgentGateway {
       try {
         if (isTestRuntime()) {
           if (clientType === 'agent') {
-            (socket as any).agent = wsTestAgentAdapter(socket.handshake.auth, socket.id);
-            (socket as any).clientType = 'agent';
+            const agent = wsTestAgentAdapter(socket.handshake.auth, socket.id);
+            socket.data.agent = agent;
+            socket.data.clientType = 'agent';
+            socket.data.tenantContext =
+              resolveAgentTenantContext(agent.tenantId, 'test-agent') ||
+              buildPlatformTenantContext('test-agent');
             return next();
           }
 
-          (socket as any).user = wsTestDashboardUserAdapter(socket.handshake.auth);
-          (socket as any).clientType = 'dashboard';
+          const user = wsTestDashboardUserAdapter(socket.handshake.auth);
+          socket.data.user = user;
+          socket.data.clientType = 'dashboard';
+          socket.data.tenantContext = resolveUserTenantContext(user, {
+            allowAdminPlatformFallback: user.role === 'admin'
+          }) || buildPlatformTenantContext('test-dashboard');
           return next();
         }
 
@@ -241,8 +278,21 @@ export class AgentGateway {
           }
 
           // Attach to socket
-          (socket as any).agent = authenticatedAgent;
-          (socket as any).clientType = 'agent';
+          const tenantContext = resolveAgentTenantContext(authenticatedAgent.tenantId, 'agent-auth');
+          if (!tenantContext) {
+            await auditLogger.logAgent({
+              action: 'connect',
+              agentId,
+              ip: clientIp,
+              success: false,
+              details: { reason: 'tenant_not_resolved' }
+            });
+            return next(new Error('backend.agent_tenant_not_resolved'));
+          }
+
+          socket.data.agent = authenticatedAgent;
+          socket.data.clientType = 'agent';
+          socket.data.tenantContext = tenantContext;
 
           await auditLogger.logAgent({
             action: 'connect',
@@ -303,8 +353,25 @@ export class AgentGateway {
         }
 
         // Attach to socket
-        (socket as any).user = user;
-        (socket as any).clientType = 'dashboard';
+        const tenantContext = resolveUserTenantContext(user, {
+          allowAdminPlatformFallback: user.role === 'admin'
+        });
+        if (!tenantContext) {
+          await auditLogger.log({
+            eventType: 'dashboard_connection',
+            category: 'auth',
+            severity: 'warning',
+            actor: { type: 'user', id: user.userId, ip: clientIp },
+            action: 'connect',
+            details: { reason: 'tenant_not_resolved', email: user.email },
+            status: 'failure'
+          });
+          return next(new Error('backend.dashboard_tenant_not_resolved'));
+        }
+
+        socket.data.user = user;
+        socket.data.clientType = 'dashboard';
+        socket.data.tenantContext = tenantContext;
 
         await auditLogger.log({
           eventType: 'dashboard_connection',
@@ -329,7 +396,7 @@ export class AgentGateway {
    */
   private setupEventHandlers(): void {
     this.io.on('connection', (socket: Socket) => {
-      const clientType = (socket as any).clientType;
+      const clientType = socket.data.clientType;
 
       logger.info(`Client connected: ${socket.id} (${clientType})`);
 
@@ -347,7 +414,13 @@ export class AgentGateway {
    * SECURITY FIX: Enhanced agent connection handler
    */
   private handleAgentConnection(socket: Socket): void {
-    const agent = (socket as any).agent;
+    const agent = socket.data.agent;
+    const tenantContext = socket.data.tenantContext as TenantContext | undefined;
+    if (!agent || !tenantContext) {
+      socket.emit('error', { message: 'backend.agent_context_not_available', reason: 'tenant_required' });
+      socket.disconnect();
+      return;
+    }
 
     // Store connected agent
     const connectedAgent: ConnectedAgent = {
@@ -355,6 +428,7 @@ export class AgentGateway {
       agentId: agent.agentId,
       hostname: agent.hostname,
       platform: agent.platform,
+      tenantId: tenantContext.tenantId,
       authenticated: true,
       lastHeartbeat: new Date(),
       status: null
@@ -364,6 +438,7 @@ export class AgentGateway {
     if (isTestRuntime()) {
       this.testOnlineCounter += 1;
     }
+    this.broadcastAgentListUpdates(tenantContext.tenantId);
 
     // Send confirmation to agent
     socket.emit('agent:authenticated', {
@@ -375,34 +450,49 @@ export class AgentGateway {
     this.broadcastToDashboards('agent:online', {
       agentId: agent.agentId,
       hostname: agent.hostname,
-      platform: agent.platform
-    });
+      platform: agent.platform,
+      tenantId: tenantContext.tenantId
+    }, { tenantId: tenantContext.tenantId });
+
+    void this.syncDetectionRulesToAgent(agent.agentId, tenantContext.tenantId);
 
     // Legacy registration event used by tests and older agents.
     socket.on('agent:register', (registration: any) => {
       const connectedAgent = this.agents.get(agent.agentId);
       if (!connectedAgent) return;
+      const validatedRegistration = validateAgentRegisterPayload(registration);
+      if (!validatedRegistration) {
+        socket.emit('error', { message: 'backend.invalid_agent_registration_payload', reason: 'invalid_payload' });
+        return;
+      }
 
-      connectedAgent.registration = registration || {};
-      connectedAgent.hostname = registration?.hostname || connectedAgent.hostname;
-      connectedAgent.platform = registration?.platform || connectedAgent.platform;
+      connectedAgent.registration = validatedRegistration;
+      connectedAgent.hostname = validatedRegistration.hostname || connectedAgent.hostname;
+      connectedAgent.platform = validatedRegistration.platform || connectedAgent.platform;
       connectedAgent.lastHeartbeat = new Date();
 
       this.broadcastToDashboards('agent:registered', {
         agentId: connectedAgent.agentId,
-        registration: connectedAgent.registration
-      });
+        registration: connectedAgent.registration,
+        tenantId: connectedAgent.tenantId
+      }, { tenantId: connectedAgent.tenantId });
     });
 
     // Heartbeat handler
     // SECURITY FIX CVE-2026-201: Validate heartbeat comes from authenticated agent
     socket.on('agent:heartbeat', async (status: AgentStatus) => {
+      const validatedStatus = validateAgentHeartbeatPayload(status);
+      if (!validatedStatus) {
+        socket.emit('error', { message: 'backend.invalid_agent_heartbeat_payload', reason: 'invalid_payload' });
+        return;
+      }
+
       // SECURITY FIX: Verify heartbeat agentId matches authenticated agent
-      if (status.agentId && status.agentId !== agent.agentId) {
+      if (validatedStatus.agentId && validatedStatus.agentId !== agent.agentId) {
         logger.warn('Heartbeat agent ID mismatch', {
           socketId: socket.id,
           expected: agent.agentId,
-          received: status.agentId
+          received: validatedStatus.agentId
         });
 
         await auditLogger.log({
@@ -411,7 +501,7 @@ export class AgentGateway {
           severity: 'warning',
           actor: { type: 'agent', id: agent.agentId },
           action: 'heartbeat',
-          details: { reason: 'Agent ID mismatch', expected: agent.agentId, received: status.agentId },
+          details: { reason: 'Agent ID mismatch', expected: agent.agentId, received: validatedStatus.agentId },
           status: 'failure'
         });
 
@@ -421,7 +511,7 @@ export class AgentGateway {
       const connectedAgent = this.agents.get(agent.agentId);
       if (connectedAgent) {
         connectedAgent.lastHeartbeat = new Date();
-        connectedAgent.status = status;
+        connectedAgent.status = validatedStatus as AgentStatus;
 
         // Update last seen in database
         if (!isTestRuntime()) {
@@ -429,12 +519,16 @@ export class AgentGateway {
         }
       }
 
-      this.broadcastToDashboards('agent:status', { ...status, agentId: agent.agentId });
+      this.broadcastToDashboards('agent:status', {
+        ...validatedStatus,
+        agentId: agent.agentId,
+        tenantId: connectedAgent?.tenantId || tenantContext.tenantId
+      }, { tenantId: connectedAgent?.tenantId || tenantContext.tenantId });
     });
 
     // Traffic stats handler (added for real data loop)
     socket.on('agent:traffic_stats', async (data: { agentId: string, stats: any, timestamp: string }) => {
-      if (data.agentId && data.agentId !== agent.agentId) return;
+      if (data?.agentId && data.agentId !== agent.agentId) return;
 
       const globalStats = getTrafficStats();
       const probeStats = data.stats;
@@ -484,47 +578,117 @@ export class AgentGateway {
         }
       }
 
-      this.broadcastToDashboards('traffic:updated', { agentId: agent.agentId, stats: probeStats });
+      this.broadcastToDashboards('traffic:updated', {
+        agentId: agent.agentId,
+        stats: probeStats,
+        tenantId: tenantContext.tenantId
+      }, { tenantId: tenantContext.tenantId });
     });
 
     // Threat alert handler
     socket.on('agent:threat', async (data: { threat: ThreatAlert }) => {
+      const threat = data?.threat;
+      if (!threat || typeof threat !== 'object') {
+        socket.emit('error', { message: 'backend.invalid_threat_payload', reason: 'invalid_payload' });
+        return;
+      }
+
       await auditLogger.log({
         eventType: 'threat_detected',
         category: 'agent',
         severity: 'critical',
         actor: { type: 'agent', id: agent.agentId },
         action: 'threat_alert',
-        details: data.threat,
+        details: threat,
         status: 'success'
       });
 
-      // Hook: Actually analyze the inbound threat payload with the Multi-Agent LLMs
       try {
-        const aiSystem = getAgentSystem();
-        if (aiSystem) {
-          const simulatedReq: TrafficRequest = {
-            id: uuidv4(),
-            method: 'GET',
-            path: data.threat.description || '/',
-            headers: {},
-            sourceIP: data.threat.sourceIP || 'unknown',
-            body: `[Rule: ${data.threat.ruleId || 'UNKNOWN'}] Protocol Violation. Evidence: ${data.threat.evidence || 'None'}`,
-            timestamp: new Date()
-          };
-          // Deliberately process without awaiting, to not stall the socket
-          aiSystem.analyze(simulatedReq).catch(err => {
-            logger.error('Background AI threat analysis failed', { error: err.message });
-          });
-        }
+        await detectionPipelineService.recordBlockedThreat({
+          tenantId: tenantContext.tenantId,
+          channel: 'agent',
+          requestId: `${agent.agentId}:${Date.now()}:${threat.ruleId || 'threat'}`,
+          timestamp: new Date().toISOString(),
+          sourceIp: threat.sourceIP || socket.handshake.address || 'unknown',
+          method: 'EVENT',
+          path: threat.description || '/',
+          headers: {},
+          body: threat.evidence || '',
+          evidence: threat.evidence || '',
+          protocol: 'agent-threat',
+          rawPayload: JSON.stringify(threat),
+          metadata: {
+            agentId: agent.agentId,
+            severity: threat.severity,
+            description: threat.description
+          }
+        }, [String(threat.ruleId || 'agent-threat')], threat.severity, threat.description || 'Agent threat detected');
       } catch (err: any) {
-        logger.warn('Failed to route threat to AI subsystem', { error: err.message });
+        logger.warn('Failed to persist blocked threat into detection pipeline', { error: err.message });
       }
 
       this.broadcastToDashboards('threat:detected', {
         agentId: agent.agentId,
-        threat: data.threat
-      });
+        threat,
+        tenantId: tenantContext.tenantId
+      }, { tenantId: tenantContext.tenantId });
+    });
+
+    socket.on('agent:review_sample', async (data: { sample?: Record<string, any>; timestamp?: string }) => {
+      const sample = data?.sample;
+      if (!sample || typeof sample !== 'object') {
+        socket.emit('error', { message: 'backend.invalid_review_sample_payload', reason: 'invalid_payload' });
+        return;
+      }
+
+      try {
+        const decision = await detectionPipelineService.reviewAgentSample({
+          tenantId: tenantContext.tenantId,
+          channel: 'agent',
+          requestId: String(sample.requestId || `${agent.agentId}:${Date.now()}`),
+          timestamp: String(sample.timestamp || data?.timestamp || new Date().toISOString()),
+          sourceIp: typeof sample.sourceIp === 'string' ? sample.sourceIp : socket.handshake.address || 'unknown',
+          method: typeof sample.method === 'string' ? sample.method : 'EVENT',
+          path: typeof sample.path === 'string' ? sample.path : '/',
+          headers: sample.headers && typeof sample.headers === 'object' ? sample.headers : {},
+          body: typeof sample.body === 'string' ? sample.body : '',
+          userAgent: typeof sample.userAgent === 'string' ? sample.userAgent : '',
+          evidence: typeof sample.evidence === 'string' ? sample.evidence : '',
+          protocol: typeof sample.protocol === 'string' ? sample.protocol : 'agent',
+          rawPayload: typeof sample.rawPayload === 'string' ? sample.rawPayload : '',
+          existingSignals: Array.isArray(sample.existingSignals) ? sample.existingSignals : [],
+          metadata: {
+            ...(sample.metadata && typeof sample.metadata === 'object' ? sample.metadata : {}),
+            agentId: agent.agentId,
+            localRiskScore: Number(sample.riskScore || 0),
+            localMatchedRuleIds: Array.isArray(sample.matchedRuleIds) ? sample.matchedRuleIds : [],
+            localDecisionSource: String(sample.decisionSource || 'agent-local')
+          }
+        });
+
+        if (decision.aiVerdict === 'malicious' || decision.candidateId) {
+          this.broadcastToDashboards('threat:detected', {
+            agentId: agent.agentId,
+            tenantId: tenantContext.tenantId,
+            threat: {
+              type: decision.attackFamily,
+              severity: decision.aiVerdict === 'malicious' ? 'high' : 'medium',
+              sourceIP: typeof sample.sourceIp === 'string' ? sample.sourceIp : socket.handshake.address || 'unknown',
+              description: `Async agent review ${decision.aiVerdict || 'monitor'} (${decision.attackFamily})`,
+              evidence: typeof sample.evidence === 'string' ? sample.evidence : '',
+              ruleId: decision.candidateId || decision.matchedRuleIds[0] || 'agent-review',
+              autoBlock: false
+            },
+            asyncReview: true,
+            candidateId: decision.candidateId || null
+          }, { tenantId: tenantContext.tenantId });
+        }
+      } catch (error: any) {
+        logger.warn('Async agent review failed', {
+          agentId: agent.agentId,
+          error: error?.message
+        });
+      }
     });
 
     // Scan result handler
@@ -539,12 +703,20 @@ export class AgentGateway {
         status: 'success'
       });
 
-      this.broadcastToDashboards('scan:result', { agentId: agent.agentId, ...data });
+      this.broadcastToDashboards('scan:result', {
+        agentId: agent.agentId,
+        ...data,
+        tenantId: tenantContext.tenantId
+      }, { tenantId: tenantContext.tenantId });
     });
 
     // Agent log handler
     socket.on('agent:log', (data: any) => {
-      this.broadcastToDashboards('agent:log', { agentId: agent.agentId, ...data });
+      this.broadcastToDashboards('agent:log', {
+        agentId: agent.agentId,
+        ...data,
+        tenantId: tenantContext.tenantId
+      }, { tenantId: tenantContext.tenantId });
     });
 
     socket.on('agent:command_ack', async (data: any) => {
@@ -558,7 +730,11 @@ export class AgentGateway {
         status: 'success'
       });
       commandDispatcherService.handleAgentCommandAck(agent.agentId, data || {});
-      this.broadcastToDashboards('agent:command:ack', { agentId: agent.agentId, ...data });
+      this.broadcastToDashboards('agent:command:ack', {
+        agentId: agent.agentId,
+        ...data,
+        tenantId: tenantContext.tenantId
+      }, { tenantId: tenantContext.tenantId });
     });
 
     socket.on('agent:command_failed', async (data: any) => {
@@ -572,7 +748,11 @@ export class AgentGateway {
         status: 'failure'
       });
       commandDispatcherService.handleAgentCommandFailure(agent.agentId, data || {});
-      this.broadcastToDashboards('agent:command:failed', { agentId: agent.agentId, ...data });
+      this.broadcastToDashboards('agent:command:failed', {
+        agentId: agent.agentId,
+        ...data,
+        tenantId: tenantContext.tenantId
+      }, { tenantId: tenantContext.tenantId });
     });
   }
 
@@ -580,128 +760,192 @@ export class AgentGateway {
    * SECURITY FIX: Enhanced dashboard connection handler with rate limiting
    */
   private handleDashboardConnection(socket: Socket): void {
-    const user = (socket as any).user;
+    const user = socket.data.user;
+    const tenantContext = socket.data.tenantContext as TenantContext | undefined;
+    if (!user || !tenantContext) {
+      socket.emit('error', { message: 'backend.dashboard_context_not_available', reason: 'tenant_required' });
+      socket.disconnect();
+      return;
+    }
 
     this.dashboardClients.set(socket.id, {
       userId: user.userId,
-      socketId: socket.id
+      socketId: socket.id,
+      tenantId: tenantContext.tenantId
     });
 
     // Send current agent list
-    socket.emit('agents:list', this.getAgentList());
+    this.emitAgentListToDashboard(socket.id, tenantContext.tenantId);
 
     // Scan request - SECURITY FIX CVE-2026-301: Check both user and socket rate limits
     socket.on('request:scan', async (data: { agentId: string }) => {
-      // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!(await checkUserRateLimit(user.userId, socket))) {
-        socket.emit('error', { message: 'backend.user_rate_limit_exceeded' });
+      const payload = validateDashboardAgentCommandPayload(data);
+      if (!payload) {
+        socket.emit('error', { message: 'backend.invalid_agent_command_payload', reason: 'invalid_payload' });
         return;
       }
 
-      if (!(await checkSocketRateLimit(socket))) {
-        socket.emit('error', { message: 'backend.connection_rate_limit_exceeded' });
+      // SECURITY FIX CVE-2026-301: Check user-level rate limit first
+      if (!(await checkUserRateLimit(user.userId, tenantContext.tenantId, socket))) {
+        socket.emit('error', { message: 'backend.user_rate_limit_exceeded', reason: 'rate_limit_exceeded' });
+        return;
+      }
+
+      if (!(await checkSocketRateLimit(socket, tenantContext.tenantId))) {
+        socket.emit('error', { message: 'backend.connection_rate_limit_exceeded', reason: 'rate_limit_exceeded' });
+        return;
+      }
+
+      const targetAgent = this.agents.get(payload.agentId);
+      if (!targetAgent) {
+        socket.emit('error', { message: 'backend.agent_not_found', reason: 'agent_not_found' });
+        return;
+      }
+
+      if (!this.canAccessTenant(tenantContext.tenantId, targetAgent.tenantId)) {
+        socket.emit('error', { message: 'backend.cannot_access_resources_from_another_tenant', reason: 'tenant_mismatch' });
         return;
       }
 
       await auditLogger.logCommand({
         commandType: 'scan',
-        agentId: data.agentId,
+        agentId: payload.agentId,
         userId: user.userId,
         success: true
       });
 
-      this.sendSignedCommand(data.agentId, 'scan', undefined, user.userId);
+      this.sendSignedCommand(payload.agentId, 'scan', undefined, user.userId, {
+        tenantId: tenantContext.tenantId
+      });
     });
 
     // Block IP request - SECURITY FIX CVE-2026-301: Validate and audit with user-level rate limiting
     socket.on('request:block_ip', async (data: { agentId: string; ip: string }) => {
-      // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!(await checkUserRateLimit(user.userId, socket))) {
-        socket.emit('error', { message: 'backend.user_rate_limit_exceeded' });
+      const payload = validateDashboardIpCommandPayload(data);
+      if (!payload) {
+        socket.emit('error', { message: 'backend.invalid_agent_command_payload', reason: 'invalid_payload' });
         return;
       }
 
-      if (!(await checkSocketRateLimit(socket))) {
-        socket.emit('error', { message: 'backend.connection_rate_limit_exceeded' });
+      // SECURITY FIX CVE-2026-301: Check user-level rate limit first
+      if (!(await checkUserRateLimit(user.userId, tenantContext.tenantId, socket))) {
+        socket.emit('error', { message: 'backend.user_rate_limit_exceeded', reason: 'rate_limit_exceeded' });
+        return;
+      }
+
+      if (!(await checkSocketRateLimit(socket, tenantContext.tenantId))) {
+        socket.emit('error', { message: 'backend.connection_rate_limit_exceeded', reason: 'rate_limit_exceeded' });
+        return;
+      }
+
+      const targetAgent = this.agents.get(payload.agentId);
+      if (!targetAgent) {
+        socket.emit('error', { message: 'backend.agent_not_found', reason: 'agent_not_found' });
+        return;
+      }
+
+      if (!this.canAccessTenant(tenantContext.tenantId, targetAgent.tenantId)) {
+        socket.emit('error', { message: 'backend.cannot_access_resources_from_another_tenant', reason: 'tenant_mismatch' });
         return;
       }
 
       // Validate IP
-      if (!isValidIPAddress(data.ip)) {
+      if (!isValidIPAddress(payload.ip)) {
         await auditLogger.logFirewall({
           action: 'block_ip',
-          agentId: data.agentId,
-          ip: data.ip,
+          agentId: payload.agentId,
+          ip: payload.ip,
           userId: user.userId,
           success: false,
           details: { reason: 'Invalid IP format' }
         });
-        socket.emit('error', { message: 'backend.invalid_ip_address_format' });
+        socket.emit('error', { message: 'backend.invalid_ip_address_format', reason: 'invalid_ip' });
         return;
       }
 
-      if (containsShellMetacharacters(data.ip)) {
+      if (containsShellMetacharacters(payload.ip)) {
         await auditLogger.log({
           eventType: 'command_injection_attempt',
           category: 'firewall',
           severity: 'critical',
           actor: { type: 'user', id: user.userId },
           action: 'block_ip',
-          target: { type: 'server', id: data.agentId },
-          details: { ip: data.ip, reason: 'Shell characters detected' },
+          target: { type: 'server', id: payload.agentId },
+          details: { ip: payload.ip, reason: 'Shell characters detected' },
           status: 'failure'
         });
-        socket.emit('error', { message: 'backend.invalid_characters_in_ip_address' });
+        socket.emit('error', { message: 'backend.invalid_characters_in_ip_address', reason: 'invalid_ip' });
         return;
       }
 
       await auditLogger.logFirewall({
         action: 'block_ip',
-        agentId: data.agentId,
-        ip: data.ip,
+        agentId: payload.agentId,
+        ip: payload.ip,
         userId: user.userId,
         success: true
       });
 
-      this.sendSignedCommand(data.agentId, 'block_ip', { ip: data.ip }, user.userId);
+      this.sendSignedCommand(payload.agentId, 'block_ip', { ip: payload.ip }, user.userId, {
+        tenantId: tenantContext.tenantId
+      });
     });
 
     // Unblock IP request - SECURITY FIX CVE-2026-301: Validate and audit with user-level rate limiting
     socket.on('request:unblock_ip', async (data: { agentId: string; ip: string }) => {
-      // SECURITY FIX CVE-2026-301: Check user-level rate limit first
-      if (!(await checkUserRateLimit(user.userId, socket))) {
-        socket.emit('error', { message: 'backend.user_rate_limit_exceeded' });
+      const payload = validateDashboardIpCommandPayload(data);
+      if (!payload) {
+        socket.emit('error', { message: 'backend.invalid_agent_command_payload', reason: 'invalid_payload' });
         return;
       }
 
-      if (!(await checkSocketRateLimit(socket))) {
-        socket.emit('error', { message: 'backend.connection_rate_limit_exceeded' });
+      // SECURITY FIX CVE-2026-301: Check user-level rate limit first
+      if (!(await checkUserRateLimit(user.userId, tenantContext.tenantId, socket))) {
+        socket.emit('error', { message: 'backend.user_rate_limit_exceeded', reason: 'rate_limit_exceeded' });
+        return;
+      }
+
+      if (!(await checkSocketRateLimit(socket, tenantContext.tenantId))) {
+        socket.emit('error', { message: 'backend.connection_rate_limit_exceeded', reason: 'rate_limit_exceeded' });
+        return;
+      }
+
+      const targetAgent = this.agents.get(payload.agentId);
+      if (!targetAgent) {
+        socket.emit('error', { message: 'backend.agent_not_found', reason: 'agent_not_found' });
+        return;
+      }
+
+      if (!this.canAccessTenant(tenantContext.tenantId, targetAgent.tenantId)) {
+        socket.emit('error', { message: 'backend.cannot_access_resources_from_another_tenant', reason: 'tenant_mismatch' });
         return;
       }
 
       // Validate IP
-      if (!isValidIPAddress(data.ip)) {
+      if (!isValidIPAddress(payload.ip)) {
         await auditLogger.logFirewall({
           action: 'unblock_ip',
-          agentId: data.agentId,
-          ip: data.ip,
+          agentId: payload.agentId,
+          ip: payload.ip,
           userId: user.userId,
           success: false,
           details: { reason: 'Invalid IP format' }
         });
-        socket.emit('error', { message: 'backend.invalid_ip_address_format' });
+        socket.emit('error', { message: 'backend.invalid_ip_address_format', reason: 'invalid_ip' });
         return;
       }
 
       await auditLogger.logFirewall({
         action: 'unblock_ip',
-        agentId: data.agentId,
-        ip: data.ip,
+        agentId: payload.agentId,
+        ip: payload.ip,
         userId: user.userId,
         success: true
       });
 
-      this.sendSignedCommand(data.agentId, 'unblock_ip', { ip: data.ip }, user.userId);
+      this.sendSignedCommand(payload.agentId, 'unblock_ip', { ip: payload.ip }, user.userId, {
+        tenantId: tenantContext.tenantId
+      });
     });
   }
 
@@ -722,6 +966,8 @@ export class AgentGateway {
       return false;
     }
 
+    const resolvedTenantId = metadata?.tenantId || agent.tenantId || PLATFORM_TENANT_ID;
+
     try {
       if (agent.commandHandler) {
         const accepted = agent.commandHandler({
@@ -740,12 +986,12 @@ export class AgentGateway {
         this.broadcastToDashboards('agent:command:ack', {
           agentId,
           actionId: metadata?.actionId || payload?.actionId,
-          tenantId: metadata?.tenantId || 'global',
+          tenantId: resolvedTenantId,
           message: `Synthetic agent accepted ${commandType}.`
         });
         commandDispatcherService.handleAgentCommandAck(agentId, {
           actionId: metadata?.actionId || payload?.actionId,
-          tenantId: metadata?.tenantId || 'global',
+          tenantId: resolvedTenantId,
           message: `Synthetic agent accepted ${commandType}.`
         });
         return true;
@@ -786,16 +1032,19 @@ export class AgentGateway {
    * Handle disconnect
    */
   private handleDisconnect(socket: Socket): void {
-    const clientType = (socket as any).clientType;
+    const clientType = socket.data.clientType;
 
     if (clientType === 'agent') {
-      const agent = (socket as any).agent;
-      if (agent) {
+      const agent = socket.data.agent;
+      const tenantContext = socket.data.tenantContext as TenantContext | undefined;
+      if (agent && tenantContext) {
         this.agents.delete(agent.agentId);
+        this.broadcastAgentListUpdates(tenantContext.tenantId);
 
         this.broadcastToDashboards('agent:offline', {
-          agentId: agent.agentId
-        });
+          agentId: agent.agentId,
+          tenantId: tenantContext.tenantId
+        }, { tenantId: tenantContext.tenantId });
 
         auditLogger.logAgent({
           action: 'disconnect',
@@ -814,9 +1063,13 @@ export class AgentGateway {
   /**
    * Broadcast to all dashboard clients
    */
-  public broadcastToDashboards(event: string, data: any): void {
-    for (const [socketId] of this.dashboardClients) {
-      this.io.to(socketId).emit(event, data);
+  public broadcastToDashboards(event: string, data: any, options: { tenantId?: string } = {}): void {
+    const targetTenantId = options.tenantId || data?.tenantId;
+    for (const [socketId, client] of this.dashboardClients) {
+      if (targetTenantId && !this.canAccessTenant(client.tenantId, targetTenantId)) {
+        continue;
+      }
+      this.io.to(socketId).emit(event as keyof AgentServerToClientEvents, data);
     }
   }
 
@@ -827,10 +1080,28 @@ export class AgentGateway {
     return this.sendSignedCommand(agentId, command.type, command.payload, userId, command.metadata);
   }
 
+  public async syncTenantDetectionRules(tenantId: string): Promise<{ attempted: number; succeeded: number }> {
+    const agents = Array.from(this.agents.values()).filter((agent) => agent.tenantId === tenantId && !agent.isSynthetic);
+    let succeeded = 0;
+
+    await Promise.all(agents.map(async (agent) => {
+      const synced = await this.syncDetectionRulesToAgent(agent.agentId, tenantId);
+      if (synced) {
+        succeeded += 1;
+      }
+    }));
+
+    return {
+      attempted: agents.length,
+      succeeded
+    };
+  }
+
   public upsertSyntheticAgent(input: {
     agentId: string;
     hostname: string;
     platform: string;
+    tenantId?: string;
     registration?: any;
     lastHeartbeat?: Date;
     status?: AgentStatus | null;
@@ -842,6 +1113,7 @@ export class AgentGateway {
       agentId: input.agentId,
       hostname: input.hostname,
       platform: input.platform,
+      tenantId: input.tenantId || existing?.tenantId || PLATFORM_TENANT_ID,
       registration: input.registration ?? existing?.registration,
       authenticated: true,
       lastHeartbeat: input.lastHeartbeat || existing?.lastHeartbeat || new Date(),
@@ -859,19 +1131,21 @@ export class AgentGateway {
         agentId: nextAgent.agentId,
         hostname: nextAgent.hostname,
         platform: nextAgent.platform,
-        synthetic: true
-      });
+        synthetic: true,
+        tenantId: nextAgent.tenantId
+      }, { tenantId: nextAgent.tenantId });
     }
 
     if (nextAgent.status) {
       this.broadcastToDashboards('agent:status', {
         ...nextAgent.status,
         agentId: nextAgent.agentId,
-        synthetic: true
-      });
+        synthetic: true,
+        tenantId: nextAgent.tenantId
+      }, { tenantId: nextAgent.tenantId });
     }
 
-    this.broadcastToDashboards('agents:list', this.getAgentList());
+    this.broadcastAgentListUpdates(nextAgent.tenantId);
   }
 
   public removeSyntheticAgent(agentId: string): void {
@@ -883,9 +1157,10 @@ export class AgentGateway {
     this.agents.delete(agentId);
     this.broadcastToDashboards('agent:offline', {
       agentId,
-      synthetic: true
-    });
-    this.broadcastToDashboards('agents:list', this.getAgentList());
+      synthetic: true,
+      tenantId: agent.tenantId
+    }, { tenantId: agent.tenantId });
+    this.broadcastAgentListUpdates(agent.tenantId);
   }
 
   /**
@@ -896,12 +1171,78 @@ export class AgentGateway {
       agentId: agent.agentId,
       hostname: agent.hostname,
       platform: agent.platform,
+      tenantId: agent.tenantId,
       registration: agent.registration,
       lastHeartbeat: agent.lastHeartbeat,
       status: agent.status,
       isOnline: agent.status?.isOnline ?? true,
       synthetic: Boolean(agent.isSynthetic)
     }));
+  }
+
+  private canAccessTenant(clientTenantId: string, targetTenantId?: string): boolean {
+    if (!targetTenantId) {
+      return true;
+    }
+
+    return clientTenantId === PLATFORM_TENANT_ID || clientTenantId === targetTenantId;
+  }
+
+  private getAgentListForTenant(tenantId: string): any[] {
+    return Array.from(this.agents.values())
+      .filter((agent) => this.canAccessTenant(tenantId, agent.tenantId))
+      .map(agent => ({
+        agentId: agent.agentId,
+        hostname: agent.hostname,
+        platform: agent.platform,
+        tenantId: agent.tenantId,
+        registration: agent.registration,
+        lastHeartbeat: agent.lastHeartbeat,
+        status: agent.status,
+        isOnline: agent.status?.isOnline ?? true,
+        synthetic: Boolean(agent.isSynthetic)
+      }));
+  }
+
+  private emitAgentListToDashboard(socketId: string, tenantId: string): void {
+    this.io.to(socketId).emit('agents:list', this.getAgentListForTenant(tenantId));
+  }
+
+  private async syncDetectionRulesToAgent(agentId: string, tenantId: string): Promise<boolean> {
+    try {
+      const rules = await detectionPipelineService.listDynamicRules(tenantId, 'agent');
+      return this.sendSignedCommand(agentId, 'update_rules', {
+        rules
+      }, 'system', {
+        tenantId,
+        source: 'detection-pipeline'
+      });
+    } catch (error: any) {
+      if (process.env.NODE_ENV === 'test' && isDetectionBootstrapError(error)) {
+        logger.debug('Skipping detection rule sync before test database bootstrap', {
+          agentId,
+          tenantId
+        });
+        return false;
+      }
+
+      logger.warn('Failed to sync detection rules to agent', {
+        agentId,
+        tenantId,
+        error: error?.message
+      });
+      return false;
+    }
+  }
+
+  private broadcastAgentListUpdates(targetTenantId?: string): void {
+    for (const client of this.dashboardClients.values()) {
+      if (targetTenantId && !this.canAccessTenant(client.tenantId, targetTenantId)) {
+        continue;
+      }
+
+      this.emitAgentListToDashboard(client.socketId, client.tenantId);
+    }
   }
 
   /**

@@ -1,6 +1,9 @@
 import i18n from '../i18n';
 import { isDemoModeActive } from '../config/demo-mode';
 import {
+    setSessionUserIdentity,
+} from './session-cache';
+import {
     DashboardStats,
     LogItem,
     MultiAgentSystemStats,
@@ -10,7 +13,11 @@ import {
     AttackSimulationReport,
     AlertRecord,
     SecurityFinding,
-    ScanAssetGroup
+    ScanAssetGroup,
+    RuleRecord,
+    RuleCandidateRecord,
+    DetectionEventRecord,
+    RuleSummary
 } from '../types/api';
 import {
     cancelDemoScanTask,
@@ -38,7 +45,6 @@ import {
     getDemoAlerts,
     getDemoAttackHistory,
     getDemoAttackTypes,
-    getDemoDashboardRulesSummary,
     getDemoDeploymentHistory,
     getDemoDeviceDetail,
     getDemoDeviceEvents,
@@ -124,6 +130,145 @@ const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
             ...options.headers
         }
     });
+};
+
+type ApiEnvelope<T> = {
+    success?: boolean;
+    data?: T;
+    error?: unknown;
+    meta?: Record<string, any>;
+};
+
+const isApiEnvelope = <T>(payload: unknown): payload is ApiEnvelope<T> => (
+    Boolean(payload)
+    && typeof payload === 'object'
+    && ('success' in (payload as Record<string, unknown>))
+    && ('data' in (payload as Record<string, unknown>))
+);
+
+const unwrapApiEnvelope = <T>(payload: unknown): T => {
+    if (isApiEnvelope<T>(payload) && payload.data !== undefined) {
+        return payload.data as T;
+    }
+    return payload as T;
+};
+
+const readJson = async <T>(response: Response): Promise<T> => {
+    const payload = await response.json().catch(() => null);
+    return unwrapApiEnvelope<T>(payload);
+};
+
+export interface CurrentUserSession {
+    userId: string;
+    email: string;
+    username: string;
+    role: 'admin' | 'tenant' | 'viewer';
+    plan?: 'starter' | 'pro' | 'ultra';
+    tenantId?: string;
+}
+
+export interface LoginResponse {
+    message?: string;
+    user: CurrentUserSession;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
+}
+
+export interface ApiReadiness {
+    ok: boolean;
+    status: 'ready' | 'not_ready';
+    blockers: string[];
+}
+
+export const fetchCurrentUserSession = async (signal?: AbortSignal): Promise<CurrentUserSession | null> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`, { signal });
+    if (!response.ok) {
+        setSessionUserIdentity(null);
+        return null;
+    }
+
+    const payload = await response.json().catch(() => null) as any;
+    const data = unwrapApiEnvelope<{ user?: CurrentUserSession }>(payload);
+    const user = data?.user || payload?.user || null;
+    setSessionUserIdentity(user);
+    return user;
+};
+
+const extractErrorMessage = (payload: any, fallback: string): string => {
+    if (typeof payload?.error === 'string') {
+        return payload.error;
+    }
+
+    if (payload?.error && typeof payload.error === 'object' && typeof payload.error.message === 'string') {
+        return payload.error.message;
+    }
+
+    if (typeof payload?.message === 'string') {
+        return payload.message;
+    }
+
+    return fallback;
+};
+
+export const login = async (
+    credentials: { email: string; password: string },
+    signal?: AbortSignal
+): Promise<LoginResponse> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        signal,
+        body: JSON.stringify(credentials)
+    });
+
+    const payload = await response.json().catch(() => null) as any;
+    const data = unwrapApiEnvelope<Partial<LoginResponse>>(payload);
+
+    if (!response.ok) {
+        setSessionUserIdentity(null);
+        throw new Error(extractErrorMessage(payload, `FG-AUTH-LOGIN-${response.status}`));
+    }
+
+    const user = data?.user || payload?.user;
+    if (!user) {
+        throw new Error('FG-AUTH-LOGIN-USER-MISSING');
+    }
+
+    setSessionUserIdentity(user);
+    return {
+        message: data?.message || payload?.message,
+        user,
+        accessToken: data?.accessToken || payload?.accessToken,
+        refreshToken: data?.refreshToken || payload?.refreshToken,
+        expiresIn: data?.expiresIn || payload?.expiresIn
+    };
+};
+
+export const logout = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        signal
+    });
+
+    const payload = await response.json().catch(() => null) as any;
+    setSessionUserIdentity(null);
+
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(payload, `FG-AUTH-LOGOUT-${response.status}`));
+    }
+
+    return unwrapApiEnvelope<{ message?: string }>(payload);
+};
+
+export const fetchApiReadiness = async (signal?: AbortSignal): Promise<ApiReadiness> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/health/ready`, { signal });
+    const payload = await response.json().catch(() => null) as any;
+    const data = unwrapApiEnvelope<{ status?: 'ready' | 'not_ready'; blockers?: string[] }>(payload);
+    return {
+        ok: response.ok,
+        status: data?.status || payload?.status || 'not_ready',
+        blockers: Array.isArray(data?.blockers) ? data.blockers : Array.isArray(payload?.blockers) ? payload.blockers : []
+    };
 };
 
 type LegacyScanFinding = {
@@ -226,6 +371,9 @@ export interface SystemModeResponse {
     demoEnabled: boolean;
     attackSimEnabled: boolean;
     canToggleMode?: boolean;
+    devLoginEnabled?: boolean;
+    profile?: string;
+    dbMode?: string;
 }
 
 export interface SystemBadges {
@@ -260,6 +408,8 @@ export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type NotificationChannelType = 'email' | 'smtp' | 'slack_webhook' | 'generic_webhook';
 export type AIRoutingMode = 'cloud_only' | 'local_preferred' | 'local_only' | 'hybrid_verify';
 export type PrivacyMode = 'off' | 'strict';
+export type DetectionAIEscalationMode = 'high_risk_allowed_only';
+export type DetectionLearningMode = 'malicious_review_queue';
 
 export interface NotificationChannelConfig {
     id: string;
@@ -318,7 +468,20 @@ export interface PlatformConfigResponse {
         socketPath: string | null;
         timeoutMs: number;
         fallbackEnabled: boolean;
+        trafficShadowEnabled: boolean;
+        trafficShadowSampleRatePct: number;
+        trafficMaxBodyBytes: number;
         configCacheTtlMs: number;
+    };
+    detectionPipeline: {
+        ruleFirstEnabled: boolean;
+        aiEscalationMode: DetectionAIEscalationMode;
+        enableHttpApi: boolean;
+        enablePacketInterceptor: boolean;
+        enableAgentAsyncReview: boolean;
+        aiEscalationThreshold: number;
+        candidateMinConfidence: number;
+        learningMode: DetectionLearningMode;
     };
     deploymentDefaults: {
         serverType: DeploymentTarget;
@@ -379,12 +542,16 @@ export interface DeviceConfigurationPayload {
 export const getAttackRunRouteId = (report: { id?: string; startTime?: string }) =>
     encodeURIComponent(report.id || report.startTime || 'unknown');
 
-export const fetchSystemMode = async (): Promise<SystemModeResponse> => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/system/mode`);
+export const fetchSystemMode = async (signal?: AbortSignal): Promise<SystemModeResponse> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/system/mode`, { signal });
     if (!response.ok) {
         throw new Error(`FG-SYSTEM-MODE-${response.status}`);
     }
-    return response.json();
+    return readJson<SystemModeResponse>(response);
+};
+
+export const fetchSystemCapabilities = async (signal?: AbortSignal): Promise<SystemModeResponse> => {
+    return fetchSystemMode(signal);
 };
 
 export const switchSystemMode = async (appMode: SystemMode, options?: {
@@ -409,7 +576,7 @@ export const switchSystemMode = async (appMode: SystemMode, options?: {
         }
         throw new Error(message);
     }
-    return response.json();
+    return readJson<SystemModeResponse & { seeded?: boolean }>(response);
 };
 
 // --- API Functions ---
@@ -596,7 +763,7 @@ const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
         channels: []
     },
     aiRouting: {
-        mode: 'cloud_only',
+        mode: 'local_preferred',
         localEndpointId: 'default-laptop',
         localHotPathEndpointId: null,
         cloudEndpointId: null,
@@ -617,7 +784,20 @@ const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
         socketPath: '/var/run/aetherguard-fastpath.sock',
         timeoutMs: 1500,
         fallbackEnabled: true,
+        trafficShadowEnabled: false,
+        trafficShadowSampleRatePct: 10,
+        trafficMaxBodyBytes: 65536,
         configCacheTtlMs: 30000
+    },
+    detectionPipeline: {
+        ruleFirstEnabled: true,
+        aiEscalationMode: 'high_risk_allowed_only',
+        enableHttpApi: true,
+        enablePacketInterceptor: true,
+        enableAgentAsyncReview: true,
+        aiEscalationThreshold: 0.4,
+        candidateMinConfidence: 0.85,
+        learningMode: 'malicious_review_queue'
     },
     deploymentDefaults: {
         serverType: 'nginx',
@@ -643,6 +823,245 @@ const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
     }
 });
 
+const demoRuleSummary = (): RuleSummary => ({
+    totalRules: 4,
+    activeRules: 4,
+    pendingCandidates: 1,
+    approvedCandidates: 1,
+    rejectedCandidates: 1,
+    ruleHitRate: 0.62,
+    aiEscalationRate: 0.18,
+    avgProcessingTimeMs: 14.8,
+    localAICount: 18,
+    cloudAICount: 2,
+    topRules: [
+        { ruleId: 'seed-http-sqli', name: 'SQLi UNION SELECT', severity: 'critical', hitCount: 12, source: 'seed' },
+        { ruleId: 'candidate-agent-bruteforce', name: 'Agent credential spray', severity: 'high', hitCount: 6, source: 'candidate' }
+    ]
+});
+
+const demoRules = (): RuleRecord[] => ([
+    {
+        ruleId: 'seed-http-sqli',
+        tenantId: 'demo-tenant',
+        name: 'SQLi UNION SELECT',
+        description: 'Blocks classic UNION SELECT payloads on HTTP entrypoints.',
+        scope: 'http_api',
+        action: 'block',
+        priority: 1000,
+        severity: 'critical',
+        matcher: { bodyIncludesAny: ['union select', 'information_schema'] },
+        source: 'seed',
+        enabled: true,
+        attackFamily: 'sqli',
+        version: 1,
+        metadata: {}
+    },
+    {
+        ruleId: 'dynamic-packet-path-traversal',
+        tenantId: 'demo-tenant',
+        name: 'Traversal packet signature',
+        description: 'Reviews packet payloads that resemble traversal probes.',
+        scope: 'packet',
+        action: 'review',
+        priority: 420,
+        severity: 'medium',
+        matcher: { evidenceIncludesAny: ['../', '..\\\\'] },
+        source: 'dynamic',
+        enabled: true,
+        attackFamily: 'path_traversal',
+        version: 3,
+        metadata: {}
+    },
+    {
+        ruleId: 'candidate-agent-bruteforce',
+        tenantId: 'demo-tenant',
+        name: 'Agent credential spray',
+        description: 'Promoted from AI review after repeated malicious agent samples.',
+        scope: 'agent',
+        action: 'block',
+        priority: 820,
+        severity: 'high',
+        matcher: { metadataMatches: { authFailureBurst: true } },
+        source: 'candidate',
+        enabled: true,
+        attackFamily: 'automation',
+        version: 1,
+        metadata: {}
+    },
+    {
+        ruleId: 'dynamic-http-xss',
+        tenantId: 'demo-tenant',
+        name: 'Reflected XSS review',
+        description: 'Escalates suspicious reflected script payloads to AI review.',
+        scope: 'http_api',
+        action: 'review',
+        priority: 450,
+        severity: 'medium',
+        matcher: { bodyIncludesAny: ['<script', 'javascript:'] },
+        source: 'dynamic',
+        enabled: true,
+        attackFamily: 'xss',
+        version: 2,
+        metadata: {}
+    }
+]);
+
+const demoRuleCandidates = (): RuleCandidateRecord[] => ([
+    {
+        candidateId: 'candidate-http-xss-1',
+        tenantId: 'demo-tenant',
+        channel: 'http_api',
+        attackFamily: 'xss',
+        name: 'Stored XSS admin panel probe',
+        severity: 'high',
+        matcher: { bodyIncludesAny: ['<script>alert(', 'onerror='] },
+        matcherFingerprint: 'demo-xss-fingerprint',
+        reasoning: 'AI observed repeated admin panel payloads that survived review rules and matched malicious reflected script behavior.',
+        status: 'pending',
+        sampleCount: 3,
+        aiConfidence: 0.93,
+        latestEvidence: {
+            request: { method: 'POST', path: '/admin/widgets', sourceIp: '203.0.113.20' },
+            ai: { verdict: 'malicious', routeMode: 'local_preferred', model: 'demo-local' }
+        },
+        approvedRuleId: null,
+        reviewReason: null,
+        createdAt: new Date(Date.now() - 3600_000).toISOString(),
+        updatedAt: new Date(Date.now() - 900_000).toISOString(),
+        reviewedAt: null,
+        reviewedBy: null
+    },
+    {
+        candidateId: 'candidate-agent-approve-1',
+        tenantId: 'demo-tenant',
+        channel: 'agent',
+        attackFamily: 'automation',
+        name: 'Agent credential spray',
+        severity: 'high',
+        matcher: { metadataMatches: { authFailureBurst: true } },
+        matcherFingerprint: 'demo-agent-fingerprint',
+        reasoning: 'Reviewed and promoted after multiple malicious agent review samples with strong agreement.',
+        status: 'approved',
+        sampleCount: 7,
+        aiConfidence: 0.97,
+        latestEvidence: {
+            request: { hostname: 'node-17', sourceIp: '198.51.100.18' },
+            ai: { verdict: 'malicious', routeMode: 'local_preferred', model: 'demo-local' }
+        },
+        approvedRuleId: 'candidate-agent-bruteforce',
+        reviewReason: 'Approved for hot rollout.',
+        createdAt: new Date(Date.now() - 86400_000).toISOString(),
+        updatedAt: new Date(Date.now() - 7200_000).toISOString(),
+        reviewedAt: new Date(Date.now() - 7200_000).toISOString(),
+        reviewedBy: 'admin@example.com'
+    },
+    {
+        candidateId: 'candidate-packet-reject-1',
+        tenantId: 'demo-tenant',
+        channel: 'packet',
+        attackFamily: 'other',
+        name: 'Noisy binary payload',
+        severity: 'medium',
+        matcher: { protocol: 'tcp', evidenceIncludesAny: ['0x16 0x03'] },
+        matcherFingerprint: 'demo-packet-fingerprint',
+        reasoning: 'Rejected because the matcher overlaps with benign TLS handshake fragments.',
+        status: 'rejected',
+        sampleCount: 2,
+        aiConfidence: 0.88,
+        latestEvidence: {
+            request: { protocol: 'tcp', sourceIp: '192.0.2.15' },
+            ai: { verdict: 'suspicious', routeMode: 'local_preferred', model: 'demo-local' }
+        },
+        approvedRuleId: null,
+        reviewReason: 'Matcher too broad.',
+        createdAt: new Date(Date.now() - 172800_000).toISOString(),
+        updatedAt: new Date(Date.now() - 86400_000).toISOString(),
+        reviewedAt: new Date(Date.now() - 86400_000).toISOString(),
+        reviewedBy: 'admin@example.com'
+    }
+]);
+
+const demoDetectionEvents = (): DetectionEventRecord[] => ([
+    {
+        detectionEventId: 'event-http-1',
+        tenantId: 'demo-tenant',
+        requestId: 'req-http-1',
+        channel: 'http_api',
+        verdict: 'block',
+        matchedRuleIds: ['seed-http-sqli'],
+        riskScore: 0.98,
+        escalatedToAI: false,
+        aiVerdict: null,
+        aiConfidence: null,
+        aiRouteMode: null,
+        aiModel: null,
+        attackFamily: 'sqli',
+        candidateId: null,
+        decisionSource: 'seed:block',
+        processingTimeMs: 6,
+        requestSnapshot: { method: 'POST', path: '/login', sourceIp: '203.0.113.10' },
+        responseSnapshot: { verdict: 'block' },
+        createdAt: new Date(Date.now() - 240_000).toISOString()
+    },
+    {
+        detectionEventId: 'event-agent-1',
+        tenantId: 'demo-tenant',
+        requestId: 'req-agent-1',
+        channel: 'agent',
+        verdict: 'block',
+        matchedRuleIds: [],
+        riskScore: 0.74,
+        escalatedToAI: true,
+        aiVerdict: 'malicious',
+        aiConfidence: 0.95,
+        aiRouteMode: 'local_preferred',
+        aiModel: 'demo-local',
+        attackFamily: 'automation',
+        candidateId: 'candidate-agent-approve-1',
+        decisionSource: 'ai:malicious',
+        processingTimeMs: 41,
+        requestSnapshot: { hostname: 'node-17', sourceIp: '198.51.100.18' },
+        responseSnapshot: { verdict: 'block', candidateId: 'candidate-agent-approve-1' },
+        createdAt: new Date(Date.now() - 1800_000).toISOString()
+    },
+    {
+        detectionEventId: 'event-http-2',
+        tenantId: 'demo-tenant',
+        requestId: 'req-http-2',
+        channel: 'http_api',
+        verdict: 'monitor',
+        matchedRuleIds: ['dynamic-http-xss'],
+        riskScore: 0.45,
+        escalatedToAI: true,
+        aiVerdict: 'suspicious',
+        aiConfidence: 0.68,
+        aiRouteMode: 'local_preferred',
+        aiModel: 'demo-local',
+        attackFamily: 'xss',
+        candidateId: 'candidate-http-xss-1',
+        decisionSource: 'ai:suspicious',
+        processingTimeMs: 29,
+        requestSnapshot: { method: 'POST', path: '/admin/widgets', sourceIp: '203.0.113.20' },
+        responseSnapshot: { verdict: 'monitor', candidateId: 'candidate-http-xss-1' },
+        createdAt: new Date(Date.now() - 900_000).toISOString()
+    }
+]);
+
+const normalizeDashboardRuleSummary = (payload: any) => ({
+    totalRules: Number(payload?.totalRules || 0),
+    activeRules: Number(payload?.activeRules || 0),
+    topRules: Array.isArray(payload?.topRules)
+        ? payload.topRules.map((rule: any) => ({
+            id: rule?.id || rule?.ruleId || '',
+            name: rule?.name || rule?.id || rule?.ruleId || 'Unnamed rule',
+            severity: rule?.severity || 'medium',
+            count: Number(rule?.count ?? rule?.hitCount ?? 0),
+            source: rule?.source || 'event'
+        }))
+        : []
+});
+
 export const fetchPlatformConfig = async (): Promise<PlatformConfigResponse> => {
     if (shouldUseDemoData()) {
         return getDefaultPlatformConfig();
@@ -652,7 +1071,7 @@ export const fetchPlatformConfig = async (): Promise<PlatformConfigResponse> => 
     if (!response.ok) {
         throw new Error(`FG-CONFIG-GET-${response.status}`);
     }
-    return response.json();
+    return readJson<PlatformConfigResponse>(response);
 };
 
 export const savePlatformConfig = async (payload: PlatformConfigResponse) => {
@@ -668,7 +1087,7 @@ export const savePlatformConfig = async (payload: PlatformConfigResponse) => {
         const data = await response.json().catch(() => ({}));
         throw new Error(data?.error || `FG-CONFIG-SAVE-${response.status}`);
     }
-    return response.json();
+    return readJson<{ success: boolean; config?: PlatformConfigResponse; message?: string }>(response);
 };
 
 export const fetchNotificationDeliveries = async (limit: number = 20): Promise<NotificationDelivery[]> => {
@@ -828,7 +1247,7 @@ export const fetchAlerts = async (signal?: AbortSignal): Promise<AlertRecord[]> 
 
         const response = await fetchWithCredentials(`${API_BASE_URL}/alerts`, { signal });
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_alerts'));
-        return response.json();
+        return readJson<AlertRecord[]>(response);
     } catch (e) {
         if (!isRequestAbortError(e, signal)) {
             console.error('Failed to fetch alerts:', e);
@@ -1418,7 +1837,7 @@ export interface AIModelInfo {
     id: string;
     name: string;
     description: string;
-    category: 'qwen' | 'third-party';
+    category: 'tencent' | 'partner';
     maxTokens: number;
     available: boolean;
     minTier: 'starter' | 'pro' | 'ultra';
@@ -1542,7 +1961,7 @@ export const deleteAdminApiKey = async (id: string) => {
 
 export const fetchDashboardRulesSummary = async (signal?: AbortSignal) => {
     if (shouldUseDemoData()) {
-        return getDemoDashboardRulesSummary();
+        return normalizeDashboardRuleSummary(demoRuleSummary());
     }
 
     const response = await fetchWithCredentials(`${API_BASE_URL}/dashboard/rules/summary`, { signal });
@@ -1550,7 +1969,200 @@ export const fetchDashboardRulesSummary = async (signal?: AbortSignal) => {
         throw new Error(`FG-DASHBOARD-RULES-${response.status}`);
     }
     const data = await response.json();
-    return data?.data || { totalRules: 0, activeRules: 0, topRules: [] };
+    return normalizeDashboardRuleSummary(data?.data);
+};
+
+export const fetchRules = async (params?: {
+    channel?: 'http_api' | 'packet' | 'agent';
+    dynamicOnly?: boolean;
+}, signal?: AbortSignal): Promise<{ rules: RuleRecord[]; summary: RuleSummary }> => {
+    if (shouldUseDemoData()) {
+        const allRules = demoRules();
+        const rules = allRules.filter((rule) => {
+            if (params?.dynamicOnly && rule.source === 'seed') {
+                return false;
+            }
+            if (params?.channel && !(rule.scope === 'all' || rule.scope === params.channel)) {
+                return false;
+            }
+            return true;
+        });
+
+        return {
+            rules,
+            summary: demoRuleSummary()
+        };
+    }
+
+    const search = new URLSearchParams();
+    if (params?.channel) {
+        search.set('channel', params.channel);
+    }
+    if (params?.dynamicOnly) {
+        search.set('dynamicOnly', 'true');
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/rules${search.toString() ? `?${search.toString()}` : ''}`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-RULES-LIST-${response.status}`);
+    }
+    return readJson<{ rules: RuleRecord[]; summary: RuleSummary }>(response);
+};
+
+export const fetchRuleCandidates = async (params?: {
+    status?: 'pending' | 'approved' | 'rejected';
+}, signal?: AbortSignal): Promise<RuleCandidateRecord[]> => {
+    if (shouldUseDemoData()) {
+        const candidates = demoRuleCandidates();
+        return params?.status ? candidates.filter((candidate) => candidate.status === params.status) : candidates;
+    }
+
+    const search = new URLSearchParams();
+    if (params?.status) {
+        search.set('status', params.status);
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/rules/candidates${search.toString() ? `?${search.toString()}` : ''}`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-RULE-CANDIDATES-${response.status}`);
+    }
+    const data = await readJson<{ candidates: RuleCandidateRecord[] }>(response);
+    return data?.candidates || [];
+};
+
+export const fetchRuleCandidate = async (candidateId: string, signal?: AbortSignal): Promise<RuleCandidateRecord | null> => {
+    if (shouldUseDemoData()) {
+        return demoRuleCandidates().find((candidate) => candidate.candidateId === candidateId) || null;
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/rules/candidates/${encodeURIComponent(candidateId)}`, { signal });
+    if (response.status === 404) {
+        return null;
+    }
+    if (!response.ok) {
+        throw new Error(`FG-RULE-CANDIDATE-${response.status}`);
+    }
+    const data = await readJson<{ candidate: RuleCandidateRecord }>(response);
+    return data?.candidate || null;
+};
+
+export const approveRuleCandidate = async (candidateId: string, reason?: string): Promise<{
+    candidate: RuleCandidateRecord;
+    sync?: { attempted: number; succeeded: number };
+}> => {
+    if (shouldUseDemoData()) {
+        const candidate = demoRuleCandidates().find((item) => item.candidateId === candidateId);
+        if (!candidate) {
+            throw new Error('FG-RULE-CANDIDATE-404');
+        }
+        return {
+            candidate: {
+                ...candidate,
+                status: 'approved',
+                reviewReason: reason || candidate.reviewReason || 'approved',
+                reviewedAt: new Date().toISOString(),
+                reviewedBy: 'demo-admin@example.com',
+                approvedRuleId: candidate.approvedRuleId || `approved-${candidateId}`,
+                updatedAt: new Date().toISOString()
+            },
+            sync: candidate.channel === 'agent' ? { attempted: 1, succeeded: 1 } : undefined
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/rules/candidates/${encodeURIComponent(candidateId)}/approve`, {
+        method: 'POST',
+        body: JSON.stringify(reason ? { reason } : {})
+    });
+    if (!response.ok) {
+        throw new Error(`FG-RULE-CANDIDATE-APPROVE-${response.status}`);
+    }
+    return readJson<{ candidate: RuleCandidateRecord; sync?: { attempted: number; succeeded: number } }>(response);
+};
+
+export const rejectRuleCandidate = async (candidateId: string, reason?: string): Promise<{ candidate: RuleCandidateRecord }> => {
+    if (shouldUseDemoData()) {
+        const candidate = demoRuleCandidates().find((item) => item.candidateId === candidateId);
+        if (!candidate) {
+            throw new Error('FG-RULE-CANDIDATE-404');
+        }
+        return {
+            candidate: {
+                ...candidate,
+                status: 'rejected',
+                reviewReason: reason || candidate.reviewReason || 'rejected',
+                reviewedAt: new Date().toISOString(),
+                reviewedBy: 'demo-admin@example.com',
+                updatedAt: new Date().toISOString()
+            }
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/rules/candidates/${encodeURIComponent(candidateId)}/reject`, {
+        method: 'POST',
+        body: JSON.stringify(reason ? { reason } : {})
+    });
+    if (!response.ok) {
+        throw new Error(`FG-RULE-CANDIDATE-REJECT-${response.status}`);
+    }
+    return readJson<{ candidate: RuleCandidateRecord }>(response);
+};
+
+export const fetchRuleEvents = async (params?: {
+    channel?: 'http_api' | 'packet' | 'agent';
+    verdict?: 'allow' | 'block' | 'monitor';
+    escalatedToAI?: boolean;
+    candidateId?: string;
+    from?: string;
+    to?: string;
+    limit?: number;
+}, signal?: AbortSignal): Promise<DetectionEventRecord[]> => {
+    if (shouldUseDemoData()) {
+        return demoDetectionEvents().filter((event) => {
+            if (params?.channel && event.channel !== params.channel) {
+                return false;
+            }
+            if (params?.verdict && event.verdict !== params.verdict) {
+                return false;
+            }
+            if (typeof params?.escalatedToAI === 'boolean' && event.escalatedToAI !== params.escalatedToAI) {
+                return false;
+            }
+            if (params?.candidateId && event.candidateId !== params.candidateId) {
+                return false;
+            }
+            return true;
+        }).slice(0, params?.limit || 50);
+    }
+
+    const search = new URLSearchParams();
+    if (params?.channel) {
+        search.set('channel', params.channel);
+    }
+    if (params?.verdict) {
+        search.set('verdict', params.verdict);
+    }
+    if (typeof params?.escalatedToAI === 'boolean') {
+        search.set('escalatedToAI', String(params.escalatedToAI));
+    }
+    if (params?.candidateId) {
+        search.set('candidateId', params.candidateId);
+    }
+    if (params?.from) {
+        search.set('from', params.from);
+    }
+    if (params?.to) {
+        search.set('to', params.to);
+    }
+    if (params?.limit) {
+        search.set('limit', String(params.limit));
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/rules/events${search.toString() ? `?${search.toString()}` : ''}`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-RULE-EVENTS-${response.status}`);
+    }
+    const data = await readJson<{ events: DetectionEventRecord[] }>(response);
+    return data?.events || [];
 };
 
 export const fetchRecentAgentThreats = async (limit: number = 50) => {
@@ -1744,7 +2356,7 @@ export const verifyPlatformAI = async (): Promise<ChatResponse> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/ai-endpoints/chat`, {
         method: 'POST',
         body: JSON.stringify({
-            modelId: 'qwen3-max-2026-01-23',
+            modelId: 'glm-5',
             purpose: 'deep_analysis',
             messages: [
                 { role: 'system', content: 'You are a concise security assistant.' },

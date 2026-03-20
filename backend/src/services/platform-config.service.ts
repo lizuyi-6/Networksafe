@@ -2,12 +2,15 @@ import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import { postgresShadowStoreService } from './postgres-shadow-store.service';
 import logger from '../utils/logger';
+import type { DetectionChannel } from './detection-engine';
 
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type NotificationChannelType = 'email' | 'smtp' | 'slack_webhook' | 'generic_webhook';
 export type NotificationDeliveryStatus = 'queued' | 'sending' | 'retrying' | 'sent' | 'failed' | 'skipped';
 export type AIRoutingMode = 'cloud_only' | 'local_preferred' | 'local_only' | 'hybrid_verify';
 export type PrivacyMode = 'off' | 'strict';
+export type DetectionAIEscalationMode = 'high_risk_allowed_only';
+export type DetectionLearningMode = 'malicious_review_queue';
 export type DeploymentTarget =
   | 'nginx'
   | 'apache'
@@ -84,6 +87,22 @@ export interface FastpathSettings {
   configCacheTtlMs: number;
 }
 
+export interface DetectionPipelineSettings {
+  ruleFirstEnabled: boolean;
+  aiEscalationMode: DetectionAIEscalationMode;
+  enableHttpApi: boolean;
+  enablePacketInterceptor: boolean;
+  enableAgentAsyncReview: boolean;
+  aiEscalationThreshold: number;
+  candidateMinConfidence: number;
+  learningMode: DetectionLearningMode;
+  learningCloudVerificationEnabled: boolean;
+  learningCloudVerificationMode: AIRoutingMode;
+  learningCloudVerificationChannels: DetectionChannel[];
+  learningCloudVerificationOnSuspicious: boolean;
+  learningCloudVerificationOnMissingConfidence: boolean;
+}
+
 export interface DeviceGatewaySettings {
   primaryPath: string;
   aliases: string[];
@@ -112,6 +131,7 @@ export interface PlatformConfig {
   privacyMode: PrivacyMode;
   auditArchive: AuditArchiveSettings;
   fastpath: FastpathSettings;
+  detectionPipeline: DetectionPipelineSettings;
   deploymentDefaults: DeploymentDefaults;
   deviceGateway: DeviceGatewaySettings;
 }
@@ -176,7 +196,7 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     channels: []
   },
   aiRouting: {
-    mode: 'cloud_only',
+    mode: 'local_preferred',
     localEndpointId: 'default-laptop',
     localHotPathEndpointId: null,
     cloudEndpointId: null,
@@ -201,6 +221,21 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     trafficShadowSampleRatePct: 10,
     trafficMaxBodyBytes: 65536,
     configCacheTtlMs: 30000
+  },
+  detectionPipeline: {
+    ruleFirstEnabled: true,
+    aiEscalationMode: 'high_risk_allowed_only',
+    enableHttpApi: true,
+    enablePacketInterceptor: true,
+    enableAgentAsyncReview: true,
+    aiEscalationThreshold: 0.4,
+    candidateMinConfidence: 0.85,
+    learningMode: 'malicious_review_queue',
+    learningCloudVerificationEnabled: true,
+    learningCloudVerificationMode: 'cloud_only',
+    learningCloudVerificationChannels: ['http_api', 'packet', 'agent'],
+    learningCloudVerificationOnSuspicious: true,
+    learningCloudVerificationOnMissingConfidence: true
   },
   deploymentDefaults: {
     serverType: 'nginx',
@@ -411,6 +446,77 @@ function normalizeFastpath(raw: any): FastpathSettings {
   };
 }
 
+function normalizeDetectionAIEscalationMode(
+  value: any,
+  fallback: DetectionAIEscalationMode = 'high_risk_allowed_only'
+): DetectionAIEscalationMode {
+  return String(value || fallback).toLowerCase() === 'high_risk_allowed_only'
+    ? 'high_risk_allowed_only'
+    : fallback;
+}
+
+function normalizeDetectionLearningMode(
+  value: any,
+  fallback: DetectionLearningMode = 'malicious_review_queue'
+): DetectionLearningMode {
+  return String(value || fallback).toLowerCase() === 'malicious_review_queue'
+    ? 'malicious_review_queue'
+    : fallback;
+}
+
+function normalizeDetectionChannels(value: any, fallback: DetectionChannel[]): DetectionChannel[] {
+  const allowed: DetectionChannel[] = ['http_api', 'packet', 'agent'];
+  const normalized = Array.isArray(value)
+    ? value
+        .map((entry) => String(entry || '').toLowerCase())
+        .filter((entry, index, entries) => allowed.includes(entry as DetectionChannel) && entries.indexOf(entry) === index)
+    : [];
+
+  return normalized.length > 0 ? (normalized as DetectionChannel[]) : fallback;
+}
+
+function normalizeDetectionPipeline(raw: any): DetectionPipelineSettings {
+  const defaults = cloneDefaultConfig().detectionPipeline;
+  const normalizeThreshold = (value: any, fallback: number): number => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return fallback;
+    }
+    return Math.min(Math.max(Number(numeric.toFixed(2)), 0), 1);
+  };
+
+  return {
+    ruleFirstEnabled: normalizeBoolean(raw?.ruleFirstEnabled, defaults.ruleFirstEnabled),
+    aiEscalationMode: normalizeDetectionAIEscalationMode(raw?.aiEscalationMode, defaults.aiEscalationMode),
+    enableHttpApi: normalizeBoolean(raw?.enableHttpApi, defaults.enableHttpApi),
+    enablePacketInterceptor: normalizeBoolean(raw?.enablePacketInterceptor, defaults.enablePacketInterceptor),
+    enableAgentAsyncReview: normalizeBoolean(raw?.enableAgentAsyncReview, defaults.enableAgentAsyncReview),
+    aiEscalationThreshold: normalizeThreshold(raw?.aiEscalationThreshold, defaults.aiEscalationThreshold),
+    candidateMinConfidence: normalizeThreshold(raw?.candidateMinConfidence, defaults.candidateMinConfidence),
+    learningMode: normalizeDetectionLearningMode(raw?.learningMode, defaults.learningMode),
+    learningCloudVerificationEnabled: normalizeBoolean(
+      raw?.learningCloudVerificationEnabled,
+      defaults.learningCloudVerificationEnabled
+    ),
+    learningCloudVerificationMode: normalizeRoutingMode(
+      raw?.learningCloudVerificationMode,
+      defaults.learningCloudVerificationMode
+    ),
+    learningCloudVerificationChannels: normalizeDetectionChannels(
+      raw?.learningCloudVerificationChannels,
+      defaults.learningCloudVerificationChannels
+    ),
+    learningCloudVerificationOnSuspicious: normalizeBoolean(
+      raw?.learningCloudVerificationOnSuspicious,
+      defaults.learningCloudVerificationOnSuspicious
+    ),
+    learningCloudVerificationOnMissingConfidence: normalizeBoolean(
+      raw?.learningCloudVerificationOnMissingConfidence,
+      defaults.learningCloudVerificationOnMissingConfidence
+    )
+  };
+}
+
 function normalizeDeploymentTarget(value: any, fallback: DeploymentTarget = 'nginx'): DeploymentTarget {
   return DEPLOYMENT_TARGETS.includes(value as DeploymentTarget) ? (value as DeploymentTarget) : fallback;
 }
@@ -477,6 +583,7 @@ function normalizePlatformConfig(raw: any, current?: PlatformConfig): PlatformCo
     privacyMode: normalizePrivacyMode(raw?.privacyMode, base.privacyMode),
     auditArchive: normalizeAuditArchive(raw?.auditArchive ?? base.auditArchive),
     fastpath: normalizeFastpath(raw?.fastpath ?? base.fastpath),
+    detectionPipeline: normalizeDetectionPipeline(raw?.detectionPipeline ?? base.detectionPipeline),
     deploymentDefaults: normalizeDeploymentDefaults(raw?.deploymentDefaults ?? base.deploymentDefaults),
     deviceGateway: normalizeDeviceGateway(raw?.deviceGateway ?? base.deviceGateway)
   };
@@ -490,7 +597,7 @@ class PlatformConfigService {
   private schemaReady = false;
   private readonly configCache = new Map<string, { value: PlatformConfig; expiresAt: number }>();
 
-  ensureSchema(): void {
+  prepare(): void {
     if (this.schemaReady) {
       return;
     }
@@ -510,6 +617,7 @@ class PlatformConfigService {
         privacy_mode TEXT NOT NULL DEFAULT 'off',
         audit_archive_json TEXT NOT NULL DEFAULT '{}',
         fastpath_json TEXT NOT NULL DEFAULT '{}',
+        detection_pipeline_json TEXT NOT NULL DEFAULT '{}',
         deployment_defaults_json TEXT NOT NULL DEFAULT '{}',
         device_gateway_json TEXT NOT NULL DEFAULT '{}',
         updated_by TEXT,
@@ -574,6 +682,7 @@ class PlatformConfigService {
       `ALTER TABLE platform_config ADD COLUMN privacy_mode TEXT NOT NULL DEFAULT 'off'`,
       `ALTER TABLE platform_config ADD COLUMN audit_archive_json TEXT NOT NULL DEFAULT '{}'`,
       `ALTER TABLE platform_config ADD COLUMN fastpath_json TEXT NOT NULL DEFAULT '{}'`,
+      `ALTER TABLE platform_config ADD COLUMN detection_pipeline_json TEXT NOT NULL DEFAULT '{}'`,
       `ALTER TABLE platform_config ADD COLUMN deployment_defaults_json TEXT NOT NULL DEFAULT '{}'`,
       `ALTER TABLE platform_config ADD COLUMN device_gateway_json TEXT NOT NULL DEFAULT '{}'`,
       `ALTER TABLE notification_deliveries ADD COLUMN dedupe_key TEXT`,
@@ -600,8 +709,21 @@ class PlatformConfigService {
     this.schemaReady = true;
   }
 
+  private assertPrepared(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+      return;
+    }
+
+    throw new Error('Platform config schema not initialized. Call platformConfigService.prepare() during bootstrap.');
+  }
+
   async getConfig(tenantId: string): Promise<PlatformConfig> {
-    this.ensureSchema();
+    this.assertPrepared();
     const cached = this.getCachedConfig(tenantId);
     if (cached) {
       return cached;
@@ -643,6 +765,7 @@ class PlatformConfigService {
       privacyMode: normalizePrivacyMode(row.privacy_mode, defaults.privacyMode),
       auditArchive: parseJson(row.audit_archive_json, defaults.auditArchive),
       fastpath: parseJson(row.fastpath_json, defaults.fastpath),
+      detectionPipeline: parseJson(row.detection_pipeline_json, defaults.detectionPipeline),
       deploymentDefaults: parseJson(row.deployment_defaults_json, defaults.deploymentDefaults),
       deviceGateway: parseJson(row.device_gateway_json, defaults.deviceGateway)
     }, defaults);
@@ -651,7 +774,7 @@ class PlatformConfigService {
   }
 
   async saveConfig(tenantId: string, rawConfig: any, actorId: string): Promise<PlatformConfig> {
-    this.ensureSchema();
+    this.assertPrepared();
     const current = await this.getConfig(tenantId);
     const merged = normalizePlatformConfig(rawConfig, current);
     const now = new Date().toISOString();
@@ -682,6 +805,7 @@ class PlatformConfigService {
       privacy_mode: merged.privacyMode,
       audit_archive_json: JSON.stringify(merged.auditArchive),
       fastpath_json: JSON.stringify(merged.fastpath),
+      detection_pipeline_json: JSON.stringify(merged.detectionPipeline),
       deployment_defaults_json: JSON.stringify(merged.deploymentDefaults),
       device_gateway_json: JSON.stringify(merged.deviceGateway),
       updated_by: actorId,
@@ -704,12 +828,13 @@ class PlatformConfigService {
           privacy_mode,
           audit_archive_json,
           fastpath_json,
+          detection_pipeline_json,
           deployment_defaults_json,
           device_gateway_json,
           updated_by,
           updated_at,
           created_at
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
         ON CONFLICT (tenant_id)
         DO UPDATE SET
           anti_bot_enabled = EXCLUDED.anti_bot_enabled,
@@ -723,6 +848,7 @@ class PlatformConfigService {
           privacy_mode = EXCLUDED.privacy_mode,
           audit_archive_json = EXCLUDED.audit_archive_json,
           fastpath_json = EXCLUDED.fastpath_json,
+          detection_pipeline_json = EXCLUDED.detection_pipeline_json,
           deployment_defaults_json = EXCLUDED.deployment_defaults_json,
           device_gateway_json = EXCLUDED.device_gateway_json,
           updated_by = EXCLUDED.updated_by,
@@ -740,6 +866,7 @@ class PlatformConfigService {
         payload.privacy_mode,
         payload.audit_archive_json,
         payload.fastpath_json,
+        payload.detection_pipeline_json,
         payload.deployment_defaults_json,
         payload.device_gateway_json,
         payload.updated_by,
@@ -762,12 +889,13 @@ class PlatformConfigService {
         privacy_mode,
         audit_archive_json,
         fastpath_json,
+        detection_pipeline_json,
         deployment_defaults_json,
         device_gateway_json,
         updated_by,
         updated_at,
         created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(tenant_id) DO UPDATE SET
         anti_bot_enabled = excluded.anti_bot_enabled,
         anti_bot_request_threshold = excluded.anti_bot_request_threshold,
@@ -780,6 +908,7 @@ class PlatformConfigService {
         privacy_mode = excluded.privacy_mode,
         audit_archive_json = excluded.audit_archive_json,
         fastpath_json = excluded.fastpath_json,
+        detection_pipeline_json = excluded.detection_pipeline_json,
         deployment_defaults_json = excluded.deployment_defaults_json,
         device_gateway_json = excluded.device_gateway_json,
         updated_by = excluded.updated_by,
@@ -797,6 +926,7 @@ class PlatformConfigService {
       payload.privacy_mode,
       payload.audit_archive_json,
       payload.fastpath_json,
+      payload.detection_pipeline_json,
       payload.deployment_defaults_json,
       payload.device_gateway_json,
       payload.updated_by,
@@ -829,7 +959,7 @@ class PlatformConfigService {
     nextAttemptAt?: string;
     terminalAt?: string;
   }): Promise<NotificationDeliveryRecord> {
-    this.ensureSchema();
+    this.assertPrepared();
     const now = new Date().toISOString();
     const row = {
       id: randomUUID(),
@@ -918,7 +1048,7 @@ class PlatformConfigService {
     id: string,
     patch: Partial<Pick<NotificationDeliveryRecord, 'status' | 'response' | 'error' | 'attemptCount' | 'nextAttemptAt' | 'terminalAt'>>
   ): Promise<NotificationDeliveryRecord | null> {
-    this.ensureSchema();
+    this.assertPrepared();
     const existing = postgresShadowStoreService.canServeReads()
       ? await postgresShadowStoreService.queryOne<any>(`
           SELECT *
@@ -990,7 +1120,7 @@ class PlatformConfigService {
   }
 
   async listNotificationDeliveries(tenantId: string, limit = 20): Promise<NotificationDeliveryRecord[]> {
-    this.ensureSchema();
+    this.assertPrepared();
     const rows = postgresShadowStoreService.canServeReads()
       ? await postgresShadowStoreService.queryAll<any>(`
           SELECT *
@@ -1011,7 +1141,7 @@ class PlatformConfigService {
   }
 
   async listDueNotificationDeliveries(limit = 50): Promise<NotificationDeliveryRecord[]> {
-    this.ensureSchema();
+    this.assertPrepared();
     const now = new Date().toISOString();
     const rows = postgresShadowStoreService.canServeReads()
       ? await postgresShadowStoreService.queryAll<any>(`
@@ -1035,7 +1165,7 @@ class PlatformConfigService {
   }
 
   async findNotificationDeliveryByDedupe(tenantId: string, dedupeKey: string, afterIso: string): Promise<NotificationDeliveryRecord | null> {
-    this.ensureSchema();
+    this.assertPrepared();
     const row = postgresShadowStoreService.canServeReads()
       ? await postgresShadowStoreService.queryOne<any>(`
           SELECT *

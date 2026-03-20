@@ -1,16 +1,16 @@
-# FluxGuard Pro CVE-2026-022 Command Injection - Exploitation Report
+﻿# AetherGuard CVE-2026-022 Command Injection - Exploitation Report
 
 **Report ID:** FG-RT-2026-022
 **Classification:** CONFIDENTIAL
 **Date:** 2026-02-17
 **Prepared By:** Red Team
-**Scope:** FluxGuard Pro 2.4.0 and earlier
+**Scope:** AetherGuard 2.4.0 and earlier
 
 ---
 
 ## Executive Summary
 
-During authorized penetration testing of FluxGuard Pro, a critical command injection vulnerability (CVE-2026-022) was identified in the enhanced-firewall-controller.ts component. The vulnerability allows authenticated attackers with administrative privileges to execute arbitrary system commands on agent systems.
+During authorized penetration testing of AetherGuard, a critical command injection vulnerability (CVE-2026-022) was identified in the enhanced-firewall-controller.ts component. The vulnerability allows authenticated attackers with administrative privileges to execute arbitrary system commands on agent systems.
 
 ### Key Findings
 
@@ -20,7 +20,7 @@ During authorized penetration testing of FluxGuard Pro, a critical command injec
 | **Attack Vector** | Network |
 | **Privileges Required** | High |
 | **Impact** | Complete system compromise |
-| **Affected Versions** | FluxGuard Pro < 2.5.0 |
+| **Affected Versions** | AetherGuard < 2.5.0 |
 
 ---
 
@@ -267,9 +267,9 @@ rm -f /tmp/pwned.txt /tmp/creds.txt
 
 ## Conclusion
 
-CVE-2026-022 represents a critical security vulnerability in FluxGuard Pro that allows complete system compromise through command injection. The attack chain demonstrates how a simple input validation failure can lead to complete infrastructure compromise.
+CVE-2026-022 represents a critical security vulnerability in AetherGuard that allows complete system compromise through command injection. The attack chain demonstrates how a simple input validation failure can lead to complete infrastructure compromise.
 
-Organizations using FluxGuard Pro must immediately:
+Organizations using AetherGuard must immediately:
 1. Apply vendor patches
 2. Review audit logs for exploitation attempts
 3. Implement detection rules

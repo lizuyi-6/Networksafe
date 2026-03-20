@@ -13,13 +13,23 @@ import {
     SecurityDecision,
     MultiAgentConfig,
     Evidence,
-    CaseAction
+    CaseAction,
+    AttackFamily,
+    AnalysisResult as AgentAnalysisResult
 } from './types';
 import { BaseAgent, ExpertAgent } from './base-agent';
 import { MessageBus, globalMessageBus } from './message-bus';
 import { SocratesAgent } from '../roles/socrates-agent';
 import { PlatoAgent } from '../roles/plato-agent';
 import { AristotleAgent } from '../roles/aristotle-agent';
+import { DebateProtocol } from '../debate/debate-protocol';
+import {
+    blendDistributions,
+    buildDebateTriggerMetrics,
+    confidenceFromDistribution,
+    dominantVerdict,
+    verdictToDecision
+} from './scoring';
 import logger from '../../utils/logger';
 
 interface AgentRegistry {
@@ -33,6 +43,7 @@ interface AnalysisTask {
     status: 'pending' | 'running' | 'completed' | 'failed';
     results: Map<AgentRole, AnalysisResult>;
     finalDecision?: SecurityDecision;
+    threatType?: AttackFamily;
 }
 
 export class AgentOrchestrator {
@@ -41,10 +52,12 @@ export class AgentOrchestrator {
     private config: MultiAgentConfig;
     private activeTasks: Map<string, AnalysisTask> = new Map();
     private expertRouting: Map<string, AgentRole[]> = new Map();
+    private debateProtocol: DebateProtocol;
 
     constructor(config: MultiAgentConfig, messageBus: MessageBus = globalMessageBus) {
         this.config = config;
         this.messageBus = messageBus;
+        this.debateProtocol = new DebateProtocol(this.messageBus);
         this.initializeAgents();
         this.setupExpertRouting();
     }
@@ -81,7 +94,8 @@ export class AgentOrchestrator {
         const baseConfig = {
             timeout: this.config.timeouts.analysis,
             modelTimeout: this.config.timeouts.modelResponse,
-            maxRetries: 3
+            maxRetries: 3,
+            heuristicOnly: this.config.heuristicOnly
         };
 
         return {
@@ -149,13 +163,16 @@ export class AgentOrchestrator {
     }
 
     private setupExpertRouting(): void {
-        this.expertRouting.set('sql_injection', ['socrates', 'plato', 'aristotle']);
+        this.expertRouting.set('sqli', ['socrates', 'plato', 'aristotle']);
         this.expertRouting.set('xss', ['socrates', 'plato', 'aristotle']);
         this.expertRouting.set('command_injection', ['socrates', 'plato']);
         this.expertRouting.set('path_traversal', ['socrates', 'plato']);
+        this.expertRouting.set('ssrf', ['socrates', 'plato', 'aristotle']);
+        this.expertRouting.set('automation', ['aristotle', 'plato']);
         this.expertRouting.set('authentication', ['aristotle', 'plato']);
         this.expertRouting.set('rate_limit', ['aristotle']);
         this.expertRouting.set('business_logic', ['socrates', 'aristotle']);
+        this.expertRouting.set('benign', ['socrates', 'plato', 'aristotle']);
         this.expertRouting.set('default', ['socrates', 'plato', 'aristotle']);
     }
 
@@ -188,6 +205,7 @@ export class AgentOrchestrator {
 
         try {
             const threatType = this.classifyThreatType(request);
+            task.threatType = threatType;
             const assignedAgents = this.routeToExperts(threatType);
 
             logger.debug(`Task ${taskId}: Assigned agents ${assignedAgents.join(', ')} for threat type ${threatType}`);
@@ -211,7 +229,7 @@ export class AgentOrchestrator {
 
             await Promise.all(analysisPromises);
 
-            const decision = await this.makeDecision(task, request);
+            const decision = await this.makeDecision(task, request, threatType);
 
             task.status = 'completed';
             task.finalDecision = decision;
@@ -226,7 +244,7 @@ export class AgentOrchestrator {
         }
     }
 
-    private classifyThreatType(request: TrafficRequest): string {
+    private classifyThreatType(request: TrafficRequest): AttackFamily {
         const content = [
             request.path,
             request.body || '',
@@ -235,7 +253,7 @@ export class AgentOrchestrator {
         ].join(' ').toLowerCase();
 
         if (content.includes('select') || content.includes('union') || content.includes("' or ")) {
-            return 'sql_injection';
+            return 'sqli';
         }
         if (content.includes('<script') || content.includes('javascript:') || content.includes('onerror')) {
             return 'xss';
@@ -246,35 +264,51 @@ export class AgentOrchestrator {
         if (content.includes('|') || content.includes(';') || content.includes('&&')) {
             return 'command_injection';
         }
+        if (content.includes('169.254.169.254') || content.includes('metadata.google.internal') || content.includes('latest/meta-data')) {
+            return 'ssrf';
+        }
+        if (
+            content.includes('sqlmap') ||
+            content.includes('python-requests') ||
+            content.includes('headless') ||
+            content.includes('selenium') ||
+            content.includes('curl/') ||
+            content.includes('wget/')
+        ) {
+            return 'automation';
+        }
         if (content.includes('login') || content.includes('auth') || content.includes('token')) {
             return 'authentication';
         }
 
-        return 'default';
+        return 'benign';
     }
 
-    private routeToExperts(threatType: string): AgentRole[] {
+    private routeToExperts(threatType: AttackFamily): AgentRole[] {
+        if (this.config.experimentMode === 'single_agent') {
+            return [this.config.primarySingleAgentRole || 'aristotle'];
+        }
+
         return this.expertRouting.get(threatType) || this.expertRouting.get('default')!;
     }
 
-    private async makeDecision(task: AnalysisTask, request: TrafficRequest): Promise<SecurityDecision> {
+    private async makeDecision(
+        task: AnalysisTask,
+        request: TrafficRequest,
+        threatType: AttackFamily
+    ): Promise<SecurityDecision> {
         const results = Array.from(task.results.values());
         
         if (results.length === 0) {
-            return this.createDefaultDecision(request, task.id);
+            return this.createDefaultDecision(request, task.id, threatType);
         }
 
         const allEvidence: Evidence[] = [];
-        let maxConfidence = 0;
         let worstVerdict: 'safe' | 'suspicious' | 'malicious' | 'unknown' = 'safe';
 
         for (const result of results) {
             if (result) {
                 allEvidence.push(...result.evidence);
-
-                if (result.confidence > maxConfidence) {
-                    maxConfidence = result.confidence;
-                }
 
                 if (this.verdictSeverity(result.verdict) > this.verdictSeverity(worstVerdict)) {
                     worstVerdict = result.verdict;
@@ -282,21 +316,43 @@ export class AgentOrchestrator {
             }
         }
 
-        const shouldDebate = this.shouldTriggerDebate(results);
-        let finalVerdict: SecurityDecision['verdict'];
-        let finalConfidence = maxConfidence;
+        const aggregateDistribution = blendDistributions(results);
+        const aggregateVerdict = dominantVerdict(aggregateDistribution);
+        const triggerMetrics = this.shouldTriggerDebate(results);
+        const shouldDebate =
+            this.config.experimentMode !== 'single_agent' &&
+            this.config.experimentMode !== 'multi_agent_no_debate' &&
+            triggerMetrics.triggered;
+        let finalVerdict: SecurityDecision['verdict'] = verdictToDecision(aggregateVerdict);
+        let finalConfidence = confidenceFromDistribution(aggregateDistribution);
+        let debateSession;
 
         if (shouldDebate) {
             logger.info(`Debate triggered for request ${request.id}`);
-            const debateResult = await this.triggerDebate(task, request, results);
-            finalVerdict = debateResult.verdict;
-            finalConfidence = debateResult.confidence;
-        } else {
-            finalVerdict = this.mapVerdictToDecision(worstVerdict);
+            debateSession = await this.triggerDebate(task, request, results, triggerMetrics);
+            if (debateSession.finalVerdict) {
+                finalVerdict = this.mapDebateVerdictToDecision(debateSession.finalVerdict.decision);
+                finalConfidence = debateSession.finalVerdict.confidence;
+            }
         }
 
-        const threatLevel = this.calculateThreatLevel(worstVerdict, allEvidence);
+        const threatLevel = this.calculateThreatLevel(
+            finalVerdict === 'block' ? 'malicious' : finalVerdict === 'monitor' ? 'suspicious' : worstVerdict,
+            allEvidence
+        );
         const actions = this.determineActions(finalVerdict, threatLevel, request);
+        const roleAnalysisMs = Number(
+            Math.max(...results.map((result) => result.analysisLatencyMs || result.modelLatencyMs || 0)).toFixed(2)
+        );
+        const debateMs = Number((debateSession?.latencyMs || 0).toFixed(2));
+        const endToEndMs = Number((Date.now() - task.startTime.getTime()).toFixed(2));
+        const layersActivated = [1, 2];
+        if (results.some((result) => result.modelTier)) {
+            layersActivated.push(6);
+        }
+        if (debateSession) {
+            layersActivated.push(5);
+        }
 
         return {
             id: uuidv4(),
@@ -305,12 +361,26 @@ export class AgentOrchestrator {
             verdict: finalVerdict,
             confidence: finalConfidence,
             threatLevel,
-            reasoning: this.buildReasoning(results),
+            reasoning: this.buildReasoning(results, triggerMetrics, debateSession?.finalVerdict?.reasoning),
             evidence: allEvidence,
             actions,
             caseFileId: task.id,
-            processingTime: Date.now() - task.startTime.getTime(),
-            layersActivated: [1, 2]
+            processingTime: endToEndMs,
+            layersActivated,
+            aggregatedDistribution: debateSession?.finalVerdict?.aggregatedDistribution || aggregateDistribution,
+            analysisResults: results,
+            experimentMode: this.config.experimentMode || 'multi_agent_with_debate',
+            attackFamily: threatType,
+            routeMode: results.find((result) => result.routeMode && result.routeMode !== 'unknown')?.routeMode || 'unknown',
+            stageLatencies: {
+                proxyMs: 0,
+                roleAnalysisMs,
+                debateMs,
+                synthesisMs: 0,
+                asyncReviewMs: roleAnalysisMs + debateMs,
+                endToEndMs
+            },
+            debateSession
         };
     }
 
@@ -334,30 +404,49 @@ export class AgentOrchestrator {
         return mapping[verdict] || 'challenge';
     }
 
-    private shouldTriggerDebate(results: (AnalysisResult | null)[]): boolean {
+    private shouldTriggerDebate(results: AgentAnalysisResult[]): ReturnType<typeof buildDebateTriggerMetrics> {
         const validResults = results.filter(r => r !== null) as AnalysisResult[];
         
-        if (validResults.length < 2) return false;
+        if (validResults.length < 2) {
+            return {
+                triggered: false,
+                labelConflict: false,
+                confidenceRange: 0,
+                divergence: 0,
+                reasons: []
+            };
+        }
 
-        const verdicts = validResults.map(r => r.verdict);
-        const hasConflict = verdicts.some(v => v === 'malicious') && 
-                           verdicts.some(v => v === 'safe');
-
-        const confidenceRange = Math.max(...validResults.map(r => r.confidence)) -
-                               Math.min(...validResults.map(r => r.confidence));
-
-        return hasConflict || confidenceRange > this.config.thresholds.debateTrigger;
+        return buildDebateTriggerMetrics(
+            validResults,
+            this.config.thresholds.debateDivergence,
+            this.config.thresholds.debateConfidenceRange
+        );
     }
 
     private async triggerDebate(
         task: AnalysisTask, 
         request: TrafficRequest, 
-        results: (AnalysisResult | null)[]
-    ): Promise<{ verdict: SecurityDecision['verdict']; confidence: number }> {
-        return {
-            verdict: 'monitor',
-            confidence: 0.7
-        };
+        results: AnalysisResult[],
+        triggerMetrics: ReturnType<typeof buildDebateTriggerMetrics>
+    ) {
+        return this.debateProtocol.initiateDebate(
+            task.requestId,
+            results.filter((result): result is AnalysisResult => result != null),
+            request,
+            triggerMetrics
+        );
+    }
+
+    private mapDebateVerdictToDecision(verdict: 'safe' | 'malicious' | 'requires_review'): SecurityDecision['verdict'] {
+        switch (verdict) {
+            case 'safe':
+                return 'allow';
+            case 'malicious':
+                return 'block';
+            default:
+                return 'monitor';
+        }
     }
 
     private calculateThreatLevel(
@@ -418,7 +507,11 @@ export class AgentOrchestrator {
         return actions;
     }
 
-    private buildReasoning(results: (AnalysisResult | null)[]): string {
+    private buildReasoning(
+        results: (AnalysisResult | null)[],
+        triggerMetrics?: ReturnType<typeof buildDebateTriggerMetrics>,
+        debateReasoning?: string
+    ): string {
         const validResults = results.filter(r => r !== null) as AnalysisResult[];
         
         if (validResults.length === 0) {
@@ -426,13 +519,20 @@ export class AgentOrchestrator {
         }
 
         const parts = validResults.map(r => 
-            `[${r.role}]: ${r.reasoning} (confidence: ${(r.confidence * 100).toFixed(0)}%)`
+            `[${r.role}]: ${r.reasoning} (confidence: ${(r.confidence * 100).toFixed(0)}%, route: ${r.routeMode || 'unknown'})`
         );
+
+        if (triggerMetrics?.triggered) {
+            parts.push(`debate_trigger=${triggerMetrics.reasons.join(',')}; divergence=${triggerMetrics.divergence.toFixed(3)}; range=${triggerMetrics.confidenceRange.toFixed(3)}`);
+        }
+        if (debateReasoning) {
+            parts.push(`debate_outcome=${debateReasoning}`);
+        }
 
         return parts.join(' | ');
     }
 
-    private createDefaultDecision(request: TrafficRequest, taskId: string): SecurityDecision {
+    private createDefaultDecision(request: TrafficRequest, taskId: string, threatType: AttackFamily): SecurityDecision {
         return {
             id: uuidv4(),
             requestId: request.id,
@@ -450,7 +550,18 @@ export class AgentOrchestrator {
             }],
             caseFileId: taskId,
             processingTime: 0,
-            layersActivated: [1]
+            layersActivated: [1],
+            experimentMode: this.config.experimentMode || 'multi_agent_with_debate',
+            attackFamily: threatType,
+            routeMode: 'unknown',
+            stageLatencies: {
+                proxyMs: 0,
+                roleAnalysisMs: 0,
+                debateMs: 0,
+                synthesisMs: 0,
+                asyncReviewMs: 0,
+                endToEndMs: 0
+            }
         };
     }
 

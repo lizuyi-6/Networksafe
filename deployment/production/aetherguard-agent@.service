@@ -1,0 +1,25 @@
+[Unit]
+Description=AetherGuard Agent Instance %i
+After=network-online.target docker.service
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment=NODE_ENV=production
+Environment=LOG_LEVEL=info
+EnvironmentFile=/etc/aetherguard/agents/%i.env
+Environment=AETHERGUARD_AGENT_ENV_DIR=/etc/aetherguard/agents
+Environment=AETHERGUARD_ENV_FILE=/etc/aetherguard/agents/%i.env
+Environment=AETHERGUARD_AGENT_IMAGE=app-backend:latest
+ExecStartPre=-/usr/bin/docker rm -f aetherguard-agent-%i
+ExecStart=/opt/aetherguard/docker-stack/current/deployment/production/aetherguard-agent-container.sh %i
+ExecStop=-/usr/bin/docker stop aetherguard-agent-%i
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

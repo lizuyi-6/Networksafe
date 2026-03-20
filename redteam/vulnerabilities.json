@@ -1,4 +1,4 @@
-{
+﻿{
   "vulnerabilities": [
     {
       "id": "VULN-001",
@@ -7,7 +7,7 @@
       "cvss": 9.8,
       "location": "/mnt/x/want/fsce/.env",
       "description": "生产环境的.env文件包含真实的JWT_SECRET、Redis密码和API密钥，这些密钥被提交到代码仓库中。攻击者可使用泄露的JWT_SECRET伪造任意用户令牌，直接获取系统完全控制权。",
-      "poc": "JWT_SECRET=FluxGuardJwtSecret_for_prod_2026_very_long_1234567890\nREDIS_PASSWORD=FluxGuardRedis123!\nVALID_API_KEYS=prod-api-key\nDEVICE_API_KEYS=prod-device-key",
+      "poc": "JWT_SECRET=AetherGuardJwtSecret_for_prod_2026_very_long_1234567890\nREDIS_PASSWORD=AetherGuardRedis123!\nVALID_API_KEYS=prod-api-key\nDEVICE_API_KEYS=prod-device-key",
       "remediation": "1. 立即撤销所有泄露的密钥\n2. 从Git历史记录中完全删除.env文件\n3. 使用GitHub密钥扫描工具检查是否被泄露\n4. 启用密钥轮换机制\n5. 使用Vault等密钥管理系统"
     },
     {
@@ -17,7 +17,7 @@
       "cvss": 9.1,
       "location": "/mnt/x/want/fsce/backend/src/middleware/auth.middleware.ts:61-62",
       "description": "JWT签名密钥硬编码在环境变量中，且在生产环境泄露。攻击者可以使用该密钥伪造任意用户的JWT令牌，包括管理员账户，完全绕过身份验证机制。",
-      "poc": "const jwt = require('jsonwebtoken');\nconst token = jwt.sign({ userId: 'admin', role: 'admin' }, 'FluxGuardJwtSecret_for_prod_2026_very_long_1234567890');\nconsole.log(token);",
+      "poc": "const jwt = require('jsonwebtoken');\nconst token = jwt.sign({ userId: 'admin', role: 'admin' }, 'AetherGuardJwtSecret_for_prod_2026_very_long_1234567890');\nconsole.log(token);",
       "remediation": "1. 立即更换JWT_SECRET\n2. 使用非对称加密(RSA/ECDSA)替代HMAC\n3. 实施令牌撤销机制\n4. 添加JWT密钥版本控制"
     },
     {
@@ -27,7 +27,7 @@
       "cvss": 8.5,
       "location": "/mnt/x/want/fsce/.env",
       "description": "Redis缓存密码硬编码在配置文件中。攻击者可使用泄露的密码直接连接Redis服务器，窃取会话数据、JWT黑名单缓存和其他敏感信息。",
-      "poc": "redis-cli -h <target> -p 6379 AUTH FluxGuardRedis123!\nKEYS *\nGET session:*",
+      "poc": "redis-cli -h <target> -p 6379 AUTH AetherGuardRedis123!\nKEYS *\nGET session:*",
       "remediation": "1. 立即更改Redis密码\n2. 配置Redis仅监听localhost\n3. 启用Redis ACL访问控制\n4. 使用Redis TLS加密连接"
     },
     {
@@ -57,7 +57,7 @@
       "cvss": 7.8,
       "location": "/mnt/x/want/fsce/backend/.env",
       "description": "开发环境配置文件中包含硬编码的管理员和演示账户凭证。如果生产环境错误地使用了这些配置，或者开发环境可被外部访问，攻击者可使用这些凭证登录系统。",
-      "poc": "ADMIN_EMAIL=admin@fluxguard.dev\nADMIN_PASSWORD=DevAdmin123456!\nDEMO_EMAIL=demo@fluxguard.dev\nDEMO_PASSWORD=DevDemo123456!",
+      "poc": "ADMIN_EMAIL=admin@AetherGuard.dev\nADMIN_PASSWORD=DevAdmin123456!\nDEMO_EMAIL=demo@AetherGuard.dev\nDEMO_PASSWORD=DevDemo123456!",
       "remediation": "1. 从仓库中移除.env文件\n2. 使用.env.example作为模板\n3. 实施强密码策略\n4. 定期轮换所有凭证"
     },
     {

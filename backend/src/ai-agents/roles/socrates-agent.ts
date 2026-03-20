@@ -77,20 +77,32 @@ Provide your analysis in JSON format:
 
     async analyze(context: TrafficContext): Promise<AnalysisResult> {
         const prompt = this.buildAnalysisPrompt(context);
+        const startedAt = Date.now();
         
         try {
-            const response = await this.callModel(prompt);
+            const response = await this.callModel(prompt, this.buildModelContext(context));
             const analysis = this.parseAnalysisResponse(response.content);
+            const content = [
+                context.request.path,
+                context.request.body || '',
+                JSON.stringify(context.request.queryParams || {})
+            ].join(' ');
 
-            return {
+            return this.finalizeAnalysisResult({
                 agentId: this.identity.id,
                 role: 'socrates',
                 verdict: analysis.verdict,
                 confidence: analysis.confidence,
                 reasoning: analysis.reasoning,
                 evidence: analysis.evidence || [],
-                mutations: analysis.mutations || []
-            };
+                mutations: analysis.mutations || [],
+                classScores: analysis.classScores,
+                attackFamily: this.inferAttackFamily(content),
+                modelTier: response.tier,
+                routeMode: response.routeMode || 'unknown',
+                modelLatencyMs: response.latency,
+                analysisLatencyMs: Date.now() - startedAt
+            });
         } catch (error: any) {
             logger.error('Socrates analysis failed', { error: error.message });
             
@@ -114,17 +126,20 @@ Provide your analysis in JSON format:
     }
 
     private fallbackAnalysis(context: TrafficContext): AnalysisResult {
+        const startedAt = Date.now();
         const { request } = context;
         const mutations: RequestMutation[] = [];
         const evidence: Evidence[] = [];
         let verdict: AnalysisResult['verdict'] = 'safe';
-        let confidence = 0.5;
+        let confidence = 0.62;
 
         const content = [
             request.path,
             request.body || '',
-            JSON.stringify(request.queryParams || {})
+            JSON.stringify(request.queryParams || {}),
+            JSON.stringify(request.headers || {})
         ].join(' ');
+        const signals = this.inspectContentHeuristics(content);
 
         const sqlPatterns = [
             { pattern: /'\s*or\s+'/i, type: 'SQL Injection - OR bypass' },
@@ -191,6 +206,23 @@ Provide your analysis in JSON format:
             }
         }
 
+        if (signals.hardSignals.length > 0) {
+            verdict = 'malicious';
+            confidence = Math.max(confidence, 0.88);
+        } else if (signals.softSignals.length > 0) {
+            verdict = verdict === 'malicious' ? verdict : 'suspicious';
+            confidence = Math.max(confidence, 0.74);
+        }
+
+        if (
+            verdict === 'safe' &&
+            signals.attackFamily === 'authentication' &&
+            /login|auth|token/i.test(content)
+        ) {
+            verdict = 'suspicious';
+            confidence = 0.68;
+        }
+
         if (mutations.length > 0) {
             evidence.push({
                 type: 'pattern',
@@ -201,17 +233,40 @@ Provide your analysis in JSON format:
             });
         }
 
-        return {
+        if (signals.softSignals.length > 0 && mutations.length === 0) {
+            evidence.push({
+                type: 'semantic',
+                description: `Adversarial probe indicators detected: ${signals.softSignals.map(signal => signal.label).join(', ')}`,
+                severity: verdict === 'malicious' ? 'high' : 'medium',
+                data: { indicators: signals.softSignals.map(signal => signal.label) },
+                source: 'Socrates'
+            });
+        }
+
+        return this.finalizeAnalysisResult({
             agentId: this.identity.id,
             role: 'socrates',
             verdict,
             confidence,
             reasoning: mutations.length > 0
                 ? `Identified ${mutations.length} potential attack vector(s): ${mutations.map(m => m.description).join(', ')}`
-                : 'No obvious attack patterns detected, but further analysis recommended',
+                : signals.softSignals.length > 0
+                    ? `Adversarial surface indicators detected: ${signals.softSignals.map(signal => signal.label).join(', ')}`
+                    : 'No obvious attack patterns detected, but further analysis recommended',
             evidence,
-            mutations
-        };
+            mutations,
+            classScores:
+                verdict === 'malicious'
+                    ? { safe: 0.04, suspicious: 0.16, malicious: 0.8 }
+                    : verdict === 'suspicious'
+                        ? { safe: 0.18, suspicious: 0.62, malicious: 0.2 }
+                        : { safe: 0.7, suspicious: 0.2, malicious: 0.1 },
+            attackFamily: signals.attackFamily,
+            modelTier: 'cloud',
+            routeMode: 'unknown',
+            modelLatencyMs: undefined,
+            analysisLatencyMs: Date.now() - startedAt
+        });
     }
 
     private generateSQLMutation(original: string): string {

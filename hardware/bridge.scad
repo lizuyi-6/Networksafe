@@ -1,7 +1,10 @@
-/*
- * FluxGuard Enclosure - BRIDGE (Component Support)
+﻿/*
+ * AetherGuard Enclosure - BRIDGE (Legacy Reference)
  * Print: Flat (as-is)
  * Supports: RECOMMENDED for alignment tabs
+ *
+ * Legacy helper from the retired unibody concept.
+ * The current serial deployer shell uses chassis/top_plate/bottom_cover.
  */
 
 // --- Parameters ---

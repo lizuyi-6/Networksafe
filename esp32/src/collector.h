@@ -1,11 +1,14 @@
-/**
- * FluxGuard ESP32 - 优化版系统信息采集模块
+﻿/**
+ * AetherGuard ESP32 - 优化版系统信息采集模块
  * 
  * 优化策略：
  * - 使用 __packed 结构体减少内存对齐开销
  * - 避免 String 类使用 (防止堆碎片)
  * - 使用静态缓冲区
  * - 增量式数据采集 (避免一次性大内存分配)
+ *
+ * NOTE: Experimental cloud-device module. It is not compiled by the active
+ * serial-deployer PlatformIO target.
  */
 
 #ifndef COLLECTOR_H

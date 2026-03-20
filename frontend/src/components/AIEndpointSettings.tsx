@@ -46,6 +46,16 @@ interface AddEndpointFormData {
     priority: number;
 }
 
+const BUILT_IN_MODEL_OPTIONS = [
+    { label: 'Tencent HY 2.0 Instruct', value: 'hunyuan-2.0-instruct' },
+    { label: 'Tencent HY 2.0 Think', value: 'hunyuan-2.0-thinking' },
+    { label: 'MiniMax-M2.5', value: 'minimax-m2.5' },
+    { label: 'Kimi-K2.5', value: 'kimi-k2.5' },
+    { label: 'GLM-5', value: 'glm-5' },
+    { label: 'Hunyuan-T1', value: 'hunyuan-t1' },
+    { label: 'Hunyuan-TurboS', value: 'hunyuan-turbos' }
+];
+
 const staggerContainer: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -368,11 +378,19 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                             <label className="block text-xs text-muted-foreground mb-1">Model</label>
                             <input
                                 type="text"
+                                list="built-in-model-options"
                                 value={formData.modelName}
                                 onChange={e => setFormData(prev => ({ ...prev, modelName: e.target.value }))}
-                                placeholder="llama3 / gpt-4 / qwen"
+                                placeholder="glm-5 / hunyuan-turbos / kimi-k2.5"
                                 className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:border-primary focus:outline-none"
                             />
+                            <datalist id="built-in-model-options">
+                                {BUILT_IN_MODEL_OPTIONS.map((model) => (
+                                    <option key={model.value} value={model.value}>
+                                        {model.label}
+                                    </option>
+                                ))}
+                            </datalist>
                         </div>
                         <div>
                             <label className="block text-xs text-muted-foreground mb-1">API Key</label>

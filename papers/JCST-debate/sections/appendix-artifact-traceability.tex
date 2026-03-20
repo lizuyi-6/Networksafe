@@ -1,0 +1,27 @@
+\section{Artifact Traceability}
+
+Table~\ref{tab:traceability} maps the manuscript's numeric and implementation-specific claims to concrete repository artifacts. This appendix is not meant as a publication novelty claim; it is included so that the draft can be reviewed against the current workspace without relying on memory or legacy whitepaper numbers.
+
+\begin{table*}[h]
+  \centering
+  \footnotesize
+  \caption{Traceability map from manuscript claims to repository artifacts.}
+  \label{tab:traceability}
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabularx}{\textwidth}{@{}p{0.30\textwidth}Y@{}}
+    \toprule
+    Manuscript claim & Repository artifact \\
+    \midrule
+    32 balanced benchmark-derived samples across four web attack families & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval.json} \\
+    87.5\% accuracy and four false positives for \texttt{single\_agent} and \texttt{multi\_agent\_no\_debate} & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval-summary.md} \\
+    100\% accuracy and zero false positives for \texttt{multi\_agent\_with\_debate} & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval-summary.md} \\
+    12/32 debate trigger ratio and 0.75 average debate rounds & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval-summary.md} \\
+    route-mode orchestration latency values & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval-summary.md} \\
+    fastpath smoke snapshot of 1329.79 QPS and 21 ms p95 latency & \nolinkurl{docs/reports/validated-capability-status-2026-03-08.md} \\
+    disagreement logic using label conflict, Jensen--Shannon divergence, and confidence range & \nolinkurl{backend/src/ai-agents/core/scoring.ts} \\
+    bounded debate orchestration and Aristotle arbitration & \nolinkurl{backend/src/ai-agents/debate/debate-protocol.ts} \\
+    route-mode names and privacy configuration surface & \nolinkurl{backend/src/services/platform-config.service.ts} \\
+    authenticated and rate-limited WebSocket gateway plus audit logging references & \nolinkurl{backend/src/websocket/agent-gateway.ts} \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Database Seed Script
  * 
  * Creates demo data for development and testing
@@ -159,7 +159,7 @@ export async function seedDatabase(options: SeedOptions = {}): Promise<void> {
 
         // Create demo API key
         const apiKeyId = uuidv4();
-        const apiKey = 'fluxguard_' + uuidv4().replace(/-/g, '');
+        const apiKey = 'AetherGuard_' + uuidv4().replace(/-/g, '');
         const apiKeyHash = await bcrypt.hash(apiKey, 10);
 
         db.prepare(`
@@ -192,7 +192,7 @@ export async function seedDatabase(options: SeedOptions = {}): Promise<void> {
  * Run seeder as standalone script
  */
 async function main() {
-    console.log('🌱 FluxGuard Database Seeder\n');
+    console.log('🌱 AetherGuard Database Seeder\n');
 
     const clearExisting = process.argv.includes('--clear');
 

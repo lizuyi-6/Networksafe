@@ -1,5 +1,5 @@
-/**
- * FluxGuard E2E Demo Script
+﻿/**
+ * AetherGuard E2E Demo Script
  * 
  * 模拟真实的生产环境场景：
  * 1. Agent 连接并注册
@@ -84,7 +84,7 @@ class DemoAgent {
     ];
 
     async start(): Promise<void> {
-        console.log('🚀 启动 FluxGuard Demo Agent...\n');
+        console.log('🚀 启动 AetherGuard Demo Agent...\n');
         console.log(`   Agent ID: ${AGENT_ID}`);
         console.log(`   Server:   ${SERVER_URL}`);
         console.log('');
@@ -269,7 +269,7 @@ class DemoAgent {
 // 主函数
 async function main() {
     console.log('═══════════════════════════════════════════════════════');
-    console.log('       FluxGuard Pro - 交付演示测试');
+    console.log('       AetherGuard - 交付演示测试');
     console.log('═══════════════════════════════════════════════════════\n');
 
     const agent = new DemoAgent();

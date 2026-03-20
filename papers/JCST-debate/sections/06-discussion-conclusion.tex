@@ -1,0 +1,36 @@
+\section{Discussion and Conclusion}\label{sec:discussion}
+
+\subsection{What the Current Evidence Supports}
+
+The public results support a precise and limited conclusion. In the current repository evaluation, debate-driven triage improves request-level precision on ambiguous web threats without materially changing the lightweight orchestration profile of the pipeline. The strongest direct evidence is the removal of four false positives that remain in both non-debate baselines. This aligns with the design intent of the method and with the observable behavior of the code paths that compute disagreement and launch bounded debate.
+
+The system evidence is also meaningful, but should remain conservative. The validated workspace snapshot confirms that the paper is not describing an isolated algorithm detached from a deployable security stack. Authenticated gateways, signed command dispatch, audit-chain retention, and benchmark harnesses are present. However, these artifacts do not justify broad claims about production scale, full LLM latency, or externally validated rollout. The draft therefore frames \system\ as a concrete realization environment, not as proof of every historical platform claim.
+
+\subsection{Threats to Validity}
+
+Three threats are especially important.
+
+First, the public corpus is small and benchmark-derived. It demonstrates mechanism behavior, not broad field performance. Second, the current route-mode latency values describe orchestration in the validated workspace rather than full downstream model latency under all deployment modes. Third, the role-specialization argument is stronger conceptually than empirically in the current draft because the repository does not yet include a separate public ablation that removes role specialization while preserving all other variables.
+
+The planned private labeled-alert layer addresses the first and third limitations most directly. Once that data is available, the paper should add a role-specialization ablation and a targeted error analysis on genuine alert ambiguity.
+
+\subsection{Conclusion}
+
+This draft reframes \system\ into a narrower, more defensible JCST contribution. The paper does not argue that a broad security platform is itself the novelty. Instead, it argues that debate-driven multi-agent judgment is a practical way to improve distributed web threat triage when evidence is ambiguous and operators require an auditable decision trail. The repository already supports this claim with a functioning implementation, a traceable public benchmark slice, and conservative system-overhead evidence. The next revision should strengthen the paper through a private labeled-alert dataset, but even in its present form the draft provides a coherent method-and-system narrative centered on role-specialized debate, auditable outputs, and deployment-aware realization.
+
+\bmhead{Acknowledgements}
+
+Acknowledgements are intentionally anonymized in this draft. Replace this paragraph in the non-anonymous revision with funding support, institutional assistance, infrastructure credits, or other brief acknowledgements that are appropriate for the final submission.
+
+\section*{Declarations}
+
+\begin{itemize}
+  \item \textbf{Funding:} To be completed in the non-anonymous revision. The current draft does not attribute any grant support without repository-traceable confirmation.
+  \item \textbf{Conflict of interest:} The author declares no competing interests for this anonymized draft.
+  \item \textbf{Ethics approval and consent to participate:} Not applicable.
+  \item \textbf{Consent for publication:} Not applicable.
+  \item \textbf{Data availability:} Public evidence used in this manuscript is traceable to repository artifacts listed in Appendix~A. The private labeled-alert layer is reserved for a later revision and is not populated in the current draft.
+  \item \textbf{Materials availability:} Not applicable.
+  \item \textbf{Code availability:} The implementation surfaces discussed in this paper are present in the repository workspace referenced throughout the manuscript and Appendix~A.
+  \item \textbf{Author contribution:} To be completed in the non-anonymous revision.
+\end{itemize}

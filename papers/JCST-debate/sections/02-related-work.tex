@@ -1,0 +1,25 @@
+\section{Related Work}\label{sec:related}
+
+\subsection{Web Attack Detection and Triage}
+
+Intrusion detection has evolved from rule-centric monitoring to increasingly adaptive learning-based pipelines. Denning's early anomaly model framed detection as a deviation-identification problem~\cite{denning1987intrusion}, while Snort and Bro demonstrated the durability of interpretable packet and log inspection in production networks~\cite{roesch1999snort,paxson1999bro}. More recent systems use deep models to classify network or application behavior with better coverage against evolving threats~\cite{doriguzzi2020lucid,holdbrook2024survey}. Yet the dominant output abstraction has not changed much: a request or flow is eventually mapped to a single label with a score.
+
+For web threat triage, this is a practical weakness rather than a purely statistical one. Operators need to know not just whether a request appears malicious, but why it should be blocked now, whether the evidence is conflicting, and whether the same request family would benefit from a policy update. The current paper addresses this operational gap by treating a request verdict as the output of explicit role conflict resolution rather than of one opaque model invocation.
+
+\subsection{AI-Assisted Security Analysis and Explainability}
+
+The explainable IDS literature shows growing dissatisfaction with bare classification scores~\cite{neupane2022xids}. Feature-attribution methods can help analysts understand model focus, but they often remain post-hoc and model-centric. In contrast, security operations typically require procedural traceability: what evidence was considered, which disagreement mattered, and why a final handling decision was selected. Surveys and recent applied work argue that security teams need explanations tied to incident workflow rather than only to feature importance~\cite{neupane2022xids,barrere2022autonomous}.
+
+This distinction is central to our positioning. \system\ does not attempt to introduce another post-hoc explanation layer. Instead, the explanation object is native to the triage workflow itself: debate transcript, verdict distribution, and case file. This is a narrower and more defensible claim than broad ``explainable AI'' language, and it aligns better with the artifact surfaces already present in the codebase.
+
+\subsection{Multi-Agent Debate and Routing}
+
+General-purpose LLM agent frameworks show that role assignment and inter-agent communication can improve complex task performance~\cite{wang2024autonomous,wu2024autogen,hong2024metagpt}. Debate-based reasoning goes further by externalizing disagreement instead of hiding it inside one model pass~\cite{du2024debate}. This direction is especially relevant after evidence that LLMs do not reliably self-correct reasoning without structured external feedback~\cite{huang2024selfcorrect,gou2024critic}. Our triage method adopts that insight in a security-specific form: debate is only triggered when disagreement indicators justify it, and each role is grounded in a recognizable security posture rather than a generic team structure.
+
+Routing and privacy constraints form the second ingredient. Cost-aware routing systems such as FrugalGPT and RouteLLM show that multi-model inference can be treated as a decision problem~\cite{chen2023frugalgpt,ong2024routellm}. Security deployments add stricter requirements around local processing, content redaction, and fallback behavior~\cite{chen2025privacy}. The \system\ implementation uses these routing ideas as system support, but not as the main contribution. In this paper, routing exists to make debate-driven triage deployable across privacy modes and runtime availability conditions.
+
+\subsection{Positioning Against Collaborative Security}
+
+Collaborative intrusion detection research traditionally focuses on intelligence sharing and distributed trust~\cite{vasilomanolakis2016taxonomy}. That line is important background because \system\ is also distributed. However, our target problem differs in scope. The present paper is not about cross-organization alert federation, consensus trust, or multi-party data fusion. It is about the internal decision quality of a distributed security platform when one web request produces conflicting signals.
+
+This leads to a compact positioning statement: the contribution is \emph{not} a broader multi-agent platform, a broader distributed IDS, or a broader explainability framework. It is a debate-centered decision method, implemented inside \system, and evaluated first on repository-traceable public evidence.

@@ -1,8 +1,8 @@
-# 🔴 第三轮红队渗透测试报告
+﻿# 🔴 第三轮红队渗透测试报告
 
 **执行日期**: 2026-02-16
 **测试团队**: 红队专家 - Round 3
-**目标系统**: FluxGuard Security Platform
+**目标系统**: AetherGuard Security Platform
 **测试类型**: 深度渗透测试 + 零日研究
 **蓝队状态**: 已修复 80% 高危漏洞
 
@@ -550,9 +550,9 @@ await Promise.all(promises);
 // 错误响应包含敏感信息
 {
   "error": "Failed to execute command",
-  "message": "ENOENT: no such file or directory, open '/var/www/fluxguard/.env'",
+  "message": "ENOENT: no such file or directory, open '/var/www/AetherGuard/.env'",
   "stack": "Error: ENOENT...\n    at /mnt/x/want/fsce/backend/src/...",
-  "path": "/var/www/fluxguard"
+  "path": "/var/www/AetherGuard"
 }
 ```
 

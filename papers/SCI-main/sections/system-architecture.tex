@@ -1,0 +1,243 @@
+% System Architecture Section for AetherGuard SCI Paper
+% Target: IEEE TDSC/TIFS
+
+\section{System Architecture}
+\label{sec:architecture}
+
+\subsection{System Overview}
+\label{subsec:overview}
+
+AetherGuard adopts a ``centralized control + distributed execution'' architecture that balances operational oversight with local responsiveness. The system comprises three primary tiers: (1) the \textit{Control Plane}, which provides centralized management, persistent storage, and coordination services; (2) the \textit{Distributed Agent Layer}, which performs attack detection, firewall control, and log collection on protected servers; and (3) the \textit{Frontend Dashboard}, which offers real-time visualization and administrative interfaces.
+
+The architectural philosophy emphasizes \textit{separation of concerns}: security policy decisions are centralized for consistency and auditability, while threat detection and response execution are distributed to minimize latency and single points of failure. This design aligns with modern zero-trust principles, where each distributed agent maintains local autonomy while remaining accountable to the control plane.
+
+Figure~\cref{fig:architecture} illustrates the overall system architecture. The control plane exposes REST APIs for configuration management and WebSocket gateways for real-time bidirectional communication with distributed agents. Agents register with the control plane using cryptographically verified onboarding tokens, establishing authenticated sessions over TLS-encrypted WebSocket connections.
+
+\subsection{Control Plane Design}
+\label{subsec:control-plane}
+
+\subsubsection{Backend API}
+
+The control plane backend is implemented in Node.js/TypeScript, providing RESTful endpoints for agent lifecycle management, threat intelligence distribution, and policy enforcement. Key API categories include:
+
+\begin{itemize}
+    \item \textbf{Agent Management}: Registration, heartbeat monitoring, capability negotiation, and secure command dispatch.
+    \item \textbf{Threat Intelligence}: Distribution of IOCs (Indicators of Compromise), attack signatures, and behavioral models.
+    \item \textbf{Policy Management}: Definition and propagation of firewall rules, response playbooks, and escalation procedures.
+    \item \textbf{Audit Logging}: Tamper-evident logging of all administrative actions and security events.
+\end{itemize}
+
+The API layer implements rate limiting, input validation, and role-based access control (RBAC) to prevent abuse and privilege escalation.
+
+\subsubsection{Database Layer}
+
+AetherGuard uses SQLite for persistent storage, selected for its operational simplicity and zero-configuration deployment. The database schema centers on four entity types:
+
+\begin{enumerate}
+    \item \textbf{Agents}: Identity, capabilities, network location, and health status of distributed agents.
+    \item \textbf{Threats}: Detected security events with severity classification, temporal context, and resolution status.
+    \item \textbf{Policies}: Firewall rules, response actions, and configuration parameters.
+    \item \textbf{Audit Logs}: Cryptographically signed records of all security-relevant operations.
+\end{enumerate}
+
+For deployments requiring horizontal scalability, the storage layer can be replaced with PostgreSQL without architectural changes.
+
+\subsubsection{Redis Pub/Sub}
+
+Redis serves as the message backbone for real-time event distribution. Two primary channels are maintained:
+
+\begin{itemize}
+    \item \textbf{threat:alerts}: Broadcast channel for distributing threat detections to all subscribed agents and dashboard clients.
+    \item \textbf{agent:commands}: Targeted command channel for dispatching response actions to specific agents.
+\end{itemize}
+
+Redis's pub/sub semantics provide fire-and-forget messaging suitable for real-time notifications, while the backend API handles reliable command delivery with acknowledgment tracking.
+
+\subsubsection{WebSocket Gateways}
+
+Two specialized gateways manage real-time communication:
+
+\textbf{AgentGateway}: Handles bidirectional communication with distributed agents. Agents maintain persistent WebSocket connections for receiving commands and reporting status. The gateway implements:
+\begin{itemize}
+    \item JWT-based authentication with short-lived tokens
+    \item Rate limiting to prevent connection flooding
+    \item Automatic reconnection with exponential backoff
+    \item Command signing with HMAC-SHA256 for integrity verification
+\end{itemize}
+
+\textbf{DeviceGateway}: Manages ESP32-based deployment dongles that auto-register when physically connected to servers. These devices execute deployment scripts via USB serial, enabling zero-touch agent installation.
+
+\subsection{Distributed Agent Design}
+\label{subsec:agent-design}
+
+Distributed agents are Node.js processes deployed on protected Linux servers. Each agent operates autonomously while maintaining periodic synchronization with the control plane.
+
+\subsubsection{Agent Core}
+
+The agent core provides:
+\begin{itemize}
+    \item \textbf{Lifecycle Management}: Registration, heartbeat transmission, and graceful shutdown.
+    \item \textbf{Secure Communication}: TLS-encrypted WebSocket connections with certificate pinning.
+    \item \textbf{Command Execution}: Sandboxed execution of firewall rules, process termination, and network isolation commands.
+    \item \textbf{Local Caching}: Offline operation capability with local threat intelligence caching.
+\end{itemize}
+
+\subsubsection{Attack Detector}
+
+The attack detection module implements multi-source threat detection:
+\begin{itemize}
+    \item \textbf{Network Monitoring}: libpcap-based packet capture with protocol analysis.
+    \item \textbf{Log Analysis}: Real-time parsing of system logs (auth.log, syslog) using pattern matching and statistical anomaly detection.
+    \item \textbf{Behavioral Analysis}: Process execution monitoring for suspicious patterns (e.g., reverse shells, privilege escalation).
+\end{itemize}
+
+Detected threats are classified by severity (LOW, MEDIUM, HIGH, CRITICAL) and enriched with contextual metadata before transmission to the control plane.
+
+\subsubsection{Firewall Controller}
+
+The firewall module provides local packet filtering using iptables/nftables:
+\begin{itemize}
+    \item \textbf{Dynamic Rule Injection}: Real-time insertion of drop/accept rules based on control plane commands.
+    \item \textbf{Rate Limiting}: Automatic throttling of suspicious traffic sources.
+    \item \textbf{Geo-blocking}: IP-based geographic filtering for known hostile regions.
+    \item \textbf{Temporary Blocks}: Time-based rules that automatically expire.
+\end{itemize}
+
+All firewall modifications are logged and reported to the control plane for audit purposes.
+
+\subsection{Multi-Agent AI Architecture}
+\label{subsec:ai-architecture}
+
+The core innovation of AetherGuard is its seven-layer multi-agent AI architecture, which transforms raw threat observations into actionable security decisions through structured deliberation. This architecture is the focus of our contribution and is described in detail below.
+
+\subsubsection{Layer 1: Collaboration Layer}
+\label{subsubsec:layer1}
+
+The collaboration layer serves as the entry point for threat analysis requests. Its responsibilities include:
+
+\begin{itemize}
+    \item \textbf{Threat Classification}: Categorizing incoming threats by type (network intrusion, malware, DDoS, etc.) to route to appropriate specialized agents.
+    \item \textbf{Load Balancing}: Distributing analysis tasks across available agent instances to prevent bottlenecks.
+    \item \textbf{Session Management}: Maintaining conversation context across multiple analysis rounds.
+\end{itemize}
+
+The collaboration layer uses a lightweight classifier (Random Forest) trained on historical threat data to perform initial triage with sub-millisecond latency.
+
+\subsubsection{Layer 2: Role Playing Layer}
+\label{subsubsec:layer2}
+
+The role-playing layer instantiates three specialized agents, each embodying a distinct security perspective:
+
+\textbf{Socrates (Red Team Agent)}: Adopts an adversarial mindset, probing for weaknesses in the proposed threat assessment and identifying potential attack vectors that may have been overlooked. Socrates challenges assumptions and stress-tests the robustness of defensive recommendations.
+
+\textbf{Plato (Blue Team Agent)}: Represents the defensive perspective, proposing countermeasures, evaluating mitigation strategies, and assessing the operational feasibility of response actions. Plato focuses on practical implementation and risk reduction.
+
+\textbf{Aristotle (Analyst Agent)}: Synthesizes information from both adversarial and defensive perspectives, identifying logical inconsistencies, evaluating evidence quality, and producing balanced assessments. Aristotle serves as the deliberation moderator and final decision arbiter.
+
+Each role is implemented as a specialized LLM prompt template with domain-specific context and constraints.
+
+\subsubsection{Layer 3: Scene Traversal Layer}
+\label{subsubsec:layer3}
+
+The scene traversal layer reconstructs the attack narrative by correlating the current threat with historical events and distributed observations:
+
+\begin{itemize}
+    \item \textbf{Distributed Tracing}: Correlating events across multiple agents to identify coordinated attacks.
+    \item \textbf{Temporal Analysis}: Establishing attack timelines and identifying precursor activities.
+    \item \textbf{Context Enrichment}: Augmenting threat descriptions with asset criticality, exposure analysis, and business impact assessment.
+\end{itemize}
+
+This layer transforms isolated alerts into coherent attack stories, enabling more informed decision-making.
+
+\subsubsection{Layer 4: Capability Layer}
+\label{subsubsec:layer4}
+
+The capability layer provides safe execution environments for security tools:
+
+\begin{itemize}
+    \item \textbf{Sandboxed Execution}: Isolated containers for running untrusted analysis scripts.
+    \item \textbf{Tool Integration}: Standardized APIs for integrating external security tools (nmap, tshark, YARA, etc.).
+    \item \textbf{Result Parsing}: Structured extraction of tool outputs for downstream processing.
+\end{itemize}
+
+Security tools execute with least-privilege principles, and all tool invocations are logged for audit purposes.
+
+\subsubsection{Layer 5: Debate Layer}
+\label{subsubsec:layer5}
+
+The debate layer orchestrates structured deliberation between role-playing agents:
+
+\begin{enumerate}
+    \item \textbf{Position Submission}: Each agent submits an initial assessment with confidence scores.
+    \item \textbf{Conflict Detection}: The system identifies disagreements exceeding a configurable threshold (default: 0.3 confidence difference).
+    \item \textbf{Debate Rounds}: Agents engage in structured argumentation, presenting evidence and challenging opposing views.
+    \item \textbf{Convergence Check}: After each round, the system evaluates whether consensus has been reached or maximum rounds (default: 5) have been exhausted.
+    \item \textbf{Arbitration}: If consensus is not reached, Aristotle produces a final decision with explicit uncertainty quantification.
+\end{enumerate}
+
+The debate process produces an auditable transcript of the deliberation, providing procedural explainability for security decisions.
+
+\subsubsection{Layer 6: Heterogeneous Model Layer}
+\label{subsubsec:layer6}
+
+The heterogeneous model layer manages inference backend selection based on privacy requirements, cost constraints, and quality needs:
+
+\begin{itemize}
+    \item \textbf{Local Models}: Ollama-hosted models (e.g., Llama 3) for sensitive data processing without cloud transmission.
+    \item \textbf{Cloud Models}: GLM-4, GPT-4, or other commercial APIs for complex analysis requiring advanced capabilities.
+    \item \textbf{Hybrid Mode}: Local pre-screening with cloud verification for high-confidence decisions.
+\end{itemize}
+
+Privacy protection is implemented through automatic prompt redaction (IP addresses, bearer tokens, email addresses) before cloud transmission. The routing decision considers:
+\begin{equation}
+\text{Route}(t) = \arg\min_{r \in \{\text{local}, \text{cloud}, \text{hybrid}\}} \alpha \cdot \text{PrivacyRisk}(t, r) + \beta \cdot \text{Cost}(r) + \gamma \cdot \text{Latency}(r)
+\end{equation}
+where $\alpha$, $\beta$, $\gamma$ are configurable weights reflecting organizational priorities.
+
+\subsubsection{Layer 7: Synthesis Layer}
+\label{subsubsec:layer7}
+
+The synthesis layer produces the final deliverable: a structured case file containing:
+
+\begin{itemize}
+    \item \textbf{Threat Summary}: Classification, severity, and affected assets.
+    \item \textbf{Reasoning Narrative}: Natural language explanation of the decision rationale.
+    \item \textbf{Debate Transcript}: Complete record of the deliberation process.
+    \item \textbf{Attack Chain Reconstruction}: Temporal and causal relationships between events.
+    \item \textbf{Recommended Actions}: Prioritized response recommendations with risk assessments.
+    \item \textbf{Policy Update Suggestions}: Recommendations for improving defensive posture based on observed attack patterns.
+\end{itemize}
+
+Case files are persisted to the database and distributed to relevant stakeholders via the dashboard and API.
+
+\subsection{Communication Architecture}
+\label{subsec:communication}
+
+\subsubsection{Protocol Design}
+
+AetherGuard uses a custom application protocol over WebSocket connections. Messages are JSON-encoded and follow a standard envelope format:
+
+\begin{verbatim}
+{
+  "messageId": "uuid",
+  "timestamp": "ISO-8601",
+  "type": "threat:detected",
+  "payload": { ... },
+  "signature": "HMAC-SHA256"
+}
+\end{verbatim}
+
+All messages are signed using per-session HMAC keys established during agent registration.
+
+\subsubsection{Authentication and Security}
+
+The authentication flow follows a zero-trust model:
+
+\begin{enumerate}
+    \item \textbf{Onboarding}: Agents receive one-time onboarding codes from the administrator.
+    \item \textbf{Registration}: Agents present onboarding codes to obtain long-term credentials.
+    \item \textbf{Session Establishment}: Credentials are exchanged for short-lived JWT tokens (15-minute expiry).
+    \item \textbf{Continuous Verification}: Tokens are refreshed periodically, and sessions are terminated if anomalies are detected.
+\end{enumerate}
+
+All communications use TLS 1.3 with mutual authentication where supported.

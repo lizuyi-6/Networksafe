@@ -1,7 +1,7 @@
-/**
+﻿/**
  * JWT Authentication Middleware
  *
- * Provides secure authentication for FluxGuard API endpoints
+ * Provides secure authentication for AetherGuard API endpoints
  * SECURITY FIX: Enhanced environment variable validation
  */
 
@@ -11,6 +11,7 @@ import crypto from 'crypto';
 import logger from '../utils/logger';
 import redisService from '../security/redis.service';
 import EnvValidator from '../security/env-validator.service';
+import { resolveRequestTenantContext, TenantContext } from '../core/tenant/tenant-context';
 
 // Validate environment variables at module load
 try {
@@ -44,6 +45,7 @@ export interface AuthenticatedUser {
  */
 export interface AuthenticatedRequest extends Request {
     user?: AuthenticatedUser;
+    tenantContext?: TenantContext;
 }
 
 /**
@@ -57,13 +59,14 @@ export interface TokenPair {
 
 /**
  * Generate JWT token pair
+ * SECURITY FIX: Explicitly specify algorithm for token generation
  */
 export function generateTokens(user: AuthenticatedUser): TokenPair {
-    const accessToken = jwt.sign(user, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
+    const accessToken = jwt.sign(user, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' } as jwt.SignOptions);
     const refreshToken = jwt.sign(
         { userId: user.userId, type: 'refresh' },
         JWT_SECRET,
-        { expiresIn: JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
+        { expiresIn: JWT_REFRESH_EXPIRES_IN, algorithm: 'HS256' } as jwt.SignOptions
     );
 
     // Calculate expiration in seconds
@@ -76,10 +79,11 @@ export function generateTokens(user: AuthenticatedUser): TokenPair {
 /**
  * Verify and decode JWT token
  * SECURITY FIX CVE-2026-001: Now checks Redis blacklist for logged-out tokens
+ * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
  */
 export function verifyToken(token: string): AuthenticatedUser | null {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
+        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as AuthenticatedUser;
         return decoded;
     } catch (error) {
         return null;
@@ -90,6 +94,7 @@ export function verifyToken(token: string): AuthenticatedUser | null {
  * Async version of verifyToken that checks Redis blacklist
  * SECURITY FIX CVE-2026-001: Check if token is blacklisted before accepting
  * SECURITY FIX: Fail secure when Redis is unavailable - reject tokens if we can't verify blacklist
+ * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
  */
 export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser | null> {
     let isRedisAvailable = false;
@@ -97,7 +102,7 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
     // First verify JWT is valid
     let decoded: AuthenticatedUser;
     try {
-        decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
+        decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as AuthenticatedUser;
     } catch (error) {
         return null;
     }
@@ -141,10 +146,11 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
 
 /**
  * Verify refresh token
+ * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
  */
 export function verifyRefreshToken(token: string): { userId: string } | null {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; type: string };
+        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as { userId: string; type: string };
         if (decoded.type !== 'refresh') {
             return null;
         }
@@ -284,31 +290,29 @@ export function requireTenantAccess(req: AuthenticatedRequest, res: Response, ne
         return;
     }
 
-    // Admins can access all tenants
-    if (req.user.role === 'admin') {
-        next();
+    const context = resolveRequestTenantContext(req, {
+        allowAdminPlatformFallback: req.user.role === 'admin'
+    });
+
+    if (!context) {
+        res.status(403).json({
+            error: 'backend.tenant_resolution_required',
+            code: 'TENANT_REQUIRED'
+        });
         return;
     }
 
-    // Check if requested tenant matches user's tenant
-    const requestedTenantId = req.params.tenantId || req.query.tenantId || req.body?.tenantId;
-
-    // SECURITY FIX CVE-2026-010: If no tenantId in request, use user's tenantId
-    // This ensures tenant isolation is always enforced
-    if (!requestedTenantId) {
-        // Attach user's tenantId to request for downstream use
-        if (!req.body) req.body = {};
-        req.body.tenantId = req.user.tenantId;
-        next();
-        return;
-    }
-
-    if (requestedTenantId !== req.user.tenantId) {
+    if (req.user.role !== 'admin' && context.tenantId !== req.user.tenantId) {
         res.status(403).json({
             error: 'backend.cannot_access_resources_from_another_tenant',
             code: 'TENANT_MISMATCH'
         });
         return;
+    }
+
+    if (!req.body) req.body = {};
+    if (!req.body.tenantId) {
+        req.body.tenantId = context.tenantId;
     }
 
     next();
@@ -379,7 +383,7 @@ export function authenticateApiKey(req: AuthenticatedRequest, res: Response, nex
     // Attach a system user for API key requests with tenant isolation
     req.user = {
         userId: 'api-key-user',
-        email: 'api@fluxguard.local',
+        email: 'api@AetherGuard.local',
         username: 'API Client',
         role: 'tenant',
         plan: 'ultra',

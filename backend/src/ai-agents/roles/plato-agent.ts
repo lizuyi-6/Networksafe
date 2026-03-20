@@ -96,9 +96,10 @@ Provide your analysis in JSON format:
 
     async analyze(context: TrafficContext): Promise<AnalysisResult> {
         const prompt = this.buildAnalysisPrompt(context);
+        const startedAt = Date.now();
         
         try {
-            const response = await this.callModel(prompt);
+            const response = await this.callModel(prompt, this.buildModelContext(context));
             const analysis = this.parseAnalysisResponse(response.content);
 
             const schemaValidation = this.performSchemaValidation(context);
@@ -107,15 +108,25 @@ Provide your analysis in JSON format:
                 analysis.confidence = Math.max(analysis.confidence, 0.7);
             }
 
-            return {
+            return this.finalizeAnalysisResult({
                 agentId: this.identity.id,
                 role: 'plato',
                 verdict: analysis.verdict,
                 confidence: analysis.confidence,
                 reasoning: analysis.reasoning,
                 evidence: analysis.evidence || [],
-                schemaValidation
-            };
+                schemaValidation,
+                classScores: analysis.classScores,
+                attackFamily: this.inferAttackFamily([
+                    context.request.path,
+                    context.request.body || '',
+                    JSON.stringify(context.request.queryParams || {})
+                ].join(' ')),
+                modelTier: response.tier,
+                routeMode: response.routeMode || 'unknown',
+                modelLatencyMs: response.latency,
+                analysisLatencyMs: Date.now() - startedAt
+            });
         } catch (error: any) {
             logger.error('Plato analysis failed', { error: error.message });
             return this.fallbackAnalysis(context);
@@ -325,6 +336,7 @@ Provide your analysis in JSON format:
             /'\s*(or|and)\s+'/i,
             /union\s+select/i,
             /;\s*(drop|delete|update|insert)/i,
+            /(?:;|&&|\|\|)\s*(cat|curl|wget|bash|sh|type|powershell)\b/i,
             /\.\.\//,
             /%2e%2e/i,
             /\|\s*\w+/,
@@ -349,47 +361,73 @@ Provide your analysis in JSON format:
     }
 
     private fallbackAnalysis(context: TrafficContext): AnalysisResult {
+        const startedAt = Date.now();
         const schemaValidation = this.performSchemaValidation(context);
         const evidence: Evidence[] = [];
         let verdict: AnalysisResult['verdict'] = 'safe';
-        let confidence = 0.7;
+        let confidence = 0.78;
+        const content = [
+            context.request.path,
+            context.request.body || '',
+            JSON.stringify(context.request.queryParams || {}),
+            JSON.stringify(context.request.headers || {})
+        ].join(' ');
+        const signals = this.inspectContentHeuristics(content);
 
         const errorCount = schemaValidation.violations.filter(v => v.severity === 'error').length;
         const warningCount = schemaValidation.violations.filter(v => v.severity === 'warning').length;
 
-        if (errorCount > 0) {
+        if (errorCount > 0 || signals.hardSignals.length > 0) {
             verdict = 'malicious';
             confidence = 0.9;
             evidence.push({
                 type: 'pattern',
-                description: `Found ${errorCount} schema violation(s)`,
+                description: `Found ${Math.max(errorCount, 1)} blocking validation issue(s)`,
                 severity: 'high',
-                data: { violations: schemaValidation.violations.filter(v => v.severity === 'error') },
+                data: {
+                    violations: schemaValidation.violations.filter(v => v.severity === 'error'),
+                    indicators: signals.hardSignals.map(signal => signal.label)
+                },
                 source: 'Plato'
             });
-        } else if (warningCount > 3) {
+        } else if (warningCount > 1 || signals.softSignals.length > 1) {
             verdict = 'suspicious';
-            confidence = 0.75;
+            confidence = 0.72;
             evidence.push({
                 type: 'pattern',
-                description: `Found ${warningCount} schema warning(s)`,
+                description: `Found ${Math.max(warningCount, signals.softSignals.length)} non-blocking validation concern(s)`,
                 severity: 'medium',
-                data: { violations: schemaValidation.violations },
+                data: {
+                    violations: schemaValidation.violations,
+                    indicators: signals.softSignals.map(signal => signal.label)
+                },
                 source: 'Plato'
             });
         }
 
-        return {
+        return this.finalizeAnalysisResult({
             agentId: this.identity.id,
             role: 'plato',
             verdict,
             confidence,
             reasoning: schemaValidation.isValid
-                ? 'Request conforms to expected schema'
+                ? signals.softSignals.length > 0
+                    ? `Request is structurally valid but exposes risky input surfaces: ${signals.softSignals.map(signal => signal.label).join(', ')}`
+                    : 'Request conforms to expected schema'
                 : `Schema validation failed: ${schemaValidation.violations.map(v => v.field).join(', ')}`,
             evidence,
-            schemaValidation
-        };
+            schemaValidation,
+            classScores:
+                verdict === 'malicious'
+                    ? { safe: 0.06, suspicious: 0.12, malicious: 0.82 }
+                    : verdict === 'suspicious'
+                        ? { safe: 0.24, suspicious: 0.58, malicious: 0.18 }
+                        : { safe: 0.82, suspicious: 0.12, malicious: 0.06 },
+            attackFamily: signals.attackFamily,
+            modelTier: 'cloud',
+            routeMode: 'unknown',
+            analysisLatencyMs: Date.now() - startedAt
+        });
     }
 
     protected async handleAnalysisRequest(message: AgentMessage): Promise<void> {

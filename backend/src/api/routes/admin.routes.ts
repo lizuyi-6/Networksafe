@@ -1,10 +1,11 @@
 ﻿import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import { getDatabase } from '../../config/database';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
+import { sendError, sendSuccess } from '../../core/http/api-response';
+import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';
 import auditLogger from '../../security/audit-logger.service';
 import { tenantOversightService } from '../../services/tenant-oversight.service';
 import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
@@ -12,8 +13,22 @@ import { auditSegmentService } from '../../services/audit-segment.service';
 import { benchmarkService } from '../../services/benchmark.service';
 import { deviceControlService } from '../../services/device-control.service';
 import { getDeviceById } from './devices.routes';
+import {
+    deleteAdminApiKey,
+    getAdminUserById,
+    listAdminApiKeys,
+    listAdminUsers,
+    saveAdminApiKey,
+    updateAdminUserField
+} from '../../modules/admin/admin.repository';
 
 const router = Router();
+
+function resolveTenantOrPlatform(req: AuthenticatedRequest): string {
+    return resolveRequestTenantContext(req, {
+        allowAdminPlatformFallback: req.user?.role === 'admin'
+    })?.tenantId || PLATFORM_TENANT_ID;
+}
 
 const logAdminOversight = async (
     req: AuthenticatedRequest,
@@ -68,107 +83,6 @@ const oversightViews = tenantOversightService as typeof tenantOversightService &
     createExportView?: (input: any) => Promise<any>;
     listExportsView?: (tenantId: string) => Promise<any[]>;
     getExportView?: (exportId: string) => Promise<any>;
-};
-
-const listApiKeysView = async () => {
-    if (postgresShadowStoreService.canServeReads()) {
-        return await postgresShadowStoreService.queryAll<any>(`
-            SELECT id, name, created_at, last_used
-            FROM api_keys
-            ORDER BY created_at DESC
-            LIMIT 200
-        `);
-    }
-    return getDatabase().prepare(`
-        SELECT id, name, created_at, last_used
-        FROM api_keys
-        ORDER BY created_at DESC
-        LIMIT 200
-    `).all() as any[];
-};
-
-const persistApiKey = async (row: Record<string, any>) => {
-    if (postgresShadowStoreService.canServeReads()) {
-        await postgresShadowStoreService.execute(`
-            INSERT INTO api_keys (id, name, key_hash, user_id, tenant_id, permissions, last_used, expires_at, created_at)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-            ON CONFLICT (id)
-            DO UPDATE SET
-              name = EXCLUDED.name,
-              key_hash = EXCLUDED.key_hash,
-              user_id = EXCLUDED.user_id,
-              tenant_id = EXCLUDED.tenant_id,
-              permissions = EXCLUDED.permissions,
-              last_used = EXCLUDED.last_used,
-              expires_at = EXCLUDED.expires_at,
-              created_at = EXCLUDED.created_at
-        `, [
-            row.id, row.name, row.key_hash, row.user_id, row.tenant_id, row.permissions,
-            row.last_used || null, row.expires_at || null, row.created_at
-        ]);
-    }
-
-    getDatabase().prepare(`
-        INSERT OR REPLACE INTO api_keys (id, name, key_hash, user_id, tenant_id, permissions, last_used, expires_at, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-        row.id, row.name, row.key_hash, row.user_id, row.tenant_id, row.permissions,
-        row.last_used || null, row.expires_at || null, row.created_at
-    );
-
-    if (!postgresShadowStoreService.canServeReads()) {
-        void postgresShadowStoreService.upsert('api_keys', row);
-    }
-};
-
-const deleteApiKeyRecord = async (id: string) => {
-    if (postgresShadowStoreService.canServeReads()) {
-        await postgresShadowStoreService.execute('DELETE FROM api_keys WHERE id = $1', [id]);
-    }
-    getDatabase().prepare('DELETE FROM api_keys WHERE id = ?').run(id);
-};
-
-const listUsersView = async () => {
-    if (postgresShadowStoreService.canServeReads()) {
-        return await postgresShadowStoreService.queryAll<any>(`
-            SELECT id, email, username, role, plan, tenant_id, status, last_login, created_at
-            FROM users
-            ORDER BY created_at DESC
-        `);
-    }
-    return getDatabase().prepare(`
-        SELECT id, email, username, role, plan, tenant_id, status, last_login, created_at
-        FROM users
-        ORDER BY created_at DESC
-    `).all() as any[];
-};
-
-const getUserForAdminView = async (id: string) => {
-    if (postgresShadowStoreService.canServeReads()) {
-        return await postgresShadowStoreService.queryOne<any>(`
-            SELECT id, email, username, role, plan, tenant_id, status, last_login, created_at, updated_at
-            FROM users
-            WHERE id = $1
-            LIMIT 1
-        `, [id]);
-    }
-    return getDatabase().prepare(`
-        SELECT id, email, username, role, plan, tenant_id, status, last_login, created_at, updated_at
-        FROM users
-        WHERE id = ?
-        LIMIT 1
-    `).get(id) as any;
-};
-
-const updateUserAdminField = async (id: string, field: 'plan' | 'role' | 'status', value: string) => {
-    if (postgresShadowStoreService.canServeReads()) {
-        await postgresShadowStoreService.execute(`
-            UPDATE users
-            SET "${field}" = $1, updated_at = $2
-            WHERE id = $3
-        `, [value, new Date().toISOString(), id]);
-    }
-    getDatabase().prepare(`UPDATE users SET ${field} = ?, updated_at = datetime('now') WHERE id = ?`).run(value, id);
 };
 
 // SECURITY FIX: All admin routes now require authentication and admin role
@@ -274,7 +188,7 @@ router.post('/audit/segments/:segmentId/verify', authenticate, requireRole('admi
 
 router.post('/benchmarks/run', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
     try {
-        const tenantId = req.user?.tenantId || 'global';
+        const tenantId = resolveTenantOrPlatform(req);
         const scenario = req.body?.scenario ? String(req.body.scenario) : 'full-suite';
         const profile = req.body?.profile ? String(req.body.profile) : 'dev-smoke';
         const run = await benchmarkService.runScenario(tenantId, scenario, profile);
@@ -283,39 +197,39 @@ router.post('/benchmarks/run', authenticate, requireRole('admin'), async (req: A
             scenario: run.scenario,
             profile: run.profile
         }, tenantId);
-        res.json({ success: true, run });
+        return sendSuccess(res, run, { legacy: { run } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_run_benchmark' });
+        return sendError(res, 500, { code: 'BENCHMARK_RUN_FAILED', message: error?.message || 'backend.failed_to_run_benchmark' });
     }
 });
 
 router.get('/benchmarks/history', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
     try {
-        const tenantId = req.user?.tenantId || 'global';
+        const tenantId = resolveTenantOrPlatform(req);
         const limit = req.query.limit ? Number(req.query.limit) : 20;
         const runs = await benchmarkService.listHistory(tenantId, limit);
-        res.json({ success: true, runs });
+        return sendSuccess(res, runs, { legacy: { runs, count: runs.length } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_list_benchmarks' });
+        return sendError(res, 500, { code: 'BENCHMARK_LIST_FAILED', message: error?.message || 'backend.failed_to_list_benchmarks' });
     }
 });
 
 router.get('/benchmarks/:id/report', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
     try {
-        const tenantId = req.user?.tenantId || 'global';
+        const tenantId = resolveTenantOrPlatform(req);
         const run = await benchmarkService.getRun(tenantId, req.params.id);
         if (!run) {
-            return res.status(404).json({ success: false, error: 'backend.benchmark_not_found' });
+            return sendError(res, 404, { code: 'BENCHMARK_NOT_FOUND', message: 'backend.benchmark_not_found' });
         }
-        res.json({ success: true, run });
+        return sendSuccess(res, run, { legacy: { run } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_get_benchmark_report' });
+        return sendError(res, 500, { code: 'BENCHMARK_REPORT_FAILED', message: error?.message || 'backend.failed_to_get_benchmark_report' });
     }
 });
 
 router.post('/devices/firmware', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
     try {
-        const tenantId = req.user?.tenantId || 'global';
+        const tenantId = resolveTenantOrPlatform(req);
         const fileName = String(req.body?.fileName || '').trim();
         const version = String(req.body?.version || '').trim();
         const channel = String(req.body?.channel || 'stable').trim();
@@ -323,7 +237,7 @@ router.post('/devices/firmware', authenticate, requireRole('admin'), async (req:
         const notes = req.body?.notes ? String(req.body.notes) : undefined;
 
         if (!fileName || !version || !contentBase64) {
-            return res.status(400).json({ success: false, error: 'backend.invalid_firmware_payload' });
+            return sendError(res, 400, { code: 'INVALID_FIRMWARE_PAYLOAD', message: 'backend.invalid_firmware_payload' });
         }
 
         const firmware = await deviceControlService.uploadFirmware({
@@ -338,9 +252,9 @@ router.post('/devices/firmware', authenticate, requireRole('admin'), async (req:
             actorIp: req.ip
         });
 
-        res.json({ success: true, firmware });
+        return sendSuccess(res, firmware, { legacy: { firmware } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_upload_firmware' });
+        return sendError(res, 500, { code: 'FIRMWARE_UPLOAD_FAILED', message: error?.message || 'backend.failed_to_upload_firmware' });
     }
 });
 
@@ -348,16 +262,16 @@ router.post('/devices/:id/ota', authenticate, requireRole('admin'), async (req: 
     try {
         const device = getDeviceById(req.params.id);
         if (!device) {
-            return res.status(404).json({ success: false, error: 'backend.device_not_found' });
+            return sendError(res, 404, { code: 'DEVICE_NOT_FOUND', message: 'backend.device_not_found' });
         }
 
         const firmwareId = String(req.body?.firmwareId || '').trim();
         if (!firmwareId) {
-            return res.status(400).json({ success: false, error: 'backend.firmware_id_required' });
+            return sendError(res, 400, { code: 'FIRMWARE_ID_REQUIRED', message: 'backend.firmware_id_required' });
         }
 
         const job = await deviceControlService.triggerOta({
-            tenantId: req.user?.tenantId || 'global',
+            tenantId: resolveTenantOrPlatform(req),
             deviceId: req.params.id,
             firmwareId,
             actorId: req.user?.userId || 'unknown',
@@ -365,9 +279,9 @@ router.post('/devices/:id/ota', authenticate, requireRole('admin'), async (req: 
             actorIp: req.ip
         });
 
-        res.json({ success: true, job });
+        return sendSuccess(res, job, { legacy: { actionId: job?.id } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_trigger_ota' });
+        return sendError(res, 500, { code: 'OTA_TRIGGER_FAILED', message: error?.message || 'backend.failed_to_trigger_ota' });
     }
 });
 
@@ -375,12 +289,12 @@ router.post('/devices/:id/confirm-required-action', authenticate, requireRole('a
     try {
         const device = getDeviceById(req.params.id);
         if (!device) {
-            return res.status(404).json({ success: false, error: 'backend.device_not_found' });
+            return sendError(res, 404, { code: 'DEVICE_NOT_FOUND', message: 'backend.device_not_found' });
         }
 
         const commandType = String(req.body?.commandType || 'reboot').trim();
         const session = await deviceControlService.createPhysicalConfirmation({
-            tenantId: req.user?.tenantId || 'global',
+            tenantId: resolveTenantOrPlatform(req),
             deviceId: req.params.id,
             commandType,
             payload: req.body?.payload && typeof req.body.payload === 'object' ? req.body.payload : {},
@@ -389,9 +303,9 @@ router.post('/devices/:id/confirm-required-action', authenticate, requireRole('a
             actorIp: req.ip
         });
 
-        res.json({ success: true, session });
+        return sendSuccess(res, session, { legacy: { actionId: session?.id } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_create_confirmation_session' });
+        return sendError(res, 500, { code: 'CONFIRMATION_SESSION_FAILED', message: error?.message || 'backend.failed_to_create_confirmation_session' });
     }
 });
 
@@ -571,7 +485,7 @@ router.get('/tenant-oversight/exports/:exportId', authenticate, requireRole('adm
 
 router.get('/api-keys', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
     try {
-        const rows = await listApiKeysView();
+        const rows = await listAdminApiKeys();
 
         const keys = (rows || []).map((row: any) => ({
             id: row.id,
@@ -581,15 +495,11 @@ router.get('/api-keys', authenticate, requireRole('admin'), async (req: Authenti
             lastUsed: row.last_used || 'never'
         }));
 
-        res.json({ success: true, keys });
+        return sendSuccess(res, keys, { legacy: { keys } });
     } catch (error: any) {
-        res.status(500).json({
-            success: false,
-            error: {
-                code: 'FG-ADMIN-KEYS-LIST-500',
-                message: error?.message || 'Failed to list API keys',
-                timestamp: new Date().toISOString()
-            }
+        return sendError(res, 500, {
+            code: 'FG-ADMIN-KEYS-LIST-500',
+            message: error?.message || 'Failed to list API keys'
         });
     }
 });
@@ -601,13 +511,9 @@ router.post('/api-keys', authenticate, requireRole('admin'), async (req: Authent
         const name = String(req.body?.name || 'API Key').trim();
 
         if (!userId) {
-            return res.status(401).json({
-                success: false,
-                error: {
-                    code: 'FG-AUTH-401',
-                    message: 'backend.unauthorized',
-                    timestamp: new Date().toISOString()
-                }
+            return sendError(res, 401, {
+                code: 'FG-AUTH-401',
+                message: 'backend.unauthorized'
             });
         }
 
@@ -616,7 +522,7 @@ router.post('/api-keys', authenticate, requireRole('admin'), async (req: Authent
         const keyHash = await bcrypt.hash(plaintext, 10);
         const createdAt = new Date().toISOString();
 
-        await persistApiKey({
+        await saveAdminApiKey({
             id,
             name,
             key_hash: keyHash,
@@ -640,24 +546,17 @@ router.post('/api-keys', authenticate, requireRole('admin'), async (req: Authent
             status: 'success'
         });
 
-        res.status(201).json({
-            success: true,
-            data: {
-                id,
-                name,
-                prefix: plaintext.slice(0, 12),
-                apiKey: plaintext,
-                warning: 'The plaintext key is shown only once.'
-            }
-        });
+        return sendSuccess(res, {
+            id,
+            name,
+            prefix: plaintext.slice(0, 12),
+            apiKey: plaintext,
+            warning: 'The plaintext key is shown only once.'
+        }, undefined, 201);
     } catch (error: any) {
-        res.status(500).json({
-            success: false,
-            error: {
-                code: 'FG-ADMIN-KEYS-CREATE-500',
-                message: error?.message || 'Failed to create API key',
-                timestamp: new Date().toISOString()
-            }
+        return sendError(res, 500, {
+            code: 'FG-ADMIN-KEYS-CREATE-500',
+            message: error?.message || 'Failed to create API key'
         });
     }
 });
@@ -665,7 +564,7 @@ router.post('/api-keys', authenticate, requireRole('admin'), async (req: Authent
 router.delete('/api-keys/:id', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
     try {
         const { id } = req.params;
-        await deleteApiKeyRecord(id);
+        await deleteAdminApiKey(id);
         await auditLogger.log({
             tenantId: req.user?.tenantId,
             eventType: 'admin_api_key_deleted',
@@ -677,26 +576,21 @@ router.delete('/api-keys/:id', authenticate, requireRole('admin'), async (req: A
             details: {},
             status: 'success'
         });
-        res.json({ success: true });
+        return sendSuccess(res, { deleted: true }, { legacy: { status: 'ok' } });
     } catch (error: any) {
-        res.status(500).json({
-            success: false,
-            error: {
-                code: 'FG-ADMIN-KEYS-DELETE-500',
-                message: error?.message || 'Failed to delete API key',
-                timestamp: new Date().toISOString()
-            }
+        return sendError(res, 500, {
+            code: 'FG-ADMIN-KEYS-DELETE-500',
+            message: error?.message || 'Failed to delete API key'
         });
     }
 });
 
 router.get('/users', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
     try {
-        const rows = await listUsersView();
-
-        res.json({ success: true, users: rows });
+        const rows = await listAdminUsers();
+        return sendSuccess(res, rows, { legacy: { users: rows } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: 'backend.failed_to_list_users' });
+        return sendError(res, 500, { code: 'USER_LIST_FAILED', message: 'backend.failed_to_list_users' });
     }
 });
 
@@ -706,14 +600,14 @@ router.put('/users/:id/plan', authenticate, requireRole('admin'), async (req: Au
         const { plan } = req.body;
 
         if (!['starter', 'pro', 'ultra'].includes(plan)) {
-            return res.status(400).json({ success: false, error: 'backend.invalid_plan' });
+            return sendError(res, 400, { code: 'INVALID_PLAN', message: 'backend.invalid_plan' });
         }
 
-        const user = await getUserForAdminView(id);
+        const user = await getAdminUserById(id);
         if (!user) {
-            return res.status(404).json({ success: false, error: 'backend.user_not_found' });
+            return sendError(res, 404, { code: 'USER_NOT_FOUND', message: 'backend.user_not_found' });
         }
-        await updateUserAdminField(id, 'plan', plan);
+        await updateAdminUserField(id, 'plan', plan);
         await auditLogger.log({
             tenantId: user?.tenant_id || undefined,
             eventType: 'user_plan_updated',
@@ -726,9 +620,9 @@ router.put('/users/:id/plan', authenticate, requireRole('admin'), async (req: Au
             status: 'success'
         });
 
-        res.json({ success: true, message: 'backend.plan_updated' });
+        return sendSuccess(res, { userId: id, plan }, { legacy: { message: 'backend.plan_updated' } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: 'backend.failed_to_update_user_plan' });
+        return sendError(res, 500, { code: 'USER_PLAN_UPDATE_FAILED', message: 'backend.failed_to_update_user_plan' });
     }
 });
 
@@ -738,14 +632,14 @@ router.put('/users/:id/role', authenticate, requireRole('admin'), async (req: Au
         const { role } = req.body;
 
         if (!['admin', 'tenant', 'viewer'].includes(role)) {
-            return res.status(400).json({ success: false, error: 'backend.invalid_role' });
+            return sendError(res, 400, { code: 'INVALID_ROLE', message: 'backend.invalid_role' });
         }
 
-        const user = await getUserForAdminView(id);
+        const user = await getAdminUserById(id);
         if (!user) {
-            return res.status(404).json({ success: false, error: 'backend.user_not_found' });
+            return sendError(res, 404, { code: 'USER_NOT_FOUND', message: 'backend.user_not_found' });
         }
-        await updateUserAdminField(id, 'role', role);
+        await updateAdminUserField(id, 'role', role);
         await auditLogger.log({
             tenantId: user?.tenant_id || undefined,
             eventType: 'user_role_updated',
@@ -758,9 +652,9 @@ router.put('/users/:id/role', authenticate, requireRole('admin'), async (req: Au
             status: 'success'
         });
 
-        res.json({ success: true, message: 'backend.role_updated' });
+        return sendSuccess(res, { userId: id, role }, { legacy: { message: 'backend.role_updated' } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: 'backend.failed_to_update_user_role' });
+        return sendError(res, 500, { code: 'USER_ROLE_UPDATE_FAILED', message: 'backend.failed_to_update_user_role' });
     }
 });
 
@@ -770,14 +664,14 @@ router.put('/users/:id/status', authenticate, requireRole('admin'), async (req: 
         const { status } = req.body;
 
         if (!['active', 'suspended', 'pending'].includes(status)) {
-            return res.status(400).json({ success: false, error: 'backend.invalid_status' });
+            return sendError(res, 400, { code: 'INVALID_STATUS', message: 'backend.invalid_status' });
         }
 
-        const user = await getUserForAdminView(id);
+        const user = await getAdminUserById(id);
         if (!user) {
-            return res.status(404).json({ success: false, error: 'backend.user_not_found' });
+            return sendError(res, 404, { code: 'USER_NOT_FOUND', message: 'backend.user_not_found' });
         }
-        await updateUserAdminField(id, 'status', status);
+        await updateAdminUserField(id, 'status', status);
         await auditLogger.log({
             tenantId: user?.tenant_id || undefined,
             eventType: 'user_status_updated',
@@ -790,9 +684,9 @@ router.put('/users/:id/status', authenticate, requireRole('admin'), async (req: 
             status: 'success'
         });
 
-        res.json({ success: true, message: 'backend.status_updated' });
+        return sendSuccess(res, { userId: id, status }, { legacy: { message: 'backend.status_updated' } });
     } catch (error: any) {
-        res.status(500).json({ success: false, error: 'backend.failed_to_update_user_status' });
+        return sendError(res, 500, { code: 'USER_STATUS_UPDATE_FAILED', message: 'backend.failed_to_update_user_status' });
     }
 });
 

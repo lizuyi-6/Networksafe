@@ -1,5 +1,5 @@
-/**
- * FluxGuard - AI endpoint configuration API
+﻿/**
+ * AetherGuard - AI endpoint configuration API
  *
  * Provides tenant-scoped endpoint persistence, routing-aware chat proxying,
  * and masked device sync output.
@@ -36,7 +36,8 @@ const ALLOWED_AI_HOSTS = [
   'api.anthropic.com',
   'generativelanguage.googleapis.com',
   'dashscope.aliyuncs.com',
-  'open.bigmodel.cn'
+  'open.bigmodel.cn',
+  'api.lkeap.cloud.tencent.com'
 ];
 
 type ChatMessage = {

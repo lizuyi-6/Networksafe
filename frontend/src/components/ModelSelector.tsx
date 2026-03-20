@@ -4,17 +4,17 @@ import { Brain, Lock, Sparkles, Crown, Loader2, AlertTriangle } from 'lucide-rea
 import { fetchAvailableModels, AIModelInfo } from '../services/api';
 
 const getCategoryIcon = (model: AIModelInfo) => {
-    if (model.id.includes('glm') || model.id.includes('kimi')) {
+    if (model.category === 'partner') {
         return <Sparkles className="h-3.5 w-3.5" />;
     }
     return <Brain className="h-3.5 w-3.5" />;
 };
 
 const getCategoryLabel = (model: AIModelInfo) => {
-    if (model.id.includes('glm') || model.id.includes('kimi')) {
-        return 'Specialized';
+    if (model.category === 'partner') {
+        return 'Partner';
     }
-    return 'General';
+    return 'Tencent';
 };
 
 const getTierBadge = (tier: string) => {

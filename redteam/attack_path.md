@@ -1,4 +1,4 @@
-# FluxGuard 渗透测试攻击路径分析
+﻿# AetherGuard 渗透测试攻击路径分析
 
 **文档版本**: v1.0
 **创建日期**: 2026-02-16
@@ -10,7 +10,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
-│                        FluxGuard Control Platform 攻击路径图                                  │
+│                        AetherGuard Control Platform 攻击路径图                                  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                               │
 │   [情报收集]        [初始访问]        [权限提升]        [横向移动]        [目标达成]           │
@@ -94,7 +94,7 @@
 **情报收集结果**:
 ```yaml
 目标系统:
-  应用名称: FluxGuard Control Platform
+  应用名称: AetherGuard Control Platform
   版本: 2.0.0
   技术栈:
     后端: Node.js + Express.js 4.18.2 + TypeScript
@@ -109,7 +109,7 @@
   高危漏洞:
     - 硬编码凭证泄露: /.env 文件包含 JWT_SECRET、管理员密码、API Keys
     - JWT_SECRET 长度 32 字符，开发用途，但已泄露
-    - 管理员账户: admin@fluxguard.dev / DevAdmin123456!
+    - 管理员账户: admin@AetherGuard.dev / DevAdmin123456!
 
   攻击向量:
     1. 直接访问 /.env 获取所有凭证
@@ -135,7 +135,7 @@
    curl -X POST http://localhost:3005/api/auth/login \
      -H "Content-Type: application/json" \
      -d '{
-       "email": "admin@fluxguard.dev",
+       "email": "admin@AetherGuard.dev",
        "password": "DevAdmin123456!"
      }' \
      -c cookies.txt \
@@ -147,7 +147,7 @@
    {
      "message": "Login successful",
      "user": {
-       "email": "admin@fluxguard.dev",
+       "email": "admin@AetherGuard.dev",
        "username": "admin",
        "role": "admin"
      },
@@ -180,8 +180,8 @@
    }, 'dev-jwt-secret-for-testing-only-32chars', {
      algorithm: 'HS256',
      expiresIn: '24h',
-     issuer: 'fluxguard',
-     audience: 'fluxguard-api',
+     issuer: 'AetherGuard',
+     audience: 'AetherGuard-api',
      jwtid: 'unique-token-id'
    });
 
@@ -359,7 +359,7 @@
    curl -X POST http://localhost:3005/api/auth/register \
      -H "Content-Type: application/json" \
      -d '{
-       "email": "backup.service@fluxguard.local",
+       "email": "backup.service@AetherGuard.local",
        "password": "ComplexP@ssw0rd123!Secure",
        "username": "backup_service"
      }'
@@ -485,7 +485,7 @@
                │ - 总数据量: ~50MB 敏感数据                            │
                │                                                       │
                │ [持久化访问]                                          │
-               │ - 后门账户: backup.service@fluxguard.local            │
+               │ - 后门账户: backup.service@AetherGuard.local            │
                │ - API Key: Production Monitoring Service (10年有效)   │
                │ - Token: 多个长期有效 JWT token                       │
                │                                                       │

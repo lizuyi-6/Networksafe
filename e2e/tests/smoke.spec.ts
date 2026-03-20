@@ -1,12 +1,12 @@
-import { expect, test } from '@playwright/test';
+﻿import { expect, test } from '@playwright/test';
 import { assertFooterLegalLinks, assertRenderedPage } from './helpers/site-health';
 
-test.describe('FluxGuard Pro Smoke Tests', () => {
+test.describe('AetherGuard Smoke Tests', () => {
     test('landing page loads successfully', async ({ page }) => {
         await page.goto('/');
 
-        await expect(page).toHaveTitle(/FluxGuard|Security/i);
-        await expect(page.locator('body')).toContainText('FluxGuard');
+        await expect(page).toHaveTitle(/AetherGuard|Security/i);
+        await expect(page.locator('body')).toContainText('AetherGuard');
         await assertRenderedPage(page, 'landing', '[data-testid="landing-main"]');
         await assertFooterLegalLinks(page);
     });

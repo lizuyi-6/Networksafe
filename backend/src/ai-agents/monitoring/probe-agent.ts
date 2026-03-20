@@ -14,6 +14,7 @@ import {
 } from '../core/types';
 import { BaseAgent } from '../core/base-agent';
 import { MessageBus } from '../core/message-bus';
+import { distributionFromVerdict } from '../core/scoring';
 import logger from '../../utils/logger';
 import { isDemoMode } from '../../config/app-mode';
 
@@ -150,6 +151,9 @@ Report any anomalies or health issues immediately.`;
         this.intervalId = setInterval(() => {
             this.collectMetrics();
         }, this.probeConfig.metricsInterval);
+        if (this.intervalId && typeof this.intervalId.unref === 'function') {
+            this.intervalId.unref();
+        }
     }
 
     private startAgentMonitoring(): void {
@@ -164,6 +168,9 @@ Report any anomalies or health issues immediately.`;
         const timer = setInterval(async () => {
             await this.checkAgentHealth(role);
         }, this.probeConfig.heartbeatInterval);
+        if (typeof timer.unref === 'function') {
+            timer.unref();
+        }
 
         this.heartbeatTimers.set(role, timer);
     }
@@ -384,6 +391,7 @@ Report any anomalies or health issues immediately.`;
             role: 'orchestrator',
             verdict: 'safe',
             confidence: 1.0,
+            classScores: distributionFromVerdict('safe', 1.0),
             reasoning: `System health check completed. ${report.agents.length} agents monitored, ${report.alerts.length} active alerts.`,
             evidence: [{
                 type: 'behavior',

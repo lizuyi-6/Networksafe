@@ -66,7 +66,7 @@ class DeviceControlService {
     this.gatewayEmitter = emitter;
   }
 
-  private ensureSchema(): void {
+  prepare(): void {
     if (this.schemaReady) {
       return;
     }
@@ -120,6 +120,19 @@ class DeviceControlService {
     this.schemaReady = true;
   }
 
+  private assertPrepared(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+      return;
+    }
+
+    throw new Error('Device control schema not initialized. Call deviceControlService.prepare() during bootstrap.');
+  }
+
   async uploadFirmware(input: {
     tenantId: string;
     fileName: string;
@@ -131,7 +144,7 @@ class DeviceControlService {
     actorEmail?: string;
     actorIp?: string;
   }): Promise<DeviceFirmwareRecord> {
-    this.ensureSchema();
+    this.assertPrepared();
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     const buffer = Buffer.from(input.contentBase64, 'base64');
@@ -203,7 +216,7 @@ class DeviceControlService {
     actorEmail?: string;
     actorIp?: string;
   }): Promise<DeviceOtaJobRecord> {
-    this.ensureSchema();
+    this.assertPrepared();
     const firmware = this.getFirmware(input.firmwareId);
     if (!firmware) {
       throw new Error('backend.firmware_not_found');
@@ -286,7 +299,7 @@ class DeviceControlService {
     actorEmail?: string;
     actorIp?: string;
   }): Promise<DeviceConfirmationSessionRecord> {
-    this.ensureSchema();
+    this.assertPrepared();
     if (!this.gatewayEmitter) {
       throw new Error('backend.device_gateway_unavailable');
     }
@@ -339,7 +352,7 @@ class DeviceControlService {
   }
 
   async handleOtaStatus(deviceId: string, payload: Record<string, any>): Promise<void> {
-    this.ensureSchema();
+    this.assertPrepared();
     const otaJobId = String(payload?.otaJobId || '').trim();
     if (!otaJobId) {
       return;
@@ -371,7 +384,7 @@ class DeviceControlService {
   }
 
   async handlePhysicalConfirmationAck(deviceId: string, payload: Record<string, any>): Promise<void> {
-    this.ensureSchema();
+    this.assertPrepared();
     const confirmationSessionId = String(payload?.confirmationSessionId || '').trim();
     if (!confirmationSessionId) {
       return;
@@ -425,7 +438,7 @@ class DeviceControlService {
   }
 
   getFirmware(id: string): DeviceFirmwareRecord | null {
-    this.ensureSchema();
+    this.assertPrepared();
     const row = getDatabase().prepare(`
       SELECT *
       FROM device_firmware

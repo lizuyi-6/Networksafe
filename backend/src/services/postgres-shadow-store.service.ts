@@ -175,9 +175,12 @@ const TABLES: Record<ShadowTable, TableConfig> = {
         platform TEXT,
         status TEXT,
         created_at TEXT,
-        last_seen_at TEXT
+        last_seen_at TEXT,
+        tenant_id TEXT
       );
+      ALTER TABLE agent_registrations ADD COLUMN IF NOT EXISTS tenant_id TEXT;
       CREATE INDEX IF NOT EXISTS idx_shadow_agent_regs_status ON agent_registrations(status, last_seen_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_shadow_agent_regs_tenant ON agent_registrations(tenant_id, created_at DESC);
     `,
     backfill: 'replace'
   },
@@ -256,6 +259,7 @@ const TABLES: Record<ShadowTable, TableConfig> = {
         privacy_mode TEXT NOT NULL DEFAULT 'off',
         audit_archive_json TEXT NOT NULL DEFAULT '{}',
         fastpath_json TEXT NOT NULL DEFAULT '{}',
+        detection_pipeline_json TEXT NOT NULL DEFAULT '{}',
         deployment_defaults_json TEXT NOT NULL DEFAULT '{}',
         device_gateway_json TEXT NOT NULL DEFAULT '{}',
         updated_by TEXT,
@@ -267,6 +271,7 @@ const TABLES: Record<ShadowTable, TableConfig> = {
       ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS privacy_mode TEXT NOT NULL DEFAULT 'off';
       ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS audit_archive_json TEXT NOT NULL DEFAULT '{}';
       ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS fastpath_json TEXT NOT NULL DEFAULT '{}';
+      ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS detection_pipeline_json TEXT NOT NULL DEFAULT '{}';
       ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS deployment_defaults_json TEXT NOT NULL DEFAULT '{}';
       ALTER TABLE platform_config ADD COLUMN IF NOT EXISTS device_gateway_json TEXT NOT NULL DEFAULT '{}';
     `,

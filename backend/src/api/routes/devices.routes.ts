@@ -1,5 +1,5 @@
 ﻿﻿﻿﻿/**
- * FluxGuard - ESP32 Device Management API
+ * AetherGuard - ESP32 Device Management API
  *
  * REST API for ESP32 firmware gateway
  * SECURITY FIX CVE-2026-031: Added authentication middleware
@@ -12,6 +12,7 @@ import logger from '../../utils/logger';
 import { securityOperationsService } from '../../services/security-operations.service';
 import auditLogger from '../../security/audit-logger.service';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
+import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';
 
 const router = Router();
 
@@ -81,6 +82,18 @@ const deviceEvents = new Map<string, DeviceEvent[]>();
 const deviceConfigs = new Map<string, DeviceConfig>();
 const deviceCommands = new Map<string, DeviceCommandRecord[]>();
 let deviceCommandTransport: ((deviceId: string, command: string, params?: Record<string, any>) => Promise<boolean> | boolean) | null = null;
+
+function resolveActorTenantId(req?: AuthenticatedRequest): string {
+    if (!req) {
+        return PLATFORM_TENANT_ID;
+    }
+
+    const context = resolveRequestTenantContext(req, {
+        allowAdminPlatformFallback: req.user?.role === 'admin'
+    });
+
+    return context?.tenantId || req.user?.tenantId || PLATFORM_TENANT_ID;
+}
 
 function safeAuditLog(payload: any): void {
     Promise.resolve(auditLogger.log(payload)).catch((error: any) => {
@@ -248,7 +261,7 @@ commandDispatcherService.setDeviceAdapter({
 function ensureDeviceAsset(device: DeviceInfo) {
     const config = ensureDeviceConfig(device);
     return securityOperationsService.upsertAsset({
-        tenantId: 'global',
+        tenantId: PLATFORM_TENANT_ID,
         assetType: 'device',
         externalRef: device.deviceId,
         displayName: config.displayName || device.deviceId,
@@ -272,7 +285,7 @@ function syncDeviceSignals(device: DeviceInfo, assetId?: string): void {
     const staleHeartbeat = device.isOnline && heartbeatAgeMs > 15 * 60 * 1000;
 
     securityOperationsService.syncSignalFinding({
-        tenantId: 'global',
+        tenantId: PLATFORM_TENANT_ID,
         active: !device.isOnline || staleHeartbeat,
         assetId,
         sourceType: 'device-health',
@@ -306,7 +319,7 @@ function syncDeviceSignals(device: DeviceInfo, assetId?: string): void {
     });
 
     securityOperationsService.syncSignalFinding({
-        tenantId: 'global',
+        tenantId: PLATFORM_TENANT_ID,
         active: Boolean(device.status && device.status.cpuUsage >= 90),
         assetId,
         sourceType: 'device-health',
@@ -336,7 +349,7 @@ function syncDeviceSignals(device: DeviceInfo, assetId?: string): void {
     });
 
     securityOperationsService.syncSignalFinding({
-        tenantId: 'global',
+        tenantId: PLATFORM_TENANT_ID,
         active: Boolean(device.status && device.status.memoryUsage >= 85),
         assetId,
         sourceType: 'device-health',
@@ -367,7 +380,7 @@ function syncDeviceSignals(device: DeviceInfo, assetId?: string): void {
     });
 
     securityOperationsService.syncSignalFinding({
-        tenantId: 'global',
+        tenantId: PLATFORM_TENANT_ID,
         active: Boolean(device.status && device.status.wifiRssi <= -80),
         assetId,
         sourceType: 'device-health',
@@ -401,7 +414,7 @@ function recordDeviceAction(device: DeviceInfo, input: { title: string; status: 
     try {
         const asset = ensureDeviceAsset(device);
         securityOperationsService.recordActionRun({
-            tenantId: 'global',
+            tenantId: PLATFORM_TENANT_ID,
             assetId: asset.assetId,
             title: input.title,
             status: input.status,
@@ -420,7 +433,7 @@ function summarizeSecurity(device: DeviceInfo) {
         const asset = ensureDeviceAsset(device);
         if (device.systemInfo?.hostname) {
             securityOperationsService.upsertAsset({
-                tenantId: 'global',
+                tenantId: PLATFORM_TENANT_ID,
                 assetType: 'host',
                 externalRef: device.systemInfo.hostname,
                 displayName: device.systemInfo.hostname,
@@ -434,7 +447,7 @@ function summarizeSecurity(device: DeviceInfo) {
         }
         syncDeviceSignals(device, asset.assetId);
         const context = securityOperationsService.getOperationalContextForExternalRefs(
-            'global',
+            PLATFORM_TENANT_ID,
             [device.deviceId, device.systemInfo?.hostname || ''],
             ['device', 'host']
         );
@@ -473,7 +486,7 @@ router.get('/', (_req: Request, res: Response) => {
                 const config = ensureDeviceConfig(device);
                 try {
                     securityOperationsService.upsertAsset({
-                        tenantId: 'global',
+                        tenantId: PLATFORM_TENANT_ID,
                         assetType: 'device',
                         externalRef: device.deviceId,
                         displayName: device.deviceId,
@@ -651,8 +664,8 @@ router.get('/:id', (req: Request, res: Response) => {
         }
 
         try {
-            securityOperationsService.upsertAsset({
-                tenantId: 'global',
+                    securityOperationsService.upsertAsset({
+                        tenantId: PLATFORM_TENANT_ID,
                 assetType: 'device',
                 externalRef: device.deviceId,
                 displayName: device.deviceId,
@@ -702,7 +715,7 @@ router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: R
             commandType: String(command || '').trim(),
             payload: params || {},
             actor: {
-                tenantId: req.user?.tenantId || 'global',
+                tenantId: resolveActorTenantId(req),
                 userId: req.user?.userId || 'unknown',
                 email: req.user?.email,
                 ip: req.ip
@@ -817,7 +830,7 @@ router.put('/:id', requireRole('admin'), (req: AuthenticatedRequest, res: Respon
 
         logger.info('Device updated', { deviceId: id });
         safeAuditLog({
-            tenantId: 'global',
+            tenantId: resolveActorTenantId(req),
             eventType: 'device_config_updated',
             category: 'system',
             severity: 'warning',
@@ -867,7 +880,7 @@ router.delete('/:id', requireRole('admin'), (req: AuthenticatedRequest, res: Res
 
         logger.info('Device unregistered', { deviceId: id });
         safeAuditLog({
-            tenantId: 'global',
+            tenantId: resolveActorTenantId(req),
             eventType: 'device_deleted',
             category: 'system',
             severity: 'critical',

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 APT-Style Attack Simulation - Post-Fix Validation
 Simulates国家级黑客团队攻击，验证安全修复是否有效
@@ -54,7 +54,7 @@ def main():
     
     print(f"\n{BOLD}{'='*70}")
     print(f"  APT-STYLE ATTACK SIMULATION - POST-FIX VALIDATION")
-    print(f"  Target: AetherGuard (FluxGuard) Security Platform")
+    print(f"  Target: AetherGuard (AetherGuard) Security Platform")
     print(f"  Scenario: 国家级黑客团队 - White Box Attack")
     print(f"{'='*70}{RESET}\n")
     
@@ -96,7 +96,7 @@ def main():
     # Try to forge admin token
     forged_payload = {
         "userId": "admin-user-id",
-        "email": "admin@fluxguard.com",
+        "email": "admin@AetherGuard.com",
         "username": "Admin",
         "role": "admin",
         "plan": "ultra",
@@ -149,7 +149,7 @@ def main():
     # Common weak passwords
     weak_passwords = [
         "admin123", "admin123456", "admin123456789", 
-        "password123", "fluxguard2024", "admin"
+        "password123", "AetherGuard2024", "admin"
     ]
     
     # Check if any weak password would work
@@ -273,7 +273,7 @@ def main():
     sim.log("START", "ATTACK 10: Redis Unauthorized Access")
     
     redis_password = env.get("REDIS_PASSWORD", "")
-    is_weak_redis = redis_password in ["", "redis", "fluxguard", "password"] or len(redis_password) < 8
+    is_weak_redis = redis_password in ["", "redis", "AetherGuard", "password"] or len(redis_password) < 8
     
     if is_weak_redis:
         sim.log("SUCCEEDED", "Weak Redis password detected")

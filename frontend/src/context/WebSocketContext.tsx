@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
+import { fetchCurrentUserSession, isRequestAbortError } from '../services/api';
 
 interface WebSocketContextType {
     connected: boolean;
@@ -77,10 +78,8 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
             location.pathname === '/login' ||
             location.pathname === '/privacy' ||
             location.pathname === '/terms';
-        const userStr = localStorage.getItem('user');
-        const shouldConnect = !isPublicRoute && Boolean(userStr);
 
-        if (!shouldConnect) {
+        if (isPublicRoute) {
             if (socketRef.current) {
                 socketRef.current.disconnect();
                 socketRef.current = null;
@@ -89,24 +88,38 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
-        connectSocket();
+        const controller = new AbortController();
+        let disposed = false;
 
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'user') {
-                if (e.newValue) {
+        const syncSocketSession = async () => {
+            try {
+                const user = await fetchCurrentUserSession(controller.signal);
+                if (disposed || controller.signal.aborted) {
+                    return;
+                }
+
+                if (user) {
                     connectSocket();
-                } else if (socketRef.current) {
-                    socketRef.current.disconnect();
-                    socketRef.current = null;
-                    setConnected(false);
+                    return;
+                }
+            } catch (error) {
+                if (disposed || isRequestAbortError(error, controller.signal)) {
+                    return;
                 }
             }
+
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            setConnected(false);
         };
 
-        window.addEventListener('storage', handleStorageChange);
+        void syncSocketSession();
 
         return () => {
-            window.removeEventListener('storage', handleStorageChange);
+            disposed = true;
+            controller.abort();
             if (socketRef.current) {
                 socketRef.current.disconnect();
             }

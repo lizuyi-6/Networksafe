@@ -1,11 +1,14 @@
-/**
- * FluxGuard ESP32 - 优化版传输层模块
+﻿/**
+ * AetherGuard ESP32 - 优化版传输层模块
  * 
  * 优化策略：
  * - 连接池复用
  * - 减少内存分配
  * - 自动重连带退避
  * - 低功耗模式支持
+ *
+ * NOTE: Experimental cloud-device module. It is not compiled by the active
+ * serial-deployer PlatformIO target.
  */
 
 #ifndef TRANSPORT_H

@@ -1,0 +1,17 @@
+Dear Editor,
+
+Please consider the enclosed manuscript, "Explainable Multi-Agent Debate for Web Attack Decision-Making: A Seven-Layer Architecture and OWASP-Derived Experimental Study," for publication in IEEE Access.
+
+This work presents an explainable web-attack decision architecture centered on a seven-layer orchestration pattern that integrates threat routing, role-specialized reasoning, trace context, sandboxed tool use, conflict-triggered debate, heterogeneous route modes, and case-file synthesis. The architecture is instantiated in the AetherGuard prototype and evaluated through a balanced HTTP corpus reconstructed from OWASP Benchmark metadata and testcase sources. The quantitative comparison in the current workspace covers three executable orchestration modes: single-agent, multi-agent without debate, and multi-agent with debate.
+
+The manuscript fits IEEE Access because it emphasizes an engineering contribution with operational relevance: a structured way to make AI-assisted web-defense decisions more specialized, inspectable, and auditable than single-model inference. The current quantitative results show that debate eliminates the false positives observed in the non-debate baselines on the available OWASP-derived corpus, while the route-mode analysis clarifies the current orchestration overhead. The paper explicitly bounds its claims to what is validated in the present workspace and does not overstate unsupported large-scale or production-WAF results.
+
+This submission is original, is not under review elsewhere, and has been approved by all authors. Any remaining placeholders in the package are limited to author-identifying metadata that will be replaced before upload.
+
+Thank you for your consideration.
+
+Sincerely,
+
+Author One Placeholder
+Corresponding Author Placeholder
+E-mail: corresponding.author@example.com

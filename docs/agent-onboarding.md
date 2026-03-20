@@ -1,4 +1,4 @@
-# Agent Onboarding (One-time Code)
+﻿# Agent Onboarding (One-time Code)
 
 ## 1. Create onboarding code (admin)
 
@@ -11,21 +11,40 @@ curl -X POST https://center.example.com/api/agent-onboarding/codes \
 
 ## 2. Prepare protected host
 
-1. Copy `deployment/production/agent.env.example` to `/etc/fluxguard/agent.env`
-2. Fill `FLUXGUARD_SERVER` and `FLUXGUARD_ONBOARDING_CODE`
-3. Install service file:
+### Single instance
+
+1. Copy `deployment/production/agent.env.example` to `/etc/aetherguard/agents/prod-node-01.env`
+2. Fill `AETHERGUARD_SERVER`, `AETHERGUARD_HOSTNAME`, and `AETHERGUARD_ONBOARDING_CODE`
+3. Install the template service and helper:
 
 ```bash
-cp deployment/production/fluxguard-agent.service /etc/systemd/system/
+install -m 0755 deployment/production/aetherguard-agent-container.sh /opt/aetherguard/docker-stack/current/deployment/production/aetherguard-agent-container.sh
+cp deployment/production/aetherguard-agent@.service /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now fluxguard-agent
+systemctl enable --now aetherguard-agent@prod-node-01
 ```
+
+### Same-host multi instance
+
+Use one env file per instance:
+
+- `/etc/aetherguard/agents/prod-node-01.env`
+- `/etc/aetherguard/agents/prod-node-01-a.env`
+- `/etc/aetherguard/agents/prod-node-01-b.env`
+
+Each instance must have its own `AETHERGUARD_HOSTNAME` and `AETHERGUARD_ONBOARDING_CODE`.
+
+```bash
+systemctl enable --now aetherguard-agent@prod-node-01
+systemctl enable --now aetherguard-agent@prod-node-01-a
+systemctl enable --now aetherguard-agent@prod-node-01-b
+```
+
+After the first successful exchange, the agent clears `AETHERGUARD_ONBOARDING_CODE` and writes the long-lived credentials back into the same env file.
 
 ## 3. Verify
 
 ```bash
-systemctl status fluxguard-agent
-journalctl -u fluxguard-agent -f
+systemctl status aetherguard-agent@prod-node-01
+journalctl -u aetherguard-agent@prod-node-01 -f
 ```
-
-After first successful exchange, the agent runs with long-lived credentials.

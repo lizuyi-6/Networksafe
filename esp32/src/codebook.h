@@ -1,10 +1,13 @@
-/**
- * FluxGuard ESP32 - 优化版密码本模块
+﻿/**
+ * AetherGuard ESP32 - 优化版密码本模块
  * 
  * 优化策略：
  * - 使用固定大小数组替代 std::map (节省 ~8KB RAM)
  * - 二分查找替代哈希表 (节省内存，可接受性能)
  * - 存储在 PROGMEM (Flash) 减少 RAM 占用
+ *
+ * NOTE: Experimental cloud-device module. It is not compiled by the active
+ * serial-deployer PlatformIO target.
  */
 
 #ifndef CODEBOOK_H

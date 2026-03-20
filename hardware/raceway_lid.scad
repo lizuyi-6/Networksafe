@@ -1,7 +1,10 @@
-/*
- * FluxGuard Enclosure - RACEWAY LID (Cable Cover)
+﻿/*
+ * AetherGuard Enclosure - RACEWAY LID (Legacy Reference)
  * Print: Flat (as-is)
  * Supports: None needed
+ *
+ * Legacy helper from the retired unibody concept.
+ * The current serial deployer shell uses chassis/top_plate/bottom_cover.
  */
 
 // --- Parameters ---

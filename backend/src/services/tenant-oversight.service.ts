@@ -18,7 +18,7 @@ interface TenantFilters {
 class TenantOversightService {
   private schemaReady = false;
 
-  private ensureSchema(): void {
+  prepare(): void {
     if (this.schemaReady) {
       return;
     }
@@ -40,6 +40,19 @@ class TenantOversightService {
     `);
 
     this.schemaReady = true;
+  }
+
+  private assertPrepared(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+      return;
+    }
+
+    throw new Error('Tenant oversight schema not initialized. Call tenantOversightService.prepare() during bootstrap.');
   }
 
   private now(): string {
@@ -186,7 +199,7 @@ class TenantOversightService {
   }
 
   listTenants() {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const rows = db.prepare(`
       SELECT
@@ -224,7 +237,7 @@ class TenantOversightService {
   }
 
   async listTenantsView() {
-    this.ensureSchema();
+    this.assertPrepared();
 
     if (!postgresShadowStoreService.canServeReads()) {
       return this.listTenants();
@@ -266,7 +279,7 @@ class TenantOversightService {
   }
 
   getTenantSummary(tenantId: string, userId?: string) {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const users = db.prepare(`
       SELECT id, email, username, role, plan, tenant_id, status, last_login, created_at
@@ -307,7 +320,7 @@ class TenantOversightService {
   }
 
   async getTenantSummaryView(tenantId: string, userId?: string) {
-    this.ensureSchema();
+    this.assertPrepared();
 
     if (!postgresShadowStoreService.canServeReads()) {
       return this.getTenantSummary(tenantId, userId);
@@ -345,7 +358,7 @@ class TenantOversightService {
   }
 
   listTimeline(filters: TenantFilters) {
-    this.ensureSchema();
+    this.assertPrepared();
     const user = filters.userId ? this.getUserRow(filters.userId) : null;
     const category = filters.category && filters.category !== 'all' ? filters.category : undefined;
     const auditEvents = auditLogger.getLogs({
@@ -522,7 +535,7 @@ class TenantOversightService {
   }
 
   async listTimelineView(filters: TenantFilters) {
-    this.ensureSchema();
+    this.assertPrepared();
 
     if (!postgresShadowStoreService.canServeReads()) {
       return this.listTimeline(filters);
@@ -965,7 +978,7 @@ class TenantOversightService {
     requestedBy: string;
     filters?: Record<string, any>;
   }) {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const id = `export-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     const createdAt = this.now();
@@ -1034,7 +1047,7 @@ class TenantOversightService {
     requestedBy: string;
     filters?: Record<string, any>;
   }) {
-    this.ensureSchema();
+    this.assertPrepared();
 
     if (!postgresShadowStoreService.canServeReads()) {
       return this.createExport(input);
@@ -1130,7 +1143,7 @@ class TenantOversightService {
   }
 
   listExports(tenantId: string) {
-    this.ensureSchema();
+    this.assertPrepared();
     const rows = getDatabase().prepare(`
       SELECT id, tenant_id, requested_by, requested_at, filters_json, summary_json
       FROM admin_dispute_exports
@@ -1150,7 +1163,7 @@ class TenantOversightService {
   }
 
   async listExportsView(tenantId: string) {
-    this.ensureSchema();
+    this.assertPrepared();
 
     if (!postgresShadowStoreService.canServeReads()) {
       return this.listExports(tenantId);
@@ -1175,7 +1188,7 @@ class TenantOversightService {
   }
 
   getExport(exportId: string) {
-    this.ensureSchema();
+    this.assertPrepared();
     const row = getDatabase().prepare(`
       SELECT *
       FROM admin_dispute_exports
@@ -1200,7 +1213,7 @@ class TenantOversightService {
   }
 
   async getExportView(exportId: string) {
-    this.ensureSchema();
+    this.assertPrepared();
 
     if (!postgresShadowStoreService.canServeReads()) {
       return this.getExport(exportId);
@@ -1235,3 +1248,4 @@ class TenantOversightService {
 }
 
 export const tenantOversightService = new TenantOversightService();
+

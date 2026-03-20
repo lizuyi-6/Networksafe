@@ -3,7 +3,7 @@
  * This file is backend-only and must not be exposed directly to the client.
  */
 
-export type PlatformProvider = 'dashscope';
+export type PlatformProvider = 'dashscope' | 'tencent-lkeap' | 'custom';
 export type PlatformProtocol = 'openai-compatible' | 'anthropic-compatible';
 export type PlanTier = 'starter' | 'pro' | 'ultra';
 
@@ -25,7 +25,7 @@ export interface PlatformModel {
   id: string;
   name: string;
   description: string;
-  category: 'qwen' | 'third-party';
+  category: 'tencent' | 'partner';
   minTier: PlanTier;
   maxTokens: number;
   isDefault?: boolean;
@@ -40,23 +40,58 @@ const normalizePath = (value: string): string => {
 
 const DEFAULT_BASE_URLS: Record<PlatformProtocol, string> = {
   'openai-compatible': 'https://coding.dashscope.aliyuncs.com/v1',
-  'anthropic-compatible': 'https://coding.dashscope.aliyuncs.com/apps/anthropic/v1'
+  'anthropic-compatible': 'https://api.lkeap.cloud.tencent.com/coding/anthropic'
+};
+
+const DEFAULT_PATHS: Record<PlatformProtocol, string> = {
+  'openai-compatible': '/chat/completions',
+  'anthropic-compatible': '/v1/messages'
 };
 
 const platformProtocol = String(process.env.PLATFORM_API_PROTOCOL || 'openai-compatible').toLowerCase() === 'anthropic-compatible'
   ? 'anthropic-compatible'
   : 'openai-compatible';
 
+function inferProviderIdentity(baseURL: string): { provider: PlatformProvider; providerId: string } {
+  try {
+    const hostname = new URL(baseURL).hostname.toLowerCase();
+    if (hostname.includes('lkeap.cloud.tencent.com')) {
+      return {
+        provider: 'tencent-lkeap',
+        providerId: 'tencent-lkeap-coding'
+      };
+    }
+    if (hostname.includes('dashscope.aliyuncs.com')) {
+      return {
+        provider: 'dashscope',
+        providerId: 'dashscope-coding-plan'
+      };
+    }
+    return {
+      provider: 'custom',
+      providerId: hostname || 'custom-cloud-endpoint'
+    };
+  } catch {
+    return {
+      provider: 'custom',
+      providerId: 'custom-cloud-endpoint'
+    };
+  }
+}
+
+const configuredBaseURL = normalizeBaseUrl(process.env.PLATFORM_API_BASE_URL || DEFAULT_BASE_URLS[platformProtocol]);
+const providerIdentity = inferProviderIdentity(configuredBaseURL);
+
 export const PLATFORM_API_CONFIG: PlatformApiConfig = {
-  provider: 'dashscope',
-  providerId: 'dashscope-coding-plan',
+  provider: providerIdentity.provider,
+  providerId: process.env.PLATFORM_API_PROVIDER_ID || providerIdentity.providerId,
   protocol: platformProtocol,
-  baseURL: normalizeBaseUrl(process.env.PLATFORM_API_BASE_URL || DEFAULT_BASE_URLS[platformProtocol]),
-  apiKey: process.env.PLATFORM_API_KEY || 'sk-sp-be54ade951c84a19a2be9c94b559bd5d',
+  baseURL: configuredBaseURL,
+  apiKey: process.env.PLATFORM_API_KEY || '',
   timeout: Number(process.env.PLATFORM_API_TIMEOUT || 120000),
   paths: {
-    openaiChatCompletions: normalizePath(process.env.PLATFORM_API_CHAT_PATH || '/chat/completions'),
-    anthropicMessages: normalizePath(process.env.PLATFORM_API_MESSAGES_PATH || '/messages')
+    openaiChatCompletions: normalizePath(process.env.PLATFORM_API_CHAT_PATH || DEFAULT_PATHS['openai-compatible']),
+    anthropicMessages: normalizePath(process.env.PLATFORM_API_MESSAGES_PATH || DEFAULT_PATHS['anthropic-compatible'])
   },
   defaultHeaders: {
     'Content-Type': 'application/json'
@@ -65,53 +100,61 @@ export const PLATFORM_API_CONFIG: PlatformApiConfig = {
 
 export const PLATFORM_MODELS: PlatformModel[] = [
   {
-    id: 'qwen3.5-plus',
-    name: 'Qwen 3.5 Plus',
-    description: 'Enhanced general-purpose Qwen model for day-to-day conversations.',
-    category: 'qwen',
-    minTier: 'pro',
-    maxTokens: 4000
+    id: 'hunyuan-2.0-instruct',
+    name: 'Tencent HY 2.0 Instruct',
+    description: 'Tencent Hunyuan 2.0 instruction-tuned model for general cloud analysis.',
+    category: 'tencent',
+    minTier: 'starter',
+    maxTokens: 4096
   },
   {
-    id: 'glm-4.7',
-    name: 'GLM 4.7',
-    description: 'General-purpose GLM model with stronger reasoning behavior.',
-    category: 'third-party',
-    minTier: 'ultra',
-    maxTokens: 4000
+    id: 'hunyuan-2.0-thinking',
+    name: 'Tencent HY 2.0 Think',
+    description: 'Tencent Hunyuan 2.0 reasoning model for multi-step security analysis.',
+    category: 'tencent',
+    minTier: 'starter',
+    maxTokens: 8192
+  },
+  {
+    id: 'minimax-m2.5',
+    name: 'MiniMax-M2.5',
+    description: 'Partner model optimized for broad instruction following and long-form synthesis.',
+    category: 'partner',
+    minTier: 'starter',
+    maxTokens: 4096
   },
   {
     id: 'kimi-k2.5',
-    name: 'Kimi K2.5',
-    description: 'Long-context Moonshot model for knowledge-heavy analysis.',
-    category: 'third-party',
-    minTier: 'ultra',
-    maxTokens: 8000
+    name: 'Kimi-K2.5',
+    description: 'Partner long-context model for knowledge-heavy reasoning and incident analysis.',
+    category: 'partner',
+    minTier: 'starter',
+    maxTokens: 8192
   },
   {
-    id: 'qwen3-max-2026-01-23',
-    name: 'Qwen 3 Max',
-    description: 'Flagship Qwen model used as the default built-in cloud route.',
-    category: 'qwen',
+    id: 'glm-5',
+    name: 'GLM-5',
+    description: 'Balanced flagship partner model used as the default built-in cloud route.',
+    category: 'partner',
     minTier: 'starter',
-    maxTokens: 8000,
+    maxTokens: 8192,
     isDefault: true
   },
   {
-    id: 'qwen3-coder-next',
-    name: 'Qwen 3 Coder Next',
-    description: 'Next-generation coding-focused Qwen model for audit and generation.',
-    category: 'qwen',
-    minTier: 'pro',
-    maxTokens: 8000
+    id: 'hunyuan-t1',
+    name: 'Hunyuan-T1',
+    description: 'Tencent Hunyuan T1 reasoning model for deeper investigations and adjudication.',
+    category: 'tencent',
+    minTier: 'starter',
+    maxTokens: 8192
   },
   {
-    id: 'qwen3-coder-plus',
-    name: 'Qwen 3 Coder Plus',
-    description: 'Lower-latency coding-focused Qwen model for security workflows.',
-    category: 'qwen',
-    minTier: 'pro',
-    maxTokens: 4000
+    id: 'hunyuan-turbos',
+    name: 'Hunyuan-TurboS',
+    description: 'Tencent Hunyuan TurboS model for lower-latency cloud verification and routing fallback.',
+    category: 'tencent',
+    minTier: 'starter',
+    maxTokens: 4096
   }
 ];
 

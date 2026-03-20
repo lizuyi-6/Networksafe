@@ -217,6 +217,9 @@ export class MessageBus extends EventEmitter {
                 reject(new Error('Shutdown'));
             };
 
+            if (typeof timeoutId.unref === 'function') {
+                timeoutId.unref();
+            }
             this.once(MESSAGE_EVENT, onMessage);
             this.once(SHUTDOWN_EVENT, onShutdown);
         });

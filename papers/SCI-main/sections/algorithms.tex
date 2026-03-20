@@ -1,0 +1,255 @@
+% Algorithm Design Section for AetherGuard SCI Paper
+% Target: IEEE TDSC/TIFS
+
+\section{Algorithm Design}
+\label{sec:algorithm}
+
+\subsection{Formal Definitions}
+\label{subsec:definitions}
+
+We begin by formalizing the multi-agent security decision system.
+
+\begin{definition}[Multi-Agent System]
+\label{def:mas}
+A multi-agent system $\mathcal{M}$ is defined as a tuple $(\mathcal{A}, \mathcal{S}, \mathcal{O}, \mathcal{P}, \mathcal{R})$ where:
+\begin{itemize}
+    \item $\mathcal{A} = \{a_1, a_2, \ldots, a_n\}$ is the set of agents
+    \item $\mathcal{S}$ is the state space representing the security environment
+    \item $\mathcal{O}$ is the observation space for threat detection
+    \item $\mathcal{P}: \mathcal{S} \times \mathcal{A} \times \mathcal{S} \rightarrow [0,1]$ is the state transition probability
+    \item $\mathcal{R}: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}$ is the reward function
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Threat Space]
+\label{def:threat}
+The threat space $\mathcal{T}$ consists of all possible security threats, where each threat $t \in \mathcal{T}$ is characterized by:
+\begin{equation}
+t = (\tau, \sigma, \delta, \chi, \pi)
+\end{equation}
+where $\tau$ is the threat type, $\sigma \in \{\text{LOW}, \text{MEDIUM}, \text{HIGH}, \text{CRITICAL}\}$ is the severity, $\delta$ is the detection timestamp, $\chi$ is the contextual metadata, and $\pi$ is the provenance information.
+\end{definition}
+
+\begin{definition}[Decision Space]
+\label{def:decision}
+The decision space $\mathcal{D}$ comprises all possible security response actions:
+\begin{equation}
+\mathcal{D} = \{\text{MONITOR}, \text{ALERT}, \text{BLOCK}, \text{ISOLATE}, \text{TERMINATE}\}
+\end{equation}
+Each decision $d \in \mathcal{D}$ is associated with a confidence score $c(d) \in [0,1]$ and an expected utility $u(d) \in \mathbb{R}$.
+\end{definition}
+
+\begin{definition}[Debate State]
+\label{def:debate}
+A debate state $\mathcal{B}$ at round $k$ is defined as:
+\begin{equation}
+\mathcal{B}_k = (\mathcal{V}_k, \mathcal{C}_k, \mathcal{H}_k)
+\end{equation}
+where $\mathcal{V}_k$ is the set of agent viewpoints, $\mathcal{C}_k$ is the conflict matrix, and $\mathcal{H}_k$ is the debate history.
+\end{definition}
+
+\subsection{Multi-Agent Decision Algorithm}
+\label{subsec:decision-algorithm}
+
+Algorithm~\ref{alg:decision} presents the core multi-agent decision process that orchestrates the seven-layer architecture.
+
+\begin{algorithm}
+\caption{Multi-Agent Decision Algorithm}
+\label{alg:decision}
+\begin{algorithmic}[1]
+\Require Threat observation $o \in \mathcal{O}$, Agent set $\mathcal{A}$
+\Ensure Decision $d \in \mathcal{D}$ with confidence $c$
+\State $t \leftarrow \textsc{ClassifyThreat}(o)$ \Comment{L1: Collaboration Layer}
+\State $\mathcal{A}_{\text{active}} \leftarrow \textsc{SelectAgents}(t, \mathcal{A})$
+\State $\mathcal{V} \leftarrow \emptyset$
+\For{each $a_i \in \mathcal{A}_{\text{active}}$} \Comment{L2: Role Playing Layer}
+    \State $v_i \leftarrow a_i.\textsc{Analyze}(t)$
+    \State $\mathcal{V} \leftarrow \mathcal{V} \cup \{v_i\}$
+\EndFor
+\State $\mathcal{S} \leftarrow \textsc{ReconstructScene}(t, \mathcal{V})$ \Comment{L3: Scene Traversal}
+\State $\mathcal{R} \leftarrow \textsc{ExecuteTools}(\mathcal{S})$ \Comment{L4: Capability Layer}
+\State $(\mathcal{V}', \mathcal{T}) \leftarrow \textsc{Debate}(\mathcal{V}, \mathcal{R}, \mathcal{S})$ \Comment{L5: Debate Layer}
+\State $m \leftarrow \textsc{SelectModel}(t, \mathcal{V}')$ \Comment{L6: Heterogeneous Model}
+\State $(d, c) \leftarrow \textsc{Synthesize}(\mathcal{V}', \mathcal{T}, m)$ \Comment{L7: Synthesis}
+\State \Return $(d, c)$
+\end{algorithmic}
+\end{algorithm}
+
+The algorithm proceeds through seven stages corresponding to the architectural layers:
+
+\textbf{Stage 1 (L1)}: Threat classification routes the observation to appropriate specialized agents based on threat type and severity.
+
+\textbf{Stage 2 (L2)}: Role-playing agents (Socrates, Plato, Aristotle) perform parallel analysis from their respective perspectives.
+
+\textbf{Stage 3 (L3)}: Scene reconstruction correlates the current threat with historical events to establish attack context.
+
+\textbf{Stage 4 (L4)}: Security tools execute in sandboxed environments to gather additional evidence.
+
+\textbf{Stage 5 (L5)}: Structured debate resolves conflicts between agent viewpoints.
+
+\textbf{Stage 6 (L6)}: Model routing selects the appropriate inference backend based on privacy and cost constraints.
+
+\textbf{Stage 7 (L7)}: Final synthesis produces the decision with supporting rationale.
+
+\subsection{Debate and Arbitration Algorithm}
+\label{subsec:debate-algorithm}
+
+Algorithm~\ref{alg:debate} describes the structured debate mechanism.
+
+\begin{algorithm}
+\caption{Debate and Arbitration Algorithm}
+\label{alg:debate}
+\begin{algorithmic}[1]
+\Require Viewpoints $\mathcal{V}$, Tools results $\mathcal{R}$, Scene $\mathcal{S}$
+\Ensure Refined viewpoints $\mathcal{V}'$, Debate transcript $\mathcal{T}$
+\State $\mathcal{T} \leftarrow \emptyset$, $k \leftarrow 0$
+\State $\mathcal{C} \leftarrow \textsc{DetectConflicts}(\mathcal{V})$
+\While{$\mathcal{C} \neq \emptyset$ \textbf{and} $k < k_{\max}$}
+    \State $k \leftarrow k + 1$
+    \For{each conflict $c \in \mathcal{C}$}
+        \State $(a_i, a_j) \leftarrow \textsc{GetConflictingAgents}(c)$
+        \State $\arg_i \leftarrow a_i.\textsc{PresentArgument}(c, \mathcal{R}, \mathcal{S})$
+        \State $\arg_j \leftarrow a_j.\textsc{PresentArgument}(c, \mathcal{R}, \mathcal{S})$
+        \State $\mathcal{T} \leftarrow \mathcal{T} \cup \{(k, a_i, \arg_i), (k, a_j, \arg_j)\}$
+    \EndFor
+    \State $\mathcal{V} \leftarrow \textsc{UpdateViewpoints}(\mathcal{V}, \mathcal{T})$
+    \State $\mathcal{C} \leftarrow \textsc{DetectConflicts}(\mathcal{V})$
+    \If{$\textsc{Converged}(\mathcal{V}, \mathcal{C})$}
+        \State \textbf{break}
+    \EndIf
+\EndWhile
+\If{$\mathcal{C} \neq \emptyset$}
+    \State $\mathcal{V}' \leftarrow \textsc{Arbitrate}(\mathcal{V}, \mathcal{T})$ \Comment{Aristotle arbitrates}
+\Else
+    \State $\mathcal{V}' \leftarrow \mathcal{V}$
+\EndIf
+\State \Return $(\mathcal{V}', \mathcal{T})$
+\end{algorithmic}
+\end{algorithm}
+
+The debate algorithm iteratively resolves conflicts between agent viewpoints:
+
+\begin{itemize}
+    \item \textbf{Conflict Detection}: Two agents are in conflict if their decision confidence differs by more than threshold $\theta = 0.3$.
+    \item \textbf{Argument Presentation}: Each agent presents evidence supporting its position, citing tool results and scene context.
+    \item \textbf{Convergence Check}: Convergence is declared when either (a) no conflicts remain, or (b) the maximum number of rounds $k_{\max} = 5$ is reached.
+    \item \textbf{Arbitration}: If convergence is not reached, Aristotle produces a final decision with explicit uncertainty quantification.
+\end{itemize}
+
+\subsection{Threat Detection Algorithm}
+\label{subsec:detection-algorithm}
+
+Algorithm~\ref{alg:detection} describes the multi-source threat detection process.
+
+\begin{algorithm}
+\caption{Threat Detection Algorithm}
+\label{alg:detection}
+\begin{algorithmic}[1]
+\Require Network packets $\mathcal{P}$, System logs $\mathcal{L}$, Process events $\mathcal{E}$
+\Ensure Detected threats $\mathcal{T}_{\text{detected}}$
+\State $\mathcal{T}_{\text{detected}} \leftarrow \emptyset$
+\State $\mathcal{F}_{\text{net}} \leftarrow \textsc{ExtractNetworkFeatures}(\mathcal{P})$
+\State $\mathcal{A}_{\text{net}} \leftarrow \textsc{DetectNetworkAnomalies}(\mathcal{F}_{\text{net}})$
+\For{each $a \in \mathcal{A}_{\text{net}}$}
+    \State $t \leftarrow \textsc{ClassifyNetworkThreat}(a)$
+    \State $\mathcal{T}_{\text{detected}} \leftarrow \mathcal{T}_{\text{detected}} \cup \{t\}$
+\EndFor
+\State $\mathcal{F}_{\text{log}} \leftarrow \textsc{ParseLogs}(\mathcal{L})$
+\State $\mathcal{A}_{\text{log}} \leftarrow \textsc{DetectLogAnomalies}(\mathcal{F}_{\text{log}})$
+\For{each $a \in \mathcal{A}_{\text{log}}$}
+    \State $t \leftarrow \textsc{ClassifyLogThreat}(a)$
+    \State $\mathcal{T}_{\text{detected}} \leftarrow \mathcal{T}_{\text{detected}} \cup \{t\}$
+\EndFor
+\State $\mathcal{A}_{\text{proc}} \leftarrow \textsc{MonitorProcesses}(\mathcal{E})$
+\For{each $a \in \mathcal{A}_{\text{proc}}$}
+    \State $t \leftarrow \textsc{ClassifyProcessThreat}(a)$
+    \State $\mathcal{T}_{\text{detected}} \leftarrow \mathcal{T}_{\text{detected}} \cup \{t\}$
+\EndFor
+\State \Return $\mathcal{T}_{\text{detected}}$
+\end{algorithmic}
+\end{algorithm}
+
+The detection algorithm aggregates anomalies from three sources:
+\begin{itemize}
+    \item \textbf{Network Monitoring}: Packet-level analysis for intrusion patterns, DDoS detection, and C2 communication.
+    \item \textbf{Log Analysis}: Statistical and signature-based analysis of authentication and system logs.
+    \item \textbf{Behavioral Analysis}: Process execution monitoring for suspicious patterns including code injection and privilege escalation.
+\end{itemize}
+
+\subsection{Model Routing Algorithm}
+\label{subsec:routing-algorithm}
+
+Algorithm~\ref{alg:routing} describes the privacy-aware model routing mechanism.
+
+\begin{algorithm}
+\caption{Model Routing Algorithm}
+\label{alg:routing}
+\begin{algorithmic}[1]
+\Require Threat $t$, Privacy policy $p$, Cost budget $b$
+\Ensure Selected model $m \in \{\text{local}, \text{cloud}, \text{hybrid}\}$
+\State $s \leftarrow \textsc{AssessSensitivity}(t)$
+\State $t' \leftarrow \textsc{RedactSensitiveData}(t)$ \Comment{Remove IPs, tokens, emails}
+\If{$s = \text{HIGH}$ \textbf{or} $p = \text{STRICT}$}
+    \State \Return $\text{local}$
+\EndIf
+\State $c_{\text{local}} \leftarrow \textsc{EstimateCost}(t', \text{local})$
+\State $c_{\text{cloud}} \leftarrow \textsc{EstimateCost}(t', \text{cloud})$
+\State $q_{\text{local}} \leftarrow \textsc{PredictQuality}(t', \text{local})$
+\State $q_{\text{cloud}} \leftarrow \textsc{PredictQuality}(t', \text{cloud})$
+\If{$c_{\text{cloud}} \leq b$ \textbf{and} $q_{\text{cloud}} - q_{\text{local}} > \delta_q$}
+    \If{$s = \text{MEDIUM}$}
+        \State \Return $\text{hybrid}$ \Comment{Local pre-screen + cloud verification}
+    \Else
+        \State \Return $\text{cloud}$
+    \EndIf
+\Else
+    \State \Return $\text{local}$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+The routing algorithm balances three objectives:
+\begin{itemize}
+    \item \textbf{Privacy Protection}: High-sensitivity threats are processed locally.
+    \item \textbf{Cost Optimization}: Cloud inference is selected only when quality improvement justifies the cost.
+    \item \textbf{Quality Assurance}: Hybrid mode provides local pre-screening with cloud verification for medium-sensitivity threats.
+\end{itemize}
+
+\subsection{Complexity Analysis}
+\label{subsec:complexity}
+
+We analyze the computational complexity of the core algorithms.
+
+\begin{theorem}[Decision Algorithm Complexity]
+\label{thm:complexity}
+The Multi-Agent Decision Algorithm (Algorithm~\ref{alg:decision}) has time complexity $O(n \cdot m + k \cdot c^2 + r)$ where $n$ is the number of active agents, $m$ is the average analysis time per agent, $k$ is the number of debate rounds, $c$ is the number of conflicts per round, and $r$ is the tool execution time.
+\end{theorem}
+
+\begin{proof}
+The complexity breakdown is:
+\begin{itemize}
+    \item Threat classification: $O(1)$ using pre-trained classifier
+    \item Agent selection: $O(n)$
+    \item Parallel agent analysis: $O(n \cdot m)$
+    \item Scene reconstruction: $O(|\mathcal{V}|) = O(n)$
+    \item Tool execution: $O(r)$ (parallelizable)
+    \item Debate: $O(k \cdot c^2)$ for conflict resolution
+    \item Model routing: $O(1)$
+    \item Synthesis: $O(|\mathcal{V}'|) = O(n)$
+\end{itemize}
+Summing these terms yields $O(n \cdot m + k \cdot c^2 + r)$.
+\end{proof}
+
+\begin{corollary}[Practical Complexity]
+\label{cor:practical}
+With bounded parameters ($n \leq 3$, $k \leq 5$, $c \leq 3$), the practical complexity is $O(m + r)$, dominated by agent analysis and tool execution times.
+\end{corollary}
+
+\begin{theorem}[Debate Convergence]
+\label{thm:convergence}
+The Debate Algorithm (Algorithm~\ref{alg:debate}) terminates in at most $k_{\max}$ rounds.
+\end{theorem}
+
+\begin{proof}
+The algorithm explicitly checks the round counter $k$ against $k_{\max}$ in the while loop condition (line 4). The loop can execute at most $k_{\max}$ iterations.
+\end{proof}

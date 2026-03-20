@@ -1,14 +1,14 @@
 # ============================================================
 # Stage 1: Builder
 # ============================================================
-FROM node:18-alpine AS builder
+FROM node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e AS builder
 
 WORKDIR /app
 
 # Copy manifests first for layer caching
 COPY package*.json ./
 RUN npm config set registry https://registry.npmmirror.com/ && \
-    npm ci
+    if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 COPY . .
 RUN npm run build
@@ -16,7 +16,7 @@ RUN npm run build
 # ============================================================
 # Stage 2: Production (Nginx)
 # ============================================================
-FROM nginx:1.27-alpine
+FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
 
 # Remove default config and assets
 RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf

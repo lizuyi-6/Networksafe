@@ -1,4 +1,4 @@
-# FluxGuard Pro 产品介绍
+﻿# AetherGuard 产品介绍
 
 > 企业级智能服务器安全防御平台 | 让安全运维从被动响应到主动防御
 
@@ -6,7 +6,7 @@
 
 ## 🎯 产品定位
 
-**FluxGuard Pro** 是一款面向中大型企业的新一代服务器安全防御平台，通过分布式 Agent 架构 + AI 智能分析 + 硬件级部署能力，为企业提供从威胁检测、实时防护到自动修复的全链路安全解决方案。
+**AetherGuard** 是一款面向中大型企业的新一代服务器安全防御平台，通过分布式 Agent 架构 + AI 智能分析 + 硬件级部署能力，为企业提供从威胁检测、实时防护到自动修复的全链路安全解决方案。
 
 ---
 
@@ -17,7 +17,7 @@
 
 ### 三大差异化优势
 
-| 传统安全方案 | FluxGuard Pro |
+| 传统安全方案 | AetherGuard |
 |-------------|---------------|
 | 需要专业运维团队 | 一键部署，零门槛 |
 | 事后告警，被动响应 | AI 预测 + 自动阻断 |
@@ -30,7 +30,7 @@
 ### 1. 分布式 Agent 架构
 ```
 ┌─────────────────────────────────────────────────────┐
-│                 FluxGuard 控制中心                    │
+│                 AetherGuard 控制中心                    │
 │        (Web Dashboard + API + WebSocket)            │
 └───────────────────────┬─────────────────────────────┘
                         │
@@ -82,7 +82,7 @@
 ### 控制台 Dashboard
 ```
 ┌────────────────────────────────────────────────────────────┐
-│  FluxGuard Pro                          🌙 Admin ▼  Live ● │
+│  AetherGuard                          🌙 Admin ▼  Live ● │
 ├────────────────────────────────────────────────────────────┤
 │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐        │
 │ │ 845,920  │ │  1,243   │ │   42ms   │ │  98.2%   │        │
@@ -187,7 +187,7 @@ AI:   OpenAI / Anthropic / Zhipu / Ollama
 5. **政企客户** - 等保合规、内网安全
 
 ### 典型使用场景
-| 场景 | 痛点 | FluxGuard 方案 |
+| 场景 | 痛点 | AetherGuard 方案 |
 |------|------|---------------|
 | 新服务器上架 | 部署安全软件耗时 | USB Dongle 即插即部署 |
 | 安全事件响应 | 需要专家分析日志 | AI 自动诊断 + 修复建议 |
@@ -219,17 +219,17 @@ AI:   OpenAI / Anthropic / Zhipu / Ollama
 ## 📞 联系我们
 
 ### 商务合作
-- 📧 Email: sales@fluxguard.io
+- 📧 Email: sales@AetherGuard.io
 - 📱 电话: 400-XXX-XXXX
-- 💬 微信: FluxGuard_Official
+- 💬 微信: AetherGuard_Official
 
 ### 技术支持
-- 📖 文档: docs.fluxguard.io
-- 💻 GitHub: github.com/fluxguard/fluxguard-pro
-- 🎫 工单: support.fluxguard.io
+- 📖 文档: docs.AetherGuard.io
+- 💻 GitHub: github.com/AetherGuard/AetherGuard-pro
+- 🎫 工单: support.AetherGuard.io
 
 ### 试用申请
-[立即申请 14 天免费试用 →](https://fluxguard.io/trial)
+[立即申请 14 天免费试用 →](https://AetherGuard.io/trial)
 
 ---
 
@@ -253,4 +253,4 @@ AI:   OpenAI / Anthropic / Zhipu / Ollama
 
 ---
 
-*FluxGuard Pro - 让安全触手可及*
+*AetherGuard - 让安全触手可及*

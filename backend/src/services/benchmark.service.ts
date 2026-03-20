@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+﻿import axios, { AxiosInstance } from 'axios';
 import http from 'http';
 import https from 'https';
 import os from 'os';
@@ -204,8 +204,14 @@ function nowMs(): number {
 }
 
 class BenchmarkService {
-  ensureSchema(): void {
-    platformConfigService.ensureSchema();
+  prepare(): void {
+    platformConfigService.prepare();
+  }
+
+  private assertPrepared(): void {
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+    }
   }
 
   async runScenario(
@@ -213,7 +219,7 @@ class BenchmarkService {
     scenarioInput = 'full-suite',
     profileInput = 'dev-smoke'
   ): Promise<BenchmarkRunRecord> {
-    this.ensureSchema();
+    this.assertPrepared();
     const createdAt = new Date().toISOString();
     const id = randomUUID();
     const scenario = normalizeScenario(scenarioInput);
@@ -348,7 +354,7 @@ class BenchmarkService {
   }
 
   async listHistory(tenantId: string, limit = 20): Promise<BenchmarkRunRecord[]> {
-    this.ensureSchema();
+    this.assertPrepared();
     const rows = postgresShadowStoreService.canServeReads()
       ? await postgresShadowStoreService.queryAll<any>(`
           SELECT *
@@ -369,7 +375,7 @@ class BenchmarkService {
   }
 
   async getRun(tenantId: string, id: string): Promise<BenchmarkRunRecord | null> {
-    this.ensureSchema();
+    this.assertPrepared();
     const row = postgresShadowStoreService.canServeReads()
       ? await postgresShadowStoreService.queryOne<any>(`
           SELECT *
@@ -956,7 +962,7 @@ class BenchmarkService {
     error?: string;
   }> {
     const explicitPid = Number(process.env.BENCHMARK_AGENT_PID || 0);
-    const processPattern = new RegExp(process.env.BENCHMARK_AGENT_PROCESS_PATTERN || 'aetherguard-agent|fluxguard-agent', 'i');
+    const processPattern = new RegExp(process.env.BENCHMARK_AGENT_PROCESS_PATTERN || 'aetherguard-agent|AetherGuard-agent', 'i');
 
     try {
       const { stdout } = await execFileAsync('sh', ['-lc', 'ps -o pid= -o rss= -o comm= -o args=']);

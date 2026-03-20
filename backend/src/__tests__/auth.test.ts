@@ -6,6 +6,9 @@
 
 import request from 'supertest';
 import express from 'express';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { initDatabase, closeDatabase, getDatabase } from '../config/database';
 import authRouter from '../api/routes/auth.routes';
 
@@ -14,15 +17,19 @@ const app = express();
 app.use(express.json());
 app.use('/api/auth', authRouter);
 
+const testDataDir = path.join(os.tmpdir(), 'aetherguard-auth-test-data');
+
 describe('Authentication API', () => {
     beforeAll(async () => {
         // Initialize test database
-        process.env.DATA_DIR = './test-data';
+        fs.rmSync(testDataDir, { recursive: true, force: true });
+        process.env.DATA_DIR = testDataDir;
         await initDatabase();
     });
 
     afterAll(async () => {
         closeDatabase();
+        fs.rmSync(testDataDir, { recursive: true, force: true });
     });
 
     beforeEach(() => {
@@ -206,6 +213,8 @@ describe('Authentication API', () => {
                 .set('Authorization', `Bearer ${accessToken}`);
 
             expect(response.status).toBe(200);
+            expect(response.body.success).toBe(true);
+            expect(response.body.data.user).toBeDefined();
             expect(response.body.user).toBeDefined();
             expect(response.body.user.email).toBe('me-test@example.com');
         });

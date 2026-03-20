@@ -1,11 +1,13 @@
 ﻿﻿﻿﻿/**
- * FluxGuard - ESP32 设备 WebSocket 网关
+ * AetherGuard - ESP32 设备 WebSocket 网关
  *
- * 处理 ESP32 固件网关的 WebSocket 连接
+ * 处理实验性 ESP32 云设备/模拟设备网关的 WebSocket 连接
  * - 设备注册
  * - 心跳监控
  * - 数据接收
  * - 命令下发
+ *
+ * NOTE: This gateway is not the current v1 USB-TTL serial deployer firmware.
  *
  * SECURITY FIX CVE-2026-032/033: Added CORS restrictions and API key validation
  * SECURITY FIX CVE-2026-DEV001: Added rate limiting
@@ -18,6 +20,11 @@ import { Server, Socket } from 'socket.io';
 import crypto from 'crypto';
 import logger from '../utils/logger';
 import auditLogger from '../security/audit-logger.service';
+import type { TenantContext } from '../core/tenant/tenant-context';
+import {
+    PLATFORM_TENANT_ID,
+    resolveDeviceTenantContext,
+} from '../core/tenant/tenant-context';
 import { deviceControlService } from '../services/device-control.service';
 import { socketRateLimitService } from '../services/socket-rate-limit.service';
 import {
@@ -27,9 +34,18 @@ import {
     getCodebook,
     addDeviceEvent,
 } from '../api/routes/devices.routes';
+import type {
+    DeviceClientToServerEvents,
+    DeviceServerToClientEvents,
+} from './socket-events';
+import {
+    validateDeviceHeartbeatPayload,
+    validateDeviceRegisterPayload,
+} from './socket-payload-validator';
 
 interface DeviceSocket extends Socket {
     deviceId?: string;
+    tenantContext?: TenantContext;
 }
 
 interface SignedDeviceCommand {
@@ -56,9 +72,9 @@ const MAX_REQUESTS_PER_WINDOW = 100;
 const DEVICE_RATE_LIMIT_WINDOW = 60000;
 const MAX_DEVICE_REQUESTS_PER_WINDOW = 100;
 
-async function checkDeviceRateLimit(deviceId: string, socket: DeviceSocket): Promise<boolean> {
+async function checkDeviceRateLimit(deviceId: string, socket: DeviceSocket, tenantId: string): Promise<boolean> {
     const result = await socketRateLimitService.check({
-        tenantId: 'global',
+        tenantId,
         key: `device:${deviceId}`,
         windowMs: DEVICE_RATE_LIMIT_WINDOW,
         limit: MAX_DEVICE_REQUESTS_PER_WINDOW,
@@ -88,9 +104,9 @@ async function checkDeviceRateLimit(deviceId: string, socket: DeviceSocket): Pro
     return result.allowed;
 }
 
-async function checkSocketRateLimit(socket: DeviceSocket): Promise<boolean> {
+async function checkSocketRateLimit(socket: DeviceSocket, tenantId: string): Promise<boolean> {
     const result = await socketRateLimitService.check({
-        tenantId: 'global',
+        tenantId,
         key: `socket:${socket.id}`,
         windowMs: RATE_LIMIT_WINDOW,
         limit: MAX_REQUESTS_PER_WINDOW,
@@ -103,8 +119,8 @@ async function checkSocketRateLimit(socket: DeviceSocket): Promise<boolean> {
 }
 
 export class DeviceGateway {
-    private io: Server;
-    private aliasServers: Server[] = [];
+    private io: Server<DeviceClientToServerEvents, DeviceServerToClientEvents>;
+    private aliasServers: Array<Server<DeviceClientToServerEvents, DeviceServerToClientEvents>> = [];
     private deviceSockets: Map<string, DeviceSocket> = new Map();
     private dashboardBroadcaster: ((event: string, data: any) => void) | null = null;
     private readonly commandSigningSecret: string;
@@ -136,7 +152,7 @@ export class DeviceGateway {
         logger.info('[DeviceGateway] Initialized on /ws/device and /ws/status with restricted CORS, rate limiting, and command signing');
     }
 
-    private createServer(httpServer: HttpServer, allowedOrigins: string[], path: string): Server {
+    private createServer(httpServer: HttpServer, allowedOrigins: string[], path: string): Server<DeviceClientToServerEvents, DeviceServerToClientEvents> {
         return new Server(httpServer, {
             path,
             cors: {
@@ -203,10 +219,10 @@ export class DeviceGateway {
             this.dashboardBroadcaster(event, data);
             return;
         }
-        this.io.emit(event, data);
+        ((this.io as unknown) as { emit: (emittedEvent: string, payload: any) => void }).emit(event, data);
     }
 
-    private setupEventHandlers(server: Server) {
+    private setupEventHandlers(server: Server<DeviceClientToServerEvents, DeviceServerToClientEvents>) {
         server.on('connection', (socket: DeviceSocket) => {
             logger.info('[DeviceGateway] New device connection', { socketId: socket.id });
 
@@ -249,6 +265,14 @@ export class DeviceGateway {
     }
 
     private async handleRegister(socket: DeviceSocket, data: any) {
+        const tenantContext = resolveDeviceTenantContext();
+        const payload = validateDeviceRegisterPayload(data);
+        if (!payload) {
+            socket.emit('register_error', { error: 'backend.invalid_device_registration_payload', reason: 'invalid_payload' });
+            socket.disconnect();
+            return;
+        }
+
         const {
             device_id,
             version,
@@ -257,10 +281,10 @@ export class DeviceGateway {
             free_heap,
             sdk_version,
             api_key,
-        } = data;
+        } = payload;
 
-        if (!(await checkSocketRateLimit(socket))) {
-            socket.emit('register_error', { error: 'backend.rate_limit_exceeded' });
+        if (!(await checkSocketRateLimit(socket, tenantContext.tenantId))) {
+            socket.emit('register_error', { error: 'backend.rate_limit_exceeded', reason: 'rate_limit_exceeded' });
             socket.disconnect();
             return;
         }
@@ -300,15 +324,16 @@ export class DeviceGateway {
         }
 
         socket.deviceId = device_id;
+        socket.tenantContext = tenantContext;
         this.deviceSockets.set(device_id, socket);
 
         registerDevice({
             deviceId: device_id,
-            version,
-            chipModel: chip_model,
-            flashSize: flash_size,
-            freeHeap: free_heap,
-            sdkVersion: sdk_version,
+            version: version || 'unknown',
+            chipModel: chip_model || 'unknown',
+            flashSize: flash_size || 0,
+            freeHeap: free_heap || 0,
+            sdkVersion: sdk_version || 'unknown',
             mode: 'online',
         });
         addDeviceEvent(device_id, 'register', {
@@ -325,6 +350,7 @@ export class DeviceGateway {
         this.emitToDashboard('device:online', {
             deviceId: device_id,
             version,
+            tenantId: tenantContext.tenantId,
             timestamp: new Date().toISOString(),
         });
 
@@ -343,19 +369,26 @@ export class DeviceGateway {
 
     private async handleHeartbeat(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
+        const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
 
-        if (!(await checkDeviceRateLimit(socket.deviceId, socket))) {
-            socket.emit('heartbeat_error', { error: 'backend.rate_limit_exceeded' });
+        if (!(await checkDeviceRateLimit(socket.deviceId, socket, tenantId))) {
+            socket.emit('heartbeat_error', { error: 'backend.rate_limit_exceeded', reason: 'rate_limit_exceeded' });
             return;
         }
 
-        const { uptime, free_heap, wifi_rssi } = data;
+        const payload = validateDeviceHeartbeatPayload(data);
+        if (!payload) {
+            socket.emit('heartbeat_error', { error: 'backend.invalid_device_heartbeat_payload', reason: 'invalid_payload' });
+            return;
+        }
+
+        const { uptime, free_heap, wifi_rssi, cpu_usage } = payload;
 
         updateDeviceStatus(socket.deviceId, {
-            cpuUsage: data.cpu_usage || 0,
-            memoryUsage: 100 - (free_heap / (4 * 1024 * 1024) * 100),
-            uptime,
-            wifiRssi: wifi_rssi,
+            cpuUsage: cpu_usage || 0,
+            memoryUsage: 100 - ((free_heap || 0) / (4 * 1024 * 1024) * 100),
+            uptime: uptime || 0,
+            wifiRssi: wifi_rssi || 0,
         });
         addDeviceEvent(socket.deviceId, 'heartbeat', {
             uptime,
@@ -368,8 +401,9 @@ export class DeviceGateway {
 
     private async handleData(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
+        const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
 
-        if (!(await checkDeviceRateLimit(socket.deviceId, socket))) {
+        if (!(await checkDeviceRateLimit(socket.deviceId, socket, tenantId))) {
             return;
         }
 
@@ -406,14 +440,16 @@ export class DeviceGateway {
         this.emitToDashboard('device:data', {
             deviceId: socket.deviceId,
             data: decodedPayload ?? {},
+            tenantId,
             timestamp: new Date().toISOString(),
         });
     }
 
     private async handleAlert(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
+        const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
 
-        if (!(await checkDeviceRateLimit(socket.deviceId, socket))) {
+        if (!(await checkDeviceRateLimit(socket.deviceId, socket, tenantId))) {
             return;
         }
 
@@ -440,12 +476,14 @@ export class DeviceGateway {
             deviceId: socket.deviceId,
             alertType: alert_type,
             message,
+            tenantId,
             timestamp: timestamp || new Date().toISOString(),
         });
     }
 
     private async handleUnknownError(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
+        const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
 
         const { message, timestamp } = data;
 
@@ -468,12 +506,14 @@ export class DeviceGateway {
         this.emitToDashboard('device:unknown_error', {
             deviceId: socket.deviceId,
             message,
+            tenantId,
             timestamp: timestamp || new Date().toISOString(),
         });
     }
 
     private async handleOtaStatus(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
+        const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
         addDeviceEvent(socket.deviceId, 'command', {
             action: 'ota_status',
             ...data
@@ -482,12 +522,14 @@ export class DeviceGateway {
         this.emitToDashboard('device:ota_status', {
             deviceId: socket.deviceId,
             ...data,
+            tenantId,
             timestamp: new Date().toISOString()
         });
     }
 
     private async handlePhysicalConfirmationAck(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
+        const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
         addDeviceEvent(socket.deviceId, 'command', {
             action: 'physical_confirmation_ack',
             ...data
@@ -496,6 +538,7 @@ export class DeviceGateway {
         this.emitToDashboard('device:physical_confirmation', {
             deviceId: socket.deviceId,
             ...data,
+            tenantId,
             timestamp: new Date().toISOString()
         });
     }
@@ -507,6 +550,7 @@ export class DeviceGateway {
 
     private async handleDisconnect(socket: DeviceSocket, reason: string) {
         if (socket.deviceId) {
+            const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
             this.deviceSockets.delete(socket.deviceId);
             setDeviceOffline(socket.deviceId);
 
@@ -514,6 +558,7 @@ export class DeviceGateway {
             this.emitToDashboard('device:offline', {
                 deviceId: socket.deviceId,
                 reason,
+                tenantId,
                 timestamp: new Date().toISOString(),
             });
 
@@ -543,12 +588,27 @@ export class DeviceGateway {
         }
 
         const signedCommand = this.signCommand(deviceId, command, params);
-        
-        if (signedCommand) {
-            socket.emit('command', signedCommand);
-        } else {
-            socket.emit('command', { cmd: command, params, timestamp: Date.now() });
+
+        // SECURITY FIX: Reject unsigned commands - never send unsigned commands to devices
+        if (!signedCommand) {
+            logger.error('[DeviceGateway] Command signing failed - rejecting unsigned command', {
+                deviceId,
+                command,
+            });
+            await auditLogger.log({
+                eventType: 'device_command_rejected',
+                category: 'command',
+                severity: 'warning',
+                actor: { type: 'system', id: 'device-gateway' },
+                action: 'send_command',
+                target: { type: 'agent', id: deviceId },
+                details: { command, params, reason: 'Signing failed - DEVICE_COMMAND_SECRET not configured' },
+                status: 'failure'
+            });
+            return false;
         }
+
+        socket.emit('command', signedCommand);
 
         addDeviceEvent(deviceId, 'command', { command, params });
 

@@ -222,7 +222,7 @@ function computeChainHash(tenantId: string, segmentKey: string, previousChainHas
 class AuditSegmentService {
   private schemaReady = false;
 
-  private ensureSchema(): void {
+  prepare(): void {
     if (this.schemaReady) {
       return;
     }
@@ -265,6 +265,19 @@ class AuditSegmentService {
     this.schemaReady = true;
   }
 
+  private assertPrepared(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+      return;
+    }
+
+    throw new Error('Audit segment schema not initialized. Call auditSegmentService.prepare() during bootstrap.');
+  }
+
   private mapRow(row: PersistedSegmentRow): AuditSegmentRecord {
     return {
       id: row.id,
@@ -287,7 +300,7 @@ class AuditSegmentService {
   }
 
   private async querySegments(tenantId?: string, limit = 50): Promise<AuditSegmentRecord[]> {
-    this.ensureSchema();
+    this.assertPrepared();
     const safeLimit = normalizeLimit(limit, 50, 1, 500);
 
     if (postgresShadowStoreService.canServeReads()) {
@@ -477,7 +490,7 @@ class AuditSegmentService {
   }
 
   private async getSegmentById(segmentId: string): Promise<AuditSegmentRecord | null> {
-    this.ensureSchema();
+    this.assertPrepared();
     if (postgresShadowStoreService.canServeReads()) {
       const row = await postgresShadowStoreService.queryOne<PersistedSegmentRow>(`
         SELECT *
@@ -498,7 +511,7 @@ class AuditSegmentService {
   }
 
   async archivePending(options: ArchiveOptions = {}) {
-    this.ensureSchema();
+    this.assertPrepared();
     const before = options.before || new Date().toISOString();
     const maxLogsPerSegment = normalizeLimit(options.maxLogsPerSegment, 250, 1, 2000);
     const maxSegments = normalizeLimit(options.maxSegments, 5, 1, 50);

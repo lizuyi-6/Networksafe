@@ -1,0 +1,42 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric,calc}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily,
+  box/.style={draw, rounded corners=3pt, align=center, minimum width=2.5cm, minimum height=0.9cm, fill=blue!4},
+  smallbox/.style={draw, rounded corners=2pt, align=center, minimum width=1.7cm, minimum height=0.7cm, fill=white},
+  arrow/.style={-Latex, thick}
+]
+
+\node[box, minimum width=2.8cm, minimum height=3.1cm, fill=green!6] (agents) at (0,0) {};
+\node[align=center, font=\bfseries] at (agents.north) [yshift=-0.45cm] {Distributed\\Agents};
+\node[smallbox] (a1) at ($(agents.center)+(0,0.55)$) {Agent A\\Request sensor};
+\node[smallbox] (a2) at ($(agents.center)+(0,-0.55)$) {Agent B\\Local policy};
+
+\node[box, minimum width=6.3cm, minimum height=3.9cm, fill=orange!8] (control) at (6.2,0) {};
+\node[align=center, font=\bfseries] at (control.north) [yshift=-0.45cm] {Control Plane};
+\node[smallbox, minimum width=2.1cm] (gw) at ($(control.center)+(-1.75,0.95)$) {Authenticated\\Gateway};
+\node[smallbox, minimum width=2.3cm] (debate) at ($(control.center)+(1.6,0.95)$) {Debate\\Orchestrator};
+\node[smallbox, minimum width=2.1cm] (audit) at ($(control.center)+(-1.75,-0.65)$) {Audit chain\\verification};
+\node[smallbox, minimum width=2.3cm] (route) at ($(control.center)+(1.6,-0.65)$) {Route modes\\local / cloud / hybrid};
+\node[smallbox, minimum width=5.1cm] (casefile) at ($(control.center)+(0,-1.75)$) {Case file: transcript + verdict distribution + action note};
+
+\node[box, minimum width=2.8cm, minimum height=3.1cm, fill=purple!7] (response) at (11.8,0) {};
+\node[align=center, font=\bfseries] at (response.north) [yshift=-0.45cm] {Response Path};
+\node[smallbox] (cmd) at ($(response.center)+(0,0.55)$) {Signed\\commands};
+\node[smallbox] (ops) at ($(response.center)+(0,-0.55)$) {Operator\\review};
+
+\draw[arrow] (a1.east) -- ++(0.7,0) |- (gw.west);
+\draw[arrow] (a2.east) -- ++(0.7,0) |- (audit.west);
+\draw[arrow] (gw.east) -- (debate.west);
+\draw[arrow] (audit.east) -- (route.west);
+\draw[arrow] (debate.south) -- ++(0,-0.45) -| (casefile.east);
+\draw[arrow] (route.south) -- ++(0,-0.3) -| (casefile.west);
+\draw[arrow] (debate.east) -- ++(0.8,0) |- (cmd.west);
+\draw[arrow] (casefile.east) -- ++(0.8,0) |- (ops.west);
+\draw[arrow] (cmd.west) -- ++(-0.55,0) |- (debate.east);
+
+\end{tikzpicture}
+\end{document}

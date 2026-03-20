@@ -1,0 +1,34 @@
+** Drc report for esp32-serial-deployer-pcb.kicad_pcb **
+** Created on 2026-03-15T17:58:07+0800 **
+
+** Found 5 DRC violations **
+[shorting_items]: 短路了两个不同网络的项目 (网络  和 3V3)
+    局部重写; error
+    @(73.9625 mm, 35.2500 mm): F.Cu 上 U3 的焊盘 13 [<no net>]
+    @(72.2000 mm, 35.4500 mm): 走线 [3V3] (F.Cu), 长度: 1.8173 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络  和 3V3)
+    局部重写; error
+    @(72.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 10 [<no net>]
+    @(71.7500 mm, 35.9625 mm): 走线 [3V3] (F.Cu), 长度: 0.6820 mm
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(72.2000 mm, 35.4500 mm): 走线 [3V3] (F.Cu), 长度: 1.8173 mm
+    @(73.9625 mm, 35.2500 mm): F.Cu 上 U3 的焊盘 13 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(72.2000 mm, 35.4500 mm): 走线 [3V3] (F.Cu), 长度: 1.8173 mm
+    @(72.0000 mm, 34.0000 mm): F.Cu 上 U3 的焊盘 25 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(71.7500 mm, 35.9625 mm): 走线 [3V3] (F.Cu), 长度: 0.6820 mm
+    @(72.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 10 [<no net>]
+
+** Found 1 unconnected pads **
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(71.7500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 9 [3V3]
+    @(70.7500 mm, 35.9625 mm): 走线 [3V3] (F.Cu), 长度: 1.0076 mm
+
+** Found 0 Footprint errors **
+
+** End of Report **

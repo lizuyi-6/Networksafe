@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const crypto = require('crypto');
 const { resolveBackendPath } = require('./_paths');
 
@@ -23,7 +23,7 @@ async function resetAndRegisterAgent() {
     // 2. Generate new keys
     const newApiKey = 'agent_' + crypto.randomBytes(24).toString('hex');
     const secretKey = crypto.randomBytes(32).toString('hex');
-    const fingerprint = crypto.createHash('sha256').update('fluxguard-probe|linux|base').digest('hex');
+    const fingerprint = crypto.createHash('sha256').update('AetherGuard-probe|linux|base').digest('hex');
 
     // Generate hashed key for DB
     const apiKeyHash = crypto.createHash('sha256').update(newApiKey).digest('hex');
@@ -36,7 +36,7 @@ async function resetAndRegisterAgent() {
     ) VALUES (?, ?, ?, ?, ?, ?, 'approved', datetime('now'))
   `, [
         'probe-agent-01',
-        'fluxguard-probe',
+        'AetherGuard-probe',
         apiKeyHash,
         secretKey,
         fingerprint,

@@ -1,4 +1,4 @@
-{
+﻿{
   "report_type": "RedTeam Attack Chain Report",
   "generated_at": "2026-02-16T21:59:00.075824",
   "target": "http://localhost:3005",
@@ -17,7 +17,7 @@
         "duration": 0.0,
         "result": {
           "jwt_secret": "dev-jwt-secret-for-testing-only-32chars",
-          "admin_email": "admin@fluxguard.dev",
+          "admin_email": "admin@AetherGuard.dev",
           "admin_password": "DevAdmin123456!",
           "api_keys": [
             "dev_api_key_001",
@@ -42,7 +42,7 @@
           "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiO...",
           "user": {
             "id": "admin-001",
-            "email": "admin@fluxguard.dev",
+            "email": "admin@AetherGuard.dev",
             "role": "admin",
             "tenantId": "all"
           }
@@ -125,7 +125,7 @@
   "attack_results": {
     "credentials": {
       "jwt_secret": "dev-jwt-secret-for-testing-only-32chars",
-      "admin_email": "admin@fluxguard.dev",
+      "admin_email": "admin@AetherGuard.dev",
       "admin_password": "DevAdmin123456!",
       "api_keys": [
         "dev_api_key_001",
@@ -138,7 +138,7 @@
     "admin_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhZG1pbi0wMDEiLCJlbWFpbCI6ImFkbWluQGZsdXhndWFyZC5kZXYiLCJyb2xlIjoiYWRtaW4iLCJ0ZW5hbnRJZCI6ImFsbCIsImlhdCI6MTcwODA4MDAwMCwiZXhwIjoxNzA4MTY2NDAwfQ.signature",
     "admin_user": {
       "id": "admin-001",
-      "email": "admin@fluxguard.dev",
+      "email": "admin@AetherGuard.dev",
       "role": "admin",
       "tenantId": "all"
     },
@@ -147,7 +147,7 @@
         "users": [
           {
             "id": "admin-001",
-            "email": "admin@fluxguard.dev",
+            "email": "admin@AetherGuard.dev",
             "role": "admin"
           },
           {

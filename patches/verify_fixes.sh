@@ -1,11 +1,11 @@
-#!/bin/bash
+﻿#!/bin/bash
 # Security Fix Verification Script
 # Run this script to verify all security patches have been applied correctly
 
 set -e
 
 echo "=========================================="
-echo "FluxGuard Security Fix Verification"
+echo "AetherGuard Security Fix Verification"
 echo "Date: $(date)"
 echo "=========================================="
 echo ""

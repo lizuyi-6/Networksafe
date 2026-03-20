@@ -1,0 +1,416 @@
+{
+  "title": "AetherGuard Security Assessment Report",
+  "timestamp": "2026-03-13T14:35:25.187093",
+  "executive_summary": {
+    "total_tests": 20,
+    "vulnerabilities_found": 3,
+    "critical_count": 0,
+    "high_count": 2,
+    "medium_count": 0,
+    "low_count": 1
+  },
+  "vulnerabilities_by_severity": {
+    "CRITICAL": [],
+    "HIGH": [
+      {
+        "id": "VULN-004",
+        "name": "Rate Limit Race Condition"
+      },
+      {
+        "id": "VULN-008",
+        "name": "Redis Failure Mode"
+      }
+    ],
+    "MEDIUM": [],
+    "LOW": [
+      {
+        "id": "CRYPTO-03",
+        "name": "Cookie Security"
+      }
+    ]
+  },
+  "phase_results": [
+    {
+      "phase": "Phase 1: Authentication & Authorization",
+      "timestamp": "2026-03-13T14:35:11.989634",
+      "results": [
+        {
+          "test_id": "VULN-001",
+          "name": "Hardcoded API Key JWT Forgery",
+          "severity": "CRITICAL",
+          "vulnerable": false,
+          "details": [
+            "Hardcoded API key rejected (mitigated)"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-005",
+          "name": "JWT Algorithm Confusion",
+          "severity": "HIGH",
+          "vulnerable": false,
+          "details": [
+            "alg:none token rejected (secure)"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-006",
+          "name": "Token Revocation Bypass",
+          "severity": "HIGH",
+          "vulnerable": false,
+          "details": [
+            "Initial token validated successfully",
+            "Logout response: 200",
+            "Revoked token rejected (secure)"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-009",
+          "name": "Tenant Isolation Bypass",
+          "severity": "MEDIUM",
+          "vulnerable": false,
+          "details": [
+            "Admin agents list: 401",
+            "Cross-tenant creation attempt: 401"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-007",
+          "name": "API Key Timing Attack",
+          "severity": "MEDIUM",
+          "vulnerable": false,
+          "details": [
+            "Average correct key time: 0.0212s",
+            "Average wrong key time: 0.0212s",
+            "Timing difference negligible - likely constant-time comparison"
+          ],
+          "evidence": []
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "vulnerable": 0
+      }
+    },
+    {
+      "phase": "Phase 2: Injection Vulnerabilities",
+      "timestamp": "2026-03-13T14:35:15.541583",
+      "results": [
+        {
+          "test_id": "VULN-002",
+          "name": "Command Injection (Firewall)",
+          "severity": "CRITICAL",
+          "vulnerable": false,
+          "details": [
+            "Could not get test agent - testing API endpoints directly",
+            "Unblock test (semicolon): 404",
+            "Unblock test (AND operator): 404",
+            "Unblock test (OR operator): 404"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-010",
+          "name": "Path Traversal",
+          "severity": "MEDIUM",
+          "vulnerable": false,
+          "details": [
+            "Not found (basic traversal)",
+            "Not found (windows traversal)",
+            "Not found (double dot bypass)",
+            "Not found (url encoded)",
+            "Not found (double url encoded)",
+            "Not found (full url encoded)",
+            "Not found (unicode bypass)",
+            "Not found (null byte)",
+            "Not found (shadow file)",
+            "Not found (proc environ)",
+            "Scanner test (basic traversal): 404",
+            "Scanner test (windows traversal): 404",
+            "Scanner test (double dot bypass): 404"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "SSRF",
+          "name": "Server-Side Request Forgery",
+          "severity": "HIGH",
+          "vulnerable": false,
+          "details": [
+            "Response (AWS metadata): 404",
+            "Response (GCP metadata): 404",
+            "Response (Azure metadata): 404",
+            "Response (Redis internal): 404",
+            "Response (Redis localhost): 404",
+            "Response (PostgreSQL internal): 404",
+            "Response (Internal API): 404",
+            "Response (IPv6 localhost): 404",
+            "Response (file protocol): 404",
+            "Response (gopher protocol): 404"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "SQLI",
+          "name": "SQL Injection",
+          "severity": "CRITICAL",
+          "vulnerable": false,
+          "details": [],
+          "evidence": []
+        }
+      ],
+      "summary": {
+        "total": 4,
+        "vulnerable": 0
+      }
+    },
+    {
+      "phase": "Phase 3: WebSocket Security",
+      "timestamp": "2026-03-13T14:35:17.870701",
+      "results": [
+        {
+          "test_id": "VULN-WS-01",
+          "name": "Unauthenticated WebSocket Access",
+          "severity": "HIGH",
+          "vulnerable": false,
+          "details": [
+            "websocket-client not installed - test skipped"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-004",
+          "name": "Rate Limit Race Condition",
+          "severity": "HIGH",
+          "vulnerable": true,
+          "details": [
+            "Total requests: 200",
+            "Successful (200): 200",
+            "Rate limited (429): 0",
+            "Time elapsed: 0.95s",
+            "RATE LIMIT BYPASS: 200 requests succeeded (> 100 limit)",
+            "No rate limiting detected"
+          ],
+          "evidence": [
+            "Success rate: 200/200"
+          ]
+        },
+        {
+          "test_id": "VULN-003",
+          "name": "Unsigned Commands Accepted",
+          "severity": "CRITICAL",
+          "vulnerable": false,
+          "details": [
+            "Device not found (expected if no devices)"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-WS-04",
+          "name": "Cross-Tenant WebSocket Access",
+          "severity": "MEDIUM",
+          "vulnerable": false,
+          "details": [
+            "websocket-client not installed - test skipped"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-WS-05",
+          "name": "WebSocket Replay Attack",
+          "severity": "MEDIUM",
+          "vulnerable": false,
+          "details": [
+            "websocket-client not installed - test skipped"
+          ],
+          "evidence": []
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "vulnerable": 1
+      }
+    },
+    {
+      "phase": "Phase 4: Crypto & Configuration",
+      "timestamp": "2026-03-13T14:35:23.759258",
+      "results": [
+        {
+          "test_id": "VULN-001",
+          "name": "Hardcoded Keys in Source",
+          "severity": "CRITICAL",
+          "vulnerable": false,
+          "details": [
+            "Test error: 'gbk' codec can't decode byte 0xbf in position 2: illegal multibyte sequence"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-NONCE",
+          "name": "Nonce Replay Attack",
+          "severity": "HIGH",
+          "vulnerable": false,
+          "details": [
+            "First request: 404",
+            "Replay request: 404",
+            "Device not found (expected if no devices)"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "VULN-008",
+          "name": "Redis Failure Mode",
+          "severity": "HIGH",
+          "vulnerable": true,
+          "details": [
+            "150 requests: 150 success, 0 rate limited",
+            "No rate limiting detected - possible Redis failure mode issue",
+            "Memory fallback may allow excessive requests"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "CRYPTO-01",
+          "name": "Encryption Key Management",
+          "severity": "MEDIUM",
+          "vulnerable": false,
+          "details": [
+            "Test error: 'gbk' codec can't decode byte 0xbf in position 2: illegal multibyte sequence"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "CRYPTO-02",
+          "name": "Session Management",
+          "severity": "MEDIUM",
+          "vulnerable": false,
+          "details": [
+            "Token expires at: 2026-03-14 14:35:23",
+            "Token duration: 23:59:59.689758",
+            "Refresh endpoint response: 400"
+          ],
+          "evidence": []
+        },
+        {
+          "test_id": "CRYPTO-03",
+          "name": "Cookie Security",
+          "severity": "LOW",
+          "vulnerable": true,
+          "details": [
+            "Cookie: accessToken",
+            "  - Secure: False",
+            "  - HttpOnly: True",
+            "  - SameSite: Strict",
+            "Cookie 'accessToken' missing Secure flag",
+            "Cookie: refreshToken",
+            "  - Secure: False",
+            "  - HttpOnly: True",
+            "  - SameSite: Strict",
+            "Cookie 'refreshToken' missing Secure flag"
+          ],
+          "evidence": []
+        }
+      ],
+      "summary": {
+        "total": 6,
+        "vulnerable": 2
+      }
+    }
+  ],
+  "attack_chains": {
+    "title": "AetherGuard Security Assessment - Attack Chain Report",
+    "timestamp": "2026-03-13T14:35:25.156318",
+    "summary": {
+      "total_chains": 3,
+      "successful_chains": 1,
+      "critical_vulnerabilities": [
+        {
+          "chain": "Cross-Tenant Data Access Attack Chain",
+          "impact": "Cross-tenant data access possible - Data breach risk",
+          "recommendation": "Enforce tenant isolation at database query level"
+        }
+      ]
+    },
+    "attack_chains": [
+      {
+        "name": "JWT Forgery -> RCE Attack Chain",
+        "success": false,
+        "steps": [
+          {
+            "step": 1,
+            "description": "Authenticate with hardcoded API key",
+            "success": false,
+            "details": "API key rejected: 401"
+          }
+        ],
+        "final_impact": null
+      },
+      {
+        "name": "Token Theft -> Persistence Attack Chain",
+        "success": false,
+        "steps": [
+          {
+            "step": 1,
+            "description": "Obtain auth token",
+            "success": true,
+            "details": "Got access and refresh tokens"
+          },
+          {
+            "step": 2,
+            "description": "Analyze token",
+            "success": true,
+            "details": "Token payload: {\n  \"userId\": \"2a6f45dc-261c-4c1d-94c0-74fc803d8bc8\",\n  \"email\": \"admin@aetherguard.local\",\n  \"username\": \"Admin\",\n  \"role\": \"admin\",\n  \"plan\": \"starter\",\n  \"tenantId\": \"d0bd48be-b8a3-4921-b985-daac4de4ca69\",\n  \"iat\": 1773383724,\n  \"exp\": 1773470124\n}"
+          },
+          {
+            "step": 3,
+            "description": "Test token revocation",
+            "success": true,
+            "details": "Token properly revoked: 401"
+          }
+        ],
+        "final_impact": null
+      },
+      {
+        "name": "Cross-Tenant Data Access Attack Chain",
+        "success": true,
+        "steps": [
+          {
+            "step": 1,
+            "description": "Authenticate",
+            "success": true,
+            "details": "Got admin token"
+          },
+          {
+            "step": 2,
+            "description": "Access tenant victim-tenant",
+            "success": true,
+            "details": "Got data: data"
+          },
+          {
+            "step": 2,
+            "description": "Access tenant other-tenant",
+            "success": true,
+            "details": "Got data: data"
+          },
+          {
+            "step": 2,
+            "description": "Access tenant tenant-123",
+            "success": true,
+            "details": "Got data: data"
+          },
+          {
+            "step": 2,
+            "description": "Access tenant production",
+            "success": true,
+            "details": "Got data: data"
+          }
+        ],
+        "final_impact": "Cross-tenant data access possible - Data breach risk"
+      }
+    ],
+    "recommendations": []
+  }
+}

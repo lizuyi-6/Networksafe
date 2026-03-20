@@ -61,6 +61,7 @@ jest.mock('../../config/database', () => ({
 jest.mock('../../utils/logger', () => ({
   __esModule: true,
   default: {
+    debug: jest.fn(),
     error: jest.fn(),
     info: jest.fn(),
     warn: jest.fn()
@@ -251,7 +252,7 @@ describe('Scanner Routes', () => {
   });
 
   describe('GET /api/scanner', () => {
-    it('should return backward compatible scan results', async () => {
+    it('should return backward compatible scan results inside the API envelope', async () => {
       (scannerTaskService.getHistory as jest.Mock).mockReturnValue([
         { id: 'task-001' }
       ]);
@@ -265,16 +266,23 @@ describe('Scanner Routes', () => {
       const response = await request(app).get('/api/scanner');
 
       expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.success).toBe(true);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data[0]).toMatchObject({
+        name: 'Test Finding',
+        severity: 'High',
+        status: 'Open'
+      });
     });
 
-    it('should return empty array if no tasks', async () => {
+    it('should return empty results inside the API envelope if no tasks exist', async () => {
       (scannerTaskService.getHistory as jest.Mock).mockReturnValue([]);
 
       const response = await request(app).get('/api/scanner');
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual([]);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual([]);
     });
   });
 
@@ -314,7 +322,8 @@ describe('Scanner Routes', () => {
       const response = await request(app).get('/api/scanner/report/task-001');
 
       expect(response.status).toBe(200);
-      expect(response.body.taskId).toBe('task-001');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.taskId).toBe('task-001');
     });
 
     it('should return 404 for non-existent task', async () => {

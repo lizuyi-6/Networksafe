@@ -100,7 +100,7 @@ function parseLastTest(value: any): AIEndpointRecord['lastTest'] {
 class AIEndpointStoreService {
   private schemaReady = false;
 
-  ensureSchema(): void {
+  prepare(): void {
     if (this.schemaReady) {
       return;
     }
@@ -139,8 +139,21 @@ class AIEndpointStoreService {
     this.schemaReady = true;
   }
 
+  private assertPrepared(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+      return;
+    }
+
+    throw new Error('AI endpoint schema not initialized. Call aiEndpointStoreService.prepare() during bootstrap.');
+  }
+
   async ensureDefaults(tenantId: string, actorId = 'system'): Promise<void> {
-    this.ensureSchema();
+    this.assertPrepared();
     const existing = postgresShadowStoreService.canServeReads()
       ? await postgresShadowStoreService.queryOne<any>(`
           SELECT id

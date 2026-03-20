@@ -1,4 +1,4 @@
-# FluxGuard Pro - 安全架构部署指南
+﻿# AetherGuard - 安全架构部署指南
 
 ## 架构修复概述
 
@@ -171,7 +171,7 @@ curl -X POST http://localhost:3005/api/admin/agents/register \
 在目标服务器上创建Agent配置文件：
 
 ```bash
-# /etc/fluxguard/agent.config.json
+# /etc/AetherGuard/agent.config.json
 {
   "serverUrl": "https://your-control-server.com",
   "agentId": "agent-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -182,7 +182,7 @@ curl -X POST http://localhost:3005/api/admin/agents/register \
 ```
 
 **安全注意事项**：
-- 配置文件权限：`chmod 600 /etc/fluxguard/agent.config.json`
+- 配置文件权限：`chmod 600 /etc/AetherGuard/agent.config.json`
 - 考虑使用密钥管理系统（HashiCorp Vault, AWS Secrets Manager）
 - 定期轮换API密钥
 
@@ -190,14 +190,14 @@ curl -X POST http://localhost:3005/api/admin/agents/register \
 
 ```bash
 # 使用配置文件启动
-fluxguard-agent --config /etc/fluxguard/agent.config.json
+AetherGuard-agent --config /etc/AetherGuard/agent.config.json
 
 # 或使用环境变量（不推荐生产环境）
-export FLUXGUARD_SERVER_URL="https://your-control-server.com"
-export FLUXGUARD_AGENT_ID="agent-..."
-export FLUXGUARD_API_KEY="agent_..."
-export FLUXGUARD_SECRET_KEY="..."
-fluxguard-agent
+export AetherGuard_SERVER_URL="https://your-control-server.com"
+export AetherGuard_AGENT_ID="agent-..."
+export AetherGuard_API_KEY="agent_..."
+export AetherGuard_SECRET_KEY="..."
+AetherGuard-agent
 ```
 
 ---
@@ -214,7 +214,7 @@ JWT_SECRET=your-production-jwt-secret-min-32-chars
 AUDIT_LOG_SECRET=your-audit-log-secret-for-signing
 
 # 数据库
-DATABASE_PATH=/var/lib/fluxguard/database.db
+DATABASE_PATH=/var/lib/AetherGuard/database.db
 
 # Redis
 REDIS_URL=redis://:your-redis-password@localhost:6379
@@ -225,13 +225,13 @@ REDIS_PASSWORD=your-redis-password
 
 ```bash
 # 方式1: 配置文件（推荐）
-FLUXGUARD_CONFIG_FILE=/etc/fluxguard/agent.config.json
+AetherGuard_CONFIG_FILE=/etc/AetherGuard/agent.config.json
 
 # 方式2: 环境变量
-FLUXGUARD_SERVER_URL=wss://control-server.com
-FLUXGUARD_AGENT_ID=agent-uuid-from-registration
-FLUXGUARD_API_KEY=agent-key-from-registration
-FLUXGUARD_SECRET_KEY=secret-key-from-registration
+AetherGuard_SERVER_URL=wss://control-server.com
+AetherGuard_AGENT_ID=agent-uuid-from-registration
+AetherGuard_API_KEY=agent-key-from-registration
+AetherGuard_SECRET_KEY=secret-key-from-registration
 ```
 
 ---
@@ -245,11 +245,11 @@ FLUXGUARD_SECRET_KEY=secret-key-from-registration
 const apiKey = 'agent_1234567890';
 
 # ✅ 正确 - 从配置文件读取
-const config = loadConfig('/etc/fluxguard/agent.config.json');
+const config = loadConfig('/etc/AetherGuard/agent.config.json');
 const apiKey = config.apiKey;
 
 # ✅ 更好 - 使用密钥管理系统
-const apiKey = await vault.read('secret/fluxguard/agent/api-key');
+const apiKey = await vault.read('secret/AetherGuard/agent/api-key');
 ```
 
 ### 2. 网络安全
@@ -290,7 +290,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ```bash
 # 检查认证状态
-tail -f /var/log/fluxguard/agent.log
+tail -f /var/log/AetherGuard/agent.log
 
 # 验证凭证
 curl -X POST /api/admin/agents/verify \
@@ -323,12 +323,12 @@ curl /api/admin/audit/logs?targetId=$AGENT_ID
 
 1. **备份现有配置**
    ```bash
-   cp -r /etc/fluxguard /etc/fluxguard.backup
+   cp -r /etc/AetherGuard /etc/AetherGuard.backup
    ```
 
 2. **通过API重新注册所有Agent**
    ```bash
-   for agent in $(ls /etc/fluxguard/agents/); do
+   for agent in $(ls /etc/AetherGuard/agents/); do
      # 读取旧配置
      hostname=$(cat $agent/hostname)
      platform=$(cat $agent/platform)
@@ -342,13 +342,13 @@ curl /api/admin/audit/logs?targetId=$AGENT_ID
 3. **更新Agent配置**
    ```bash
    # 用新凭证替换配置
-   fluxguard-agent --migrate --old-config /etc/fluxguard.backup \
+   AetherGuard-agent --migrate --old-config /etc/AetherGuard.backup \
                            --new-credentials new-creds.json
    ```
 
 4. **验证连接**
    ```bash
-   fluxguard-agent --test-connection
+   AetherGuard-agent --test-connection
    ```
 
 ---
@@ -392,7 +392,7 @@ curl "http://localhost:3005/api/admin/audit/logs?category=command&limit=20" \
 
 ## 总结
 
-通过这次安全重构，FluxGuard Pro现在具有：
+通过这次安全重构，AetherGuard现在具有：
 
 ✅ **服务端控制Agent注册** - 防止Agent ID伪造
 ✅ **HMAC命令签名** - 防止命令伪造和注入

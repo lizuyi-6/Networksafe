@@ -19,8 +19,12 @@ function normalizeArtifactStore(value?: string): ArtifactStoreMode {
 }
 
 function normalizeDatabaseMode(value?: string): DatabaseMode {
-  const normalized = String(value || 'sqlite').trim().toLowerCase() as DatabaseMode;
-  return VALID_DATABASE_MODES.has(normalized) ? normalized : 'sqlite';
+  const normalized = String(value || '').trim().toLowerCase() as DatabaseMode;
+  if (VALID_DATABASE_MODES.has(normalized)) {
+    return normalized;
+  }
+
+  return getRuntimeProfile() === 'prod' ? 'postgres' : 'sqlite';
 }
 
 function normalizeRuntimeProfile(value?: string): RuntimeProfile {
@@ -58,7 +62,7 @@ export function getRuntimeProfile(): RuntimeProfile {
 }
 
 export function isSqliteFallbackEnabled(): boolean {
-  return normalizeBoolean(process.env.SQLITE_FALLBACK_ENABLED, true);
+  return normalizeBoolean(process.env.SQLITE_FALLBACK_ENABLED, getRuntimeProfile() !== 'prod');
 }
 
 export function isRuntimeEmulatorEnabled(): boolean {

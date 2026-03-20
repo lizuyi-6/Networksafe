@@ -3,10 +3,14 @@ import { createHash, randomUUID } from 'crypto';
 import { posix as pathPosix } from 'path';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
 import { InputValidator } from '../../security/input-validator';
-import { getDatabase } from '../../config/database';
-import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
 import auditLogger from '../../security/audit-logger.service';
 import { DeploymentTarget } from '../../services/platform-config.service';
+import {
+  getDeploymentProfile,
+  getNextDeploymentProfileVersion,
+  listDeploymentProfiles,
+  saveDeploymentProfile
+} from '../../modules/deployments/deployment-profile.repository';
 
 // SECURITY FIX CVE-2026-014: Add input validation to deployments routes
 const inputValidator = new InputValidator();
@@ -30,160 +34,6 @@ const SUPPORTED_SERVER_TYPES: DeploymentTarget[] = [
   'binary_agent',
   'k8s_daemonset'
 ];
-
-function ensureSchema(): void {
-  const db = getDatabase();
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS deployment_profiles (
-      id TEXT PRIMARY KEY,
-      tenant_id TEXT NOT NULL,
-      site_id TEXT,
-      server_type TEXT NOT NULL,
-      name TEXT,
-      profile_json TEXT NOT NULL,
-      config_text TEXT NOT NULL,
-      env_snippet TEXT NOT NULL,
-      checksum TEXT NOT NULL,
-      version INTEGER NOT NULL,
-      created_by TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    )
-  `);
-}
-
-async function getDeploymentRow(id: string, tenantId: string) {
-  if (postgresShadowStoreService.canServeReads()) {
-    return await postgresShadowStoreService.queryOne<any>(`
-      SELECT *
-      FROM deployment_profiles
-      WHERE id = $1 AND tenant_id = $2
-      LIMIT 1
-    `, [id, tenantId]);
-  }
-
-  return getDatabase().prepare(`
-    SELECT *
-    FROM deployment_profiles
-    WHERE id = ? AND tenant_id = ?
-  `).get(id, tenantId) as any;
-}
-
-async function listDeploymentRows(tenantId: string, siteId: string | null, limit: number) {
-  if (postgresShadowStoreService.canServeReads()) {
-    if (siteId) {
-      return await postgresShadowStoreService.queryAll<any>(`
-        SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
-        FROM deployment_profiles
-        WHERE tenant_id = $1 AND site_id = $2
-        ORDER BY created_at DESC
-        LIMIT $3
-      `, [tenantId, siteId, limit]);
-    }
-    return await postgresShadowStoreService.queryAll<any>(`
-      SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
-      FROM deployment_profiles
-      WHERE tenant_id = $1
-      ORDER BY created_at DESC
-      LIMIT $2
-    `, [tenantId, limit]);
-  }
-
-  const db = getDatabase();
-  if (siteId) {
-    return db.prepare(`
-      SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
-      FROM deployment_profiles
-      WHERE tenant_id = ? AND site_id = ?
-      ORDER BY created_at DESC
-      LIMIT ?
-    `).all(tenantId, siteId, limit) as any[];
-  }
-
-  return db.prepare(`
-    SELECT id, site_id, server_type, name, checksum, version, created_by, created_at
-    FROM deployment_profiles
-    WHERE tenant_id = ?
-    ORDER BY created_at DESC
-    LIMIT ?
-  `).all(tenantId, limit) as any[];
-}
-
-async function getNextVersion(tenantId: string, serverType: string, siteId: string | null) {
-  if (postgresShadowStoreService.canServeReads()) {
-    const row = await postgresShadowStoreService.queryOne<any>(`
-      SELECT MAX(version) AS "maxVersion"
-      FROM deployment_profiles
-      WHERE tenant_id = $1 AND server_type = $2 AND ((site_id = $3) OR ($3 IS NULL AND site_id IS NULL))
-    `, [tenantId, serverType, siteId]);
-    return (Number(row?.maxVersion || 0) || 0) + 1;
-  }
-
-  const row = getDatabase().prepare(`
-    SELECT MAX(version) as maxVersion
-    FROM deployment_profiles
-    WHERE tenant_id = ? AND server_type = ? AND (site_id = ? OR (? IS NULL AND site_id IS NULL))
-  `).get(tenantId, serverType, siteId, siteId) as any;
-  return (Number(row?.maxVersion || 0) || 0) + 1;
-}
-
-async function persistDeployment(row: Record<string, any>) {
-  if (postgresShadowStoreService.canServeReads()) {
-    await postgresShadowStoreService.execute(`
-      INSERT INTO deployment_profiles
-      (id, tenant_id, site_id, server_type, name, profile_json, config_text, env_snippet, checksum, version, created_by, created_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-      ON CONFLICT (id)
-      DO UPDATE SET
-        tenant_id = EXCLUDED.tenant_id,
-        site_id = EXCLUDED.site_id,
-        server_type = EXCLUDED.server_type,
-        name = EXCLUDED.name,
-        profile_json = EXCLUDED.profile_json,
-        config_text = EXCLUDED.config_text,
-        env_snippet = EXCLUDED.env_snippet,
-        checksum = EXCLUDED.checksum,
-        version = EXCLUDED.version,
-        created_by = EXCLUDED.created_by,
-        created_at = EXCLUDED.created_at
-    `, [
-      row.id,
-      row.tenant_id,
-      row.site_id,
-      row.server_type,
-      row.name,
-      row.profile_json,
-      row.config_text,
-      row.env_snippet,
-      row.checksum,
-      row.version,
-      row.created_by,
-      row.created_at
-    ]);
-  }
-
-  getDatabase().prepare(`
-    INSERT OR REPLACE INTO deployment_profiles
-    (id, tenant_id, site_id, server_type, name, profile_json, config_text, env_snippet, checksum, version, created_by, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    row.id,
-    row.tenant_id,
-    row.site_id,
-    row.server_type,
-    row.name,
-    row.profile_json,
-    row.config_text,
-    row.env_snippet,
-    row.checksum,
-    row.version,
-    row.created_by,
-    row.created_at
-  );
-
-  if (!postgresShadowStoreService.canServeReads()) {
-    void postgresShadowStoreService.upsert('deployment_profiles', row);
-  }
-}
 
 function renderNginx(profile: any): string {
   return `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=${profile.rateLimit}r/m;
@@ -799,7 +649,6 @@ router.post('/generate', (req: AuthenticatedRequest, res: Response) => {
     });
   }
 
-  ensureSchema();
   const serverType = req.body?.serverType;
   const profile = req.body?.profile || {};
   const validation = validateProfile(profile);
@@ -828,7 +677,6 @@ router.post('/generate', (req: AuthenticatedRequest, res: Response) => {
 
 router.post('/save', async (req: AuthenticatedRequest, res: Response) => {
   try {
-  ensureSchema();
   const serverType = req.body?.serverType;
   const profile = req.body?.profile || {};
   const siteId = req.body?.siteId || null;
@@ -846,12 +694,12 @@ router.post('/save', async (req: AuthenticatedRequest, res: Response) => {
   const envSnippet = rendered.envSnippet;
 
   const tenantId = tenantOf(req);
-  const version = await getNextVersion(tenantId, serverType, siteId);
+  const version = await getNextDeploymentProfileVersion(tenantId, serverType, siteId);
   const checksum = createHash('sha256').update(`${configText}\n${envSnippet}`).digest('hex');
   const id = randomUUID();
   const createdAt = nowISO();
 
-  await persistDeployment({
+  await saveDeploymentProfile({
     id,
     tenant_id: tenantId,
     site_id: siteId,
@@ -893,9 +741,8 @@ router.post('/save', async (req: AuthenticatedRequest, res: Response) => {
 
 router.get('/:id/download', async (req: AuthenticatedRequest, res: Response) => {
   try {
-  ensureSchema();
   const format = String(req.query.format || 'bundle');
-  const row = await getDeploymentRow(req.params.id, tenantOf(req));
+  const row = await getDeploymentProfile(req.params.id, tenantOf(req));
   if (!row) {
     return res.status(404).json({ success: false, error: 'backend.deployment_profile_not_found' });
   }
@@ -964,11 +811,10 @@ router.get('/:id/download', async (req: AuthenticatedRequest, res: Response) => 
 
 router.get('/history/list', async (req: AuthenticatedRequest, res: Response) => {
   try {
-  ensureSchema();
   const limit = Math.min(parseInt(String(req.query.limit || '20'), 10) || 20, 200);
   const siteId = (req.query.siteId as string) || null;
   const tenantId = tenantOf(req);
-  const rows = await listDeploymentRows(tenantId, siteId, limit);
+  const rows = await listDeploymentProfiles(tenantId, siteId, limit);
 
   return res.json({ success: true, data: rows });
   } catch (error: any) {

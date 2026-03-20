@@ -151,8 +151,13 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
       next();
     } catch (error) {
       logger.error('Rate limit middleware error', { error });
-      // Fail open - allow request if rate limiter fails
-      next();
+      // SECURITY FIX: Fail closed - reject request if rate limiter fails
+      // This prevents attackers from bypassing rate limits by causing Redis failures
+      res.status(503).json({
+        error: 'backend.service_temporarily_unavailable',
+        code: 'RATE_LIMIT_CHECK_FAILED',
+        retryAfter: 5,
+      });
     }
   };
 }

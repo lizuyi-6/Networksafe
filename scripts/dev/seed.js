@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+﻿const fetch = require('node-fetch');
 
 async function register(email, username, password) {
     const res = await fetch('http://localhost:3005/api/auth/register', {
@@ -11,8 +11,8 @@ async function register(email, username, password) {
 }
 
 async function run() {
-    await register('tenant_test@fluxguard.local', 'TenantTest', 'Password123!');
-    await register('admin_test@fluxguard.local', 'AdminTest', 'Password123!');
+    await register('tenant_test@AetherGuard.local', 'TenantTest', 'Password123!');
+    await register('admin_test@AetherGuard.local', 'AdminTest', 'Password123!');
 }
 
 run();

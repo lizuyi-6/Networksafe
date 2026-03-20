@@ -1,4 +1,4 @@
-const { Client } = require('ssh2');
+﻿const { Client } = require('ssh2');
 const fs = require('fs');
 const { resolveOpsFile } = require('./_paths');
 
@@ -12,7 +12,7 @@ conn.on('ready', () => {
         'echo "=== Kill old PM2 ==="',
         'pm2 delete all 2>&1 || true',
         'echo "=== Start fresh ==="',
-        'cd /opt/aetherguard/backend && NODE_ENV=development DISABLE_REDIS=true PORT=3005 pm2 start dist/index.js --name fluxguard-backend 2>&1',
+        'cd /opt/aetherguard/backend && NODE_ENV=development DISABLE_REDIS=true PORT=3005 pm2 start dist/index.js --name AetherGuard-backend 2>&1',
         'sleep 3',
         'echo "=== PM2 status ==="',
         'pm2 list 2>&1',

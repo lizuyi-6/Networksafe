@@ -160,6 +160,12 @@ const Alerts = () => {
             subtitle="真实告警、状态流转和近期运营上下文在同一页收口展示。"
             actions={
                 <div className="flex flex-wrap gap-2">
+                    <Link
+                        to="/rules"
+                        className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/30"
+                    >
+                        Open Rules Ops
+                    </Link>
                     {['all', 'critical', 'high', 'medium', 'low'].map((value) => (
                         <button
                             key={value}

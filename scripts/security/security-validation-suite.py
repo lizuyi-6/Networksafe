@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-Security Validation Suite for AetherGuard (FluxGuard)
+Security Validation Suite for AetherGuard (AetherGuard)
 Tests all security fixes applied in Round 9
 """
 

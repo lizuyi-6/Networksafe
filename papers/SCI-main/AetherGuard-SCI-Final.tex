@@ -1,0 +1,105 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+
+% Basic packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{balance}
+\usepackage{url}
+
+% Theorem environments
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{property}{Property}
+
+% Custom commands
+\newcommand{\systemname}{AetherGuard}
+\newcommand{\agentset}{\mathcal{A}}
+\newcommand{\threatset}{\mathcal{T}}
+\newcommand{\actionset}{\mathcal{X}}
+\newcommand{\decision}{\mathcal{D}}
+
+% Color definitions
+\definecolor{darkblue}{RGB}{0,51,102}
+\definecolor{darkgreen}{RGB}{0,102,51}
+\definecolor{darkred}{RGB}{153,0,0}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=darkblue,
+    citecolor=darkblue,
+    urlcolor=darkblue
+}
+
+\begin{document}
+
+% Title
+\title{\systemname: A Multi-Agent AI Architecture for Distributed Server Security}
+
+% Authors (placeholder for anonymous review)
+\author{
+    \IEEEauthorblockN{Anonymous Authors}
+    \IEEEauthorblockA{
+        Institution Name\\
+        Email: anonymous@institution.edu
+    }
+}
+
+% Make title
+\maketitle
+
+% Include sections
+\input{sections/abstract-intro}
+\input{sections/related-work}
+\input{sections/system-architecture}
+\input{sections/algorithms}
+\input{sections/security-analysis}
+\input{sections/implementation}
+\input{sections/evaluation}
+\input{sections/conclusion}
+
+% References
+\bibliographystyle{IEEEtran}
+\bibliography{references/main}
+
+% Appendix
+\appendix
+
+\section{Additional Mathematical Proofs}
+\label{app:proofs}
+
+\subsection{Proof of Theorem 1: Command Authentication Security}
+
+Complete proof with detailed cryptographic analysis.
+
+\subsection{Proof of Theorem 2: Audit Log Integrity}
+
+Complete proof with hash chain analysis.
+
+\section{Supplementary Experimental Results}
+\label{app:experiments}
+
+Additional experimental results and raw data.
+
+\section{Implementation Details}
+\label{app:implementation}
+
+Additional code snippets and configuration examples.
+
+\section{Dataset Description}
+\label{app:dataset}
+
+Detailed description of datasets used in evaluation.
+
+\end{document}

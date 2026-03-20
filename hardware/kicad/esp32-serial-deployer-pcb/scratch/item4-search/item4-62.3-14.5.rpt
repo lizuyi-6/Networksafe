@@ -1,0 +1,72 @@
+** Drc report for item4-62.3-14.5.kicad_pcb **
+** Created on 2026-03-15T16:27:55+0800 **
+
+** Found 15 DRC violations **
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1454 mm)
+    规则: netclass 'Default'; error
+    @(62.6397 mm, 15.0454 mm): 走线 [USB_C_DN] (F.Cu), 长度: 2.8682 mm
+    @(62.3000 mm, 14.5000 mm): 过孔 [GND] (F.Cu - B.Cu)
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(94.0000 mm, 33.0000 mm): 封装 J2
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(88.0000 mm, 16.0000 mm): 封装 J3
+
+** Found 4 unconnected pads **
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(71.7500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 9 [3V3]
+    @(70.7500 mm, 35.9625 mm): 走线 [3V3] (F.Cu), 长度: 1.0076 mm
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(43.8760 mm, 27.8396 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(41.8625 mm, 26.0000 mm): F.Cu 上 U4 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(60.9375 mm, 19.6481 mm): 走线 [GND] (F.Cu), 长度: 1.4019 mm
+    @(60.2144 mm, 23.9031 mm): 走线 [GND] (F.Cu), 长度: 0.4238 mm
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(66.0000 mm, 27.6898 mm): 走线 [GND] (F.Cu), 长度: 1.5352 mm
+    @(70.0375 mm, 33.2500 mm): F.Cu 上 U3 的焊盘 2 [GND]
+
+** Found 0 Footprint errors **
+
+** End of Report **

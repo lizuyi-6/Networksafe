@@ -1,11 +1,14 @@
-/**
- * FluxGuard ESP32 - 优化版加密模块
+﻿/**
+ * AetherGuard ESP32 - 优化版加密模块
  * 
  * 优化策略：
  * - 可选打开 AES-128 (比 AES-256 快 40%)
  * - 使用 ESP32 硬件加速器
  * - 避免动态内存分配
  * - 简化的 XOR 备选方案 (极低功耗场景)
+ *
+ * NOTE: Experimental cloud-device module. It is not compiled by the active
+ * serial-deployer PlatformIO target.
  */
 
 #ifndef CRYPTO_H

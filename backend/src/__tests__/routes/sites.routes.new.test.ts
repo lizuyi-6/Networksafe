@@ -121,6 +121,7 @@ jest.mock('dns', () => ({
 jest.mock('../../utils/logger', () => ({
   __esModule: true,
   default: {
+    debug: jest.fn(),
     error: jest.fn(),
     info: jest.fn(),
     warn: jest.fn()
@@ -200,7 +201,7 @@ describe('Sites Routes', () => {
           sslEnabled: true
         });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
 
       // Verify site was created in database

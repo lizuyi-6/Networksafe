@@ -18,12 +18,16 @@ const defaultEnv = {
   JWT_SECRET: process.env.JWT_SECRET || 'release-verify-jwt-secret-minimum-32-chars',
   AUDIT_LOG_SECRET: process.env.AUDIT_LOG_SECRET || 'release-verify-audit-secret-minimum-32',
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || 'AetherGuardRedisPassword2026!',
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@fluxguard.com',
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@aetherguard.com',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'AetherGuardAdminPass2026!',
+  DEVICE_COMMAND_SECRET: process.env.DEVICE_COMMAND_SECRET || 'AetherGuardReleaseCommandSecret2026!',
+  ENABLE_DEV_LOGIN_PRESETS: process.env.ENABLE_DEV_LOGIN_PRESETS || 'false',
+  DB_MODE: process.env.DB_MODE || 'postgres',
   PLAYWRIGHT_BASE_URL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8080',
 };
 
 const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const nodeExecutable = process.execPath;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -165,6 +169,17 @@ async function checkHttp(url, label) {
   }
 }
 
+async function checkReadiness(url, label) {
+  const response = await fetch(url, { redirect: 'manual' });
+  const payload = await response.json().catch(() => null);
+  const body = payload && typeof payload === 'object' && 'data' in payload
+    ? payload.data
+    : payload;
+  if (!response.ok || body?.status !== 'ready') {
+    throw new Error(`${label} failed with ${response.status}: ${JSON.stringify(payload)}`);
+  }
+}
+
 async function runRustChecks() {
   const cargoAvailable = await new Promise((resolve) => {
     const child = spawn(process.platform === 'win32' ? 'where' : 'which', ['cargo'], {
@@ -213,10 +228,13 @@ async function main() {
     await runStep('backend lint', npmExecutable, ['run', 'lint'], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend typecheck', npmExecutable, ['run', 'typecheck'], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend tests', npmExecutable, ['run', 'test:coverage', '--', '--runInBand'], { cwd: path.join(workspaceRoot, 'backend') });
+    await runStep('backend route db guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-route-db-access.mjs')]);
 
     await runStep('frontend install', npmExecutable, ['ci'], { cwd: path.join(workspaceRoot, 'frontend') });
     await runStep('frontend lint', npmExecutable, ['run', 'lint'], { cwd: path.join(workspaceRoot, 'frontend') });
+    await runStep('frontend typecheck', npmExecutable, ['run', 'typecheck'], { cwd: path.join(workspaceRoot, 'frontend') });
     await runStep('frontend build', npmExecutable, ['run', 'build'], { cwd: path.join(workspaceRoot, 'frontend') });
+    await runStep('frontend direct api guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-no-direct-api-fetch.mjs')]);
 
     await runStep('e2e install', npmExecutable, ['ci'], { cwd: path.join(workspaceRoot, 'e2e') });
 
@@ -229,17 +247,17 @@ async function main() {
     );
 
     await waitForComposeServices(['redis', 'postgres', 'minio', 'fastpath', 'backend', 'frontend']);
-    await collectDockerArtifacts();
-
-    await checkHttp('http://127.0.0.1:3005/api/health', 'backend health');
-    await checkHttp('http://127.0.0.1:8080/', 'frontend home');
-    await runStep('fastpath self-check', 'docker', ['compose', 'exec', '-T', 'fastpath', 'aetherguard-fastpath', 'self-check']);
 
     await runStep('release e2e', npmExecutable, ['run', 'test:release'], {
       cwd: path.join(workspaceRoot, 'e2e'),
       env: defaultEnv,
     });
 
+    await checkHttp('http://127.0.0.1:3005/api/health/live', 'backend liveness');
+    await checkReadiness('http://127.0.0.1:3005/api/health/ready', 'backend readiness');
+    await checkHttp('http://127.0.0.1:3005/api/health/dependencies', 'backend dependency health');
+    await checkHttp('http://127.0.0.1:8080/', 'frontend home');
+    await runStep('fastpath self-check', 'docker', ['compose', 'exec', '-T', 'fastpath', 'aetherguard-fastpath', 'self-check']);
     await collectDockerArtifacts();
     fs.writeFileSync(
       path.join(artifactRoot, 'summary.json'),

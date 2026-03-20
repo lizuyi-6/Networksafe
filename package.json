@@ -2,7 +2,8 @@
   "scripts": {
     "build:ppt": "node scripts/generate-aetherguard-pitch-ppt.mjs",
     "build:video:demo": "node scripts/video/build-aetherguard-demo-video.mjs",
-    "verify:release": "node scripts/release/verify-release.mjs"
+    "verify:release": "node scripts/release/verify-release.mjs",
+    "replay:dataset:safe": "node scripts/dev/security_dataset_replay_safe.js"
   },
   "dependencies": {
     "playwright": "^1.58.2",

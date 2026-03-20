@@ -1,7 +1,7 @@
-# FluxGuard Pro - 攻击面图谱 (Attack Surface Mapping)
+﻿# AetherGuard - 攻击面图谱 (Attack Surface Mapping)
 
 **生成日期**: 2026-02-16
-**目标系统**: FluxGuard Pro v2.0.0
+**目标系统**: AetherGuard v2.0.0
 **架构类型**: 微服务 + WebSocket + Agent 模型
 
 ---
@@ -26,7 +26,7 @@
 │                             │                                        │
 │                             ▼                                        │
 │  ┌─────────────────────────────────────────────────────────────┐    │
-│  │              FluxGuard 后端 (Node.js:3005)                   │    │
+│  │              AetherGuard 后端 (Node.js:3005)                   │    │
 │  │  ┌───────────────────────────────────────────────────────┐  │    │
 │  │  │                    Express.js                          │  │    │
 │  │  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────┐  │  │    │
@@ -312,8 +312,8 @@
 
 | 服务 | 用户名 | 密码 | 来源 |
 |------|--------|------|------|
-| FluxGuard Admin | `admin` | `admin123` | README.md |
-| Redis | - | `FluxGuardRedis123!` | .env |
+| AetherGuard Admin | `admin` | `admin123` | README.md |
+| Redis | - | `AetherGuardRedis123!` | .env |
 | 生产 API Key | - | `prod-api-key` | .env |
 | 设备 API Key | - | `prod-device-key` | .env |
 

@@ -4,7 +4,7 @@
 
 This repository now includes a stronger capability baseline, but the validated status is mixed rather than "all strong claims passed".
 
-- Verified in the current workspace: Docker runtime, object-lock audit archive, notification outbox with retry tracking, persistent AI endpoint/config routing, `caddy` / `docker_compose` / `binary_agent` / `k8s_daemonset` bundle generation, Rust fastpath sidecar wiring, `/ws/device` plus `/ws/status` compatibility, OTA plus physical-confirmation smoke flow for `esp32-smoke`.
+- Verified in the current workspace: Docker runtime, object-lock audit archive, notification outbox with retry tracking, persistent AI endpoint/config routing, `caddy` / `docker_compose` / `binary_agent` / `k8s_daemonset` bundle generation, Rust fastpath sidecar wiring, and backend `/ws/device` plus `/ws/status` simulation compatibility with OTA plus physical-confirmation smoke flow for `esp32-smoke`.
 - Current benchmark evidence in this workspace does not justify the historical strongest claims. Latest smoke benchmark recorded about `1329.79 QPS`, `p95 21ms`, `agent CPU 6.22%`, `agent memory 99.64MB`, and no local Ollama latency because `127.0.0.1:11434` was unavailable.
 - Physical ESP32 board flashing, external Linux binary install/rollback, and `100,000+ QPS` / `<10ms local AI` / `<2% CPU` / `<50MB` remain unvalidated here.
 
@@ -46,10 +46,11 @@ AetherGuard 彻底重构了传统防火墙架构，采用创新的 **"中心化�
 - **一键复制**: 运维人员只需复制一行命令即可完成服务器接入。
 ![Deployment](docs/assets/deploy.png)
 
-### 5. 硬件网关与 ESP32 工具 (Devices)
-管理 **ESP32 Deployment Dongle** 和其他硬件安全节点。
-- **自动注册**: 运维人员插入 U 盘后，设备自动注册上线。
-- **远程管理**: 支持对分布在各个机房的 ESP32 设备进行远程管理。
+### 5. ESP32 串口部署器 (Devices)
+管理 **ESP32 Serial Deployer Prototype** 的本地部署流程与操作记录。
+- **面包板跳线原型**: 采用 ESP32 开发板、面包板、杜邦线和外接模块快速搭建本地部署器。
+- **本地串口部署**: 运维人员将外部 CP2102 切到部署模式后接入目标服务器，离线完成环境检测、备份与安装确认。
+- **物理安全确认**: 通过 OLED、三键、RGB 和蜂鸣器完成高风险操作的本地确认，避免误触发卸载。
 ![Devices](docs/assets/devices.png)
 
 ### 6. 主动漏洞扫描 (Monitoring)
@@ -98,8 +99,8 @@ graph TD
     end
     
     subgraph "硬件运维层"
-        ESP32[ESP32 Dongle] -- USB Console --> App1
-        ESP32_2[ESP32 Dongle] -- USB Console --> App2
+        ESP32[ESP32 Serial Deployer Prototype] -- "USB-TTL Short Cable" --> App1
+        ESP32_2[ESP32 Serial Deployer Prototype] -- "USB-TTL Short Cable" --> App2
     end
     
     subgraph "控制平面 Control Plane"
@@ -116,19 +117,25 @@ graph TD
 
 ## 🛠️ ESP32 部署工具 (Deployment Dongle)
 
-AetherGuard 独有的硬件部署方案，让安全运维变得触手可及。
+AetherGuard 当前的硬件基线是 **面包板跳线版 ESP32 串口部署器原型**，而不是量产外壳或双桥单板。
 
 ### 硬件清单 (BOM)
-- **主控**: ESP32-WROOM-32 (Type-C)
-- **显示**: 0.96寸 OLED (SSD1306)
-- **交互**: 3x 按键 (OK/Next/Back), 1x RGB LED, 1x 蜂鸣器
-- **通信**: CP2102 USB-TTL
+- **主控**: ESP32 开发板
+- **显示**: 0.96寸 OLED (SSD1306, 4-pin I2C)
+- **交互**: 3x 按键 (OK/Next/Back), 1x 共阴 RGB 模块, 1x 低电平触发有源蜂鸣器模块
+- **连接**: 1x 外部 CP2102, 杜邦线, 面包板
+- **按键引脚**: `GPIO18 / GPIO19 / GPIO23` (避开启动配置脚)
+- **发布构建**: `esp32/platformio.ini` 默认环境为 `serial_deployer_release`
 
 ### 使用流程
-1. **插入**: 将 Dongle 插入服务器 USB 口。
-2. **识别**: 设备自动识别 Linux/Windows 环境 (蓝灯亮起)。
-3. **确认**: 使用屏幕与按键确认安装操作 (防误触设计)。
-4. **运行**: 自动执行 Shell 脚本完成 Agent 部署 (绿灯呼吸)。
+1. **搭线**: OLED 接 `GPIO21/22`，按键接 `GPIO18/19/23` 到 `GND`，RGB 接 `GPIO25/26/27`，蜂鸣器模块接 `GPIO14`。
+2. **烧录/调试**: 优先使用 ESP32 开发板自带 USB；若板载 USB 不可用，再把外部 CP2102 临时接到 `GPIO3/1/GND`。
+3. **切到部署模式**: 断电后把外部 CP2102 改接到 `GPIO16/17/GND`，只接 `TXD/RXD/GND`，不要把 `VCC/5V/3V3` 反灌给 ESP32。
+4. **运行**: ESP32 发送 `AG:REQ:*` allow-list 请求，预装在 Linux 主机上的 serial helper 返回 `AG:BEGIN/*`、`AG:STEP/*`、`AG:OK/*`、`AG:ERR/*` 并执行部署。
+
+> 当前硬件基线是 **单颗外部 CP2102 的 USB-TTL 串口部署器原型**。同一时刻只能处于“烧录/调试”或“部署”其中一种模式，切换前必须断电或拔 USB。
+>
+> 仓库中的 `/ws/device`、OTA、physical-confirmation smoke 仅用于后端模拟链路与后续联网设备实验，不代表当前 ESP32 固件已支持远程网关模式。
 
 ---
 

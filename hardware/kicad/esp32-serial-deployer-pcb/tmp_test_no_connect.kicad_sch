@@ -1,0 +1,6441 @@
+﻿(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "75f2c042-0327-4f19-a1fa-6cc481318155")
+	(paper "A4")
+	(title_block
+		(title "ESP32 Serial Deployer PCB v1")
+		(date "2026-03-15")
+	)
+	(lib_symbols
+		(symbol "esp32-serial-deployer-pcb:ESP32_WROOM_32E_CORE"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at -11 -19.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "ESP32_WROOM_32E_CORE"
+				(at 0 19.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 21.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 23.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "ESP32_WROOM_32E_CORE_1_1"
+				(rectangle
+					(start -11 -17)
+					(end 11 17)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_in line
+					(at -13.54 -13.222222 0)
+					(length 2.54)
+					(name "3V3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -13.54 -9.444444 0)
+					(length 2.54)
+					(name "EN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -13.54 -5.666667 0)
+					(length 2.54)
+					(name "IO0"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -13.54 -1.888889 0)
+					(length 2.54)
+					(name "U0RXD/GPIO3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -13.54 1.888889 0)
+					(length 2.54)
+					(name "U0TXD/GPIO1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -13.54 5.666667 0)
+					(length 2.54)
+					(name "RX2/GPIO16"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -13.54 9.444444 0)
+					(length 2.54)
+					(name "TX2/GPIO17"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -13.54 13.222222 0)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 13.54 -13.222222 180)
+					(length 2.54)
+					(name "SDA/GPIO21"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 13.54 -9.444444 180)
+					(length 2.54)
+					(name "SCL/GPIO22"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 13.54 -5.666667 180)
+					(length 2.54)
+					(name "OK/GPIO18"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 13.54 -1.888889 180)
+					(length 2.54)
+					(name "NEXT/GPIO19"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 13.54 1.888889 180)
+					(length 2.54)
+					(name "BACK/GPIO23"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 13.54 5.666667 180)
+					(length 2.54)
+					(name "LED_R/GPIO25"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 13.54 9.444444 180)
+					(length 2.54)
+					(name "LED_G/GPIO26"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "15"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 13.54 13.222222 180)
+					(length 2.54)
+					(name "LED_B/GPIO27"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "16"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -3.666667 19.54 270)
+					(length 2.54)
+					(name "BUZZ/GPIO14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "17"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 3.666667 19.54 270)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "18"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:CP2102N_QFN24_MIN"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at -9 -14.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "CP2102N_QFN24_MIN"
+				(at 0 14.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 16.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 18.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "CP2102N_QFN24_MIN_1_1"
+				(rectangle
+					(start -9 -12)
+					(end 9 12)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -11.54 -8.571429 0)
+					(length 2.54)
+					(name "D+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -11.54 -5.142857 0)
+					(length 2.54)
+					(name "D-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -11.54 -1.714286 0)
+					(length 2.54)
+					(name "VBUS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -11.54 1.714286 0)
+					(length 2.54)
+					(name "VIO"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -11.54 5.142857 0)
+					(length 2.54)
+					(name "VDD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -11.54 8.571429 0)
+					(length 2.54)
+					(name "VREGIN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 11.54 -8 180)
+					(length 2.54)
+					(name "TXD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 11.54 -4 180)
+					(length 2.54)
+					(name "RXD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 11.54 0 180)
+					(length 2.54)
+					(name "DTR"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 11.54 4 180)
+					(length 2.54)
+					(name "RTS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 11.54 8 180)
+					(length 2.54)
+					(name "RSTb"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 14.54 270)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:USB_C_DEVICE_2P0"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at -7 -10.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "USB_C_DEVICE_2P0"
+				(at 0 10.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 12.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 14.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "USB_C_DEVICE_2P0_1_1"
+				(rectangle
+					(start -7 -8)
+					(end 7 8)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_out line
+					(at -9.54 -4 0)
+					(length 2.54)
+					(name "VBUS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -9.54 0 0)
+					(length 2.54)
+					(name "D+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -9.54 4 0)
+					(length 2.54)
+					(name "D-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 9.54 -4 180)
+					(length 2.54)
+					(name "CC1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 9.54 0 180)
+					(length 2.54)
+					(name "CC2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 9.54 4 180)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:USB_A_HOST_PIGTAIL"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at -7 -8.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "USB_A_HOST_PIGTAIL"
+				(at 0 8.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 10.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 12.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "USB_A_HOST_PIGTAIL_1_1"
+				(rectangle
+					(start -7 -6)
+					(end 7 6)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_out line
+					(at -9.54 -2 0)
+					(length 2.54)
+					(name "VBUS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -9.54 2 0)
+					(length 2.54)
+					(name "D-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 9.54 -2 180)
+					(length 2.54)
+					(name "D+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 9.54 2 180)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:AP2112K_33"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at -7 -9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "AP2112K_33"
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 11.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 13.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "AP2112K_33_1_1"
+				(rectangle
+					(start -7 -7)
+					(end 7 7)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_in line
+					(at -9.54 -3.5 0)
+					(length 2.54)
+					(name "VIN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -9.54 0 0)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -9.54 3.5 0)
+					(length 2.54)
+					(name "EN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 9.54 -2.333333 180)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 9.54 2.333333 180)
+					(length 2.54)
+					(name "VOUT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:R_GENERIC"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at -4 -5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "R_GENERIC"
+				(at 0 5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_GENERIC_1_1"
+				(rectangle
+					(start -4 -3)
+					(end 4 3)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -6.54 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 6.54 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:C_GENERIC"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at -4 -5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "C_GENERIC"
+				(at 0 5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "C_GENERIC_1_1"
+				(rectangle
+					(start -4 -3)
+					(end 4 3)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -6.54 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 6.54 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:FUSE_GENERIC"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "F"
+				(at -4 -5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "FUSE_GENERIC"
+				(at 0 5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "FUSE_GENERIC_1_1"
+				(rectangle
+					(start -4 -3)
+					(end 4 3)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -6.54 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 6.54 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:DIODE_GENERIC"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at -4 -5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "DIODE_GENERIC"
+				(at 0 5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "DIODE_GENERIC_1_1"
+				(rectangle
+					(start -4 -3)
+					(end 4 3)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -6.54 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 6.54 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:LED_GENERIC"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at -4 -5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "LED_GENERIC"
+				(at 0 5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "LED_GENERIC_1_1"
+				(rectangle
+					(start -4 -3)
+					(end 4 3)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -6.54 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 6.54 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:BUZZER_GENERIC"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "BZ"
+				(at -4 -5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "BUZZER_GENERIC"
+				(at 0 5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "BUZZER_GENERIC_1_1"
+				(rectangle
+					(start -4 -3)
+					(end 4 3)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -6.54 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 6.54 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:TP_GENERIC"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "TP"
+				(at -4 -5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "TP_GENERIC"
+				(at 0 5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "TP_GENERIC_1_1"
+				(rectangle
+					(start -4 -3)
+					(end 4 3)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -6.54 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 6.54 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:NPN_SOT23"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "Q"
+				(at -5 -6.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "NPN_SOT23"
+				(at 0 6.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 8.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 10.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "NPN_SOT23_1_1"
+				(rectangle
+					(start -5 -4)
+					(end 5 4)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -7.54 -1.333333 0)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -7.54 1.333333 0)
+					(length 2.54)
+					(name "E"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 7.54 0 180)
+					(length 2.54)
+					(name "C"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:SW_SPST_NO"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "SW"
+				(at -4 -5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "SW_SPST_NO"
+				(at 0 5.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SW_SPST_NO_1_1"
+				(rectangle
+					(start -4 -3)
+					(end 4 3)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -6.54 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 6.54 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:OLED_I2C_HDR_1x4"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at -7 -8.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "OLED_I2C_HDR_1x4"
+				(at 0 8.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 10.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 12.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "OLED_I2C_HDR_1x4_1_1"
+				(rectangle
+					(start -7 -6)
+					(end 7 6)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_in line
+					(at -9.54 -2 0)
+					(length 2.54)
+					(name "VCC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -9.54 2 0)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 9.54 -2 180)
+					(length 2.54)
+					(name "SCL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 9.54 2 180)
+					(length 2.54)
+					(name "SDA"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:RGB_LED_CC"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at -6 -7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "RGB_LED_CC"
+				(at 0 7.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 9.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 11.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "RGB_LED_CC_1_1"
+				(rectangle
+					(start -6 -5)
+					(end 6 5)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -8.54 -1.666667 0)
+					(length 2.54)
+					(name "R"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -8.54 1.666667 0)
+					(length 2.54)
+					(name "K"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 8.54 -1.666667 180)
+					(length 2.54)
+					(name "G"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 8.54 1.666667 180)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "esp32-serial-deployer-pcb:USB_ESD_2CH"
+			(pin_names
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at -5 -6.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Value" "USB_ESD_2CH"
+				(at 0 6.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 8.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 10.5 0)
+				(effects
+					(font
+						(size 1 1)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "USB_ESD_2CH_1_1"
+				(rectangle
+					(start -5 -4)
+					(end 5 4)
+					(stroke
+						(width 0.15)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -7.54 -1.333333 0)
+					(length 2.54)
+					(name "D+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -7.54 1.333333 0)
+					(length 2.54)
+					(name "D-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 7.54 0 180)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 20 30) (xy 24 30)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "cd1a286b-6e5a-458c-89b6-836d1e747c39")
+	)
+	(wire
+		(pts
+			(xy 20 56) (xy 24 56)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "ee35dd8f-ff3d-4a96-a309-f32e76b28724")
+	)
+	(wire
+		(pts
+			(xy 48 30) (xy 52 30)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "d143ef3f-1797-43bc-8c43-03cdaa52bf47")
+	)
+	(wire
+		(pts
+			(xy 48 56) (xy 52 56)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "f2d25e38-5877-4ddd-8ccd-7a83b8d58779")
+	)
+	(wire
+		(pts
+			(xy 70 28) (xy 76 28)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "31208c76-d1c8-4d38-9077-54d32f4ba144")
+	)
+	(wire
+		(pts
+			(xy 72 28) (xy 74 28)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "1cd3d635-ecf2-4fce-b4d2-00babc178b18")
+	)
+	(wire
+		(pts
+			(xy 56 12) (xy 56 16)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "5054c945-ab8e-49ad-b4aa-c1f0f429ee5d")
+	)
+	(wire
+		(pts
+			(xy 60 14) (xy 60 16)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "9c2258f0-2576-4610-95b6-0dd508c1c75c")
+	)
+	(text "ESP32 Single-Board PCB v1"
+		(at 18 8 0)
+		(effects
+			(font
+				(size 1.6 1.6)
+			)
+		)
+		(uuid "c01cd8b7-de44-466d-aa8d-e31d125f833b")
+	)
+	(text "Power / service USB-C / host bridge / UI peripherals"
+		(at 18 12 0)
+		(effects
+			(font
+				(size 1.1 1.1)
+			)
+		)
+		(uuid "9515ef5a-a26e-437b-88f1-416d7be6d6fe")
+	)
+	(text "Power path"
+		(at 16 24 0)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "c4730a8b-47d7-46e9-8795-a9ea78ef7dc1")
+	)
+	(text "Service / debug bridge"
+		(at 138 24 0)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "b5bac2d8-e33f-406e-8c7a-83881eb1928a")
+	)
+	(text "Host deployment bridge"
+		(at 138 102 0)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "bb53b810-b524-4642-b1e8-dabad09ea6be")
+	)
+	(text "ESP32 core + UI"
+		(at 56 84 0)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "8c8d934b-1ef8-4735-aac5-d83cc81fd155")
+	)
+	(text "CP2102N bridges are self-powered from 3V3; USB VBUS is sensed through divider and ORed into 5V_SYS through fuse + Schottky."
+		(at 14 182 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "3a881ae2-1c56-4691-8559-3bac75fe56cc")
+	)
+	(text "Host pigtail USB is dedicated to deployment UART2. Service USB-C is dedicated to flashing / debug UART0."
+		(at 14 186 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "ff7e34ff-69ea-498c-969d-5541168c4000")
+	)
+	(label "VBUS_USB_C_RAW"
+		(at 20 30 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4a8010d3-d837-427a-863d-54b7fa2de504")
+	)
+	(label "VBUS_HOST_RAW"
+		(at 20 56 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "f948675d-9035-42ac-bf56-e01d4125a938")
+	)
+	(label "VBUS_USB_C_PROT"
+		(at 52 30 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "1bde37c2-af4a-4287-a348-9579c357461c")
+	)
+	(label "VBUS_HOST_PROT"
+		(at 52 56 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "28c8d902-7c37-481c-8c02-4fcdce5970f4")
+	)
+	(label "5V_SYS"
+		(at 76 28 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "8e7e327b-7cfd-4344-8dc7-a4e62410e4ee")
+	)
+	(label "3V3"
+		(at 74 28 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "6225ee8c-86e9-4e04-a766-a285d5b5456d")
+	)
+	(label "3V3"
+		(at 56 12 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "5392a36d-e517-40c0-94dd-c1b5d6806600")
+	)
+	(label "GND"
+		(at 60 14 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "88d398b1-9499-45ae-b5d6-19b1f80d3e97")
+	)
+	(label "USB_C_DP"
+		(at 188 44 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "913af6b9-bfa3-463d-9439-f39e9f264318")
+	)
+	(label "USB_C_DN"
+		(at 188 48 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "fb43cb5d-4f96-445e-ab30-b00d73320785")
+	)
+	(label "VBUS_USB_C_RAW"
+		(at 188 40 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "ce4e4232-f5f0-4642-bb87-deaef5eebcc3")
+	)
+	(label "USB_CC1"
+		(at 188 36 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "c89d9191-ca91-43cb-9c3c-db29e9523215")
+	)
+	(label "USB_CC2"
+		(at 188 32 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "6cc8c414-6cc9-458d-a3a7-80d5a27612a8")
+	)
+	(label "GND"
+		(at 204 44 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "65f48cf5-4426-404c-9b5f-524bb649c444")
+	)
+	(label "USB_C_DP"
+		(at 150 42 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "0698b33d-d06d-4223-b3bf-7ef390acd53c")
+	)
+	(label "USB_C_DN"
+		(at 150 46 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "1e95faec-9f80-4381-81ab-3fc5920ad882")
+	)
+	(label "USB_C_VBUS_SENSE"
+		(at 150 50 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "69233993-08b4-4dbb-91f8-b8b3f5f8c043")
+	)
+	(label "3V3"
+		(at 150 54 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "68fff5f7-d24e-4f09-8633-5c166a5d650b")
+	)
+	(label "GND"
+		(at 150 58 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "90f10215-cce5-4e35-b4aa-70e51ce833d5")
+	)
+	(label "UART0_RX"
+		(at 170 42 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4dbd4db4-2068-4bcd-8216-3a82ab87dac5")
+	)
+	(label "UART0_TX"
+		(at 170 46 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "cd96f399-9ddd-44cc-8d95-0616d7ef8273")
+	)
+	(label "USB_DTR"
+		(at 170 50 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "2d76a01c-754a-45fa-9559-4a1e7a521968")
+	)
+	(label "USB_RTS"
+		(at 170 54 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "09934a0e-013d-4df4-bca8-f651cab380ce")
+	)
+	(label "USB_C_DP"
+		(at 174 44 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "fb94c8c2-4e55-402f-879f-d406460c0bcf")
+	)
+	(label "USB_C_DN"
+		(at 174 48 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4de95f6d-12c9-48c0-8d4a-36369ae5d300")
+	)
+	(label "GND"
+		(at 188 48 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "429baa73-0b6f-40c1-8cdd-464d8bedfad9")
+	)
+	(label "USB_C_VBUS_SENSE"
+		(at 152 30 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "ac961d49-0bd6-4378-9faa-213069f05ef5")
+	)
+	(label "GND"
+		(at 152 38 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "f6855ef7-3dd7-402a-a43f-471e8f489792")
+	)
+	(label "3V3"
+		(at 170 24 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "ea8a74ed-2158-42a0-a402-65e547ddd166")
+	)
+	(label "3V3"
+		(at 170 30 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d58722d1-a485-43c9-bc6f-26f910c0b0cb")
+	)
+	(label "3V3"
+		(at 140 62 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "791b3003-f998-411c-ba8a-6a63175b31d1")
+	)
+	(label "3V3"
+		(at 140 76 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "a6219dbd-fa37-4186-bbc4-28b4144d9349")
+	)
+	(label "USB_RTS"
+		(at 126 58 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "02dac493-e0f2-46e0-89f6-f3c447cc23a5")
+	)
+	(label "USB_DTR"
+		(at 126 72 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d792615b-30ee-4526-accb-c5c21ab8b6be")
+	)
+	(label "ESP_EN"
+		(at 118 62 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "02614227-2508-4e83-927e-b5cae63254a2")
+	)
+	(label "ESP_IO0"
+		(at 118 76 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "48161295-578c-4135-805c-7ecdbfb7bfc8")
+	)
+	(label "HOST_VBUS"
+		(at 188 120 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b70fbecf-c27b-4fde-9a0f-4ef8941e7f91")
+	)
+	(label "HOST_DN"
+		(at 188 124 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "563147a3-a418-4010-8509-0f45864a8381")
+	)
+	(label "HOST_DP"
+		(at 204 120 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "948a7cfc-59a3-49da-b273-56a9b8b427f5")
+	)
+	(label "GND"
+		(at 204 124 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "a5394e25-7390-4bbc-86fa-294028ff63cc")
+	)
+	(label "HOST_DP"
+		(at 150 120 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "829648c8-719f-4638-a669-882f18e45bc4")
+	)
+	(label "HOST_DN"
+		(at 150 124 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "a21af835-182a-45d6-a230-b8932f80025a")
+	)
+	(label "HOST_VBUS_SENSE"
+		(at 150 128 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "fb8ff9db-a21a-4a1e-b643-d26bb97fe0ef")
+	)
+	(label "3V3"
+		(at 150 132 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "feb87615-a62b-4a24-8fdd-f381972c6d9d")
+	)
+	(label "GND"
+		(at 150 136 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "8cebf2c9-46c0-49c9-8e51-e47a46495f40")
+	)
+	(label "UART2_RX"
+		(at 170 120 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4baf5d8a-114b-4b40-8f41-8ea1bed2a743")
+	)
+	(label "UART2_TX"
+		(at 170 124 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b5e100a9-6e88-44d8-8c66-572fdf07b73b")
+	)
+	(label "HOST_DP"
+		(at 174 122 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "310c6667-56e7-48bf-8a32-4412b94a635e")
+	)
+	(label "HOST_DN"
+		(at 174 126 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "fa45fdaa-aaf1-4c16-8425-0c001e11a16c")
+	)
+	(label "GND"
+		(at 188 126 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "064b2e8b-927e-4440-b309-e7d3bb26baad")
+	)
+	(label "HOST_VBUS_SENSE"
+		(at 152 108 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "fac03b80-90f9-456c-8295-11f18e589355")
+	)
+	(label "GND"
+		(at 152 116 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d60d965a-51ba-401d-9c86-7f3c8f4e9b8c")
+	)
+	(label "3V3"
+		(at 170 102 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "802d2d37-7bb3-43c9-a9b4-43e540d3eca5")
+	)
+	(label "3V3"
+		(at 170 108 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "8824d72f-cf5e-44f0-9763-acd2623c3644")
+	)
+	(label "3V3"
+		(at 64 82 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4dfca13d-1098-4ecd-b840-5073f5b818e1")
+	)
+	(label "ESP_EN"
+		(at 64 86 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b5182cc6-719a-4140-870a-12d133973cc2")
+	)
+	(label "ESP_IO0"
+		(at 64 90 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "cd114b5f-b53e-4ca9-9854-8e7b58bf4365")
+	)
+	(label "UART0_RX"
+		(at 64 94 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d0fca3f5-4a82-4dcd-b7d0-d40271dca42a")
+	)
+	(label "UART0_TX"
+		(at 64 98 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "f9942be4-7663-4754-aec1-376f212c04f4")
+	)
+	(label "UART2_RX"
+		(at 64 102 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "ec343891-e531-41b9-a288-25e7578dddb1")
+	)
+	(label "UART2_TX"
+		(at 64 106 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "6792961b-99bc-4ec6-bae6-5f5a77d4c638")
+	)
+	(label "GND"
+		(at 64 110 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "5d356e7b-4a99-44ca-af29-51ab66d5534f")
+	)
+	(label "OLED_SDA"
+		(at 92 82 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "2edd65f8-9833-4382-be75-6e6a9139c241")
+	)
+	(label "OLED_SCL"
+		(at 92 86 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "ac968e0a-7e72-41ba-8e00-a500dce44d20")
+	)
+	(label "BTN_OK"
+		(at 92 90 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "15fc1de6-e409-4028-b073-db1aa868e9cf")
+	)
+	(label "BTN_NEXT"
+		(at 92 94 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4df1d2dc-74a0-456b-b777-ed5ca32145d0")
+	)
+	(label "BTN_BACK"
+		(at 92 98 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "1e2e825c-aea2-4b93-91cd-33b0db1d9a1b")
+	)
+	(label "LED_R"
+		(at 92 102 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "9ca26c92-07ad-4040-ad04-5fc3b284e2d6")
+	)
+	(label "LED_G"
+		(at 92 106 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d45f84a7-ed77-4109-b3a2-faf332f663b5")
+	)
+	(label "LED_B"
+		(at 92 110 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "c5127151-ab46-4cd2-96ec-5d7c717b4ae8")
+	)
+	(label "BUZZER_CTRL"
+		(at 76 116 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "9884fd06-6198-4624-97ff-7422ccec24a1")
+	)
+	(label "GND"
+		(at 82 116 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "9a049d77-8dac-47d9-84d7-934cb19a1ce0")
+	)
+	(label "3V3"
+		(at 104 80 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "bd936471-60e3-4e00-969e-bf1932d0a3e4")
+	)
+	(label "GND"
+		(at 104 84 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "78eaeda9-c457-4427-9978-d85fa6ec46d1")
+	)
+	(label "OLED_SCL"
+		(at 124 80 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "2058ae3f-91c5-4fb2-8c15-d5d35a1fc869")
+	)
+	(label "OLED_SDA"
+		(at 124 84 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "1e191a25-80d6-45e9-a71a-3095a43482ed")
+	)
+	(label "LED_R"
+		(at 104 122 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "eccd46a4-96c9-44b4-b15b-932251fab8a3")
+	)
+	(label "LED_G"
+		(at 104 128 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "de775b8d-d5f1-4c6d-bf7f-f30150ce9cdc")
+	)
+	(label "LED_B"
+		(at 104 134 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "3764802f-c4f7-42e9-8d1b-f488b8893c0d")
+	)
+	(label "GND"
+		(at 124 128 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d60754b5-8b1c-4b4b-8b03-b72726efd881")
+	)
+	(label "3V3"
+		(at 104 152 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "9daf135c-e0cf-495b-abed-a0a34e4dc654")
+	)
+	(label "BUZZER_SW"
+		(at 104 156 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "f35c59c5-6362-4c10-8af7-bc7b15f4ec0d")
+	)
+	(label "BUZZER_CTRL"
+		(at 82 152 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "bae56e0a-ed22-4600-bda1-8b665ac49569")
+	)
+	(label "GND"
+		(at 82 156 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "05525473-8f15-4f3f-af98-d66c61b72849")
+	)
+	(label "BTN_OK"
+		(at 128 162 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b9fdfb63-1c19-493d-a59d-b5104e5c0a68")
+	)
+	(label "BTN_NEXT"
+		(at 150 162 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "2f1a4eab-1efb-46af-86c7-abf4d5ea1071")
+	)
+	(label "BTN_BACK"
+		(at 172 162 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "36cbb041-0bf1-477c-9d19-ad4148e4145a")
+	)
+	(label "GND"
+		(at 140 168 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b4b9d9eb-48ae-4d00-973c-ec34209d6d97")
+	)
+	(label "GND"
+		(at 162 168 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "349f01c8-bc30-47cf-a655-abf4404dc447")
+	)
+	(label "GND"
+		(at 184 168 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "2d884a41-3034-4547-b747-9aee264312cd")
+	)
+	(label "3V3"
+		(at 10 146 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4384a3a7-2154-40d9-a884-84049f7fdea8")
+	)
+	(label "GND"
+		(at 10 154 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4b7326a5-1786-4860-9de5-29170d4214c9")
+	)
+	(label "ESP_EN"
+		(at 10 162 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "411478ff-0d6a-4290-a9bb-f24e755f0fa9")
+	)
+	(label "ESP_IO0"
+		(at 10 170 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "5bfbe9d0-0449-4718-967e-196728b0d6cd")
+	)
+	(label "UART0_TX"
+		(at 28 146 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "87a9cc9a-ffa2-48ba-b078-90145a431f98")
+	)
+	(label "UART0_RX"
+		(at 28 154 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "17323ac7-1aad-436e-a716-b53f5605b33e")
+	)
+	(label "UART2_TX"
+		(at 28 162 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "99c2284f-61f4-49d7-915e-6cb884d3f199")
+	)
+	(label "UART2_RX"
+		(at 28 170 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "9cc4613b-bbe2-497c-a637-f2b050805d22")
+	)
+	(label "3V3"
+		(at 12 24 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "69ebf45d-8ba9-40a9-9fa4-826276f3742d")
+	)
+	(label "3V3"
+		(at 12 92 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d750a846-8675-40c2-9494-ef7e92d68dd7")
+	)
+	(label "3V3"
+		(at 88 18 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4cd4b2d7-8687-4b4a-9406-3f301b5075e6")
+	)
+	(label "3V3"
+		(at 120 70 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "a7ed018f-d194-4775-b02f-4a46842a07f3")
+	)
+	(label "3V3"
+		(at 120 144 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "aa8beb8c-52eb-406d-9a5f-8f234a53e36f")
+	)
+	(label "3V3"
+		(at 188 20 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "e569ba2e-2af2-4944-8ad9-57f826621383")
+	)
+	(label "GND"
+		(at 12 28 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "f8b1d2af-eafc-442e-9d76-681422c7da25")
+	)
+	(label "GND"
+		(at 12 98 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "069cc835-08f7-462a-adb6-a7fa2f53bf95")
+	)
+	(label "GND"
+		(at 120 76 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "25fa1cf6-277f-40c2-b647-662d8d6ac8d9")
+	)
+	(label "GND"
+		(at 120 154 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "40229044-f9e1-4736-bbe2-9d9a70ed1e8a")
+	)
+	(label "GND"
+		(at 188 36 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "a626be0c-2c0d-4b8e-97cb-c7e63e4f6683")
+	)
+	(label "GND"
+		(at 200 168 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "78fcd3f6-2dc3-4192-bca7-4b2e9a8d9b4b")
+	)
+	(label "5V_SYS"
+		(at 56 22 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "6271c4de-6862-4134-b750-bf508fc8c442")
+	)
+	(label "VBUS_USB_C_RAW"
+		(at 12 30 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "bae08211-aacc-4b65-90ee-33ce7814bf0b")
+	)
+	(label "VBUS_HOST_RAW"
+		(at 12 56 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d5dc84d2-2cdc-4ed3-94c7-39ead75886a9")
+	)
+	(label "VBUS_USB_C_PROT"
+		(at 54 30 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b44f64e8-e09b-4a17-bb5d-fa9582c1743d")
+	)
+	(label "VBUS_HOST_PROT"
+		(at 54 56 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "961b142e-32ba-45c0-b486-3473ba412d60")
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:ESP32_WROOM_32E_CORE")
+		(at 78 96 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d146b5b1-6aaa-4565-bdac-d555c4d32509")
+		(property "Reference" "U1"
+			(at 72 86 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "ESP32-WROOM-32E"
+			(at 78 106 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:ESP32-WROOM-32"
+			(at 78 108 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 78 110 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/d146b5b1-6aaa-4565-bdac-d555c4d32509"
+					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:CP2102N_QFN24_MIN")
+		(at 160 48 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f082849a-8551-47b4-b7b0-60fd007d5aa0")
+		(property "Reference" "U2"
+			(at 154 38 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "CP2102N Service"
+			(at 160 58 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:QFN-24-1EP_4x4mm_P0.5mm_EP2.7x2.7mm"
+			(at 160 60 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 160 62 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/f082849a-8551-47b4-b7b0-60fd007d5aa0"
+					(reference "U2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:CP2102N_QFN24_MIN")
+		(at 160 126 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ce8c3979-c5f6-42d8-b757-81777be6332b")
+		(property "Reference" "U3"
+			(at 154 116 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "CP2102N Host"
+			(at 160 136 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:QFN-24-1EP_4x4mm_P0.5mm_EP2.7x2.7mm"
+			(at 160 138 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 160 140 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/ce8c3979-c5f6-42d8-b757-81777be6332b"
+					(reference "U3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:USB_C_DEVICE_2P0")
+		(at 196 42 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d9738e0b-988c-4acb-89f7-2117e281044e")
+		(property "Reference" "J1"
+			(at 190 32 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "Service USB-C"
+			(at 196 52 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:USB_C_Receptacle_HRO_TYPE-C-31-M-12"
+			(at 196 54 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 196 56 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/d9738e0b-988c-4acb-89f7-2117e281044e"
+					(reference "J1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:USB_A_HOST_PIGTAIL")
+		(at 196 120 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c06498f7-5212-414b-973e-20c05c9ced3c")
+		(property "Reference" "J2"
+			(at 190 110 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "USB-A Pigtail"
+			(at 196 130 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:USB_A_Pigtail_Pads_1x4_Edge"
+			(at 196 132 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 196 134 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/c06498f7-5212-414b-973e-20c05c9ced3c"
+					(reference "J2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:AP2112K_33")
+		(at 66 28 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "46a9720d-3b33-421b-b482-18c7dbecd484")
+		(property "Reference" "U4"
+			(at 60 18 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "AP2112K-3.3"
+			(at 66 38 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SOT-23-5"
+			(at 66 40 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 66 42 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/46a9720d-3b33-421b-b482-18c7dbecd484"
+					(reference "U4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:OLED_I2C_HDR_1x4")
+		(at 114 84 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4bc08ee2-4212-4d02-825b-cd1812fc8946")
+		(property "Reference" "J3"
+			(at 108 74 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "OLED 0.96in I2C"
+			(at 114 94 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:OLED_096_I2C_Module_1x4"
+			(at 114 96 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 114 98 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/4bc08ee2-4212-4d02-825b-cd1812fc8946"
+					(reference "J3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:RGB_LED_CC")
+		(at 114 130 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d4d70a86-9b29-4a49-b2d3-a215ba574ed7")
+		(property "Reference" "D10"
+			(at 108 120 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "RGB LED CC"
+			(at 114 140 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:LED_RGB_CC_PLCC4"
+			(at 114 142 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 114 144 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/d4d70a86-9b29-4a49-b2d3-a215ba574ed7"
+					(reference "D10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:BUZZER_GENERIC")
+		(at 114 152 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9dd84d18-4d5a-40f9-b84d-8236ee6c7a93")
+		(property "Reference" "BZ1"
+			(at 108 142 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "Active Buzzer"
+			(at 114 162 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:BUZZER_SMD_9x9"
+			(at 114 164 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 114 166 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/9dd84d18-4d5a-40f9-b84d-8236ee6c7a93"
+					(reference "BZ1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:NPN_SOT23")
+		(at 128 62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6ab0f019-ef1a-44e9-b18d-2f67627263fd")
+		(property "Reference" "Q1"
+			(at 122 52 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "Auto-EN"
+			(at 128 72 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SOT-23"
+			(at 128 74 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 128 76 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/6ab0f019-ef1a-44e9-b18d-2f67627263fd"
+					(reference "Q1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:NPN_SOT23")
+		(at 128 76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "322ef01d-30c5-4f60-94fc-164454357f2a")
+		(property "Reference" "Q2"
+			(at 122 66 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "Auto-IO0"
+			(at 128 86 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SOT-23"
+			(at 128 88 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 128 90 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/322ef01d-30c5-4f60-94fc-164454357f2a"
+					(reference "Q2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:NPN_SOT23")
+		(at 92 152 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1983b781-8f54-4417-99a3-a990a6789554")
+		(property "Reference" "Q3"
+			(at 86 142 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "Buzzer Driver"
+			(at 92 162 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SOT-23"
+			(at 92 164 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 92 166 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/1983b781-8f54-4417-99a3-a990a6789554"
+					(reference "Q3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:FUSE_GENERIC")
+		(at 28 30 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d84f0c4c-8c8a-49f2-9e52-ec045dff180a")
+		(property "Reference" "F1"
+			(at 22 20 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "500mA PTC"
+			(at 28 40 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:FUSE_1206_3216Metric"
+			(at 28 42 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 28 44 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/d84f0c4c-8c8a-49f2-9e52-ec045dff180a"
+					(reference "F1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:FUSE_GENERIC")
+		(at 28 56 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a2e68dad-de27-41d3-b4a5-631547cde46d")
+		(property "Reference" "F2"
+			(at 22 46 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "500mA PTC"
+			(at 28 66 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:FUSE_1206_3216Metric"
+			(at 28 68 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 28 70 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/a2e68dad-de27-41d3-b4a5-631547cde46d"
+					(reference "F2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:DIODE_GENERIC")
+		(at 44 30 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ac83533f-1397-4597-8141-93e9c8d81ec6")
+		(property "Reference" "D1"
+			(at 38 20 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "B5819W"
+			(at 44 40 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:D_SOD123"
+			(at 44 42 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 44 44 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/ac83533f-1397-4597-8141-93e9c8d81ec6"
+					(reference "D1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:DIODE_GENERIC")
+		(at 44 56 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "0b45117b-e576-41d0-9e5f-f94cb55846e5")
+		(property "Reference" "D2"
+			(at 38 46 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "B5819W"
+			(at 44 66 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:D_SOD123"
+			(at 44 68 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 44 70 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/0b45117b-e576-41d0-9e5f-f94cb55846e5"
+					(reference "D2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 82 24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e382a064-8b78-40a8-81a0-b18d534e2402")
+		(property "Reference" "C1"
+			(at 76 14 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "10uF"
+			(at 82 34 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 82 36 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 82 38 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/e382a064-8b78-40a8-81a0-b18d534e2402"
+					(reference "C1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 82 34 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "958fbbee-778c-41ba-ad01-a0d241d80ff2")
+		(property "Reference" "C2"
+			(at 76 24 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "1uF"
+			(at 82 44 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 82 46 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 82 48 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/958fbbee-778c-41ba-ad01-a0d241d80ff2"
+					(reference "C2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 146 30 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b4502b03-7359-4c64-828d-fdae77a249b7")
+		(property "Reference" "R1"
+			(at 140 20 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "22.1k"
+			(at 146 40 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 146 42 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 146 44 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/b4502b03-7359-4c64-828d-fdae77a249b7"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 146 38 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7fcaa91c-7838-4a8c-beec-adce597c27a6")
+		(property "Reference" "R2"
+			(at 140 28 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "47.5k"
+			(at 146 48 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 146 50 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 146 52 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/7fcaa91c-7838-4a8c-beec-adce597c27a6"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 146 108 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1985281-3579-4692-b963-5ec0736a0fd3")
+		(property "Reference" "R3"
+			(at 140 98 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "22.1k"
+			(at 146 118 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 146 120 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 146 122 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/a1985281-3579-4692-b963-5ec0736a0fd3"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 146 116 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "aaf3bc13-8ee3-44c9-9b71-a1b72e4bc32f")
+		(property "Reference" "R4"
+			(at 140 106 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "47.5k"
+			(at 146 126 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 146 128 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 146 130 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/aaf3bc13-8ee3-44c9-9b71-a1b72e4bc32f"
+					(reference "R4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 184 24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4521478c-d2f6-4aee-86fa-f5107f544318")
+		(property "Reference" "R5"
+			(at 178 14 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "5.1k"
+			(at 184 34 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 184 36 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 184 38 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/4521478c-d2f6-4aee-86fa-f5107f544318"
+					(reference "R5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 184 30 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a05aa4e2-7fdc-4848-b98b-02b059cdd2f8")
+		(property "Reference" "R6"
+			(at 178 20 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "5.1k"
+			(at 184 40 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 184 42 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 184 44 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/a05aa4e2-7fdc-4848-b98b-02b059cdd2f8"
+					(reference "R6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 142 62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "cdfca015-04c0-4605-b22f-33e1ed64918d")
+		(property "Reference" "R7"
+			(at 136 52 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "1k"
+			(at 142 72 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 142 74 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 142 76 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/cdfca015-04c0-4605-b22f-33e1ed64918d"
+					(reference "R7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 142 76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "dfa610cc-4d95-4639-a262-2cf12dabea5d")
+		(property "Reference" "R8"
+			(at 136 66 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "1k"
+			(at 142 86 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 142 88 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 142 90 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/dfa610cc-4d95-4639-a262-2cf12dabea5d"
+					(reference "R8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 58 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f495fcce-afbd-464f-93a8-4aaa6bc2f2ae")
+		(property "Reference" "R9"
+			(at 52 70 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "10k"
+			(at 58 90 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 58 92 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 58 94 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/f495fcce-afbd-464f-93a8-4aaa6bc2f2ae"
+					(reference "R9")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 58 88 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ff23d406-61f3-4304-81cf-01550a9d93a2")
+		(property "Reference" "R10"
+			(at 52 78 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "10k"
+			(at 58 98 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 58 100 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 58 102 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/ff23d406-61f3-4304-81cf-01550a9d93a2"
+					(reference "R10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 92 122 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7f29a937-150e-40e4-914d-e4d04e8999d3")
+		(property "Reference" "R11"
+			(at 86 112 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "330R"
+			(at 92 132 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 92 134 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 92 136 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/7f29a937-150e-40e4-914d-e4d04e8999d3"
+					(reference "R11")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 92 128 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4924411d-1bea-43dd-9b66-a41ec5acbcce")
+		(property "Reference" "R12"
+			(at 86 118 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "330R"
+			(at 92 138 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 92 140 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 92 142 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/4924411d-1bea-43dd-9b66-a41ec5acbcce"
+					(reference "R12")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 92 134 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ce8d0e0d-0fb4-4f12-98bb-4358878dc85e")
+		(property "Reference" "R13"
+			(at 86 124 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "330R"
+			(at 92 144 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 92 146 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 92 148 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/ce8d0e0d-0fb4-4f12-98bb-4358878dc85e"
+					(reference "R13")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 84 146 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e20602d6-eb11-47a2-a558-00a751c0e89b")
+		(property "Reference" "R14"
+			(at 78 136 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "1k"
+			(at 84 156 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 84 158 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 84 160 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/e20602d6-eb11-47a2-a558-00a751c0e89b"
+					(reference "R14")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 84 158 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "02ec123a-af2b-47b8-8467-725f796fe847")
+		(property "Reference" "R15"
+			(at 78 148 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "100k"
+			(at 84 168 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 84 170 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 84 172 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/02ec123a-af2b-47b8-8467-725f796fe847"
+					(reference "R15")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:R_GENERIC")
+		(at 58 18 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5224ac0a-17be-4a1f-b9cd-c2be952fd031")
+		(property "Reference" "R16"
+			(at 52 8 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "1k"
+			(at 58 28 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:R_0603_1608Metric"
+			(at 58 30 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 58 32 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/5224ac0a-17be-4a1f-b9cd-c2be952fd031"
+					(reference "R16")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:LED_GENERIC")
+		(at 58 12 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "04d3d26a-8145-40bf-82ee-efcba120fe7c")
+		(property "Reference" "D3"
+			(at 52 2 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "PWR"
+			(at 58 22 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:LED_0603_1608Metric"
+			(at 58 24 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 58 26 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/04d3d26a-8145-40bf-82ee-efcba120fe7c"
+					(reference "D3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 52 82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "56eabf3e-e705-470d-9d04-4e390d3609c0")
+		(property "Reference" "C3"
+			(at 46 72 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "1uF"
+			(at 52 92 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 52 94 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 52 96 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/56eabf3e-e705-470d-9d04-4e390d3609c0"
+					(reference "C3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 172 24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e1b6de76-76d7-44cb-ac52-68ad220fb464")
+		(property "Reference" "C4"
+			(at 166 14 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "4.7uF"
+			(at 172 34 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 172 36 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 172 38 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/e1b6de76-76d7-44cb-ac52-68ad220fb464"
+					(reference "C4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 172 30 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "45ef4597-3e45-4edc-bce1-4ef99cacc8fd")
+		(property "Reference" "C5"
+			(at 166 20 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "0.1uF"
+			(at 172 40 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 172 42 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 172 44 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/45ef4597-3e45-4edc-bce1-4ef99cacc8fd"
+					(reference "C5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 172 102 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "88ca3ae5-97ba-4af2-bc47-eb56395e8a69")
+		(property "Reference" "C6"
+			(at 166 92 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "4.7uF"
+			(at 172 112 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 172 114 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 172 116 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/88ca3ae5-97ba-4af2-bc47-eb56395e8a69"
+					(reference "C6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 172 108 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9cb912ee-be46-486b-8a6c-9088785ce744")
+		(property "Reference" "C7"
+			(at 166 98 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "0.1uF"
+			(at 172 118 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 172 120 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 172 122 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/9cb912ee-be46-486b-8a6c-9088785ce744"
+					(reference "C7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 62 96 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5cc851df-aeee-4556-9de7-9a7dcb39a870")
+		(property "Reference" "C8"
+			(at 56 86 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "10uF"
+			(at 62 106 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 62 108 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 62 110 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/5cc851df-aeee-4556-9de7-9a7dcb39a870"
+					(reference "C8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:C_GENERIC")
+		(at 62 104 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ac64c1b4-54a2-465a-8ad9-798d7668d291")
+		(property "Reference" "C9"
+			(at 56 94 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "0.1uF"
+			(at 62 114 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:C_0603_1608Metric"
+			(at 62 116 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 62 118 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/ac64c1b4-54a2-465a-8ad9-798d7668d291"
+					(reference "C9")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:USB_ESD_2CH")
+		(at 182 48 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "250e5d28-80dc-474a-ac93-bad14da54ede")
+		(property "Reference" "U5"
+			(at 176 38 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "USB ESD"
+			(at 182 58 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SOT-23-5"
+			(at 182 60 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 182 62 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/250e5d28-80dc-474a-ac93-bad14da54ede"
+					(reference "U5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:USB_ESD_2CH")
+		(at 182 126 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e097b8c8-0643-4346-a354-c9c0342fb221")
+		(property "Reference" "U6"
+			(at 176 116 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "USB ESD"
+			(at 182 136 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SOT-23-5"
+			(at 182 138 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 182 140 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/e097b8c8-0643-4346-a354-c9c0342fb221"
+					(reference "U6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:SW_SPST_NO")
+		(at 36 88 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6800b4df-4145-4a96-a9f6-126d33c33d91")
+		(property "Reference" "SW1"
+			(at 30 78 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "RESET"
+			(at 36 98 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SW_SPST_4P_4.2x3.2mm"
+			(at 36 100 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 36 102 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/6800b4df-4145-4a96-a9f6-126d33c33d91"
+					(reference "SW1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:SW_SPST_NO")
+		(at 36 102 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "0c9bc69e-6c07-4578-9783-49fc3191659c")
+		(property "Reference" "SW2"
+			(at 30 92 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "BOOT"
+			(at 36 112 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SW_SPST_4P_4.2x3.2mm"
+			(at 36 114 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 36 116 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/0c9bc69e-6c07-4578-9783-49fc3191659c"
+					(reference "SW2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:SW_SPST_NO")
+		(at 138 162 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "77d55aec-dc30-40de-bd01-c6273d41ea30")
+		(property "Reference" "SW3"
+			(at 132 152 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "OK"
+			(at 138 172 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SW_SPST_4P_4.2x3.2mm"
+			(at 138 174 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 138 176 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/77d55aec-dc30-40de-bd01-c6273d41ea30"
+					(reference "SW3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:SW_SPST_NO")
+		(at 160 162 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "54d09dac-9c8c-43e5-8054-7c5abab6efe7")
+		(property "Reference" "SW4"
+			(at 154 152 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "NEXT"
+			(at 160 172 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SW_SPST_4P_4.2x3.2mm"
+			(at 160 174 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 160 176 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/54d09dac-9c8c-43e5-8054-7c5abab6efe7"
+					(reference "SW4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:SW_SPST_NO")
+		(at 182 162 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "98de8e63-f72a-45b4-8cdf-6122826398d9")
+		(property "Reference" "SW5"
+			(at 176 152 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "BACK"
+			(at 182 172 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:SW_SPST_4P_4.2x3.2mm"
+			(at 182 174 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 182 176 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/98de8e63-f72a-45b4-8cdf-6122826398d9"
+					(reference "SW5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TP_GENERIC")
+		(at 18 146 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "96635b2b-1dbc-4c67-b5d2-baae4de51268")
+		(property "Reference" "TP1"
+			(at 12 136 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "3V3"
+			(at 18 156 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:TestPoint_Pad_D1.5mm"
+			(at 18 158 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 18 160 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/96635b2b-1dbc-4c67-b5d2-baae4de51268"
+					(reference "TP1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TP_GENERIC")
+		(at 18 154 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ba887e59-505c-4d7e-97d0-3eeb40568abe")
+		(property "Reference" "TP2"
+			(at 12 144 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 18 164 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:TestPoint_Pad_D1.5mm"
+			(at 18 166 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 18 168 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/ba887e59-505c-4d7e-97d0-3eeb40568abe"
+					(reference "TP2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TP_GENERIC")
+		(at 18 162 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "42ac4041-c7c0-401c-ad78-45bb489f10d1")
+		(property "Reference" "TP3"
+			(at 12 152 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "EN"
+			(at 18 172 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:TestPoint_Pad_D1.5mm"
+			(at 18 174 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 18 176 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/42ac4041-c7c0-401c-ad78-45bb489f10d1"
+					(reference "TP3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TP_GENERIC")
+		(at 18 170 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f71762b5-e024-49c1-a193-8e4b1abb9b22")
+		(property "Reference" "TP4"
+			(at 12 160 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "IO0"
+			(at 18 180 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:TestPoint_Pad_D1.5mm"
+			(at 18 182 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 18 184 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/f71762b5-e024-49c1-a193-8e4b1abb9b22"
+					(reference "TP4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TP_GENERIC")
+		(at 36 146 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7a049c4e-c8a2-4271-9f1f-b55bb46fbfa7")
+		(property "Reference" "TP5"
+			(at 30 136 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "TX0"
+			(at 36 156 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:TestPoint_Pad_D1.5mm"
+			(at 36 158 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 36 160 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/7a049c4e-c8a2-4271-9f1f-b55bb46fbfa7"
+					(reference "TP5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TP_GENERIC")
+		(at 36 154 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "87b4b16a-891d-4a1b-8d07-ce7d1ce394c7")
+		(property "Reference" "TP6"
+			(at 30 144 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "RX0"
+			(at 36 164 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:TestPoint_Pad_D1.5mm"
+			(at 36 166 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 36 168 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/87b4b16a-891d-4a1b-8d07-ce7d1ce394c7"
+					(reference "TP6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TP_GENERIC")
+		(at 36 162 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a7847612-5c57-4825-b442-e1a4f37e7e4d")
+		(property "Reference" "TP7"
+			(at 30 152 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "TX2"
+			(at 36 172 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:TestPoint_Pad_D1.5mm"
+			(at 36 174 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 36 176 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/a7847612-5c57-4825-b442-e1a4f37e7e4d"
+					(reference "TP7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TP_GENERIC")
+		(at 36 170 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f1ba2f3c-babd-491d-8c94-47203fbff176")
+		(property "Reference" "TP8"
+			(at 30 160 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "RX2"
+			(at 36 180 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Footprint" "esp32-serial-deployer-pcb:TestPoint_Pad_D1.5mm"
+			(at 36 182 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 36 184 0)
+			(effects
+				(font
+					(size 1 1)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/f1ba2f3c-babd-491d-8c94-47203fbff176"
+					(reference "TP8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)	(no_connect
+		(at 10 10)
+		(uuid "11111111-1111-1111-1111-111111111111")
+	))
+

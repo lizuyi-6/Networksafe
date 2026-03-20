@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useDemo } from '../context/DemoContext';
@@ -7,6 +7,7 @@ import { User, Lock, ArrowRight, ArrowLeft, CheckCircle, Info } from 'lucide-rea
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../components/Logo';
 import { COMPANY_NAME_CN, COMPANY_NAME_EN } from '../config/branding';
+import { fetchSystemCapabilities, login } from '../services/api';
 
 type ToastState = {
     msg: string;
@@ -52,13 +53,6 @@ const DEV_LOGIN_PRESETS: DevLoginPreset[] = [
     },
 ];
 
-const canShowDevLogin = () => {
-    if (typeof window === 'undefined') return false;
-
-    const host = window.location.hostname.toLowerCase();
-    return host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
-};
-
 const Login = () => {
     const navigate = useNavigate();
     const { t } = useLanguage();
@@ -68,7 +62,26 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isDevModeOpen, setIsDevModeOpen] = useState(false);
+    const [devLoginEnabled, setDevLoginEnabled] = useState(false);
     const [toast, setToast] = useState<ToastState | null>(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        fetchSystemCapabilities(controller.signal)
+            .then((mode) => {
+                if (!controller.signal.aborted) {
+                    setDevLoginEnabled(Boolean(mode.devLoginEnabled));
+                }
+            })
+            .catch(() => {
+                if (!controller.signal.aborted) {
+                    setDevLoginEnabled(false);
+                }
+            });
+
+        return () => controller.abort();
+    }, []);
 
     const showToast = (msg: string, type: ToastState['type'] = 'info') => {
         setToast({ msg, type });
@@ -86,35 +99,7 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({ email, password }),
-            });
-
-            let data;
-            try {
-                data = await response.json();
-            } catch {
-                if (response.status >= 502) {
-                    throw new Error('Service temporarily unavailable. Check backend status and retry.');
-                }
-
-                throw new Error(
-                    response.ok
-                        ? 'Unable to parse the server response.'
-                        : `Server error (${response.status}). Check whether the backend is running.`,
-                );
-            }
-
-            if (!response.ok) {
-                throw new Error(data?.error || 'Login failed');
-            }
-
-            localStorage.setItem('user', JSON.stringify(data.user));
+            await login({ email, password });
             showToast('Login succeeded. Redirecting...', 'success');
 
             await refreshDemoState();
@@ -228,7 +213,7 @@ const Login = () => {
                             </div>
                         </div>
 
-                        {canShowDevLogin() && (
+                        {devLoginEnabled && (
                             <div className="mb-6 rounded-2xl border border-border bg-muted/15 p-4">
                                 <button
                                     type="button"

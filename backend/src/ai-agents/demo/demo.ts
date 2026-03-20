@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Multi-Agent Decision System - Demo Script
  * Demonstrates all 7 layers of the AI security analysis system
  */
@@ -80,6 +80,8 @@ class MultiAgentDemo {
             enabled: true,
             thresholds: {
                 debateTrigger: 0.3,
+                debateDivergence: 0.3,
+                debateConfidenceRange: 0.3,
                 cloudEscalation: 0.6,
                 autoBlock: 0.85
             }
@@ -89,7 +91,7 @@ class MultiAgentDemo {
     async run(): Promise<void> {
         console.log('\n');
         console.log('╔════════════════════════════════════════════════════════════════╗');
-        console.log('║     FluxGuard Multi-Agent Decision System - 7 Layer Demo      ║');
+        console.log('║     AetherGuard Multi-Agent Decision System - 7 Layer Demo      ║');
         console.log('╚════════════════════════════════════════════════════════════════╝');
         console.log('\n');
 

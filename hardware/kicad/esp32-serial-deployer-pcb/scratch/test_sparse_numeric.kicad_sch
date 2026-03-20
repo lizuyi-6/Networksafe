@@ -1,0 +1,313 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "bfe7f710-d7d9-58ed-9aaf-a0ce0205ba5f")
+	(paper "A4")
+	(lib_symbols
+	(symbol "esp32-serial-deployer-pcb:TEST_SPARSE"
+		(pin_names)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property "Reference" "U"
+			(at -7.62 -7.62 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+			)
+		)
+		(property "Value" "TEST_SPARSE"
+			(at 0.0 7.62 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+			)
+		)
+		(property "Footprint" ""
+			(at 0.0 10.16 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0.0 12.7 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 0.0 12.7 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(symbol "TEST_SPARSE_1_1"
+			(rectangle
+				(start -8 -5.08)
+				(end 8 5.08)
+				(stroke
+					(width 0.15)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(pin passive line
+				(at -10.16 -2.54 0)
+				(length 2.54)
+
+				(name "P25"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "25"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at -10.16 0.0 0)
+				(length 2.54)
+
+				(name "P27"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "27"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 10.16 -2.54 180)
+				(length 2.54)
+
+				(name "P33"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "33"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 10.16 0.0 180)
+				(length 2.54)
+
+				(name "P35"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "35"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
+	)
+	(wire
+		(pts
+			(xy 40.64 48.26) (xy 38.1 48.26)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "270fc269-cac6-5a17-89a3-73408f2b1e1a")
+	)
+	(global_label "N25"
+		(shape bidirectional)
+		(at 38.1 48.26 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "ed97ac0c-420a-5fb2-9af7-d86cbd4d3f3c")
+	)
+	(wire
+		(pts
+			(xy 40.64 50.8) (xy 38.1 50.8)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "72f89cb1-0a7c-5394-87ca-80f11648db13")
+	)
+	(global_label "N27"
+		(shape bidirectional)
+		(at 38.1 50.8 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "2eefea2a-fa1b-5a82-8f6a-35fff08fa7f6")
+	)
+	(wire
+		(pts
+			(xy 60.959999999999994 48.26) (xy 63.5 48.26)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "6b19e8db-f6b9-524c-bb3b-6f5e72943ae8")
+	)
+	(global_label "N33"
+		(shape bidirectional)
+		(at 63.5 48.26 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "7dd6b2dd-20d1-5a8f-a421-916193b481e6")
+	)
+	(wire
+		(pts
+			(xy 60.959999999999994 50.8) (xy 63.5 50.8)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "43cb19a8-aa75-5349-9120-467b820ef51e")
+	)
+	(global_label "N35"
+		(shape bidirectional)
+		(at 63.5 50.8 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "764f5610-a60a-56cd-a079-309d7a90bd27")
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TEST_SPARSE")
+		(at 50.8 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b6c1b43e-afca-5b77-9980-77bc54c3396f")
+		(property "Reference" "U1"
+			(at 43.18 30.48 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+			)
+		)
+		(property "Value" "TEST"
+			(at 50.8 71.12 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+			)
+		)
+		(property "Footprint" ""
+			(at 50.8 71.12 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 50.8 73.66 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 50.8 76.2 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/da3a7308-9b56-51dc-a723-484320690582"
+					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

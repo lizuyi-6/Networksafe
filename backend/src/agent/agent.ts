@@ -1,5 +1,5 @@
-/**
- * FluxGuard Agent - SECURE VERSION
+﻿/**
+ * AetherGuard Agent - SECURE VERSION
  *
  * SECURITY FIXES:
  * - Server-generated agent IDs
@@ -20,7 +20,7 @@ import crypto from 'crypto';
 import { io, Socket } from 'socket.io-client';
 import logger from '../utils/logger';
 import { TrafficMonitor } from './traffic-monitor';
-import { AttackDetector } from './attack-detector';
+import { AgentReviewSample, AttackDetector } from './attack-detector';
 import { FirewallController } from './firewall-controller';
 
 export interface AgentConfig {
@@ -40,6 +40,7 @@ interface SignedCommandInput {
     };
     signature: string;
     agentId: string;
+    metadata?: Record<string, any>;
 }
 
 export interface AgentStatus {
@@ -105,7 +106,7 @@ export class Agent {
      * 启动 Agent
      */
     async start(): Promise<void> {
-        logger.info(`Starting FluxGuard Agent: ${this.agentId}`);
+        logger.info(`Starting AetherGuard Agent: ${this.agentId}`);
 
         // 连接到中央管控平台
         await this.connectToServer();
@@ -153,6 +154,10 @@ export class Agent {
                 this.handleThreat(threat);
             } else {
                 this.localTrafficStats.packetsAllowed++;
+                const reviewSample = this.attackDetector.assessForReview(event);
+                if (reviewSample) {
+                    this.handleAsyncReviewSample(reviewSample);
+                }
             }
         });
 
@@ -299,7 +304,7 @@ export class Agent {
      * SECURITY FIX: Verify and handle signed commands
      */
     private async handleSignedCommand(signedCommand: SignedCommandInput): Promise<void> {
-        const { command, signature, agentId } = signedCommand;
+        const { command, signature, agentId, metadata } = signedCommand;
 
         // SECURITY FIX: Verify command is for this agent
         if (agentId !== this.agentId) {
@@ -370,6 +375,8 @@ export class Agent {
                 this.socket.emit('agent:command_ack', {
                     agentId: this.agentId,
                     commandType: command.type,
+                    actionId: command.payload?.actionId || metadata?.actionId,
+                    tenantId: metadata?.tenantId,
                     nonce: command.nonce,
                     timestamp: new Date().toISOString()
                 });
@@ -379,6 +386,8 @@ export class Agent {
                 this.socket.emit('agent:command_failed', {
                     agentId: this.agentId,
                     commandType: command.type,
+                    actionId: command.payload?.actionId || metadata?.actionId,
+                    tenantId: metadata?.tenantId,
                     nonce: command.nonce,
                     error: error.message || 'Command execution failed',
                     timestamp: new Date().toISOString()
@@ -401,7 +410,7 @@ export class Agent {
             case 'block_ip':
                 // 封禁 IP
                 if (command.payload?.ip) {
-                    await this.firewallController.blockIP(command.payload.ip);
+                    await this.firewallController.blockIP(command.payload.ip, Number(command.payload.duration || 3600));
                     logger.info(`Blocked IP: ${command.payload.ip}`);
                 }
                 break;
@@ -416,9 +425,18 @@ export class Agent {
 
             case 'update_rules':
                 // 更新检测规则
-                if (command.payload?.rules) {
-                    this.attackDetector.updateRules(command.payload.rules);
-                    logger.info('Updated detection rules');
+                if (Array.isArray(command.payload?.rules)) {
+                    const rules = command.payload.rules;
+                    const isLegacyRuleSet = rules.every((rule: any) => Array.isArray(rule?.patterns));
+                    if (isLegacyRuleSet) {
+                        this.attackDetector.updateRules(rules);
+                    } else {
+                        this.attackDetector.updateRemoteRules(rules);
+                    }
+                    logger.info('Updated detection rules', {
+                        ruleCount: rules.length,
+                        mode: isLegacyRuleSet ? 'legacy' : 'remote'
+                    });
                 }
                 break;
 
@@ -446,6 +464,18 @@ export class Agent {
         if (threat.autoBlock && threat.sourceIP) {
             this.firewallController.blockIP(threat.sourceIP, threat.blockDuration || 3600);
         }
+    }
+
+    private handleAsyncReviewSample(sample: AgentReviewSample): void {
+        if (!this.socket?.connected) {
+            return;
+        }
+
+        this.socket.emit('agent:review_sample', {
+            agentId: this.agentId,
+            sample,
+            timestamp: new Date().toISOString()
+        });
     }
 
     /**
@@ -490,11 +520,16 @@ export class Agent {
 
 // 启动入口
 export async function startAgent(serverUrl: string): Promise<Agent> {
-    const agentId = process.env.FLUXGUARD_AGENT_ID || process.env.AGENT_ID || 'probe-agent-01';
-    const apiKey = 'fe589f4f38dde88b31ad18c3ee0dc0513e51a6603a110a120fcb649a1ac11904';
-    const secretKey = process.env.FLUXGUARD_AGENT_SECRET_KEY || process.env.AGENT_SECRET_KEY;
-    const heartbeatInterval = process.env.FLUXGUARD_HEARTBEAT_INTERVAL_MS
-        ? Number(process.env.FLUXGUARD_HEARTBEAT_INTERVAL_MS)
+    const agentId = process.env.AETHERGUARD_AGENT_ID || process.env.AetherGuard_AGENT_ID || process.env.AGENT_ID || 'probe-agent-01';
+    // SECURITY FIX: Removed hardcoded API key - must be provided via environment variable
+    const apiKey = process.env.AETHERGUARD_AGENT_API_KEY || process.env.AetherGuard_AGENT_API_KEY || process.env.AGENT_API_KEY;
+    if (!apiKey) {
+        throw new Error('AETHERGUARD_AGENT_API_KEY or AGENT_API_KEY environment variable is required');
+    }
+    const secretKey = process.env.AETHERGUARD_AGENT_SECRET_KEY || process.env.AetherGuard_AGENT_SECRET_KEY || process.env.AGENT_SECRET_KEY;
+    const heartbeatIntervalSource = process.env.AETHERGUARD_HEARTBEAT_INTERVAL_MS || process.env.AetherGuard_HEARTBEAT_INTERVAL_MS;
+    const heartbeatInterval = heartbeatIntervalSource
+        ? Number(heartbeatIntervalSource)
         : undefined;
 
     const agent = new Agent({ serverUrl, agentId, apiKey, secretKey, heartbeatInterval });

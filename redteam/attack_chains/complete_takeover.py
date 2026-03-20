@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 完整攻击链执行脚本
 ====================
-FluxGuard 端到端渗透测试攻击执行器
+AetherGuard 端到端渗透测试攻击执行器
 
 ⚠️ 安全警告：本工具仅供授权渗透测试使用
     严禁用于非法目的，使用需获得目标系统所有者书面授权
@@ -122,7 +122,7 @@ class CompleteSystemTakeover:
             # 在实际攻击中，这需要通过文件读取漏洞或源代码泄露获取
             credentials = {
                 'jwt_secret': 'dev-jwt-secret-for-testing-only-32chars',
-                'admin_email': 'admin@fluxguard.dev',
+                'admin_email': 'admin@AetherGuard.dev',
                 'admin_password': 'DevAdmin123456!',
                 'api_keys': ['dev_api_key_001', 'dev_api_key_002'],
                 'redis_password': 'devredis123',
@@ -330,7 +330,7 @@ class CompleteSystemTakeover:
         if 'users' in endpoint:
             return {
                 'users': [
-                    {'id': 'admin-001', 'email': 'admin@fluxguard.dev', 'role': 'admin'},
+                    {'id': 'admin-001', 'email': 'admin@AetherGuard.dev', 'role': 'admin'},
                     {'id': 'user-001', 'email': 'user1@test.com', 'role': 'tenant'},
                     {'id': 'user-002', 'email': 'user2@test.com', 'role': 'viewer'},
                 ],

@@ -357,7 +357,7 @@ class ScannerTaskService {
       return;
     }
 
-    this.ensureSchema();
+    this.assertPrepared();
     this.workerStarted = true;
     await this.recoverRunnableTasks();
     this.scheduleQueuePump();
@@ -445,7 +445,7 @@ class ScannerTaskService {
     }
   }
 
-  private ensureSchema(): void {
+  prepare(): void {
     if (this.schemaReady) {
       return;
     }
@@ -623,6 +623,19 @@ class ScannerTaskService {
     `).run(now);
 
     this.schemaReady = true;
+  }
+
+  private assertPrepared(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+      return;
+    }
+
+    throw new Error('Scanner task schema not initialized. Call scannerTaskService.prepare() during bootstrap.');
   }
 
   private nowISO(): string {
@@ -2110,7 +2123,7 @@ class ScannerTaskService {
   }
 
   async createTask(input: ScanTaskInput): Promise<ScanTaskState> {
-    this.ensureSchema();
+    this.assertPrepared();
 
     const normalizedTargets = this.normalizeTargets(input);
     const profile = this.deriveProfile(input, normalizedTargets);
@@ -2151,7 +2164,7 @@ class ScannerTaskService {
       }
     }
 
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const row = db.prepare(`
       SELECT * FROM scan_runs
@@ -2168,14 +2181,14 @@ class ScannerTaskService {
       return task;
     }
 
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const row = db.prepare('SELECT * FROM scan_runs WHERE id = ? LIMIT 1').get(taskId) as any;
     return row ? this.mapTaskRow(row) : null;
   }
 
   getHistory(tenantId: string, limit = 20): ScanTaskState[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const rowsById = new Map<string, ScanTaskState>();
     const db = getDatabase();
     const rows = db.prepare(`
@@ -2201,7 +2214,7 @@ class ScannerTaskService {
       'SELECT * FROM scan_runs WHERE id = $1 LIMIT 1',
       [taskId],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare('SELECT * FROM scan_runs WHERE id = ? LIMIT 1').get(taskId) as any;
       }
@@ -2224,7 +2237,7 @@ class ScannerTaskService {
       `,
       [tenantId, limit],
       () => {
-        this.ensureSchema();
+        this.assertPrepared();
         const db = getDatabase();
         return db.prepare(`
           SELECT * FROM scan_runs
@@ -3160,7 +3173,7 @@ class ScannerTaskService {
   }
 
   getTaskResults(taskId: string): any {
-    this.ensureSchema();
+    this.assertPrepared();
     const task = this.getTask(taskId);
     if (!task) {
       return null;
@@ -3686,3 +3699,4 @@ class ScannerTaskService {
 }
 
 export const scannerTaskService = new ScannerTaskService();
+

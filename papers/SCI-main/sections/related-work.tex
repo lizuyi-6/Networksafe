@@ -1,0 +1,75 @@
+% Related Work Section for AetherGuard SCI Paper
+% Target: IEEE TDSC/TIFS
+% Based on comprehensive literature review (2026-03-13)
+
+\section{Background and Related Work}
+\label{sec:related-work}
+
+\subsection{AI-Assisted Intrusion Detection}
+\label{subsec:ai-ids}
+
+Intrusion detection research has evolved through several paradigm shifts. Denning's foundational model established audit-based anomaly detection as a core security primitive~\cite{denning1987intrusion}, while early practical systems like Snort~\cite{roesch1999snort} and Bro~\cite{paxson1999bro} demonstrated the operational value of signature-based and semantic network monitoring. Contemporary approaches increasingly incorporate machine learning: LUCID showed that deep learning models can achieve practical DDoS detection with acceptable computational overhead~\cite{doriguzzi2020lucid}, and comprehensive surveys document the progression toward explainable, adaptive detection systems~\cite{neupane2022xids,holdbrook2024survey}.
+
+However, most AI-augmented IDS architectures follow a single-model pattern: traffic features feed into one classifier or one LLM invocation, producing a label and confidence score. This design, while operationally convenient, exhibits three limitations evident in recent literature. First, ambiguous or mutated attacks often generate conflicting evidence that single models handle poorly~\cite{neupane2022xids}. Second, detection outputs provide limited explanatory material for downstream incident response~\cite{hermosilla2025systems}. Third, federated and privacy-preserving variants~\cite{buyuktanir2025federated} address data distribution but do not resolve the fundamental brittleness of unitary decision boundaries.
+
+Our work addresses these limitations by replacing single-model inference with a multi-role deliberation architecture. Rather than maximizing detection accuracy in isolation, we target decision robustness through explicit conflict resolution and traceable reasoning.
+
+\subsection{Multi-Agent LLM Systems}
+\label{subsec:multi-agent}
+
+The rapid development of LLM-based agents has produced diverse frameworks for collaborative problem-solving. Generative Agents~\cite{park2023generative} demonstrated believable multi-agent behavior in simulated environments, while CAMEL~\cite{li2023camel} established role-playing as a viable pattern for autonomous agent societies. Subsequent systems refined this direction: AutoGen~\cite{wu2024autogen} enabled flexible conversation programming, MetaGPT~\cite{hong2024metagpt} structured collaboration through meta-programming, and AgentVerse~\cite{chen2024agentverse} explored emergent collective behaviors. Recent work has addressed scalability~\cite{qian2025scaling} and automated workflow generation~\cite{zhang2025aflow}.
+
+These frameworks establish that agent specialization and communication improve task outcomes, but they are not designed for security-specific requirements. Security decisions involve adversarial inputs, strict latency constraints, forensic traceability, and operational risk---concerns largely orthogonal to the general-purpose collaboration patterns explored in existing multi-agent literature. Our architecture adapts the multi-agent paradigm to this domain by introducing security-specialized roles (red-team, blue-team, analyst perspectives), threat-category routing, attack-chain reconstruction, and debate-based conflict resolution.
+
+\subsection{Debate, Self-Consistency, and Critique}
+\label{subsec:debate}
+
+Reasoning quality in language models can improve through structured deliberation. Self-consistency~\cite{wang2023selfconsistency} aggregates multiple reasoning paths to produce more reliable outputs. Multi-agent debate~\cite{du2024debate} extends this by explicitly contrasting positions before convergence, with evidence that debate reduces factual errors and reasoning failures. Complementary work on Reflexion~\cite{shinn2023reflexion} and CRITIC~\cite{gou2024critic} shows that critique-driven revision improves task performance when models can inspect intermediate reasoning.
+
+Critically, Huang et al.~\cite{huang2024selfcorrect} demonstrated that LLMs cannot reliably self-correct reasoning without external feedback, underscoring the need for structured externalization of disagreement rather than blind trust in single-pass inference. Our architecture operationalizes this insight: the debate layer (L5) explicitly externalizes conflict between role-specialized agents, producing an auditable deliberation record rather than a hidden confidence adjustment. This addresses the security-domain need for explainable decisions while respecting the empirical constraint that models require externalized critique.
+
+\subsection{Hybrid Inference and Privacy-Aware Deployment}
+\label{subsec:hybrid-inference}
+
+Operational security systems face a persistent trade-off between local privacy constraints and cloud-model capability. Recent surveys document privacy risks in LLM deployment~\cite{chen2025privacy} and propose protective mechanisms including differentially private in-context learning~\cite{tang2024dpicl} and trustworthy AI frameworks~\cite{feretzakis2024trustworthy}. Cost-aware routing research---FrugalGPT's cascaded model selection~\cite{chen2023frugalgpt} and RouteLLM's preference-based routing~\cite{ong2024routellm}---demonstrates that inference backend selection can be treated as an optimization problem.
+
+Our heterogeneous model layer (L6) adopts this optimization perspective but grounds routing decisions in security operations: privacy mode, fallback policy, and runtime availability determine whether analysis remains local, moves to cloud, or follows a hybrid verification path. We additionally implement prompt redaction for sensitive content (IP addresses, bearer tokens, email addresses) before cloud transmission, addressing a practical deployment concern underrepresented in the routing literature.
+
+\subsection{Explainability and Traceability in Security Operations}
+\label{subsec:xai-security}
+
+Explainable intrusion detection increasingly recognizes that prediction outputs alone are insufficient for operational security~\cite{neupane2022xids,hermosilla2025systems,hermosilla2025forensic}. Analysts require incident narratives, forensic evidence, and policy consequences---not merely feature attributions. Current X-IDS research focuses primarily on post-hoc interpretation of model decisions (e.g., SHAP and LIME explanations), leaving procedural explainability largely unexplored.
+
+Our synthesis layer (L7) extends X-IDS research by producing structured case files containing not only classification labels but also reasoning narratives, debate transcripts, attack chain reconstructions, and policy-update suggestions. This shifts explainability from a model-interpretation problem to a workflow-traceability capability, aligning with the operational reality that security decisions have downstream consequences requiring audit trails.
+
+\subsection{Distributed and Collaborative Security}
+\label{subsec:collaborative-security}
+
+Collaborative intrusion detection networks (CIDNs) have been extensively studied as a mechanism for sharing threat intelligence across organizational boundaries~\cite{vasilomanolakis2016taxonomy}. Recent work explores blockchain-based trust management for collaborative detection~\cite{meng2023blockchain} and edge-based architectures for industrial IoT scenarios~\cite{alhawawreh2023edge}. Autonomous security agents represent another active research direction, with surveys documenting progress in self-governing defensive systems~\cite{barrere2022autonomous}.
+
+Our architecture differs from prior CIDN work in two key respects. First, we focus on intra-organizational distributed defense rather than inter-organizational threat sharing, enabling tighter integration between the control plane and distributed agents. Second, our multi-agent AI subsystem operates at the decision layer rather than the data-sharing layer, using role specialization and debate to improve decision quality rather than aggregating alerts across administrative domains.
+
+\subsection{Positioning Summary}
+\label{subsec:positioning}
+
+Table~\ref{tab:comparison} situates our architecture against related approaches across six operational dimensions.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison with Related Approaches}
+\label{tab:comparison}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Dimension} & \textbf{Single-Model} & \textbf{Multi-Agent} & \textbf{Debate} & \textbf{Federated} & \textbf{Ours} \\
+\hline
+Analytical perspective & Unitary & General roles & Adversarial & Distributed & Security-specialized \\
+Conflict handling & Threshold-based & Consensus & Argumentation & Aggregation & Structured debate \\
+Context fusion & Request-local & Workflow & Multi-view & Data-distributed & Trace-centric \\
+Explainability & Post-hoc & Interaction log & Debate record & Model-level & Case file synthesis \\
+Deployment flexibility & Fixed backend & Cloud-default & Cloud-default & Distributed & Local/cloud/hybrid \\
+Operational follow-up & External tooling & Task output & Verdict only & Model update & Policy suggestions \\
+\hline
+\end{tabular}
+\end{table}
+
+Our contribution is not to outperform existing approaches on any single metric, but to integrate role specialization, conflict resolution, trace reconstruction, and deployment-aware routing into a coherent security-decision architecture that is more explainable and auditable than single-model inference.

@@ -89,6 +89,33 @@ export function createPlatformCloudClient(model: string, options?: {
   );
 }
 
+function buildAnthropicPayload(
+  modelId: string,
+  messages: PlatformChatMessage[],
+  options?: { maxTokens?: number; temperature?: number }
+): Record<string, unknown> {
+  const systemMessages = messages
+    .filter((message) => message.role === 'system')
+    .map((message) => message.content.trim())
+    .filter(Boolean);
+  const conversation = messages
+    .filter((message) => message.role !== 'system')
+    .map((message) => ({
+      role: message.role,
+      content: message.content
+    }));
+
+  return {
+    model: modelId,
+    max_tokens: options?.maxTokens || 2048,
+    ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+    ...(systemMessages.length > 0 ? { system: systemMessages.join('\n\n') } : {}),
+    messages: conversation.length > 0
+      ? conversation
+      : [{ role: 'user', content: 'Continue.' }]
+  };
+}
+
 export async function invokePlatformCloudModel(
   modelId: string,
   messages: PlatformChatMessage[],
@@ -101,11 +128,7 @@ export async function invokePlatformCloudModel(
     if (PLATFORM_API_CONFIG.protocol === 'anthropic-compatible') {
       const response = await axios.post(
         url,
-        {
-          model: modelId,
-          max_tokens: options?.maxTokens || 2048,
-          messages
-        },
+        buildAnthropicPayload(modelId, messages, options),
         {
           headers: {
             ...PLATFORM_API_CONFIG.defaultHeaders,

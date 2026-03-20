@@ -274,9 +274,12 @@ export class TraceContextManager {
     }
 
     private startCleanupTimer(): void {
-        setInterval(() => {
+        const timer = setInterval(() => {
             this.cleanupStaleTraces();
         }, 300000);
+        if (typeof timer.unref === 'function') {
+            timer.unref();
+        }
     }
 
     private cleanupStaleTraces(): void {

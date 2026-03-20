@@ -1,0 +1,164 @@
+** Drc report for esp32-serial-deployer-pcb.kicad_pcb **
+** Created on 2026-03-15T18:36:54+0800 **
+
+** Found 0 DRC violations **
+
+** Found 1 unconnected pads **
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(71.7500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 9 [3V3]
+    @(70.7500 mm, 35.9625 mm): 走线 [3V3] (F.Cu), 长度: 1.0076 mm
+
+** Found 50 Footprint errors **
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(60.0000 mm, 26.0000 mm): 封装 Q2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(42.0000 mm, 6.0000 mm): 封装 R16
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(44.0000 mm, 30.0000 mm): 封装 C9
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(56.0000 mm, 60.0000 mm): 封装 SW3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(56.0000 mm, 34.0000 mm): 封装 R15
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(68.0000 mm, 12.0000 mm): 封装 C5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(50.0000 mm, 34.0000 mm): 封装 R13
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(46.0000 mm, 38.0000 mm): 封装 Q3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(62.0000 mm, 34.0000 mm): 封装 D10
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(73.0000 mm, 60.0000 mm): 封装 SW4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(60.0000 mm, 22.0000 mm): 封装 Q1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(53.0000 mm, 34.0000 mm): 封装 R14
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(72.0000 mm, 34.0000 mm): 封装 U3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(36.0000 mm, 53.0000 mm): 封装 SW2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(80.0000 mm, 68.0000 mm): 封装 TP8
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(48.0000 mm, 25.0000 mm): 封装 C2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(43.0000 mm, 26.0000 mm): 封装 U4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(76.0000 mm, 68.0000 mm): 封装 TP7
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(64.0000 mm, 68.0000 mm): 封装 TP4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(40.0000 mm, 30.0000 mm): 封装 C8
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(66.0000 mm, 30.0000 mm): 封装 C6
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(72.0000 mm, 68.0000 mm): 封装 TP6
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(90.0000 mm, 60.0000 mm): 封装 SW5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(78.0000 mm, 24.0000 mm): 封装 D2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(50.0000 mm, 23.0000 mm): 封装 R1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(12.0000 mm, 30.0000 mm): 封装 U1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(82.0000 mm, 24.0000 mm): 封装 F2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(61.0000 mm, 13.0000 mm): 封装 U5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(42.0000 mm, 43.0000 mm): 封装 R17
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(94.0000 mm, 33.0000 mm): 封装 J2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(46.0000 mm, 18.0000 mm): 封装 D1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(86.0000 mm, 32.0000 mm): 封装 U6
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(53.0000 mm, 23.0000 mm): 封装 R2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(60.0000 mm, 68.0000 mm): 封装 TP3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(88.0000 mm, 16.0000 mm): 封装 J3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(40.0000 mm, 18.0000 mm): 封装 F1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(55.0000 mm, 5.0000 mm): 封装 J1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(38.0000 mm, 25.0000 mm): 封装 C1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(34.0000 mm, 40.0000 mm): 封装 C3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(66.0000 mm, 40.0000 mm): 封装 C7
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(18.0000 mm, 53.0000 mm): 封装 SW1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(56.0000 mm, 46.0000 mm): 封装 BZ1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(31.0000 mm, 40.0000 mm): 封装 R4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(28.0000 mm, 40.0000 mm): 封装 R3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(56.0000 mm, 68.0000 mm): 封装 TP2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(68.0000 mm, 68.0000 mm): 封装 TP5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(52.0000 mm, 68.0000 mm): 封装 TP1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(73.0000 mm, 14.0000 mm): 封装 U2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(38.0000 mm, 6.0000 mm): 封装 D3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(66.0000 mm, 12.0000 mm): 封装 C4
+
+** End of Report **

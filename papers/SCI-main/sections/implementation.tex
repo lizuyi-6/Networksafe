@@ -1,0 +1,228 @@
+% Implementation Section for AetherGuard SCI Paper
+% Target: IEEE TDSC/TIFS
+
+\section{Implementation}
+\label{sec:implementation}
+
+\subsection{Technology Stack}
+\label{subsec:tech-stack}
+
+AetherGuard is implemented using a modern, type-safe technology stack chosen for performance, maintainability, and operational reliability.
+
+\subsubsection{Control Plane}
+
+\begin{itemize}
+    \item \textbf{Runtime}: Node.js 18 LTS with TypeScript 5.0
+    \item \textbf{Web Framework}: Express.js 4.18 for REST APIs
+    \item \textbf{Real-time Communication}: Socket.IO 4.6 for WebSocket gateways
+    \item \textbf{Database}: SQLite 3.42 (default) or PostgreSQL 15 (production)
+    \item \textbf{Cache/Message Broker}: Redis 7.0
+    \item \textbf{Authentication}: JWT with RS256 signing, bcrypt password hashing
+\end{itemize}
+
+\subsubsection{Distributed Agents}
+
+\begin{itemize}
+    \item \textbf{Runtime}: Node.js 18 LTS with TypeScript 5.0
+    \item \textbf{Process Management}: PM2 for production deployment
+    \item \textbf{Network Monitoring}: libpcap via node-pcap bindings
+    \item \textbf{Firewall Control}: iptables/nftables via child process invocation
+    \item \textbf{System Integration}: systemd service files for Linux deployment
+\end{itemize}
+
+\subsubsection{AI/ML Components}
+
+\begin{itemize}
+    \item \textbf{Local Models}: Ollama 0.1.x with Llama 3 8B and Mistral 7B
+    \item \textbf{Cloud Models}: GLM-4 (Zhipu AI), GPT-4 (OpenAI) via REST APIs
+    \item \textbf{Threat Classification}: scikit-learn Random Forest (Python bridge)
+    \item \textbf{Embeddings}: sentence-transformers for semantic similarity
+\end{itemize}
+
+\subsubsection{Frontend Dashboard}
+
+\begin{itemize}
+    \item \textbf{Framework}: React 18 with TypeScript
+    \item \textbf{Build Tool}: Vite 5.0
+    \item \textbf{UI Components}: TailwindCSS 3.4, Headless UI
+    \item \textbf{Charts}: Recharts for real-time metrics visualization
+    \item \textbf{Real-time Updates}: Socket.IO client
+\end{itemize}
+
+\subsection{Key Implementation Details}
+\label{subsec:implementation-details}
+
+\subsubsection{Agent Registration Flow}
+
+The agent onboarding process implements cryptographic verification:
+
+\begin{enumerate}
+    \item Administrator generates a one-time onboarding code via the dashboard.
+    \item Agent installer presents the code to the \texttt{/api/agents/register} endpoint.
+    \item Control plane verifies the code and issues a long-term agent ID and API key.
+    \item Agent establishes WebSocket connection with mutual TLS authentication.
+    \item Agent receives initial configuration including threat intelligence feeds and policy rules.
+\end{enumerate}
+
+\subsubsection{Secure Command Execution}
+
+Commands from the control plane follow a defense-in-depth approach:
+
+\begin{enumerate}
+    \item Command is signed with HMAC-SHA256 using the agent-specific signing key.
+    \item Command is transmitted over the authenticated WebSocket connection.
+    \item Agent verifies the HMAC signature before parsing the command.
+    \item Command is validated against an allowlist of permitted operations.
+    \item Command execution is sandboxed using Linux namespaces where applicable.
+    \item Execution result is signed and returned to the control plane.
+\end{enumerate}
+
+\subsubsection{Multi-Agent Debate Implementation}
+
+The debate layer is implemented as an asynchronous orchestration workflow:
+
+\begin{verbatim}
+async function debate(threat: Threat): Promise<Decision> {
+  // Parallel analysis by role-playing agents
+  const viewpoints = await Promise.all([
+    socrates.analyze(threat),
+    plato.analyze(threat),
+    aristotle.analyze(threat)
+  ]);
+
+  // Conflict detection
+  const conflicts = detectConflicts(viewpoints);
+
+  // Iterative debate rounds
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    if (conflicts.length === 0) break;
+
+    const arguments = await Promise.all(
+      conflicts.map(c => agents[c.agent].presentArgument(c))
+    );
+
+    viewpoints = updateViewpoints(viewpoints, arguments);
+    conflicts = detectConflicts(viewpoints);
+  }
+
+  // Final synthesis
+  return aristotle.synthesize(viewpoints);
+}
+\end{verbatim}
+
+\subsubsection{Privacy-Aware Model Routing}
+
+The routing implementation uses a decision tree based on threat sensitivity:
+
+\begin{verbatim}
+function selectModel(threat: Threat, policy: PrivacyPolicy): Model {
+  const sensitivity = assessSensitivity(threat);
+
+  if (policy.mode === 'STRICT' || sensitivity === 'HIGH') {
+    return localModel;  // Ollama
+  }
+
+  if (sensitivity === 'MEDIUM' && policy.allowHybrid) {
+    return hybridModel; // Local pre-screen + cloud verification
+  }
+
+  if (policy.costBudget > cloudModel.estimateCost(threat)) {
+    return cloudModel;  // GLM-4 or GPT-4
+  }
+
+  return localModel;
+}
+\end{verbatim}
+
+Sensitive data redaction uses regular expression patterns:
+
+\begin{verbatim}
+const REDACTION_PATTERNS = {
+  ipv4: /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g,
+  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+  token: /bearer\s+[a-zA-Z0-9_\-\.]+/gi,
+  apiKey: /api[_-]?key["']?\s*[:=]\s*["']?[a-zA-Z0-9]{16,}["']?/gi
+};
+\end{verbatim}
+
+\subsection{Deployment Architecture}
+\label{subsec:deployment}
+
+\subsubsection{Control Plane Deployment}
+
+The control plane is deployed as a containerized application using Docker Compose:
+
+\begin{verbatim}
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=sqlite:./data/aetherguard.db
+    volumes:
+      - ./data:/app/data
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+\end{verbatim}
+
+\subsubsection{Agent Deployment}
+
+Distributed agents are deployed as systemd services on Linux servers:
+
+\begin{verbatim}
+[Unit]
+Description=AetherGuard Security Agent
+After=network.target
+
+[Service]
+Type=simple
+User=aetherguard
+ExecStart=/usr/bin/node /opt/aetherguard/agent.js
+Restart=always
+RestartSec=10
+Environment=AETHERGUARD_SERVER=https://control.example.com
+Environment=AETHERGUARD_AGENT_ID=agent-001
+
+[Install]
+WantedBy=multi-user.target
+\end{verbatim}
+
+\subsubsection{ESP32 Deployment Dongle}
+
+The ESP32-based deployment dongle provides zero-touch agent installation:
+
+\begin{enumerate}
+    \item Dongle connects to target server via USB.
+    \item Dongle presents as USB mass storage with auto-run script.
+    \item Auto-run script detects OS and downloads appropriate agent binary.
+    \item Agent registers with control plane using pre-configured onboarding code.
+    \item Dongle LED indicates installation status (green=success, red=failure).
+\end{enumerate}
+
+\subsection{Code Availability}
+\label{subsec:code}
+
+The AetherGuard implementation is open-source under the MIT license. The repository includes:
+
+\begin{itemize}
+    \item Control plane backend source code (Node.js/TypeScript)
+    \item Distributed agent source code (Node.js/TypeScript)
+    \item Frontend dashboard source code (React/TypeScript)
+    \item ESP32 firmware for deployment dongles (C++/Arduino)
+    \item Docker Compose configurations for deployment
+    \item Systemd service files for agent installation
+    \item Comprehensive documentation and API specifications
+\end{itemize}
+
+The source code is available at: \url{https://github.com/aetherguard/aetherguard}

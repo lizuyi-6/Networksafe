@@ -1,0 +1,304 @@
+ERC 报告 (2026-03-15T19:10:26+0800, UTF8 编码)
+
+***** 图纸 /
+[pin_to_pin]: 类型为 Power output 和 Power output 的引脚已连接
+    ; error
+    @(71.12 mm, 27.94 mm): Symbol U4 引脚 5 [VOUT, Power output, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(63.50 mm, 109.22 mm): Symbol U1 引脚 27 [IO16, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(63.50 mm, 111.76 mm): Symbol U1 引脚 35 [U0TXD/IO1, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(63.50 mm, 114.30 mm): Symbol U1 引脚 34 [U0RXD/IO3, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(63.50 mm, 116.84 mm): Symbol U1 引脚 25 [IO0, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(63.50 mm, 119.38 mm): Symbol U1 引脚 1 [GND, Power input, Line]
+[power_pin_not_driven]: 输入电源引脚不受任何输出电源引脚驱动
+    ; error
+    @(63.50 mm, 119.38 mm): Symbol U1 引脚 1 [GND, Power input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(63.50 mm, 121.92 mm): Symbol U1 引脚 3 [EN, Input, Line]
+[pin_not_driven]: 输入引脚不受任何输出引脚驱动
+    ; error
+    @(63.50 mm, 121.92 mm): Symbol U1 引脚 3 [EN, Input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(63.50 mm, 124.46 mm): Symbol U1 引脚 2 [VDD, Power input, Line]
+[power_pin_not_driven]: 输入电源引脚不受任何输出电源引脚驱动
+    ; error
+    @(63.50 mm, 124.46 mm): Symbol U1 引脚 2 [VDD, Power input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(93.98 mm, 111.76 mm): Symbol U1 引脚 10 [IO25, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(93.98 mm, 114.30 mm): Symbol U1 引脚 37 [IO23, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(93.98 mm, 116.84 mm): Symbol U1 引脚 36 [IO22, Bidirectional, Line]
+[power_pin_not_driven]: 输入电源引脚不受任何输出电源引脚驱动
+    ; error
+    @(142.24 mm, 53.34 mm): Symbol U2 引脚 5 [VIO, Power input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(93.98 mm, 119.38 mm): Symbol U1 引脚 33 [IO21, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(142.24 mm, 58.42 mm): Symbol U2 引脚 7 [VREGIN, Power input, Line]
+[power_pin_not_driven]: 输入电源引脚不受任何输出电源引脚驱动
+    ; error
+    @(142.24 mm, 58.42 mm): Symbol U2 引脚 7 [VREGIN, Power input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(93.98 mm, 121.92 mm): Symbol U1 引脚 31 [IO19, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(93.98 mm, 124.46 mm): Symbol U1 引脚 30 [IO18, Bidirectional, Line]
+[pin_to_pin]: 类型为 Output 和 Power output 的引脚已连接
+    ; error
+    @(167.64 mm, 43.18 mm): Symbol U2 引脚 23 [~DTR, Output, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(167.64 mm, 53.34 mm): Symbol U2 引脚 21 [TXD, Output, Line]
+[power_pin_not_driven]: 输入电源引脚不受任何输出电源引脚驱动
+    ; error
+    @(142.24 mm, 127.00 mm): Symbol U3 引脚 2 [GND, Power input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(185.42 mm, 45.72 mm): Symbol J1 引脚 A6 [D+, Bidirectional, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(185.42 mm, 50.80 mm): Symbol J1 引脚 A4 [VBUS, Power output, Line]
+[power_pin_not_driven]: 输入电源引脚不受任何输出电源引脚驱动
+    ; error
+    @(142.24 mm, 132.08 mm): Symbol U3 引脚 5 [VIO, Power input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(142.24 mm, 137.16 mm): Symbol U3 引脚 7 [VREGIN, Power input, Line]
+[power_pin_not_driven]: 输入电源引脚不受任何输出电源引脚驱动
+    ; error
+    @(142.24 mm, 137.16 mm): Symbol U3 引脚 7 [VREGIN, Power input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(167.64 mm, 127.00 mm): Symbol U3 引脚 20 [RXD, Input, Line]
+[pin_not_driven]: 输入引脚不受任何输出引脚驱动
+    ; error
+    @(167.64 mm, 127.00 mm): Symbol U3 引脚 20 [RXD, Input, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(167.64 mm, 132.08 mm): Symbol U3 引脚 21 [TXD, Output, Line]
+[pin_not_connected]: 引脚未连接
+    ; error
+    @(185.42 mm, 121.92 mm): Symbol J2 引脚 1 [VBUS, Power output, Line]
+[pin_to_pin]: 类型为 Power output 和 Power output 的引脚已连接
+    ; error
+    @(205.74 mm, 116.84 mm): Symbol J2 引脚 4 [GND, Power output, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(63.50 mm, 88.90 mm): Symbol U1 隐藏的引脚 9 [NC, Unconnected, Line]
+    @(63.50 mm, 88.90 mm): 水平线, 长度 2.54 mm
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(63.50 mm, 91.44 mm): Symbol U1 隐藏的引脚 8 [NC, Unconnected, Line]
+    @(63.50 mm, 91.44 mm): 水平线, 长度 2.54 mm
+[multiple_net_names]: 3V3 和 GND 都连接到同一项上; 将使用 3V3 作为网表中的网络名称
+    ; warning
+    @(60.96 mm, 88.90 mm): 全局标签 '3V3'
+    @(60.96 mm, 93.98 mm): 全局标签 'GND'
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(63.50 mm, 93.98 mm): Symbol U1 隐藏的引脚 7 [NC, Unconnected, Line]
+    @(63.50 mm, 93.98 mm): 水平线, 长度 2.54 mm
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(63.50 mm, 96.52 mm): Symbol U1 隐藏的引脚 6 [NC, Unconnected, Line]
+    @(63.50 mm, 96.52 mm): 水平线, 长度 2.54 mm
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(63.50 mm, 99.06 mm): Symbol U1 隐藏的引脚 5 [NC, Unconnected, Line]
+    @(63.50 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(60.96 mm, 101.60 mm): 全局标签 'UART0_TX'
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(63.50 mm, 101.60 mm): Symbol U1 隐藏的引脚 4 [NC, Unconnected, Line]
+    @(63.50 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(63.50 mm, 104.14 mm): 水平线, 长度 2.54 mm
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(93.98 mm, 88.90 mm): Symbol U1 隐藏的引脚 20 [NC, Unconnected, Line]
+    @(93.98 mm, 88.90 mm): 水平线, 长度 2.54 mm
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(93.98 mm, 91.44 mm): Symbol U1 隐藏的引脚 19 [NC, Unconnected, Line]
+    @(93.98 mm, 91.44 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(96.52 mm, 88.90 mm): 全局标签 'BTN_OK'
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(93.98 mm, 93.98 mm): Symbol U1 隐藏的引脚 18 [NC, Unconnected, Line]
+    @(93.98 mm, 93.98 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(96.52 mm, 93.98 mm): 全局标签 'OLED_SDA'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(96.52 mm, 96.52 mm): 全局标签 'OLED_SCL'
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(93.98 mm, 99.06 mm): Symbol U1 隐藏的引脚 16 [NC, Unconnected, Line]
+    @(93.98 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(93.98 mm, 101.60 mm): Symbol U1 隐藏的引脚 14 [NC, Unconnected, Line]
+    @(93.98 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(96.52 mm, 101.60 mm): 全局标签 'LED_R_DRV'
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(93.98 mm, 104.14 mm): Symbol U1 引脚 13 [IO14, Bidirectional, Line]
+    @(71.12 mm, 27.94 mm): Symbol U4 引脚 5 [VOUT, Power output, Line]
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(106.68 mm, 96.52 mm): 全局标签 'LED_R_DRV'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(27.94 mm, 144.78 mm): 全局标签 'UART0_TX'
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(142.24 mm, 43.18 mm): Symbol U2 引脚 4 [D-, Bidirectional, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(142.24 mm, 43.18 mm): Symbol U2 引脚 3 [D+, Bidirectional, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(129.54 mm, 76.20 mm): 全局标签 'OLED_SCL'
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(109.22 mm, 104.14 mm): Symbol D10 引脚 1 [R, Bidirectional, Line]
+    @(71.12 mm, 27.94 mm): Symbol U4 引脚 5 [VOUT, Power output, Line]
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(129.54 mm, 81.28 mm): 全局标签 'OLED_SDA'
+[multiple_net_names]: LED_B 和 LED_G 都连接到同一项上; 将使用 LED_B 作为网表中的网络名称
+    ; warning
+    @(127.00 mm, 104.14 mm): 全局标签 'LED_B'
+    @(127.00 mm, 104.14 mm): 全局标签 'LED_G'
+[lib_symbol_issues]: 在符号库中 'R_GENERIC' 找不到符号 'esp32-serial-deployer-pcb'
+    ; warning
+    @(165.10 mm, 27.94 mm): 符号 R1 [R_GENERIC]
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(167.64 mm, 33.02 mm): Symbol U2 隐藏的引脚 12 [NC, Unconnected, Line]
+    @(167.64 mm, 33.02 mm): Symbol U2 隐藏的引脚 13 [NC, Unconnected, Line]
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(167.64 mm, 38.10 mm): Symbol U2 隐藏的引脚 10 [NC, Unconnected, Line]
+    @(167.64 mm, 38.10 mm): Symbol U2 隐藏的引脚 11 [NC, Unconnected, Line]
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(167.64 mm, 40.64 mm): Symbol U5 引脚 3 [D-, Bidirectional, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(167.64 mm, 40.64 mm): Symbol U5 引脚 1 [D+, Bidirectional, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(167.64 mm, 43.18 mm): Symbol U2 隐藏的引脚 1 [NC, Unconnected, Line]
+    @(167.64 mm, 43.18 mm): Symbol U2 引脚 23 [~DTR, Output, Line]
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 33.02 mm): 全局标签 'UART0_TX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(142.24 mm, 106.68 mm): 水平线, 长度 2.54 mm
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(142.24 mm, 121.92 mm): Symbol U3 引脚 4 [D-, Bidirectional, Line]
+    @(205.74 mm, 116.84 mm): Symbol J2 引脚 4 [GND, Power output, Line]
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(142.24 mm, 121.92 mm): Symbol U3 引脚 3 [D+, Bidirectional, Line]
+    @(205.74 mm, 116.84 mm): Symbol J2 引脚 4 [GND, Power output, Line]
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(185.42 mm, 30.48 mm): Symbol J1 隐藏的引脚 B8 [NC, Unconnected, Line]
+    @(185.42 mm, 30.48 mm): 水平线, 长度 2.54 mm
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(185.42 mm, 35.56 mm): Symbol J1 隐藏的引脚 A8 [NC, Unconnected, Line]
+    @(185.42 mm, 35.56 mm): 水平线, 长度 2.54 mm
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(185.42 mm, 40.64 mm): Symbol J1 引脚 A7 [D-, Bidirectional, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[multiple_net_names]: HOST_CP2102_RST_N 和 HOST_VBUS_SENSE 都连接到同一项上; 将使用 HOST_CP2102_RST_N 作为网表中的网络名称
+    ; warning
+    @(139.70 mm, 127.00 mm): 全局标签 'HOST_CP2102_RST_N'
+    @(142.24 mm, 127.00 mm): 全局标签 'HOST_VBUS_SENSE'
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(167.64 mm, 111.76 mm): Symbol U3 隐藏的引脚 14 [NC, Unconnected, Line]
+    @(167.64 mm, 111.76 mm): Symbol U3 隐藏的引脚 15 [NC, Unconnected, Line]
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(167.64 mm, 116.84 mm): Symbol U3 隐藏的引脚 12 [NC, Unconnected, Line]
+    @(167.64 mm, 116.84 mm): Symbol U3 隐藏的引脚 13 [NC, Unconnected, Line]
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(167.64 mm, 116.84 mm): Symbol U6 引脚 3 [D-, Bidirectional, Line]
+    @(205.74 mm, 116.84 mm): Symbol J2 引脚 4 [GND, Power output, Line]
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(167.64 mm, 116.84 mm): Symbol U6 引脚 1 [D+, Bidirectional, Line]
+    @(205.74 mm, 116.84 mm): Symbol J2 引脚 4 [GND, Power output, Line]
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(167.64 mm, 121.92 mm): Symbol U3 隐藏的引脚 10 [NC, Unconnected, Line]
+    @(167.64 mm, 121.92 mm): Symbol U3 隐藏的引脚 11 [NC, Unconnected, Line]
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(134.62 mm, 160.02 mm): 全局标签 'BTN_OK'
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(205.74 mm, 40.64 mm): Symbol J1 引脚 B5 [CC2, Bidirectional, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[no_connect_connected]: 带有 '无连接' 标志的引脚具有外部连接
+    ; warning
+    @(167.64 mm, 127.00 mm): Symbol U3 隐藏的引脚 1 [NC, Unconnected, Line]
+    @(167.64 mm, 127.00 mm): Symbol U3 引脚 20 [RXD, Input, Line]
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(205.74 mm, 45.72 mm): Symbol J1 引脚 A5 [CC1, Bidirectional, Line]
+    @(205.74 mm, 35.56 mm): Symbol J1 引脚 A1 [GND, Power output, Line]
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(185.42 mm, 111.76 mm): 水平线, 长度 2.54 mm
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(185.42 mm, 116.84 mm): Symbol J2 引脚 3 [D+, Bidirectional, Line]
+    @(205.74 mm, 116.84 mm): Symbol J2 引脚 4 [GND, Power output, Line]
+[pin_to_pin]: 类型为 Bidirectional 和 Power output 的引脚已连接
+    ; warning
+    @(185.42 mm, 116.84 mm): Symbol J2 引脚 2 [D-, Bidirectional, Line]
+    @(205.74 mm, 116.84 mm): Symbol J2 引脚 4 [GND, Power output, Line]
+
+ ** ERC 信息: 86 个错误 33 个警告 53

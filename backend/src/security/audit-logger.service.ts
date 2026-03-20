@@ -72,7 +72,7 @@ export class AuditLogger {
     this.startPeriodicBackupCheck();
   }
 
-  private ensureSchema(): void {
+  prepare(): void {
     if (this.schemaReady) {
       return;
     }
@@ -124,6 +124,19 @@ export class AuditLogger {
     this.schemaReady = true;
   }
 
+  private assertPrepared(): void {
+    if (this.schemaReady) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      this.prepare();
+      return;
+    }
+
+    throw new Error('Audit logger schema not initialized. Call auditLogger.prepare() during bootstrap.');
+  }
+
   private mapAuditRow(row: any): AuditEvent {
     return {
       id: row.id,
@@ -153,7 +166,7 @@ export class AuditLogger {
    * Log a security event
    */
   async log(event: Omit<AuditEvent, 'id' | 'timestamp' | 'signature'>): Promise<string> {
-    this.ensureSchema();
+    this.assertPrepared();
     const auditEvent: AuditEvent = {
       id: uuidv4(),
       timestamp: new Date().toISOString(),
@@ -397,7 +410,7 @@ export class AuditLogger {
    * SECURITY FIX CVE-2026-103: Use class property instead of environment variable
    */
   verifyIntegrity(logId: string): boolean {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const log = db.prepare('SELECT * FROM audit_log WHERE id = ?').get(logId) as any;
 
@@ -447,7 +460,7 @@ export class AuditLogger {
     page?: number;
     limit?: number;
   }): AuditEvent[] {
-    this.ensureSchema();
+    this.assertPrepared();
     const db = getDatabase();
     const page = Math.max(1, Number(filter.page || 1));
     const limit = Math.max(1, Math.min(Number(filter.limit || 100), 500));
@@ -928,7 +941,7 @@ export class AuditLogger {
       }
     };
 
-    setInterval(async () => {
+    const backupCheckTimer = setInterval(async () => {
       try {
         const needsRotation = await this.checkDatabaseSize();
 
@@ -940,14 +953,23 @@ export class AuditLogger {
         logger.error('Periodic backup check failed', { error });
       }
     }, checkInterval);
+    if (typeof backupCheckTimer.unref === 'function') {
+      backupCheckTimer.unref();
+    }
 
-    setTimeout(() => {
+    const initialArchiverTimer = setTimeout(() => {
       void runSegmentArchiver();
     }, 15 * 1000);
+    if (typeof initialArchiverTimer.unref === 'function') {
+      initialArchiverTimer.unref();
+    }
 
-    setInterval(() => {
+    const archiverTimer = setInterval(() => {
       void runSegmentArchiver();
     }, archiveInterval);
+    if (typeof archiverTimer.unref === 'function') {
+      archiverTimer.unref();
+    }
 
     logger.info('Periodic audit log backup check started', {
       segmentArchiveIntervalMinutes: archiveIntervalMinutes

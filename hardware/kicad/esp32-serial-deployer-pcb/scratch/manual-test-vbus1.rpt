@@ -1,0 +1,88 @@
+** Drc report for manual-test-vbus1.kicad_pcb **
+** Created on 2026-03-15T20:36:27+0800 **
+
+** Found 23 DRC violations **
+[shorting_items]: 短路了两个不同网络的项目 (网络 VBUS_HOST_RAW 和 GND)
+    局部重写; error
+    @(70.9000 mm, 37.2000 mm): 过孔 [VBUS_HOST_RAW] (F.Cu - B.Cu)
+    @(70.7500 mm, 37.2000 mm): 走线 [GND] (In2.Cu), 长度: 4.8957 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 VBUS_HOST_RAW 和 GND)
+    局部重写; error
+    @(70.9000 mm, 37.2000 mm): 过孔 [VBUS_HOST_RAW] (F.Cu - B.Cu)
+    @(70.7500 mm, 33.2500 mm): 走线 [GND] (In2.Cu), 长度: 3.9500 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1632 mm)
+    规则: netclass 'Default'; error
+    @(71.2500 mm, 35.9625 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 1.2860 mm
+    @(70.7500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 7 [3V3]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0878 mm)
+    规则: netclass 'Default'; error
+    @(71.3378 mm, 30.6168 mm): 走线 [UART2_TX] (In2.Cu), 长度: 30.7849 mm
+    @(70.9000 mm, 37.2000 mm): 过孔 [VBUS_HOST_RAW] (F.Cu - B.Cu)
+[clearance]: 间距违规 (填充区 间距 0.5000 mm; 实际 0.0000 mm)
+    局部重写; error
+    @(70.9000 mm, 37.2000 mm): 过孔 [VBUS_HOST_RAW] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(70.9000 mm, 37.2000 mm): 过孔 [VBUS_HOST_RAW] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[clearance]: 间距违规 (填充区 间距 0.5000 mm; 实际 0.0000 mm)
+    局部重写; error
+    @(75.9013 mm, 36.6831 mm): 过孔 [VBUS_HOST_RAW] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(75.9013 mm, 36.6831 mm): 过孔 [VBUS_HOST_RAW] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1307 mm)
+    规则: netclass 'Default'; error
+    @(71.8000 mm, 36.4000 mm): 走线 [HOST_CP2102_RST_N] (F.Cu), 长度: 3.3106 mm
+    @(72.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 10 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(94.0000 mm, 33.0000 mm): 封装 J2
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(88.0000 mm, 16.0000 mm): 封装 J3
+
+** Found 0 unconnected pads **
+
+** Found 0 Footprint errors **
+
+** End of Report **

@@ -32,6 +32,7 @@ jest.mock('../../services/api-rate-limit-engine.service', () => ({
 jest.mock('../../utils/logger', () => ({
   __esModule: true,
   default: {
+    debug: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
     info: jest.fn()
@@ -223,7 +224,7 @@ describe('Rate Limit Middleware', () => {
       expect(customHandler).toHaveBeenCalled();
     });
 
-    it('should fail open on error', async () => {
+    it('should fail closed on limiter errors', async () => {
       (enhancedRateLimiter.checkRateLimit as jest.Mock).mockRejectedValueOnce(
         new Error('Redis connection error')
       );
@@ -236,7 +237,13 @@ describe('Rate Limit Middleware', () => {
         mockNext
       );
 
-      expect(mockNext).toHaveBeenCalled();
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockStatus).toHaveBeenCalledWith(503);
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: 'RATE_LIMIT_CHECK_FAILED'
+        })
+      );
     });
 
     it('should use user ID as key when available', async () => {

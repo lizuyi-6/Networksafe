@@ -1,5 +1,8 @@
 const path = require('path');
 
+// Backend-only smoke for the experimental cloud-device gateway.
+// This does not represent the current v1 USB-TTL serial deployer firmware.
+
 const socketIoClient = require(path.resolve(__dirname, '../../backend/node_modules/socket.io-client'));
 const { io } = socketIoClient;
 

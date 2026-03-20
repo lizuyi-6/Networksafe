@@ -1,0 +1,141 @@
+% Security Analysis Section for AetherGuard SCI Paper
+% Target: IEEE TDSC/TIFS
+
+\section{Security Analysis}
+\label{sec:security}
+
+\subsection{Threat Model}
+\label{subsec:threat-model}
+
+We consider an adversary whose goal is to compromise the confidentiality, integrity, or availability of protected servers. The adversary may operate at multiple levels of the system stack.
+
+\begin{definition}[Threat Model]
+The threat model $\mathcal{T}$ encompasses three attacker classes:
+\begin{enumerate}
+    \item \textbf{External Attackers}: Remote adversaries attempting network-based intrusions, DDoS attacks, or exploitation of public-facing services.
+    \item \textbf{Internal Threats}: Malicious insiders or compromised accounts with legitimate access to internal systems.
+    \item \textbf{Supply Chain Attackers}: Adversaries targeting the AetherGuard infrastructure itself, including the control plane or agent software.
+\end{enumerate}
+\end{definition}
+
+\subsection{Attacker Model}
+\label{subsec:attacker-model}
+
+We assume an attacker with the following capabilities:
+
+\begin{itemize}
+    \item \textbf{Network Capabilities}: The attacker can intercept, modify, or inject network traffic between agents and the control plane (Man-in-the-Middle).
+    \item \textbf{Cryptographic Capabilities}: The attacker knows all algorithms and protocols but does not possess valid authentication credentials.
+    \item \textbf{Resource Capabilities}: The attacker has access to moderate computational resources but cannot break standard cryptographic primitives (AES-256, RSA-2048, SHA-256).
+    \item \textbf{Insider Capabilities}: In the internal threat model, the attacker possesses valid credentials for a subset of systems but not administrative access to the control plane.
+\end{itemize}
+
+We do not assume the attacker can break TLS 1.3, forge valid JWT tokens without the signing key, or compromise the hardware security modules protecting root certificates.
+
+\subsection{Security Properties}
+\label{subsec:security-properties}
+
+AetherGuard guarantees the following security properties:
+
+\begin{property}[Authentication]
+\label{prop:authentication}
+All communications between agents and the control plane are mutually authenticated. Agents verify the control plane's identity via X.509 certificates, and the control plane verifies agent identity via cryptographically signed JWT tokens.
+\end{property}
+
+\begin{property}[Integrity]
+\label{prop:integrity}
+All commands dispatched from the control plane to agents are cryptographically signed using HMAC-SHA256. Agents reject commands with invalid signatures, preventing unauthorized modifications.
+\end{property}
+
+\begin{property}[Confidentiality]
+\label{prop:confidentiality}
+All data transmitted between agents and the control plane is encrypted using TLS 1.3 with forward secrecy. Sensitive data (IP addresses, credentials) is redacted before cloud model processing.
+\end{property}
+
+\begin{property}[Non-repudiation]
+\label{prop:non-repudiation}
+All security-relevant actions are recorded in tamper-evident audit logs signed with the audit log secret key. Agents cannot deny executed commands, and administrators cannot deny issued commands.
+\end{property}
+
+\begin{property}[Availability]
+\label{prop:availability}
+The system maintains partial functionality during network partitions. Agents continue local threat detection and can execute cached response policies even when disconnected from the control plane.
+\end{property}
+
+\subsection{Formal Security Analysis}
+\label{subsec:formal-analysis}
+
+We formalize the security guarantees using the threat model defined above.
+
+\begin{theorem}[Command Authentication Security]
+\label{thm:command-auth}
+Under the threat model defined in Section~\ref{subsec:threat-model}, an attacker cannot forge valid control commands accepted by agents without knowledge of the command signing key.
+\end{theorem}
+
+\begin{proof}
+Commands are signed using HMAC-SHA256 with a 256-bit key $k$ shared between the control plane and agents. The signature is computed as:
+\begin{equation}
+\sigma = \text{HMAC-SHA256}_k(m)
+\end{equation}
+where $m$ is the command message. To forge a valid signature, the attacker must either:
+\begin{enumerate}
+    \item Guess the 256-bit key $k$, which succeeds with probability $2^{-256}$ (negligible).
+    \item Find a collision in HMAC-SHA256, which is computationally infeasible under standard cryptographic assumptions.
+\end{enumerate}
+Therefore, the probability of successful command forgery is negligible.
+\end{proof}
+
+\begin{theorem}[Audit Log Integrity]
+\label{thm:audit-integrity}
+An attacker cannot undetectably modify audit log entries without knowledge of the audit log signing key.
+\end{theorem}
+
+\begin{proof}
+Each audit log entry $e_i$ contains a hash chain linking it to the previous entry:
+\begin{equation}
+h_i = \text{SHA-256}(e_i || h_{i-1} || \text{timestamp}_i)
+\end{equation}
+The final hash is signed with the audit log key. Modifying any entry $e_j$ would require recomputing all subsequent hashes $h_{j+1}, \ldots, h_n$ and the final signature, which is infeasible without the signing key.
+\end{proof}
+
+\begin{theorem}[Privacy Preservation in Model Routing]
+\label{thm:privacy}
+When privacy mode is set to STRICT, no sensitive data is transmitted to cloud models.
+\end{theorem}
+
+\begin{proof}
+In STRICT mode, the routing algorithm (Algorithm~\ref{alg:routing}) selects the local model $m_{\text{local}}$ with probability 1. The redaction step (line 2) is applied but unnecessary since no transmission occurs. By definition of STRICT mode, all inference remains on-premises.
+\end{proof}
+
+\subsection{Attack Scenarios and Mitigations}
+\label{subsec:attacks}
+
+\subsubsection{Man-in-the-Middle Attacks}
+
+\textbf{Scenario}: An attacker intercepts communication between an agent and the control plane.
+
+\textbf{Mitigation}: All communications use TLS 1.3 with mutual authentication. Agents verify the control plane's certificate against a pinned root CA. The attacker cannot impersonate either party without the private keys.
+
+\subsubsection{Command Injection}
+
+\textbf{Scenario}: An attacker attempts to inject malicious commands into the command channel.
+
+\textbf{Mitigation}: All commands are signed with HMAC-SHA256. Agents verify signatures before execution. Invalid commands are logged and rejected.
+
+\subsubsection{Agent Compromise}
+
+\textbf{Scenario}: An attacker compromises a distributed agent and attempts to use it as a pivot point.
+
+\textbf{Mitigation}: Agents operate with least privilege. Compromised agents can be remotely deactivated by the control plane. Network segmentation prevents lateral movement from agents to other systems.
+
+\subsubsection{Model Poisoning}
+
+\textbf{Scenario}: An attacker attempts to poison the LLM models used for threat analysis.
+
+\textbf{Mitigation}: Local models are loaded from cryptographically signed model files. Cloud models are accessed via authenticated APIs. The debate mechanism (Section~\ref{subsec:debate-algorithm}) provides defense in depth: a single compromised model cannot unilaterally influence decisions.
+
+\subsubsection{Denial of Service}
+
+\textbf{Scenario}: An attacker floods the control plane or agents with traffic to cause service degradation.
+
+\textbf{Mitigation}: Rate limiting is applied at multiple layers: API gateway, WebSocket connections, and agent message processing. Agents can operate autonomously during control plane unavailability.

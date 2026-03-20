@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+﻿import { NextFunction, Request, Response } from 'express';
 
 type PasswordValidation = {
   valid: boolean;
@@ -52,15 +52,17 @@ export function wsTestAgentAdapter(auth: Record<string, any>, socketId: string) 
   return {
     agentId: auth.agentId || `test-agent-${socketId}`,
     hostname: auth.hostname || 'test-host',
-    platform: auth.platform || 'linux'
+    platform: auth.platform || 'linux',
+    tenantId: auth.tenantId || 'test-tenant'
   };
 }
 
 export function wsTestDashboardUserAdapter(auth: Record<string, any>) {
   return {
     userId: auth.userId || 'test-user',
-    email: 'test@fluxguard.local',
+    email: 'test@AetherGuard.local',
     username: 'Test User',
-    role: 'admin' as const
+    role: 'admin' as const,
+    tenantId: auth.tenantId || 'test-tenant'
   };
 }

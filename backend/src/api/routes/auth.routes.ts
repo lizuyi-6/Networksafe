@@ -16,7 +16,7 @@ import {
     buildCookieOptions,
     buildRefreshCookieOptions
 } from '../../middleware/auth.middleware';
-import { getDatabase } from '../../config/database';
+import { sendError, sendSuccess } from '../../core/http/api-response';
 import authSecurityService from '../../security/auth-security.service';
 import redisService from '../../security/redis.service';
 import auditLogger from '../../security/audit-logger.service';
@@ -28,6 +28,13 @@ import {
     passwordWeakResponseAdapter,
     validatePasswordAdapter
 } from '../../testing/test-runtime-adapter';
+import {
+    createAuthUser,
+    findAuthUserByEmail,
+    findAuthUserById,
+    touchAuthUserLastLogin,
+    updateAuthUserPassword
+} from '../../modules/auth/auth-user.repository';
 
 const router = Router();
 const isTestEnv = isTestRuntime();
@@ -49,16 +56,16 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
 
         // Validate input
         if (!email || !password || !username) {
-            return res.status(400).json({
-                error: 'backend.email_password_and_username_are_required',
-                code: 'VALIDATION_ERROR'
+            return sendError(res, 400, {
+                code: 'VALIDATION_ERROR',
+                message: 'backend.email_password_and_username_are_required'
             });
         }
 
         if (!EMAIL_REGEX.test(email)) {
-            return res.status(400).json({
-                error: 'backend.invalid_email_format',
-                code: 'INVALID_EMAIL'
+            return sendError(res, 400, {
+                code: 'INVALID_EMAIL',
+                message: 'backend.invalid_email_format'
             });
         }
 
@@ -70,23 +77,21 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
         );
         if (!passwordValidation.valid) {
             const response = passwordWeakResponseAdapter();
-            return res.status(400).json({
-                error: response.error,
+            return sendError(res, 400, {
                 code: response.code,
+                message: response.error,
                 details: passwordValidation.errors
             });
         }
 
-        const db = getDatabase();
-
         // Check if user already exists
-        const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+        const existingUser = await findAuthUserByEmail(email);
         if (existingUser) {
             // SECURITY FIX: Use generic error message to prevent user enumeration
             logger.info(`Registration attempt for existing email: ${email}`);
-            return res.status(409).json({
-                error: 'backend.user_already_exists',
-                code: 'USER_EXISTS'
+            return sendError(res, 409, {
+                code: 'USER_EXISTS',
+                message: 'backend.user_already_exists'
             });
         }
 
@@ -100,10 +105,16 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
         const role = 'tenant'; // Default role
         const plan = 'starter'; // Default plan
 
-        db.prepare(`
-      INSERT INTO users (id, email, username, password_hash, role, plan, tenant_id, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).run(userId, email, username, passwordHash, role, plan, tenantId);
+        await createAuthUser({
+            id: userId,
+            email,
+            username,
+            password_hash: passwordHash,
+            role,
+            plan,
+            tenant_id: tenantId,
+            status: 'active'
+        });
 
         // Generate tokens
         const tokens = generateTokens({
@@ -132,7 +143,7 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
         res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
         res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
 
-        res.status(201).json({
+        return sendSuccess(res, {
             message: 'backend.user_registered_successfully',
             user: {
                 userId,
@@ -145,13 +156,28 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             expiresIn: tokens.expiresIn
-        });
+        }, {
+            legacy: {
+                message: 'backend.user_registered_successfully',
+                user: {
+                    userId,
+                    email,
+                    username,
+                    role,
+                    plan,
+                    tenantId
+                },
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
+                expiresIn: tokens.expiresIn
+            }
+        }, 201);
 
     } catch (error: any) {
         logger.error('Registration error', { error: error.message });
-        res.status(500).json({
-            error: 'backend.registration_failed',
-            code: 'INTERNAL_ERROR'
+        return sendError(res, 500, {
+            code: 'INTERNAL_ERROR',
+            message: 'backend.registration_failed'
         });
     }
 });
@@ -168,9 +194,9 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
 
         if (!email || !password) {
-            return res.status(400).json({
-                error: 'backend.email_and_password_are_required',
-                code: 'VALIDATION_ERROR'
+            return sendError(res, 400, {
+                code: 'VALIDATION_ERROR',
+                message: 'backend.email_and_password_are_required'
             });
         }
 
@@ -179,10 +205,16 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         if (isLocked) {
             const lockInfo = await authSecurityService.getLockInfo(email);
             logger.warn(`Login attempt on locked account: ${email}`);
-            return res.status(403).json({
-                error: 'backend.account_is_temporarily_locked_due_to_too_many_failed_login_attempts',
+            return sendError(res, 403, {
                 code: 'ACCOUNT_LOCKED',
-                remainingTime: lockInfo.remainingTime
+                message: 'backend.account_is_temporarily_locked_due_to_too_many_failed_login_attempts',
+                details: {
+                    remainingTime: lockInfo.remainingTime
+                }
+            }, {
+                legacy: {
+                    remainingTime: lockInfo.remainingTime
+                }
             });
         }
 
@@ -192,13 +224,8 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             logger.warn(`Suspicious login detected for ${email}`, { warnings });
         }
 
-        const db = getDatabase();
-
         // Find user
-        const user = db.prepare(`
-      SELECT id, email, username, password_hash, role, plan, tenant_id, status
-      FROM users WHERE email = ?
-    `).get(email) as any;
+        const user = await findAuthUserByEmail(email) as any;
 
         // SECURITY FIX CVE-2026-302: Use dummy hash to prevent timing attacks on user existence
         // This prevents attackers from determining if an email exists based on response time
@@ -221,9 +248,9 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             // Use dummy hash for non-existent user
             await bcrypt.compare(password, dummyHash);
 
-            return res.status(401).json({
-                error: 'backend.invalid_credentials',
-                code: 'INVALID_CREDENTIALS'
+            return sendError(res, 401, {
+                code: 'INVALID_CREDENTIALS',
+                message: 'backend.invalid_credentials'
             });
         }
 
@@ -243,9 +270,9 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
                 status: 'failure'
             });
 
-            return res.status(403).json({
-                error: 'backend.account_suspended',
-                code: 'ACCOUNT_SUSPENDED'
+            return sendError(res, 403, {
+                code: 'ACCOUNT_SUSPENDED',
+                message: 'backend.account_suspended'
             });
         }
 
@@ -266,9 +293,9 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
                 status: 'failure'
             });
             logger.warn(`Failed login attempt for: ${email}`);
-            return res.status(401).json({
-                error: 'backend.invalid_credentials',
-                code: 'INVALID_CREDENTIALS'
+            return sendError(res, 401, {
+                code: 'INVALID_CREDENTIALS',
+                message: 'backend.invalid_credentials'
             });
         }
 
@@ -276,7 +303,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         await authSecurityService.recordLoginAttempt(email, clientIp, true);
 
         // Update last login
-        db.prepare(`UPDATE users SET last_login = datetime('now') WHERE id = ?`).run(user.id);
+        await touchAuthUserLastLogin(user.id);
         await auditLogger.log({
             tenantId: user.tenant_id || undefined,
             eventType: 'login',
@@ -306,24 +333,41 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
 
         // SECURITY FIX CVE-2026-028: Reduce exposed user information
-        res.json({
+        return sendSuccess(res, {
             message: 'backend.login_successful',
             user: {
+                userId: user.id,
                 email: user.email,
                 username: user.username,
                 role: user.role,
-                plan: user.plan || 'starter'
+                plan: user.plan || 'starter',
+                tenantId: user.tenant_id || undefined
             },
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             expiresIn: tokens.expiresIn
+        }, {
+            legacy: {
+                message: 'backend.login_successful',
+                user: {
+                    userId: user.id,
+                    email: user.email,
+                    username: user.username,
+                    role: user.role,
+                    plan: user.plan || 'starter',
+                    tenantId: user.tenant_id || undefined
+                },
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
+                expiresIn: tokens.expiresIn
+            }
         });
 
     } catch (error: any) {
         logger.error('Login error', { error: error.message });
-        res.status(500).json({
-            error: 'backend.login_failed',
-            code: 'INTERNAL_ERROR'
+        return sendError(res, 500, {
+            code: 'INTERNAL_ERROR',
+            message: 'backend.login_failed'
         });
     }
 });
@@ -341,9 +385,9 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
         const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
         if (!refreshToken) {
-            return res.status(400).json({
-                error: 'backend.refresh_token_required',
-                code: 'TOKEN_MISSING'
+            return sendError(res, 400, {
+                code: 'TOKEN_MISSING',
+                message: 'backend.refresh_token_required'
             });
         }
 
@@ -352,9 +396,9 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
             const isBlacklisted = await redisService.exists(`refresh:blacklist:${refreshToken}`);
             if (isBlacklisted) {
                 logger.warn('Attempted use of blacklisted refresh token');
-                return res.status(401).json({
-                    error: 'backend.token_revoked',
-                    code: 'TOKEN_REVOKED'
+                return sendError(res, 401, {
+                    code: 'TOKEN_REVOKED',
+                    message: 'backend.token_revoked'
                 });
             }
         } catch (redisError) {
@@ -364,24 +408,19 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
 
         const decoded = verifyRefreshToken(refreshToken);
         if (!decoded) {
-            return res.status(401).json({
-                error: 'backend.invalid_or_expired_refresh_token',
-                code: 'TOKEN_INVALID'
+            return sendError(res, 401, {
+                code: 'TOKEN_INVALID',
+                message: 'backend.invalid_or_expired_refresh_token'
             });
         }
 
-        const db = getDatabase();
-
         // Get user info
-        const user = db.prepare(`
-      SELECT id, email, username, role, plan, tenant_id, status
-      FROM users WHERE id = ?
-    `).get(decoded.userId) as any;
+        const user = await findAuthUserById(decoded.userId) as any;
 
         if (!user || user.status === 'suspended') {
-            return res.status(401).json({
-                error: 'backend.user_not_found_or_suspended',
-                code: 'USER_INVALID'
+            return sendError(res, 401, {
+                code: 'USER_INVALID',
+                message: 'backend.user_not_found_or_suspended'
             });
         }
 
@@ -399,18 +438,25 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
         res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
         res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
 
-        res.json({
+        return sendSuccess(res, {
             message: 'backend.token_refreshed',
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             expiresIn: tokens.expiresIn
+        }, {
+            legacy: {
+                message: 'backend.token_refreshed',
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
+                expiresIn: tokens.expiresIn
+            }
         });
 
     } catch (error: any) {
         logger.error('Token refresh error', { error: error.message });
-        res.status(500).json({
-            error: 'backend.token_refresh_failed',
-            code: 'INTERNAL_ERROR'
+        return sendError(res, 500, {
+            code: 'INTERNAL_ERROR',
+            message: 'backend.token_refresh_failed'
         });
     }
 });
@@ -420,8 +466,10 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
  * Get current user info (requires authentication)
  */
 router.get('/me', authenticate, (req: AuthenticatedRequest, res: Response) => {
-    res.json({
-        user: req.user
+    sendSuccess(res, { user: req.user }, {
+        legacy: {
+            user: req.user
+        }
     });
 });
 
@@ -469,12 +517,22 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
             status: 'success'
         });
 
-        res.json({
+        return sendSuccess(res, {
             message: 'backend.logout_successful'
+        }, {
+            legacy: {
+                message: 'backend.logout_successful'
+            }
         });
     } catch (error: any) {
         logger.error('Logout error', { error: error.message });
-        res.json({ message: 'backend.logout_successful' }); // Still return success to client
+        return sendSuccess(res, {
+            message: 'backend.logout_successful'
+        }, {
+            legacy: {
+                message: 'backend.logout_successful'
+            }
+        }); // Still return success to client
     }
 });
 
@@ -487,9 +545,9 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
         const { currentPassword, newPassword } = req.body;
 
         if (!currentPassword || !newPassword) {
-            return res.status(400).json({
-                error: 'backend.current_and_new_password_required',
-                code: 'VALIDATION_ERROR'
+            return sendError(res, 400, {
+                code: 'VALIDATION_ERROR',
+                message: 'backend.current_and_new_password_required'
             });
         }
 
@@ -501,29 +559,29 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
         );
         if (!passwordValidation.valid) {
             const response = passwordWeakResponseAdapter();
-            return res.status(400).json({
-                error: response.error,
+            return sendError(res, 400, {
                 code: response.code,
+                message: response.error,
                 details: passwordValidation.errors
             });
         }
 
-        const db = getDatabase();
-
         // Get current password hash
-        const user = db.prepare('SELECT password_hash FROM users WHERE id = ?')
-            .get(req.user!.userId) as any;
+        const user = await findAuthUserById(req.user!.userId) as any;
 
         if (!user) {
-            return res.status(404).json({ error: 'backend.user_not_found' });
+            return sendError(res, 404, {
+                code: 'USER_NOT_FOUND',
+                message: 'backend.user_not_found'
+            });
         }
 
         // Verify current password
         const passwordValid = await bcrypt.compare(currentPassword, user.password_hash);
         if (!passwordValid) {
-            return res.status(401).json({
-                error: 'backend.current_password_is_incorrect',
-                code: 'INVALID_PASSWORD'
+            return sendError(res, 401, {
+                code: 'INVALID_PASSWORD',
+                message: 'backend.current_password_is_incorrect'
             });
         }
 
@@ -531,8 +589,7 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
         const newPasswordHash = await bcrypt.hash(newPassword, 12);
 
         // Update password
-        db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\') WHERE id = ?')
-            .run(newPasswordHash, req.user!.userId);
+        await updateAuthUserPassword(req.user!.userId, newPasswordHash);
 
         logger.info(`Password changed for user: ${req.user?.email}`);
         await auditLogger.log({
@@ -547,15 +604,19 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
             status: 'success'
         });
 
-        res.json({
+        return sendSuccess(res, {
             message: 'backend.password_changed_successfully'
+        }, {
+            legacy: {
+                message: 'backend.password_changed_successfully'
+            }
         });
 
     } catch (error: any) {
         logger.error('Password change error', { error: error.message });
-        res.status(500).json({
-            error: 'backend.password_change_failed',
-            code: 'INTERNAL_ERROR'
+        return sendError(res, 500, {
+            code: 'INTERNAL_ERROR',
+            message: 'backend.password_change_failed'
         });
     }
 });

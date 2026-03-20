@@ -1,5 +1,5 @@
 /**
- * FluxGuard ESP32 - 多按键事件处理器
+ * AetherGuard ESP32 - 多按键事件处理器
  * 
  * 支持多个独立按键的去抖和单击检测
  */
@@ -8,11 +8,13 @@
 #define BUTTON_HANDLER_H
 
 #include <Arduino.h>
+#include "config.h"
 
 class SimpleButton {
 private:
     uint8_t pin;
     bool lastState;
+    bool waitingRelease;
     uint32_t lastDebounceTime;
     const uint32_t DEBOUNCE_DELAY = 50;
 
@@ -21,6 +23,7 @@ public:
         pin = p;
         pinMode(pin, INPUT_PULLUP);
         lastState = HIGH;
+        waitingRelease = false;
         lastDebounceTime = 0;
     }
 
@@ -45,17 +48,28 @@ public:
     
     // 检测单击 (释放瞬间触发)
     bool isClicked() {
-        static bool waitingRelease = false;
+        const uint32_t now = millis();
         bool reading = digitalRead(pin);
-        
+
+        if (reading != lastState) {
+            lastDebounceTime = now;
+            lastState = reading;
+        }
+
+        if ((now - lastDebounceTime) < DEBOUNCE_DELAY) {
+            return false;
+        }
+
         if (reading == LOW && !waitingRelease) {
             waitingRelease = true;
-            delay(20); // 简单消抖
+            return false;
         }
-        else if (reading == HIGH && waitingRelease) {
+
+        if (reading == HIGH && waitingRelease) {
             waitingRelease = false;
             return true;
         }
+
         return false;
     }
 };

@@ -1,0 +1,92 @@
+** Drc report for manual-reset1.kicad_pcb **
+** Created on 2026-03-15T20:38:18+0800 **
+
+** Found 24 DRC violations **
+[shorting_items]: 短路了两个不同网络的项目 (网络 HOST_CP2102_RST_N 和 HOST_DN)
+    局部重写; error
+    @(74.8000 mm, 35.2000 mm): 过孔 [HOST_CP2102_RST_N] (F.Cu - B.Cu)
+    @(87.5677 mm, 35.3013 mm): 走线 [HOST_DN] (B.Cu), 长度: 16.9432 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 HOST_CP2102_RST_N 和 )
+    局部重写; error
+    @(71.9000 mm, 35.5500 mm): 走线 [HOST_CP2102_RST_N] (F.Cu), 长度: 2.9210 mm
+    @(72.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 10 [<no net>]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1817 mm)
+    规则: netclass 'Default'; error
+    @(72.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 10 [<no net>]
+    @(71.7500 mm, 35.9625 mm): 走线 [HOST_CP2102_RST_N] (F.Cu), 长度: 0.4389 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1750 mm)
+    规则: netclass 'Default'; error
+    @(74.8000 mm, 35.2000 mm): 过孔 [HOST_CP2102_RST_N] (F.Cu - B.Cu)
+    @(73.9625 mm, 35.2500 mm): F.Cu 上 U3 的焊盘 13 [<no net>]
+[clearance]: 间距违规 (填充区 间距 0.5000 mm; 实际 0.0000 mm)
+    局部重写; error
+    @(74.8000 mm, 35.2000 mm): 过孔 [HOST_CP2102_RST_N] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(74.8000 mm, 35.2000 mm): 过孔 [HOST_CP2102_RST_N] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(74.8000 mm, 35.2000 mm): 走线 [HOST_CP2102_RST_N] (B.Cu), 长度: 7.6000 mm
+    @(87.5677 mm, 35.3013 mm): 走线 [HOST_DN] (B.Cu), 长度: 16.9432 mm
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(71.9000 mm, 35.5500 mm): 走线 [HOST_CP2102_RST_N] (F.Cu), 长度: 2.9210 mm
+    @(72.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 10 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(71.9000 mm, 35.5500 mm): 走线 [HOST_CP2102_RST_N] (F.Cu), 长度: 2.9210 mm
+    @(73.9625 mm, 35.2500 mm): F.Cu 上 U3 的焊盘 13 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(71.9000 mm, 35.5500 mm): 走线 [HOST_CP2102_RST_N] (F.Cu), 长度: 2.9210 mm
+    @(72.0000 mm, 34.0000 mm): F.Cu 上 U3 的焊盘 25 [GND]
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(94.0000 mm, 33.0000 mm): 封装 J2
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(88.0000 mm, 16.0000 mm): 封装 J3
+
+** Found 0 unconnected pads **
+
+** Found 0 Footprint errors **
+
+** End of Report **

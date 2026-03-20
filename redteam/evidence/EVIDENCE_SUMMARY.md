@@ -1,6 +1,6 @@
-# FluxGuard 渗透测试证据摘要
+﻿# AetherGuard 渗透测试证据摘要
 
-**测试项目**: FluxGuard Control Platform 端到端安全测试
+**测试项目**: AetherGuard Control Platform 端到端安全测试
 **测试日期**: 2026-02-16
 **证据编号**: FG-PENTEST-2026-02-16
 **证据保管人**: 红队渗透测试团队
@@ -37,11 +37,11 @@ AUDIT_LOG_SECRET=dev-audit-log-secret-for-testing-32ch
 REDIS_PASSWORD=devredis123
 
 # 管理员账户
-ADMIN_EMAIL=admin@fluxguard.dev
+ADMIN_EMAIL=admin@AetherGuard.dev
 ADMIN_PASSWORD=DevAdmin123456!
 
 # 演示账户
-DEMO_EMAIL=demo@fluxguard.dev
+DEMO_EMAIL=demo@AetherGuard.dev
 DEMO_PASSWORD=DevDemo123456!
 
 # API 密钥

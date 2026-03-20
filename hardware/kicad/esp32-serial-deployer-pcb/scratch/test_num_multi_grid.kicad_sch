@@ -1,0 +1,354 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "74ee8db5-f788-5eed-841b-e2425b081cf5")
+	(paper "A4")
+	(lib_symbols
+	(symbol "esp32-serial-deployer-pcb:TEST_NUM_GRID"
+		(pin_names)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property "Reference" "U"
+			(at -7.62 -7.62 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+			)
+		)
+		(property "Value" "TEST_NUM_GRID"
+			(at 0.0 7.62 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+			)
+		)
+		(property "Footprint" ""
+			(at 0.0 10.16 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0.0 12.7 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 0.0 12.7 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(symbol "TEST_NUM_GRID_1_1"
+			(rectangle
+				(start -8 -5.08)
+				(end 8 5.08)
+				(stroke
+					(width 0.15)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(pin passive line
+				(at -10.16 -2.54 0)
+				(length 2.54)
+
+				(name "P1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at -10.16 0.0 0)
+				(length 2.54)
+
+				(name "P2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 10.16 -2.54 180)
+				(length 2.54)
+
+				(name "P5"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "5"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 10.16 0.0 180)
+				(length 2.54)
+
+				(name "P6"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "6"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 10.16 2.54 180)
+				(length 2.54)
+
+				(name "P9"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "9"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
+	)
+	(wire
+		(pts
+			(xy 40.64 48.26) (xy 38.1 48.26)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "fe12b692-1411-5ec3-b87e-0a5b3772dbfd")
+	)
+	(global_label "N1"
+		(shape bidirectional)
+		(at 38.1 48.26 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "f7410803-00b1-54c8-b613-67509c0de05f")
+	)
+	(wire
+		(pts
+			(xy 40.64 50.8) (xy 38.1 50.8)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "b7628846-724c-514c-8b90-38b254615726")
+	)
+	(global_label "N2"
+		(shape bidirectional)
+		(at 38.1 50.8 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "e643d7f1-f66c-5ee2-8234-0badf60550ee")
+	)
+	(wire
+		(pts
+			(xy 60.959999999999994 48.26) (xy 63.5 48.26)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "f8d0975d-b034-50f0-ba57-a60b808e5048")
+	)
+	(global_label "N5"
+		(shape bidirectional)
+		(at 63.5 48.26 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "f5ef0ac4-cd9d-5a7c-8e08-5b545dad7318")
+	)
+	(wire
+		(pts
+			(xy 60.959999999999994 50.8) (xy 63.5 50.8)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "7bc8e053-e957-56d4-a9fd-7d937ca6387c")
+	)
+	(global_label "N6"
+		(shape bidirectional)
+		(at 63.5 50.8 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "ad8bcb76-c193-5e27-9109-fe7496b6980d")
+	)
+	(wire
+		(pts
+			(xy 60.959999999999994 53.339999999999996) (xy 63.5 53.339999999999996)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(uuid "9e069353-b6e7-5859-ad0d-78fb67020226")
+	)
+	(global_label "N9"
+		(shape bidirectional)
+		(at 63.5 53.339999999999996 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "426c3454-d706-51b2-96f9-5366cf55d806")
+	)
+	(symbol
+		(lib_id "esp32-serial-deployer-pcb:TEST_NUM_GRID")
+		(at 50.8 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b6c1b43e-afca-5b77-9980-77bc54c3396f")
+		(property "Reference" "U1"
+			(at 43.18 30.48 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+			)
+		)
+		(property "Value" "TEST"
+			(at 50.8 71.12 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+			)
+		)
+		(property "Footprint" ""
+			(at 50.8 71.12 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 50.8 73.66 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 50.8 76.2 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+
+				(hide yes)
+			)
+		)
+		(instances
+			(project "esp32-serial-deployer-pcb"
+				(path "/da3a7308-9b56-51dc-a723-484320690582"
+					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

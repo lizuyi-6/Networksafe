@@ -1,15 +1,16 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-AetherGuard (formerly FluxGuard) - 智能服务器安全防御平台。基于 Agent 的分布式安全防御系统，采用"中心化控制 + 分布式执行"架构。
+AetherGuard (formerly AetherGuard) - 智能服务器安全防御平台。基于 Agent 的分布式安全防御系统，采用"中心化控制 + 分布式执行"架构。
 
 **Core Components:**
-- **Control Plane**: Backend API + SQLite + Redis (pub/sub, caching)
+- **Control Plane**: Backend API + PostgreSQL (primary) / SQLite (fallback) + Redis (pub/sub, caching)
 - **Distributed Agents**: Node.js processes on Linux servers (attack detection, firewall control)
 - **Frontend Dashboard**: React SPA for monitoring and management
+- **Rust Fastpath**: High-performance traffic processing sidecar (optional but recommended)
 - **ESP32 Dongles**: Hardware deployment tools (optional)
 
 ## Quick Start
@@ -55,7 +56,7 @@ npm run build
 npm run lint
 
 # Type check (TypeScript validation)
-npx tsc --noEmit
+npm run typecheck                 # Or: npx tsc --noEmit
 
 # Security audit
 npm audit --audit-level=high
@@ -65,6 +66,7 @@ npm test                          # Run all tests
 npm run test:coverage             # With coverage
 npm run test:agents               # AI agents tests only
 npm run demo:agents               # Run AI agents demo locally
+npm run eval:owasp                # Run OWASP security evaluation
 
 # Database seeding (demo data)
 npm run seed                      # Seed demo data
@@ -91,7 +93,7 @@ npm run build
 npm run lint
 
 # Type check (TypeScript validation)
-npx tsc --noEmit
+npm run typecheck                 # Or: npx tsc --noEmit
 
 # Security audit
 npm audit --audit-level=high
@@ -100,9 +102,49 @@ npm audit --audit-level=high
 npm run preview
 ```
 
+### E2E Tests (Playwright)
+
+```bash
+cd e2e
+
+# Install dependencies
+npm install
+
+# Install Playwright browsers
+npx playwright install --with-deps chromium
+
+# Run all E2E tests
+npm test
+
+# Run release verification tests
+npm run test:release
+
+# Run with UI for debugging
+npm run test:ui
+
+# Debug specific test
+npm run test:debug
+```
+
+### Rust Fastpath
+
+```bash
+cd rust-fastpath
+
+# Run tests
+cargo test
+
+# Run linter
+cargo clippy -- -D warnings
+
+# Build release
+cargo build --release
+```
+
 ### TypeScript Version
 
 - **Node.js**: v18+ (CI uses Node 18)
+- **Rust**: 1.85.0 (for fastpath component)
 
 ### Key Environment Variables
 
@@ -111,6 +153,9 @@ Copy `.env.example` to `.env`:
 **Required for Docker:**
 - `JWT_SECRET` - JWT signing key (min 32 chars)
 - `REDIS_PASSWORD` - Redis authentication
+- `DEVICE_COMMAND_SECRET` - Device command signing key (min 24 chars)
+- `ENCRYPTION_KEY` - Agent secrets encryption key (min 32 chars)
+- `ENCRYPTION_SALT` - Agent secrets encryption salt (min 32 chars)
 
 **Required for Production:**
 - `AUDIT_LOG_SECRET` - Audit log signing key (min 32 chars, for tamper-evident logs)
@@ -124,28 +169,33 @@ Copy `.env.example` to `.env`:
 - `ALLOWED_ORIGINS` - CORS origins (comma-separated)
 
 **Agent CLI Variables** (for distributed agents):
-- `FLUXGUARD_SERVER` - Control plane URL
-- `FLUXGUARD_ONBOARDING_CODE` - One-time registration code
-- `FLUXGUARD_AGENT_ID`, `FLUXGUARD_AGENT_API_KEY`, `FLUXGUARD_AGENT_SECRET_KEY` - Set after onboarding
+- `AetherGuard_SERVER` - Control plane URL
+- `AetherGuard_ONBOARDING_CODE` - One-time registration code
+- `AetherGuard_AGENT_ID`, `AetherGuard_AGENT_API_KEY`, `AetherGuard_AGENT_SECRET_KEY` - Set after onboarding
 
 ## Architecture
 
 ### High-Level Structure
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Control Plane                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │   Backend   │  │   SQLite    │  │      Redis          │ │
-│  │  (Node.js)  │  │  Database   │  │   (Pub/Sub + Cache) │ │
-│  └──────┬──────┘  └─────────────┘  └─────────────────────┘ │
-│         │                                                   │
-│  ┌──────┴──────────────────────────────────────────────┐   │
-│  │           WebSocket Gateways                        │   │
-│  │  - AgentGateway (bi-directional with agents)        │   │
-│  │  - DeviceGateway (ESP32 dongles)                    │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Control Plane                                  │
+│  ┌─────────────┐  ┌──────────────────┐  ┌─────────────────────────────┐ │
+│  │   Backend   │  │  PostgreSQL/     │  │         Redis               │ │
+│  │  (Node.js)  │  │    SQLite        │  │    (Pub/Sub + Cache)        │ │
+│  └──────┬──────┘  └──────────────────┘  └─────────────────────────────┘ │
+│         │                                                                │
+│  ┌──────┴────────────────────────────────────────────────────────────┐  │
+│  │                    WebSocket Gateways                              │  │
+│  │  - AgentGateway (bi-directional with agents)                      │  │
+│  │  - DeviceGateway (ESP32 dongles)                                  │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  ┌────────────────────────┐  ┌──────────────────────────────────────┐  │
+│  │    Rust Fastpath       │  │       MinIO (S3-compatible)          │  │
+│  │  (High-perf traffic)   │  │   (Artifacts + Audit Archives)       │  │
+│  └────────────────────────┘  └──────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
                      │           │
            WebSocket │           │ HTTP/API
                      ▼           ▼
@@ -186,14 +236,17 @@ The `ai-agents/` module implements a multi-agent decision system for AI-powered 
 | `agent/` | Agent core logic: attack detection, firewall control, log collection, traffic monitoring |
 | `ai-agents/` | Multi-agent AI system for threat analysis and decision making |
 | `api/routes/` | REST API endpoints (agents, devices, auth, scanner, dashboard, etc.) |
-| `config/` | App mode, database connection, configuration |
-| `database/` | SQLite initialization, migrations, models, seeds |
+| `config/` | App mode, database connection, runtime capabilities |
+| `core/` | Core abstractions: API response utilities, tenant context, runtime health |
+| `database/` | SQLite/PostgreSQL initialization, migrations, models, seeds |
 | `middleware/` | Auth, rate limiting, request timing |
+| `modules/` | Feature modules (modular architecture) |
 | `scanner/` | Nuclei-based vulnerability scanning |
 | `security/` | Input validation, authentication utilities |
-| `services/` | Business logic (scanner-task, investigation, simulation) |
+| `services/` | Business logic (scanner-task, investigation, simulation, OWASP evaluation) |
 | `websocket/` | AgentGateway and DeviceGateway for real-time communication |
 | `traffic-interceptor/` | Traffic analysis and interception |
+| `bootstrap/` | Application bootstrap and initialization |
 
 **Key Entry Points:**
 - `index.ts` - Server startup, WebSocket initialization, database connection
@@ -214,9 +267,10 @@ The `ai-agents/` module implements a multi-agent decision system for AI-powered 
 
 ### Key Technologies
 
-- **Backend:** Express, Socket.IO, SQLite (sql.js), TypeScript, Jest
+- **Backend:** Express, Socket.IO, SQLite (sql.js) / PostgreSQL, TypeScript, Jest
 - **Frontend:** React 18, Vite, TailwindCSS, Recharts, Socket.IO Client, i18next
-- **Infrastructure:** Docker, Redis, Nginx (for SSL/Let's Encrypt)
+- **Performance:** Rust fastpath sidecar for high-throughput traffic processing
+- **Infrastructure:** Docker, Redis, Nginx (for SSL/Let's Encrypt), MinIO (S3-compatible storage)
 - **Hardware:** ESP32-WROOM-32 for deployment dongles
 
 ### WebSocket Communication
@@ -293,26 +347,32 @@ docker-compose down -v
 
 Services:
 - `redis` - Redis 7 (port 6379)
+- `postgres` - PostgreSQL 16 (port 15432)
+- `minio` - S3-compatible object storage (port 19000, console 19001)
+- `fastpath` - Rust high-performance traffic processor (internal)
 - `backend` - Node.js API (port 3005)
 - `frontend` - Nginx serving React SPA (port 8080)
 
+**Note:** Docker Compose requires these environment variables to be set:
+- `JWT_SECRET`, `REDIS_PASSWORD`, `DEVICE_COMMAND_SECRET`, `AUDIT_LOG_SECRET`
+
 ### Agent Installation (Linux servers)
 
-1. Configure `/etc/fluxguard/agent.env`:
-   - `FLUXGUARD_SERVER` - Control plane URL
-   - `FLUXGUARD_ONBOARDING_CODE` - One-time onboarding code from admin API
+1. Configure `/etc/AetherGuard/agent.env`:
+   - `AetherGuard_SERVER` - Control plane URL
+   - `AetherGuard_ONBOARDING_CODE` - One-time onboarding code from admin API
 
 2. Install systemd service:
 ```bash
-cp deployment/production/fluxguard-agent.service /etc/systemd/system/
+cp deployment/production/AetherGuard-agent.service /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now fluxguard-agent
+systemctl enable --now AetherGuard-agent
 ```
 
 3. Verify:
 ```bash
-systemctl status fluxguard-agent
-journalctl -u fluxguard-agent -f
+systemctl status AetherGuard-agent
+journalctl -u AetherGuard-agent -f
 ```
 
 ### ESP32 Deployment Dongle
@@ -321,8 +381,8 @@ See `esp32/platformio.ini` for hardware specs. The dongle auto-registers when pl
 
 ## API Key Patterns
 
-- Agent API keys: `fluxguard_test_key_*`, `agent_*`
-- Device API keys: `device_key_*`, `fluxguard-device-*`
+- Agent API keys: `AetherGuard_test_key_*`, `agent_*`
+- Device API keys: `device_key_*`, `AetherGuard-device-*`
 - Default demo keys are in `.env.example`
 
 ## Security Features
@@ -334,3 +394,51 @@ The system implements multiple security layers:
 - **Command Signing**: HMAC-based command verification (`security/command-signing.service.ts`)
 - **Audit Logging**: Tamper-evident audit logs (`security/audit-logger.service.ts`)
 - **CORS**: Strict origin validation in production mode
+
+## Development Constraints
+
+### Database Access Rules
+- **禁止在 `backend/src/api/routes` 中直接访问数据库** - 必须通过 repositories 或 services
+- 生产环境 Postgres 是主写路径 (`DB_MODE=postgres`)
+- SQLite 写入仅在 `DB_MODE=sqlite` 或 `SQLITE_FALLBACK_ENABLED=true` 时允许
+
+### Schema Initialization
+- **不能在请求或 WebSocket 处理器中调用 `ensureSchema()`**
+- 服务拥有的表必须在 `backend/src/bootstrap/persistence.ts` 中准备
+- 运行时诊断必须是只读的
+
+### API Response Format
+- 必须使用 `backend/src/core/http/api-response.ts` 中的 `sendSuccess` 和 `sendError`
+- 成功响应: `{ success: true, data, error: null, meta? }`
+- 失败响应: `{ success: false, data: null, error, code, message, meta? }`
+
+### Frontend API Calls
+- **只能通过 `frontend/src/services/api.ts` 调用后端 API**
+- 禁止在前端代码中直接使用 `fetch('/api...')`
+
+### Release Guard Scripts
+
+```bash
+# 检查路由层是否直接访问数据库
+node scripts/guards/check-route-db-access.mjs
+
+# 检查前端是否直接调用 /api
+node scripts/guards/check-no-direct-api-fetch.mjs
+```
+
+### Detection Pipeline
+
+The `services/detection-pipeline.service.ts` and `services/detection-engine.ts` implement rule-based threat detection:
+- Rule matching with configurable severity levels
+- AI escalation for suspicious traffic
+- Attack family classification (SQL injection, XSS, path traversal, command injection, etc.)
+- Candidate rule suggestions for new attack patterns
+
+### Architecture Decision Records (ADR)
+
+架构决策记录位于 `docs/adr/`:
+- `2026-03-12-api-envelope-compatibility.md` - API 响应格式统一
+- `2026-03-12-module-boundaries-bootstrap-core-modules-integrations.md` - 模块边界划分
+- `2026-03-12-postgres-primary-write-path.md` - Postgres 主写路径
+- `2026-03-12-startup-entrypoint-unification.md` - 启动入口统一
+- `2026-03-14-esp32-serial-deployer-wiring-baseline.md` - ESP32 跳线原型接线基线

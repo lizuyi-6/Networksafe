@@ -1,9 +1,9 @@
-﻿# FluxGuard 产品使用手册
+﻿# AetherGuard 产品使用手册
 
 ## 1. 产品概述
-FluxGuard 是下一代 API 安全中间件平台，集成实时流量监控、自动化漏洞扫描、智能威胁防御与可视化管理于一体。系统采用现代化微服务架构，支持 Docker 容器化部署，并内置 AI 驱动的错误分析引擎。
+AetherGuard 是下一代 API 安全中间件平台，集成实时流量监控、自动化漏洞扫描、智能威胁防御与可视化管理于一体。系统采用现代化微服务架构，支持 Docker 容器化部署，并内置 AI 驱动的错误分析引擎。
 
-> Validation Note (2026-03-08): Deployment target generation now covers `nginx`, `apache`, `caddy`, `docker_compose`, `binary_agent`, and `k8s_daemonset`, but only Docker runtime is fully validated in this workspace. Notification outbox, audit archive with object lock, and device OTA/physical-confirmation smoke are validated. Historical performance and hardware production claims should be treated as unvalidated unless they are repeated in `docs/reports/validated-capability-status-2026-03-08.md`.
+> Validation Note (2026-03-08): Deployment target generation now covers `nginx`, `apache`, `caddy`, `docker_compose`, `binary_agent`, and `k8s_daemonset`, but only Docker runtime is fully validated in this workspace. Notification outbox, audit archive with object lock, and backend-simulated device OTA/physical-confirmation smoke are validated. Historical performance and hardware production claims should be treated as unvalidated unless they are repeated in `docs/reports/validated-capability-status-2026-03-08.md`.
 
 ## 2. 核心功能模块
 
@@ -65,7 +65,7 @@ FluxGuard 是下一代 API 安全中间件平台，集成实时流量监控、�
 
 ## 3. 高级集成：AI 驱动的错误分析
 
-FluxGuard 内置了基于本地大语言模型 (LLM) 的智能分析引擎 `Deployment AI Server`，可自动分析部署日志并提供修复建议。
+AetherGuard 内置了基于本地大语言模型 (LLM) 的智能分析引擎 `Deployment AI Server`，可自动分析部署日志并提供修复建议。
 
 ### 3.1 AI 模型规格
 - **模型名称**：`deepseek-coder:6.7b`
@@ -83,15 +83,26 @@ FluxGuard 内置了基于本地大语言模型 (LLM) 的智能分析引擎 `Depl
 
 ---
 
-## 4. 扩展工具：ESP32 硬件集成
+## 4. 扩展工具：ESP32 串口部署器
 
-FluxGuard 支持通过 ESP32 单片机扩展物理层面的可视化与控制能力，打造“软硬结合”的安全态势感知系统。
+AetherGuard 当前提供的硬件基线是 **ESP32 USB-TTL 串口部署器**，用于在机房或现场对目标服务器执行本地化、可确认的 Agent 部署。
 
 ### 4.1 功能特性
-- **物理状态指示灯**：通过 ESP32 连接 WS2812B 灯带，根据系统当前威胁等级（安全-绿 / 警告-黄 / 攻击-红）实时改变环境光颜色。
-- **硬件紧急开关**：接入物理按钮，实现“一键断网”或“开启高防御模式”的物理熔断机制。
-- **OLED 实时看板**：在 0.96寸 OLED 屏幕上实时显示当前 QPS、拦截总数与 CPU 温度。
+- **面包板跳线原型**：采用 ESP32 开发板、面包板、杜邦线和外接模块快速搭建，适合先完成部署闭环验证。
+- **OLED 可视确认**：在 0.96 寸 OLED 屏幕上显示环境检测、备份、安装和卸载确认状态。
+- **三键安全交互**：通过 OK / Next / Back 三键完成安装选择、风险确认和失败回退。
+- **强制备份与物理确认**：安装前先执行服务器侧备份；卸载等高风险动作必须由本地按键确认。
+- **RGB + 蜂鸣器反馈**：蓝灯表示检测中，黄灯表示处理，绿灯表示完成，红灯表示错误或高风险确认；当前蜂鸣器模块按低电平触发。
+- **非阻塞部署流程**：环境检测、备份、安装和卸载均以主机回包终态判定成败，部署期间 OLED 和按键界面持续可用。
 
 ### 4.2 接入方式
-FluxGuard 后端提供标准的 WebSocket 接口，ESP32 可通过 WiFi 连接并订阅 `/ws/status` 频道，实时获取系统状态数据包并驱动外设动作。
+- **物理链路**：原型通过面包板接线，外部 CP2102 在部署模式下连接 `GPIO16/17/GND` 与目标主机通信，默认 115200 8N1。
+- **模式切换**：优先使用开发板板载 USB 进行烧录与串口调试；若板载 USB 不可用，可临时把外部 CP2102 接到 `GPIO3/1/GND` 进行烧录。外部 CP2102 同一时刻只能承担一种角色，切换前必须断电。
+- **主机侧前提**：Linux 主机必须预装 serial helper 服务，负责把固定 allow-list 请求映射到本地部署命令。
+- **协议**：当前固件先发送 `AG:REQ:ENV`、`AG:REQ:BACKUP`、`AG:REQ:INSTALL`、`AG:REQ:REMOVE`，主机 helper 再返回 `AG:BEGIN:*`、`AG:STEP:*`、`AG:ENV:*`、`AG:OK:*`、`AG:ERR:*`。
+- **本地输入引脚**：`BTN_OK=GPIO18`、`BTN_NEXT=GPIO19`、`BTN_BACK=GPIO23`，已避开 ESP32 启动配置脚。
+- **供电约束**：所有外设默认从 ESP32 开发板 `3V3` 和 `GND` 取电；部署模式下外部 CP2102 只接 `TXD/RXD/GND`，不向 ESP32 反灌电源。
+- **限制**：当前 v1 固件仅对 Linux 主机执行部署/卸载；Windows 仅做环境识别，不执行安装。
+
+> 仓库中的 `/ws/device`、OTA 和 physical-confirmation smoke 属于后端模拟链路与后续联网设备实验，不是当前串口部署器固件能力。
 

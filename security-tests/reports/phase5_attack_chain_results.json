@@ -1,0 +1,93 @@
+{
+  "title": "AetherGuard Security Assessment - Attack Chain Report",
+  "timestamp": "2026-03-13T14:35:25.156318",
+  "summary": {
+    "total_chains": 3,
+    "successful_chains": 1,
+    "critical_vulnerabilities": [
+      {
+        "chain": "Cross-Tenant Data Access Attack Chain",
+        "impact": "Cross-tenant data access possible - Data breach risk",
+        "recommendation": "Enforce tenant isolation at database query level"
+      }
+    ]
+  },
+  "attack_chains": [
+    {
+      "name": "JWT Forgery -> RCE Attack Chain",
+      "success": false,
+      "steps": [
+        {
+          "step": 1,
+          "description": "Authenticate with hardcoded API key",
+          "success": false,
+          "details": "API key rejected: 401"
+        }
+      ],
+      "final_impact": null
+    },
+    {
+      "name": "Token Theft -> Persistence Attack Chain",
+      "success": false,
+      "steps": [
+        {
+          "step": 1,
+          "description": "Obtain auth token",
+          "success": true,
+          "details": "Got access and refresh tokens"
+        },
+        {
+          "step": 2,
+          "description": "Analyze token",
+          "success": true,
+          "details": "Token payload: {\n  \"userId\": \"2a6f45dc-261c-4c1d-94c0-74fc803d8bc8\",\n  \"email\": \"admin@aetherguard.local\",\n  \"username\": \"Admin\",\n  \"role\": \"admin\",\n  \"plan\": \"starter\",\n  \"tenantId\": \"d0bd48be-b8a3-4921-b985-daac4de4ca69\",\n  \"iat\": 1773383724,\n  \"exp\": 1773470124\n}"
+        },
+        {
+          "step": 3,
+          "description": "Test token revocation",
+          "success": true,
+          "details": "Token properly revoked: 401"
+        }
+      ],
+      "final_impact": null
+    },
+    {
+      "name": "Cross-Tenant Data Access Attack Chain",
+      "success": true,
+      "steps": [
+        {
+          "step": 1,
+          "description": "Authenticate",
+          "success": true,
+          "details": "Got admin token"
+        },
+        {
+          "step": 2,
+          "description": "Access tenant victim-tenant",
+          "success": true,
+          "details": "Got data: data"
+        },
+        {
+          "step": 2,
+          "description": "Access tenant other-tenant",
+          "success": true,
+          "details": "Got data: data"
+        },
+        {
+          "step": 2,
+          "description": "Access tenant tenant-123",
+          "success": true,
+          "details": "Got data: data"
+        },
+        {
+          "step": 2,
+          "description": "Access tenant production",
+          "success": true,
+          "details": "Got data: data"
+        }
+      ],
+      "final_impact": "Cross-tenant data access possible - Data breach risk"
+    }
+  ],
+  "recommendations": []
+}

@@ -1,10 +1,10 @@
-# 🔴 红蓝对抗演练 - 最终完整报告
+﻿# 🔴 红蓝对抗演练 - 最终完整报告
 
 ## 📋 演练概览
 
 | 项目 | 详情 |
 |------|------|
-| **演练目标** | FluxGuard Control Platform |
+| **演练目标** | AetherGuard Control Platform |
 | **攻击场景** | 源代码完全泄露 |
 | **演练模式** | 红队攻击 → 蓝队修复 → 红队复测 |
 | **演练周期** | 3轮攻防 |
@@ -223,7 +223,7 @@ curl -X POST http://target/api/firewall/block \
 
 **演练完成时间**：2026年2月16日
 **演练组织**：Enterprise Red Team vs Blue Team
-**演练目标**：FluxGuard Control Platform
+**演练目标**：AetherGuard Control Platform
 **演练结果**：✅ 成功完成
 
 ---

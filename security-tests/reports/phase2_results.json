@@ -1,0 +1,72 @@
+{
+  "phase": "Phase 2: Injection Vulnerabilities",
+  "timestamp": "2026-03-13T14:35:15.541583",
+  "results": [
+    {
+      "test_id": "VULN-002",
+      "name": "Command Injection (Firewall)",
+      "severity": "CRITICAL",
+      "vulnerable": false,
+      "details": [
+        "Could not get test agent - testing API endpoints directly",
+        "Unblock test (semicolon): 404",
+        "Unblock test (AND operator): 404",
+        "Unblock test (OR operator): 404"
+      ],
+      "evidence": []
+    },
+    {
+      "test_id": "VULN-010",
+      "name": "Path Traversal",
+      "severity": "MEDIUM",
+      "vulnerable": false,
+      "details": [
+        "Not found (basic traversal)",
+        "Not found (windows traversal)",
+        "Not found (double dot bypass)",
+        "Not found (url encoded)",
+        "Not found (double url encoded)",
+        "Not found (full url encoded)",
+        "Not found (unicode bypass)",
+        "Not found (null byte)",
+        "Not found (shadow file)",
+        "Not found (proc environ)",
+        "Scanner test (basic traversal): 404",
+        "Scanner test (windows traversal): 404",
+        "Scanner test (double dot bypass): 404"
+      ],
+      "evidence": []
+    },
+    {
+      "test_id": "SSRF",
+      "name": "Server-Side Request Forgery",
+      "severity": "HIGH",
+      "vulnerable": false,
+      "details": [
+        "Response (AWS metadata): 404",
+        "Response (GCP metadata): 404",
+        "Response (Azure metadata): 404",
+        "Response (Redis internal): 404",
+        "Response (Redis localhost): 404",
+        "Response (PostgreSQL internal): 404",
+        "Response (Internal API): 404",
+        "Response (IPv6 localhost): 404",
+        "Response (file protocol): 404",
+        "Response (gopher protocol): 404"
+      ],
+      "evidence": []
+    },
+    {
+      "test_id": "SQLI",
+      "name": "SQL Injection",
+      "severity": "CRITICAL",
+      "vulnerable": false,
+      "details": [],
+      "evidence": []
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "vulnerable": 0
+  }
+}

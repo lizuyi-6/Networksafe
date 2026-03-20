@@ -1,12 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
 import { InputValidator } from '../../security/input-validator';
+import { sendError, sendSuccess } from '../../core/http/api-response';
+import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
 import logger from '../../utils/logger';
 import { scannerTaskService } from '../../services/scanner-task.service';
-import { getDatabase } from '../../config/database';
 import { securityOperationsService } from '../../services/security-operations.service';
 import * as dns from 'dns';
 import { promisify } from 'util';
+import { getLegacyScanResultById } from '../../modules/scanner/scanner-route.repository';
 
 const dnsLookup = promisify(dns.lookup);
 
@@ -17,7 +19,7 @@ const router = Router();
 router.use(authenticate, requireRole('admin'));
 
 function tenantOf(req: AuthenticatedRequest): string {
-  return req.user?.tenantId || 'global';
+  return req.user?.tenantId || PLATFORM_TENANT_ID;
 }
 
 async function getHistoryForView(tenantId: string, limit: number) {
@@ -196,8 +198,14 @@ router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
     if (!validationResult.isValid) {
       return res.status(400).json({
         success: false,
-        error: 'backend.invalid_input',
-        details: validationResult.errors
+        data: null,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'backend.invalid_input',
+          details: validationResult.errors
+        },
+        code: 'INVALID_INPUT',
+        message: 'backend.invalid_input'
       });
     }
 
@@ -205,7 +213,10 @@ router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
     const urls = Array.isArray(req.body?.targets?.urls) ? req.body.targets.urls : [];
     const urlValidation = await validateUrls(urls);
     if (!urlValidation.valid) {
-      return res.status(400).json({ success: false, error: urlValidation.error });
+      return sendError(res, 400, {
+        code: 'INVALID_TARGETS',
+        message: String(urlValidation.error || 'backend.invalid_input')
+      });
     }
 
     const task = await scannerTaskService.createTask({
@@ -215,17 +226,22 @@ router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
       targets: buildTargetsFromRequest(req.body, urlValidation.filteredUrls)
     });
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
+      taskId: task.id,
+      status: task.status,
+      createdAt: task.createdAt
+    }, {
+      legacy: {
         taskId: task.id,
-        status: task.status,
-        createdAt: task.createdAt
+        status: task.status
       }
     });
   } catch (error: any) {
     logger.error('Failed to create scan task', { error: error.message });
-    return res.status(500).json({ success: false, error: 'backend.failed_to_create_scan_task' });
+    return sendError(res, 500, {
+      code: 'SCAN_TASK_CREATE_FAILED',
+      message: 'backend.failed_to_create_scan_task'
+    });
   }
 });
 
@@ -235,7 +251,11 @@ router.post('/tasks', async (req: AuthenticatedRequest, res: Response) => {
 router.get('/tasks/history', async (req: AuthenticatedRequest, res: Response) => {
   const limit = Math.min(parseInt(String(req.query.limit || '20'), 10) || 20, 100);
   const history = await getHistoryForView(tenantOf(req), limit);
-  return res.json({ success: true, data: history });
+  return sendSuccess(res, history, {
+    legacy: {
+      count: history.length
+    }
+  });
 });
 
 /**
@@ -245,20 +265,25 @@ router.get('/tasks/history', async (req: AuthenticatedRequest, res: Response) =>
 router.get('/tasks/:taskId', async (req: AuthenticatedRequest, res: Response) => {
   const task = await getTaskForView(req.params.taskId);
   if (!task || task.tenantId !== tenantOf(req)) {
-    return res.status(404).json({ success: false, error: 'backend.task_not_found' });
+    return sendError(res, 404, {
+      code: 'TASK_NOT_FOUND',
+      message: 'backend.task_not_found'
+    });
   }
-  return res.json({
-    success: true,
-    data: {
+  return sendSuccess(res, {
+    taskId: task.id,
+    status: task.status,
+    phase: task.phase,
+    progress: task.progress,
+    summary: task.summary,
+    error: task.error,
+    createdAt: task.createdAt,
+    startedAt: task.startedAt,
+    completedAt: task.completedAt
+  }, {
+    legacy: {
       taskId: task.id,
-      status: task.status,
-      phase: task.phase,
-      progress: task.progress,
-      summary: task.summary,
-      error: task.error,
-      createdAt: task.createdAt,
-      startedAt: task.startedAt,
-      completedAt: task.completedAt
+      status: task.status
     }
   });
 });
@@ -270,10 +295,13 @@ router.get('/tasks/:taskId', async (req: AuthenticatedRequest, res: Response) =>
 router.get('/tasks/:taskId/results', async (req: AuthenticatedRequest, res: Response) => {
   const task = await getTaskForView(req.params.taskId);
   if (!task || task.tenantId !== tenantOf(req)) {
-    return res.status(404).json({ success: false, error: 'backend.task_not_found' });
+    return sendError(res, 404, {
+      code: 'TASK_NOT_FOUND',
+      message: 'backend.task_not_found'
+    });
   }
   const result = await getTaskResultsForView(req.params.taskId);
-  return res.json({ success: true, data: result });
+  return sendSuccess(res, result);
 });
 
 /**
@@ -282,35 +310,56 @@ router.get('/tasks/:taskId/results', async (req: AuthenticatedRequest, res: Resp
 router.post('/tasks/:taskId/cancel', async (req: AuthenticatedRequest, res: Response) => {
   const task = await getTaskForView(req.params.taskId);
   if (!task || task.tenantId !== tenantOf(req)) {
-    return res.status(404).json({ success: false, error: 'backend.task_not_found' });
+    return sendError(res, 404, {
+      code: 'TASK_NOT_FOUND',
+      message: 'backend.task_not_found'
+    });
   }
   const ok = scannerTaskService.cancelTask(req.params.taskId);
-  return res.json({ success: ok });
+  return ok
+    ? sendSuccess(res, { taskId: req.params.taskId, cancelled: true }, {
+        legacy: { status: 'cancelled' }
+      })
+    : sendError(res, 409, {
+        code: 'TASK_CANCEL_FAILED',
+        message: 'backend.failed_to_cancel_scan_task'
+      });
 });
 
 router.post('/tasks/:taskId/retry', async (req: AuthenticatedRequest, res: Response) => {
   const task = await getTaskForView(req.params.taskId);
   if (!task || task.tenantId !== tenantOf(req)) {
-    return res.status(404).json({ success: false, error: 'backend.task_not_found' });
+    return sendError(res, 404, {
+      code: 'TASK_NOT_FOUND',
+      message: 'backend.task_not_found'
+    });
   }
 
   try {
     const retryTask = await scannerTaskService.retryTask(req.params.taskId, req.user?.userId);
     if (!retryTask) {
-      return res.status(404).json({ success: false, error: 'backend.task_not_found' });
+      return sendError(res, 404, {
+        code: 'TASK_NOT_FOUND',
+        message: 'backend.task_not_found'
+      });
     }
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
+      taskId: retryTask.id,
+      status: retryTask.status,
+      createdAt: retryTask.createdAt
+    }, {
+      legacy: {
         taskId: retryTask.id,
-        status: retryTask.status,
-        createdAt: retryTask.createdAt
+        status: retryTask.status
       }
     });
   } catch (error: any) {
     logger.error('Failed to retry scan task', { error: error.message, taskId: req.params.taskId });
-    return res.status(500).json({ success: false, error: 'backend.failed_to_retry_scan_task' });
+    return sendError(res, 500, {
+      code: 'SCAN_TASK_RETRY_FAILED',
+      message: 'backend.failed_to_retry_scan_task'
+    });
   }
 });
 
@@ -322,10 +371,17 @@ router.post('/findings/:findingId/actions', async (req: AuthenticatedRequest, re
   );
 
   if (!action) {
-    return res.status(404).json({ success: false, error: 'backend.finding_not_found' });
+    return sendError(res, 404, {
+      code: 'FINDING_NOT_FOUND',
+      message: 'backend.finding_not_found'
+    });
   }
 
-  return res.json({ success: true, data: action });
+  return sendSuccess(res, action, {
+    legacy: {
+      actionId: action.actionId
+    }
+  });
 });
 
 /**
@@ -335,7 +391,12 @@ router.post('/findings/:findingId/actions', async (req: AuthenticatedRequest, re
 router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   const history = await getHistoryForView(tenantOf(req), 1);
   if (history.length === 0) {
-    return res.json([]);
+    res.setHeader('X-Deprecated-Endpoint', 'Use /api/scanner/tasks/* instead');
+    return sendSuccess(res, [], {
+      legacy: {
+        events: []
+      }
+    });
   }
   const latest = history[0];
   const result = await getTaskResultsForView(latest.id);
@@ -351,7 +412,11 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
     status: 'Open'
   }));
   res.setHeader('X-Deprecated-Endpoint', 'Use /api/scanner/tasks/* instead');
-  return res.json(flattened);
+  return sendSuccess(res, flattened, {
+    legacy: {
+      events: flattened
+    }
+  });
 });
 
 /**
@@ -365,7 +430,10 @@ router.post('/run', async (req: AuthenticatedRequest, res: Response) => {
 
     const validation = await validateUrls(urls);
     if (!validation.valid) {
-      return res.status(400).json({ success: false, error: validation.error });
+      return sendError(res, 400, {
+        code: 'INVALID_TARGETS',
+        message: String(validation.error || 'backend.invalid_input')
+      });
     }
 
     const task = await scannerTaskService.createTask({
@@ -382,20 +450,28 @@ router.post('/run', async (req: AuthenticatedRequest, res: Response) => {
         }
       }
     });
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
+      taskId: task.id,
+      status: task.status,
+      createdAt: task.createdAt
+    }, {
+      legacy: {
         taskId: task.id,
-        status: task.status,
-        createdAt: task.createdAt
+        status: task.status
       }
     });
   } catch (error: any) {
     if (error.code === 'TENANT_TASK_RUNNING') {
-      return res.status(409).json({ success: false, error: error.message });
+      return sendError(res, 409, {
+        code: 'TENANT_TASK_RUNNING',
+        message: error.message
+      });
     }
     logger.error('Failed to run scan', { error: error.message });
-    return res.status(500).json({ success: false, error: 'backend.failed_to_start_scan' });
+    return sendError(res, 500, {
+      code: 'SCAN_START_FAILED',
+      message: 'backend.failed_to_start_scan'
+    });
   }
 });
 
@@ -403,39 +479,40 @@ router.post('/run', async (req: AuthenticatedRequest, res: Response) => {
  * Keep legacy endpoints but return explicit not supported for now
  */
 router.post('/apply', (_req: Request, res: Response) => {
-  return res.status(501).json({ success: false, error: 'backend.use_smart_fix_endpoints_for_remediation_actions' });
+  return sendError(res, 501, {
+    code: 'SMART_FIX_REQUIRED',
+    message: 'backend.use_smart_fix_endpoints_for_remediation_actions'
+  });
 });
 
 router.get('/results/:id', async (req: AuthenticatedRequest, res: Response) => {
   // Try task id first
   const task = await getTaskForView(req.params.id);
   if (task && task.tenantId === tenantOf(req)) {
-    return res.json({
-      success: true,
-      data: await getTaskResultsForView(task.id)
-    });
+    return sendSuccess(res, await getTaskResultsForView(task.id));
   }
 
   // Fallback to legacy numeric scan_results table row
   const numericId = parseInt(req.params.id, 10);
   if (Number.isFinite(numericId) && numericId > 0) {
-    try {
-      const row = getDatabase().prepare('SELECT * FROM scan_results WHERE id = ?').get(numericId) as any;
-      if (!row) {
-        return res.status(404).json({ success: false, error: 'backend.scan_result_not_found' });
-      }
-      return res.json({ success: true, data: row });
-    } catch {
-      // ignore
+    const row = getLegacyScanResultById(numericId);
+    if (row) {
+      return sendSuccess(res, row);
     }
   }
-  return res.status(404).json({ success: false, error: 'backend.scan_result_not_found' });
+  return sendError(res, 404, {
+    code: 'SCAN_RESULT_NOT_FOUND',
+    message: 'backend.scan_result_not_found'
+  });
 });
 
 router.get('/report/:id', async (req: AuthenticatedRequest, res: Response) => {
   const task = await getTaskForView(req.params.id);
   if (!task || task.tenantId !== tenantOf(req)) {
-    return res.status(404).json({ success: false, error: 'backend.task_not_found' });
+    return sendError(res, 404, {
+      code: 'TASK_NOT_FOUND',
+      message: 'backend.task_not_found'
+    });
   }
   const data = await getTaskResultsForView(task.id);
   const report = {
@@ -450,7 +527,9 @@ router.get('/report/:id', async (req: AuthenticatedRequest, res: Response) => {
     }
   };
   res.setHeader('Content-Type', 'application/json');
-  return res.send(JSON.stringify(report, null, 2));
+  return sendSuccess(res, report, {
+    legacy: report
+  });
 });
 
 export default router;

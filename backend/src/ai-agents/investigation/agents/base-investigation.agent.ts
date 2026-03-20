@@ -9,6 +9,7 @@ import { InvestigationContext, InvestigationAgentType } from '../types';
 import { AgentConfig, MessageBus, BaseAgent } from '../../core';
 import type { AgentMessage } from '../../core/types';
 import type { AnalysisResult, ModelResponse, TrafficContext } from '../../core/types';
+import { distributionFromVerdict } from '../../core/scoring';
 
 export abstract class BaseInvestigationAgent extends BaseAgent {
   protected agentType: InvestigationAgentType;
@@ -383,20 +384,22 @@ Format your response as JSON.
   private toAnalysisResult(result: any): AnalysisResult {
     const findings = Array.isArray(result?.findings) ? result.findings : [];
     const confidence = typeof result?.confidence === 'number' ? result.confidence : 0.5;
+    const verdict = findings.some((f: any) => f?.severity === 'critical')
+      ? 'malicious'
+      : findings.length > 0
+        ? 'suspicious'
+        : 'unknown';
 
     return {
       agentId: this.identity.id,
       role: this.identity.role,
-      verdict: findings.some((f: any) => f?.severity === 'critical')
-        ? 'malicious'
-        : findings.length > 0
-          ? 'suspicious'
-          : 'unknown',
+      verdict,
       confidence: Math.max(0, Math.min(1, confidence)),
       reasoning: typeof result?.summary === 'string'
         ? result.summary
         : 'Investigation analysis completed',
-      evidence: []
+      evidence: [],
+      classScores: distributionFromVerdict(verdict, Math.max(0, Math.min(1, confidence)))
     };
   }
 }

@@ -3,12 +3,54 @@
  * 7-Layer Architecture for AI-powered Security Analysis
  */
 
+import type { AIRoutingMode } from '../../services/platform-config.service';
+
 // ============================================================================
 // Layer 1: Collaboration - Base Types
 // ============================================================================
 
 export type AgentRole = 'socrates' | 'plato' | 'aristotle' | 'arbitrator' | 'orchestrator';
 export type AgentTeam = 'red' | 'blue' | 'analyst' | 'arbitrator';
+export type SecurityVerdict = 'safe' | 'suspicious' | 'malicious' | 'unknown';
+export type AttackFamily =
+    | 'benign'
+    | 'sqli'
+    | 'xss'
+    | 'path_traversal'
+    | 'command_injection'
+    | 'ssrf'
+    | 'automation'
+    | 'authentication'
+    | 'business_logic'
+    | 'other';
+export type AnalysisPurpose = 'primary' | 'learning_verification';
+export type ExperimentMode =
+    | 'single_agent'
+    | 'multi_agent_no_debate'
+    | 'multi_agent_with_debate';
+
+export interface VerdictDistribution {
+    safe: number;
+    suspicious: number;
+    malicious: number;
+}
+
+export interface DebateTriggerMetrics {
+    triggered: boolean;
+    labelConflict: boolean;
+    confidenceRange: number;
+    divergence: number;
+    reasons: string[];
+}
+
+export interface StageLatencyBreakdown {
+    proxyMs: number;
+    roleAnalysisMs: number;
+    debateMs: number;
+    synthesisMs: number;
+    asyncReviewMs: number;
+    endToEndMs: number;
+}
 
 export interface AgentIdentity {
     id: string;
@@ -25,6 +67,7 @@ export interface AgentConfig {
     timeout: number;
     modelTimeout?: number;
     maxRetries: number;
+    heuristicOnly?: boolean;
 }
 
 export interface ModelConfig {
@@ -51,6 +94,9 @@ export interface TrafficRequest {
     queryParams?: Record<string, string>;
     userAgent?: string;
     rawLog?: string;
+    tenantId?: string;
+    routeModeOverride?: AIRoutingMode;
+    analysisPurpose?: AnalysisPurpose;
     traceContext?: TraceContext;
 }
 
@@ -83,13 +129,19 @@ export interface OpenApiSpec {
 export interface AnalysisResult {
     agentId: string;
     role: AgentRole;
-    verdict: 'safe' | 'suspicious' | 'malicious' | 'unknown';
+    verdict: SecurityVerdict;
     confidence: number;
+    classScores: VerdictDistribution;
     reasoning: string;
     evidence: Evidence[];
+    attackFamily?: AttackFamily;
     mutations?: RequestMutation[];
     schemaValidation?: SchemaValidation;
     anomalyScore?: number;
+    modelTier?: ModelTier;
+    routeMode?: AIRoutingMode | 'unknown';
+    modelLatencyMs?: number;
+    analysisLatencyMs?: number;
 }
 
 export interface Evidence {
@@ -224,6 +276,10 @@ export interface DebateSession {
     finalVerdict?: DebateVerdict;
     startTime: Date;
     endTime?: Date;
+    triggerMetrics?: DebateTriggerMetrics;
+    consensusReached?: boolean;
+    aggregateDistribution?: VerdictDistribution;
+    latencyMs?: number;
 }
 
 export interface DebateRound {
@@ -241,6 +297,7 @@ export interface DebateVerdict {
     reasoning: string;
     votingRecord: VotingRecord[];
     arbitratorNotes: string;
+    aggregatedDistribution?: VerdictDistribution;
 }
 
 export interface VotingRecord {
@@ -273,6 +330,8 @@ export interface ModelRequest {
     priority: 'low' | 'medium' | 'high' | 'critical';
     timeout: number;
     sanitizationLevel: 'none' | 'basic' | 'aggressive';
+    routeModeOverride?: AIRoutingMode;
+    analysisPurpose?: AnalysisPurpose;
 }
 
 export interface ModelResponse {
@@ -283,6 +342,7 @@ export interface ModelResponse {
     latency: number;
     tokensUsed: number;
     sanitized: boolean;
+    routeMode?: AIRoutingMode | 'unknown';
 }
 
 export interface AmbiguityScore {
@@ -387,6 +447,13 @@ export interface SecurityDecision {
     caseFileId: string;
     processingTime: number;
     layersActivated: number[];
+    aggregatedDistribution?: VerdictDistribution;
+    analysisResults?: AnalysisResult[];
+    experimentMode?: ExperimentMode;
+    attackFamily?: AttackFamily;
+    routeMode?: AIRoutingMode | 'unknown';
+    stageLatencies?: StageLatencyBreakdown;
+    debateSession?: DebateSession;
 }
 
 // ============================================================================
@@ -395,6 +462,10 @@ export interface SecurityDecision {
 
 export interface MultiAgentConfig {
     enabled: boolean;
+    experimentMode?: ExperimentMode;
+    primarySingleAgentRole?: 'socrates' | 'plato' | 'aristotle';
+    heuristicOnly?: boolean;
+    useIsolatedBus?: boolean;
     layers: {
         l1_collaboration: LayerConfig;
         l2_rolePlaying: LayerConfig;
@@ -410,6 +481,8 @@ export interface MultiAgentConfig {
     };
     thresholds: {
         debateTrigger: number;
+        debateDivergence: number;
+        debateConfidenceRange: number;
         cloudEscalation: number;
         autoBlock: number;
     };

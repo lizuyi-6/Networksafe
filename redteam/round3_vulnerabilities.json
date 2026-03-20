@@ -1,8 +1,8 @@
-{
+﻿{
   "round": 3,
   "attack_date": "2026-02-16",
   "attacker": "Red Team Expert - Round 3",
-  "target": "FluxGuard Security System",
+  "target": "AetherGuard Security System",
   "summary": {
     "total_findings": 8,
     "critical": 2,

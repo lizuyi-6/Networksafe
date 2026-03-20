@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { sendError, sendSuccess } from '../../core/http/api-response';
 import auditLogger from '../../security/audit-logger.service';
 import { notificationDispatcherService } from '../../services/notification-dispatcher.service';
 import { platformConfigService } from '../../services/platform-config.service';
@@ -13,9 +14,12 @@ function tenantOf(req: AuthenticatedRequest): string {
 router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
   try {
     const config = await platformConfigService.getConfig(tenantOf(req));
-    res.json(config);
+    sendSuccess(res, config, { legacy: config });
   } catch (error: any) {
-    res.status(500).json({ error: error?.message || 'backend.failed_to_load_configuration' });
+    sendError(res, 500, {
+      code: 'backend.failed_to_load_configuration',
+      message: error?.message || 'backend.failed_to_load_configuration'
+    });
   }
 });
 
@@ -36,21 +40,31 @@ router.post('/', authenticate, requireRole('admin'), async (req: AuthenticatedRe
       actor: { type: 'user', id: req.user?.userId || 'unknown', email: req.user?.email, ip: req.ip },
       action: 'update_platform_config',
       target: { type: 'tenant', id: tenantId },
-      details: {
-        antiBotEnabled: config.antiBot.enabled,
-        rateLimitRequestsPerMinute: config.rateLimit.requestsPerMinute,
-        notificationChannels: config.notifications.channels.length,
-        aiRoutingMode: config.aiRouting.mode,
-        privacyMode: config.privacyMode,
-        deploymentDefault: config.deploymentDefaults.serverType,
-        deviceGatewayPrimaryPath: config.deviceGateway.primaryPath
-      },
+        details: {
+          antiBotEnabled: config.antiBot.enabled,
+          rateLimitRequestsPerMinute: config.rateLimit.requestsPerMinute,
+          notificationChannels: config.notifications.channels.length,
+          aiRoutingMode: config.aiRouting.mode,
+          detectionRuleFirstEnabled: config.detectionPipeline.ruleFirstEnabled,
+          detectionEscalationThreshold: config.detectionPipeline.aiEscalationThreshold,
+          privacyMode: config.privacyMode,
+          deploymentDefault: config.deploymentDefaults.serverType,
+          deviceGatewayPrimaryPath: config.deviceGateway.primaryPath
+        },
       status: 'success'
     });
 
-    res.json({ success: true, message: 'backend.configuration_saved', config });
+    sendSuccess(res, { config }, {
+      legacy: {
+        message: 'backend.configuration_saved',
+        config
+      }
+    });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_save_configuration' });
+    sendError(res, 500, {
+      code: 'backend.failed_to_save_configuration',
+      message: error?.message || 'backend.failed_to_save_configuration'
+    });
   }
 });
 
@@ -58,9 +72,12 @@ router.get('/notifications/deliveries', authenticate, requireRole('admin'), asyn
   try {
     const limit = Math.min(Number(req.query.limit || 20), 100);
     const deliveries = await platformConfigService.listNotificationDeliveries(tenantOf(req), limit);
-    res.json({ success: true, deliveries });
+    sendSuccess(res, { deliveries }, { legacy: { deliveries } });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_load_notification_deliveries' });
+    sendError(res, 500, {
+      code: 'backend.failed_to_load_notification_deliveries',
+      message: error?.message || 'backend.failed_to_load_notification_deliveries'
+    });
   }
 });
 
@@ -68,7 +85,10 @@ router.post('/notifications/test', authenticate, requireRole('admin'), async (re
   try {
     const channelId = String(req.body?.channelId || '');
     if (!channelId) {
-      return res.status(400).json({ success: false, error: 'backend.notification_channel_id_required' });
+      return sendError(res, 400, {
+        code: 'backend.notification_channel_id_required',
+        message: 'backend.notification_channel_id_required'
+      });
     }
 
     const delivery = await notificationDispatcherService.testChannel(tenantOf(req), channelId, {
@@ -77,9 +97,12 @@ router.post('/notifications/test', authenticate, requireRole('admin'), async (re
       ip: req.ip
     });
 
-    res.json({ success: true, delivery });
+    sendSuccess(res, { delivery }, { legacy: { delivery } });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_send_test_notification' });
+    sendError(res, 500, {
+      code: 'backend.failed_to_send_test_notification',
+      message: error?.message || 'backend.failed_to_send_test_notification'
+    });
   }
 });
 

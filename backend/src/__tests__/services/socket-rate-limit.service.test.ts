@@ -1,7 +1,9 @@
 const mockRedisClient = {
   get: jest.fn(),
   setex: jest.fn(),
-  incr: jest.fn()
+  incr: jest.fn(),
+  script: jest.fn(),
+  evalsha: jest.fn()
 };
 
 jest.mock('../../services/fastpath-client.service', () => ({
@@ -30,6 +32,8 @@ describe('socketRateLimitService', () => {
     mockRedisClient.get.mockResolvedValue(null);
     mockRedisClient.setex.mockResolvedValue('OK');
     mockRedisClient.incr.mockResolvedValue(2);
+    mockRedisClient.script.mockResolvedValue('sha-socket-limit');
+    mockRedisClient.evalsha.mockResolvedValue([1, 9, Date.now() + 60000]);
   });
 
   it('uses fastpath when available', async () => {
@@ -65,7 +69,8 @@ describe('socketRateLimitService', () => {
     expect(result.usedFallback).toBe(true);
     expect(result.allowed).toBe(true);
     expect(result.decisionSource).toBe('redis-fallback');
-    expect(mockRedisClient.setex).toHaveBeenCalledTimes(2);
+    expect(mockRedisClient.script).toHaveBeenCalledWith('LOAD', expect.any(String));
+    expect(mockRedisClient.evalsha).toHaveBeenCalled();
   });
 
   it('uses memory fallback when redis is unavailable', async () => {

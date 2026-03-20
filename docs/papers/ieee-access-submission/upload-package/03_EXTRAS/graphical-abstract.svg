@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <style>
+      .title { font: 700 42px 'Arial', sans-serif; fill: #12324a; }
+      .subtitle { font: 500 24px 'Arial', sans-serif; fill: #34536a; }
+      .label { font: 600 22px 'Arial', sans-serif; fill: #15324a; }
+      .small { font: 500 18px 'Arial', sans-serif; fill: #23465d; }
+      .box { rx: 18; ry: 18; stroke: #2a5c7f; stroke-width: 3; }
+      .arrow { stroke: #2a5c7f; stroke-width: 5; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <polygon points="0 0, 12 6, 0 12" fill="#2a5c7f"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="900" fill="#f6fbff"/>
+  <text x="800" y="80" text-anchor="middle" class="title">AetherGuard: Explainable Security Decision Pipeline</text>
+  <text x="800" y="120" text-anchor="middle" class="subtitle">Seven-layer multi-agent debate architecture for distributed server defense</text>
+
+  <rect x="60" y="220" width="210" height="110" class="box" fill="#dff2ff"/>
+  <text x="165" y="265" text-anchor="middle" class="label">Input Event</text>
+  <text x="165" y="300" text-anchor="middle" class="small">Request, alert,</text>
+  <text x="165" y="326" text-anchor="middle" class="small">or telemetry fragment</text>
+
+  <rect x="320" y="200" width="170" height="90" class="box" fill="#eaf7e8"/>
+  <text x="405" y="236" text-anchor="middle" class="label">L1</text>
+  <text x="405" y="266" text-anchor="middle" class="small">Threat routing</text>
+
+  <rect x="320" y="315" width="170" height="90" class="box" fill="#eaf7e8"/>
+  <text x="405" y="351" text-anchor="middle" class="label">L2</text>
+  <text x="405" y="381" text-anchor="middle" class="small">Red / Blue / Analyst</text>
+
+  <rect x="540" y="200" width="170" height="90" class="box" fill="#fff3df"/>
+  <text x="625" y="236" text-anchor="middle" class="label">L3</text>
+  <text x="625" y="266" text-anchor="middle" class="small">Trace narrative</text>
+
+  <rect x="540" y="315" width="170" height="90" class="box" fill="#fff3df"/>
+  <text x="625" y="351" text-anchor="middle" class="label">L4</text>
+  <text x="625" y="381" text-anchor="middle" class="small">Sandboxed tools</text>
+
+  <rect x="760" y="200" width="190" height="205" class="box" fill="#fde8ef"/>
+  <text x="855" y="245" text-anchor="middle" class="label">L5 Debate</text>
+  <text x="855" y="285" text-anchor="middle" class="small">Escalate only when</text>
+  <text x="855" y="311" text-anchor="middle" class="small">confidence is low or</text>
+  <text x="855" y="337" text-anchor="middle" class="small">roles disagree</text>
+  <text x="855" y="383" text-anchor="middle" class="small">Outcome:</text>
+  <text x="855" y="409" text-anchor="middle" class="small">auditable deliberation</text>
+
+  <rect x="1000" y="200" width="180" height="90" class="box" fill="#ebe7ff"/>
+  <text x="1090" y="236" text-anchor="middle" class="label">L6</text>
+  <text x="1090" y="266" text-anchor="middle" class="small">Local / Cloud / Hybrid</text>
+
+  <rect x="1000" y="315" width="180" height="90" class="box" fill="#ebe7ff"/>
+  <text x="1090" y="351" text-anchor="middle" class="label">L7</text>
+  <text x="1090" y="381" text-anchor="middle" class="small">Case-file synthesis</text>
+
+  <rect x="1230" y="220" width="300" height="170" class="box" fill="#dff7ee"/>
+  <text x="1380" y="260" text-anchor="middle" class="label">Operational Output</text>
+  <text x="1380" y="302" text-anchor="middle" class="small">Verdict + evidence + trace</text>
+  <text x="1380" y="330" text-anchor="middle" class="small">debate record + actions</text>
+  <text x="1380" y="358" text-anchor="middle" class="small">lessons + policy suggestions</text>
+
+  <rect x="290" y="560" width="430" height="180" class="box" fill="#eef4ff"/>
+  <text x="505" y="604" text-anchor="middle" class="label">Prototype Evidence Boundary</text>
+  <text x="505" y="646" text-anchor="middle" class="small">Validated capability status report</text>
+  <text x="505" y="674" text-anchor="middle" class="small">Local platform acceptance report</text>
+  <text x="505" y="702" text-anchor="middle" class="small">Repository unit scenarios and code inspection</text>
+
+  <rect x="860" y="560" width="450" height="180" class="box" fill="#fff6e7"/>
+  <text x="1085" y="604" text-anchor="middle" class="label">Current Supported Claim</text>
+  <text x="1085" y="646" text-anchor="middle" class="small">Explainable, auditable prototype feasibility</text>
+  <text x="1085" y="674" text-anchor="middle" class="small">Not benchmark-dominant, not large-scale validated</text>
+  <text x="1085" y="702" text-anchor="middle" class="small">No unsupported performance or hardware claims</text>
+
+  <path d="M270 275 H320" class="arrow"/>
+  <path d="M490 245 H540" class="arrow"/>
+  <path d="M490 360 H540" class="arrow"/>
+  <path d="M710 245 H760" class="arrow"/>
+  <path d="M710 360 H760" class="arrow"/>
+  <path d="M950 245 H1000" class="arrow"/>
+  <path d="M950 360 H1000" class="arrow"/>
+  <path d="M1180 275 H1230" class="arrow"/>
+
+  <path d="M405 405 V470 H1085 V560" class="arrow"/>
+  <path d="M1380 390 V470 H1085 V560" class="arrow"/>
+</svg>

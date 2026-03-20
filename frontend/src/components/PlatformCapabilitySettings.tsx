@@ -291,6 +291,144 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                             </label>
                         </div>
                     </div>
+
+                    <div className="rounded-xl border border-border bg-muted/10 p-4">
+                        <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                            <Waypoints size={16} className="text-primary" />
+                            Detection Pipeline
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className={labelClassName}>Rule-first mode</label>
+                                <select
+                                    value={config.detectionPipeline.ruleFirstEnabled ? 'true' : 'false'}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            ruleFirstEnabled: event.target.value === 'true'
+                                        }
+                                    }))}
+                                    className={inputClassName}
+                                >
+                                    <option value="true">Enabled</option>
+                                    <option value="false">Disabled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={labelClassName}>AI escalation mode</label>
+                                <select
+                                    value={config.detectionPipeline.aiEscalationMode}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            aiEscalationMode: event.target.value as PlatformConfigResponse['detectionPipeline']['aiEscalationMode']
+                                        }
+                                    }))}
+                                    className={inputClassName}
+                                >
+                                    <option value="high_risk_allowed_only">high_risk_allowed_only</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={labelClassName}>Escalation threshold</label>
+                                <input
+                                    className={inputClassName}
+                                    type="number"
+                                    min="0"
+                                    max="1"
+                                    step="0.05"
+                                    value={config.detectionPipeline.aiEscalationThreshold}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            aiEscalationThreshold: Number(event.target.value || 0)
+                                        }
+                                    }))}
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClassName}>Candidate confidence</label>
+                                <input
+                                    className={inputClassName}
+                                    type="number"
+                                    min="0"
+                                    max="1"
+                                    step="0.05"
+                                    value={config.detectionPipeline.candidateMinConfidence}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            candidateMinConfidence: Number(event.target.value || 0)
+                                        }
+                                    }))}
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClassName}>Learning mode</label>
+                                <select
+                                    value={config.detectionPipeline.learningMode}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            learningMode: event.target.value as PlatformConfigResponse['detectionPipeline']['learningMode']
+                                        }
+                                    }))}
+                                    className={inputClassName}
+                                >
+                                    <option value="malicious_review_queue">malicious_review_queue</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                            <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                                <input
+                                    type="checkbox"
+                                    checked={config.detectionPipeline.enableHttpApi}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            enableHttpApi: event.target.checked
+                                        }
+                                    }))}
+                                />
+                                HTTP API
+                            </label>
+                            <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                                <input
+                                    type="checkbox"
+                                    checked={config.detectionPipeline.enablePacketInterceptor}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            enablePacketInterceptor: event.target.checked
+                                        }
+                                    }))}
+                                />
+                                Packet interceptor
+                            </label>
+                            <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                                <input
+                                    type="checkbox"
+                                    checked={config.detectionPipeline.enableAgentAsyncReview}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            enableAgentAsyncReview: event.target.checked
+                                        }
+                                    }))}
+                                />
+                                Agent async review
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -382,6 +520,24 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     onChange={(event) => updateConfig((current) => ({ ...current, fastpath: { ...current.fastpath, configCacheTtlMs: Number(event.target.value || 0) } }))}
                                 />
                             </div>
+                            <div>
+                                <label className={labelClassName}>Shadow sample %</label>
+                                <input
+                                    className={inputClassName}
+                                    type="number"
+                                    value={config.fastpath.trafficShadowSampleRatePct}
+                                    onChange={(event) => updateConfig((current) => ({ ...current, fastpath: { ...current.fastpath, trafficShadowSampleRatePct: Number(event.target.value || 0) } }))}
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClassName}>Max body bytes</label>
+                                <input
+                                    className={inputClassName}
+                                    type="number"
+                                    value={config.fastpath.trafficMaxBodyBytes}
+                                    onChange={(event) => updateConfig((current) => ({ ...current, fastpath: { ...current.fastpath, trafficMaxBodyBytes: Number(event.target.value || 0) } }))}
+                                />
+                            </div>
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-4">
                             <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
@@ -399,6 +555,14 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     onChange={(event) => updateConfig((current) => ({ ...current, fastpath: { ...current.fastpath, fallbackEnabled: event.target.checked } }))}
                                 />
                                 Allow fallback
+                            </label>
+                            <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                                <input
+                                    type="checkbox"
+                                    checked={config.fastpath.trafficShadowEnabled}
+                                    onChange={(event) => updateConfig((current) => ({ ...current, fastpath: { ...current.fastpath, trafficShadowEnabled: event.target.checked } }))}
+                                />
+                                Traffic shadow
                             </label>
                         </div>
                     </div>

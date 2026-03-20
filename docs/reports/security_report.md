@@ -1,4 +1,4 @@
-# FluxGuard 安全审计报告
+﻿# AetherGuard 安全审计报告
 
 **审计日期**: 2026-02-16
 **审计范围**: `/mnt/x/want/fsce` 目录下的所有代码
@@ -81,8 +81,8 @@ exec(command, (error, stdout, stderr) => { ... });
 **问题代码**:
 ```env
 # 第1-4行
-REDIS_PASSWORD=FluxGuardRedis123!
-JWT_SECRET=FluxGuardJwtSecret_for_prod_2026_very_long_1234567890
+REDIS_PASSWORD=AetherGuardRedis123!
+JWT_SECRET=AetherGuardJwtSecret_for_prod_2026_very_long_1234567890
 VALID_API_KEYS=prod-api-key
 DEVICE_API_KEYS=prod-device-key
 ```

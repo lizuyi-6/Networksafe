@@ -1,4 +1,4 @@
-# FluxGuard Pro - 技术架构与功能实施手册
+﻿# AetherGuard - 技术架构与功能实施手册
 
 **密级**: 内部技术文档
 **版本**: v1.0.0
@@ -9,7 +9,7 @@
 
 ## 1. 系统综述
 
-FluxGuard Pro 是下一代**服务器安全防御平台**，旨在解决传统 WAF 无法防御的业务逻辑攻击与内部威胁。系统采用 "Agent-Hub" 架构，通过驻留在业务服务器上的轻量级 Agent 实时采集流量与系统调用，上报至中心化 Hub 进行 AI 分析与决策。
+AetherGuard 是下一代**服务器安全防御平台**，旨在解决传统 WAF 无法防御的业务逻辑攻击与内部威胁。系统采用 "Agent-Hub" 架构，通过驻留在业务服务器上的轻量级 Agent 实时采集流量与系统调用，上报至中心化 Hub 进行 AI 分析与决策。
 
 ### 核心架构图
 ```mermaid
@@ -18,7 +18,7 @@ graph TD
     ELB --> LinuxNode["业务服务器 (Linux)"]
     
     subgraph "Edge Node (单机)"
-        LinuxNode -- Hook --> Agent[FluxGuard Agent]
+        LinuxNode -- Hook --> Agent[AetherGuard Agent]
         Agent -- 采集 --> Metrics[系统指标]
         Agent -- 采集 --> Traffic[HTTP流量]
         Agent -- 执行 --> Firewall[IPTables阻断]
@@ -59,9 +59,10 @@ graph TD
 ### 2.3 硬件化部署与运维 (Devices)
 **功能**: 纳管 ESP32 部署工具 (Deployment Dongle)。
 **实现原理**:
-- ESP32 通过 WebSocket 连接网关。
-- 采用 **Codebook 压缩协议** 降低带宽消耗，仅传输 4 字节状态码。
-- 支持远程 OTA：用户上传固件 -> 后端推送 -> ESP32 自动写入 Flash。
+- 当前 v1 硬件为 **面包板跳线版 USB-TTL 串口部署器原型**，ESP32 通过本地串口与目标主机交互。
+- 原型使用 1 个外部 CP2102，在“烧录/调试”与“部署”两种模式之间切换，不做双桥并存设计。
+- 固件在本地屏幕和按键上完成环境检测、备份、安装确认和高风险卸载确认。
+- 后端 `/ws/device`、OTA 与 physical confirmation 仍保留为实验性云设备网关与模拟链路，不属于当前串口部署器固件能力。
 - **Screenshot Ref**: `devices.png`
 
 ![Devices](assets/devices.png)
@@ -110,12 +111,30 @@ graph TD
 
 ### 通信协议
 - **物理层**: USB-TTL (Serial 115200 8N1)
-- **协议层**: JSON Line 
-  - 下行 (Web -> ESP): `{"cmd": "install", "url": "..."}`
-  - 上行 (ESP -> Web): `{"status": "progress", "percent": 45}`
+- **部署模式**: 本地串口部署器，Linux 主机通过预装 serial helper 执行安装/卸载，Windows 仅做环境识别。
+- **原型切换规则**:
+  - 烧录/调试优先使用开发板板载 USB
+  - 若板载 USB 不可用，外部 CP2102 可临时接 `GPIO3/1/GND` 进行烧录
+  - 进入部署模式前必须断电，再把外部 CP2102 改接到 `GPIO16/17/GND`
+  - 部署模式下 CP2102 不连接 `VCC/5V/3V3`
+- **协议层**: allow-list 请求 + 显式串口标记协议
+  - 请求阶段: `AG:REQ:ENV`, `AG:REQ:BACKUP`, `AG:REQ:INSTALL`, `AG:REQ:REMOVE`
+  - 运行阶段: `AG:BEGIN:<action>`, `AG:STEP:<action>:RUN`
+  - 环境识别: `AG:ENV:LINUX`, `AG:ENV:WINDOWS`
+  - 备份结果: `AG:OK:BACKUP`, `AG:ERR:BACKUP:<code>`
+  - 安装结果: `AG:OK:INSTALL`, `AG:ERR:INSTALL:<code>`
+  - 卸载结果: `AG:OK:REMOVE`, `AG:ERR:REMOVE:<code>`
+
+### 引脚基线
+- **按键**: `BTN_OK=GPIO18`, `BTN_NEXT=GPIO19`, `BTN_BACK=GPIO23`
+- **I2C OLED**: `SDA=GPIO21`, `SCL=GPIO22`
+- **目标串口**: `RX=GPIO16`, `TX=GPIO17`
+- **指示与提示**: `RGB=GPIO25/26/27`, `BUZZER=GPIO14 (active-low module)`
 
 ### 安全机制
-- **Hard Confirmation**: 涉及 `rm -rf` 等指令时，ESP32 固件逻辑强制拦截，等待 GPIO 15 (BTN_OK) 物理高电平信号才能放行。
+- **Boot-safe GPIO**: 三颗按键已避开启动配置脚，防止按键按住上电时误入异常启动模式。
+- **Single-Bridge Rule**: 外部 CP2102 同一时刻只能承担一种角色，任何重新接线必须在断电状态下完成。
+- **Hard Confirmation**: 涉及 `rm -rf` 等指令时，ESP32 固件逻辑强制拦截，等待本地 `BTN_OK (GPIO18)` 按下确认后才放行。
 
 ---
-**Technical Department @ FluxGuard**
+**Technical Department @ AetherGuard**

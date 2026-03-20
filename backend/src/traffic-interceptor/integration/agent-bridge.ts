@@ -1,20 +1,18 @@
 /**
- * Agent Bridge - Integration with Multi-Agent Decision System
+ * Agent Bridge - Integration with the rule-first detection pipeline
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import {
     Verdict,
     InterceptionResult,
-    PacketForAnalysis,
     AnalysisResult,
     ThreatEvent,
     ParsedPacket
 } from '../core/types';
 import { Packet } from '../core/packet';
-import { ProtocolParser, ThreatIndicator } from '../processing/protocol-parser';
+import { ProtocolParser } from '../processing/protocol-parser';
 import { FlowManager } from '../core/flow';
-import { MultiAgentDecisionSystem } from '../../ai-agents';
+import { detectionPipelineService } from '../../services/detection-pipeline.service';
 import logger from '../../utils/logger';
 
 export interface AgentBridgeConfig {
@@ -37,11 +35,9 @@ const DEFAULT_CONFIG: AgentBridgeConfig = {
 
 export class AgentBridge {
     private config: AgentBridgeConfig;
-    private agentSystem: MultiAgentDecisionSystem | null = null;
     private protocolParser: ProtocolParser;
     private flowManager: FlowManager;
     private verdictCache: Map<string, { verdict: Verdict; timestamp: number }>;
-    private pendingAnalyses: Map<string, Promise<AnalysisResult>>;
     private stats = {
         totalAnalyzed: 0,
         cacheHits: 0,
@@ -59,7 +55,6 @@ export class AgentBridge {
         this.protocolParser = new ProtocolParser();
         this.flowManager = flowManager;
         this.verdictCache = new Map();
-        this.pendingAnalyses = new Map();
     }
 
     async initialize(): Promise<void> {
@@ -68,14 +63,7 @@ export class AgentBridge {
             return;
         }
 
-        try {
-            this.agentSystem = new MultiAgentDecisionSystem();
-            await this.agentSystem.initialize();
-            logger.info('Agent bridge initialized successfully');
-        } catch (error: any) {
-            logger.error('Failed to initialize agent bridge', { error: error.message });
-            this.agentSystem = null;
-        }
+        logger.info('Agent bridge initialized successfully');
     }
 
     async analyzePacket(packet: Packet): Promise<InterceptionResult> {
@@ -84,16 +72,6 @@ export class AgentBridge {
 
         try {
             const parsed = packet.parsed;
-            
-            const fastPathVerdict = this.fastPathAnalysis(parsed);
-            if (fastPathVerdict) {
-                return {
-                    packetId,
-                    verdict: fastPathVerdict.verdict,
-                    processingTime: Date.now() - startTime,
-                    matchedRule: fastPathVerdict.rule
-                };
-            }
 
             const cacheKey = this.generateCacheKey(parsed);
             if (this.config.cacheResults) {
@@ -110,7 +88,7 @@ export class AgentBridge {
                 this.stats.cacheMisses++;
             }
 
-            const analysisResult = await this.performDeepAnalysis(parsed);
+            const analysisResult = await this.performDetectionPipelineAnalysis(parsed);
 
             const verdict = this.mapAnalysisVerdict(analysisResult);
 
@@ -147,113 +125,56 @@ export class AgentBridge {
         }
     }
 
-    private fastPathAnalysis(parsed: ParsedPacket): { verdict: Verdict; rule: string } | null {
-        if (!parsed.ipHeader) return null;
-
-        const payload = parsed.payload;
-        if (payload.length === 0) return null;
-
-        const protocolResult = this.protocolParser.detectProtocol(payload);
-        
-        if (protocolResult.protocol === 'http') {
-            const httpResult = this.protocolParser.parseHTTP(payload);
-            
-            if (httpResult.threats.length > 0) {
-                const criticalThreat = httpResult.threats.find(t => t.severity === 'critical');
-                if (criticalThreat) {
-                    return {
-                        verdict: 'block',
-                        rule: `fast_path:${criticalThreat.type}`
-                    };
-                }
-            }
-        }
-
-        const payloadStr = payload.toString('utf-8');
-        const genericThreats = this.detectGenericThreats(payloadStr);
-        
-        if (genericThreats.some(t => t.severity === 'critical')) {
-            return {
-                verdict: 'block',
-                rule: 'fast_path:critical_threat'
-            };
-        }
-
-        return null;
-    }
-
-    private detectGenericThreats(content: string): ThreatIndicator[] {
-        const threats: ThreatIndicator[] = [];
-
-        const criticalPatterns = [
-            { pattern: /'\s*or\s+'1'\s*=\s*'1/gi, type: 'sql_injection' },
-            { pattern: /;\s*drop\s+table/gi, type: 'sql_injection' },
-            { pattern: /<script[\s\S]*?>[\s\S]*?<\/script>/gi, type: 'xss' },
-            { pattern: /\.\.\/\.\.\/\.\.\/etc\/passwd/gi, type: 'path_traversal' }
-        ];
-
-        for (const { pattern, type } of criticalPatterns) {
-            if (pattern.test(content)) {
-                threats.push({
-                    type,
-                    severity: 'critical',
-                    description: `Critical threat detected: ${type}`,
-                    location: { start: 0, end: content.length }
-                });
-            }
-        }
-
-        return threats;
-    }
-
-    private async performDeepAnalysis(parsed: ParsedPacket): Promise<AnalysisResult> {
-        if (!this.agentSystem) {
-            return this.fallbackAnalysis(parsed);
-        }
-
-        const flow = this.flowManager.getOrCreateFlow(parsed);
-
-        const analysisRequest: PacketForAnalysis = {
-            id: parsed.id,
-            timestamp: new Date(),
-            sourceIP: parsed.ipHeader?.sourceIP || '',
-            destIP: parsed.ipHeader?.destIP || '',
-            sourcePort: (parsed.transportHeader as any)?.sourcePort || 0,
-            destPort: (parsed.transportHeader as any)?.destPort || 0,
-            protocol: parsed.protocol,
-            payload: parsed.payload.toString('base64'),
-            raw: parsed.raw.toString('base64'),
-            flowId: flow?.id || '',
-            direction: parsed.metadata.direction
-        };
-
+    private async performDetectionPipelineAnalysis(parsed: ParsedPacket): Promise<AnalysisResult> {
         try {
+            const protocolResult = this.protocolParser.parse(parsed.payload);
+            const existingSignals = protocolResult.threats.map((threat) => ({
+                source: 'existing_signal' as const,
+                key: `protocol:${threat.type}`,
+                score: threat.severity === 'critical' ? 1 : threat.severity === 'high' ? 0.8 : 0.55,
+                severity: threat.severity,
+                description: threat.description
+            }));
+
             const decision = await Promise.race([
-                this.agentSystem.analyze({
-                    id: analysisRequest.id,
-                    timestamp: analysisRequest.timestamp,
-                    sourceIP: analysisRequest.sourceIP,
+                detectionPipelineService.evaluateRequest({
+                    tenantId: 'global',
+                    channel: 'packet',
+                    requestId: parsed.id,
+                    timestamp: new Date().toISOString(),
+                    sourceIp: parsed.ipHeader?.sourceIP || '',
                     method: parsed.protocol.toUpperCase(),
                     path: this.extractPath(parsed),
                     headers: {},
                     body: parsed.payload.toString('utf-8'),
-                    queryParams: {},
-                    traceContext: undefined
+                    evidence: protocolResult.threats.map((threat) => threat.description).join('\n'),
+                    protocol: parsed.protocol,
+                    rawPayload: parsed.raw.toString('utf-8'),
+                    existingSignals,
+                    metadata: {
+                        destIP: parsed.ipHeader?.destIP || '',
+                        sourcePort: (parsed.transportHeader as any)?.sourcePort || 0,
+                        destPort: (parsed.transportHeader as any)?.destPort || 0,
+                        direction: parsed.metadata.direction,
+                        flowId: this.flowManager.getOrCreateFlow(parsed)?.id || ''
+                    }
                 }),
-                this.createTimeoutPromise()
+                this.createTimeoutPromise<any>()
             ]);
 
             return {
                 packetId: parsed.id,
                 verdict: decision.verdict === 'allow' ? 'allow' :
                          decision.verdict === 'block' ? 'block' : 'monitor',
-                confidence: decision.confidence,
-                threatType: decision.threatLevel !== 'none' ? decision.threatLevel : undefined,
-                threatLevel: decision.threatLevel !== 'none' ? decision.threatLevel : undefined,
-                reasoning: decision.reasoning,
-                actions: (decision.actions || []).map(a => a.action)
+                confidence: decision.aiConfidence ?? decision.riskScore,
+                threatType: decision.attackFamily !== 'benign' ? decision.attackFamily : undefined,
+                threatLevel: decision.verdict === 'block'
+                    ? 'high'
+                    : decision.verdict === 'monitor'
+                        ? 'medium'
+                        : undefined,
+                reasoning: decision.decisionSource
             };
-
         } catch (error: any) {
             this.stats.timeouts++;
             logger.warn('Deep analysis timeout or error', { error: error.message });
@@ -359,7 +280,7 @@ export class AgentBridge {
         return {
             ...this.stats,
             cacheSize: this.verdictCache.size,
-            pendingCount: this.pendingAnalyses.size
+            pendingCount: 0
         };
     }
 
@@ -368,11 +289,7 @@ export class AgentBridge {
     }
 
     async shutdown(): Promise<void> {
-        if (this.agentSystem) {
-            await this.agentSystem.shutdown();
-        }
         this.verdictCache.clear();
-        this.pendingAnalyses.clear();
         logger.info('Agent bridge shutdown complete');
     }
 }

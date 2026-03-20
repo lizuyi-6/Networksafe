@@ -1,7 +1,7 @@
-{
-    "name": "fluxguard-e2e",
+﻿{
+    "name": "AetherGuard-e2e",
     "version": "1.0.0",
-    "description": "E2E tests for FluxGuard Pro",
+    "description": "E2E tests for AetherGuard",
     "scripts": {
         "test": "playwright test",
         "test:release": "playwright test tests/smoke.spec.ts tests/dev-login.spec.ts tests/site-walkthrough.spec.ts tests/visual-smoke.spec.ts --project=chromium",

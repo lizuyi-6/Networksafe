@@ -11,8 +11,11 @@ import { PLATFORM_API_CONFIG, getPlatformCloudBaseUrl } from '../../utils/model-
 import logger from '../../utils/logger';
 import { isAttackSimulatorEnabled, isDemoMode } from '../../config/app-mode';
 import { authenticate } from '../../middleware/auth.middleware';
+import agentAuthService from '../../security/agent-auth.service';
 import { securityOperationsService } from '../../services/security-operations.service';
-import { getDatabase } from '../../config/database';
+import { owaspWebEvaluationService } from '../../services/owasp-web-evaluation.service';
+import { detectionPipelineService } from '../../services/detection-pipeline.service';
+import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
 
 const router = Router();
 
@@ -46,17 +49,14 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
         const rawStats = system.getStats();
         const probeReport = system.getProbeReport();
         const health = system.getHealthStatus();
-        const tenantId = (req as any).user?.tenantId || 'global';
+        const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
         const opsSummary = await securityOperationsService.getDashboardSummaryView(tenantId);
         const threatPatterns = await securityOperationsService.summarizeThreatsView(tenantId);
         const runtimeAgents = agentGateway?.getAgentList?.() || [];
-        const registeredAgentsCount = Number(
-            getDatabase().prepare(`
-                SELECT COUNT(*) AS count
-                FROM agent_registrations
-                WHERE status IN ('approved', 'pending')
-            `).get()?.count || 0
-        );
+        const registeredAgentsCount = agentAuthService
+            .listAgents()
+            .filter((agent) => agent.status === 'approved' || agent.status === 'pending')
+            .length;
         const mergedAgents = new Map<string, any>();
 
         for (const runtimeAgent of runtimeAgents) {
@@ -139,6 +139,20 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
     }
 });
 
+router.post('/evaluation/owasp', authenticate, async (req: Request, res: Response) => {
+    try {
+        const report = await owaspWebEvaluationService.evaluate({
+            datasetRoot: typeof req.body?.datasetRoot === 'string' ? req.body.datasetRoot : undefined,
+            tenantId: (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID
+        });
+
+        res.json(report);
+    } catch (error: any) {
+        logger.error('Failed to run OWASP web evaluation:', { error: error.message });
+        res.status(500).json({ error: 'evaluation_failed', message: error.message });
+    }
+});
+
 let multiAgentSystem: MultiAgentDecisionSystem | null = null;
 let agentGateway: any = null;
 
@@ -165,6 +179,31 @@ const trafficStats: TrafficStats = {
     threats: new Map(),
     activeFlows: []
 };
+
+function normalizeDetectionAIConfidence(value: unknown): number {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+        return 0;
+    }
+    return Math.max(0, Math.min(1, numeric));
+}
+
+function normalizeDetectionAttackFamily(value: unknown) {
+    const normalized = String(value || '').toLowerCase();
+    if (
+        normalized === 'benign' ||
+        normalized === 'sqli' ||
+        normalized === 'xss' ||
+        normalized === 'path_traversal' ||
+        normalized === 'command_injection' ||
+        normalized === 'ssrf' ||
+        normalized === 'automation' ||
+        normalized === 'other'
+    ) {
+        return normalized;
+    }
+    return undefined;
+}
 
 export const setAgentGateway = (gateway: any) => {
     agentGateway = gateway;
@@ -207,6 +246,54 @@ export const initializeAgentSystem = async (): Promise<void> => {
     });
 
     await multiAgentSystem.initialize();
+    detectionPipelineService.setAiAnalyzer({
+        analyze: async (request, options) => {
+            const decision = await multiAgentSystem!.analyze({
+                id: request.requestId,
+                timestamp: new Date(request.timestamp),
+                sourceIP: request.sourceIp || 'unknown',
+                method: request.method || 'GET',
+                path: request.path || '/',
+                headers: request.headers || {},
+                body: request.body || request.evidence || '',
+                userAgent: request.userAgent,
+                rawLog: request.evidence,
+                queryParams: request.parsedQuery
+                    ? { __raw: request.parsedQuery }
+                    : {},
+                tenantId: request.tenantId,
+                routeModeOverride: options?.routeModeOverride,
+                analysisPurpose: options?.analysisPurpose || 'primary',
+                traceContext: undefined
+            });
+
+            const verdict = decision.verdict === 'block'
+                ? 'malicious'
+                : decision.verdict === 'monitor' || decision.verdict === 'challenge'
+                    ? 'suspicious'
+                    : 'safe';
+
+            return {
+                verdict,
+                confidence: normalizeDetectionAIConfidence(decision.confidence),
+                reasoning: decision.reasoning,
+                attackFamily: normalizeDetectionAttackFamily(decision.attackFamily),
+                routeMode: decision.routeMode,
+                model: decision.routeMode || null,
+                decisionId: decision.id,
+                rawDecision: {
+                    id: decision.id,
+                    verdict: decision.verdict,
+                    confidence: normalizeDetectionAIConfidence(decision.confidence),
+                    threatLevel: decision.threatLevel,
+                    attackFamily: decision.attackFamily,
+                    routeMode: decision.routeMode,
+                    caseFileId: decision.caseFileId,
+                    analysisPurpose: options?.analysisPurpose || 'primary'
+                }
+            };
+        }
+    });
     logger.info('Multi-Agent System initialized for API routes');
 };
 

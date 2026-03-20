@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 防火墙控制器
  * 
  * 调用系统防火墙工具封禁/解封 IP:
@@ -283,7 +283,7 @@ export class FirewallController {
     private async blockWithNetsh(ip: string): Promise<boolean> {
         try {
             // 生成安全的规则名称
-            const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;
+            const ruleName = `AetherGuard_Block_${ip.replace(/\./g, '_')}`;
 
             // 使用参数化命令执行
             const args = [
@@ -307,7 +307,7 @@ export class FirewallController {
 
     private async unblockWithNetsh(ip: string): Promise<boolean> {
         try {
-            const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;
+            const ruleName = `AetherGuard_Block_${ip.replace(/\./g, '_')}`;
 
             const args = [
                 'advfirewall',

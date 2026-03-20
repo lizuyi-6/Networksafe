@@ -1,4 +1,4 @@
-﻿module.exports = {
+module.exports = {
     testEnvironment: 'node',
     roots: ['<rootDir>/src'],
     testMatch: ['**/__tests__/**/*.test.ts', '**/tests/**/*.test.ts'],
@@ -11,7 +11,7 @@
     ],
     coverageDirectory: 'coverage',
     transform: {
-        '^.+\\.ts$': ['ts-jest', {
+        '^.+\\.ts$': [require.resolve('ts-jest'), {
             tsconfig: 'tsconfig.test.json',
             diagnostics: false
         }]
@@ -25,7 +25,5 @@
     watchman: false,
     maxWorkers: 1,
     forceExit: true,
-    testTimeout: 30000,
-    setupFiles: ['<rootDir>/jest.setup.js'],
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.db.js']
+    testTimeout: 30000
 };

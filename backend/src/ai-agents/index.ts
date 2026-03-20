@@ -47,6 +47,10 @@ export { ProbeAgent, ProbeReport, AgentHeartbeat, SystemMetrics, ProbeAlert, Pro
 
 const DEFAULT_CONFIG: MultiAgentConfig = {
     enabled: true,
+    experimentMode: 'multi_agent_with_debate',
+    primarySingleAgentRole: 'aristotle',
+    heuristicOnly: false,
+    useIsolatedBus: false,
     layers: {
         l1_collaboration: { enabled: true, priority: 1, timeout: 5000, maxConcurrency: 10 },
         l2_rolePlaying: { enabled: true, priority: 2, timeout: 10000, maxConcurrency: 3 },
@@ -73,6 +77,8 @@ const DEFAULT_CONFIG: MultiAgentConfig = {
     },
     thresholds: {
         debateTrigger: 0.3,
+        debateDivergence: 0.3,
+        debateConfidenceRange: 0.3,
         cloudEscalation: 0.6,
         autoBlock: 0.85
     },
@@ -99,7 +105,7 @@ export class MultiAgentDecisionSystem {
 
     constructor(config: Partial<MultiAgentConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
-        this.messageBus = globalMessageBus;
+        this.messageBus = this.config.useIsolatedBus ? new MessageBus() : globalMessageBus;
         this.orchestrator = new AgentOrchestrator(this.config, this.messageBus);
         this.debateProtocol = new DebateProtocol(this.messageBus);
         this.traceManager = traceContextManager;
@@ -198,19 +204,7 @@ export class MultiAgentDecisionSystem {
 
             const narrative = this.traceManager.buildAttackNarrative(traceId);
             
-            let debate: DebateSession | undefined;
-            if (this.shouldTriggerDebate(decision)) {
-                debate = await this.debateProtocol.initiateDebate(
-                    request.id,
-                    this.getAnalysisResults(decision),
-                    request
-                );
-                
-                if (debate.finalVerdict) {
-                    decision.verdict = this.mapDebateVerdict(debate.finalVerdict.decision);
-                    decision.confidence = debate.finalVerdict.confidence;
-                }
-            }
+            const debate = decision.debateSession;
 
             const caseFile = this.synthesisEngine.generateCaseFile(
                 decision,
@@ -220,6 +214,11 @@ export class MultiAgentDecisionSystem {
 
             decision.caseFileId = caseFile.id;
             decision.processingTime = Date.now() - startTime;
+            decision.layersActivated = Array.from(new Set([...(decision.layersActivated || []), 7])).sort();
+            if (decision.stageLatencies) {
+                decision.stageLatencies.synthesisMs = Number((Date.now() - startTime - (decision.stageLatencies.roleAnalysisMs + decision.stageLatencies.debateMs)).toFixed(2));
+                decision.stageLatencies.endToEndMs = Number((Date.now() - startTime).toFixed(2));
+            }
 
             this.traceManager.addTraceEvent(traceId, {
                 service: 'synthesis',
@@ -249,34 +248,6 @@ export class MultiAgentDecisionSystem {
         return `trace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
 
-    private shouldTriggerDebate(decision: SecurityDecision): boolean {
-        return (
-            decision.confidence < this.config.thresholds.debateTrigger ||
-            decision.verdict === 'challenge' ||
-            (decision.evidence.length > 0 && decision.confidence < 0.8)
-        );
-    }
-
-    private getAnalysisResults(decision: SecurityDecision): AnalysisResult[] {
-        return decision.evidence.map((e, i) => ({
-            agentId: `agent-${i}`,
-            role: 'socrates' as const,
-            verdict: decision.verdict === 'allow' ? 'safe' : 
-                     decision.verdict === 'block' ? 'malicious' : 'suspicious',
-            confidence: decision.confidence,
-            reasoning: e.description,
-            evidence: [e]
-        }));
-    }
-
-    private mapDebateVerdict(verdict: string): SecurityDecision['verdict'] {
-        switch (verdict) {
-            case 'safe': return 'allow';
-            case 'malicious': return 'block';
-            default: return 'monitor';
-        }
-    }
-
     private createEmptyDebate(requestId: string): DebateSession {
         return {
             id: 'no-debate',
@@ -291,7 +262,12 @@ export class MultiAgentDecisionSystem {
                 confidence: 0.5,
                 reasoning: 'No debate was triggered',
                 votingRecord: [],
-                arbitratorNotes: 'Skipped debate phase'
+                arbitratorNotes: 'Skipped debate phase',
+                aggregatedDistribution: {
+                    safe: 0.5,
+                    suspicious: 0.3,
+                    malicious: 0.2
+                }
             }
         };
     }

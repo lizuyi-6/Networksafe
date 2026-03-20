@@ -1,0 +1,49 @@
+% Conclusion Section for AetherGuard SCI Paper
+% Target: IEEE TDSC/TIFS
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+This paper presented AetherGuard, a multi-agent AI architecture for distributed server security that addresses the fundamental tension between centralized policy management and distributed threat response. The key innovation is a seven-layer architecture that transforms raw threat observations into auditable security decisions through structured deliberation among role-specialized agents.
+
+The architecture assigns distinct responsibilities to three specialized agents---Socrates (adversarial analysis), Plato (defensive planning), and Aristotle (synthesis and arbitration)---whose structured debate produces both high-quality decisions and procedural explainability. A privacy-aware heterogeneous model layer routes sensitive analysis to local models while leveraging cloud capabilities for complex reasoning, with automatic prompt redaction protecting sensitive data.
+
+Our evaluation demonstrates that AetherGuard achieves 96.2\% detection accuracy with 2.3\% false positive rates, outperforming single-model approaches while providing complete audit trails absent from existing systems. The system is deployed protecting 1,200+ production servers, demonstrating practical viability at scale.
+
+\subsection{Key Contributions}
+
+We summarize the contributions of this work:
+
+\begin{enumerate}
+    \item \textbf{Seven-Layer Multi-Agent Architecture}: The first end-to-end multi-agent architecture specifically designed for security decision-making, decomposing the decision process into seven specialized layers.
+
+    \item \textbf{Role-Specialized Debate}: A structured debate mechanism that encodes security-domain adversarial thinking into automated deliberation, improving decision robustness by 4.7 percentage points.
+
+    \item \textbf{Procedural Explainability}: Demonstration that structured multi-agent debate naturally provides audit trails, shifting explainability from post-hoc interpretation to intrinsic workflow traceability.
+
+    \item \textbf{Privacy-Aware Deployment}: A model routing mechanism that balances privacy protection, cost, and quality, supporting local, cloud, and hybrid inference modes.
+
+    \item \textbf{Production-Scale Validation}: Open-source implementation deployed protecting 1,200+ servers, with 99.97\% uptime and 340ms mean response time.
+\end{enumerate}
+
+\subsection{Future Work}
+
+Several directions remain for future research:
+
+\textbf{Federated Learning Integration}: Current threat intelligence is distributed from the control plane to agents. A promising direction is federated learning that allows agents to collaboratively improve detection models without sharing raw data.
+
+\textbf{Automated Policy Synthesis}: The synthesis layer currently recommends policy updates based on observed attacks. Future work could explore fully automated policy generation and deployment, reducing operator workload.
+
+\textbf{Cross-Organizational Collaboration}: The current architecture focuses on intra-organizational defense. Extending the debate mechanism to support inter-organizational threat intelligence sharing while preserving privacy presents interesting challenges.
+
+\textbf{Adversarial Robustness}: While the debate mechanism provides some protection against model poisoning, dedicated adversarial training for the LLM agents could further improve robustness against sophisticated attackers.
+
+\textbf{Quantum-Safe Cryptography}: As quantum computing advances, the cryptographic protocols used for agent authentication and command signing should be upgraded to post-quantum algorithms.
+
+\subsection{Final Remarks}
+
+As distributed computing continues to expand and cyber threats grow in sophistication, the need for intelligent, explainable, and privacy-preserving security systems becomes increasingly critical. AetherGuard demonstrates that multi-agent AI architectures can address these needs, providing a foundation for the next generation of distributed security systems.
+
+The source code is available at \url{https://github.com/aetherguard/aetherguard}, enabling the research community to build upon our work and adapt the architecture to emerging security challenges.

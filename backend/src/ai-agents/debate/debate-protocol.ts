@@ -1,7 +1,6 @@
 /**
  * Debate Protocol - L5: Debate Protocol Layer
  * Core innovation: Multi-agent debate with arbitrator resolution
- * Reduces false positives by 90%
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -14,9 +13,16 @@ import {
     AnalysisResult,
     TrafficRequest,
     Evidence,
-    AgentMessage
+    DebateTriggerMetrics
 } from '../core/types';
 import { MessageBus } from '../core/message-bus';
+import {
+    averagePairwiseDivergence,
+    blendDistributions,
+    confidenceFromDistribution,
+    dominantVerdict,
+    normalizeDistribution
+} from '../core/scoring';
 import logger from '../../utils/logger';
 
 export interface DebateConfig {
@@ -46,9 +52,11 @@ export class DebateProtocol {
     async initiateDebate(
         requestId: string,
         results: AnalysisResult[],
-        request: TrafficRequest
+        request: TrafficRequest,
+        triggerMetrics?: DebateTriggerMetrics
     ): Promise<DebateSession> {
         const sessionId = uuidv4();
+        const startedAt = Date.now();
         
         const session: DebateSession = {
             id: sessionId,
@@ -57,7 +65,8 @@ export class DebateProtocol {
             participants: ['socrates', 'plato', 'aristotle', 'arbitrator'],
             rounds: [],
             status: 'active',
-            startTime: new Date()
+            startTime: new Date(),
+            triggerMetrics
         };
 
         this.sessions.set(sessionId, session);
@@ -67,6 +76,9 @@ export class DebateProtocol {
             session.finalVerdict = await this.arbitrate(session, results);
             session.status = 'resolved';
             session.endTime = new Date();
+            session.consensusReached = this.checkConsensus(session, results);
+            session.aggregateDistribution = session.finalVerdict.aggregatedDistribution;
+            session.latencyMs = Date.now() - startedAt;
         } catch (error: any) {
             session.status = 'failed';
             logger.error(`Debate ${sessionId} failed`, { error: error.message });
@@ -76,7 +88,7 @@ export class DebateProtocol {
     }
 
     private generateDebateTopic(results: AnalysisResult[], request: TrafficRequest): string {
-        const conflictingViews = results.filter(r => r.verdict !== results[0]?.verdict);
+        const conflictingViews = results.filter((result) => dominantVerdict(result.classScores) !== dominantVerdict(results[0]?.classScores || result.classScores));
         
         if (conflictingViews.length > 0) {
             return `Conflict resolution: Agents disagree on request to ${request.path}`;
@@ -101,7 +113,7 @@ export class DebateProtocol {
             const round = await this.executeRound(session, roundNum, results, request);
             session.rounds.push(round);
 
-            if (this.checkConsensus(session)) {
+            if (this.checkConsensus(session, results)) {
                 logger.info(`Debate ${session.id}: Consensus reached at round ${roundNum}`);
                 break;
             }
@@ -303,18 +315,15 @@ Provide a concise argument supporting your position. Focus on evidence and reaso
                `From a statistical perspective, this appears within normal parameters.`;
     }
 
-    private checkConsensus(session: DebateSession): boolean {
-        if (session.rounds.length < 3) return false;
+    private checkConsensus(session: DebateSession, results: AnalysisResult[]): boolean {
+        if (session.rounds.length < 2) return false;
 
-        const recentRounds = session.rounds.slice(-3);
-        const verdicts = recentRounds.map(r => {
-            if (r.argument.toLowerCase().includes('malicious')) return 'malicious';
-            if (r.argument.toLowerCase().includes('safe')) return 'safe';
-            return 'suspicious';
-        });
+        const dominantLabels = new Set(results.map((result) => dominantVerdict(result.classScores)));
+        if (dominantLabels.size === 1) {
+            return true;
+        }
 
-        const uniqueVerdicts = new Set(verdicts);
-        return uniqueVerdicts.size === 1;
+        return averagePairwiseDivergence(results) <= Math.max(0.05, 1 - this.config.consensusThreshold);
     }
 
     private async arbitrate(
@@ -322,35 +331,68 @@ Provide a concise argument supporting your position. Focus on evidence and reaso
         results: AnalysisResult[]
     ): Promise<DebateVerdict> {
         const votingRecord = this.collectVotes(results);
+        const initialAggregateDistribution = blendDistributions(results);
+        const aggregateDistribution = this.applyDebateAdjustments(
+            initialAggregateDistribution,
+            session,
+            results,
+            votingRecord
+        );
+        const aggregateVerdict = dominantVerdict(aggregateDistribution);
         
         const maliciousVotes = votingRecord.filter(v => v.vote === 'malicious').length;
         const safeVotes = votingRecord.filter(v => v.vote === 'safe').length;
+        const abstainVotes = votingRecord.filter(v => v.vote === 'abstain').length;
         const totalVotes = votingRecord.length;
+        const hardEvidenceCount = session.rounds.reduce((sum, round) => (
+            sum + round.evidence.filter((evidence) => evidence.severity === 'high' || evidence.severity === 'critical').length
+        ), 0);
 
         let decision: 'safe' | 'malicious' | 'requires_review';
         let confidence: number;
         let reasoning: string;
 
-        if (maliciousVotes > safeVotes) {
+        if (
+            maliciousVotes >= Math.ceil(totalVotes / 2) ||
+            aggregateDistribution.malicious >= 0.58 ||
+            hardEvidenceCount >= 2
+        ) {
             const avgConfidence = votingRecord
                 .filter(v => v.vote === 'malicious')
-                .reduce((sum, v) => sum + v.confidence, 0) / maliciousVotes;
+                .reduce((sum, v) => sum + v.confidence, 0) / Math.max(maliciousVotes, 1);
             
             decision = 'malicious';
-            confidence = avgConfidence;
-            reasoning = `Majority (${maliciousVotes}/${totalVotes}) voted malicious with average confidence ${(avgConfidence * 100).toFixed(0)}%`;
-        } else if (safeVotes > maliciousVotes) {
+            confidence = Math.max(avgConfidence, confidenceFromDistribution(aggregateDistribution));
+            reasoning = `Aggregated posterior favors malicious with ${(aggregateDistribution.malicious * 100).toFixed(0)}% support`;
+        } else if (
+            safeVotes >= Math.ceil(totalVotes / 2) ||
+            (
+                safeVotes >= 1 &&
+                maliciousVotes === 0 &&
+                aggregateDistribution.safe >= aggregateDistribution.malicious
+            ) ||
+            (
+                safeVotes >= 1 &&
+                maliciousVotes === 1 &&
+                abstainVotes >= 1 &&
+                session.triggerMetrics?.labelConflict
+            )
+        ) {
             const avgConfidence = votingRecord
                 .filter(v => v.vote === 'safe')
-                .reduce((sum, v) => sum + v.confidence, 0) / safeVotes;
+                .reduce((sum, v) => sum + v.confidence, 0) / Math.max(safeVotes, 1);
             
             decision = 'safe';
-            confidence = avgConfidence;
-            reasoning = `Majority (${safeVotes}/${totalVotes}) voted safe with average confidence ${(avgConfidence * 100).toFixed(0)}%`;
+            confidence = Math.max(avgConfidence, confidenceFromDistribution(aggregateDistribution));
+            reasoning = `Aggregated posterior favors safe with ${(aggregateDistribution.safe * 100).toFixed(0)}% support`;
+        } else if (aggregateVerdict === 'malicious' && abstainVotes > 0 && safeVotes > 0) {
+            decision = 'requires_review';
+            confidence = Math.max(0.55, confidenceFromDistribution(aggregateDistribution));
+            reasoning = `Debate preserved ambiguity after conflicting evidence; ${(aggregateDistribution.suspicious * 100).toFixed(0)}% posterior mass remains in review space`;
         } else {
             decision = 'requires_review';
-            confidence = 0.5;
-            reasoning = 'Split decision - requires human review';
+            confidence = Math.max(0.5, confidenceFromDistribution(aggregateDistribution));
+            reasoning = `Posterior remains ambiguous with ${(aggregateDistribution.suspicious * 100).toFixed(0)}% suspicious support`;
         }
 
         const arbitratorNotes = this.generateArbitratorNotes(session, votingRecord);
@@ -360,15 +402,47 @@ Provide a concise argument supporting your position. Focus on evidence and reaso
             confidence,
             reasoning,
             votingRecord,
-            arbitratorNotes
+            arbitratorNotes,
+            aggregatedDistribution: normalizeDistribution(aggregateDistribution)
         };
+    }
+
+    private applyDebateAdjustments(
+        aggregateDistribution: ReturnType<typeof normalizeDistribution>,
+        session: DebateSession,
+        results: AnalysisResult[],
+        votingRecord: VotingRecord[]
+    ) {
+        const adjusted = {
+            ...normalizeDistribution(aggregateDistribution)
+        };
+        const maliciousVotes = votingRecord.filter((vote) => vote.vote === 'malicious').length;
+        const safeVotes = votingRecord.filter((vote) => vote.vote === 'safe').length;
+        const abstainVotes = votingRecord.filter((vote) => vote.vote === 'abstain').length;
+        const divergence = session.triggerMetrics?.divergence ?? averagePairwiseDivergence(results);
+
+        if (maliciousVotes >= 2) {
+            adjusted.malicious += 0.08;
+            adjusted.suspicious -= 0.03;
+            adjusted.safe -= 0.05;
+        } else if (maliciousVotes === 1 && safeVotes >= 1 && abstainVotes >= 1 && divergence >= 0.08) {
+            adjusted.safe += 0.1;
+            adjusted.suspicious += 0.03;
+            adjusted.malicious -= 0.13;
+        } else if (safeVotes >= 2 && divergence >= 0.08) {
+            adjusted.safe += 0.07;
+            adjusted.suspicious -= 0.04;
+            adjusted.malicious -= 0.03;
+        }
+
+        return normalizeDistribution(adjusted);
     }
 
     private collectVotes(results: AnalysisResult[]): VotingRecord[] {
         return results.map(result => ({
             agentId: result.agentId,
             role: result.role,
-            vote: this.mapVerdictToVote(result.verdict),
+            vote: this.mapVerdictToVote(dominantVerdict(result.classScores)),
             confidence: result.confidence,
             reasoning: result.reasoning
         }));
@@ -378,7 +452,7 @@ Provide a concise argument supporting your position. Focus on evidence and reaso
         switch (verdict) {
             case 'safe': return 'safe';
             case 'malicious': return 'malicious';
-            case 'suspicious': return 'malicious';
+            case 'suspicious': return 'abstain';
             default: return 'abstain';
         }
     }

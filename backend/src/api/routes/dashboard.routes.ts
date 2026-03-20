@@ -1,28 +1,21 @@
 import { Router, Response } from 'express';
 import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import { getTrafficStats } from './ai-system.routes';
+import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
+import { detectionPipelineService } from '../../services/detection-pipeline.service';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.get('/rules/summary', (req: AuthenticatedRequest, res: Response) => {
+router.get('/rules/summary', async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const stats = getTrafficStats();
-        const threatEntries = Array.from(stats.threats.entries()).map(([key, item]) => ({
-            id: key,
-            name: item.type,
-            severity: item.severity,
-            count: item.count,
-            enabled: true
-        }));
+        const tenantId = req.tenantContext?.tenantId || req.user?.tenantId || PLATFORM_TENANT_ID;
+        const summary = await detectionPipelineService.getSummary(tenantId);
 
         res.json({
             success: true,
             data: {
-                totalRules: threatEntries.length,
-                activeRules: threatEntries.filter((r) => r.enabled).length,
-                topRules: threatEntries.sort((a, b) => b.count - a.count).slice(0, 10),
+                ...summary,
                 updatedAt: new Date().toISOString()
             }
         });

@@ -116,6 +116,7 @@ describe('Devices Routes', () => {
     it('should send command to device', async () => {
       const response = await request(app)
         .post('/api/devices/device-001/cmd')
+        .type('application/json')
         .send({ command: 'reboot', params: {} });
 
       expect(response.status).toBe(200);
@@ -125,6 +126,7 @@ describe('Devices Routes', () => {
     it('should return 404 for non-existent device', async () => {
       const response = await request(app)
         .post('/api/devices/non-existent/cmd')
+        .type('application/json')
         .send({ command: 'reboot' });
 
       expect(response.status).toBe(404);
@@ -135,6 +137,7 @@ describe('Devices Routes', () => {
 
       const response = await request(app)
         .post('/api/devices/device-001/cmd')
+        .type('application/json')
         .send({ command: 'reboot' });
 
       expect(response.status).toBe(400);
@@ -146,6 +149,7 @@ describe('Devices Routes', () => {
     it('should update device configuration', async () => {
       const response = await request(app)
         .put('/api/devices/device-001')
+        .type('application/json')
         .send({ connectedAgents: ['agent-001'] });
 
       expect(response.status).toBe(200);
@@ -155,6 +159,7 @@ describe('Devices Routes', () => {
     it('should return 404 for non-existent device', async () => {
       const response = await request(app)
         .put('/api/devices/non-existent')
+        .type('application/json')
         .send({ connectedAgents: [] });
 
       expect(response.status).toBe(404);
@@ -190,6 +195,7 @@ describe('Devices Routes', () => {
     it('should update codebook entries', async () => {
       const response = await request(app)
         .post('/api/devices/codebook')
+        .type('application/json')
         .send({ entries: { E100: 'Test error message' } });
 
       expect(response.status).toBe(200);
@@ -200,6 +206,7 @@ describe('Devices Routes', () => {
     it('should return 400 for invalid entries', async () => {
       const response = await request(app)
         .post('/api/devices/codebook')
+        .type('application/json')
         .send({});
 
       expect(response.status).toBe(400);
@@ -208,6 +215,7 @@ describe('Devices Routes', () => {
     it('should return 400 for invalid key format', async () => {
       const response = await request(app)
         .post('/api/devices/codebook')
+        .type('application/json')
         .send({ entries: { 'invalid-key!': 'Test' } });
 
       expect(response.status).toBe(400);
@@ -216,6 +224,7 @@ describe('Devices Routes', () => {
     it('should return 400 for malicious content', async () => {
       const response = await request(app)
         .post('/api/devices/codebook')
+        .type('application/json')
         .send({ entries: { E101: '<script>alert(1)</script>' } });
 
       expect(response.status).toBe(400);

@@ -297,6 +297,21 @@ export class DatabaseManager {
         )
       `);
 
+      try {
+        this.db.exec(`ALTER TABLE agent_registrations ADD COLUMN tenant_id TEXT`);
+        logger.info('Database migration applied: added tenant_id column to agent_registrations');
+      } catch (e: any) {
+        if (!(e.message && e.message.includes('duplicate column name'))) {
+          logger.warn('Error during database soft migration', { error: e.message });
+        }
+      }
+
+      try {
+        this.db.exec(`UPDATE agent_registrations SET tenant_id = 'platform' WHERE tenant_id IS NULL OR tenant_id = ''`);
+      } catch (e: any) {
+        logger.warn('Error during database tenant backfill for agent_registrations', { error: e.message });
+      }
+
       // System configuration table (for seed version, settings, etc.)
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS system_config (

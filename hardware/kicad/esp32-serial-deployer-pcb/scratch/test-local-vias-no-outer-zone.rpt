@@ -1,0 +1,360 @@
+** Drc report for test-local-vias-no-outer-zone.kicad_pcb **
+** Created on 2026-03-15T14:00:52+0800 **
+
+** Found 90 DRC violations **
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(65.8500 mm, 57.5000 mm): 走线 [GND] (F.Cu), 长度: 3.0000 mm
+    @(65.0697 mm, 54.6882 mm): 走线 [UART0_TX] (F.Cu), 长度: 4.1441 mm
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.2023 mm)
+    规则: board setup constraints hole; error
+    @(51.7500 mm, 6.8000 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(52.1100 mm, 7.6000 mm): J1 的 NPTH 焊盘
+[shorting_items]: 短路了两个不同网络的项目 (网络 HOST_DN 和 GND)
+    局部重写; error
+    @(68.4352 mm, 33.1120 mm): 走线 [HOST_DN] (F.Cu), 长度: 0.1886 mm
+    @(68.1000 mm, 33.2500 mm): 过孔 [GND] (F.Cu - B.Cu)
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1650 mm)
+    规则: netclass 'Default'; error
+    @(75.0511 mm, 21.5600 mm): 走线 [5V_SYS] (B.Cu), 长度: 29.4710 mm
+    @(54.8000 mm, 22.1750 mm): 过孔 [GND] (F.Cu - B.Cu)
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1251 mm)
+    规则: netclass 'Default'; error
+    @(5.8230 mm, 24.8001 mm): 走线 [3V3] (B.Cu), 长度: 30.7446 mm
+    @(36.2000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 USB_CC1)
+    局部重写; error
+    @(49.8000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(50.0000 mm, 23.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 UART0_TX)
+    局部重写; error
+    @(49.8000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(22.5384 mm, 24.0700 mm): 走线 [UART0_TX] (In1.Cu), 长度: 35.4982 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 3V3 和 GND)
+    局部重写; error
+    @(36.5676 mm, 24.8001 mm): 走线 [3V3] (In2.Cu), 长度: 21.0813 mm
+    @(48.6000 mm, 37.0500 mm): 过孔 [GND] (F.Cu - B.Cu)
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(51.7500 mm, 9.0450 mm): 走线 [GND] (F.Cu), 长度: 2.2450 mm
+    @(52.1100 mm, 7.6000 mm): J1 的 NPTH 焊盘
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_DTR 和 GND)
+    局部重写; error
+    @(71.9940 mm, 11.3115 mm): 走线 [USB_DTR] (F.Cu), 长度: 2.0498 mm
+    @(68.0000 mm, 11.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(49.1941 mm, 24.2710 mm): 走线 [VBUS_USB_C_RAW] (F.Cu), 长度: 7.5098 mm
+    @(50.0000 mm, 22.1750 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 UART0_TX)
+    局部重写; error
+    @(36.2000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(22.5384 mm, 24.0700 mm): 走线 [UART0_TX] (In1.Cu), 长度: 35.4982 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 USB_DTR)
+    局部重写; error
+    @(69.8000 mm, 11.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(71.9940 mm, 11.3115 mm): 走线 [USB_DTR] (F.Cu), 长度: 2.0498 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(68.4352 mm, 33.1120 mm): 走线 [HOST_DN] (F.Cu), 长度: 0.1886 mm
+    @(70.0375 mm, 33.2500 mm): 走线 [GND] (F.Cu), 长度: 1.9375 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 UART0_TX)
+    局部重写; error
+    @(62.5000 mm, 25.0500 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(60.0122 mm, 22.0944 mm): 走线 [UART0_TX] (In1.Cu), 长度: 4.4684 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 USB_RTS)
+    局部重写; error
+    @(69.8000 mm, 11.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(67.6630 mm, 10.9922 mm): 走线 [USB_RTS] (B.Cu), 长度: 7.0343 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_CC1 和 GND)
+    局部重写; error
+    @(50.0000 mm, 23.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+    @(48.0000 mm, 24.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.2500 mm)
+    规则: netclass 'Default'; error
+    @(73.0000 mm, 14.0000 mm): F.Cu 上 U2 的焊盘 25 [<no net>]
+    @(73.0000 mm, 13.2500 mm): 过孔 [GND] (F.Cu - B.Cu)
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1851 mm)
+    规则: netclass 'Default'; error
+    @(36.5676 mm, 24.8001 mm): 过孔 [3V3] (F.Cu - B.Cu)
+    @(38.0000 mm, 24.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(66.0000 mm, 29.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+    @(65.0697 mm, 26.2402 mm): 走线 [UART0_TX] (F.Cu), 长度: 28.4480 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 USB_CC1)
+    局部重写; error
+    @(49.8000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(50.7147 mm, 24.5397 mm): 走线 [USB_CC1] (F.Cu), 长度: 1.0107 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 HOST_DN)
+    局部重写; error
+    @(68.1000 mm, 33.2500 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(68.4352 mm, 33.3006 mm): 走线 [HOST_DN] (F.Cu), 长度: 1.3427 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(71.2500 mm, 35.9625 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 0.4280 mm
+    @(70.7500 mm, 35.9625 mm): 走线 [3V3] (F.Cu), 长度: 1.0000 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_DTR 和 GND)
+    局部重写; error
+    @(63.2627 mm, 24.4480 mm): 走线 [USB_DTR] (F.Cu), 长度: 3.2883 mm
+    @(60.9375 mm, 25.0500 mm): 走线 [GND] (F.Cu), 长度: 1.5625 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(66.0000 mm, 39.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+    @(64.6180 mm, 32.7413 mm): 走线 [ESP_IO0] (F.Cu), 长度: 8.9527 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(44.0000 mm, 29.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+    @(45.1278 mm, 25.7750 mm): 走线 [3V3] (F.Cu), 长度: 3.8722 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 3V3 和 GND)
+    局部重写; error
+    @(31.0000 mm, 40.8250 mm): 走线 [3V3] (F.Cu), 长度: 9.0850 mm
+    @(32.2000 mm, 39.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(53.0000 mm, 22.1750 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+    @(53.7851 mm, 20.1516 mm): 走线 [USB_CC2] (F.Cu), 长度: 2.8883 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 LED_B_DRV 和 GND)
+    局部重写; error
+    @(50.1752 mm, 39.2157 mm): 走线 [LED_B_DRV] (B.Cu), 长度: 24.4417 mm
+    @(32.2000 mm, 39.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 HOST_DN 和 GND)
+    局部重写; error
+    @(68.4352 mm, 33.1120 mm): 过孔 [HOST_DN] (F.Cu - B.Cu)
+    @(68.1000 mm, 33.2500 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_DTR 和 GND)
+    局部重写; error
+    @(69.9442 mm, 11.3115 mm): 走线 [USB_DTR] (F.Cu), 长度: 0.8784 mm
+    @(68.0000 mm, 11.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0605 mm)
+    规则: netclass 'Default'; error
+    @(83.2000 mm, 31.0625 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(82.0000 mm, 30.5844 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 8.7195 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 USB_DTR)
+    局部重写; error
+    @(62.5000 mm, 25.0500 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(63.2627 mm, 24.4480 mm): 走线 [USB_DTR] (F.Cu), 长度: 3.2883 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 BUZZER_CTRL 和 GND)
+    局部重写; error
+    @(35.8216 mm, 39.6174 mm): 走线 [BUZZER_CTRL] (B.Cu), 长度: 9.9218 mm
+    @(32.2000 mm, 39.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 USB_C_DP)
+    局部重写; error
+    @(61.9500 mm, 13.9375 mm): 走线 [GND] (F.Cu), 长度: 1.7500 mm
+    @(60.0500 mm, 13.9375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_C_DP 和 GND)
+    局部重写; error
+    @(60.0500 mm, 13.9375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+    @(60.2000 mm, 13.9375 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 HOST_DN 和 GND)
+    局部重写; error
+    @(70.6245 mm, 35.3013 mm): 走线 [HOST_DN] (B.Cu), 长度: 3.0961 mm
+    @(68.1000 mm, 33.2500 mm): 过孔 [GND] (F.Cu - B.Cu)
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(37.1977 mm, 11.6273 mm): 走线 [3V3] (F.Cu), 长度: 13.1728 mm
+    @(38.0000 mm, 24.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 )
+    局部重写; error
+    @(71.0375 mm, 13.2500 mm): 走线 [GND] (F.Cu), 长度: 1.9625 mm
+    @(73.0000 mm, 14.0000 mm): F.Cu 上 U2 的焊盘 25 [<no net>]
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(66.0000 mm, 39.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+    @(65.0697 mm, 26.2402 mm): 走线 [UART0_TX] (F.Cu), 长度: 28.4480 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 ESP_IO0)
+    局部重写; error
+    @(64.2000 mm, 39.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(64.6180 mm, 32.7413 mm): 走线 [ESP_IO0] (F.Cu), 长度: 8.9527 mm
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(58.2500 mm, 9.0450 mm): 走线 [GND] (F.Cu), 长度: 2.2450 mm
+    @(57.8900 mm, 7.6000 mm): J1 的 NPTH 焊盘
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.2023 mm)
+    规则: board setup constraints hole; error
+    @(58.2500 mm, 6.8000 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(57.8900 mm, 7.6000 mm): J1 的 NPTH 焊盘
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0607 mm)
+    规则: netclass 'Default'; error
+    @(70.0375 mm, 33.2500 mm): 走线 [GND] (F.Cu), 长度: 1.9375 mm
+    @(69.2894 mm, 33.5007 mm): 走线 [HOST_DP] (F.Cu), 长度: 0.3526 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 OLED_SCL 和 GND)
+    局部重写; error
+    @(69.8909 mm, 26.0807 mm): 走线 [OLED_SCL] (In1.Cu), 长度: 47.1393 mm
+    @(40.0000 mm, 26.0000 mm): 过孔 [GND] (F.Cu - B.Cu)
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(69.2894 mm, 31.7852 mm): 走线 [HOST_DP] (F.Cu), 长度: 1.7155 mm
+    @(70.0375 mm, 33.2500 mm): 走线 [GND] (F.Cu), 长度: 1.9375 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(34.0000 mm, 39.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+    @(31.0000 mm, 40.8250 mm): 走线 [3V3] (F.Cu), 长度: 9.0850 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0325 mm)
+    规则: netclass 'Default'; error
+    @(36.5676 mm, 24.8001 mm): 过孔 [3V3] (F.Cu - B.Cu)
+    @(36.2000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1650 mm)
+    规则: netclass 'Default'; error
+    @(48.2000 mm, 22.1750 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(75.0511 mm, 21.5600 mm): 走线 [5V_SYS] (B.Cu), 长度: 29.4710 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0486 mm)
+    规则: netclass 'Default'; error
+    @(60.9375 mm, 21.0500 mm): 走线 [GND] (F.Cu), 长度: 1.5625 mm
+    @(60.9375 mm, 22.9500 mm): 走线 [USB_RTS] (F.Cu), 长度: 4.0596 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 USB_RTS)
+    局部重写; error
+    @(62.5000 mm, 21.0500 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(60.9375 mm, 22.9500 mm): 走线 [USB_RTS] (F.Cu), 长度: 4.0596 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 OLED_SDA 和 GND)
+    局部重写; error
+    @(34.5605 mm, 25.3092 mm): 走线 [OLED_SDA] (F.Cu), 长度: 2.8120 mm
+    @(36.2000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0600 mm)
+    规则: netclass 'Default'; error
+    @(62.5000 mm, 21.0500 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(75.0511 mm, 21.5600 mm): 走线 [5V_SYS] (B.Cu), 长度: 29.4710 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_C_DP 和 GND)
+    局部重写; error
+    @(60.5125 mm, 13.9375 mm): 走线 [USB_C_DP] (F.Cu), 长度: 0.4625 mm
+    @(60.2000 mm, 13.9375 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 3V3 和 GND)
+    局部重写; error
+    @(5.8230 mm, 24.8001 mm): 走线 [3V3] (B.Cu), 长度: 30.7446 mm
+    @(5.8000 mm, 24.7400 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 3V3 和 GND)
+    局部重写; error
+    @(4.8971 mm, 25.7260 mm): 走线 [3V3] (B.Cu), 长度: 1.3094 mm
+    @(5.8000 mm, 24.7400 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_C_DP 和 GND)
+    局部重写; error
+    @(61.6223 mm, 12.8277 mm): 走线 [USB_C_DP] (F.Cu), 长度: 1.5695 mm
+    @(60.2000 mm, 13.9375 mm): 过孔 [GND] (F.Cu - B.Cu)
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0827 mm)
+    规则: netclass 'Default'; error
+    @(58.2500 mm, 6.8000 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(56.8760 mm, 6.2673 mm): 走线 [USB_C_DP] (F.Cu), 长度: 2.8763 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_C_DN 和 GND)
+    局部重写; error
+    @(57.0733 mm, 6.6950 mm): 走线 [USB_C_DN] (F.Cu), 长度: 2.5142 mm
+    @(58.2500 mm, 6.8000 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 USB_DTR)
+    局部重写; error
+    @(69.8000 mm, 11.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(69.9442 mm, 11.3115 mm): 走线 [USB_DTR] (F.Cu), 长度: 0.8784 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(49.1941 mm, 24.2710 mm): 走线 [VBUS_USB_C_RAW] (F.Cu), 长度: 7.5098 mm
+    @(48.0000 mm, 24.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 VBUS_USB_C_RAW)
+    局部重写; error
+    @(48.0000 mm, 24.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+    @(49.8869 mm, 24.9638 mm): 走线 [VBUS_USB_C_RAW] (F.Cu), 长度: 0.9798 mm
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(50.0000 mm, 23.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+    @(49.8000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(60.0500 mm, 13.9375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+    @(60.2000 mm, 13.9375 mm): 过孔 [GND] (F.Cu - B.Cu)
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(73.0000 mm, 14.0000 mm): F.Cu 上 U2 的焊盘 25 [<no net>]
+    @(73.0000 mm, 13.2500 mm): 过孔 [GND] (F.Cu - B.Cu)
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(70.7500 mm, 35.9625 mm): 走线 [3V3] (F.Cu), 长度: 1.0000 mm
+    @(71.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 8 [VBUS_HOST_RAW]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(61.9500 mm, 13.9375 mm): 走线 [GND] (F.Cu), 长度: 1.7500 mm
+    @(60.0500 mm, 13.9375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(71.0375 mm, 13.2500 mm): 走线 [GND] (F.Cu), 长度: 1.9625 mm
+    @(73.0000 mm, 14.0000 mm): F.Cu 上 U2 的焊盘 25 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(48.0000 mm, 24.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+    @(50.0000 mm, 23.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(49.8000 mm, 24.2250 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(50.0000 mm, 23.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(73.0000 mm, 13.2500 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(73.0000 mm, 14.0000 mm): F.Cu 上 U2 的焊盘 25 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(60.2000 mm, 13.9375 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(60.0500 mm, 13.9375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+[hole_to_hole]: 钻孔太靠近其他孔 (board setup constraints 最小 0.2495 mm; 实际 0.0625 mm)
+    规则: board setup constraints; warning
+    @(68.4352 mm, 33.1120 mm): 过孔 [HOST_DN] (F.Cu - B.Cu)
+    @(68.1000 mm, 33.2500 mm): 过孔 [GND] (F.Cu - B.Cu)
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(94.0000 mm, 33.0000 mm): 封装 J2
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(88.0000 mm, 16.0000 mm): 封装 J3
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(95.0000 mm, 5.0000 mm): J3 的 线段, 位于 F.Silkscreen
+    @(89.5000 mm, 25.0000 mm): J2 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(89.5000 mm, 41.0000 mm): J2 的 线段, 位于 F.Silkscreen
+    @(95.0000 mm, 27.0000 mm): J3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(81.0000 mm, 27.0000 mm): J3 的 线段, 位于 F.Silkscreen
+    @(81.0900 mm, 24.6021 mm): F2 的 线段, 位于 F.Silkscreen
+
+** Found 1 unconnected pads **
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(70.0375 mm, 33.2500 mm): 走线 [GND] (F.Cu), 长度: 1.9375 mm
+    @(66.0000 mm, 29.2250 mm): 走线 [GND] (F.Cu), 长度: 1.8000 mm
+
+** Found 0 Footprint errors **
+
+** End of Report **

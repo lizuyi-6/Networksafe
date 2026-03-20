@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 ESP32 Device Connection Test Script
 
 Tests WebSocket communication between ESP32 deployment dongles
-and the FluxGuard Control Platform.
+and the AetherGuard Control Platform.
 
 Usage:
     python test_esp32_connection.py [--host HOST] [--port PORT]
@@ -181,7 +181,7 @@ class ESP32DeviceSimulator:
         print(f"[→] Alert sent: [{severity}] {message}")
     
     async def connect_to_server(self, host: str, port: int):
-        """Connect to the FluxGuard Control Platform"""
+        """Connect to the AetherGuard Control Platform"""
         url = f"http://{host}:{port}"
         print(f"[*] Connecting to {url}...")
         
@@ -213,7 +213,7 @@ class ESP32DeviceSimulator:
 async def run_test(host: str, port: int, duration: int = 60):
     """Run the ESP32 connection test"""
     print("=" * 60)
-    print("FluxGuard ESP32 Device Connection Test")
+    print("AetherGuard ESP32 Device Connection Test")
     print("=" * 60)
     print()
     
@@ -284,18 +284,18 @@ async def run_test(host: str, port: int, duration: int = 60):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Test ESP32 device connection to FluxGuard"
+        description="Test ESP32 device connection to AetherGuard"
     )
     parser.add_argument(
         "--host",
         default="localhost",
-        help="FluxGuard server host (default: localhost)"
+        help="AetherGuard server host (default: localhost)"
     )
     parser.add_argument(
         "--port",
         type=int,
         default=3005,
-        help="FluxGuard server port (default: 3005)"
+        help="AetherGuard server port (default: 3005)"
     )
     parser.add_argument(
         "--duration",

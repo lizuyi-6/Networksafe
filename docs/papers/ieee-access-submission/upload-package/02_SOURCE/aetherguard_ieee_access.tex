@@ -1,0 +1,433 @@
+\documentclass{ieeeaccess}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{url}
+
+\makeatletter
+\AtBeginDocument{\DeclareMathVersion{bold}
+\SetSymbolFont{operators}{bold}{T1}{times}{b}{n}
+\SetSymbolFont{NewLetters}{bold}{T1}{times}{b}{it}
+\SetMathAlphabet{\mathrm}{bold}{T1}{times}{b}{n}
+\SetMathAlphabet{\mathit}{bold}{T1}{times}{b}{it}
+\SetMathAlphabet{\mathbf}{bold}{T1}{times}{b}{n}
+\SetMathAlphabet{\mathtt}{bold}{OT1}{pcr}{b}{n}
+\SetSymbolFont{symbols}{bold}{OMS}{cmsy}{b}{n}
+\renewcommand\boldmath{\@nomath\boldmath\mathversion{bold}}}
+\makeatother
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\sys}{AetherGuard}
+\newcommand{\repo}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\artifact}[1]{\texttt{\detokenize{#1}}}
+\input{author-metadata.tex}
+
+\begin{document}
+\history{}
+\doi{}
+
+\title{Explainable Multi-Agent Debate for Web Attack Decision-Making: A Seven-Layer Architecture and OWASP-Derived Experimental Study}
+\author{\uppercase{\AuthorOneName}\authorrefmark{1},
+\uppercase{\AuthorTwoName}\authorrefmark{1},
+and \uppercase{\AuthorThreeName}\authorrefmark{2}}
+
+\address[1]{\AffiliationOneText\ (e-mail: \AffiliationOneEmails)}
+\address[2]{\AffiliationTwoText\ (e-mail: \AffiliationTwoEmails)}
+\tfootnote{\MetadataFootnoteText}
+
+\markboth
+{\RunningAuthorText: Explainable Multi-Agent Debate for Web Attack Decision-Making}
+{\RunningAuthorText: Explainable Multi-Agent Debate for Web Attack Decision-Making}
+
+\corresp{\CorrespondingAuthorLine}
+
+\begin{abstract}
+Modern web-defense pipelines increasingly combine fast-path filtering with language-model reasoning, yet many practical deployments still collapse the AI stage into one model call and one scalar confidence score. That design weakens role specialization, conflict handling, and auditability. This article presents a seven-layer multi-agent architecture for explainable web-attack decision-making and evaluates it through a balanced HTTP corpus derived from OWASP Benchmark metadata and testcase sources. The architecture combines threat routing, role-specialized analysis, trace-centric context, sandboxed tool execution, conflict-triggered debate, heterogeneous route modes, and case-file synthesis. The design is implemented in the \sys{} prototype and formalized with agent posterior distributions, Jensen-Shannon divergence based conflict scoring, and weighted post-debate aggregation. Quantitative comparison on 32 reconstructed HTTP requests spanning SQL injection, cross-site scripting, path traversal, and command injection shows that both the single-agent baseline and the multi-agent system without debate achieve 0.875 accuracy and 0.8889 F1, with four false positives concentrated in benign command-injection-like requests. Enabling debate removes all four false positives and yields 1.000 accuracy, precision, recall, and F1 on the available corpus. Under the current heuristic-fallback evaluation path, all three route modes (\texttt{cloud\_only}, \texttt{local\_preferred}, and \texttt{hybrid\_verify}) preserve perfect classification for the debate-enabled system while exposing measurable orchestration overhead below 1~ms average end-to-end latency. Because the current workspace lacks a runnable external ModSecurity environment and stable local-model execution for full LLM latency studies, the article frames these results as an evidence-backed experimental study of orchestration behavior rather than a claim of benchmark dominance.
+\end{abstract}
+
+\begin{keywords}
+ablation study, debate-based reasoning, explainable security, large language model agents, multi-agent systems, OWASP Benchmark, web application firewall
+\end{keywords}
+
+\titlepgskip=-18pt
+\maketitle
+
+\section{Introduction}
+\PARstart{W}{eb} attack defense still depends heavily on single-pass decision rules. Traditional intrusion-detection systems and web application firewalls compress each request into a label or risk score, trading simplicity for limited interpretability \cite{denning1987intrusion,roesch1999snort}. Recent learning-based detectors improve behavioral coverage, but analyst-facing explainability remains a persistent weakness \cite{doriguzzi2020lucid,neupane2022xids}. The same limitation appears in many large language model (LLM) security prototypes: one model is asked to inspect a request, produce one verdict, and implicitly resolve its own uncertainty.
+
+That pattern is structurally mismatched to adversarial web traffic. SQL injection, cross-site scripting (XSS), path traversal, and command injection often create partial evidence rather than a single decisive feature. A red-team perspective may emphasize exploitability, a blue-team perspective may emphasize schema and policy violations, and an analyst perspective may emphasize behavioral normality. Treating those views as separate posteriors rather than hidden prompt-internal thoughts creates an opportunity for explicit conflict handling and auditability.
+
+Multi-agent LLM systems have shown that specialization and communication can improve reasoning on complex tasks \cite{wang2024autonomous,guo2024multiagentsurvey,li2023camel,wu2024autogen,hong2024metagpt,chen2024agentverse}. Debate, critique, and self-correction work further suggests that exposing disagreement can improve factuality and reasoning quality \cite{wang2023selfconsistency,du2024debate,shinn2023reflexion,huang2024selfcorrect,gou2024critic}. Yet most of that literature is general-purpose. It does not directly define how to route web-security requests, when to trigger debate, how to aggregate posteriors, or how to connect the reasoning trace to operational response artifacts.
+
+This article addresses that gap through a seven-layer architecture implemented in the \sys{} prototype and evaluated on a reconstructed HTTP corpus derived from OWASP Benchmark metadata and testcase sources. The core question is not whether one more model can be added to a defense stack. The question is whether a security-oriented orchestration pattern with explicit disagreement handling improves web-attack decision quality over both single-agent reasoning and multi-agent reasoning without debate.
+
+The contributions are as follows.
+\begin{enumerate}
+\item A seven-layer architecture for web-attack decision-making that combines threat-family routing, role-specialized reasoning, trace-centric context, sandboxed capability execution, conflict-triggered debate, heterogeneous route modes, and case-file synthesis.
+\item A mathematical formulation of the debate trigger and arbitration process using per-agent posterior distributions, Jensen-Shannon divergence, confidence spread, and weighted post-debate aggregation.
+\item An implemented experimental pipeline that reconstructs HTTP requests from OWASP Benchmark metadata and evaluates three executable decision modes: \texttt{single\_agent}, \texttt{multi\_agent\_no\_debate}, and \texttt{multi\_agent\_with\_debate}.
+\item Quantitative evidence that debate eliminates the false positives observed in the non-debate baselines on the available 32-request corpus, together with route-mode and latency-decomposition results that clarify what the current prototype does and does not yet validate.
+\end{enumerate}
+
+The remainder of this article is organized as follows. Section~\ref{sec:related} reviews related work. Section~\ref{sec:architecture} presents the architecture and mathematical formulation. Section~\ref{sec:implementation} maps the design to the \sys{} prototype. Section~\ref{sec:evaluation} describes the experimental setup and quantitative results. Section~\ref{sec:discussion} discusses limitations and validity threats. Section~\ref{sec:conclusion} concludes the article.
+
+\section{Related Work}
+\label{sec:related}
+
+\subsection{AI-Assisted Intrusion Detection}
+Intrusion-detection research has progressed from audit-driven anomaly models and signature-driven monitoring \cite{denning1987intrusion,roesch1999snort} to machine-learning pipelines that infer malicious behavior from traffic features, temporal structure, and behavioral context. Lightweight detectors such as LUCID demonstrate that practical deep-learning-based traffic defense can be engineered for operational environments \cite{doriguzzi2020lucid}. At the same time, explainable intrusion-detection surveys highlight a persistent gap between predictive performance and analyst usability \cite{neupane2022xids}. Federated and privacy-aware learning directions further indicate that deployment constraints are increasingly central to real-world security analytics \cite{buyuktanir2025federated}. These lines of work motivate multi-source reasoning, but they typically still emit a single model verdict rather than an explicit conflict-resolution workflow.
+
+\subsection{Multi-Agent LLM Systems}
+Recent LLM-agent literature establishes role specialization and communication as first-class design patterns. Generative Agents explored agent societies in simulation \cite{park2023generative}. CAMEL, AutoGen, MetaGPT, and AgentVerse then operationalized role-based collaboration in increasingly practical settings \cite{li2023camel,wu2024autogen,hong2024metagpt,chen2024agentverse}. More recent work studies scaling and automatic workflow generation \cite{qian2025scaling,zhang2025aflow}. These frameworks demonstrate that multi-agent coordination can outperform monolithic prompting on complex tasks, but they are not designed around security-specific evidence such as attack mutations, schema violations, incident traces, and downstream response actions.
+
+\subsection{Debate, Critique, and Self-Correction}
+Self-consistency improves reasoning by aggregating multiple reasoning paths \cite{wang2023selfconsistency}. Multi-agent debate externalizes disagreement rather than collapsing it into a hidden confidence score \cite{du2024debate}. Reflexion and CRITIC similarly show that critique-based revision can improve outcomes when models can inspect and revise intermediate reasoning \cite{shinn2023reflexion,gou2024critic}. Importantly, Huang \emph{et al.} demonstrate that LLMs cannot reliably self-correct on their own, which strengthens the case for structured external feedback rather than implicit trust in one model pass \cite{huang2024selfcorrect}. Security decision-making is a particularly relevant domain for this idea because ambiguous traffic often creates partially conflicting interpretations that should remain visible to auditors.
+
+\subsection{Hybrid Routing, Privacy, and Explainability}
+Operational AI systems often balance privacy, latency, and quality across local and cloud execution paths. Recent work on privacy risks in LLMs, privacy-preserving inference, and trustworthy AI highlights the need for redaction and routing policies that depend on sensitivity and runtime availability \cite{chen2025privacy,tang2024dpicl,feretzakis2024trustworthy}. Cost-aware routing approaches such as FrugalGPT and RouteLLM show that backend selection can itself be optimized \cite{chen2023frugalgpt,ong2024routellm}. In parallel, explainable intrusion detection increasingly argues that analysts require narrative evidence, not just a label and score \cite{neupane2022xids,hermosilla2025systems,hermosilla2025forensic}. The architecture proposed here combines these concerns by treating explainability, deployment routing, and operational follow-up as parts of one security-decision pipeline.
+
+\section{Proposed Architecture}
+\label{sec:architecture}
+
+\subsection{Architectural Overview}
+The proposed method treats web-attack decision-making as a staged workflow rather than a single inference call. Incoming HTTP traffic enters a control-plane service that coordinates request content, historical context, trace events, runtime route state, and response-policy configuration. The workflow then traverses seven layers, each producing an artifact that can be audited independently or consumed downstream.
+
+\begin{figure*}[!t]
+\centering
+\fbox{\begin{minipage}{0.97\textwidth}
+\small
+\centering
+\textbf{Security event or request}
+
+\vspace{4pt}
+$\rightarrow$ \fbox{\shortstack{L1 Collaboration\\Threat routing}}
+$\rightarrow$ \fbox{\shortstack{L2 Role Playing\\Socrates, Plato, Aristotle}}
+$\rightarrow$ \fbox{\shortstack{L3 Scene Traversal\\Trace narrative}}
+$\rightarrow$ \fbox{\shortstack{L4 Capability\\Sandboxed tools}}
+$\rightarrow$ \fbox{\shortstack{L5 Debate\\Conflict resolution}}
+$\rightarrow$ \fbox{\shortstack{L6 Heterogeneous Models\\Local, cloud, hybrid}}
+$\rightarrow$ \fbox{\shortstack{L7 Synthesis\\Case file output}}
+$\rightarrow$ \textbf{Decision and response action}
+
+\vspace{6pt}
+\begin{tabularx}{0.92\textwidth}{YY}
+\textbf{Control plane context:} API, routing, audit, policy controls &
+\textbf{Distributed agent context:} telemetry, enforcement, execution feedback
+\end{tabularx}
+\end{minipage}}
+\caption{Seven-layer multi-agent architecture instantiated in the \sys{} prototype for web-attack decision-making.}
+\label{fig:architecture}
+\end{figure*}
+
+\subsection{Layer-by-Layer Design}
+\textbf{L1: Collaboration.} The collaboration layer identifies the rough threat family and routes the request to relevant experts. In the current prototype, routing covers SQL injection, cross-site scripting, path traversal, command injection, authentication issues, and a default benign fallback.
+
+\textbf{L2: Role Playing.} The architecture defines three named perspectives. Socrates plays the red-team role and searches for bypasses, mutations, and exploit paths. Plato plays the blue-team role and validates schema, parameters, and policy alignment. Aristotle plays the analyst role and evaluates historical behavior and anomaly indicators. Disagreement among the three is treated as informative evidence rather than noise.
+
+\textbf{L3: Scene Traversal.} The scene-traversal layer reconstructs a trace-centric narrative from distributed events. It records timeline fragments, implicated services, attack-chain hints, and a summary risk level.
+
+\textbf{L4: Capability.} The capability layer exposes sandboxed tools for evidence enrichment, including SQL explanation, safe HTTP probing, payload decoding, header analysis, and pattern checking.
+
+\textbf{L5: Debate.} The debate layer is the architectural centerpiece. Low-confidence or conflicting analyses are escalated into a structured debate session with role-specific arguments, round history, evidence fragments, and arbitration notes.
+
+\textbf{L6: Heterogeneous Models.} The heterogeneous layer selects between local, cloud, and hybrid execution according to privacy mode, configured route policy, and runtime availability.
+
+\textbf{L7: Synthesis.} The synthesis layer emits a case file that combines the final decision, supporting evidence, trace narrative, debate record, operational actions, lessons learned, and policy suggestions.
+
+\subsection{Mathematical Formulation}
+Let $x$ denote an HTTP request and let the label space be $Y=\{\textnormal{safe}, \textnormal{suspicious}, \textnormal{malicious}\}$. Each role agent $i \in \{1,\dots,n\}$ emits a posterior distribution
+\begin{equation}
+p_i(y \mid x), \qquad \sum_{y \in Y} p_i(y \mid x)=1.
+\end{equation}
+The dominant label for agent $i$ is
+\begin{equation}
+\hat{y}_i(x)=\arg\max_{y \in Y} p_i(y \mid x).
+\end{equation}
+
+To quantify disagreement we use average pairwise Jensen-Shannon divergence
+\begin{equation}
+D(x)=\frac{2}{n(n-1)} \sum_{i<j} \operatorname{JS}\!\left(p_i(\cdot \mid x), p_j(\cdot \mid x)\right),
+\end{equation}
+and confidence spread
+\begin{equation}
+C(x)=\max_i c_i(x)-\min_i c_i(x),
+\end{equation}
+where $c_i(x)=\max_{y \in Y} p_i(y \mid x)$.
+
+Debate is triggered when at least one of the following conditions holds:
+\begin{equation}
+\left| \{ \hat{y}_i(x) \}_{i=1}^{n} \right| > 1,
+\end{equation}
+\begin{equation}
+D(x) > \tau_D,
+\end{equation}
+\begin{equation}
+C(x) > \tau_C.
+\end{equation}
+In the current implementation the default thresholds are $\tau_D=\tau_C=0.3$, matching the repository configuration. After debate, the arbitrator produces adjusted posteriors $p_i^{\textnormal{post}}(y \mid x)$ and aggregates them as
+\begin{equation}
+q(y \mid x)=\sum_{i=1}^{n} w_i p_i^{\textnormal{post}}(y \mid x),
+\end{equation}
+with $\sum_i w_i=1$. The current prototype uses equal weights during orchestration experiments. The operational verdict is then mapped from $\arg\max_y q(y \mid x)$ to \texttt{allow}, \texttt{monitor}, \texttt{challenge}, or \texttt{block}. For synthesis and policy adaptation, the prototype additionally combines final malicious mass, suspicious mass, and event frequency into a unified risk score
+\begin{equation}
+S(x)=\alpha q(\textnormal{malicious} \mid x)+\beta q(\textnormal{suspicious} \mid x)+\gamma f(x),
+\end{equation}
+where $f(x)$ denotes pattern frequency or recurrence metadata and $\alpha,\beta,\gamma$ are implementation-level weighting coefficients.
+
+\subsection{Decision Flow}
+The prototype uses the formulation above as a conflict-escalation mechanism rather than cosmetic post-processing. Requests are first typed and routed, then analyzed concurrently by specialized roles. When label conflict, divergence, or confidence spread crosses threshold, the debate layer creates an explicit deliberation session before final case-file synthesis.
+
+\begin{figure*}[!t]
+\centering
+\fbox{\begin{minipage}{0.97\textwidth}
+\small
+\centering
+\fbox{Incoming request}
+$\rightarrow$ \fbox{Threat classification}
+$\rightarrow$ \fbox{Concurrent role analyses}
+$\rightarrow$ \fbox{Evidence and confidence aggregation}
+
+\vspace{6pt}
+\textbf{Decision gate: Conflict or low confidence?}
+
+\vspace{4pt}
+\begin{tabularx}{0.92\textwidth}{YY}
+\textbf{No:} direct verdict mapping to allow / monitor / block &
+\textbf{Yes:} debate session $\rightarrow$ arbitration $\rightarrow$ case-file synthesis
+\end{tabularx}
+
+\vspace{6pt}
+\textbf{Shared final stage:} synthesized case file $\rightarrow$ operational action
+\end{minipage}}
+\caption{Request-to-verdict workflow with explicit disagreement-triggered debate escalation.}
+\label{fig:workflow}
+\end{figure*}
+
+\subsection{Explainable Synthesis Output}
+The final output of the architecture is not just a label. Each decision can be associated with a reasoning string, evidence list, optional debate transcript, attack narrative, and machine-readable response actions. This design shifts explainability from a post-hoc visualization problem to a workflow-traceability capability.
+
+\begin{figure}[!t]
+\centering
+\fbox{\begin{minipage}{0.9\columnwidth}
+\scriptsize
+\centering
+\textbf{Inputs to synthesis}
+
+\vspace{4pt}
+Security decision \quad Trace narrative \quad Debate record \quad Response actions \quad Evidence bundle
+
+\vspace{6pt}
+$\Downarrow$
+
+\vspace{4pt}
+\fbox{\textbf{Synthesis engine} $\rightarrow$ \textbf{Case file}}
+
+\vspace{6pt}
+\begin{tabularx}{0.9\columnwidth}{YYY}
+Auditable incident record & Lessons learned & Policy-update suggestions
+\end{tabularx}
+\end{minipage}}
+\caption{Synthesis pipeline for explainable case-file generation.}
+\label{fig:synthesis}
+\end{figure}
+
+\section{Prototype Implementation in \sys{}}
+\label{sec:implementation}
+
+The architecture is instantiated inside the \sys{} control plane rather than as a standalone benchmark script. The top-level entry point \repo{ai-agents/index.ts} assembles the orchestrator, message bus, debate protocol, trace manager, tool executor, model router, synthesis engine, and probe agent. This matters because the contribution is not merely a debate prompt template. It is an end-to-end orchestration pattern embedded in a broader web-defense platform.
+
+Several implementation parameters are explicitly encoded in the repository and are therefore evidence-backed. The default configuration sets a debate trigger threshold of 0.3, divergence and confidence-spread thresholds of 0.3, a cloud escalation threshold of 0.6, and an auto-block threshold of 0.85. The debate layer defaults to at most three rounds before arbitration. The model router supports \texttt{local\_only}, \texttt{local\_preferred}, \texttt{cloud\_only}, and \texttt{hybrid\_verify} modes, and its redaction path masks IP addresses, email addresses, and bearer tokens before cloud execution when redaction is enabled.
+
+To support controlled experiments, the implementation now exposes three explicit orchestration modes shared by the runtime and the benchmark runner:
+\begin{enumerate}
+\item \texttt{single\_agent}: one primary role handles the request.
+\item \texttt{multi\_agent\_no\_debate}: specialized roles run concurrently and their posteriors are aggregated without deliberation.
+\item \texttt{multi\_agent\_with\_debate}: specialized roles run concurrently and disagreement can trigger a structured debate before arbitration.
+\end{enumerate}
+Each analysis result now records a class-score vector, attack family, model tier, route mode, and stage-level latency fields. This makes quantitative comparison possible without changing the surrounding control-plane integration.
+
+\begin{table*}[!t]
+\caption{Layer Responsibilities and Implementation Mapping}
+\label{tab:implementation}
+\centering
+\small
+\begin{tabularx}{\textwidth}{lYY}
+\toprule
+\textbf{Layer} & \textbf{Primary responsibility} & \textbf{Implemented module(s)} \\
+\midrule
+L1 Collaboration & Threat typing and expert routing & \repo{ai-agents/core/agent-orchestrator.ts}, \repo{ai-agents/core/message-bus.ts} \\
+L2 Role Playing & Specialized red-team, blue-team, and analyst reasoning & \repo{ai-agents/roles/socrates-agent.ts}, \repo{ai-agents/roles/plato-agent.ts}, \repo{ai-agents/roles/aristotle-agent.ts} \\
+L3 Scene Traversal & Trace capture and attack narrative construction & \repo{ai-agents/tracing/trace-context.ts} \\
+L4 Capability & Safe tool execution for evidence enrichment & \repo{ai-agents/capabilities/tool-executor.ts} \\
+L5 Debate & Conflict escalation and arbitration & \repo{ai-agents/debate/debate-protocol.ts} \\
+L6 Heterogeneous Models & Runtime selection of inference tier and prompt redaction & \repo{ai-agents/models/model-router.ts} \\
+L7 Synthesis & Case-file generation and learning outputs & \repo{ai-agents/synthesis/synthesis-engine.ts} \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+Two design choices are especially important for the claims made in this article. First, the router is deployment-aware rather than benchmark-driven. It makes decisions according to privacy mode, availability, and configured policy, not according to an unsupported assumption that one model is always superior. Second, the synthesis layer serializes operational outcomes instead of emitting only a verdict. That supports auditability and future response automation.
+
+\section{Experimental Setup}
+\label{sec:evaluation}
+
+\subsection{Research Questions}
+The experimental study addresses four research questions.
+\begin{enumerate}
+\item \textbf{RQ1:} Does the full debate-enabled system improve web-attack classification over a single-agent baseline and a multi-agent baseline without debate?
+\item \textbf{RQ2:} Does the debate layer reduce false positives or false negatives on ambiguous requests?
+\item \textbf{RQ3:} How do the supported route modes affect measured orchestration latency under the current workspace conditions?
+\item \textbf{RQ4:} What claims remain unsupported because the current workspace lacks runnable external WAF infrastructure or stable local-model execution?
+\end{enumerate}
+
+\subsection{Dataset Construction}
+The quantitative evaluation uses a balanced HTTP corpus reconstructed from the OWASP Benchmark metadata file \artifact{expectedresults-1.2.csv} and testcase servlet source files. Instead of running the full Java benchmark application, the evaluation runner parses the expected-results metadata, extracts servlet paths and request input locations from testcase source, and reconstructs synthetic HTTP requests that preserve the attack family and vulnerability label. The current report uses 32 requests: four attack families (\texttt{sqli}, \texttt{xss}, \texttt{path\_traversal}, and \texttt{command\_injection}) with four vulnerable and four non-vulnerable requests per family.
+
+\begin{table*}[!t]
+\caption{Experimental Setup and Evaluation Scope}
+\label{tab:setup}
+\centering
+\small
+\begin{tabularx}{\textwidth}{lYY}
+\toprule
+\textbf{Component} & \textbf{Current setting} & \textbf{Purpose} \\
+\midrule
+Dataset & 32 HTTP requests derived from OWASP Benchmark metadata and testcase source & Balanced attack/benign evaluation corpus for four web-attack families \\
+Labels & Binary report (\texttt{attack} vs.\ \texttt{benign}) plus attack-family breakdown & Supports both aggregate metrics and family-specific error analysis \\
+Baselines & \texttt{single\_agent}, \texttt{multi\_agent\_no\_debate}, \texttt{multi\_agent\_with\_debate} & Isolates the effect of role multiplicity and the debate layer \\
+External WAF baseline & \texttt{ModSecurity + CRS} runner scaffolded but unavailable in current workspace & Included in the framework design, excluded from quantitative tables because Docker/Java execution is not available \\
+Route modes & \texttt{cloud\_only}, \texttt{local\_preferred}, \texttt{hybrid\_verify} & Measures route-level orchestration behavior for the debate-enabled system \\
+Metrics & Accuracy, precision, recall, F1, false positive rate, false negative rate, confusion counts & Standard classification comparison across modes \\
+Statistical test & Paired McNemar approximation against the debate-enabled system & Reports whether observed gains are statistically stable on the current sample size \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{Baselines and Metrics}
+Three baselines are quantitatively executable in the current workspace.
+\begin{enumerate}
+\item \textbf{Single agent:} only the primary analyst role is used.
+\item \textbf{Multi-agent without debate:} all routed roles emit posteriors but no deliberation is allowed.
+\item \textbf{Multi-agent with debate:} routed roles emit posteriors and the conflict gate can trigger deliberation.
+\end{enumerate}
+An external \texttt{ModSecurity + CRS} runner is scaffolded in the evaluation service, but the current workspace does not provide the required Docker daemon or benchmark application runtime. Therefore it is described as a pending baseline rather than reported quantitatively.
+
+All reported comparisons use the same request corpus and the same heuristic-fallback execution path. This design isolates orchestration behavior rather than backend-model variance. The resulting latency numbers should therefore be interpreted as orchestration overhead and stage decomposition, not as production LLM inference latency.
+
+\section{Experimental Results}
+
+\subsection{Overall Baseline Comparison}
+Table~\ref{tab:overall-results} reports the aggregate classification metrics. The single-agent baseline and the multi-agent system without debate produce identical performance on the current 32-request corpus: both detect all 16 attacks, but each incorrectly flags four benign command-injection-like requests. Enabling debate removes those four false positives and yields perfect binary classification on the available sample.
+
+\begin{table*}[!t]
+\caption{Overall Baseline Results on the OWASP-Derived 32-Request Corpus}
+\label{tab:overall-results}
+\centering
+\small
+\begin{tabularx}{\textwidth}{lcccccccc}
+\toprule
+\textbf{Baseline} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{FPR} & \textbf{FNR} & \textbf{FP} & \textbf{FN} \\
+\midrule
+\texttt{single\_agent} & 0.8750 & 0.8000 & 1.0000 & 0.8889 & 0.2500 & 0.0000 & 4 & 0 \\
+\texttt{multi\_agent\_no\_debate} & 0.8750 & 0.8000 & 1.0000 & 0.8889 & 0.2500 & 0.0000 & 4 & 0 \\
+\texttt{multi\_agent\_with\_debate} & 1.0000 & 1.0000 & 1.0000 & 1.0000 & 0.0000 & 0.0000 & 0 & 0 \\
+\texttt{modsecurity\_crs} & \multicolumn{8}{c}{Runner scaffolded but unavailable in the current workspace} \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{Ablation: Effect of the Debate Layer}
+The measured gain is concentrated in the command-injection family. Table~\ref{tab:ablation} shows that the four false positives in the non-debate baselines come entirely from benign command-injection-like requests that resemble reconnaissance or shell-surface traffic. In those cases the debate trigger externalizes disagreement and allows the arbitrator to de-escalate isolated aggressive votes. Across the full debate-enabled run, debate was triggered for 12 out of 32 requests (37.5\%) with an average of 0.75 debate rounds per request over the whole corpus.
+
+\begin{table*}[!t]
+\caption{Ablation and Family-Level Effect of Debate}
+\label{tab:ablation}
+\centering
+\small
+\begin{tabularx}{\textwidth}{lccccY}
+\toprule
+\textbf{Mode} & \textbf{Command-injection FP} & \textbf{Command-injection F1} & \textbf{Debate trigger rate} & \textbf{Avg. debate rounds} & \textbf{Interpretation} \\
+\midrule
+\texttt{single\_agent} & 4/4 benign cases & 0.6667 & -- & -- & One role treats command-like probes as suspicious and cannot explicitly reconcile that bias \\
+\texttt{multi\_agent\_no\_debate} & 4/4 benign cases & 0.6667 & 0 & 0 & Posterior averaging alone is not sufficient to suppress aggressive command-surface alarms \\
+\texttt{multi\_agent\_with\_debate} & 0/4 benign cases & 1.0000 & 0.3750 & 0.7500 & Debate resolves disagreement and removes the false positives observed in the non-debate baselines \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+The paired McNemar comparison against the debate-enabled system yields $p \approx 0.1336$ for both non-debate baselines. The direction of improvement is favorable to debate (four better paired outcomes and zero worse paired outcomes), but the current sample size is too small to claim statistical significance. The correct interpretation is therefore exploratory: the observed gain is consistent and mechanistically explainable, but not yet large-sample validated.
+
+\subsection{Latency Decomposition and Route Modes}
+The full debate-enabled system exposes both proxy-side and AI-side timing. Averaged across the 32-request run, the fast-path proxy stage contributes 0.0484~ms, role analysis contributes 0.1250~ms, debate contributes 0.0938~ms, and total end-to-end decision time is 0.5000~ms. These numbers are intentionally reported as orchestration overhead under heuristic fallback. They are \emph{not} proxies for production LLM latency.
+
+Route-mode comparison for the debate-enabled system is summarized in Table~\ref{tab:route-modes}. Under the current fallback execution path, all three supported route modes preserve perfect accuracy while showing small but measurable differences in orchestration latency. The present workspace therefore supports a route-mode comparison for control-plane behavior, but not yet a claim about real local-model versus cloud-model inference quality.
+
+\begin{table*}[!t]
+\caption{Route-Mode Comparison for the Debate-Enabled System}
+\label{tab:route-modes}
+\centering
+\small
+\begin{tabularx}{\textwidth}{lccccY}
+\toprule
+\textbf{Route mode} & \textbf{Acc.} & \textbf{F1} & \textbf{Avg. debate latency (ms)} & \textbf{Avg. end-to-end latency (ms)} & \textbf{Interpretation} \\
+\midrule
+\texttt{cloud\_only} & 1.0000 & 1.0000 & 0.2813 & 0.8438 & Reference route in the current workspace \\
+\texttt{local\_preferred} & 1.0000 & 1.0000 & 0.1875 & 0.7500 & Comparable accuracy with slightly lower orchestration latency in the current run \\
+\texttt{hybrid\_verify} & 1.0000 & 1.0000 & 0.0938 & 0.7813 & Comparable accuracy; current timing reflects orchestration only, not dual-model LLM latency \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{Operational Evidence Beyond the Experimental Corpus}
+Two repository-backed artifacts remain important for deployment interpretation. The validated capability report records a current smoke benchmark of 1329.79 QPS, 21~ms p95 latency, 6.22\% CPU proxy usage, and 99.64~MB memory proxy usage in the local workspace. The local platform acceptance report records a deterministic remote-AI proof with 973~ms latency and a business-path SQL simulation that returned a blocking verdict with confidence 0.98. These numbers do not substitute for the OWASP-derived experimental results; they instead show that the orchestration stack is integrated into a broader runnable platform.
+
+\section{Discussion}
+\label{sec:discussion}
+
+The current evidence supports three practical conclusions. First, a security-oriented multi-agent architecture can be implemented as explicit modules with inspectable responsibilities rather than described only as a conceptual prompting pattern. Second, debate is useful in web-defense orchestration because it resolves disagreement that posterior averaging alone leaves unresolved. Third, case-file synthesis provides a direct bridge between model reasoning and downstream operations such as monitoring, blocking, auditing, and policy adaptation.
+
+\subsection{Limitations and Threats to Validity}
+The current study is stronger than a pure feasibility note but still falls short of a full top-tier benchmark paper. The main limitation is dataset execution mode: the requests are reconstructed from OWASP Benchmark metadata and testcase source rather than captured from a live benchmark deployment. That preserves attack-family labeling and enables controlled comparison, but it does not yet validate the architecture against the full benchmark application stack.
+
+The second limitation is baseline coverage. A ModSecurity plus OWASP CRS runner is integrated into the experimental framework, but the current workspace lacks the Docker and Java runtime needed to execute that baseline. As a result, the present quantitative comparison isolates architectural effects inside the \sys{} decision stack but cannot yet support claims against a production WAF baseline.
+
+The third limitation concerns route-mode realism. The quantitative runs intentionally use the repository's heuristic fallback path to ensure deterministic, shared logic across orchestration modes. Consequently, the reported sub-millisecond stage timings represent orchestration overhead, not full LLM inference latency. The local-model contribution is architecturally implemented and the route switch is measurable, but stable local-model quality and end-to-end local/cloud trade-offs remain to be validated under real heterogeneous inference.
+
+Finally, the statistical evidence is limited by sample size. McNemar testing shows that the observed improvement direction is favorable to debate but not statistically significant at conventional thresholds on the current 32-request corpus. A larger OWASP slice, a runnable WAF baseline, and real-model latency studies are required before making stronger claims about superiority.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This article presented a seven-layer multi-agent architecture for explainable web-attack decision-making and instantiated it in the \sys{} prototype. The system combines collaboration, role specialization, trace context, safe tool execution, debate, heterogeneous route modes, and synthesis into one operational workflow. The mathematical formulation makes disagreement explicit through posterior divergence and confidence spread, while the implementation exposes comparable execution modes for ablation.
+
+On the available 32-request OWASP-derived corpus, the debate-enabled system improves over both the single-agent and non-debate multi-agent baselines by eliminating the four benign command-injection false positives that remain in those baselines. The same workspace also provides route-mode comparisons and stage-level latency decomposition for the debate-enabled configuration. These results do not yet establish benchmark dominance, but they do show that explicit conflict escalation can create measurable classification gains and a more auditable decision path than posterior averaging alone. Future work should focus on executing the full OWASP Benchmark stack, adding a live ModSecurity baseline, validating real local/cloud LLM latencies, and scaling the statistical evaluation.
+
+\section*{Data Availability}
+The code and repository artifacts used in this study are maintained in the \sys{} project repository. The quantitative report used in this manuscript is generated by \artifact{backend/scripts/run-owasp-eval.ts} and stored in \artifact{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval.json}. The current study intentionally limits itself to files and reports that exist in the present workspace and does not claim availability for historical artifacts that are not currently present.
+
+\section*{Acknowledgment}
+The authors acknowledge the use of AI-assisted drafting tools for language organization and editorial refinement during manuscript preparation. All technical claims, evidence boundaries, architecture descriptions, and final wording were reviewed and validated by the authors against the repository implementation and documented validation reports. No sponsor or financial support information is claimed in this submission package.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\begin{IEEEbiographynophoto}{\AuthorOneName}
+\AuthorOneBiography
+\end{IEEEbiographynophoto}
+
+\begin{IEEEbiographynophoto}{\AuthorTwoName}
+\AuthorTwoBiography
+\end{IEEEbiographynophoto}
+
+\begin{IEEEbiographynophoto}{\AuthorThreeName}
+\AuthorThreeBiography
+\end{IEEEbiographynophoto}
+
+\EOD
+\end{document}

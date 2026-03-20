@@ -1,0 +1,100 @@
+** Drc report for candidate_plane_test.kicad_pcb **
+** Created on 2026-03-15T16:08:27+0800 **
+
+** Found 23 DRC violations **
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(71.5426 mm, 36.6831 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 4.3587 mm
+    @(71.7500 mm, 37.2500 mm): 走线 [3V3] (F.Cu), 长度: 1.2875 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0074 mm)
+    规则: netclass 'Default'; error
+    @(71.7500 mm, 37.2500 mm): 走线 [3V3] (F.Cu), 长度: 1.2875 mm
+    @(71.2500 mm, 36.3905 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 0.4138 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 OLED_SCL 和 GND)
+    局部重写; error
+    @(69.8909 mm, 26.0807 mm): 走线 [OLED_SCL] (In1.Cu), 长度: 47.1393 mm
+    @(41.2393 mm, 26.0000 mm): 过孔 [GND] (F.Cu - B.Cu)
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 UART2_RX)
+    局部重写; error
+    @(72.0000 mm, 34.0000 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(72.1040 mm, 36.0830 mm): 走线 [UART2_RX] (In2.Cu), 长度: 5.8838 mm
+[clearance]: 间距违规 (填充区 间距 0.5000 mm; 实际 0.0000 mm)
+    局部重写; error
+    @(63.0000 mm, 13.3000 mm): 过孔 [USB_C_DP] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(63.0000 mm, 13.3000 mm): 过孔 [USB_C_DP] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[clearance]: 间距违规 (填充区 间距 0.5000 mm; 实际 0.0000 mm)
+    局部重写; error
+    @(63.0000 mm, 13.3000 mm): 过孔 [USB_C_DP] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(63.0000 mm, 13.3000 mm): 过孔 [USB_C_DP] (F.Cu - B.Cu)
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[zones_intersect]: 覆铜区相交 (相交的填充区必须具有不同的优先级)
+    局部重写; error
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+    @(0.5000 mm, 0.5000 mm): 填充区[GND]在 In1.Cu 上, 优先级 0
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.1000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(9.8000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(10.5000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.2000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(11.9000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(94.0000 mm, 33.0000 mm): 封装 J2
+[lib_footprint_issues]: 当前配置不包含封装库 'esp32-serial-deployer-pcb'。
+    局部重写; warning
+    @(88.0000 mm, 16.0000 mm): 封装 J3
+
+** Found 3 unconnected pads **
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(41.8625 mm, 26.0000 mm): F.Cu 上 U4 的焊盘 2 [GND]
+    @(43.8760 mm, 27.8396 mm): 过孔 [GND] (F.Cu - B.Cu)
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(60.2144 mm, 23.9031 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(60.9375 mm, 19.6481 mm): 走线 [GND] (F.Cu), 长度: 1.4019 mm
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(66.0000 mm, 9.7571 mm): 走线 [GND] (F.Cu), 长度: 1.4679 mm
+    @(61.9500 mm, 13.9375 mm): F.Cu 上 U5 的焊盘 2 [GND]
+
+** Found 0 Footprint errors **
+
+** End of Report **

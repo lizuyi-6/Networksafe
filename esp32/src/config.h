@@ -1,13 +1,17 @@
 /**
- * FluxGuard ESP32 - 自动化部署工具配置
- * 
- * 硬件清单:
- * - ESP32-WROOM-32 (Type-C)
- * - OLED 0.96" (I2C)
- * - RGB LED (共阴)
- * - 有源蜂鸣器
- * - 3个轻触按键
- * - USB-TTL (连接目标服务器)
+ * AetherGuard ESP32 serial deployer configuration.
+ *
+ * Default baseline:
+ * - Jumper prototype on an ESP32 development board
+ * - 0.96" I2C OLED
+ * - Three buttons wired to GND with INPUT_PULLUP
+ * - Common-cathode RGB module
+ * - Active-low buzzer module
+ * - One external CP2102 used in deployment mode on UART2
+ *
+ * Optional board profile:
+ * - AG_HW_PROFILE_PCB_V1=1 for the single-board KiCad PCB variant
+ * - Keeps the same GPIO map, but flips the buzzer control polarity to HIGH
  */
 
 #ifndef CONFIG_H
@@ -15,94 +19,129 @@
 
 #include <Arduino.h>
 
-// ============================================
-// 1. I2C OLED 显示屏 (SSD1306)
-// ============================================
-#define ENABLE_SCREEN       1
-#define SCREEN_WIDTH        128
-#define SCREEN_HEIGHT       64
-#define SCREEN_ADDRESS      0x3C
-#define PIN_I2C_SDA         21
-#define PIN_I2C_SCL         22
+// Feature flags
+#ifndef ENABLE_ENCRYPTION
+#define ENABLE_ENCRYPTION       0
+#endif
 
-// ============================================
-// 2. 物理按键
-// ============================================
-#define PIN_BTN_OK          15      // [确认/开始]
-#define PIN_BTN_NEXT        4       // [切换/跳过]
-#define PIN_BTN_BACK        5       // [取消/返回]
+#ifndef ENABLE_EXPERIMENTAL_CLOUD
+#define ENABLE_EXPERIMENTAL_CLOUD 0
+#endif
 
-// ============================================
-// 3. RGB LED 指示灯
-// ============================================
-#define PIN_RGB_RED         25
-#define PIN_RGB_GREEN       26
-#define PIN_RGB_BLUE        27
-#define RGB_COMMON_ANODE    0       // 1=共阳, 0=共阴 (根据实际硬件调整)
+#ifndef AG_HW_PROFILE_PCB_V1
+#define AG_HW_PROFILE_PCB_V1     0
+#endif
 
-// ============================================
-// 4. 蜂鸣器
-// ============================================
-#define PIN_BUZZER          14
-#define BUZZER_ACTIVE       1       // 1=有源, 0=无源
+// 1. I2C OLED (SSD1306)
+#define ENABLE_SCREEN           1
+#define SCREEN_WIDTH            128
+#define SCREEN_HEIGHT           64
+#define SCREEN_ADDRESS          0x3C
+#define DISPLAY_I2C_CLOCK_HZ    400000
+#define PIN_I2C_SDA             21
+#define PIN_I2C_SCL             22
 
-// ============================================
-// 5. 目标服务器通信 (USB-TTL)
-// ============================================
-#define TARGET_SERIAL       Serial2
-#define TARGET_RX_PIN       16      // 连接 CP2102 TX
-#define TARGET_TX_PIN       17      // 连接 CP2102 RX
-#define TARGET_BAUD         115200
+// 2. Buttons
+// Use non-strap GPIOs so a held button does not disturb boot.
+#define PIN_BTN_OK              18
+#define PIN_BTN_NEXT            19
+#define PIN_BTN_BACK            23
 
-// ============================================
-// 部署与安全配置
-// ============================================
-#define INSTALL_CMD_URL     "curl -sL http://192.168.4.2:8080/install.sh | bash"
-#define CHECK_CMD           "fluxguard-agent --version"
+// 3. RGB module
+#define PIN_RGB_RED             25
+#define PIN_RGB_GREEN           26
+#define PIN_RGB_BLUE            27
+#define RGB_COMMON_ANODE        0
 
-// 备份命令 (Linux)
-// 创建时间戳目录并根据需要备份关键配置，这里以备份 /etc 为示例
-#define BACKUP_CMD          "mkdir -p /tmp/fg_backup_$(date +%s) && tar -czf /tmp/fg_backup_$(date +%s)/etc_backup.tar.gz /etc/fluxguard /etc/hosts 2>/dev/null || echo 'Backup Skipped'"
+// 4. Buzzer module
+#define PIN_BUZZER              14
+#define BUZZER_ACTIVE           1
+#if AG_HW_PROFILE_PCB_V1
+#define BUZZER_ACTIVE_LEVEL     HIGH
+#else
+#define BUZZER_ACTIVE_LEVEL     LOW
+#endif
 
-// 敏感操作关键字 (用于触发人工确认)
-// 简单的子串匹配
-#define CRITICAL_KEYWORDS   "rm ","remove","uninstall","delete","format"
+// 5. Target-host serial link (deployment mode via external CP2102)
+#define TARGET_SERIAL           Serial2
+#define TARGET_RX_PIN           16
+#define TARGET_TX_PIN           17
+#define TARGET_BAUD             115200
 
-// 缓冲区
-#define RX_BUFFER_SIZE      2048
-#define JSON_BUFFER_SIZE    1024
-#define TX_BUFFER_SIZE      512
+// Deployment protocol
+#define SERIAL_REQ_ENV               "AG:REQ:ENV"
+#define SERIAL_REQ_BACKUP            "AG:REQ:BACKUP"
+#define SERIAL_REQ_INSTALL           "AG:REQ:INSTALL"
+#define SERIAL_REQ_REMOVE            "AG:REQ:REMOVE"
+
+// Operator-facing helper status messages
+#define HOST_HELPER_NOT_READY_MSG    "Host helper not ready"
+#define HOST_HELPER_TIMEOUT_MSG      "Timeout waiting for host helper"
+
+// Serial protocol markers
+#define SERIAL_PROTO_ENV_LINUX       "AG:ENV:LINUX"
+#define SERIAL_PROTO_ENV_WINDOWS     "AG:ENV:WINDOWS"
+#define SERIAL_PROTO_BEGIN_PREFIX    "AG:BEGIN:"
+#define SERIAL_PROTO_STEP_PREFIX     "AG:STEP:"
+#define SERIAL_PROTO_OK_PREFIX       "AG:OK:"
+#define SERIAL_PROTO_ERR_PREFIX      "AG:ERR:"
+#define SERIAL_PROTO_OK_BACKUP       "AG:OK:BACKUP"
+#define SERIAL_PROTO_ERR_BACKUP      "AG:ERR:BACKUP"
+#define SERIAL_PROTO_OK_INSTALL      "AG:OK:INSTALL"
+#define SERIAL_PROTO_ERR_INSTALL     "AG:ERR:INSTALL"
+#define SERIAL_PROTO_OK_REMOVE       "AG:OK:REMOVE"
+#define SERIAL_PROTO_ERR_REMOVE      "AG:ERR:REMOVE"
+
+// Buffers
+#define RX_BUFFER_SIZE           2048
+#define SERIAL_LINE_BUFFER_SIZE  128
+#define JSON_BUFFER_SIZE         1024
+#define TX_BUFFER_SIZE           1024
+
+// Timing
+#define ENV_CHECK_TIMEOUT_MS     1500
+#define BACKUP_TIMEOUT_MS        15000
+#define INSTALL_TIMEOUT_MS       45000
+#define REMOVE_TIMEOUT_MS        20000
+#define BOOT_SPLASH_MS           900
+#define UI_SPINNER_INTERVAL_MS   250
+#define LOOP_IDLE_DELAY_MS       1
 
 // WiFi / WebSocket / local control plane defaults
-#define WIFI_SSID           "AetherGuard-Setup"
-#define WIFI_PASSWORD       "aetherguard123"
-#define LOCAL_HOST          "192.168.4.1"
-#define LOCAL_PORT          8080
-#define SERVER_HOST         "192.168.4.1"
-#define SERVER_PORT         3005
-#define SERVER_PATH         "/ws/status"
-#define SERVER_USE_SSL      0
-#define WIFI_CONNECT_TIMEOUT 15000
+// NOTE: The current v1 target is the USB-TTL serial deployer. Cloud-device
+// modules remain experimental and are not part of the active build target.
+#define WIFI_SSID                "AetherGuard-Setup"
+#define WIFI_PASSWORD            "aetherguard123"
+#define LOCAL_HOST               "192.168.4.1"
+#define LOCAL_PORT               8080
+#define SERVER_HOST              "192.168.4.1"
+#define SERVER_PORT              3005
+#define SERVER_PATH              "/ws/status"
+#define SERVER_USE_SSL           0
+#define WIFI_CONNECT_TIMEOUT     15000
 
 // Device identity defaults
-#define DEVICE_ID           "ESP32-001"
-#define DEVICE_VERSION      "1.0.0"
-#define API_KEY             "demo-device-key"
+#define DEVICE_ID                "ESP32-001"
+#define DEVICE_VERSION           "1.0.0"
+#define API_KEY                  "demo-device-key"
 
 // Legacy aliases used by collector/transport modules
-#define SERIAL_RX_PIN       TARGET_RX_PIN
-#define SERIAL_TX_PIN       TARGET_TX_PIN
+#define SERIAL_RX_PIN            TARGET_RX_PIN
+#define SERIAL_TX_PIN            TARGET_TX_PIN
 
-// DEBUG
-#define ENABLE_DEBUG        1
+// Debug output
+#ifndef ENABLE_DEBUG
+#define ENABLE_DEBUG             1
+#endif
+
 #if ENABLE_DEBUG
-    #define DEBUG_PRINT(x)      Serial.print(x)
-    #define DEBUG_PRINTLN(x)    Serial.println(x)
-    #define DEBUG_PRINTF(...)   Serial.printf(__VA_ARGS__)
+    #define DEBUG_PRINT(x)       Serial.print(x)
+    #define DEBUG_PRINTLN(x)     Serial.println(x)
+    #define DEBUG_PRINTF(...)    Serial.printf(__VA_ARGS__)
 #else
-    #define DEBUG_PRINT(x)      ((void)0)
-    #define DEBUG_PRINTLN(x)    ((void)0)
-    #define DEBUG_PRINTF(...)   ((void)0)
+    #define DEBUG_PRINT(x)       ((void)0)
+    #define DEBUG_PRINTLN(x)     ((void)0)
+    #define DEBUG_PRINTF(...)    ((void)0)
 #endif
 
 #endif // CONFIG_H

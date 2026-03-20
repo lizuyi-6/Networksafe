@@ -1,9 +1,11 @@
-
+﻿
 import { initDatabase, getDatabase } from '../config/database';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import logger from '../utils/logger';
+import { isDevLoginPresetEnabled } from '../config/runtime-capabilities';
+import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
 
 function generateApiKey(): string {
     return `agent_${crypto.randomBytes(24).toString('hex')}`;
@@ -76,7 +78,7 @@ async function bootstrapDatabase() {
         await initDatabase();
         const db = getDatabase();
 
-        const adminEmail = process.env.ADMIN_EMAIL || 'admin@fluxguard.com';
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@AetherGuard.com';
         
         // SECURITY FIX: Require ADMIN_PASSWORD to be set - no fallback allowed
         const adminPassword = process.env.ADMIN_PASSWORD;
@@ -106,11 +108,7 @@ async function bootstrapDatabase() {
             logger.info(`Admin user created: ${adminEmail}`);
         }
 
-        const enableDevLoginPresets =
-            process.env.ENABLE_DEV_LOGIN_PRESETS === 'true' ||
-            process.env.NODE_ENV !== 'production';
-
-        if (enableDevLoginPresets) {
+        if (isDevLoginPresetEnabled()) {
             for (const preset of DEV_LOGIN_PRESETS) {
                 await ensureUser(db, preset);
             }
@@ -125,17 +123,29 @@ async function bootstrapDatabase() {
             
             const apiKey = process.env.PROBE_AGENT_API_KEY || generateApiKey();
             const secretKey = generateSecretKey();
-            const fingerprint = crypto.createHash('sha256').update('fluxguard-probe|linux|base').digest('hex');
+            const fingerprint = crypto.createHash('sha256').update('AetherGuard-probe|linux|base').digest('hex');
             
             // Hash the API key for secure storage
             const apiKeyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
             
-            db.prepare(`
-                INSERT INTO agent_registrations (
-                    agent_id, hostname, api_key_hash, secret_key, fingerprint, 
-                    platform, status, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 'approved', datetime('now'))
-            `).run('probe-agent-01', 'fluxguard-probe', apiKeyHash, secretKey, fingerprint, 'linux');
+            const columns = db.prepare(`PRAGMA table_info(agent_registrations)`).all() as Array<{ name: string }>;
+            const hasTenantId = columns.some((column) => column.name === 'tenant_id');
+
+            if (hasTenantId) {
+                db.prepare(`
+                    INSERT INTO agent_registrations (
+                        agent_id, hostname, api_key_hash, secret_key, fingerprint, 
+                        platform, status, created_at, tenant_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, 'approved', datetime('now'), ?)
+                `).run('probe-agent-01', 'AetherGuard-probe', apiKeyHash, secretKey, fingerprint, 'linux', PLATFORM_TENANT_ID);
+            } else {
+                db.prepare(`
+                    INSERT INTO agent_registrations (
+                        agent_id, hostname, api_key_hash, secret_key, fingerprint, 
+                        platform, status, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, 'approved', datetime('now'))
+                `).run('probe-agent-01', 'AetherGuard-probe', apiKeyHash, secretKey, fingerprint, 'linux');
+            }
             
             logger.info('Default probe agent registered with API key');
         }

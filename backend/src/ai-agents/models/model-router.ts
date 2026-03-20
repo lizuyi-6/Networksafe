@@ -14,7 +14,12 @@ import {
 import { AIEngine } from '../../scanner/ai-engine';
 import { ZhipuClient } from '../../scanner/zhipu-client';
 import logger from '../../utils/logger';
-import { PLATFORM_API_CONFIG, getPlatformCloudBaseUrl } from '../../utils/model-access';
+import {
+    PLATFORM_API_CONFIG,
+    PlatformProvider,
+    getDefaultModel,
+    getPlatformCloudBaseUrl
+} from '../../utils/model-access';
 import { AIRoutingSettings, PlatformConfig, platformConfigService } from '../../services/platform-config.service';
 import auditLogger from '../../security/audit-logger.service';
 import { PlatformCloudClient, createPlatformCloudClient } from '../../services/platform-cloud-provider.service';
@@ -26,7 +31,7 @@ export interface ModelRouterConfig {
         baseURL: string;
     };
     cloudModel: {
-        provider: 'openai' | 'zhipu' | 'anthropic' | 'dashscope';
+        provider: PlatformProvider | 'openai' | 'zhipu' | 'anthropic';
         model: string;
         apiKey: string;
         baseURL?: string;
@@ -42,8 +47,8 @@ const DEFAULT_CONFIG: ModelRouterConfig = {
         baseURL: 'http://localhost:11434'
     },
     cloudModel: {
-        provider: 'dashscope',
-        model: 'qwen3-max-2026-01-23',
+        provider: PLATFORM_API_CONFIG.provider,
+        model: getDefaultModel('starter').id,
         apiKey: PLATFORM_API_CONFIG.apiKey,
         baseURL: getPlatformCloudBaseUrl()
     },
@@ -97,7 +102,13 @@ export class ModelRouter {
 
         if (this.config.cloudModel.apiKey) {
             try {
-                if (this.config.cloudModel.provider === 'dashscope') {
+                if (this.config.cloudModel.provider === 'zhipu') {
+                    this.cloudClient = new ZhipuClient(
+                        this.config.cloudModel.apiKey,
+                        this.config.cloudModel.baseURL
+                    );
+                    logger.info('Cloud model initialized', { provider: this.config.cloudModel.provider });
+                } else {
                     this.cloudClient = createPlatformCloudClient(
                         this.config.cloudModel.model,
                         {
@@ -105,13 +116,10 @@ export class ModelRouter {
                             temperature: 0.2
                         }
                     );
-                    logger.info('DashScope cloud model initialized', { model: this.config.cloudModel.model });
-                } else {
-                    this.cloudClient = new ZhipuClient(
-                        this.config.cloudModel.apiKey,
-                        this.config.cloudModel.baseURL
-                    );
-                    logger.info('Cloud model initialized', { provider: this.config.cloudModel.provider });
+                    logger.info('Platform cloud model initialized', {
+                        provider: PLATFORM_API_CONFIG.providerId,
+                        model: this.config.cloudModel.model
+                    });
                 }
             } catch (error: any) {
                 logger.warn('Failed to initialize cloud model', { error: error.message });
@@ -124,6 +132,7 @@ export class ModelRouter {
         const decision = this.makeRoutingDecision(request, runtimeConfig);
         const startTime = Date.now();
         const tenantId = this.getTenantId(request);
+        const effectiveRouteMode = request.routeModeOverride || runtimeConfig.aiRouting.mode;
 
         this.requestStats.total++;
 
@@ -187,7 +196,8 @@ export class ModelRouter {
 
             return {
                 ...response,
-                latency
+                latency,
+                routeMode: effectiveRouteMode
             };
 
         } catch (error: any) {
@@ -199,17 +209,21 @@ export class ModelRouter {
     makeRoutingDecision(request: ModelRequest, runtimeConfig?: PlatformConfig): ModelRoutingDecision {
         const aiRouting: AIRoutingSettings | undefined = runtimeConfig?.aiRouting;
         const privacyMode = runtimeConfig?.privacyMode || 'off';
-        const mode = privacyMode === 'strict'
+        const overrideMode = request.routeModeOverride;
+        const mode = overrideMode || (privacyMode === 'strict'
             ? 'local_only'
-            : aiRouting?.mode || 'cloud_only';
+            : aiRouting?.mode || 'cloud_only');
+        const reasonPrefix = overrideMode
+            ? `Request-scoped override forces ${overrideMode}`
+            : null;
 
         if (mode === 'local_only') {
             return {
                 tier: 'local',
                 model: this.config.localModel.model,
-                reason: privacyMode === 'strict'
+                reason: reasonPrefix || (privacyMode === 'strict'
                     ? 'Strict privacy mode forces local execution'
-                    : 'AI routing mode is local_only',
+                    : 'AI routing mode is local_only'),
                 estimatedLatency: 1500,
                 estimatedCost: 0
             };
@@ -219,7 +233,7 @@ export class ModelRouter {
             return {
                 tier: 'hybrid',
                 model: `${this.config.localModel.model}+${this.config.cloudModel.model}`,
-                reason: 'AI routing mode is hybrid_verify',
+                reason: reasonPrefix || 'AI routing mode is hybrid_verify',
                 estimatedLatency: 4500,
                 estimatedCost: 0.02
             };
@@ -229,9 +243,9 @@ export class ModelRouter {
             return {
                 tier: this.localEngine ? 'local' : 'cloud',
                 model: this.localEngine ? this.config.localModel.model : this.config.cloudModel.model,
-                reason: this.localEngine
+                reason: reasonPrefix || (this.localEngine
                     ? 'AI routing mode is local_preferred'
-                    : 'Local model unavailable, falling back to cloud',
+                    : 'Local model unavailable, falling back to cloud'),
                 estimatedLatency: this.localEngine ? 1500 : 3000,
                 estimatedCost: this.localEngine ? 0 : 0.01
             };
@@ -240,7 +254,7 @@ export class ModelRouter {
         return {
             tier: 'cloud',
             model: this.config.cloudModel.model,
-            reason: 'AI routing mode is cloud_only',
+            reason: reasonPrefix || 'AI routing mode is cloud_only',
             estimatedLatency: 3000,
             estimatedCost: 0.01
         };

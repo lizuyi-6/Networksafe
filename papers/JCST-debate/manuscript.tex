@@ -1,0 +1,53 @@
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[title]{appendix}
+\usepackage{url}
+
+\graphicspath{{figures/}}
+\setlist[itemize]{leftmargin=1.2em}
+\setlist[enumerate]{leftmargin=1.4em}
+\raggedbottom
+
+\newcommand{\system}{AetherGuard}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\title[Debate-Driven Multi-Agent Security Decision]{Debate-Driven Multi-Agent Security Decision for Distributed Web Threat Triage: Design and Evaluation of \system}
+
+\author*[1]{\fnm{Anonymous} \sur{Author}}\email{anonymous@example.com}
+
+\affil*[1]{\orgdiv{Anonymous Institution}, \orgname{Anonymous Organization}, \orgaddress{\city{Anonymous City}, \country{Anonymous Country}}}
+
+\abstract{
+Distributed web defense increasingly mixes centralized policy control with local enforcement, yet most AI-assisted security pipelines still rely on a single model invocation that produces brittle labels and weak operational explanations. This paper presents \system, a debate-driven multi-agent triage architecture for ambiguous web threats in distributed environments. The method assigns three explicit roles to security agents: Socrates challenges a request from an adversarial perspective, Plato evaluates defensive handling and policy impact, and Aristotle aggregates evidence into a final verdict distribution and case file. Debate is triggered only when label conflict, confidence spread, or distribution divergence indicates disagreement, so the mechanism targets hard cases instead of adding unconditional latency. The implementation couples this triage loop with authenticated WebSocket gateways, signed command dispatch, audit-chain retention, and local/cloud/hybrid routing modes. Public evidence is drawn from a repository-traceable OWASP-derived corpus of 32 balanced samples spanning SQL injection, cross-site scripting, path traversal, and command injection. On this corpus, the debate-enabled configuration improves accuracy from 87.5\% to 100\% and removes all four observed false positives while keeping mean orchestration latency at 0.5\,ms. A second evidence layer is prepared as a reporting protocol for private labeled alerts. The resulting draft positions \system\ as a system-and-method contribution centered on auditable multi-agent security judgment rather than platform breadth claims.
+}
+
+\keywords{multi-agent security, web threat triage, debate-based reasoning, explainable security operations, distributed defense}
+
+\begin{document}
+\maketitle
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-method}
+\input{sections/04-system-realization}
+\input{sections/05-evaluation}
+\input{sections/06-discussion-conclusion}
+
+\input{sections/07-references}
+
+\appendix
+\input{sections/appendix-artifact-traceability}
+
+\end{document}

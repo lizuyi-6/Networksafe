@@ -1,7 +1,7 @@
 # ============================================================
 # Stage 1: Builder
 # ============================================================
-FROM node:20-alpine AS builder
+FROM node:20-alpine@sha256:b88333c42c23fbd91596ebd7fd10de239cedab9617de04142dde7315e3bc0afa AS builder
 
 WORKDIR /app/backend
 
@@ -10,8 +10,9 @@ RUN apk add --no-cache python3 make g++
 
 # Copy manifests first for layer caching
 COPY backend/package*.json ./
-RUN npm config set registry https://registry.npmmirror.com/ && \
-    npm ci
+RUN mkdir -p /root/.cache/node-gyp && \
+    npm config set registry https://registry.npmmirror.com/ && \
+    if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Copy source and build
 COPY backend/ ./
@@ -27,7 +28,7 @@ RUN mkdir -p dist && ls -la dist/
 # ============================================================
 # Stage 2: Production Runner
 # ============================================================
-FROM node:20-alpine AS runner
+FROM node:20-alpine@sha256:b88333c42c23fbd91596ebd7fd10de239cedab9617de04142dde7315e3bc0afa AS runner
 
 # Install runtime system deps
 RUN apk add --no-cache \
@@ -54,8 +55,9 @@ WORKDIR /app/backend
 
 # Install ONLY production dependencies
 COPY backend/package*.json ./
-RUN npm config set registry https://registry.npmmirror.com/ && \
-    npm ci --omit=dev
+RUN mkdir -p /root/.cache/node-gyp && \
+    npm config set registry https://registry.npmmirror.com/ && \
+    if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 
 # Copy compiled output from builder
 COPY --from=builder /app/backend/dist ./dist

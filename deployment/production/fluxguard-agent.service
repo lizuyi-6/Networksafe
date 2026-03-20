@@ -1,14 +1,14 @@
 [Unit]
-Description=FluxGuard Probe Agent
+Description=AetherGuard Probe Agent
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/fluxguard/backend
-EnvironmentFile=/etc/fluxguard/agent.env
-ExecStart=/usr/bin/npm run agent -- --server=${FLUXGUARD_SERVER}
+WorkingDirectory=/opt/aetherguard/backend
+EnvironmentFile=/etc/aetherguard/agent.env
+ExecStart=/usr/bin/npm run agent -- --server=${AETHERGUARD_SERVER}
 Restart=always
 RestartSec=5
 StandardOutput=journal

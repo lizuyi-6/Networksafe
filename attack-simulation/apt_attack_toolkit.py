@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AetherGuard/FluxGuard APT Attack Simulation Toolkit
+AetherGuard/AetherGuard APT Attack Simulation Toolkit
 ===================================================
 国家级黑客团队攻击模拟工具包
 
@@ -60,7 +60,7 @@ class JWTForger:
     # Leaked secrets (from .env)
     LEAKED_SECRETS = [
         "supersecretjwtkeythatisatleast32charslong",
-        "FluxGuard_JWT_Secret_Key_For_Production_2024",
+        "AetherGuard_JWT_Secret_Key_For_Production_2024",
     ]
     
     def __init__(self, secret: str):

@@ -1,6 +1,8 @@
 import express from 'express';
 import request from 'supertest';
 
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-minimum-32-characters-long';
+
 jest.mock('../../services/platform-config.service', () => ({
   platformConfigService: {
     getConfig: jest.fn()
@@ -22,8 +24,15 @@ jest.mock('../../utils/logger', () => ({
   }
 }));
 
+jest.mock('../../services/detection-pipeline.service', () => ({
+  detectionPipelineService: {
+    evaluateRequest: jest.fn()
+  }
+}));
+
 import logger from '../../utils/logger';
 import { apiTrafficShadowMiddleware } from '../../middleware/api-traffic-shadow.middleware';
+import { detectionPipelineService } from '../../services/detection-pipeline.service';
 import { fastpathTrafficShadowService } from '../../services/fastpath-traffic-shadow.service';
 import { fastpathClientService } from '../../services/fastpath-client.service';
 import { platformConfigService } from '../../services/platform-config.service';
@@ -55,6 +64,18 @@ describe('apiTrafficShadowMiddleware', () => {
       decisionSource: 'rust-fastpath-traffic-http',
       processingTimeMicros: 10
     });
+    (detectionPipelineService.evaluateRequest as jest.Mock).mockResolvedValue({
+      verdict: 'allow',
+      matchedRuleIds: [],
+      riskScore: 0.1,
+      escalatedToAI: false,
+      queuedForAsyncReview: false,
+      decisionSource: 'seed:allow',
+      signals: [],
+      attackFamily: 'benign',
+      processingTimeMs: 1,
+      ruleMatches: []
+    });
   });
 
   afterEach(() => {
@@ -78,6 +99,7 @@ describe('apiTrafficShadowMiddleware', () => {
 
     await fastpathTrafficShadowService.awaitIdleForTests();
     expect(fastpathClientService.evaluateHttpTraffic).not.toHaveBeenCalled();
+    expect(detectionPipelineService.evaluateRequest).not.toHaveBeenCalled();
   });
 
   it('queues textual API traffic and calls fastpath asynchronously', async () => {
@@ -94,6 +116,56 @@ describe('apiTrafficShadowMiddleware', () => {
         requestId: 'shadow-1',
         method: 'POST',
         url: '/login?from=test'
+      })
+    );
+    expect(detectionPipelineService.evaluateRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: 'http_api',
+        requestId: 'shadow-1',
+        method: 'POST',
+        path: '/login?from=test',
+        decodedPath: '/login?from=test',
+        query: 'from=test',
+        decodedQuery: 'from=test',
+        parsedQuery: 'from=test\ntest'
+      })
+    );
+  });
+
+  it('normalizes encoded query payloads before detection evaluation', async () => {
+    const app = buildApp();
+    await request(app)
+      .get('/rules?q=union%20select%201')
+      .set('x-request-id', 'query-encoded-1')
+      .expect(200);
+
+    expect(detectionPipelineService.evaluateRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: 'query-encoded-1',
+        path: '/rules?q=union%20select%201',
+        decodedPath: '/rules?q=union select 1',
+        query: 'q=union%20select%201',
+        decodedQuery: 'q=union select 1',
+        parsedQuery: 'q=union select 1\nunion select 1'
+      })
+    );
+  });
+
+  it('normalizes form-urlencoded bodies before detection evaluation', async () => {
+    const app = buildApp();
+    await request(app)
+      .post('/login')
+      .set('Content-Type', 'application/x-www-form-urlencoded')
+      .set('x-request-id', 'form-encoded-1')
+      .send("username=%27+or+1%3D1&password=test")
+      .expect(200);
+
+    expect(detectionPipelineService.evaluateRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: 'form-encoded-1',
+        body: 'username=%27+or+1%3D1&password=test',
+        normalizedBody: "username=' or 1=1&password=test",
+        parsedBody: "username=' or 1=1\n' or 1=1\npassword=test\ntest"
       })
     );
   });
@@ -173,5 +245,32 @@ describe('apiTrafficShadowMiddleware', () => {
         requestId: 'shadow-mismatch'
       })
     );
+  });
+
+  it('blocks malicious requests before they reach downstream routes', async () => {
+    (detectionPipelineService.evaluateRequest as jest.Mock).mockResolvedValue({
+      verdict: 'block',
+      matchedRuleIds: ['seed-sqli-union'],
+      riskScore: 1,
+      escalatedToAI: false,
+      queuedForAsyncReview: false,
+      aiVerdict: undefined,
+      decisionSource: 'seed:block',
+      signals: [],
+      attackFamily: 'sqli',
+      processingTimeMs: 2,
+      ruleMatches: []
+    });
+
+    const app = buildApp();
+    await request(app)
+      .post('/search')
+      .set('x-request-id', 'blocked-1')
+      .send({ q: '1 UNION SELECT password FROM users' })
+      .expect(403)
+      .expect((response) => {
+        expect(response.body?.error?.code).toBe('backend.request_blocked_by_detection_pipeline');
+        expect(response.body?.error?.matchedRuleIds).toEqual(['seed-sqli-union']);
+      });
   });
 });

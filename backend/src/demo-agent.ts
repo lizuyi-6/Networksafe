@@ -1,5 +1,5 @@
-/**
- * FluxGuard E2E Demo Script
+﻿/**
+ * AetherGuard E2E Demo Script
  * 
  * 模拟真实的生产环境场景
  */
@@ -19,7 +19,7 @@ const mockThreats = [
 
 async function runDemo() {
     console.log('═══════════════════════════════════════════════');
-    console.log('       FluxGuard Pro - 交付演示测试');
+    console.log('       AetherGuard - 交付演示测试');
     console.log('═══════════════════════════════════════════════\n');
     console.log(`Agent ID: ${AGENT_ID}`);
     console.log(`Server:   ${SERVER_URL}\n`);

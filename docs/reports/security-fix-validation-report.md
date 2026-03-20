@@ -1,6 +1,6 @@
-# Security Validation Report - Round 9 Fixes
+﻿# Security Validation Report - Round 9 Fixes
 
-**Project:** AetherGuard (formerly FluxGuard)  
+**Project:** AetherGuard (formerly AetherGuard)  
 **Date:** 2024  
 **Type:** Security Vulnerability Fix Validation
 

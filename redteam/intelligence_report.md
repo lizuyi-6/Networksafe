@@ -1,4 +1,4 @@
-# FluxGuard 红队情报分析报告
+﻿# AetherGuard 红队情报分析报告
 
 ## 1. 技术栈识别
 
@@ -35,10 +35,10 @@
 #### 文件: `/mnt/x/want/fsce/.env`
 ```bash
 # 生产环境JWT密钥 - 可用于伪造令牌
-JWT_SECRET=FluxGuardJwtSecret_for_prod_2026_very_long_1234567890
+JWT_SECRET=AetherGuardJwtSecret_for_prod_2026_very_long_1234567890
 
 # Redis密码
-REDIS_PASSWORD=FluxGuardRedis123!
+REDIS_PASSWORD=AetherGuardRedis123!
 
 # API密钥
 VALID_API_KEYS=prod-api-key
@@ -48,9 +48,9 @@ DEVICE_API_KEYS=prod-device-key
 #### 文件: `/mnt/x/want/fsce/backend/.env` (开发环境)
 ```bash
 # 开发环境硬编码凭证
-ADMIN_EMAIL=admin@fluxguard.dev
+ADMIN_EMAIL=admin@AetherGuard.dev
 ADMIN_PASSWORD=DevAdmin123456!
-DEMO_EMAIL=demo@fluxguard.dev
+DEMO_EMAIL=demo@AetherGuard.dev
 DEMO_PASSWORD=DevDemo123456!
 ```
 
@@ -118,8 +118,8 @@ DEMO_PASSWORD=DevDemo123456!
 **证据**:
 ```bash
 # 文件: /mnt/x/want/fsce/.env
-JWT_SECRET=FluxGuardJwtSecret_for_prod_2026_very_long_1234567890
-REDIS_PASSWORD=FluxGuardRedis123!
+JWT_SECRET=AetherGuardJwtSecret_for_prod_2026_very_long_1234567890
+REDIS_PASSWORD=AetherGuardRedis123!
 VALID_API_KEYS=prod-api-key
 DEVICE_API_KEYS=prod-device-key
 ```
@@ -228,7 +228,7 @@ tbody.innerHTML = events.map(event => `
 
 ### 7.1 系统架构理解
 
-FluxGuard是一个基于以下架构的安全平台：
+AetherGuard是一个基于以下架构的安全平台：
 - **前端**: React + TypeScript + Vite + TailwindCSS
 - **后端**: Node.js + Express + TypeScript
 - **数据库**: SQLite (嵌入式) + Redis (缓存)

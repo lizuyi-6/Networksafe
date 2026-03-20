@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 set -e
 
 echo "==========================================="
@@ -58,7 +58,7 @@ fi
 
 # Start backend via PM2
 echo "--> Starting backend with PM2..."
-pm2 restart fluxguard-backend || pm2 start dist/index.js --name "fluxguard-backend"
+pm2 restart AetherGuard-backend || pm2 start dist/index.js --name "AetherGuard-backend"
 pm2 save
 pm2 startup | grep "sudo env" | sh || true
 

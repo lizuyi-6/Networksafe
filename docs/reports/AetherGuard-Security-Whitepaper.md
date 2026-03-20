@@ -1,6 +1,6 @@
-# AetherGuard 安全架构白皮书
+﻿# AetherGuard 安全架构白皮书
 
-**项目名称**: AetherGuard (原 FluxGuard)  
+**项目名称**: AetherGuard (原 AetherGuard)  
 **文档版本**: 1.0  
 **发布日期**: 2024年  
 **文档类型**: 安全架构与渗透测试报告
@@ -213,7 +213,7 @@ const ENCRYPTION_SALT = process.env.ENCRYPTION_SALT || 'fallback-salt-12345';
 | ENCRYPTION_KEY | - | `OI8OwrGewrOPad89WszK...` | 32 字符 |
 | ENCRYPTION_SALT | `fallback-salt-12345` | `rL7eolZZiRwgJydtjv77...` | 32 字符 |
 | AUDIT_LOG_SECRET | `auditsecretkey123...` | `oG98dVg6NWfmvlPufC2...` | 48 字符 |
-| REDIS_PASSWORD | `fluxguard_redis...` | `NlNdTxHU3jpVcFpck08...` | 25 字符 |
+| REDIS_PASSWORD | `AetherGuard_redis...` | `NlNdTxHU3jpVcFpck08...` | 25 字符 |
 
 ### 4.2 代码级修复
 

@@ -1,4 +1,4 @@
-# FluxGuard 安全漏洞紧急修复报告
+﻿# AetherGuard 安全漏洞紧急修复报告
 
 **修复日期**: 2026-02-16
 **修复专员**: 蓝队应急响应专家
@@ -25,8 +25,8 @@
 ### 发现的问题
 - **位置**: `/mnt/x/want/fsce/.env`
 - **泄露内容**:
-  - `JWT_SECRET=FluxGuardJwtSecret_for_prod_2026_very_long_1234567890`
-  - `REDIS_PASSWORD=FluxGuardRedis123!`
+  - `JWT_SECRET=AetherGuardJwtSecret_for_prod_2026_very_long_1234567890`
+  - `REDIS_PASSWORD=AetherGuardRedis123!`
   - `VALID_API_KEYS=prod-api-key`
   - `DEVICE_API_KEYS=prod-device-key`
 
@@ -126,7 +126,7 @@
    ```typescript
    private async blockWithNetsh(ip: string): Promise<boolean> {
        try {
-           const ruleName = `FluxGuard_Block_${ip.replace(/\./g, '_')}`;
+           const ruleName = `AetherGuard_Block_${ip.replace(/\./g, '_')}`;
            const args = [
                'advfirewall',
                'firewall',

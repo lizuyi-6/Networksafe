@@ -1,32 +1,14 @@
+import { getSessionUserKey } from '../services/session-cache';
+
 export type AppMode = 'production' | 'demo';
 
 let runtimeDemoMode = false;
 const LEGACY_DEMO_MODE_KEY = 'demo_mode';
 const DEMO_MODE_KEY_PREFIX = 'demo-mode:';
 
-type StoredUser = {
-  email?: string;
-  userId?: string;
-  id?: string;
-  username?: string;
-};
-
 const normalizeUserKey = (value?: string | null): string | null => {
   const normalized = value?.trim().toLowerCase();
   return normalized || null;
-};
-
-const getStoredUser = (): StoredUser | null => {
-  if (typeof window === 'undefined') return null;
-
-  const rawUser = localStorage.getItem('user');
-  if (!rawUser) return null;
-
-  try {
-    return JSON.parse(rawUser) as StoredUser;
-  } catch {
-    return null;
-  }
 };
 
 const getScopedDemoKey = (userKey: string): string => `${DEMO_MODE_KEY_PREFIX}${userKey}`;
@@ -52,8 +34,7 @@ export const envAppMode = (): AppMode => {
 export const canUseDemoMode = (): boolean => true;
 
 export const getCurrentDemoUserKey = (): string | null => {
-  const user = getStoredUser();
-  return normalizeUserKey(user?.email || user?.userId || user?.id || user?.username || null);
+  return normalizeUserKey(getSessionUserKey());
 };
 
 export const getStoredDemoMode = (userKey?: string | null): boolean => {

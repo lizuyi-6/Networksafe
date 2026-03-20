@@ -33,7 +33,12 @@ import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusCon
 import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
 import Logo from './components/Logo';
 import { COMPANY_NAME_CN } from './config/branding';
-import { fetchSystemBadges, isRequestAbortError } from './services/api';
+import {
+    fetchApiReadiness,
+    fetchCurrentUserSession,
+    fetchSystemBadges,
+    isRequestAbortError
+} from './services/api';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -45,6 +50,7 @@ import SettingsPage from './pages/Settings';
 import SuperAdmin from './pages/SuperAdmin';
 import AdminUsers from './pages/AdminUsers';
 import Alerts from './pages/Alerts';
+import Rules from './pages/Rules';
 import Agents from './pages/Agents';
 import Devices from './pages/Devices';
 import AlertDetail from './pages/AlertDetail';
@@ -77,19 +83,13 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
         // Check backend readiness first (lightweight health check)
         const checkBackend = async () => {
             try {
-                const healthResponse = await fetch('/api/health', {
-                    method: 'GET',
-                    signal: AbortSignal.timeout(3000) // 3 second timeout
-                });
-                if (healthResponse.ok) {
+                const readiness = await fetchApiReadiness(AbortSignal.timeout(3000));
+                if (readiness.ok) {
                     setBackendReady(true);
-                    // Now check authentication
-                    const authResponse = await fetch('/api/auth/me', {
-                        credentials: 'include',
-                        signal: AbortSignal.timeout(5000) // 5 second timeout
-                    });
-                    setIsAuthenticated(authResponse.ok);
+                    const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
+                    setIsAuthenticated(Boolean(user));
                 } else {
+                    setBackendReady(true);
                     setIsAuthenticated(false);
                 }
             } catch {
@@ -129,14 +129,8 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const checkRole = async () => {
             try {
-                const response = await fetch('/api/auth/me', {
-                    credentials: 'include',
-                    signal: AbortSignal.timeout(5000)
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setUserRole(data.user?.role);
-                }
+                const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
+                setUserRole(user?.role || null);
             } catch {
                 setUserRole(null);
             }
@@ -201,6 +195,7 @@ const Sidebar = () => {
             title: t('nav.governance'),
             items: [
                 { icon: FileText, label: t('nav.audit'), path: '/history' },
+                ...(profile.role === 'admin' ? [{ icon: Shield, label: 'Rules', path: '/rules' }] : []),
                 { icon: Bell, label: t('nav.alerts'), path: '/alerts', badge: badges.alerts > 0 ? badges.alerts : undefined },
             ]
         }
@@ -261,17 +256,14 @@ const Sidebar = () => {
     useEffect(() => {
         const controller = new AbortController();
 
-        fetch('/api/auth/me', { credentials: 'include', signal: controller.signal })
-            .then(async (r) => {
-                if (!r.ok) throw new Error(`FG-AUTH-ME-${r.status}`);
-                return r.json();
-            })
-            .then((data) => {
+        fetchCurrentUserSession(controller.signal)
+            .then((user) => {
                 if (controller.signal.aborted) {
                     return;
                 }
-
-                const user = data?.user || {};
+                if (!user) {
+                    throw new Error('FG-AUTH-ME-401');
+                }
                 const name = user.username || user.email || '未命名用户';
                 const initials = String(name).split(/\s+/).map((x: string) => x[0] || '').join('').slice(0, 2).toUpperCase() || '??';
                 setProfile({
@@ -560,6 +552,7 @@ const AnimatedRoutes = () => {
                 <Route path="/settings" element={<PrivateRoute><PageWrapper><SettingsPage /></PageWrapper></PrivateRoute>} />
                 <Route path="/alerts" element={<PrivateRoute><PageWrapper><Alerts /></PageWrapper></PrivateRoute>} />
                 <Route path="/alerts/:id" element={<PrivateRoute><PageWrapper><AlertDetail /></PageWrapper></PrivateRoute>} />
+                <Route path="/rules" element={<PrivateRoute><AdminRoute><PageWrapper><Rules /></PageWrapper></AdminRoute></PrivateRoute>} />
                 <Route path="/agents/:id" element={<PrivateRoute><PageWrapper><AgentDetail /></PageWrapper></PrivateRoute>} />
                 <Route path="/devices/board-status/:id" element={<PrivateRoute><PageWrapper><BoardStatus /></PageWrapper></PrivateRoute>} />
                 <Route path="/sites/:id" element={<PrivateRoute><PageWrapper><SiteDetail /></PageWrapper></PrivateRoute>} />

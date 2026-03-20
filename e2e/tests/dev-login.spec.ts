@@ -25,10 +25,17 @@ const presets = [
 
 test.describe('Dev login presets', () => {
     test('fills all local preset credentials from the dev mode panel', async ({ page, baseURL }) => {
-        const hostname = new URL(baseURL || 'http://127.0.0.1:8080').hostname;
-        test.skip(!(hostname === '127.0.0.1' || hostname === 'localhost'), 'dev login presets are only shown on local hosts');
+        const origin = baseURL || 'http://127.0.0.1:8080';
+        const modeResponse = await page.request.get(`${origin}/api/system/mode`);
+        const modePayload = await modeResponse.json().catch(() => ({}));
+        const devLoginEnabled = Boolean(modePayload?.data?.devLoginEnabled ?? modePayload?.devLoginEnabled);
 
         await page.goto('/login');
+        if (!devLoginEnabled) {
+            await expect(page.getByTestId('dev-login-toggle')).toHaveCount(0);
+            return;
+        }
+
         await expect(page.getByTestId('dev-login-toggle')).toBeVisible();
 
         await page.getByTestId('dev-login-toggle').click();

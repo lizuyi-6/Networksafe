@@ -68,12 +68,14 @@ export interface AgentRegistration {
   status: 'pending' | 'approved' | 'revoked';
   createdAt: string;
   lastSeenAt?: string;
+  tenantId?: string;
 }
 
 export interface AuthenticatedAgent {
   agentId: string;
   hostname: string;
   platform: string;
+  tenantId?: string;
 }
 
 /**
@@ -264,8 +266,10 @@ export class AgentAuthService {
 
       // Check database
       const db = getDatabase();
+      const cols = this.getAgentRegistrationColumns();
+      const tenantSelect = cols.has('tenant_id') ? ', tenant_id' : '';
       const result = db.prepare(`
-        SELECT agent_id, hostname, platform, api_key_hash, status
+        SELECT agent_id, hostname, platform, api_key_hash, status${tenantSelect}
         FROM agent_registrations
         WHERE agent_id = ? AND status = 'approved'
       `).get(agentId) as any;
@@ -284,7 +288,8 @@ export class AgentAuthService {
       const agent: AuthenticatedAgent = {
         agentId: result.agent_id,
         hostname: result.hostname,
-        platform: result.platform
+        platform: result.platform,
+        tenantId: result.tenant_id || undefined
       };
 
       // Cache successful authentication
@@ -355,7 +360,7 @@ export class AgentAuthService {
   listAgents(): AgentRegistration[] {
     const db = getDatabase();
     const results = db.prepare(`
-      SELECT agent_id, hostname, platform, status, created_at, last_seen_at
+      SELECT agent_id, hostname, platform, status, created_at, last_seen_at, tenant_id
       FROM agent_registrations
       ORDER BY created_at DESC
     `).all() as any[];
@@ -367,6 +372,7 @@ export class AgentAuthService {
       status: r.status,
       createdAt: r.created_at,
       lastSeenAt: r.last_seen_at,
+      tenantId: r.tenant_id || undefined,
       apiKey: '', // Never return API keys
       secretKey: '',
       fingerprint: ''

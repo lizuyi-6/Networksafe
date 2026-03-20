@@ -1,4 +1,4 @@
-# ESP32 部署助手 - 完整实现（适配真实需求）
+﻿# ESP32 部署助手 - 完整实现（适配真实需求）
 # main.py - 部署助手主程序
 
 import machine
@@ -523,7 +523,7 @@ class UserInterface:
             "DEPLOYMENT",
             "COMPLETE!",
             "",
-            "FluxGuard is",
+            "AetherGuard is",
             "running now",
             "",
             "[Finished]"

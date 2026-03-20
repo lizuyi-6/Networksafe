@@ -1,0 +1,62 @@
+** Drc report for esp32-serial-deployer-pcb.kicad_pcb **
+** Created on 2026-03-15T16:57:02+0800 **
+
+** Found 10 DRC violations **
+[shorting_items]: 短路了两个不同网络的项目 (网络 5V_SYS 和 GND)
+    局部重写; error
+    @(41.8625 mm, 26.9500 mm): F.Cu 上 U4 的焊盘 3 [5V_SYS]
+    @(41.2393 mm, 26.0000 mm): 走线 [GND] (F.Cu), 长度: 1.4208 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 ESP_IO0 和 GND)
+    局部重写; error
+    @(33.2288 mm, 26.9633 mm): 走线 [ESP_IO0] (B.Cu), 长度: 23.8809 mm
+    @(42.0000 mm, 27.2000 mm): 过孔 [GND] (F.Cu - B.Cu)
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0367 mm)
+    规则: netclass 'Default'; error
+    @(33.2288 mm, 26.9633 mm): 走线 [ESP_IO0] (B.Cu), 长度: 23.8809 mm
+    @(42.0000 mm, 27.2000 mm): 走线 [GND] (B.Cu), 长度: 1.2000 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 5V_SYS 和 GND)
+    局部重写; error
+    @(42.2384 mm, 26.9500 mm): 走线 [5V_SYS] (F.Cu), 长度: 0.3759 mm
+    @(41.2393 mm, 26.0000 mm): 走线 [GND] (F.Cu), 长度: 1.4208 mm
+[shorting_items]: 短路了两个不同网络的项目 (网络 5V_SYS 和 GND)
+    局部重写; error
+    @(41.8625 mm, 26.9500 mm): F.Cu 上 U4 的焊盘 3 [5V_SYS]
+    @(42.0000 mm, 27.2000 mm): 过孔 [GND] (F.Cu - B.Cu)
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1352 mm)
+    规则: netclass 'Default'; error
+    @(42.8763 mm, 26.3121 mm): 走线 [5V_SYS] (F.Cu), 长度: 0.9021 mm
+    @(41.2393 mm, 26.0000 mm): 走线 [GND] (F.Cu), 长度: 1.4208 mm
+[tracks_crossing]: 走线交叉
+    规则: netclass 'Default'; error
+    @(39.1750 mm, 26.9500 mm): 走线 [5V_SYS] (F.Cu), 长度: 2.6875 mm
+    @(41.2393 mm, 26.0000 mm): 走线 [GND] (F.Cu), 长度: 1.4208 mm
+[hole_clearance]: 孔间距违规 (board setup constraints hole 间距 0.2500 mm; 实际 0.0000 mm)
+    规则: board setup constraints hole; error
+    @(41.8625 mm, 26.9500 mm): F.Cu 上 U4 的焊盘 3 [5V_SYS]
+    @(42.0000 mm, 27.2000 mm): 过孔 [GND] (F.Cu - B.Cu)
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(41.2393 mm, 26.0000 mm): 走线 [GND] (F.Cu), 长度: 1.4208 mm
+    @(41.8625 mm, 26.9500 mm): F.Cu 上 U4 的焊盘 3 [5V_SYS]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(42.0000 mm, 27.2000 mm): 过孔 [GND] (F.Cu - B.Cu)
+    @(41.8625 mm, 26.9500 mm): F.Cu 上 U4 的焊盘 3 [5V_SYS]
+
+** Found 3 unconnected pads **
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(71.7500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 9 [3V3]
+    @(70.7500 mm, 35.9625 mm): 走线 [3V3] (F.Cu), 长度: 1.0076 mm
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(60.2144 mm, 23.9031 mm): 走线 [GND] (F.Cu), 长度: 0.4238 mm
+    @(60.9375 mm, 19.6481 mm): 走线 [GND] (F.Cu), 长度: 1.4019 mm
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(66.0000 mm, 27.6898 mm): 走线 [GND] (F.Cu), 长度: 1.5352 mm
+    @(70.0375 mm, 33.2500 mm): F.Cu 上 U3 的焊盘 2 [GND]
+
+** Found 0 Footprint errors **
+
+** End of Report **

@@ -1,0 +1,638 @@
+** Drc report for esp32-serial-deployer-pcb.kicad_pcb **
+** Created on 2026-03-15T19:10:27+0800 **
+
+** Found 7 DRC violations **
+[shorting_items]: 短路了两个不同网络的项目 (网络 HOST_CP2102_RST_N 和 VBUS_HOST_RAW)
+    局部重写; error
+    @(72.0750 mm, 37.0000 mm): F.Cu 上 R18 的焊盘 2 [HOST_CP2102_RST_N]
+    @(71.5426 mm, 36.6831 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 4.3587 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0350 mm)
+    规则: netclass 'Default'; error
+    @(72.0750 mm, 37.0000 mm): F.Cu 上 R18 的焊盘 2 [HOST_CP2102_RST_N]
+    @(71.2500 mm, 36.3905 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 0.4138 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0971 mm)
+    规则: netclass 'Default'; error
+    @(71.7500 mm, 36.4500 mm): 走线 [HOST_CP2102_RST_N] (F.Cu), 长度: 0.6388 mm
+    @(71.2500 mm, 36.3905 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 0.4138 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1115 mm)
+    规则: netclass 'Default'; error
+    @(71.2500 mm, 36.3905 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 0.4138 mm
+    @(71.7500 mm, 35.9625 mm): 走线 [HOST_CP2102_RST_N] (F.Cu), 长度: 0.4875 mm
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1500 mm)
+    规则: netclass 'Default'; error
+    @(72.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 10 [<no net>]
+    @(72.0750 mm, 37.0000 mm): F.Cu 上 R18 的焊盘 2 [HOST_CP2102_RST_N]
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(72.0000 mm, 34.0000 mm): 封装 U3
+    @(71.2500 mm, 37.0000 mm): 封装 R18
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(71.5426 mm, 36.6831 mm): 走线 [VBUS_HOST_RAW] (F.Cu), 长度: 4.3587 mm
+    @(72.0750 mm, 37.0000 mm): F.Cu 上 R18 的焊盘 2 [HOST_CP2102_RST_N]
+
+** Found 0 unconnected pads **
+
+** Found 200 Footprint errors **
+[net_conflict]: 焊盘网络 (5V_SYS) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(38.0000 mm, 25.7750 mm): F.Cu 上 C1 的焊盘 1 [5V_SYS]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(38.0000 mm, 24.2250 mm): F.Cu 上 C1 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(48.0000 mm, 24.2250 mm): F.Cu 上 C2 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(34.0000 mm, 39.2250 mm): F.Cu 上 C3 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(66.0000 mm, 11.2250 mm): F.Cu 上 C4 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(68.0000 mm, 11.2250 mm): F.Cu 上 C5 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(66.0000 mm, 29.2250 mm): F.Cu 上 C6 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(66.0000 mm, 39.2250 mm): F.Cu 上 C7 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(40.0000 mm, 29.2250 mm): F.Cu 上 C8 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(44.0000 mm, 29.2250 mm): F.Cu 上 C9 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (5V_SYS) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(47.6500 mm, 18.0000 mm): F.Cu 上 D1 的焊盘 2 [5V_SYS]
+[net_conflict]: 焊盘网络 (5V_SYS) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(78.0000 mm, 22.3500 mm): F.Cu 上 D2 的焊盘 2 [5V_SYS]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(38.0000 mm, 6.7875 mm): F.Cu 上 D3 的焊盘 1 [GND]
+[net_conflict]: 焊盘网络 (LED_R) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(63.5500 mm, 33.3000 mm): F.Cu 上 D10 的焊盘 1 [LED_R]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(63.5500 mm, 34.7000 mm): F.Cu 上 D10 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (LED_G) 与原理图 (LED_B) 提供的网络不匹配。
+    局部重写; warning
+    @(60.4500 mm, 33.3000 mm): F.Cu 上 D10 的焊盘 3 [LED_G]
+[net_conflict]: 焊盘网络 (VBUS_USB_C_RAW) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(38.6000 mm, 18.0000 mm): F.Cu 上 F1 的焊盘 1 [VBUS_USB_C_RAW]
+[net_conflict]: 焊盘网络 (VBUS_HOST_RAW) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(82.0000 mm, 25.4000 mm): F.Cu 上 F2 的焊盘 1 [VBUS_HOST_RAW]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(58.2500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 A1 [GND]
+[net_conflict]: 焊盘网络 (VBUS_USB_C_RAW) 与原理图 (Net-(J1-VBUS-PadA4)) 提供的网络不匹配。
+    局部重写; warning
+    @(57.4500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 A4 [VBUS_USB_C_RAW]
+[net_conflict]: 焊盘网络 (USB_CC1) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(56.2500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 A5 [USB_CC1]
+[net_conflict]: 焊盘网络 (USB_C_DP) 与原理图 (Net-(J1-D+-PadA6)) 提供的网络不匹配。
+    局部重写; warning
+    @(55.2500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 A6 [USB_C_DP]
+[net_conflict]: 焊盘网络 (USB_C_DN) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(54.7500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 A7 [USB_C_DN]
+[net_conflict]: 原理图 (unconnected-(J1-NC-PadA8)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(53.7500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 A8 [<no net>]
+[net_conflict]: 焊盘网络 (VBUS_USB_C_RAW) 与原理图 (Net-(J1-VBUS-PadA4)) 提供的网络不匹配。
+    局部重写; warning
+    @(52.5500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 A9 [VBUS_USB_C_RAW]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(51.7500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 A12 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(51.7500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 B1 [GND]
+[net_conflict]: 焊盘网络 (VBUS_USB_C_RAW) 与原理图 (Net-(J1-VBUS-PadA4)) 提供的网络不匹配。
+    局部重写; warning
+    @(52.5500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 B4 [VBUS_USB_C_RAW]
+[net_conflict]: 焊盘网络 (USB_CC2) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(53.2500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 B5 [USB_CC2]
+[net_conflict]: 焊盘网络 (USB_C_DP) 与原理图 (Net-(J1-D+-PadA6)) 提供的网络不匹配。
+    局部重写; warning
+    @(54.2500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 B6 [USB_C_DP]
+[net_conflict]: 焊盘网络 (USB_C_DN) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(55.7500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 B7 [USB_C_DN]
+[net_conflict]: 原理图 (unconnected-(J1-NC-PadB8)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(56.7500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 B8 [<no net>]
+[net_conflict]: 焊盘网络 (VBUS_USB_C_RAW) 与原理图 (Net-(J1-VBUS-PadA4)) 提供的网络不匹配。
+    局部重写; warning
+    @(57.4500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 B9 [VBUS_USB_C_RAW]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(58.2500 mm, 9.0450 mm): F.Cu 上 J1 的焊盘 B12 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(59.3200 mm, 8.1300 mm): J1 的PTH 焊盘 S1 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(59.3200 mm, 3.9500 mm): J1 的PTH 焊盘 S1 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(50.6800 mm, 8.1300 mm): J1 的PTH 焊盘 S1 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(50.6800 mm, 3.9500 mm): J1 的PTH 焊盘 S1 [GND]
+[net_conflict]: 焊盘网络 (VBUS_HOST_RAW) 与原理图 (unconnected-(J2-VBUS-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(92.2000 mm, 36.7500 mm): F.Cu 上 J2 的焊盘 1 [VBUS_HOST_RAW]
+[net_conflict]: 焊盘网络 (HOST_DN) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(92.2000 mm, 34.2500 mm): F.Cu 上 J2 的焊盘 2 [HOST_DN]
+[net_conflict]: 焊盘网络 (HOST_DP) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(92.2000 mm, 31.7500 mm): F.Cu 上 J2 的焊盘 3 [HOST_DP]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(92.2000 mm, 29.2500 mm): F.Cu 上 J2 的焊盘 4 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(86.7300 mm, 7.5000 mm): J3 的PTH 焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (OLED_SCL) 与原理图 (OLED_SDA) 提供的网络不匹配。
+    局部重写; warning
+    @(89.2700 mm, 7.5000 mm): J3 的PTH 焊盘 3 [OLED_SCL]
+[net_conflict]: 焊盘网络 (OLED_SDA) 与原理图 (OLED_SCL) 提供的网络不匹配。
+    局部重写; warning
+    @(91.8100 mm, 7.5000 mm): J3 的PTH 焊盘 4 [OLED_SDA]
+[net_conflict]: 焊盘网络 (USB_RTS) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(60.9375 mm, 22.9500 mm): F.Cu 上 Q1 的焊盘 1 [USB_RTS]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(60.9375 mm, 21.0500 mm): F.Cu 上 Q1 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (USB_DTR) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(60.9375 mm, 26.9500 mm): F.Cu 上 Q2 的焊盘 1 [USB_DTR]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(60.9375 mm, 25.0500 mm): F.Cu 上 Q2 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (BUZZER_CTRL_DRV) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(46.9375 mm, 38.9500 mm): F.Cu 上 Q3 的焊盘 1 [BUZZER_CTRL_DRV]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(46.9375 mm, 37.0500 mm): F.Cu 上 Q3 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (USB_CC1) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(50.0000 mm, 23.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(50.0000 mm, 22.1750 mm): F.Cu 上 R1 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (USB_CC2) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(53.0000 mm, 23.8250 mm): F.Cu 上 R2 的焊盘 1 [USB_CC2]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(53.0000 mm, 22.1750 mm): F.Cu 上 R2 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (LED_R) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(50.0000 mm, 34.8250 mm): F.Cu 上 R13 的焊盘 1 [LED_R]
+[net_conflict]: 焊盘网络 (LED_G) 与原理图 (LED_B) 提供的网络不匹配。
+    局部重写; warning
+    @(53.0000 mm, 34.8250 mm): F.Cu 上 R14 的焊盘 1 [LED_G]
+[net_conflict]: 焊盘网络 (LED_G_DRV) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(53.0000 mm, 33.1750 mm): F.Cu 上 R14 的焊盘 2 [LED_G_DRV]
+[net_conflict]: 焊盘网络 (BUZZER_CTRL_DRV) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(42.8250 mm, 43.0000 mm): F.Cu 上 R17 的焊盘 2 [BUZZER_CTRL_DRV]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(25.1500 mm, 50.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(10.8500 mm, 50.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(43.1500 mm, 50.5000 mm): F.Cu 上 SW2 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(28.8500 mm, 50.5000 mm): F.Cu 上 SW2 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(63.1500 mm, 57.5000 mm): F.Cu 上 SW3 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(48.8500 mm, 57.5000 mm): F.Cu 上 SW3 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (BTN_NEXT) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(80.1500 mm, 62.5000 mm): F.Cu 上 SW4 的焊盘 1 [BTN_NEXT]
+[net_conflict]: 焊盘网络 (BTN_NEXT) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(65.8500 mm, 62.5000 mm): F.Cu 上 SW4 的焊盘 1 [BTN_NEXT]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(80.1500 mm, 57.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(65.8500 mm, 57.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (BTN_BACK) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(97.1500 mm, 62.5000 mm): F.Cu 上 SW5 的焊盘 1 [BTN_BACK]
+[net_conflict]: 焊盘网络 (BTN_BACK) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(82.8500 mm, 62.5000 mm): F.Cu 上 SW5 的焊盘 1 [BTN_BACK]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(97.1500 mm, 57.5000 mm): F.Cu 上 SW5 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(82.8500 mm, 57.5000 mm): F.Cu 上 SW5 的焊盘 2 [GND]
+[footprint_symbol_mismatch]: 封装特性与符号不匹配: 从物料清单中移除 设置不同。
+    局部重写; warning
+    @(52.0000 mm, 68.0000 mm): 封装 TP1
+[footprint_symbol_mismatch]: 封装特性与符号不匹配: 从物料清单中移除 设置不同。
+    局部重写; warning
+    @(56.0000 mm, 68.0000 mm): 封装 TP2
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(56.0000 mm, 68.0000 mm): F.Cu 上 TP2 的焊盘 1 [GND]
+[footprint_symbol_mismatch]: 封装特性与符号不匹配: 从物料清单中移除 设置不同。
+    局部重写; warning
+    @(60.0000 mm, 68.0000 mm): 封装 TP3
+[footprint_symbol_mismatch]: 封装特性与符号不匹配: 从物料清单中移除 设置不同。
+    局部重写; warning
+    @(64.0000 mm, 68.0000 mm): 封装 TP4
+[footprint_symbol_mismatch]: 封装特性与符号不匹配: 从物料清单中移除 设置不同。
+    局部重写; warning
+    @(68.0000 mm, 68.0000 mm): 封装 TP5
+[footprint_symbol_mismatch]: 封装特性与符号不匹配: 从物料清单中移除 设置不同。
+    局部重写; warning
+    @(72.0000 mm, 68.0000 mm): 封装 TP6
+[net_conflict]: 焊盘网络 (UART0_RX) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(72.0000 mm, 68.0000 mm): F.Cu 上 TP6 的焊盘 1 [UART0_RX]
+[footprint_symbol_mismatch]: 封装特性与符号不匹配: 从物料清单中移除 设置不同。
+    局部重写; warning
+    @(76.0000 mm, 68.0000 mm): 封装 TP7
+[footprint_symbol_mismatch]: 封装特性与符号不匹配: 从物料清单中移除 设置不同。
+    局部重写; warning
+    @(80.0000 mm, 68.0000 mm): 封装 TP8
+[net_conflict]: 焊盘网络 (UART2_RX) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(80.0000 mm, 68.0000 mm): F.Cu 上 TP8 的焊盘 1 [UART2_RX]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(3.2500 mm, 24.7400 mm): F.Cu 上 U1 的焊盘 1 [GND]
+[net_conflict]: 焊盘网络 (3V3) 与原理图 (unconnected-(U1-VDD-Pad2)) 提供的网络不匹配。
+    局部重写; warning
+    @(3.2500 mm, 26.0100 mm): F.Cu 上 U1 的焊盘 2 [3V3]
+[net_conflict]: 焊盘网络 (ESP_EN) 与原理图 (unconnected-(U1-EN-Pad3)) 提供的网络不匹配。
+    局部重写; warning
+    @(3.2500 mm, 27.2800 mm): F.Cu 上 U1 的焊盘 3 [ESP_EN]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad4)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(3.2500 mm, 28.5500 mm): F.Cu 上 U1 的焊盘 4 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad5)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(3.2500 mm, 29.8200 mm): F.Cu 上 U1 的焊盘 5 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad6)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(3.2500 mm, 31.0900 mm): F.Cu 上 U1 的焊盘 6 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad7)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(3.2500 mm, 32.3600 mm): F.Cu 上 U1 的焊盘 7 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad8)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(3.2500 mm, 33.6300 mm): F.Cu 上 U1 的焊盘 8 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad9)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(3.2500 mm, 34.9000 mm): F.Cu 上 U1 的焊盘 9 [<no net>]
+[net_conflict]: 焊盘网络 (LED_R_DRV) 与原理图 (unconnected-(U1-IO25-Pad10)) 提供的网络不匹配。
+    局部重写; warning
+    @(3.2500 mm, 36.1700 mm): F.Cu 上 U1 的焊盘 10 [LED_R_DRV]
+[net_conflict]: 焊盘网络 (LED_G_DRV) 与原理图 (BUZZER_CTRL) 提供的网络不匹配。
+    局部重写; warning
+    @(3.2500 mm, 37.4400 mm): F.Cu 上 U1 的焊盘 11 [LED_G_DRV]
+[net_conflict]: 焊盘网络 (BUZZER_CTRL) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(3.2500 mm, 39.9800 mm): F.Cu 上 U1 的焊盘 13 [BUZZER_CTRL]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad14)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(3.2500 mm, 41.2500 mm): F.Cu 上 U1 的焊盘 14 [<no net>]
+[net_conflict]: 原理图 (Net-(U1-GND-Pad1)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(6.2850 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 15 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad16)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(7.5550 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 16 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad17)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(8.8250 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 17 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad18)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(10.0950 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 18 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad19)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(11.3650 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 19 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad20)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(12.6350 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 20 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad21)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(13.9050 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 21 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad22)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(15.1750 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 22 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad23)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(16.4450 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 23 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad24)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(17.7150 mm, 42.5000 mm): F.Cu 上 U1 的焊盘 24 [<no net>]
+[net_conflict]: 焊盘网络 (ESP_IO0) 与原理图 (unconnected-(U1-IO0-Pad25)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 41.2500 mm): F.Cu 上 U1 的焊盘 25 [ESP_IO0]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad26)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(20.7500 mm, 39.9800 mm): F.Cu 上 U1 的焊盘 26 [<no net>]
+[net_conflict]: 焊盘网络 (UART2_RX) 与原理图 (unconnected-(U1-IO16-Pad27)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 38.7100 mm): F.Cu 上 U1 的焊盘 27 [UART2_RX]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad29)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(20.7500 mm, 36.1700 mm): F.Cu 上 U1 的焊盘 29 [<no net>]
+[net_conflict]: 焊盘网络 (BTN_OK) 与原理图 (unconnected-(U1-IO18-Pad30)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 34.9000 mm): F.Cu 上 U1 的焊盘 30 [BTN_OK]
+[net_conflict]: 焊盘网络 (BTN_NEXT) 与原理图 (unconnected-(U1-IO19-Pad31)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 33.6300 mm): F.Cu 上 U1 的焊盘 31 [BTN_NEXT]
+[net_conflict]: 原理图 (unconnected-(U1-NC-Pad32)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(20.7500 mm, 32.3600 mm): F.Cu 上 U1 的焊盘 32 [<no net>]
+[net_conflict]: 焊盘网络 (OLED_SDA) 与原理图 (unconnected-(U1-IO21-Pad33)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 31.0900 mm): F.Cu 上 U1 的焊盘 33 [OLED_SDA]
+[net_conflict]: 焊盘网络 (UART0_RX) 与原理图 (unconnected-(U1-U0RXD{slash}IO3-Pad34)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 29.8200 mm): F.Cu 上 U1 的焊盘 34 [UART0_RX]
+[net_conflict]: 焊盘网络 (UART0_TX) 与原理图 (unconnected-(U1-U0TXD{slash}IO1-Pad35)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 28.5500 mm): F.Cu 上 U1 的焊盘 35 [UART0_TX]
+[net_conflict]: 焊盘网络 (OLED_SCL) 与原理图 (unconnected-(U1-IO22-Pad36)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 27.2800 mm): F.Cu 上 U1 的焊盘 36 [OLED_SCL]
+[net_conflict]: 焊盘网络 (BTN_BACK) 与原理图 (unconnected-(U1-IO23-Pad37)) 提供的网络不匹配。
+    局部重写; warning
+    @(20.7500 mm, 26.0100 mm): F.Cu 上 U1 的焊盘 37 [BTN_BACK]
+[net_conflict]: 原理图 (Net-(U1-GND-Pad1)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(20.7500 mm, 24.7400 mm): F.Cu 上 U1 的焊盘 38 [<no net>]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(9.1000 mm, 31.0600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(9.1000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(9.1000 mm, 32.4600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(9.1000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(9.1000 mm, 33.8600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(9.8000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(9.8000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(9.8000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(10.5000 mm, 31.0600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(10.5000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(10.5000 mm, 32.4600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(10.5000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(10.5000 mm, 33.8600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(11.2000 mm, 31.0600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(11.2000 mm, 32.4600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(11.2000 mm, 33.8600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(11.9000 mm, 31.0600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(11.9000 mm, 31.7600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(11.9000 mm, 32.4600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(11.9000 mm, 33.1600 mm): U1 的PTH 焊盘 39 [GND]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (Net-(U1-GND-Pad1)) 提供的网络不匹配。
+    局部重写; warning
+    @(11.9000 mm, 33.8600 mm): F.Cu 上 U1 的焊盘 39 [GND]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad1)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(71.0375 mm, 12.7500 mm): F.Cu 上 U2 的焊盘 1 [<no net>]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(71.0375 mm, 13.2500 mm): F.Cu 上 U2 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (USB_C_DP) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(71.0375 mm, 13.7500 mm): F.Cu 上 U2 的焊盘 3 [USB_C_DP]
+[net_conflict]: 焊盘网络 (USB_C_DN) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(71.0375 mm, 14.2500 mm): F.Cu 上 U2 的焊盘 4 [USB_C_DN]
+[net_conflict]: 焊盘网络 (3V3) 与原理图 (Net-(U2-VDD)) 提供的网络不匹配。
+    局部重写; warning
+    @(71.0375 mm, 14.7500 mm): F.Cu 上 U2 的焊盘 5 [3V3]
+[net_conflict]: 焊盘网络 (3V3) 与原理图 (Net-(U2-VDD)) 提供的网络不匹配。
+    局部重写; warning
+    @(71.0375 mm, 15.2500 mm): F.Cu 上 U2 的焊盘 6 [3V3]
+[net_conflict]: 焊盘网络 (3V3) 与原理图 (unconnected-(U2-VREGIN-Pad7)) 提供的网络不匹配。
+    局部重写; warning
+    @(71.7500 mm, 15.9625 mm): F.Cu 上 U2 的焊盘 7 [3V3]
+[net_conflict]: 焊盘网络 (VBUS_USB_C_RAW) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(72.2500 mm, 15.9625 mm): F.Cu 上 U2 的焊盘 8 [VBUS_USB_C_RAW]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad10)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.2500 mm, 15.9625 mm): F.Cu 上 U2 的焊盘 10 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad11)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.7500 mm, 15.9625 mm): F.Cu 上 U2 的焊盘 11 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad12)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(74.2500 mm, 15.9625 mm): F.Cu 上 U2 的焊盘 12 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad13)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(74.9625 mm, 15.2500 mm): F.Cu 上 U2 的焊盘 13 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad14)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(74.9625 mm, 14.7500 mm): F.Cu 上 U2 的焊盘 14 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad15)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(74.9625 mm, 14.2500 mm): F.Cu 上 U2 的焊盘 15 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad16)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(74.9625 mm, 13.7500 mm): F.Cu 上 U2 的焊盘 16 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad17)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(74.9625 mm, 13.2500 mm): F.Cu 上 U2 的焊盘 17 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad18)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(74.9625 mm, 12.7500 mm): F.Cu 上 U2 的焊盘 18 [<no net>]
+[net_conflict]: 焊盘网络 (USB_RTS) 与原理图 (Net-(U2-RXD)) 提供的网络不匹配。
+    局部重写; warning
+    @(74.2500 mm, 12.0375 mm): F.Cu 上 U2 的焊盘 19 [USB_RTS]
+[net_conflict]: 焊盘网络 (UART0_RX) 与原理图 (Net-(U2-RXD)) 提供的网络不匹配。
+    局部重写; warning
+    @(73.7500 mm, 12.0375 mm): F.Cu 上 U2 的焊盘 20 [UART0_RX]
+[net_conflict]: 焊盘网络 (UART0_TX) 与原理图 (unconnected-(U2-TXD-Pad21)) 提供的网络不匹配。
+    局部重写; warning
+    @(73.2500 mm, 12.0375 mm): F.Cu 上 U2 的焊盘 21 [UART0_TX]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad22)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(72.7500 mm, 12.0375 mm): F.Cu 上 U2 的焊盘 22 [<no net>]
+[net_conflict]: 焊盘网络 (USB_DTR) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(72.2500 mm, 12.0375 mm): F.Cu 上 U2 的焊盘 23 [USB_DTR]
+[net_conflict]: 原理图 (unconnected-(U2-NC-Pad24)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(71.7500 mm, 12.0375 mm): F.Cu 上 U2 的焊盘 24 [<no net>]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(73.0000 mm, 14.0000 mm): F.Cu 上 U2 的焊盘 25 [GND]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad1)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(70.0375 mm, 32.7500 mm): F.Cu 上 U3 的焊盘 1 [<no net>]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (HOST_CP2102_RST_N) 提供的网络不匹配。
+    局部重写; warning
+    @(70.0375 mm, 33.2500 mm): F.Cu 上 U3 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (HOST_DP) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(70.0375 mm, 33.7500 mm): F.Cu 上 U3 的焊盘 3 [HOST_DP]
+[net_conflict]: 焊盘网络 (HOST_DN) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(70.0375 mm, 34.2500 mm): F.Cu 上 U3 的焊盘 4 [HOST_DN]
+[net_conflict]: 焊盘网络 (3V3) 与原理图 (Net-(U3-VDD)) 提供的网络不匹配。
+    局部重写; warning
+    @(70.0375 mm, 34.7500 mm): F.Cu 上 U3 的焊盘 5 [3V3]
+[net_conflict]: 焊盘网络 (3V3) 与原理图 (Net-(U3-VDD)) 提供的网络不匹配。
+    局部重写; warning
+    @(70.0375 mm, 35.2500 mm): F.Cu 上 U3 的焊盘 6 [3V3]
+[net_conflict]: 焊盘网络 (3V3) 与原理图 (unconnected-(U3-VREGIN-Pad7)) 提供的网络不匹配。
+    局部重写; warning
+    @(70.7500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 7 [3V3]
+[net_conflict]: 焊盘网络 (VBUS_HOST_RAW) 与原理图 (HOST_CP2102_RST_N) 提供的网络不匹配。
+    局部重写; warning
+    @(71.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 8 [VBUS_HOST_RAW]
+[net_conflict]: 焊盘网络 (HOST_CP2102_RST_N) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(71.7500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 9 [HOST_CP2102_RST_N]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad10)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(72.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 10 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad11)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(72.7500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 11 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad12)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.2500 mm, 35.9625 mm): F.Cu 上 U3 的焊盘 12 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad13)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.9625 mm, 35.2500 mm): F.Cu 上 U3 的焊盘 13 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad14)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.9625 mm, 34.7500 mm): F.Cu 上 U3 的焊盘 14 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad15)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.9625 mm, 34.2500 mm): F.Cu 上 U3 的焊盘 15 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad16)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.9625 mm, 33.7500 mm): F.Cu 上 U3 的焊盘 16 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad17)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.9625 mm, 33.2500 mm): F.Cu 上 U3 的焊盘 17 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad18)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.9625 mm, 32.7500 mm): F.Cu 上 U3 的焊盘 18 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad19)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(73.2500 mm, 32.0375 mm): F.Cu 上 U3 的焊盘 19 [<no net>]
+[net_conflict]: 焊盘网络 (UART2_RX) 与原理图 (unconnected-(U3-RXD-Pad20)) 提供的网络不匹配。
+    局部重写; warning
+    @(72.7500 mm, 32.0375 mm): F.Cu 上 U3 的焊盘 20 [UART2_RX]
+[net_conflict]: 焊盘网络 (UART2_TX) 与原理图 (unconnected-(U3-TXD-Pad21)) 提供的网络不匹配。
+    局部重写; warning
+    @(72.2500 mm, 32.0375 mm): F.Cu 上 U3 的焊盘 21 [UART2_TX]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad22)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(71.7500 mm, 32.0375 mm): F.Cu 上 U3 的焊盘 22 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad23)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(71.2500 mm, 32.0375 mm): F.Cu 上 U3 的焊盘 23 [<no net>]
+[net_conflict]: 原理图 (unconnected-(U3-NC-Pad24)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(70.7500 mm, 32.0375 mm): F.Cu 上 U3 的焊盘 24 [<no net>]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (HOST_CP2102_RST_N) 提供的网络不匹配。
+    局部重写; warning
+    @(72.0000 mm, 34.0000 mm): F.Cu 上 U3 的焊盘 25 [GND]
+[net_conflict]: 焊盘网络 (5V_SYS) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(41.8625 mm, 25.0500 mm): F.Cu 上 U4 的焊盘 1 [5V_SYS]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(41.8625 mm, 26.0000 mm): F.Cu 上 U4 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (5V_SYS) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(41.8625 mm, 26.9500 mm): F.Cu 上 U4 的焊盘 3 [5V_SYS]
+[net_conflict]: 原理图 (unconnected-(U4-NC-Pad4)) 给出的焊盘缺失网络。
+    局部重写; warning
+    @(44.1375 mm, 26.9500 mm): F.Cu 上 U4 的焊盘 4 [<no net>]
+[net_conflict]: 焊盘网络 (USB_C_DP) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(60.0500 mm, 13.9375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(61.9500 mm, 13.9375 mm): F.Cu 上 U5 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (USB_C_DN) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(61.0000 mm, 12.0625 mm): F.Cu 上 U5 的焊盘 3 [USB_C_DN]
+[net_conflict]: 焊盘网络 (HOST_DP) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(86.9500 mm, 31.0625 mm): F.Cu 上 U6 的焊盘 1 [HOST_DP]
+[net_conflict]: 焊盘网络 (GND) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(85.0500 mm, 31.0625 mm): F.Cu 上 U6 的焊盘 2 [GND]
+[net_conflict]: 焊盘网络 (HOST_DN) 与原理图 (3V3) 提供的网络不匹配。
+    局部重写; warning
+    @(86.0000 mm, 32.9375 mm): F.Cu 上 U6 的焊盘 3 [HOST_DN]
+
+** End of Report **

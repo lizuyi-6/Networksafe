@@ -1,5 +1,5 @@
-/**
- * FluxGuard ESP32 - AI 模型调用模块
+﻿/**
+ * AetherGuard ESP32 - AI 模型调用模块
  * 
  * 支持多模型来源：
  * 1. 用户笔记本本地模型 (默认)
@@ -7,6 +7,9 @@
  * 3. 服务器集群模型 (可配置)
  * 
  * 优先级: 自定义端点 > 笔记本本地
+ *
+ * NOTE: Experimental cloud-device module. It is not compiled by the active
+ * serial-deployer PlatformIO target.
  */
 
 #ifndef AI_MODEL_H

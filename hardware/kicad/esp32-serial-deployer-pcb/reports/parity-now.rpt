@@ -1,0 +1,1999 @@
+** Drc report for esp32-serial-deployer-pcb.kicad_pcb **
+** Created on 2026-03-15T12:05:56+0800 **
+
+** Found 361 DRC violations **
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.9500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.0000 mm, 9.5625 mm): F.Cu 上 U5 的焊盘 3 [USB_C_DN]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.0000 mm, 10.5000 mm): 封装 U5
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(44.4500 mm, 9.3000 mm): F.Cu 上 D10 的焊盘 3 [LED_G]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(44.4500 mm, 10.7000 mm): F.Cu 上 D10 的焊盘 4 [LED_B]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(46.0000 mm, 10.0000 mm): 封装 D10
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(37.8900 mm, 6.8000 mm): J1 的 NPTH 焊盘
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(32.1100 mm, 6.8000 mm): J1 的 NPTH 焊盘
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A1 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A4 [VBUS_USB_C_RAW]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(36.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A5 [USB_CC1]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(35.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A6 [USB_C_DP]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(34.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A7 [USB_C_DN]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(33.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A8 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(32.5500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A9 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(31.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A12 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(31.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B1 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(32.5500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B4 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(33.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B5 [USB_CC2]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(34.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B6 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(35.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B7 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(36.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B8 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B9 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B12 [<no net>]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(39.3200 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(39.3200 mm, 3.1500 mm): J1 的PTH 焊盘 S1 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(30.6800 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(30.6800 mm, 3.1500 mm): J1 的PTH 焊盘 S1 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(35.0000 mm, 4.2000 mm): 封装 J1
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(37.1500 mm, 36.5000 mm): F.Cu 上 SW2 的焊盘 1 [ESP_EN]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(37.1500 mm, 31.5000 mm): F.Cu 上 SW2 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(45.1750 mm, 20.0000 mm): F.Cu 上 R7 的焊盘 1 [USB_RTS]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(46.0000 mm, 20.0000 mm): 封装 R7
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(45.0000 mm, 13.3250 mm): F.Cu 上 R15 的焊盘 1 [LED_B]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(45.0000 mm, 11.6750 mm): F.Cu 上 R15 的焊盘 2 [LED_B_DRV]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(45.0000 mm, 12.5000 mm): 封装 R15
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(24.0000 mm, 30.0000 mm): 封装 R3
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(39.0000 mm, 9.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(39.0000 mm, 8.1750 mm): F.Cu 上 R1 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(39.0000 mm, 9.0000 mm): 封装 R1
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.9375 mm, 20.9500 mm): F.Cu 上 Q1 的焊盘 1 [USB_RTS]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.9375 mm, 19.0500 mm): F.Cu 上 Q1 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0625 mm, 20.0000 mm): F.Cu 上 Q1 的焊盘 3 [ESP_EN]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.0000 mm, 20.0000 mm): 封装 Q1
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0000 mm, 13.3250 mm): F.Cu 上 R13 的焊盘 1 [LED_R]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0000 mm, 11.6750 mm): F.Cu 上 R13 的焊盘 2 [LED_R_DRV]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0000 mm, 12.5000 mm): 封装 R13
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.8500 mm, 38.5000 mm): F.Cu 上 SW5 的焊盘 1 [BTN_BACK]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.8500 mm, 33.5000 mm): F.Cu 上 SW5 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(37.1500 mm, 38.5000 mm): F.Cu 上 SW3 的焊盘 1 [BTN_OK]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(37.1500 mm, 33.5000 mm): F.Cu 上 SW3 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(24.0000 mm, 27.5000 mm): 封装 C8
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(43.0000 mm, 13.3250 mm): F.Cu 上 R14 的焊盘 1 [LED_G]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(43.0000 mm, 11.6750 mm): F.Cu 上 R14 的焊盘 2 [LED_G_DRV]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(43.0000 mm, 12.5000 mm): 封装 R14
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(26.0000 mm, 30.8250 mm): F.Cu 上 R4 的焊盘 1 [3V3]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(26.0000 mm, 29.1750 mm): F.Cu 上 R4 的焊盘 2 [ESP_IO0]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(26.0000 mm, 30.0000 mm): 封装 R4
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(43.1750 mm, 17.0000 mm): F.Cu 上 R10 的焊盘 1 [USB_C_VBUS_SENSE]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(44.8250 mm, 17.0000 mm): F.Cu 上 R10 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(44.0000 mm, 17.0000 mm): 封装 R10
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0000 mm, 9.8250 mm): F.Cu 上 R2 的焊盘 1 [USB_CC2]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0000 mm, 8.1750 mm): F.Cu 上 R2 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0000 mm, 9.0000 mm): 封装 R2
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(28.0000 mm, 30.7750 mm): F.Cu 上 C3 的焊盘 1 [ESP_EN]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(28.0000 mm, 29.2250 mm): F.Cu 上 C3 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(28.0000 mm, 30.0000 mm): 封装 C3
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(44.1750 mm, 33.0000 mm): F.Cu 上 R17 的焊盘 1 [BUZZER_CTRL]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(45.8250 mm, 33.0000 mm): F.Cu 上 R17 的焊盘 2 [BUZZER_CTRL_DRV]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(45.0000 mm, 33.0000 mm): 封装 R17
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(25.1500 mm, 36.5000 mm): F.Cu 上 SW1 的焊盘 1 [ESP_IO0]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(25.1500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(45.1750 mm, 24.0000 mm): F.Cu 上 R8 的焊盘 1 [USB_DTR]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(46.0000 mm, 24.0000 mm): 封装 R8
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(26.0000 mm, 28.2750 mm): F.Cu 上 C9 的焊盘 1 [3V3]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(26.0000 mm, 26.7250 mm): F.Cu 上 C9 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(26.0000 mm, 27.5000 mm): 封装 C9
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(34.1900 mm, 6.5000 mm): J3 的PTH 焊盘 1 [3V3]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(36.7300 mm, 6.5000 mm): J3 的PTH 焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(39.2700 mm, 6.5000 mm): J3 的PTH 焊盘 3 [OLED_SCL]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.8100 mm, 6.5000 mm): J3 的PTH 焊盘 4 [OLED_SDA]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(43.1750 mm, 15.0000 mm): F.Cu 上 R9 的焊盘 1 [VBUS_USB_C_RAW]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(44.8250 mm, 15.0000 mm): F.Cu 上 R9 的焊盘 2 [USB_C_VBUS_SENSE]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(44.0000 mm, 15.0000 mm): 封装 R9
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(32.8500 mm, 38.5000 mm): F.Cu 上 SW4 的焊盘 1 [BTN_NEXT]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(32.8500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(40.0000 mm, 36.0000 mm): 封装 SW4
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.9375 mm, 24.9500 mm): F.Cu 上 Q2 的焊盘 1 [USB_DTR]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.9375 mm, 23.0500 mm): F.Cu 上 Q2 的焊盘 2 [GND]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(41.0625 mm, 24.0000 mm): F.Cu 上 Q2 的焊盘 3 [ESP_IO0]
+[items_not_allowed]: 不允许的项目 (keepout area)
+    规则: keepout area; error
+    @(42.0000 mm, 24.0000 mm): 封装 Q2
+[shorting_items]: 短路了两个不同网络的项目 (网络 USB_C_DP 和 LED_R_DRV)
+    局部重写; error
+    @(41.0500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+    @(41.0000 mm, 11.6750 mm): F.Cu 上 R13 的焊盘 2 [LED_R_DRV]
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 LED_G_DRV)
+    局部重写; error
+    @(42.9500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 2 [GND]
+    @(43.0000 mm, 11.6750 mm): F.Cu 上 R14 的焊盘 2 [LED_G_DRV]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1250 mm)
+    规则: netclass 'Default'; error
+    @(44.4500 mm, 10.7000 mm): F.Cu 上 D10 的焊盘 4 [LED_B]
+    @(45.0000 mm, 11.6750 mm): F.Cu 上 R15 的焊盘 2 [LED_B_DRV]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A1 [GND]
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B12 [<no net>]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A4 [VBUS_USB_C_RAW]
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B9 [<no net>]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1661 mm)
+    规则: netclass 'Default'; error
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A4 [VBUS_USB_C_RAW]
+    @(36.7300 mm, 6.5000 mm): J3 的PTH 焊盘 2 [GND]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1305 mm)
+    规则: netclass 'Default'; error
+    @(36.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A5 [USB_CC1]
+    @(36.7300 mm, 6.5000 mm): J3 的PTH 焊盘 2 [GND]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1618 mm)
+    规则: netclass 'Default'; error
+    @(34.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A7 [USB_C_DN]
+    @(34.1900 mm, 6.5000 mm): J3 的PTH 焊盘 1 [3V3]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1171 mm)
+    规则: netclass 'Default'; error
+    @(33.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A8 [<no net>]
+    @(34.1900 mm, 6.5000 mm): J3 的PTH 焊盘 1 [3V3]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(32.5500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A9 [<no net>]
+    @(32.5500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B4 [<no net>]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(31.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A12 [<no net>]
+    @(31.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B1 [<no net>]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0700 mm)
+    规则: netclass 'Default'; error
+    @(34.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B6 [<no net>]
+    @(34.1900 mm, 6.5000 mm): J3 的PTH 焊盘 1 [3V3]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0700 mm)
+    规则: netclass 'Default'; error
+    @(36.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B8 [<no net>]
+    @(36.7300 mm, 6.5000 mm): J3 的PTH 焊盘 2 [GND]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1661 mm)
+    规则: netclass 'Default'; error
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B9 [<no net>]
+    @(36.7300 mm, 6.5000 mm): J3 的PTH 焊盘 2 [GND]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B12 [<no net>]
+    @(39.0000 mm, 8.1750 mm): F.Cu 上 R1 的焊盘 2 [GND]
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 OLED_SCL)
+    局部重写; error
+    @(39.3200 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+    @(39.2700 mm, 6.5000 mm): J3 的PTH 焊盘 3 [OLED_SCL]
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 3V3)
+    局部重写; error
+    @(22.8500 mm, 31.5000 mm): F.Cu 上 SW2 的焊盘 2 [GND]
+    @(24.0000 mm, 30.8250 mm): F.Cu 上 R3 的焊盘 1 [3V3]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(15.8625 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 1 [5V_SYS]
+    @(15.6400 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 32 [<no net>]
+[shorting_items]: 短路了两个不同网络的项目 (网络 5V_SYS 和 OLED_SDA)
+    局部重写; error
+    @(15.8625 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 1 [5V_SYS]
+    @(16.9100 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 33 [OLED_SDA]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1150 mm)
+    规则: netclass 'Default'; error
+    @(18.1375 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 5 [3V3]
+    @(16.9100 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 33 [OLED_SDA]
+[shorting_items]: 短路了两个不同网络的项目 (网络 3V3 和 UART0_RX)
+    局部重写; error
+    @(18.1375 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 5 [3V3]
+    @(18.1800 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 34 [UART0_RX]
+[shorting_items]: 短路了两个不同网络的项目 (网络 3V3 和 GND)
+    局部重写; error
+    @(24.0000 mm, 30.8250 mm): F.Cu 上 R3 的焊盘 1 [3V3]
+    @(25.1500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0500 mm)
+    规则: netclass 'Default'; error
+    @(24.0000 mm, 29.1750 mm): F.Cu 上 R3 的焊盘 2 [ESP_EN]
+    @(24.0000 mm, 28.2750 mm): F.Cu 上 C8 的焊盘 1 [3V3]
+[shorting_items]: 短路了两个不同网络的项目 (网络 3V3 和 BTN_BACK)
+    局部重写; error
+    @(22.0000 mm, 27.7750 mm): F.Cu 上 C2 的焊盘 1 [3V3]
+    @(21.9900 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 37 [BTN_BACK]
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 BTN_BACK)
+    局部重写; error
+    @(22.0000 mm, 26.2250 mm): F.Cu 上 C2 的焊盘 2 [GND]
+    @(21.9900 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 37 [BTN_BACK]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1250 mm)
+    规则: netclass 'Default'; error
+    @(13.1000 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 9 [<no net>]
+    @(12.4000 mm, 7.5000 mm): F.Cu 上 F1 的焊盘 2 [VBUS_USB_C_PROT]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1250 mm)
+    规则: netclass 'Default'; error
+    @(11.8300 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 10 [LED_R]
+    @(12.4000 mm, 7.5000 mm): F.Cu 上 F1 的焊盘 2 [VBUS_USB_C_PROT]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1486 mm)
+    规则: netclass 'Default'; error
+    @(10.5600 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 11 [LED_G]
+    @(9.6000 mm, 7.5000 mm): F.Cu 上 F1 的焊盘 1 [VBUS_USB_C_RAW]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1250 mm)
+    规则: netclass 'Default'; error
+    @(9.2900 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 12 [LED_B]
+    @(9.6000 mm, 7.5000 mm): F.Cu 上 F1 的焊盘 1 [VBUS_USB_C_RAW]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(11.8300 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 29 [<no net>]
+    @(12.0000 mm, 26.2250 mm): F.Cu 上 C1 的焊盘 2 [GND]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(11.8300 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 29 [<no net>]
+    @(12.0000 mm, 27.7750 mm): F.Cu 上 C1 的焊盘 1 [5V_SYS]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1750 mm)
+    规则: netclass 'Default'; error
+    @(13.1000 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 30 [BTN_OK]
+    @(12.0000 mm, 26.2250 mm): F.Cu 上 C1 的焊盘 2 [GND]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.1781 mm)
+    规则: netclass 'Default'; error
+    @(13.1000 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 30 [BTN_OK]
+    @(12.0000 mm, 27.7750 mm): F.Cu 上 C1 的焊盘 1 [5V_SYS]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0000 mm)
+    规则: netclass 'Default'; error
+    @(23.2600 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 38 [<no net>]
+    @(24.0000 mm, 26.7250 mm): F.Cu 上 C8 的焊盘 2 [GND]
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 BUZZER_CTRL)
+    局部重写; error
+    @(42.8500 mm, 33.5000 mm): F.Cu 上 SW5 的焊盘 2 [GND]
+    @(44.1750 mm, 33.0000 mm): F.Cu 上 R17 的焊盘 1 [BUZZER_CTRL]
+[shorting_items]: 短路了两个不同网络的项目 (网络 3V3 和 GND)
+    局部重写; error
+    @(26.0000 mm, 30.8250 mm): F.Cu 上 R4 的焊盘 1 [3V3]
+    @(25.1500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[clearance]: 间距违规 (netclass 'Default' 间距 0.2000 mm; 实际 0.0500 mm)
+    规则: netclass 'Default'; error
+    @(26.0000 mm, 29.1750 mm): F.Cu 上 R4 的焊盘 2 [ESP_IO0]
+    @(26.0000 mm, 28.2750 mm): F.Cu 上 C9 的焊盘 1 [3V3]
+[shorting_items]: 短路了两个不同网络的项目 (网络 BUZZER_SW 和 GND)
+    局部重写; error
+    @(48.0625 mm, 33.0000 mm): F.Cu 上 Q3 的焊盘 3 [BUZZER_SW]
+    @(47.1500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+[shorting_items]: 短路了两个不同网络的项目 (网络 BUZZER_CTRL_DRV 和 GND)
+    局部重写; error
+    @(45.8250 mm, 33.0000 mm): F.Cu 上 R17 的焊盘 2 [BUZZER_CTRL_DRV]
+    @(47.1500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+[shorting_items]: 短路了两个不同网络的项目 (网络 ESP_IO0 和 UART0_RX)
+    局部重写; error
+    @(10.8500 mm, 36.5000 mm): F.Cu 上 SW1 的焊盘 1 [ESP_IO0]
+    @(12.0000 mm, 36.5000 mm): F.Cu 上 TP6 的焊盘 1 [UART0_RX]
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 3V3)
+    局部重写; error
+    @(57.0000 mm, 28.2250 mm): F.Cu 上 C6 的焊盘 2 [GND]
+    @(57.0000 mm, 27.8250 mm): F.Cu 上 R6 的焊盘 1 [3V3]
+[shorting_items]: 短路了两个不同网络的项目 (网络 GND 和 3V3)
+    局部重写; error
+    @(57.0000 mm, 12.2250 mm): F.Cu 上 C4 的焊盘 2 [GND]
+    @(57.0000 mm, 11.8250 mm): F.Cu 上 R5 的焊盘 1 [3V3]
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(59.0000 mm, 29.0000 mm): 封装 C7
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(59.0000 mm, 29.0000 mm): 封装 C7
+    @(58.0000 mm, 33.0000 mm): 封装 BZ1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(42.0000 mm, 10.5000 mm): 封装 U5
+    @(46.0000 mm, 10.0000 mm): 封装 D10
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(42.0000 mm, 10.5000 mm): 封装 U5
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(42.0000 mm, 10.5000 mm): 封装 U5
+    @(41.0000 mm, 12.5000 mm): 封装 R13
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(42.0000 mm, 10.5000 mm): 封装 U5
+    @(43.0000 mm, 12.5000 mm): 封装 R14
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(42.0000 mm, 10.5000 mm): 封装 U5
+    @(41.0000 mm, 9.0000 mm): 封装 R2
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(46.0000 mm, 10.0000 mm): 封装 D10
+    @(45.0000 mm, 12.5000 mm): 封装 R15
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(46.0000 mm, 10.0000 mm): 封装 D10
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(46.0000 mm, 10.0000 mm): 封装 D10
+    @(43.0000 mm, 12.5000 mm): 封装 R14
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(35.0000 mm, 4.2000 mm): 封装 J1
+    @(39.0000 mm, 9.0000 mm): 封装 R1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(35.0000 mm, 4.2000 mm): 封装 J1
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(35.0000 mm, 4.2000 mm): 封装 J1
+    @(41.0000 mm, 9.0000 mm): 封装 R2
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(24.0000 mm, 30.0000 mm): 封装 R3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(22.0000 mm, 27.0000 mm): 封装 C2
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(24.0000 mm, 27.5000 mm): 封装 C8
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(26.0000 mm, 30.0000 mm): 封装 R4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(28.0000 mm, 30.0000 mm): 封装 C3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(26.0000 mm, 27.5000 mm): 封装 C9
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+    @(40.0000 mm, 36.0000 mm): 封装 SW4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(46.0000 mm, 20.0000 mm): 封装 R7
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(45.0000 mm, 12.5000 mm): 封装 R15
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(17.0000 mm, 28.0000 mm): 封装 U4
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(17.0000 mm, 28.0000 mm): 封装 U4
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(24.0000 mm, 30.0000 mm): 封装 R3
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(24.0000 mm, 30.0000 mm): 封装 R3
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(24.0000 mm, 30.0000 mm): 封装 R3
+    @(24.0000 mm, 27.5000 mm): 封装 C8
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(24.0000 mm, 30.0000 mm): 封装 R3
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(39.0000 mm, 9.0000 mm): 封装 R1
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(22.0000 mm, 27.0000 mm): 封装 C2
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(22.0000 mm, 27.0000 mm): 封装 C2
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(42.0000 mm, 20.0000 mm): 封装 Q1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(41.0000 mm, 12.5000 mm): 封装 R13
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(18.0000 mm, 7.5000 mm): 封装 D1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(11.0000 mm, 7.5000 mm): 封装 F1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(24.0000 mm, 27.5000 mm): 封装 C8
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(43.0000 mm, 12.5000 mm): 封装 R14
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(26.0000 mm, 30.0000 mm): 封装 R4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(12.0000 mm, 27.0000 mm): 封装 C1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(44.0000 mm, 17.0000 mm): 封装 R10
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(41.0000 mm, 9.0000 mm): 封装 R2
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(28.0000 mm, 30.0000 mm): 封装 C3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(10.0000 mm, 22.0000 mm): 封装 D3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(45.0000 mm, 33.0000 mm): 封装 R17
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(46.0000 mm, 24.0000 mm): 封装 R8
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(26.0000 mm, 27.5000 mm): 封装 C9
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(44.0000 mm, 15.0000 mm): 封装 R9
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(40.0000 mm, 36.0000 mm): 封装 SW4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(42.0000 mm, 24.0000 mm): 封装 Q2
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+    @(10.0000 mm, 18.0000 mm): 封装 R16
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(56.0000 mm, 33.0000 mm): 封装 R12
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(56.0000 mm, 33.0000 mm): 封装 R12
+    @(58.0000 mm, 33.0000 mm): 封装 BZ1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+    @(58.0000 mm, 33.0000 mm): 封装 BZ1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+    @(49.0000 mm, 33.0000 mm): 封装 Q3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+    @(45.0000 mm, 33.0000 mm): 封装 R17
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+    @(57.0000 mm, 29.0000 mm): 封装 C6
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+    @(56.0000 mm, 31.0000 mm): 封装 R11
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+    @(40.0000 mm, 36.0000 mm): 封装 SW4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+    @(26.0000 mm, 30.0000 mm): 封装 R4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+    @(28.0000 mm, 30.0000 mm): 封装 C3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+    @(40.0000 mm, 36.0000 mm): 封装 SW4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(24.0000 mm, 27.5000 mm): 封装 C8
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(26.0000 mm, 30.0000 mm): 封装 R4
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(26.0000 mm, 30.0000 mm): 封装 R4
+    @(26.0000 mm, 27.5000 mm): 封装 C9
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(58.0000 mm, 33.0000 mm): 封装 BZ1
+    @(57.0000 mm, 29.0000 mm): 封装 C6
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(58.0000 mm, 33.0000 mm): 封装 BZ1
+    @(56.0000 mm, 31.0000 mm): 封装 R11
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(58.0000 mm, 33.0000 mm): 封装 BZ1
+    @(57.0000 mm, 27.0000 mm): 封装 R6
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(58.0000 mm, 33.0000 mm): 封装 BZ1
+    @(52.0000 mm, 26.0000 mm): 封装 U3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(12.0000 mm, 27.0000 mm): 封装 C1
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(49.0000 mm, 33.0000 mm): 封装 Q3
+    @(40.0000 mm, 36.0000 mm): 封装 SW4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(45.0000 mm, 33.0000 mm): 封装 R17
+    @(40.0000 mm, 36.0000 mm): 封装 SW4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+    @(26.0000 mm, 27.5000 mm): 封装 C9
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+    @(16.0000 mm, 33.0000 mm): 封装 TP3
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+    @(12.0000 mm, 36.5000 mm): 封装 TP6
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+    @(20.0000 mm, 33.0000 mm): 封装 TP4
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+    @(20.0000 mm, 36.5000 mm): 封装 TP8
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+    @(16.0000 mm, 36.5000 mm): 封装 TP7
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+    @(12.0000 mm, 33.0000 mm): 封装 TP2
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(57.0000 mm, 29.0000 mm): 封装 C6
+    @(56.0000 mm, 31.0000 mm): 封装 R11
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(57.0000 mm, 29.0000 mm): 封装 C6
+    @(57.0000 mm, 27.0000 mm): 封装 R6
+[courtyards_overlap]: 元件外框重叠
+    规则: board setup constraints courtyard; error
+    @(57.0000 mm, 13.0000 mm): 封装 C4
+    @(57.0000 mm, 11.0000 mm): 封装 R5
+[copper_edge_clearance]: 电路板边缘间距违规 (board setup constraints edge 间距 0.5000 mm; 实际 0.3500 mm)
+    规则: board setup constraints edge; error
+    @(70.0000 mm, 0.0000 mm): Edge.Cuts 上的 线段
+    @(68.4000 mm, 14.0000 mm): J2 的 NPTH 焊盘
+[copper_edge_clearance]: 电路板边缘间距违规 (board setup constraints edge 间距 0.5000 mm; 实际 0.3500 mm)
+    规则: board setup constraints edge; error
+    @(70.0000 mm, 0.0000 mm): Edge.Cuts 上的 线段
+    @(68.4000 mm, 26.0000 mm): J2 的 NPTH 焊盘
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(16.2400 mm, 15.1000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(14.8400 mm, 15.1000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(16.9400 mm, 15.8000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(15.5400 mm, 15.8000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(14.1400 mm, 15.8000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(16.2400 mm, 16.5000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(14.8400 mm, 16.5000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(16.9400 mm, 17.2000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(15.5400 mm, 17.2000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(14.1400 mm, 17.2000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(16.2400 mm, 17.9000 mm): U1 的PTH 焊盘 39 [<no net>]
+[drill_out_of_range]: 孔径超出范围 (电路板配置约束 最小孔径 0.3000 mm; 实际 0.2000 mm)
+    规则: board setup constraints; error
+    @(14.8400 mm, 17.9000 mm): U1 的PTH 焊盘 39 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(41.0500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+    @(41.0000 mm, 11.6750 mm): F.Cu 上 R13 的焊盘 2 [LED_R_DRV]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(42.9500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 2 [GND]
+    @(43.0000 mm, 11.6750 mm): F.Cu 上 R14 的焊盘 2 [LED_G_DRV]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A1 [GND]
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B12 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A4 [VBUS_USB_C_RAW]
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B9 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(32.5500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A9 [<no net>]
+    @(32.5500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B4 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(31.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A12 [<no net>]
+    @(31.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B1 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B12 [<no net>]
+    @(39.0000 mm, 8.1750 mm): F.Cu 上 R1 的焊盘 2 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(39.3200 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+    @(39.2700 mm, 6.5000 mm): J3 的PTH 焊盘 3 [OLED_SCL]
+[solder_mask_bridge]: 底层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(39.3200 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+    @(39.2700 mm, 6.5000 mm): J3 的PTH 焊盘 3 [OLED_SCL]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(22.8500 mm, 31.5000 mm): F.Cu 上 SW2 的焊盘 2 [GND]
+    @(24.0000 mm, 30.8250 mm): F.Cu 上 R3 的焊盘 1 [3V3]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(15.8625 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 1 [5V_SYS]
+    @(15.6400 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 32 [<no net>]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(15.8625 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 1 [5V_SYS]
+    @(16.9100 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 33 [OLED_SDA]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(18.1375 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 5 [3V3]
+    @(18.1800 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 34 [UART0_RX]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(24.0000 mm, 30.8250 mm): F.Cu 上 R3 的焊盘 1 [3V3]
+    @(25.1500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(22.0000 mm, 27.7750 mm): F.Cu 上 C2 的焊盘 1 [3V3]
+    @(21.9900 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 37 [BTN_BACK]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(22.0000 mm, 26.2250 mm): F.Cu 上 C2 的焊盘 2 [GND]
+    @(21.9900 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 37 [BTN_BACK]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(11.8300 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 29 [<no net>]
+    @(12.0000 mm, 27.7750 mm): F.Cu 上 C1 的焊盘 1 [5V_SYS]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(11.8300 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 29 [<no net>]
+    @(12.0000 mm, 26.2250 mm): F.Cu 上 C1 的焊盘 2 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(23.2600 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 38 [<no net>]
+    @(24.0000 mm, 26.7250 mm): F.Cu 上 C8 的焊盘 2 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(42.8500 mm, 33.5000 mm): F.Cu 上 SW5 的焊盘 2 [GND]
+    @(44.1750 mm, 33.0000 mm): F.Cu 上 R17 的焊盘 1 [BUZZER_CTRL]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(26.0000 mm, 30.8250 mm): F.Cu 上 R4 的焊盘 1 [3V3]
+    @(25.1500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(48.0625 mm, 33.0000 mm): F.Cu 上 Q3 的焊盘 3 [BUZZER_SW]
+    @(47.1500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(45.8250 mm, 33.0000 mm): F.Cu 上 R17 的焊盘 2 [BUZZER_CTRL_DRV]
+    @(47.1500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(10.8500 mm, 36.5000 mm): F.Cu 上 SW1 的焊盘 1 [ESP_IO0]
+    @(12.0000 mm, 36.5000 mm): F.Cu 上 TP6 的焊盘 1 [UART0_RX]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(57.0000 mm, 28.2250 mm): F.Cu 上 C6 的焊盘 2 [GND]
+    @(57.0000 mm, 27.8250 mm): F.Cu 上 R6 的焊盘 1 [3V3]
+[solder_mask_bridge]: 顶层阻焊开窗区域与不同网络的项目相连
+    规则: <电路板配置> 中的 "阻焊层最小宽度"; error
+    @(57.0000 mm, 12.2250 mm): F.Cu 上 C4 的焊盘 2 [GND]
+    @(57.0000 mm, 11.8250 mm): F.Cu 上 R5 的焊盘 1 [3V3]
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(25.4000 mm, 40.2000 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(36.2000 mm, 38.6000 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(43.8000 mm, 39.4500 mm): SW5 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(56.2000 mm, 39.4500 mm): SW5 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(23.8000 mm, 39.4500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(36.2000 mm, 39.4500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 0.0000 mm): Edge.Cuts 上的 线段
+    @(61.5000 mm, 12.0000 mm): J2 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 0.0000 mm): Edge.Cuts 上的 线段
+    @(70.5000 mm, 28.0000 mm): J2 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(13.4000 mm, 40.2000 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(24.2000 mm, 38.6000 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(33.8000 mm, 39.4500 mm): SW4 的 线段, 位于 F.Silkscreen
+[silk_edge_clearance]: 被板边截断的丝印
+    规则: board setup constraints silk; warning
+    @(70.0000 mm, 40.0000 mm): Edge.Cuts 上的 线段
+    @(46.2000 mm, 39.4500 mm): SW4 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(40.4400 mm, 9.7400 mm): U5 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(43.5000 mm, 11.6000 mm): D10 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(43.5000 mm, 11.6000 mm): D10 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(39.7000 mm, 6.1000 mm): J1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(23.8000 mm, 30.5500 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(23.8000 mm, 35.5500 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(23.8000 mm, 37.4500 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(25.4000 mm, 27.8000 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(25.4000 mm, 40.2000 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(34.6000 mm, 27.8000 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(36.2000 mm, 35.5500 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(36.2000 mm, 37.4500 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(36.2000 mm, 38.6000 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(16.0900 mm, 26.4400 mm): U4 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(16.0900 mm, 26.4900 mm): U4 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(17.9100 mm, 26.4400 mm): U4 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(15.5500 mm, 26.4900 mm): U4 的 多边形, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(38.4775 mm, 9.2373 mm): R1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(21.4900 mm, 27.1406 mm): C2 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(55.7627 mm, 33.5225 mm): R12 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(43.8000 mm, 32.5500 mm): SW5 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(56.2000 mm, 31.4000 mm): SW5 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(23.8000 mm, 32.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(23.8000 mm, 37.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(25.4000 mm, 29.8000 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(36.2000 mm, 31.4000 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(36.2000 mm, 32.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(36.2000 mm, 37.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(15.6400 mm, 6.5000 mm): D1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(15.6400 mm, 8.5000 mm): D1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(23.4900 mm, 27.6406 mm): C8 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(53.3900 mm, 28.3900 mm): BZ1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(53.3900 mm, 31.0400 mm): BZ1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(11.4900 mm, 27.1406 mm): C1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(11.8000 mm, 35.5500 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(22.6000 mm, 27.8000 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(24.2000 mm, 29.4000 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(24.2000 mm, 30.5500 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(24.2000 mm, 38.6000 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(31.0000 mm, 4.0000 mm): J3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(31.0000 mm, 26.0000 mm): J3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(45.0000 mm, 4.0000 mm): J3 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(46.2000 mm, 32.5500 mm): SW4 的 线段, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(12.0000 mm, 36.5000 mm): TP6 的 圆形, 位于 F.Silkscreen
+[silk_over_copper]: 被阻焊层截断的丝印
+    局部重写; warning
+    @(12.0000 mm, 33.0000 mm): TP2 的 圆形, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(42.5600 mm, 9.7400 mm): U5 的 线段, 位于 F.Silkscreen
+    @(43.5000 mm, 11.6000 mm): D10 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(43.5000 mm, 11.6000 mm): D10 的 线段, 位于 F.Silkscreen
+    @(43.5600 mm, 9.7400 mm): U5 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(43.5000 mm, 11.6000 mm): D10 的 线段, 位于 F.Silkscreen
+    @(43.5600 mm, 11.2600 mm): U5 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(43.9000 mm, 8.4000 mm): D10 的 线段, 位于 F.Silkscreen
+    @(45.0000 mm, 4.0000 mm): J3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(43.5000 mm, 11.6000 mm): D10 的 线段, 位于 F.Silkscreen
+    @(45.0000 mm, 4.0000 mm): J3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(39.7000 mm, 6.1000 mm): J1 的 线段, 位于 F.Silkscreen
+    @(31.0000 mm, 4.0000 mm): J3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(25.4000 mm, 27.8000 mm): SW2 的 线段, 位于 F.Silkscreen
+    @(24.2000 mm, 29.4000 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(44.6000 mm, 29.8000 mm): SW4 的 线段, 位于 F.Silkscreen
+    @(36.2000 mm, 30.5500 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(12.0000 mm, 36.5000 mm): TP6 的 圆形, 位于 F.Silkscreen
+    @(11.8000 mm, 35.5500 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(11.8000 mm, 35.5500 mm): SW1 的 线段, 位于 F.Silkscreen
+    @(12.0000 mm, 33.0000 mm): TP2 的 圆形, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(12.0000 mm, 36.5000 mm): TP6 的 圆形, 位于 F.Silkscreen
+    @(11.8000 mm, 37.4500 mm): SW1 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(22.6000 mm, 27.8000 mm): SW1 的 线段, 位于 F.Silkscreen
+    @(17.9100 mm, 27.6100 mm): U4 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(23.8000 mm, 37.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+    @(23.8000 mm, 35.5500 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(23.8000 mm, 35.5500 mm): SW2 的 线段, 位于 F.Silkscreen
+    @(23.8000 mm, 32.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(23.8000 mm, 37.4500 mm): SW2 的 线段, 位于 F.Silkscreen
+    @(23.8000 mm, 37.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(24.2000 mm, 38.6000 mm): SW1 的 线段, 位于 F.Silkscreen
+    @(25.4000 mm, 40.2000 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(61.5000 mm, 12.0000 mm): J2 的 线段, 位于 F.Silkscreen
+    @(62.0000 mm, 15.3600 mm): D2 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(61.5000 mm, 12.0000 mm): J2 的 线段, 位于 F.Silkscreen
+    @(64.0000 mm, 15.3600 mm): D2 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(56.2000 mm, 32.5500 mm): SW5 的 线段, 位于 F.Silkscreen
+    @(55.7627 mm, 32.4775 mm): R12 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(55.7627 mm, 31.5225 mm): R11 的 线段, 位于 F.Silkscreen
+    @(56.2000 mm, 32.5500 mm): SW5 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(62.6100 mm, 37.6100 mm): BZ1 的 线段, 位于 F.Silkscreen
+    @(56.2000 mm, 37.5500 mm): SW5 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(61.5000 mm, 28.0000 mm): J2 的 线段, 位于 F.Silkscreen
+    @(61.5100 mm, 21.2400 mm): U6 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(61.5000 mm, 28.0000 mm): J2 的 线段, 位于 F.Silkscreen
+    @(61.5600 mm, 21.2400 mm): U6 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(61.5000 mm, 28.0000 mm): J2 的 线段, 位于 F.Silkscreen
+    @(61.5600 mm, 22.7600 mm): U6 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(46.2000 mm, 40.6000 mm): SW4 的 线段, 位于 F.Silkscreen
+    @(45.4000 mm, 42.2000 mm): SW5 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(54.6000 mm, 29.8000 mm): SW5 的 线段, 位于 F.Silkscreen
+    @(53.3900 mm, 31.0400 mm): BZ1 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(33.8000 mm, 39.4500 mm): SW4 的 线段, 位于 F.Silkscreen
+    @(34.6000 mm, 40.2000 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(36.2000 mm, 35.5500 mm): SW2 的 线段, 位于 F.Silkscreen
+    @(36.2000 mm, 32.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(36.2000 mm, 37.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+    @(36.2000 mm, 35.5500 mm): SW2 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(36.2000 mm, 31.4000 mm): SW3 的 线段, 位于 F.Silkscreen
+    @(35.4000 mm, 29.8000 mm): SW4 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(25.4775 mm, 30.2373 mm): R4 的 线段, 位于 F.Silkscreen
+    @(25.4000 mm, 29.8000 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(25.4775 mm, 30.2373 mm): R4 的 线段, 位于 F.Silkscreen
+    @(34.6000 mm, 29.8000 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(36.2000 mm, 37.4500 mm): SW2 的 线段, 位于 F.Silkscreen
+    @(36.2000 mm, 37.5500 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(35.4000 mm, 42.2000 mm): SW4 的 线段, 位于 F.Silkscreen
+    @(36.2000 mm, 40.6000 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(26.5225 mm, 30.2373 mm): R4 的 线段, 位于 F.Silkscreen
+    @(34.6000 mm, 29.8000 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(27.4900 mm, 30.1406 mm): C3 的 线段, 位于 F.Silkscreen
+    @(34.6000 mm, 29.8000 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(28.5100 mm, 30.1406 mm): C3 的 线段, 位于 F.Silkscreen
+    @(34.6000 mm, 29.8000 mm): SW3 的 线段, 位于 F.Silkscreen
+[silk_overlap]: 丝印重叠
+    规则: board setup constraints silk; warning
+    @(45.4000 mm, 29.8000 mm): SW5 的 线段, 位于 F.Silkscreen
+    @(46.2000 mm, 31.4000 mm): SW4 的 线段, 位于 F.Silkscreen
+
+** Found 131 unconnected pads **
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(8.0000 mm, 33.0000 mm): F.Cu 上 TP1 的焊盘 1 [3V3]
+    @(18.1375 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 5 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(10.0000 mm, 18.8250 mm): F.Cu 上 R16 的焊盘 1 [3V3]
+    @(18.1375 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 5 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(21.9900 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 2 [3V3]
+    @(10.0000 mm, 18.8250 mm): F.Cu 上 R16 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(22.0000 mm, 27.7750 mm): F.Cu 上 C2 的焊盘 1 [3V3]
+    @(24.0000 mm, 28.2750 mm): F.Cu 上 C8 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(22.0000 mm, 27.7750 mm): F.Cu 上 C2 的焊盘 1 [3V3]
+    @(18.1375 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 5 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(24.0000 mm, 30.8250 mm): F.Cu 上 R3 的焊盘 1 [3V3]
+    @(26.0000 mm, 30.8250 mm): F.Cu 上 R4 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(26.0000 mm, 28.2750 mm): F.Cu 上 C9 的焊盘 1 [3V3]
+    @(24.0000 mm, 28.2750 mm): F.Cu 上 C8 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(26.0000 mm, 30.8250 mm): F.Cu 上 R4 的焊盘 1 [3V3]
+    @(26.0000 mm, 28.2750 mm): F.Cu 上 C9 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(34.1900 mm, 6.5000 mm): J3 的PTH 焊盘 1 [3V3]
+    @(21.9900 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 2 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 12.7500 mm): F.Cu 上 U2 的焊盘 5 [3V3]
+    @(34.1900 mm, 6.5000 mm): J3 的PTH 焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 13.2500 mm): F.Cu 上 U2 的焊盘 6 [3V3]
+    @(50.0375 mm, 12.7500 mm): F.Cu 上 U2 的焊盘 5 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 26.7500 mm): F.Cu 上 U3 的焊盘 5 [3V3]
+    @(50.0375 mm, 27.2500 mm): F.Cu 上 U3 的焊盘 6 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 26.7500 mm): F.Cu 上 U3 的焊盘 5 [3V3]
+    @(50.7500 mm, 13.9625 mm): F.Cu 上 U2 的焊盘 7 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.7500 mm, 13.9625 mm): F.Cu 上 U2 的焊盘 7 [3V3]
+    @(51.7500 mm, 13.9625 mm): F.Cu 上 U2 的焊盘 9 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.7500 mm, 13.9625 mm): F.Cu 上 U2 的焊盘 7 [3V3]
+    @(50.0375 mm, 13.2500 mm): F.Cu 上 U2 的焊盘 6 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.7500 mm, 27.9625 mm): F.Cu 上 U3 的焊盘 7 [3V3]
+    @(51.7500 mm, 27.9625 mm): F.Cu 上 U3 的焊盘 9 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.7500 mm, 27.9625 mm): F.Cu 上 U3 的焊盘 7 [3V3]
+    @(50.0375 mm, 27.2500 mm): F.Cu 上 U3 的焊盘 6 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(51.7500 mm, 13.9625 mm): F.Cu 上 U2 的焊盘 9 [3V3]
+    @(57.0000 mm, 13.7750 mm): F.Cu 上 C4 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(51.7500 mm, 27.9625 mm): F.Cu 上 U3 的焊盘 9 [3V3]
+    @(57.0000 mm, 27.8250 mm): F.Cu 上 R6 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(53.6500 mm, 33.0000 mm): F.Cu 上 BZ1 的焊盘 1 [3V3]
+    @(57.0000 mm, 29.7750 mm): F.Cu 上 C6 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(57.0000 mm, 11.8250 mm): F.Cu 上 R5 的焊盘 1 [3V3]
+    @(57.0000 mm, 13.7750 mm): F.Cu 上 C4 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(57.0000 mm, 13.7750 mm): F.Cu 上 C4 的焊盘 1 [3V3]
+    @(59.0000 mm, 13.7750 mm): F.Cu 上 C5 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(57.0000 mm, 29.7750 mm): F.Cu 上 C6 的焊盘 1 [3V3]
+    @(57.0000 mm, 27.8250 mm): F.Cu 上 R6 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(57.0000 mm, 29.7750 mm): F.Cu 上 C6 的焊盘 1 [3V3]
+    @(59.0000 mm, 29.7750 mm): F.Cu 上 C7 的焊盘 1 [3V3]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(12.0000 mm, 27.7750 mm): F.Cu 上 C1 的焊盘 1 [5V_SYS]
+    @(15.8625 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 1 [5V_SYS]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(15.8625 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 1 [5V_SYS]
+    @(19.6500 mm, 7.5000 mm): F.Cu 上 D1 的焊盘 2 [5V_SYS]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(15.8625 mm, 28.9500 mm): F.Cu 上 U4 的焊盘 3 [5V_SYS]
+    @(15.8625 mm, 27.0500 mm): F.Cu 上 U4 的焊盘 1 [5V_SYS]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(63.0000 mm, 11.3500 mm): F.Cu 上 D2 的焊盘 2 [5V_SYS]
+    @(19.6500 mm, 7.5000 mm): F.Cu 上 D1 的焊盘 2 [5V_SYS]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(21.9900 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 37 [BTN_BACK]
+    @(42.8500 mm, 38.5000 mm): F.Cu 上 SW5 的焊盘 1 [BTN_BACK]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(42.8500 mm, 38.5000 mm): F.Cu 上 SW5 的焊盘 1 [BTN_BACK]
+    @(57.1500 mm, 38.5000 mm): F.Cu 上 SW5 的焊盘 1 [BTN_BACK]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(14.3700 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 31 [BTN_NEXT]
+    @(32.8500 mm, 38.5000 mm): F.Cu 上 SW4 的焊盘 1 [BTN_NEXT]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(32.8500 mm, 38.5000 mm): F.Cu 上 SW4 的焊盘 1 [BTN_NEXT]
+    @(47.1500 mm, 38.5000 mm): F.Cu 上 SW4 的焊盘 1 [BTN_NEXT]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(13.1000 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 30 [BTN_OK]
+    @(22.8500 mm, 38.5000 mm): F.Cu 上 SW3 的焊盘 1 [BTN_OK]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(22.8500 mm, 38.5000 mm): F.Cu 上 SW3 的焊盘 1 [BTN_OK]
+    @(37.1500 mm, 38.5000 mm): F.Cu 上 SW3 的焊盘 1 [BTN_OK]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(8.0200 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 13 [BUZZER_CTRL]
+    @(44.1750 mm, 33.0000 mm): F.Cu 上 R17 的焊盘 1 [BUZZER_CTRL]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(45.8250 mm, 33.0000 mm): F.Cu 上 R17 的焊盘 2 [BUZZER_CTRL_DRV]
+    @(49.9375 mm, 33.9500 mm): F.Cu 上 Q3 的焊盘 1 [BUZZER_CTRL_DRV]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(48.0625 mm, 33.0000 mm): F.Cu 上 Q3 的焊盘 3 [BUZZER_SW]
+    @(62.3500 mm, 33.0000 mm): F.Cu 上 BZ1 的焊盘 2 [BUZZER_SW]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(16.0000 mm, 33.0000 mm): F.Cu 上 TP3 的焊盘 1 [ESP_EN]
+    @(22.8500 mm, 36.5000 mm): F.Cu 上 SW2 的焊盘 1 [ESP_EN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(24.0000 mm, 29.1750 mm): F.Cu 上 R3 的焊盘 2 [ESP_EN]
+    @(22.8500 mm, 36.5000 mm): F.Cu 上 SW2 的焊盘 1 [ESP_EN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(24.0000 mm, 29.1750 mm): F.Cu 上 R3 的焊盘 2 [ESP_EN]
+    @(20.7200 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 3 [ESP_EN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(28.0000 mm, 30.7750 mm): F.Cu 上 C3 的焊盘 1 [ESP_EN]
+    @(24.0000 mm, 29.1750 mm): F.Cu 上 R3 的焊盘 2 [ESP_EN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(37.1500 mm, 36.5000 mm): F.Cu 上 SW2 的焊盘 1 [ESP_EN]
+    @(28.0000 mm, 30.7750 mm): F.Cu 上 C3 的焊盘 1 [ESP_EN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(41.0625 mm, 20.0000 mm): F.Cu 上 Q1 的焊盘 3 [ESP_EN]
+    @(28.0000 mm, 30.7750 mm): F.Cu 上 C3 的焊盘 1 [ESP_EN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(6.7500 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 25 [ESP_IO0]
+    @(10.8500 mm, 36.5000 mm): F.Cu 上 SW1 的焊盘 1 [ESP_IO0]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(20.0000 mm, 33.0000 mm): F.Cu 上 TP4 的焊盘 1 [ESP_IO0]
+    @(25.1500 mm, 36.5000 mm): F.Cu 上 SW1 的焊盘 1 [ESP_IO0]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(20.0000 mm, 33.0000 mm): F.Cu 上 TP4 的焊盘 1 [ESP_IO0]
+    @(10.8500 mm, 36.5000 mm): F.Cu 上 SW1 的焊盘 1 [ESP_IO0]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(26.0000 mm, 29.1750 mm): F.Cu 上 R4 的焊盘 2 [ESP_IO0]
+    @(20.0000 mm, 33.0000 mm): F.Cu 上 TP4 的焊盘 1 [ESP_IO0]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(41.0625 mm, 24.0000 mm): F.Cu 上 Q2 的焊盘 3 [ESP_IO0]
+    @(26.0000 mm, 29.1750 mm): F.Cu 上 R4 的焊盘 2 [ESP_IO0]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(10.0000 mm, 22.7875 mm): F.Cu 上 D3 的焊盘 1 [GND]
+    @(12.0000 mm, 26.2250 mm): F.Cu 上 C1 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(10.8500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+    @(12.0000 mm, 33.0000 mm): F.Cu 上 TP2 的焊盘 1 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(12.0000 mm, 26.2250 mm): F.Cu 上 C1 的焊盘 2 [GND]
+    @(15.8625 mm, 28.0000 mm): F.Cu 上 U4 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(12.0000 mm, 26.2250 mm): F.Cu 上 C1 的焊盘 2 [GND]
+    @(10.8500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(15.8625 mm, 28.0000 mm): F.Cu 上 U4 的焊盘 2 [GND]
+    @(22.0000 mm, 26.2250 mm): F.Cu 上 C2 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(22.0000 mm, 26.2250 mm): F.Cu 上 C2 的焊盘 2 [GND]
+    @(24.0000 mm, 26.7250 mm): F.Cu 上 C8 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(22.8500 mm, 33.5000 mm): F.Cu 上 SW3 的焊盘 2 [GND]
+    @(22.8500 mm, 31.5000 mm): F.Cu 上 SW2 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(25.1500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+    @(22.8500 mm, 31.5000 mm): F.Cu 上 SW2 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(26.0000 mm, 26.7250 mm): F.Cu 上 C9 的焊盘 2 [GND]
+    @(24.0000 mm, 26.7250 mm): F.Cu 上 C8 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(26.0000 mm, 26.7250 mm): F.Cu 上 C9 的焊盘 2 [GND]
+    @(28.0000 mm, 29.2250 mm): F.Cu 上 C3 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(28.0000 mm, 29.2250 mm): F.Cu 上 C3 的焊盘 2 [GND]
+    @(25.1500 mm, 31.5000 mm): F.Cu 上 SW1 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(30.6800 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+    @(30.6800 mm, 3.1500 mm): J1 的PTH 焊盘 S1 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(30.6800 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+    @(23.2600 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 1 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(32.8500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+    @(37.1500 mm, 33.5000 mm): F.Cu 上 SW3 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(32.8500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+    @(28.0000 mm, 29.2250 mm): F.Cu 上 C3 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(36.7300 mm, 6.5000 mm): J3 的PTH 焊盘 2 [GND]
+    @(30.6800 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(37.1500 mm, 31.5000 mm): F.Cu 上 SW2 的焊盘 2 [GND]
+    @(37.1500 mm, 33.5000 mm): F.Cu 上 SW3 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(37.1500 mm, 33.5000 mm): F.Cu 上 SW3 的焊盘 2 [GND]
+    @(42.8500 mm, 33.5000 mm): F.Cu 上 SW5 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(38.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A1 [GND]
+    @(36.7300 mm, 6.5000 mm): J3 的PTH 焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(39.3200 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+    @(41.0000 mm, 8.1750 mm): F.Cu 上 R2 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(39.3200 mm, 7.3300 mm): J1 的PTH 焊盘 S1 [GND]
+    @(39.3200 mm, 3.1500 mm): J1 的PTH 焊盘 S1 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(42.8500 mm, 33.5000 mm): F.Cu 上 SW5 的焊盘 2 [GND]
+    @(47.1500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(42.9375 mm, 19.0500 mm): F.Cu 上 Q1 的焊盘 2 [GND]
+    @(42.9375 mm, 23.0500 mm): F.Cu 上 Q2 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(42.9500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 2 [GND]
+    @(41.0000 mm, 8.1750 mm): F.Cu 上 R2 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(42.9500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 2 [GND]
+    @(47.5500 mm, 10.7000 mm): F.Cu 上 D10 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(42.9500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 2 [GND]
+    @(44.8250 mm, 17.0000 mm): F.Cu 上 R10 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(44.8250 mm, 17.0000 mm): F.Cu 上 R10 的焊盘 2 [GND]
+    @(42.9375 mm, 19.0500 mm): F.Cu 上 Q1 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(47.1500 mm, 33.5000 mm): F.Cu 上 SW4 的焊盘 2 [GND]
+    @(49.9375 mm, 32.0500 mm): F.Cu 上 Q3 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 11.2500 mm): F.Cu 上 U2 的焊盘 2 [GND]
+    @(47.5500 mm, 10.7000 mm): F.Cu 上 D10 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 11.2500 mm): F.Cu 上 U2 的焊盘 2 [GND]
+    @(57.0000 mm, 12.2250 mm): F.Cu 上 C4 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 25.2500 mm): F.Cu 上 U3 的焊盘 2 [GND]
+    @(49.9375 mm, 32.0500 mm): F.Cu 上 Q3 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(56.8250 mm, 33.0000 mm): F.Cu 上 R12 的焊盘 2 [GND]
+    @(57.0000 mm, 28.2250 mm): F.Cu 上 C6 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(56.8250 mm, 33.0000 mm): F.Cu 上 R12 的焊盘 2 [GND]
+    @(49.9375 mm, 32.0500 mm): F.Cu 上 Q3 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(59.0000 mm, 12.2250 mm): F.Cu 上 C5 的焊盘 2 [GND]
+    @(57.0000 mm, 12.2250 mm): F.Cu 上 C4 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(59.0000 mm, 28.2250 mm): F.Cu 上 C7 的焊盘 2 [GND]
+    @(57.0000 mm, 28.2250 mm): F.Cu 上 C6 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(59.0000 mm, 28.2250 mm): F.Cu 上 C7 的焊盘 2 [GND]
+    @(59.0500 mm, 21.0625 mm): F.Cu 上 U6 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(59.0500 mm, 21.0625 mm): F.Cu 上 U6 的焊盘 2 [GND]
+    @(64.2000 mm, 16.2500 mm): F.Cu 上 J2 的焊盘 4 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(64.2000 mm, 16.2500 mm): F.Cu 上 J2 的焊盘 4 [GND]
+    @(59.0000 mm, 12.2250 mm): F.Cu 上 C5 的焊盘 2 [GND]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 26.2500 mm): F.Cu 上 U3 的焊盘 4 [HOST_DN]
+    @(60.0000 mm, 22.9375 mm): F.Cu 上 U6 的焊盘 3 [HOST_DN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(60.0000 mm, 22.9375 mm): F.Cu 上 U6 的焊盘 3 [HOST_DN]
+    @(64.2000 mm, 21.2500 mm): F.Cu 上 J2 的焊盘 2 [HOST_DN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 25.7500 mm): F.Cu 上 U3 的焊盘 3 [HOST_DP]
+    @(60.9500 mm, 21.0625 mm): F.Cu 上 U6 的焊盘 1 [HOST_DP]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(60.9500 mm, 21.0625 mm): F.Cu 上 U6 的焊盘 1 [HOST_DP]
+    @(64.2000 mm, 18.7500 mm): F.Cu 上 J2 的焊盘 3 [HOST_DP]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(55.1750 mm, 33.0000 mm): F.Cu 上 R12 的焊盘 1 [HOST_VBUS_SENSE]
+    @(56.8250 mm, 31.0000 mm): F.Cu 上 R11 的焊盘 2 [HOST_VBUS_SENSE]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(56.8250 mm, 31.0000 mm): F.Cu 上 R11 的焊盘 2 [HOST_VBUS_SENSE]
+    @(51.2500 mm, 27.9625 mm): F.Cu 上 U3 的焊盘 8 [HOST_VBUS_SENSE]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(44.4500 mm, 10.7000 mm): F.Cu 上 D10 的焊盘 4 [LED_B]
+    @(9.2900 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 12 [LED_B]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(45.0000 mm, 13.3250 mm): F.Cu 上 R15 的焊盘 1 [LED_B]
+    @(44.4500 mm, 10.7000 mm): F.Cu 上 D10 的焊盘 4 [LED_B]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(10.5600 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 11 [LED_G]
+    @(43.0000 mm, 13.3250 mm): F.Cu 上 R14 的焊盘 1 [LED_G]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(43.0000 mm, 13.3250 mm): F.Cu 上 R14 的焊盘 1 [LED_G]
+    @(44.4500 mm, 9.3000 mm): F.Cu 上 D10 的焊盘 3 [LED_G]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(11.8300 mm, 9.2500 mm): F.Cu 上 U1 的焊盘 10 [LED_R]
+    @(41.0000 mm, 13.3250 mm): F.Cu 上 R13 的焊盘 1 [LED_R]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(41.0000 mm, 13.3250 mm): F.Cu 上 R13 的焊盘 1 [LED_R]
+    @(47.5500 mm, 9.3000 mm): F.Cu 上 D10 的焊盘 1 [LED_R]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(20.7200 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 36 [OLED_SCL]
+    @(39.2700 mm, 6.5000 mm): J3 的PTH 焊盘 3 [OLED_SCL]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(16.9100 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 33 [OLED_SDA]
+    @(41.8100 mm, 6.5000 mm): J3 的PTH 焊盘 4 [OLED_SDA]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(10.0000 mm, 17.1750 mm): F.Cu 上 R16 的焊盘 2 [PWR_LED_N]
+    @(10.0000 mm, 21.2125 mm): F.Cu 上 D3 的焊盘 2 [PWR_LED_N]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(18.1800 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 34 [UART0_RX]
+    @(12.0000 mm, 36.5000 mm): F.Cu 上 TP6 的焊盘 1 [UART0_RX]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(52.7500 mm, 10.0375 mm): F.Cu 上 U2 的焊盘 20 [UART0_RX]
+    @(18.1800 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 34 [UART0_RX]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(19.4500 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 35 [UART0_TX]
+    @(8.0000 mm, 36.5000 mm): F.Cu 上 TP5 的焊盘 1 [UART0_TX]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(52.2500 mm, 10.0375 mm): F.Cu 上 U2 的焊盘 21 [UART0_TX]
+    @(19.4500 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 35 [UART0_TX]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(9.2900 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 27 [UART2_RX]
+    @(20.0000 mm, 36.5000 mm): F.Cu 上 TP8 的焊盘 1 [UART2_RX]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(20.0000 mm, 36.5000 mm): F.Cu 上 TP8 的焊盘 1 [UART2_RX]
+    @(52.7500 mm, 24.0375 mm): F.Cu 上 U3 的焊盘 20 [UART2_RX]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(10.5600 mm, 26.7500 mm): F.Cu 上 U1 的焊盘 28 [UART2_TX]
+    @(16.0000 mm, 36.5000 mm): F.Cu 上 TP7 的焊盘 1 [UART2_TX]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(16.0000 mm, 36.5000 mm): F.Cu 上 TP7 的焊盘 1 [UART2_TX]
+    @(52.2500 mm, 24.0375 mm): F.Cu 上 U3 的焊盘 21 [UART2_TX]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(36.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A5 [USB_CC1]
+    @(39.0000 mm, 9.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(39.0000 mm, 9.8250 mm): F.Cu 上 R1 的焊盘 1 [USB_CC1]
+    @(57.0000 mm, 10.1750 mm): F.Cu 上 R5 的焊盘 2 [USB_CC1]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(41.0000 mm, 9.8250 mm): F.Cu 上 R2 的焊盘 1 [USB_CC2]
+    @(33.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 B5 [USB_CC2]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(57.0000 mm, 26.1750 mm): F.Cu 上 R6 的焊盘 2 [USB_CC2]
+    @(41.0000 mm, 9.8250 mm): F.Cu 上 R2 的焊盘 1 [USB_CC2]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(42.0000 mm, 9.5625 mm): F.Cu 上 U5 的焊盘 3 [USB_C_DN]
+    @(34.7500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A7 [USB_C_DN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(50.0375 mm, 12.2500 mm): F.Cu 上 U2 的焊盘 4 [USB_C_DN]
+    @(42.0000 mm, 9.5625 mm): F.Cu 上 U5 的焊盘 3 [USB_C_DN]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(35.2500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A6 [USB_C_DP]
+    @(41.0500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(41.0500 mm, 11.4375 mm): F.Cu 上 U5 的焊盘 1 [USB_C_DP]
+    @(50.0375 mm, 11.7500 mm): F.Cu 上 U2 的焊盘 3 [USB_C_DP]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(44.8250 mm, 15.0000 mm): F.Cu 上 R9 的焊盘 2 [USB_C_VBUS_SENSE]
+    @(43.1750 mm, 17.0000 mm): F.Cu 上 R10 的焊盘 1 [USB_C_VBUS_SENSE]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(51.2500 mm, 13.9625 mm): F.Cu 上 U2 的焊盘 8 [USB_C_VBUS_SENSE]
+    @(44.8250 mm, 15.0000 mm): F.Cu 上 R9 的焊盘 2 [USB_C_VBUS_SENSE]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(45.1750 mm, 24.0000 mm): F.Cu 上 R8 的焊盘 1 [USB_DTR]
+    @(42.9375 mm, 24.9500 mm): F.Cu 上 Q2 的焊盘 1 [USB_DTR]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(46.8250 mm, 24.0000 mm): F.Cu 上 R8 的焊盘 2 [USB_DTR]
+    @(45.1750 mm, 24.0000 mm): F.Cu 上 R8 的焊盘 1 [USB_DTR]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(46.8250 mm, 24.0000 mm): F.Cu 上 R8 的焊盘 2 [USB_DTR]
+    @(51.2500 mm, 10.0375 mm): F.Cu 上 U2 的焊盘 23 [USB_DTR]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(45.1750 mm, 20.0000 mm): F.Cu 上 R7 的焊盘 1 [USB_RTS]
+    @(42.9375 mm, 20.9500 mm): F.Cu 上 Q1 的焊盘 1 [USB_RTS]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(46.8250 mm, 20.0000 mm): F.Cu 上 R7 的焊盘 2 [USB_RTS]
+    @(45.1750 mm, 20.0000 mm): F.Cu 上 R7 的焊盘 1 [USB_RTS]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(46.8250 mm, 20.0000 mm): F.Cu 上 R7 的焊盘 2 [USB_RTS]
+    @(53.2500 mm, 10.0375 mm): F.Cu 上 U2 的焊盘 19 [USB_RTS]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(63.0000 mm, 6.6000 mm): F.Cu 上 F2 的焊盘 2 [VBUS_HOST_PROT]
+    @(63.0000 mm, 14.6500 mm): F.Cu 上 D2 的焊盘 1 [VBUS_HOST_PROT]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(55.1750 mm, 31.0000 mm): F.Cu 上 R11 的焊盘 1 [VBUS_HOST_RAW]
+    @(64.2000 mm, 23.7500 mm): F.Cu 上 J2 的焊盘 1 [VBUS_HOST_RAW]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(64.2000 mm, 23.7500 mm): F.Cu 上 J2 的焊盘 1 [VBUS_HOST_RAW]
+    @(63.0000 mm, 9.4000 mm): F.Cu 上 F2 的焊盘 1 [VBUS_HOST_RAW]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(12.4000 mm, 7.5000 mm): F.Cu 上 F1 的焊盘 2 [VBUS_USB_C_PROT]
+    @(16.3500 mm, 7.5000 mm): F.Cu 上 D1 的焊盘 1 [VBUS_USB_C_PROT]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A4 [VBUS_USB_C_RAW]
+    @(9.6000 mm, 7.5000 mm): F.Cu 上 F1 的焊盘 1 [VBUS_USB_C_RAW]
+[unconnected_items]: 项目之间的连接缺失
+    局部重写; error
+    @(43.1750 mm, 15.0000 mm): F.Cu 上 R9 的焊盘 1 [VBUS_USB_C_RAW]
+    @(37.4500 mm, 8.2450 mm): F.Cu 上 J1 的焊盘 A4 [VBUS_USB_C_RAW]
+
+** Found 58 Footprint errors **
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(59.0000 mm, 29.0000 mm): 封装 C7
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(42.0000 mm, 10.5000 mm): 封装 U5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(63.0000 mm, 13.0000 mm): 封装 D2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(46.0000 mm, 10.0000 mm): 封装 D10
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(35.0000 mm, 4.2000 mm): 封装 J1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(30.0000 mm, 34.0000 mm): 封装 SW2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(8.0000 mm, 36.5000 mm): 封装 TP5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(46.0000 mm, 20.0000 mm): 封装 R7
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(45.0000 mm, 12.5000 mm): 封装 R15
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(17.0000 mm, 28.0000 mm): 封装 U4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(24.0000 mm, 30.0000 mm): 封装 R3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(59.0000 mm, 13.0000 mm): 封装 C5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(39.0000 mm, 9.0000 mm): 封装 R1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(22.0000 mm, 27.0000 mm): 封装 C2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(18.0000 mm, 18.0000 mm): 封装 U1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(42.0000 mm, 20.0000 mm): 封装 Q1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(41.0000 mm, 12.5000 mm): 封装 R13
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(56.0000 mm, 33.0000 mm): 封装 R12
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(50.0000 mm, 36.0000 mm): 封装 SW5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(30.0000 mm, 36.0000 mm): 封装 SW3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(18.0000 mm, 7.5000 mm): 封装 D1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(11.0000 mm, 7.5000 mm): 封装 F1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(24.0000 mm, 27.5000 mm): 封装 C8
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(43.0000 mm, 12.5000 mm): 封装 R14
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(26.0000 mm, 30.0000 mm): 封装 R4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(58.0000 mm, 33.0000 mm): 封装 BZ1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(8.0000 mm, 33.0000 mm): 封装 TP1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(12.0000 mm, 27.0000 mm): 封装 C1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(66.0000 mm, 20.0000 mm): 封装 J2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(44.0000 mm, 17.0000 mm): 封装 R10
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(41.0000 mm, 9.0000 mm): 封装 R2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(28.0000 mm, 30.0000 mm): 封装 C3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(49.0000 mm, 33.0000 mm): 封装 Q3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(10.0000 mm, 22.0000 mm): 封装 D3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(45.0000 mm, 33.0000 mm): 封装 R17
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(18.0000 mm, 34.0000 mm): 封装 SW1
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(57.0000 mm, 29.0000 mm): 封装 C6
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(46.0000 mm, 24.0000 mm): 封装 R8
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(26.0000 mm, 27.5000 mm): 封装 C9
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(52.0000 mm, 12.0000 mm): 封装 U2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(16.0000 mm, 33.0000 mm): 封装 TP3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(38.0000 mm, 15.0000 mm): 封装 J3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(44.0000 mm, 15.0000 mm): 封装 R9
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(56.0000 mm, 31.0000 mm): 封装 R11
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(57.0000 mm, 13.0000 mm): 封装 C4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(40.0000 mm, 36.0000 mm): 封装 SW4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(12.0000 mm, 36.5000 mm): 封装 TP6
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(42.0000 mm, 24.0000 mm): 封装 Q2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(20.0000 mm, 33.0000 mm): 封装 TP4
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(20.0000 mm, 36.5000 mm): 封装 TP8
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(10.0000 mm, 18.0000 mm): 封装 R16
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(57.0000 mm, 11.0000 mm): 封装 R5
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(60.0000 mm, 22.0000 mm): 封装 U6
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(63.0000 mm, 8.0000 mm): 封装 F2
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(57.0000 mm, 27.0000 mm): 封装 R6
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(16.0000 mm, 36.5000 mm): 封装 TP7
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(52.0000 mm, 26.0000 mm): 封装 U3
+[extra_footprint]: 多余的封装
+    局部重写; warning
+    @(12.0000 mm, 33.0000 mm): 封装 TP2
+
+** End of Report **

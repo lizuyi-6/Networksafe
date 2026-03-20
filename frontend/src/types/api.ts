@@ -312,3 +312,96 @@ export interface AlertRecord {
     investigationId?: string;
     metadata?: Record<string, any>;
 }
+
+export type DetectionChannel = 'http_api' | 'packet' | 'agent';
+export type DetectionVerdict = 'allow' | 'block' | 'monitor';
+export type DetectionAttackFamily =
+    | 'benign'
+    | 'sqli'
+    | 'xss'
+    | 'path_traversal'
+    | 'command_injection'
+    | 'ssrf'
+    | 'automation'
+    | 'other';
+
+export interface RuleRecord {
+    ruleId: string;
+    tenantId?: string;
+    name: string;
+    description?: string;
+    scope: DetectionChannel | 'all';
+    action: 'allow' | 'block' | 'review';
+    priority: number;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    matcher: Record<string, any>;
+    source: 'seed' | 'candidate' | 'dynamic';
+    enabled: boolean;
+    attackFamily?: DetectionAttackFamily;
+    version?: number;
+    metadata?: Record<string, any>;
+}
+
+export interface RuleCandidateRecord {
+    candidateId: string;
+    tenantId: string;
+    channel: DetectionChannel;
+    attackFamily: DetectionAttackFamily;
+    name: string;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    matcher: Record<string, any>;
+    matcherFingerprint: string;
+    reasoning: string;
+    status: 'pending' | 'approved' | 'rejected';
+    sampleCount: number;
+    aiConfidence: number;
+    latestEvidence: Record<string, any>;
+    approvedRuleId?: string | null;
+    reviewReason?: string | null;
+    createdAt: string;
+    updatedAt: string;
+    reviewedAt?: string | null;
+    reviewedBy?: string | null;
+}
+
+export interface DetectionEventRecord {
+    detectionEventId: string;
+    tenantId: string;
+    requestId: string;
+    channel: DetectionChannel;
+    verdict: DetectionVerdict;
+    matchedRuleIds: string[];
+    riskScore: number;
+    escalatedToAI: boolean;
+    aiVerdict?: string | null;
+    aiConfidence?: number | null;
+    aiRouteMode?: string | null;
+    aiModel?: string | null;
+    attackFamily: DetectionAttackFamily;
+    candidateId?: string | null;
+    decisionSource: string;
+    processingTimeMs: number;
+    requestSnapshot: Record<string, any>;
+    responseSnapshot: Record<string, any>;
+    createdAt: string;
+}
+
+export interface RuleSummary {
+    totalRules: number;
+    activeRules: number;
+    pendingCandidates: number;
+    approvedCandidates: number;
+    rejectedCandidates: number;
+    ruleHitRate: number;
+    aiEscalationRate: number;
+    avgProcessingTimeMs: number;
+    localAICount: number;
+    cloudAICount: number;
+    topRules: Array<{
+        ruleId: string;
+        name: string;
+        severity: 'critical' | 'high' | 'medium' | 'low';
+        hitCount: number;
+        source: string;
+    }>;
+}

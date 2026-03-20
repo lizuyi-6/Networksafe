@@ -96,9 +96,10 @@ Provide your analysis in JSON format:
 
     async analyze(context: TrafficContext): Promise<AnalysisResult> {
         const prompt = this.buildAnalysisPrompt(context);
+        const startedAt = Date.now();
         
         try {
-            const response = await this.callModel(prompt);
+            const response = await this.callModel(prompt, this.buildModelContext(context));
             const analysis = this.parseAnalysisResponse(response.content);
 
             const anomalyIndicators = this.detectAnomalies(context);
@@ -111,15 +112,25 @@ Provide your analysis in JSON format:
 
             this.updateBehaviorProfile(context);
 
-            return {
+            return this.finalizeAnalysisResult({
                 agentId: this.identity.id,
                 role: 'aristotle',
                 verdict: analysis.verdict,
                 confidence: analysis.confidence,
                 reasoning: analysis.reasoning,
                 evidence: analysis.evidence || [],
-                anomalyScore
-            };
+                anomalyScore,
+                classScores: analysis.classScores,
+                attackFamily: this.inferAttackFamily([
+                    context.request.path,
+                    context.request.body || '',
+                    JSON.stringify(context.request.queryParams || {})
+                ].join(' ')),
+                modelTier: response.tier,
+                routeMode: response.routeMode || 'unknown',
+                modelLatencyMs: response.latency,
+                analysisLatencyMs: Date.now() - startedAt
+            });
         } catch (error: any) {
             logger.error('Aristotle analysis failed', { error: error.message });
             return this.fallbackAnalysis(context);
@@ -290,11 +301,19 @@ Provide your analysis in JSON format:
     }
 
     private fallbackAnalysis(context: TrafficContext): AnalysisResult {
+        const startedAt = Date.now();
         const { request, history } = context;
         const evidence: Evidence[] = [];
         let verdict: AnalysisResult['verdict'] = 'safe';
         let confidence = 0.6;
         let anomalyScore = 0;
+        const content = [
+            request.path,
+            request.body || '',
+            JSON.stringify(request.queryParams || {}),
+            JSON.stringify(request.headers || {})
+        ].join(' ');
+        const signals = this.inspectContentHeuristics(content);
 
         const anomalyIndicators = this.detectAnomalies(context);
         anomalyScore = this.calculateAnomalyScore(anomalyIndicators);
@@ -339,29 +358,41 @@ Provide your analysis in JSON format:
             });
         }
 
-        if (anomalyScore > 0.7) {
+        if (signals.hardSignals.length >= 2 || anomalyScore > 0.7) {
             verdict = 'malicious';
             confidence = 0.85;
-        } else if (anomalyScore > 0.4) {
+        } else if (signals.hardSignals.length === 1 || signals.softSignals.length > 0 || anomalyScore > 0.2) {
             verdict = 'suspicious';
-            confidence = 0.75;
+            confidence = Math.max(0.68, anomalyScore > 0.4 ? 0.75 : 0.68);
         }
 
         const historyInsight = history.length > 0
             ? `Based on ${history.length} historical events`
             : 'No historical data available';
 
-        return {
+        return this.finalizeAnalysisResult({
             agentId: this.identity.id,
             role: 'aristotle',
             verdict,
             confidence,
             reasoning: evidence.length > 0
                 ? `${historyInsight}. Detected ${evidence.length} anomaly indicator(s): ${evidence.map(e => e.description).join('; ')}`
-                : `${historyInsight}. No significant anomalies detected.`,
+                : signals.softSignals.length > 0 || signals.hardSignals.length > 0
+                    ? `${historyInsight}. Request includes heuristic risk indicators: ${[...signals.hardSignals, ...signals.softSignals].map(signal => signal.label).join(', ')}.`
+                    : `${historyInsight}. No significant anomalies detected.`,
             evidence,
-            anomalyScore
-        };
+            anomalyScore,
+            classScores:
+                verdict === 'malicious'
+                    ? { safe: 0.08, suspicious: 0.17, malicious: 0.75 }
+                    : verdict === 'suspicious'
+                        ? { safe: 0.22, suspicious: 0.56, malicious: 0.22 }
+                        : { safe: 0.74, suspicious: 0.18, malicious: 0.08 },
+            attackFamily: signals.attackFamily,
+            modelTier: 'cloud',
+            routeMode: 'unknown',
+            analysisLatencyMs: Date.now() - startedAt
+        });
     }
 
     protected async handleAnalysisRequest(message: AgentMessage): Promise<void> {

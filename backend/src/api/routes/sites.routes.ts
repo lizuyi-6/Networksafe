@@ -1,32 +1,27 @@
-import { Router, Request, Response } from 'express';
-import { getDatabase, DatabaseManager } from '../../config/database';
+import { Router, Response } from 'express';
 import { authenticate, AuthenticatedRequest, requireTenantAccess } from '../../middleware/auth.middleware';
 import { requirePlanQuota } from '../../middleware/plan.middleware';
+import { sendError, sendSuccess } from '../../core/http/api-response';
+import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
 import logger from '../../utils/logger';
 import dns from 'dns';
 import { promisify } from 'util';
 import { securityOperationsService } from '../../services/security-operations.service';
 import auditLogger from '../../security/audit-logger.service';
+import {
+  createSite,
+  deleteSiteForUser,
+  getSiteForUser,
+  listSitesForUser,
+  setSiteRepositoryDatabase,
+  updateSite
+} from '../../modules/sites/site.repository';
 
 const router = Router();
 const dnsLookup = promisify(dns.lookup);
 
-// Allow database injection for testing
-let injectedDb: DatabaseManager | null = null;
-
-/**
- * Set database instance (for testing)
- * @param db - Database manager instance
- */
-export function setDatabase(db: DatabaseManager | null): void {
-  injectedDb = db;
-}
-
-/**
- * Get database instance (uses injected db for testing, otherwise production db)
- */
-function getDb(): DatabaseManager {
-  return injectedDb || getDatabase();
+export function setDatabase(db: any | null): void {
+  setSiteRepositoryDatabase(db);
 }
 
 function safeAuditLog(payload: any): void {
@@ -231,16 +226,8 @@ function isPrivateIP(ip: string): boolean {
  */
 router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const db = getDb();
     const user = req.user!;
-
-    // SECURITY FIX CVE-2026-002: Filter by tenant for non-admin users
-    let sites;
-    if (user.role === 'admin') {
-      sites = db.prepare('SELECT * FROM sites ORDER BY createdAt DESC').all();
-    } else {
-      sites = db.prepare('SELECT * FROM sites WHERE tenant_id = ? ORDER BY createdAt DESC').all(user.tenantId);
-    }
+    const sites = await listSitesForUser(user.role, user.tenantId);
 
     // Convert integer booleans
     const formattedSites = sites.map((site: any) => {
@@ -251,7 +238,12 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
         rateLimitEnabled: Boolean(site.rateLimitEnabled),
         concurrencyEnabled: Boolean(site.concurrencyEnabled)
       };
-      const security = hydrateSiteSecurity(user.role === 'admin' ? (site.tenant_id || user.tenantId || 'global') : (user.tenantId || 'global'), normalized);
+      const security = hydrateSiteSecurity(
+        user.role === 'admin'
+          ? (site.tenant_id || user.tenantId || PLATFORM_TENANT_ID)
+          : (user.tenantId || PLATFORM_TENANT_ID),
+        normalized
+      );
 
       return {
         ...normalized,
@@ -266,10 +258,13 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
       };
     });
 
-    res.json({ success: true, data: formattedSites });
+    return sendSuccess(res, formattedSites);
   } catch (error: any) {
     logger.error('Failed to get sites', { error });
-    res.status(500).json({ success: false, error: 'backend.internal_server_error' });
+    return sendError(res, 500, {
+      code: 'INTERNAL_ERROR',
+      message: 'backend.internal_server_error'
+    });
   }
 });
 
@@ -280,49 +275,46 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
  */
 router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const db = getDb();
     const user = req.user!;
-
-    // SECURITY FIX CVE-2026-002: Filter by tenant for non-admin users
-    let site;
-    if (user.role === 'admin') {
-      site = db.prepare('SELECT * FROM sites WHERE id = ?').get(req.params.id);
-    } else {
-      site = db.prepare('SELECT * FROM sites WHERE id = ? AND tenant_id = ?').get(req.params.id, user.tenantId);
-    }
+    const site = await getSiteForUser(req.params.id, user.role, user.tenantId);
 
     if (!site) {
-      return res.status(404).json({ success: false, error: 'backend.site_not_found' });
+      return sendError(res, 404, {
+        code: 'SITE_NOT_FOUND',
+        message: 'backend.site_not_found'
+      });
     }
 
-    const tenantId = user.role === 'admin' ? (site.tenant_id || user.tenantId || 'global') : (user.tenantId || 'global');
+    const tenantId = user.role === 'admin'
+      ? (site.tenant_id || user.tenantId || PLATFORM_TENANT_ID)
+      : (user.tenantId || PLATFORM_TENANT_ID);
     const security = hydrateSiteSecurity(tenantId, site);
 
-    res.json({
-      success: true,
-      data: {
-        ...site,
-        securityOverview: {
-          asset: security.primaryAsset,
-          assets: security.context.assets,
-          findings: security.context.findings,
-          alerts: security.context.alerts,
-          actions: security.context.actions,
-          scans: security.context.scanRuns,
-          trafficSessions: security.context.trafficSessions,
-          serviceExposure: security.context.serviceExposure
-        },
-        relatedAlerts: security.context.alerts,
-        relatedFindings: security.context.findings,
-        relatedActions: security.context.actions,
-        relatedScans: security.context.scanRuns,
-        relatedFlows: security.context.trafficSessions,
+    return sendSuccess(res, {
+      ...site,
+      securityOverview: {
+        asset: security.primaryAsset,
+        assets: security.context.assets,
+        findings: security.context.findings,
+        alerts: security.context.alerts,
+        actions: security.context.actions,
+        scans: security.context.scanRuns,
+        trafficSessions: security.context.trafficSessions,
         serviceExposure: security.context.serviceExposure
-      }
+      },
+      relatedAlerts: security.context.alerts,
+      relatedFindings: security.context.findings,
+      relatedActions: security.context.actions,
+      relatedScans: security.context.scanRuns,
+      relatedFlows: security.context.trafficSessions,
+      serviceExposure: security.context.serviceExposure
     });
   } catch (error: any) {
     logger.error('Failed to get site', { error });
-    res.status(500).json({ success: false, error: 'backend.internal_server_error' });
+    return sendError(res, 500, {
+      code: 'INTERNAL_ERROR',
+      message: 'backend.internal_server_error'
+    });
   }
 });
 
@@ -343,31 +335,23 @@ router.post('/', requirePlanQuota('site'), async (req: AuthenticatedRequest, res
     // SECURITY FIX CVE-2026-006: Enhanced SSRF validation with DNS resolution check
     const validation = await validateTargetUrl(target);
     if (!validation.valid) {
-      return res.status(400).json({ success: false, error: validation.error });
+      return sendError(res, 400, {
+        code: 'INVALID_TARGET',
+        message: String(validation.error || 'backend.invalid_url_format')
+      });
     }
 
-    const db = getDb();
-
-    // SECURITY FIX CVE-2026-002: Include tenantId in new sites
-    const stmt = db.prepare(`
-      INSERT INTO sites (
-        domain, target, sslEnabled, tenant_id,
-        antiBotEnabled, rateLimitEnabled, concurrencyEnabled,
-        rateLimitRequests, concurrencyMax
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = stmt.run(
+    const siteId = await createSite({
       domain,
       target,
-      sslEnabled ? 1 : 0,
-      user.tenantId,
-      security?.antiBot ? 1 : 0,
-      security?.rateLimit?.enabled ? 1 : 0,
-      security?.concurrency?.enabled ? 1 : 0,
-      security?.rateLimit?.requestsPerMinute || 60,
-      security?.concurrency?.maxConcurrent || 5
-    );
+      sslEnabled: sslEnabled ? 1 : 0,
+      tenant_id: user.tenantId,
+      antiBotEnabled: security?.antiBot ? 1 : 0,
+      rateLimitEnabled: security?.rateLimit?.enabled ? 1 : 0,
+      concurrencyEnabled: security?.concurrency?.enabled ? 1 : 0,
+      rateLimitRequests: security?.rateLimit?.requestsPerMinute || 60,
+      concurrencyMax: security?.concurrency?.maxConcurrent || 5
+    });
 
     logger.info(`Site created: ${domain} -> ${target}`, { userId: user.userId, tenantId: user.tenantId });
     safeAuditLog({
@@ -382,16 +366,13 @@ router.post('/', requirePlanQuota('site'), async (req: AuthenticatedRequest, res
       status: 'success'
     });
 
-    // Retrieve the newly created site by unique domain
-    const newSite = db.prepare('SELECT id FROM sites WHERE domain = ?').get(domain) as { id: number } | null;
-
-    res.json({
-      success: true,
-      data: { id: newSite?.id, domain, target }
-    });
+    return sendSuccess(res, { id: siteId, domain, target }, undefined, 201);
   } catch (error: any) {
     logger.error('Failed to create site', { error });
-    res.status(500).json({ success: false, error: 'backend.internal_server_error' });
+    return sendError(res, 500, {
+      code: 'INTERNAL_ERROR',
+      message: 'backend.internal_server_error'
+    });
   }
 });
 
@@ -404,54 +385,36 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { domain, target, sslEnabled, security } = req.body;
     const user = req.user!;
-
-    const db = getDb();
-
-    // SECURITY FIX CVE-2026-002: Check site ownership
-    let existingSite;
-    if (user.role === 'admin') {
-      existingSite = db.prepare('SELECT * FROM sites WHERE id = ?').get(req.params.id);
-    } else {
-      existingSite = db.prepare('SELECT * FROM sites WHERE id = ? AND tenant_id = ?').get(req.params.id, user.tenantId);
-    }
+    const existingSite = await getSiteForUser(req.params.id, user.role, user.tenantId);
 
     if (!existingSite) {
-      return res.status(404).json({ success: false, error: 'backend.site_not_found' });
+      return sendError(res, 404, {
+        code: 'SITE_NOT_FOUND',
+        message: 'backend.site_not_found'
+      });
     }
 
     // SECURITY FIX CVE-2026-006: Validate target URL if being updated
     if (target) {
       const validation = await validateTargetUrl(target);
       if (!validation.valid) {
-        return res.status(400).json({ success: false, error: validation.error });
+        return sendError(res, 400, {
+          code: 'INVALID_TARGET',
+          message: String(validation.error || 'backend.invalid_url_format')
+        });
       }
     }
 
-    const stmt = db.prepare(`
-      UPDATE sites SET
-        domain = COALESCE(?, domain),
-        target = COALESCE(?, target),
-        sslEnabled = COALESCE(?, sslEnabled),
-        antiBotEnabled = COALESCE(?, antiBotEnabled),
-        rateLimitEnabled = COALESCE(?, rateLimitEnabled),
-        concurrencyEnabled = COALESCE(?, concurrencyEnabled),
-        rateLimitRequests = COALESCE(?, rateLimitRequests),
-        concurrencyMax = COALESCE(?, concurrencyMax),
-        updatedAt = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `);
-
-    stmt.run(
+    await updateSite(req.params.id, {
       domain,
       target,
-      sslEnabled !== undefined ? (sslEnabled ? 1 : 0) : null,
-      security?.antiBot !== undefined ? (security.antiBot ? 1 : 0) : null,
-      security?.rateLimit?.enabled !== undefined ? (security.rateLimit.enabled ? 1 : 0) : null,
-      security?.concurrency?.enabled !== undefined ? (security.concurrency.enabled ? 1 : 0) : null,
-      security?.rateLimit?.requestsPerMinute || null,
-      security?.concurrency?.maxConcurrent || null,
-      req.params.id
-    );
+      sslEnabled: typeof sslEnabled === 'boolean' ? sslEnabled : undefined,
+      antiBotEnabled: security?.antiBot,
+      rateLimitEnabled: security?.rateLimit?.enabled,
+      concurrencyEnabled: security?.concurrency?.enabled,
+      rateLimitRequests: security?.rateLimit?.requestsPerMinute,
+      concurrencyMax: security?.concurrency?.maxConcurrent
+    });
 
     logger.info(`Site updated: ${req.params.id}`, { userId: user.userId });
     safeAuditLog({
@@ -471,10 +434,15 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
       status: 'success'
     });
 
-    res.json({ success: true });
+    return sendSuccess(res, { updated: true }, {
+      legacy: { status: 'ok' }
+    });
   } catch (error: any) {
     logger.error('Failed to update site', { error });
-    res.status(500).json({ success: false, error: 'backend.internal_server_error' });
+    return sendError(res, 500, {
+      code: 'INTERNAL_ERROR',
+      message: 'backend.internal_server_error'
+    });
   }
 });
 
@@ -485,19 +453,14 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
  */
 router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const db = getDb();
     const user = req.user!;
+    const changes = await deleteSiteForUser(req.params.id, user.role, user.tenantId);
 
-    // SECURITY FIX CVE-2026-002: Only delete own sites (or admin can delete any)
-    let result;
-    if (user.role === 'admin') {
-      result = db.prepare('DELETE FROM sites WHERE id = ?').run(req.params.id);
-    } else {
-      result = db.prepare('DELETE FROM sites WHERE id = ? AND tenant_id = ?').run(req.params.id, user.tenantId);
-    }
-
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, error: 'backend.site_not_found' });
+    if (changes === 0) {
+      return sendError(res, 404, {
+        code: 'SITE_NOT_FOUND',
+        message: 'backend.site_not_found'
+      });
     }
 
     logger.info(`Site deleted: ${req.params.id}`, { userId: user.userId });
@@ -513,10 +476,15 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
       status: 'success'
     });
 
-    res.json({ success: true });
+    return sendSuccess(res, { deleted: true }, {
+      legacy: { status: 'ok' }
+    });
   } catch (error: any) {
     logger.error('Failed to delete site', { error });
-    res.status(500).json({ success: false, error: 'backend.internal_server_error' });
+    return sendError(res, 500, {
+      code: 'INTERNAL_ERROR',
+      message: 'backend.internal_server_error'
+    });
   }
 });
 

@@ -14,6 +14,34 @@
 import logger from '../utils/logger';
 import redisService from './redis.service';
 
+// SECURITY FIX: Lua script for atomic rate limit check and increment
+// This prevents race conditions between get() and incr() operations
+const RATE_LIMIT_SCRIPT = `
+local key = KEYS[1]
+local resetKey = KEYS[2]
+local limit = tonumber(ARGV[1])
+local windowMs = tonumber(ARGV[2])
+local resetTime = tonumber(ARGV[3])
+
+local current = tonumber(redis.call('GET', key))
+if current == nil then
+    redis.call('SETEX', key, math.ceil(windowMs / 1000), '1')
+    redis.call('SETEX', resetKey, math.ceil(windowMs / 1000), tostring(resetTime))
+    return {1, limit - 1, resetTime}
+end
+
+if current >= limit then
+    local storedReset = tonumber(redis.call('GET', resetKey)) or resetTime
+    return {0, 0, storedReset}
+end
+
+local newCount = redis.call('INCR', key)
+return {1, limit - newCount, resetTime}
+`;
+
+// Cache for compiled Lua script SHA
+let rateLimitScriptSha: string | null = null;
+
 export interface RateLimitConfig {
   maxRequests: number;
   windowMs: number;
@@ -36,10 +64,32 @@ interface RateLimitInfo {
 
 export class EnhancedRateLimiter {
   private memoryFallback: Map<string, RateLimitInfo> = new Map();
+  // SECURITY FIX: Lock for memory fallback to prevent race conditions
+  private memoryLocks: Map<string, Promise<void>> = new Map();
   private readonly DEFAULT_LIMITS: RateLimitConfig = {
     maxRequests: 100,
     windowMs: 60000,
   };
+
+  /**
+   * SECURITY FIX: Load and cache the Lua script for atomic rate limiting
+   */
+  private async loadRateLimitScript(): Promise<string> {
+    if (rateLimitScriptSha) {
+      return rateLimitScriptSha;
+    }
+
+    try {
+      const client = redisService.getClient();
+      const sha = await client.script('LOAD', RATE_LIMIT_SCRIPT);
+      rateLimitScriptSha = typeof sha === 'string' ? sha : String(sha);
+      logger.info('Rate limit Lua script loaded', { sha: rateLimitScriptSha });
+      return rateLimitScriptSha;
+    } catch (error) {
+      logger.error('Failed to load rate limit Lua script', { error });
+      throw error;
+    }
+  }
 
   async checkRateLimit(params: {
     identifier: string;
@@ -108,11 +158,14 @@ export class EnhancedRateLimiter {
 
     } catch (error) {
       logger.error('Rate limit check failed', { error, identifier, ip });
+      // SECURITY FIX: Fail closed - reject request if rate limit check fails
+      // This prevents attackers from bypassing rate limits by causing failures
       return {
-        allowed: true,
+        allowed: false,
         limit: finalConfig.maxRequests,
-        remaining: finalConfig.maxRequests,
+        remaining: 0,
         resetTime: new Date(resetTime),
+        reason: 'Rate limit check failed - request rejected for security',
       };
     }
   }
@@ -126,48 +179,74 @@ export class EnhancedRateLimiter {
     const resetTime = now + windowMs;
 
     if (!redisService.isAvailable()) {
-      return this.checkDimensionMemory(key, limit, windowMs);
+      return this.checkDimensionMemoryWithLock(key, limit, windowMs);
     }
 
     try {
       const client = redisService.getClient();
-      const current = await client.get(key);
+      const resetKey = `${key}:reset`;
 
-      if (current === null) {
-        const ttlSeconds = Math.max(Math.ceil(windowMs / 1000), 1);
-        await client.setex(key, ttlSeconds, '1');
-        await client.setex(`${key}:reset`, ttlSeconds, resetTime.toString());
+      // SECURITY FIX: Use atomic Lua script to prevent race conditions
+      try {
+        const sha = await this.loadRateLimitScript();
+        const result = await client.evalsha(sha, 2, key, resetKey, limit.toString(), windowMs.toString(), resetTime.toString()) as [number, number, number];
+
+        const [allowed, remaining, actualResetTime] = result;
 
         return {
-          allowed: true,
+          allowed: allowed === 1,
           limit,
-          remaining: limit - 1,
-          resetTime: new Date(resetTime),
+          remaining: Math.max(remaining, 0),
+          resetTime: new Date(actualResetTime),
         };
+      } catch (evalError: any) {
+        // If script not found (NOSCRIPT), reload it
+        if (evalError.message?.includes('NOSCRIPT')) {
+          rateLimitScriptSha = null;
+          const sha = await this.loadRateLimitScript();
+          const result = await client.evalsha(sha, 2, key, resetKey, limit.toString(), windowMs.toString(), resetTime.toString()) as [number, number, number];
+
+          const [allowed, remaining, actualResetTime] = result;
+
+          return {
+            allowed: allowed === 1,
+            limit,
+            remaining: Math.max(remaining, 0),
+            resetTime: new Date(actualResetTime),
+          };
+        }
+        throw evalError;
       }
-
-      const count = parseInt(current, 10);
-
-      if (count >= limit) {
-        return {
-          allowed: false,
-          limit,
-          remaining: 0,
-          resetTime: new Date(resetTime),
-        };
-      }
-
-      const newCount = await client.incr(key);
-      return {
-        allowed: true,
-        limit,
-        remaining: limit - newCount,
-        resetTime: new Date(resetTime),
-      };
 
     } catch (error) {
       logger.warn('Redis rate limit failed, using memory fallback', { error, key });
+      return this.checkDimensionMemoryWithLock(key, limit, windowMs);
+    }
+  }
+
+  /**
+   * SECURITY FIX: Memory fallback with proper locking to prevent race conditions
+   */
+  private async checkDimensionMemoryWithLock(
+    key: string,
+    limit: number,
+    windowMs: number
+  ): Promise<RateLimitResult> {
+    // Wait for any existing lock on this key
+    while (this.memoryLocks.has(key)) {
+      await this.memoryLocks.get(key);
+    }
+
+    // Create lock for this operation
+    let lockResolver: () => void;
+    const lockPromise = new Promise<void>(resolve => { lockResolver = resolve; });
+    this.memoryLocks.set(key, lockPromise);
+
+    try {
       return this.checkDimensionMemory(key, limit, windowMs);
+    } finally {
+      this.memoryLocks.delete(key);
+      lockResolver!();
     }
   }
 
