@@ -102,7 +102,7 @@ jobs:
           context: .
           file: ./backend.Dockerfile
           push: false
-          tags: AetherGuard-backend:test
+          tags: aetherguard-backend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -112,7 +112,7 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: false
-          tags: AetherGuard-frontend:test
+          tags: aetherguard-frontend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -122,7 +122,7 @@ jobs:
           context: .
           file: ./rust-fastpath/Dockerfile
           push: false
-          tags: AetherGuard-fastpath:test
+          tags: aetherguard-fastpath:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
