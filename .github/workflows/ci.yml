@@ -129,6 +129,9 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     needs: backend-test
+    defaults:
+      run:
+        working-directory: ./backend
 
     steps:
       - name: Checkout Repository
