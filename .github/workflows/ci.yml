@@ -165,7 +165,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install E2E Dependencies
-        run: npm --prefix e2e ci
+        run: npm --prefix e2e install
 
       - name: Install Playwright Browsers
         run: npx --prefix e2e playwright install --with-deps chromium
