@@ -1,0 +1,6 @@
+﻿node_modules/
+coverage/
+*.log
+.tmp/
+dist/
+EXPORT_MANIFEST.md

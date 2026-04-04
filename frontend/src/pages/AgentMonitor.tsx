@@ -137,28 +137,28 @@ export default function AgentMonitor() {
                     icon={ShieldAlert}
                     label={t('agentMonitor.systemHealth')}
                     value={getStatusText(health?.status || 'unknown').toUpperCase()}
-                    hint={health?.details && Object.keys(health.details).length > 0 ? Object.keys(health.details).join(', ') : '监控已启用'}
+                    hint={health?.details && Object.keys(health.details).length > 0 ? Object.keys(health.details).join(', ') : t('agentMonitor.auto_refresh_on')}
                     tone={health?.status === 'healthy' ? 'success' : health?.status === 'unhealthy' ? 'danger' : 'warning'}
                 />
                 <ConsoleStatCard
                     icon={Users}
                     label={t('agentMonitor.activeAgents')}
                     value={stats?.orchestrator.registeredAgents || 0}
-                    hint="当前已注册的编排节点"
+                    hint={t('agentMonitor.orchestrator_hint')}
                     tone="primary"
                 />
                 <ConsoleStatCard
                     icon={MessageSquare}
                     label={t('agentMonitor.queueSize')}
                     value={stats?.messageBus.queueSize || 0}
-                    hint="当前消息总线排队深度"
+                    hint={t('agentMonitor.queue_hint')}
                     tone="neutral"
                 />
                 <ConsoleStatCard
                     icon={BarChart3}
                     label={t('agentMonitor.caseFiles')}
                     value={stats?.synthesis.totalCaseFiles || 0}
-                    hint="已保留的综合研判案卷"
+                    hint={t('agentMonitor.casefile_hint')}
                     tone="warning"
                 />
             </div>
@@ -166,44 +166,44 @@ export default function AgentMonitor() {
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                 <ConsoleStatCard
                     icon={AlertTriangle}
-                    label="{t('agentMonitor.active_alerts')}"
+                    label={t('agentMonitor.active_alerts')}
                     value={stats?.operations?.activeAlerts || 0}
-                    hint="来自扫描、流量与验证链路"
+                    hint={t('agentMonitor.scans_hint')}
                     tone="danger"
                 />
                 <ConsoleStatCard
                     icon={RefreshCw}
-                    label="{t('agentMonitor.running_scans')}"
+                    label={t('agentMonitor.running_scans')}
                     value={stats?.operations?.runningScans || 0}
-                    hint="当前仍在执行的扫描任务"
+                    hint={t('agentMonitor.running_hint')}
                     tone="warning"
                 />
                 <ConsoleStatCard
                     icon={Zap}
-                    label="待执行动作"
+                    label={t('agentMonitor.actions_hint')}
                     value={stats?.operations?.pendingActions || 0}
-                    hint="处置动作与队列积压"
+                    hint={t('agentMonitor.queue_depth_hint')}
                     tone="primary"
                 />
                 <ConsoleStatCard
                     icon={XCircle}
-                    label="验证失败"
+                    label={t('agentMonitor.validations_failed')}
                     value={stats?.operations?.failedValidations || 0}
-                    hint="未拦截或误报的演练运行"
+                    hint={t('agentMonitor.drill_no_block')}
                     tone="danger"
                 />
                 <ConsoleStatCard
                     icon={ShieldAlert}
-                    label="高风险资产"
+                    label={t('agentMonitor.high_risk_assets')}
                     value={stats?.operations?.assetsAtRisk || 0}
-                    hint="当前需要优先关注的资产"
+                    hint={t('agentMonitor.high_risk_hint')}
                     tone="warning"
                 />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 <div className="lg:col-span-7">
-                    <ConsolePanel title={t('agentMonitor.layerArchitecture')} subtitle="七层协同决策链路" icon={Brain} iconTone="primary">
+                    <ConsolePanel title={t('agentMonitor.layerArchitecture')} subtitle={t('agentMonitor.decision_chain')} icon={Brain} iconTone="primary">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                             {layerInfo.map((layer, index) => {
                                 const Icon = layer.icon;
@@ -228,7 +228,7 @@ export default function AgentMonitor() {
                 </div>
 
                 <div className="lg:col-span-5">
-                    <ConsolePanel title={t('agentMonitor.messageBusStats')} subtitle="调度与传输运行指标" icon={Clock} iconTone="neutral">
+                    <ConsolePanel title={t('agentMonitor.messageBusStats')} subtitle={t('agentMonitor.dispatch_subtitle')} icon={Clock} iconTone="neutral">
                         <div className="grid grid-cols-2 gap-3">
                             <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
                                 <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.queueSize || 0}</p>
@@ -252,7 +252,7 @@ export default function AgentMonitor() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <ConsolePanel title={t('agentMonitor.agentHeartbeats')} subtitle="各节点活动与响应遥测" icon={Users} iconTone="primary">
+                <ConsolePanel title={t('agentMonitor.agentHeartbeats')} subtitle={t('agentMonitor.telemetry_subtitle')} icon={Users} iconTone="primary">
                     <div className="space-y-3">
                         {stats?.agents?.length ? (
                             stats.agents.map((agent: AgentHeartbeat, index: number) => {
@@ -305,12 +305,12 @@ export default function AgentMonitor() {
                                 );
                             })
                         ) : (
-                            <ConsoleEmptyState title={t('agentMonitor.noAgents')} description="当前环境还没有可用的心跳数据。" />
+                            <ConsoleEmptyState title={t('agentMonitor.noAgents')} description={t('agentMonitor.no_heartbeat')} />
                         )}
                     </div>
                 </ConsolePanel>
 
-                <ConsolePanel title={t('agentMonitor.synthesisStats')} subtitle="学习结果与模式沉淀" icon={TrendingUp} iconTone="success">
+                <ConsolePanel title={t('agentMonitor.synthesisStats')} subtitle={t('agentMonitor.learning')} icon={TrendingUp} iconTone="success">
                     <div className="space-y-3">
                         <div className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-4">
                             <span className="text-sm text-muted-foreground">{t('agentMonitor.totalCaseFiles')}</span>
@@ -338,13 +338,13 @@ export default function AgentMonitor() {
                                 </div>
                             </div>
                         ) : (
-                            <ConsoleEmptyState title="暂无综合模式" description="案卷积累后，这里会展示高频归纳模式。" />
+                            <ConsoleEmptyState title={t('agentMonitor.no_patterns')} description={t('agentMonitor.no_patterns_desc')} />
                         )}
                     </div>
                 </ConsolePanel>
             </div>
 
-            <ConsolePanel title={t('agentMonitor.systemHealth')} subtitle="系统健康与降级节点说明" icon={ShieldAlert} iconTone="warning">
+            <ConsolePanel title={t('agentMonitor.systemHealth')} subtitle={t('agentMonitor.systemHealth')} icon={ShieldAlert} iconTone="warning">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div>
                         <div className="flex items-center gap-3">
@@ -353,14 +353,14 @@ export default function AgentMonitor() {
                                 <div className={`text-2xl font-bold tracking-tight ${getStatusTone(health?.status || 'unknown')}`}>
                                     {getStatusText(health?.status || 'unknown').toUpperCase()}
                                 </div>
-                                <p className="text-sm text-muted-foreground">当前协同编排健康快照</p>
+                                <p className="text-sm text-muted-foreground">{t('agentMonitor.systemHealth')}</p>
                             </div>
                         </div>
                     </div>
 
                     {health?.details && Object.keys(health.details).length > 0 ? (
                         <div className="w-full rounded-xl border border-border bg-muted/15 p-4 md:max-w-md">
-                            <div className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground">详细信息</div>
+                            <div className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground">{t('agentMonitor.systemHealth')}</div>
                             <div className="space-y-1 font-mono text-xs text-foreground">
                                 {Object.entries(health.details).map(([key, value]) => (
                                     <div key={key} className="truncate">
@@ -370,7 +370,7 @@ export default function AgentMonitor() {
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-xl border border-border bg-muted/15 px-4 py-3 text-sm text-muted-foreground">当前未发现降级子系统。</div>
+                        <div className="rounded-xl border border-border bg-muted/15 px-4 py-3 text-sm text-muted-foreground">{t('agentMonitor.no_degradation')}</div>
                     )}
                 </div>
             </ConsolePanel>

@@ -110,6 +110,10 @@ export class MultiAgentDecisionSystem {
         this.debateProtocol = new DebateProtocol(this.messageBus);
         this.traceManager = traceContextManager;
         this.toolExecutor = toolExecutor;
+        // Inject stage model overrides into the shared model router
+        if (this.config.modelRouterOverrides) {
+            modelRouter.updateStageOverrides(this.config.modelRouterOverrides);
+        }
         this.modelRouter = modelRouter;
         this.synthesisEngine = synthesisEngine;
         this.probeAgent = new ProbeAgent(

@@ -1,0 +1,143 @@
+(footprint "AetherGuard_CH340N_SOP8"
+	(version 20241209)
+	(generator "kicad_footprint_editor")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "CH340N USB-UART Bridge, SOP-8, 3.9x4.9mm, 1.27mm pitch")
+	(tags "CH340N SOP-8 USB UART")
+	(property "Reference" "U"
+		(at 0 -3.5 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1.0 1.0)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "CH340N"
+		(at 0 3.5 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1.0 1.0)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -2.65 -2.7)
+		(end 2.65 -2.7)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 2.65 -2.7)
+		(end 2.65 2.7)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 2.65 2.7)
+		(end -2.65 2.7)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.65 2.7)
+		(end -2.65 -2.7)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_rect
+		(start -2.8 -2.85)
+		(end 2.8 2.85)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(fill none)
+		(layer "F.CrtYd")
+	)
+	(fp_rect
+		(start -2.45 -2.45)
+		(end 2.45 2.45)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -1.75 -1.75)
+		(end -1.5 -1.5)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(pad "1" smd rect
+		(at -1.905 -1.905)
+		(size 1.3 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad "2" smd rect
+		(at -1.905 -0.635)
+		(size 1.3 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad "3" smd rect
+		(at -1.905 0.635)
+		(size 1.3 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad "4" smd rect
+		(at -1.905 1.905)
+		(size 1.3 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad "5" smd rect
+		(at 1.905 1.905)
+		(size 1.3 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad "6" smd rect
+		(at 1.905 0.635)
+		(size 1.3 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad "7" smd rect
+		(at 1.905 -0.635)
+		(size 1.3 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad "8" smd rect
+		(at 1.905 -1.905)
+		(size 1.3 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad "9" smd rect
+		(at 0 0)
+		(size 2.4 3.0)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(solder_paste_margin -0.3)
+		(zone_connect 2)
+		(thermal_bridge_angle 45)
+	)
+)

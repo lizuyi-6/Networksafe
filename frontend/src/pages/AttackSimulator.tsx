@@ -162,7 +162,7 @@ export default function AttackSimulator() {
 
             switch (event) {
                 case 'attack:simulation:start':
-                    addLocalTerminalLog(`开始演练：${eventData.totalAttacks} 项攻击`);
+                    addLocalTerminalLog(`${t('attackSimulator.start')}：${eventData.totalAttacks} ${t('attackSimulator.attacks_count')}`);
                     setAttackProgress(eventData.attacks.map((a: any) => ({
                         attackId: a.id,
                         attackName: a.name,
@@ -176,7 +176,7 @@ export default function AttackSimulator() {
                     break;
 
                 case 'attack:start':
-                    addLocalTerminalLog(`开始执行攻击：${eventData.attackName}`);
+                    addLocalTerminalLog(`${t('attackSimulator.start_attack')}：${eventData.attackName}`);
                     setAttackProgress(prev => prev.map((p, i) => 
                         i === eventData.attackIndex 
                             ? { ...p, status: 'analyzing' }
@@ -194,7 +194,7 @@ export default function AttackSimulator() {
                     break;
 
                 case 'attack:result':
-                    addLocalTerminalLog(`结果：${eventData.attackName} - ${eventData.blocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}`);
+                    addLocalTerminalLog(`t('attackSimulator.results')}：${eventData.attackName} - ${eventData.blocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}`);
                     setAttackProgress(prev => prev.map((p, i) => 
                         i === eventData.attackIndex
                             ? { ...p, status: 'complete', result: eventData }
@@ -448,7 +448,7 @@ export default function AttackSimulator() {
             addLocalTerminalLog(`   ${t('attackSimulator.blocked')}: ${result.blocked}`);
             addLocalTerminalLog(`   ${t('attackSimulator.allowed')}: ${result.allowed}`);
         } else {
-            addLocalTerminalLog('演练失败，未返回结果数据');
+            addLocalTerminalLog(`${t('attackSimulator.drill_failed')}，${t('attackSimulator.no_results')}`);
         }
 
         setIsRunning(false);
@@ -573,7 +573,7 @@ export default function AttackSimulator() {
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div className={`truncate text-sm font-semibold ${category.color}`}>{category.name}</div>
-                                                    <div className="text-xs text-muted-foreground">{categoryAttacks.length} 项攻击</div>
+                                                    <div className="text-xs text-muted-foreground">{categoryAttacks.length} {t('attackSimulator.attacks_count')}</div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -746,14 +746,14 @@ export default function AttackSimulator() {
                                     );
                                 })
                             ) : (
-                                <ConsoleEmptyState title={t('attackSimulator.selectAndRun')} description="选中攻击并执行后，这里会显示分析过程与判定结果。" />
+                                <ConsoleEmptyState title={t('attackSimulator.selectAndRun')} description={t('attackSimulator.selectAndRunDesc')} />
                             )}
                         </div>
                     </ConsolePanel>
 
-                    <ConsolePanel title={t('attackSimulator.terminal')} subtitle="执行日志流" icon={Terminal} iconTone="neutral">
+                    <ConsolePanel title={t('attackSimulator.terminal')} subtitle={t('attackSimulator.log_stream')} icon={Terminal} iconTone="neutral">
                         <div className="rounded-xl border border-border bg-muted/20">
-                            <div className="border-b border-border px-4 py-3 text-xs text-muted-foreground">终端输出</div>
+                            <div className="border-b border-border px-4 py-3 text-xs text-muted-foreground">{t('attackSimulator.terminal')}</div>
                             <div ref={terminalRef} className="h-52 overflow-y-auto bg-background/80 px-4 py-4 font-mono text-sm">
                                 {terminalLogs.length > 0 ? (
                                     <div className="space-y-2">
@@ -784,7 +784,7 @@ export default function AttackSimulator() {
                         className="grid grid-cols-1 gap-6 lg:grid-cols-12"
                     >
                         <div className="lg:col-span-4">
-                            <ConsolePanel title={t('attackSimulator.results')} subtitle="最近一次演练汇总" icon={BarChart3} iconTone="primary">
+                            <ConsolePanel title={t('attackSimulator.results')} subtitle={t('attackSimulator.recentDrillSummary')} icon={BarChart3} iconTone="primary">
                                 <div className="grid grid-cols-3 gap-3">
                                     <div className="rounded-xl border border-border bg-muted/20 p-4 text-center">
                                         <p className="text-3xl font-bold tracking-tight text-foreground">{report.total}</p>
@@ -840,7 +840,7 @@ export default function AttackSimulator() {
                         </div>
 
                         <div className="lg:col-span-8">
-                            <ConsolePanel title={t('attackSimulator.attackResults')} subtitle="逐项攻击判定日志" icon={AlertTriangle} iconTone="warning">
+                            <ConsolePanel title={t('attackSimulator.attackResults')} subtitle={t('attackSimulator.attackResultLog')} icon={AlertTriangle} iconTone="warning">
                                 <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                                     {report.results.map((result, i) => (
                                         <motion.div
@@ -889,7 +889,7 @@ export default function AttackSimulator() {
 
             {history.length > 0 && (
                 <motion.div variants={itemVariants}>
-                    <ConsolePanel title={t('attackSimulator.recentSimulations')} subtitle="最近完成的演练批次" icon={Clock} iconTone="neutral">
+                    <ConsolePanel title={t('attackSimulator.recentSimulations')} subtitle={t('attackSimulator.recentDrillBatches')} icon={Clock} iconTone="neutral">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                             {history.slice(0, 6).map((item, i) => (
                                 <motion.div
@@ -913,7 +913,7 @@ export default function AttackSimulator() {
                                     </div>
                                     <div className="mt-3 flex justify-end">
                                         <Link to={`/attack-sim/runs/${getAttackRunRouteId(item)}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
-                                            查看详情
+                                            {t('attackSimulator.view_detail')}
                                         </Link>
                                     </div>
                                 </motion.div>

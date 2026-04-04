@@ -1,9 +1,10 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, createVerify, createHash } from 'crypto';
 import { getDatabase } from '../config/database';
 import { artifactStoreService } from './artifact-store.service';
 import auditLogger from '../security/audit-logger.service';
 import logger from '../utils/logger';
 import { commandDispatcherService } from './command-dispatcher.service';
+import { getDeviceById } from '../api/routes/devices.routes';
 
 export interface DeviceFirmwareRecord {
   id: string;
@@ -401,7 +402,32 @@ class DeviceControlService {
       return;
     }
 
-    const confirmed = Boolean(payload?.confirmed);
+    // Verify signature if present
+    let verified = false;
+    if (payload.signature) {
+      const device = getDeviceById(deviceId) as any;
+      const publicKeyPem = device?.physicalAuth?.publicKeyPem;
+      if (publicKeyPem) {
+        const message = [
+          deviceId,
+          confirmationSessionId,
+          existing.command_type,
+          createHash('sha256').update(existing.payload_json).digest('hex'),
+          String(payload.monotonicCounter),
+          String(payload.timestamp)
+        ].join('\n');
+        try {
+          verified = createVerify('SHA256')
+            .update(message)
+            .end()
+            .verify(publicKeyPem, payload.signature, 'base64');
+        } catch {
+          verified = false;
+        }
+      }
+    }
+
+    const confirmed = Boolean(payload?.confirmed) && (payload.signature ? verified : true);
     const confirmedAt = confirmed ? new Date().toISOString() : null;
     const dispatchResult = confirmed
       ? await commandDispatcherService.dispatchDeviceCommand({
@@ -418,10 +444,13 @@ class DeviceControlService {
         })
       : null;
 
-    const result = {
+    const result: Record<string, any> = {
       ack: payload,
       dispatchResult
     };
+    if (payload.signature) {
+      result.verified = verified;
+    }
 
     getDatabase().prepare(`
       UPDATE device_confirmation_sessions

@@ -1,0 +1,19 @@
+{
+  "tenantId": "global",
+  "requestId": "fixture-mqtt-1",
+  "protocol": "mqtt",
+  "direction": "egress",
+  "sourceRef": "agent-1",
+  "destRef": "cloud",
+  "channel": "vehicle/heartbeat",
+  "headers": {},
+  "metadata": {
+    "observedIntervalMs": 200,
+    "heartbeatMinIntervalMs": 1000,
+    "heartbeatTopics": ["vehicle/heartbeat"],
+    "suppressHighFrequency": true
+  },
+  "payloadBase64": "b2s=",
+  "truncated": false,
+  "timestamp": "2026-03-22T00:00:00Z"
+}

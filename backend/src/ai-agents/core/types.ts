@@ -23,7 +23,7 @@ export type AttackFamily =
     | 'authentication'
     | 'business_logic'
     | 'other';
-export type AnalysisPurpose = 'primary' | 'learning_verification';
+export type AnalysisPurpose = 'primary' | 'deep_analysis' | 'learning_verification';
 export type ExperimentMode =
     | 'single_agent'
     | 'multi_agent_no_debate'
@@ -466,6 +466,8 @@ export interface MultiAgentConfig {
     primarySingleAgentRole?: 'socrates' | 'plato' | 'aristotle';
     heuristicOnly?: boolean;
     useIsolatedBus?: boolean;
+    /** Per-detection-stage model ID overrides passed to ModelRouter (stage → model ID). */
+    modelRouterOverrides?: Record<string, string>;
     layers: {
         l1_collaboration: LayerConfig;
         l2_rolePlaying: LayerConfig;

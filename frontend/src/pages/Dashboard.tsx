@@ -291,28 +291,28 @@ export default function Dashboard() {
         anchor.download = `dashboard-${timeRange}-${Date.now()}.${format}`;
         anchor.click();
         window.URL.revokeObjectURL(url);
-        setExportMessage(`已导出当前视图（${format.toUpperCase()}）`);
+        setExportMessage(`${t('dashboard.exported')} (${format.toUpperCase()})`);
         window.setTimeout(() => setExportMessage(null), 2500);
     };
 
     const healthStatus = stats.successRate >= 99 ? t('dashboard.health_good') : stats.successRate >= 95 ? t('dashboard.health_stable') : t('dashboard.health_warning');
     const emptyAttackDescription = securitySummary.observedSessions || securitySummary.trafficAnomalies
-        ? `最近已观测 ${securitySummary.observedSessions || 0} 条会话，识别 ${securitySummary.trafficAnomalies || 0} 个异常流量特征。`
-        : '当前没有新的来源分布，但系统仍在持续接收实时流量摘要。';
+        ? t('dashboard.empty_attack_observed', { sessions: securitySummary.observedSessions || 0, anomalies: securitySummary.trafficAnomalies || 0 })
+        : t('dashboard.empty_attack_fallback');
     const emptyRulesDescription = securitySummary.activeAlerts || securitySummary.highRiskFindings
-        ? `当前有 ${securitySummary.activeAlerts} 条活跃告警、${securitySummary.highRiskFindings || 0} 条高风险发现等待规则命中。`
-        : '规则命中后这里会显示排行；当前可转到监控、告警和设备页查看实时状态。';
+        ? t('dashboard.empty_rules_alert', { alerts: securitySummary.activeAlerts, risks: securitySummary.highRiskFindings || 0 })
+        : t('dashboard.empty_rules_fallback');
     const emptyLogsText = securitySummary.pendingActions || securitySummary.failedValidations
-        ? `当前没有新的日志流；待执行动作 ${securitySummary.pendingActions}，失败验证 ${securitySummary.failedValidations}。`
-        : '正在等待新的日志事件进入当前视图。';
+        ? t('dashboard.empty_logs_pending', { pending: securitySummary.pendingActions, failed: securitySummary.failedValidations })
+        : t('dashboard.empty_logs_fallback');
 
     return (
         <ConsolePage title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <ConsoleStatCard icon={Server} label={t('dashboard.total_requests')} value={stats.totalRequests.toLocaleString()} hint={t('dashboard.scale')} tone="primary" />
                 <ConsoleStatCard icon={Shield} label={t('dashboard.threats_blocked')} value={stats.blockedRequests.toLocaleString()} hint={t('dashboard.recent_events')} tone="danger" />
-                <ConsoleStatCard icon={Zap} label="平均延迟" value={`${stats.avgProcessingTime || 0}ms`} hint={`P99 ${stats.p99Latency || 0}ms`} tone="warning" />
-                <ConsoleStatCard icon={Globe} label="全局健康" value={`${stats.successRate}%`} hint={healthStatus} tone="success" />
+                <ConsoleStatCard icon={Zap} label={t('dashboard.avg_latency')} value={`${stats.avgProcessingTime || 0}ms`} hint={`P99 ${stats.p99Latency || 0}ms`} tone="warning" />
+                <ConsoleStatCard icon={Globe} label={t('dashboard.global_health')} value={`${stats.successRate}%`} hint={healthStatus} tone="success" />
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -323,17 +323,17 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={AlertTriangle} label={t('dashboard.high_risk')} value={securitySummary.openCriticalFindings} hint={`高风险总数 ${securitySummary.highRiskFindings || 0}`} tone="danger" />
-                <ConsoleStatCard icon={Shield} label={t('dashboard.active_alerts')} value={securitySummary.activeAlerts} hint={`待处理动作 ${securitySummary.pendingActions}`} tone="warning" />
-                <ConsoleStatCard icon={Search} label={t('dashboard.scan_tasks')} value={securitySummary.runningScans} hint={`排队中 ${securitySummary.queuedScans || 0}`} tone="primary" />
-                <ConsoleStatCard icon={Globe} label={t('dashboard.observed_sessions')} value={securitySummary.observedSessions || 0} hint={`异常流量 ${securitySummary.trafficAnomalies || 0}`} tone="success" />
+                <ConsoleStatCard icon={AlertTriangle} label={t('dashboard.high_risk')} value={securitySummary.openCriticalFindings} hint={t('dashboard.high_risk_hint').replace('{n}', String(securitySummary.highRiskFindings || 0))} tone="danger" />
+                <ConsoleStatCard icon={Shield} label={t('dashboard.active_alerts')} value={securitySummary.activeAlerts} hint={t('dashboard.pending_actions_hint').replace('{n}', String(securitySummary.pendingActions))} tone="warning" />
+                <ConsoleStatCard icon={Search} label={t('dashboard.scan_tasks')} value={securitySummary.runningScans} hint={t('dashboard.queued_hint').replace('{n}', String(securitySummary.queuedScans || 0))} tone="primary" />
+                <ConsoleStatCard icon={Globe} label={t('dashboard.observed_sessions')} value={securitySummary.observedSessions || 0} hint={t('dashboard.anomaly_hint').replace('{n}', String(securitySummary.trafficAnomalies || 0))} tone="success" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 <div className="lg:col-span-8">
                     <ConsolePanel
-                        title="流量分析"
-                        subtitle="按时间窗口查看请求与拦截趋势"
+                        title={t('dashboard.traffic_analysis')}
+                        subtitle={t('dashboard.traffic_trend_subtitle')}
                         icon={Activity}
                         iconTone="primary"
                     >
@@ -346,7 +346,7 @@ export default function Dashboard() {
                                         : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                1 小时
+                                {t('dashboard.time_1h')}
                             </button>
                             <button
                                 onClick={() => setTimeRange('24h')}
@@ -356,7 +356,7 @@ export default function Dashboard() {
                                         : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                24 小时
+                                {t('dashboard.time_24h')}
                             </button>
                         </div>
                         <TrafficChart data={filteredHistory} />
@@ -388,7 +388,7 @@ export default function Dashboard() {
                                     </div>
                                 ))
                             ) : (
-                                <ConsoleEmptyState title="暂无攻击来源分布" description={emptyAttackDescription} />
+                                <ConsoleEmptyState title={t('dashboard.no_attack_sources')} description={emptyAttackDescription} />
                             )}
                         </div>
                     </ConsolePanel>
@@ -398,8 +398,8 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 <div className="lg:col-span-8">
                     <ConsolePanel
-                        title="实时日志流"
-                        subtitle="筛选当前视图并导出结果"
+                        title={t('dashboard.real_time_logs')}
+                        subtitle={t('dashboard.logs_filter_subtitle')}
                         icon={Terminal}
                         iconTone="neutral"
                         headerAction={(
@@ -410,7 +410,7 @@ export default function Dashboard() {
                                         type="text"
                                         value={filterQuery}
                                         onChange={(event) => setFilterQuery(event.target.value)}
-                                        placeholder="筛选：status / type / path / message"
+                                        placeholder={t('dashboard.filter_placeholder')}
                                         className="w-full rounded-lg border border-border bg-card py-1.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none md:w-64"
                                     />
                                 </div>
@@ -449,7 +449,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="space-y-6 lg:col-span-4">
-                    <ConsolePanel title="最近运营动作" subtitle="来自扫描、处置和验证链路的最新结果" icon={Zap} iconTone="success">
+                    <ConsolePanel title={t('dashboard.recent_actions')} subtitle={t('dashboard.recent_actions_subtitle')} icon={Zap} iconTone="success">
                         {(securitySummary.recentActions || []).length > 0 || (securitySummary.recentValidations || []).length > 0 ? (
                             <div className="space-y-3">
                                 {(securitySummary.recentActions || []).slice(0, 3).map((action) => (
@@ -472,18 +472,18 @@ export default function Dashboard() {
                                 ))}
                             </div>
                         ) : (
-                            <ConsoleEmptyState title="暂无新的运营动作" description="当扫描、处置或攻击验证完成后，这里会展示最近的真实结果。" />
+                            <ConsoleEmptyState title={t('dashboard.no_recent_actions')} description={t('dashboard.no_recent_actions_desc')} />
                         )}
                     </ConsolePanel>
 
                     <ConsolePanel
-                        title="活跃规则"
-                        subtitle="触发次数最高的规则清单"
+                        title={t('dashboard.active_rules')}
+                        subtitle={t('dashboard.active_rules_subtitle')}
                         icon={Code}
                         iconTone="primary"
                         headerAction={(
                             <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                                总计 {rulesSummary.totalRules || 0}
+                                {t('dashboard.total_rules', { count: rulesSummary.totalRules || 0 })}
                             </span>
                         )}
                     >
@@ -497,7 +497,7 @@ export default function Dashboard() {
                                             </div>
                                             <div>
                                                 <div className="text-sm font-semibold text-foreground">{rule.name || rule.id}</div>
-                                                <div className="text-xs uppercase tracking-wide text-muted-foreground">严重级别 {rule.severity || 'unknown'}</div>
+                                                <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('dashboard.severity_level', { level: rule.severity || 'unknown' })}</div>
                                             </div>
                                         </div>
                                         <div className="rounded-md border border-primary/15 bg-primary/10 px-2 py-1 font-mono text-sm font-semibold text-primary">
@@ -506,20 +506,20 @@ export default function Dashboard() {
                                     </div>
                                 ))
                             ) : (
-                                <ConsoleEmptyState title="暂无规则遥测" description={emptyRulesDescription} />
+                                <ConsoleEmptyState title={t('dashboard.no_rules')} description={emptyRulesDescription} />
                             )}
                         </div>
                     </ConsolePanel>
 
                     {userRole === 'admin' && (
-                        <ConsolePanel title="管理员 API 密钥" subtitle="快速查看最近使用的接入前缀" icon={Key} iconTone="success">
+                        <ConsolePanel title={t('dashboard.admin_api_keys')} subtitle={t('dashboard.admin_api_keys_subtitle')} icon={Key} iconTone="success">
                             <div className="space-y-4">
                                 <p className="text-sm leading-6 text-muted-foreground">
-                                    展示当前管理员可快速核对的首个密钥前缀与最近使用时间，便于排查接入链路。
+                                    {t('dashboard.api_key_desc_full')}
                                 </p>
                                 <div className="flex items-center justify-between rounded-xl border border-border bg-muted p-3">
                                     <code className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                                        {apiKeys[0]?.prefix ? `${apiKeys[0].prefix}********` : '未找到'}
+                                        {apiKeys[0]?.prefix ? `${apiKeys[0].prefix}********` : t('dashboard.not_found')}
                                     </code>
                                     <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                         {apiKeys[0]?.lastUsed || 'never'}

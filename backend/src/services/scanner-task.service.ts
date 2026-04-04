@@ -264,7 +264,7 @@ function parseJson<T>(value: any, fallback: T): T {
   }
 }
 
-function normalizeSeverity(severity: string): Severity {
+export function normalizeSeverity(severity: string): Severity {
   const normalized = String(severity || 'medium').toLowerCase();
   if (normalized === 'critical' || normalized === 'high' || normalized === 'medium' || normalized === 'low') {
     return normalized;
@@ -272,7 +272,7 @@ function normalizeSeverity(severity: string): Severity {
   return 'medium';
 }
 
-function compareSemver(left: string, right: string): number {
+export function compareSemver(left: string, right: string): number {
   const leftParts = String(left || '')
     .split('.')
     .map((item) => Number.parseInt(item, 10))
@@ -294,16 +294,16 @@ function compareSemver(left: string, right: string): number {
   return 0;
 }
 
-function isIp(value: string): boolean {
+export function isIp(value: string): boolean {
   return net.isIP(value) !== 0;
 }
 
-function ipToLong(ip: string): number {
+export function ipToLong(ip: string): number {
   const parts = ip.split('.').map((item) => Number(item));
   return (((parts[0] << 24) >>> 0) + (parts[1] << 16) + (parts[2] << 8) + parts[3]) >>> 0;
 }
 
-function longToIp(value: number): string {
+export function longToIp(value: number): string {
   return [
     (value >>> 24) & 255,
     (value >>> 16) & 255,
@@ -312,7 +312,7 @@ function longToIp(value: number): string {
   ].join('.');
 }
 
-function expandIpv4Cidr(cidr: string, maxHosts = 64): string[] {
+export function expandIpv4Cidr(cidr: string, maxHosts = 64): string[] {
   const [base, prefixRaw] = cidr.split('/');
   const prefix = Number(prefixRaw);
   if (!isIp(base) || !Number.isInteger(prefix) || prefix < 0 || prefix > 32) {

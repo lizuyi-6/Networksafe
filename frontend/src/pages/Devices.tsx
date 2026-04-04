@@ -361,7 +361,7 @@ const Devices = () => {
             <div className="flex justify-between items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-foreground tracking-tight">{t('devices.title')}</h2>
-                    <p className="text-sm text-muted-foreground mt-1">设备、命令、配置与安全上下文统一查看。</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t('devices.page_subtitle')}</p>
                 </div>
                 <div className="flex gap-3">
                     <button onClick={() => void fetchDevices()} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-card border border-border text-foreground rounded-lg hover:bg-muted/50 hover:border-primary/30 transition-all shadow-sm">
@@ -409,12 +409,12 @@ const Devices = () => {
                                 <div className="text-center">
                                     <div className="text-base font-medium text-foreground">{t('devices.no_gateways')}</div>
                                     <p className="mt-2 text-sm text-muted-foreground">
-                                        平台当前运行正常，但该租户尚未注册任何物联网网关。生产模式下不会再注入演示设备，因此这里会真实反映接入现状。
+                                        {t('devices.no_device_desc')}
                                     </p>
                                 </div>
                                 <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
                                     <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
-                                        <div className="text-xs text-muted-foreground">在线智能体</div>
+                                        <div className="text-xs text-muted-foreground">{t('devices.online_agents')}</div>
                                         <div className="mt-1 text-2xl font-semibold text-foreground">{platformBadges.agentMonitor || platformBadges.agents}</div>
                                     </div>
                                     <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
@@ -432,7 +432,7 @@ const Devices = () => {
                                         className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
                                     >
                                         <Server size={14} />
-                                        查看接入与部署
+                                        {t('devices.view_deploy')}
                                     </Link>
                                     <button
                                         onClick={() => void fetchDevices()}

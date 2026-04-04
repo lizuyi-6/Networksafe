@@ -64,7 +64,7 @@ const DeploymentWizard = () => {
             setGenerated(response.data);
             setStep(3);
         } catch (e: any) {
-            setError(e.message || '生成配置失败');
+            setError(e.message || t('deploymentWizard.generate_failed'));
         } finally {
             setLoading(false);
         }
@@ -90,7 +90,7 @@ const DeploymentWizard = () => {
             setSavedId(response.data.deploymentId);
             await loadHistory();
         } catch (e: any) {
-            setError(e.message || '保存部署配置失败');
+            setError(e.message || t('deploymentWizard.save_failed'));
         } finally {
             setSaving(false);
         }
@@ -110,9 +110,9 @@ const DeploymentWizard = () => {
     }, []);
 
     return (
-        <ConsolePage title={t('deploy.title')} subtitle="按步骤生成、保存并下载中间件部署配置">
+        <ConsolePage title={t('deploy.title')} subtitle={t('deploymentWizard.page_subtitle')}>
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-                <ConsolePanel title="部署向导" subtitle="按步骤完成中间件配置" icon={Server} iconTone="primary" className="xl:col-span-2">
+                <ConsolePanel title={t('deploymentWizard.wizard_title')} subtitle={t('deploymentWizard.wizard_subtitle')} icon={Server} iconTone="primary" className="xl:col-span-2">
                     <div className="relative mb-12 flex items-center justify-between">
                         <div className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-border" />
                         {[1, 2, 3].map((s) => (
@@ -208,7 +208,7 @@ const DeploymentWizard = () => {
                             </div>
 
                             <div className="text-xs text-muted-foreground">
-                                校验和：<span className="font-mono">{generated.checksum}</span>
+                                {t('deploymentWizard.checksum')}：<span className="font-mono">{generated.checksum}</span>
                             </div>
                             <div className="overflow-x-auto rounded-xl border border-border bg-muted/20 p-6 font-mono text-xs text-foreground">
                                 <pre>{generated.configText}</pre>
@@ -258,9 +258,9 @@ const DeploymentWizard = () => {
                     </div>
                 </ConsolePanel>
 
-                <ConsolePanel title={t('wizard.deployment_history')} subtitle="最近生成与保存的配置包" icon={FileCode} iconTone="neutral">
+                <ConsolePanel title={t('wizard.deployment_history')} subtitle={t('deploymentWizard.history_subtitle')} icon={FileCode} iconTone="neutral">
                     <div className="max-h-[560px] space-y-3 overflow-y-auto pr-1">
-                        {history.length === 0 && <ConsoleEmptyState title={t('wizard.no_profiles')} description="还没有保存过部署配置。" />}
+                        {history.length === 0 && <ConsoleEmptyState title={t('wizard.no_profiles')} description={t('deploymentWizard.no_saved_configs')} />}
                         {history.map((row: any) => (
                             <div key={row.id} className="rounded-xl border border-border bg-muted/15 p-3">
                                 <div className="flex items-start justify-between gap-2">

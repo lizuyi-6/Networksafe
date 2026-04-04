@@ -115,6 +115,25 @@ export interface DeviceGatewaySettings {
   statusAliasEnabled: boolean;
 }
 
+export interface EdgeAutoProtocolModuleSettings {
+  [moduleId: string]: Record<string, any>;
+}
+
+export interface EdgeAutoSettings {
+  runtimeDefaults: {
+    cpuCeilingPct: number;
+    sampleIntervalSec: number;
+    breachWindowSec: number;
+    recoveryWindowSec: number;
+    autoReadOnlyBypass: boolean;
+  };
+  protocolDefaults: {
+    modules: EdgeAutoProtocolModuleSettings;
+    legacy?: Record<string, any>;
+  };
+  arm64Enabled: boolean;
+}
+
 export interface PlatformConfig {
   antiBot: {
     enabled: boolean;
@@ -134,6 +153,7 @@ export interface PlatformConfig {
   detectionPipeline: DetectionPipelineSettings;
   deploymentDefaults: DeploymentDefaults;
   deviceGateway: DeviceGatewaySettings;
+  edgeAuto?: EdgeAutoSettings;
 }
 
 export interface NotificationDeliveryRecord {
@@ -261,7 +281,7 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   }
 };
 
-function cloneDefaultConfig(): PlatformConfig {
+export function cloneDefaultConfig(): PlatformConfig {
   return JSON.parse(JSON.stringify(DEFAULT_PLATFORM_CONFIG)) as PlatformConfig;
 }
 
@@ -276,7 +296,7 @@ function parseJson<T>(value: any, fallback: T): T {
   }
 }
 
-function normalizeNumber(value: any, fallback: number, min: number, max: number): number {
+export function normalizeNumber(value: any, fallback: number, min: number, max: number): number {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
     return fallback;
@@ -284,7 +304,7 @@ function normalizeNumber(value: any, fallback: number, min: number, max: number)
   return Math.min(Math.max(Math.round(numeric), min), max);
 }
 
-function normalizeBoolean(value: any, fallback: boolean): boolean {
+export function normalizeBoolean(value: any, fallback: boolean): boolean {
   if (typeof value === 'boolean') {
     return value;
   }
@@ -303,11 +323,11 @@ function normalizeBoolean(value: any, fallback: boolean): boolean {
   return fallback;
 }
 
-function normalizeString(value: any, fallback: string): string {
+export function normalizeString(value: any, fallback: string): string {
   return typeof value === 'string' ? value.trim() : fallback;
 }
 
-function normalizeSeverity(value: any, fallback: SeverityLevel = 'medium'): SeverityLevel {
+export function normalizeSeverity(value: any, fallback: SeverityLevel = 'medium'): SeverityLevel {
   const normalized = String(value || fallback).toLowerCase();
   if (normalized === 'critical' || normalized === 'high' || normalized === 'medium' || normalized === 'low') {
     return normalized;
@@ -315,7 +335,7 @@ function normalizeSeverity(value: any, fallback: SeverityLevel = 'medium'): Seve
   return fallback;
 }
 
-function severityRank(value: SeverityLevel): number {
+export function severityRank(value: SeverityLevel): number {
   switch (value) {
     case 'critical':
       return 4;
@@ -332,7 +352,7 @@ export function isSeverityAtLeast(value: SeverityLevel, minimum: SeverityLevel):
   return severityRank(value) >= severityRank(minimum);
 }
 
-function normalizeHeaders(input: any): Record<string, string> {
+export function normalizeHeaders(input: any): Record<string, string> {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     return {};
   }
@@ -346,7 +366,7 @@ function normalizeHeaders(input: any): Record<string, string> {
   }, {});
 }
 
-function normalizeChannel(raw: any, index: number): NotificationChannelConfig {
+export function normalizeChannel(raw: any, index: number): NotificationChannelConfig {
   const type = String(raw?.type || 'generic_webhook') as NotificationChannelType;
   const safeType: NotificationChannelType = ['email', 'smtp', 'slack_webhook', 'generic_webhook'].includes(type)
     ? type
@@ -371,7 +391,7 @@ function normalizeChannel(raw: any, index: number): NotificationChannelConfig {
   };
 }
 
-function normalizeNotifications(raw: any): NotificationSettings {
+export function normalizeNotifications(raw: any): NotificationSettings {
   const defaults = cloneDefaultConfig().notifications;
   const retryDelays = Array.isArray(raw?.retryDelaysSeconds)
     ? raw.retryDelaysSeconds
@@ -389,7 +409,7 @@ function normalizeNotifications(raw: any): NotificationSettings {
   };
 }
 
-function normalizeRoutingMode(value: any, fallback: AIRoutingMode = 'cloud_only'): AIRoutingMode {
+export function normalizeRoutingMode(value: any, fallback: AIRoutingMode = 'cloud_only'): AIRoutingMode {
   const normalized = String(value || fallback).toLowerCase();
   if (normalized === 'cloud_only' || normalized === 'local_preferred' || normalized === 'local_only' || normalized === 'hybrid_verify') {
     return normalized;
@@ -397,7 +417,7 @@ function normalizeRoutingMode(value: any, fallback: AIRoutingMode = 'cloud_only'
   return fallback;
 }
 
-function normalizeAiRouting(raw: any): AIRoutingSettings {
+export function normalizeAiRouting(raw: any): AIRoutingSettings {
   const defaults = cloneDefaultConfig().aiRouting;
   return {
     mode: normalizeRoutingMode(raw?.mode, defaults.mode),
@@ -409,7 +429,7 @@ function normalizeAiRouting(raw: any): AIRoutingSettings {
   };
 }
 
-function normalizePrivacyMode(value: any, fallback: PrivacyMode = 'off'): PrivacyMode {
+export function normalizePrivacyMode(value: any, fallback: PrivacyMode = 'off'): PrivacyMode {
   if (value === 'strict') {
     return 'strict';
   }
@@ -419,7 +439,7 @@ function normalizePrivacyMode(value: any, fallback: PrivacyMode = 'off'): Privac
   return fallback;
 }
 
-function normalizeAuditArchive(raw: any): AuditArchiveSettings {
+export function normalizeAuditArchive(raw: any): AuditArchiveSettings {
   const defaults = cloneDefaultConfig().auditArchive;
   return {
     bucket: normalizeString(raw?.bucket, defaults.bucket) || defaults.bucket,
@@ -429,7 +449,7 @@ function normalizeAuditArchive(raw: any): AuditArchiveSettings {
   };
 }
 
-function normalizeFastpath(raw: any): FastpathSettings {
+export function normalizeFastpath(raw: any): FastpathSettings {
   const defaults = cloneDefaultConfig().fastpath;
   const transport = String(raw?.transport || defaults.transport).toLowerCase();
   return {
@@ -446,7 +466,7 @@ function normalizeFastpath(raw: any): FastpathSettings {
   };
 }
 
-function normalizeDetectionAIEscalationMode(
+export function normalizeDetectionAIEscalationMode(
   value: any,
   fallback: DetectionAIEscalationMode = 'high_risk_allowed_only'
 ): DetectionAIEscalationMode {
@@ -455,7 +475,7 @@ function normalizeDetectionAIEscalationMode(
     : fallback;
 }
 
-function normalizeDetectionLearningMode(
+export function normalizeDetectionLearningMode(
   value: any,
   fallback: DetectionLearningMode = 'malicious_review_queue'
 ): DetectionLearningMode {
@@ -464,7 +484,7 @@ function normalizeDetectionLearningMode(
     : fallback;
 }
 
-function normalizeDetectionChannels(value: any, fallback: DetectionChannel[]): DetectionChannel[] {
+export function normalizeDetectionChannels(value: any, fallback: DetectionChannel[]): DetectionChannel[] {
   const allowed: DetectionChannel[] = ['http_api', 'packet', 'agent'];
   const normalized = Array.isArray(value)
     ? value
@@ -475,7 +495,7 @@ function normalizeDetectionChannels(value: any, fallback: DetectionChannel[]): D
   return normalized.length > 0 ? (normalized as DetectionChannel[]) : fallback;
 }
 
-function normalizeDetectionPipeline(raw: any): DetectionPipelineSettings {
+export function normalizeDetectionPipeline(raw: any): DetectionPipelineSettings {
   const defaults = cloneDefaultConfig().detectionPipeline;
   const normalizeThreshold = (value: any, fallback: number): number => {
     const numeric = Number(value);
@@ -517,11 +537,11 @@ function normalizeDetectionPipeline(raw: any): DetectionPipelineSettings {
   };
 }
 
-function normalizeDeploymentTarget(value: any, fallback: DeploymentTarget = 'nginx'): DeploymentTarget {
+export function normalizeDeploymentTarget(value: any, fallback: DeploymentTarget = 'nginx'): DeploymentTarget {
   return DEPLOYMENT_TARGETS.includes(value as DeploymentTarget) ? (value as DeploymentTarget) : fallback;
 }
 
-function normalizeDeploymentTemplate(raw: any): DeploymentProfileTemplate {
+export function normalizeDeploymentTemplate(raw: any): DeploymentProfileTemplate {
   return {
     port: normalizeNumber(raw?.port, DEFAULT_DEPLOYMENT_TEMPLATE.port, 1, 65535),
     serverName: normalizeString(raw?.serverName, DEFAULT_DEPLOYMENT_TEMPLATE.serverName),
@@ -532,7 +552,7 @@ function normalizeDeploymentTemplate(raw: any): DeploymentProfileTemplate {
   };
 }
 
-function normalizeDeploymentDefaults(raw: any): DeploymentDefaults {
+export function normalizeDeploymentDefaults(raw: any): DeploymentDefaults {
   const templates = DEPLOYMENT_TARGETS.reduce<Record<DeploymentTarget, DeploymentProfileTemplate>>((acc, target) => {
     acc[target] = normalizeDeploymentTemplate(raw?.profileTemplates?.[target]);
     return acc;
@@ -544,7 +564,7 @@ function normalizeDeploymentDefaults(raw: any): DeploymentDefaults {
   };
 }
 
-function normalizeDeviceGateway(raw: any): DeviceGatewaySettings {
+export function normalizeDeviceGateway(raw: any): DeviceGatewaySettings {
   const defaults = cloneDefaultConfig().deviceGateway;
   const aliases = Array.isArray(raw?.aliases)
     ? raw.aliases
@@ -565,7 +585,7 @@ function normalizeDeviceGateway(raw: any): DeviceGatewaySettings {
   };
 }
 
-function normalizePlatformConfig(raw: any, current?: PlatformConfig): PlatformConfig {
+export function normalizePlatformConfig(raw: any, current?: PlatformConfig): PlatformConfig {
   const base = current || cloneDefaultConfig();
   return {
     antiBot: {
@@ -589,7 +609,7 @@ function normalizePlatformConfig(raw: any, current?: PlatformConfig): PlatformCo
   };
 }
 
-function cloneConfig<T>(value: T): T {
+export function cloneConfig<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 

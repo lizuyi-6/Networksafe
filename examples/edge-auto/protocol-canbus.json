@@ -1,0 +1,26 @@
+{
+  "kind": "protocol",
+  "moduleId": "canbus",
+  "version": "1.0.0",
+  "displayName": "Canbus",
+  "defaultEnabled": false,
+  "supportedNodeKinds": [
+    "edge",
+    "vehicle"
+  ],
+  "supportedArchitectures": [
+    "x86_64",
+    "aarch64",
+    "unknown"
+  ],
+  "policySchema": {},
+  "statsSchema": {},
+  "uiSections": [
+    "platform_settings",
+    "agent_detail",
+    "dashboard"
+  ],
+  "capabilities": [
+    "template"
+  ]
+}

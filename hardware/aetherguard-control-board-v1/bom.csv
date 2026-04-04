@@ -1,0 +1,27 @@
+Ref,Qty,Value / Part,Package / Footprint,Notes
+U1,1,ESP32-S3-WROOM-1-N8R2,ESP32-S3-WROOM-1,Main controller with native USB
+U2,1,ATECC608C,SOIC-8 or UDFN-8,Secure element for physical confirmation signing
+U3,1,5V Buck Regulator,Vendor specific,External 12/24V to 5V rail
+U4,1,3.3V Regulator,Vendor specific,5V to 3V3 logic rail
+U5,1,USB power switch with reverse blocking,SOT-23-5 or DFN,Prevent host backfeed
+U6,1,Ideal diode / OR-ing controller,Vendor specific,External DC priority over USB
+U7,1,Optocoupler output driver,SOIC-4 or SOIC-8,Low-voltage isolated interlock output
+U8,1,Optocoupler input receiver,SOIC-4 or SOIC-8,Interlock feedback sense
+J1,1,USB-C receptacle,USB-C 16P USB2.0,Host data and 5V input
+J2,1,2-pin locking terminal,3.5mm pitch,12/24V external input
+J3,1,Tag-Connect or 1x6 2.54mm header,Debug footprint,3V3 UART and recovery
+J4,1,2-pin locking terminal,3.5mm pitch,Isolated interlock output
+J5,1,2-pin locking terminal,3.5mm pitch,Interlock feedback input
+DS1,1,0.96in 128x64 OLED,I2C OLED footprint,Status and approval prompts
+BZ1,1,Passive buzzer,9x9mm SMD,Pending-confirmation audible alert
+LED1,1,RGB LED,PLCC4 or 5050,Status indication
+SW1,1,Cancel tactile switch,4.2x3.2mm or similar,Reject pending action
+SW2,1,Confirm tactile switch,4.2x3.2mm or similar,2-second long press confirm
+SW3,1,Reset tactile switch,Side or top access,Maintenance only
+F1,1,Polyfuse USB input,1206,Protect host VBUS
+TVS1,1,USB ESD array,SOT-23-6 or DFN,Protect D+/D- and CC pins
+TVS2,1,DC input TVS,SMA or SMB,Protect 12/24V input
+R-CC1,2,5.1k,0603,USB-C sink CC resistors
+R-I2C,2,4.7k,0603,I2C pull-ups for OLED and ATECC608C
+C-DEC,12,0.1uF,0603,Local decoupling
+C-BULK,4,10uF to 47uF,0805 or 1206,Power rail stabilization

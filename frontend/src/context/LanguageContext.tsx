@@ -7,7 +7,7 @@ type Language = 'en' | 'zh';
 interface LanguageContextType {
     language: Language;
     toggleLanguage: () => void;
-    t: (key: string) => string;
+    t: (key: string, options?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -23,7 +23,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <LanguageContext.Provider value={{ language, toggleLanguage, t: t as any }}>
+        <LanguageContext.Provider value={{ language, toggleLanguage, t: t as (key: string, options?: Record<string, string | number>) => string }}>
             {children}
         </LanguageContext.Provider>
     );

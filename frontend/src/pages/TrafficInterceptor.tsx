@@ -112,12 +112,12 @@ export default function TrafficInterceptor() {
             }
         >
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-                <ConsoleStatCard icon={Activity} label={t('trafficInterceptor.packets')} value={stats?.packetsProcessed?.toLocaleString() || 0} hint="累计处理报文数" tone="primary" />
-                <ConsoleStatCard icon={CheckCircle} label={t('trafficInterceptor.allowed')} value={stats?.packetsAllowed?.toLocaleString() || 0} hint="已通过检测链路" tone="success" />
-                <ConsoleStatCard icon={XCircle} label={t('trafficInterceptor.blocked')} value={stats?.packetsBlocked?.toLocaleString() || 0} hint="已被主动拦截" tone="danger" />
-                <ConsoleStatCard icon={Shield} label={t('trafficInterceptor.inspected')} value={stats?.packetsInspected?.toLocaleString() || 0} hint="已完成深度检查" tone="warning" />
-                <ConsoleStatCard icon={Database} label={t('trafficInterceptor.bytes')} value={formatBytes(Number(stats?.bytesProcessed || 0))} hint="累计吞吐量" tone="neutral" />
-                <ConsoleStatCard icon={Clock} label={t('trafficInterceptor.uptime')} value={formatUptime(stats?.uptime || 0)} hint="拦截器持续运行时长" tone="neutral" />
+                <ConsoleStatCard icon={Activity} label={t('trafficInterceptor.packets')} value={stats?.packetsProcessed?.toLocaleString() || 0} hint={t('trafficInterceptor.processed_packets')} tone="primary" />
+                <ConsoleStatCard icon={CheckCircle} label={t('trafficInterceptor.allowed')} value={stats?.packetsAllowed?.toLocaleString() || 0} hint={t('trafficInterceptor.passed')} tone="success" />
+                <ConsoleStatCard icon={XCircle} label={t('trafficInterceptor.blocked')} value={stats?.packetsBlocked?.toLocaleString() || 0} hint={t('trafficInterceptor.blocked')} tone="danger" />
+                <ConsoleStatCard icon={Shield} label={t('trafficInterceptor.inspected')} value={stats?.packetsInspected?.toLocaleString() || 0} hint={t('trafficInterceptor.deep_inspected')} tone="warning" />
+                <ConsoleStatCard icon={Database} label={t('trafficInterceptor.bytes')} value={formatBytes(Number(stats?.bytesProcessed || 0))} hint={t('trafficInterceptor.throughput')} tone="neutral" />
+                <ConsoleStatCard icon={Clock} label={t('trafficInterceptor.uptime')} value={formatUptime(stats?.uptime || 0)} hint={t('trafficInterceptor.uptime')} tone="neutral" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -267,7 +267,7 @@ export default function TrafficInterceptor() {
                                             <td className="px-4 py-3 text-right font-mono font-bold text-muted-foreground">{formatBytes(flow.byteCount ?? 0)}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <Link to={`/traffic/sessions/${flow.id}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
-                                                    查看
+                                                    {t('trafficInterceptor.detail')}
                                                 </Link>
                                             </td>
                                         </motion.tr>
@@ -277,7 +277,7 @@ export default function TrafficInterceptor() {
                         </table>
                     </div>
                 ) : (
-                    <ConsoleEmptyState title={t('trafficInterceptor.noFlows')} description="当前没有可供查看的活动连接。" />
+                    <ConsoleEmptyState title={t('trafficInterceptor.noFlows')} description={t('trafficInterceptor.no_active')} />
                 )}
             </ConsolePanel>
 

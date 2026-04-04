@@ -216,7 +216,7 @@ const Scanner = () => {
                 if (typeof evt.payload?.progress === 'number') {
                     setProgress(evt.payload.progress);
                 }
-                addLog(`进入阶段：${t(PHASE_LABELS_KEYS[evt.payload?.phase]) || evt.payload?.phase}`);
+                addLog(t('scanner.enter_phase', { phase: t(PHASE_LABELS_KEYS[evt.payload?.phase]) || evt.payload?.phase }));
             }
 
             if (evt.event === 'scanner:task:progress' && typeof evt.payload?.progress === 'number') {
@@ -293,7 +293,7 @@ const Scanner = () => {
             });
             const id = response?.data?.taskId;
             setTaskId(id);
-            addLog(`已创建任务 ${id}`);
+            addLog(t('scanner.task_created', { id }));
             await loadHistory();
         } catch (scanError: any) {
             setStatus('failed');
@@ -313,13 +313,13 @@ const Scanner = () => {
 
     const createAction = async () => {
         if (!selectedFinding?.findingId || selectedFinding.findingId.startsWith('legacy-')) {
-            setActionMessage('当前发现项没有可创建的处置动作。');
+            setActionMessage(t('scanner.no_action_desc'));
             return;
         }
 
         try {
             const response = await createScanRemediationAction(selectedFinding.findingId);
-            setActionMessage(`已创建处置动作：${response?.data?.title || '待处理修复任务'}`);
+            setActionMessage(t('scanner.action_created', { title: response?.data?.title || t('scanner.default_task_title') }));
         } catch (actionError: any) {
             setActionMessage(actionError.message || t('scanner.action_failed'));
         }
@@ -328,7 +328,7 @@ const Scanner = () => {
     return (
         <ConsolePage
             title={t('scanner.title')}
-            subtitle={`统一管理扫描任务、资产证据与处置建议${connected ? '，WebSocket 已连接' : '，当前使用轮询回退'}`}
+            subtitle={t('scanner.subtitle', { wsStatus: connected ? t('scanner.ws_connected') : t('scanner.ws_polling') })}
             actions={
                 <div className="flex gap-2">
                     {isRunning ? (
@@ -337,14 +337,14 @@ const Scanner = () => {
                             className="flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-500"
                         >
                             <StopCircle size={16} />
-                            取消任务
+                            {t('scanner.cancel_task')}
                         </button>
                     ) : (
                         <button
                             onClick={startScan}
                             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                         >
-                            启动扫描
+                            {t('scanner.start_scan_btn')}
                         </button>
                     )}
                 </div>
@@ -353,10 +353,10 @@ const Scanner = () => {
             {error && <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={History} label={t('scanner.current_task') || 'Current Task'} value={taskId || '-'} hint="最近一次加载或执行的扫描任务" tone="neutral" />
-                <ConsoleStatCard icon={Activity} label={t('scanner.task_status') || 'Task Status'} value={`${t(STATUS_LABELS_KEYS[status]) || status} / ${t(PHASE_LABELS_KEYS[phase]) || phase}`} hint="实时阶段与任务状态" tone="primary" />
-                <ConsoleStatCard icon={CheckCircle} label={t('scanner.progress') || 'Progress'} value={`${progress}%`} hint="任务阶段推进情况" tone="warning" />
-                <ConsoleStatCard icon={AlertTriangle} label="发现总数" value={summary.total} hint={`Critical ${summary.critical} · High ${summary.high} · Medium ${summary.medium} · Low ${summary.low}`} tone="danger" />
+                <ConsoleStatCard icon={History} label={t('scanner.current_task') || 'Current Task'} value={taskId || '-'} hint={t('scanner.current_task_hint')} tone="neutral" />
+                <ConsoleStatCard icon={Activity} label={t('scanner.task_status') || 'Task Status'} value={`${t(STATUS_LABELS_KEYS[status]) || status} / ${t(PHASE_LABELS_KEYS[phase]) || phase}`} hint={t('scanner.task_status_hint')} tone="primary" />
+                <ConsoleStatCard icon={CheckCircle} label={t('scanner.progress') || 'Progress'} value={`${progress}%`} hint={t('scanner.progress_hint')} tone="warning" />
+                <ConsoleStatCard icon={AlertTriangle} label={t('scanner.findings_total')} value={summary.total} hint={`Critical ${summary.critical} · High ${summary.high} · Medium ${summary.medium} · Low ${summary.low}`} tone="danger" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
@@ -364,28 +364,28 @@ const Scanner = () => {
                     <ConsolePanel title={t('scanner.scan_input')} subtitle={t('scanner.scan_input_subtitle')} icon={Globe} iconTone="primary">
                         <div className="space-y-4">
                             <div>
-                                <label className="text-xs text-muted-foreground">URL 目标（每行一个）</label>
+                                <label className="text-xs text-muted-foreground">{t('scanner.target')}</label>
                                 <textarea
                                     value={urls}
                                     onChange={(event) => setUrls(event.target.value)}
                                     rows={6}
                                     className="mt-2 w-full rounded-lg border border-border bg-muted/20 px-3 py-2 font-mono text-sm text-foreground"
-                                    placeholder="https://example.com&#10;https://api.example.com"
+                                    placeholder={t('scanner.one_per_line')}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <div className="text-xs text-muted-foreground">t('scanner.local_scope')</div>
+                                <div className="text-xs text-muted-foreground">{t('scanner.local_scope')}</div>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
                                     <input type="checkbox" checked={includeSystem} onChange={(event) => setIncludeSystem(event.target.checked)} />
-                                    t('scanner.baseline')
+                                    {t('scanner.baseline')}
                                 </label>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
                                     <input type="checkbox" checked={includeWeb} onChange={(event) => setIncludeWeb(event.target.checked)} />
-                                    t('scanner.web_fingerprint')
+                                    {t('scanner.web_fingerprint')}
                                 </label>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
                                     <input type="checkbox" checked={includePorts} onChange={(event) => setIncludePorts(event.target.checked)} />
-                                    端口暴露与服务探测
+                                    {t('scanner.port_scan')}
                                 </label>
                             </div>
                         </div>
@@ -393,7 +393,7 @@ const Scanner = () => {
                 </div>
 
                 <div className="xl:col-span-7">
-                    <ConsolePanel title="任务历史" subtitle="保留原来的历史区块，但支持重新载入完整证据" icon={History} iconTone="neutral">
+                    <ConsolePanel title={t('scanner.task_history')} subtitle={t('scanner.task_history_subtitle')} icon={History} iconTone="neutral">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                             {history.length === 0 && <ConsoleEmptyState title={t('scanner.no_tasks')} description={t('scanner.no_tasks_desc')} />}
                             {history.map((item) => (
@@ -407,7 +407,7 @@ const Scanner = () => {
                                     </button>
                                     <div className="mt-3 flex justify-end">
                                         <Link to={`/scanner/runs/${item.id}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
-                                            查看详情
+                                            {t('scanner.view_detail')}
                                         </Link>
                                     </div>
                                 </div>
@@ -419,9 +419,9 @@ const Scanner = () => {
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
                 <div className="xl:col-span-4">
-                    <ConsolePanel title="资产视角" subtitle="按目标聚合风险，快速判断优先级" icon={Server} iconTone="warning">
+                    <ConsolePanel title={t('scanner.asset_view')} subtitle={t('scanner.asset_view_subtitle')} icon={Server} iconTone="warning">
                         <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-                            {assetGroups.length === 0 && <ConsoleEmptyState title="暂无资产结果" description="任务完成后，这里会显示按资产聚合的风险分布。" />}
+                            {assetGroups.length === 0 && <ConsoleEmptyState title={t('scanner.no_assets')} description={t('scanner.no_assets_desc')} />}
                             {assetGroups.map((group) => (
                                 <button
                                     key={`${group.target}-${group.assetId || 'na'}`}
@@ -444,7 +444,7 @@ const Scanner = () => {
                 </div>
 
                 <div className="xl:col-span-4">
-                    <ConsolePanel title="发现列表" subtitle="当前任务中所有可追踪的发现项" icon={Shield} iconTone="danger">
+                    <ConsolePanel title={t('scanner.findings_panel')} subtitle={t('scanner.findings_panel_subtitle')} icon={Shield} iconTone="danger">
                         <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
                             {findings.length === 0 && <ConsoleEmptyState title={t('scanner.no_findings') || 'No Findings'} description={t('scanner.no_findings_desc') || 'Findings will appear here after scan'}  />}
                             {findings.map((finding) => (
@@ -474,8 +474,8 @@ const Scanner = () => {
 
                 <div className="xl:col-span-4">
                     <ConsolePanel
-                        title="证据与处置"
-                        subtitle="在原页面里补齐证据展开、处置建议和动作创建"
+                        title={t('scanner.evidence_panel')}
+                        subtitle={t('scanner.evidence_panel_subtitle')}
                         icon={Wrench}
                         iconTone="primary"
                         headerAction={
@@ -484,12 +484,12 @@ const Scanner = () => {
                                 disabled={!selectedFinding}
                                 className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                创建处置动作
+                                {t('scanner.create_action')}
                             </button>
                         }
                     >
                         {!selectedFinding ? (
-                            <ConsoleEmptyState title="选择一个发现项" description="点击左侧发现项后，这里会展开证据与修复建议。" />
+                            <ConsoleEmptyState title={t('scanner.select_finding')} description={t('scanner.select_finding_desc')} />
                         ) : (
                             <div className="space-y-4">
                                 <div>
@@ -502,19 +502,19 @@ const Scanner = () => {
                                     <p className="mt-2 text-sm text-muted-foreground">{selectedFinding.description}</p>
                                 </div>
                                 <div className="rounded-lg border border-border bg-muted/15 p-3">
-                                    <div className="text-xs font-semibold text-foreground">证据</div>
+                                    <div className="text-xs font-semibold text-foreground">{t('scanner.evidence')}</div>
                                     <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all text-xs text-muted-foreground">
                                         {JSON.stringify(selectedFinding.evidence || {}, null, 2)}
                                     </pre>
                                 </div>
                                 <div className="rounded-lg border border-border bg-muted/15 p-3">
-                                    <div className="text-xs font-semibold text-foreground">处置建议</div>
+                                    <div className="text-xs font-semibold text-foreground">{t('scanner.remediation')}</div>
                                     <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all text-xs text-muted-foreground">
                                         {JSON.stringify(selectedFinding.remediation || {}, null, 2)}
                                     </pre>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                    状态：{selectedFinding.status} · 最近出现：{new Date(selectedFinding.lastSeenAt).toLocaleString('zh-CN')}
+                                    {t('scanner.finding_status')}{selectedFinding.status} · {t('scanner.last_seen')}{new Date(selectedFinding.lastSeenAt).toLocaleString('zh-CN')}
                                 </div>
                                 {actionMessage && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-600 dark:text-emerald-300">{actionMessage}</div>}
                             </div>
@@ -523,14 +523,14 @@ const Scanner = () => {
                 </div>
             </div>
 
-            <ConsolePanel title="任务时间线" subtitle="保留实时日志区，但同时展示结构化阶段事件" icon={Activity} iconTone="warning">
+            <ConsolePanel title={t('scanner.timeline_panel')} subtitle={t('scanner.timeline_subtitle')} icon={Activity} iconTone="warning">
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                     <div ref={logRef} className="max-h-56 overflow-y-auto rounded-lg border border-border bg-muted/15 p-3 font-mono text-xs">
-                        {logs.length === 0 ? <div className="text-muted-foreground">暂无任务日志。</div> : logs.map((log, index) => <div key={`${log}-${index}`} className="mb-1 text-emerald-600 dark:text-emerald-400">{log}</div>)}
+                        {logs.length === 0 ? <div className="text-muted-foreground">{t('scanner.no_logs')}</div> : logs.map((log, index) => <div key={`${log}-${index}`} className="mb-1 text-emerald-600 dark:text-emerald-400">{log}</div>)}
                     </div>
                     <div className="max-h-56 overflow-y-auto rounded-lg border border-border bg-muted/15 p-3 text-xs">
                         {timeline.length === 0 ? (
-                            <div className="text-muted-foreground">暂无结构化时间线。</div>
+                            <div className="text-muted-foreground">{t('scanner.no_timeline')}</div>
                         ) : (
                             timeline.map((item, index) => (
                                 <div key={`${item.eventType}-${index}`} className="mb-3 rounded-lg border border-border bg-background/60 p-3">

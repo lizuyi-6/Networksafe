@@ -1,0 +1,16 @@
+[Unit]
+Description=AetherGuard USB Device Companion
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/AetherGuard/backend
+EnvironmentFile=-/etc/AetherGuard/device-companion.env
+ExecStart=/usr/bin/env node /opt/AetherGuard/backend/dist/companion/serial-device-companion.js
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+{
+  "tenantId": "global",
+  "requestId": "fixture-canbus-1",
+  "protocol": "canbus",
+  "direction": "internal",
+  "sourceRef": "agent-1",
+  "destRef": "edge-node",
+  "channel": "canbus/channel",
+  "headers": {},
+  "metadata": {},
+  "payloadBase64": "",
+  "truncated": false,
+  "timestamp": "2026-03-22T00:00:00Z"
+}

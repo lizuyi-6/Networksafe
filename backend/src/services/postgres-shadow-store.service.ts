@@ -745,7 +745,7 @@ const TABLES: Record<ShadowTable, TableConfig> = {
   }
 };
 
-function maskConnectionString(connectionString: string): string {
+export function maskConnectionString(connectionString: string): string {
   try {
     const parsed = new URL(connectionString);
     const auth = parsed.username ? `${parsed.username}:***@` : '';
@@ -755,7 +755,7 @@ function maskConnectionString(connectionString: string): string {
   }
 }
 
-function toSqlValue(value: unknown): unknown {
+export function toSqlValue(value: unknown): unknown {
   if (value === undefined) {
     return null;
   }
@@ -768,7 +768,7 @@ function toSqlValue(value: unknown): unknown {
   return value;
 }
 
-function toQueryValue(value: unknown): unknown {
+export function toQueryValue(value: unknown): unknown {
   if (value === undefined) {
     return null;
   }

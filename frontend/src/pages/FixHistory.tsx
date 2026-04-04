@@ -32,7 +32,7 @@ const FixHistory = () => {
     return (
         <ConsolePage title={t('fixHistory.title')} subtitle={t('fixHistory.subtitle')}>
             {error && <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
-            <ConsolePanel title="修复记录" subtitle="点击按钮进入稳定详情页查看完整记录。" icon={History} iconTone="primary">
+            <ConsolePanel title={t('fixHistory.page_title')} subtitle={t('fixHistory.page_subtitle')} icon={History} iconTone="primary">
                 {loading ? (
                     <ConsoleEmptyState title={t('fixHistory.loading')} />
                 ) : rows.length === 0 ? (

@@ -1,0 +1,43 @@
+Refs,Qty,Value,Footprint,Assembly,DNP,Sheets
+TP1,1,3V3,TestPoint:TestPoint_Pad_D1.5mm,Hand,No,power-input
+TP2,1,5V_SYS,TestPoint:TestPoint_Pad_D1.5mm,Hand,No,power-input
+TP6,1,BOOT,TestPoint:TestPoint_Pad_D1.5mm,Hand,No,power-input
+TP5,1,EN,TestPoint:TestPoint_Pad_D1.5mm,Hand,No,power-input
+TP3,1,I2C_SCL,TestPoint:TestPoint_Pad_D1.5mm,Hand,No,power-input
+TP4,1,I2C_SDA,TestPoint:TestPoint_Pad_D1.5mm,Hand,No,power-input
+J5,1,INTERLOCK_FB_IN,"Connector_Phoenix_MC:PhoenixContact_MCV_1,5_2-G-3.5_1x02_P3.50mm_Vertical",Hand,No,isolated-io
+J4,1,INTERLOCK_OUT,"Connector_Phoenix_MC:PhoenixContact_MCV_1,5_2-G-3.5_1x02_P3.50mm_Vertical",Hand,No,isolated-io
+DS1,1,OLED_0.96_I2C,aetherguard-control-board-v1:AetherGuard_OLED_096_I2C_Module_1x4,Hand,No,ui-panel
+J3,1,SERVICE_UART,Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical,Hand,No,mcu-usb-secure
+J2,1,VIN_EXT_12V_24V,"Connector_Phoenix_MC:PhoenixContact_MCV_1,5_2-G-3.5_1x02_P3.50mm_Vertical",Hand,No,power-input
+"R12, R13",2,100k,Resistor_SMD:R_0603_1608Metric,SMT,No,mcu-usb-secure
+"C6, C7",2,100nF,Capacitor_SMD:C_0603_1608Metric,SMT,No,mcu-usb-secure
+"R4, R9, R16, R17, R24",5,10k,Resistor_SMD:R_0603_1608Metric,SMT,No,"isolated-io, mcu-usb-secure, power-input, ui-panel"
+C1,1,10uF/50V,Capacitor_SMD:C_1206_3216Metric,SMT,No,power-input
+L1,1,10uH,Inductor_SMD:L_6.3x6.3_H3,SMT,No,power-input
+R21,1,1k,Resistor_SMD:R_0603_1608Metric,SMT,No,isolated-io
+"C4, C5",2,1uF,Capacitor_SMD:C_0603_1608Metric,SMT,No,power-input
+R14,1,20k,Resistor_SMD:R_0603_1608Metric,SMT,No,mcu-usb-secure
+"C2, C3",2,22uF/10V,Capacitor_SMD:C_1206_3216Metric,SMT,No,power-input
+"Q1, Q2",2,2N7002,Package_TO_SOT_SMD:SOT-23,SMT,No,"mcu-usb-secure, ui-panel"
+"R18, R19, R20",3,330R,Resistor_SMD:R_0603_1608Metric,SMT,No,ui-panel
+"R10, R11, R22, R23",4,4.7k,Resistor_SMD:R_0603_1608Metric,SMT,No,"isolated-io, mcu-usb-secure"
+"R1, R2",2,5.1k,Resistor_SMD:R_0603_1608Metric,SMT,No,power-input
+F1,1,500mA,Fuse:Fuse_1206_3216Metric,SMT,No,power-input
+R3,1,78.7k,Resistor_SMD:R_0603_1608Metric,SMT,No,power-input
+U4,1,AP2112K-3.3TRG1,Package_TO_SOT_SMD:SOT-23-5,SMT,No,power-input
+U2,1,ATECC608C-SSHDA-T,Package_SO:SOIC-8_3.9x4.9mm_P1.27mm,SMT,No,mcu-usb-secure
+D2,1,B5819W,Diode_SMD:D_SOD-123,SMT,No,power-input
+SW1,1,CANCEL,aetherguard-control-board-v1:AetherGuard_SW_SPST_4P_4.2x3.2mm,SMT,No,ui-panel
+SW2,1,CONFIRM,aetherguard-control-board-v1:AetherGuard_SW_SPST_4P_4.2x3.2mm,SMT,No,ui-panel
+U1,1,ESP32-S3-WROOM-1-N8R2,aetherguard-control-board-v1:AetherGuard_ESP32-S3-WROOM-1,SMT,No,mcu-usb-secure
+U3,1,LMR16006YDDCR,Package_TO_SOT_SMD:SOT-23-6,SMT,No,power-input
+BZ1,1,Passive_Buzzer,aetherguard-control-board-v1:AetherGuard_BUZZER_SMD_9x9,SMT,No,ui-panel
+SW3,1,RESET,aetherguard-control-board-v1:AetherGuard_SW_SPST_4P_4.2x3.2mm,SMT,No,ui-panel
+LED1,1,RGB_LED_CC,aetherguard-control-board-v1:AetherGuard_LED_RGB_CC_PLCC4,SMT,No,ui-panel
+TVS2,1,SMBJ33A,Diode_SMD:D_SMB,SMT,No,power-input
+D1,1,SS34,Diode_SMD:D_SMA,SMT,No,power-input
+TVS1,1,TPD4EUSB30DQAR,Package_DFN_QFN:Texas_DSQ0010A_WSON-10-1EP_2x2mm_P0.4mm_EP0.9x1.5mm,SMT,No,power-input
+U5,1,TPS2121DRLR,Package_DFN_QFN:DHWQFN-14-1EP_2.5x3mm_P0.5mm_EP1x1.5mm,SMT,No,power-input
+J1,1,USB4110-GF-A,aetherguard-control-board-v1:AetherGuard_USB4110_GFA,SMT,No,power-input
+"U7, U8",2,VOS617A,Package_SO:SO-4_4.4x2.3mm_P1.27mm,SMT,No,isolated-io

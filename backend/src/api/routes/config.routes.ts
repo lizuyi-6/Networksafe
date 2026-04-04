@@ -14,6 +14,11 @@ function tenantOf(req: AuthenticatedRequest): string {
 router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
   try {
     const config = await platformConfigService.getConfig(tenantOf(req));
+    // Strip legacy sub-fields from edgeAuto.protocolDefaults before sending
+    if (config?.edgeAuto?.protocolDefaults?.legacy) {
+      const { legacy, ...rest } = config.edgeAuto.protocolDefaults;
+      config.edgeAuto.protocolDefaults = rest;
+    }
     sendSuccess(res, config, { legacy: config });
   } catch (error: any) {
     sendError(res, 500, {

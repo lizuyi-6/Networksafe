@@ -43,6 +43,9 @@ interface DeviceInfo {
         kernel: string;
         arch: string;
     };
+    physicalAuth?: {
+        publicKeyPem: string;
+    };
 }
 
 interface DeviceConfig {

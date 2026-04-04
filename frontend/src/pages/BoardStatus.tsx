@@ -168,7 +168,7 @@ const BoardStatus = () => {
                         <div className="rounded-xl border border-border bg-muted/20">
                             <div className="flex items-center justify-between border-b border-border px-4 py-3 text-xs text-muted-foreground">
                                 <span className="font-medium text-foreground">{t('board.eventStream')}</span>
-                                <span>最近 80 条</span>
+                                <span>{t('board.recent')} 80</span>
                             </div>
                             <div className="max-h-[560px] overflow-y-auto px-4 py-4">
                                 {logs.length > 0 ? (

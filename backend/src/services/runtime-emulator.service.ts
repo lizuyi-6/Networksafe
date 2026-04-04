@@ -710,4 +710,13 @@ class RuntimeEmulatorService {
   }
 }
 
+// Exported for testing
+export function jitter(spread: number): number {
+  return Math.round((Math.random() - 0.5) * 2 * spread);
+}
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
 export const runtimeEmulatorService = new RuntimeEmulatorService();

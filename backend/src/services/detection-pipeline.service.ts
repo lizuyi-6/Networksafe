@@ -148,7 +148,7 @@ interface EvaluateOptions {
 }
 
 interface DetectionAIAnalyzeOptions {
-  analysisPurpose?: 'primary' | 'learning_verification';
+  analysisPurpose?: 'primary' | 'deep_analysis' | 'learning_verification';
   routeModeOverride?: AIRoutingMode;
 }
 

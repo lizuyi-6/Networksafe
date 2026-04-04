@@ -550,7 +550,8 @@
     "recheck": "Recheck Access Status",
     "page_subtitle": "Unified view of devices, commands, configurations, and security.",
     "no_device_desc": "Platform running normally, no IoT gateways registered. Demo devices not injected in production.",
-    "online_agents": "Online Agents"
+    "online_agents": "Online Agents",
+    "view_deploy": "View Access & Deployment"
   },
   "agents": {
     "title": "Agents",

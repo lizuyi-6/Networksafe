@@ -1,0 +1,17 @@
+{
+  "tenantId": "global",
+  "requestId": "fixture-ros2-1",
+  "protocol": "ros2_cyberrt",
+  "direction": "internal",
+  "sourceRef": "agent-1",
+  "destRef": "vehicle",
+  "channel": "/apollo/chassis/control",
+  "headers": {},
+  "metadata": {
+    "service": "/apollo/chassis/control",
+    "allowlist": ["/apollo/telemetry/read"]
+  },
+  "payloadBase64": "",
+  "truncated": false,
+  "timestamp": "2026-03-22T00:00:00Z"
+}

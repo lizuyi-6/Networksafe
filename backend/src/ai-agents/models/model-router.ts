@@ -18,7 +18,10 @@ import {
     PLATFORM_API_CONFIG,
     PlatformProvider,
     getDefaultModel,
-    getPlatformCloudBaseUrl
+    getPlatformCloudBaseUrl,
+    DetectionStage,
+    getModelIdForStage,
+    getStageModelMap
 } from '../../utils/model-access';
 import { AIRoutingSettings, PlatformConfig, platformConfigService } from '../../services/platform-config.service';
 import auditLogger from '../../security/audit-logger.service';
@@ -38,6 +41,8 @@ export interface ModelRouterConfig {
     };
     escalationThreshold: number;
     maxLocalLatency: number;
+    /** Per-detection-stage model overrides (stage → model ID). Falls back to cloudModel.model when absent. */
+    stageModelOverrides?: Record<string, string>;
 }
 
 const DEFAULT_CONFIG: ModelRouterConfig = {
@@ -60,6 +65,8 @@ export class ModelRouter {
     private config: ModelRouterConfig;
     private localEngine: AIEngine | null = null;
     private cloudClient: ZhipuClient | PlatformCloudClient | null = null;
+    /** Cache of PlatformCloudClient per stage model ID */
+    private stageClients: Map<string, PlatformCloudClient> = new Map();
     private requestStats = {
         total: 0,
         local: 0,
@@ -188,6 +195,7 @@ export class ModelRouter {
                     requestedTier: request.tier,
                     actualTier: response.tier,
                     model: decision.model,
+                    analysisPurpose: request.analysisPurpose || 'primary',
                     reason: decision.reason,
                     latency
                 },
@@ -251,9 +259,10 @@ export class ModelRouter {
             };
         }
 
+            const stageModel = this.resolveStageModelFromPurpose('primary');
         return {
             tier: 'cloud',
-            model: this.config.cloudModel.model,
+            model: stageModel,
             reason: reasonPrefix || 'AI routing mode is cloud_only',
             estimatedLatency: 3000,
             estimatedCost: 0.01
@@ -346,32 +355,42 @@ export class ModelRouter {
         }
     }
 
+    private resolveStageModelFromPurpose(purpose: string | undefined): string {
+        const stage = (purpose || 'primary') as DetectionStage;
+        return this.config.stageModelOverrides?.[stage] || this.config.cloudModel.model;
+    }
+
+    private resolveStageModel(request: ModelRequest): string {
+        const stage = (request.analysisPurpose || 'primary') as DetectionStage;
+        const override = this.config.stageModelOverrides?.[stage];
+        return override || this.config.cloudModel.model;
+    }
+
     private async executeCloud(request: ModelRequest): Promise<ModelResponse> {
         if (!this.cloudClient) {
             throw new Error('Cloud model not available');
         }
 
         const startTime = Date.now();
+        const modelId = this.resolveStageModel(request);
 
         try {
             const content = await this.cloudClient.generateCompletion(
                 request.prompt,
-                this.config.cloudModel.provider === 'dashscope'
-                    ? undefined
-                    : this.config.cloudModel.model
+                modelId
             );
 
             return {
                 id: uuidv4(),
                 content,
-                model: this.config.cloudModel.model,
+                model: modelId,
                 tier: 'cloud',
                 latency: Date.now() - startTime,
                 tokensUsed: 0,
                 sanitized: request.sanitizationLevel !== 'none'
             };
         } catch (error: any) {
-            logger.error('Cloud model execution failed', { error: error.message });
+            logger.error('Cloud model execution failed', { error: error.message, model: modelId });
             throw error;
         }
     }
@@ -416,6 +435,14 @@ export class ModelRouter {
 
     isCloudAvailable(): boolean {
         return this.cloudClient !== null;
+    }
+
+    updateStageOverrides(overrides: Record<string, string>): void {
+        this.config.stageModelOverrides = {
+            ...this.config.stageModelOverrides,
+            ...overrides
+        };
+        logger.info('Stage model overrides updated', { overrides });
     }
 }
 
