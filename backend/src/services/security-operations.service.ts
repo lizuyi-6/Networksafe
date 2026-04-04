@@ -92,12 +92,91 @@ export interface ValidationRunRecord {
   result: Record<string, any>;
 }
 
-const severityWeight: Record<Severity, number> = {
+export export const severityWeight: Record<Severity, number> = {
   critical: 100,
   high: 75,
   medium: 45,
   low: 20
 };
+
+// Exported helper functions for testing
+export function parseJson<T>(value: any, fallback: T): T {
+  if (!value || typeof value !== 'string') {
+    return fallback;
+  }
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+export function normalizeSeverity(severity?: string): Severity {
+  const normalized = String(severity || 'medium').toLowerCase();
+  if (normalized === 'critical' || normalized === 'high' || normalized === 'medium' || normalized === 'low') {
+    return normalized;
+  }
+  return 'medium';
+}
+
+export function mapSeverityLabel(severity: Severity): 'Critical' | 'High' | 'Medium' | 'Low' {
+  return severity.charAt(0).toUpperCase() + severity.slice(1) as 'Critical' | 'High' | 'Medium' | 'Low';
+}
+
+export function assetKey(tenantId: string, assetType: AssetType, externalRef: string): string {
+  return `${tenantId}:${assetType}:${externalRef}`;
+}
+
+export function relativeTime(timestamp?: string): string {
+  if (!timestamp) return 'Just now';
+  const diffMs = Date.now() - new Date(timestamp).getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} mins ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  return `${diffDays} days ago`;
+}
+
+export function mapAsset(row: any): AssetSummary {
+  return {
+    assetId: row.asset_id,
+    tenantId: row.tenant_id,
+    assetType: row.asset_type,
+    externalRef: row.external_ref,
+    displayName: row.display_name,
+    primaryAddress: row.primary_address || undefined,
+    status: row.status,
+    riskScore: Number(row.risk_score || 0),
+    findingsOpen: Number(row.findings_open || 0),
+    alertsOpen: Number(row.alerts_open || 0),
+    metadata: parseJson(row.metadata_json, {}),
+    lastSeenAt: row.last_seen_at || undefined
+  };
+}
+
+export function mapFinding(row: any): FindingRecord {
+  return {
+    findingId: row.finding_id,
+    tenantId: row.tenant_id,
+    assetId: row.asset_id || undefined,
+    sourceType: row.source_type,
+    sourceRef: row.source_ref,
+    target: row.target,
+    category: row.category,
+    severity: normalizeSeverity(row.severity),
+    status: row.status as FindingStatus,
+    title: row.title,
+    description: row.description,
+    evidence: parseJson(row.evidence_json, {}),
+    remediation: parseJson(row.remediation_json, {}),
+    fingerprint: row.fingerprint,
+    occurrenceCount: Number(row.occurrence_count || 0),
+    firstSeenAt: row.first_seen_at,
+    lastSeenAt: row.last_seen_at
+  };
+}
 
 class SecurityOperationsService {
   private schemaReady = false;

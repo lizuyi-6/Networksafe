@@ -15,6 +15,83 @@ interface TenantFilters {
   limit?: number;
 }
 
+// Exported helper functions for testing
+export function severityWeight(value?: string): number {
+  switch (String(value || '').toLowerCase()) {
+    case 'critical':
+      return 4;
+    case 'high':
+      return 3;
+    case 'medium':
+      return 2;
+    case 'low':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+export function buildWindow(range?: string): { from?: string; to?: string } {
+  if (!range || range === 'all') {
+    return {};
+  }
+
+  const now = Date.now();
+  const days = Number(range);
+  if (!Number.isFinite(days) || days <= 0) {
+    return {};
+  }
+
+  return {
+    from: new Date(now - days * 24 * 60 * 60 * 1000).toISOString(),
+    to: new Date(now).toISOString()
+  };
+}
+
+export function withinWindow(timestamp: string | undefined, filters: TenantFilters): boolean {
+  if (!timestamp) {
+    return true;
+  }
+  if (filters.from && timestamp < filters.from) {
+    return false;
+  }
+  if (filters.to && timestamp > filters.to) {
+    return false;
+  }
+  return true;
+}
+
+export function matchesUser(user: any, filters: TenantFilters, actorId?: string, actorEmail?: string): boolean {
+  if (!filters.userId) {
+    return true;
+  }
+  if (!user) {
+    return actorId === filters.userId;
+  }
+  return actorId === filters.userId || actorEmail === user.email;
+}
+
+export function toTimelineEvent(input: {
+  id: string;
+  tenantId: string;
+  category: TimelineCategory;
+  action: string;
+  status: string;
+  timestamp: string;
+  actor?: Record<string, any>;
+  target?: Record<string, any>;
+  details?: Record<string, any>;
+  source: string;
+  severity?: string;
+  evidenceRefs?: string[];
+}) {
+  return {
+    ...input,
+    severity: input.severity || 'info',
+    evidenceRefs: input.evidenceRefs || []
+  };
+}
+
 class TenantOversightService {
   private schemaReady = false;
 
