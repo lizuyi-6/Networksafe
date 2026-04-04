@@ -25,11 +25,12 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             echo "🚀 Deploying AetherGuard..."
+            DEPLOY_PATH=/opt/aetherguard
             mkdir -p $DEPLOY_PATH
             cd $DEPLOY_PATH
             git pull origin master || git clone https://github.com/lizuyi-6/Networksafe.git .
-            docker compose down || true
-            docker compose up -d --build
+            docker-compose down || true
+            docker-compose up -d --build
             docker image prune -f
             echo "✅ Deploy complete!"
 
