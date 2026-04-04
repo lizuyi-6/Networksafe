@@ -167,7 +167,7 @@
     "time_24h": "24 小时",
     "waiting_logs": "等待日志中...",
     "no_attack_data": "暂无攻击数据",
-    "filter_placeholder": "筛选: status=403...",
+    "filter_placeholder": "筛选：status / type / path / message",
     "sql_injection": "SQL 注入",
     "xss_reflected": "反射型 XSS",
     "bad_bot": "恶意爬虫",
@@ -186,7 +186,7 @@
     "logs_subtitle": "来自安全流水线的实时日志流",
     "no_sessions": "暂无会话可展示",
     "no_anomalies": "暂无异常流量特征",
-    "no_attack_sources": "暂无攻击来源数据",
+    "no_attack_sources": "暂无攻击来源分布",
     "health_good": "系统健康",
     "health_stable": "运行稳定",
     "health_warning": "需要重点关注",
@@ -201,7 +201,31 @@
     "pending_actions": "待处理动作",
     "queued_tasks": "排队中",
     "anomaly_traffic": "异常流量",
-    "recent_actions": "最近运营动作"
+    "recent_actions": "最近运营动作",
+    "empty_attack_observed": "最近已观测 {sessions} 条会话，识别 {anomalies} 个异常流量特征。",
+    "empty_attack_fallback": "当前没有新的来源分布，但系统仍在持续接收实时流量摘要。",
+    "empty_rules_alert": "当前有 {alerts} 条活跃告警、{risks} 条高风险发现等待规则命中。",
+    "empty_rules_fallback": "规则命中后这里会显示排行；当前可转到监控、告警和设备页查看实时状态。",
+    "empty_logs_pending": "当前没有新的日志流；待执行动作 {pending}，失败验证 {failed}。",
+    "empty_logs_fallback": "正在等待新的日志事件进入当前视图",
+    "traffic_trend_subtitle": "按时间窗口查看请求与拦截趋势",
+    "logs_filter_subtitle": "筛选当前视图并导出结果",
+    "recent_actions_subtitle": "来自扫描、处置和验证链路的最新结果",
+    "no_recent_actions": "暂无新的运营动作",
+    "no_recent_actions_desc": "当扫描、处置或攻击验证完成后，这里会展示最近的真实结果。",
+    "no_rules": "暂无规则遥测",
+    "exported": "已导出当前视图",
+    "api_key_desc_full": "展示当前管理员可快速核对的首个密钥前缀与最近使用时间，便于排查接入链路。",
+    "high_risk_hint": "高风险总数 {n}",
+    "pending_actions_hint": "待处理动作 {n}",
+    "queued_hint": "排队中 {n}",
+    "anomaly_hint": "异常流量 {n}",
+    "active_rules_subtitle": "触发次数最高的规则清单",
+    "admin_api_keys": "管理员 API 密钥",
+    "admin_api_keys_subtitle": "快速查看最近使用的接入前缀",
+    "not_found": "未找到",
+    "total_rules": "总计 {count}",
+    "severity_level": "严重级别 {level}"
   },
   "pricing": {
     "title": "选择您的方案",
@@ -288,7 +312,27 @@
       "synthesis": "综合分析"
     },
     "active_alerts": "活跃告警",
-    "running_scans": "进行中扫描"
+    "running_scans": "进行中扫描",
+    "auto_refresh_on": "监控已启用",
+    "orchestrator_hint": "当前已注册的编排节点",
+    "queue_hint": "当前消息总线排队深度",
+    "casefile_hint": "已保留的综合研判案卷",
+    "scans_hint": "来自扫描、流量与验证链路",
+    "running_hint": "当前仍在执行的扫描任务",
+    "actions_hint": "待执行动作",
+    "queue_depth_hint": "处置动作与队列积压",
+    "validations_failed": "验证失败",
+    "drill_no_block": "未拦截或误报的演练运行",
+    "high_risk_assets": "高风险资产",
+    "high_risk_hint": "当前需要优先关注的资产",
+    "decision_chain": "七层协同决策链路",
+    "dispatch_subtitle": "调度与传输运行指标",
+    "telemetry_subtitle": "各节点活动与响应遥测",
+    "no_heartbeat": "当前环境还没有可用的心跳数据",
+    "learning": "学习结果与模式沉淀",
+    "no_patterns": "暂无综合模式",
+    "no_patterns_desc": "案卷积累后，这里会展示高频归纳模式。",
+    "no_degradation": "当前未发现降级子系统。"
   },
   "trafficInterceptor": {
     "title": "流量拦截器",
@@ -330,7 +374,12 @@
     "activeSubtitle": "当前已纳入检测的连接",
     "noThreatsDesc": "当前没有待处理的威胁检测结果。",
     "detail": "详情",
-    "hint_passed": "已通过检测链路"
+    "hint_passed": "已通过检测链路",
+    "processed_packets": "累计处理报文数",
+    "passed": "已通过检测链路",
+    "deep_inspected": "已完成深度检查",
+    "throughput": "累计吞吐量",
+    "no_active": "当前没有可供查看的活动连接"
   },
   "attackSimulator": {
     "title": "攻击模拟器",
@@ -401,7 +450,18 @@
       "high": "高危",
       "medium": "中等",
       "low": "低危"
-    }
+    },
+    "start": "开始演练",
+    "start_attack": "开始执行攻击",
+    "drill_failed": "演练失败",
+    "no_results": "未返回结果数据",
+    "attacks_count": "项攻击",
+    "log_stream": "执行日志流",
+    "view_detail": "查看详情",
+    "selectAndRunDesc": "选中攻击并执行后，这里会显示分析过程与判定结果",
+    "recentDrillSummary": "最近一次演练汇总",
+    "attackResultLog": "逐项攻击判定日志",
+    "recentDrillBatches": "最近完成的演练批次"
   },
   "common": {
     "loading": "加载中...",
@@ -491,7 +551,11 @@
     "subtitle": "设备、命令、配置与安全上下文统一查看",
     "active_alerts": "活跃告警",
     "running_scans": "进行中扫描",
-    "recheck": "重新检查接入状态"
+    "recheck": "重新检查接入状态",
+    "page_subtitle": "设备、命令、配置与安全上下文统一查看。",
+    "no_device_desc": "平台当前运行正常，但该租户尚未注册任何物联网网关。生产模式下不会再注入演示设备，因此这里会真实反映接入现状。",
+    "online_agents": "在线智能体",
+    "view_deploy": "查看接入与部署"
   },
   "agents": {
     "title": "智能体",
@@ -513,7 +577,27 @@
     "hour": "小时",
     "minute": "分钟",
     "loading": "加载中...",
-    "no_agents_desc": "注册新节点以开始监控"
+    "no_agents_desc": "注册新节点以开始监控",
+    "page_title": "智能体",
+    "page_subtitle": "统一查看智能体在线状态、资源占用与近期威胁事件。",
+    "total_agents_hint": "已注册智能体总数",
+    "online_hint": "当前在线节点数量",
+    "threats_hint": "最近相关安全事件数",
+    "online_rate_hint": "在线健康比例",
+    "fleet": "智能体机群",
+    "fleet_subtitle": "每个卡片都支持执行动作和进入详情页。",
+    "loading_agents": "正在加载智能体数据",
+    "no_agents_display": "当前没有可显示的智能体节点",
+    "online": "在线",
+    "offline": "离线",
+    "uptime_label": "运行时长",
+    "view_detail": "查看详情",
+    "threat_panel": "安全事件",
+    "threat_panel_subtitle": "近期与智能体相关的事件",
+    "no_active_threats": "暂无活动威胁",
+    "no_threats_desc": "最近没有检测到新的智能体安全事件。",
+    "source_label": "来源",
+    "time_label": "时间"
   },
   "board": {
     "device_metrics": "设备指标",
@@ -532,7 +616,8 @@
     "back_to_list": "返回设备列表",
     "gateway_metrics": "网关运行时指标",
     "no_events_desc": "设备上报遥测后，这里会显示事件消息。",
-    "no_events": "暂无事件"
+    "no_events": "暂无事件",
+    "recent": "最近"
   },
   "scanner": {
     "task": "任务",
@@ -596,7 +681,39 @@
     "cancel_failed": "取消任务失败",
     "cancel_requested": "已请求取消",
     "action_failed": "创建处置动作失败",
-    "no_findings_desc": "完成扫描后，这里会显示按严重级别排序的发现项"
+    "no_findings_desc": "完成扫描后，这里会显示按严重级别排序的发现项",
+    "no_action_desc": "当前发现项没有可创建的处置动作。",
+    "action_created": "已创建处置动作",
+    "default_task_title": "待处理修复任务",
+    "task_created": "已创建任务 {id}",
+    "subtitle_connected": "统一管理扫描任务、资产证据与处置建议，WebSocket 已连接",
+    "subtitle_polling": "统一管理扫描任务、资产证据与处置建议，当前使用轮询回退",
+    "cancel_task": "取消任务",
+    "start_scan_btn": "启动扫描",
+    "findings_total": "发现总数",
+    "task_history": "任务历史",
+    "task_history_subtitle": "保留原来的历史区块，但支持重新载入完整证据",
+    "view_detail": "查看详情",
+    "asset_view": "资产视角",
+    "asset_subtitle": "按目标聚合风险，快速判断优先级",
+    "no_assets": "暂无资产结果",
+    "no_assets_desc": "任务完成后，这里会显示按资产聚合的风险分布。",
+    "findings_panel": "发现列表",
+    "findings_panel_subtitle": "当前任务中所有可追踪的发现项",
+    "select_finding": "选择一个发现项",
+    "select_finding_desc": "点击左侧发现项后，这里会展开证据与修复建议。",
+    "finding_status": "状态",
+    "last_seen": "最近出现",
+    "timeline_panel": "任务时间线",
+    "timeline_subtitle": "保留实时日志区，但同时展示结构化阶段事件",
+    "no_logs": "暂无任务日志。",
+    "no_timeline": "暂无结构化时间线。",
+    "enter_phase": "进入阶段",
+    "target": "目标",
+    "one_per_line": "每行一个",
+    "current_task_subtitle": "最近一次加载或执行的扫描任务",
+    "realtime_phase": "实时阶段与任务状态",
+    "phase_progress": "任务阶段推进情况"
   },
   "login": {
     "password_label": "PASSWORD"
@@ -936,14 +1053,25 @@
     "timeline": "时间线",
     "no_timeline": "暂无时间线事件",
     "related_actions": "关联动作",
-    "no_actions": "暂无关联动作"
+    "no_actions": "暂无关联动作",
+    "page_title": "告警详情",
+    "page_subtitle": "查看告警 {id} 的证据、线索与关联对象",
+    "findings": "与本次告警相关的发现",
+    "findings_subtitle": "扫描与流量会话",
+    "findings_desc": "后续扫描、验证和流量事件会在这里聚合",
+    "context": "调查上下文",
+    "actions": "关联动作",
+    "actions_subtitle": "已创建的调查与处置动作",
+    "actions_desc": "从扫描和告警页创建处置动作后，这里会显示执行记录"
   },
   "fixHistory": {
     "title": "修复历史",
     "subtitle": "查看和管理所有 AI 自修复操作记录",
     "loading": "正在加载历史记录",
     "no_records": "当前没有可展示的历史记录",
-    "view_detail": "查看详情"
+    "view_detail": "查看详情",
+    "page_title": "修复记录",
+    "page_subtitle": "点击按钮进入稳定详情页查看完整记录"
   },
   "fixHistoryDetail": {
     "title": "修复记录详情",
@@ -956,16 +1084,59 @@
     "none": "无",
     "summary": "修复摘要",
     "findings": "发现项",
-    "no_findings": "暂无关联发现项"
+    "no_findings": "暂无关联发现项",
+    "task_summary": "任务摘要",
+    "stats": "结果统计与剩余工作",
+    "remediation": "修复摘要",
+    "remediation_subtitle": "本次记录关联的风险与修复对象"
   },
   "agentDetail": {
     "recent_threats": "最近威胁与任务",
     "no_threats": "暂无关联威胁",
-    "status_timeline": "状态时间线"
+    "status_timeline": "状态时间线",
+    "page_title": "智能体详情",
+    "page_subtitle": "查看智能体 {id} 的健康、能力与事件",
+    "back": "返回智能体",
+    "scan": "发起扫描",
+    "loading": "正在加载智能体详情",
+    "online": "在线",
+    "offline": "离线",
+    "platform": "平台",
+    "last_heartbeat": "最近心跳",
+    "memory": "内存",
+    "capabilities": "运行能力",
+    "capabilities_subtitle": "版本、架构与资源描述",
+    "recent_threats_title": "近期安全事件",
+    "recent_threats_subtitle": "与该智能体关联的安全事件",
+    "no_threats_desc": "扫描和策略命中后，这里会显示与该智能体相关的事件。",
+    "status_timeline_subtitle": "心跳和运行态变化"
   },
   "app": {
     "role_not_set": "未设置角色",
     "unnamed_user": "未命名用户",
     "chinese": "中文"
+  },
+  "scannerRunDetail": {
+    "page_subtitle": "查看任务 {id} 的阶段、证据与修复建议"
+  },
+  "siteDetail": {
+    "status": "状态",
+    "target": "目标",
+    "risk_score": "风险分",
+    "packets": "报文",
+    "traffic": "流量"
+  },
+  "trafficSessionDetail": {
+    "page_subtitle": "查看会话 {id} 的上下文、元数据与时间线"
+  },
+  "deploymentWizard": {
+    "generate_failed": "生成配置失败",
+    "save_failed": "保存部署配置失败",
+    "checksum": "校验和"
+  },
+  "adminUsers": {
+    "audit": "监察",
+    "view_activity": "查看活动",
+    "no_users": "暂无用户数据"
   }
 }

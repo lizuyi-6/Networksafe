@@ -88,7 +88,7 @@ export default function AdminUsers() {
                             <th className="px-6 py-4 font-medium">{t('admin_users.user_plan')}</th>
                             <th className="px-6 py-4 font-medium">{t('admin_users.user_status')}</th>
                             <th className="px-6 py-4 font-medium hidden md:table-cell">{t('admin_users.user_last_login')}</th>
-                            <th className="px-6 py-4 font-medium">监察</th>
+                            <th className="px-6 py-4 font-medium">{t('adminUsers.audit')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -143,7 +143,7 @@ export default function AdminUsers() {
                                         to={`/admin?tab=timeline&tenant=${encodeURIComponent(u.tenant_id || '')}&user=${encodeURIComponent(u.id)}`}
                                         className="inline-flex rounded border border-border px-3 py-2 text-xs text-foreground transition-colors hover:bg-muted/40"
                                     >
-                                        查看活动
+                                        {t('adminUsers.view_activity')}
                                     </Link>
                                 </td>
                             </tr>
@@ -152,7 +152,7 @@ export default function AdminUsers() {
                 </table>
                 {users.length === 0 && (
                     <div className="p-8 text-center text-muted-foreground">
-                        No users found
+                        {t('adminUsers.no_users')}
                     </div>
                 )}
             </div>
