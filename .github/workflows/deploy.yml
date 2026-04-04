@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     env:
-      SERVER_HOST: 39.102.81.78
-      DEPLOY_PATH: /opt/aetherguard
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      DEPLOY_PATH: /opt/networksafe
     steps:
       - uses: actions/checkout@v4
 
@@ -25,19 +25,34 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             echo "🚀 Deploying AetherGuard..."
-            DEPLOY_PATH=/opt/aetherguard
-            mkdir -p $DEPLOY_PATH
-            cd $DEPLOY_PATH
-            git pull origin master || git clone https://github.com/lizuyi-6/Networksafe.git .
-            docker-compose down || true
-            docker-compose up -d --build
-            docker image prune -f
+            DEPLOY_PATH=/opt/networksafe
+
+            # Clone or update the repository
+            if [ -d "$DEPLOY_PATH/.git" ]; then
+              cd $DEPLOY_PATH
+              git pull origin master
+            else
+              rm -rf $DEPLOY_PATH
+              git clone https://github.com/lizuyi-6/Networksafe.git $DEPLOY_PATH
+              cd $DEPLOY_PATH
+            fi
+
+            # Build backend
+            cd $DEPLOY_PATH/backend
+            npm ci --production || npm install --production
+            npm run build
+
+            # Restart PM2
+            pm2 delete api-security-backend 2>/dev/null || true
+            pm2 start ecosystem.config.js
+            pm2 save
+
             echo "✅ Deploy complete!"
 
       - name: Health Check
         run: |
-          sleep 10
-          curl -f http://${{ secrets.SERVER_HOST }}:3005/api/health
+          sleep 15
+          curl -f http://${{ secrets.SERVER_HOST }}:8080/api/health
 
   notify-success:
     runs-on: ubuntu-latest
@@ -48,33 +63,8 @@ jobs:
         uses: foxundermoon/feishu-action@v1
         with:
           url: ${{ secrets.FEISHU_WEBHOOK }}
-          msg_type: interactive
-          content: |
-            {
-              "elements": [
-                {
-                  "tag": "div",
-                  "text": {
-                    "content": "**✅ AetherGuard 部署成功**\n\n**项目**: ${{ github.repository }}\n**分支**: ${{ github.ref_name }}\n**提交**: ${{ github.sha }}\n\n🔗 [查看详情](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-                    "tag": "lark_md"
-                  }
-                },
-                {
-                  "tag": "action",
-                  "actions": [
-                    {
-                      "tag": "button",
-                      "text": {
-                        "content": "查看 API",
-                        "tag": "plain_text"
-                      },
-                      "type": "primary",
-                      "url": "http://${{ secrets.SERVER_HOST }}:3005/api/health"
-                    }
-                  ]
-                }
-              ]
-            }
+          title: "✅ AetherGuard 部署成功"
+          text: "**AetherGuard 部署成功**\n\n项目: ${{ github.repository }}\n分支: ${{ github.ref_name }}\n提交: ${{ github.sha }}"
 
   notify-failure:
     runs-on: ubuntu-latest
@@ -85,13 +75,5 @@ jobs:
         uses: foxundermoon/feishu-action@v1
         with:
           url: ${{ secrets.FEISHU_WEBHOOK }}
-          msg_type: text
-          content: |
-            ❌ AetherGuard 部署失败！
-            
-            项目: ${{ github.repository }}
-            分支: ${{ github.ref_name }}
-            提交: ${{ github.sha }}
-            
-            请检查 GitHub Actions 日志:
-            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          title: "❌ AetherGuard 部署失败"
+          text: "❌ AetherGuard 部署失败！\n\n项目: ${{ github.repository }}\n分支: ${{ github.ref_name }}\n提交: ${{ github.sha }}\n\n请检查: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
