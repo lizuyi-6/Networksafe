@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 import { cancelScanTask, createScanRemediationAction, createScanTask, fetchScanHistory, fetchScanTask, fetchScanTaskResults } from '../services/api';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useLiveMode } from '../context/LiveModeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
 import type { ScanAssetGroup, SecurityFinding } from '../types/api';
 
@@ -29,22 +30,22 @@ type ScanResultPayload = {
     };
 };
 
-const STATUS_LABELS: Record<string, string> = {
-    idle: '空闲',
-    pending: '排队中',
-    running: '执行中',
-    completed: '已完成',
-    failed: '失败',
-    cancelled: '已取消'
+const STATUS_LABELS_KEYS: Record<string, string> = {
+    idle: 'scanner.status_idle',
+    pending: 'scanner.status_pending',
+    running: 'scanner.status_running',
+    completed: 'scanner.status_completed',
+    failed: 'scanner.status_failed',
+    cancelled: 'scanner.status_cancelled'
 };
 
-const PHASE_LABELS: Record<string, string> = {
-    queued: '等待执行',
-    'url-scan': 'Web 指纹与 TLS',
-    'host-scan': '主机与服务',
-    'nuclei-scan': '模板验证',
-    finalizing: '结果归档',
-    done: '已结束'
+const PHASE_LABELS_KEYS: Record<string, string> = {
+    queued: 'scanner.phase_queued',
+    'url-scan': 'scanner.phase_url_scan',
+    'host-scan': 'scanner.phase_host_scan',
+    'nuclei-scan': 'scanner.phase_nuclei_scan',
+    finalizing: 'scanner.phase_finalizing',
+    done: 'scanner.phase_done'
 };
 
 const severityTone: Record<string, string> = {
@@ -78,6 +79,7 @@ function normalizeLegacyFindings(data: NonNullable<ScanResultPayload['data']>): 
 const Scanner = () => {
     const { subscribe, connected } = useWebSocket();
     const { liveModeEnabled } = useLiveMode();
+    const { t } = useLanguage();
 
     const [taskId, setTaskId] = useState<string | null>(null);
     const [status, setStatus] = useState<string>('idle');
@@ -206,7 +208,7 @@ const Scanner = () => {
                 setStatus('running');
                 setPhase(evt.payload?.phase || 'url-scan');
                 setProgress(evt.payload?.progress ?? 0);
-                addLog('扫描任务已启动');
+                addLog(t('scanner.task_started'));
             }
 
             if (evt.event === 'scanner:task:phase') {
@@ -214,7 +216,7 @@ const Scanner = () => {
                 if (typeof evt.payload?.progress === 'number') {
                     setProgress(evt.payload.progress);
                 }
-                addLog(`进入阶段：${PHASE_LABELS[evt.payload?.phase] || evt.payload?.phase}`);
+                addLog(`进入阶段：${t(PHASE_LABELS_KEYS[evt.payload?.phase]) || evt.payload?.phase}`);
             }
 
             if (evt.event === 'scanner:task:progress' && typeof evt.payload?.progress === 'number') {
@@ -222,14 +224,14 @@ const Scanner = () => {
             }
 
             if (evt.event === 'scanner:task:log') {
-                addLog(evt.payload?.message || '收到任务日志');
+                addLog(evt.payload?.message || t('scanner.task_log_received'));
             }
 
             if (evt.event === 'scanner:task:completed') {
                 setStatus('completed');
                 setPhase('done');
                 setProgress(100);
-                addLog('扫描任务已完成');
+                addLog(t('scanner.task_completed'));
                 void loadResults(taskId);
                 void loadHistory();
             }
@@ -238,8 +240,8 @@ const Scanner = () => {
                 setStatus('failed');
                 setPhase('done');
                 setProgress(100);
-                setError(evt.payload?.error || '扫描失败');
-                addLog(`扫描失败：${evt.payload?.error || '未知错误'}`);
+                setError(evt.payload?.error || t('scanner.task_failed'));
+                `scan failed: ${evt.payload?.error || t('scanner.none')}`;
                 void loadHistory();
             }
 
@@ -247,7 +249,7 @@ const Scanner = () => {
                 setStatus('cancelled');
                 setPhase('done');
                 setProgress(100);
-                addLog('扫描任务已取消');
+                addLog(t('scanner.task_cancelled'));
                 void loadHistory();
             }
         });
@@ -295,7 +297,7 @@ const Scanner = () => {
             await loadHistory();
         } catch (scanError: any) {
             setStatus('failed');
-            setError(scanError.message || '创建扫描任务失败');
+            setError(scanError.message || t('scanner.create_failed'));
         }
     };
 
@@ -303,9 +305,9 @@ const Scanner = () => {
         if (!taskId) return;
         try {
             await cancelScanTask(taskId);
-            addLog('已请求取消当前任务');
+            addLog(t('scanner.cancel_requested') || 'Cancel requested');
         } catch (scanError: any) {
-            setError(scanError.message || '取消任务失败');
+            setError(scanError.message || t('scanner.cancel_failed'));
         }
     };
 
@@ -319,13 +321,13 @@ const Scanner = () => {
             const response = await createScanRemediationAction(selectedFinding.findingId);
             setActionMessage(`已创建处置动作：${response?.data?.title || '待处理修复任务'}`);
         } catch (actionError: any) {
-            setActionMessage(actionError.message || '创建处置动作失败');
+            setActionMessage(actionError.message || t('scanner.action_failed'));
         }
     };
 
     return (
         <ConsolePage
-            title="扫描中心"
+            title={t('scanner.title')}
             subtitle={`统一管理扫描任务、资产证据与处置建议${connected ? '，WebSocket 已连接' : '，当前使用轮询回退'}`}
             actions={
                 <div className="flex gap-2">
@@ -351,15 +353,15 @@ const Scanner = () => {
             {error && <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={History} label="当前任务" value={taskId || '-'} hint="最近一次加载或执行的扫描任务" tone="neutral" />
-                <ConsoleStatCard icon={Activity} label="任务状态" value={`${STATUS_LABELS[status] || status} / ${PHASE_LABELS[phase] || phase}`} hint="实时阶段与任务状态" tone="primary" />
-                <ConsoleStatCard icon={CheckCircle} label="执行进度" value={`${progress}%`} hint="任务阶段推进情况" tone="warning" />
+                <ConsoleStatCard icon={History} label={t('scanner.current_task') || 'Current Task'} value={taskId || '-'} hint="最近一次加载或执行的扫描任务" tone="neutral" />
+                <ConsoleStatCard icon={Activity} label={t('scanner.task_status') || 'Task Status'} value={`${t(STATUS_LABELS_KEYS[status]) || status} / ${t(PHASE_LABELS_KEYS[phase]) || phase}`} hint="实时阶段与任务状态" tone="primary" />
+                <ConsoleStatCard icon={CheckCircle} label={t('scanner.progress') || 'Progress'} value={`${progress}%`} hint="任务阶段推进情况" tone="warning" />
                 <ConsoleStatCard icon={AlertTriangle} label="发现总数" value={summary.total} hint={`Critical ${summary.critical} · High ${summary.high} · Medium ${summary.medium} · Low ${summary.low}`} tone="danger" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
                 <div className="xl:col-span-5">
-                    <ConsolePanel title="扫描输入" subtitle="保留现有入口，但把结果深化为资产、证据与处置闭环" icon={Globe} iconTone="primary">
+                    <ConsolePanel title={t('scanner.scan_input')} subtitle={t('scanner.scan_input_subtitle')} icon={Globe} iconTone="primary">
                         <div className="space-y-4">
                             <div>
                                 <label className="text-xs text-muted-foreground">URL 目标（每行一个）</label>
@@ -372,14 +374,14 @@ const Scanner = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <div className="text-xs text-muted-foreground">本机扫描范围</div>
+                                <div className="text-xs text-muted-foreground">t('scanner.local_scope')</div>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
                                     <input type="checkbox" checked={includeSystem} onChange={(event) => setIncludeSystem(event.target.checked)} />
-                                    系统基线与主机状态
+                                    t('scanner.baseline')
                                 </label>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
                                     <input type="checkbox" checked={includeWeb} onChange={(event) => setIncludeWeb(event.target.checked)} />
-                                    Web 服务指纹与配置
+                                    t('scanner.web_fingerprint')
                                 </label>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
                                     <input type="checkbox" checked={includePorts} onChange={(event) => setIncludePorts(event.target.checked)} />
@@ -393,13 +395,13 @@ const Scanner = () => {
                 <div className="xl:col-span-7">
                     <ConsolePanel title="任务历史" subtitle="保留原来的历史区块，但支持重新载入完整证据" icon={History} iconTone="neutral">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            {history.length === 0 && <ConsoleEmptyState title="暂无扫描任务" description="执行一次扫描后，这里会保留最近任务与执行进度。" />}
+                            {history.length === 0 && <ConsoleEmptyState title={t('scanner.no_tasks')} description={t('scanner.no_tasks_desc')} />}
                             {history.map((item) => (
                                 <div key={item.id} className="rounded-lg border border-border bg-muted/15 p-3 transition-colors hover:border-border/80 hover:bg-muted/20">
                                     <button onClick={() => void loadTask(item.id)} className="w-full text-left">
                                         <div className="truncate font-mono text-xs text-foreground">{item.id}</div>
                                         <div className="mt-1 text-xs text-muted-foreground">
-                                            {STATUS_LABELS[item.status] || item.status} / {PHASE_LABELS[item.phase] || item.phase} / {item.progress}%
+                                            {t(STATUS_LABELS_KEYS[item.status]) || item.status} / {t(PHASE_LABELS_KEYS[item.phase]) || item.phase} / {item.progress}%
                                         </div>
                                         <div className="mt-2 text-[11px] text-muted-foreground">{new Date(item.createdAt).toLocaleString('zh-CN')}</div>
                                     </button>
@@ -444,7 +446,7 @@ const Scanner = () => {
                 <div className="xl:col-span-4">
                     <ConsolePanel title="发现列表" subtitle="当前任务中所有可追踪的发现项" icon={Shield} iconTone="danger">
                         <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-                            {findings.length === 0 && <ConsoleEmptyState title="暂无发现项" description="完成扫描后，这里会显示按严重级别排序的发现项。" />}
+                            {findings.length === 0 && <ConsoleEmptyState title={t('scanner.no_findings') || 'No Findings'} description={t('scanner.no_findings_desc') || 'Findings will appear here after scan'}  />}
                             {findings.map((finding) => (
                                 <button
                                     key={finding.findingId}

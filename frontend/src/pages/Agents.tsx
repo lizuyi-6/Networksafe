@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import { useLiveMode } from '../context/LiveModeContext';
 import { AlertTriangle, Clock, Cpu, HardDrive, RefreshCw, Scan, Server, Wifi, WifiOff } from 'lucide-react';
 import { fetchAgentsList, fetchRecentAgentThreats, triggerAgentScan } from '../services/api';
@@ -45,6 +46,7 @@ const itemVariant: Variants = {
 
 const Agents = () => {
     const { liveModeEnabled } = useLiveMode();
+    const { t } = useLanguage();
     const [agents, setAgents] = useState<Agent[]>([]);
     const [threats, setThreats] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -102,16 +104,16 @@ const Agents = () => {
         <ConsolePage
             title="智能体"
             subtitle="统一查看智能体在线状态、资源占用与近期威胁事件。"
-            actions={<button onClick={() => { fetchAgents(); fetchThreats(); }} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />刷新</button>}
+            actions={<button onClick={() => { fetchAgents(); fetchThreats(); }} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />{t('agents.refresh')}</button>}
         >
             {actionMessage && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-600 dark:text-emerald-300">{actionMessage}</motion.div>}
             {error && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</motion.div>}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={Server} label="总智能体" value={agents.length} hint="已注册智能体总数" tone="primary" />
-                <ConsoleStatCard icon={Wifi} label="在线节点" value={onlineCount} hint="当前在线节点数量" tone="success" />
-                <ConsoleStatCard icon={AlertTriangle} label="近期威胁" value={threats.length} hint="最近相关安全事件数" tone="danger" />
-                <ConsoleStatCard icon={Clock} label="在线率" value={`${Math.round((onlineCount / (agents.length || 1)) * 100)}%`} hint="在线健康比例" tone="warning" />
+                <ConsoleStatCard icon={Server} label={t('agents.total_agents')} value={agents.length} hint="已注册智能体总数" tone="primary" />
+                <ConsoleStatCard icon={Wifi} label={t('agents.online_nodes')} value={onlineCount} hint="当前在线节点数量" tone="success" />
+                <ConsoleStatCard icon={AlertTriangle} label={t('agents.recent_threats')} value={threats.length} hint="最近相关安全事件数" tone="danger" />
+                <ConsoleStatCard icon={Clock} label={t('agents.online_rate')} value={`${Math.round((onlineCount / (agents.length || 1)) * 100)}%`} hint="在线健康比例" tone="warning" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -158,7 +160,7 @@ const Agents = () => {
                                         </div>
 
                                         <div className="flex gap-2">
-                                            <button onClick={() => triggerScan(agent.agentId)} disabled={!agent.isOnline} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2 text-xs font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"><Scan size={14} />发起扫描</button>
+                                            <button onClick={() => triggerScan(agent.agentId)} disabled={!agent.isOnline} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2 text-xs font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"><Scan size={14} />{t('agents.initiate_scan')}</button>
                                             <Link to={`/agents/${agent.agentId}`} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-all hover:bg-muted/50 hover:border-primary/30">查看详情</Link>
                                         </div>
                                     </motion.div>
@@ -185,7 +187,7 @@ const Agents = () => {
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-2">
                                         <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400" />
-                                        <span className="text-sm font-medium text-foreground">{event.title || '安全事件'}</span>
+                                        <span className="text-sm font-medium text-foreground">{event.title || t('agents.security_event') || 'Security Event'}</span>
                                     </div>
                                     <span className="text-[11px] font-bold uppercase text-amber-600 dark:text-amber-400">{event.severity || 'medium'}</span>
                                 </div>

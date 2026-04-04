@@ -166,14 +166,14 @@ export default function AgentMonitor() {
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                 <ConsoleStatCard
                     icon={AlertTriangle}
-                    label="活跃告警"
+                    label="{t('agentMonitor.active_alerts')}"
                     value={stats?.operations?.activeAlerts || 0}
                     hint="来自扫描、流量与验证链路"
                     tone="danger"
                 />
                 <ConsoleStatCard
                     icon={RefreshCw}
-                    label="进行中扫描"
+                    label="{t('agentMonitor.running_scans')}"
                     value={stats?.operations?.runningScans || 0}
                     hint="当前仍在执行的扫描任务"
                     tone="warning"

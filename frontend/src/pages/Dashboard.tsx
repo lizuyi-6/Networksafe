@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { useLanguage } from '../context/LanguageContext';
 import {
     Activity,
     Code,
@@ -117,6 +118,7 @@ const countryColor = (code: string) => ({
 export default function Dashboard() {
     const { subscribe } = useWebSocket();
     const { liveModeEnabled } = useLiveMode();
+    const { t } = useLanguage();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [logs, setLogs] = useState<LogItem[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -293,7 +295,7 @@ export default function Dashboard() {
         window.setTimeout(() => setExportMessage(null), 2500);
     };
 
-    const healthStatus = stats.successRate >= 99 ? '系统健康' : stats.successRate >= 95 ? '运行稳定' : '需要重点关注';
+    const healthStatus = stats.successRate >= 99 ? t('dashboard.health_good') : stats.successRate >= 95 ? t('dashboard.health_stable') : t('dashboard.health_warning');
     const emptyAttackDescription = securitySummary.observedSessions || securitySummary.trafficAnomalies
         ? `最近已观测 ${securitySummary.observedSessions || 0} 条会话，识别 ${securitySummary.trafficAnomalies || 0} 个异常流量特征。`
         : '当前没有新的来源分布，但系统仍在持续接收实时流量摘要。';
@@ -305,26 +307,26 @@ export default function Dashboard() {
         : '正在等待新的日志事件进入当前视图。';
 
     return (
-        <ConsolePage title="安全控制台" subtitle="统一监控、规则、日志与运营摘要">
+        <ConsolePage title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={Server} label="总请求数" value={stats.totalRequests.toLocaleString()} hint="整体流量处理规模" tone="primary" />
-                <ConsoleStatCard icon={Shield} label="拦截威胁" value={stats.blockedRequests.toLocaleString()} hint="近期拦截事件累计" tone="danger" />
+                <ConsoleStatCard icon={Server} label={t('dashboard.total_requests')} value={stats.totalRequests.toLocaleString()} hint={t('dashboard.scale')} tone="primary" />
+                <ConsoleStatCard icon={Shield} label={t('dashboard.threats_blocked')} value={stats.blockedRequests.toLocaleString()} hint={t('dashboard.recent_events')} tone="danger" />
                 <ConsoleStatCard icon={Zap} label="平均延迟" value={`${stats.avgProcessingTime || 0}ms`} hint={`P99 ${stats.p99Latency || 0}ms`} tone="warning" />
                 <ConsoleStatCard icon={Globe} label="全局健康" value={`${stats.successRate}%`} hint={healthStatus} tone="success" />
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={Cpu} label="CPU 使用率" value={`${stats.cpuUsage?.toFixed(1) || 0}%`} hint="主机 CPU" tone="primary" />
-                <ConsoleStatCard icon={HardDrive} label="内存占用" value={`${stats.memoryUsage?.toFixed(1) || 0}%`} hint="系统内存" tone="warning" />
-                <ConsoleStatCard icon={Database} label="磁盘占用" value={`${stats.diskUsage?.toFixed(1) || 0}%`} hint="根分区使用率" tone="neutral" />
-                <ConsoleStatCard icon={Activity} label="网络吞吐" value={`${stats.networkUsage?.toFixed(2) || 0} MB/s`} hint="实时 I/O 吞吐量" tone="success" />
+                <ConsoleStatCard icon={Cpu} label={t('dashboard.cpu_usage')} value={`${stats.cpuUsage?.toFixed(1) || 0}%`} hint={t('dashboard.host_cpu')} tone="primary" />
+                <ConsoleStatCard icon={HardDrive} label={t('dashboard.memory_usage')} value={`${stats.memoryUsage?.toFixed(1) || 0}%`} hint={t('dashboard.system_memory')} tone="warning" />
+                <ConsoleStatCard icon={Database} label={t('dashboard.disk_usage')} value={`${stats.diskUsage?.toFixed(1) || 0}%`} hint={t('dashboard.root_partition')} tone="neutral" />
+                <ConsoleStatCard icon={Activity} label={t('dashboard.network_throughput')} value={`${stats.networkUsage?.toFixed(2) || 0} MB/s`} hint={t('dashboard.real_time_io')} tone="success" />
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={AlertTriangle} label="高危发现" value={securitySummary.openCriticalFindings} hint={`高风险总数 ${securitySummary.highRiskFindings || 0}`} tone="danger" />
-                <ConsoleStatCard icon={Shield} label="活跃告警" value={securitySummary.activeAlerts} hint={`待处理动作 ${securitySummary.pendingActions}`} tone="warning" />
-                <ConsoleStatCard icon={Search} label="扫描任务" value={securitySummary.runningScans} hint={`排队中 ${securitySummary.queuedScans || 0}`} tone="primary" />
-                <ConsoleStatCard icon={Globe} label="观测会话" value={securitySummary.observedSessions || 0} hint={`异常流量 ${securitySummary.trafficAnomalies || 0}`} tone="success" />
+                <ConsoleStatCard icon={AlertTriangle} label={t('dashboard.high_risk')} value={securitySummary.openCriticalFindings} hint={`高风险总数 ${securitySummary.highRiskFindings || 0}`} tone="danger" />
+                <ConsoleStatCard icon={Shield} label={t('dashboard.active_alerts')} value={securitySummary.activeAlerts} hint={`待处理动作 ${securitySummary.pendingActions}`} tone="warning" />
+                <ConsoleStatCard icon={Search} label={t('dashboard.scan_tasks')} value={securitySummary.runningScans} hint={`排队中 ${securitySummary.queuedScans || 0}`} tone="primary" />
+                <ConsoleStatCard icon={Globe} label={t('dashboard.observed_sessions')} value={securitySummary.observedSessions || 0} hint={`异常流量 ${securitySummary.trafficAnomalies || 0}`} tone="success" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -362,7 +364,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="lg:col-span-4">
-                    <ConsolePanel title="攻击来源" subtitle="按地区聚合的最近来源分布" icon={Globe} iconTone="warning">
+                    <ConsolePanel title={t('dashboard.attack_sources')} subtitle={t('dashboard.attack_sources_subtitle')} icon={Globe} iconTone="warning">
                         <div className="space-y-5">
                             {(stats.attackOrigins || []).length > 0 ? (
                                 stats.attackOrigins!.map((item, index) => (

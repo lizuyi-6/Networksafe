@@ -268,7 +268,7 @@ const Sidebar = () => {
                 const initials = String(name).split(/\s+/).map((x: string) => x[0] || '').join('').slice(0, 2).toUpperCase() || '??';
                 setProfile({
                     name,
-                    role: user.role || '未设置角色',
+                    role: user.role || t('app.role_not_set'),
                     initials,
                     plan: user.plan || 'starter'
                 });
@@ -277,7 +277,7 @@ const Sidebar = () => {
                 if (isRequestAbortError(error, controller.signal)) {
                     return;
                 }
-                setProfile({ name: '未命名用户', role: '未设置角色', initials: '??', plan: 'starter' });
+                setProfile({ name: t('app.unnamed_user'), role: t('app.role_not_set'), initials: '??', plan: 'starter' });
             });
 
         return () => controller.abort();
@@ -483,7 +483,7 @@ const Header = () => {
                     <div className={`w-8 h-4 rounded-full relative transition-colors ${language === 'zh' ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
                         <div className={`absolute top-0.5 w-3 h-3 rounded-full shadow-sm transition-all ${language === 'zh' ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
                     </div>
-                    <span className={`text-xs font-medium transition-colors ${language === 'zh' ? 'text-primary' : 'text-muted-foreground'}`}>中文</span>
+                    <span className={`text-xs font-medium transition-colors ${language === 'zh' ? 'text-primary' : 'text-muted-foreground'}`}>{t('app.chinese')}</span>
                 </div>
 
                 <div className="h-8 w-px bg-border"></div>

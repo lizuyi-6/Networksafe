@@ -17,6 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download Frontend Build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend-dist
+
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -26,6 +32,7 @@ jobs:
           script: |
             echo "🚀 Deploying AetherGuard..."
             DEPLOY_PATH=/opt/networksafe
+            FRONTEND_PATH=/var/www/aetherguard
 
             # Clone or update the repository
             if [ -d "$DEPLOY_PATH/.git" ]; then
@@ -46,6 +53,11 @@ jobs:
             pm2 delete api-security-backend 2>/dev/null || true
             pm2 start ecosystem.config.js
             pm2 save
+
+            # Deploy frontend
+            rm -rf $FRONTEND_PATH
+            mkdir -p $FRONTEND_PATH
+            cp -r frontend-dist/* $FRONTEND_PATH/
 
             echo "✅ Deploy complete!"
 

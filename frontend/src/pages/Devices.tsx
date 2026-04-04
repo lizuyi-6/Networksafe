@@ -418,11 +418,11 @@ const Devices = () => {
                                         <div className="mt-1 text-2xl font-semibold text-foreground">{platformBadges.agentMonitor || platformBadges.agents}</div>
                                     </div>
                                     <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
-                                        <div className="text-xs text-muted-foreground">活跃告警</div>
+                                        <div className="text-xs text-muted-foreground">{t('devices.active_alerts')}</div>
                                         <div className="mt-1 text-2xl font-semibold text-foreground">{platformBadges.alerts}</div>
                                     </div>
                                     <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
-                                        <div className="text-xs text-muted-foreground">进行中扫描</div>
+                                        <div className="text-xs text-muted-foreground">{t('devices.running_scans')}</div>
                                         <div className="mt-1 text-2xl font-semibold text-foreground">{platformBadges.scanner}</div>
                                     </div>
                                 </div>
@@ -439,7 +439,7 @@ const Devices = () => {
                                         className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
                                     >
                                         <RefreshCw size={14} />
-                                        重新检查接入状态
+                                        {t('devices.recheck')}
                                     </button>
                                 </div>
                             </div>

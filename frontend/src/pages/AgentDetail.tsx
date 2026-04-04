@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import { Activity, ArrowLeft, Scan, Server, ShieldAlert, Wifi, WifiOff } from 'lucide-react';
 import { fetchAgentDetail, triggerAgentScan } from '../services/api';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
 
 const AgentDetail = () => {
+    const { t } = useLanguage();
     const { id = '' } = useParams();
     const [detail, setDetail] = useState<any>(null);
     const [message, setMessage] = useState<string | null>(null);
@@ -48,7 +50,7 @@ const AgentDetail = () => {
                         </ConsolePanel>
                     </div>
                     <div className="space-y-6 xl:col-span-8">
-                        <ConsolePanel title="最近威胁与任务" subtitle="与该智能体关联的安全事件" icon={ShieldAlert} iconTone="danger">
+                        <ConsolePanel title={t('agentDetail.recent_threats')} subtitle="与该智能体关联的安全事件" icon={ShieldAlert} iconTone="danger">
                             {(detail.recentThreats || []).length > 0 ? (
                                 <div className="space-y-3">
                                     {detail.recentThreats.map((item: any, index: number) => (
@@ -59,9 +61,9 @@ const AgentDetail = () => {
                                         </div>
                                     ))}
                                 </div>
-                            ) : <ConsoleEmptyState title="暂无关联威胁" description="扫描和策略命中后，这里会显示与该智能体相关的事件。" />}
+                            ) : <ConsoleEmptyState title={t('agentDetail.no_threats')} description="扫描和策略命中后，这里会显示与该智能体相关的事件。" />}
                         </ConsolePanel>
-                        <ConsolePanel title="状态时间线" subtitle="心跳和运行态变化" icon={Activity} iconTone="neutral">
+                        <ConsolePanel title={t('agentDetail.status_timeline')} subtitle="心跳和运行态变化" icon={Activity} iconTone="neutral">
                             <div className="space-y-3">
                                 {(detail.timeline || []).map((item: any, index: number) => (
                                     <div key={`${item.title}-${index}`} className="rounded-lg border border-border bg-muted/15 p-3">
