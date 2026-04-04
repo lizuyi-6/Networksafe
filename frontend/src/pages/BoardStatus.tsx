@@ -81,7 +81,7 @@ const BoardStatus = () => {
                     <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">
                         <span className={`h-2 w-2 rounded-full ${device?.isOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                         <span className={device?.isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
-                            {device?.isOnline ? '在线' : '离线'}
+                            {device?.isOnline ? t('board.online') : t('board.offline')}
                         </span>
                     </div>
                     <button
@@ -89,7 +89,7 @@ const BoardStatus = () => {
                         className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"
                     >
                         <ArrowLeft size={14} />
-                        返回设备列表
+                        {t('board.backToList')}
                     </button>
                 </>
             }
@@ -121,7 +121,7 @@ const BoardStatus = () => {
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 <div className="lg:col-span-4">
-                    <ConsolePanel title={t('board.device_metrics')} subtitle="网关运行时指标" icon={Router} iconTone="primary">
+                    <ConsolePanel title={t('board.deviceMetrics')} subtitle={t('board.gatewayMetrics')} icon={Router} iconTone="primary">
                         <div className="space-y-3 text-sm">
                             <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
                                 <span className="text-muted-foreground">{t('board.chip')}</span>
@@ -159,15 +159,15 @@ const BoardStatus = () => {
 
                 <div className="lg:col-span-8">
                     <ConsolePanel
-                        title={t('board.event_stream')}
-                        subtitle="设备最近事件流"
+                        title={t('board.eventStream')}
+                        subtitle={t('board.eventStream')}
                         icon={Activity}
                         iconTone="warning"
                         headerAction={<span className="text-xs text-muted-foreground">/api/devices/{id}/events</span>}
                     >
                         <div className="rounded-xl border border-border bg-muted/20">
                             <div className="flex items-center justify-between border-b border-border px-4 py-3 text-xs text-muted-foreground">
-                                <span className="font-medium text-foreground">实时事件流</span>
+                                <span className="font-medium text-foreground">{t('board.eventStream')}</span>
                                 <span>最近 80 条</span>
                             </div>
                             <div className="max-h-[560px] overflow-y-auto px-4 py-4">
@@ -180,7 +180,7 @@ const BoardStatus = () => {
                                         ))}
                                     </div>
                                 ) : (
-                                    <ConsoleEmptyState title="暂无事件" description="设备上报遥测后，这里会显示事件消息。" />
+                                    <ConsoleEmptyState title={t('board.noEvents')} description={t('board.noEventsDesc')} />
                                 )}
                             </div>
                         </div>

@@ -103,7 +103,7 @@
         "description": "Strategically positioned nodes ensuring sub-millisecond latency worldwide.",
         "operational": "Operational",
         "maintenance": "Maintenance",
-        "simulate_btn": "Simulate Btn"
+        "simulate_btn": "Simulate Attack"
     },
     "dashboard": {
         "searchLogs": "Search logs...",
@@ -290,7 +290,15 @@
             "high": "High",
             "medium": "Medium",
             "low": "Low"
-        }
+        },
+        "protocol_subtitle": "Protocol distribution of observed traffic",
+        "threat_subtitle": "Latest threat detection count by severity",
+        "active_subtitle": "Active connections under detection",
+        "protocolSubtitle": "Protocol distribution of observed traffic",
+        "threatSubtitle": "Latest threat detection count by severity",
+        "activeSubtitle": "Active connections under detection",
+        "noThreatsDesc": "No pending threat detection results.",
+        "detail": "Detail"
     },
     "attackSimulator": {
         "title": "Attack Simulator",
@@ -461,14 +469,41 @@
         "last_heartbeat": "Last Heartbeat",
         "event_stream": "Event Stream",
         "device_id": "Device Id",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "online": "Online",
+        "offline": "Offline",
+        "back_to_list": "Back to Device List",
+        "gateway_metrics": "Gateway Runtime Metrics",
+        "no_events_desc": "Device telemetry events will appear here when received.",
+        "no_events": "No Events"
     },
     "scanner": {
         "task": "Task",
         "progress": "Progress",
         "findings": "Findings",
         "host_scan_toggles": "Host scan toggles",
-        "title": "Title"
+        "title": "Title",
+        "detail_title": "Scan Task Detail",
+        "back_to_center": "Back to Scanner",
+        "detailTitle": "Scan Task Detail",
+        "backToCenter": "Back to Scanner",
+        "loading": "Loading scan detail...",
+        "summary": "Task Summary",
+        "summarySubtitle": "Current status and execution phase",
+        "status": "Status",
+        "phase": "Phase",
+        "error": "Error",
+        "none": "None",
+        "timelineTitle": "Task Timeline",
+        "timelineSubtitle": "Phases and structured events",
+        "noEvents": "No structured events",
+        "findingsTitle": "Findings",
+        "findingsSubtitle": "Structured security findings from this task",
+        "noFindings": "No findings",
+        "noFindingsDesc": "Evidence and risk summary will appear here after task completion and hits.",
+        "remediation": "Remediation",
+        "remediationSubtitle": "Disposal recommendations derived from evidence and rule chains",
+        "noRemediation": "No remediation available"
     },
     "login": {
         "password_label": "PASSWORD"
@@ -731,12 +766,34 @@
     },
     "settings": {
         "desc": "Manage model selection, AI endpoint priority, and platform-wide configuration in one place.",
-        "title": "System Settings"
+        "title": "System Settings",
+        "subtitle": "Manage models, AI endpoints, and system configuration.",
+        "other": "Other Settings",
+        "otherSubtitle": "Reserved system-level configuration notes."
     },
     "sites": {
         "title": "Title",
         "protected_domains": "Protected Domains",
-        "no_sites": "No Sites"
+        "no_sites": "No Sites",
+        "detail_title": "Site Detail",
+        "back_to_list": "Back to Site List",
+        "no_related_alerts": "No Related Alerts",
+        "list_subtitle": "View detailed exposure and security context for each site.",
+        "listTitle": "Site List",
+        "subtitle": "View protected sites, targets, and current protection status.",
+        "viewDetail": "View Detail",
+        "detailTitle": "Site Detail",
+        "backToList": "Back to Site List",
+        "noRelatedAlerts": "No Related Alerts",
+        "noRelatedFlows": "No Related Traffic",
+        "loading": "Loading site detail...",
+        "relatedAlerts": "Related Alerts",
+        "relatedAlertsSubtitle": "Risks and events related to this site",
+        "relatedTraffic": "Related Traffic and Exposure",
+        "relatedTrafficSubtitle": "Recently related traffic and asset context",
+        "noRelatedFlowsDesc": "Traffic sessions produced or hit by this site will appear here.",
+        "securityOverview": "Security Overview",
+        "noData": "No data"
     },
     "alerts": {
         "id": "Id",
@@ -748,6 +805,52 @@
         "filter_medium": "Filter Medium",
         "filter_all": "Filter All",
         "no_alerts": "No Alerts",
-        "filter_high": "Filter High"
+        "filter_high": "Filter High",
+        "status_open": "Open",
+        "status_acknowledged": "Acknowledged",
+        "status_investigating": "Investigating",
+        "status_resolved": "Resolved",
+        "status_suppressed": "Suppressed",
+        "load_failed": "Failed to load alerts",
+        "alertsActionFailed": "Alert status update failed",
+        "alertsInvestigate": "Investigate",
+        "alertsResolve": "Resolve",
+        "alertsSuppress": "Suppress",
+        "alertsViewDetail": "View Detail",
+        "alertsConfirm": "Confirm",
+        "alertsLoading": "Loading alerts...",
+        "alertsTitle": "Alert Center",
+        "alertsSubtitle": "Real alerts, status flow, and recent operational context in one place.",
+        "alertsFilterAllLevels": "All Levels",
+        "alertsFilterAllStatus": "All Status",
+        "alertsActiveAlerts": "Active Alerts",
+        "alertsHighRisk": "High Risk Findings",
+        "alertsPendingActions": "Pending Actions",
+        "alertsFailedValidations": "Failed Validations",
+        "alertsActiveHint": "Unresolved or under investigation alerts",
+        "alertsHighRiskHint": "High risk findings requiring priority action",
+        "alertsPendingHint": "Generated but pending execution",
+        "alertsValidationHint": "Failed or anomalous verification tasks",
+        "alertsListTitle": "Alert List",
+        "alertsListSubtitle": "Filter, confirm, investigate, resolve, and suppress in one flow.",
+        "alertsNoAlertsFiltered": "No alerts matching current filters",
+        "alertsNoAlertsDesc": "The system continues aggregating scan, traffic, and validation results.",
+        "alertsRecentActions": "Recent Actions",
+        "alertsNoActions": "No new actions. Recent executions appear here when high-confidence findings are generated.",
+        "alertsRecentValidations": "Recent Validations",
+        "alertsNoValidations": "No new validation failures. Attack simulations and policy validations leave conclusions here."
+    },
+    "traffic": {
+        "detail_title": "Session Detail",
+        "back_to_list": "Back to Traffic",
+        "loading": "Loading session detail...",
+        "detailTitle": "Session Detail",
+        "backToList": "Back to Traffic",
+        "packets": "Packets",
+        "bytes": "Bytes",
+        "timeline": "Session Timeline",
+        "timelineSubtitle": "Start, activity, and status changes",
+        "metadata": "Metadata",
+        "metadataSubtitle": "Policy decisions and session supplementary info"
     }
 }

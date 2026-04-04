@@ -122,7 +122,7 @@ export default function TrafficInterceptor() {
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 <div className="lg:col-span-5">
-                    <ConsolePanel title={t('trafficInterceptor.protocolDistribution')} subtitle="当前观测流量的协议分布" icon={Globe} iconTone="primary">
+                    <ConsolePanel title={t('trafficInterceptor.protocolDistribution')} subtitle={t('trafficInterceptor.protocolSubtitle')} icon={Globe} iconTone="primary">
                         <div className="space-y-4">
                             {[
                                 { name: 'HTTP', value: protocols.http, color: 'bg-blue-500' },
@@ -150,7 +150,7 @@ export default function TrafficInterceptor() {
                 </div>
 
                 <div className="lg:col-span-7">
-                    <ConsolePanel title={t('trafficInterceptor.threatDetections')} subtitle="按风险等级汇总的最新检测计数" icon={ShieldAlert} iconTone="danger">
+                    <ConsolePanel title={t('trafficInterceptor.threatDetections')} subtitle={t('trafficInterceptor.threatSubtitle')} icon={ShieldAlert} iconTone="danger">
                         {threats.length > 0 ? (
                             <div className="space-y-2">
                                 <AnimatePresence>
@@ -184,7 +184,7 @@ export default function TrafficInterceptor() {
                                 </AnimatePresence>
                             </div>
                         ) : (
-                            <ConsoleEmptyState title={t('trafficInterceptor.noThreats')} description="当前没有待处理的威胁检测结果。" />
+                            <ConsoleEmptyState title={t('trafficInterceptor.noThreats')} description={t('trafficInterceptor.noThreatsDesc')} />
                         )}
                     </ConsolePanel>
                 </div>
@@ -192,7 +192,7 @@ export default function TrafficInterceptor() {
 
             <ConsolePanel
                 title={t('trafficInterceptor.activeFlows')}
-                subtitle="当前已纳入检测的连接"
+                subtitle={t('trafficInterceptor.activeSubtitle')}
                 icon={Zap}
                 iconTone="primary"
                 headerAction={
@@ -212,7 +212,7 @@ export default function TrafficInterceptor() {
                                     <th className="px-4 py-3">{t('trafficInterceptor.state')}</th>
                                     <th className="px-4 py-3 text-right">{t('trafficInterceptor.packets')}</th>
                                     <th className="px-4 py-3 text-right">{t('trafficInterceptor.bytes')}</th>
-                                    <th className="px-4 py-3 text-right">详情</th>
+                                    <th className="px-4 py-3 text-right">{t('trafficInterceptor.detail')}</th>
                                 </tr>
                             </thead>
                             <tbody>

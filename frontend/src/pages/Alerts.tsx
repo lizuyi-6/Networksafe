@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Activity, AlertCircle, AlertTriangle, Bell, CheckCircle, Clock, ShieldAlert, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLiveMode } from '../context/LiveModeContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
     acknowledgeAlert,
     fetchAlerts,
@@ -30,12 +31,12 @@ const defaultSecuritySummary: DashboardSecuritySummary = {
     recentValidations: [],
 };
 
-const statusLabels: Record<string, string> = {
-    open: '待处理',
-    acknowledged: '已确认',
-    investigating: '调查中',
-    resolved: '已解决',
-    suppressed: '已抑制',
+const statusKeyMap: Record<string, string> = {
+    open: 'status_open',
+    acknowledged: 'status_acknowledged',
+    investigating: 'status_investigating',
+    resolved: 'status_resolved',
+    suppressed: 'status_suppressed',
 };
 
 const severityStyles: Record<string, string> = {
@@ -47,6 +48,7 @@ const severityStyles: Record<string, string> = {
 
 const Alerts = () => {
     const { liveModeEnabled } = useLiveMode();
+    const { t } = useLanguage();
     const [alerts, setAlerts] = useState<AlertRecord[]>([]);
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -74,7 +76,7 @@ const Alerts = () => {
             setError(null);
         } catch (err: any) {
             if (!isRequestAbortError(err, signal)) {
-                setError(err?.message || '告警数据加载失败');
+                setError(err?.message || t('alerts.load_failed'));
             }
         } finally {
             if (!signal?.aborted) {
@@ -146,18 +148,18 @@ const Alerts = () => {
             await action();
             await loadAlerts();
         } catch (nextError: any) {
-            setActionError(nextError?.message || '告警状态更新失败');
+            setActionError(nextError?.message || t('alerts.actionFailed'));
         }
     };
 
     if (loading && !stats && alerts.length === 0) {
-        return <div className="p-8 text-muted-foreground">正在加载告警中心…</div>;
+        return <div className="p-8 text-muted-foreground">{t('alerts.loading')}</div>;
     }
 
     return (
         <ConsolePage
-            title="告警中心"
-            subtitle="真实告警、状态流转和近期运营上下文在同一页收口展示。"
+            title={t('alerts.title')}
+            subtitle={t('alerts.subtitle')}
             actions={
                 <div className="flex flex-wrap gap-2">
                     <Link
@@ -176,7 +178,7 @@ const Alerts = () => {
                                     : 'border border-border bg-card text-muted-foreground hover:text-foreground'
                             }`}
                         >
-                            {value === 'all' ? '全部级别' : value}
+                            {value === 'all' ? t('alerts.filterAllLevels') : value}
                         </button>
                     ))}
                     {['all', 'open', 'acknowledged', 'investigating', 'resolved', 'suppressed'].map((value) => (
@@ -189,7 +191,7 @@ const Alerts = () => {
                                     : 'border border-border bg-card text-muted-foreground hover:text-foreground'
                             }`}
                         >
-                            {value === 'all' ? '全部状态' : statusLabels[value]}
+                            {value === 'all' ? t('alerts.filterAllStatus') : t(`alerts.${statusKeyMap[value]}`)}
                         </button>
                     ))}
                 </div>
@@ -199,15 +201,15 @@ const Alerts = () => {
             {actionError && <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">{actionError}</div>}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={Bell} label="活跃告警" value={securitySummary.activeAlerts} hint="当前未解决或调查中的告警" tone="danger" />
-                <ConsoleStatCard icon={ShieldAlert} label="高危发现" value={securitySummary.highRiskFindings || securitySummary.openCriticalFindings} hint="需要优先处置的高风险发现" tone="warning" />
-                <ConsoleStatCard icon={Activity} label="待执行动作" value={securitySummary.pendingActions} hint="系统已生成但仍待执行的处置动作" tone="primary" />
-                <ConsoleStatCard icon={XCircle} label="失败验证" value={securitySummary.failedValidations} hint="最近未命中或结果异常的验证任务" tone="danger" />
+                <ConsoleStatCard icon={Bell} label={t('alerts.activeAlerts')} value={securitySummary.activeAlerts} hint={t('alerts.activeHint')} tone="danger" />
+                <ConsoleStatCard icon={ShieldAlert} label={t('alerts.highRisk')} value={securitySummary.highRiskFindings || securitySummary.openCriticalFindings} hint={t('alerts.highRiskHint')} tone="warning" />
+                <ConsoleStatCard icon={Activity} label={t('alerts.pendingActions')} value={securitySummary.pendingActions} hint={t('alerts.pendingHint')} tone="primary" />
+                <ConsoleStatCard icon={XCircle} label={t('alerts.failedValidations')} value={securitySummary.failedValidations} hint={t('alerts.validationHint')} tone="danger" />
             </div>
 
             <ConsolePanel
-                title="告警列表"
-                subtitle="筛选、确认、调查、解决和抑制都在同一条链路内闭环。"
+                title={t('alerts.listTitle')}
+                subtitle={t('alerts.listSubtitle')}
                 icon={Bell}
                 iconTone="warning"
             >
@@ -215,15 +217,15 @@ const Alerts = () => {
                     {filteredAlerts.length === 0 ? (
                         <div className="space-y-4">
                             <ConsoleEmptyState
-                                title="当前筛选条件下没有可显示的告警"
-                                description="系统仍在持续聚合扫描、流量和验证结果。下面保留最近动作与验证上下文，避免页面看起来像空壳。"
+                                title={t('alerts.noAlertsFiltered')}
+                                description={t('alerts.noAlertsDesc')}
                             />
                             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                                 <div className="rounded-xl border border-border bg-muted/10 p-4">
-                                    <div className="text-sm font-medium text-foreground">最近处置动作</div>
+                                    <div className="text-sm font-medium text-foreground">{t('alerts.recentActions')}</div>
                                     <div className="mt-3 space-y-3">
                                         {securitySummary.recentActions.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground">当前没有新的处置动作。待新的高置信发现生成后，这里会显示最近的执行记录。</p>
+                                            <p className="text-sm text-muted-foreground">{t('alerts.noActions')}</p>
                                         ) : (
                                             securitySummary.recentActions.slice(0, 4).map((action) => (
                                                 <div key={action.actionId} className="rounded-lg border border-border bg-card px-3 py-2">
@@ -235,10 +237,10 @@ const Alerts = () => {
                                     </div>
                                 </div>
                                 <div className="rounded-xl border border-border bg-muted/10 p-4">
-                                    <div className="text-sm font-medium text-foreground">最近验证结果</div>
+                                    <div className="text-sm font-medium text-foreground">{t('alerts.recentValidations')}</div>
                                     <div className="mt-3 space-y-3">
                                         {securitySummary.recentValidations.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground">当前没有新的验证失败。后续攻击演练、回放和策略验证会在这里保留最近的结论。</p>
+                                            <p className="text-sm text-muted-foreground">{t('alerts.noValidations')}</p>
                                         ) : (
                                             securitySummary.recentValidations.slice(0, 4).map((validation) => (
                                                 <div key={validation.validationRunId} className="rounded-lg border border-border bg-card px-3 py-2">
@@ -270,10 +272,10 @@ const Alerts = () => {
                                             <div>
                                                 <h3 className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">{alert.title}</h3>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                                                    <span className="rounded border border-border bg-muted/20 px-2 py-0.5">{statusLabels[alert.status]}</span>
+                                                    <span className="rounded border border-border bg-muted/20 px-2 py-0.5">{t(`alerts.${statusKeyMap[alert.status]}`)}</span>
                                                     <span>{alert.source}</span>
                                                     {alert.assetId && <span>Asset {alert.assetId.slice(0, 8)}</span>}
-                                                    {alert.investigationId && <span>调查 {alert.investigationId}</span>}
+                                                    {alert.investigationId && <span>{t('alerts.investigate')} {alert.investigationId}</span>}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -288,19 +290,19 @@ const Alerts = () => {
                                         )}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <Link to={`/alerts/${alert.id}`} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="查看详情">
+                                        <Link to={`/alerts/${alert.id}`} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title={t('alerts.viewDetail')}>
                                             <Clock size={16} />
                                         </Link>
-                                        <button className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="确认" onClick={() => executeAction(() => acknowledgeAlert(alert.id))}>
+                                        <button className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title={t('alerts.confirm')} onClick={() => executeAction(() => acknowledgeAlert(alert.id))}>
                                             <CheckCircle size={16} />
                                         </button>
-                                        <button className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="调查" onClick={() => executeAction(() => investigateAlert(alert.id))}>
+                                        <button className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title={t('alerts.investigate')} onClick={() => executeAction(() => investigateAlert(alert.id))}>
                                             <Activity size={16} />
                                         </button>
-                                        <button className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="解决" onClick={() => executeAction(() => resolveAlert(alert.id))}>
+                                        <button className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title={t('alerts.resolve')} onClick={() => executeAction(() => resolveAlert(alert.id))}>
                                             <CheckCircle size={16} />
                                         </button>
-                                        <button className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="抑制" onClick={() => executeAction(() => suppressAlert(alert.id))}>
+                                        <button className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title={t('alerts.suppress')} onClick={() => executeAction(() => suppressAlert(alert.id))}>
                                             <XCircle size={16} />
                                         </button>
                                     </div>
