@@ -3,8 +3,10 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Shield, TerminalSquare } from 'lucide-react';
 import { fetchAttackRunDetail } from '../services/api';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
+import { useLanguage } from '../context/LanguageContext';
 
 const AttackRunDetail = () => {
+    const { t } = useLanguage();
     const { id = '' } = useParams();
     const [detail, setDetail] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
@@ -21,15 +23,15 @@ const AttackRunDetail = () => {
 
     return (
         <ConsolePage
-            title="Attack Run Detail"
-            subtitle={`Inspect run ${id} and its decision trail`}
+            title={t('attackRunDetail.page_title')}
+            subtitle={t('attackRunDetail.page_subtitle', { id })}
             actions={
                 <Link
                     to="/attack-sim"
                     className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30"
                 >
                     <ArrowLeft size={14} />
-                    Back to Attack Simulator
+                    {t('attackRunDetail.back_to_simulator')}
                 </Link>
             }
         >
@@ -39,31 +41,31 @@ const AttackRunDetail = () => {
                 </div>
             )}
             {!detail ? (
-                <ConsoleEmptyState title="Loading attack run detail" />
+                <ConsoleEmptyState title={t('attackRunDetail.loading')} />
             ) : (
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
                     <div className="space-y-6 xl:col-span-4">
                         <ConsolePanel
-                            title={summary?.attackName || 'Attack Run'}
+                            title={summary?.attackName || t('attackRunDetail.attack_run')}
                             subtitle={summary?.category || 'simulation'}
                             icon={Shield}
                             iconTone="danger"
                         >
                             <div className="space-y-3 text-sm">
                                 <div className="rounded-lg border border-border bg-muted/15 p-3">
-                                    Verdict:{' '}
+                                    {t('attackRunDetail.verdict')}:{' '}
                                     <span className="font-semibold text-foreground">
                                         {summary?.verdict || `${summary?.blocked}/${summary?.total}`}
                                     </span>
                                 </div>
                                 <div className="rounded-lg border border-border bg-muted/15 p-3">
-                                    Started:{' '}
+                                    {t('attackRunDetail.started')}:{' '}
                                     <span className="font-semibold text-foreground">
                                         {new Date(summary?.startedAt || summary?.startTime || Date.now()).toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="rounded-lg border border-border bg-muted/15 p-3">
-                                    Completed:{' '}
+                                    {t('attackRunDetail.completed')}:{' '}
                                     <span className="font-semibold text-foreground">
                                         {new Date(summary?.completedAt || summary?.endTime || Date.now()).toLocaleString()}
                                     </span>
@@ -71,19 +73,19 @@ const AttackRunDetail = () => {
                                 {aiAnalysis && (
                                     <div className="rounded-lg border border-border bg-muted/15 p-3">
                                         <div>
-                                            AI route:{' '}
+                                            {t('attackRunDetail.ai_route')}:{' '}
                                             <span className="font-semibold text-foreground">
-                                                {aiAnalysis.route || 'unknown'}
+                                                {aiAnalysis.route || t('attackRunDetail.unknown')}
                                             </span>
                                         </div>
                                         {aiAnalysis.provider && (
                                             <div className="mt-1 text-xs text-muted-foreground">
-                                                Provider: {aiAnalysis.provider}
+                                                {t('attackRunDetail.provider')}: {aiAnalysis.provider}
                                             </div>
                                         )}
                                         {aiAnalysis.model && (
                                             <div className="mt-1 text-xs text-muted-foreground">
-                                                Model: {aiAnalysis.model}
+                                                {t('attackRunDetail.model')}: {aiAnalysis.model}
                                             </div>
                                         )}
                                     </div>
@@ -93,8 +95,8 @@ const AttackRunDetail = () => {
                     </div>
                     <div className="space-y-6 xl:col-span-8">
                         <ConsolePanel
-                            title="Execution Timeline"
-                            subtitle="Run start, completion, and correlated events"
+                            title={t('attackRunDetail.timeline')}
+                            subtitle={t('attackRunDetail.timeline_subtitle')}
                             icon={TerminalSquare}
                             iconTone="primary"
                         >
@@ -115,8 +117,8 @@ const AttackRunDetail = () => {
                             </div>
                         </ConsolePanel>
                         <ConsolePanel
-                            title="Result Payload"
-                            subtitle="Raw decision and correlated context"
+                            title={t('attackRunDetail.result_payload')}
+                            subtitle={t('attackRunDetail.result_payload_subtitle')}
                             icon={Shield}
                             iconTone="warning"
                         >

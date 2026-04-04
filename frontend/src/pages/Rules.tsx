@@ -10,6 +10,7 @@ import {
     ShieldAlert,
     XCircle
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 import { useLiveMode } from '../context/LiveModeContext';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
 import {
@@ -55,6 +56,7 @@ const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`;
 const formatJson = (value: unknown) => JSON.stringify(value || {}, null, 2);
 
 const Rules = () => {
+    const { t } = useLanguage();
     const { liveModeEnabled } = useLiveMode();
     const [summary, setSummary] = useState<RuleSummary>(emptySummary);
     const [rules, setRules] = useState<RuleRecord[]>([]);
@@ -191,7 +193,7 @@ const Rules = () => {
             return;
         }
 
-        const reason = window.prompt('Approval note (optional)', selectedCandidate.reviewReason || '');
+        const reason = window.prompt(t('rules.approval_note_prompt'), selectedCandidate.reviewReason || '');
         if (reason === null) {
             return;
         }
@@ -200,9 +202,9 @@ const Rules = () => {
             setActionError(null);
             const result = await approveRuleCandidate(selectedCandidate.candidateId, reason || undefined);
             if (result.sync && selectedCandidate.channel === 'agent') {
-                setSyncMessage(`Agent sync ${result.sync.succeeded}/${result.sync.attempted} succeeded.`);
+                setSyncMessage(t('rules.agent_sync_message', { succeeded: result.sync.succeeded, attempted: result.sync.attempted }));
             } else {
-                setSyncMessage('Candidate approved and rule set refreshed.');
+                setSyncMessage(t('rules.approved_sync_message'));
             }
             await loadPage();
             const detail = await fetchRuleCandidate(selectedCandidate.candidateId);
@@ -217,7 +219,7 @@ const Rules = () => {
             return;
         }
 
-        const reason = window.prompt('Rejection note (optional)', selectedCandidate.reviewReason || '');
+        const reason = window.prompt(t('rules.rejection_note_prompt'), selectedCandidate.reviewReason || '');
         if (reason === null) {
             return;
         }
@@ -238,22 +240,22 @@ const Rules = () => {
 
     return (
         <ConsolePage
-            title="Rule Operations"
-            subtitle="Rule-first detection, AI escalation, candidate review, and delivery telemetry in one admin console."
+            title={t('rules.page_title')}
+            subtitle={t('rules.page_subtitle')}
             actions={(
                 <div className="flex flex-wrap items-center gap-2">
                     <Link
                         to="/alerts"
                         className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"
                     >
-                        Open Alerts
+                        {t('rules.open_alerts')}
                     </Link>
                     <button
                         onClick={() => void refreshAll()}
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                     >
                         <RefreshCw size={14} />
-                        Refresh
+                        {t('rules.refresh')}
                     </button>
                 </div>
             )}
@@ -263,19 +265,19 @@ const Rules = () => {
             {syncMessage && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">{syncMessage}</div>}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <ConsoleStatCard icon={Shield} label="Active Rules" value={summary.activeRules} hint={`${summary.totalRules} total`} tone="primary" />
-                <ConsoleStatCard icon={Bot} label="Pending Candidates" value={summary.pendingCandidates} hint={`${summary.approvedCandidates} approved / ${summary.rejectedCandidates} rejected`} tone="warning" />
-                <ConsoleStatCard icon={Activity} label="Rule Hit Rate" value={formatPercent(summary.ruleHitRate)} hint={`AI escalation ${formatPercent(summary.aiEscalationRate)}`} tone="success" />
-                <ConsoleStatCard icon={Clock3} label="Average Detection Time" value={`${summary.avgProcessingTimeMs.toFixed(1)} ms`} hint="Across recent detection events" tone="neutral" />
-                <ConsoleStatCard icon={Bot} label="Local AI Calls" value={summary.localAICount} hint={`Cloud ${summary.cloudAICount}`} tone="primary" />
-                <ConsoleStatCard icon={ShieldAlert} label="Top Rule Hits" value={summary.topRules[0]?.hitCount || 0} hint={summary.topRules[0]?.name || 'No recent hits'} tone="danger" />
+                <ConsoleStatCard icon={Shield} label={t('rules.active_rules')} value={summary.activeRules} hint={t('rules.total_hint', { count: summary.totalRules })} tone="primary" />
+                <ConsoleStatCard icon={Bot} label={t('rules.pending_candidates')} value={summary.pendingCandidates} hint={t('rules.candidates_hint', { approved: summary.approvedCandidates, rejected: summary.rejectedCandidates })} tone="warning" />
+                <ConsoleStatCard icon={Activity} label={t('rules.hit_rate')} value={formatPercent(summary.ruleHitRate)} hint={t('rules.ai_escalation_hint', { rate: formatPercent(summary.aiEscalationRate) })} tone="success" />
+                <ConsoleStatCard icon={Clock3} label={t('rules.avg_detection_time')} value={`${summary.avgProcessingTimeMs.toFixed(1)} ms`} hint={t('rules.across_recent_events')} tone="neutral" />
+                <ConsoleStatCard icon={Bot} label={t('rules.local_ai_calls')} value={summary.localAICount} hint={t('rules.cloud_hint', { count: summary.cloudAICount })} tone="primary" />
+                <ConsoleStatCard icon={ShieldAlert} label={t('rules.top_rule_hits')} value={summary.topRules[0]?.hitCount || 0} hint={summary.topRules[0]?.name || t('rules.no_recent_hits')} tone="danger" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
                 <div className="space-y-6 xl:col-span-7">
                     <ConsolePanel
-                        title="Rule Candidates"
-                        subtitle="Review AI-learned malicious patterns before they are promoted into active rules."
+                        title={t('rules.rule_candidates')}
+                        subtitle={t('rules.rule_candidates_subtitle')}
                         icon={Bot}
                         iconTone="warning"
                         headerAction={(
@@ -311,7 +313,7 @@ const Rules = () => {
                                     onChange={(event) => setFamilyFilter(event.target.value as typeof familyFilter)}
                                     className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs text-foreground"
                                 >
-                                    <option value="all">all families</option>
+                                    <option value="all">{t('rules.all_families')}</option>
                                     {attackFamilies.map((family) => (
                                         <option key={family} value={family}>{family}</option>
                                     ))}
@@ -320,9 +322,9 @@ const Rules = () => {
                         )}
                     >
                         {loading && candidates.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">Loading rule candidates...</div>
+                            <div className="text-sm text-muted-foreground">{t('rules.loading_candidates')}</div>
                         ) : filteredCandidates.length === 0 ? (
-                            <ConsoleEmptyState title="No candidates match the current filters." description="AI-learned candidates will appear here after high-risk allowed traffic is escalated and judged malicious." />
+                            <ConsoleEmptyState title={t('rules.no_candidates_title')} description={t('rules.no_candidates_desc')} />
                         ) : (
                             <div className="space-y-3">
                                 {filteredCandidates.map((candidate) => {
@@ -344,8 +346,8 @@ const Rules = () => {
                                                     <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                                                         <span>{candidate.channel}</span>
                                                         <span>{candidate.attackFamily}</span>
-                                                        <span>{candidate.sampleCount} samples</span>
-                                                        <span>{(candidate.aiConfidence * 100).toFixed(0)}% AI confidence</span>
+                                                        <span>{t('rules.samples_count', { count: candidate.sampleCount })}</span>
+                                                        <span>{t('rules.ai_confidence', { value: (candidate.aiConfidence * 100).toFixed(0) })}</span>
                                                     </div>
                                                 </div>
                                                 <span className={`rounded-full border px-2 py-1 text-[11px] font-semibold uppercase ${statusTone[candidate.status]}`}>
@@ -353,7 +355,7 @@ const Rules = () => {
                                                 </span>
                                             </div>
                                             <div className="mt-3 text-xs text-muted-foreground">
-                                                Updated {new Date(candidate.updatedAt).toLocaleString()}
+                                                {t('rules.updated')} {new Date(candidate.updatedAt).toLocaleString()}
                                             </div>
                                         </button>
                                     );
@@ -363,8 +365,8 @@ const Rules = () => {
                     </ConsolePanel>
 
                     <ConsolePanel
-                        title="Candidate Detail"
-                        subtitle="Matcher, latest evidence, AI reasoning, and review history for the selected candidate."
+                        title={t('rules.candidate_detail')}
+                        subtitle={t('rules.candidate_detail_subtitle')}
                         icon={ShieldAlert}
                         iconTone="danger"
                         headerAction={selectedCandidate ? (
@@ -375,7 +377,7 @@ const Rules = () => {
                                     className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <CheckCircle2 size={14} />
-                                    Approve
+                                    {t('rules.approve')}
                                 </button>
                                 <button
                                     onClick={() => void handleReject()}
@@ -383,50 +385,50 @@ const Rules = () => {
                                     className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <XCircle size={14} />
-                                    Reject
+                                    {t('rules.reject')}
                                 </button>
                             </div>
                         ) : undefined}
                     >
                         {!selectedCandidate ? (
-                            <ConsoleEmptyState title="Select a candidate to inspect matcher and evidence." description="The detail panel keeps approval and rejection on the same page so the review loop stays short." />
+                            <ConsoleEmptyState title={t('rules.select_candidate_title')} description={t('rules.select_candidate_desc')} />
                         ) : (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                     <div className="rounded-xl border border-border bg-muted/10 p-4">
-                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Candidate</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('rules.candidate')}</div>
                                         <div className="mt-2 text-base font-semibold text-foreground">{selectedCandidate.name}</div>
                                         <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                                            <div>Channel: <span className="font-medium text-foreground">{selectedCandidate.channel}</span></div>
-                                            <div>Attack family: <span className="font-medium text-foreground">{selectedCandidate.attackFamily}</span></div>
-                                            <div>AI confidence: <span className="font-medium text-foreground">{(selectedCandidate.aiConfidence * 100).toFixed(1)}%</span></div>
-                                            <div>Samples: <span className="font-medium text-foreground">{selectedCandidate.sampleCount}</span></div>
+                                            <div>{t('rules.channel')}: <span className="font-medium text-foreground">{selectedCandidate.channel}</span></div>
+                                            <div>{t('rules.attack_family')}: <span className="font-medium text-foreground">{selectedCandidate.attackFamily}</span></div>
+                                            <div>{t('rules.ai_confidence_label')}: <span className="font-medium text-foreground">{(selectedCandidate.aiConfidence * 100).toFixed(1)}%</span></div>
+                                            <div>{t('rules.samples')}: <span className="font-medium text-foreground">{selectedCandidate.sampleCount}</span></div>
                                         </div>
                                     </div>
                                     <div className="rounded-xl border border-border bg-muted/10 p-4">
-                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Review History</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('rules.review_history')}</div>
                                         <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                                            <div>Status: <span className="font-medium text-foreground">{selectedCandidate.status}</span></div>
-                                            <div>Created: <span className="font-medium text-foreground">{new Date(selectedCandidate.createdAt).toLocaleString()}</span></div>
-                                            <div>Updated: <span className="font-medium text-foreground">{new Date(selectedCandidate.updatedAt).toLocaleString()}</span></div>
-                                            <div>Reviewed by: <span className="font-medium text-foreground">{selectedCandidate.reviewedBy || '-'}</span></div>
-                                            <div>Reviewed at: <span className="font-medium text-foreground">{selectedCandidate.reviewedAt ? new Date(selectedCandidate.reviewedAt).toLocaleString() : '-'}</span></div>
-                                            <div>Review note: <span className="font-medium text-foreground">{selectedCandidate.reviewReason || '-'}</span></div>
-                                            <div>Approved rule: <span className="font-medium text-foreground">{selectedCandidate.approvedRuleId || '-'}</span></div>
+                                            <div>{t('rules.status')}: <span className="font-medium text-foreground">{selectedCandidate.status}</span></div>
+                                            <div>{t('rules.created')}: <span className="font-medium text-foreground">{new Date(selectedCandidate.createdAt).toLocaleString()}</span></div>
+                                            <div>{t('rules.updated_label')}: <span className="font-medium text-foreground">{new Date(selectedCandidate.updatedAt).toLocaleString()}</span></div>
+                                            <div>{t('rules.reviewed_by')}: <span className="font-medium text-foreground">{selectedCandidate.reviewedBy || '-'}</span></div>
+                                            <div>{t('rules.reviewed_at')}: <span className="font-medium text-foreground">{selectedCandidate.reviewedAt ? new Date(selectedCandidate.reviewedAt).toLocaleString() : '-'}</span></div>
+                                            <div>{t('rules.review_note')}: <span className="font-medium text-foreground">{selectedCandidate.reviewReason || '-'}</span></div>
+                                            <div>{t('rules.approved_rule')}: <span className="font-medium text-foreground">{selectedCandidate.approvedRuleId || '-'}</span></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="rounded-xl border border-border bg-muted/10 p-4">
-                                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">AI Reasoning</div>
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('rules.ai_reasoning')}</div>
                                     <p className="mt-2 text-sm leading-6 text-foreground">{selectedCandidate.reasoning}</p>
                                 </div>
                                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                     <div className="rounded-xl border border-border bg-muted/10 p-4">
-                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Matcher</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('rules.matcher')}</div>
                                         <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">{formatJson(selectedCandidate.matcher)}</pre>
                                     </div>
                                     <div className="rounded-xl border border-border bg-muted/10 p-4">
-                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Latest Evidence</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('rules.latest_evidence')}</div>
                                         <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">{formatJson(selectedCandidate.latestEvidence)}</pre>
                                     </div>
                                 </div>
@@ -437,13 +439,13 @@ const Rules = () => {
 
                 <div className="space-y-6 xl:col-span-5">
                     <ConsolePanel
-                        title="Active Rules"
-                        subtitle="Approved candidate rules sit here alongside seed and dynamic rules already active in the pipeline."
+                        title={t('rules.active_rules_panel')}
+                        subtitle={t('rules.active_rules_subtitle')}
                         icon={Shield}
                         iconTone="primary"
                     >
                         {activeRules.length === 0 ? (
-                            <ConsoleEmptyState title="No active rules available." description="Approved and seed rules will appear here once the detection pipeline has been initialized." />
+                            <ConsoleEmptyState title={t('rules.no_active_rules_title')} description={t('rules.no_active_rules_desc')} />
                         ) : (
                             <div className="space-y-3">
                                 {activeRules.slice(0, 12).map((rule) => (
@@ -455,7 +457,7 @@ const Rules = () => {
                                                     <span>{rule.scope}</span>
                                                     <span>{rule.action}</span>
                                                     <span>{rule.source}</span>
-                                                    <span>priority {rule.priority}</span>
+                                                    <span>{t('rules.priority', { value: rule.priority })}</span>
                                                 </div>
                                             </div>
                                             <span className={`text-xs font-semibold uppercase ${severityTone[rule.severity]}`}>{rule.severity}</span>
@@ -468,13 +470,13 @@ const Rules = () => {
                     </ConsolePanel>
 
                     <ConsolePanel
-                        title="Recent Detection Events"
-                        subtitle="Use the event stream to verify the full loop: rule hit, AI escalation, candidate generation, and operator decision."
+                        title={t('rules.recent_events')}
+                        subtitle={t('rules.recent_events_subtitle')}
                         icon={Activity}
                         iconTone="success"
                     >
                         {events.length === 0 ? (
-                            <ConsoleEmptyState title="No detection events yet." description="Events are recorded when rules match, AI review is triggered, or candidates are generated." />
+                            <ConsoleEmptyState title={t('rules.no_events_title')} description={t('rules.no_events_desc')} />
                         ) : (
                             <div className="space-y-3">
                                 {events.map((event) => (
@@ -484,16 +486,16 @@ const Rules = () => {
                                                 <div className="text-sm font-semibold text-foreground">{event.channel} / {event.verdict}</div>
                                                 <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                                                     <span>{event.attackFamily}</span>
-                                                    <span>risk {event.riskScore.toFixed(2)}</span>
+                                                    <span>{t('rules.risk_score', { value: event.riskScore.toFixed(2) })}</span>
                                                     <span>{event.processingTimeMs} ms</span>
-                                                    <span>{event.escalatedToAI ? 'AI escalated' : 'Rules only'}</span>
+                                                    <span>{event.escalatedToAI ? t('rules.ai_escalated') : t('rules.rules_only')}</span>
                                                 </div>
                                             </div>
                                             <div className="text-xs text-muted-foreground">{new Date(event.createdAt).toLocaleString()}</div>
                                         </div>
                                         <div className="mt-2 text-xs text-muted-foreground">
-                                            Source: <span className="font-medium text-foreground">{event.decisionSource}</span>
-                                            {event.candidateId && <span> | Candidate {event.candidateId}</span>}
+                                            {t('rules.source')}: <span className="font-medium text-foreground">{event.decisionSource}</span>
+                                            {event.candidateId && <span> | {t('rules.candidate')} {event.candidateId}</span>}
                                             {event.aiVerdict && <span> | AI {event.aiVerdict} {(event.aiConfidence || 0) * 100 >= 0 ? `(${((event.aiConfidence || 0) * 100).toFixed(0)}%)` : ''}</span>}
                                         </div>
                                         <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">{formatJson(event.requestSnapshot)}</pre>
