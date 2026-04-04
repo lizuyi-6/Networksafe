@@ -18,7 +18,7 @@ const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 const KEY_LENGTH = 32;
 
-function getEncryptionKey(): Buffer {
+export function getEncryptionKey(): Buffer {
   if (!ENCRYPTION_KEY) {
     throw new Error('ENCRYPTION_KEY environment variable is not set');
   }
@@ -32,7 +32,7 @@ function getEncryptionKey(): Buffer {
   return key;
 }
 
-function encryptSecretKey(plaintext: string): string {
+export function encryptSecretKey(plaintext: string): string {
   const key = getEncryptionKey();
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
@@ -42,7 +42,7 @@ function encryptSecretKey(plaintext: string): string {
   return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
 }
 
-function decryptSecretKey(encryptedData: string): string {
+export function decryptSecretKey(encryptedData: string): string {
   const key = getEncryptionKey();
   const parts = encryptedData.split(':');
   if (parts.length !== 3) {
@@ -81,21 +81,21 @@ export interface AuthenticatedAgent {
 /**
  * Generate a secure random API key
  */
-function generateApiKey(): string {
+export function generateApiKey(): string {
   return `agent_${crypto.randomBytes(24).toString('hex')}`;
 }
 
 /**
  * Generate a secret key for HMAC signing
  */
-function generateSecretKey(): string {
+export function generateSecretKey(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
 /**
  * Create machine fingerprint from provided info
  */
-function createFingerprint(info: { hostname: string; platform: string; mac?: string }): string {
+export function createFingerprint(info: { hostname: string; platform: string; mac?: string }): string {
   const data = `${info.hostname}|${info.platform}|${info.mac || 'unknown'}`;
   return crypto.createHash('sha256').update(data).digest('hex');
 }

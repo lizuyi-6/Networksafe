@@ -204,4 +204,273 @@ describe('ScannerTaskService', () => {
       expect(true).toBe(true); // No error means success
     });
   });
+
+  describe('retryTask', () => {
+    it('should return null for non-existent task', async () => {
+      const result = await scannerTaskService.retryTask('non-existent-id');
+      expect(result).toBeNull();
+    });
+
+    it('should create new task from existing task', async () => {
+      const original = await scannerTaskService.createTask({
+        ...defaultInput,
+        tenantId: 'tenant-retry-test'
+      });
+
+      const retried = await scannerTaskService.retryTask(original.id);
+      expect(retried).toBeDefined();
+      expect(retried?.id).not.toBe(original.id);
+      expect(retried?.tenantId).toBe('tenant-retry-test');
+      expect(retried?.status).toBe('pending');
+    });
+
+    it('should use custom actor when provided', async () => {
+      const original = await scannerTaskService.createTask({
+        ...defaultInput,
+        tenantId: 'tenant-retry-actor',
+        createdBy: 'original-user'
+      });
+
+      const retried = await scannerTaskService.retryTask(original.id, 'retry-user');
+      expect(retried?.createdBy).toBe('retry-user');
+    });
+  });
+
+  describe('stopWorker', () => {
+    it('should stop without error', () => {
+      scannerTaskService.setBroadcaster(jest.fn());
+      scannerTaskService.stopWorker();
+      expect(true).toBe(true);
+    });
+
+    it('should be safe to call multiple times', () => {
+      scannerTaskService.stopWorker();
+      scannerTaskService.stopWorker();
+      expect(true).toBe(true);
+    });
+  });
+
+  describe('prepare', () => {
+    it('should mark schema as ready', async () => {
+      await scannerTaskService.prepare();
+      // prepare() sets schemaReady = true internally
+      const task = await scannerTaskService.createTask({
+        ...defaultInput,
+        tenantId: 'tenant-after-prepare'
+      });
+      expect(task).toBeDefined();
+    });
+  });
+
+  describe('getTaskView', () => {
+    it('should return null for non-existent task', async () => {
+      const view = await scannerTaskService.getTaskView('non-existent');
+      expect(view).toBeNull();
+    });
+
+    it('should return task view for existing task', async () => {
+      const created = await scannerTaskService.createTask({
+        ...defaultInput,
+        tenantId: 'tenant-view-test'
+      });
+
+      const view = await scannerTaskService.getTaskView(created.id);
+      expect(view).toBeDefined();
+      expect(view?.id).toBe(created.id);
+    });
+  });
+
+  describe('getHistoryView', () => {
+    it('should return empty array for tenant with no tasks', async () => {
+      const views = await scannerTaskService.getHistoryView('empty-view-tenant');
+      expect(Array.isArray(views)).toBe(true);
+      expect(views.length).toBe(0);
+    });
+  });
+
+  describe('target types', () => {
+    it('should create task with IP targets', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-ip-test',
+        createdBy: 'user-001',
+        targets: {
+          ips: ['192.168.1.1', '10.0.0.1'],
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.targetCount).toBe(2);
+    });
+
+    it('should create task with CIDR targets', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-cidr-test',
+        createdBy: 'user-001',
+        targets: {
+          cidrs: ['192.168.1.0/24'],
+        },
+      });
+      expect(task).toBeDefined();
+    });
+
+    it('should create task with domain targets', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-domain-test',
+        createdBy: 'user-001',
+        targets: {
+          domains: ['example.com', 'test.com'],
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.targetCount).toBe(2);
+    });
+
+    it('should create task with asset IDs', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-asset-test',
+        createdBy: 'user-001',
+        targets: {
+          assetIds: ['asset-1', 'asset-2'],
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.targetCount).toBe(2);
+    });
+
+    it('should create task with device IDs', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-device-test',
+        createdBy: 'user-001',
+        targets: {
+          deviceIds: ['device-1', 'device-2'],
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.targetCount).toBe(2);
+    });
+
+    it('should create task with agent IDs', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-agent-test',
+        createdBy: 'user-001',
+        targets: {
+          agentIds: ['agent-1', 'agent-2'],
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.targetCount).toBe(2);
+    });
+
+    it('should create task with raw target items', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-items-test',
+        createdBy: 'user-001',
+        targets: {
+          items: [
+            { kind: 'url', value: 'http://example.com', label: 'Example' },
+            { kind: 'ip', value: '192.168.1.1' },
+          ],
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.targetCount).toBe(2);
+    });
+
+    it('should deduplicate targets', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-dedup-test',
+        createdBy: 'user-001',
+        targets: {
+          urls: ['http://example.com', 'http://example.com'],
+        },
+      });
+      expect(task.summary.targetCount).toBe(1);
+    });
+  });
+
+  describe('host scan configuration', () => {
+    it('should create task with host scan including system', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-host-system',
+        createdBy: 'user-001',
+        targets: {
+          host: {
+            mode: 'local',
+            includeSystem: true,
+            includeWeb: false,
+            includePorts: false,
+          },
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.hostEnabled).toBe(true);
+    });
+
+    it('should create task with host scan including web', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-host-web',
+        createdBy: 'user-001',
+        targets: {
+          host: {
+            mode: 'local',
+            includeSystem: false,
+            includeWeb: true,
+            includePorts: false,
+          },
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.hostEnabled).toBe(true);
+    });
+
+    it('should create task with host scan including ports', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-host-ports',
+        createdBy: 'user-001',
+        targets: {
+          host: {
+            mode: 'local',
+            includeSystem: false,
+            includeWeb: false,
+            includePorts: true,
+          },
+        },
+      });
+      expect(task).toBeDefined();
+      expect(task.summary.hostEnabled).toBe(true);
+    });
+  });
+
+  describe('task status transitions', () => {
+    it('should start with pending status', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-status-test',
+        createdBy: 'user-001',
+        targets: { urls: ['http://example.com'] },
+      });
+      expect(task.status).toBe('pending');
+      expect(task.phase).toBe('queued');
+    });
+
+    it('should track created task in memory', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-track-test',
+        createdBy: 'user-001',
+        targets: { urls: ['http://example.com'] },
+      });
+      const retrieved = scannerTaskService.getTask(task.id);
+      expect(retrieved).toBeDefined();
+      expect(retrieved?.id).toBe(task.id);
+    });
+  });
+
+  describe('engine policy', () => {
+    it('should default to opt_then_nuclei policy', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-policy-test',
+        createdBy: 'user-001',
+        targets: { urls: ['http://example.com'] },
+      });
+      expect(task.enginePolicy).toBe('opt_then_nuclei');
+    });
+  });
 });

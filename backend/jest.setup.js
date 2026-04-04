@@ -18,5 +18,9 @@ process.env.ALLOWED_ORIGINS = 'http://localhost:5173,http://127.0.0.1:5173';
 // 禁用 Redis 连接错误日志（测试时 Redis 可能未运行）
 process.env.DISABLE_REDIS = 'true';
 
+// 加密环境变量（agent-auth / command-signing 测试需要）
+process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-ok!';
+process.env.ENCRYPTION_SALT = 'test-salt-16-char!';
+
 // 设置超时
 jest.setTimeout(10000);

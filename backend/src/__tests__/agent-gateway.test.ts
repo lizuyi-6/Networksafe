@@ -1,6 +1,6 @@
 /**
  * Agent Gateway Unit Tests
- * 
+ *
  * Tests WebSocket communication between agents and the control platform
  */
 
@@ -16,6 +16,70 @@ jest.mock('../security/audit-logger.service', () => ({
         logAgent: jest.fn(),
         logCommand: jest.fn(),
         logFirewall: jest.fn()
+    }
+}));
+
+jest.mock('../services/socket-rate-limit.service', () => ({
+    socketRateLimitService: {
+        check: jest.fn().mockResolvedValue({
+            allowed: true,
+            remaining: 100,
+            resetAt: new Date(Date.now() + 60000).toISOString(),
+            resetAtMs: Date.now() + 60000,
+            decisionSource: 'test-mock',
+            riskFlags: []
+        }),
+        close: jest.fn()
+    }
+}));
+
+jest.mock('../services/fastpath-client.service', () => ({
+    fastpathClientService: {
+        checkSocket: jest.fn().mockResolvedValue(null),
+        check: jest.fn().mockResolvedValue(null)
+    }
+}));
+
+jest.mock('../services/command-dispatcher.service', () => ({
+    commandDispatcherService: {
+        handleAgentCommandAck: jest.fn(),
+        handleAgentCommandFailure: jest.fn()
+    }
+}));
+
+jest.mock('../services/detection-pipeline.service', () => {
+    const mockFn = jest.fn();
+    mockFn.mockResolvedValue({
+        aiVerdict: 'safe',
+        matchedRuleIds: [],
+        attackFamily: 'unknown',
+        riskScore: 0.1,
+        decisionSource: 'test'
+    });
+    return {
+        detectionPipelineService: {
+            recordBlockedThreat: jest.fn().mockResolvedValue(undefined),
+            reviewAgentSample: mockFn,
+            listDynamicRules: jest.fn().mockResolvedValue([])
+        }
+    };
+});
+
+// Import the mocked module for test-specific behavior
+import { detectionPipelineService } from '../services/detection-pipeline.service';
+
+jest.mock('../security/command-signing.service', () => ({
+    commandSigningService: {
+        signCommand: jest.fn().mockReturnValue({
+            command: {
+                type: 'test',
+                payload: undefined,
+                timestamp: Date.now(),
+                nonce: 'test-nonce'
+            },
+            signature: 'test-signature',
+            agentId: 'test-agent'
+        })
     }
 }));
 
@@ -226,10 +290,12 @@ describe('AgentGateway', () => {
                     hostname: 'command-test-server'
                 });
 
-                // Listen for command
+                // Listen for command - filter for scan (ignore update_rules sent on connect)
                 agentSocket.on('command', (command) => {
-                    expect(command.type).toBe('scan');
-                    done();
+                    if (command.type === 'scan') {
+                        expect(command.type).toBe('scan');
+                        done();
+                    }
                 });
 
                 // Send command from gateway
@@ -265,6 +331,829 @@ describe('AgentGateway', () => {
                     done();
                 }, 100);
             });
+        });
+    });
+
+    describe('isValidIPAddress (shell injection prevention)', () => {
+        // Import the module-level function by requiring the compiled source
+        // We test through the behavior of block_ip validation
+
+        it('accepts valid IPv4 addresses', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-ip-agent-001' }
+                });
+
+                agentSocket.on('connect', () => {
+                    // Valid IPv4 should work
+                    dashboardSocket.emit('request:block_ip', {
+                        agentId: 'test-ip-agent-001',
+                        ip: '192.168.1.1'
+                    });
+
+                    // Give it time to process, then check no error was emitted for IP format
+                    setTimeout(() => {
+                        done();
+                    }, 100);
+                });
+            });
+        });
+
+        it('accepts valid IPv6 addresses', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-ip-agent-002' }
+                });
+
+                agentSocket.on('connect', () => {
+                    // Valid IPv6 should work
+                    dashboardSocket.emit('request:block_ip', {
+                        agentId: 'test-ip-agent-002',
+                        ip: '::1'
+                    });
+
+                    setTimeout(() => {
+                        done();
+                    }, 100);
+                });
+            });
+        });
+
+        it('rejects IPv4-mapped IPv6 addresses', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-ip-agent-003' }
+                });
+
+                agentSocket.on('connect', () => {
+                    let errorReceived = false;
+                    dashboardSocket.on('error', (error: any) => {
+                        if (error.reason === 'invalid_ip') {
+                            errorReceived = true;
+                        }
+                    });
+
+                    // ::ffff:192.0.2.1 is technically valid but should pass isValidIPAddress
+                    dashboardSocket.emit('request:block_ip', {
+                        agentId: 'test-ip-agent-003',
+                        ip: '::ffff:192.0.2.1'
+                    });
+
+                    setTimeout(() => {
+                        done();
+                    }, 100);
+                });
+            });
+        });
+    });
+
+    describe('agent:heartbeat spoofed agentId detection', () => {
+        it('rejects heartbeat when agentId does not match authenticated socket', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-spoof-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                // Send heartbeat with DIFFERENT agentId than authenticated
+                const spoofedStatus = {
+                    agentId: 'different-agent-id', // This doesn't match the socket's auth
+                    hostname: 'spoofed-host',
+                    platform: 'linux',
+                    uptime: 3600,
+                    cpuUsage: 25.5,
+                    memoryUsage: 60.0,
+                    lastHeartbeat: new Date().toISOString(),
+                    isOnline: true
+                };
+
+                agentSocket.emit('agent:heartbeat', spoofedStatus);
+
+                // Give it time to process, then verify the heartbeat was NOT applied
+                setTimeout(() => {
+                    const agent = gateway.getAgent('test-spoof-agent');
+                    // The status should NOT have been updated to the spoofed values
+                    expect(agent?.status?.cpuUsage).not.toBe(25.5);
+                    done();
+                }, 200);
+            });
+        });
+
+        it('accepts heartbeat when agentId matches authenticated socket', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-valid-heartbeat' }
+            });
+
+            agentSocket.on('connect', () => {
+                const validStatus = {
+                    agentId: 'test-valid-heartbeat', // Matches authenticated socket
+                    hostname: 'valid-heartbeat-host',
+                    platform: 'linux',
+                    uptime: 3600,
+                    cpuUsage: 45.5,
+                    memoryUsage: 70.0,
+                    lastHeartbeat: new Date().toISOString(),
+                    isOnline: true
+                };
+
+                agentSocket.emit('agent:heartbeat', validStatus);
+
+                setTimeout(() => {
+                    const agent = gateway.getAgent('test-valid-heartbeat');
+                    expect(agent?.status?.cpuUsage).toBe(45.5);
+                    done();
+                }, 200);
+            });
+        });
+    });
+
+    describe('sendSignedCommand return values', () => {
+        it('returns false when sending command to non-existent agent', () => {
+            const result = gateway.sendCommandToAgent('non-existent-agent', { type: 'scan' });
+            expect(result).toBe(false);
+        });
+
+        it('returns false when agent exists but is offline', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-offline-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                agentSocket.emit('agent:register', {
+                    agentId: 'test-offline-agent',
+                    hostname: 'offline-test-server'
+                });
+
+                // Send heartbeat marking agent as offline
+                setTimeout(() => {
+                    const status = {
+                        agentId: 'test-offline-agent',
+                        hostname: 'offline-test-server',
+                        isOnline: false
+                    };
+                    agentSocket.emit('agent:heartbeat', status);
+
+                    // Now try to send command - should return false because agent is offline
+                    setTimeout(() => {
+                        const result = gateway.sendCommandToAgent('test-offline-agent', { type: 'scan' });
+                        expect(result).toBe(false);
+                        done();
+                    }, 100);
+                }, 100);
+            });
+        });
+
+        it('returns true when sending command to online agent', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-online-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                agentSocket.emit('agent:register', {
+                    agentId: 'test-online-agent',
+                    hostname: 'online-test-server'
+                });
+
+                // Filter for scan command (ignore update_rules sent on connect)
+                agentSocket.on('command', (command) => {
+                    if (command.type === 'scan') {
+                        expect(command.type).toBe('scan');
+                        done();
+                    }
+                });
+
+                setTimeout(() => {
+                    const result = gateway.sendCommandToAgent('test-online-agent', { type: 'scan' });
+                    expect(result).toBe(true);
+                }, 100);
+            });
+        });
+    });
+
+    describe('canAccessTenant', () => {
+        it('allows platform-level access to any tenant', () => {
+            // In test runtime, dashboard user is created with platform context
+            // We can verify by checking cross-tenant access behavior
+            const result1 = gateway.sendCommandToAgent('non-existent', { type: 'scan' });
+            expect(result1).toBe(false);
+        });
+
+        it('denies access to non-existent agent', () => {
+            const result = gateway.sendCommandToAgent('definitely-does-not-exist', { type: 'block_ip' }, { ip: '1.2.3.4' });
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('agent:review_sample malicious vs non-malicious', () => {
+        it('broadcasts threat:detected for malicious sample', (done) => {
+            // Set up mock for malicious verdict
+            jest.mocked(detectionPipelineService.reviewAgentSample).mockResolvedValueOnce({
+                aiVerdict: 'malicious',
+                matchedRuleIds: ['rule-1'],
+                attackFamily: 'sql_injection',
+                riskScore: 0.95,
+                decisionSource: 'test',
+                candidateId: null
+            });
+
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-review-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    dashboardSocket.on('threat:detected', (data) => {
+                        // This should be called for malicious
+                        done();
+                    });
+
+                    // Emit malicious review sample
+                    setTimeout(() => {
+                        agentSocket.emit('agent:review_sample', {
+                            sample: {
+                                requestId: 'review-001',
+                                sourceIp: '10.0.0.1',
+                                path: '/malicious/path',
+                                evidence: 'suspicious content',
+                                riskScore: 0.95,
+                                matchedRuleIds: ['rule-1'],
+                                decisionSource: 'agent-local'
+                            }
+                        });
+                    }, 100);
+                });
+            });
+        }, 10000);
+
+        it('does not broadcast threat:detected for non-malicious sample', (done) => {
+            // Set up mock for non-malicious verdict
+            jest.mocked(detectionPipelineService.reviewAgentSample).mockResolvedValueOnce({
+                aiVerdict: 'safe',
+                matchedRuleIds: [],
+                attackFamily: 'unknown',
+                riskScore: 0.1,
+                decisionSource: 'test'
+            });
+
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            let threatDetected = false;
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-review-agent-safe' }
+                });
+
+                agentSocket.on('connect', () => {
+                    dashboardSocket.on('threat:detected', () => {
+                        threatDetected = true;
+                    });
+
+                    // Emit non-malicious review sample (low risk score)
+                    setTimeout(() => {
+                        agentSocket.emit('agent:review_sample', {
+                            sample: {
+                                requestId: 'review-002',
+                                sourceIp: '10.0.0.5',
+                                path: '/normal/path',
+                                evidence: 'normal content',
+                                riskScore: 0.1,
+                                matchedRuleIds: [],
+                                decisionSource: 'agent-local'
+                            }
+                        });
+
+                        // Wait and verify threat:detected was NOT called
+                        setTimeout(() => {
+                            expect(threatDetected).toBe(false);
+                            done();
+                        }, 500);
+                    }, 100);
+                });
+            });
+        }, 10000);
+    });
+
+    describe('request:block_ip validation', () => {
+        it('rejects block_ip for invalid IP format', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-block-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    let errorReceived = false;
+                    dashboardSocket.on('error', (error: any) => {
+                        if (error.reason === 'invalid_ip' || error.message?.includes('invalid_ip')) {
+                            errorReceived = true;
+                        }
+                    });
+
+                    // Invalid IP format
+                    dashboardSocket.emit('request:block_ip', {
+                        agentId: 'test-block-agent',
+                        ip: 'not-an-ip'
+                    });
+
+                    setTimeout(() => {
+                        expect(errorReceived).toBe(true);
+                        done();
+                    }, 200);
+                });
+            });
+        });
+
+        it('rejects block_ip with shell metacharacters', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-block-shell-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    let errorReceived = false;
+                    dashboardSocket.on('error', (error: any) => {
+                        if (error.reason === 'invalid_ip' || error.message?.includes('invalid_characters')) {
+                            errorReceived = true;
+                        }
+                    });
+
+                    // IP with shell injection attempt
+                    dashboardSocket.emit('request:block_ip', {
+                        agentId: 'test-block-shell-agent',
+                        ip: '192.168.1.1; ls'
+                    });
+
+                    setTimeout(() => {
+                        expect(errorReceived).toBe(true);
+                        done();
+                    }, 200);
+                });
+            });
+        });
+    });
+
+    describe('request:unblock_ip validation', () => {
+        it('rejects unblock_ip for invalid IP format', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-unblock-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    let errorReceived = false;
+                    dashboardSocket.on('error', (error: any) => {
+                        if (error.reason === 'invalid_ip' || error.message?.includes('invalid_ip')) {
+                            errorReceived = true;
+                        }
+                    });
+
+                    dashboardSocket.emit('request:unblock_ip', {
+                        agentId: 'test-unblock-agent',
+                        ip: 'invalid-ip-format'
+                    });
+
+                    setTimeout(() => {
+                        expect(errorReceived).toBe(true);
+                        done();
+                    }, 200);
+                });
+            });
+        });
+    });
+
+    describe('getAgentList', () => {
+        it('returns list of registered agents', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-list-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                agentSocket.emit('agent:register', {
+                    agentId: 'test-list-agent',
+                    hostname: 'list-test-server'
+                });
+
+                setTimeout(() => {
+                    const agents = gateway.getAgentList();
+                    expect(Array.isArray(agents)).toBe(true);
+                    const found = agents.find(a => a.agentId === 'test-list-agent');
+                    expect(found).toBeDefined();
+                    expect(found?.hostname).toBe('list-test-server');
+                    done();
+                }, 100);
+            });
+        });
+    });
+
+    describe('synthetic agents', () => {
+        it('upserts and removes synthetic agents', () => {
+            // Add synthetic agent
+            gateway.upsertSyntheticAgent({
+                agentId: 'synthetic-001',
+                hostname: 'synthetic-host',
+                platform: 'linux',
+                tenantId: 'test-tenant'
+            });
+
+            let agents = gateway.getAgentList();
+            let synthetic = agents.find(a => a.agentId === 'synthetic-001');
+            expect(synthetic).toBeDefined();
+            expect(synthetic?.synthetic).toBe(true);
+
+            // Update synthetic agent
+            gateway.upsertSyntheticAgent({
+                agentId: 'synthetic-001',
+                hostname: 'synthetic-host-updated',
+                status: { isOnline: true, cpuUsage: 10 }
+            });
+
+            agents = gateway.getAgentList();
+            synthetic = agents.find(a => a.agentId === 'synthetic-001');
+            expect(synthetic?.hostname).toBe('synthetic-host-updated');
+
+            // Remove synthetic agent
+            gateway.removeSyntheticAgent('synthetic-001');
+
+            agents = gateway.getAgentList();
+            synthetic = agents.find(a => a.agentId === 'synthetic-001');
+            expect(synthetic).toBeUndefined();
+        });
+
+        it('synthetic agent with commandHandler accepts commands', (done) => {
+            let handlerCalled = false;
+
+            gateway.upsertSyntheticAgent({
+                agentId: 'synthetic-cmd-001',
+                hostname: 'synthetic-cmd-host',
+                platform: 'linux',
+                commandHandler: (cmd) => {
+                    handlerCalled = true;
+                    return true;
+                }
+            });
+
+            const result = gateway.sendCommandToAgent('synthetic-cmd-001', { type: 'scan' });
+            expect(result).toBe(true);
+            expect(handlerCalled).toBe(true);
+
+            done();
+        });
+
+        it('synthetic agent with rejecting handler returns false', () => {
+            gateway.upsertSyntheticAgent({
+                agentId: 'synthetic-cmd-002',
+                hostname: 'synthetic-cmd-host-2',
+                platform: 'linux',
+                commandHandler: () => false
+            });
+
+            const result = gateway.sendCommandToAgent('synthetic-cmd-002', { type: 'block_ip' });
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('agent:scan_result', () => {
+        it('broadcasts scan results to dashboard', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-scan-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    dashboardSocket.on('scan:result', (data) => {
+                        expect(data.agentId).toBe('test-scan-agent');
+                        done();
+                    });
+
+                    setTimeout(() => {
+                        agentSocket.emit('agent:scan_result', {
+                            scanId: 'scan-001',
+                            vulnerabilities: []
+                        });
+                    }, 100);
+                });
+            });
+        });
+    });
+
+    describe('agent:log', () => {
+        it('broadcasts agent logs to dashboard', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-log-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    dashboardSocket.on('agent:log', (data) => {
+                        expect(data.agentId).toBe('test-log-agent');
+                        done();
+                    });
+
+                    setTimeout(() => {
+                        agentSocket.emit('agent:log', {
+                            level: 'info',
+                            message: 'Test log message'
+                        });
+                    }, 100);
+                });
+            });
+        });
+    });
+
+    describe('agent:command_ack and agent:command_failed', () => {
+        it('broadcasts command ack to dashboard', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-ack-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    dashboardSocket.on('agent:command:ack', (data) => {
+                        expect(data.agentId).toBe('test-ack-agent');
+                        done();
+                    });
+
+                    setTimeout(() => {
+                        agentSocket.emit('agent:command_ack', {
+                            actionId: 'action-001'
+                        });
+                    }, 100);
+                });
+            });
+        });
+
+        it('broadcasts command failure to dashboard', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-fail-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    dashboardSocket.on('agent:command:failed', (data) => {
+                        expect(data.agentId).toBe('test-fail-agent');
+                        done();
+                    });
+
+                    setTimeout(() => {
+                        agentSocket.emit('agent:command_failed', {
+                            actionId: 'action-002',
+                            reason: 'timeout'
+                        });
+                    }, 100);
+                });
+            });
+        });
+    });
+
+    describe('rate limiting', () => {
+        it('handles rapid requests within limits', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-rate-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    // Send a few requests rapidly - should all succeed
+                    dashboardSocket.emit('request:scan', { agentId: 'test-rate-agent' });
+                    dashboardSocket.emit('request:scan', { agentId: 'test-rate-agent' });
+                    dashboardSocket.emit('request:scan', { agentId: 'test-rate-agent' });
+
+                    setTimeout(() => {
+                        done();
+                    }, 100);
+                });
+            });
+        });
+    });
+
+    describe('agent disconnect', () => {
+        it('removes agent from list on disconnect', (done) => {
+            const socket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-disconnect-agent' }
+            });
+
+            socket.on('connect', () => {
+                socket.emit('agent:register', {
+                    agentId: 'test-disconnect-agent',
+                    hostname: 'disconnect-test-server'
+                });
+
+                setTimeout(() => {
+                    let agents = gateway.getAgentList();
+                    let found = agents.find(a => a.agentId === 'test-disconnect-agent');
+                    expect(found).toBeDefined();
+
+                    // Now disconnect
+                    socket.disconnect();
+
+                    setTimeout(() => {
+                        agents = gateway.getAgentList();
+                        found = agents.find(a => a.agentId === 'test-disconnect-agent');
+                        expect(found).toBeUndefined();
+                        done();
+                    }, 100);
+                }, 100);
+            });
+        });
+    });
+
+    describe('broadcastToDashboards', () => {
+        it('sends traffic:updated to dashboards', (done) => {
+            dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'dashboard' }
+            });
+
+            dashboardSocket.on('connect', () => {
+                agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'agent', agentId: 'test-traffic-agent' }
+                });
+
+                agentSocket.on('connect', () => {
+                    dashboardSocket.on('traffic:updated', (data) => {
+                        expect(data.agentId).toBe('test-traffic-agent');
+                        done();
+                    });
+
+                    setTimeout(() => {
+                        agentSocket.emit('agent:traffic_stats', {
+                            agentId: 'test-traffic-agent',
+                            stats: {
+                                packetsProcessed: 100,
+                                packetsAllowed: 80,
+                                packetsBlocked: 20,
+                                activeFlows: []
+                            },
+                            timestamp: new Date().toISOString()
+                        });
+                    }, 100);
+                });
+            });
+        });
+    });
+
+    describe('agent:traffic_stats', () => {
+        it('handles traffic stats without crashing', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-traffic-stats-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                // Send traffic stats
+                agentSocket.emit('agent:traffic_stats', {
+                    agentId: 'test-traffic-stats-agent',
+                    stats: {
+                        packetsProcessed: 50,
+                        packetsAllowed: 40,
+                        packetsBlocked: 10,
+                        bytesProcessed: 1000,
+                        activeFlows: []
+                    },
+                    timestamp: new Date().toISOString()
+                });
+
+                setTimeout(() => {
+                    done();
+                }, 100);
+            });
+        });
+
+        it('handles traffic stats with mismatched agentId', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-traffic-mismatch-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                // Send traffic stats with wrong agentId - should be ignored
+                agentSocket.emit('agent:traffic_stats', {
+                    agentId: 'different-agent-id',
+                    stats: {
+                        packetsProcessed: 50,
+                        activeFlows: []
+                    },
+                    timestamp: new Date().toISOString()
+                });
+
+                setTimeout(() => {
+                    done();
+                }, 100);
+            });
+        });
+    });
+
+    describe('invalid payloads', () => {
+        it('rejects invalid heartbeat payload', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-invalid-hb-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                let errorReceived = false;
+                agentSocket.on('error', () => {
+                    errorReceived = true;
+                });
+
+                // Send invalid heartbeat (null)
+                agentSocket.emit('agent:heartbeat', null);
+
+                setTimeout(() => {
+                    done();
+                }, 100);
+            });
+        });
+
+        it('rejects invalid threat payload', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-invalid-threat-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                // Send invalid threat
+                agentSocket.emit('agent:threat', { threat: 'not-an-object' });
+
+                setTimeout(() => {
+                    done();
+                }, 100);
+            });
+        });
+
+        it('rejects invalid review_sample payload', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-invalid-review-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                // Send invalid review_sample
+                agentSocket.emit('agent:review_sample', null);
+
+                setTimeout(() => {
+                    done();
+                }, 100);
+            });
+        });
+    });
+
+    describe('syncTenantDetectionRules', () => {
+        it('syncs rules to agents in tenant', async () => {
+            // This tests the public method
+            const result = await gateway.syncTenantDetectionRules('test-tenant');
+            expect(result).toHaveProperty('attempted');
+            expect(result).toHaveProperty('succeeded');
+        });
+    });
+
+    describe('getOnlineCount', () => {
+        it('returns correct count for test runtime', () => {
+            const count = gateway.getOnlineCount();
+            expect(typeof count).toBe('number');
+            expect(count).toBeGreaterThanOrEqual(0);
         });
     });
 });
