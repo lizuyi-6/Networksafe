@@ -19,8 +19,8 @@ const AlertDetail = () => {
 
     return (
         <ConsolePage
-            title="告警详情"
-            subtitle={`查看告警 ${id} 的证据、{t('alertDetail.time')}线与关联对象`}
+            title={t('alertDetail.page_title')}
+            subtitle={t('alertDetail.page_subtitle').replace('{id}', id)}
             actions={<Link to="/alerts" className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30"><ArrowLeft size={14} />{t('alertDetail.back')}</Link>}
         >
             {error && <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
@@ -37,7 +37,7 @@ const AlertDetail = () => {
                                 <div className="rounded-lg border border-border bg-muted/15 p-4 text-sm"><div className="text-xs text-muted-foreground">{t('alertDetail.time')}</div><div className="mt-1 font-semibold text-foreground">{new Date(detail.summary?.timestamp || Date.now()).toLocaleString()}</div></div>
                             </div>
                         </ConsolePanel>
-                        <ConsolePanel title={t('alertDetail.evidence')} subtitle="与本次告警相关的发现、扫描与流量会话" icon={Shield} iconTone="warning">
+                        <ConsolePanel title={t('alertDetail.evidence')} subtitle={t('alertDetail.findings_subtitle')} icon={Shield} iconTone="warning">
                             <div className="space-y-4">
                                 {(detail.evidence || []).length > 0 ? (detail.evidence || []).map((item: any) => (
                                     <div key={item.findingId} className="rounded-lg border border-border bg-muted/15 p-4">
@@ -48,12 +48,12 @@ const AlertDetail = () => {
                                         <p className="mt-2 text-sm text-muted-foreground">{item.description}</p>
                                         <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">{JSON.stringify(item.evidence || {}, null, 2)}</pre>
                                     </div>
-                                )) : <ConsoleEmptyState title={t('alertDetail.no_evidence')} description="后续扫描、验证和流量事件会在这里聚合。" />}
+                                )) : <ConsoleEmptyState title={t('alertDetail.no_evidence')} description={t('alertDetail.findings_desc')} />}
                             </div>
                         </ConsolePanel>
                     </div>
                     <div className="space-y-6 xl:col-span-4">
-                        <ConsolePanel title="{t('alertDetail.time')}线" subtitle="告警{t('alertDetail.status')}与调查上下文" icon={Clock} iconTone="neutral">
+                        <ConsolePanel title={t('alertDetail.timeline')} subtitle={t('alertDetail.context')} icon={Clock} iconTone="neutral">
                             <div className="space-y-3">
                                 {(detail.timeline || []).map((item: any, index: number) => (
                                     <div key={`${item.title}-${index}`} className="rounded-lg border border-border bg-muted/15 p-3">
@@ -64,7 +64,7 @@ const AlertDetail = () => {
                                 ))}
                             </div>
                         </ConsolePanel>
-                        <ConsolePanel title="关联动作" subtitle="已创建的调查与处置动作" icon={Shield} iconTone="primary">
+                        <ConsolePanel title={t('alertDetail.actions')} subtitle={t('alertDetail.actions_subtitle')} icon={Shield} iconTone="primary">
                             {(detail.relatedActions || []).length > 0 ? (
                                 <div className="space-y-3">
                                     {(detail.relatedActions || []).map((action: any) => (
@@ -74,7 +74,7 @@ const AlertDetail = () => {
                                         </div>
                                     ))}
                                 </div>
-                            ) : <ConsoleEmptyState title={t('alertDetail.no_actions')} description="从扫描和告警页创建处置动作后，这里会显示执行记录。" />}
+                            ) : <ConsoleEmptyState title={t('alertDetail.no_actions')} description={t('alertDetail.actions_desc')} />}
                         </ConsolePanel>
                     </div>
                 </div>
