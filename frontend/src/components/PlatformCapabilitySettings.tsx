@@ -12,6 +12,7 @@ import {
     savePlatformConfig,
     testNotificationChannel
 } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 type EndpointOption = { id: string; name: string; modelName: string; purpose?: 'hot_path' | 'deep_analysis' };
 
@@ -19,9 +20,9 @@ const targets: DeploymentTarget[] = ['nginx', 'apache', 'caddy', 'docker_compose
 const inputClassName = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none';
 const labelClassName = 'mb-1 block text-xs font-medium text-muted-foreground';
 
-const makeChannel = (): NotificationChannelConfig => ({
+const makeChannel = (t: (key: string) => string): NotificationChannelConfig => ({
     id: `channel-${Date.now()}`,
-    name: 'New channel',
+    name: t('platformSettings.newChannel'),
     type: 'generic_webhook',
     enabled: true,
     target: '',
@@ -31,6 +32,7 @@ const makeChannel = (): NotificationChannelConfig => ({
 });
 
 const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?: number }) => {
+    const { t } = useLanguage();
     const [config, setConfig] = useState<PlatformConfigResponse | null>(null);
     const [deliveries, setDeliveries] = useState<NotificationDelivery[]>([]);
     const [endpoints, setEndpoints] = useState<EndpointOption[]>([]);
@@ -91,7 +93,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
         setStatus(null);
         try {
             await savePlatformConfig(config);
-            setStatus('Configuration saved');
+            setStatus(t('platformSettings.configSaved'));
             await load();
         } catch (e: any) {
             setError(e.message || 'FG-PLATFORM-CONTROL-SAVE');
@@ -106,7 +108,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
         setStatus(null);
         try {
             await testNotificationChannel(channelId);
-            setStatus('Notification test sent');
+            setStatus(t('platformSettings.notificationTestSent'));
             setDeliveries(await fetchNotificationDeliveries(12));
         } catch (e: any) {
             setError(e.message || 'FG-PLATFORM-CONTROL-TEST');
@@ -117,10 +119,10 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
 
     if (loading || !config) {
         return (
-            <ConsolePanel title="Platform Control" subtitle="Loading control-plane settings" icon={Settings2} iconTone="primary">
+            <ConsolePanel title={t('platformSettings.platformControl')} subtitle={t('platformSettings.loadingControlPlane')} icon={Settings2} iconTone="primary">
                 <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
                     <Loader2 size={18} className="mr-2 animate-spin" />
-                    Loading platform settings...
+                    {t('platformSettings.loadingPlatformSettings')}
                 </div>
             </ConsolePanel>
         );
@@ -140,8 +142,8 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
             )}
 
             <ConsolePanel
-                title="Platform Control"
-                subtitle="Guardrails, AI routing, deployment defaults and device gateway"
+                title={t('platformSettings.platformControl')}
+                subtitle={t('platformSettings.guardrailsSubtitle')}
                 icon={Settings2}
                 iconTone="primary"
                 headerAction={(
@@ -151,27 +153,28 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                     >
                         {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                        Save
+                        {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                        {t('platformSettings.save')}
                     </button>
                 )}
             >
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                     <div className="rounded-xl border border-border bg-muted/10 p-4">
-                        <div className="mb-4 text-sm font-semibold text-foreground">Traffic Guardrails</div>
+                        <div className="mb-4 text-sm font-semibold text-foreground">{t('platformSettings.trafficGuardrails')}</div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClassName}>Anti-bot enabled</label>
+                                <label className={labelClassName}>{t('platformSettings.antiBotEnabled')}</label>
                                 <select
                                     value={config.antiBot.enabled ? 'true' : 'false'}
                                     onChange={(event) => updateConfig((current) => ({ ...current, antiBot: { ...current.antiBot, enabled: event.target.value === 'true' } }))}
                                     className={inputClassName}
                                 >
-                                    <option value="true">Enabled</option>
-                                    <option value="false">Disabled</option>
+                                    <option value="true">{t('common.enabled')}</option>
+                                    <option value="false">{t('common.disabled')}</option>
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>Requests per minute</label>
+                                <label className={labelClassName}>{t('platformSettings.requestsPerMinute')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -180,7 +183,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Request threshold</label>
+                                <label className={labelClassName}>{t('platformSettings.requestThreshold')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -189,7 +192,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Fast request threshold</label>
+                                <label className={labelClassName}>{t('platformSettings.fastRequestThreshold')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -578,7 +581,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                     <button
                         onClick={() => updateConfig((current) => ({
                             ...current,
-                            notifications: { ...current.notifications, channels: [...current.notifications.channels, makeChannel()] }
+                            notifications: { ...current.notifications, channels: [...current.notifications.channels, makeChannel(t)] }
                         }))}
                         className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/40"
                     >

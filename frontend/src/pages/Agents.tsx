@@ -155,7 +155,7 @@ const Agents = () => {
                                         </div>
 
                                         <div className="mb-4 grid grid-cols-3 gap-4">
-                                            <div className="rounded-lg bg-card p-2 text-center border border-border/50 group-hover:border-primary/20 transition-colors"><Cpu size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.cpuUsage ?? '--'}%</div><div className="text-[11px] text-muted-foreground">CPU</div></div>
+                                            <div className="rounded-lg bg-card p-2 text-center border border-border/50 group-hover:border-primary/20 transition-colors"><Cpu size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.cpuUsage ?? '--'}%</div><div className="text-[11px] text-muted-foreground">{t('agents.cpu')}</div></div>
                                             <div className="rounded-lg bg-card p-2 text-center border border-border/50 group-hover:border-primary/20 transition-colors"><HardDrive size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.memoryUsage ?? '--'}%</div><div className="text-[11px] text-muted-foreground">{t('agents.memory')}</div></div>
                                             <div className="rounded-lg bg-card p-2 text-center border border-border/50 group-hover:border-primary/20 transition-colors"><Clock size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.uptime ? formatUptime(agent.status.uptime) : '--'}</div><div className="text-[11px] text-muted-foreground">{t('agents.uptime_label')}</div></div>
                                         </div>
@@ -188,7 +188,7 @@ const Agents = () => {
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-2">
                                         <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400" />
-                                        <span className="text-sm font-medium text-foreground">{event.title || t('agents.security_event') || 'Security Event'}</span>
+                                        <span className="text-sm font-medium text-foreground">{event.title || t('agents.security_event')}</span>
                                     </div>
                                     <span className="text-[11px] font-bold uppercase text-amber-600 dark:text-amber-400">{event.severity || 'medium'}</span>
                                 </div>

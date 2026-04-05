@@ -130,7 +130,7 @@ const DeviceCard = ({
                     {device.isOnline ? (
                         device.mode === 'online' ? <><Wifi size={12} /> {t('devices.cloud_mode')}</> : <><WifiOff size={12} /> {t('devices.no_agents')}</>
                     ) : (
-                        <><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></span> Disconnected</>
+                        <><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></span> {t('devices.disconnected')}</>
                     )}
                 </div>
             </div>
@@ -161,11 +161,11 @@ const DeviceCard = ({
                     <span className="font-medium text-foreground flex items-center gap-1"><Server size={14} className="text-primary" />{device.connectedAgents.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Risk</span>
+                    <span className="text-muted-foreground">{t('devices.risk')}</span>
                     <span className="font-medium text-foreground">{device.securitySummary?.asset?.riskScore || 0}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                    Latest action: <span className="text-foreground">{latestCommand?.command || 'none'}</span>
+                    {t('devices.latest_action')}: <span className="text-foreground">{latestCommand?.command || t('devices.none')}</span>
                 </div>
             </div>
 
@@ -175,7 +175,7 @@ const DeviceCard = ({
                     disabled={!device.isOnline || commandBusy === 'collect'}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                    <Zap size={12} /> {commandBusy === 'collect' ? 'Running...' : 'Collect'}
+                    <Zap size={12} /> {commandBusy === 'collect' ? t('devices.running') : t('devices.collect')}
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); onCommand('reboot'); }}
@@ -192,7 +192,7 @@ const DeviceCard = ({
                 </button>
                 <div onClick={(e) => e.stopPropagation()} className="ml-auto">
                     <Link to={`/devices/board-status/${device.deviceId}`} className="px-3 py-2 text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition-all flex items-center gap-1">
-                        <Activity size={12} /> View Status
+                        <Activity size={12} /> {t('devices.view_status')}
                     </Link>
                 </div>
             </div>
@@ -336,7 +336,7 @@ const Devices = () => {
             const response = await saveDeviceConfig(settingsDeviceId, configDraft);
             setConfigDraft(response?.config || configDraft);
             setCommandHistory(response?.commandHistory || []);
-            setActionMessage('Device configuration saved');
+            setActionMessage(t('devices.config_saved'));
             await fetchDevices();
         } catch (e: any) {
             setError(e.message || 'FG-DEVICE-SAVE-ERR');
@@ -365,7 +365,7 @@ const Devices = () => {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={() => void fetchDevices()} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-card border border-border text-foreground rounded-lg hover:bg-muted/50 hover:border-primary/30 transition-all shadow-sm">
-                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> {t('devices.refresh')}
                     </button>
                 </div>
             </div>
@@ -393,7 +393,7 @@ const Devices = () => {
                     <div className="text-3xl font-bold text-foreground">{cloudCount}</div>
                 </div>
                 <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-orange-500/10 text-orange-500 rounded-lg"><Shield size={18} /></div><span className="text-sm font-medium text-muted-foreground">Open Findings / Actions</span></div>
+                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-orange-500/10 text-orange-500 rounded-lg"><Shield size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.open_findings_actions')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{findingsOpen} / {recentActions}</div>
                 </div>
             </div>
@@ -401,9 +401,9 @@ const Devices = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                        <div className="flex justify-between items-center mb-5"><h3 className="font-semibold text-foreground flex items-center gap-2"><Radio size={16} className="text-primary" /> Edge Gateways</h3></div>
+                        <div className="flex justify-between items-center mb-5"><h3 className="font-semibold text-foreground flex items-center gap-2"><Radio size={16} className="text-primary" /> {t('devices.edge_gateways')}</h3></div>
                         {loading ? (
-                            <div className="text-center py-12 text-muted-foreground">Loading gateways...</div>
+                            <div className="text-center py-12 text-muted-foreground">{t('devices.loading_gateways')}</div>
                         ) : devices.length === 0 ? (
                             <div className="rounded-lg border border-dashed border-border/50 bg-muted/20 px-6 py-8">
                                 <div className="text-center">
@@ -466,16 +466,16 @@ const Devices = () => {
                         <>
                             <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="font-semibold text-foreground flex items-center gap-2"><Terminal size={16} className="text-primary" /> Device Details</h3>
+                                    <h3 className="font-semibold text-foreground flex items-center gap-2"><Terminal size={16} className="text-primary" /> {t('devices.device_details')}</h3>
                                     <button onClick={() => void openSettings(selectedDeviceData)} className="rounded-lg border border-border bg-muted/20 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/40">
-                                        Edit Config
+                                        {t('devices.edit_config')}
                                     </button>
                                 </div>
                                 <dl className="space-y-3 text-sm">
                                     <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.device_id')}</dt><dd className="font-medium text-foreground">{selectedDeviceData.deviceId}</dd></div>
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">Display Name</dt><dd className="font-medium text-foreground">{selectedDeviceData.config?.displayName || selectedDeviceData.deviceId}</dd></div>
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">Group</dt><dd className="font-medium text-foreground">{selectedDeviceData.config?.group || '--'}</dd></div>
-                                    <div className="flex justify-between"><dt className="text-muted-foreground">Site</dt><dd className="font-medium text-foreground">{selectedDeviceData.config?.site || '--'}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.display_name')}</dt><dd className="font-medium text-foreground">{selectedDeviceData.config?.displayName || selectedDeviceData.deviceId}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.group')}</dt><dd className="font-medium text-foreground">{selectedDeviceData.config?.group || '--'}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.site')}</dt><dd className="font-medium text-foreground">{selectedDeviceData.config?.site || '--'}</dd></div>
                                     <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.chip_model')}</dt><dd className="font-medium text-foreground">{selectedDeviceData.chipModel}</dd></div>
                                     <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.flash_size')}</dt><dd className="font-medium text-foreground">{(selectedDeviceData.flashSize / 1024 / 1024).toFixed(0)} MB</dd></div>
                                     <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.free_heap')}</dt><dd className="font-medium text-foreground">{(selectedDeviceData.freeHeap / 1024).toFixed(0)} KB</dd></div>
@@ -484,7 +484,7 @@ const Devices = () => {
                                 </dl>
                             </div>
                             <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><History size={16} className="text-primary" /> Latest Command</h3>
+                                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><History size={16} className="text-primary" /> {t('devices.latest_command')}</h3>
                                 {(selectedDeviceData.latestCommand || selectedDeviceData.securitySummary?.latestCommand) ? (
                                     <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
                                         <div className="font-medium text-foreground">{(selectedDeviceData.latestCommand || selectedDeviceData.securitySummary?.latestCommand)?.command}</div>
@@ -492,11 +492,11 @@ const Devices = () => {
                                         <div className="mt-2 text-xs text-muted-foreground">{formatDateTime((selectedDeviceData.latestCommand || selectedDeviceData.securitySummary?.latestCommand)?.createdAt)}</div>
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground text-center py-4">No commands have been executed yet.</p>
+                                    <p className="text-sm text-muted-foreground text-center py-4">{t('devices.no_commands_yet')}</p>
                                 )}
                             </div>
                             <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Server size={16} className="text-primary" /> Connected Agents</h3>
+                                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Server size={16} className="text-primary" /> {t('devices.connected_agents')}</h3>
                                 {selectedDeviceData.connectedAgents.length > 0 ? (
                                     <ul className="space-y-2">
                                         {selectedDeviceData.connectedAgents.map((agent) => (
@@ -506,36 +506,36 @@ const Devices = () => {
                                 ) : <p className="text-sm text-muted-foreground text-center py-4">{t('devices.no_agents')}</p>}
                             </div>
                             <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Shield size={16} className="text-primary" /> Security Context</h3>
+                                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Shield size={16} className="text-primary" /> {t('devices.security_context')}</h3>
                                 {selectedDeviceData.securitySummary?.asset ? (
                                     <div className="space-y-3 text-sm">
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="rounded-lg bg-muted/30 p-3 text-center">
-                                                <div className="text-xs text-muted-foreground">Risk</div>
+                                                <div className="text-xs text-muted-foreground">{t('devices.risk')}</div>
                                                 <div className="mt-1 text-lg font-semibold text-foreground">{selectedDeviceData.securitySummary.asset.riskScore || 0}</div>
                                             </div>
                                             <div className="rounded-lg bg-muted/30 p-3 text-center">
-                                                <div className="text-xs text-muted-foreground">Findings</div>
+                                                <div className="text-xs text-muted-foreground">{t('devices.findings')}</div>
                                                 <div className="mt-1 text-lg font-semibold text-foreground">{selectedDeviceData.securitySummary.asset.findingsOpen || 0}</div>
                                             </div>
                                             <div className="rounded-lg bg-muted/30 p-3 text-center">
-                                                <div className="text-xs text-muted-foreground">Alerts</div>
+                                                <div className="text-xs text-muted-foreground">{t('devices.alerts')}</div>
                                                 <div className="mt-1 text-lg font-semibold text-foreground">{selectedDeviceData.securitySummary.asset.alertsOpen || 0}</div>
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Recent Findings</div>
+                                            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('devices.recent_findings')}</div>
                                             {(selectedDeviceData.securitySummary.findings || []).slice(0, 3).map((finding) => (
                                                 <div key={`${finding.title}-${finding.severity}`} className="mb-2 rounded-lg border border-border bg-muted/20 px-3 py-2">
                                                     <div className="text-sm font-medium text-foreground">{finding.title}</div>
                                                     <div className="text-xs text-muted-foreground">{finding.severity}</div>
                                                 </div>
                                             ))}
-                                            {(selectedDeviceData.securitySummary.findings || []).length === 0 && <div className="text-xs text-muted-foreground">No linked findings yet.</div>}
+                                            {(selectedDeviceData.securitySummary.findings || []).length === 0 && <div className="text-xs text-muted-foreground">{t('devices.no_linked_findings')}</div>}
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground text-center py-4">This device has not been linked to a security asset yet.</p>
+                                    <p className="text-sm text-muted-foreground text-center py-4">{t('devices.no_security_asset')}</p>
                                 )}
                             </div>
                         </>
@@ -551,7 +551,7 @@ const Devices = () => {
                         <div className="flex h-full flex-col">
                             <div className="flex items-center justify-between border-b border-border px-6 py-4">
                                 <div>
-                                    <div className="text-lg font-semibold text-foreground">Device Settings</div>
+                                    <div className="text-lg font-semibold text-foreground">{t('devices.device_settings')}</div>
                                     <div className="text-sm text-muted-foreground">{activeConfigDevice.deviceId}</div>
                                 </div>
                                 <button onClick={closeSettings} className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-muted/20 hover:text-foreground">
@@ -561,26 +561,26 @@ const Devices = () => {
 
                             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
                                 {configLoading || !configDraft ? (
-                                    <div className="text-sm text-muted-foreground">Loading device configuration...</div>
+                                    <div className="text-sm text-muted-foreground">{t('devices.loading_config')}</div>
                                 ) : (
                                     <>
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">Display Name</span><input value={configDraft.displayName} onChange={(e) => setConfigDraft({ ...configDraft, displayName: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
-                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">Group</span><input value={configDraft.group} onChange={(e) => setConfigDraft({ ...configDraft, group: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
-                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">Site</span><input value={configDraft.site} onChange={(e) => setConfigDraft({ ...configDraft, site: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
-                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">Network Profile</span><input value={configDraft.networkProfile} onChange={(e) => setConfigDraft({ ...configDraft, networkProfile: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
-                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">Scan Profile</span><input value={configDraft.scanProfile} onChange={(e) => setConfigDraft({ ...configDraft, scanProfile: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
-                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">Allowed Commands</span><input value={configDraft.commandPermissions.join(', ')} onChange={(e) => setConfigDraft({ ...configDraft, commandPermissions: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
+                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">{t('devices.display_name')}</span><input value={configDraft.displayName} onChange={(e) => setConfigDraft({ ...configDraft, displayName: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
+                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">{t('devices.group')}</span><input value={configDraft.group} onChange={(e) => setConfigDraft({ ...configDraft, group: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
+                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">{t('devices.site')}</span><input value={configDraft.site} onChange={(e) => setConfigDraft({ ...configDraft, site: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
+                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">{t('devices.network_profile')}</span><input value={configDraft.networkProfile} onChange={(e) => setConfigDraft({ ...configDraft, networkProfile: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
+                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">{t('devices.scan_profile')}</span><input value={configDraft.scanProfile} onChange={(e) => setConfigDraft({ ...configDraft, scanProfile: e.target.value })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
+                                            <label className="space-y-2 text-sm"><span className="text-muted-foreground">{t('devices.allowed_commands')}</span><input value={configDraft.commandPermissions.join(', ')} onChange={(e) => setConfigDraft({ ...configDraft, commandPermissions: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
                                         </div>
 
-                                        <label className="space-y-2 text-sm block"><span className="text-muted-foreground">Tags</span><input value={configDraft.tags.join(', ')} onChange={(e) => setConfigDraft({ ...configDraft, tags: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
-                                        <label className="space-y-2 text-sm block"><span className="text-muted-foreground">Notes</span><textarea value={configDraft.notes} onChange={(e) => setConfigDraft({ ...configDraft, notes: e.target.value })} rows={4} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
+                                        <label className="space-y-2 text-sm block"><span className="text-muted-foreground">{t('devices.tags')}</span><input value={configDraft.tags.join(', ')} onChange={(e) => setConfigDraft({ ...configDraft, tags: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
+                                        <label className="space-y-2 text-sm block"><span className="text-muted-foreground">{t('devices.notes')}</span><textarea value={configDraft.notes} onChange={(e) => setConfigDraft({ ...configDraft, notes: e.target.value })} rows={4} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
 
                                         <div className="rounded-xl border border-border bg-muted/20 p-4">
-                                            <div className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground"><History size={14} className="text-primary" /> Recent Command History</div>
+                                            <div className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground"><History size={14} className="text-primary" /> {t('devices.recent_command_history')}</div>
                                             <div className="space-y-2">
                                                 {commandHistory.length === 0 ? (
-                                                    <div className="text-sm text-muted-foreground">No command history recorded yet.</div>
+                                                    <div className="text-sm text-muted-foreground">{t('devices.no_command_history')}</div>
                                                 ) : (
                                                     commandHistory.map((entry) => (
                                                         <div key={entry.id} className="rounded-lg border border-border bg-card px-3 py-2">
@@ -601,12 +601,12 @@ const Devices = () => {
                             <div className="border-t border-border px-6 py-4">
                                 <div className="flex items-center justify-between gap-3">
                                     <button onClick={() => activeConfigDevice && setConfigDraft(defaultConfig(activeConfigDevice))} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">
-                                        <RotateCcw size={14} /> Reset
+                                        <RotateCcw size={14} /> {t('devices.reset')}
                                     </button>
                                     <div className="flex gap-3">
-                                        <button onClick={closeSettings} className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">Cancel</button>
+                                        <button onClick={closeSettings} className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">{t('devices.cancel')}</button>
                                         <button onClick={saveSettings} disabled={configSaving || !configDraft} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
-                                            <Save size={14} /> {configSaving ? 'Saving...' : 'Save'}
+                                            <Save size={14} /> {configSaving ? t('devices.saving') : t('devices.save')}
                                         </button>
                                     </div>
                                 </div>

@@ -23,7 +23,7 @@ export default function AdminUsers() {
             setUsers(res.users || []);
             setError(null);
         } catch (err: any) {
-            setError(err.message || 'Failed to load users');
+            setError(err.message || t('adminUsers.load_failed'));
         } finally {
             setLoading(false);
         }
@@ -38,7 +38,7 @@ export default function AdminUsers() {
             await updateAdminUserPlan(userId, newPlan);
             setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan } : u));
         } catch (e: any) {
-            alert(e.message || 'Failed to update plan');
+            alert(e.message || t('adminUsers.update_plan_failed'));
         }
     };
 
@@ -47,7 +47,7 @@ export default function AdminUsers() {
             await updateAdminUserRole(userId, newRole);
             setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
         } catch (e: any) {
-            alert(e.message || 'Failed to update role');
+            alert(e.message || t('adminUsers.update_role_failed'));
         }
     };
 
@@ -56,16 +56,16 @@ export default function AdminUsers() {
             await updateAdminUserStatus(userId, newStatus);
             setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
         } catch (e: any) {
-            alert(e.message || 'Failed to update status');
+            alert(e.message || t('adminUsers.update_status_failed'));
         }
     };
 
     if (error) {
-        return <ErrorDisplay title="Error" message={error} onRetry={loadUsers} />;
+        return <ErrorDisplay title={t('adminUsers.error_title')} message={error} onRetry={loadUsers} />;
     }
 
     if (loading) {
-        return <div className="p-8 text-muted-foreground flex items-center justify-center">Loading Admin Control Panel...</div>;
+        return <div className="p-8 text-muted-foreground flex items-center justify-center">{t('adminUsers.loading')}</div>;
     }
 
     return (

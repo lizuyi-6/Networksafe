@@ -20,6 +20,8 @@ type DevLoginPreset = {
     detail: string;
     email: string;
     password: string;
+    labelKey: string;
+    detailKey: string;
 };
 
 const DEV_LOGIN_PRESETS: DevLoginPreset[] = [
@@ -29,6 +31,8 @@ const DEV_LOGIN_PRESETS: DevLoginPreset[] = [
         detail: 'Ultra admin',
         email: 'dev-admin@aetherguard.local',
         password: 'DevAdmin!2026',
+        labelKey: 'login.preset_admin',
+        detailKey: 'login.preset_admin_desc',
     },
     {
         id: 'starter',
@@ -36,6 +40,8 @@ const DEV_LOGIN_PRESETS: DevLoginPreset[] = [
         detail: 'Starter tenant',
         email: 'starter@aetherguard.local',
         password: 'DevStarter!2026',
+        labelKey: 'login.preset_starter',
+        detailKey: 'login.preset_starter_desc',
     },
     {
         id: 'pro',
@@ -43,6 +49,8 @@ const DEV_LOGIN_PRESETS: DevLoginPreset[] = [
         detail: 'Pro tenant',
         email: 'pro@aetherguard.local',
         password: 'DevPro!2026',
+        labelKey: 'login.preset_pro',
+        detailKey: 'login.preset_pro_desc',
     },
     {
         id: 'ultra',
@@ -50,6 +58,8 @@ const DEV_LOGIN_PRESETS: DevLoginPreset[] = [
         detail: 'Ultra tenant',
         email: 'ultra@aetherguard.local',
         password: 'DevUltra!2026',
+        labelKey: 'login.preset_ultra',
+        detailKey: 'login.preset_ultra_desc',
     },
 ];
 
@@ -91,7 +101,7 @@ const Login = () => {
     const handleApplyPreset = (preset: DevLoginPreset) => {
         setEmail(preset.email);
         setPassword(preset.password);
-        showToast(`${preset.label} credentials filled`);
+        showToast(t('login.credentials_filled', { preset: preset.label }));
     };
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -100,7 +110,7 @@ const Login = () => {
 
         try {
             await login({ email, password });
-            showToast('Login succeeded. Redirecting...', 'success');
+            showToast(t('login.login_success'), 'success');
 
             await refreshDemoState();
 
@@ -108,9 +118,9 @@ const Login = () => {
                 navigate('/dashboard');
             }, 800);
         } catch (error: any) {
-            let errorMsg = error.message || 'Login failed. Check your network connection.';
+            let errorMsg = error.message || t('login.login_failed');
             if (errorMsg.includes('invalid_credentials') || errorMsg.includes('401')) {
-                errorMsg = 'Incorrect email or password.';
+                errorMsg = t('login.incorrect_credentials');
             }
             showToast(errorMsg);
         } finally {
@@ -151,46 +161,46 @@ const Login = () => {
                                         <div className="text-xs text-muted-foreground">{COMPANY_NAME_CN}</div>
                                     </div>
                                     <span className="rounded-full border border-border bg-muted/30 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                                        Operations Console
+                                        {t('login.badge')}
                                     </span>
                                 </div>
                                 <div className="space-y-4">
                                     <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-foreground">
-                                        Security operations for gateways, agents, scans, and response workflows.
+                                        {t('login.headline')}
                                     </h1>
                                     <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                                        Sign in to the same monitoring console used for device health, alert handling, deployment, and incident history.
+                                        {t('login.subheadline')}
                                     </p>
                                 </div>
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                     <div className="rounded-2xl border border-border bg-muted/20 p-4">
-                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Gateways</div>
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.stat_gateways_label')}</div>
                                         <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">24</div>
-                                        <div className="mt-2 text-xs text-muted-foreground">Field inspection points online</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">{t('login.stat_gateways_desc')}</div>
                                     </div>
                                     <div className="rounded-2xl border border-border bg-muted/20 p-4">
-                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Agents</div>
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.stat_agents_label')}</div>
                                         <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">7</div>
-                                        <div className="mt-2 text-xs text-muted-foreground">Inference and response roles available</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">{t('login.stat_agents_desc')}</div>
                                     </div>
                                     <div className="rounded-2xl border border-border bg-muted/20 p-4">
-                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Alerts</div>
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.stat_alerts_label')}</div>
                                         <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">3</div>
-                                        <div className="mt-2 text-xs text-muted-foreground">Items currently awaiting review</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">{t('login.stat_alerts_desc')}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="rounded-2xl border border-border bg-muted/15 p-5">
-                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Workspace Notes</div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t('login.workspace_notes')}</div>
                                 <div className="mt-3 grid gap-3 text-sm text-muted-foreground">
                                     <div className="flex items-start gap-3">
                                         <div className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />
-                                        <p>Device telemetry and board status use the same console shell after sign-in.</p>
+                                        <p>{t('login.workspace_note_1')}</p>
                                     </div>
                                     <div className="flex items-start gap-3">
                                         <div className="mt-1 h-2 w-2 rounded-full bg-amber-500" />
-                                        <p>Demo mode and development presets remain available without changing the authentication flow.</p>
+                                        <p>{t('login.workspace_note_2')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -207,9 +217,9 @@ const Login = () => {
                                 <Logo />
                             </div>
                             <div className="space-y-2">
-                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Account Access</div>
-                                <h2 className="text-2xl font-bold tracking-tight text-foreground">Control console login</h2>
-                                <p className="text-sm text-muted-foreground">Sign in with your enterprise account.</p>
+                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t('login.account_access')}</div>
+                                <h2 className="text-2xl font-bold tracking-tight text-foreground">{t('login.control_login')}</h2>
+                                <p className="text-sm text-muted-foreground">{t('login.sign_in_enterprise')}</p>
                             </div>
                         </div>
 
@@ -222,10 +232,10 @@ const Login = () => {
                                     className="flex w-full items-center justify-between gap-3 text-left"
                                 >
                                     <div>
-                                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Dev Access</div>
-                                        <div className="mt-1 text-sm text-foreground">Fill local test accounts instantly.</div>
+                                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t('login.dev_access')}</div>
+                                        <div className="mt-1 text-sm text-foreground">{t('login.dev_access_desc')}</div>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">{isDevModeOpen ? 'Hide' : 'Show'}</span>
+                                    <span className="text-xs text-muted-foreground">{isDevModeOpen ? t('login.hide') : t('login.show')}</span>
                                 </button>
 
                                 <AnimatePresence initial={false}>
@@ -245,8 +255,8 @@ const Login = () => {
                                                         onClick={() => handleApplyPreset(preset)}
                                                         className="rounded-xl border border-border bg-card px-3 py-3 text-left transition-colors hover:border-primary/25 hover:bg-muted/20"
                                                     >
-                                                        <div className="text-sm font-semibold text-foreground">{preset.label}</div>
-                                                        <div className="text-xs text-muted-foreground">{preset.detail}</div>
+                                                        <div className="text-sm font-semibold text-foreground">{t(preset.labelKey)}</div>
+                                                        <div className="text-xs text-muted-foreground">{t(preset.detailKey)}</div>
                                                         <div className="mt-2 break-all font-mono text-[11px] text-muted-foreground">{preset.email}</div>
                                                     </button>
                                                 ))}
@@ -259,7 +269,7 @@ const Login = () => {
 
                         <form onSubmit={handleLogin} className="space-y-6">
                             <div>
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Email / Username</label>
+                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.email_label')}</label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                                     <input
@@ -269,7 +279,7 @@ const Login = () => {
                                         onChange={(e) => setEmail(e.target.value)}
                                         autoComplete="username"
                                         className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
-                                        placeholder="name@company.com"
+                                        placeholder={t('login.email_placeholder')}
                                     />
                                 </div>
                             </div>
@@ -284,24 +294,24 @@ const Login = () => {
                                         onChange={(e) => setPassword(e.target.value)}
                                         autoComplete="current-password"
                                         className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
-                                        placeholder="........"
+                                        placeholder={t('login.password_placeholder')}
                                     />
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between text-xs">
                                 <label className="flex cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground">
-                                    <input type="checkbox" className="mr-2 rounded text-primary focus:ring-0" /> Remember this device
+                                    <input type="checkbox" className="mr-2 rounded text-primary focus:ring-0" /> {t('login.remember_device')}
                                 </label>
                                 <a
                                     href="#"
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        showToast('Contact your administrator to reset the password.');
+                                        showToast(t('login.forgot_password_msg'));
                                     }}
                                     className="text-primary hover:opacity-80"
                                 >
-                                    Forgot password?
+                                    {t('login.forgot_password')}
                                 </a>
                             </div>
 
@@ -312,7 +322,7 @@ const Login = () => {
                                     isLoading ? 'cursor-not-allowed opacity-75' : ''
                                 }`}
                             >
-                                <span>{isLoading ? 'Signing in...' : 'Secure Login'}</span>
+                                <span>{isLoading ? t('login.signing_in') : t('login.secure_login')}</span>
                                 {!isLoading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
                             </button>
                         </form>
@@ -322,7 +332,7 @@ const Login = () => {
                                 {COMPANY_NAME_CN} · {COMPANY_NAME_EN}
                             </div>
                             <button onClick={() => navigate('/')} className="mx-auto flex items-center justify-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
-                                <ArrowLeft className="h-3 w-3" /> Back to home
+                                <ArrowLeft className="h-3 w-3" /> {t('login.back_to_home')}
                             </button>
                         </div>
                     </motion.div>

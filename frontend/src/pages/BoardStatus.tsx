@@ -95,7 +95,7 @@ const BoardStatus = () => {
             }
         >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={Cpu} label="CPU" value={`${device?.status?.cpuUsage ?? 0}%`} hint={device?.chipModel || '-'} tone="primary" />
+                <ConsoleStatCard icon={Cpu} label={t('board.cpu')} value={`${device?.status?.cpuUsage ?? 0}%`} hint={device?.chipModel || '-'} tone="primary" />
                 <ConsoleStatCard
                     icon={MemoryStick}
                     label={t('board.memory')}
@@ -105,14 +105,14 @@ const BoardStatus = () => {
                 />
                 <ConsoleStatCard
                     icon={Activity}
-                    label="Wi-Fi RSSI"
+                    label={t('board.wifi_rssi')}
                     value={`${device?.status?.wifiRssi ?? 0} dBm`}
                     hint={t('board.last_heartbeat')}
                     tone={device?.isOnline ? 'success' : 'danger'}
                 />
                 <ConsoleStatCard
                     icon={Clock3}
-                    label="Uptime"
+                    label={t('board.uptime')}
                     value={uptimeText}
                     hint={device?.lastHeartbeat ? new Date(device.lastHeartbeat).toLocaleString() : '-'}
                     tone="neutral"

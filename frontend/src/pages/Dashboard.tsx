@@ -49,8 +49,8 @@ const defaultSecuritySummary: DashboardSecuritySummary = {
     recentValidations: [],
 };
 
-const TrafficChart = ({ data }: { data: { time: string; requests: number; blocked: number }[] }) => (
-    <StableResponsiveChart minHeight={300} loadingText="Waiting for chart container...">
+const TrafficChart = ({ data, loadingText }: { data: { time: string; requests: number; blocked: number }[]; loadingText: string }) => (
+    <StableResponsiveChart minHeight={300} loadingText={loadingText}>
         <AreaChart data={data}>
             <defs>
                 <linearGradient id="colorRequests" x1="0" y1="0" x2="0" y2="1">
@@ -247,7 +247,7 @@ export default function Dashboard() {
     }, []);
 
     if (error) {
-        return <ErrorDisplay title="Dashboard unavailable" message={error} onRetry={() => window.location.reload()} />;
+        return <ErrorDisplay title={t('dashboard.unavailable')} message={error} onRetry={() => window.location.reload()} />;
     }
 
     if (!stats) {
@@ -359,7 +359,7 @@ export default function Dashboard() {
                                 {t('dashboard.time_24h')}
                             </button>
                         </div>
-                        <TrafficChart data={filteredHistory} />
+                        <TrafficChart data={filteredHistory} loadingText={t('dashboard.waiting_chart')} />
                     </ConsolePanel>
                 </div>
 
@@ -522,7 +522,7 @@ export default function Dashboard() {
                                         {apiKeys[0]?.prefix ? `${apiKeys[0].prefix}********` : t('dashboard.not_found')}
                                     </code>
                                     <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                        {apiKeys[0]?.lastUsed || 'never'}
+                                        {apiKeys[0]?.lastUsed || t('dashboard.never_used_short')}
                                     </span>
                                 </div>
                             </div>
