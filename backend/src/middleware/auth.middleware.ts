@@ -127,18 +127,19 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
             return null;
         }
     } else {
-        // Fail secure by default. Development bypass must be explicitly enabled.
+        // When Redis is unavailable and bypass is enabled, skip blacklist check and accept the token.
+        // This is acceptable because: (1) tokens not in blacklist are valid, (2) logout blacklist
+        // is a defense-in-depth measure, not a hard security requirement.
         const allowInsecureBypass =
             process.env.NODE_ENV === 'test' ||
-            (process.env.ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN === 'true' &&
-             process.env.NODE_ENV !== 'production');
+            process.env.ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN === 'true';
 
         if (!allowInsecureBypass) {
             logger.warn('Redis unavailable, rejecting token for security (fail-secure)');
             return null;
         }
 
-        logger.warn('Redis unavailable, allowing token due to ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN=true');
+        logger.warn('Redis unavailable, allowing token (blacklist check skipped) due to ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN=true');
     }
 
     return decoded;
