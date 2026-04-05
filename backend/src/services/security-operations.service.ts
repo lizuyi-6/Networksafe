@@ -92,7 +92,7 @@ export interface ValidationRunRecord {
   result: Record<string, any>;
 }
 
-export export const severityWeight: Record<Severity, number> = {
+export const severityWeight: Record<Severity, number> = {
   critical: 100,
   high: 75,
   medium: 45,

@@ -226,7 +226,7 @@ function isRapidIpRotation(reason?: string): boolean {
 
 // Strict rate limiter for authentication endpoints
 export const authRateLimit = rateLimit({
-  maxRequests: 15, // 15 requests per minute (increased from 5 for cold start scenarios)
+  maxRequests: 60, // 60 requests per minute - accommodates page refreshes, token refreshes, and rapid UI interactions without triggering lockout
   windowMs: 60000,
   handler: (req, res) => {
     res.status(429).json({

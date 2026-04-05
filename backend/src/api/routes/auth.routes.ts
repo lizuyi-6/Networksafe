@@ -328,6 +328,29 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
 
         logger.info(`User logged in: ${email}`);
 
+        // Concurrent session enforcement: check if user has too many active sessions
+        const MAX_CONCURRENT_SESSIONS = 5;
+        const sessionId = authSecurityService.generateSessionId();
+        const allowed = await authSecurityService.checkConcurrentSessions(user.id, MAX_CONCURRENT_SESSIONS);
+        const concurrentWarning = !allowed
+            ? `Multiple concurrent sessions detected (max ${MAX_CONCURRENT_SESSIONS}). New login added.`
+            : null;
+
+        // Always add the session (tracks active sessions for the user)
+        await authSecurityService.addSession(user.id, sessionId, {
+            ip: clientIp,
+            userAgent: req.headers['user-agent'] || 'unknown',
+            loginAt: new Date().toISOString(),
+        });
+
+        // If over limit, log warning but still allow login
+        if (!allowed) {
+            logger.warn(`Concurrent session limit exceeded for user ${email}`, {
+                userId: user.id,
+                sessionId,
+            });
+        }
+
         // SECURITY FIX: Set tokens as httpOnly cookies instead of sending in body
         res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
         res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
@@ -335,6 +358,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         // SECURITY FIX CVE-2026-028: Reduce exposed user information
         return sendSuccess(res, {
             message: 'backend.login_successful',
+            concurrentWarning,
             user: {
                 userId: user.id,
                 email: user.email,
@@ -349,6 +373,7 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         }, {
             legacy: {
                 message: 'backend.login_successful',
+                concurrentWarning,
                 user: {
                     userId: user.id,
                     email: user.email,
