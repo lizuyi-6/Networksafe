@@ -264,8 +264,11 @@ export const fetchApiReadiness = async (signal?: AbortSignal): Promise<ApiReadin
     const response = await fetchWithCredentials(`${API_BASE_URL}/health/ready`, { signal });
     const payload = await response.json().catch(() => null) as any;
     const data = unwrapApiEnvelope<{ status?: 'ready' | 'not_ready'; blockers?: string[] }>(payload);
+    // Treat 503 as "reachable but not ready" - still proceed with auth check
+    // since auth endpoints may work even when other services (postgres) are down
+    const is503 = response.status === 503;
     return {
-        ok: response.ok,
+        ok: response.ok || is503,
         status: data?.status || payload?.status || 'not_ready',
         blockers: Array.isArray(data?.blockers) ? data.blockers : Array.isArray(payload?.blockers) ? payload.blockers : []
     };
