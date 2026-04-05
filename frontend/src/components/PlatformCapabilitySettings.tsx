@@ -153,7 +153,6 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                     >
                         {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                        {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                         {t('platformSettings.save')}
                     </button>
                 )}
@@ -206,11 +205,11 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                     <div className="rounded-xl border border-border bg-muted/10 p-4">
                         <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
                             <BrainCircuit size={16} className="text-primary" />
-                            AI Routing
+                            {t('platformSettings.aiRouting')}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClassName}>Routing mode</label>
+                                <label className={labelClassName}>{t('platformSettings.routingMode')}</label>
                                 <select
                                     value={config.aiRouting.mode}
                                     onChange={(event) => updateConfig((current) => ({ ...current, aiRouting: { ...current.aiRouting, mode: event.target.value as PlatformConfigResponse['aiRouting']['mode'] } }))}
@@ -223,7 +222,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>Privacy mode</label>
+                                <label className={labelClassName}>{t('platformSettings.privacyMode')}</label>
                                 <select
                                     value={config.privacyMode}
                                     onChange={(event) => updateConfig((current) => ({ ...current, privacyMode: event.target.value as PlatformConfigResponse['privacyMode'] }))}
@@ -234,26 +233,26 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>Local endpoint</label>
+                                <label className={labelClassName}>{t('platformSettings.localEndpoint')}</label>
                                 <select
                                     value={config.aiRouting.localEndpointId || ''}
                                     onChange={(event) => updateConfig((current) => ({ ...current, aiRouting: { ...current.aiRouting, localEndpointId: event.target.value || null } }))}
                                     className={inputClassName}
                                 >
-                                    <option value="">Not selected</option>
+                                    <option value="">{t('platformSettings.notSelected')}</option>
                                     {endpoints.map((endpoint) => (
                                         <option key={endpoint.id} value={endpoint.id}>{endpoint.name} ({endpoint.modelName})</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>Local hot-path endpoint</label>
+                                <label className={labelClassName}>{t('platformSettings.localHotPathEndpoint')}</label>
                                 <select
                                     value={config.aiRouting.localHotPathEndpointId || ''}
                                     onChange={(event) => updateConfig((current) => ({ ...current, aiRouting: { ...current.aiRouting, localHotPathEndpointId: event.target.value || null } }))}
                                     className={inputClassName}
                                 >
-                                    <option value="">Not selected</option>
+                                    <option value="">{t('platformSettings.notSelected')}</option>
                                     {endpoints.map((endpoint) => (
                                         <option key={endpoint.id} value={endpoint.id}>
                                             {endpoint.name} ({endpoint.modelName}){endpoint.purpose === 'hot_path' ? ' [hot_path]' : ''}
@@ -262,13 +261,13 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>Cloud endpoint</label>
+                                <label className={labelClassName}>{t('platformSettings.cloudEndpoint')}</label>
                                 <select
                                     value={config.aiRouting.cloudEndpointId || ''}
                                     onChange={(event) => updateConfig((current) => ({ ...current, aiRouting: { ...current.aiRouting, cloudEndpointId: event.target.value || null } }))}
                                     className={inputClassName}
                                 >
-                                    <option value="">Platform default</option>
+                                    <option value="">{t('platformSettings.platformDefault')}</option>
                                     {endpoints.map((endpoint) => (
                                         <option key={endpoint.id} value={endpoint.id}>{endpoint.name} ({endpoint.modelName})</option>
                                     ))}
@@ -282,7 +281,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     checked={config.aiRouting.fallbackAllowed}
                                     onChange={(event) => updateConfig((current) => ({ ...current, aiRouting: { ...current.aiRouting, fallbackAllowed: event.target.checked } }))}
                                 />
-                                Allow fallback
+                                {t('platformSettings.allowFallback')}
                             </label>
                             <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
                                 <input
@@ -290,7 +289,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     checked={config.aiRouting.redactionEnabled}
                                     onChange={(event) => updateConfig((current) => ({ ...current, aiRouting: { ...current.aiRouting, redactionEnabled: event.target.checked } }))}
                                 />
-                                Cloud redaction
+                                {t('platformSettings.cloudRedaction')}
                             </label>
                         </div>
                     </div>
@@ -298,11 +297,11 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                     <div className="rounded-xl border border-border bg-muted/10 p-4">
                         <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
                             <Waypoints size={16} className="text-primary" />
-                            Detection Pipeline
+                            {t('platformSettings.detectionPipeline')}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClassName}>Rule-first mode</label>
+                                <label className={labelClassName}>{t('platformSettings.ruleFirstMode')}</label>
                                 <select
                                     value={config.detectionPipeline.ruleFirstEnabled ? 'true' : 'false'}
                                     onChange={(event) => updateConfig((current) => ({
@@ -314,12 +313,12 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     }))}
                                     className={inputClassName}
                                 >
-                                    <option value="true">Enabled</option>
-                                    <option value="false">Disabled</option>
+                                    <option value="true">{t('common.enabled')}</option>
+                                    <option value="false">{t('common.disabled')}</option>
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>AI escalation mode</label>
+                                <label className={labelClassName}>{t('platformSettings.aiEscalationMode')}</label>
                                 <select
                                     value={config.detectionPipeline.aiEscalationMode}
                                     onChange={(event) => updateConfig((current) => ({
@@ -335,7 +334,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>Escalation threshold</label>
+                                <label className={labelClassName}>{t('platformSettings.escalationThreshold')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -353,7 +352,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Candidate confidence</label>
+                                <label className={labelClassName}>{t('platformSettings.candidateConfidence')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -371,7 +370,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Learning mode</label>
+                                <label className={labelClassName}>{t('platformSettings.learningMode')}</label>
                                 <select
                                     value={config.detectionPipeline.learningMode}
                                     onChange={(event) => updateConfig((current) => ({
@@ -400,7 +399,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                         }
                                     }))}
                                 />
-                                HTTP API
+                                {t('platformSettings.httpApi')}
                             </label>
                             <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
                                 <input
@@ -414,7 +413,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                         }
                                     }))}
                                 />
-                                Packet interceptor
+                                {t('platformSettings.packetInterceptor')}
                             </label>
                             <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
                                 <input
@@ -428,7 +427,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                         }
                                     }))}
                                 />
-                                Agent async review
+                                {t('platformSettings.agentAsyncReview')}
                             </label>
                         </div>
                     </div>
@@ -436,10 +435,10 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
 
                 <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                     <div className="rounded-xl border border-border bg-muted/10 p-4">
-                        <div className="mb-4 text-sm font-semibold text-foreground">Audit Archive</div>
+                        <div className="mb-4 text-sm font-semibold text-foreground">{t('platformSettings.auditArchive')}</div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClassName}>Audit bucket</label>
+                                <label className={labelClassName}>{t('platformSettings.auditBucket')}</label>
                                 <input
                                     className={inputClassName}
                                     value={config.auditArchive.bucket}
@@ -447,7 +446,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Retention days</label>
+                                <label className={labelClassName}>{t('platformSettings.retentionDays')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -456,7 +455,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Verify interval (min)</label>
+                                <label className={labelClassName}>{t('platformSettings.verifyIntervalMin')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -470,16 +469,16 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     checked={config.auditArchive.objectLockRequired}
                                     onChange={(event) => updateConfig((current) => ({ ...current, auditArchive: { ...current.auditArchive, objectLockRequired: event.target.checked } }))}
                                 />
-                                Require object lock
+                                {t('platformSettings.requireObjectLock')}
                             </label>
                         </div>
                     </div>
 
                     <div className="rounded-xl border border-border bg-muted/10 p-4">
-                        <div className="mb-4 text-sm font-semibold text-foreground">Fastpath</div>
+                        <div className="mb-4 text-sm font-semibold text-foreground">{t('platformSettings.fastpath')}</div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClassName}>Base URL</label>
+                                <label className={labelClassName}>{t('platformSettings.baseUrl')}</label>
                                 <input
                                     className={inputClassName}
                                     value={config.fastpath.baseUrl}
@@ -487,7 +486,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Transport</label>
+                                <label className={labelClassName}>{t('platformSettings.transport')}</label>
                                 <select
                                     className={inputClassName}
                                     value={config.fastpath.transport}
@@ -498,7 +497,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>Timeout (ms)</label>
+                                <label className={labelClassName}>{t('platformSettings.timeoutMs')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -507,7 +506,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Unix socket path</label>
+                                <label className={labelClassName}>{t('platformSettings.unixSocketPath')}</label>
                                 <input
                                     className={inputClassName}
                                     value={config.fastpath.socketPath || ''}
@@ -515,7 +514,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Config cache TTL (ms)</label>
+                                <label className={labelClassName}>{t('platformSettings.configCacheTtlMs')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -524,7 +523,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Shadow sample %</label>
+                                <label className={labelClassName}>{t('platformSettings.shadowSamplePct')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -533,7 +532,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Max body bytes</label>
+                                <label className={labelClassName}>{t('platformSettings.maxBodyBytes')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -549,7 +548,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     checked={config.fastpath.enabled}
                                     onChange={(event) => updateConfig((current) => ({ ...current, fastpath: { ...current.fastpath, enabled: event.target.checked } }))}
                                 />
-                                Fastpath enabled
+                                {t('platformSettings.fastpathEnabled')}
                             </label>
                             <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
                                 <input
@@ -557,7 +556,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     checked={config.fastpath.fallbackEnabled}
                                     onChange={(event) => updateConfig((current) => ({ ...current, fastpath: { ...current.fastpath, fallbackEnabled: event.target.checked } }))}
                                 />
-                                Allow fallback
+                                {t('platformSettings.allowFallback')}
                             </label>
                             <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
                                 <input
@@ -565,7 +564,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     checked={config.fastpath.trafficShadowEnabled}
                                     onChange={(event) => updateConfig((current) => ({ ...current, fastpath: { ...current.fastpath, trafficShadowEnabled: event.target.checked } }))}
                                 />
-                                Traffic shadow
+                                {t('platformSettings.trafficShadow')}
                             </label>
                         </div>
                     </div>
@@ -573,8 +572,8 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
             </ConsolePanel>
 
             <ConsolePanel
-                title="Deployment, Device And Notifications"
-                subtitle="Default rollout profile, device gateway aliases and external notification channels"
+                title={t('platformSettings.deploymentDeviceNotifications')}
+                subtitle={t('platformSettings.deploymentSubtitle')}
                 icon={Waypoints}
                 iconTone="neutral"
                 headerAction={(
@@ -586,7 +585,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                         className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/40"
                     >
                         <Plus size={16} />
-                        Add channel
+                        {t('platformSettings.addChannel')}
                     </button>
                 )}
             >
@@ -594,11 +593,11 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                     <div className="rounded-xl border border-border bg-muted/10 p-4">
                         <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
                             <Waypoints size={16} className="text-primary" />
-                            Deployment Defaults
+                            {t('platformSettings.deploymentDefaults')}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClassName}>Default target</label>
+                                <label className={labelClassName}>{t('platformSettings.defaultTarget')}</label>
                                 <select
                                     value={config.deploymentDefaults.serverType}
                                     onChange={(event) => updateConfig((current) => ({ ...current, deploymentDefaults: { ...current.deploymentDefaults, serverType: event.target.value as DeploymentTarget } }))}
@@ -608,7 +607,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClassName}>Upstream</label>
+                                <label className={labelClassName}>{t('platformSettings.upstream')}</label>
                                 <input
                                     className={inputClassName}
                                     value={currentTemplate.upstream}
@@ -628,7 +627,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Listen port</label>
+                                <label className={labelClassName}>{t('platformSettings.listenPort')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -649,7 +648,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Server name</label>
+                                <label className={labelClassName}>{t('platformSettings.serverName')}</label>
                                 <input
                                     className={inputClassName}
                                     value={currentTemplate.serverName}
@@ -672,10 +671,10 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                     </div>
 
                     <div className="rounded-xl border border-border bg-muted/10 p-4">
-                        <div className="mb-4 text-sm font-semibold text-foreground">Device Gateway</div>
+                        <div className="mb-4 text-sm font-semibold text-foreground">{t('platformSettings.deviceGateway')}</div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClassName}>Primary path</label>
+                                <label className={labelClassName}>{t('platformSettings.primaryPath')}</label>
                                 <input
                                     className={inputClassName}
                                     value={config.deviceGateway.primaryPath}
@@ -683,7 +682,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Aliases</label>
+                                <label className={labelClassName}>{t('platformSettings.aliases')}</label>
                                 <input
                                     className={inputClassName}
                                     value={config.deviceGateway.aliases.join(', ')}
@@ -697,7 +696,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Setup SSID</label>
+                                <label className={labelClassName}>{t('platformSettings.setupSSID')}</label>
                                 <input
                                     className={inputClassName}
                                     value={config.deviceGateway.wifiSSID}
@@ -705,7 +704,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Firmware host</label>
+                                <label className={labelClassName}>{t('platformSettings.firmwareHost')}</label>
                                 <input
                                     className={inputClassName}
                                     value={config.deviceGateway.firmwareLocalHost}
@@ -713,7 +712,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Local port</label>
+                                <label className={labelClassName}>{t('platformSettings.localPort')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -722,7 +721,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Firmware channel</label>
+                                <label className={labelClassName}>{t('platformSettings.firmwareChannel')}</label>
                                 <input
                                     className={inputClassName}
                                     value={config.deviceGateway.firmwareChannel}
@@ -730,7 +729,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 />
                             </div>
                             <div>
-                                <label className={labelClassName}>Retention days</label>
+                                <label className={labelClassName}>{t('platformSettings.firmwareRetentionDays')}</label>
                                 <input
                                     className={inputClassName}
                                     type="number"
@@ -746,7 +745,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     checked={config.deviceGateway.statusAliasEnabled}
                                     onChange={(event) => updateConfig((current) => ({ ...current, deviceGateway: { ...current.deviceGateway, statusAliasEnabled: event.target.checked } }))}
                                 />
-                                Enable `/ws/status` alias
+                                {t('platformSettings.enableStatusAlias')}
                             </label>
                         </div>
                     </div>
@@ -754,18 +753,18 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
 
                 <div className="mt-6 grid grid-cols-3 gap-4">
                     <div>
-                        <label className={labelClassName}>Notifications enabled</label>
+                        <label className={labelClassName}>{t('platformSettings.notificationsEnabled')}</label>
                         <select
                             value={config.notifications.enabled ? 'true' : 'false'}
                             onChange={(event) => updateConfig((current) => ({ ...current, notifications: { ...current.notifications, enabled: event.target.value === 'true' } }))}
                             className={inputClassName}
                         >
-                            <option value="true">Enabled</option>
-                            <option value="false">Disabled</option>
+                            <option value="true">{t('common.enabled')}</option>
+                            <option value="false">{t('common.disabled')}</option>
                         </select>
                     </div>
                     <div>
-                        <label className={labelClassName}>Dedupe window (s)</label>
+                        <label className={labelClassName}>{t('platformSettings.dedupeWindow')}</label>
                         <input
                             className={inputClassName}
                             type="number"
@@ -774,7 +773,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                         />
                     </div>
                     <div>
-                        <label className={labelClassName}>Retry delays (s)</label>
+                        <label className={labelClassName}>{t('platformSettings.retryDelays')}</label>
                         <input
                             className={inputClassName}
                             value={config.notifications.retryDelaysSeconds.join(', ')}
@@ -792,7 +791,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                 <div className="mt-4 space-y-4">
                     {config.notifications.channels.length === 0 && (
                         <div className="rounded-xl border border-dashed border-border bg-muted/10 px-4 py-8 text-center text-sm text-muted-foreground">
-                            No channels configured.
+                            {t('platformSettings.noChannels')}
                         </div>
                     )}
                     {config.notifications.channels.map((channel) => (
@@ -813,7 +812,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 </select>
                                 <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
                                     <input type="checkbox" checked={channel.enabled} onChange={(event) => updateChannel(channel.id, (current) => ({ ...current, enabled: event.target.checked }))} />
-                                    Enabled
+                                    {t('common.enabled')}
                                 </label>
                             </div>
 
@@ -829,11 +828,11 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                         className={inputClassName}
                                         value={channel.smtp.host}
                                         onChange={(event) => updateChannel(channel.id, (current) => ({ ...current, smtp: { ...current.smtp, host: event.target.value } }))}
-                                        placeholder="SMTP host"
+                                        placeholder={t('platformSettings.smtpHost')}
                                     />
                                 ) : (
                                     <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
-                                        Webhook target
+                                        {t('platformSettings.webhookTarget')}
                                     </div>
                                 )}
                             </div>
@@ -845,7 +844,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/40 disabled:opacity-60"
                                 >
                                     {testingChannelId === channel.id ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                                    Test
+                                    {t('platformSettings.test')}
                                 </button>
                                 <button
                                     onClick={() => updateConfig((current) => ({
@@ -858,7 +857,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     className="inline-flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600 dark:text-rose-300 hover:bg-rose-500/15"
                                 >
                                     <Trash2 size={16} />
-                                    Remove
+                                    {t('platformSettings.remove')}
                                 </button>
                             </div>
                         </div>
@@ -868,10 +867,10 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                 <div className="mt-6 rounded-xl border border-border bg-muted/10 p-4">
                     <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                         <Bell size={16} className="text-primary" />
-                        Recent deliveries
+                        {t('platformSettings.recentDeliveries')}
                     </div>
                     <div className="space-y-2">
-                        {deliveries.length === 0 && <div className="text-sm text-muted-foreground">No delivery records yet.</div>}
+                        {deliveries.length === 0 && <div className="text-sm text-muted-foreground">{t('platformSettings.noDeliveries')}</div>}
                         {deliveries.map((delivery) => (
                             <div key={delivery.id} className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
                                 <div className="flex items-center justify-between">
@@ -885,9 +884,9 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     </div>
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                                    <span>Attempts: {delivery.attemptCount}</span>
-                                    {delivery.nextAttemptAt && <span>Next retry: {new Date(delivery.nextAttemptAt).toLocaleString()}</span>}
-                                    {delivery.terminalAt && <span>Terminal: {new Date(delivery.terminalAt).toLocaleString()}</span>}
+                                    <span>{t('platformSettings.attempts')}: {delivery.attemptCount}</span>
+                                    {delivery.nextAttemptAt && <span>{t('platformSettings.nextRetry')}: {new Date(delivery.nextAttemptAt).toLocaleString()}</span>}
+                                    {delivery.terminalAt && <span>{t('platformSettings.terminalAt')}: {new Date(delivery.terminalAt).toLocaleString()}</span>}
                                 </div>
                                 {delivery.error && (
                                     <div className="mt-2 rounded-md border border-rose-500/20 bg-rose-500/10 px-2 py-1 text-xs text-rose-600 dark:text-rose-300">

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Lock, Sparkles, Crown, Loader2, AlertTriangle } from 'lucide-react';
 import { fetchAvailableModels, AIModelInfo } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const getCategoryIcon = (model: AIModelInfo) => {
     if (model.category === 'partner') {
@@ -37,6 +38,7 @@ const ModelSelector = () => {
     const [selectedModelId, setSelectedModelId] = useState<string>('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { t } = useLanguage();
 
     const loadModels = useCallback(async () => {
         try {
@@ -62,7 +64,7 @@ const ModelSelector = () => {
         return (
             <div className="flex items-center justify-center gap-3 rounded-2xl border border-border bg-card p-8">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">Loading AI model configuration...</span>
+                <span className="text-sm text-muted-foreground">{t('modelSelector.loadingConfig')}</span>
             </div>
         );
     }
@@ -75,7 +77,7 @@ const ModelSelector = () => {
                     <span>{error}</span>
                 </div>
                 <button onClick={loadModels} className="mt-3 rounded-lg border border-border bg-muted px-4 py-1.5 text-sm text-foreground transition-colors hover:bg-muted/80">
-                    Retry
+                    {t('modelSelector.retry')}
                 </button>
             </div>
         );
@@ -89,11 +91,11 @@ const ModelSelector = () => {
                         <Brain className="h-5 w-5" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-foreground">AI Model Center</h3>
+                        <h3 className="text-lg font-semibold text-foreground">{t('modelSelector.title')}</h3>
                         <p className="text-xs text-muted-foreground">
-                            Current plan: {getTierBadge(plan)}
+                            {t('modelSelector.currentPlan')}: {getTierBadge(plan)}
                             <span className="ml-2">
-                                {models.filter((model) => model.available).length}/{models.length} models available
+                                {models.filter((model) => model.available).length}/{models.length} {t('modelSelector.modelsAvailable')}
                             </span>
                         </p>
                     </div>
@@ -101,7 +103,7 @@ const ModelSelector = () => {
                 {canCustomize && (
                     <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
                         <Crown className="h-3 w-3" />
-                        Custom model policy enabled
+                        {t('modelSelector.customPolicy')}
                     </span>
                 )}
             </div>
@@ -147,7 +149,7 @@ const ModelSelector = () => {
                                     {getCategoryLabel(model)}
                                 </span>
                                 {getTierBadge(model.minTier)}
-                                {isLocked && <span className="ml-auto text-[10px] text-amber-600 dark:text-amber-400">Upgrade required</span>}
+                                {isLocked && <span className="ml-auto text-[10px] text-amber-600 dark:text-amber-400">{t('modelSelector.upgradeRequired')}</span>}
                             </div>
                         </motion.button>
                     );

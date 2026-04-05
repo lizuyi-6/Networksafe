@@ -194,7 +194,7 @@ export default function AttackSimulator() {
                     break;
 
                 case 'attack:result':
-                    addLocalTerminalLog(`t('attackSimulator.results')}：${eventData.attackName} - ${eventData.blocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}`);
+                    addLocalTerminalLog(`${t('attackSimulator.results')}：${eventData.attackName} - ${eventData.blocked ? t('attackSimulator.blocked') : t('attackSimulator.allowed')}`);
                     setAttackProgress(prev => prev.map((p, i) => 
                         i === eventData.attackIndex
                             ? { ...p, status: 'complete', result: eventData }

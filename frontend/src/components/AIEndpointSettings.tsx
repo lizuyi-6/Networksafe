@@ -4,6 +4,7 @@ import {
     Server, Laptop, Globe, Check, X, Loader2,
     ChevronDown, ChevronUp, AlertCircle
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 import {
     fetchAIEndpoints,
     createAIEndpoint,
@@ -105,6 +106,8 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
         purpose: 'deep_analysis',
         priority: 10,
     });
+
+    const { t } = useLanguage();
 
     const loadEndpoints = async () => {
         setLoading(true);
@@ -249,13 +252,13 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
             <div className="flex justify-between items-center mb-5">
                 <div className="flex items-center gap-2">
                     <Brain size={18} className="text-primary" />
-                    <h3 className="font-semibold text-foreground">AI Endpoint Settings</h3>
+                    <h3 className="font-semibold text-foreground">{t('aiEndpoint.title')}</h3>
                 </div>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all"
                 >
-                    <Plus size={14} /> Add Endpoint
+                    <Plus size={14} /> {t('aiEndpoint.addEndpoint')}
                 </button>
             </div>
 
@@ -268,16 +271,16 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4 flex items-start gap-2">
                 <AlertCircle size={16} className="text-blue-500 mt-0.5" />
                 <div className="text-xs text-blue-700 dark:text-blue-300">
-                    Endpoints are used by priority order. If one fails, the next enabled endpoint is used.
+                    {t('aiEndpoint.priorityNote')}
                 </div>
             </div>
 
             <div className="border border-border rounded-lg p-4 mb-4 bg-muted/20">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <div className="text-sm font-medium text-foreground">Built-in Platform AI Proof</div>
+                        <div className="text-sm font-medium text-foreground">{t('aiEndpoint.platformProof')}</div>
                         <div className="text-xs text-muted-foreground mt-1">
-                            Runs one deterministic cloud-model check and expects <span className="font-mono">AETHERGUARD_REMOTE_AI_OK</span>.
+                            {t('aiEndpoint.platformProofDesc')} <span className="font-mono">AETHERGUARD_REMOTE_AI_OK</span>.
                         </div>
                     </div>
                     <button
@@ -286,7 +289,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                         className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                     >
                         {verifyingPlatform ? <Loader2 size={14} className="animate-spin" /> : <TestTube size={14} />}
-                        Verify Platform AI
+                        {t('aiEndpoint.verifyPlatformAI')}
                     </button>
                 </div>
 
@@ -294,15 +297,15 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
                         <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
                             <Check size={12} />
-                            Platform route returned a live response.
+                            {t('aiEndpoint.platformProofSuccess')}
                         </div>
                         <div className="mt-2 text-xs text-muted-foreground space-y-1">
-                            <div>Model: <span className="text-foreground">{platformProof.model}</span></div>
-                            <div>Latency: <span className="text-foreground">{platformProof.latency}ms</span></div>
-                            {platformProof.route && <div>Route: <span className="text-foreground">{platformProof.route}</span></div>}
-                            {platformProof.provider && <div>Provider: <span className="text-foreground">{platformProof.provider}</span></div>}
-                            {platformProof.upstreamPath && <div>Path: <span className="font-mono text-foreground">{platformProof.upstreamPath}</span></div>}
-                            {platformProof.requestId && <div>Request ID: <span className="font-mono text-foreground">{platformProof.requestId}</span></div>}
+                            <div>{t('aiEndpoint.model')} <span className="text-foreground">{platformProof.model}</span></div>
+                            <div>{t('aiEndpoint.latency')} <span className="text-foreground">{platformProof.latency}ms</span></div>
+                            {platformProof.route && <div>{t('aiEndpoint.route')} <span className="text-foreground">{platformProof.route}</span></div>}
+                            {platformProof.provider && <div>{t('aiEndpoint.provider')} <span className="text-foreground">{platformProof.provider}</span></div>}
+                            {platformProof.upstreamPath && <div>{t('aiEndpoint.path')} <span className="font-mono text-foreground">{platformProof.upstreamPath}</span></div>}
+                            {platformProof.requestId && <div>{t('aiEndpoint.requestId')} <span className="font-mono text-foreground">{platformProof.requestId}</span></div>}
                         </div>
                         <div className="mt-3 rounded-md border border-border bg-background/80 px-3 py-2 text-xs font-mono text-foreground break-all">
                             {platformProof.content}
@@ -314,10 +317,10 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-3 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300">
                         <div className="font-medium">{platformProofError.message}</div>
                         <div className="mt-2 space-y-1 text-rose-700/80 dark:text-rose-300/80">
-                            {platformProofError.provider && <div>Provider: {platformProofError.provider}</div>}
-                            {platformProofError.upstreamStatus && <div>Status: {platformProofError.upstreamStatus}</div>}
-                            {platformProofError.upstreamPath && <div>Path: <span className="font-mono">{platformProofError.upstreamPath}</span></div>}
-                            {platformProofError.requestId && <div>Request ID: <span className="font-mono">{platformProofError.requestId}</span></div>}
+                            {platformProofError.provider && <div>{t('aiEndpoint.provider')} {platformProofError.provider}</div>}
+                            {platformProofError.upstreamStatus && <div>{t('aiEndpoint.status')} {platformProofError.upstreamStatus}</div>}
+                            {platformProofError.upstreamPath && <div>{t('aiEndpoint.path')} <span className="font-mono">{platformProofError.upstreamPath}</span></div>}
+                            {platformProofError.requestId && <div>{t('aiEndpoint.requestId')} <span className="font-mono">{platformProofError.requestId}</span></div>}
                         </div>
                     </motion.div>
                 )}
@@ -327,7 +330,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-muted/30 border border-border rounded-lg p-4 mb-4 overflow-hidden">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label className="block text-xs text-muted-foreground mb-1">Name</label>
+                            <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.name')}</label>
                             <input
                                 type="text"
                                 value={formData.name}
@@ -337,7 +340,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-muted-foreground mb-1">Type</label>
+                            <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.type')}</label>
                             <select
                                 value={formData.type}
                                 onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as EndpointType }))}
@@ -351,7 +354,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-xs text-muted-foreground mb-1">Purpose</label>
+                        <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.purpose')}</label>
                         <select
                             value={formData.purpose}
                             onChange={e => setFormData(prev => ({ ...prev, purpose: e.target.value as EndpointPurpose }))}
@@ -363,7 +366,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-xs text-muted-foreground mb-1">Endpoint URL *</label>
+                        <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.endpointUrl')}</label>
                         <input
                             type="text"
                             value={formData.url}
@@ -375,7 +378,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label className="block text-xs text-muted-foreground mb-1">Model</label>
+                            <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.modelLabel')}</label>
                             <input
                                 type="text"
                                 list="built-in-model-options"
@@ -393,7 +396,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                             </datalist>
                         </div>
                         <div>
-                            <label className="block text-xs text-muted-foreground mb-1">API Key</label>
+                            <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.apiKey')}</label>
                             <input
                                 type="password"
                                 value={formData.apiKey}
@@ -409,14 +412,14 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                             onClick={() => setShowAddForm(false)}
                             className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            Cancel
+                            {t('aiEndpoint.cancel')}
                         </button>
                         <button
                             onClick={handleAddEndpoint}
                             disabled={!formData.url}
                             className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                            Add
+                            {t('aiEndpoint.add')}
                         </button>
                     </div>
                 </motion.div>
@@ -425,11 +428,11 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
             {loading ? (
                 <div className="text-center py-8 text-muted-foreground">
                     <Loader2 size={24} className="mx-auto mb-2 animate-spin" />
-                    Loading...
+                    {t('aiEndpoint.loading')}
                 </div>
             ) : sortedEndpoints.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                    No configured AI endpoints.
+                    {t('aiEndpoint.noEndpoints')}
                 </div>
             ) : (
                 <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
@@ -473,7 +476,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                         </div>
                                         <div className="text-xs text-muted-foreground mb-1">{endpoint.url}</div>
                                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                            <span>Model: {endpoint.modelName}</span>
+                                            <span>{t('aiEndpoint.model')} {endpoint.modelName}</span>
                                             {endpoint.lastTest && (
                                                 <span className={`flex items-center gap-1 ${endpoint.lastTest.success ? 'text-emerald-500' : 'text-red-500'}`}>
                                                     {endpoint.lastTest.success ? <Check size={12} /> : <X size={12} />}
@@ -489,7 +492,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                         onClick={() => handleTestEndpoint(endpoint.id)}
                                         disabled={testingId === endpoint.id}
                                         className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
-                                        title="Test"
+                                        title={t('aiEndpoint.test')}
                                     >
                                         {testingId === endpoint.id ? (
                                             <Loader2 size={16} className="animate-spin" />
@@ -503,14 +506,14 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                             ? 'text-emerald-500 hover:bg-emerald-500/10'
                                             : 'text-muted-foreground hover:bg-muted'
                                             }`}
-                                        title={endpoint.enabled ? 'Disable' : 'Enable'}
+                                        title={endpoint.enabled ? t('aiEndpoint.disable') : t('aiEndpoint.enable')}
                                     >
                                         {endpoint.enabled ? <Check size={16} /> : <X size={16} />}
                                     </button>
                                     <button
                                         onClick={() => handleDeleteEndpoint(endpoint.id)}
                                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                        title="Delete"
+                                        title={t('aiEndpoint.delete')}
                                     >
                                         <Trash2 size={16} />
                                     </button>
