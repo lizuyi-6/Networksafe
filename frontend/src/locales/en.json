@@ -662,7 +662,13 @@
     "recent": "Recent",
     "cpu": "CPU",
     "wifi_rssi": "Wi-Fi RSSI",
-    "uptime": "Uptime"
+    "uptime": "Uptime",
+    "backToList": "Back to list",
+    "deviceMetrics": "Device metrics",
+    "gatewayMetrics": "Gateway metrics",
+    "eventStream": "Event stream",
+    "noEvents": "No events",
+    "noEventsDesc": "No active events at this time"
   },
   "scanner": {
     "task": "Task",
@@ -758,7 +764,18 @@
     "one_per_line": "One per line",
     "current_task_subtitle": "Most recently loaded or executed scan task",
     "realtime_phase": "Real-time Phase & Status",
-    "phase_progress": "Task phase progress"
+    "phase_progress": "Task phase progress",
+    "ws_connected": "Live connection established",
+    "ws_polling": "Polling...",
+    "current_task_hint": "Current task",
+    "task_status_hint": "Task status",
+    "progress_hint": "Progress",
+    "port_scan": "Port scan",
+    "asset_view_subtitle": "Asset view",
+    "evidence_panel": "Evidence panel",
+    "evidence_panel_subtitle": "Related evidence and context",
+    "create_action": "Create action",
+    "evidence": "Evidence"
   },
   "login": {
     "password_label": "PASSWORD",
@@ -1092,7 +1109,9 @@
     "relatedTrafficSubtitle": "Recently related traffic and asset context",
     "noRelatedFlowsDesc": "Traffic sessions produced or hit by this site will appear here.",
     "securityOverview": "Security Overview",
-    "noData": "No data"
+    "noData": "No data",
+    "listSubtitle": "Directly access site detail pages to view exposure and related security context.",
+    "noSites": "No sites"
   },
   "alerts": {
     "id": "Id",
@@ -1161,7 +1180,8 @@
     "confirm": "Confirm",
     "resolve": "Resolve",
     "suppress": "Suppress",
-    "actionFailed": "Action failed"
+    "actionFailed": "Action failed",
+    "title": "System Alerts"
   },
   "traffic": {
     "detail_title": "Session Detail",
@@ -1225,7 +1245,8 @@
     "task_summary": "Task Summary",
     "stats": "Result Statistics & Remaining Work",
     "remediation": "Remediation Summary",
-    "remediation_subtitle": "Risks and remediation objects for this record"
+    "remediation_subtitle": "Risks and remediation objects for this record",
+    "page_subtitle": "View fix record detail {id}"
   },
   "agentDetail": {
     "recent_threats": "Recent Threats and Tasks",
@@ -1287,7 +1308,8 @@
     "target": "Target",
     "risk_score": "Risk Score",
     "packets": "Packets",
-    "traffic": "Traffic"
+    "traffic": "Traffic",
+    "page_subtitle": "View site {id} details"
   },
   "trafficSessionDetail": {
     "page_subtitle": "View session {id} context, metadata, and timeline"
@@ -1295,7 +1317,12 @@
   "deploymentWizard": {
     "generate_failed": "Configuration generation failed",
     "save_failed": "Failed to save deployment config",
-    "checksum": "Checksum"
+    "checksum": "Checksum",
+    "page_subtitle": "Deployment configuration wizard",
+    "wizard_title": "Deployment Wizard",
+    "wizard_subtitle": "Follow the wizard steps to configure and deploy the system",
+    "history_subtitle": "View historical deployment records",
+    "no_saved_configs": "No saved configurations"
   },
   "adminUsers": {
     "audit": "Audit",

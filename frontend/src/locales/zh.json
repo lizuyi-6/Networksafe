@@ -662,7 +662,13 @@
     "recent": "最近",
     "cpu": "处理器",
     "wifi_rssi": "Wi-Fi RSSI",
-    "uptime": "运行时间"
+    "uptime": "运行时间",
+    "backToList": "返回列表",
+    "deviceMetrics": "设备指标",
+    "gatewayMetrics": "网关指标",
+    "eventStream": "事件流",
+    "noEvents": "暂无事件",
+    "noEventsDesc": "当前无活跃事件"
   },
   "scanner": {
     "task": "任务",
@@ -758,7 +764,18 @@
     "one_per_line": "每行一个",
     "current_task_subtitle": "最近一次加载或执行的扫描任务",
     "realtime_phase": "实时阶段与任务状态",
-    "phase_progress": "任务阶段推进情况"
+    "phase_progress": "任务阶段推进情况",
+    "ws_connected": "实时连接已建立",
+    "ws_polling": "轮询中...",
+    "current_task_hint": "当前任务",
+    "task_status_hint": "任务状态",
+    "progress_hint": "进度",
+    "port_scan": "端口扫描",
+    "asset_view_subtitle": "资产视图",
+    "evidence_panel": "证据面板",
+    "evidence_panel_subtitle": "相关证据和上下文",
+    "create_action": "创建动作",
+    "evidence": "证据"
   },
   "login": {
     "password_label": "密码",
@@ -1065,7 +1082,9 @@
     "relatedTrafficSubtitle": "最近关联的流量与资产上下文",
     "noRelatedFlowsDesc": "站点产生或命中的观测会话会展示在这里。",
     "securityOverview": "安全概览",
-    "noData": "暂无数据"
+    "noData": "暂无数据",
+    "listSubtitle": "支持直接进入站点详情页查看暴露面和关联安全上下文。",
+    "noSites": "暂无站点"
   },
   "alerts": {
     "id": "警报 ID",
@@ -1200,7 +1219,8 @@
     "task_summary": "任务摘要",
     "stats": "结果统计与剩余工作",
     "remediation": "修复摘要",
-    "remediation_subtitle": "本次记录关联的风险与修复对象"
+    "remediation_subtitle": "本次记录关联的风险与修复对象",
+    "page_subtitle": "查看修复记录详情 {id}"
   },
   "agentDetail": {
     "recent_threats": "最近威胁与任务",
@@ -1262,7 +1282,8 @@
     "target": "目标",
     "risk_score": "风险分",
     "packets": "报文",
-    "traffic": "流量"
+    "traffic": "流量",
+    "page_subtitle": "查看站点 {id} 详情"
   },
   "trafficSessionDetail": {
     "page_subtitle": "查看会话 {id} 的上下文、元数据与时间线"
@@ -1270,7 +1291,12 @@
   "deploymentWizard": {
     "generate_failed": "生成配置失败",
     "save_failed": "保存部署配置失败",
-    "checksum": "校验和"
+    "checksum": "校验和",
+    "page_subtitle": "部署配置向导",
+    "wizard_title": "部署向导",
+    "wizard_subtitle": "按照向导步骤配置并部署系统",
+    "history_subtitle": "查看历史部署记录",
+    "no_saved_configs": "暂无已保存的配置"
   },
   "adminUsers": {
     "audit": "监察",
