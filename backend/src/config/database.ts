@@ -321,6 +321,37 @@ export class DatabaseManager {
         )
       `);
 
+      // Announcements table (for system-wide announcements)
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS announcements (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          type TEXT DEFAULT 'info' CHECK(type IN ('info', 'warning', 'critical')),
+          status TEXT DEFAULT 'draft' CHECK(status IN ('draft', 'published', 'archived')),
+          published_at DATETIME,
+          expires_at DATETIME,
+          created_by TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+        )
+      `);
+
+      // Login history table (for tracking user logins)
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS login_history (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          ip_address TEXT,
+          user_agent TEXT,
+          status TEXT DEFAULT 'success' CHECK(status IN ('success', 'failed')),
+          logout_at DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
       // Create indexes
       this.db.exec(`CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain)`);
       this.db.exec(`CREATE INDEX IF NOT EXISTS idx_scan_results_siteId ON scan_results(siteId)`);
@@ -331,6 +362,9 @@ export class DatabaseManager {
       this.db.exec(`CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id)`);
       this.db.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts(severity)`);
       this.db.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts(created_at)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_status ON announcements(status)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history(user_id)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_login_history_created ON login_history(created_at)`);
 
       logger.info('Database schema initialized');
     } catch (error: any) {

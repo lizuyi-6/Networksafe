@@ -1,12 +1,12 @@
 import { AgentStatus } from '../agent';
-import { getTrafficStats } from '../api/routes/ai-system.routes';
+import { getTrafficStats } from './traffic-stats.service';
 import {
   addDeviceEvent,
   getDeviceList,
   registerDevice,
   setDeviceOffline,
   updateDeviceStatus
-} from '../api/routes/devices.routes';
+} from './device-registry.service';
 import { securityOperationsService } from './security-operations.service';
 import { AgentGateway } from '../websocket/agent-gateway';
 import logger from '../utils/logger';

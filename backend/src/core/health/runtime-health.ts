@@ -131,7 +131,7 @@ export async function buildRuntimeHealthSnapshot(input: {
     aiProvider: getAiProviderHealth(input.runtime.profile)
   };
 
-  if (input.runtime.dbMode === 'postgres' && dependencies.postgres.status !== 'healthy') {
+  if (input.runtime.dbMode === 'postgres' && dependencies.postgres.status === 'unhealthy') {
     blockers.push('postgres');
   }
 

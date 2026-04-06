@@ -18,6 +18,7 @@ export interface TrafficEvent {
     destPort: number;
     method?: string;
     path?: string;
+    queryParams?: Record<string, string | number | boolean>;
     userAgent?: string;
     requestBody?: string;
     rawLog?: string;

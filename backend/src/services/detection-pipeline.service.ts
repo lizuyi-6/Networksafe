@@ -5,7 +5,9 @@ import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
 import {
   platformConfigService,
   type AIRoutingMode,
-  type DetectionPipelineSettings
+  type DetectionPipelineSettings,
+  isSeverityAtLeast,
+  type SeverityLevel
 } from './platform-config.service';
 import { securityOperationsService } from './security-operations.service';
 import {
@@ -642,6 +644,88 @@ class DetectionPipelineService {
     );
   }
 
+  /**
+   * Create a rule candidate from a blocked request (no AI call).
+   * Uses heuristic analysis and rule metadata to build a candidate suggestion.
+   */
+  private async createCandidateFromBlock(
+    request: DetectionRequest,
+    settings: DetectionPipelineSettings,
+    attackFamily: DetectionAttackFamily,
+    matchedRules: DetectionRuleRecord[],
+    heuristicSignals: DetectionSignal[]
+  ): Promise<DetectionRuleCandidateRecord | null> {
+    if (!settings.learningFromBlockedEnabled) {
+      return null;
+    }
+    if (settings.learningMode !== 'malicious_review_queue') {
+      return null;
+    }
+    // Skip generic families that produce noisy matchers
+    if (attackFamily === 'benign' || attackFamily === 'other') {
+      return null;
+    }
+
+    const blockRule = matchedRules.find(rule => rule.action === 'block');
+    const severity: DetectionSeverity = (blockRule?.severity as DetectionSeverity) || 'medium';
+
+    if (!isSeverityAtLeast(severity, settings.learningFromBlockedMinSeverity)) {
+      return null;
+    }
+
+    // Map severity to confidence (no AI, heuristic-based)
+    const confidenceMap: Record<DetectionSeverity, number> = {
+      critical: 0.95,
+      high: 0.85,
+      medium: 0.65,
+      low: 0.45
+    };
+    const confidence = confidenceMap[severity];
+
+    // Build reasoning from rule matches + heuristic signals
+    const ruleNames = matchedRules
+      .map(rule => `${rule.name} (${rule.severity})`)
+      .join(', ');
+    const heuristicReasoning = heuristicSignals
+      .slice(0, 3)
+      .map(signal => signal.description)
+      .filter(Boolean)
+      .join('; ');
+    const reasoning = heuristicReasoning
+      ? `Seed rule block: ${ruleNames}. Heuristics: ${heuristicReasoning}`
+      : `Seed rule block: ${ruleNames}`;
+
+    const evidence = {
+      source: 'seed_rule_block',
+      matchedRuleIds: matchedRules.map(rule => rule.ruleId),
+      heuristics: heuristicSignals.slice(0, 5).map(signal => ({
+        source: signal.source,
+        key: signal.key,
+        score: signal.score,
+        description: signal.description
+      }))
+    };
+
+    try {
+      return await this.createOrMergeRuleCandidate(
+        request,
+        attackFamily,
+        severity,
+        reasoning,
+        confidence,
+        evidence
+      );
+    } catch (error: any) {
+      logger.warn('Failed to create candidate from blocked request', {
+        requestId: request.requestId,
+        channel: request.channel,
+        attackFamily,
+        error: error?.message
+      });
+      return null;
+    }
+  }
+
   private serializeAIResult(aiResult?: DetectionAIResult | null): Record<string, any> | null {
     if (!aiResult) {
       return null;
@@ -779,6 +863,28 @@ class DetectionPipelineService {
       }
     }
 
+    // --- Learning from blocked requests (seed-rule blocks, no AI) ---
+    if (verdict === 'block' && !candidateId && settings.learningFromBlockedEnabled) {
+      try {
+        const blockedCandidate = await this.createCandidateFromBlock(
+          request,
+          settings,
+          attackFamily,
+          ruleEvaluation.matchedRules.map(item => item.rule),
+          heuristicAssessment.signals
+        );
+        if (blockedCandidate) {
+          candidateId = blockedCandidate.candidateId;
+        }
+      } catch (error: any) {
+        logger.warn('Blocked-request learning failed', {
+          requestId: request.requestId,
+          channel: request.channel,
+          error: error?.message
+        });
+      }
+    }
+
     const decision: DetectionDecision = {
       verdict,
       matchedRuleIds: ruleEvaluation.matchedRuleIds,
@@ -809,6 +915,38 @@ class DetectionPipelineService {
   }
 
   async recordBlockedThreat(request: DetectionRequest, matchedRuleIds: string[], severity: DetectionSeverity, description: string): Promise<void> {
+    let candidateId: string | null = null;
+    const attackFamily = inferAttackFamily(request);
+
+    // --- Learning from agent-reported blocks ---
+    try {
+      const settings = await this.getSettings(request.tenantId);
+      if (settings.learningFromBlockedEnabled && attackFamily !== 'benign' && attackFamily !== 'other') {
+        const heuristicSignals: DetectionSignal[] = [{
+          source: 'existing_signal',
+          key: matchedRuleIds[0] || 'agent-threat',
+          score: severity === 'critical' ? 1 : severity === 'high' ? 0.9 : 0.6,
+          severity,
+          description
+        }];
+        const candidate = await this.createCandidateFromBlock(
+          request,
+          settings,
+          attackFamily,
+          [],  // no rule records available from agent reports
+          heuristicSignals
+        );
+        if (candidate) {
+          candidateId = candidate.candidateId;
+        }
+      }
+    } catch (error: any) {
+      logger.warn('Agent blocked-threat learning failed', {
+        requestId: request.requestId,
+        error: error?.message
+      });
+    }
+
     const decision: DetectionDecision = {
       verdict: 'block',
       matchedRuleIds,
@@ -823,7 +961,8 @@ class DetectionPipelineService {
         severity,
         description
       }],
-      attackFamily: inferAttackFamily(request),
+      attackFamily,
+      candidateId,
       processingTimeMs: 0,
       ruleMatches: []
     };

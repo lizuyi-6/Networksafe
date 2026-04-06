@@ -12,12 +12,12 @@ import { setAgentGateway } from './api/routes/agents.routes';
 import {
   initializeAgentSystem,
   setAgentGateway as setAISystemAgentGateway
-} from './api/routes/ai-system.routes';
+} from './services/agent-system.service';
 import {
   getDeviceById,
   executeDeviceCommandInternal,
   setDeviceCommandTransport
-} from './api/routes/devices.routes';
+} from './services/device-registry.service';
 import { scannerTaskService } from './services/scanner-task.service';
 import { runtimeEmulatorService } from './services/runtime-emulator.service';
 import { commandDispatcherService } from './services/command-dispatcher.service';
@@ -176,6 +176,11 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   void shutdown();
 });
+
+// Export for routes to access device gateway
+export function getDeviceGateway(): DeviceGateway | null {
+  return deviceGateway;
+}
 
 void start();
 

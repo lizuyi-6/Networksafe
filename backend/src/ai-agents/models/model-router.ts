@@ -24,6 +24,7 @@ import {
     getStageModelMap
 } from '../../utils/model-access';
 import { AIRoutingSettings, PlatformConfig, platformConfigService } from '../../services/platform-config.service';
+import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
 import auditLogger from '../../security/audit-logger.service';
 import { PlatformCloudClient, createPlatformCloudClient } from '../../services/platform-cloud-provider.service';
 
@@ -81,7 +82,7 @@ export class ModelRouter {
     }
 
     private getTenantId(request: ModelRequest): string {
-        return String(request.context?.tenantId || 'global');
+        return String(request.context?.tenantId || PLATFORM_TENANT_ID);
     }
 
     private redactPrompt(prompt: string): string {

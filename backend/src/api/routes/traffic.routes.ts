@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import { getTrafficStats, getAgentSystem } from './ai-system.routes';
+import { getTrafficStats } from '../../services/traffic-stats.service';
+import { getAgentSystem } from '../../services/agent-system.service';
 import logger from '../../utils/logger';
 import { SystemStats } from '../../utils/system-stats';
 import { securityOperationsService } from '../../services/security-operations.service';
@@ -190,7 +191,7 @@ router.get('/protocols', (req: Request, res: Response) => {
         let otherCount = 0;
 
         for (const flow of stats.activeFlows) {
-            const port = flow.destPort || 0;
+            const port = flow.destPort || flow.port || 0;
             const protocol = flow.protocol?.toLowerCase() || '';
 
             // Classify by destination port

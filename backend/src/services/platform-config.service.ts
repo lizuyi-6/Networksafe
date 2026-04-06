@@ -101,6 +101,8 @@ export interface DetectionPipelineSettings {
   learningCloudVerificationChannels: DetectionChannel[];
   learningCloudVerificationOnSuspicious: boolean;
   learningCloudVerificationOnMissingConfidence: boolean;
+  learningFromBlockedEnabled: boolean;
+  learningFromBlockedMinSeverity: SeverityLevel;
 }
 
 export interface DeviceGatewaySettings {
@@ -216,11 +218,11 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     channels: []
   },
   aiRouting: {
-    mode: 'local_preferred',
+    mode: 'cloud_only',
     localEndpointId: 'default-laptop',
     localHotPathEndpointId: null,
     cloudEndpointId: null,
-    fallbackAllowed: true,
+    fallbackAllowed: false,
     redactionEnabled: true
   },
   privacyMode: 'off',
@@ -255,7 +257,9 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     learningCloudVerificationMode: 'cloud_only',
     learningCloudVerificationChannels: ['http_api', 'packet', 'agent'],
     learningCloudVerificationOnSuspicious: true,
-    learningCloudVerificationOnMissingConfidence: true
+    learningCloudVerificationOnMissingConfidence: true,
+    learningFromBlockedEnabled: true,
+    learningFromBlockedMinSeverity: 'medium'
   },
   deploymentDefaults: {
     serverType: 'nginx',
@@ -533,6 +537,14 @@ export function normalizeDetectionPipeline(raw: any): DetectionPipelineSettings 
     learningCloudVerificationOnMissingConfidence: normalizeBoolean(
       raw?.learningCloudVerificationOnMissingConfidence,
       defaults.learningCloudVerificationOnMissingConfidence
+    ),
+    learningFromBlockedEnabled: normalizeBoolean(
+      raw?.learningFromBlockedEnabled,
+      defaults.learningFromBlockedEnabled
+    ),
+    learningFromBlockedMinSeverity: normalizeSeverity(
+      raw?.learningFromBlockedMinSeverity,
+      defaults.learningFromBlockedMinSeverity
     )
   };
 }

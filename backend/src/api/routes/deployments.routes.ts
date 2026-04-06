@@ -809,6 +809,158 @@ router.get('/:id/download', async (req: AuthenticatedRequest, res: Response) => 
   }
 });
 
+// --- ESP32 Deploy Bundle APIs ---
+
+/**
+ * GET /api/deployments/esp32-status
+ * Query ESP32 dongle status (bundle cache state)
+ * Uses DeviceGateway for real ESP32 hardware devices connected via WebSocket
+ */
+router.get('/esp32-status', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDeviceGateway } = await import('../../index');
+    const gateway = getDeviceGateway();
+    if (!gateway) {
+      return res.json({ success: true, connected: false, message: 'backend.device_gateway_unavailable' });
+    }
+
+    // Get connected devices from DeviceGateway
+    const devices = gateway.getConnectedDevices();
+    const esp32Devices = devices.filter((d: any) =>
+      d.deviceType === 'esp32' ||
+      d.deviceId?.toLowerCase().includes('esp32') ||
+      d.deviceId?.toLowerCase().includes('dongle')
+    );
+
+    if (esp32Devices.length === 0) {
+      return res.json({
+        success: true,
+        connected: false,
+        message: 'backend.no_esp32_connected'
+      });
+    }
+
+    // Return status of first connected ESP32
+    const device = esp32Devices[0];
+    return res.json({
+      success: true,
+      connected: true,
+      deviceId: device.deviceId,
+      isOnline: device.isOnline,
+      bundleState: device.bundleState || 'none',
+      bundleSize: device.bundleSize || 0
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error?.message || 'backend.esp32_status_failed' });
+  }
+});
+
+/**
+ * POST /api/deployments/esp32-execute
+ * Trigger bundle deployment on a connected ESP32 device
+ * Sends AG:REQ:DEPLOY command via DeviceGateway
+ */
+router.post('/esp32-execute', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { deviceId } = req.body;
+
+    const { getDeviceGateway } = await import('../../index');
+    const gateway = getDeviceGateway();
+    if (!gateway) {
+      return res.status(503).json({ success: false, error: 'backend.device_gateway_unavailable' });
+    }
+
+    // Find target device
+    const devices = gateway.getConnectedDevices();
+    const targetDevice = deviceId
+      ? devices.find((d: any) => d.deviceId === deviceId)
+      : devices.find((d: any) =>
+          d.deviceType === 'esp32' ||
+          d.deviceId?.toLowerCase().includes('esp32') ||
+          d.deviceId?.toLowerCase().includes('dongle')
+        );
+
+    if (!targetDevice) {
+      return res.status(404).json({ success: false, error: 'backend.esp32_not_found' });
+    }
+
+    // Send deploy command to ESP32
+    await gateway.sendCommand(targetDevice.deviceId, 'DEPLOY_BUNDLE', {});
+    return res.json({
+      success: true,
+      message: 'backend.deploy_command_sent',
+      deviceId: targetDevice.deviceId
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error?.message || 'backend.esp32_execute_failed' });
+  }
+});
+
+/**
+ * POST /api/deployments/generate-bundle
+ * Generate a deployment bundle as base64 for writing to ESP32
+ * Returns the full bundle content encoded for serial transfer
+ */
+router.post('/generate-bundle', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { serverType, profile, deploymentId } = req.body;
+    if (!serverType) {
+      return res.status(400).json({ success: false, error: 'backend.server_type_required' });
+    }
+
+    if (!isSupportedServerType(serverType)) {
+      return res.status(400).json({ success: false, error: 'backend.unsupported_deployment_target' });
+    }
+
+    const validatedProfile = {
+      port: Number(profile?.port) || 8080,
+      serverName: String(profile?.serverName || 'localhost'),
+      rateLimit: Number(profile?.rateLimit) || 100,
+      upstream: String(profile?.upstream || 'http://backend:3005'),
+      ...(profile?.namespace ? { namespace: String(profile.namespace) } : {}),
+      ...(profile?.image ? { image: String(profile.image) } : {}),
+      ...(profile?.apiKey ? { apiKey: String(profile.apiKey) } : {})
+    };
+
+    const validation = validateProfile(validatedProfile);
+    if (!validation.ok) {
+      return res.status(400).json({ success: false, error: 'backend.invalid_profile', details: validation.errors });
+    }
+
+    const rendered = renderDeployment(serverType as DeploymentTarget, validatedProfile);
+    const configText = rendered.configText;
+    const envSnippet = rendered.envSnippet;
+    const checksum = createHash('sha256').update(`${configText}\n${envSnippet}`).digest('hex');
+    const id = deploymentId || randomUUID();
+
+    const bundleFiles = buildBundleFiles(
+      serverType as DeploymentTarget,
+      id,
+      validatedProfile,
+      configText,
+      envSnippet,
+      checksum,
+      rendered.warnings
+    );
+
+    const bundleContent = renderSelfExtractingBundle(id, bundleFiles);
+    const bundleBase64 = Buffer.from(bundleContent).toString('base64');
+
+    return res.json({
+      success: true,
+      data: {
+        bundleBase64,
+        bundleSize: bundleContent.length,
+        checksum,
+        serverType,
+        filename: `aetherguard-${serverType}-deploy.sh`
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error?.message || 'backend.failed_to_generate_bundle' });
+  }
+});
+
 router.get('/history/list', async (req: AuthenticatedRequest, res: Response) => {
   try {
   const limit = Math.min(parseInt(String(req.query.limit || '20'), 10) || 20, 200);

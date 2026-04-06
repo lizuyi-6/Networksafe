@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 AetherGuard (formerly AetherGuard) - 智能服务器安全防御平台。基于 Agent 的分布式安全防御系统，采用"中心化控制 + 分布式执行"架构。
 
 **Core Components:**
-- **Control Plane**: Backend API + PostgreSQL (primary) / SQLite (fallback) + Redis (pub/sub, caching)
+- **Control Plane**: Backend API + SQLite (sql.js / better-sqlite3) + Redis (pub/sub, caching)
 - **Distributed Agents**: Node.js processes on Linux servers (attack detection, firewall control)
 - **Frontend Dashboard**: React SPA for monitoring and management
 - **Rust Fastpath**: High-performance traffic processing sidecar (optional but recommended)
@@ -64,7 +64,16 @@ npm audit --audit-level=high
 # Tests
 npm test                          # Run all tests
 npm run test:coverage             # With coverage
-npm run test:agents               # AI agents tests only
+npm run test:agents               # AI agents tests only (excluded from npm test)
+npm run test:core                 # Core module tests
+npm run test:security             # Security module tests
+npm run test:scanner              # Scanner module tests
+npm run test:websocket            # WebSocket module tests
+npm run test:services             # Services module tests
+npm run test:agent                # Agent module tests
+npm run test:utils                # Utility function tests
+npm run test:routes               # Route tests
+npm run test:controllers          # Controller tests
 npm run demo:agents               # Run AI agents demo locally
 npm run eval:owasp                # Run OWASP security evaluation
 
@@ -145,6 +154,17 @@ cargo build --release
 
 - **Node.js**: v18+ (CI uses Node 18)
 - **Rust**: 1.85.0 (for fastpath component)
+
+## Database
+
+The `DatabaseManager` (`backend/src/config/database.ts`) provides a dual-backend abstraction:
+
+1. **sql.js** (priority): Loads entire DB into memory on startup. **Saves to disk every 30 seconds** via `setInterval`. Final save on `close()`. Uses `db.export()` + `fs.writeFileSync` for persistence.
+2. **better-sqlite3** (fallback): Opens file directly with WAL mode and `foreign_keys = ON`.
+
+Both are wrapped behind a unified `prepare()` / `run()` / `all()` / `get()` API.
+
+**Important**: Since sql.js operates in-memory, direct file modifications (e.g. via `sqlite3` CLI or better-sqlite3 from a separate script) will be overwritten when the running backend saves. Always stop the backend process before modifying the database file directly, or modify it after startup via the running process's API.
 
 ### Key Environment Variables
 
@@ -259,15 +279,34 @@ The `ai-agents/` module implements a multi-agent decision system for AI-powered 
 |-----------|---------|
 | `components/` | Reusable UI components |
 | `pages/` | Route pages (Dashboard, Agents, Sites, Devices, etc.) |
-| `services/` | API client services |
+| `services/api.ts` | Centralized API client — **all backend calls must go through here** |
 | `context/` | React context providers |
 | `utils/` | Helper functions |
 | `types/` | TypeScript type definitions |
-| `locales/` | i18n translation files |
+| `locales/` | i18n translation files (`en.json`, `zh.json`) |
+
+**Frontend API Pattern** (`services/api.ts`):
+- `fetchWithCredentials()` wraps `fetch()` with `credentials: 'include'`. Auth tokens are in **httpOnly cookies**, not headers.
+- `unwrapApiEnvelope<T>()` extracts `.data` from the standard `{ success, data, error, meta }` envelope.
+- `extractErrorMessage()` extracts error messages from responses.
+- Demo mode: many functions branch to `shouldUseDemoData()` with demo data generators.
+- Error prefix convention: `FG-AUTH-LOGIN-401`, `FG-SYSTEM-MODE-500`, etc.
+- All async functions accept optional `signal: AbortSignal`.
+
+**Context Providers** (6 providers, wrapped in `App.tsx`):
+
+| Provider | Purpose |
+|----------|---------|
+| `WebSocketProvider` | Socket.IO connection, event subscribe/emit, reconnection |
+| `ThemeProvider` | Dark/light/system theme (`localStorage: vite-ui-theme`) |
+| `LanguageProvider` | i18n toggle (en/zh), exposes `t()` and `toggleLanguage()` |
+| `DemoProvider` | Demo mode toggle, `attackSimEnabled`, `dataSource` |
+| `LiveModeProvider` | Live mode with auto-refresh (`localStorage: aetherguard-live-mode`) |
+| `AttackStatusProvider` | Attack simulation status via WebSocket |
 
 ### Key Technologies
 
-- **Backend:** Express, Socket.IO, SQLite (sql.js) / PostgreSQL, TypeScript, Jest
+- **Backend:** Express, Socket.IO, SQLite (sql.js) / better-sqlite3, TypeScript, Jest
 - **Frontend:** React 18, Vite, TailwindCSS, Recharts, Socket.IO Client, i18next
 - **Performance:** Rust fastpath sidecar for high-throughput traffic processing
 - **Infrastructure:** Docker, Redis, Nginx (for SSL/Let's Encrypt), MinIO (S3-compatible storage)
@@ -308,15 +347,19 @@ npx jest --verbose --testNamePattern="should detect attacks"
 npm run test:agents
 ```
 
-**Test Environment Variables** (auto-set by `npm test`):
+**Test Environment Variables** (auto-set by `jest.setup.js`):
 - `NODE_ENV=test`
 - `DISABLE_REDIS=true` (tests use in-memory fallback)
 - `JWT_SECRET` and `AUDIT_LOG_SECRET` set to test values
+- `DATA_DIR=./test-data` (isolated test database)
 
 **Jest Configuration Notes:**
 - AI agents investigation tests are excluded from `npm test` (see `testPathIgnorePatterns` in `jest.config.js`)
 - Use `npm run test:agents` for AI-specific tests
 - Tests run with `maxWorkers: 1` and `forceExit: true` for stability
+- `testTimeout: 30000` (configured in `jest.config.js`)
+- Database lifecycle: `jest.setup.db.js` provides `beforeAll`/`afterEach`/`afterAll` via `TestDatabaseManager`
+- Modular test config: `jest.config.modular.js` — run by module via `TEST_MODULE` env var
 
 Key test files:
 - `agent-gateway.test.ts` - WebSocket communication
@@ -328,7 +371,28 @@ Key test files:
 
 ## Deployment
 
-### Docker Compose (Recommended)
+### Production Server
+
+The production server at `39.102.81.78` runs:
+- **Frontend**: Nginx serving `/var/www/aetherguard/dist/` (port 80)
+- **Backend**: Node.js process started via `nohup node dist/index.js` (port 3005)
+- **Database**: sql.js in-memory with 30-second disk persistence at `/opt/aetherguard/backend/data/newsecurity.db`
+- **No systemd service** — manual process management
+
+Deployment workflow:
+```bash
+# Build frontend, create tar, upload, extract
+cd frontend && npm run build && rm -f dist.tar && tar -cvf dist.tar dist/
+scp -i key.pem dist.tar root@server:/var/www/aetherguard/
+ssh root@server "cd /var/www/aetherguard && rm -rf dist && tar -xvf dist.tar"
+
+# Build backend, create tar, upload, extract, restart
+cd backend && npm run build && rm -f dist.tar && tar -cvf dist.tar dist/
+scp -i key.pem dist.tar root@server:/opt/aetherguard/backend/
+ssh root@server "pkill -f 'node dist/index'; sleep 2; cd /opt/aetherguard/backend && rm -rf dist && tar -xvf dist.tar && nohup node dist/index.js > /var/log/aetherguard/backend.log 2>&1 &"
+```
+
+### Docker Compose (Development)
 
 ```bash
 # Build and start all services
@@ -397,10 +461,16 @@ The system implements multiple security layers:
 
 ## Development Constraints
 
+### Route Registration
+
+All API routes are registered in `backend/src/bootstrap/control-plane-app.ts` → `createControlPlaneApp()`, mounted on `apiRouter` at `/api`. Health endpoints (`/health`, `/health/live`, `/health/ready`) are registered directly and are not gated by `apiEnabled`.
+
+Route modules (23 total): stats, config, logs, sites, admin, scanner, smart-fix, deployments, agents, devices, ai-endpoints, auth, ai-system, traffic, attack, alerts, system, agent-onboarding, dashboard, fix-history, investigation, seed, pipeline, rules.
+
 ### Database Access Rules
 - **禁止在 `backend/src/api/routes` 中直接访问数据库** - 必须通过 repositories 或 services
-- 生产环境 Postgres 是主写路径 (`DB_MODE=postgres`)
-- SQLite 写入仅在 `DB_MODE=sqlite` 或 `SQLITE_FALLBACK_ENABLED=true` 时允许
+- SQLite 写入是当前唯一的数据库后端（sql.js 或 better-sqlite3）
+- `DB_MODE=postgres` 在 `.env` 中配置但 Postgres 实现尚未集成到 database.ts
 
 ### Schema Initialization
 - **不能在请求或 WebSocket 处理器中调用 `ensureSchema()`**
@@ -425,6 +495,22 @@ node scripts/guards/check-route-db-access.mjs
 # 检查前端是否直接调用 /api
 node scripts/guards/check-no-direct-api-fetch.mjs
 ```
+
+### Backend Modules (`backend/src/modules/`)
+
+Feature modules encapsulate persistence helpers and schema setup:
+
+| Module | Contents |
+|--------|----------|
+| `admin/` | `admin.repository.ts` — user management, role/plan/status updates |
+| `agent-onboarding/` | `agent-onboarding.repository.ts`, `agent-onboarding.schema.ts` |
+| `auth/` | `auth-user.repository.ts` — user lookup, password verification |
+| `deployments/` | `deployment-profile.repository.ts` |
+| `pipeline/` | `pipeline-diagnostics.service.ts` |
+| `scanner/` | `scanner-route.repository.ts` |
+| `sites/` | `site.repository.ts` |
+
+Per ADR, `services/` files remain integration-heavy until gradually migrated behind module boundaries.
 
 ### Detection Pipeline
 

@@ -107,6 +107,16 @@
 #define UI_SPINNER_INTERVAL_MS   250
 #define LOOP_IDLE_DELAY_MS       1
 
+// --- Deploy Bundle (SPIFFS cache for offline deployment) ---
+#define DEPLOY_BUNDLE_MAX_SIZE    (1024 * 1024)     // 1 MB max bundle
+#define RECEIVE_CHUNK_SIZE       1024               // Each chunk during USB write
+#define DEPLOY_FILE_NAME_MAX     64                 // Max filename length
+#define SPIFFS_MOUNT_POINT       "/deploy"           // SPIFFS mount point
+#define SPIFFS_MAX_FILES         10
+#define SPIFFS_MAX_FILE_SIZE     (512 * 1024)        // 512 KB per file
+#define DEPLOY_WRITE_TIMEOUT_MS  30000               // 30s to receive full bundle
+#define DEPLOY_PLAY_TIMEOUT_MS   60000               // 60s to play bundle to target
+
 // WiFi / WebSocket / local control plane defaults
 // NOTE: The current v1 target is the USB-TTL serial deployer. Cloud-device
 // modules remain experimental and are not part of the active build target.

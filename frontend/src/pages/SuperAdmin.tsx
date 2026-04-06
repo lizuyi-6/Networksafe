@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Copy, Cpu, Download, FileSearch, HardDrive, Key, Plus, RefreshCw, ShieldCheck, Trash2, Users, Zap } from 'lucide-react';
+import { AlertTriangle, Copy, Cpu, Download, FileSearch, HardDrive, Key, Plus, RefreshCw, ShieldCheck, Trash2, Users, Zap, Megaphone, Edit2, Send, Archive } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import {
     createAdminApiKey,
@@ -22,16 +22,23 @@ import {
     isRequestAbortError,
     revokeAgentCredential,
     verifyAdminAuditLog,
+    fetchAnnouncements,
+    createAnnouncement,
+    updateAnnouncement,
+    deleteAnnouncement,
+    publishAnnouncement,
+    archiveAnnouncement,
 } from '../services/api';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
 import StructuredDataView from '../components/StructuredDataView';
 
-type Tab = 'overview' | 'timeline' | 'evidence' | 'exports';
+type Tab = 'overview' | 'timeline' | 'evidence' | 'exports' | 'announcements';
 type ApiKey = { id: string; name: string; prefix: string; created: string; lastUsed: string };
 type CodeRow = { id: string; status: 'active' | 'used' | 'expired' | 'revoked'; expectedHostname: string | null; maxUses: number; usedCount: number; expiresAt: string; usedByAgentId: string | null };
 type AgentRow = { agentId: string; hostname: string; platform: string; status: 'pending' | 'approved' | 'revoked' };
+type AnnouncementRow = { id: string; title: string; content: string; type: string; status: string; published_at: string | null; expires_at: string | null; created_at: string; created_by_email?: string };
 
-const parseTab = (value: string | null): Tab => (value === 'timeline' || value === 'evidence' || value === 'exports' ? value : 'overview');
+const parseTab = (value: string | null): Tab => (value === 'timeline' || value === 'evidence' || value === 'exports' || value === 'announcements' ? value : 'overview');
 const fmt = (value?: string | null, t?: (key: string) => string) => {
     if (!value) return t ? t('superAdmin.not_available') : 'Not available';
     const parsed = new Date(value);
@@ -119,6 +126,11 @@ export default function SuperAdmin() {
     const [exportsList, setExportsList] = useState<any[]>([]);
     const [integrity, setIntegrity] = useState<Record<string, string>>({});
     const [detail, setDetail] = useState<any>(null);
+
+    // Announcements state
+    const [announcements, setAnnouncements] = useState<AnnouncementRow[]>([]);
+    const [editingAnnouncement, setEditingAnnouncement] = useState<AnnouncementRow | null>(null);
+    const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '', type: 'info', expiresAt: '' });
 
     const [tab, setTab] = useState<Tab>(() => parseTab(searchParams.get('tab')));
     const [tenantId, setTenantId] = useState(() => searchParams.get('tenant') || '');
@@ -255,6 +267,23 @@ export default function SuperAdmin() {
         return () => controller.abort();
     }, [tenantId, userId, category, range, tab]);
 
+    // Load announcements when tab is announcements
+    useEffect(() => {
+        if (tab !== 'announcements') return;
+        const controller = new AbortController();
+        (async () => {
+            try {
+                const res = await fetchAnnouncements(controller.signal);
+                setAnnouncements(res || []);
+            } catch (e) {
+                if (!isRequestAbortError(e, controller.signal)) {
+                    setError(t('announcement.load_failed'));
+                }
+            }
+        })();
+        return () => controller.abort();
+    }, [tab]);
+
     const copy = async (value: string) => navigator.clipboard.writeText(value).catch(() => setError(t('superAdmin.error_copy')));
     const createKey = async () => { await createAdminApiKey(keyName); setKeys(await fetchAdminApiKeys()); };
     const removeKey = async (id: string) => { await deleteAdminApiKey(id); setKeys(await fetchAdminApiKeys()); };
@@ -311,7 +340,7 @@ export default function SuperAdmin() {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">{([['overview', t('superAdmin.tab_overview')], ['timeline', t('superAdmin.tab_timeline')], ['evidence', t('superAdmin.tab_evidence')], ['exports', t('superAdmin.tab_exports')]] as Array<[Tab, string]>).map(([value, label]) => <button key={value} data-testid={`oversight-tab-${value}`} onClick={() => applyOversightView(value, tenantId, userId)} className={`rounded-full px-3 py-1.5 text-xs font-medium ${tab === value ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}>{label}</button>)}</div>
+                    <div className="flex flex-wrap gap-2">{([['overview', t('superAdmin.tab_overview')], ['timeline', t('superAdmin.tab_timeline')], ['evidence', t('superAdmin.tab_evidence')], ['exports', t('superAdmin.tab_exports')], ['announcements', t('superAdmin.tab_announcements')]] as Array<[Tab, string]>).map(([value, label]) => <button key={value} data-testid={`oversight-tab-${value}`} onClick={() => applyOversightView(value, tenantId, userId)} className={`rounded-full px-3 py-1.5 text-xs font-medium ${tab === value ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}>{label}</button>)}</div>
 
                     {tab === 'overview' && <>
                         <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
@@ -349,6 +378,26 @@ export default function SuperAdmin() {
                     </div>}
 
                     {tab === 'exports' && <ConsolePanel title={t('superAdmin.export_history')} subtitle={t('superAdmin.export_history_subtitle')}>{exportsList.length === 0 ? <ConsoleEmptyState title={t('superAdmin.no_exports')} description={t('superAdmin.no_exports_desc')} /> : <div className="space-y-3">{exportsList.map((record) => <div key={record.id} className="flex flex-col gap-3 rounded-xl border border-border bg-muted/10 px-4 py-4 lg:flex-row lg:items-center lg:justify-between"><div><div className="text-sm font-medium text-foreground">{record.id}</div><div className="mt-1 text-xs text-muted-foreground">{t('superAdmin.tenant')} {record.tenantId} / {record.requestedBy} / {fmt(record.requestedAt, t)}</div></div><div className="flex gap-2"><button onClick={() => downloadExport(record, 'json')} className="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/40">{t('superAdmin.download_json')}</button><button onClick={() => downloadExport(record, 'csv')} className="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/40">{t('superAdmin.download_csv')}</button></div></div>)}</div>}</ConsolePanel>}
+
+                    {tab === 'announcements' && <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                        <ConsolePanel title={t('announcement.list_title')} subtitle={t('announcement.list_subtitle')} icon={Megaphone} iconTone="primary" headerAction={<button onClick={() => { setEditingAnnouncement(null); setAnnouncementForm({ title: '', content: '', type: 'info', expiresAt: '' }); }} className="flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"><Plus size={14} />{t('announcement.create')}</button>}>
+                            {announcements.length === 0 ? <ConsoleEmptyState title={t('announcement.no_announcements')} description={t('announcement.no_announcements_desc')} /> : <div className="space-y-3">{announcements.map((a) => <div key={a.id} className="flex flex-col gap-3 rounded-xl border border-border bg-muted/10 p-4"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><span className={`px-2 py-0.5 rounded text-xs font-medium ${a.type === 'critical' ? 'bg-red-500/20 text-red-400' : a.type === 'warning' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>{a.type}</span><span className={`px-2 py-0.5 rounded text-xs font-medium ${a.status === 'published' ? 'bg-emerald-500/20 text-emerald-400' : a.status === 'archived' ? 'bg-gray-500/20 text-gray-400' : 'bg-muted text-muted-foreground'}`}>{a.status}</span></div><div className="mt-1 text-sm font-medium text-foreground">{a.title}</div><div className="mt-1 text-xs text-muted-foreground line-clamp-2">{a.content}</div></div><div className="flex gap-1"><button onClick={() => { setEditingAnnouncement(a); setAnnouncementForm({ title: a.title, content: a.content, type: a.type, expiresAt: a.expires_at || '' }); }} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Edit2 size={14} /></button>{a.status === 'draft' && <button onClick={async () => { await publishAnnouncement(a.id); const res = await fetchAnnouncements(); setAnnouncements(res || []); }} className="rounded-md p-1.5 text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-400"><Send size={14} /></button>}{a.status === 'published' && <button onClick={async () => { await archiveAnnouncement(a.id); const res = await fetchAnnouncements(); setAnnouncements(res || []); }} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Archive size={14} /></button>}<button onClick={async () => { await deleteAnnouncement(a.id); const res = await fetchAnnouncements(); setAnnouncements(res || []); }} className="rounded-md p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300"><Trash2 size={14} /></button></div></div><div className="text-xs text-muted-foreground">{t('announcement.created')} {fmt(a.created_at, t)} / {a.published_at ? `${t('announcement.published')} ${fmt(a.published_at, t)}` : ''} / {a.expires_at ? `${t('announcement.expires')} ${fmt(a.expires_at, t)}` : ''}</div></div>)}</div>}
+                        </ConsolePanel>
+                        <ConsolePanel title={editingAnnouncement ? t('announcement.edit_title') : t('announcement.create_title')} subtitle={editingAnnouncement ? t('announcement.edit_subtitle') : t('announcement.create_subtitle')}>
+                            <div className="space-y-4">
+                                <div><label className="text-xs text-muted-foreground">{t('announcement.title_label')}</label><input value={announcementForm.title} onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder={t('announcement.title_placeholder')} /></div>
+                                <div><label className="text-xs text-muted-foreground">{t('announcement.content_label')}</label><textarea value={announcementForm.content} onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground min-h-[100px]" placeholder={t('announcement.content_placeholder')} /></div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="text-xs text-muted-foreground">{t('announcement.type_label')}</label><select value={announcementForm.type} onChange={(e) => setAnnouncementForm({ ...announcementForm, type: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"><option value="info">{t('announcement.type_info')}</option><option value="warning">{t('announcement.type_warning')}</option><option value="critical">{t('announcement.type_critical')}</option></select></div>
+                                    <div><label className="text-xs text-muted-foreground">{t('announcement.expires_label')}</label><input type="datetime-local" value={announcementForm.expiresAt} onChange={(e) => setAnnouncementForm({ ...announcementForm, expiresAt: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground" /></div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={async () => { if (!announcementForm.title || !announcementForm.content) return; if (editingAnnouncement) { await updateAnnouncement(editingAnnouncement.id, announcementForm); } else { await createAnnouncement(announcementForm); } const res = await fetchAnnouncements(); setAnnouncements(res || []); setEditingAnnouncement(null); setAnnouncementForm({ title: '', content: '', type: 'info', expiresAt: '' }); }} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{editingAnnouncement ? t('announcement.update') : t('announcement.create')}</button>
+                                    {editingAnnouncement && <button onClick={() => { setEditingAnnouncement(null); setAnnouncementForm({ title: '', content: '', type: 'info', expiresAt: '' }); }} className="rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground">{t('announcement.cancel')}</button>}
+                                </div>
+                            </div>
+                        </ConsolePanel>
+                    </div>}
                 </div>
             </ConsolePanel>
 

@@ -5,6 +5,7 @@ import { detectionPipelineService } from '../services/detection-pipeline.service
 import { fastpathTrafficShadowService } from '../services/fastpath-traffic-shadow.service';
 import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
 import logger from '../utils/logger';
+import { recordApiRequest } from '../services/api-request-tracker.service';
 
 function normalizeHeaderValue(value: unknown): string {
   if (Array.isArray(value)) {
@@ -235,6 +236,10 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
     (req as any).detectionDecision = decision;
 
     if (decision.verdict === 'block') {
+      // Record blocked request for stats
+      const sourceIP = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
+      recordApiRequest(true, sourceIP);
+
       res.status(403).json({
         success: false,
         error: {

@@ -12,10 +12,11 @@ import { postgresShadowStoreService } from '../../services/postgres-shadow-store
 import { auditSegmentService } from '../../services/audit-segment.service';
 import { benchmarkService } from '../../services/benchmark.service';
 import { deviceControlService } from '../../services/device-control.service';
-import { getDeviceById } from './devices.routes';
+import { getDeviceById } from '../../services/device-registry.service';
 import {
     deleteAdminApiKey,
     getAdminUserById,
+    getLoginHistory,
     listAdminApiKeys,
     listAdminUsers,
     saveAdminApiKey,
@@ -635,10 +636,25 @@ router.put('/users/:id/role', authenticate, requireRole('admin'), async (req: Au
             return sendError(res, 400, { code: 'INVALID_ROLE', message: 'backend.invalid_role' });
         }
 
+        // SECURITY: Prevent admin from demoting themselves
+        if (id === req.user?.userId) {
+            return sendError(res, 403, { code: 'CANNOT_MODIFY_SELF_ROLE', message: 'backend.cannot_modify_self_role' });
+        }
+
         const user = await getAdminUserById(id);
         if (!user) {
             return sendError(res, 404, { code: 'USER_NOT_FOUND', message: 'backend.user_not_found' });
         }
+
+        // SECURITY: Prevent demoting the last admin
+        if (user.role === 'admin' && role !== 'admin') {
+            const allUsers = await listAdminUsers();
+            const adminCount = allUsers.filter((u: any) => u.role === 'admin').length;
+            if (adminCount <= 1) {
+                return sendError(res, 403, { code: 'CANNOT_REMOVE_LAST_ADMIN', message: 'backend.cannot_remove_last_admin' });
+            }
+        }
+
         await updateAdminUserField(id, 'role', role);
         await auditLogger.log({
             tenantId: user?.tenant_id || undefined,
@@ -667,10 +683,25 @@ router.put('/users/:id/status', authenticate, requireRole('admin'), async (req: 
             return sendError(res, 400, { code: 'INVALID_STATUS', message: 'backend.invalid_status' });
         }
 
+        // SECURITY: Prevent admin from suspending themselves
+        if (id === req.user?.userId) {
+            return sendError(res, 403, { code: 'CANNOT_SUSPEND_SELF', message: 'backend.cannot_suspend_self' });
+        }
+
         const user = await getAdminUserById(id);
         if (!user) {
             return sendError(res, 404, { code: 'USER_NOT_FOUND', message: 'backend.user_not_found' });
         }
+
+        // SECURITY: Prevent suspending the last admin
+        if (user.role === 'admin' && status === 'suspended') {
+            const allUsers = await listAdminUsers();
+            const activeAdminCount = allUsers.filter((u: any) => u.role === 'admin' && u.status === 'active').length;
+            if (activeAdminCount <= 1) {
+                return sendError(res, 403, { code: 'CANNOT_SUSPEND_LAST_ADMIN', message: 'backend.cannot_suspend_last_admin' });
+            }
+        }
+
         await updateAdminUserField(id, 'status', status);
         await auditLogger.log({
             tenantId: user?.tenant_id || undefined,
@@ -687,6 +718,159 @@ router.put('/users/:id/status', authenticate, requireRole('admin'), async (req: 
         return sendSuccess(res, { userId: id, status }, { legacy: { message: 'backend.status_updated' } });
     } catch (error: any) {
         return sendError(res, 500, { code: 'USER_STATUS_UPDATE_FAILED', message: 'backend.failed_to_update_user_status' });
+    }
+});
+
+// ============================================================
+// Batch Operations
+// ============================================================
+
+router.post('/users/batch', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const { userIds, action, value } = req.body;
+
+        if (!Array.isArray(userIds) || userIds.length === 0) {
+            return sendError(res, 400, { code: 'INVALID_USER_IDS', message: 'backend.invalid_user_ids' });
+        }
+
+        const validActions = ['suspend', 'activate', 'setPlan', 'setRole'];
+        if (!validActions.includes(action)) {
+            return sendError(res, 400, { code: 'INVALID_ACTION', message: 'backend.invalid_action' });
+        }
+
+        // SECURITY: Cannot batch operate on self
+        if (userIds.includes(req.user?.userId)) {
+            return sendError(res, 403, { code: 'CANNOT_BATCH_SELF', message: 'backend.cannot_batch_self' });
+        }
+
+        // Get all target users
+        const allUsers = await listAdminUsers();
+        const targetUsers = allUsers.filter((u: any) => userIds.includes(u.id));
+
+        if (targetUsers.length === 0) {
+            return sendError(res, 404, { code: 'USERS_NOT_FOUND', message: 'backend.users_not_found' });
+        }
+
+        // SECURITY: Cannot batch operate on admins
+        const hasAdmin = targetUsers.some((u: any) => u.role === 'admin');
+        if (hasAdmin) {
+            return sendError(res, 403, { code: 'CANNOT_BATCH_ADMINS', message: 'backend.cannot_batch_admins' });
+        }
+
+        // Perform batch operation
+        let updateField = '';
+        let updateValue: any = value;
+
+        switch (action) {
+            case 'suspend':
+                updateField = 'status';
+                updateValue = 'suspended';
+                break;
+            case 'activate':
+                updateField = 'status';
+                updateValue = 'active';
+                break;
+            case 'setPlan':
+                if (!['starter', 'pro', 'ultra'].includes(value)) {
+                    return sendError(res, 400, { code: 'INVALID_PLAN', message: 'backend.invalid_plan' });
+                }
+                updateField = 'plan';
+                break;
+            case 'setRole':
+                if (!['tenant', 'viewer'].includes(value)) {
+                    return sendError(res, 400, { code: 'INVALID_ROLE', message: 'backend.invalid_role' });
+                }
+                updateField = 'role';
+                break;
+        }
+
+        for (const user of targetUsers) {
+            await updateAdminUserField(user.id, updateField as 'plan' | 'role' | 'status', updateValue);
+        }
+
+        await auditLogger.log({
+            tenantId: undefined,
+            eventType: 'users_batch_updated',
+            category: 'system',
+            severity: 'critical',
+            actor: { type: 'user', id: req.user?.userId || 'unknown', email: req.user?.email, ip: req.ip },
+            action: 'batch_update_users',
+            details: { action, value: updateValue, count: targetUsers.length, userIds },
+            status: 'success'
+        });
+
+        return sendSuccess(res, { updated: targetUsers.length, action, value: updateValue });
+    } catch (error: any) {
+        return sendError(res, 500, { code: 'BATCH_UPDATE_FAILED', message: error?.message || 'backend.batch_update_failed' });
+    }
+});
+
+// ============================================================
+// User Detail & Login History
+// ============================================================
+
+router.get('/users/:id', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const { id } = req.params;
+        const user = await getAdminUserById(id);
+        if (!user) {
+            return sendError(res, 404, { code: 'USER_NOT_FOUND', message: 'backend.user_not_found' });
+        }
+        return sendSuccess(res, user);
+    } catch (error: any) {
+        return sendError(res, 500, { code: 'USER_GET_FAILED', message: error?.message || 'backend.failed_to_get_user' });
+    }
+});
+
+router.get('/users/:id/login-history', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const { id } = req.params;
+        const limit = req.query.limit ? Number(req.query.limit) : 50;
+
+        const history = await getLoginHistory(id, limit);
+
+        return sendSuccess(res, history || []);
+    } catch (error: any) {
+        return sendError(res, 500, { code: 'LOGIN_HISTORY_FAILED', message: error?.message || 'backend.failed_to_get_login_history' });
+    }
+});
+
+router.post('/users/:id/reset-password', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+    try {
+        const { id } = req.params;
+
+        // SECURITY: Cannot reset own password this way
+        if (id === req.user?.userId) {
+            return sendError(res, 403, { code: 'CANNOT_RESET_SELF', message: 'backend.cannot_reset_self_password' });
+        }
+
+        const user = await getAdminUserById(id);
+        if (!user) {
+            return sendError(res, 404, { code: 'USER_NOT_FOUND', message: 'backend.user_not_found' });
+        }
+
+        // Generate temporary password
+        const tempPassword = crypto.randomBytes(12).toString('base64').slice(0, 16);
+        const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+        // Update password
+        await updateAdminUserField(id, 'password_hash', passwordHash);
+
+        await auditLogger.log({
+            tenantId: user?.tenant_id || undefined,
+            eventType: 'user_password_reset',
+            category: 'system',
+            severity: 'critical',
+            actor: { type: 'user', id: req.user?.userId || 'unknown', email: req.user?.email, ip: req.ip },
+            target: { type: 'user', id },
+            action: 'reset_user_password',
+            details: { email: user?.email || null },
+            status: 'success'
+        });
+
+        return sendSuccess(res, { tempPassword, message: 'backend.password_reset_success' });
+    } catch (error: any) {
+        return sendError(res, 500, { code: 'PASSWORD_RESET_FAILED', message: error?.message || 'backend.failed_to_reset_password' });
     }
 });
 

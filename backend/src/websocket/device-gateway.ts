@@ -33,7 +33,7 @@ import {
     setDeviceOffline,
     getCodebook,
     addDeviceEvent,
-} from '../api/routes/devices.routes';
+} from '../services/device-registry.service';
 import type {
     DeviceClientToServerEvents,
     DeviceServerToClientEvents,
@@ -673,6 +673,21 @@ export class DeviceGateway {
             if (socket.connected) count++;
         });
         return count;
+    }
+
+    public getConnectedDevices(): Array<{ deviceId: string; isOnline: boolean; deviceType?: string; bundleState?: string; bundleSize?: number }> {
+        const devices: Array<{ deviceId: string; isOnline: boolean; deviceType?: string; bundleState?: string; bundleSize?: number }> = [];
+        this.deviceSockets.forEach((socket, deviceId) => {
+            const data = socket.data as any;
+            devices.push({
+                deviceId,
+                isOnline: socket.connected,
+                deviceType: data?.deviceType,
+                bundleState: data?.bundleState,
+                bundleSize: data?.bundleSize
+            });
+        });
+        return devices;
     }
 
     public close() {

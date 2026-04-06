@@ -10,6 +10,7 @@
 #define DEPLOYMENT_H
 
 #include <Arduino.h>
+#include <SPIFFS.h>
 #include "config.h"
 
 enum CmdStatus {
@@ -401,6 +402,11 @@ public:
         lastStatus = CMD_FAIL;
         completionPending = false;
         resetPending();
+
+        // Initialize SPIFFS and restore bundle state
+        initSPIFFS();
+        restoreBundleState();
+
         DEBUG_PRINTLN("[Deploy] Serial2 Init OK");
     }
 
@@ -495,6 +501,410 @@ public:
 
     const char* getLastMessage() const {
         return lastMessage;
+    }
+
+    // ============================================================
+    // SPIFFS-backed deploy bundle (offline deployment)
+    // ============================================================
+public:
+    enum BundleState {
+        BUNDLE_NONE,         // No cached bundle
+        BUNDLE_RECEIVED,     // Bundle written to SPIFFS, ready to deploy
+        BUNDLE_DEPLOYING,    // Playing bundle to target host
+        BUNDLE_DONE,         // Deploy succeeded
+        BUNDLE_FAILED        // Deploy failed
+    };
+
+private:
+    BundleState bundleState = BUNDLE_NONE;
+    char bundlePath[DEPLOY_FILE_NAME_MAX] = "";
+    uint32_t bundleSize = 0;
+    uint32_t bundleReceived = 0;
+    uint32_t bundlePlayed = 0;
+    uint32_t bundleWriteStartedAt = 0;
+    uint32_t bundleDeployStartedAt = 0;
+    char bundleError[64] = "";
+
+    bool spiffsMounted = false;
+    File bundlePlayFile;  // File handle for non-blocking deploy
+
+public:
+    bool initSPIFFS() {
+        if (spiffsMounted) return true;
+        if (!SPIFFS.begin(true)) {
+            DEBUG_PRINTLN("[Deploy] SPIFFS mount failed");
+            return false;
+        }
+        spiffsMounted = true;
+        DEBUG_PRINTLN("[Deploy] SPIFFS mounted");
+        return true;
+    }
+
+    void restoreBundleState() {
+        if (!spiffsMounted) return;
+
+        // Scan SPIFFS for existing bundle files
+        File root = SPIFFS.open(SPIFFS_MOUNT_POINT);
+        if (!root || !root.isDirectory()) {
+            DEBUG_PRINTLN("[Bundle] No deploy directory found");
+            return;
+        }
+
+        File f = root.openNextFile();
+        while (f) {
+            if (!f.isDirectory()) {
+                // Found a file, restore as cached bundle
+                strncpy(bundlePath, f.path(), sizeof(bundlePath) - 1);
+                bundleSize = f.size();
+                bundleReceived = bundleSize;
+                bundleState = BUNDLE_RECEIVED;
+                DEBUG_PRINTF("[Bundle] Restored: %s (%u bytes)\n", bundlePath, bundleSize);
+                f.close();
+                return;
+            }
+            f = root.openNextFile();
+        }
+        DEBUG_PRINTLN("[Bundle] No cached bundle found");
+    }
+
+    bool hasBundle() const {
+        return bundleState == BUNDLE_RECEIVED;
+    }
+
+    BundleState getBundleState() const {
+        return bundleState;
+    }
+
+    uint32_t getBundleTotalSize() const {
+        return bundleSize;
+    }
+
+    uint32_t getBundleReceived() const {
+        return bundleReceived;
+    }
+
+    const char* getBundleError() const {
+        return bundleError;
+    }
+
+    void clearBundle() {
+        if (bundlePath[0] != '\0' && spiffsMounted) {
+            SPIFFS.remove(bundlePath);
+        }
+        bundleState = BUNDLE_NONE;
+        bundleSize = 0;
+        bundleReceived = 0;
+        bundlePlayed = 0;
+        bundlePath[0] = '\0';
+        bundleError[0] = '\0';
+        DEBUG_PRINTLN("[Bundle] Cleared");
+    }
+
+    // --- Write bundle from console via Serial (USB) ---
+    // Console sends:  AG:REQ:WRITE_BUNDLE:<total_size>:<filename>
+    // ESP32 replies: AG:ACK:WRITE_BUNDLE:READY
+    // Console sends:  AG:CHUNK:<base64_data>\n   (1KB chunks)
+    // ESP32 replies: AG:ACK:CHUNK:<received_bytes>
+    // Console sends:  AG:END_BUNDLE
+    // ESP32 replies: AG:ACK:BUNDLE:<total_bytes>
+    // Or on error:  AG:ERR:BUNDLE:<detail>
+
+    void handleWriteBundleRequest(const char* payload) {
+        if (bundleState == BUNDLE_DEPLOYING) {
+            TARGET_SERIAL.println("AG:ERR:BUNDLE:deploying");
+            return;
+        }
+
+        // Parse total_size:filename
+        char sizeStr[16] = "";
+        const char* colon1 = strchr(payload, ':');
+        if (!colon1) {
+            TARGET_SERIAL.println("AG:ERR:BUNDLE:missing_size");
+            return;
+        }
+        size_t len = min(static_cast<size_t>(colon1 - payload), sizeof(sizeStr) - 1);
+        memcpy(sizeStr, payload, len);
+        sizeStr[len] = '\0';
+        uint32_t totalSize = strtoul(sizeStr, nullptr, 10);
+
+        const char* fname = colon1 + 1;
+        if (!*fname) fname = "bundle.sh";
+
+        if (totalSize > DEPLOY_BUNDLE_MAX_SIZE) {
+            TARGET_SERIAL.println("AG:ERR:BUNDLE:too_large");
+            return;
+        }
+
+        if (!initSPIFFS()) {
+            TARGET_SERIAL.println("AG:ERR:BUNDLE:spiffs_fail");
+            return;
+        }
+
+        // Remove old bundle
+        if (bundlePath[0] != '\0') {
+            SPIFFS.remove(bundlePath);
+        }
+
+        snprintf(bundlePath, sizeof(bundlePath), "%s/%s", SPIFFS_MOUNT_POINT, fname);
+        bundleSize = totalSize;
+        bundleReceived = 0;
+        bundlePlayed = 0;
+        bundleWriteStartedAt = millis();
+        bundleState = BUNDLE_NONE;
+        bundleError[0] = '\0';
+
+        TARGET_SERIAL.print("AG:ACK:WRITE_BUNDLE:READY");
+        DEBUG_PRINTF("[Bundle] Expecting %u bytes to %s\n", totalSize, bundlePath);
+    }
+
+    // Decode base64 chunk and append to SPIFFS file
+    void handleChunk(const char* base64Data) {
+        if (bundleState != BUNDLE_NONE || bundleWriteStartedAt == 0) {
+            // Not in write mode
+            return;
+        }
+
+        bundleState = BUNDLE_NONE; // still writing
+
+        // Simple base64 decode (limited subset for binary safety)
+        size_t b64Len = strlen(base64Data);
+        if (b64Len == 0) {
+            // Empty chunk = end signal handled elsewhere
+            return;
+        }
+
+        // Decode base64 to a temp buffer
+        uint8_t decodeBuf[RECEIVE_CHUNK_SIZE + 4];
+        int decodedLen = 0;
+
+        // Minimal base64 decode
+        static const char b64table[256] = { ['A']=0,['B']=1,['C']=2,['D']=3,['E']=4,['F']=5,['G']=6,['H']=7,
+            ['I']=8,['J']=9,['K']=10,['L']=11,['M']=12,['N']=13,['O']=14,['P']=15,
+            ['Q']=16,['R']=17,['S']=18,['T']=19,['U']=20,['V']=21,['W']=22,['X']=23,
+            ['Y']=24,['Z']=25,['a']=26,['b']=27,['c']=28,['d']=29,['e']=30,['f']=31,
+            ['g']=32,['h']=33,['i']=34,['j']=35,['k']=36,['l']=37,['m']=38,['n']=39,
+            ['o']=40,['p']=41,['q']=42,['r']=43,['s']=44,['t']=45,['u']=46,['v']=47,
+            ['w']=48,['x']=49,['y']=50,['z']=51,['0']=52,['1']=53,['2']=54,['3']=55,
+            ['4']=56,['5']=57,['6']=58,['7']=59,['8']=60,['9']=61,['+']=62,['/']=63 };
+
+        // Quick decode (no padding check for speed)
+        uint32_t accum = 0;
+        int bits = 0;
+        for (size_t i = 0; i < b64Len && decodedLen < RECEIVE_CHUNK_SIZE; i++) {
+            uint8_t c = base64Data[i];
+            uint8_t val = (c < 128) ? b64table[c] : 0xFF;
+            if (val == 0xFF) continue;
+            accum = (accum << 6) | val;
+            bits += 6;
+            if (bits >= 8) {
+                decodeBuf[decodedLen++] = (accum >> (bits -8)) & 0xFF;
+                bits -= 8;
+            }
+        }
+
+        // Append to SPIFFS file
+        File f = SPIFFS.open(bundlePath, "a");  // append mode
+        if (!f) {
+            snprintf(bundleError, sizeof(bundleError), "open failed: %s", bundlePath);
+            TARGET_SERIAL.println("AG:ERR:BUNDLE:write_fail");
+            bundleState = BUNDLE_FAILED;
+            return;
+        }
+        size_t written = f.write(decodeBuf, decodedLen);
+        f.close();
+
+        bundleReceived += written;
+
+        // Check timeout
+        if (millis() - bundleWriteStartedAt > DEPLOY_WRITE_TIMEOUT_MS) {
+            snprintf(bundleError, sizeof(bundleError), "timeout at %u/%u", bundleReceived, bundleSize);
+            TARGET_SERIAL.println("AG:ERR:BUNDLE:timeout");
+            bundleState = BUNDLE_FAILED;
+            SPIFFS.remove(bundlePath);
+            return;
+        }
+
+        char ack[64];
+        snprintf(ack, sizeof(ack), "AG:ACK:CHUNK:%u", bundleReceived);
+        TARGET_SERIAL.println(ack);
+    }
+
+    void handleEndBundle() {
+        if (bundleReceived < bundleSize) {
+            snprintf(bundleError, sizeof(bundleError), "short: %u/%u", bundleReceived, bundleSize);
+            TARGET_SERIAL.println("AG:ERR:BUNDLE:short");
+            bundleState = BUNDLE_FAILED;
+            return;
+        }
+
+        bundleState = BUNDLE_RECEIVED;
+        bundleError[0] = '\0';
+
+        char ack[64];
+        snprintf(ack, sizeof(ack), "AG:ACK:BUNDLE:%u", bundleReceived);
+        TARGET_SERIAL.println(ack);
+        DEBUG_PRINTF("[Bundle] Received complete: %u bytes\n", bundleReceived);
+    }
+
+    // --- Status query from console ---
+    void handleStatusRequest() {
+        switch (bundleState) {
+            case BUNDLE_NONE:
+                TARGET_SERIAL.println("AG:STATUS:NO_BUNDLE");
+                break;
+            case BUNDLE_RECEIVED:
+                TARGET_SERIAL.print("AG:STATUS:BUNDLE_READY:");
+                TARGET_SERIAL.println(bundlePath);
+                break;
+            case BUNDLE_DEPLOYING:
+                TARGET_SERIAL.print("AG:STATUS:DEPLOYING:");
+                TARGET_SERIAL.println(bundlePath);
+                break;
+            case BUNDLE_DONE:
+                TARGET_SERIAL.println("AG:STATUS:DEPLOY_OK");
+                break;
+            case BUNDLE_FAILED:
+                TARGET_SERIAL.print("AG:STATUS:DEPLOY_ERR:");
+                TARGET_SERIAL.println(bundleError);
+                break;
+        }
+    }
+
+    // --- Deploy: play bundle from SPIFFS to target host via serial (non-blocking) ---
+    void startDeploy() {
+        if (bundleState != BUNDLE_RECEIVED) {
+            TARGET_SERIAL.println("AG:ERR:DEPLOY:no_bundle");
+            return;
+        }
+
+        bundlePlayFile = SPIFFS.open(bundlePath, "r");
+        if (!bundlePlayFile) {
+            snprintf(bundleError, sizeof(bundleError), "file missing: %s", bundlePath);
+            TARGET_SERIAL.println("AG:ERR:DEPLOY:file_missing");
+            bundleState = BUNDLE_FAILED;
+            return;
+        }
+
+        bundleState = BUNDLE_DEPLOYING;
+        bundleDeployStartedAt = millis();
+        bundlePlayed = 0;
+
+        TARGET_SERIAL.println("AG:BEGIN:DEPLOY");
+        DEBUG_PRINTLN("[Bundle] Starting non-blocking deploy");
+    }
+
+    // Call this from loop() when bundleState == BUNDLE_DEPLOYING
+    void updateBundleDeploy() {
+        if (bundleState != BUNDLE_DEPLOYING || !bundlePlayFile) return;
+
+        // Check timeout
+        if (millis() - bundleDeployStartedAt > DEPLOY_PLAY_TIMEOUT_MS) {
+            TARGET_SERIAL.println("AG:ERR:DEPLOY:timeout");
+            bundleState = BUNDLE_FAILED;
+            bundlePlayFile.close();
+            snprintf(bundleError, sizeof(bundleError), "timeout at %u/%u", bundlePlayed, bundleSize);
+            return;
+        }
+
+        // Read and send one chunk per update
+        uint8_t readBuf[RECEIVE_CHUNK_SIZE];
+        int bytes = bundlePlayFile.read(readBuf, sizeof(readBuf));
+        if (bytes <= 0) {
+            // EOF or error - deploy complete
+            bundlePlayFile.close();
+            bundleState = BUNDLE_DONE;
+            TARGET_SERIAL.println("AG:OK:DEPLOY");
+            DEBUG_PRINTF("[Bundle] Deploy complete: %u bytes\n", bundlePlayed);
+            return;
+        }
+
+        // Write hex-encoded data to target serial
+        TARGET_SERIAL.print("AG:DATA:");
+        for (int i = 0; i < bytes; i++) {
+            TARGET_SERIAL.printf("%02X", readBuf[i]);
+        }
+        TARGET_SERIAL.println();
+
+        bundlePlayed += bytes;
+
+        // Progress report
+        if (bundleSize > 0) {
+            int pct = (bundlePlayed * 100) / bundleSize;
+            char progress[64];
+            snprintf(progress, sizeof(progress), "AG:PROGRESS:DEPLOY:%d", pct);
+            TARGET_SERIAL.println(progress);
+        }
+    }
+
+    uint32_t getBundlePlayed() const {
+        return bundlePlayed;
+    }
+
+    int getBundleDeployProgress() const {
+        if (bundleSize == 0) return 0;
+        return (bundlePlayed * 100) / bundleSize;
+    }
+
+    // --- Handle bundle-related serial input from Console ---
+    void handleBundleSerialLine(const char* line) {
+        if (strncmp(line, "AG:REQ:WRITE_BUNDLE:") == 0) {
+            handleWriteBundleRequest(line + strlen("AG:REQ:WRITE_BUNDLE:"));
+        } else if (strncmp(line, "AG:CHUNK:") == 0) {
+            handleChunk(line + strlen("AG:CHUNK:"));
+        } else if (strcmp(line, "AG:END_BUNDLE") == 0) {
+            handleEndBundle();
+        } else if (strcmp(line, "AG:REQ:STATUS") == 0) {
+            handleStatusRequest();
+        } else if (strcmp(line, "AG:REQ:DEPLOY") == 0) {
+            startDeploy();
+        } else if (strcmp(line, "AG:REQ:CLEAR_BUNDLE") == 0) {
+            // Clear stored bundle
+            if (bundlePath[0] != '\0') {
+                SPIFFS.remove(bundlePath);
+            }
+            bundleState = BUNDLE_NONE;
+            bundleSize = 0;
+            bundleReceived = 0;
+            bundlePlayed = 0;
+            bundlePath[0] = '\0';
+            bundleError[0] = '\0';
+            TARGET_SERIAL.println("AG:ACK:CLEAR_BUNDLE");
+            DEBUG_PRINTLN("[Bundle] Cleared");
+        }
+    }
+
+    // Integrate into existing update() — process bundle commands on Serial0 (console)
+    // Also handles non-blocking bundle deploy
+    void updateBundle() {
+        // Handle non-blocking bundle deploy first
+        updateBundleDeploy();
+
+        // Only process Serial0 if not busy with deployment-to-host
+        if (pending.active) return;
+
+        while (Serial.available()) {
+            char c = Serial.read();
+            // Accumulate line
+            if (c == '\n') {
+                // Process completed line
+                if (pending.lineLen > 0) {
+                    pending.lineBuffer[pending.lineLen] = '\0';
+                    handleBundleSerialLine(pending.lineBuffer);
+                    pending.lineLen = 0;
+                }
+            } else if (c == '\r') {
+                // flush
+                if (pending.lineLen > 0) {
+                    pending.lineBuffer[pending.lineLen] = '\0';
+                    handleBundleSerialLine(pending.lineBuffer);
+                    pending.lineLen = 0;
+                }
+            } else {
+                if (pending.lineLen < SERIAL_LINE_BUFFER_SIZE - 1) {
+                    pending.lineBuffer[pending.lineLen++] = c;
+                }
+            }
+        }
     }
 };
 

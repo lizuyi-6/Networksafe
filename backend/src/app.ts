@@ -1,6 +1,6 @@
 import { createControlPlaneApp } from './bootstrap/control-plane-app';
 import { getRuntimeDescriptor } from './config/platform-runtime';
-export { initializeAgentSystem } from './api/routes/ai-system.routes';
+export { initializeAgentSystem } from './services/agent-system.service';
 
 const runtime = getRuntimeDescriptor();
 

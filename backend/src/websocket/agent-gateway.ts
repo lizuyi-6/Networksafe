@@ -19,7 +19,8 @@ import { verifyTokenAsync, AuthenticatedRequest } from '../middleware/auth.middl
 import agentAuthService from '../security/agent-auth.service';
 import commandSigningService from '../security/command-signing.service';
 import auditLogger from '../security/audit-logger.service';
-import { getTrafficStats, getAgentSystem } from '../api/routes/ai-system.routes';
+import { getTrafficStats } from '../services/traffic-stats.service';
+import { getAgentSystem } from '../services/agent-system.service';
 import {
   isTestRuntime,
   wsTestAgentAdapter,

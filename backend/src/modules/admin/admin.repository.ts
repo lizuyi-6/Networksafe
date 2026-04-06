@@ -145,7 +145,7 @@ export async function getAdminUserById(id: string): Promise<AdminUserRow | null>
 
 export async function updateAdminUserField(
   id: string,
-  field: 'plan' | 'role' | 'status',
+  field: 'plan' | 'role' | 'status' | 'password_hash',
   value: string
 ): Promise<void> {
   const updatedAt = new Date().toISOString();
@@ -161,4 +161,24 @@ export async function updateAdminUserField(
   if (shouldWriteSqliteFallback()) {
     getDatabase().prepare(`UPDATE users SET ${field} = ?, updated_at = datetime('now') WHERE id = ?`).run(value, id);
   }
+}
+
+export async function getLoginHistory(userId: string, limit: number = 50): Promise<any[]> {
+  if (postgresShadowStoreService.canServeReads()) {
+    return await postgresShadowStoreService.queryAll(`
+      SELECT id, user_id, ip_address, user_agent, status, logout_at, created_at
+      FROM login_history
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `, [userId, limit]);
+  }
+
+  return getDatabase().prepare(`
+    SELECT id, user_id, ip_address, user_agent, status, logout_at, created_at
+    FROM login_history
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+    LIMIT ?
+  `).all(userId, limit);
 }

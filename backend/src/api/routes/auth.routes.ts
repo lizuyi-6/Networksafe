@@ -32,6 +32,7 @@ import {
     createAuthUser,
     findAuthUserByEmail,
     findAuthUserById,
+    recordLoginHistory,
     touchAuthUserLastLogin,
     updateAuthUserPassword
 } from '../../modules/auth/auth-user.repository';
@@ -304,6 +305,21 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
 
         // Update last login
         await touchAuthUserLastLogin(user.id);
+
+        // Record login history
+        try {
+            const loginHistoryId = uuidv4();
+            await recordLoginHistory({
+                id: loginHistoryId,
+                userId: user.id,
+                ipAddress: clientIp,
+                userAgent: req.headers['user-agent'] || 'unknown',
+                status: 'success'
+            });
+        } catch (historyError: any) {
+            logger.warn('Failed to record login history', { error: historyError.message });
+        }
+
         await auditLogger.log({
             tenantId: user.tenant_id || undefined,
             eventType: 'login',

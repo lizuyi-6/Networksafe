@@ -5,7 +5,7 @@
 import { Router, Request, Response } from 'express';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
-import { getAlerts } from './alerts.routes';
+import { getAlerts } from '../../services/alert-state.service';
 import * as net from 'net';
 import { securityOperationsService } from '../../services/security-operations.service';
 import { scannerTaskService } from '../../services/scanner-task.service';
@@ -564,12 +564,12 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
             success: true,
             agent: {
                 ...agent,
-                isOnline: agent.isOnline
+                isOnline: agent.status?.isOnline ?? true
             },
             data: {
                 summary: {
                     ...agent,
-                    isOnline: agent.isOnline,
+                    isOnline: agent.status?.isOnline ?? true,
                     securitySummary: securityContext.agentAsset
                 },
                 capabilities: {

@@ -78,9 +78,9 @@ export class SystemStats {
             if (process.platform === 'win32') {
                 exec('wmic logicaldisk get size,freespace,caption', (error, stdout) => {
                     if (error) return resolve(0);
-                    const lines = stdout.trim().split('\\n').slice(1);
+                    const lines = stdout.trim().split('\n').slice(1);
                     for (const line of lines) {
-                        const parts = line.trim().split(/\\s+/);
+                        const parts = line.trim().split(/\s+/);
                         if (parts.length >= 3 && parts[0].includes('C:')) {
                             const freeString = parts[1];
                             const totalString = parts[2];
@@ -94,9 +94,9 @@ export class SystemStats {
             } else {
                 exec('df -BG /', (error, stdout) => {
                     if (error) return resolve(0);
-                    const lines = stdout.trim().split('\\n');
+                    const lines = stdout.trim().split('\n');
                     if (lines.length > 1) {
-                        const parts = lines[1].trim().split(/\\s+/);
+                        const parts = lines[1].trim().split(/\s+/);
                         const usageStr = parts[4];
                         if (usageStr) {
                             return resolve(parseInt(usageStr.replace('%', ''), 10));
@@ -115,17 +115,17 @@ export class SystemStats {
         try {
             if (process.platform === 'win32') {
                 const { stdout } = await execAsync('netstat -e');
-                const lines = stdout.trim().split('\\n');
+                const lines = stdout.trim().split('\n');
                 if (lines.length > 1) {
-                    const bytesLine = lines[1].trim().split(/\\s+/);
+                    const bytesLine = lines[1].trim().split(/\s+/);
                     currentRx = parseInt(bytesLine[1], 10);
                     currentTx = parseInt(bytesLine[2], 10);
                 }
             } else {
                 const { stdout } = await execAsync('cat /proc/net/dev');
-                const lines = stdout.trim().split('\\n').slice(2);
+                const lines = stdout.trim().split('\n').slice(2);
                 for (const line of lines) {
-                    const parts = line.trim().split(/\\s+/).filter(Boolean);
+                    const parts = line.trim().split(/\s+/).filter(Boolean);
                     if (parts.length >= 10 && !line.includes('lo:')) {
                         currentRx += parseInt(parts[1], 10);
                         currentTx += parseInt(parts[9], 10);

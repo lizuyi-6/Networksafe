@@ -4,7 +4,7 @@ import { sendError, sendSuccess } from '../../core/http/api-response';
 import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';
 import auditLogger from '../../security/audit-logger.service';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
-import { getAgentGateway } from './ai-system.routes';
+import { getAgentGateway } from '../../services/agent-system.service';
 
 const router = Router();
 

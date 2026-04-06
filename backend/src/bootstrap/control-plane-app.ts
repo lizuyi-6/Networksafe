@@ -13,6 +13,8 @@ import { buildRuntimeHealthSnapshot } from '../core/health/runtime-health';
 import statsRoutes from '../api/routes/stats.routes';
 import configRoutes from '../api/routes/config.routes';
 import logsRoutes from '../api/routes/logs.routes';
+import { addLog } from '../services/log-state.service';
+import { recordApiRequest } from '../services/api-request-tracker.service';
 import sitesRoutes from '../api/routes/sites.routes';
 import adminRoutes from '../api/routes/admin.routes';
 import scannerRouter from '../api/routes/scanner.routes';
@@ -34,6 +36,8 @@ import investigationRoutes from '../api/routes/investigation.routes';
 import seedRoutes from '../api/routes/seed.routes';
 import pipelineRoutes from '../api/routes/pipeline.routes';
 import rulesRoutes from '../api/routes/rules.routes';
+import announcementsAdminRoutes from '../modules/announcements/announcements.routes';
+import { listPublishedAnnouncements } from '../modules/announcements/announcements.repository';
 
 interface CreateControlPlaneAppOptions {
   runtime: Record<string, any> & { profile: 'prod' | 'dev' | 'demo'; dbMode: string; sqliteFallbackEnabled: boolean; };
@@ -120,6 +124,27 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
       ip: req.ip,
       userAgent: req.headers['user-agent']?.substring(0, 50),
     });
+
+    // Record request in live log stream
+    // Skip repetitive polling endpoints to reduce noise
+    const isPolling = /^\/api\/(stats|stats\/badges|logs|health)/.test(req.path);
+    if (!isPolling) {
+      const isAttack = /union|select|script|alert|whoami|passwd|etc\/|rm -rf|\.\.\//i.test(
+        req.url + ' ' + JSON.stringify(req.body || {}).substring(0, 500)
+      );
+      addLog({
+        type: isAttack ? 'attack' : 'request',
+        level: isAttack ? 'WARN' : 'INFO',
+        message: isAttack
+          ? `Suspicious request detected: ${req.method} ${req.path}`
+          : `${req.method} ${req.path}`,
+        ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown',
+        status: 200,
+        method: req.method,
+        path: req.path,
+      });
+    }
+
     next();
   });
 
@@ -134,6 +159,12 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
 
   const apiRouter = express.Router();
   apiRouter.use(apiRateLimit);
+
+  // Count every API request for dashboard stats
+  apiRouter.use((_req, _res, next) => {
+    recordApiRequest(false);
+    next();
+  });
 
   apiRouter.get('/health', async (_req, res) => {
     try {
@@ -220,6 +251,19 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
     apiRouter.use('/seed', seedRoutes);
     apiRouter.use('/pipeline', pipelineRoutes);
     apiRouter.use('/rules', rulesRoutes);
+
+    // Announcements admin routes (CRUD, publish, archive)
+    apiRouter.use('/admin', announcementsAdminRoutes);
+
+    // Public announcements endpoint (no auth required)
+    apiRouter.get('/announcements', async (_req, res) => {
+      try {
+        const announcements = listPublishedAnnouncements();
+        return sendSuccess(res, announcements || []);
+      } catch (error: any) {
+        return sendError(res, 500, { code: 'ANNOUNCEMENTS_LIST_FAILED', message: error?.message || 'backend.failed_to_list_announcements' });
+      }
+    });
   }
 
   app.use('/api', apiRouter);

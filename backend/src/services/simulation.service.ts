@@ -1,5 +1,5 @@
 import { defaultConfig as config } from '../config';
-import { getAgentSystem } from '../api/routes/ai-system.routes';
+import { getAgentSystem } from './agent-system.service';
 import os from 'os';
 import { EventEmitter } from 'events';
 import IPAnalyzer from '../utils/ip-analyzer';

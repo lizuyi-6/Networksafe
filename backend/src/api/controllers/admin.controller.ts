@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import os from 'os';
-import { getAgentSystem } from '../routes/ai-system.routes';
+import { getAgentSystem } from '../../services/agent-system.service';
 import logger from '../../utils/logger';
 import { isDemoMode } from '../../config/app-mode';
 

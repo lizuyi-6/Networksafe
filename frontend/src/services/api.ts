@@ -740,6 +740,29 @@ export const fetchDeploymentHistory = async (siteId?: string, limit: number = 20
     return data?.data || [];
 };
 
+export const generateDeploymentBundle = async (payload: {
+    serverType: DeploymentTarget;
+    profile: Record<string, any>;
+    deploymentId?: string;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/generate-bundle`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(i18n.t('api.failed_to_generate_deployment_bundle'));
+    }
+    return response.json();
+};
+
+export const fetchEsp32Status = async () => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/esp32-status`);
+    if (!response.ok) {
+        return { success: false, connected: false };
+    }
+    return response.json();
+};
+
 export const getDeploymentDownloadUrl = (deploymentId: string, format: 'conf' | 'env' | 'bundle' = 'bundle') => {
     if (shouldUseDemoData()) {
         return getDemoDownloadUrl(deploymentId, format);
@@ -2230,6 +2253,134 @@ export const fetchAdminUsersList = async (signal?: AbortSignal) => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users`, { signal });
     if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_admin_users'));
     return response.json();
+};
+
+// Batch operations on users
+export const batchUpdateUsers = async (payload: {
+    userIds: string[];
+    action: 'suspend' | 'activate' | 'setPlan' | 'setRole';
+    value?: string;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/batch`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(data, i18n.t('api.batch_update_failed')));
+    }
+    return data;
+};
+
+// User detail
+export const fetchAdminUserDetail = async (userId: string, signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}`, { signal });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_get_user')));
+    return data;
+};
+
+// Login history
+export const fetchUserLoginHistory = async (userId: string, limit: number = 50, signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/login-history?limit=${limit}`, { signal });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_get_login_history')));
+    return data;
+};
+
+// Reset user password
+export const resetUserPassword = async (userId: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/reset-password`, {
+        method: 'POST'
+    });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_reset_password')));
+    }
+    return data;
+};
+
+// Announcements - Public endpoint (no auth required)
+export const fetchPublicAnnouncements = async (signal?: AbortSignal) => {
+    const response = await fetch(`${API_BASE_URL}/announcements`, { signal });
+    if (!response.ok) throw new Error(i18n.t('api.failed_to_list_announcements'));
+    return response.json().catch(() => ({}));
+};
+
+// Announcements - Admin endpoints
+export const fetchAnnouncements = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements`, { signal });
+    if (!response.ok) throw new Error(i18n.t('api.failed_to_list_announcements'));
+    return response.json().catch(() => ({}));
+};
+
+export const createAnnouncement = async (payload: { title: string; content: string; type?: string; expiresAt?: string }) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_create_announcement')));
+    }
+    return data;
+};
+
+export const updateAnnouncement = async (id: string, payload: { title?: string; content?: string; type?: string; expiresAt?: string }) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_update_announcement')));
+    }
+    return data;
+};
+
+export const deleteAnnouncement = async (id: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements/${id}`, {
+        method: 'DELETE'
+    });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_delete_announcement')));
+    }
+    return data;
+};
+
+export const publishAnnouncement = async (id: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements/${id}/publish`, {
+        method: 'POST'
+    });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_publish_announcement')));
+    }
+    return data;
+};
+
+export const archiveAnnouncement = async (id: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements/${id}/archive`, {
+        method: 'POST'
+    });
+    const data = await response.json().catch(() => ({})) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_archive_announcement')));
+    }
+    return data;
+};
+
+// Public: fetch published announcements for banner display
+export const fetchPublishedAnnouncements = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements`, { signal });
+    if (!response.ok) return [];
+    const data = await response.json().catch(() => ({ data: [] })) as any;
+    // Filter to only published and non-expired
+    const now = new Date().toISOString();
+    return (data?.data || []).filter((a: any) =>
+        a.status === 'published' && (!a.expires_at || a.expires_at > now)
+    );
 };
 
 export const fetchAdminOversightTenants = async (signal?: AbortSignal) => {

@@ -360,8 +360,33 @@ export class EnhancedAttackDetector {
             }
         }
 
-        // 命令注入检测
-        const cmdResult = this.inputValidator.validateCommand(contentToCheck);
+        // 查询参数路径遍历检测
+        if (event.queryParams) {
+            for (const [, value] of Object.entries(event.queryParams)) {
+                const strValue = String(value);
+                if (strValue.includes('../') || strValue.includes('..\\')) {
+                    const pathResult = this.inputValidator.validatePath(strValue);
+                    if (!pathResult.isValid) {
+                        return this.buildThreatAlert('path_traversal', pathResult, event.sourceIP);
+                    }
+                }
+            }
+        }
+
+        // 命令注入检测（排除明显路径类参数值，避免Windows路径误报）
+        const isPathValue = (v: string) => /^[a-zA-Z]:[\\\/]/.test(v) || v.includes('../') || v.includes('..\\');
+        const cmdCheckContent = [
+            event.path || '',
+            event.requestBody || '',
+            event.userAgent || '',
+            event.rawLog || '',
+            ...(event.queryParams
+                ? Object.entries(event.queryParams)
+                    .filter(([, v]) => !isPathValue(String(v)))
+                    .map(([k, v]) => `${k}=${v}`)
+                : [])
+        ].join(' ');
+        const cmdResult = this.inputValidator.validateCommand(cmdCheckContent);
         if (!cmdResult.isValid) {
             return this.buildThreatAlert('command_injection', cmdResult, event.sourceIP);
         }
@@ -377,8 +402,12 @@ export class EnhancedAttackDetector {
      * 构建检查内容
      */
     private buildCheckContent(event: TrafficEvent): string {
+        const queryString = event.queryParams
+            ? Object.entries(event.queryParams).map(([k, v]) => `${k}=${v}`).join('&')
+            : '';
         return [
             event.path || '',
+            queryString,
             event.requestBody || '',
             event.userAgent || '',
             event.rawLog || ''

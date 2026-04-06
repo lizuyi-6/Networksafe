@@ -137,3 +137,21 @@ export async function updateAuthUserPassword(userId: string, passwordHash: strin
     getDatabase().prepare(`UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?`).run(passwordHash, userId);
   }
 }
+
+export async function recordLoginHistory(params: {
+  id: string; userId: string; ipAddress: string; userAgent: string; status: string;
+}): Promise<void> {
+  if (getDatabaseMode() === 'postgres') {
+    await postgresShadowStoreService.execute(`
+      INSERT INTO login_history (id, user_id, ip_address, user_agent, status, created_at)
+      VALUES ($1, $2, $3, $4, $5, datetime('now'))
+    `, [params.id, params.userId, params.ipAddress, params.userAgent, params.status]);
+  }
+
+  if (shouldWriteSqliteFallback()) {
+    getDatabase().prepare(`
+      INSERT INTO login_history (id, user_id, ip_address, user_agent, status, created_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `).run(params.id, params.userId, params.ipAddress, params.userAgent, params.status);
+  }
+}

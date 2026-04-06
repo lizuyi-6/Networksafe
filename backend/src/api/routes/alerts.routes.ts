@@ -2,7 +2,7 @@ import { Response, Router } from 'express';
 import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
-import { getAgentSystem } from './ai-system.routes';
+import { getAgentSystem } from '../../services/agent-system.service';
 import logger from '../../utils/logger';
 import { securityOperationsService } from '../../services/security-operations.service';
 

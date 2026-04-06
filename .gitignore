@@ -48,9 +48,15 @@ venv/
 
 # Archives and local artifact store
 *.tar.gz
+*.tar
 *.zip
 /artifacts/*
 !/artifacts/README.md
+
+# Local deploy scripts and temp test scripts
+backend/deploy/
+backend/test-attack-*.js
+backend/test-attack-*.cjs
 
 # Logs and temporary diagnostics
 logs/

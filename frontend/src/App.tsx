@@ -49,6 +49,8 @@ import FixHistory from './pages/FixHistory';
 import SettingsPage from './pages/Settings';
 import SuperAdmin from './pages/SuperAdmin';
 import AdminUsers from './pages/AdminUsers';
+import UserDetail from './pages/UserDetail';
+import AnnouncementBanner from './components/AnnouncementBanner';
 import Alerts from './pages/Alerts';
 import Rules from './pages/Rules';
 import Agents from './pages/Agents';
@@ -266,9 +268,15 @@ const Sidebar = () => {
                 }
                 const name = user.username || user.email || '未命名用户';
                 const initials = String(name).split(/\s+/).map((x: string) => x[0] || '').join('').slice(0, 2).toUpperCase() || '??';
+                // Translate role to display name
+                const roleMap: Record<string, string> = {
+                    'admin': t('admin_users.role_admin'),
+                    'tenant': t('admin_users.role_tenant'),
+                    'viewer': t('admin_users.role_viewer')
+                };
                 setProfile({
                     name,
-                    role: user.role || t('app.role_not_set'),
+                    role: roleMap[user.role] || user.role || t('app.role_not_set'),
                     initials,
                     plan: user.plan || 'starter'
                 });
@@ -414,6 +422,44 @@ const Header = () => {
     const { liveModeEnabled, toggleLiveMode } = useLiveMode();
     const location = useLocation();
 
+    // Map paths to nav keys for breadcrumb
+    const pathToNavKey: Record<string, string> = {
+        '/dashboard': 'nav.dashboard',
+        '/agents': 'nav.agents',
+        '/agent-monitor': 'nav.agent_monitor',
+        '/traffic': 'nav.traffic_interceptor',
+        '/attack-sim': 'nav.attack_simulator',
+        '/devices': 'nav.devices',
+        '/sites': 'nav.sites',
+        '/deploy': 'nav.deployment',
+        '/scanner': 'nav.monitoring',
+        '/settings': 'nav.settings',
+        '/admin': 'nav.keys',
+        '/super-admin': 'nav.super_admin',
+        '/history': 'nav.audit',
+        '/alerts': 'nav.alerts',
+        '/rules': 'nav.platform',
+    };
+
+    const getCurrentPageTitle = () => {
+        const path = location.pathname;
+        // Check for exact match first
+        if (pathToNavKey[path]) {
+            return t(pathToNavKey[path]);
+        }
+        // Check for dynamic routes
+        if (path.startsWith('/agents/')) return t('nav.agents');
+        if (path.startsWith('/sites/')) return t('nav.sites');
+        if (path.startsWith('/alerts/')) return t('nav.alerts');
+        if (path.startsWith('/history/')) return t('nav.audit');
+        if (path.startsWith('/scanner/runs/')) return t('nav.monitoring');
+        if (path.startsWith('/traffic/sessions/')) return t('nav.traffic_interceptor');
+        if (path.startsWith('/attack-sim/runs/')) return t('nav.attack_simulator');
+        if (path.startsWith('/devices/board-status/')) return t('nav.devices');
+        if (path.startsWith('/super-admin/users/')) return t('adminUsers.user_detail');
+        return t('nav.dashboard');
+    };
+
     // Don't show header on standalone public pages
     if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film') return null;
 
@@ -422,7 +468,7 @@ const Header = () => {
             <div className="min-w-0 flex items-center gap-3 text-sm text-muted-foreground overflow-hidden">
                 <span className="hover:text-foreground cursor-pointer transition-colors truncate">{t('header.overview')}</span>
                 <span className="text-muted-foreground/50 shrink-0">/</span>
-                <span className="text-foreground font-medium truncate">{t('nav.dashboard')}</span>
+                <span className="text-foreground font-medium truncate">{getCurrentPageTitle()}</span>
             </div>
 
             <div className="flex items-center gap-2 md:gap-4 shrink-0">
@@ -562,6 +608,7 @@ const AnimatedRoutes = () => {
                 {/* Admin-only routes */}
                 <Route path="/admin" element={<PrivateRoute><AdminRoute><PageWrapper><SuperAdmin /></PageWrapper></AdminRoute></PrivateRoute>} />
                 <Route path="/super-admin" element={<PrivateRoute><AdminRoute><PageWrapper><AdminUsers /></PageWrapper></AdminRoute></PrivateRoute>} />
+                <Route path="/super-admin/users/:id" element={<PrivateRoute><AdminRoute><PageWrapper><UserDetail /></PageWrapper></AdminRoute></PrivateRoute>} />
             </Routes>
         </AnimatePresence>
     );
@@ -587,6 +634,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
             <Sidebar />
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+                <AnnouncementBanner />
                 <Header />
                 <div className="flex-1 overflow-y-auto scrollbar-hide">
                     {children}

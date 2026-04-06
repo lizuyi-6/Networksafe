@@ -4,7 +4,7 @@ import { artifactStoreService } from './artifact-store.service';
 import auditLogger from '../security/audit-logger.service';
 import logger from '../utils/logger';
 import { commandDispatcherService } from './command-dispatcher.service';
-import { getDeviceById } from '../api/routes/devices.routes';
+import { getDeviceById } from './device-registry.service';
 
 export interface DeviceFirmwareRecord {
   id: string;

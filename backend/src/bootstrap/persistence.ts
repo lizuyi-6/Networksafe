@@ -3,6 +3,7 @@ import { initDatabase } from '../config/database';
 import { bootstrapDatabase } from '../database/init';
 import { ensureAgentOnboardingSchema } from '../modules/agent-onboarding/agent-onboarding.schema';
 import { ensureDeploymentProfileSchema } from '../modules/deployments/deployment-profile.repository';
+import { ensureAnnouncementsSchema } from '../modules/announcements/announcements.repository';
 import { aiEndpointStoreService } from '../services/ai-endpoint-store.service';
 import auditLogger from '../security/audit-logger.service';
 import { auditSegmentService } from '../services/audit-segment.service';
@@ -33,6 +34,7 @@ export async function bootstrapPersistence(): Promise<void> {
   detectionPipelineService.prepare();
   ensureAgentOnboardingSchema();
   ensureDeploymentProfileSchema();
+  ensureAnnouncementsSchema();
 
   await bootstrapDatabase();
   if (isDemoAutoSeedEnabled()) {

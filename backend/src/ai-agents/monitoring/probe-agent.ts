@@ -469,9 +469,10 @@ Report any anomalies or health issues immediately.`;
         const metrics = this.gatherSystemMetrics();
         const messageBusStats = this.messageBus.getStats();
         
-        const systemHealth = metrics.memory.usagePercent < 90 && metrics.cpu.loadAverage[0] < metrics.cpu.cores
+        const cpuThreshold = metrics.cpu.cores * 1.5;
+        const systemHealth = metrics.memory.usagePercent < 90 && metrics.cpu.loadAverage[0] < cpuThreshold
             ? 'healthy'
-            : metrics.memory.usagePercent < 95
+            : metrics.memory.usagePercent < 95 && metrics.cpu.loadAverage[0] < metrics.cpu.cores * 3
                 ? 'degraded'
                 : 'unhealthy';
 

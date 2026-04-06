@@ -31,7 +31,12 @@ enum DeployState {
     ST_CRITICAL_CONFIRM,
     ST_UNINSTALLING,
     ST_SUCCESS,
-    ST_ERROR
+    ST_ERROR,
+    // Bundle relay states
+    ST_BUNDLE_MENU,
+    ST_BUNDLE_DEPLOYING,
+    ST_BUNDLE_SUCCESS,
+    ST_BUNDLE_ERROR
 };
 
 static DeployState state = ST_BOOT;
@@ -163,6 +168,25 @@ void handleStateEntry() {
             hw.setColor(COLOR_RED);
             hw.playError();
             break;
+
+        // Bundle relay states
+        case ST_BUNDLE_MENU:
+            hw.setColor(COLOR_CYAN);
+            break;
+
+        case ST_BUNDLE_DEPLOYING:
+            hw.setBlink(COLOR_CYAN, COLOR_OFF, 150);
+            break;
+
+        case ST_BUNDLE_SUCCESS:
+            hw.setColor(COLOR_GREEN);
+            hw.playSuccess();
+            break;
+
+        case ST_BUNDLE_ERROR:
+            hw.setColor(COLOR_RED);
+            hw.playError();
+            break;
     }
 }
 
@@ -211,8 +235,21 @@ void handleDeployResults() {
             }
             break;
 
+        // Bundle deploy results handled separately via getBundleState()
         default:
             break;
+    }
+}
+
+void handleBundleDeployResults() {
+    auto bs = deploy.getBundleState();
+    if (state == ST_BUNDLE_DEPLOYING) {
+        if (bs == DeploymentModule::BUNDLE_DONE) {
+            enterState(ST_BUNDLE_SUCCESS);
+        } else if (bs == DeploymentModule::BUNDLE_FAILED) {
+            setStatusMessage("Deploy Failed", deploy.getBundleError());
+            enterState(ST_BUNDLE_ERROR);
+        }
     }
 }
 
@@ -305,6 +342,28 @@ void renderUi() {
                 errorReturnState == ST_CHECK_ENV ? "[Back] Retry Detect" : "[Back] Retry"
             );
             break;
+
+        // Bundle relay states
+        case ST_BUNDLE_MENU: {
+            char sizeInfo[24];
+            snprintf(sizeInfo, sizeof(sizeInfo), "Size: %u KB", deploy.getBundleTotalSize() / 1024);
+            display.showLines("Bundle Ready", sizeInfo, "Press OK to deploy", "[Back] Menu", false);
+            break;
+        }
+
+        case ST_BUNDLE_DEPLOYING: {
+            snprintf(title, sizeof(title), "Deploy %c", spinnerChars[spinner]);
+            display.showProgress(title, "Writing to target...", deploy.getBundleDeployProgress());
+            break;
+        }
+
+        case ST_BUNDLE_SUCCESS:
+            display.showSuccess("Bundle deployed");
+            break;
+
+        case ST_BUNDLE_ERROR:
+            display.showError("Deploy Failed", statusDetail, "[Back] Return");
+            break;
     }
 
     uiDirty = false;
@@ -324,6 +383,11 @@ void handleButtons(bool ok, bool next, bool back) {
                 } else {
                     enterState(ST_BACKUP);
                 }
+            }
+
+            // Long press Back to access bundle menu if bundle available
+            if (back && deploy.hasBundle()) {
+                enterState(ST_BUNDLE_MENU);
             }
             break;
 
@@ -361,6 +425,33 @@ void handleButtons(bool ok, bool next, bool back) {
             }
             break;
 
+        // Bundle relay button handling
+        case ST_BUNDLE_MENU:
+            if (ok) {
+                deploy.startDeploy();
+                enterState(ST_BUNDLE_DEPLOYING);
+            } else if (back) {
+                enterState(ST_MENU_SELECT);
+            }
+            break;
+
+        case ST_BUNDLE_DEPLOYING:
+            // No buttons allowed during deploy
+            break;
+
+        case ST_BUNDLE_SUCCESS:
+            if (ok || back) {
+                deploy.clearBundle();
+                enterState(ST_MENU_SELECT);
+            }
+            break;
+
+        case ST_BUNDLE_ERROR:
+            if (ok || back) {
+                enterState(ST_MENU_SELECT);
+            }
+            break;
+
         default:
             break;
     }
@@ -378,7 +469,9 @@ void setup() {
 void loop() {
     hw.update();
     deploy.update();
+    deploy.updateBundle();   // Process console serial for bundle commands
     handleDeployResults();
+    handleBundleDeployResults();
     handleStateEntry();
 
     if (state == ST_BOOT && millis() - stateEnteredAt >= BOOT_SPLASH_MS) {
