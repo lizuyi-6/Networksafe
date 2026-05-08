@@ -245,7 +245,7 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     configCacheTtlMs: 30000
   },
   detectionPipeline: {
-    ruleFirstEnabled: false,
+    ruleFirstEnabled: true,
     aiEscalationMode: 'high_risk_allowed_only',
     enableHttpApi: true,
     enablePacketInterceptor: true,

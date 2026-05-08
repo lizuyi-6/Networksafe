@@ -186,7 +186,8 @@ function resolveNormalizedBody(req: Request, headers: Record<string, string>, ra
 export async function apiTrafficShadowMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   fastpathTrafficShadowService.submitFromRequest(req);
 
-  if (req.method === 'OPTIONS' || req.path === '/health' || req.path === '/api/health') {
+  const authPaths = ['/auth/login', '/auth/me', '/auth/refresh', '/auth/logout', '/auth/register'];
+  if (req.method === 'OPTIONS' || req.path === '/health' || req.path === '/api/health' || authPaths.some(p => req.path.startsWith(p))) {
     next();
     return;
   }
