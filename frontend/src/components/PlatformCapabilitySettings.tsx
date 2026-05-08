@@ -148,6 +148,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                 iconTone="primary"
                 headerAction={(
                     <button
+                        data-testid="platform-settings-save"
                         onClick={() => void handleSave()}
                         disabled={saving}
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
@@ -578,6 +579,7 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                 iconTone="neutral"
                 headerAction={(
                     <button
+                        data-testid="platform-settings-add-notification-channel"
                         onClick={() => updateConfig((current) => ({
                             ...current,
                             notifications: { ...current.notifications, channels: [...current.notifications.channels, makeChannel(t)] }

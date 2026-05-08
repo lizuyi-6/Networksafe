@@ -23,9 +23,23 @@ import { TraceAnalysisAgent } from './agents/trace-analysis.agent';
 import { RootCauseAgent } from './agents/root-cause.agent';
 import { SolutionAgent } from './agents/solution.agent';
 
+type InvestigationStatus = 'in_progress' | 'completed' | 'failed' | 'cancelled';
+
+interface InvestigationState {
+  investigationId: string;
+  context: InvestigationContext;
+  status: InvestigationStatus;
+  startedAt: Date;
+  completedAt?: Date;
+  cancelledAt?: Date;
+  error?: string;
+  result?: InvestigationResult;
+}
+
 export class InvestigationCoordinator extends EventEmitter {
   private agents: Map<string, any>;
   private activeInvestigations: Map<string, InvestigationContext>;
+  private investigationStates: Map<string, InvestigationState>;
   private taskQueue: AgentTask[];
   private completedTasks: Map<string, AgentTask>;
   private messageBus: MessageBus;
@@ -34,6 +48,7 @@ export class InvestigationCoordinator extends EventEmitter {
     super();
     this.agents = new Map();
     this.activeInvestigations = new Map();
+    this.investigationStates = new Map();
     this.taskQueue = [];
     this.completedTasks = new Map();
     this.messageBus = messageBus || new MessageBus();
@@ -80,19 +95,52 @@ export class InvestigationCoordinator extends EventEmitter {
     context.bugReport = bugReport;
 
     this.activeInvestigations.set(investigationId, context);
+    this.investigationStates.set(investigationId, {
+      investigationId,
+      context,
+      status: 'in_progress',
+      startedAt: new Date()
+    });
 
     console.log(`[InvestigationCoordinator] Starting investigation ${investigationId} for bug ${bugReport.id}`);
     this.emit('investigation:started', { investigationId, bugReport });
 
-    // Execute investigation workflow
+    setImmediate(() => {
+      void this.runInvestigation(investigationId, context);
+    });
+
+    return investigationId;
+  }
+
+  private async runInvestigation(investigationId: string, context: InvestigationContext): Promise<void> {
     try {
       const result = await this.executeInvestigationWorkflow(investigationId, context);
+      const state = this.investigationStates.get(investigationId);
+      if (!state || state.status === 'cancelled') {
+        return;
+      }
+
+      state.status = 'completed';
+      state.result = result;
+      state.completedAt = new Date();
+      this.activeInvestigations.delete(investigationId);
+
       this.emit('investigation:completed', { investigationId, result });
-      return investigationId;
     } catch (error) {
+      const state = this.investigationStates.get(investigationId);
+      if (state?.status === 'cancelled') {
+        return;
+      }
+
+      if (state) {
+        state.status = 'failed';
+        state.error = error instanceof Error ? error.message : String(error);
+        state.completedAt = new Date();
+      }
+      this.activeInvestigations.delete(investigationId);
+
       console.error(`[InvestigationCoordinator] Investigation ${investigationId} failed:`, error);
       this.emit('investigation:failed', { investigationId, error });
-      throw error;
     }
   }
 
@@ -117,6 +165,10 @@ export class InvestigationCoordinator extends EventEmitter {
 
     // Execute workflow stages
     for (const agentType of workflow) {
+      if (this.isInvestigationCancelled(investigationId)) {
+        break;
+      }
+
       const agent = this.agents.get(agentType);
       if (!agent) {
         console.warn(`[InvestigationCoordinator] Agent ${agentType} not found, skipping`);
@@ -129,6 +181,10 @@ export class InvestigationCoordinator extends EventEmitter {
       try {
         const task = await this.createTask(investigationId, agentType, context);
         const result = await this.executeTask(task);
+
+        if (result.status === 'cancelled' || this.isInvestigationCancelled(investigationId)) {
+          break;
+        }
 
         if (result.output) {
           // Accumulate findings from each stage
@@ -181,6 +237,14 @@ export class InvestigationCoordinator extends EventEmitter {
    * Execute a task on an agent
    */
   private async executeTask(task: AgentTask): Promise<AgentTask> {
+    const investigationId = task.input?.investigationId;
+    if (this.isInvestigationCancelled(investigationId)) {
+      task.status = 'cancelled';
+      task.completedAt = new Date();
+      this.completedTasks.set(task.taskId, task);
+      return task;
+    }
+
     task.status = 'in_progress';
     task.startedAt = new Date();
 
@@ -191,6 +255,15 @@ export class InvestigationCoordinator extends EventEmitter {
 
     try {
       const result = await agent.analyze(task.input.context);
+
+      if (this.isInvestigationCancelled(investigationId)) {
+        task.status = 'cancelled';
+        task.completedAt = new Date();
+        task.duration = task.completedAt.getTime() - task.startedAt.getTime();
+        this.completedTasks.set(task.taskId, task);
+        return task;
+      }
+
       task.output = result;
       task.status = 'completed';
       task.completedAt = new Date();
@@ -199,6 +272,14 @@ export class InvestigationCoordinator extends EventEmitter {
       this.completedTasks.set(task.taskId, task);
       return task;
     } catch (error) {
+      if (this.isInvestigationCancelled(investigationId)) {
+        task.status = 'cancelled';
+        task.completedAt = new Date();
+        task.duration = task.startedAt ? task.completedAt.getTime() - task.startedAt.getTime() : 0;
+        this.completedTasks.set(task.taskId, task);
+        return task;
+      }
+
       task.status = 'failed';
       task.error = error instanceof Error ? error.message : String(error);
       task.completedAt = new Date();
@@ -321,12 +402,91 @@ export class InvestigationCoordinator extends EventEmitter {
     return evidence;
   }
 
+  private isInvestigationCancelled(investigationId: string | undefined): boolean {
+    if (!investigationId) {
+      return false;
+    }
+    return this.investigationStates.get(investigationId)?.status === 'cancelled';
+  }
+
+  public cancelInvestigation(investigationId: string): {
+    cancelled: boolean;
+    status: 'cancelled' | 'not_found' | 'already_completed' | 'already_failed' | 'already_cancelled';
+    investigationId: string;
+    message: string;
+  } {
+    const state = this.investigationStates.get(investigationId);
+    if (!state) {
+      return {
+        cancelled: false,
+        status: 'not_found',
+        investigationId,
+        message: 'backend.investigation_not_found'
+      };
+    }
+
+    if (state.status === 'completed') {
+      return {
+        cancelled: false,
+        status: 'already_completed',
+        investigationId,
+        message: 'backend.investigation_already_completed'
+      };
+    }
+
+    if (state.status === 'failed') {
+      return {
+        cancelled: false,
+        status: 'already_failed',
+        investigationId,
+        message: 'backend.investigation_already_failed'
+      };
+    }
+
+    if (state.status === 'cancelled') {
+      return {
+        cancelled: false,
+        status: 'already_cancelled',
+        investigationId,
+        message: 'backend.investigation_already_cancelled'
+      };
+    }
+
+    state.status = 'cancelled';
+    state.cancelledAt = new Date();
+    state.completedAt = state.cancelledAt;
+    this.activeInvestigations.delete(investigationId);
+
+    for (const task of this.taskQueue) {
+      if (
+        task.input?.investigationId === investigationId &&
+        (task.status === 'pending' || task.status === 'in_progress')
+      ) {
+        task.status = 'cancelled';
+        task.completedAt = state.cancelledAt;
+        if (task.startedAt) {
+          task.duration = state.cancelledAt.getTime() - task.startedAt.getTime();
+        }
+        this.completedTasks.set(task.taskId, task);
+      }
+    }
+
+    this.emit('investigation:cancelled', { investigationId });
+
+    return {
+      cancelled: true,
+      status: 'cancelled',
+      investigationId,
+      message: 'backend.investigation_cancelled'
+    };
+  }
+
   /**
    * Get investigation status
    */
   public getInvestigationStatus(investigationId: string): any {
-    const context = this.activeInvestigations.get(investigationId);
-    if (!context) {
+    const state = this.investigationStates.get(investigationId);
+    if (!state) {
       return { status: 'not_found' };
     }
 
@@ -335,10 +495,15 @@ export class InvestigationCoordinator extends EventEmitter {
 
     return {
       investigationId,
-      bugReport: context.bugReport,
+      bugReport: state.context.bugReport,
       tasksCompleted: tasks.length,
       tasksTotal: this.agents.size,
-      status: tasks.length === this.agents.size ? 'completed' : 'in_progress',
+      status: state.status,
+      startedAt: state.startedAt,
+      completedAt: state.completedAt,
+      cancelledAt: state.cancelledAt,
+      error: state.error,
+      result: state.result,
       tasks: tasks.map(t => ({
         type: t.assignedTo,
         status: t.status,

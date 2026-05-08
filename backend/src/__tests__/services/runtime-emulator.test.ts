@@ -13,7 +13,7 @@ jest.mock('../../utils/logger', () => ({
   default: { debug: jest.fn(), warn: jest.fn(), error: jest.fn(), info: jest.fn() },
 }));
 
-jest.mock('../../api/routes/ai-system.routes', () => ({
+jest.mock('../../services/traffic-stats.service', () => ({
   getTrafficStats: jest.fn().mockReturnValue({
     packetsProcessed: 0,
     packetsInspected: 0,
@@ -25,7 +25,7 @@ jest.mock('../../api/routes/ai-system.routes', () => ({
   }),
 }));
 
-jest.mock('../../api/routes/devices.routes', () => ({
+jest.mock('../../services/device-registry.service', () => ({
   addDeviceEvent: jest.fn(),
   getDeviceList: jest.fn().mockReturnValue([]),
   registerDevice: jest.fn(),
@@ -60,8 +60,8 @@ jest.mock('../../services/security-operations.service', () => ({
 
 import { jitter, clamp, runtimeEmulatorService } from '../../services/runtime-emulator.service';
 import { isRuntimeEmulatorEnabled } from '../../config/platform-runtime';
-import * as devicesRoutes from '../../api/routes/devices.routes';
-import * as aiSystemRoutes from '../../api/routes/ai-system.routes';
+import * as devicesRoutes from '../../services/device-registry.service';
+import * as trafficStatsService from '../../services/traffic-stats.service';
 import { securityOperationsService } from '../../services/security-operations.service';
 
 // Track the commandHandler captured from upsertSyntheticAgent
@@ -588,7 +588,7 @@ describe('runtimeEmulatorService', () => {
 
       runtimeEmulatorService.start(mockGateway);
 
-      const stats = (aiSystemRoutes.getTrafficStats as jest.Mock).mock.results[0].value;
+      const stats = (trafficStatsService.getTrafficStats as jest.Mock).mock.results[0].value;
       // stats is a mutable object that tickTraffic modifies in place
       expect(stats.packetsProcessed).toBeGreaterThan(0);
       expect(stats.packetsInspected).toBeGreaterThan(0);
@@ -646,7 +646,7 @@ describe('runtimeEmulatorService', () => {
 
       runtimeEmulatorService.start(mockGateway);
 
-      const stats = (aiSystemRoutes.getTrafficStats as jest.Mock).mock.results[0].value;
+      const stats = (trafficStatsService.getTrafficStats as jest.Mock).mock.results[0].value;
       // Should have 4 synthetic flows added
       const syntheticFlows = stats.activeFlows.filter((f: any) => f.synthetic);
       expect(syntheticFlows.length).toBe(4);
@@ -671,7 +671,7 @@ describe('runtimeEmulatorService', () => {
 
       runtimeEmulatorService.start(mockGateway);
 
-      const stats = (aiSystemRoutes.getTrafficStats as jest.Mock).mock.results[0].value;
+      const stats = (trafficStatsService.getTrafficStats as jest.Mock).mock.results[0].value;
       // The 'security-signal' flow (syn-flow-agent-hk-watch) is always anomalous
       const threats = stats.threats;
       expect(threats.size).toBeGreaterThanOrEqual(1);
@@ -682,7 +682,7 @@ describe('runtimeEmulatorService', () => {
 
       runtimeEmulatorService.start(mockGateway);
 
-      const stats = (aiSystemRoutes.getTrafficStats as jest.Mock).mock.results[0].value;
+      const stats = (trafficStatsService.getTrafficStats as jest.Mock).mock.results[0].value;
       // At least one flow is always anomalous (security-signal), so some should be blocked
       expect(stats.packetsBlocked).toBeGreaterThan(0);
       expect(stats.packetsAllowed).toBeGreaterThan(0);

@@ -19,6 +19,7 @@ export interface RateLimitMiddlewareOptions {
   windowMs?: number;
   skipSuccessfulRequests?: boolean;
   skipFailedRequests?: boolean;
+  namespace?: string;
   keyGenerator?: (req: Request) => string;
   handler?: (req: Request, res: Response) => void;
 }
@@ -41,15 +42,20 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
   const {
     maxRequests = 100,
     windowMs = 60000,
+    namespace,
     keyGenerator,
     handler = defaultHandler,
   } = options;
+  const limiterNamespace = namespace ? sanitizeNamespace(namespace) : undefined;
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const identifier = keyGenerator
+      const baseIdentifier = keyGenerator
         ? keyGenerator(req)
         : getDefaultKey(req);
+      const identifier = limiterNamespace
+        ? `${limiterNamespace}:${baseIdentifier}`
+        : baseIdentifier;
       const ip = getClientIP(req);
       const sessionId = String((req as any).sessionID || req.headers['x-session-id'] || '');
       const forwardedFor = String(req.headers['x-forwarded-for'] || '').trim();
@@ -61,6 +67,7 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
         const engineResult = await apiRateLimitEngineService.check({
           identifier,
           ip,
+          bucketScope: limiterNamespace,
           endpoint,
           maxRequests,
           windowMs,
@@ -124,6 +131,7 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
         identifier,
         ip,
         endpoint,
+        bucketScope: limiterNamespace,
         config: {
           maxRequests,
           windowMs,
@@ -220,13 +228,23 @@ function isRapidIpRotation(reason?: string): boolean {
   return String(reason || '').toLowerCase().includes('rapid ip rotation');
 }
 
+function parsePositiveIntEnv(name: string, fallback: number): number {
+  const parsed = Number.parseInt(String(process.env[name] || ''), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function sanitizeNamespace(namespace: string): string {
+  return namespace.replace(/[^a-zA-Z0-9_.-]/g, '_') || 'default';
+}
+
 /**
  * Pre-configured rate limiters for different use cases
  */
 
 // Strict rate limiter for authentication endpoints
 export const authRateLimit = rateLimit({
-  maxRequests: 60, // 60 requests per minute - accommodates page refreshes, token refreshes, and rapid UI interactions without triggering lockout
+  namespace: 'auth',
+  maxRequests: parsePositiveIntEnv('AUTH_RATE_LIMIT_MAX_REQUESTS', 120),
   windowMs: 60000,
   handler: (req, res) => {
     res.status(429).json({
@@ -239,18 +257,21 @@ export const authRateLimit = rateLimit({
 
 // Standard rate limiter for general API endpoints
 export const apiRateLimit = rateLimit({
-  maxRequests: 100,
+  namespace: 'api',
+  maxRequests: parsePositiveIntEnv('API_RATE_LIMIT_MAX_REQUESTS', 600),
   windowMs: 60000,
 });
 
 // Lenient rate limiter for less critical endpoints
 export const lenientRateLimit = rateLimit({
+  namespace: 'lenient',
   maxRequests: 300,
   windowMs: 60000,
 });
 
 // Strict rate limiter for admin operations
 export const adminRateLimit = rateLimit({
+  namespace: 'admin',
   maxRequests: 20,
   windowMs: 60000,
   handler: (req, res) => {
@@ -264,6 +285,7 @@ export const adminRateLimit = rateLimit({
 
 // WebSocket connection rate limit
 export const wsRateLimit = rateLimit({
+  namespace: 'ws',
   maxRequests: 10,
   windowMs: 60000,
   handler: (req, res) => {

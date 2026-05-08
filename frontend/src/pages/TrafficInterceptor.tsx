@@ -94,6 +94,7 @@ export default function TrafficInterceptor() {
                 <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-2 shadow-sm">
                     <label className="flex cursor-pointer items-center gap-2 px-3 text-sm font-medium text-foreground">
                         <input
+                            data-testid="traffic-auto-refresh"
                             type="checkbox"
                             checked={autoRefresh}
                             onChange={(e) => setAutoRefresh(e.target.checked)}
@@ -102,6 +103,7 @@ export default function TrafficInterceptor() {
                         {t('trafficInterceptor.autoRefresh')}
                     </label>
                     <button
+                        data-testid="traffic-refresh"
                         onClick={loadData}
                         className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                     >

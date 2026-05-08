@@ -8,7 +8,8 @@ import request from 'supertest';
 import express from 'express';
 import agentsRouter, { setAgentGateway } from '../../api/routes/agents.routes';
 import { authenticate, requireRole } from '../../middleware/auth.middleware';
-import { getAlerts } from '../../api/routes/alerts.routes';
+import { getAlerts } from '../../services/alert-state.service';
+import { commandDispatcherService } from '../../services/command-dispatcher.service';
 
 // Mock dependencies
 jest.mock('../../middleware/auth.middleware', () => ({
@@ -25,11 +26,43 @@ jest.mock('../../middleware/auth.middleware', () => ({
   AuthenticatedRequest: jest.fn()
 }));
 
-jest.mock('../../api/routes/alerts.routes', () => ({
+jest.mock('../../services/alert-state.service', () => ({
   getAlerts: jest.fn(() => [
     { id: '1', type: 'security', title: 'SQL Injection', severity: 'critical', source: '192.168.1.1', timestamp: new Date().toISOString() },
     { id: '2', type: 'security', title: 'XSS Attempt', severity: 'high', source: '192.168.1.2', timestamp: new Date().toISOString() }
   ])
+}));
+
+jest.mock('../../services/security-operations.service', () => ({
+  securityOperationsService: {
+    upsertAsset: jest.fn().mockReturnValue({ assetId: 'agent-asset-1' }),
+    syncSignalFinding: jest.fn(),
+    getOperationalContextForExternalRefs: jest.fn().mockReturnValue({
+      alerts: [],
+      findings: [],
+      actions: [],
+      scanRuns: []
+    }),
+    recordActionRun: jest.fn()
+  }
+}));
+
+jest.mock('../../services/scanner-task.service', () => ({
+  scannerTaskService: {
+    createTask: jest.fn().mockResolvedValue({ id: 'task-001' })
+  }
+}));
+
+jest.mock('../../services/command-dispatcher.service', () => ({
+  commandDispatcherService: {
+    setAgentGateway: jest.fn(),
+    dispatchAgentCommand: jest.fn().mockResolvedValue({
+      success: true,
+      actionId: 'action-001',
+      status: 'queued',
+      message: 'backend.command_dispatched'
+    })
+  }
 }));
 
 jest.mock('../../utils/logger', () => ({
@@ -178,6 +211,13 @@ describe('Agents Routes', () => {
     });
 
     it('should return 404 for non-existent agent', async () => {
+      (commandDispatcherService.dispatchAgentCommand as jest.Mock).mockResolvedValueOnce({
+        success: false,
+        actionId: 'action-missing',
+        status: 'failed',
+        message: 'backend.agent_not_found_or_offline'
+      });
+
       const response = await request(app)
         .post('/api/agents/non-existent/block')
         .send({ ip: '192.168.1.100' });

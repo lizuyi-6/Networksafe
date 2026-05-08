@@ -20,7 +20,7 @@ export interface InvestigationRecord {
   context: InvestigationContext;
   result?: InvestigationResult;
   createdAt: Date;
-  status: 'in_progress' | 'completed' | 'failed';
+  status: 'in_progress' | 'completed' | 'failed' | 'cancelled';
 }
 
 type RawRow = Record<string, unknown>;
@@ -177,7 +177,7 @@ export class InvestigationService {
    */
   public async updateInvestigationStatus(
     investigationId: string,
-    status: 'in_progress' | 'completed' | 'failed'
+    status: 'in_progress' | 'completed' | 'failed' | 'cancelled'
   ): Promise<void> {
     await this.ensureInitialized();
     const db = this.getDb();
@@ -213,8 +213,8 @@ export class InvestigationService {
     };
   }
 
-  private parseStatus(status: unknown): 'in_progress' | 'completed' | 'failed' {
-    if (status === 'in_progress' || status === 'completed' || status === 'failed') {
+  private parseStatus(status: unknown): 'in_progress' | 'completed' | 'failed' | 'cancelled' {
+    if (status === 'in_progress' || status === 'completed' || status === 'failed' || status === 'cancelled') {
       return status;
     }
     return 'in_progress';

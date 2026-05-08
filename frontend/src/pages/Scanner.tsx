@@ -333,6 +333,7 @@ const Scanner = () => {
                 <div className="flex gap-2">
                     {isRunning ? (
                         <button
+                            data-testid="scanner-cancel-task"
                             onClick={stopScan}
                             className="flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-500"
                         >
@@ -341,6 +342,7 @@ const Scanner = () => {
                         </button>
                     ) : (
                         <button
+                            data-testid="scanner-start-task"
                             onClick={startScan}
                             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                         >
@@ -356,7 +358,7 @@ const Scanner = () => {
                 <ConsoleStatCard icon={History} label={t('scanner.current_task') || 'Current Task'} value={taskId || '-'} hint={t('scanner.current_task_hint')} tone="neutral" />
                 <ConsoleStatCard icon={Activity} label={t('scanner.task_status') || 'Task Status'} value={`${t(STATUS_LABELS_KEYS[status]) || status} / ${t(PHASE_LABELS_KEYS[phase]) || phase}`} hint={t('scanner.task_status_hint')} tone="primary" />
                 <ConsoleStatCard icon={CheckCircle} label={t('scanner.progress') || 'Progress'} value={`${progress}%`} hint={t('scanner.progress_hint')} tone="warning" />
-                <ConsoleStatCard icon={AlertTriangle} label={t('scanner.findings_total')} value={summary.total} hint={`Critical ${summary.critical} · High ${summary.high} · Medium ${summary.medium} · Low ${summary.low}`} tone="danger" />
+                <ConsoleStatCard icon={AlertTriangle} label={t('scanner.findings_total')} value={summary.total} hint={`Critical ${summary.critical} / High ${summary.high} / Medium ${summary.medium} / Low ${summary.low}`} tone="danger" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
@@ -366,6 +368,7 @@ const Scanner = () => {
                             <div>
                                 <label className="text-xs text-muted-foreground">{t('scanner.target')}</label>
                                 <textarea
+                                    data-testid="scanner-targets"
                                     value={urls}
                                     onChange={(event) => setUrls(event.target.value)}
                                     rows={6}
@@ -376,15 +379,15 @@ const Scanner = () => {
                             <div className="space-y-2">
                                 <div className="text-xs text-muted-foreground">{t('scanner.local_scope')}</div>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
-                                    <input type="checkbox" checked={includeSystem} onChange={(event) => setIncludeSystem(event.target.checked)} />
+                                    <input data-testid="scanner-include-system" type="checkbox" checked={includeSystem} onChange={(event) => setIncludeSystem(event.target.checked)} />
                                     {t('scanner.baseline')}
                                 </label>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
-                                    <input type="checkbox" checked={includeWeb} onChange={(event) => setIncludeWeb(event.target.checked)} />
+                                    <input data-testid="scanner-include-web" type="checkbox" checked={includeWeb} onChange={(event) => setIncludeWeb(event.target.checked)} />
                                     {t('scanner.web_fingerprint')}
                                 </label>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
-                                    <input type="checkbox" checked={includePorts} onChange={(event) => setIncludePorts(event.target.checked)} />
+                                    <input data-testid="scanner-include-ports" type="checkbox" checked={includePorts} onChange={(event) => setIncludePorts(event.target.checked)} />
                                     {t('scanner.port_scan')}
                                 </label>
                             </div>
@@ -398,7 +401,7 @@ const Scanner = () => {
                             {history.length === 0 && <ConsoleEmptyState title={t('scanner.no_tasks')} description={t('scanner.no_tasks_desc')} />}
                             {history.map((item) => (
                                 <div key={item.id} className="rounded-lg border border-border bg-muted/15 p-3 transition-colors hover:border-border/80 hover:bg-muted/20">
-                                    <button onClick={() => void loadTask(item.id)} className="w-full text-left">
+                                    <button data-testid={`scanner-history-${item.id}`} onClick={() => void loadTask(item.id)} className="w-full text-left">
                                         <div className="truncate font-mono text-xs text-foreground">{item.id}</div>
                                         <div className="mt-1 text-xs text-muted-foreground">
                                             {t(STATUS_LABELS_KEYS[item.status]) || item.status} / {t(PHASE_LABELS_KEYS[item.phase]) || item.phase} / {item.progress}%
@@ -425,6 +428,7 @@ const Scanner = () => {
                             {assetGroups.map((group) => (
                                 <button
                                     key={`${group.target}-${group.assetId || 'na'}`}
+                                    data-testid={`scanner-asset-${group.assetId || group.target}`}
                                     onClick={() => setSelectedFindingId(group.findings[0]?.findingId || null)}
                                     className="w-full rounded-lg border border-border bg-muted/15 p-3 text-left transition-colors hover:border-border/80"
                                 >
@@ -450,6 +454,7 @@ const Scanner = () => {
                             {findings.map((finding) => (
                                 <button
                                     key={finding.findingId}
+                                    data-testid={`scanner-finding-${finding.findingId}`}
                                     onClick={() => setSelectedFindingId(finding.findingId)}
                                     className={clsx(
                                         'w-full rounded-lg border p-3 text-left transition-colors',
@@ -480,6 +485,7 @@ const Scanner = () => {
                         iconTone="primary"
                         headerAction={
                             <button
+                                data-testid="scanner-create-action"
                                 onClick={createAction}
                                 disabled={!selectedFinding}
                                 className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-50"

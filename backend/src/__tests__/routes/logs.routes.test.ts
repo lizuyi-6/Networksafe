@@ -1,6 +1,7 @@
 import express from 'express';
 import request from 'supertest';
-import logsRouter, { addLog } from '../../api/routes/logs.routes';
+import logsRouter from '../../api/routes/logs.routes';
+import { addLog } from '../../services/log-state.service';
 
 jest.mock('../../middleware/auth.middleware', () => ({
   authenticate: jest.fn((_req: any, _res: any, next: any) => next())
@@ -11,8 +12,11 @@ jest.mock('../../utils/logger', () => ({
   default: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() }
 }));
 
-jest.mock('../../api/routes/ai-system.routes', () => ({
+jest.mock('../../services/traffic-stats.service', () => ({
   getTrafficStats: jest.fn().mockReturnValue({ activeFlows: [] }),
+}));
+
+jest.mock('../../services/agent-system.service', () => ({
   getAgentSystem: jest.fn().mockReturnValue(null),
   getAgentGateway: jest.fn().mockReturnValue(null),
 }));
@@ -57,7 +61,7 @@ describe('GET /', () => {
   });
 
   it('getTrafficStats is called', async () => {
-    const { getTrafficStats } = require('../../api/routes/ai-system.routes');
+    const { getTrafficStats } = require('../../services/traffic-stats.service');
 
     await request(app).get('/');
 
@@ -65,7 +69,7 @@ describe('GET /', () => {
   });
 
   it('getAgentSystem is called', async () => {
-    const { getAgentSystem } = require('../../api/routes/ai-system.routes');
+    const { getAgentSystem } = require('../../services/agent-system.service');
 
     await request(app).get('/');
 
@@ -109,7 +113,7 @@ describe('GET /', () => {
   });
 
   it('returns empty array on error from getTrafficStats', async () => {
-    const { getTrafficStats } = require('../../api/routes/ai-system.routes');
+    const { getTrafficStats } = require('../../services/traffic-stats.service');
     getTrafficStats.mockImplementationOnce(() => {
       throw new Error('Simulated failure');
     });

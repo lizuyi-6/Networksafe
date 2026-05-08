@@ -339,6 +339,7 @@ export default function Dashboard() {
                     >
                         <div className="flex items-center justify-end gap-2 pb-4">
                             <button
+                                data-testid="dashboard-range-1h"
                                 onClick={() => setTimeRange('1h')}
                                 className={`rounded-lg border px-4 py-1.5 text-xs font-semibold ${
                                     timeRange === '1h'
@@ -349,6 +350,7 @@ export default function Dashboard() {
                                 {t('dashboard.time_1h')}
                             </button>
                             <button
+                                data-testid="dashboard-range-24h"
                                 onClick={() => setTimeRange('24h')}
                                 className={`rounded-lg border px-4 py-1.5 text-xs font-semibold ${
                                     timeRange === '24h'
@@ -407,6 +409,7 @@ export default function Dashboard() {
                                 <div className="relative">
                                     <Search className="absolute left-3 top-2 text-muted-foreground" size={16} />
                                     <input
+                                        data-testid="dashboard-log-filter"
                                         type="text"
                                         value={filterQuery}
                                         onChange={(event) => setFilterQuery(event.target.value)}
@@ -415,6 +418,8 @@ export default function Dashboard() {
                                     />
                                 </div>
                                 <button
+                                    data-testid="dashboard-log-pause"
+                                    aria-label={paused ? t('dashboard.resume_logs') || 'Resume logs' : t('dashboard.pause_logs') || 'Pause logs'}
                                     onClick={() => setPaused((current) => !current)}
                                     className={`rounded-lg border border-border bg-card p-2 transition-colors hover:bg-muted/30 ${
                                         paused ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground hover:text-foreground'
@@ -423,12 +428,15 @@ export default function Dashboard() {
                                     <Pause size={18} />
                                 </button>
                                 <button
+                                    data-testid="dashboard-export-json"
+                                    aria-label={t('dashboard.export_json') || 'Export dashboard JSON'}
                                     onClick={() => exportSnapshot('json')}
                                     className="rounded-lg border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
                                 >
                                     <Download size={18} />
                                 </button>
                                 <button
+                                    data-testid="dashboard-export-csv"
                                     onClick={() => exportSnapshot('csv')}
                                     className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
                                 >

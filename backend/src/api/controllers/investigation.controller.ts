@@ -208,10 +208,33 @@ export class InvestigationController {
     try {
       const { investigationId } = req.params;
 
-      // TODO: Implement cancellation logic in coordinator
-      res.status(501).json({
-        success: false,
-        error: 'backend.investigation_cancellation_not_yet_implemented'
+      const result = this.investigationTeam.cancelInvestigation(investigationId);
+
+      if (!result.cancelled) {
+        const statusCode = result.status === 'not_found' ? 404 : 409;
+        res.status(statusCode).json({
+          success: false,
+          error: result.message,
+          data: {
+            investigationId,
+            status: result.status
+          }
+        });
+        return;
+      }
+
+      try {
+        await this.investigationService.updateInvestigationStatus(investigationId, 'cancelled');
+      } catch (persistError) {
+        console.warn('[InvestigationController] Cancelled investigation but failed to persist status:', persistError);
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          investigationId,
+          status: 'cancelled'
+        }
       });
     } catch (error) {
       console.error('[InvestigationController] Failed to cancel investigation:', error);

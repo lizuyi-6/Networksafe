@@ -95,18 +95,20 @@ export class EnhancedRateLimiter {
     identifier: string;
     ip: string;
     endpoint?: string;
+    bucketScope?: string;
     config?: Partial<RateLimitConfig>;
   }): Promise<RateLimitResult> {
-    const { identifier, ip, endpoint, config } = params;
+    const { identifier, ip, endpoint, bucketScope, config } = params;
     const finalConfig = { ...this.DEFAULT_LIMITS, ...config };
 
     const now = Date.now();
     const resetTime = now + finalConfig.windowMs;
+    const scopedIp = bucketScope ? `${bucketScope}:${ip}` : ip;
 
     const userKey = `ratelimit:user:${identifier}`;
-    const ipKey = `ratelimit:ip:${ip}`;
+    const ipKey = `ratelimit:ip:${scopedIp}`;
     const endpointKey = endpoint ? `ratelimit:endpoint:${endpoint}:${identifier}` : null;
-    const combinedKey = `ratelimit:combined:${identifier}:${ip}`;
+    const combinedKey = `ratelimit:combined:${identifier}:${scopedIp}`;
 
     try {
       const results = await Promise.all([

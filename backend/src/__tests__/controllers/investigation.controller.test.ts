@@ -17,7 +17,8 @@ const mockTeam = {
   }),
   getInvestigationStatus: jest.fn(),
   getActiveInvestigations: jest.fn(() => []),
-  getAgentCapabilities: jest.fn(() => [])
+  getAgentCapabilities: jest.fn(() => []),
+  cancelInvestigation: jest.fn()
 };
 
 // Mock dependencies
@@ -40,6 +41,7 @@ jest.mock('../../services/investigation.service', () => ({
   InvestigationService: jest.fn().mockImplementation(() => ({
     saveInvestigation: jest.fn().mockResolvedValue(undefined),
     getInvestigation: jest.fn(),
+    updateInvestigationStatus: jest.fn().mockResolvedValue(undefined),
     getInvestigationHistory: jest.fn().mockResolvedValue({
       investigations: [],
       total: 0
@@ -74,8 +76,15 @@ describe('InvestigationController', () => {
     mockTeam.getInvestigationStatus.mockReset();
     mockTeam.getActiveInvestigations.mockReset();
     mockTeam.getAgentCapabilities.mockReset();
+    mockTeam.cancelInvestigation.mockReset();
     mockTeam.getActiveInvestigations.mockReturnValue([]);
     mockTeam.getAgentCapabilities.mockReturnValue([]);
+    mockTeam.cancelInvestigation.mockReturnValue({
+      cancelled: true,
+      status: 'cancelled',
+      investigationId: 'inv-001',
+      message: 'backend.investigation_cancelled'
+    });
   });
 
   describe('startInvestigation', () => {
@@ -243,7 +252,7 @@ describe('InvestigationController', () => {
   });
 
   describe('cancelInvestigation', () => {
-    it('should return 501 not implemented', async () => {
+    it('should cancel an active investigation', async () => {
       mockRequest.params = { investigationId: 'inv-001' };
 
       await controller.cancelInvestigation(
@@ -252,7 +261,50 @@ describe('InvestigationController', () => {
         mockNext
       );
 
-      expect(mockStatus).toHaveBeenCalledWith(501);
+      expect(mockStatus).toHaveBeenCalledWith(200);
+      expect(mockJson).toHaveBeenCalledWith({
+        success: true,
+        data: {
+          investigationId: 'inv-001',
+          status: 'cancelled'
+        }
+      });
+    });
+
+    it('should return 404 when cancelling a missing investigation', async () => {
+      mockRequest.params = { investigationId: 'missing' };
+      mockTeam.cancelInvestigation.mockReturnValueOnce({
+        cancelled: false,
+        status: 'not_found',
+        investigationId: 'missing',
+        message: 'backend.investigation_not_found'
+      });
+
+      await controller.cancelInvestigation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+    });
+
+    it('should return 409 when investigation is already completed', async () => {
+      mockRequest.params = { investigationId: 'inv-001' };
+      mockTeam.cancelInvestigation.mockReturnValueOnce({
+        cancelled: false,
+        status: 'already_completed',
+        investigationId: 'inv-001',
+        message: 'backend.investigation_already_completed'
+      });
+
+      await controller.cancelInvestigation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(mockStatus).toHaveBeenCalledWith(409);
     });
   });
 

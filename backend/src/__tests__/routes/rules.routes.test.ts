@@ -30,7 +30,7 @@ jest.mock('../../services/detection-pipeline.service', () => ({
   }
 }));
 
-jest.mock('../../api/routes/ai-system.routes', () => ({
+jest.mock('../../services/agent-system.service', () => ({
   getAgentGateway: jest.fn()
 }));
 
@@ -42,7 +42,7 @@ jest.mock('../../security/audit-logger.service', () => ({
 }));
 
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
-import { getAgentGateway } from '../../api/routes/ai-system.routes';
+import { getAgentGateway } from '../../services/agent-system.service';
 
 function buildApp(): express.Express {
   const app = express();

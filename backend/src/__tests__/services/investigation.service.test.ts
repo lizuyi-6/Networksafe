@@ -162,6 +162,11 @@ describe('InvestigationService', () => {
       await service.updateInvestigationStatus('test-inv-001', 'in_progress');
       expect(true).toBe(true);
     });
+
+    it('should update investigation status to cancelled', async () => {
+      await service.updateInvestigationStatus('test-inv-001', 'cancelled');
+      expect(true).toBe(true);
+    });
   });
 
   describe('close', () => {

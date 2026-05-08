@@ -535,7 +535,13 @@ const Header = () => {
                 <div className="h-8 w-px bg-border"></div>
 
                 {/* Custom Switch (Auto Refresh) */}
-                <button type="button" onClick={toggleLiveMode} className="flex items-center gap-2 group cursor-pointer">
+                <button
+                    type="button"
+                    data-testid="live-mode-toggle"
+                    aria-pressed={liveModeEnabled}
+                    onClick={toggleLiveMode}
+                    className="flex items-center gap-2 group cursor-pointer"
+                >
                     <span className="text-xs font-medium group-hover:text-foreground transition-colors text-muted-foreground">{t('header.live')}</span>
                     <div className={`w-9 h-5 rounded-full border relative transition-colors ${liveModeEnabled ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border group-hover:border-primary/50'}`}>
                         <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-sm transition-all ${liveModeEnabled ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>

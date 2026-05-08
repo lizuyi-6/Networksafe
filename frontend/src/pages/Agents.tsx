@@ -105,7 +105,7 @@ const Agents = () => {
         <ConsolePage
             title={t('agents.page_title')}
             subtitle={t('agents.page_subtitle')}
-            actions={<button onClick={() => { fetchAgents(); fetchThreats(); }} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />{t('agents.refresh')}</button>}
+            actions={<button data-testid="agents-refresh" onClick={() => { fetchAgents(); fetchThreats(); }} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />{t('agents.refresh')}</button>}
         >
             {actionMessage && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-600 dark:text-emerald-300">{actionMessage}</motion.div>}
             {error && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</motion.div>}
@@ -161,8 +161,8 @@ const Agents = () => {
                                         </div>
 
                                         <div className="flex gap-2">
-                                            <button onClick={() => triggerScan(agent.agentId)} disabled={!agent.isOnline} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2 text-xs font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"><Scan size={14} />{t('agents.initiate_scan')}</button>
-                                            <Link to={`/agents/${agent.agentId}`} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-all hover:bg-muted/50 hover:border-primary/30">{t('agents.view_detail')}</Link>
+                                            <button data-testid={`agent-scan-${agent.agentId}`} onClick={() => triggerScan(agent.agentId)} disabled={!agent.isOnline} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2 text-xs font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"><Scan size={14} />{t('agents.initiate_scan')}</button>
+                                            <Link data-testid={`agent-detail-${agent.agentId}`} to={`/agents/${agent.agentId}`} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-all hover:bg-muted/50 hover:border-primary/30">{t('agents.view_detail')}</Link>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -194,8 +194,8 @@ const Agents = () => {
                                 </div>
                                 <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                                     <div>{event.message || '-'}</div>
-                                    <div>{t('agents.source_label')}：{event.source || '-'}</div>
-                                    <div>{t('agents.time_label')}：{new Date(event.timestamp).toLocaleString()}</div>
+                                    <div>{t('agents.source_label')}: {event.source || '-'}</div>
+                                    <div>{t('agents.time_label')}: {event.timestamp ? new Date(event.timestamp).toLocaleString() : '-'}</div>
                                 </div>
                             </motion.div>
                         )) : <ConsoleEmptyState title={t('agents.no_active_threats')} description={t('agents.no_threats_desc')} />}

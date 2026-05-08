@@ -8,6 +8,7 @@ import request from 'supertest';
 import express from 'express';
 import scannerRouter from '../../api/routes/scanner.routes';
 import { scannerTaskService } from '../../services/scanner-task.service';
+import { securityOperationsService } from '../../services/security-operations.service';
 import { authenticate, requireRole } from '../../middleware/auth.middleware';
 
 // Mock dependencies
@@ -47,6 +48,12 @@ jest.mock('../../services/scanner-task.service', () => ({
     getTaskResults: jest.fn(),
     getHistory: jest.fn(),
     cancelTask: jest.fn()
+  }
+}));
+
+jest.mock('../../services/security-operations.service', () => ({
+  securityOperationsService: {
+    createActionFromFindingView: jest.fn()
   }
 }));
 
@@ -298,10 +305,43 @@ describe('Scanner Routes', () => {
   });
 
   describe('POST /api/scanner/apply', () => {
-    it('should return 501 not implemented', async () => {
+    it('should require a finding id', async () => {
       const response = await request(app).post('/api/scanner/apply');
 
-      expect(response.status).toBe(501);
+      expect(response.status).toBe(400);
+      expect(response.body.code).toBe('FINDING_ID_REQUIRED');
+    });
+
+    it('should create a remediation action for a finding', async () => {
+      (securityOperationsService.createActionFromFindingView as jest.Mock).mockResolvedValueOnce({
+        actionId: 'action-001',
+        status: 'pending',
+        title: 'Remediate: Test Finding'
+      });
+
+      const response = await request(app)
+        .post('/api/scanner/apply')
+        .send({ findingId: 'finding-001' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.actionId).toBe('action-001');
+      expect(securityOperationsService.createActionFromFindingView).toHaveBeenCalledWith(
+        'tenant-001',
+        'finding-001',
+        'test@example.com'
+      );
+    });
+
+    it('should return 404 when finding does not exist', async () => {
+      (securityOperationsService.createActionFromFindingView as jest.Mock).mockResolvedValueOnce(null);
+
+      const response = await request(app)
+        .post('/api/scanner/apply')
+        .send({ findingId: 'missing-finding' });
+
+      expect(response.status).toBe(404);
+      expect(response.body.code).toBe('FINDING_NOT_FOUND');
     });
   });
 

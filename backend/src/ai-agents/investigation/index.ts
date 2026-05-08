@@ -40,22 +40,42 @@ export class BugInvestigationTeam {
     // Wait for investigation to complete
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        this.coordinator.cancelInvestigation(investigationId);
+        cleanup();
         reject(new Error('Investigation timeout'));
       }, 300000); // 5 minute timeout
 
-      this.coordinator.once('investigation:completed', (data) => {
+      const cleanup = () => {
+        clearTimeout(timeout);
+        this.coordinator.off('investigation:completed', onCompleted);
+        this.coordinator.off('investigation:failed', onFailed);
+        this.coordinator.off('investigation:cancelled', onCancelled);
+      };
+
+      const onCompleted = (data: any) => {
         if (data.investigationId === investigationId) {
-          clearTimeout(timeout);
+          cleanup();
           resolve(data.result);
         }
-      });
+      };
 
-      this.coordinator.once('investigation:failed', (data) => {
+      const onFailed = (data: any) => {
         if (data.investigationId === investigationId) {
-          clearTimeout(timeout);
+          cleanup();
           reject(data.error);
         }
-      });
+      };
+
+      const onCancelled = (data: any) => {
+        if (data.investigationId === investigationId) {
+          cleanup();
+          reject(new Error('Investigation cancelled'));
+        }
+      };
+
+      this.coordinator.on('investigation:completed', onCompleted);
+      this.coordinator.on('investigation:failed', onFailed);
+      this.coordinator.on('investigation:cancelled', onCancelled);
     });
   }
 
@@ -71,6 +91,10 @@ export class BugInvestigationTeam {
    */
   public getActiveInvestigations(): any[] {
     return this.coordinator.getActiveInvestigations();
+  }
+
+  public cancelInvestigation(investigationId: string): ReturnType<InvestigationCoordinator['cancelInvestigation']> {
+    return this.coordinator.cancelInvestigation(investigationId);
   }
 
   /**

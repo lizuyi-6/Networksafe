@@ -21,8 +21,8 @@ jest.mock('../../core/tenant/tenant-context', () => ({
   resolveDeviceTenantContext: jest.fn().mockReturnValue({ tenantId: 't1', platformId: 'p1' }),
 }));
 
-// Mock device routes
-jest.mock('../../api/routes/devices.routes', () => ({
+// Mock device registry
+jest.mock('../../services/device-registry.service', () => ({
   registerDevice: jest.fn().mockResolvedValue({}),
   updateDeviceStatus: jest.fn().mockResolvedValue({}),
   setDeviceOffline: jest.fn().mockResolvedValue({}),
@@ -110,7 +110,7 @@ jest.mock('socket.io', () => ({
 
 // Import after mocks
 import { DeviceGateway } from '../../websocket/device-gateway';
-import * as deviceRoutes from '../../api/routes/devices.routes';
+import * as deviceRoutes from '../../services/device-registry.service';
 import * as payloadValidator from '../../websocket/socket-payload-validator';
 import * as socketRateLimit from '../../services/socket-rate-limit.service';
 import * as auditLoggerMod from '../../security/audit-logger.service';

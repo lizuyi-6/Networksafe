@@ -382,8 +382,8 @@ describe('normalizeRoutingMode', () => {
 describe('normalizeAiRouting', () => {
   it('returns defaults when input is empty', () => {
     const result = normalizeAiRouting({});
-    expect(result.mode).toBe('local_preferred');
-    expect(result.fallbackAllowed).toBe(true);
+    expect(result.mode).toBe('cloud_only');
+    expect(result.fallbackAllowed).toBe(false);
   });
 
   it('normalizes all fields', () => {

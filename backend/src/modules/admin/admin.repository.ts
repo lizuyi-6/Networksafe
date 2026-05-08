@@ -31,6 +31,14 @@ function shouldWriteSqliteFallback(): boolean {
   return getDatabaseMode() === 'sqlite' || isSqliteFallbackEnabled();
 }
 
+function isMissingLoginHistoryTable(error: any): boolean {
+  const message = String(error?.message || error || '').toLowerCase();
+  return message.includes('login_history') && (
+    message.includes('does not exist') ||
+    message.includes('no such table')
+  );
+}
+
 export async function listAdminApiKeys(): Promise<AdminApiKeyRow[]> {
   if (postgresShadowStoreService.canServeReads()) {
     return await postgresShadowStoreService.queryAll<AdminApiKeyRow>(`
@@ -164,21 +172,28 @@ export async function updateAdminUserField(
 }
 
 export async function getLoginHistory(userId: string, limit: number = 50): Promise<any[]> {
-  if (postgresShadowStoreService.canServeReads()) {
-    return await postgresShadowStoreService.queryAll(`
+  try {
+    if (postgresShadowStoreService.canServeReads()) {
+      return await postgresShadowStoreService.queryAll(`
+        SELECT id, user_id, ip_address, user_agent, status, logout_at, created_at
+        FROM login_history
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT $2
+      `, [userId, limit]);
+    }
+
+    return getDatabase().prepare(`
       SELECT id, user_id, ip_address, user_agent, status, logout_at, created_at
       FROM login_history
-      WHERE user_id = $1
+      WHERE user_id = ?
       ORDER BY created_at DESC
-      LIMIT $2
-    `, [userId, limit]);
+      LIMIT ?
+    `).all(userId, limit);
+  } catch (error: any) {
+    if (isMissingLoginHistoryTable(error)) {
+      return [];
+    }
+    throw error;
   }
-
-  return getDatabase().prepare(`
-    SELECT id, user_id, ip_address, user_agent, status, logout_at, created_at
-    FROM login_history
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-    LIMIT ?
-  `).all(userId, limit);
 }

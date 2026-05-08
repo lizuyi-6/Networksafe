@@ -14,8 +14,12 @@ jest.mock('../../config/app-mode', () => ({
   isAttackSimulatorEnabled: jest.fn().mockReturnValue(false),
 }));
 
-jest.mock('../../api/routes/ai-system.routes', () => ({
+jest.mock('../../services/agent-system.service', () => ({
   getAgentGateway: jest.fn().mockReturnValue(null),
+  getAgentSystem: jest.fn().mockReturnValue(null),
+}));
+
+jest.mock('../../services/traffic-stats.service', () => ({
   getTrafficStats: jest.fn().mockReturnValue({
     activeFlows: [],
     packetsProcessed: 0,
@@ -25,7 +29,6 @@ jest.mock('../../api/routes/ai-system.routes', () => ({
     bytesProcessed: 0,
     threats: new Map(),
   }),
-  getAgentSystem: jest.fn().mockReturnValue(null),
 }));
 
 jest.mock('../../services/security-operations.service', () => ({
@@ -114,7 +117,8 @@ describe('attack.routes', () => {
 
       try {
         const { isAttackSimulatorEnabled } = require('../../config/app-mode');
-        const { getAgentSystem, getTrafficStats } = require('../../api/routes/ai-system.routes');
+        const { getAgentSystem } = require('../../services/agent-system.service');
+        const { getTrafficStats } = require('../../services/traffic-stats.service');
         isAttackSimulatorEnabled.mockReturnValue(true);
         getTrafficStats.mockReturnValue({
           activeFlows: [],
@@ -150,7 +154,8 @@ describe('attack.routes', () => {
 
       try {
         const { isAttackSimulatorEnabled } = require('../../config/app-mode');
-        const { getAgentSystem, getTrafficStats } = require('../../api/routes/ai-system.routes');
+        const { getAgentSystem } = require('../../services/agent-system.service');
+        const { getTrafficStats } = require('../../services/traffic-stats.service');
         isAttackSimulatorEnabled.mockReturnValue(true);
         getTrafficStats.mockReturnValue({
           activeFlows: [],
@@ -188,7 +193,8 @@ describe('attack.routes', () => {
 
       try {
         const { isAttackSimulatorEnabled } = require('../../config/app-mode');
-        const { getAgentSystem, getTrafficStats } = require('../../api/routes/ai-system.routes');
+        const { getAgentSystem } = require('../../services/agent-system.service');
+        const { getTrafficStats } = require('../../services/traffic-stats.service');
         isAttackSimulatorEnabled.mockReturnValue(true);
         getTrafficStats.mockReturnValue({
           activeFlows: [],

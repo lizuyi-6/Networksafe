@@ -167,6 +167,7 @@ return { allowed, remaining, reset_at_ms, block_reason, table.concat(risk_flags,
 export interface ApiRateLimitEngineCheckInput {
   identifier: string;
   ip: string;
+  bucketScope?: string;
   endpoint?: string;
   maxRequests: number;
   windowMs: number;
@@ -320,15 +321,16 @@ export class ApiRateLimitEngineService {
   }
 
   private buildKeys(input: ApiRateLimitEngineCheckInput): string[] {
+    const scopedIp = input.bucketScope ? `${input.bucketScope}:${input.ip || '__missing__'}` : input.ip || '__missing__';
     const endpointKey = input.endpoint
       ? buildRateLimitKey('endpoint', `${input.endpoint}:${input.identifier}`)
       : buildRateLimitKey('endpoint', '__disabled__');
 
     return [
       buildRateLimitKey('user', input.identifier),
-      buildRateLimitKey('ip', input.ip || '__missing__'),
+      buildRateLimitKey('ip', scopedIp),
       endpointKey,
-      buildRateLimitKey('combined', `${input.identifier}:${input.ip || '__missing__'}`),
+      buildRateLimitKey('combined', `${input.identifier}:${scopedIp}`),
       buildRateLimitKey('fingerprint', input.identifier),
       buildRateLimitKey('recent-ips', input.identifier)
     ];

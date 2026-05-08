@@ -1,5 +1,6 @@
 import { getDatabase } from '../../config/database';
 import { getRuntimeDescriptor } from '../../config/platform-runtime';
+import { getAgentGateway } from '../../services/agent-system.service';
 import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
 
 export interface PipelineHealthCheckResult {
@@ -31,11 +32,31 @@ function nowIso(): string {
 
 export class PipelineDiagnosticsService {
   checkWebSocketHealth(): PipelineHealthCheckResult {
+    const gateway = getAgentGateway();
+    const onlineAgents = this.getAgentConnectionCount();
+    const dashboardConnections = this.getDashboardConnectionCount();
+
+    if (!gateway) {
+      return {
+        status: 'degraded',
+        message: 'WebSocket gateway is not attached',
+        details: {
+          connections: 0,
+          agents: 0,
+          dashboards: 0,
+          uptime: process.uptime()
+        },
+        timestamp: nowIso()
+      };
+    }
+
     return {
       status: 'healthy',
       message: 'WebSocket gateway is running',
       details: {
-        connections: 0,
+        connections: onlineAgents + (dashboardConnections || 0),
+        agents: onlineAgents,
+        dashboards: dashboardConnections,
         uptime: process.uptime()
       },
       timestamp: nowIso()
@@ -100,7 +121,30 @@ export class PipelineDiagnosticsService {
   }
 
   getAgentConnectionCount(): number {
+    const gateway = getAgentGateway();
+    if (!gateway) {
+      return 0;
+    }
+
+    if (typeof gateway.getOnlineCount === 'function') {
+      return Number(gateway.getOnlineCount() || 0);
+    }
+
+    if (typeof gateway.getAgentList === 'function') {
+      const agents = gateway.getAgentList();
+      return Array.isArray(agents) ? agents.filter((agent) => agent.isOnline !== false).length : 0;
+    }
+
     return 0;
+  }
+
+  private getDashboardConnectionCount(): number | null {
+    const gateway = getAgentGateway();
+    if (!gateway || typeof gateway.getDashboardConnectionCount !== 'function') {
+      return null;
+    }
+
+    return Number(gateway.getDashboardConnectionCount() || 0);
   }
 
   checkAgentsHealth(): PipelineHealthCheckResult {
@@ -166,18 +210,43 @@ export class PipelineDiagnosticsService {
   }
 
   verifyDataPipeline(): PipelineVerification[] {
-    const verifications: PipelineVerification[] = [
-      {
+    const verifications: PipelineVerification[] = [];
+    const gateway = getAgentGateway();
+
+    if (!gateway) {
+      verifications.push({
         component: 'agent_to_gateway',
         status: 'skip',
-        message: 'Agent to Gateway verification not implemented'
-      },
-      {
+        message: 'Agent gateway is not attached to this process'
+      });
+      verifications.push({
         component: 'gateway_to_frontend',
         status: 'skip',
-        message: 'Gateway to Frontend verification not implemented'
-      }
-    ];
+        message: 'Agent gateway is not attached to this process'
+      });
+    } else {
+      const onlineAgents = this.getAgentConnectionCount();
+      verifications.push({
+        component: 'agent_to_gateway',
+        status: onlineAgents > 0 ? 'pass' : 'skip',
+        message: onlineAgents > 0
+          ? `Agent gateway has ${onlineAgents} online agent connection(s)`
+          : 'No online agents are available for live agent-to-gateway verification',
+        details: { onlineAgents }
+      });
+
+      const dashboardConnections = this.getDashboardConnectionCount();
+      verifications.push({
+        component: 'gateway_to_frontend',
+        status: dashboardConnections && dashboardConnections > 0 ? 'pass' : 'skip',
+        message: dashboardConnections == null
+          ? 'Dashboard connection count is unavailable from the gateway'
+          : dashboardConnections > 0
+            ? `Gateway has ${dashboardConnections} dashboard connection(s)`
+            : 'No dashboard clients are connected for gateway-to-frontend verification',
+        details: { dashboardConnections }
+      });
+    }
 
     try {
       const sqlite = getDatabase();

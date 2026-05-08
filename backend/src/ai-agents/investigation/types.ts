@@ -168,7 +168,7 @@ export interface AgentTask {
   assignedTo: string;
   taskType: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
   priority: 'critical' | 'high' | 'medium' | 'low';
   input: any;
   output?: any;

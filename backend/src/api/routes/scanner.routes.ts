@@ -475,14 +475,52 @@ router.post('/run', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-/**
- * Keep legacy endpoints but return explicit not supported for now
- */
-router.post('/apply', (_req: Request, res: Response) => {
-  return sendError(res, 501, {
-    code: 'SMART_FIX_REQUIRED',
-    message: 'backend.use_smart_fix_endpoints_for_remediation_actions'
-  });
+router.post('/apply', async (req: AuthenticatedRequest, res: Response) => {
+  const rawFindingId =
+    req.body?.findingId ||
+    req.body?.finding_id ||
+    req.body?.finding?.id ||
+    req.body?.id;
+  const findingId = typeof rawFindingId === 'string' ? rawFindingId.trim() : '';
+
+  if (!findingId) {
+    return sendError(res, 400, {
+      code: 'FINDING_ID_REQUIRED',
+      message: 'backend.finding_id_required'
+    });
+  }
+
+  try {
+    const action = await securityOperationsService.createActionFromFindingView(
+      tenantOf(req),
+      findingId,
+      req.user?.email || req.user?.userId || 'unknown'
+    );
+
+    if (!action) {
+      return sendError(res, 404, {
+        code: 'FINDING_NOT_FOUND',
+        message: 'backend.finding_not_found'
+      });
+    }
+
+    return sendSuccess(res, {
+      actionId: action.actionId,
+      status: action.status,
+      action
+    }, {
+      legacy: {
+        actionId: action.actionId,
+        status: action.status
+      }
+    });
+  } catch (error: any) {
+    logger.error('Failed to apply scan remediation', { error: error.message, findingId });
+    return sendError(res, 500, {
+      code: 'SCAN_REMEDIATION_APPLY_FAILED',
+      message: 'backend.failed_to_apply_scan_remediation'
+    });
+  }
 });
 
 router.get('/results/:id', async (req: AuthenticatedRequest, res: Response) => {

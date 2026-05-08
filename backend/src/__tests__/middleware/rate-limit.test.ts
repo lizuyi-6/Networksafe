@@ -263,6 +263,37 @@ describe('Rate Limit Middleware', () => {
         })
       );
     });
+
+    it('should isolate limiter namespaces so API traffic does not pollute auth buckets', async () => {
+      await apiRateLimit(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      await authRateLimit(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(enhancedRateLimiter.checkRateLimit).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          identifier: 'api:ip:127.0.0.1',
+          bucketScope: 'api',
+          config: expect.objectContaining({ maxRequests: 600 })
+        })
+      );
+      expect(enhancedRateLimiter.checkRateLimit).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          identifier: 'auth:ip:127.0.0.1',
+          bucketScope: 'auth',
+          config: expect.objectContaining({ maxRequests: 120 })
+        })
+      );
+    });
   });
 
   describe('authRateLimit', () => {

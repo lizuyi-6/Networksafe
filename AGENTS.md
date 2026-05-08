@@ -1,336 +1,174 @@
 ﻿# AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to OpenCode when working with code in this repository.
 
 ## Project Overview
 
-AetherGuard (formerly AetherGuard) - 智能服务器安全防御平台。基于 Agent 的分布式安全防御系统，采用"中心化控制 + 分布式执行"架构。
+AetherGuard — 智能服务器安全防御平台。Agent-based distributed security + physical hardware safety gate.
 
-**Core Components:**
-- **Control Plane**: Backend API + SQLite + Redis (pub/sub, caching)
-- **Distributed Agents**: Node.js processes on Linux servers (attack detection, firewall control)
-- **Frontend Dashboard**: React SPA for monitoring and management
-- **ESP32 Dongles**: Hardware deployment tools (optional)
+The core differentiator: **ESP32 hardware dongles act as an air-gapped physical confirmation gate**. Dangerous server operations (install/uninstall agents, wipe data, critical config changes) require a human to physically press buttons on the ESP32 device. The dongle communicates only via serial (UART), using an allow-list protocol (`AG:REQ:*` → `AG:BEGIN/*`, `AG:STEP/*`, `AG:OK/*`, `AG:ERR/*`). Even if the server is fully compromised, an attacker cannot execute destructive operations without physical presence.
+
+| Component | Stack |
+|-----------|-------|
+| Backend | Node.js/TypeScript, Express, Socket.IO, SQLite (sql.js / better-sqlite3), Postgres (shadow writes) |
+| Frontend | React 18, Vite, TailwindCSS, Recharts, Socket.IO Client, i18next |
+| Fastpath | Rust sidecar for high-throughput traffic processing |
+| E2E | Playwright |
+| Hardware | ESP32-WROOM-32 + OLED + 3-button + RGB + buzzer, over USB-TTL serial |
 
 ## Quick Start
 
 ```bash
-# Development with Docker Compose
+# Docker (all services)
 docker-compose up -d --build
-
-# Access points (Docker)
-# Frontend: http://localhost:8080
-# Backend API: http://localhost:3005
+# Frontend: http://localhost:8080  Backend: http://localhost:3005
 # Default credentials: admin / admin123
 
-# Local development (without Docker)
+# Local dev (without Docker)
 cd backend && npm install && npm run dev    # Backend on :8080 (or $PORT)
 cd frontend && npm install && npm run dev   # Frontend on :5173
-
-# Note: Backend default port differs:
-# - Docker: 3005 (mapped from container)
-# - Local: 8080 (or PORT env var)
 ```
 
 ## Development Commands
 
-### Backend (Node.js/TypeScript)
+### Backend (`backend/`)
 
 ```bash
-cd backend
+npm run dev              # Auto-reload via ts-node-dev
+npm run agent            # Run agent CLI separately
+npm run build            # Production build (tsc -p tsconfig.build.json)
+npm run typecheck        # TypeScript check (== tsc --noEmit -p tsconfig.build.json)
+npm run lint             # eslint src/**/*.ts
 
-# Install dependencies
-npm install
+npm test                 # All tests (maxWorkers:1, forceExit, REDIS disabled)
+npm run test:module      # Modular test runner; set TEST_MODULE env var
+npm run test:coverage    # With coverage
+npm run test:agents       # AI agents only (excluded from npm test)
 
-# Development mode (auto-reload)
-npm run dev
+# DB seeding
+npm run seed             # Seed demo data
+npm run seed:clear       # Clear demo data
 
-# Run agent CLI separately
-npm run agent
-
-# Build for production
-npm run build
-
-# Lint
-npm run lint
-
-# Type check (TypeScript validation)
-npx tsc --noEmit
-
-# Security audit
-npm audit --audit-level=high
-
-# Tests
-npm test                          # Run all tests
-npm run test:coverage             # With coverage
-npm run test:agents               # AI agents tests only
-npm run demo:agents               # Run AI agents demo locally
-
-# Database seeding (demo data)
-npm run seed                      # Seed demo data
-npm run seed:clear                # Clear demo data
-npm run cleanup:demo:dry-run      # Preview cleanup
-npm run cleanup:demo              # Execute cleanup
+# Release guards (must pass before release)
+node scripts/guards/check-route-db-access.mjs
+node scripts/guards/check-no-direct-api-fetch.mjs
 ```
 
-### Frontend (React/Vite/TypeScript)
+### Frontend (`frontend/`)
 
 ```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Development mode
-npm run dev
-
-# Build for production
-npm run build
-
-# Lint
-npm run lint
-
-# Type check (TypeScript validation)
-npx tsc --noEmit
-
-# Security audit
-npm audit --audit-level=high
-
-# Preview production build
-npm run preview
+npm run dev              # Vite dev server (:5173)
+npm run build            # tsc && vite build
+npm run typecheck        # tsc --noEmit
+npm run lint             # eslint (--max-warnings 0)
 ```
 
-### TypeScript Version
+### E2E (`e2e/`)
 
-- **Node.js**: v18+ (CI uses Node 18)
+```bash
+npm install              # First time: also run `npx playwright install --with-deps chromium`
+npm test                 # All E2E tests
+npm run test:release     # Release verification subset
+```
 
-### Key Environment Variables
+### Rust Fastpath (`rust-fastpath/`)
 
-Copy `.env.example` to `.env`:
+```bash
+cargo test
+cargo clippy -- -D warnings
+cargo build --release
+```
 
-**Required for Docker:**
-- `JWT_SECRET` - JWT signing key (min 32 chars)
-- `REDIS_PASSWORD` - Redis authentication
+**Node.js**: v18+ (CI uses Node 18). **Rust**: 1.85.0.
 
-**Required for Production:**
-- `AUDIT_LOG_SECRET` - Audit log signing key (min 32 chars, for tamper-evident logs)
+## Critical Developer Rules
 
-**Optional:**
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD` - Initial admin credentials
-- `VALID_API_KEYS` - Comma-separated API keys for agents
-- `DEVICE_API_KEYS` - Keys for ESP32 devices
-- `REDIS_URL` - Redis connection string (auto-set in Docker)
-- `APP_MODE` - `production` or `demo`
-- `ALLOWED_ORIGINS` - CORS origins (comma-separated)
+### Route-level DB access is FORBIDDEN
 
-**Agent CLI Variables** (for distributed agents):
-- `AetherGuard_SERVER` - Control plane URL
-- `AetherGuard_ONBOARDING_CODE` - One-time registration code
-- `AetherGuard_AGENT_ID`, `AetherGuard_AGENT_API_KEY`, `AetherGuard_AGENT_SECRET_KEY` - Set after onboarding
+Files in `backend/src/api/routes/` must NEVER access the database directly. Use repositories in `backend/src/modules/` or services in `backend/src/services/` instead. A guard script enforces this: `scripts/guards/check-route-db-access.mjs`.
+
+### Frontend API calls — single entry point
+
+All frontend API calls MUST go through `frontend/src/services/api.ts`. Direct `fetch('/api...')` anywhere else in frontend source is forbidden. Guard: `scripts/guards/check-no-direct-api-fetch.mjs`.
+
+### API response format
+
+Every route handler MUST use `sendSuccess()` / `sendError()` from `backend/src/core/http/api-response.ts`:
+- Success: `{ success: true, data, error: null, meta? }`
+- Error: `{ success: false, data: null, error: { code, message }, meta? }`
+
+### Schema initialization
+
+Do NOT call `ensureSchema()` inside request handlers or WebSocket processors. Service-owned tables must be prepared in `backend/src/bootstrap/persistence.ts`. Runtime diagnostics must be read-only.
+
+## Database Gotchas
+
+The `DatabaseManager` (`backend/src/config/database.ts`) uses two backends:
+
+1. **sql.js** (default): Loads entire DB into memory. **Saves to disk every 30 seconds** via `setInterval`. Final save on `close()`.
+2. **better-sqlite3** (fallback): Opens file directly with WAL mode.
+
+**Critical**: Since sql.js operates in-memory, direct file modifications (e.g. using `sqlite3` CLI or better-sqlite3 from a separate script) will be overwritten when the running backend saves. Always stop the backend before modifying the database file directly.
+
+`DB_MODE` in production must be `postgres`. `DISABLE_REDIS` must NOT be enabled in production.
 
 ## Architecture
 
-### High-Level Structure
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Control Plane                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │   Backend   │  │   SQLite    │  │      Redis          │ │
-│  │  (Node.js)  │  │  Database   │  │   (Pub/Sub + Cache) │ │
-│  └──────┬──────┘  └─────────────┘  └─────────────────────┘ │
-│         │                                                   │
-│  ┌──────┴──────────────────────────────────────────────┐   │
-│  │           WebSocket Gateways                        │   │
-│  │  - AgentGateway (bi-directional with agents)        │   │
-│  │  - DeviceGateway (ESP32 dongles)                    │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                     │           │
-           WebSocket │           │ HTTP/API
-                     ▼           ▼
-┌────────────────────────┐  ┌────────────────────────────────┐
-│   Distributed Agents   │  │      Frontend Dashboard        │
-│  (Node.js on servers)  │  │     (React + Vite)             │
-│  - Attack Detection    │  │  - Real-time charts (Recharts) │
-│  - Firewall Control    │  │  - Socket.IO for live updates  │
-│  - Log Collection      │  │  - i18n support                │
-│  - Traffic Monitoring  │  └────────────────────────────────┘
-└────────────────────────┘
-```
-
-### AI Agents System (7-Layer Architecture)
-
-The `ai-agents/` module implements a multi-agent decision system for AI-powered security analysis:
-
-| Layer | Name | Purpose |
-|-------|------|---------|
-| L1 | Collaboration | Traffic routing to specialized agents |
-| L2 | Role Playing | Socrates (Red Team), Plato (Blue Team), Aristotle (Analyst) |
-| L3 | Scene Traversal | Distributed tracing and attack narrative |
-| L4 | Capability | Safe tool execution |
-| L5 | Debate | Multi-agent debate with arbitrator |
-| L6 | Heterogeneous Model | Local (Ollama) + Cloud (Zhipu/GLM) model collaboration |
-| L7 | Synthesis | Case files and self-evolution |
-
-**Key Files:**
-- `ai-agents/index.ts` - `MultiAgentDecisionSystem` main class
-- `ai-agents/core/agent-orchestrator.ts` - Agent coordination
-- `ai-agents/models/model-router.ts` - Routes between local/cloud models
-- `ai-agents/investigation/` - Investigation agents (bug reproduction, code analysis, root cause)
-
-### Backend Structure (`backend/src/`)
+### Backend key directories (`backend/src/`)
 
 | Directory | Purpose |
 |-----------|---------|
-| `agent/` | Agent core logic: attack detection, firewall control, log collection, traffic monitoring |
-| `ai-agents/` | Multi-agent AI system for threat analysis and decision making |
-| `api/routes/` | REST API endpoints (agents, devices, auth, scanner, dashboard, etc.) |
-| `config/` | App mode, database connection, configuration |
-| `database/` | SQLite initialization, migrations, models, seeds |
-| `middleware/` | Auth, rate limiting, request timing |
-| `scanner/` | Nuclei-based vulnerability scanning |
-| `security/` | Input validation, authentication utilities |
-| `services/` | Business logic (scanner-task, investigation, simulation) |
-| `websocket/` | AgentGateway and DeviceGateway for real-time communication |
-| `traffic-interceptor/` | Traffic analysis and interception |
+| `bootstrap/` | Startup: `control-plane-app.ts` (app wiring, 23+ route mounts), `persistence.ts` (schema prep), `runtime-env.ts` (secret validation) |
+| `core/` | `http/api-response.ts` (envelope helpers), `health/`, `tenant/` |
+| `modules/` | Feature modules with repositories: admin, auth, agent-onboarding, deployments, scanner, sites, pipeline, announcements |
+| `api/routes/` | Route handlers — must NOT access DB directly |
+| `services/` | Integration services (scanner-task, detection-pipeline, etc.) |
+| `websocket/` | AgentGateway and DeviceGateway (Socket.IO) |
+| `config/` | `database.ts` (dual-backend DB), `platform-runtime.ts` (profiles/modes) |
 
-**Key Entry Points:**
-- `index.ts` - Server startup, WebSocket initialization, database connection
-- `app.ts` - Express app configuration, middleware, route registration
-- `agent-cli.ts` - Standalone agent CLI for distributed deployment
+Key entry points: `index.ts` (server startup), `app.ts` (re-exports for external use), `agent-cli.ts` (standalone agent).
 
-### Frontend Structure (`frontend/src/`)
+### Frontend (`frontend/src/`)
 
-| Directory | Purpose |
-|-----------|---------|
-| `components/` | Reusable UI components |
-| `pages/` | Route pages (Dashboard, Agents, Sites, Devices, etc.) |
-| `services/` | API client services |
-| `context/` | React context providers |
-| `utils/` | Helper functions |
-| `types/` | TypeScript type definitions |
-| `locales/` | i18n translation files |
+- `services/api.ts`: Centralized API client — `fetchWithCredentials()` + cookie-based auth + `unwrapApiEnvelope()`. Demo mode branches to demo data generators.
+- `context/`: 6 providers — WebSocket, Theme, Language (i18n), Demo, LiveMode, AttackStatus.
+- Routes are in `pages/`. i18n in `locales/` (en.json, zh.json).
 
-### Key Technologies
-
-- **Backend:** Express, Socket.IO, SQLite (sql.js), TypeScript, Jest
-- **Frontend:** React 18, Vite, TailwindCSS, Recharts, Socket.IO Client, i18next
-- **Infrastructure:** Docker, Redis, Nginx (for SSL/Let's Encrypt)
-- **Hardware:** ESP32-WROOM-32 for deployment dongles
-
-### WebSocket Communication
-
-**AgentGateway** (`websocket/agent-gateway.ts`):
-- Bi-directional Socket.IO connection between control plane and distributed agents
-- Agent authentication via JWT or API key
-- Rate limiting (Redis-backed with memory fallback)
-- Command signing with HMAC for security
-- Events: `agent:register`, `traffic:analyze`, `agent:command`, `threat:alert`
-
-**DeviceGateway** (`websocket/device-gateway.ts`):
-- ESP32 device registration and management
-- Auto-registration when dongles are plugged into servers
-
-## Testing Guidelines
+## Testing
 
 ```bash
-# Run all tests
-npm test
+# All tests (backend)
+cd backend && npm test
 
-# Run specific test file
+# Single file
 npx jest src/__tests__/agent-gateway.test.ts
 
-# Run tests matching a pattern
-npm test -- --testPathPattern="controller"
+# By module (modular config via TEST_MODULE env)
+npm run test:core      # TEST_MODULE=core
+npm run test:security  # TEST_MODULE=security
+npm run test:scanner   # TEST_MODULE=scanner
+npm run test:websocket # TEST_MODULE=websocket
+npm run test:services  # TEST_MODULE=services
+npm run test:agent     # TEST_MODULE=agent
+npm run test:routes    # TEST_MODULE=routes
 
-# Run tests in watch mode (development)
+# Watch / verbose
 npx jest --watch
-
-# Run with verbose output
 npx jest --verbose --testNamePattern="should detect attacks"
-
-# Run AI agents tests only
-npm run test:agents
 ```
 
-**Test Environment Variables** (auto-set by `npm test`):
-- `NODE_ENV=test`
-- `DISABLE_REDIS=true` (tests use in-memory fallback)
-- `JWT_SECRET` and `AUDIT_LOG_SECRET` set to test values
+**Jest config**: `maxWorkers: 1`, `forceExit: true`, `testTimeout: 30000`. AI agents investigation tests are excluded from `npm test`. Use `npm run test:agents` for those. Test env vars are set in `jest.setup.js` (`NODE_ENV=test`, `DISABLE_REDIS=true`, `DATA_DIR=./test-data`).
 
-**Jest Configuration Notes:**
-- AI agents investigation tests are excluded from `npm test` (see `testPathIgnorePatterns` in `jest.config.js`)
-- Use `npm run test:agents` for AI-specific tests
-- Tests run with `maxWorkers: 1` and `forceExit: true` for stability
+## Docker Compose
 
-Key test files:
-- `agent-gateway.test.ts` - WebSocket communication
-- `attack-detector.test.ts` - Attack detection logic
-- `auth.test.ts` - Authentication and authorization
-- `firewall-controller.test.ts` - Firewall operations
-- `nuclei-scanner.test.ts` - Vulnerability scanning
-- `ai-agents/investigation/__tests__/investigation.test.ts` - AI agent tests (run separately)
+Services defined in `docker-compose.yml`: redis (7), postgres (16), minio (S3-compatible), fastpath (Rust sidecar), backend, frontend (nginx).
 
-## Deployment
+**Required env vars** (or compose will refuse to start): `JWT_SECRET`, `REDIS_PASSWORD`, `AUDIT_LOG_SECRET`, `DEVICE_COMMAND_SECRET`.
 
-### Docker Compose (Recommended)
+## ADR
 
-```bash
-# Build and start all services
-docker-compose up -d --build
+Architecture Decision Records live in `docs/adr/`. Consult before making structural changes.
 
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
+## CI
 
-# Stop services
-docker-compose down
-
-# Stop and remove volumes (clean slate)
-docker-compose down -v
-```
-
-Services:
-- `redis` - Redis 7 (port 6379)
-- `backend` - Node.js API (port 3005)
-- `frontend` - Nginx serving React SPA (port 8080)
-
-### Agent Installation (Linux servers)
-
-1. Configure `/etc/AetherGuard/agent.env`:
-   - `AetherGuard_SERVER` - Control plane URL
-   - `AetherGuard_ONBOARDING_CODE` - One-time onboarding code from admin API
-
-2. Install systemd service:
-```bash
-cp deployment/production/AetherGuard-agent.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable --now AetherGuard-agent
-```
-
-3. Verify:
-```bash
-systemctl status AetherGuard-agent
-journalctl -u AetherGuard-agent -f
-```
-
-### ESP32 Deployment Dongle
-
-See `esp32/platformio.ini` for hardware specs. The dongle auto-registers when plugged into a server and executes deployment scripts via USB serial.
-
-## API Key Patterns
-
-- Agent API keys: `AetherGuard_test_key_*`, `agent_*`
-- Device API keys: `device_key_*`, `AetherGuard-device-*`
-- Default demo keys are in `.env.example`
-
-## Security Features
-
-The system implements multiple security layers:
-
-- **Input Validation**: `security/input-validator.ts` detects SQL injection, XSS, path traversal
-- **Rate Limiting**: Redis-backed with memory fallback (`middleware/rate-limit.middleware.ts`)
-- **Command Signing**: HMAC-based command verification (`security/command-signing.service.ts`)
-- **Audit Logging**: Tamper-evident audit logs (`security/audit-logger.service.ts`)
-- **CORS**: Strict origin validation in production mode
+`.github/workflows/ci.yml`: single workflow with jobs: frontend-build → backend-test → rust-fastpath-check → docker-build → security-scan → release-verify. All run on push/PR to `master`. Node 18.

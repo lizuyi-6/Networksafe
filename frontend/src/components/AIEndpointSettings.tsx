@@ -255,6 +255,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                     <h3 className="font-semibold text-foreground">{t('aiEndpoint.title')}</h3>
                 </div>
                 <button
+                    data-testid="ai-endpoint-add-toggle"
                     onClick={() => setShowAddForm(!showAddForm)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all"
                 >
@@ -284,6 +285,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                         </div>
                     </div>
                     <button
+                        data-testid="ai-platform-verify"
                         onClick={handleVerifyPlatformAI}
                         disabled={verifyingPlatform}
                         className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
@@ -332,6 +334,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                         <div>
                             <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.name')}</label>
                             <input
+                                data-testid="ai-endpoint-name"
                                 type="text"
                                 value={formData.name}
                                 onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -342,6 +345,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                         <div>
                             <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.type')}</label>
                             <select
+                                data-testid="ai-endpoint-type"
                                 value={formData.type}
                                 onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as EndpointType }))}
                                 className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:border-primary focus:outline-none"
@@ -356,6 +360,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                     <div className="mb-4">
                         <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.purpose')}</label>
                         <select
+                            data-testid="ai-endpoint-purpose"
                             value={formData.purpose}
                             onChange={e => setFormData(prev => ({ ...prev, purpose: e.target.value as EndpointPurpose }))}
                             className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:border-primary focus:outline-none"
@@ -368,6 +373,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                     <div className="mb-4">
                         <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.endpointUrl')}</label>
                         <input
+                            data-testid="ai-endpoint-url"
                             type="text"
                             value={formData.url}
                             onChange={e => setFormData(prev => ({ ...prev, url: e.target.value }))}
@@ -380,6 +386,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                         <div>
                             <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.modelLabel')}</label>
                             <input
+                                data-testid="ai-endpoint-model"
                                 type="text"
                                 list="built-in-model-options"
                                 value={formData.modelName}
@@ -398,6 +405,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                         <div>
                             <label className="block text-xs text-muted-foreground mb-1">{t('aiEndpoint.apiKey')}</label>
                             <input
+                                data-testid="ai-endpoint-api-key"
                                 type="password"
                                 value={formData.apiKey}
                                 onChange={e => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
@@ -409,12 +417,14 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
 
                     <div className="flex justify-end gap-2">
                         <button
+                            data-testid="ai-endpoint-cancel"
                             onClick={() => setShowAddForm(false)}
                             className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
                             {t('aiEndpoint.cancel')}
                         </button>
                         <button
+                            data-testid="ai-endpoint-submit"
                             onClick={handleAddEndpoint}
                             disabled={!formData.url}
                             className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -441,6 +451,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                             variants={itemVariant}
                             whileHover={{ scale: 1.01 }}
                             key={endpoint.id}
+                            data-testid={`ai-endpoint-row-${endpoint.id}`}
                             className={`border rounded-lg p-4 transition-all ${endpoint.enabled
                                 ? 'border-border bg-card hover:border-primary/40'
                                 : 'border-border/50 bg-muted/20 opacity-60'
@@ -450,6 +461,8 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                 <div className="flex items-start gap-3">
                                     <div className="flex flex-col items-center">
                                         <button
+                                            data-testid={`ai-endpoint-priority-up-${endpoint.id}`}
+                                            aria-label={`Move ${endpoint.name} up`}
                                             onClick={() => handlePriorityChange(endpoint.id, 'up')}
                                             disabled={index === 0}
                                             className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
@@ -458,6 +471,8 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                         </button>
                                         <span className="text-xs font-bold text-muted-foreground">{index + 1}</span>
                                         <button
+                                            data-testid={`ai-endpoint-priority-down-${endpoint.id}`}
+                                            aria-label={`Move ${endpoint.name} down`}
                                             onClick={() => handlePriorityChange(endpoint.id, 'down')}
                                             disabled={index === sortedEndpoints.length - 1}
                                             className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
@@ -489,6 +504,8 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
 
                                 <div className="flex items-center gap-2">
                                     <button
+                                        data-testid={`ai-endpoint-test-${endpoint.id}`}
+                                        aria-label={`Test ${endpoint.name}`}
                                         onClick={() => handleTestEndpoint(endpoint.id)}
                                         disabled={testingId === endpoint.id}
                                         className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
@@ -501,6 +518,8 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                         )}
                                     </button>
                                     <button
+                                        data-testid={`ai-endpoint-toggle-${endpoint.id}`}
+                                        aria-label={`${endpoint.enabled ? 'Disable' : 'Enable'} ${endpoint.name}`}
                                         onClick={() => handleToggleEndpoint(endpoint.id, endpoint.enabled)}
                                         className={`p-2 rounded-lg transition-all ${endpoint.enabled
                                             ? 'text-emerald-500 hover:bg-emerald-500/10'
@@ -511,6 +530,8 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                         {endpoint.enabled ? <Check size={16} /> : <X size={16} />}
                                     </button>
                                     <button
+                                        data-testid={`ai-endpoint-delete-${endpoint.id}`}
+                                        aria-label={`Delete ${endpoint.name}`}
                                         onClick={() => handleDeleteEndpoint(endpoint.id)}
                                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                         title={t('aiEndpoint.delete')}

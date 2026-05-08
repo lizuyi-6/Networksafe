@@ -19,6 +19,9 @@ jest.mock('../../security/auth-security.service', () => ({
     detectSuspiciousLogin: jest.fn().mockResolvedValue([]),
     recordLoginAttempt: jest.fn().mockResolvedValue(undefined),
     validatePassword: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+    generateSessionId: jest.fn().mockReturnValue('session-1'),
+    checkConcurrentSessions: jest.fn().mockResolvedValue(true),
+    addSession: jest.fn().mockResolvedValue(undefined),
   }
 }));
 
@@ -42,6 +45,7 @@ jest.mock('../../modules/auth/auth-user.repository', () => ({
   createAuthUser: jest.fn(),
   findAuthUserByEmail: jest.fn(),
   findAuthUserById: jest.fn(),
+  recordLoginHistory: jest.fn(),
   touchAuthUserLastLogin: jest.fn(),
   updateAuthUserPassword: jest.fn(),
 }));

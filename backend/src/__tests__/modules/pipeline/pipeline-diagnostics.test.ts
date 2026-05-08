@@ -13,6 +13,7 @@ const mocks = {
   dbMode: 'sqlite',
   sqliteFallbackEnabled: false,
   canServeReads: true,
+  agentGateway: null as any,
 };
 
 mocks.dbPrepare = jest.fn();
@@ -36,6 +37,10 @@ jest.doMock('../../../services/postgres-shadow-store.service', () => ({
   },
 }));
 
+jest.doMock('../../../services/agent-system.service', () => ({
+  getAgentGateway: () => mocks.agentGateway,
+}));
+
 let PipelineDiagnosticsService: typeof import('../../modules/pipeline/pipeline-diagnostics.service').PipelineDiagnosticsService;
 
 beforeAll(() => {
@@ -47,6 +52,10 @@ beforeEach(() => {
   mocks.dbMode = 'sqlite';
   mocks.sqliteFallbackEnabled = false;
   mocks.canServeReads = true;
+  mocks.agentGateway = {
+    getOnlineCount: jest.fn(() => 0),
+    getDashboardConnectionCount: jest.fn(() => 0),
+  };
 
   // Default: SELECT 1 returns { test: 1 }
   mocks.dbPrepare!.mockImplementation((sql: string) => {
@@ -94,6 +103,14 @@ describe('PipelineDiagnosticsService', () => {
       const svc = createService();
       const result = svc.checkWebSocketHealth();
       expect(result.message).toBe('WebSocket gateway is running');
+    });
+
+    it('returns degraded when gateway is not attached', () => {
+      mocks.agentGateway = null;
+      const svc = createService();
+      const result = svc.checkWebSocketHealth();
+      expect(result.status).toBe('degraded');
+      expect(result.message).toBe('WebSocket gateway is not attached');
     });
   });
 
@@ -310,7 +327,7 @@ describe('PipelineDiagnosticsService', () => {
       expect(sqliteStep!.message).toContain('disk full');
     });
 
-    it('agent_to_gateway and gateway_to_frontend are always skip', () => {
+    it('agent_to_gateway and gateway_to_frontend skip when no live clients are connected', () => {
       mocks.dbPrepare!.mockImplementation((sql: string) => {
         if (sql.includes('ok')) {
           return { get: jest.fn().mockReturnValue({ ok: 1 }), free: jest.fn() };
@@ -323,6 +340,26 @@ describe('PipelineDiagnosticsService', () => {
       expect(results[0].status).toBe('skip');
       expect(results[1].component).toBe('gateway_to_frontend');
       expect(results[1].status).toBe('skip');
+      expect(results[0].message).not.toContain('not implemented');
+      expect(results[1].message).not.toContain('not implemented');
+    });
+
+    it('agent_to_gateway and gateway_to_frontend pass when live clients are connected', () => {
+      mocks.agentGateway = {
+        getOnlineCount: jest.fn(() => 2),
+        getDashboardConnectionCount: jest.fn(() => 1),
+      };
+      mocks.dbPrepare!.mockImplementation((sql: string) => {
+        if (sql.includes('ok')) {
+          return { get: jest.fn().mockReturnValue({ ok: 1 }), free: jest.fn() };
+        }
+        return { get: jest.fn().mockReturnValue({ test: 1 }), free: jest.fn() };
+      });
+
+      const svc = createService();
+      const results = svc.verifyDataPipeline();
+      expect(results[0].status).toBe('pass');
+      expect(results[1].status).toBe('pass');
     });
 
     it('api_to_postgres skips when dbMode is sqlite', () => {

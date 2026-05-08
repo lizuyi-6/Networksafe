@@ -1,6 +1,6 @@
 import { createHash, createSign, generateKeyPairSync } from 'crypto';
 import { getDatabase, initDatabase } from '../../config/database';
-import { registerDevice } from '../../api/routes/devices.routes';
+import { registerDevice } from '../../services/device-registry.service';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { deviceControlService } from '../../services/device-control.service';
 

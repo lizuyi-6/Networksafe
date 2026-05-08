@@ -6,10 +6,10 @@
 
 import { Request, Response } from 'express';
 import { AdminController } from '../../api/controllers/admin.controller';
-import { getAgentSystem } from '../../api/routes/ai-system.routes';
+import { getAgentSystem } from '../../services/agent-system.service';
 
 // Mock dependencies
-jest.mock('../../api/routes/ai-system.routes', () => ({
+jest.mock('../../services/agent-system.service', () => ({
   getAgentSystem: jest.fn()
 }));
 

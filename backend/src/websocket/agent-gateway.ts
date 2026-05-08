@@ -1263,6 +1263,10 @@ export class AgentGateway {
     return this.getAgentList().filter((agent) => agent.isOnline).length;
   }
 
+  getDashboardConnectionCount(): number {
+    return this.dashboardClients.size;
+  }
+
   /**
    * Close gateway
    */
