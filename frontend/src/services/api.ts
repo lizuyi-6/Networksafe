@@ -121,7 +121,7 @@ const getAuthHeaders = () => {
 };
 
 // SECURITY FIX: Fetch options with credentials for httpOnly cookies
-const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
+const _fetchBase = (url: string, options: RequestInit = {}) => {
     return fetch(url, {
         ...options,
         credentials: 'include',
@@ -130,6 +130,51 @@ const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
             ...options.headers
         }
     });
+};
+
+let isRefreshing = false;
+let refreshSubscribers: ((success: boolean) => void)[] = [];
+
+const doRefresh = async (): Promise<boolean> => {
+    try {
+        const response = await _fetchBase(`${API_BASE_URL}/auth/refresh`, { method: 'POST' });
+        return response.ok;
+    } catch {
+        return false;
+    }
+};
+
+const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Promise<Response> => {
+    const response = await _fetchBase(url, options);
+
+    if (response.status !== 401 || url.includes('/auth/refresh') || url.includes('/health/')) {
+        return response;
+    }
+
+    if (!isRefreshing) {
+        isRefreshing = true;
+        const success = await doRefresh();
+        isRefreshing = false;
+        refreshSubscribers.forEach(cb => cb(success));
+        refreshSubscribers = [];
+        if (!success) {
+            setSessionUserIdentity(null);
+        }
+    }
+
+    return new Promise((resolve) => {
+        refreshSubscribers.push((success: boolean) => {
+            if (success) {
+                resolve(_fetchBase(url, options));
+            } else {
+                resolve(response);
+            }
+        });
+    });
+};
+
+const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
+    return fetchWithAutoRefresh(url, options);
 };
 
 type ApiEnvelope<T> = {

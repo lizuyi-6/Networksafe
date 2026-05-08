@@ -311,6 +311,10 @@ function detectRepeatedCharacters(value: string): number {
 }
 
 export function buildSeedDetectionRules(): DetectionRuleRecord[] {
+  // Disable seed rules in development to avoid blocking legitimate local requests
+  if (process.env.NODE_ENV === 'development' && process.env.DISABLE_SEED_RULES !== 'false') {
+    return [];
+  }
   const base: Array<Omit<DetectionRuleRecord, 'tenantId' | 'enabled' | 'version'>> = [
     {
       ruleId: 'seed-sqli-union',

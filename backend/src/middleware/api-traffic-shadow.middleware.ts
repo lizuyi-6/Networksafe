@@ -236,6 +236,16 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
     (req as any).detectionDecision = decision;
 
     if (decision.verdict === 'block') {
+      const settings = await detectionPipelineService.getSettings(resolveTenantId(req));
+      if (!settings.ruleFirstEnabled) {
+        logger.debug('Detection pipeline would block, but rule-first blocking is disabled; allowing request', {
+          path: req.originalUrl || req.url,
+          matchedRuleIds: decision.matchedRuleIds
+        });
+        next();
+        return;
+      }
+
       // Record blocked request for stats
       const sourceIP = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
       recordApiRequest(true, sourceIP);
