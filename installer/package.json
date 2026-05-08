@@ -1,25 +1,44 @@
 {
-    "name": "security-installer-agent",
-    "version": "0.1.0",
-    "description": "AI-powered installer for Security Middleware",
-    "main": "dist/index.js",
-    "scripts": {
-        "build": "tsc",
-        "start": "ts-node src/index.ts",
-        "dev": "nodemon src/index.ts"
-    },
-    "dependencies": {
-        "chalk": "^4.1.2",
-        "commander": "^11.0.0",
-        "inquirer": "^8.2.5",
-        "ora": "^5.4.1",
-        "axios": "^1.6.0"
-    },
-    "devDependencies": {
-        "@types/node": "^20.0.0",
-        "@types/inquirer": "^9.0.0",
-        "typescript": "^5.0.0",
-        "ts-node": "^10.9.1",
-        "nodemon": "^3.0.0"
-    }
+  "name": "aetherguard-cli",
+  "version": "1.0.0",
+  "description": "AetherGuard - 智能服务器安全防御平台 CLI 一键安装工具",
+  "main": "dist/cli.js",
+  "bin": {
+    "aetherguard": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "dev": "ts-node src/cli.ts"
+  },
+  "keywords": [
+    "aetherguard",
+    "security",
+    "firewall",
+    "waf",
+    "deployment",
+    "cli"
+  ],
+  "author": "AetherGuard Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "inquirer": "^8.2.5",
+    "ora": "^5.4.1",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/inquirer": "^9.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.1"
+  }
 }
