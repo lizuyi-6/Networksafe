@@ -9,20 +9,30 @@ function payloadHash(value: Record<string, any>): string {
 }
 
 function buildMessage(input: {
-  deviceId: string;
-  confirmationSessionId: string;
+  gateId: string;
+  sessionId: string;
+  actionId: string;
+  tenantId: string;
+  scope: 'device';
+  targetId: string;
   commandType: string;
   payloadHash: string;
+  issuedAt: string;
+  expiresAt: string;
   monotonicCounter: number;
-  timestamp: number;
 }): string {
   return [
-    input.deviceId,
-    input.confirmationSessionId,
+    input.gateId,
+    input.sessionId,
+    input.actionId,
+    input.tenantId,
+    input.scope,
+    input.targetId,
     input.commandType,
     input.payloadHash,
+    input.issuedAt,
+    input.expiresAt,
     String(input.monotonicCounter),
-    String(input.timestamp)
   ].join('\n');
 }
 
@@ -69,15 +79,21 @@ describe('deviceControlService physical confirmation', () => {
       actorId: 'tester'
     });
 
-    const timestamp = Date.now();
+    const issuedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 120000).toISOString();
     const monotonicCounter = 1;
     const message = buildMessage({
-      deviceId,
-      confirmationSessionId: session.id,
+      gateId: deviceId,
+      sessionId: session.id,
+      actionId: session.id,
+      tenantId: 'tenant-test',
+      scope: 'device',
+      targetId: deviceId,
       commandType: 'host_remove',
       payloadHash: payloadHash({ path: '/opt/AetherGuard' }),
+      issuedAt,
+      expiresAt,
       monotonicCounter,
-      timestamp
     });
     const signature = createSign('SHA256').update(message).end().sign(keyPair.privateKey, 'base64');
 
@@ -85,7 +101,8 @@ describe('deviceControlService physical confirmation', () => {
       confirmationSessionId: session.id,
       confirmed: true,
       monotonicCounter,
-      timestamp,
+      issuedAt,
+      expiresAt,
       signature
     });
 

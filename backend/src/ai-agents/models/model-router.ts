@@ -140,7 +140,8 @@ export class ModelRouter {
         const decision = this.makeRoutingDecision(request, runtimeConfig);
         const startTime = Date.now();
         const tenantId = this.getTenantId(request);
-        const effectiveRouteMode = request.routeModeOverride || runtimeConfig.aiRouting.mode;
+        const hotPathLocalOnly = request.analysisPurpose === 'primary' || request.analysisPurpose === 'blocking_review';
+        const effectiveRouteMode = hotPathLocalOnly ? 'local_only' : (request.routeModeOverride || runtimeConfig.aiRouting.mode);
 
         this.requestStats.total++;
 
@@ -156,7 +157,8 @@ export class ModelRouter {
                         response = await this.executeLocal(request);
                         this.requestStats.local++;
                     } catch (localError: any) {
-                        const allowFallback = runtimeConfig.aiRouting.mode === 'local_preferred'
+                        const allowFallback = !hotPathLocalOnly
+                            && runtimeConfig.aiRouting.mode === 'local_preferred'
                             && runtimeConfig.aiRouting.fallbackAllowed
                             && runtimeConfig.privacyMode !== 'strict';
                         if (!allowFallback) {
@@ -218,8 +220,11 @@ export class ModelRouter {
     makeRoutingDecision(request: ModelRequest, runtimeConfig?: PlatformConfig): ModelRoutingDecision {
         const aiRouting: AIRoutingSettings | undefined = runtimeConfig?.aiRouting;
         const privacyMode = runtimeConfig?.privacyMode || 'off';
+        const hotPathLocalOnly = request.analysisPurpose === 'primary' || request.analysisPurpose === 'blocking_review';
         const overrideMode = request.routeModeOverride;
-        const mode = overrideMode || (privacyMode === 'strict'
+        const mode = hotPathLocalOnly
+            ? 'local_only'
+            : overrideMode || (privacyMode === 'strict'
             ? 'local_only'
             : aiRouting?.mode || 'cloud_only');
         const reasonPrefix = overrideMode
@@ -230,7 +235,9 @@ export class ModelRouter {
             return {
                 tier: 'local',
                 model: this.config.localModel.model,
-                reason: reasonPrefix || (privacyMode === 'strict'
+                reason: hotPathLocalOnly
+                    ? 'Production hot path forces local-only execution'
+                    : reasonPrefix || (privacyMode === 'strict'
                     ? 'Strict privacy mode forces local execution'
                     : 'AI routing mode is local_only'),
                 estimatedLatency: 1500,

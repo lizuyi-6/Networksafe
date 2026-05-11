@@ -1,0 +1,31 @@
+
+(kicad_sch
+	(version 20241209)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "af100000-0000-0000-0000-000000000001")
+	(paper "A4")
+	(title_block
+		(title "AetherGuard Gate — User Interface Peripherals")
+		(date "2025-01-01")
+		(rev "1.0")
+		(company "AetherGuard")
+		(comment 1 "Tasks 3.1-3.3: OLED I2C, buttons SW1-SW3, RGB LED, buzzer")
+		(comment 2 "Requirements: 6.1-6.8, 7.1-7.4, 8.1-8.9, 9.1-9.8")
+	)
+	(lib_symbols)
+	;; TODO Task 3.1: D1 (SSD1306 OLED connector), R1 4.7k SDA pull-up 0402,
+	;;               R2 4.7k SCL pull-up 0402, GPIO21->SDA, GPIO22->SCL, I2C addr 0x3C
+	;; TODO Task 3.2: SW1 (OK/GPIO18), SW2 (Next/GPIO19), SW3 (Back/GPIO23) -> GND
+	;;               INPUT_PULLUP, no strapping pins, >= 10mm spacing
+	;; TODO Task 3.3: LED1 RGB common-cathode: GPIO25->R3(150R)->Red, GPIO26->R4(33R)->Green,
+	;;               GPIO27->R5(33R)->Blue, cathode->GND
+	;;               BZ1 active buzzer: GPIO14->R6(1k)->Q1 base, Q1 collector->BZ1-,
+	;;               Q1 emitter->GND, 3.3V->BZ1+, D2 (1N4148 SOD-123) flyback across BZ1
+	(sheet_instances
+		(path "/af000000-0000-0000-0000-000000000001"
+			(page "6")
+		)
+	)
+	(embedded_fonts no)
+)

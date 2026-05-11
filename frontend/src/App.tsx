@@ -33,6 +33,7 @@ import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusCon
 import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
 import Logo from './components/Logo';
 import { COMPANY_NAME_CN } from './config/branding';
+import { getSessionUserIdentity } from './services/session-cache';
 import {
     fetchApiReadiness,
     fetchCurrentUserSession,
@@ -82,22 +83,28 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
     const [backendReady, setBackendReady] = useState(false);
 
     useEffect(() => {
-        // Check backend readiness first (lightweight health check)
         const checkBackend = async () => {
             try {
                 const readiness = await fetchApiReadiness(AbortSignal.timeout(3000));
                 if (readiness.ok) {
                     setBackendReady(true);
                     const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
-                    setIsAuthenticated(Boolean(user));
+                    if (user) {
+                        setIsAuthenticated(true);
+                    } else {
+                        // Fallback: check sessionStorage (cookie may not persist in dev)
+                        const cached = getSessionUserIdentity();
+                        setIsAuthenticated(Boolean(cached?.userId));
+                    }
                 } else {
                     setBackendReady(true);
-                    setIsAuthenticated(false);
+                    const cached = getSessionUserIdentity();
+                    setIsAuthenticated(Boolean(cached?.userId));
                 }
             } catch {
-                // Backend not ready - don't block UI, show login
-                setBackendReady(true); // Allow access to check auth
-                setIsAuthenticated(false);
+                setBackendReady(true);
+                const cached = getSessionUserIdentity();
+                setIsAuthenticated(Boolean(cached?.userId));
             }
         };
         checkBackend();

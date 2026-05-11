@@ -103,7 +103,11 @@ export function validateDeviceRegisterPayload(input: unknown): DeviceRegisterPay
     chip_model: nonEmptyString(payload.chip_model) || undefined,
     flash_size: optionalFiniteNumber(payload.flash_size),
     free_heap: optionalFiniteNumber(payload.free_heap),
-    sdk_version: nonEmptyString(payload.sdk_version) || undefined
+    sdk_version: nonEmptyString(payload.sdk_version) || undefined,
+    public_key_pem: nonEmptyString(payload.public_key_pem) || undefined,
+    secure_element_present: typeof payload.secure_element_present === 'boolean' ? payload.secure_element_present : undefined,
+    device_role: nonEmptyString(payload.device_role) || undefined,
+    transport: nonEmptyString(payload.transport) || undefined
   };
 }
 

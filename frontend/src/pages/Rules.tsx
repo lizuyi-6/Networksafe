@@ -32,9 +32,20 @@ const emptySummary: RuleSummary = {
     rejectedCandidates: 0,
     ruleHitRate: 0,
     aiEscalationRate: 0,
+    localModelHitRate: 0,
     avgProcessingTimeMs: 0,
     localAICount: 0,
     cloudAICount: 0,
+    asyncReviewQueueDepth: 0,
+    asyncReviewRunning: 0,
+    asyncReviewCompleted: 0,
+    asyncReviewFailed: 0,
+    debateCompletionRate: 0,
+    avgAsyncReviewLatencyMs: 0,
+    classificationLevel: 'standard',
+    blockingDiscussionCount: 0,
+    blockingDiscussionFailClosed: 0,
+    avgBlockingDiscussionLatencyMs: 0,
     topRules: []
 };
 
@@ -269,7 +280,10 @@ const Rules = () => {
                 <ConsoleStatCard icon={Bot} label={t('rules.pending_candidates')} value={summary.pendingCandidates} hint={t('rules.candidates_hint', { approved: summary.approvedCandidates, rejected: summary.rejectedCandidates })} tone="warning" />
                 <ConsoleStatCard icon={Activity} label={t('rules.hit_rate')} value={formatPercent(summary.ruleHitRate)} hint={t('rules.ai_escalation_hint', { rate: formatPercent(summary.aiEscalationRate) })} tone="success" />
                 <ConsoleStatCard icon={Clock3} label={t('rules.avg_detection_time')} value={`${summary.avgProcessingTimeMs.toFixed(1)} ms`} hint={t('rules.across_recent_events')} tone="neutral" />
-                <ConsoleStatCard icon={Bot} label={t('rules.local_ai_calls')} value={summary.localAICount} hint={t('rules.cloud_hint', { count: summary.cloudAICount })} tone="primary" />
+                <ConsoleStatCard icon={Bot} label={t('rules.local_ai_calls')} value={summary.localAICount} hint={`local hit ${formatPercent(summary.localModelHitRate)} / cloud ${summary.cloudAICount}`} tone="primary" />
+                <ConsoleStatCard icon={ShieldAlert} label="Async Reviews" value={summary.asyncReviewQueueDepth} hint={`done ${summary.asyncReviewCompleted}, failed ${summary.asyncReviewFailed}`} tone="warning" />
+                <ConsoleStatCard icon={Bot} label="Debate Completion" value={formatPercent(summary.debateCompletionRate)} hint={`${summary.avgAsyncReviewLatencyMs.toFixed(1)} ms async avg`} tone="neutral" />
+                <ConsoleStatCard icon={ShieldAlert} label="Blocking Discussion" value={summary.blockingDiscussionCount} hint={`${summary.classificationLevel} · fail-closed ${summary.blockingDiscussionFailClosed} · ${summary.avgBlockingDiscussionLatencyMs.toFixed(1)} ms`} tone="danger" />
                 <ConsoleStatCard icon={ShieldAlert} label={t('rules.top_rule_hits')} value={summary.topRules[0]?.hitCount || 0} hint={summary.topRules[0]?.name || t('rules.no_recent_hits')} tone="danger" />
             </div>
 
@@ -484,19 +498,21 @@ const Rules = () => {
                                         <div className="flex flex-wrap items-start justify-between gap-3">
                                             <div>
                                                 <div className="text-sm font-semibold text-foreground">{event.channel} / {event.verdict}</div>
-                                                <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                                                    <span>{event.attackFamily}</span>
-                                                    <span>{t('rules.risk_score', { value: event.riskScore.toFixed(2) })}</span>
-                                                    <span>{event.processingTimeMs} ms</span>
-                                                    <span>{event.escalatedToAI ? t('rules.ai_escalated') : t('rules.rules_only')}</span>
-                                                </div>
+                                            <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                                                <span>{event.attackFamily}</span>
+                                                <span>{t('rules.risk_score', { value: event.riskScore.toFixed(2) })}</span>
+                                                <span>{event.processingTimeMs} ms</span>
+                                                <span>{event.blockingDiscussion ? `${event.discussionStatus || 'blocking'} review` : event.queuedForAsyncReview ? 'async review queued' : event.escalatedToAI ? t('rules.ai_escalated') : t('rules.rules_only')}</span>
                                             </div>
-                                            <div className="text-xs text-muted-foreground">{new Date(event.createdAt).toLocaleString()}</div>
                                         </div>
-                                        <div className="mt-2 text-xs text-muted-foreground">
+                                        <div className="text-xs text-muted-foreground">{new Date(event.createdAt).toLocaleString()}</div>
+                                    </div>
+                                    <div className="mt-2 text-xs text-muted-foreground">
                                             {t('rules.source')}: <span className="font-medium text-foreground">{event.decisionSource}</span>
                                             {event.candidateId && <span> | {t('rules.candidate')} {event.candidateId}</span>}
                                             {event.aiVerdict && <span> | AI {event.aiVerdict} {(event.aiConfidence || 0) * 100 >= 0 ? `(${((event.aiConfidence || 0) * 100).toFixed(0)}%)` : ''}</span>}
+                                            {event.classificationLevel && <span> | {event.classificationLevel}</span>}
+                                            {event.blockingDiscussion && <span> | {event.discussionLatencyMs || 0} ms</span>}
                                         </div>
                                         <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">{formatJson(event.requestSnapshot)}</pre>
                                     </div>

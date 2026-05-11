@@ -228,7 +228,15 @@
     "severity_level": "严重级别 {level}",
     "waiting_chart": "等待图表容器...",
     "unavailable": "控制台不可用",
-    "never_used_short": "从未使用"
+    "never_used_short": "从未使用",
+    "time_7d": "7 天",
+    "threat_intel": "威胁情报",
+    "security_ops": "安全运营",
+    "system_resources": "系统资源",
+    "tab_origins": "攻击来源",
+    "tab_vectors": "攻击向量",
+    "tab_rules": "活跃规则",
+    "tab_actions": "近期操作"
   },
   "pricing": {
     "title": "选择您的方案",

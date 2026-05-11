@@ -33,6 +33,10 @@ export interface DeviceRegisterPayload {
   free_heap?: number;
   sdk_version?: string;
   api_key?: string;
+  public_key_pem?: string;
+  secure_element_present?: boolean;
+  device_role?: string;
+  transport?: string;
 }
 
 export interface DeviceHeartbeatPayload {

@@ -228,7 +228,15 @@
     "severity_level": "Severity {level}",
     "waiting_chart": "Waiting for chart container...",
     "unavailable": "Dashboard unavailable",
-    "never_used_short": "never"
+    "never_used_short": "never",
+    "time_7d": "7d",
+    "threat_intel": "Threat Intelligence",
+    "security_ops": "Security Operations",
+    "system_resources": "System Resources",
+    "tab_origins": "Attack Origins",
+    "tab_vectors": "Attack Vectors",
+    "tab_rules": "Active Rules",
+    "tab_actions": "Recent Actions"
   },
   "pricing": {
     "title": "Select Your Variant",

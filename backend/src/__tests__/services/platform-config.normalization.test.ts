@@ -382,7 +382,7 @@ describe('normalizeRoutingMode', () => {
 describe('normalizeAiRouting', () => {
   it('returns defaults when input is empty', () => {
     const result = normalizeAiRouting({});
-    expect(result.mode).toBe('cloud_only');
+    expect(result.mode).toBe('local_only');
     expect(result.fallbackAllowed).toBe(false);
   });
 
@@ -559,7 +559,7 @@ describe('normalizePlatformConfig', () => {
       privacyMode: 'off',
       auditArchive: { bucket: 'default', retentionDays: 30, objectLockRequired: true, verifyIntervalMinutes: 60 },
       fastpath: { enabled: true, baseUrl: 'http://localhost', transport: 'tcp' as const, socketPath: null, timeoutMs: 1500, fallbackEnabled: true, trafficShadowEnabled: false, trafficShadowSampleRatePct: 10, trafficMaxBodyBytes: 65536, configCacheTtlMs: 30000 },
-      detectionPipeline: { ruleFirstEnabled: true, aiEscalationMode: 'high_risk_allowed_only' as const, enableHttpApi: true, enablePacketInterceptor: true, enableAgentAsyncReview: true, aiEscalationThreshold: 0.4, candidateMinConfidence: 0.85, learningMode: 'malicious_review_queue' as const, learningCloudVerificationEnabled: true, learningCloudVerificationMode: 'cloud_only' as const, learningCloudVerificationChannels: ['http_api', 'packet', 'agent'] as any, learningCloudVerificationOnSuspicious: true, learningCloudVerificationOnMissingConfidence: true },
+      detectionPipeline: { ruleFirstEnabled: true, aiEscalationMode: 'high_risk_allowed_only' as const, classificationLevel: 'standard' as const, blockingDiscussionTimeoutMs: 30000, hotPathRouteMode: 'local_only' as const, asyncReviewEnabled: true, blockingReviewForHighRiskActions: true, enableHttpApi: true, enablePacketInterceptor: true, enableAgentAsyncReview: true, aiEscalationThreshold: 0.4, candidateMinConfidence: 0.85, learningMode: 'malicious_review_queue' as const, learningCloudVerificationEnabled: true, learningCloudVerificationMode: 'cloud_only' as const, learningCloudVerificationChannels: ['http_api', 'packet', 'agent'] as any, learningCloudVerificationOnSuspicious: true, learningCloudVerificationOnMissingConfidence: true, learningFromBlockedEnabled: true, learningFromBlockedMinSeverity: 'medium' as const },
       deploymentDefaults: { serverType: 'nginx' as const, profileTemplates: {} as any },
       deviceGateway: { primaryPath: '/ws/device', aliases: [], syncMaskApiKeys: true, firmwareLocalHost: '', wifiSSID: '', localPort: 8080, firmwareChannel: 'stable', firmwareRetentionDays: 30, statusAliasEnabled: true },
     };

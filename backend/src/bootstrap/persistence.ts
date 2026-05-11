@@ -10,6 +10,7 @@ import { auditSegmentService } from '../services/audit-segment.service';
 import { benchmarkService } from '../services/benchmark.service';
 import { detectionPipelineService } from '../services/detection-pipeline.service';
 import { deviceControlService } from '../services/device-control.service';
+import { hardwareAuthorizationService } from '../services/hardware-authorization.service';
 import { platformConfigService } from '../services/platform-config.service';
 import { scannerTaskService } from '../services/scanner-task.service';
 import { securityOperationsService } from '../services/security-operations.service';
@@ -29,6 +30,7 @@ export async function bootstrapPersistence(): Promise<void> {
   securityOperationsService.prepare();
   scannerTaskService.prepare();
   deviceControlService.prepare();
+  hardwareAuthorizationService.prepare();
   tenantOversightService.prepare();
   benchmarkService.prepare();
   detectionPipelineService.prepare();

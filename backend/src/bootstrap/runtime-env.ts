@@ -20,6 +20,20 @@ function hasWeakValue(value: string): boolean {
   return WEAK_VALUE_PATTERNS.some((pattern) => pattern.test(value.trim()));
 }
 
+function assertWeakSecretWarning(
+  key: string,
+  warnings: string[]
+): void {
+  const value = String(process.env[key] || '').trim();
+  if (!value) return;
+  if (hasWeakValue(value)) {
+    warnings.push(
+      `[SECURITY WARNING] ${key} is using a known default or placeholder value. ` +
+        'Replace it with a strong secret before exposing this service to production traffic.'
+    );
+  }
+}
+
 function assertStrongSecret(
   key: string,
   minimumLength: number,
@@ -82,6 +96,13 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
     if (hasGatewayRole() || appRole === 'all') {
       assertStrongSecret('DEVICE_COMMAND_SECRET', 24, errors);
     }
+
+    // WARNING-level checks: these fields use known default values but are not
+    // hard-blocked so that operators can still start the service and rotate
+    // secrets without a full outage.
+    assertWeakSecretWarning('POSTGRES_PASSWORD', warnings);
+    assertWeakSecretWarning('S3_SECRET_KEY', warnings);
+    assertWeakSecretWarning('DEVICE_API_KEYS', warnings);
 
     if (String(process.env.APP_MODE || '').trim().toLowerCase() === 'demo') {
       errors.push('APP_MODE=demo is not allowed in production.');

@@ -1,0 +1,26 @@
+
+(kicad_sch
+	(version 20241209)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "b0100000-0000-0000-0000-000000000001")
+	(paper "A4")
+	(title_block
+		(title "AetherGuard Gate — Test Points")
+		(date "2025-01-01")
+		(rev "1.0")
+		(company "AetherGuard")
+		(comment 1 "Task 4.1: TP1-TP6 SMD pads >= 1.0mm, silkscreen labels within 2mm")
+		(comment 2 "Requirements: 12.1-12.7")
+	)
+	(lib_symbols)
+	;; TODO Task 4.1: TP1 (3.3V), TP2 (GND), TP3 (GPIO16/RX2), TP4 (GPIO17/TX2),
+	;;               TP5 (GPIO1/UART0 TX), TP6 (GPIO3/UART0 RX)
+	;;               All SMD pads >= 1.0mm exposed copper, silkscreen net-name within 2mm
+	(sheet_instances
+		(path "/b0000000-0000-0000-0000-000000000001"
+			(page "7")
+		)
+	)
+	(embedded_fonts no)
+)

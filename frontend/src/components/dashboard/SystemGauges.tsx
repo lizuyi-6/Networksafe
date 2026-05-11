@@ -1,0 +1,70 @@
+import { motion, Variants } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
+
+type Tone = 'primary' | 'success' | 'warning' | 'danger' | 'neutral';
+
+const toneStroke: Record<Tone, string> = {
+    primary: 'stroke-primary',
+    success: 'stroke-emerald-500',
+    warning: 'stroke-amber-500',
+    danger: 'stroke-rose-500',
+    neutral: 'stroke-muted-foreground',
+};
+
+const fadeUpVariants: Variants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } },
+};
+
+export interface GaugeItem {
+    icon: LucideIcon;
+    label: string;
+    value: number; // 0-100
+    tone: Tone;
+}
+
+const GaugeRing = ({ value, tone }: { value: number; tone: Tone }) => {
+    const circumference = 2 * Math.PI * 15.9155;
+    const offset = circumference - (value / 100) * circumference;
+
+    return (
+        <svg viewBox="0 0 36 36" className="h-14 w-14">
+            <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                className="stroke-muted"
+                strokeWidth="3"
+                strokeLinecap="round"
+            />
+            <motion.path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                className={toneStroke[tone]}
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset: offset }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+            />
+        </svg>
+    );
+};
+
+export const SystemGauges = ({ gauges }: { gauges: GaugeItem[] }) => (
+    <motion.div variants={fadeUpVariants} className="grid grid-cols-2 gap-3">
+        {gauges.map((g, i) => (
+            <div
+                key={i}
+                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-sm"
+            >
+                <GaugeRing value={g.value} tone={g.tone} />
+                <span className="text-lg font-bold text-foreground">{g.value.toFixed(1)}%</span>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <g.icon size={12} />
+                    <span>{g.label}</span>
+                </div>
+            </div>
+        ))}
+    </motion.div>
+);

@@ -26,7 +26,8 @@ jest.mock('../../utils/logger', () => ({
 
 jest.mock('../../services/detection-pipeline.service', () => ({
   detectionPipelineService: {
-    evaluateRequest: jest.fn()
+    evaluateRequest: jest.fn(),
+    getSettings: jest.fn()
   }
 }));
 
@@ -75,6 +76,9 @@ describe('apiTrafficShadowMiddleware', () => {
       attackFamily: 'benign',
       processingTimeMs: 1,
       ruleMatches: []
+    });
+    (detectionPipelineService.getSettings as jest.Mock).mockResolvedValue({
+      ruleFirstEnabled: true
     });
   });
 

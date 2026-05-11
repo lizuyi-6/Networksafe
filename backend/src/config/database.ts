@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import logger from '../utils/logger';
+import { getDatabaseMode, isSqliteFallbackEnabled } from './platform-runtime';
 
 // Type for sql.js database
 interface SqlJsDatabase {
@@ -36,6 +37,12 @@ export class DatabaseManager {
    * Initialize database - tries sql.js first, falls back to better-sqlite3
    */
   public async initAsync(): Promise<void> {
+    // Guard: if SQLite fallback is disabled and DB_MODE is postgres, refuse to
+    // silently degrade — the caller must ensure Postgres is available.
+    if (!isSqliteFallbackEnabled() && getDatabaseMode() === 'postgres') {
+      throw new Error('SQLite fallback is disabled. Postgres connection is required.');
+    }
+
     // Try sql.js first
     try {
       SqlJs = require('sql.js');

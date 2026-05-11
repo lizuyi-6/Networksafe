@@ -1,7 +1,8 @@
-import { randomUUID, createVerify, createHash } from 'crypto';
+import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import { artifactStoreService } from './artifact-store.service';
 import auditLogger from '../security/audit-logger.service';
+import { hashPayload, verifyHardwareGrantSignature } from '../security/hardware-grant';
 import logger from '../utils/logger';
 import { commandDispatcherService } from './command-dispatcher.service';
 import { getDeviceById } from './device-registry.service';
@@ -402,35 +403,31 @@ class DeviceControlService {
       return;
     }
 
-    // Verify signature if present
+    const device = getDeviceById(deviceId) as any;
+    const publicKeyPem = device?.physicalAuth?.publicKeyPem;
     let verified = false;
-    if (payload.signature) {
-      const device = getDeviceById(deviceId) as any;
-      const publicKeyPem = device?.physicalAuth?.publicKeyPem;
-      if (publicKeyPem) {
-        const message = [
-          deviceId,
-          confirmationSessionId,
-          existing.command_type,
-          createHash('sha256').update(existing.payload_json).digest('hex'),
-          String(payload.monotonicCounter),
-          String(payload.timestamp)
-        ].join('\n');
-        try {
-          verified = createVerify('SHA256')
-            .update(message)
-            .end()
-            .verify(publicKeyPem, payload.signature, 'base64');
-        } catch {
-          verified = false;
-        }
-      }
+    if (publicKeyPem && payload.signature) {
+      verified = verifyHardwareGrantSignature(publicKeyPem, {
+        gateId: String(payload?.gateId || deviceId),
+        sessionId: confirmationSessionId,
+        actionId: String(payload?.actionId || confirmationSessionId),
+        tenantId: String(existing.tenant_id || 'global'),
+        scope: 'device',
+        targetId: deviceId,
+        commandType: existing.command_type,
+        payloadHash: hashPayload(parseJson(existing.payload_json, {})),
+        issuedAt: String(payload?.issuedAt || existing.created_at || ''),
+        expiresAt: String(payload?.expiresAt || existing.updated_at || ''),
+        monotonicCounter: Number(payload?.monotonicCounter || 0),
+        signature: String(payload.signature),
+        algorithm: 'ECDSA_P256_SHA256'
+      });
     }
 
-    const confirmed = Boolean(payload?.confirmed) && (payload.signature ? verified : true);
+    const confirmed = Boolean(payload?.confirmed) && Boolean(payload.signature) && verified;
     const confirmedAt = confirmed ? new Date().toISOString() : null;
     const dispatchResult = confirmed
-      ? await commandDispatcherService.dispatchDeviceCommand({
+      ? await commandDispatcherService.dispatchConfirmedDeviceCommand({
           deviceId,
           commandType: existing.command_type,
           payload: parseJson(existing.payload_json, {}),
@@ -440,7 +437,7 @@ class DeviceControlService {
             email: existing.requested_by,
             ip: 'device-gateway'
           },
-          approved: true
+          actionId: confirmationSessionId
         })
       : null;
 

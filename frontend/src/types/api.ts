@@ -29,6 +29,7 @@ export interface DashboardStats {
     diskUsage?: number;
     networkUsage?: number;
     securityOperations?: DashboardSecuritySummary;
+    detectionPipeline?: RuleSummary | null;
 }
 
 export interface AttackOrigin {
@@ -109,6 +110,24 @@ export interface MultiAgentSystemStats {
         pendingActions: number;
         failedValidations: number;
         assetsAtRisk: number;
+    };
+    detectionPipeline?: {
+        asyncReview: {
+            queueDepth: number;
+            queued: number;
+            running: number;
+            completed: number;
+            failed: number;
+            completionRate: number;
+            debateCompletionRate: number;
+            avgLatencyMs: number;
+        };
+        blockingDiscussion?: {
+            count: number;
+            failClosed: number;
+            avgLatencyMs: number;
+        };
+        classificationLevel?: 'standard' | 'elevated' | 'maximum';
     };
     health: {
         status: 'healthy' | 'degraded' | 'unhealthy';
@@ -373,6 +392,11 @@ export interface DetectionEventRecord {
     matchedRuleIds: string[];
     riskScore: number;
     escalatedToAI: boolean;
+    queuedForAsyncReview?: boolean;
+    classificationLevel?: 'standard' | 'elevated' | 'maximum';
+    blockingDiscussion?: boolean;
+    discussionStatus?: 'not_required' | 'completed' | 'failed' | 'timeout' | 'unavailable';
+    discussionLatencyMs?: number;
     aiVerdict?: string | null;
     aiConfidence?: number | null;
     aiRouteMode?: string | null;
@@ -394,9 +418,20 @@ export interface RuleSummary {
     rejectedCandidates: number;
     ruleHitRate: number;
     aiEscalationRate: number;
+    localModelHitRate: number;
     avgProcessingTimeMs: number;
     localAICount: number;
     cloudAICount: number;
+    asyncReviewQueueDepth: number;
+    asyncReviewRunning: number;
+    asyncReviewCompleted: number;
+    asyncReviewFailed: number;
+    debateCompletionRate: number;
+    avgAsyncReviewLatencyMs: number;
+    classificationLevel: 'standard' | 'elevated' | 'maximum';
+    blockingDiscussionCount: number;
+    blockingDiscussionFailClosed: number;
+    avgBlockingDiscussionLatencyMs: number;
     topRules: Array<{
         ruleId: string;
         name: string;

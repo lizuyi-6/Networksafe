@@ -69,42 +69,43 @@ describe('GET /', () => {
   it('returns 200 with required fields', async () => {
     const res = await request(app).get('/');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('totalRequests');
-    expect(res.body).toHaveProperty('blockedRequests');
-    expect(res.body).toHaveProperty('successRate');
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('totalRequests');
+    expect(res.body.data).toHaveProperty('blockedRequests');
+    expect(res.body.data).toHaveProperty('successRate');
   });
 
   it('returns history array', async () => {
     const res = await request(app).get('/');
-    expect(Array.isArray(res.body.history)).toBe(true);
+    expect(Array.isArray(res.body.data.history)).toBe(true);
   });
 
   it('returns attackOrigins array', async () => {
     const res = await request(app).get('/');
-    expect(Array.isArray(res.body.attackOrigins)).toBe(true);
+    expect(Array.isArray(res.body.data.attackOrigins)).toBe(true);
   });
 
   it('returns cpuUsage, memoryUsage, diskUsage, networkUsage fields', async () => {
     const res = await request(app).get('/');
-    expect(res.body).toHaveProperty('cpuUsage');
-    expect(res.body).toHaveProperty('memoryUsage');
-    expect(res.body).toHaveProperty('diskUsage');
-    expect(res.body).toHaveProperty('networkUsage');
+    expect(res.body.data).toHaveProperty('cpuUsage');
+    expect(res.body.data).toHaveProperty('memoryUsage');
+    expect(res.body.data).toHaveProperty('diskUsage');
+    expect(res.body.data).toHaveProperty('networkUsage');
   });
 
   it('returns threats array', async () => {
     const res = await request(app).get('/');
-    expect(Array.isArray(res.body.threats)).toBe(true);
+    expect(Array.isArray(res.body.data.threats)).toBe(true);
   });
 
   it('returns p99Latency field', async () => {
     const res = await request(app).get('/');
-    expect(res.body).toHaveProperty('p99Latency');
+    expect(res.body.data).toHaveProperty('p99Latency');
   });
 
   it('returns securityOperations from opsSummary', async () => {
     const res = await request(app).get('/');
-    expect(res.body).toHaveProperty('securityOperations');
+    expect(res.body.data).toHaveProperty('securityOperations');
   });
 });
 
@@ -112,22 +113,23 @@ describe('GET /badges', () => {
   it('returns 200 with badge counts', async () => {
     const res = await request(app).get('/badges');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('alerts');
-    expect(res.body).toHaveProperty('devices');
-    expect(res.body).toHaveProperty('agents');
-    expect(res.body).toHaveProperty('traffic');
-    expect(res.body).toHaveProperty('agentMonitor');
-    expect(res.body).toHaveProperty('scanner');
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('alerts');
+    expect(res.body.data).toHaveProperty('devices');
+    expect(res.body.data).toHaveProperty('agents');
+    expect(res.body.data).toHaveProperty('traffic');
+    expect(res.body.data).toHaveProperty('agentMonitor');
+    expect(res.body.data).toHaveProperty('scanner');
   });
 
-  it('returns zeros on error (error is caught, returns zeros)', async () => {
-    const { securityOperationsService } = require('../../services/security-operations.service');
-    securityOperationsService.getDashboardSummaryView.mockRejectedValueOnce(new Error('db error'));
+  it('returns error envelope on error', async () => {
+    const deviceRegistry = require('../../services/device-registry.service');
+    jest.spyOn(deviceRegistry, 'getDeviceList').mockImplementationOnce(() => { throw new Error('device error'); });
 
     const res = await request(app).get('/badges');
 
-    expect(res.status).toBe(200);
-    expect(res.body.alerts).toBe(0);
-    expect(res.body.devices).toBe(0);
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toHaveProperty('code', 'BADGES_ERROR');
   });
 });

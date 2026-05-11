@@ -13,14 +13,21 @@
 #include "config.h"
 
 enum LEDColor {
-    COLOR_OFF = 0,
-    COLOR_RED,
-    COLOR_GREEN,
-    COLOR_BLUE,
-    COLOR_YELLOW,
-    COLOR_WHITE,
-    COLOR_PURPLE
+    COLOR_OFF     = 0,
+    COLOR_RED,       // ERROR state
+    COLOR_GREEN,     // OK state
+    COLOR_BLUE,      // IDLE state
+    COLOR_YELLOW,    // PENDING state (awaiting confirmation)
+    COLOR_WHITE,     // Boot/initialisation
+    COLOR_PURPLE     // BUSY state (magenta: red+blue)
 };
+
+// Requirement 8.5 colour mapping:
+//   IDLE    → COLOR_BLUE   (GPIO25=LOW,  GPIO26=LOW,  GPIO27=HIGH)
+//   PENDING → COLOR_YELLOW (GPIO25=HIGH, GPIO26=HIGH, GPIO27=LOW)  blink 500/500ms
+//   OK      → COLOR_GREEN  (GPIO25=LOW,  GPIO26=HIGH, GPIO27=LOW)
+//   ERROR   → COLOR_RED    (GPIO25=HIGH, GPIO26=LOW,  GPIO27=LOW)
+//   BUSY    → COLOR_PURPLE (GPIO25=HIGH, GPIO26=LOW,  GPIO27=HIGH) magenta
 
 class HardwareCtrl {
 private:
@@ -84,16 +91,10 @@ private:
     }
 
     void setBuzzer(bool enabled) {
-        #if BUZZER_ACTIVE
-            const uint8_t inactiveLevel = (BUZZER_ACTIVE_LEVEL == HIGH) ? LOW : HIGH;
-            digitalWrite(PIN_BUZZER, enabled ? BUZZER_ACTIVE_LEVEL : inactiveLevel);
-        #else
-            if (enabled) {
-                tone(PIN_BUZZER, 2000);
-            } else {
-                noTone(PIN_BUZZER);
-            }
-        #endif
+        // Active buzzer driven by BUZZER_ACTIVE_LEVEL (LOW == 0 per config.h / Req 14.5).
+        // Inactive level is the logical complement.
+        const uint8_t inactiveLevel = (BUZZER_ACTIVE_LEVEL == HIGH) ? LOW : HIGH;
+        digitalWrite(PIN_BUZZER, enabled ? BUZZER_ACTIVE_LEVEL : inactiveLevel);
         buzzerEnabled = enabled;
     }
 
@@ -190,11 +191,18 @@ public:
     }
 
     void playSuccess() {
-        playSequence(100, 2, 50);
+        // Requirement 9.8: 2 pulses of 100 ms with 100 ms gap
+        playSequence(100, 2, 100);
     }
 
     void playError() {
-        playSequence(350, 1, 0);
+        // Requirement 9.8: 3 pulses of 100 ms with 100 ms gaps
+        playSequence(100, 3, 100);
+    }
+
+    void playBegin() {
+        // Requirement 9.8: 1 pulse of 100 ms (for AG:BEGIN events)
+        playSequence(100, 1, 0);
     }
 
     void playWarning() {

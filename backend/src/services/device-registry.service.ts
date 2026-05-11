@@ -108,7 +108,20 @@ function buildDefaultConfig(device: DeviceInfo): DeviceConfig {
         networkProfile: device.mode === 'online' ? 'cloud-mesh' : 'standalone-buffer',
         scanProfile: device.isOnline ? 'balanced' : 'offline-recovery',
         notes: `${device.chipModel} running firmware ${device.version}`,
-        commandPermissions: ['collect', 'reboot', 'sync-config', 'ota_update'],
+        commandPermissions: [
+            'collect',
+            'reboot',
+            'sync-config',
+            'ota_update',
+            'deploy_bundle',
+            'host_install',
+            'host_remove',
+            'recovery_flash',
+            'factory_reset',
+            'diagnostic_unlock',
+            'wipe_data',
+            'critical_config_change'
+        ],
         tags: [device.chipModel.toLowerCase(), device.mode, device.isOnline ? 'online' : 'offline'],
         updatedAt: new Date().toISOString()
     };
@@ -309,6 +322,7 @@ export async function executeDeviceCommandInternal(input: {
     actorEmail?: string;
     actorIp?: string;
     actionId?: string;
+    hardwareGrant?: any;
 }): Promise<{ success: boolean; record?: DeviceCommandRecord; message: string; reason?: string }> {
     const device = devices.get(input.deviceId);
     if (!device) {

@@ -335,6 +335,59 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                 </select>
                             </div>
                             <div>
+                                <label className={labelClassName}>Security classification</label>
+                                <select
+                                    value={config.detectionPipeline.classificationLevel}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            classificationLevel: event.target.value as PlatformConfigResponse['detectionPipeline']['classificationLevel']
+                                        }
+                                    }))}
+                                    className={inputClassName}
+                                >
+                                    <option value="standard">standard</option>
+                                    <option value="elevated">elevated</option>
+                                    <option value="maximum">maximum</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={labelClassName}>Hot path route</label>
+                                <select
+                                    value={config.detectionPipeline.hotPathRouteMode}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            hotPathRouteMode: event.target.value as PlatformConfigResponse['detectionPipeline']['hotPathRouteMode']
+                                        }
+                                    }))}
+                                    className={inputClassName}
+                                >
+                                    <option value="local_only">local_only</option>
+                                    <option value="local_preferred">local_preferred</option>
+                                    </select>
+                                </div>
+                            <div>
+                                <label className={labelClassName}>Blocking discussion timeout (ms)</label>
+                                <input
+                                    className={inputClassName}
+                                    type="number"
+                                    min="1000"
+                                    max="120000"
+                                    step="500"
+                                    value={config.detectionPipeline.blockingDiscussionTimeoutMs}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            blockingDiscussionTimeoutMs: Number(event.target.value || 30000)
+                                        }
+                                    }))}
+                                />
+                            </div>
+                            <div>
                                 <label className={labelClassName}>{t('platformSettings.escalationThreshold')}</label>
                                 <input
                                     className={inputClassName}
@@ -388,6 +441,20 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                             </div>
                         </div>
                         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                            <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                                <input
+                                    type="checkbox"
+                                    checked={config.detectionPipeline.asyncReviewEnabled}
+                                    onChange={(event) => updateConfig((current) => ({
+                                        ...current,
+                                        detectionPipeline: {
+                                            ...current.detectionPipeline,
+                                            asyncReviewEnabled: event.target.checked
+                                        }
+                                    }))}
+                                />
+                                Async review
+                            </label>
                             <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
                                 <input
                                     type="checkbox"

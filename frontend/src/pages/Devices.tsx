@@ -76,7 +76,20 @@ const defaultConfig = (device: Device): DeviceConfig => ({
     networkProfile: device.config?.networkProfile || 'cloud-mesh',
     scanProfile: device.config?.scanProfile || 'balanced',
     notes: device.config?.notes || '',
-    commandPermissions: device.config?.commandPermissions || ['collect', 'reboot', 'sync-config'],
+    commandPermissions: device.config?.commandPermissions || [
+        'collect',
+        'reboot',
+        'sync-config',
+        'ota_update',
+        'deploy_bundle',
+        'host_install',
+        'host_remove',
+        'recovery_flash',
+        'factory_reset',
+        'diagnostic_unlock',
+        'wipe_data',
+        'critical_config_change'
+    ],
     tags: device.config?.tags || []
 });
 
@@ -313,7 +326,11 @@ const Devices = () => {
         setCommandBusyByDevice((current) => ({ ...current, [deviceId]: command }));
         try {
             const response = await sendDeviceCommand(deviceId, command);
-            setActionMessage(response.message || `Command ${command} completed`);
+            setActionMessage(
+                response.status === 'approval_required'
+                    ? `${response.message || `Command ${command} is waiting for hardware confirmation.`}${response.confirmationSessionId ? ` (${response.confirmationSessionId})` : ''}`
+                    : response.message || `Command ${command} completed`
+            );
             await fetchDevices();
             if (settingsOpen && settingsDeviceId === deviceId) {
                 await loadDeviceConfig(deviceId);

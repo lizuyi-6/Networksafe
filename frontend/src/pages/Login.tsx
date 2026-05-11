@@ -112,7 +112,11 @@ const Login = () => {
             await login({ email, password });
             showToast(t('login.login_success'), 'success');
 
-            await refreshDemoState();
+            // Don't let refreshDemoState block navigation
+            await Promise.race([
+                refreshDemoState(),
+                new Promise(resolve => setTimeout(resolve, 2000))
+            ]);
 
             setTimeout(() => {
                 navigate('/dashboard');

@@ -176,8 +176,8 @@ const isHttpsRequest = (req: Request): boolean => {
 
 export const buildCookieOptions = (req: Request) => ({
     httpOnly: true,
-    secure: isHttpsRequest(req),
-    sameSite: 'strict' as const,
+    secure: process.env.NODE_ENV === 'production' ? isHttpsRequest(req) : false,
+    sameSite: 'lax' as const,
     path: '/',
     maxAge: COOKIE_MAX_AGE // 24 hours
 });

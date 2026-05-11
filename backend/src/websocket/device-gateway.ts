@@ -20,12 +20,14 @@ import { Server, Socket } from 'socket.io';
 import crypto from 'crypto';
 import logger from '../utils/logger';
 import auditLogger from '../security/audit-logger.service';
+import { commandDispatcherService } from '../services/command-dispatcher.service';
 import type { TenantContext } from '../core/tenant/tenant-context';
 import {
     PLATFORM_TENANT_ID,
     resolveDeviceTenantContext,
 } from '../core/tenant/tenant-context';
 import { deviceControlService } from '../services/device-control.service';
+import { hardwareAuthorizationService } from '../services/hardware-authorization.service';
 import { socketRateLimitService } from '../services/socket-rate-limit.service';
 import {
     registerDevice,
@@ -46,7 +48,10 @@ import {
 interface DeviceSocket extends Socket {
     deviceId?: string;
     tenantContext?: TenantContext;
+    hardwareGateId?: string;
 }
+
+type HardwareAckResult = Awaited<ReturnType<typeof hardwareAuthorizationService.handlePhysicalConfirmationAck>>;
 
 interface SignedDeviceCommand {
     command: {
@@ -280,6 +285,10 @@ export class DeviceGateway {
             free_heap,
             sdk_version,
             api_key,
+            public_key_pem,
+            secure_element_present,
+            device_role,
+            transport,
         } = payload;
 
         if (!(await checkSocketRateLimit(socket, tenantContext.tenantId))) {
@@ -326,6 +335,25 @@ export class DeviceGateway {
         socket.tenantContext = tenantContext;
         this.deviceSockets.set(device_id, socket);
 
+        if (public_key_pem) {
+            socket.hardwareGateId = device_id;
+            hardwareAuthorizationService.enrollGate({
+                tenantId: tenantContext.tenantId,
+                gateId: device_id,
+                displayName: device_id,
+                publicKeyPem: public_key_pem,
+                algorithm: 'ECDSA_P256_SHA256',
+                metadata: {
+                    chipModel: chip_model || 'unknown',
+                    sdkVersion: sdk_version || 'unknown',
+                    secureElementPresent: secure_element_present ?? false,
+                    deviceRole: device_role || 'hardware_gate',
+                    transport: transport || 'unknown'
+                },
+                status: 'online'
+            });
+        }
+
         registerDevice({
             deviceId: device_id,
             version: version || 'unknown',
@@ -334,6 +362,7 @@ export class DeviceGateway {
             freeHeap: free_heap || 0,
             sdkVersion: sdk_version || 'unknown',
             mode: 'online',
+            physicalAuth: public_key_pem ? { publicKeyPem: public_key_pem } : undefined,
         });
         addDeviceEvent(device_id, 'register', {
             version,
@@ -529,15 +558,47 @@ export class DeviceGateway {
     private async handlePhysicalConfirmationAck(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
         const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
+        const gateId = socket.hardwareGateId || socket.deviceId;
         addDeviceEvent(socket.deviceId, 'command', {
             action: 'physical_confirmation_ack',
             ...data
         });
+        let hardwareResult: HardwareAckResult = {
+            handled: false,
+            confirmed: false,
+            reason: 'hardware_authorization_unavailable'
+        };
+        try {
+            hardwareResult = await hardwareAuthorizationService.handlePhysicalConfirmationAck(gateId, data || {});
+        } catch (error: any) {
+            logger.warn('[DeviceGateway] Hardware authorization service unavailable, falling back to legacy confirmation', {
+                deviceId: socket.deviceId,
+                gateId,
+                error: error?.message
+            });
+        }
+        if (hardwareResult.handled) {
+            if (hardwareResult.confirmed && hardwareResult.intent && hardwareResult.grant) {
+                await commandDispatcherService.dispatchHardwareConfirmedIntent(hardwareResult.intent, hardwareResult.grant);
+            }
+            this.emitToDashboard('device:physical_confirmation', {
+                deviceId: socket.deviceId,
+                ...data,
+                tenantId,
+                hardwareGateId: gateId,
+                confirmed: hardwareResult.confirmed,
+                reason: hardwareResult.reason || null,
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+
         await deviceControlService.handlePhysicalConfirmationAck(socket.deviceId, data || {});
         this.emitToDashboard('device:physical_confirmation', {
             deviceId: socket.deviceId,
             ...data,
             tenantId,
+            hardwareGateId: gateId,
             timestamp: new Date().toISOString()
         });
     }
@@ -552,6 +613,9 @@ export class DeviceGateway {
             const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
             this.deviceSockets.delete(socket.deviceId);
             setDeviceOffline(socket.deviceId);
+            if (socket.hardwareGateId) {
+                hardwareAuthorizationService.markGateOffline(socket.hardwareGateId);
+            }
 
             addDeviceEvent(socket.deviceId, 'disconnect', { reason });
             this.emitToDashboard('device:offline', {

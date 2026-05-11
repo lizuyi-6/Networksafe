@@ -3,12 +3,14 @@
  * Public endpoints (no auth required for read-only dashboard data)
  */
 import { Router, Request, Response } from 'express';
+import { sendSuccess, sendError } from '../../core/http/api-response';
 import { getTrafficStats } from '../../services/traffic-stats.service';
 import { getAgentGateway, getAgentSystem } from '../../services/agent-system.service';
 import { getAlerts } from '../../services/alert-state.service';
 import { getDeviceList } from '../../services/device-registry.service';
 import { SystemStats } from '../../utils/system-stats';
 import { securityOperationsService } from '../../services/security-operations.service';
+import { detectionPipelineService } from '../../services/detection-pipeline.service';
 
 const router = Router();
 
@@ -179,8 +181,9 @@ router.get('/', async (req: any, res: any) => {
         const p99Latency = Math.round(Math.max(avgProcessingTime * 1.5, avgProcessingTime + cpuOverhead + Math.random() * 5));
 
         const sys = SystemStats.getInstance();
+        const detectionPipeline = await detectionPipelineService.getSummary('global').catch(() => null);
 
-        res.json({
+        sendSuccess(res, {
             totalRequests: total,
             blockedRequests: blocked,
             activeConnections: ts.activeFlows.filter((f: any) => f.state === 'ESTABLISHED').length,
@@ -197,41 +200,11 @@ router.get('/', async (req: any, res: any) => {
             memoryUsage: sys.memoryUsage,
             diskUsage: sys.diskUsage,
             networkUsage: sys.networkUsageMb,
-            securityOperations: cachedOpsSummary
+            securityOperations: cachedOpsSummary,
+            detectionPipeline
         });
     } catch (err: any) {
-        res.json({
-            totalRequests: 0,
-            blockedRequests: 0,
-            activeConnections: 0,
-            successRate: 100,
-            avgProcessingTime: 0,
-            currentRPS: 0,
-            history: [],
-            attackOrigins: [],
-            threats: [],
-            requestsTrend: 0,
-            blockedTrend: 0,
-            p99Latency: 0,
-            cpuUsage: 0,
-            memoryUsage: 0,
-            diskUsage: 0,
-            networkUsage: 0,
-            securityOperations: {
-                openCriticalFindings: 0,
-                highRiskFindings: 0,
-                activeAlerts: 0,
-                runningScans: 0,
-                queuedScans: 0,
-                pendingActions: 0,
-                failedValidations: 0,
-                assetsAtRisk: 0,
-                observedSessions: 0,
-                trafficAnomalies: 0,
-                recentActions: [],
-                recentValidations: []
-            }
-        });
+        sendError(res, 500, { code: 'STATS_ERROR', message: err.message });
     }
 });
 
@@ -249,7 +222,7 @@ router.get('/badges', async (req: any, res: any) => {
 
         const summary = cachedOpsSummary;
 
-        res.json({
+        sendSuccess(res, {
             alerts: activeAlertsCount,
             devices: onlineDevicesCount,
             agents: agentsCount,
@@ -258,7 +231,7 @@ router.get('/badges', async (req: any, res: any) => {
             scanner: summary.runningScans + summary.highRiskFindings + summary.pendingActions
         });
     } catch (err: any) {
-        res.json({ alerts: 0, devices: 0, agents: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
+        sendError(res, 500, { code: 'BADGES_ERROR', message: err.message });
     }
 });
 

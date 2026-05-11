@@ -61,7 +61,7 @@ describe('Config Routes', () => {
       privacyMode: 'off',
       auditArchive: { bucket: 'audit', retentionDays: 30, objectLockRequired: true, verifyIntervalMinutes: 60 },
       fastpath: { enabled: true, baseUrl: 'http://fastpath:8081', transport: 'tcp', socketPath: null, timeoutMs: 1500, fallbackEnabled: true, trafficShadowEnabled: false, trafficShadowSampleRatePct: 10, trafficMaxBodyBytes: 65536, configCacheTtlMs: 30000 },
-      detectionPipeline: { ruleFirstEnabled: true, aiEscalationMode: 'high_risk_allowed_only', enableHttpApi: true, enablePacketInterceptor: true, enableAgentAsyncReview: true, aiEscalationThreshold: 0.4, candidateMinConfidence: 0.85, learningMode: 'malicious_review_queue' },
+      detectionPipeline: { ruleFirstEnabled: true, aiEscalationMode: 'high_risk_allowed_only', classificationLevel: 'standard', blockingDiscussionTimeoutMs: 30000, hotPathRouteMode: 'local_only', asyncReviewEnabled: true, blockingReviewForHighRiskActions: true, enableHttpApi: true, enablePacketInterceptor: true, enableAgentAsyncReview: true, aiEscalationThreshold: 0.4, candidateMinConfidence: 0.85, learningMode: 'malicious_review_queue' },
       deploymentDefaults: { serverType: 'nginx', profileTemplates: {} },
       deviceGateway: { primaryPath: '/ws/device', aliases: [], syncMaskApiKeys: true, firmwareLocalHost: '192.168.4.1', wifiSSID: 'AetherGuard-Setup', localPort: 8080, firmwareChannel: 'stable', firmwareRetentionDays: 30, statusAliasEnabled: true },
       edgeAuto: {

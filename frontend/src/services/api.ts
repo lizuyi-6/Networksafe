@@ -112,12 +112,22 @@ const applyDemoJitter = () => {
 };
 
 
+// In-memory token storage for development (cookie fallback)
+let _accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+    _accessToken = token;
+};
+
 const getAuthHeaders = () => {
-    // SECURITY FIX: No longer sending token in header
-    // Token is now in httpOnly cookie, sent automatically with credentials: 'include'
-    return {
+    const headers: Record<string, string> = {
         'Content-Type': 'application/json'
     };
+    // In dev, also send Authorization header as cookie fallback
+    if (_accessToken) {
+        headers['Authorization'] = `Bearer ${_accessToken}`;
+    }
+    return headers;
 };
 
 // SECURITY FIX: Fetch options with credentials for httpOnly cookies
@@ -147,7 +157,7 @@ const doRefresh = async (): Promise<boolean> => {
 const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Promise<Response> => {
     const response = await _fetchBase(url, options);
 
-    if (response.status !== 401 || url.includes('/auth/refresh') || url.includes('/health/')) {
+    if (response.status !== 401 || url.includes('/auth/refresh') || url.includes('/health/') || url.includes('/auth/login')) {
         return response;
     }
 
@@ -159,9 +169,14 @@ const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Pro
         refreshSubscribers = [];
         if (!success) {
             setSessionUserIdentity(null);
+            setAccessToken(null);
+            return response;
         }
+        // Retry the original request after successful refresh
+        return _fetchBase(url, options);
     }
 
+    // Another refresh is in progress — wait for it
     return new Promise((resolve) => {
         refreshSubscribers.push((success: boolean) => {
             if (success) {
@@ -280,6 +295,7 @@ export const login = async (
     }
 
     setSessionUserIdentity(user);
+    setAccessToken(data?.accessToken || payload?.accessToken || null);
     return {
         message: data?.message || payload?.message,
         user,
@@ -297,6 +313,7 @@ export const logout = async (signal?: AbortSignal) => {
 
     const payload = await response.json().catch(() => null) as any;
     setSessionUserIdentity(null);
+    setAccessToken(null);
 
     if (!response.ok) {
         throw new Error(extractErrorMessage(payload, `FG-AUTH-LOGOUT-${response.status}`));
@@ -524,6 +541,11 @@ export interface PlatformConfigResponse {
     detectionPipeline: {
         ruleFirstEnabled: boolean;
         aiEscalationMode: DetectionAIEscalationMode;
+        classificationLevel: 'standard' | 'elevated' | 'maximum';
+        blockingDiscussionTimeoutMs: number;
+        hotPathRouteMode: AIRoutingMode;
+        asyncReviewEnabled: boolean;
+        blockingReviewForHighRiskActions: boolean;
         enableHttpApi: boolean;
         enablePacketInterceptor: boolean;
         enableAgentAsyncReview: boolean;
@@ -638,17 +660,6 @@ export const fetchStats = async (signal?: AbortSignal): Promise<DashboardStats |
         const response = await fetchWithCredentials(`${API_BASE_URL}/stats`, { signal });
         if (!response.ok) throw new Error(i18n.t('api.fetch_failed'));
         const data = await response.json();
-
-        if (isDemoModeActive() && data?.overview) {
-            applyDemoJitter();
-            data.overview.totalRequests += demoState.statsOffset.totalRequests;
-            data.overview.threatsBlocked += demoState.statsOffset.threatsBlocked;
-            data.overview.activeConnections = Math.max(0, data.overview.activeConnections + demoState.trafficOffset.activeConnections);
-            if (data.performance) {
-                data.performance.requestsPerSecond = Math.floor(Math.random() * 600) + 150;
-                data.performance.averageLatency = Math.floor(Math.random() * 45) + 12;
-            }
-        }
         return data;
     } catch (e) {
         if (!isRequestAbortError(e, signal)) {
@@ -834,11 +845,11 @@ const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
         channels: []
     },
     aiRouting: {
-        mode: 'local_preferred',
+        mode: 'local_only',
         localEndpointId: 'default-laptop',
         localHotPathEndpointId: null,
         cloudEndpointId: null,
-        fallbackAllowed: true,
+        fallbackAllowed: false,
         redactionEnabled: true
     },
     privacyMode: 'off',
@@ -863,6 +874,11 @@ const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
     detectionPipeline: {
         ruleFirstEnabled: true,
         aiEscalationMode: 'high_risk_allowed_only',
+        classificationLevel: 'standard',
+        blockingDiscussionTimeoutMs: 30000,
+        hotPathRouteMode: 'local_only',
+        asyncReviewEnabled: true,
+        blockingReviewForHighRiskActions: true,
         enableHttpApi: true,
         enablePacketInterceptor: true,
         enableAgentAsyncReview: true,
@@ -902,9 +918,20 @@ const demoRuleSummary = (): RuleSummary => ({
     rejectedCandidates: 1,
     ruleHitRate: 0.62,
     aiEscalationRate: 0.18,
+    localModelHitRate: 0.16,
     avgProcessingTimeMs: 14.8,
     localAICount: 18,
     cloudAICount: 2,
+    asyncReviewQueueDepth: 3,
+    asyncReviewRunning: 1,
+    asyncReviewCompleted: 14,
+    asyncReviewFailed: 1,
+    debateCompletionRate: 0.42,
+    avgAsyncReviewLatencyMs: 1880,
+    classificationLevel: 'elevated',
+    blockingDiscussionCount: 6,
+    blockingDiscussionFailClosed: 1,
+    avgBlockingDiscussionLatencyMs: 412.6,
     topRules: [
         { ruleId: 'seed-http-sqli', name: 'SQLi UNION SELECT', severity: 'critical', hitCount: 12, source: 'seed' },
         { ruleId: 'candidate-agent-bruteforce', name: 'Agent credential spray', severity: 'high', hitCount: 6, source: 'candidate' }
@@ -2773,12 +2800,50 @@ export const sendDeviceCommand = async (deviceId: string, command: string): Prom
         return sendDemoDeviceCommand(deviceId, command);
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/devices/${encodeURIComponent(deviceId)}/cmd`, {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/commands/intents`, {
         method: 'POST',
-        body: JSON.stringify({ command })
+        body: JSON.stringify({
+            scope: 'device',
+            targetId: deviceId,
+            commandType: command,
+            payload: {}
+        })
     });
     if (!response.ok) {
         throw new Error(`FG-DEVICE-CMD-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchHardwareConfirmation = async (sessionId: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/hardware-confirmations/${encodeURIComponent(sessionId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-HARDWARE-CONFIRMATION-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchHardwareGates = async () => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/hardware-gates`);
+    if (!response.ok) {
+        throw new Error(`FG-HARDWARE-GATES-${response.status}`);
+    }
+    return response.json();
+};
+
+export const enrollHardwareGate = async (payload: {
+    gateId: string;
+    displayName?: string;
+    publicKeyPem: string;
+    algorithm?: string;
+    metadata?: Record<string, any>;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/hardware-gates/enroll`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-HARDWARE-GATE-ENROLL-${response.status}`);
     }
     return response.json();
 };

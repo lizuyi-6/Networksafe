@@ -303,8 +303,9 @@ router.post('/chat', async (req: AuthenticatedRequest, res: Response) => {
       : null;
     const effectiveLocalEndpoint = fallbackHotPathEndpoint || selectedLocalEndpoint;
 
-    if (config.privacyMode === 'strict') {
+    if (config.privacyMode === 'strict' || purpose === 'hot_path') {
       config.aiRouting.mode = 'local_only';
+      config.aiRouting.fallbackAllowed = false;
     }
 
     const runLocal = async () => {

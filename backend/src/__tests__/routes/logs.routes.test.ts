@@ -124,3 +124,50 @@ describe('GET /', () => {
     expect(response.body).toEqual([]);
   });
 });
+
+describe('GET /summary', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns 200 with aggregate counts only', async () => {
+    const response = await request(app).get('/summary');
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    const data = response.body.data;
+    expect(typeof data.totalLogs).toBe('number');
+    expect(typeof data.blockedCount).toBe('number');
+    expect(typeof data.warnCount).toBe('number');
+    expect(typeof data.criticalCount).toBe('number');
+  });
+
+  it('does not return raw log fields (ip, path, message)', async () => {
+    addLog({ type: 'Test', level: 'WARN', message: 'secret message', ip: '1.2.3.4', path: '/secret' });
+
+    const response = await request(app).get('/summary');
+    expect(response.status).toBe(200);
+    const data = response.body.data;
+    expect(data).not.toHaveProperty('ip');
+    expect(data).not.toHaveProperty('path');
+    expect(data).not.toHaveProperty('message');
+  });
+
+  it('counts WARN and CRITICAL logs correctly', async () => {
+    addLog({ type: 'T', level: 'WARN', message: 'w1', ip: '1.1.1.1' });
+    addLog({ type: 'T', level: 'CRITICAL', message: 'c1', ip: '2.2.2.2' });
+    addLog({ type: 'T', level: 'INFO', message: 'i1', ip: '3.3.3.3' });
+
+    const response = await request(app).get('/summary');
+    expect(response.status).toBe(200);
+    const data = response.body.data;
+    // warnCount and criticalCount should be at least the ones we just added
+    expect(data.warnCount).toBeGreaterThanOrEqual(1);
+    expect(data.criticalCount).toBeGreaterThanOrEqual(1);
+  });
+
+  it('requires authentication (authenticate middleware is called)', async () => {
+    const { authenticate } = require('../../middleware/auth.middleware');
+    await request(app).get('/summary');
+    expect(authenticate).toHaveBeenCalled();
+  });
+});

@@ -15,6 +15,10 @@ import agentAuthService from '../../security/agent-auth.service';
 import { securityOperationsService } from '../../services/security-operations.service';
 import { owaspWebEvaluationService } from '../../services/owasp-web-evaluation.service';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
+import {
+    getAgentGateway as getSharedAgentGateway,
+    getAgentSystem as getSharedAgentSystem
+} from '../../services/agent-system.service';
 import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
 
 const router = Router();
@@ -25,7 +29,7 @@ const router = Router();
 
 router.get('/agents/health', authenticate, (req: Request, res: Response) => {
     try {
-        const system = getAgentSystem();
+        const system = getSharedAgentSystem() || getAgentSystem();
         if (!system || !system.isInitialized()) {
             return res.json({ status: 'unknown', details: { reason: 'System not initialized' } });
         }
@@ -38,11 +42,14 @@ router.get('/agents/health', authenticate, (req: Request, res: Response) => {
 
 router.get('/agents/stats', authenticate, async (req: Request, res: Response) => {
     try {
-        const system = getAgentSystem();
+        const system = getSharedAgentSystem() || getAgentSystem();
+        const gateway = getSharedAgentGateway() || agentGateway;
         if (!system || !system.isInitialized()) {
             const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
             const opsSummary = await securityOperationsService.getDashboardSummaryView(tenantId);
-            const runtimeAgents = agentGateway?.getAgentList?.() || [];
+            const asyncReview = await detectionPipelineService.getAsyncReviewStats(tenantId);
+            const detectionSummary = await detectionPipelineService.getSummary(tenantId);
+            const runtimeAgents = gateway?.getAgentList?.() || [];
             return res.json({
                 orchestrator: {
                     activeTasks: opsSummary.runningScans + opsSummary.pendingActions + opsSummary.activeAlerts,
@@ -65,6 +72,15 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
                     pendingActions: opsSummary.pendingActions,
                     failedValidations: opsSummary.failedValidations,
                     assetsAtRisk: opsSummary.assetsAtRisk
+                },
+                detectionPipeline: {
+                    asyncReview,
+                    blockingDiscussion: {
+                        count: detectionSummary.blockingDiscussionCount,
+                        failClosed: detectionSummary.blockingDiscussionFailClosed,
+                        avgLatencyMs: detectionSummary.avgBlockingDiscussionLatencyMs
+                    },
+                    classificationLevel: detectionSummary.classificationLevel
                 },
                 health: {
                     status: 'degraded',
@@ -93,8 +109,10 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
         const health = system.getHealthStatus();
         const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
         const opsSummary = await securityOperationsService.getDashboardSummaryView(tenantId);
+        const asyncReview = await detectionPipelineService.getAsyncReviewStats(tenantId);
+        const detectionSummary = await detectionPipelineService.getSummary(tenantId);
         const threatPatterns = await securityOperationsService.summarizeThreatsView(tenantId);
-        const runtimeAgents = agentGateway?.getAgentList?.() || [];
+        const runtimeAgents = gateway?.getAgentList?.() || [];
         const registeredAgentsCount = agentAuthService
             .listAgents()
             .filter((agent) => agent.status === 'approved' || agent.status === 'pending')
@@ -169,6 +187,15 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
                 pendingActions: opsSummary.pendingActions,
                 failedValidations: opsSummary.failedValidations,
                 assetsAtRisk: opsSummary.assetsAtRisk
+            },
+            detectionPipeline: {
+                asyncReview,
+                blockingDiscussion: {
+                    count: detectionSummary.blockingDiscussionCount,
+                    failClosed: detectionSummary.blockingDiscussionFailClosed,
+                    avgLatencyMs: detectionSummary.avgBlockingDiscussionLatencyMs
+                },
+                classificationLevel: detectionSummary.classificationLevel
             },
             health: health,
             agents: combinedAgents
@@ -309,6 +336,7 @@ export const initializeAgentSystem = async (): Promise<void> => {
                 tenantId: request.tenantId,
                 routeModeOverride: options?.routeModeOverride,
                 analysisPurpose: options?.analysisPurpose || 'primary',
+                forceDebate: options?.forceDebate,
                 traceContext: undefined
             });
 
@@ -334,7 +362,12 @@ export const initializeAgentSystem = async (): Promise<void> => {
                     attackFamily: decision.attackFamily,
                     routeMode: decision.routeMode,
                     caseFileId: decision.caseFileId,
-                    analysisPurpose: options?.analysisPurpose || 'primary'
+                    layersActivated: decision.layersActivated || [],
+                    stageLatencies: decision.stageLatencies,
+                    debateTriggered: Boolean(decision.debateSession),
+                    experimentMode: decision.experimentMode,
+                    analysisPurpose: options?.analysisPurpose || 'primary',
+                    forceDebate: options?.forceDebate || false
                 }
             };
         }

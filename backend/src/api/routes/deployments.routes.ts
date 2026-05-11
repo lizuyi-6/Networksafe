@@ -4,7 +4,9 @@ import { posix as pathPosix } from 'path';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
 import { InputValidator } from '../../security/input-validator';
 import auditLogger from '../../security/audit-logger.service';
+import { sendError, sendSuccess } from '../../core/http/api-response';
 import { DeploymentTarget } from '../../services/platform-config.service';
+import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import {
   getDeploymentProfile,
   getNextDeploymentProfileVersion,
@@ -867,7 +869,7 @@ router.post('/esp32-execute', async (req: AuthenticatedRequest, res: Response) =
     const { getDeviceGateway } = await import('../../index');
     const gateway = getDeviceGateway();
     if (!gateway) {
-      return res.status(503).json({ success: false, error: 'backend.device_gateway_unavailable' });
+      return sendError(res, 503, { code: 'DEVICE_GATEWAY_UNAVAILABLE', message: 'backend.device_gateway_unavailable' });
     }
 
     // Find target device
@@ -881,18 +883,45 @@ router.post('/esp32-execute', async (req: AuthenticatedRequest, res: Response) =
         );
 
     if (!targetDevice) {
-      return res.status(404).json({ success: false, error: 'backend.esp32_not_found' });
+      return sendError(res, 404, { code: 'ESP32_NOT_FOUND', message: 'backend.esp32_not_found' });
     }
 
-    // Send deploy command to ESP32
-    await gateway.sendCommand(targetDevice.deviceId, 'DEPLOY_BUNDLE', {});
-    return res.json({
-      success: true,
-      message: 'backend.deploy_command_sent',
-      deviceId: targetDevice.deviceId
+    const result = await commandDispatcherService.dispatchDeviceCommand({
+      deviceId: targetDevice.deviceId,
+      commandType: 'deploy_bundle',
+      payload: {},
+      actor: {
+        tenantId: tenantOf(req),
+        userId: req.user?.userId || 'unknown',
+        email: req.user?.email,
+        ip: req.ip
+      }
+    });
+
+    if (!result.success && result.status === 'failed') {
+      return sendError(res, result.reason === 'hardware_gate_unavailable' ? 503 : 400, {
+        code: String(result.reason || 'ESP32_EXECUTE_FAILED').replace(/[^A-Za-z0-9]+/g, '_').toUpperCase(),
+        message: result.message
+      });
+    }
+
+    return sendSuccess(res, {
+      message: result.message || 'backend.deploy_command_sent',
+      deviceId: targetDevice.deviceId,
+      status: result.status,
+      actionId: result.actionId,
+      confirmationSessionId: result.confirmationSessionId || null
+    }, {
+      legacy: {
+        message: result.message || 'backend.deploy_command_sent',
+        deviceId: targetDevice.deviceId,
+        status: result.status,
+        actionId: result.actionId,
+        confirmationSessionId: result.confirmationSessionId || null
+      }
     });
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error?.message || 'backend.esp32_execute_failed' });
+    return sendError(res, 500, { code: 'ESP32_EXECUTE_FAILED', message: error?.message || 'backend.esp32_execute_failed' });
   }
 });
 

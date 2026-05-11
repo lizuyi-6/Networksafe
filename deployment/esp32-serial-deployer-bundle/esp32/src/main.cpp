@@ -6,6 +6,16 @@
  * - 非阻塞状态机
  * - 真实 OLED 状态显示
  * - 显式串口标记协议
+ *
+ * Hardening changes:
+ * - Task 9.1:  Button event queue (button_handler.h)
+ * - Task 10.2: Physical confirmation gate — startInstall/startUninstall only
+ *              called after OK button press in ST_CONFIRM_INSTALL/ST_CRITICAL_CONFIRM
+ * - Task 10.3: Back-button rejection sends AG:ERR:INSTALL / AG:ERR:REMOVE on UART2
+ * - Task 10.4: 60-second auto-cancel timeout for pending confirmations (Req 6.5)
+ * - Task 11.1: OLED updated within same loop tick on confirmation state entry (Req 6.5)
+ * - Task 11.2: 5-second result display hold in ST_SUCCESS / ST_ERROR (Req 6.6)
+ * - Task 12.1: LED colour mapping aligned with Requirement 8.5 / 8.9
  */
 
 #include <Arduino.h>
@@ -19,6 +29,12 @@ static Display display;
 static MultiButtonHandler btns;
 static HardwareCtrl hw;
 static DeploymentModule deploy;
+
+// Confirmation timeout: 60 seconds (Requirement 6.5)
+static constexpr uint32_t CONFIRM_TIMEOUT_MS = 60000UL;
+
+// Result display hold: 5 seconds (Requirement 6.6)
+static constexpr uint32_t RESULT_HOLD_MS = 5000UL;
 
 enum DeployState {
     ST_BOOT = 0,
@@ -91,6 +107,11 @@ void enterState(DeployState nextState) {
     DEBUG_PRINTF("[State] -> %d\n", static_cast<int>(state));
 }
 
+// ---------------------------------------------------------------------------
+// renderUi() — forward declaration (needed by handleStateEntry for task 11.1)
+// ---------------------------------------------------------------------------
+void renderUi();
+
 void handleStateEntry() {
     if (!stateNeedsEntry) {
         return;
@@ -104,6 +125,7 @@ void handleStateEntry() {
             errorReturnState = ST_MENU_SELECT;
             copyText(envInfo, sizeof(envInfo), "Detecting...");
             setStatusMessage("Status", "");
+            // Idle state: white during boot splash
             hw.setColor(COLOR_WHITE);
             break;
 
@@ -115,10 +137,12 @@ void handleStateEntry() {
             break;
 
         case ST_MENU_SELECT:
+            // Idle → blue (Requirement 8.9)
             hw.setColor(COLOR_BLUE);
             break;
 
         case ST_BACKUP:
+            // Operation in progress → BUSY (magenta) (Requirement 8.9)
             hw.setBlink(COLOR_PURPLE, COLOR_OFF, 220);
             if (!deploy.startBackup()) {
                 setStatusMessage("Backup Failed", deploy.getLastMessage());
@@ -127,39 +151,52 @@ void handleStateEntry() {
             break;
 
         case ST_BACKUP_FAIL:
+            // Operation failed → ERROR (red) (Requirement 8.9)
             hw.setColor(COLOR_RED);
             hw.playError();
             break;
 
         case ST_CONFIRM_INSTALL:
-            hw.setColor(COLOR_YELLOW);
+            // Awaiting confirmation → PENDING (yellow, blink 500/500ms) (Requirement 8.9)
+            hw.setBlink(COLOR_YELLOW, COLOR_OFF, 500);
+            // Task 11.1: Update OLED immediately (within same loop tick) — Requirement 6.5
+            uiDirty = true;
+            renderUi();
             break;
 
         case ST_INSTALLING:
-            hw.setBlink(COLOR_YELLOW, COLOR_OFF, 200);
+            // Operation in progress → BUSY (magenta) (Requirement 8.9)
+            hw.setBlink(COLOR_PURPLE, COLOR_OFF, 200);
             if (!deploy.startInstall()) {
                 enterErrorState("Install Failed", deploy.getLastMessage(), ST_MENU_SELECT);
             }
             break;
 
         case ST_CRITICAL_CONFIRM:
-            hw.setBlink(COLOR_RED, COLOR_OFF, 160);
+            // Awaiting confirmation → PENDING (yellow, blink 500/500ms) (Requirement 8.9)
+            hw.setBlink(COLOR_YELLOW, COLOR_OFF, 500);
             hw.playWarning();
+            // Task 11.1: Update OLED immediately (within same loop tick) — Requirement 6.5
+            uiDirty = true;
+            renderUi();
             break;
 
         case ST_UNINSTALLING:
-            hw.setBlink(COLOR_RED, COLOR_OFF, 200);
+            // Operation in progress → BUSY (magenta) (Requirement 8.9)
+            hw.setBlink(COLOR_PURPLE, COLOR_OFF, 200);
             if (!deploy.startUninstall()) {
                 enterErrorState("Remove Failed", deploy.getLastMessage(), ST_MENU_SELECT);
             }
             break;
 
         case ST_SUCCESS:
+            // Operation succeeded → OK (green, 3s solid) (Requirement 8.9)
             hw.setColor(COLOR_GREEN);
             hw.playSuccess();
             break;
 
         case ST_ERROR:
+            // Operation failed/rejected → ERROR (red, 3s solid) (Requirement 8.9)
             hw.setColor(COLOR_RED);
             hw.playError();
             break;
@@ -277,7 +314,8 @@ void renderUi() {
             break;
 
         case ST_CONFIRM_INSTALL:
-            display.showPrompt("Install Agent?", "Backup complete. Continue?", "[OK] Yes [Back] No");
+            // Task 11.1: Show operation name and "CONFIRM?" text (Requirement 6.5)
+            display.showPrompt("INSTALL", "CONFIRM?", "[OK] Yes [Back] No");
             break;
 
         case ST_INSTALLING:
@@ -286,7 +324,8 @@ void renderUi() {
             break;
 
         case ST_CRITICAL_CONFIRM:
-            display.showLines("Warning", "Delete deployed files?", "Press OK to confirm", "[Back] Cancel", false);
+            // Task 11.1: Show operation name and "CONFIRM?" text (Requirement 6.5)
+            display.showLines("REMOVE", "CONFIRM?", "Press OK to confirm", "[Back] Cancel", false);
             break;
 
         case ST_UNINSTALLING:
@@ -335,28 +374,38 @@ void handleButtons(bool ok, bool next, bool back) {
 
         case ST_CONFIRM_INSTALL:
             if (ok) {
+                // Task 10.2: Physical OK press received — now safe to call startInstall()
+                // (Requirement 5.3, 5.8: AG:BEGIN:INSTALL only sent after physical OK)
                 enterState(ST_INSTALLING);
             } else if (back) {
+                // Task 10.3: Back rejection — send AG:ERR:INSTALL on UART2 (Requirement 5.6)
+                deploy.sendErrInstall();
                 enterState(ST_MENU_SELECT);
             }
             break;
 
         case ST_CRITICAL_CONFIRM:
             if (ok) {
+                // Task 10.2: Physical OK press received — now safe to call startUninstall()
+                // (Requirement 5.4, 5.8: AG:BEGIN:REMOVE only sent after physical OK)
                 enterState(ST_UNINSTALLING);
             } else if (back) {
+                // Task 10.3: Back rejection — send AG:ERR:REMOVE on UART2 (Requirement 5.5)
+                deploy.sendErrRemove();
                 enterState(ST_MENU_SELECT);
             }
             break;
 
         case ST_SUCCESS:
-            if (ok || back) {
+            // Task 11.2: Only accept button input after 5-second hold (Requirement 6.6)
+            if ((ok || back) && millis() - stateEnteredAt >= RESULT_HOLD_MS) {
                 enterState(ST_BOOT);
             }
             break;
 
         case ST_ERROR:
-            if (back) {
+            // Task 11.2: Only accept button input after 5-second hold (Requirement 6.6)
+            if (back && millis() - stateEnteredAt >= RESULT_HOLD_MS) {
                 enterState(errorReturnState);
             }
             break;
@@ -364,6 +413,32 @@ void handleButtons(bool ok, bool next, bool back) {
         default:
             break;
     }
+}
+
+// ---------------------------------------------------------------------------
+// Task 10.4: 60-second auto-cancel for pending confirmations (Requirement 6.5)
+// ---------------------------------------------------------------------------
+void checkConfirmationTimeout() {
+    if (state != ST_CONFIRM_INSTALL && state != ST_CRITICAL_CONFIRM) {
+        return;
+    }
+
+    if (millis() - stateEnteredAt < CONFIRM_TIMEOUT_MS) {
+        return;
+    }
+
+    // Timeout elapsed — send AG:ERR and revert to idle
+    if (state == ST_CONFIRM_INSTALL) {
+        deploy.sendErrTimeout(OP_INSTALL);
+        DEBUG_PRINTLN("[Main] INSTALL confirmation timed out — auto-cancelled");
+    } else {
+        deploy.sendErrTimeout(OP_REMOVE);
+        DEBUG_PRINTLN("[Main] REMOVE confirmation timed out — auto-cancelled");
+    }
+
+    // Revert OLED to idle state
+    setStatusMessage("Timeout", "Confirmation expired");
+    enterState(ST_MENU_SELECT);
 }
 
 void setup() {
@@ -379,17 +454,32 @@ void loop() {
     hw.update();
     deploy.update();
     handleDeployResults();
+
+    // Task 13.1: Play begin sound when AG:BEGIN is received
+    if (deploy.consumeBeginSound()) {
+        hw.playBegin();
+    }
+
     handleStateEntry();
 
     if (state == ST_BOOT && millis() - stateEnteredAt >= BOOT_SPLASH_MS) {
         enterState(ST_CHECK_ENV);
     }
 
-    bool ok = btns.isOkClicked();
-    bool next = btns.isNextClicked();
-    bool back = btns.isBackClicked();
+    // Task 10.4: Check 60-second confirmation timeout
+    checkConfirmationTimeout();
 
-    handleButtons(ok, next, back);
+    // Poll buttons into the event queue (Requirement 7.5 / 7.6)
+    btns.update();
+
+    // Drain the event queue and dispatch each event
+    ButtonEvent evt;
+    while (btns.dequeue(evt)) {
+        bool ok   = (evt == BTN_OK);
+        bool next = (evt == BTN_NEXT);
+        bool back = (evt == BTN_BACK);
+        handleButtons(ok, next, back);
+    }
     handleStateEntry();
     renderUi();
 

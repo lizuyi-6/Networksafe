@@ -47,8 +47,7 @@
 
 // 4. Buzzer module
 #define PIN_BUZZER              14
-#define BUZZER_ACTIVE           1
-#define BUZZER_ACTIVE_LEVEL     LOW
+#define BUZZER_ACTIVE_LEVEL     LOW   // LOW == 0; GPIO14 low → transistor conducts → buzzer sounds
 
 // 5. Target-host serial link (deployment mode via external CP2102)
 #define TARGET_SERIAL           Serial2
@@ -79,6 +78,7 @@
 #define SERIAL_PROTO_ERR_INSTALL     "AG:ERR:INSTALL"
 #define SERIAL_PROTO_OK_REMOVE       "AG:OK:REMOVE"
 #define SERIAL_PROTO_ERR_REMOVE      "AG:ERR:REMOVE"
+#define SERIAL_PROTO_ERR_BUSY        "AG:ERR:BUSY"
 
 // Buffers
 #define RX_BUFFER_SIZE           2048
@@ -130,6 +130,53 @@
     #define DEBUG_PRINT(x)       ((void)0)
     #define DEBUG_PRINTLN(x)     ((void)0)
     #define DEBUG_PRINTF(...)    ((void)0)
+#endif
+
+// ---------------------------------------------------------------------------
+// Compile-time guards — Requirement 14.7
+// The build MUST fail if any of the 14 hardware-pin macros is undefined.
+// ---------------------------------------------------------------------------
+#ifndef PIN_I2C_SDA
+#  error "config.h: PIN_I2C_SDA is not defined (expected 21)"
+#endif
+#ifndef PIN_I2C_SCL
+#  error "config.h: PIN_I2C_SCL is not defined (expected 22)"
+#endif
+#ifndef PIN_BTN_OK
+#  error "config.h: PIN_BTN_OK is not defined (expected 18)"
+#endif
+#ifndef PIN_BTN_NEXT
+#  error "config.h: PIN_BTN_NEXT is not defined (expected 19)"
+#endif
+#ifndef PIN_BTN_BACK
+#  error "config.h: PIN_BTN_BACK is not defined (expected 23)"
+#endif
+#ifndef PIN_RGB_RED
+#  error "config.h: PIN_RGB_RED is not defined (expected 25)"
+#endif
+#ifndef PIN_RGB_GREEN
+#  error "config.h: PIN_RGB_GREEN is not defined (expected 26)"
+#endif
+#ifndef PIN_RGB_BLUE
+#  error "config.h: PIN_RGB_BLUE is not defined (expected 27)"
+#endif
+#ifndef RGB_COMMON_ANODE
+#  error "config.h: RGB_COMMON_ANODE is not defined (expected 0)"
+#endif
+#ifndef PIN_BUZZER
+#  error "config.h: PIN_BUZZER is not defined (expected 14)"
+#endif
+#ifndef BUZZER_ACTIVE_LEVEL
+#  error "config.h: BUZZER_ACTIVE_LEVEL is not defined (expected LOW / 0)"
+#endif
+#ifndef TARGET_RX_PIN
+#  error "config.h: TARGET_RX_PIN is not defined (expected 16)"
+#endif
+#ifndef TARGET_TX_PIN
+#  error "config.h: TARGET_TX_PIN is not defined (expected 17)"
+#endif
+#ifndef TARGET_BAUD
+#  error "config.h: TARGET_BAUD is not defined (expected 115200)"
 #endif
 
 #endif // CONFIG_H
