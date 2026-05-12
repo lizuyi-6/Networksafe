@@ -229,6 +229,7 @@ const Devices = () => {
     const [commandHistory, setCommandHistory] = useState<DeviceCommandRecord[]>([]);
     const [commandBusyByDevice, setCommandBusyByDevice] = useState<Record<string, string | null>>({});
     const [platformBadges, setPlatformBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
+    const [, setShowResetConfirm] = useState(false);
 
     const fetchDevices = async (signal?: AbortSignal) => {
         setLoading(true);
@@ -617,7 +618,7 @@ const Devices = () => {
 
                             <div className="border-t border-border px-6 py-4">
                                 <div className="flex items-center justify-between gap-3">
-                                    <button onClick={() => activeConfigDevice && setConfigDraft(defaultConfig(activeConfigDevice))} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">
+                                    <button onClick={() => setShowResetConfirm(true)} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">
                                         <RotateCcw size={14} /> {t('devices.reset')}
                                     </button>
                                     <div className="flex gap-3">

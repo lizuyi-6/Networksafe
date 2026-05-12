@@ -1,13 +1,14 @@
 import { getDatabase } from '../../config/database';
 import { getDatabaseMode, isSqliteFallbackEnabled } from '../../config/platform-runtime';
 import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
+import type { EnterpriseRole } from '../../security/permissions';
 
 export interface AuthUserRow {
   id: string;
   email: string;
   username: string;
   password_hash: string;
-  role: 'admin' | 'tenant' | 'viewer';
+  role: EnterpriseRole;
   plan?: 'starter' | 'pro' | 'ultra' | null;
   tenant_id?: string | null;
   status?: string | null;

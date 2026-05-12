@@ -332,6 +332,8 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     className={inputClassName}
                                 >
                                     <option value="high_risk_allowed_only">high_risk_allowed_only</option>
+                                    <option value="all_allowed">all_allowed</option>
+                                    <option value="disabled">disabled</option>
                                 </select>
                             </div>
                             <div>
@@ -437,6 +439,8 @@ const PlatformCapabilitySettings = ({ endpointVersion = 0 }: { endpointVersion?:
                                     className={inputClassName}
                                 >
                                     <option value="malicious_review_queue">malicious_review_queue</option>
+                                    <option value="passive_observe">passive_observe</option>
+                                    <option value="active_block">active_block</option>
                                 </select>
                             </div>
                         </div>

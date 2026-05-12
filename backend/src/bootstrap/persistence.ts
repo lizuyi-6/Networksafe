@@ -16,6 +16,7 @@ import { scannerTaskService } from '../services/scanner-task.service';
 import { securityOperationsService } from '../services/security-operations.service';
 import { tenantOversightService } from '../services/tenant-oversight.service';
 import { postgresShadowStoreService } from '../services/postgres-shadow-store.service';
+import { deploymentRunService } from '../services/deployment-run.service';
 import logger from '../utils/logger';
 
 export async function bootstrapPersistence(): Promise<void> {
@@ -34,6 +35,7 @@ export async function bootstrapPersistence(): Promise<void> {
   tenantOversightService.prepare();
   benchmarkService.prepare();
   detectionPipelineService.prepare();
+  deploymentRunService.prepare();
   ensureAgentOnboardingSchema();
   ensureDeploymentProfileSchema();
   ensureAnnouncementsSchema();

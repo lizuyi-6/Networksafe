@@ -9,6 +9,8 @@ import logger from '../utils/logger';
 import { securityOperationsService } from './security-operations.service';
 import { commandDispatcherService } from './command-dispatcher.service';
 import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
+import { allowGatewayDestructiveCommands } from '../config/enterprise-runtime';
+import { requiresPhysicalConfirmation } from '../security/command-risk-policy';
 
 // ---- Types ----
 
@@ -79,6 +81,10 @@ const deviceEvents = new Map<string, DeviceEvent[]>();
 const deviceConfigs = new Map<string, DeviceConfig>();
 const deviceCommands = new Map<string, DeviceCommandRecord[]>();
 let deviceCommandTransport: ((deviceId: string, command: string, params?: Record<string, any>) => Promise<boolean> | boolean) | null = null;
+
+function isProductionBlockedDeviceCommand(command: string): boolean {
+    return !allowGatewayDestructiveCommands() && requiresPhysicalConfirmation(command);
+}
 
 // Codebook
 const codebook: Record<string, string> = {
@@ -327,6 +333,14 @@ export async function executeDeviceCommandInternal(input: {
     const device = devices.get(input.deviceId);
     if (!device) {
         return { success: false, message: 'Device not found.', reason: 'device_not_found' };
+    }
+
+    if (isProductionBlockedDeviceCommand(input.command)) {
+        return {
+            success: false,
+            message: `Command ${input.command} is blocked on the experimental device gateway in the current enterprise runtime.`,
+            reason: 'device_command_requires_enterprise_serial_run'
+        };
     }
 
     const config = ensureDeviceConfig(device);

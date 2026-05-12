@@ -62,7 +62,7 @@ npm run typecheck                 # Or: npx tsc --noEmit
 npm audit --audit-level=high
 
 # Tests
-npm test                          # Run all tests
+npm test                          # Run all tests (excludes AI agents tests)
 npm run test:coverage             # With coverage
 npm run test:agents               # AI agents tests only (excluded from npm test)
 npm run test:core                 # Core module tests
@@ -76,6 +76,18 @@ npm run test:routes               # Route tests
 npm run test:controllers          # Controller tests
 npm run demo:agents               # Run AI agents demo locally
 npm run eval:owasp                # Run OWASP security evaluation
+
+# Run specific test file
+npx jest src/__tests__/agent-gateway.test.ts
+
+# Run tests matching a pattern
+npm test -- --testPathPattern="controller"
+
+# Run tests in watch mode (development)
+npx jest --watch
+
+# Run with verbose output
+npx jest --verbose --testNamePattern="should detect attacks"
 
 # Database seeding (demo data)
 npm run seed                      # Seed demo data
@@ -150,10 +162,11 @@ cargo clippy -- -D warnings
 cargo build --release
 ```
 
-### TypeScript Version
+### Runtime Versions
 
 - **Node.js**: v18+ (CI uses Node 18)
 - **Rust**: 1.85.0 (for fastpath component)
+- **TypeScript**: Configured in `tsconfig.json` (backend and frontend have separate configs)
 
 ## Database
 

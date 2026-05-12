@@ -3,6 +3,7 @@ import auditLogger from '../security/audit-logger.service';
 import { classifyCommandRisk } from '../security/command-risk-policy';
 import type { HardwareGrantRecord, CommandIntentRecord } from './hardware-authorization.service';
 import { hardwareAuthorizationService } from './hardware-authorization.service';
+import { deploymentRunService } from './deployment-run.service';
 import logger from '../utils/logger';
 import { detectionPipelineService } from './detection-pipeline.service';
 import { securityOperationsService } from './security-operations.service';
@@ -737,6 +738,27 @@ class CommandDispatcherService {
   }
 
   async dispatchHardwareConfirmedIntent(intent: CommandIntentRecord, grant: HardwareGrantRecord): Promise<DispatchResult> {
+    if (intent.scope === 'deployment') {
+      const run = deploymentRunService.confirmApprovedRun(intent, grant);
+      const result: DispatchResult = {
+        success: Boolean(run),
+        status: run ? 'completed' : 'failed',
+        actionId: intent.actionId,
+        message: run
+          ? 'Deployment run approved and waiting for helper execution.'
+          : 'Deployment run approval target not found.',
+        reason: run ? undefined : 'deployment_run_not_found'
+      };
+      hardwareAuthorizationService.completeIntent(intent.actionId, result.success, {
+        status: result.success ? 'approved' : 'failed',
+        message: result.message,
+        reason: result.reason || null,
+        runId: intent.targetId,
+        hardwareGrantId: grant.grantId
+      });
+      return result;
+    }
+
     const actor: CommandActor = {
       tenantId: intent.tenantId,
       userId: 'hardware-confirmation-gateway',

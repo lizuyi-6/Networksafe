@@ -222,9 +222,11 @@ export interface CurrentUserSession {
     userId: string;
     email: string;
     username: string;
-    role: 'admin' | 'tenant' | 'viewer';
+    role: 'admin' | 'tenant' | 'viewer' | 'platform_admin' | 'tenant_admin' | 'tenant_operator' | 'tenant_viewer' | 'auditor';
     plan?: 'starter' | 'pro' | 'ultra';
     tenantId?: string;
+    permissions?: string[];
+    authProvider?: 'local' | 'oidc';
 }
 
 export interface LoginResponse {
@@ -302,6 +304,18 @@ export const login = async (
         accessToken: data?.accessToken || payload?.accessToken,
         refreshToken: data?.refreshToken || payload?.refreshToken,
         expiresIn: data?.expiresIn || payload?.expiresIn
+    };
+};
+
+export const loginWithOidc = async (): Promise<{ authorizationUrl: string }> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/oidc/login`);
+    const payload = await response.json().catch(() => null) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(payload, `FG-AUTH-OIDC-LOGIN-${response.status}`));
+    }
+    const data = unwrapApiEnvelope<{ authorizationUrl: string }>(payload);
+    return {
+        authorizationUrl: data.authorizationUrl
     };
 };
 
@@ -437,6 +451,11 @@ export interface SystemModeResponse {
     attackSimEnabled: boolean;
     canToggleMode?: boolean;
     devLoginEnabled?: boolean;
+    passwordLoginEnabled?: boolean;
+    oidcEnabled?: boolean;
+    enterpriseRuntimeMode?: 'prod-enterprise' | 'trial' | 'lab';
+    demoModeAllowed?: boolean;
+    enterpriseStrictMode?: boolean;
     profile?: string;
     dbMode?: string;
 }
@@ -469,12 +488,66 @@ export type DeploymentTarget =
     | 'binary_agent'
     | 'k8s_daemonset';
 
+export interface HardwareGateRecord {
+    gateId: string;
+    tenantId: string;
+    displayName: string;
+    algorithm: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    lastSeenAt?: string;
+    metadata?: Record<string, any>;
+}
+
+export interface DeploymentRunRecord {
+    id: string;
+    tenantId: string;
+    helperId: string;
+    gateId: string;
+    requestType: 'install' | 'remove';
+    serverType: DeploymentTarget;
+    status: string;
+    bundleChecksum: string;
+    checksumShortCode: string;
+    requestedBy: string;
+    approvedBy?: string;
+    backupRef?: string;
+    hardwareGrantId?: string;
+    evidenceStatus: 'pending' | 'ready' | 'failed';
+    evidenceArtifactRef?: string;
+    createdAt: string;
+    updatedAt: string;
+    completedAt?: string;
+    lastError?: string;
+}
+
+export interface DeploymentHelperRecord {
+    helperId: string;
+    tenantId: string;
+    fingerprint: string;
+    version: string;
+    hostname: string;
+    systemdStatus: string;
+    writablePaths: string[];
+    targetHost: string;
+    status: 'online' | 'offline' | 'stale';
+    createdAt: string;
+    updatedAt: string;
+    lastHeartbeatAt?: string;
+}
+
+export interface DeploymentEvidenceResponse {
+    run: DeploymentRunRecord;
+    payload: Record<string, any>;
+}
+
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type NotificationChannelType = 'email' | 'smtp' | 'slack_webhook' | 'generic_webhook';
 export type AIRoutingMode = 'cloud_only' | 'local_preferred' | 'local_only' | 'hybrid_verify';
 export type PrivacyMode = 'off' | 'strict';
-export type DetectionAIEscalationMode = 'high_risk_allowed_only';
-export type DetectionLearningMode = 'malicious_review_queue';
+export type DetectionAIEscalationMode = 'high_risk_allowed_only' | 'all_allowed' | 'disabled';
+export type DetectionLearningMode = 'malicious_review_queue' | 'passive_observe' | 'active_block';
 
 export interface NotificationChannelConfig {
     id: string;
@@ -2376,14 +2449,14 @@ export const resetUserPassword = async (userId: string) => {
 export const fetchPublicAnnouncements = async (signal?: AbortSignal) => {
     const response = await fetch(`${API_BASE_URL}/announcements`, { signal });
     if (!response.ok) throw new Error(i18n.t('api.failed_to_list_announcements'));
-    return response.json().catch(() => ({}));
+    return readJson<any[]>(response);
 };
 
 // Announcements - Admin endpoints
 export const fetchAnnouncements = async (signal?: AbortSignal) => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements`, { signal });
     if (!response.ok) throw new Error(i18n.t('api.failed_to_list_announcements'));
-    return response.json().catch(() => ({}));
+    return readJson<any[]>(response);
 };
 
 export const createAnnouncement = async (payload: { title: string; content: string; type?: string; expiresAt?: string }) => {
@@ -2823,12 +2896,14 @@ export const fetchHardwareConfirmation = async (sessionId: string) => {
     return response.json();
 };
 
-export const fetchHardwareGates = async () => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/hardware-gates`);
+export const fetchHardwareGates = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/hardware-gates`, { signal });
     if (!response.ok) {
         throw new Error(`FG-HARDWARE-GATES-${response.status}`);
     }
-    return response.json();
+    const payload = await response.json();
+    const data = unwrapApiEnvelope<{ gates: HardwareGateRecord[] }>(payload);
+    return data?.gates || [];
 };
 
 export const enrollHardwareGate = async (payload: {
@@ -2845,7 +2920,62 @@ export const enrollHardwareGate = async (payload: {
     if (!response.ok) {
         throw new Error(`FG-HARDWARE-GATE-ENROLL-${response.status}`);
     }
-    return response.json();
+    return readJson<HardwareGateRecord>(response);
+};
+
+export const fetchDeploymentHelpers = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/helpers`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-HELPERS-${response.status}`);
+    }
+    const payload = await response.json();
+    const data = unwrapApiEnvelope<{ helpers: DeploymentHelperRecord[] }>(payload);
+    return data?.helpers || [];
+};
+
+export const createDeploymentRun = async (payload: {
+    helperId: string;
+    gateId: string;
+    requestType: 'install' | 'remove';
+    serverType: DeploymentTarget;
+    profile: Record<string, any>;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployment-runs`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-RUN-CREATE-${response.status}`);
+    }
+    return readJson<DeploymentRunRecord>(response);
+};
+
+export const fetchDeploymentRuns = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployment-runs`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-RUNS-${response.status}`);
+    }
+    const payload = await response.json();
+    const data = unwrapApiEnvelope<{ runs: DeploymentRunRecord[] }>(payload);
+    return data?.runs || [];
+};
+
+export const approveDeploymentRun = async (runId: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployment-runs/${encodeURIComponent(runId)}/approve`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-RUN-APPROVE-${response.status}`);
+    }
+    return readJson<{ run: DeploymentRunRecord; sessionId?: string }>(response);
+};
+
+export const fetchDeploymentEvidence = async (runId: string): Promise<DeploymentEvidenceResponse> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployment-runs/${encodeURIComponent(runId)}/evidence`);
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-EVIDENCE-${response.status}`);
+    }
+    return readJson<DeploymentEvidenceResponse>(response);
 };
 
 export const updateAdminUserPlan = async (userId: string, plan: string) => {

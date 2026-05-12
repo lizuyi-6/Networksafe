@@ -44,6 +44,8 @@ import {
     validateDeviceHeartbeatPayload,
     validateDeviceRegisterPayload,
 } from './socket-payload-validator';
+import { allowGatewayDestructiveCommands } from '../config/enterprise-runtime';
+import { requiresPhysicalConfirmation } from '../security/command-risk-policy';
 
 interface DeviceSocket extends Socket {
     deviceId?: string;
@@ -643,6 +645,24 @@ export class DeviceGateway {
     }
 
     public async sendCommand(deviceId: string, command: string, params?: any): Promise<boolean> {
+        if (!allowGatewayDestructiveCommands() && requiresPhysicalConfirmation(command)) {
+            logger.warn('[DeviceGateway] Blocked destructive command on experimental gateway in enterprise runtime', {
+                deviceId,
+                command
+            });
+            await auditLogger.log({
+                eventType: 'device_command_rejected',
+                category: 'command',
+                severity: 'warning',
+                actor: { type: 'system', id: 'device-gateway' },
+                action: 'send_command',
+                target: { type: 'agent', id: deviceId },
+                details: { command, params, reason: 'enterprise_runtime_blocks_destructive_ws_commands' },
+                status: 'failure'
+            });
+            return false;
+        }
+
         const socket = this.deviceSockets.get(deviceId);
 
         if (!socket || !socket.connected) {

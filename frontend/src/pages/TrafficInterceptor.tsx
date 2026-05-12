@@ -34,6 +34,7 @@ export default function TrafficInterceptor() {
     const [protocols, setProtocols] = useState({ http: 0, https: 0, dns: 0, other: 0 });
     const [threats, setThreats] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [autoRefresh, setAutoRefresh] = useState(true);
 
     useEffect(() => {
@@ -59,8 +60,9 @@ export default function TrafficInterceptor() {
             if (flowsData) setFlows(flowsData);
             if (protocolsData) setProtocols(protocolsData);
             if (threatsData) setThreats(threatsData);
-        } catch (e) {
-            console.error('Traffic fetch error', e);
+            setError(null);
+        } catch (e: any) {
+            setError(e?.message || t('trafficInterceptor.loadError'));
         }
         setLoading(false);
     };
@@ -113,6 +115,12 @@ export default function TrafficInterceptor() {
                 </div>
             }
         >
+            {error && (
+                <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-300">
+                    {error}
+                </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
                 <ConsoleStatCard icon={Activity} label={t('trafficInterceptor.packets')} value={stats?.packetsProcessed?.toLocaleString() || 0} hint={t('trafficInterceptor.processed_packets')} tone="primary" />
                 <ConsoleStatCard icon={CheckCircle} label={t('trafficInterceptor.allowed')} value={stats?.packetsAllowed?.toLocaleString() || 0} hint={t('trafficInterceptor.passed')} tone="success" />

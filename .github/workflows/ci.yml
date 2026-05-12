@@ -80,7 +80,6 @@ jobs:
 
       - name: Run Fastpath Tests
         run: cargo test
-        continue-on-error: true
 
       - name: Run Clippy on Fastpath
         run: cargo clippy -- -D warnings
@@ -174,9 +173,15 @@ jobs:
         run: npm run verify:release
         env:
           CI: 'true'
+          AETHERGUARD_RUNTIME_MODE: prod-enterprise
+          ARTIFACT_STORE: s3
+          DISABLE_SQLITE_FALLBACK: 'true'
           REDIS_PASSWORD: AetherGuardRedisPassword2026!
           JWT_SECRET: release-verify-jwt-secret-minimum-32-chars
           AUDIT_LOG_SECRET: release-verify-audit-secret-minimum-32
+          DEVICE_COMMAND_SECRET: release-verify-device-command-secret-minimum-32
+          SERIAL_HELPER_SHARED_SECRET: release-verify-helper-secret-minimum-32
+          DEPLOYMENT_BUNDLE_SIGNING_SECRET: release-verify-bundle-signing-secret-minimum-32
           ADMIN_EMAIL: admin@AetherGuard.com
           ADMIN_PASSWORD: AetherGuardAdminPass2026!
 

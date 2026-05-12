@@ -10,6 +10,7 @@ import {
     ShieldAlert,
     XCircle
 } from 'lucide-react';
+import InputDialog from '../components/InputDialog';
 import { useLanguage } from '../context/LanguageContext';
 import { useLiveMode } from '../context/LiveModeContext';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
@@ -62,7 +63,14 @@ const severityTone: Record<RuleRecord['severity'], string> = {
     low: 'text-sky-600 dark:text-sky-300'
 };
 
-const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`;
+const safeNumber = (value: unknown, fallback: number = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const formatPercent = (value: unknown) => `${(safeNumber(value) * 100).toFixed(1)}%`;
+
+const formatMs = (value: unknown) => `${safeNumber(value).toFixed(1)} ms`;
 
 const formatJson = (value: unknown) => JSON.stringify(value || {}, null, 2);
 
@@ -199,16 +207,17 @@ const Rules = () => {
         await loadPage();
     };
 
-    const handleApproval = async () => {
-        if (!selectedCandidate) {
-            return;
-        }
+    const [showApproveDialog, setShowApproveDialog] = useState(false);
+    const [showRejectDialog, setShowRejectDialog] = useState(false);
 
-        const reason = window.prompt(t('rules.approval_note_prompt'), selectedCandidate.reviewReason || '');
-        if (reason === null) {
-            return;
-        }
+    const handleApproval = () => {
+        if (!selectedCandidate) return;
+        setShowApproveDialog(true);
+    };
 
+    const submitApproval = async (reason: string) => {
+        if (!selectedCandidate) return;
+        setShowApproveDialog(false);
         try {
             setActionError(null);
             const result = await approveRuleCandidate(selectedCandidate.candidateId, reason || undefined);
@@ -225,16 +234,14 @@ const Rules = () => {
         }
     };
 
-    const handleReject = async () => {
-        if (!selectedCandidate) {
-            return;
-        }
+    const handleReject = () => {
+        if (!selectedCandidate) return;
+        setShowRejectDialog(true);
+    };
 
-        const reason = window.prompt(t('rules.rejection_note_prompt'), selectedCandidate.reviewReason || '');
-        if (reason === null) {
-            return;
-        }
-
+    const submitReject = async (reason: string) => {
+        if (!selectedCandidate) return;
+        setShowRejectDialog(false);
         try {
             setActionError(null);
             setSyncMessage(null);
@@ -250,6 +257,27 @@ const Rules = () => {
     const activeRules = useMemo(() => rules.filter((rule) => rule.enabled), [rules]);
 
     return (
+        <>
+        <InputDialog
+            open={showApproveDialog}
+            title={t('rules.approve')}
+            label={t('rules.approval_note_prompt')}
+            defaultValue={selectedCandidate?.reviewReason || ''}
+            confirmLabel={t('rules.approve')}
+            cancelLabel={t('rules.cancel') || 'Cancel'}
+            onConfirm={(reason) => void submitApproval(reason)}
+            onCancel={() => setShowApproveDialog(false)}
+        />
+        <InputDialog
+            open={showRejectDialog}
+            title={t('rules.reject')}
+            label={t('rules.rejection_note_prompt')}
+            defaultValue={selectedCandidate?.reviewReason || ''}
+            confirmLabel={t('rules.reject')}
+            cancelLabel={t('rules.cancel') || 'Cancel'}
+            onConfirm={(reason) => void submitReject(reason)}
+            onCancel={() => setShowRejectDialog(false)}
+        />
         <ConsolePage
             title={t('rules.page_title')}
             subtitle={t('rules.page_subtitle')}
@@ -262,6 +290,7 @@ const Rules = () => {
                         {t('rules.open_alerts')}
                     </Link>
                     <button
+                        data-testid="rules-refresh"
                         onClick={() => void refreshAll()}
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                     >
@@ -279,11 +308,11 @@ const Rules = () => {
                 <ConsoleStatCard icon={Shield} label={t('rules.active_rules')} value={summary.activeRules} hint={t('rules.total_hint', { count: summary.totalRules })} tone="primary" />
                 <ConsoleStatCard icon={Bot} label={t('rules.pending_candidates')} value={summary.pendingCandidates} hint={t('rules.candidates_hint', { approved: summary.approvedCandidates, rejected: summary.rejectedCandidates })} tone="warning" />
                 <ConsoleStatCard icon={Activity} label={t('rules.hit_rate')} value={formatPercent(summary.ruleHitRate)} hint={t('rules.ai_escalation_hint', { rate: formatPercent(summary.aiEscalationRate) })} tone="success" />
-                <ConsoleStatCard icon={Clock3} label={t('rules.avg_detection_time')} value={`${summary.avgProcessingTimeMs.toFixed(1)} ms`} hint={t('rules.across_recent_events')} tone="neutral" />
+                <ConsoleStatCard icon={Clock3} label={t('rules.avg_detection_time')} value={formatMs(summary.avgProcessingTimeMs)} hint={t('rules.across_recent_events')} tone="neutral" />
                 <ConsoleStatCard icon={Bot} label={t('rules.local_ai_calls')} value={summary.localAICount} hint={`local hit ${formatPercent(summary.localModelHitRate)} / cloud ${summary.cloudAICount}`} tone="primary" />
-                <ConsoleStatCard icon={ShieldAlert} label="Async Reviews" value={summary.asyncReviewQueueDepth} hint={`done ${summary.asyncReviewCompleted}, failed ${summary.asyncReviewFailed}`} tone="warning" />
-                <ConsoleStatCard icon={Bot} label="Debate Completion" value={formatPercent(summary.debateCompletionRate)} hint={`${summary.avgAsyncReviewLatencyMs.toFixed(1)} ms async avg`} tone="neutral" />
-                <ConsoleStatCard icon={ShieldAlert} label="Blocking Discussion" value={summary.blockingDiscussionCount} hint={`${summary.classificationLevel} · fail-closed ${summary.blockingDiscussionFailClosed} · ${summary.avgBlockingDiscussionLatencyMs.toFixed(1)} ms`} tone="danger" />
+                <ConsoleStatCard icon={ShieldAlert} label="Async Reviews" value={safeNumber(summary.asyncReviewQueueDepth)} hint={`done ${safeNumber(summary.asyncReviewCompleted)}, failed ${safeNumber(summary.asyncReviewFailed)}`} tone="warning" />
+                <ConsoleStatCard icon={Bot} label="Debate Completion" value={formatPercent(summary.debateCompletionRate)} hint={`${formatMs(summary.avgAsyncReviewLatencyMs)} async avg`} tone="neutral" />
+                <ConsoleStatCard icon={ShieldAlert} label="Blocking Discussion" value={safeNumber(summary.blockingDiscussionCount)} hint={`${summary.classificationLevel || 'standard'} · fail-closed ${safeNumber(summary.blockingDiscussionFailClosed)} · ${formatMs(summary.avgBlockingDiscussionLatencyMs)}`} tone="danger" />
                 <ConsoleStatCard icon={ShieldAlert} label={t('rules.top_rule_hits')} value={summary.topRules[0]?.hitCount || 0} hint={summary.topRules[0]?.name || t('rules.no_recent_hits')} tone="danger" />
             </div>
 
@@ -299,6 +328,7 @@ const Rules = () => {
                                 {(['all', 'pending', 'approved', 'rejected'] as const).map((value) => (
                                     <button
                                         key={value}
+                                        data-testid={`rules-status-${value}`}
                                         onClick={() => setStatusFilter(value)}
                                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                                             statusFilter === value
@@ -312,6 +342,7 @@ const Rules = () => {
                                 {(['all', 'http_api', 'packet', 'agent'] as const).map((value) => (
                                     <button
                                         key={value}
+                                        data-testid={`rules-channel-${value}`}
                                         onClick={() => setChannelFilter(value)}
                                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                                             channelFilter === value
@@ -323,6 +354,7 @@ const Rules = () => {
                                     </button>
                                 ))}
                                 <select
+                                    data-testid="rules-family-filter"
                                     value={familyFilter}
                                     onChange={(event) => setFamilyFilter(event.target.value as typeof familyFilter)}
                                     className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs text-foreground"
@@ -346,6 +378,7 @@ const Rules = () => {
                                     return (
                                         <button
                                             key={candidate.candidateId}
+                                            data-testid={`rules-candidate-${candidate.candidateId}`}
                                             type="button"
                                             onClick={() => setSelectedCandidateId(candidate.candidateId)}
                                             className={`w-full rounded-xl border p-4 text-left transition-colors ${
@@ -361,7 +394,7 @@ const Rules = () => {
                                                         <span>{candidate.channel}</span>
                                                         <span>{candidate.attackFamily}</span>
                                                         <span>{t('rules.samples_count', { count: candidate.sampleCount })}</span>
-                                                        <span>{t('rules.ai_confidence', { value: (candidate.aiConfidence * 100).toFixed(0) })}</span>
+                                                        <span>{t('rules.ai_confidence', { value: (safeNumber(candidate.aiConfidence) * 100).toFixed(0) })}</span>
                                                     </div>
                                                 </div>
                                                 <span className={`rounded-full border px-2 py-1 text-[11px] font-semibold uppercase ${statusTone[candidate.status]}`}>
@@ -386,6 +419,7 @@ const Rules = () => {
                         headerAction={selectedCandidate ? (
                             <div className="flex gap-2">
                                 <button
+                                    data-testid="rules-approve-candidate"
                                     onClick={() => void handleApproval()}
                                     disabled={selectedCandidate.status === 'approved'}
                                     className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
@@ -394,6 +428,7 @@ const Rules = () => {
                                     {t('rules.approve')}
                                 </button>
                                 <button
+                                    data-testid="rules-reject-candidate"
                                     onClick={() => void handleReject()}
                                     disabled={selectedCandidate.status === 'rejected'}
                                     className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
@@ -415,7 +450,7 @@ const Rules = () => {
                                         <div className="mt-2 space-y-1 text-sm text-muted-foreground">
                                             <div>{t('rules.channel')}: <span className="font-medium text-foreground">{selectedCandidate.channel}</span></div>
                                             <div>{t('rules.attack_family')}: <span className="font-medium text-foreground">{selectedCandidate.attackFamily}</span></div>
-                                            <div>{t('rules.ai_confidence_label')}: <span className="font-medium text-foreground">{(selectedCandidate.aiConfidence * 100).toFixed(1)}%</span></div>
+                                            <div>{t('rules.ai_confidence_label')}: <span className="font-medium text-foreground">{formatPercent(selectedCandidate.aiConfidence)}</span></div>
                                             <div>{t('rules.samples')}: <span className="font-medium text-foreground">{selectedCandidate.sampleCount}</span></div>
                                         </div>
                                     </div>
@@ -500,7 +535,7 @@ const Rules = () => {
                                                 <div className="text-sm font-semibold text-foreground">{event.channel} / {event.verdict}</div>
                                             <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                                                 <span>{event.attackFamily}</span>
-                                                <span>{t('rules.risk_score', { value: event.riskScore.toFixed(2) })}</span>
+                                                <span>{t('rules.risk_score', { value: safeNumber(event.riskScore).toFixed(2) })}</span>
                                                 <span>{event.processingTimeMs} ms</span>
                                                 <span>{event.blockingDiscussion ? `${event.discussionStatus || 'blocking'} review` : event.queuedForAsyncReview ? 'async review queued' : event.escalatedToAI ? t('rules.ai_escalated') : t('rules.rules_only')}</span>
                                             </div>
@@ -523,6 +558,7 @@ const Rules = () => {
                 </div>
             </div>
         </ConsolePage>
+        </>
     );
 };
 

@@ -20,7 +20,9 @@ import {
     Zap,
     CheckCircle,
     XCircle,
-    UserCog
+    UserCog,
+    HardDriveDownload,
+    ScrollText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -73,6 +75,14 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Promo from './pages/Promo';
 import PromoFilm from './pages/PromoFilm';
+import HardwareGates from './pages/HardwareGates';
+import DeploymentRuns from './pages/DeploymentRuns';
+import DeploymentEvidence from './pages/DeploymentEvidence';
+
+const ADMIN_ROLES = new Set(['admin', 'platform_admin']);
+const GOVERNANCE_ROLES = new Set(['admin', 'platform_admin', 'tenant_admin', 'auditor']);
+const isAdminRole = (role?: string | null) => ADMIN_ROLES.has(String(role || ''));
+const canSeeEnterpriseControls = (role?: string | null) => GOVERNANCE_ROLES.has(String(role || ''));
 
 /**
  * SECURITY FIX CVE-2026-012: Authentication guard for protected routes
@@ -156,7 +166,7 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
         );
     }
 
-    if (userRole !== 'admin') {
+    if (!isAdminRole(userRole)) {
         return <Navigate to="/dashboard" replace />;
     }
 
@@ -170,9 +180,10 @@ const Sidebar = () => {
     const { attackSimEnabled } = useDemo();
     const { liveModeEnabled } = useLiveMode();
     const [badges, setBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
-    const [profile, setProfile] = useState<{ name: string; role: string; initials: string; plan: string }>({
+    const [profile, setProfile] = useState<{ name: string; role: string; rawRole: string | null; initials: string; plan: string }>({
         name: 'Unknown User',
         role: 'N/A',
+        rawRole: null,
         initials: '??',
         plan: 'starter'
     });
@@ -187,12 +198,17 @@ const Sidebar = () => {
         { icon: Network, label: t('nav.traffic_interceptor'), path: '/traffic', badge: badges.traffic > 0 ? badges.traffic : undefined },
         ...(attackSimEnabled ? [{ icon: Shield, label: t('nav.attack_simulator'), path: '/attack-sim' }] : []),
         { icon: Radio, label: t('nav.devices'), path: '/devices', badge: badges.devices > 0 ? badges.devices : undefined },
+        ...(canSeeEnterpriseControls(profile.rawRole) ? [
+            { icon: Shield, label: 'Gate Management', path: '/hardware-gates' },
+            { icon: HardDriveDownload, label: 'Deployment Runs', path: '/deployment-runs' },
+            { icon: ScrollText, label: 'Evidence', path: '/deployment-evidence' },
+        ] : []),
         { icon: Server, label: t('nav.sites'), path: '/sites' },
         { icon: Rocket, label: t('nav.deployment'), path: '/deploy' },
         { icon: Activity, label: t('nav.monitoring'), path: '/scanner', badge: badges.scanner > 0 ? badges.scanner : undefined },
         { icon: Settings, label: t('nav.settings'), path: '/settings' },
         { icon: Key, label: t('nav.keys'), path: '/admin' },
-        ...(profile.role === 'admin' ? [{ icon: UserCog, label: t('nav.super_admin'), path: '/super-admin' }] : []),
+        ...(isAdminRole(profile.rawRole) ? [{ icon: UserCog, label: t('nav.super_admin'), path: '/super-admin' }] : []),
     ];
 
     const navGroups = [
@@ -204,7 +220,7 @@ const Sidebar = () => {
             title: t('nav.governance'),
             items: [
                 { icon: FileText, label: t('nav.audit'), path: '/history' },
-                ...(profile.role === 'admin' ? [{ icon: Shield, label: 'Rules', path: '/rules' }] : []),
+                ...(isAdminRole(profile.rawRole) ? [{ icon: Shield, label: 'Rules', path: '/rules' }] : []),
                 { icon: Bell, label: t('nav.alerts'), path: '/alerts', badge: badges.alerts > 0 ? badges.alerts : undefined },
             ]
         }
@@ -273,17 +289,22 @@ const Sidebar = () => {
                 if (!user) {
                     throw new Error('FG-AUTH-ME-401');
                 }
-                const name = user.username || user.email || '未命名用户';
+                const name = user.username || user.email || t('app.unnamed_user');
                 const initials = String(name).split(/\s+/).map((x: string) => x[0] || '').join('').slice(0, 2).toUpperCase() || '??';
-                // Translate role to display name
                 const roleMap: Record<string, string> = {
                     'admin': t('admin_users.role_admin'),
                     'tenant': t('admin_users.role_tenant'),
-                    'viewer': t('admin_users.role_viewer')
+                    'viewer': t('admin_users.role_viewer'),
+                    'platform_admin': 'Platform Admin',
+                    'tenant_admin': 'Tenant Admin',
+                    'tenant_operator': 'Tenant Operator',
+                    'tenant_viewer': 'Tenant Viewer',
+                    'auditor': 'Auditor'
                 };
                 setProfile({
                     name,
                     role: roleMap[user.role] || user.role || t('app.role_not_set'),
+                    rawRole: user.role || null,
                     initials,
                     plan: user.plan || 'starter'
                 });
@@ -292,7 +313,7 @@ const Sidebar = () => {
                 if (isRequestAbortError(error, controller.signal)) {
                     return;
                 }
-                setProfile({ name: t('app.unnamed_user'), role: t('app.role_not_set'), initials: '??', plan: 'starter' });
+                setProfile({ name: t('app.unnamed_user'), role: t('app.role_not_set'), rawRole: null, initials: '??', plan: 'starter' });
             });
 
         return () => controller.abort();
@@ -437,6 +458,9 @@ const Header = () => {
         '/traffic': 'nav.traffic_interceptor',
         '/attack-sim': 'nav.attack_simulator',
         '/devices': 'nav.devices',
+        '/hardware-gates': 'Gate Management',
+        '/deployment-runs': 'Deployment Runs',
+        '/deployment-evidence': 'Evidence',
         '/sites': 'nav.sites',
         '/deploy': 'nav.deployment',
         '/scanner': 'nav.monitoring',
@@ -452,7 +476,8 @@ const Header = () => {
         const path = location.pathname;
         // Check for exact match first
         if (pathToNavKey[path]) {
-            return t(pathToNavKey[path]);
+            const title = pathToNavKey[path];
+            return title.startsWith('nav.') ? t(title) : title;
         }
         // Check for dynamic routes
         if (path.startsWith('/agents/')) return t('nav.agents');
@@ -602,6 +627,9 @@ const AnimatedRoutes = () => {
                     }
                 />
                 <Route path="/devices" element={<PrivateRoute><PageWrapper><Devices /></PageWrapper></PrivateRoute>} />
+                <Route path="/hardware-gates" element={<PrivateRoute><PageWrapper><HardwareGates /></PageWrapper></PrivateRoute>} />
+                <Route path="/deployment-runs" element={<PrivateRoute><PageWrapper><DeploymentRuns /></PageWrapper></PrivateRoute>} />
+                <Route path="/deployment-evidence" element={<PrivateRoute><PageWrapper><DeploymentEvidence /></PageWrapper></PrivateRoute>} />
                 <Route path="/sites" element={<PrivateRoute><PageWrapper><Sites /></PageWrapper></PrivateRoute>} />
                 <Route path="/deploy" element={<PrivateRoute><PageWrapper><DeploymentWizard /></PageWrapper></PrivateRoute>} />
                 <Route path="/scanner" element={<PrivateRoute><PageWrapper><Scanner /></PageWrapper></PrivateRoute>} />

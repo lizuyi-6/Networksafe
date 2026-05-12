@@ -4,6 +4,7 @@ import { getAppMode, setAppMode, isDemoMode, isAttackSimulatorEnabled, AppMode }
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import logger from '../../utils/logger';
 import { getRuntimeCapabilities } from '../../config/runtime-capabilities';
+import { allowDemoFeatures } from '../../config/enterprise-runtime';
 
 const router = Router();
 
@@ -13,8 +14,13 @@ router.get('/mode', optionalAuth, (req: AuthenticatedRequest, res) => {
     appMode: getAppMode(),
     demoEnabled: isDemoMode(),
     attackSimEnabled: isAttackSimulatorEnabled(),
-    canToggleMode: req.user?.role === 'admin',
+    canToggleMode: allowDemoFeatures() && req.user?.role === 'platform_admin',
     devLoginEnabled: capabilities.devLoginEnabled,
+    passwordLoginEnabled: capabilities.passwordLoginEnabled,
+    oidcEnabled: capabilities.oidcEnabled,
+    enterpriseRuntimeMode: capabilities.enterpriseRuntimeMode,
+    demoModeAllowed: capabilities.demoModeAllowed,
+    enterpriseStrictMode: capabilities.enterpriseStrictMode,
     profile: capabilities.profile,
     dbMode: capabilities.dbMode
   };
@@ -34,6 +40,12 @@ router.post('/mode', authenticate, requireRole('admin'), async (req: Authenticat
 
   const previousMode = getAppMode();
   const capabilities = getRuntimeCapabilities();
+  if (targetMode === 'demo' && !allowDemoFeatures()) {
+    return sendError(res, 403, {
+      code: 'backend.demo_mode_disabled_in_enterprise_runtime',
+      message: 'Demo mode is disabled in the current enterprise runtime mode.'
+    });
+  }
   if (previousMode === targetMode) {
     const payload = {
       appMode: getAppMode(),

@@ -35,6 +35,7 @@ export default function AgentMonitor() {
     const [stats, setStats] = useState<MultiAgentSystemStats | null>(null);
     const [health, setHealth] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [autoRefresh, setAutoRefresh] = useState(true);
     const asyncReview = stats?.detectionPipeline?.asyncReview;
     const blockingDiscussion = stats?.detectionPipeline?.blockingDiscussion;
@@ -64,8 +65,9 @@ export default function AgentMonitor() {
             const [statsData, healthData] = await Promise.all([fetchAgentSystemStats(), fetchAgentHealth()]);
             setStats(statsData);
             setHealth(healthData);
-        } catch (e) {
-            console.error('Failed to load agent data', e);
+            setError(null);
+        } catch (e: any) {
+            setError(e?.message || t('agentMonitor.loadError'));
         }
         setLoading(false);
     };
@@ -136,6 +138,12 @@ export default function AgentMonitor() {
                 </div>
             }
         >
+            {error && (
+                <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-300">
+                    {error}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <ConsoleStatCard
                     icon={ShieldAlert}

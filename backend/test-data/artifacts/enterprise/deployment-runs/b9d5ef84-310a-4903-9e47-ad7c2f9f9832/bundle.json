@@ -1,0 +1,37 @@
+{
+  "manifest": {
+    "deploymentId": "b9d5ef84-310a-4903-9e47-ad7c2f9f9832",
+    "serverType": "docker_compose",
+    "requestType": "install",
+    "files": [
+      {
+        "path": "install.sh",
+        "checksum": "1705716ff0843a351861d1840da060a911466d172644c7f793656925520224b0"
+      },
+      {
+        "path": "remove.sh",
+        "checksum": "4aad1ad68cde70fa609ab00059e67b8badb8d10c5dc07b57847ba6f3257ce3f7"
+      },
+      {
+        "path": "rollback.sh",
+        "checksum": "d5588004410af6919992b500e04625a2de701d711963a3e0376dd639420b43dc"
+      },
+      {
+        "path": "healthcheck.sh",
+        "checksum": "37a1e1e91198b273ac3f9f446a4a32a9791cd5d8a48b705cee97cc459c3eed60"
+      },
+      {
+        "path": "backup.sh",
+        "checksum": "9dba00f6a1f88eef18867df71d32bbf29a883a9108ec15c4006e491c3f62d713"
+      }
+    ]
+  },
+  "signature": "b5bf0e6aecf333223297ea89c973b124076838f49f4df62d535dafa70eda727c",
+  "scripts": {
+    "backup": "#!/usr/bin/env bash\nset -euo pipefail\nTS=\"$(date +%Y%m%d%H%M%S)\"\nDEST=\"/tmp/aetherguard-enterprise-b9d5ef84-310a-4903-9e47-ad7c2f9f9832-$TS\"\nmkdir -p \"$DEST\"\ntar -czf \"$DEST/etc-aetherguard.tgz\" /etc/aetherguard 2>/dev/null || true\nprintf '%s' \"$DEST\"\n",
+    "install": "#!/usr/bin/env bash\nset -euo pipefail\ncat > docker-compose.enterprise.yml <<'EOF'\nversion: \"3.9\"\nservices:\n  aetherguard-agent:\n    image: ghcr.io/aetherguard/agent:latest\n    restart: unless-stopped\n    environment:\n      AETHERGUARD_SERVER_NAME: localhost\n      AETHERGUARD_RATE_LIMIT: \"100\"\n      AETHERGUARD_UPSTREAM: http://backend:3005\n    ports:\n      - \"8080:8080\"\nEOF\ndocker compose -f docker-compose.enterprise.yml up -d\n",
+    "remove": "#!/usr/bin/env bash\nset -euo pipefail\nif [ -f docker-compose.enterprise.yml ]; then\n  docker compose -f docker-compose.enterprise.yml down\nfi\n",
+    "rollback": "#!/usr/bin/env bash\nset -euo pipefail\nif [ -f docker-compose.enterprise.yml ]; then\n  docker compose -f docker-compose.enterprise.yml down\nfi\necho \"Rollback executed\"\n",
+    "healthcheck": "#!/usr/bin/env bash\nset -euo pipefail\ncurl -fsS \"http://127.0.0.1:8080/api/health\" >/dev/null 2>&1 || true\necho \"healthcheck completed\"\n"
+  }
+}

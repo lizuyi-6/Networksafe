@@ -149,14 +149,14 @@ export const createIssueMonitor = (page: Page, baseUrl: string) => {
                 requestFailures: issues.requestFailures.length,
             };
         },
-        async assertNoNewIssues(snapshot: Snapshot, label: string) {
+        async assertNoNewIssues(snapshot: Snapshot, label: string, options?: { allowPatterns?: RegExp[] }) {
             const newIssues = [
                 ...issues.consoleErrors.slice(snapshot.consoleErrors).map((value) => `console.error: ${value}`),
                 ...issues.consoleWarnings.slice(snapshot.consoleWarnings).map((value) => `console.warn: ${value}`),
                 ...issues.pageErrors.slice(snapshot.pageErrors).map((value) => `pageerror: ${value}`),
                 ...issues.responseErrors.slice(snapshot.responseErrors).map((value) => `response: ${value}`),
                 ...issues.requestFailures.slice(snapshot.requestFailures).map((value) => `requestfailed: ${value}`),
-            ];
+            ].filter((issue) => !(options?.allowPatterns || []).some((pattern) => pattern.test(issue)));
 
             expect(newIssues, `${label} should not produce browser or API errors`).toEqual([]);
         },

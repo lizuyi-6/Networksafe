@@ -3,11 +3,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useDemo } from '../context/DemoContext';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, ArrowRight, ArrowLeft, CheckCircle, Info } from 'lucide-react';
+import { User, Lock, ArrowRight, ArrowLeft, CheckCircle, Info, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../components/Logo';
 import { COMPANY_NAME_CN, COMPANY_NAME_EN } from '../config/branding';
-import { fetchSystemCapabilities, login } from '../services/api';
+import { fetchSystemCapabilities, login, loginWithOidc } from '../services/api';
 
 type ToastState = {
     msg: string;
@@ -73,6 +73,9 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isDevModeOpen, setIsDevModeOpen] = useState(false);
     const [devLoginEnabled, setDevLoginEnabled] = useState(false);
+    const [oidcEnabled, setOidcEnabled] = useState(false);
+    const [passwordLoginEnabled, setPasswordLoginEnabled] = useState(true);
+    const [isOidcLoading, setIsOidcLoading] = useState(false);
     const [toast, setToast] = useState<ToastState | null>(null);
 
     useEffect(() => {
@@ -82,11 +85,15 @@ const Login = () => {
             .then((mode) => {
                 if (!controller.signal.aborted) {
                     setDevLoginEnabled(Boolean(mode.devLoginEnabled));
+                    setOidcEnabled(Boolean(mode.oidcEnabled));
+                    setPasswordLoginEnabled(mode.passwordLoginEnabled !== false);
                 }
             })
             .catch(() => {
                 if (!controller.signal.aborted) {
                     setDevLoginEnabled(false);
+                    setOidcEnabled(false);
+                    setPasswordLoginEnabled(true);
                 }
             });
 
@@ -106,6 +113,10 @@ const Login = () => {
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (!email.trim() || !password.trim()) {
+            showToast(t('backend.email_and_password_are_required'));
+            return;
+        }
         setIsLoading(true);
 
         try {
@@ -129,6 +140,18 @@ const Login = () => {
             showToast(errorMsg);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleOidcLogin = async () => {
+        setIsOidcLoading(true);
+        try {
+            const { authorizationUrl } = await loginWithOidc();
+            window.location.assign(authorizationUrl);
+        } catch (error: any) {
+            showToast(error?.message || 'OIDC login failed');
+        } finally {
+            setIsOidcLoading(false);
         }
     };
 
@@ -271,65 +294,95 @@ const Login = () => {
                             </div>
                         )}
 
-                        <form onSubmit={handleLogin} className="space-y-6">
-                            <div>
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.email_label')}</label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                                    <input
-                                        type="text"
-                                        name="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        autoComplete="username"
-                                        className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
-                                        placeholder={t('login.email_placeholder')}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.password_label')}</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        autoComplete="current-password"
-                                        className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
-                                        placeholder={t('login.password_placeholder')}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between text-xs">
-                                <label className="flex cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground">
-                                    <input type="checkbox" className="mr-2 rounded text-primary focus:ring-0" /> {t('login.remember_device')}
-                                </label>
-                                <a
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        showToast(t('login.forgot_password_msg'));
-                                    }}
-                                    className="text-primary hover:opacity-80"
+                        <div className="space-y-4">
+                            {oidcEnabled && (
+                                <button
+                                    type="button"
+                                    onClick={handleOidcLogin}
+                                    disabled={isOidcLoading}
+                                    className="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-75"
                                 >
-                                    {t('login.forgot_password')}
-                                </a>
-                            </div>
+                                    <KeyRound className="h-4 w-4" />
+                                    <span>{isOidcLoading ? 'Redirecting...' : 'Continue with SSO'}</span>
+                                </button>
+                            )}
 
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className={`group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 ${
-                                    isLoading ? 'cursor-not-allowed opacity-75' : ''
-                                }`}
-                            >
-                                <span>{isLoading ? t('login.signing_in') : t('login.secure_login')}</span>
-                                {!isLoading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
-                            </button>
-                        </form>
+                            {oidcEnabled && passwordLoginEnabled && (
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <div className="h-px flex-1 bg-border" />
+                                    <span>or use break-glass credentials</span>
+                                    <div className="h-px flex-1 bg-border" />
+                                </div>
+                            )}
+
+                            {passwordLoginEnabled ? (
+                                <form onSubmit={handleLogin} className="space-y-6">
+                                    <div>
+                                        <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.email_label')}</label>
+                                        <div className="relative">
+                                            <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                name="email"
+                                                required
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                autoComplete="username"
+                                                className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
+                                                placeholder={t('login.email_placeholder')}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('login.password_label')}</label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                                            <input
+                                                type="password"
+                                                name="password"
+                                                required
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                autoComplete="current-password"
+                                                className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
+                                                placeholder={t('login.password_placeholder')}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-xs">
+                                        <label className="flex cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground">
+                                            <input type="checkbox" className="mr-2 rounded text-primary focus:ring-0" /> {t('login.remember_device')}
+                                        </label>
+                                        <a
+                                            href="#"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                showToast(t('login.forgot_password_msg'));
+                                            }}
+                                            className="text-primary hover:opacity-80"
+                                        >
+                                            {t('login.forgot_password')}
+                                        </a>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className={`group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 ${
+                                            isLoading ? 'cursor-not-allowed opacity-75' : ''
+                                        }`}
+                                    >
+                                        <span>{isLoading ? t('login.signing_in') : t('login.secure_login')}</span>
+                                        {!isLoading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
+                                    Local password login is disabled in this runtime. Use enterprise SSO or the configured break-glass account.
+                                </div>
+                            )}
+                        </div>
 
                         <div className="mt-6 text-center">
                             <div className="mb-3 text-xs text-muted-foreground">

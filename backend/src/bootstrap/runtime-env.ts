@@ -7,6 +7,12 @@ import {
   getRuntimeProfile,
   hasGatewayRole
 } from '../config/platform-runtime';
+import {
+  allowDemoFeatures,
+  getEnterpriseRuntimeMode,
+  isEnterpriseStrictMode,
+  oidcEnabled
+} from '../config/enterprise-runtime';
 
 const WEAK_VALUE_PATTERNS: RegExp[] = [
   /^change_me/i,
@@ -78,6 +84,7 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
   const dbMode = getDatabaseMode();
   const artifactStoreMode = getArtifactStoreMode();
   const isProduction = nodeEnv === 'production' || profile === 'prod';
+  const enterpriseRuntimeMode = getEnterpriseRuntimeMode();
 
   EnvValidator.require('JWT_SECRET', {
     minLength: 32,
@@ -106,6 +113,10 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
 
     if (String(process.env.APP_MODE || '').trim().toLowerCase() === 'demo') {
       errors.push('APP_MODE=demo is not allowed in production.');
+    }
+
+    if (enterpriseRuntimeMode === 'prod-enterprise' && !oidcEnabled()) {
+      warnings.push('OIDC is not configured; only break-glass local login will be available in prod-enterprise mode.');
     }
 
     if (String(process.env.ENABLE_DEV_LOGIN_PRESETS || '').trim().toLowerCase() === 'true') {
@@ -137,6 +148,14 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
   const allowedOrigins = String(process.env.ALLOWED_ORIGINS || '').trim();
   if (!allowedOrigins) {
     warnings.push('ALLOWED_ORIGINS is empty; browser access will rely on localhost defaults.');
+  }
+
+  if (!allowDemoFeatures() && String(process.env.APP_MODE || '').trim().toLowerCase() === 'demo') {
+    warnings.push(`APP_MODE=demo requested but ENTERPRISE_RUNTIME_MODE=${enterpriseRuntimeMode} disables demo features; runtime will behave as production.`);
+  }
+
+  if (isEnterpriseStrictMode() && String(process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN || '').trim().toLowerCase() !== 'true') {
+    warnings.push('prod-enterprise mode is active; local password login is restricted to break-glass accounts only.');
   }
 
   if (errors.length > 0) {

@@ -1,19 +1,22 @@
 import { Router } from 'express';
-import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
+import { authenticate, AuthenticatedRequest, requirePermission, requireRole } from '../../middleware/auth.middleware';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';
+import { authenticateHelperRequest } from '../../middleware/helper-auth.middleware';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { hardwareAuthorizationService } from '../../services/hardware-authorization.service';
+import { deploymentRunService } from '../../services/deployment-run.service';
+import { isPlatformAdminRole } from '../../security/permissions';
 
 const router = Router();
 
 function tenantOf(req: AuthenticatedRequest): string {
   return resolveRequestTenantContext(req, {
-    allowAdminPlatformFallback: req.user?.role === 'admin'
+    allowAdminPlatformFallback: isPlatformAdminRole(req.user?.role)
   })?.tenantId || req.user?.tenantId || PLATFORM_TENANT_ID;
 }
 
-router.post('/commands/intents', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/commands/intents', authenticate, requirePermission('deployment.run.create'), async (req: AuthenticatedRequest, res) => {
   try {
     const scope = String(req.body?.scope || '').trim();
     const targetId = String(req.body?.targetId || '').trim();
@@ -94,7 +97,7 @@ router.get('/hardware-confirmations/:id', authenticate, async (req: Authenticate
   }
 });
 
-router.post('/hardware-gates/enroll', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/hardware-gates/enroll', authenticate, requirePermission('gate.enroll'), async (req: AuthenticatedRequest, res) => {
   try {
     const gateId = String(req.body?.gateId || '').trim();
     const publicKeyPem = String(req.body?.publicKeyPem || '').trim();
@@ -121,7 +124,7 @@ router.post('/hardware-gates/enroll', authenticate, requireRole('admin'), async 
   }
 });
 
-router.get('/hardware-gates', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.get('/hardware-gates', authenticate, requirePermission('gate.read'), async (req: AuthenticatedRequest, res) => {
   try {
     const gates = hardwareAuthorizationService.listGates(tenantOf(req));
     return sendSuccess(res, { gates }, { legacy: { gates } });
@@ -129,6 +132,163 @@ router.get('/hardware-gates', authenticate, requireRole('admin'), async (req: Au
     return sendError(res, 500, {
       code: 'HARDWARE_GATE_LIST_FAILED',
       message: error?.message || 'backend.hardware_gate_list_failed'
+    });
+  }
+});
+
+router.post('/deployment-runs', authenticate, requirePermission('deployment.run.create'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const helperId = String(req.body?.helperId || '').trim();
+    const gateId = String(req.body?.gateId || '').trim();
+    const requestType = String(req.body?.requestType || 'install').trim() as 'install' | 'remove';
+    const serverType = String(req.body?.serverType || 'docker_compose').trim() as any;
+    const profile = req.body?.profile && typeof req.body.profile === 'object' ? req.body.profile : {};
+
+    if (!helperId || !gateId || !serverType) {
+      return sendError(res, 400, {
+        code: 'DEPLOYMENT_RUN_REQUIRED_FIELDS',
+        message: 'backend.deployment_run_required_fields'
+      });
+    }
+
+    const run = await deploymentRunService.createRun({
+      tenantId: tenantOf(req),
+      helperId,
+      gateId,
+      requestType,
+      serverType,
+      profile,
+      requestedBy: req.user?.email || req.user?.userId || 'unknown'
+    });
+
+    return sendSuccess(res, run, { legacy: { run } }, 201);
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'DEPLOYMENT_RUN_CREATE_FAILED',
+      message: error?.message || 'backend.deployment_run_create_failed'
+    });
+  }
+});
+
+router.get('/deployment-runs', authenticate, requirePermission('deployment.run.read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const runs = deploymentRunService.listRuns(tenantOf(req));
+    return sendSuccess(res, { runs }, { legacy: { runs } });
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'DEPLOYMENT_RUN_LIST_FAILED',
+      message: error?.message || 'backend.deployment_run_list_failed'
+    });
+  }
+});
+
+router.post('/deployment-runs/:id/approve', authenticate, requirePermission('deployment.run.approve'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const result = await deploymentRunService.requestApproval(req.params.id, {
+      tenantId: tenantOf(req),
+      userId: req.user?.userId || 'unknown',
+      email: req.user?.email,
+      ip: req.ip
+    });
+    return sendSuccess(res, result, { legacy: result });
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'DEPLOYMENT_RUN_APPROVE_FAILED',
+      message: error?.message || 'backend.deployment_run_approve_failed'
+    });
+  }
+});
+
+router.get('/deployment-runs/:id/evidence', authenticate, requirePermission('deployment.evidence.read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const evidence = await deploymentRunService.readEvidence(req.params.id, tenantOf(req));
+    if (!evidence) {
+      return sendError(res, 404, {
+        code: 'DEPLOYMENT_EVIDENCE_NOT_FOUND',
+        message: 'backend.deployment_evidence_not_found'
+      });
+    }
+    return sendSuccess(res, {
+      run: evidence.run,
+      payload: JSON.parse(evidence.payload)
+    });
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'DEPLOYMENT_EVIDENCE_READ_FAILED',
+      message: error?.message || 'backend.deployment_evidence_read_failed'
+    });
+  }
+});
+
+router.get('/helpers', authenticate, requirePermission('deployment.run.read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const helpers = deploymentRunService.listHelpers(tenantOf(req));
+    return sendSuccess(res, { helpers }, { legacy: { helpers } });
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'DEPLOYMENT_HELPER_LIST_FAILED',
+      message: error?.message || 'backend.deployment_helper_list_failed'
+    });
+  }
+});
+
+router.post('/helpers/register', authenticateHelperRequest, async (req, res) => {
+  try {
+    const helperId = String(req.body?.helperId || '').trim();
+    const tenantId = String(req.body?.tenantId || '').trim();
+    const fingerprint = String(req.body?.fingerprint || '').trim();
+    const version = String(req.body?.version || '').trim();
+    const hostname = String(req.body?.hostname || '').trim();
+    const systemdStatus = String(req.body?.systemdStatus || '').trim();
+    const targetHost = String(req.body?.targetHost || '').trim();
+    const writablePaths = Array.isArray(req.body?.writablePaths) ? req.body.writablePaths.map((item: unknown) => String(item)) : [];
+
+    if (!helperId || !tenantId || !fingerprint || !version || !hostname || !systemdStatus || !targetHost) {
+      return sendError(res, 400, {
+        code: 'DEPLOYMENT_HELPER_REQUIRED_FIELDS',
+        message: 'backend.deployment_helper_required_fields'
+      });
+    }
+
+    const helper = await deploymentRunService.registerHelper({
+      helperId,
+      tenantId,
+      fingerprint,
+      version,
+      hostname,
+      systemdStatus,
+      writablePaths,
+      targetHost
+    });
+    return sendSuccess(res, helper, { legacy: { helper } }, 201);
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'DEPLOYMENT_HELPER_REGISTER_FAILED',
+      message: error?.message || 'backend.deployment_helper_register_failed'
+    });
+  }
+});
+
+router.post('/helpers/:id/heartbeat', authenticateHelperRequest, async (req, res) => {
+  try {
+    const helper = deploymentRunService.heartbeatHelper(req.params.id, {
+      systemdStatus: String(req.body?.systemdStatus || 'unknown').trim(),
+      targetHost: typeof req.body?.targetHost === 'string' ? req.body.targetHost.trim() : undefined,
+      writablePaths: Array.isArray(req.body?.writablePaths) ? req.body.writablePaths.map((item: unknown) => String(item)) : undefined
+    });
+
+    if (!helper) {
+      return sendError(res, 404, {
+        code: 'DEPLOYMENT_HELPER_NOT_FOUND',
+        message: 'backend.deployment_helper_not_found'
+      });
+    }
+
+    return sendSuccess(res, helper, { legacy: { helper } });
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'DEPLOYMENT_HELPER_HEARTBEAT_FAILED',
+      message: error?.message || 'backend.deployment_helper_heartbeat_failed'
     });
   }
 });
