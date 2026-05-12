@@ -1,0 +1,26 @@
+Item,Refs,Qty,Value,Package,ManufacturerPart,PreferredSupplier,AltPart,DNP,Notes
+1,U1,1,ESP32-WROOM-32E,RF_Module:ESP32-WROOM-32E,ESP32-WROOM-32E-N4,Espressif authorized distributor,ESP32-WROOM-32E-N8,No,Critical locked controller module
+2,"U2 U3",2,CP2102N,Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.7x2.7mm,CP2102N-A02-GQFN24,Silicon Labs authorized distributor,CP2102N-A01-GQFN24 if firmware/USB descriptors approved,No,Critical locked USB-UART bridge
+3,U4,1,AP2112K-3.3,Package_TO_SOT_SMD:SOT-23-5,AP2112K-3.3TRG1,Diodes Inc authorized distributor,ME6211C33M5G-N if footprint/pinout approved,No,3V3 regulator
+4,J1,1,Service USB-C,Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12,HRO TYPE-C-31-M-12,LCSC or approved connector vendor,TBD exact footprint compatible USB-C receptacle,No,Must match KiCad footprint before order
+5,J2,1,USB-A Pigtail,esp32-serial-deployer-pcb:USB_A_Pigtail_Pads_1x4_Edge,TBD cable assembly,Factory sourced,TBD 4-wire shielded USB-A pigtail,No,Right rear lower pigtail with strain relief
+6,J3,1,OLED 0.96in I2C,esp32-serial-deployer-pcb:OLED_096_I2C_Module_1x4,TBD 0.96in SSD1306 128x64 I2C module,Factory sourced,Equivalent 4-pin 0.96in SSD1306 module,No,Confirm pin order VCC/GND/SCL/SDA against footprint
+7,"F1 F2",2,PTC500mA,Fuse:Fuse_1206_3216Metric,TBD 1206 resettable fuse,Factory AVL,0.5A hold equivalent,No,USB VBUS protection
+8,"D1 D2",2,B5819W,Diode_SMD:D_SOD-123,B5819W,Factory AVL,SS14 if footprint/ratings approved,No,VBUS Schottky OR diodes
+9,D3,1,PWR LED,LED_SMD:LED_0603_1608Metric,TBD 0603 LED green,Factory AVL,Equivalent 0603 indicator LED,No,Power indicator
+10,D10,1,RGB LED,LED_SMD:LED_RGB_Wuerth-PLCC4_3.2x2.8mm_150141M173100,150141M173100,Wurth or distributor,Common-cathode footprint-compatible RGB LED,No,Confirm orientation and common-cathode wiring
+11,BZ1,1,Buzzer,Buzzer_Beeper:Buzzer_Murata_PKMCS0909E,PKMCS0909E4000-R1,Murata or distributor,Footprint-compatible 9x9 SMD buzzer,No,Driven active HIGH by PCB profile
+12,"SW1 SW2 SW3 SW4 SW5",5,Push button,Button_Switch_SMD:SW_Push_1P1T_NO_CK_PTS125Sx43SMTR,PTS125SM43SMTR LFS,CK or distributor,Footprint-compatible tact switch,No,BOOT RESET OK NEXT BACK
+13,"Q1 Q2 Q3",3,MMBT3904,Package_TO_SOT_SMD:SOT-23,MMBT3904,Factory AVL,MMBT3904LT1G,No,NPN driver/transistor stages
+14,"U5 U6",2,USB ESD,Package_TO_SOT_SMD:SOT-23,TBD USB ESD array,Factory AVL,TPD2EUSB30 or footprint-compatible approved part,No,Confirm footprint/pinout before order
+15,"R1 R2",2,5.1k,Resistor_SMD:R_0603_1608Metric,TBD 1% 0603 resistor,Factory AVL,Equivalent 0603 1%,No,USB-C CC resistors
+16,"R3 R4",2,10k,Resistor_SMD:R_0603_1608Metric,TBD 1% 0603 resistor,Factory AVL,Equivalent 0603 1%,No,Pull resistors
+17,"R13 R14 R15",3,330,Resistor_SMD:R_0603_1608Metric,TBD 1% 0603 resistor,Factory AVL,Equivalent 0603 1%,No,RGB/current limit resistors
+18,"R16 R18",2,1k,Resistor_SMD:R_0603_1608Metric,TBD 1% 0603 resistor,Factory AVL,Equivalent 0603 1%,No,Driver/base resistors
+19,R17,1,4.7k,Resistor_SMD:R_0603_1608Metric,TBD 1% 0603 resistor,Factory AVL,Equivalent 0603 1%,No,Pull resistor
+20,"C1 C2 C9",3,10u,Capacitor_SMD:C_0603_1608Metric,TBD X5R/X7R 0603 MLCC,Factory AVL,Equivalent voltage-rated 0603 MLCC,No,Power bulk capacitance
+21,"C5 C7",2,4.7u,Capacitor_SMD:C_0603_1608Metric,TBD X5R/X7R 0603 MLCC,Factory AVL,Equivalent voltage-rated 0603 MLCC,No,Regulator/rail capacitance
+22,C3,1,1u,Capacitor_SMD:C_0603_1608Metric,TBD X5R/X7R 0603 MLCC,Factory AVL,Equivalent voltage-rated 0603 MLCC,No,Decoupling/timing
+23,"C4 C6 C8",3,0.1u,Capacitor_SMD:C_0603_1608Metric,TBD X7R 0603 MLCC,Factory AVL,Equivalent voltage-rated 0603 MLCC,No,Local decoupling
+24,"TP1 TP2 TP3 TP4 TP5 TP6 TP7 TP8",8,Test point,TestPoint:TestPoint_Pad_D1.5mm,PCB pad only,N/A,N/A,No,3V3 GND EN IO0 TX0 RX0 TX2 RX2
+

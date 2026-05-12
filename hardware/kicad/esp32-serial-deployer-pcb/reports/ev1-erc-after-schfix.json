@@ -1,0 +1,1661 @@
+{
+    "$schema": "https://schemas.kicad.org/erc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-05-12T15:54:42+0800",
+    "kicad_version": "9.0.7",
+    "sheets": [
+        {
+            "path": "/",
+            "uuid_path": "/da3a7308-9b56-51dc-a723-484320690582",
+            "violations": [
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 2 [VDD, Power input, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.2032
+                            },
+                            "uuid": "4cfc7c86-3cc3-43b6-952d-514d95a4d2f7"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 2 [VDD, Power input, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.2032
+                            },
+                            "uuid": "4cfc7c86-3cc3-43b6-952d-514d95a4d2f7"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 3 [EN, Input, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.2286
+                            },
+                            "uuid": "af723117-b6ea-45bc-9e0e-35e6c12fdc1c"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入引脚不受任何输出引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 3 [EN, Input, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.2286
+                            },
+                            "uuid": "af723117-b6ea-45bc-9e0e-35e6c12fdc1c"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 1 [GND, Power input, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.254
+                            },
+                            "uuid": "ddbb7fd7-b4e2-43e9-82cd-5e82c026f713"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 1 [GND, Power input, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.254
+                            },
+                            "uuid": "ddbb7fd7-b4e2-43e9-82cd-5e82c026f713"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 15 [GND, Passive, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.2794
+                            },
+                            "uuid": "98bc0a1d-db5f-48b4-a2fc-bff485ad6f0a"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 38 [GND, Passive, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.3048
+                            },
+                            "uuid": "d680a4f8-8647-472f-aeb4-263fe16519ed"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 39 [GND, Passive, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.3302
+                            },
+                            "uuid": "57295aba-8d0c-4094-8824-9911514c8e19"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 30 [IO18, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.2286
+                            },
+                            "uuid": "a456423d-66dd-45f5-8b04-dde5b3c5d776"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 31 [IO19, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.254
+                            },
+                            "uuid": "9d0f5ffd-badd-4a81-9d98-409c42ebdc68"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 33 [IO21, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.2794
+                            },
+                            "uuid": "2ad74857-4cef-4572-9f29-36aa80fa87f2"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 36 [IO22, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.3048
+                            },
+                            "uuid": "c1a3c289-43cc-4212-af71-575d0e23d820"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 37 [IO23, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.3302
+                            },
+                            "uuid": "cca3c75c-b502-4492-90bd-57f83bff733f"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 引脚 10 [IO25, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.3556
+                            },
+                            "uuid": "7d6cc20f-b86f-4f89-ac6b-a816913f8a0b"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol J3 引脚 1 [VCC, Passive, Line]",
+                            "pos": {
+                                "x": 0.3048,
+                                "y": 0.9652
+                            },
+                            "uuid": "a1d7e268-7edc-4d34-8e7d-e79339e3dc6c"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 6 [VDD, Power input, Line]",
+                            "pos": {
+                                "x": 0.9652,
+                                "y": 0.3302
+                            },
+                            "uuid": "c2233a3d-60fc-40f6-bb4d-f95f4a264fde"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 5 [VIO, Power input, Line]",
+                            "pos": {
+                                "x": 0.9652,
+                                "y": 0.3556
+                            },
+                            "uuid": "b9b1dfc0-ea1a-4e49-9d82-1511f089e953"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 2 [GND, Power input, Line]",
+                            "pos": {
+                                "x": 0.9652,
+                                "y": 0.381
+                            },
+                            "uuid": "b31d590c-e072-4e81-a2e2-dc886593ae2f"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol J3 引脚 3 [SCL, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.508,
+                                "y": 0.9652
+                            },
+                            "uuid": "84191a3d-e6b5-4428-aa90-62e871c5ea45"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 21 [TXD, Output, Line]",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.2794
+                            },
+                            "uuid": "8b890957-7272-44cd-8c6c-332f15e98a4e"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 20 [RXD, Input, Line]",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.3048
+                            },
+                            "uuid": "7edde47e-a734-4508-bb12-99d7b8ba0efb"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入引脚不受任何输出引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 20 [RXD, Input, Line]",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.3048
+                            },
+                            "uuid": "7edde47e-a734-4508-bb12-99d7b8ba0efb"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 19 [~RTS, Output, Line]",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.3302
+                            },
+                            "uuid": "735bdbb1-87a3-496a-9033-c1119f7001a3"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 23 [~DTR, Output, Line]",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.3556
+                            },
+                            "uuid": "bcc2c385-3913-4bde-94b8-9a3610fb3ca6"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol D10 引脚 1 [R, Bidirectional, Line]",
+                            "pos": {
+                                "x": 1.016,
+                                "y": 0.9652
+                            },
+                            "uuid": "ca943646-4e84-420a-9bdc-9ae2f5d096c2"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol D10 引脚 3 [G, Bidirectional, Line]",
+                            "pos": {
+                                "x": 1.1684,
+                                "y": 0.9652
+                            },
+                            "uuid": "7350f133-05a3-4bda-984c-f00bac28234c"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U5 引脚 1 [D+, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.3302,
+                                "y": 1.5748
+                            },
+                            "uuid": "78eac095-3dc6-4016-9241-1808b1da3950"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 7 [VREGIN, Power input, Line]",
+                            "pos": {
+                                "x": 1.6764,
+                                "y": 0.3048
+                            },
+                            "uuid": "1c29fc73-c594-4075-8578-0e5817b9c69a"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 6 [VDD, Power input, Line]",
+                            "pos": {
+                                "x": 1.6764,
+                                "y": 0.3302
+                            },
+                            "uuid": "d345f1bb-b130-4eec-879e-72f292a8a2c2"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 5 [VIO, Power input, Line]",
+                            "pos": {
+                                "x": 1.6764,
+                                "y": 0.3556
+                            },
+                            "uuid": "f29c4efb-2df9-4e1d-9a67-b7126b87a680"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "输入电源引脚不受任何输出电源引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 2 [GND, Power input, Line]",
+                            "pos": {
+                                "x": 1.6764,
+                                "y": 0.381
+                            },
+                            "uuid": "45d58e29-5883-4a31-8eea-96d195f27f34"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "power_pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U6 引脚 1 [D+, Bidirectional, Line]",
+                            "pos": {
+                                "x": 1.016,
+                                "y": 1.5748
+                            },
+                            "uuid": "854789b9-c095-4b02-b6ab-13ce36912b42"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 21 [TXD, Output, Line]",
+                            "pos": {
+                                "x": 1.9304,
+                                "y": 0.2794
+                            },
+                            "uuid": "ae02864e-ffc0-4a05-9238-f3b63f60a541"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 20 [RXD, Input, Line]",
+                            "pos": {
+                                "x": 1.9304,
+                                "y": 0.3048
+                            },
+                            "uuid": "cfd731d2-2330-43df-8967-540095067216"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入引脚不受任何输出引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 20 [RXD, Input, Line]",
+                            "pos": {
+                                "x": 1.9304,
+                                "y": 0.3048
+                            },
+                            "uuid": "cfd731d2-2330-43df-8967-540095067216"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol J1 引脚 A4 [VBUS, Passive, Line]",
+                            "pos": {
+                                "x": 2.3876,
+                                "y": 0.2794
+                            },
+                            "uuid": "08cb6fa4-d801-42f8-b043-23dbcea4aea3"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol J1 隐藏的引脚 A9 [VBUS, Passive, Line]",
+                            "pos": {
+                                "x": 2.3876,
+                                "y": 0.3048
+                            },
+                            "uuid": "17c50209-6bb5-4a11-95e0-a18b44fa2810"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol J1 隐藏的引脚 B4 [VBUS, Passive, Line]",
+                            "pos": {
+                                "x": 2.3876,
+                                "y": 0.3302
+                            },
+                            "uuid": "4849ddd2-9c48-4a49-8873-42d39c98253d"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol Q1 引脚 1 [B, Input, Line]",
+                            "pos": {
+                                "x": 2.413,
+                                "y": 0.9652
+                            },
+                            "uuid": "4c67ca65-f9f0-4ce7-9ca9-0a5669a1b3d8"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入引脚不受任何输出引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol Q1 引脚 1 [B, Input, Line]",
+                            "pos": {
+                                "x": 2.413,
+                                "y": 0.9652
+                            },
+                            "uuid": "4c67ca65-f9f0-4ce7-9ca9-0a5669a1b3d8"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol Q2 引脚 1 [B, Input, Line]",
+                            "pos": {
+                                "x": 3.1242,
+                                "y": 0.9652
+                            },
+                            "uuid": "61f84602-96e3-421e-8643-4fe31d355503"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入引脚不受任何输出引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol Q2 引脚 1 [B, Input, Line]",
+                            "pos": {
+                                "x": 3.1242,
+                                "y": 0.9652
+                            },
+                            "uuid": "61f84602-96e3-421e-8643-4fe31d355503"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_driven"
+                },
+                {
+                    "description": "引脚未连接",
+                    "items": [
+                        {
+                            "description": "Symbol Q3 引脚 1 [B, Input, Line]",
+                            "pos": {
+                                "x": 3.8354,
+                                "y": 0.9652
+                            },
+                            "uuid": "405f45fe-62c2-4747-903d-147718559b12"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_connected"
+                },
+                {
+                    "description": "输入引脚不受任何输出引脚驱动",
+                    "items": [
+                        {
+                            "description": "Symbol Q3 引脚 1 [B, Input, Line]",
+                            "pos": {
+                                "x": 3.8354,
+                                "y": 0.9652
+                            },
+                            "uuid": "405f45fe-62c2-4747-903d-147718559b12"
+                        }
+                    ],
+                    "severity": "error",
+                    "type": "pin_not_driven"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 4 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.4826
+                            },
+                            "uuid": "ff39729a-99be-486a-a240-5cd14f1d6db3"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.4826
+                            },
+                            "uuid": "b81ba00c-1bd9-5614-813c-5eb5772403df"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 5 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.508
+                            },
+                            "uuid": "f6e457ab-170f-43fe-8843-43b6c8c8e6a7"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.508
+                            },
+                            "uuid": "77e526d9-b2df-5e01-bafe-037fd5ddb029"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 6 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.5334
+                            },
+                            "uuid": "293db75a-0b11-45a5-b35e-e1054edde043"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.5334
+                            },
+                            "uuid": "9bd30b90-7821-5fb1-96d0-e3686ebc2aed"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 8 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.5842
+                            },
+                            "uuid": "2fac69ed-7c4a-4cbe-99ea-d7295a19b378"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.5842
+                            },
+                            "uuid": "e9b34bea-625f-5a50-9699-aa6ea6ce974e"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 9 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.6096
+                            },
+                            "uuid": "f7e40324-83ca-4bdb-ba7c-25ac46f1398d"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.254,
+                                "y": 0.6096
+                            },
+                            "uuid": "c92982f6-5792-5dea-bf2e-a87a23473cee"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 14 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.4572
+                            },
+                            "uuid": "a9bb7076-964b-43f3-838a-1044af7fdcb8"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.4572
+                            },
+                            "uuid": "9debf225-f9e3-5fd6-b283-71889e448b41"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 16 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.4826
+                            },
+                            "uuid": "becc2ecc-27b6-45f1-aa9b-119d658d1731"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.4826
+                            },
+                            "uuid": "a7c28057-dc62-5f04-8dab-e3483380e2ac"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'LED_R_DRV'",
+                            "pos": {
+                                "x": 0.5842,
+                                "y": 0.4572
+                            },
+                            "uuid": "f2df639f-b17c-5cef-b32d-fbcf0f53f4b3"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 17 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.508
+                            },
+                            "uuid": "311766da-e8cb-485a-be2e-d43c18c4db69"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.508
+                            },
+                            "uuid": "b68090fd-02d4-504c-8f15-97ffdff96334"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'BTN_BACK'",
+                            "pos": {
+                                "x": 0.5842,
+                                "y": 0.4826
+                            },
+                            "uuid": "1c59e2a5-131d-5e7c-92fd-586f6f2118f9"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 18 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.5334
+                            },
+                            "uuid": "e6e1b37c-5269-45b8-a519-c6e8a756f2e9"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.5334
+                            },
+                            "uuid": "9ad9e902-8b18-5aa4-9567-6fd06c4ad200"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'OLED_SCL'",
+                            "pos": {
+                                "x": 0.5842,
+                                "y": 0.508
+                            },
+                            "uuid": "bdab3a3f-60a7-5fba-98e9-fa5660f56634"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U1 隐藏的引脚 19 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.5588
+                            },
+                            "uuid": "b9751a9d-ef55-4809-b0e6-99fd2f37c7c7"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.5588,
+                                "y": 0.5588
+                            },
+                            "uuid": "45b4caaa-e3a3-54bb-a014-0dfe8aca76fa"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'OLED_SDA'",
+                            "pos": {
+                                "x": 0.5842,
+                                "y": 0.5334
+                            },
+                            "uuid": "26bb109e-eb5d-50c9-bcd9-9b65a4dbd18d"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'BTN_NEXT'",
+                            "pos": {
+                                "x": 0.5842,
+                                "y": 0.5588
+                            },
+                            "uuid": "152a28e2-f408-59ce-8621-e4e9c6eb96ce"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'BTN_OK'",
+                            "pos": {
+                                "x": 0.5842,
+                                "y": 0.5842
+                            },
+                            "uuid": "fdb87bda-b537-5cf5-8b3e-87cabec7cf3f"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.3048,
+                                "y": 1.016
+                            },
+                            "uuid": "1c5c4ca4-ad3f-5d03-b7b6-119c2a316f8b"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "类型为 Bidirectional 和 Power output 的引脚已连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 3 [D+, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.9652,
+                                "y": 0.4572
+                            },
+                            "uuid": "8f1139f3-9685-4b8b-ba7f-5431b158e886"
+                        },
+                        {
+                            "description": "Symbol U4 引脚 5 [VOUT, Power output, Line]",
+                            "pos": {
+                                "x": 4.0132,
+                                "y": 0.4064
+                            },
+                            "uuid": "48ab8e2c-62e8-44a2-9247-46ae89a9b924"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "pin_to_pin"
+                },
+                {
+                    "description": "类型为 Bidirectional 和 Power output 的引脚已连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 引脚 4 [D-, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.9652,
+                                "y": 0.4826
+                            },
+                            "uuid": "1744a994-ac41-4478-a877-ca09161da1f9"
+                        },
+                        {
+                            "description": "Symbol U4 引脚 5 [VOUT, Power output, Line]",
+                            "pos": {
+                                "x": 4.0132,
+                                "y": 0.4064
+                            },
+                            "uuid": "48ab8e2c-62e8-44a2-9247-46ae89a9b924"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "pin_to_pin"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'OLED_SDA'",
+                            "pos": {
+                                "x": 0.5334,
+                                "y": 0.9906
+                            },
+                            "uuid": "3e6e0e66-a74a-5f14-948a-7f7942247070"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.508,
+                                "y": 1.016
+                            },
+                            "uuid": "afab6a5b-e839-524d-8e7c-44de514a9e61"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'OLED_SCL'",
+                            "pos": {
+                                "x": 0.5334,
+                                "y": 1.016
+                            },
+                            "uuid": "582e7882-f16d-5777-930e-ce29b00a03be"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 隐藏的引脚 12 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.4572
+                            },
+                            "uuid": "8ca5aeab-e413-421d-bd81-81729d1483bc"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.4572
+                            },
+                            "uuid": "7fdc14ec-75c0-58b6-88a4-ae1762c32890"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 隐藏的引脚 13 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.4826
+                            },
+                            "uuid": "f6091e95-5b63-4f34-ba5c-20d3bb1aca63"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.4826
+                            },
+                            "uuid": "a5c34489-ae3f-5e9b-96d3-ffe9d51d19a6"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U2 隐藏的引脚 14 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.508
+                            },
+                            "uuid": "6fc240fd-d0f4-4d0a-97d7-4d1546fe1ba9"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.508
+                            },
+                            "uuid": "71dec31a-951c-50ee-912f-ba2b2e4af25f"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.2192,
+                                "y": 0.5334
+                            },
+                            "uuid": "bcafb0b8-aa3b-56e3-bba0-31a46807546b"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'LED_R'",
+                            "pos": {
+                                "x": 0.9906,
+                                "y": 1.016
+                            },
+                            "uuid": "e3f7d652-2166-562e-8c91-9a18246ed9af"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.016,
+                                "y": 1.016
+                            },
+                            "uuid": "a9df724e-bc03-554f-81a5-bd774d568bd1"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.1684,
+                                "y": 1.016
+                            },
+                            "uuid": "a169664b-a124-5c21-8e1e-8b3f23a96e65"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'LED_G'",
+                            "pos": {
+                                "x": 1.1938,
+                                "y": 1.016
+                            },
+                            "uuid": "2914c3c9-1a74-5166-a2ed-97edf7e6531c"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 0.3302,
+                                "y": 1.6256
+                            },
+                            "uuid": "44961af3-5e58-5c45-aa7f-c0a0a7ac8eae"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "类型为 Bidirectional 和 Power output 的引脚已连接",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 3 [D+, Bidirectional, Line]",
+                            "pos": {
+                                "x": 1.6764,
+                                "y": 0.4572
+                            },
+                            "uuid": "f0f44d90-8102-4c86-b6f4-33fa96cb1447"
+                        },
+                        {
+                            "description": "Symbol U4 引脚 5 [VOUT, Power output, Line]",
+                            "pos": {
+                                "x": 4.0132,
+                                "y": 0.4064
+                            },
+                            "uuid": "48ab8e2c-62e8-44a2-9247-46ae89a9b924"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "pin_to_pin"
+                },
+                {
+                    "description": "类型为 Bidirectional 和 Power output 的引脚已连接",
+                    "items": [
+                        {
+                            "description": "Symbol U3 引脚 4 [D-, Bidirectional, Line]",
+                            "pos": {
+                                "x": 1.6764,
+                                "y": 0.4826
+                            },
+                            "uuid": "5168bc69-0f3b-456c-bd05-ad339b1af756"
+                        },
+                        {
+                            "description": "Symbol U4 引脚 5 [VOUT, Power output, Line]",
+                            "pos": {
+                                "x": 4.0132,
+                                "y": 0.4064
+                            },
+                            "uuid": "48ab8e2c-62e8-44a2-9247-46ae89a9b924"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "pin_to_pin"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.016,
+                                "y": 1.6256
+                            },
+                            "uuid": "5053d6bc-d1cb-536d-af2d-f63f09a4b321"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol U3 隐藏的引脚 16 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 1.9304,
+                                "y": 0.508
+                            },
+                            "uuid": "cda7846c-0e7f-4c72-a891-81227ea1a288"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.9304,
+                                "y": 0.508
+                            },
+                            "uuid": "6141eea4-43ca-56cd-8bf8-f4256cff42e0"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 1.9304,
+                                "y": 0.5334
+                            },
+                            "uuid": "217596c7-2f1c-5683-a17e-9c7c5b1cdef7"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol J1 隐藏的引脚 A8 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 2.3876,
+                                "y": 0.4826
+                            },
+                            "uuid": "652751b6-c4d5-4fd7-a0be-3fac8c166ef7"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 2.3876,
+                                "y": 0.4826
+                            },
+                            "uuid": "8cc7d544-acf4-5bbb-a3ab-444a92845804"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "带有 '无连接' 标志的引脚具有外部连接",
+                    "items": [
+                        {
+                            "description": "Symbol J1 隐藏的引脚 B8 [NC, Unconnected, Line]",
+                            "pos": {
+                                "x": 2.3876,
+                                "y": 0.508
+                            },
+                            "uuid": "451b44e7-7b9e-4afd-828f-d4ee15aebc13"
+                        },
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 2.3876,
+                                "y": 0.508
+                            },
+                            "uuid": "4e0925ff-f132-53ec-a2a2-eddb068d93d5"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "no_connect_connected"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 2.3876,
+                                "y": 0.5334
+                            },
+                            "uuid": "6f7009b2-7f36-55ef-aee1-3f5357a5b132"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "类型为 Bidirectional 和 Power output 的引脚已连接",
+                    "items": [
+                        {
+                            "description": "Symbol J1 引脚 A5 [CC1, Bidirectional, Line]",
+                            "pos": {
+                                "x": 2.5908,
+                                "y": 0.3302
+                            },
+                            "uuid": "957514a3-c19a-4976-ac74-987b0df1c441"
+                        },
+                        {
+                            "description": "Symbol FLG2 引脚 1 [pwr, Power output, Line]",
+                            "pos": {
+                                "x": 0.3556,
+                                "y": 6.4008
+                            },
+                            "uuid": "fc0ddf68-1ea8-44fe-a05b-bd6d1053283f"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "pin_to_pin"
+                },
+                {
+                    "description": "类型为 Bidirectional 和 Power output 的引脚已连接",
+                    "items": [
+                        {
+                            "description": "Symbol J1 引脚 B5 [CC2, Bidirectional, Line]",
+                            "pos": {
+                                "x": 2.5908,
+                                "y": 0.3556
+                            },
+                            "uuid": "865925c6-2268-4527-87ef-a82583069a41"
+                        },
+                        {
+                            "description": "Symbol FLG2 引脚 1 [pwr, Power output, Line]",
+                            "pos": {
+                                "x": 0.3556,
+                                "y": 6.4008
+                            },
+                            "uuid": "fc0ddf68-1ea8-44fe-a05b-bd6d1053283f"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "pin_to_pin"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 2.413,
+                                "y": 1.016
+                            },
+                            "uuid": "1b76c9f8-e715-55d4-bb5b-ea3e4ba9bafe"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "在符号库中 'R_GENERIC' 找不到符号 'esp32-serial-deployer-pcb'",
+                    "items": [
+                        {
+                            "description": "符号 R2 [R_GENERIC]",
+                            "pos": {
+                                "x": 1.8034,
+                                "y": 2.2098
+                            },
+                            "uuid": "6aa00964-c205-5b45-89ce-358f4d71a03d"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "lib_symbol_issues"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 3.1242,
+                                "y": 1.016
+                            },
+                            "uuid": "cf9132ba-2ba6-5bae-b6d1-5e6e1a8c017d"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'LED_R'",
+                            "pos": {
+                                "x": 0.9906,
+                                "y": 3.4036
+                            },
+                            "uuid": "af6c09d2-2162-5fe3-a76d-ada4b3796e68"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'LED_R_DRV'",
+                            "pos": {
+                                "x": 1.1938,
+                                "y": 3.4036
+                            },
+                            "uuid": "9b117435-b329-50be-bf21-6759c67b893b"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'LED_G'",
+                            "pos": {
+                                "x": 1.7018,
+                                "y": 3.4036
+                            },
+                            "uuid": "5e50cb9f-7d80-5810-9d4f-f56e5689320f"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'BUZZER_CTRL_DRV'",
+                            "pos": {
+                                "x": 3.81,
+                                "y": 1.016
+                            },
+                            "uuid": "25880b24-4f0e-512a-a060-4ab13db49c96"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "未连接的连线端点",
+                    "items": [
+                        {
+                            "description": "水平线, 长度 0.0254 mm",
+                            "pos": {
+                                "x": 3.8354,
+                                "y": 1.016
+                            },
+                            "uuid": "3759e4b0-cd34-5736-bf9c-5983412d0a85"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "unconnected_wire_endpoint"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'BTN_OK'",
+                            "pos": {
+                                "x": 0.3048,
+                                "y": 5.207
+                            },
+                            "uuid": "d8d05737-4ac3-5c54-ae83-597f7d31752d"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'BUZZER_CTRL_DRV'",
+                            "pos": {
+                                "x": 4.0132,
+                                "y": 3.4036
+                            },
+                            "uuid": "f31bcbb0-ce82-5d53-838f-86b8454f1f95"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'BTN_NEXT'",
+                            "pos": {
+                                "x": 0.9906,
+                                "y": 5.207
+                            },
+                            "uuid": "1bc2a67a-1ee2-56d4-8ce0-bc1f4f038a81"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                },
+                {
+                    "description": "在原理图中的任何其他位置都未连接全局标签",
+                    "items": [
+                        {
+                            "description": "全局标签 'BTN_BACK'",
+                            "pos": {
+                                "x": 1.7018,
+                                "y": 5.207
+                            },
+                            "uuid": "35aa56eb-5921-55a4-8741-8a64db6b22aa"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                }
+            ]
+        }
+    ],
+    "source": "esp32-serial-deployer-pcb.kicad_sch"
+}

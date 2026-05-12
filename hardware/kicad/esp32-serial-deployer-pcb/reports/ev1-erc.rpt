@@ -1,0 +1,1043 @@
+ERC 报告 (2026-05-12T14:24:43+0800, UTF8 编码)
+
+***** 图纸 /
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 35.56 mm): 全局标签 'UART2_TX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 35.56 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 38.10 mm): 全局标签 'UART2_RX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 38.10 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 40.64 mm): 全局标签 'UART0_TX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 43.18 mm): 全局标签 'UART0_RX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 43.18 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 45.72 mm): 全局标签 'ESP_IO0'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 45.72 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 48.26 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 48.26 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 50.80 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 50.80 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 53.34 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 53.34 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 55.88 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 55.88 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 58.42 mm): 全局标签 'ESP_EN'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 58.42 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(22.86 mm, 60.96 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(25.40 mm, 60.96 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 38.10 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(58.42 mm, 38.10 mm): 全局标签 'BUZZER_CTRL'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 43.18 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(58.42 mm, 40.64 mm): 全局标签 'LED_B_DRV'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 45.72 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(58.42 mm, 43.18 mm): 全局标签 'LED_G_DRV'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 48.26 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(58.42 mm, 45.72 mm): 全局标签 'LED_R_DRV'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 50.80 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(58.42 mm, 48.26 mm): 全局标签 'BTN_BACK'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 53.34 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(58.42 mm, 50.80 mm): 全局标签 'OLED_SCL'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 55.88 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(58.42 mm, 53.34 mm): 全局标签 'OLED_SDA'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(55.88 mm, 58.42 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(58.42 mm, 58.42 mm): 全局标签 'BTN_OK'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 30.48 mm): 全局标签 '3V3'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 33.02 mm): 全局标签 'USB_C_DN'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 35.56 mm): 全局标签 'USB_C_DP'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 30.48 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 38.10 mm): 全局标签 'VBUS_USB_C_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 33.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 40.64 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 35.56 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(27.94 mm, 99.06 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 43.18 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(30.48 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 38.10 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 45.72 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(27.94 mm, 101.60 mm): 全局标签 '3V3'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 48.26 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 43.18 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(30.48 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 45.72 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(93.98 mm, 50.80 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 48.26 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(96.52 mm, 50.80 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(50.80 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(53.34 mm, 99.06 mm): 全局标签 'OLED_SDA'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(50.80 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(53.34 mm, 101.60 mm): 全局标签 'OLED_SCL'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(121.92 mm, 45.72 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(121.92 mm, 48.26 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(121.92 mm, 50.80 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(124.46 mm, 45.72 mm): 全局标签 'USB_DTR'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(121.92 mm, 53.34 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(124.46 mm, 48.26 mm): 全局标签 'USB_RTS'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(124.46 mm, 50.80 mm): 全局标签 'UART0_RX'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(124.46 mm, 53.34 mm): 全局标签 'UART0_TX'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(99.06 mm, 99.06 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 99.06 mm): 全局标签 'LED_B'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 101.60 mm): 全局标签 'LED_G'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(30.48 mm, 160.02 mm): 全局标签 'USB_C_DN'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(33.02 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(30.48 mm, 162.56 mm): 全局标签 'USB_C_DP'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(33.02 mm, 162.56 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(48.26 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(50.80 mm, 160.02 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(165.10 mm, 33.02 mm): 全局标签 'HOST_DN'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(165.10 mm, 35.56 mm): 全局标签 'HOST_DP'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(165.10 mm, 38.10 mm): 全局标签 'VBUS_HOST_RAW'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(165.10 mm, 40.64 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 30.48 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(165.10 mm, 43.18 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 33.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(165.10 mm, 45.72 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 35.56 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 38.10 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(165.10 mm, 48.26 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(165.10 mm, 50.80 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 43.18 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 45.72 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 48.26 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(167.64 mm, 50.80 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(99.06 mm, 160.02 mm): 全局标签 'HOST_DN'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(99.06 mm, 162.56 mm): 全局标签 'HOST_DP'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 162.56 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 99.06 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(172.72 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(193.04 mm, 50.80 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 160.02 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(193.04 mm, 53.34 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(195.58 mm, 50.80 mm): 全局标签 'UART2_RX'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(195.58 mm, 53.34 mm): 全局标签 'UART2_TX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(187.96 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(190.50 mm, 99.06 mm): 全局标签 'BUZZER_SW'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(30.48 mm, 220.98 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(33.02 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(48.26 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(50.80 mm, 220.98 mm): 全局标签 'PWR_LED_N'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 160.02 mm): 全局标签 'VBUS_USB_C_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(172.72 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(236.22 mm, 35.56 mm): 全局标签 'USB_C_DN'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(236.22 mm, 38.10 mm): 全局标签 'USB_C_DN'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(236.22 mm, 40.64 mm): 全局标签 'USB_C_DP'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(236.22 mm, 43.18 mm): 全局标签 'USB_C_DP'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(236.22 mm, 45.72 mm): 全局标签 'VBUS_USB_C_RAW'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(236.22 mm, 48.26 mm): 全局标签 'VBUS_USB_C_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(238.76 mm, 35.56 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(236.22 mm, 50.80 mm): 全局标签 'VBUS_USB_C_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(238.76 mm, 38.10 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(236.22 mm, 53.34 mm): 全局标签 'VBUS_USB_C_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(238.76 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(238.76 mm, 43.18 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(238.76 mm, 45.72 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(238.76 mm, 48.26 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(238.76 mm, 50.80 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(238.76 mm, 53.34 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(187.96 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(190.50 mm, 160.02 mm): 全局标签 'VBUS_USB_C_PROT'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 220.98 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(238.76 mm, 99.06 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(238.76 mm, 101.60 mm): 全局标签 'USB_RTS'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(241.30 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(259.08 mm, 33.02 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(259.08 mm, 35.56 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(241.30 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(259.08 mm, 38.10 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(259.08 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(259.08 mm, 43.18 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(259.08 mm, 45.72 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(259.08 mm, 48.26 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(261.62 mm, 33.02 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(261.62 mm, 35.56 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(261.62 mm, 38.10 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(261.62 mm, 40.64 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(261.62 mm, 43.18 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(261.62 mm, 45.72 mm): 全局标签 'USB_CC2'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(261.62 mm, 48.26 mm): 全局标签 'USB_CC1'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(256.54 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(259.08 mm, 99.06 mm): 全局标签 'ESP_EN'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 220.98 mm): 全局标签 'USB_CC2'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(172.72 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(30.48 mm, 279.40 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(33.02 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(48.26 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(50.80 mm, 279.40 mm): 全局标签 'USB_CC2'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(238.76 mm, 160.02 mm): 全局标签 'VBUS_HOST_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(241.30 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(187.96 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(190.50 mm, 220.98 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(99.06 mm, 279.40 mm): 全局标签 'USB_RTS'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(256.54 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 279.40 mm): 全局标签 'USB_RTS'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(259.08 mm, 160.02 mm): 全局标签 'VBUS_HOST_PROT'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(307.34 mm, 38.10 mm): 全局标签 'HOST_DP'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(307.34 mm, 40.64 mm): 全局标签 'HOST_DN'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(307.34 mm, 43.18 mm): 全局标签 'VBUS_HOST_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(309.88 mm, 38.10 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(309.88 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(309.88 mm, 43.18 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(309.88 mm, 99.06 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(309.88 mm, 101.60 mm): 全局标签 'USB_DTR'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 279.40 mm): 全局标签 'USB_DTR'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(241.30 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(312.42 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(172.72 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(312.42 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(330.20 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(332.74 mm, 40.64 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(187.96 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(190.50 mm, 279.40 mm): 全局标签 'USB_DTR'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(256.54 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(259.08 mm, 220.98 mm): 全局标签 'ESP_EN'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(30.48 mm, 340.36 mm): 全局标签 'HOST_VBUS_SENSE'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(33.02 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(327.66 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(48.26 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(50.80 mm, 340.36 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(330.20 mm, 99.06 mm): 全局标签 'ESP_IO0'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(309.88 mm, 160.02 mm): 全局标签 'VBUS_USB_C_PROT'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(312.42 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(99.06 mm, 340.36 mm): 全局标签 'LED_R'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 340.36 mm): 全局标签 'LED_R_DRV'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(327.66 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(330.20 mm, 160.02 mm): 全局标签 '5V_SYS'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(238.76 mm, 279.40 mm): 全局标签 'VBUS_USB_C_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(241.30 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(256.54 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(378.46 mm, 38.10 mm): 全局标签 '5V_SYS'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 340.36 mm): 全局标签 'LED_G'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(309.88 mm, 220.98 mm): 全局标签 '3V3'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(378.46 mm, 40.64 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(378.46 mm, 43.18 mm): 全局标签 '5V_SYS'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(259.08 mm, 279.40 mm): 全局标签 'USB_C_VBUS_SENSE'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(172.72 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(312.42 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(381.00 mm, 38.10 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(381.00 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(381.00 mm, 43.18 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(187.96 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(190.50 mm, 340.36 mm): 全局标签 'LED_G_DRV'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(381.00 mm, 99.06 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(381.00 mm, 101.60 mm): 全局标签 'BUZZER_CTRL_DRV'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(327.66 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(383.54 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(383.54 mm, 101.60 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(330.20 mm, 220.98 mm): 全局标签 'ESP_IO0'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(30.48 mm, 398.78 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(33.02 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(48.26 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(50.80 mm, 398.78 mm): 全局标签 'HOST_CP2102_RST_N'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(401.32 mm, 40.64 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(403.86 mm, 40.64 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(398.78 mm, 99.06 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(381.00 mm, 160.02 mm): 全局标签 'VBUS_HOST_PROT'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(401.32 mm, 99.06 mm): 全局标签 'BUZZER_SW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(383.54 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(238.76 mm, 340.36 mm): 全局标签 'LED_B'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 398.78 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(241.30 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(309.88 mm, 279.40 mm): 全局标签 'USB_C_VBUS_SENSE'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(312.42 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(256.54 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(259.08 mm, 340.36 mm): 全局标签 'LED_B_DRV'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(398.78 mm, 160.02 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(327.66 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(401.32 mm, 160.02 mm): 全局标签 '5V_SYS'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(330.20 mm, 279.40 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 398.78 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(172.72 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(381.00 mm, 220.98 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(187.96 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(190.50 mm, 398.78 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(383.54 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(398.78 mm, 220.98 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(401.32 mm, 220.98 mm): 全局标签 'USB_CC1'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(309.88 mm, 340.36 mm): 全局标签 '3V3'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(30.48 mm, 459.74 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(33.02 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(312.42 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(48.26 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(50.80 mm, 459.74 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(238.76 mm, 398.78 mm): 全局标签 'ESP_EN'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(241.30 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(99.06 mm, 459.74 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(327.66 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(381.00 mm, 279.40 mm): 全局标签 'VBUS_HOST_RAW'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(256.54 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(330.20 mm, 340.36 mm): 全局标签 'PWR_LED_N'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(383.54 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 459.74 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(259.08 mm, 398.78 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(398.78 mm, 279.40 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(401.32 mm, 279.40 mm): 全局标签 'HOST_VBUS_SENSE'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 459.74 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(172.72 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(187.96 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(190.50 mm, 459.74 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(309.88 mm, 398.78 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(312.42 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(381.00 mm, 340.36 mm): 全局标签 'BUZZER_CTRL'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(383.54 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(327.66 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(330.20 mm, 398.78 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(238.76 mm, 459.74 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(241.30 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(30.48 mm, 520.70 mm): 全局标签 'BTN_OK'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(33.02 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(48.26 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(50.80 mm, 520.70 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(398.78 mm, 340.36 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(401.32 mm, 340.36 mm): 全局标签 'BUZZER_CTRL_DRV'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(256.54 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(259.08 mm, 459.74 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(99.06 mm, 520.70 mm): 全局标签 'BTN_NEXT'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(101.60 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(116.84 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(119.38 mm, 520.70 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(170.18 mm, 520.70 mm): 全局标签 'BTN_BACK'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(172.72 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(381.00 mm, 398.78 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(383.54 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(187.96 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(309.88 mm, 459.74 mm): 全局标签 'ESP_IO0'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(190.50 mm, 520.70 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(312.42 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(398.78 mm, 398.78 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(327.66 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(401.32 mm, 398.78 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(330.20 mm, 459.74 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(241.30 mm, 520.70 mm): 全局标签 '3V3'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(243.84 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(33.02 mm, 579.12 mm): 全局标签 'ESP_IO0'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(35.56 mm, 579.12 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(101.60 mm, 579.12 mm): 全局标签 'UART0_TX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(104.14 mm, 579.12 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(381.00 mm, 459.74 mm): 全局标签 'ESP_EN'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(383.54 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(172.72 mm, 579.12 mm): 全局标签 'UART0_RX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(175.26 mm, 579.12 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(312.42 mm, 520.70 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(314.96 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(398.78 mm, 459.74 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(401.32 mm, 459.74 mm): 全局标签 'GND'
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(241.30 mm, 579.12 mm): 全局标签 'UART2_TX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(243.84 mm, 579.12 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(33.02 mm, 640.08 mm): 全局标签 'GND'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(35.56 mm, 640.08 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(383.54 mm, 520.70 mm): 全局标签 'ESP_EN'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(386.08 mm, 520.70 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(312.42 mm, 579.12 mm): 全局标签 'UART2_RX'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(314.96 mm, 579.12 mm): 水平线, 长度 2.54 mm
+[global_label_dangling]: 在原理图中的任何其他位置都未连接全局标签
+    ; warning
+    @(383.54 mm, 579.12 mm): 全局标签 '5V_SYS'
+[unconnected_wire_endpoint]: 未连接的连线端点
+    ; warning
+    @(386.08 mm, 579.12 mm): 水平线, 长度 2.54 mm
+
+ ** ERC 信息: 346 个错误 0 个警告 346

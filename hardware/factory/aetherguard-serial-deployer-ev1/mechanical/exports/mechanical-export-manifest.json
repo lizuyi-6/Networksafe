@@ -1,0 +1,39 @@
+﻿{
+    "status":  "exported",
+    "package":  "aetherguard-serial-deployer-ev1",
+    "source":  "../../enclosure.scad",
+    "openscad":  "OpenSCAD version 2021.01",
+    "generatedAt":  "2026-05-12T12:40:14.8704272+08:00",
+    "outputs":  [
+                    {
+                        "part":  "LOWER_CHASSIS",
+                        "file":  "mechanical/exports/lower-chassis.stl",
+                        "bytes":  1088794
+                    },
+                    {
+                        "part":  "UPPER_BEZEL",
+                        "file":  "mechanical/exports/upper-bezel.stl",
+                        "bytes":  1661466
+                    },
+                    {
+                        "part":  "SERVICE_DOOR",
+                        "file":  "mechanical/exports/service-door.stl",
+                        "bytes":  263660
+                    },
+                    {
+                        "part":  "LENS",
+                        "file":  "mechanical/exports/lens.stl",
+                        "bytes":  45520
+                    },
+                    {
+                        "part":  "BUTTON_CAPS",
+                        "file":  "mechanical/exports/button-caps.stl",
+                        "bytes":  1433175
+                    },
+                    {
+                        "part":  "PLATE",
+                        "file":  "mechanical/exports/inspection-plate.stl",
+                        "bytes":  3950198
+                    }
+                ]
+}
