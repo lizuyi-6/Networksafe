@@ -107,7 +107,12 @@ export function validateDeviceRegisterPayload(input: unknown): DeviceRegisterPay
     public_key_pem: nonEmptyString(payload.public_key_pem) || undefined,
     secure_element_present: typeof payload.secure_element_present === 'boolean' ? payload.secure_element_present : undefined,
     device_role: nonEmptyString(payload.device_role) || undefined,
-    transport: nonEmptyString(payload.transport) || undefined
+    transport: nonEmptyString(payload.transport) || undefined,
+    policy_digest: nonEmptyString(payload.policy_digest) || undefined,
+    breaker_target: nonEmptyString(payload.breaker_target) || undefined,
+    interlock_state: nonEmptyString(payload.interlock_state) || undefined,
+    external_power_present: typeof payload.external_power_present === 'boolean' ? payload.external_power_present : undefined,
+    feedback_ok: typeof payload.feedback_ok === 'boolean' ? payload.feedback_ok : undefined
   };
 }
 
@@ -121,6 +126,12 @@ export function validateDeviceHeartbeatPayload(input: unknown): DeviceHeartbeatP
     uptime: optionalFiniteNumber(payload.uptime),
     free_heap: optionalFiniteNumber(payload.free_heap),
     wifi_rssi: optionalFiniteNumber(payload.wifi_rssi),
-    cpu_usage: optionalFiniteNumber(payload.cpu_usage)
+    cpu_usage: optionalFiniteNumber(payload.cpu_usage),
+    policy_digest: nonEmptyString(payload.policy_digest) || undefined,
+    breaker_target: nonEmptyString(payload.breaker_target) || undefined,
+    interlock_state: nonEmptyString(payload.interlock_state) || undefined,
+    external_power_present: typeof payload.external_power_present === 'boolean' ? payload.external_power_present : undefined,
+    secure_element_present: typeof payload.secure_element_present === 'boolean' ? payload.secure_element_present : undefined,
+    feedback_ok: typeof payload.feedback_ok === 'boolean' ? payload.feedback_ok : undefined
   };
 }

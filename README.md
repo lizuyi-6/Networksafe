@@ -18,6 +18,10 @@ See [`docs/reports/validated-capability-status-2026-03-08.md`](docs/reports/vali
 
 AetherGuard 彻底重构了传统防火墙架构，采用创新的 **"中心化控制 + 分布式执行 + 硬件级部署"** 三位一体防御体系。它不仅是一个软件，更是一套结合了 AI 威胁分析与 ESP32 硬件运维的完整服务器安全解决方案。
 
+**AetherGuard 完全最后防线**：即使控制平面沦陷，危险动作仍需本地硬件放行。工程上这对应 **Final Defense Mode**：控制平面只发起请求和记录审计，最终授权由本地主机 companion、签名本地策略、ATECC608C 硬件签名 grant、单调计数器、payload hash、策略摘要和 interlock 反馈共同决定。
+
+该承诺是条件式安全边界：管理链路必须实际接入 Control Board v1 interlock，Final Defense Mode 必须启用，本地策略必须离线签名，硬件安全芯片必须完成 provision，外部 DC、反馈回路和 companion 心跳都必须健康。第一版物理断路只控制低压网络/管理链路，不切换市电或业务主机电源。
+
 ---
 
 ## 📸 功能概览
@@ -46,11 +50,12 @@ AetherGuard 彻底重构了传统防火墙架构，采用创新的 **"中心化�
 - **一键复制**: 运维人员只需复制一行命令即可完成服务器接入。
 ![Deployment](docs/assets/deploy.png)
 
-### 5. ESP32 串口部署器 (Devices)
-管理 **ESP32 Serial Deployer Prototype** 的本地部署流程与操作记录。
+### 5. 硬件最后防线 (Devices)
+管理 **ESP32 Serial Deployer Prototype** 的 legacy 部署流程，以及 **AetherGuard Control Board v1** 的 Final Defense Mode 状态。
 - **面包板跳线原型**: 采用 ESP32 开发板、面包板、杜邦线和外接模块快速搭建本地部署器。
 - **本地串口部署**: 运维人员将外部 CP2102 切到部署模式后接入目标服务器，离线完成环境检测、备份与安装确认。
 - **物理安全确认**: 通过 OLED、三键、RGB 和蜂鸣器完成高风险操作的本地确认，避免误触发卸载。
+- **完全最后防线**: Control Board v1 使用 ESP32-S3 + ATECC608C + 隔离 interlock 输出/反馈，只有 secure element、策略摘要、外部电源、反馈、companion 和 interlock 全部健康时，控制台才显示 “Final Defense Active / 完全最后防线已启用”。
 ![Devices](docs/assets/devices.png)
 
 ### 6. 主动漏洞扫描 (Monitoring)
@@ -101,6 +106,7 @@ graph TD
     subgraph "硬件运维层"
         ESP32[ESP32 Serial Deployer Prototype] -- "USB-TTL Short Cable" --> App1
         ESP32_2[ESP32 Serial Deployer Prototype] -- "USB-TTL Short Cable" --> App2
+        CB1[Control Board v1 Final Defense] -- "isolated interlock feedback" --> Mgmt[Management Link]
     end
     
     subgraph "控制平面 Control Plane"
@@ -136,6 +142,20 @@ AetherGuard 当前的硬件基线是 **面包板跳线版 ESP32 串口部署器�
 > 当前硬件基线是 **单颗外部 CP2102 的 USB-TTL 串口部署器原型**。同一时刻只能处于“烧录/调试”或“部署”其中一种模式，切换前必须断电或拔 USB。
 >
 > 仓库中的 `/ws/device`、OTA、physical-confirmation smoke 仅用于后端模拟链路与后续联网设备实验，不代表当前 ESP32 固件已支持远程网关模式。
+
+---
+
+## 🛡️ Final Defense Mode / 完全最后防线
+
+Control Board v1 是新增的最终防护硬件形态，目标基线位于 `hardware/aetherguard-control-board-v1`。它保留 legacy ESP32 串口部署器的物理确认价值，但把最终放行权从后端转移到 **本地主机 companion + 硬件安全板**。
+
+- 控制平面不再是危险操作的最终授权源，只负责发起请求和写审计。
+- Companion 读取 `/etc/aetherguard/final-defense-policy.json`，只执行本地签名策略 allow-list 中的动作和脚本路径。
+- 硬件 grant 由 ATECC608C 不可导出私钥签名，签名消息包含 `policyDigest`、`challenge`、`breakerTarget`、`interlockAction`。
+- Interlock 状态统一为 `isolated`、`armed`、`released`、`fault`、`disabled`、`unknown`，legacy `asserted` 映射为 `isolated`。
+- 默认失败关闭：签名失败、计数器回退、策略摘要不匹配、grant 过期、外部 DC 丢失、反馈异常或 board 心跳丢失时，companion 会自动 `interlock_assert`，管理链路保持或回到 `isolated`。
+
+第一版只断开低压网络/管理链路。攻击者具备实体拆线、替换硬件或 root 后破坏本地执行器的场景，需要后续 secure boot、TPM attestation 和 OS hardening 阶段继续增强。
 
 ---
 

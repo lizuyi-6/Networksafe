@@ -1,8 +1,8 @@
 # AetherGuard Serial Deployer EV1 Factory Package
 
-Status: `factory-draft`
+Status: `pcb-prototype-order-ready`
 
-This package is for engineering prototype quote, factory review, and build preparation. It is not a ready-to-order production release until the readiness gates in `manufacturing-readiness.md` pass.
+This package is ready for EV1 PCB prototype fabrication and engineering prototype quote. It is not a mass-production release and it is not `prototype-ready` until first-article assembly and hardware-in-loop acceptance pass.
 
 ## Product Definition
 
@@ -54,8 +54,9 @@ This package is for engineering prototype quote, factory review, and build prepa
 - `diagrams/`: factory-facing block and layout diagrams.
 - `scripts/`: top-level export/readiness automation.
 - `manufacturing-readiness.md`: current gate status and blockers.
+- `pcb-routing-blockers.md`: closed PCB routing summary and traceability notes.
 - `package-manifest.json`: machine-readable package metadata.
 
 ## Factory Handling Rule
 
-Do not fabricate the PCB from this package unless `scripts/export-factory-package.ps1` has produced Gerber, drill, and position outputs and `manufacturing-readiness.md` has been updated from `factory-draft` to a passing engineering release state. The current package intentionally does not include generated Gerber/drill data because the active KiCad PCB still has 118 unconnected items, even though ERC, DRC violations, and schematic parity are clean.
+PCB fabrication may use the generated files in `pcb/exports/gerber/`, `pcb/exports/drill/`, and `pcb/exports/position.csv` after the factory reviews `readiness-report.json` and `manufacturing-readiness.md`. Do not treat this as a production release: first-article electrical inspection, enclosure fit, firmware flashing, and HIL protocol acceptance are still required before marking the EV1 hardware `prototype-ready`.

@@ -1,29 +1,13 @@
 {
     "$schema": "https://schemas.kicad.org/erc.v1.json",
     "coordinate_units": "mm",
-    "date": "2026-05-12T18:19:28+0800",
+    "date": "2026-05-13T09:25:16+0800",
     "kicad_version": "9.0.7",
     "sheets": [
         {
             "path": "/",
             "uuid_path": "/da3a7308-9b56-51dc-a723-484320690582",
-            "violations": [
-                {
-                    "description": "在符号库中 'ESP32_WROOM_32E_PCB' 找不到符号 'esp32-serial-deployer-pcb'",
-                    "items": [
-                        {
-                            "description": "符号 U1 [ESP32_WROOM_32E_PCB]",
-                            "pos": {
-                                "x": 0.4064,
-                                "y": 0.4064
-                            },
-                            "uuid": "b6c1b43e-afca-5b77-9980-77bc54c3396f"
-                        }
-                    ],
-                    "severity": "warning",
-                    "type": "lib_symbol_issues"
-                }
-            ]
+            "violations": []
         }
     ],
     "source": "esp32-serial-deployer-pcb.kicad_sch"

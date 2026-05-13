@@ -22,6 +22,7 @@ import smartFixRouter from '../api/routes/smart-fix.routes';
 import deploymentsRouter from '../api/routes/deployments.routes';
 import agentsRouter from '../api/routes/agents.routes';
 import devicesRouter from '../api/routes/devices.routes';
+import finalDefenseRouter from '../api/routes/final-defense.routes';
 import hardwareAuthorizationRouter from '../api/routes/hardware-authorization.routes';
 import aiEndpointsRouter from '../api/routes/ai-endpoints.routes';
 import authRouter from '../api/routes/auth.routes';
@@ -239,6 +240,7 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
     apiRouter.use('/deployments', deploymentsRouter);
     apiRouter.use('/agents', agentsRouter);
     apiRouter.use('/devices', devicesRouter);
+    apiRouter.use('/final-defense', finalDefenseRouter);
     apiRouter.use('/', hardwareAuthorizationRouter);
     apiRouter.use('/ai-endpoints', aiEndpointsRouter);
     apiRouter.use('/auth', authRouter);

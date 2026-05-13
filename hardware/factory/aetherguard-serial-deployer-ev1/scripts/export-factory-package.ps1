@@ -80,6 +80,137 @@ function Invoke-Tool {
     }
 }
 
+function Test-UsableFile {
+    param(
+        [string]$Path,
+        [int]$MinBytes = 1
+    )
+    if (-not (Test-Path $Path)) {
+        return $false
+    }
+    try {
+        return ((Get-Item -LiteralPath $Path).Length -ge $MinBytes)
+    } catch {
+        return $false
+    }
+}
+
+function Invoke-ToolToFile {
+    param(
+        [string]$Name,
+        [string]$Exe,
+        [string[]]$ArgsBeforeOutput,
+        [string]$OutputPath,
+        [string[]]$ArgsAfterOutput = @(),
+        [switch]$Optional,
+        [int]$MinBytes = 1
+    )
+
+    $safeName = ($Name -replace '[^A-Za-z0-9_.-]', '-')
+    $logPath = Join-Path $reportRoot "$safeName.log"
+    $outputDir = Split-Path -Parent $OutputPath
+    $extension = [System.IO.Path]::GetExtension($OutputPath)
+    $tempPath = Join-Path $outputDir (".tmp-$safeName-$PID-$([System.Guid]::NewGuid().ToString('N'))$extension")
+
+    try {
+        & $Exe @ArgsBeforeOutput $tempPath @ArgsAfterOutput *> $logPath
+        if ($LASTEXITCODE -ne 0 -or -not (Test-UsableFile $tempPath $MinBytes)) {
+            $status = if ($Optional) { "blocked" } else { "fail" }
+            Add-Gate $Name $status "exit code $LASTEXITCODE; see pcb/exports/reports/$safeName.log"
+            return $false
+        }
+
+        try {
+            Move-Item -Force -LiteralPath $tempPath -Destination $OutputPath
+            Add-Gate $Name "pass" "exit code 0"
+            return $true
+        } catch {
+            if (Test-UsableFile $OutputPath $MinBytes) {
+                Add-Gate $Name "pass" "exit code 0; existing output retained because destination is locked"
+                return $true
+            }
+            $status = if ($Optional) { "blocked" } else { "fail" }
+            Add-Gate $Name $status $_.Exception.Message
+            return $false
+        }
+    } catch {
+        $status = if ($Optional) { "blocked" } else { "fail" }
+        Add-Gate $Name $status $_.Exception.Message
+        return $false
+    } finally {
+        if (Test-Path $tempPath) {
+            Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Test-UsableDirectory {
+    param(
+        [string]$Path,
+        [int]$MinFiles = 1
+    )
+    if (-not (Test-Path $Path)) {
+        return $false
+    }
+    try {
+        return (@(Get-ChildItem -LiteralPath $Path -File -Recurse).Count -ge $MinFiles)
+    } catch {
+        return $false
+    }
+}
+
+function Invoke-ToolToDirectory {
+    param(
+        [string]$Name,
+        [string]$Exe,
+        [string[]]$ArgsBeforeOutput,
+        [string]$OutputPath,
+        [string[]]$ArgsAfterOutput = @(),
+        [switch]$Optional,
+        [int]$MinFiles = 1
+    )
+
+    $safeName = ($Name -replace '[^A-Za-z0-9_.-]', '-')
+    $logPath = Join-Path $reportRoot "$safeName.log"
+    $parentDir = Split-Path -Parent $OutputPath
+    $tempPath = Join-Path $parentDir (".tmp-$safeName-$PID-$([System.Guid]::NewGuid().ToString('N'))")
+
+    try {
+        New-Item -ItemType Directory -Force -Path $tempPath | Out-Null
+        & $Exe @ArgsBeforeOutput $tempPath @ArgsAfterOutput *> $logPath
+        if ($LASTEXITCODE -ne 0 -or -not (Test-UsableDirectory $tempPath $MinFiles)) {
+            $status = if ($Optional) { "blocked" } else { "fail" }
+            Add-Gate $Name $status "exit code $LASTEXITCODE; see pcb/exports/reports/$safeName.log"
+            return $false
+        }
+
+        try {
+            if (Test-Path $OutputPath) {
+                Remove-Item -LiteralPath $OutputPath -Recurse -Force
+            }
+            Move-Item -LiteralPath $tempPath -Destination $OutputPath
+            Add-Gate $Name "pass" "exit code 0"
+            return $true
+        } catch {
+            if (Test-UsableDirectory $OutputPath $MinFiles) {
+                Add-Gate $Name "pass" "exit code 0; existing output retained because destination is locked"
+                return $true
+            }
+            $status = if ($Optional) { "blocked" } else { "fail" }
+            Add-Gate $Name $status $_.Exception.Message
+            return $false
+        }
+    } catch {
+        $status = if ($Optional) { "blocked" } else { "fail" }
+        Add-Gate $Name $status $_.Exception.Message
+        return $false
+    } finally {
+        if (Test-Path $tempPath) {
+            Remove-Item -LiteralPath $tempPath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
 function Read-JsonFile {
     param([string]$Path)
     if (-not (Test-Path $Path)) {
@@ -94,6 +225,27 @@ function Count-JsonArray {
         return 0
     }
     return @($Value).Count
+}
+
+function Get-JsonViolations {
+    param($Json)
+    $items = @()
+
+    foreach ($violation in @($Json.violations)) {
+        if ($null -ne $violation) {
+            $items += $violation
+        }
+    }
+
+    foreach ($sheet in @($Json.sheets)) {
+        foreach ($violation in @($sheet.violations)) {
+            if ($null -ne $violation) {
+                $items += $violation
+            }
+        }
+    }
+
+    return $items
 }
 
 function Count-Severity {
@@ -118,7 +270,8 @@ function Add-JsonGate {
     }
 
     if ($Kind -eq "erc") {
-        $violations = Count-JsonArray $json.violations
+        $ercViolations = Get-JsonViolations $json
+        $violations = Count-JsonArray $ercViolations
         $script:metrics.ercViolations = $violations
         if ($violations -eq 0) {
             Add-Gate $Name "pass" "0 ERC violations"
@@ -229,13 +382,13 @@ if ($kicad) {
     $assemblyBottomSvg = Join-Path $exportRoot "assembly-bottom.svg"
     $bomExportPath = Join-Path $exportRoot "bom-ev1.csv"
 
-    Invoke-Tool "export:netlist" $kicad @("sch", "export", "netlist", "--format", "kicadsexpr", "--output", $netlistPath, $pcbSch) | Out-Null
-    Invoke-Tool "export:bom-xml" $kicad @("sch", "export", "python-bom", "--output", $bomXmlPath, $pcbSch) | Out-Null
-    Invoke-Tool "export:schematic-pdf" $kicad @("sch", "export", "pdf", "--output", $schematicPdf, $pcbSch) -Optional | Out-Null
-    Invoke-Tool "export:pcb-layout-top-svg" $kicad @("pcb", "export", "svg", "--output", $layoutTopSvg, "--layers", "F.Cu,F.Mask,F.SilkS,Edge.Cuts", "--page-size-mode", "2", "--exclude-drawing-sheet", "--mode-single", $pcbBoard) -Optional | Out-Null
-    Invoke-Tool "export:pcb-layout-bottom-svg" $kicad @("pcb", "export", "svg", "--output", $layoutBottomSvg, "--layers", "B.Cu,B.Mask,B.SilkS,Edge.Cuts", "--mirror", "--page-size-mode", "2", "--exclude-drawing-sheet", "--mode-single", $pcbBoard) -Optional | Out-Null
-    Invoke-Tool "export:assembly-top-svg" $kicad @("pcb", "export", "svg", "--output", $assemblyTopSvg, "--layers", "F.Fab,F.SilkS,F.CrtYd,Edge.Cuts", "--page-size-mode", "2", "--exclude-drawing-sheet", "--mode-single", "--sketch-pads-on-fab-layers", $pcbBoard) -Optional | Out-Null
-    Invoke-Tool "export:assembly-bottom-svg" $kicad @("pcb", "export", "svg", "--output", $assemblyBottomSvg, "--layers", "B.Fab,B.SilkS,B.CrtYd,Edge.Cuts", "--mirror", "--page-size-mode", "2", "--exclude-drawing-sheet", "--mode-single", "--sketch-pads-on-fab-layers", $pcbBoard) -Optional | Out-Null
+    Invoke-ToolToFile "export:netlist" $kicad @("sch", "export", "netlist", "--format", "kicadsexpr", "--output") $netlistPath @($pcbSch) -MinBytes 100 | Out-Null
+    Invoke-ToolToFile "export:bom-xml" $kicad @("sch", "export", "python-bom", "--output") $bomXmlPath @($pcbSch) -MinBytes 100 | Out-Null
+    Invoke-ToolToFile "export:schematic-pdf" $kicad @("sch", "export", "pdf", "--output") $schematicPdf @($pcbSch) -Optional -MinBytes 1000 | Out-Null
+    Invoke-ToolToFile "export:pcb-layout-top-svg" $kicad @("pcb", "export", "svg", "--output") $layoutTopSvg @("--layers", "F.Cu,F.Mask,F.SilkS,Edge.Cuts", "--page-size-mode", "2", "--exclude-drawing-sheet", "--mode-single", $pcbBoard) -Optional -MinBytes 1000 | Out-Null
+    Invoke-ToolToFile "export:pcb-layout-bottom-svg" $kicad @("pcb", "export", "svg", "--output") $layoutBottomSvg @("--layers", "B.Cu,B.Mask,B.SilkS,Edge.Cuts", "--mirror", "--page-size-mode", "2", "--exclude-drawing-sheet", "--mode-single", $pcbBoard) -Optional -MinBytes 1000 | Out-Null
+    Invoke-ToolToFile "export:assembly-top-svg" $kicad @("pcb", "export", "svg", "--output") $assemblyTopSvg @("--layers", "F.Fab,F.SilkS,F.CrtYd,Edge.Cuts", "--page-size-mode", "2", "--exclude-drawing-sheet", "--mode-single", "--sketch-pads-on-fab-layers", $pcbBoard) -Optional -MinBytes 1000 | Out-Null
+    Invoke-ToolToFile "export:assembly-bottom-svg" $kicad @("pcb", "export", "svg", "--output") $assemblyBottomSvg @("--layers", "B.Fab,B.SilkS,B.CrtYd,Edge.Cuts", "--mirror", "--page-size-mode", "2", "--exclude-drawing-sheet", "--mode-single", "--sketch-pads-on-fab-layers", $pcbBoard) -Optional -MinBytes 1000 | Out-Null
 
     if (Test-Path $bomSource) {
         Copy-Item -Force -LiteralPath $bomSource -Destination $bomExportPath
@@ -278,8 +431,8 @@ if ($kicad) {
         $positionPath = Join-Path $exportRoot "position.csv"
         New-Item -ItemType Directory -Force -Path $gerberDir, $drillDir | Out-Null
 
-        Invoke-Tool "export:gerber" $kicad @("pcb", "export", "gerbers", "--output", $gerberDir, $pcbBoard) | Out-Null
-        Invoke-Tool "export:drill" $kicad @("pcb", "export", "drill", "--output", $drillDir, $pcbBoard) | Out-Null
+        Invoke-ToolToDirectory "export:gerber" $kicad @("pcb", "export", "gerbers", "--output") $gerberDir @($pcbBoard) -MinFiles 10 | Out-Null
+        Invoke-ToolToDirectory "export:drill" $kicad @("pcb", "export", "drill", "--output") $drillDir @($pcbBoard) -MinFiles 1 | Out-Null
         Invoke-Tool "export:position" $kicad @("pcb", "export", "pos", "--output", $positionPath, "--format", "csv", "--units", "mm", "--side", "both", $pcbBoard) | Out-Null
     } else {
         Add-Gate "manufacturing-export" "blocked" "Gerber, drill, and position exports blocked until ERC, DRC, schematic parity, netlist, and BOM gates pass"
@@ -334,7 +487,7 @@ if ($RequireReady -and $status -ne "pcb-prototype-order-ready") {
 }
 
 if ($CreateArchive) {
-    $archivePath = Join-Path $packageRoot "..\aetherguard-serial-deployer-ev1-factory-draft.zip"
+    $archivePath = Join-Path $packageRoot "..\aetherguard-serial-deployer-ev1-$status.zip"
     if (Test-Path $archivePath) {
         Remove-Item -LiteralPath $archivePath
     }

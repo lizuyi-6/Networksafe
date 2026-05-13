@@ -2,13 +2,13 @@
 
 Package: `aetherguard-serial-deployer-ev1`
 
-Date: 2026-05-12
+Date: 2026-05-13
 
-Current status: `factory-draft`
+Current status: `pcb-prototype-order-ready`
 
 ## Decision
 
-This package is suitable for factory review, quoting, BOM discussion, and mechanical prototype preparation. It is not suitable for PCB ordering yet.
+This package is suitable for EV1 PCB prototype fabrication, factory quote, BOM discussion, and mechanical prototype preparation. It is not suitable for mass production, regulatory claims, or `prototype-ready` status until first-article assembly and hardware-in-loop acceptance pass.
 
 ## Current Validation
 
@@ -18,25 +18,26 @@ This package is suitable for factory review, quoting, BOM discussion, and mechan
 | KiCad ERC | 0 violations | Pass |
 | KiCad PCB DRC | 0 violations | Pass |
 | KiCad schematic parity | 0 issues | Pass |
-| Unexpected unconnected items | 118 | Blocked |
+| Unexpected unconnected items | 0 | Pass |
 | Netlist | 55 components, 85 nets | Pass |
 | BOM | 51 BOM components | Pass |
-| Mechanical STL export | Generated with OpenSCAD 2021.01 | Pass after extended timeout |
+| Gerber export | Generated in `pcb/exports/gerber/` | Pass |
+| Excellon drill export | Generated in `pcb/exports/drill/` | Pass |
+| Position CSV export | Generated as `pcb/exports/position.csv` | Pass |
+| Mechanical STL export | Existing OpenSCAD STL manifest present | Pass |
 
 ## Manufacturing Gate
 
-Gerber, drill, and position exports remain blocked until the PCB has 0 unexpected unconnected items. The review exports in `pcb/exports/` are useful for engineering review only.
+Gerber, drill, position, schematic, BOM, assembly plots, ERC, DRC, and schematic-parity reports have been exported by `scripts/export-factory-package.ps1 -RequireReady`. The machine-readable readiness report is `readiness-report.json` and currently reports `pcb-prototype-order-ready`.
 
-Do not send the PCB to fabrication from this package yet.
+The PCB may be sent for 5-20 unit EV1 engineering prototype fabrication after factory review. Do not mark the hardware `prototype-ready` until first-article inspection, firmware flashing, enclosure fit, and HIL protocol acceptance pass.
 
 ## Required Before PCB Order
 
-- Finish full EV1 routing for all power, ground, USB, UART, OLED, button, RGB, buzzer, boot/reset, and test-point nets.
-- Re-run `kicad-cli sch erc`, `kicad-cli pcb drc`, and `kicad-cli pcb drc --schematic-parity`.
-- Confirm DRC reports 0 violations and 0 unconnected items.
-- Export Gerber, drill, position CSV, and assembly plots through `scripts/export-factory-package.ps1`.
-- Review Gerber/drill in KiCad or an external Gerber viewer.
-- Lock BOM critical parts and alternates before quoting.
+- Review Gerber/drill in KiCad or an external Gerber viewer before releasing files to the board house.
+- Confirm exact USB-C, CP2102N, ESP32-WROOM-32E, regulator, RGB, buzzer, tactile switch, ESD, PTC, and Schottky manufacturer part numbers before assembly quote lock.
+- Confirm the assembler can handle CP2102N exposed-pad QFN assembly and inspection.
+- Confirm pigtail cable OD, strain relief, and enclosure exit details with the mechanical supplier.
 
 ## Required Before `prototype-ready`
 

@@ -32,6 +32,7 @@ import { socketRateLimitService } from '../services/socket-rate-limit.service';
 import {
     registerDevice,
     updateDeviceStatus,
+    updateDeviceFinalDefenseState,
     setDeviceOffline,
     getCodebook,
     addDeviceEvent,
@@ -46,6 +47,7 @@ import {
 } from './socket-payload-validator';
 import { allowGatewayDestructiveCommands } from '../config/enterprise-runtime';
 import { requiresPhysicalConfirmation } from '../security/command-risk-policy';
+import { normalizeInterlockState } from '../security/final-defense-policy';
 
 interface DeviceSocket extends Socket {
     deviceId?: string;
@@ -291,6 +293,11 @@ export class DeviceGateway {
             secure_element_present,
             device_role,
             transport,
+            policy_digest,
+            breaker_target,
+            interlock_state,
+            external_power_present,
+            feedback_ok,
         } = payload;
 
         if (!(await checkSocketRateLimit(socket, tenantContext.tenantId))) {
@@ -365,6 +372,14 @@ export class DeviceGateway {
             sdkVersion: sdk_version || 'unknown',
             mode: 'online',
             physicalAuth: public_key_pem ? { publicKeyPem: public_key_pem } : undefined,
+            finalDefense: {
+                policyDigest: policy_digest,
+                breakerTarget: breaker_target,
+                interlockState: interlock_state ? normalizeInterlockState(interlock_state) : undefined,
+                externalPowerPresent: external_power_present,
+                secureElementPresent: secure_element_present,
+                feedbackOk: feedback_ok
+            },
         });
         addDeviceEvent(device_id, 'register', {
             version,
@@ -412,7 +427,18 @@ export class DeviceGateway {
             return;
         }
 
-        const { uptime, free_heap, wifi_rssi, cpu_usage } = payload;
+        const {
+            uptime,
+            free_heap,
+            wifi_rssi,
+            cpu_usage,
+            policy_digest,
+            breaker_target,
+            interlock_state,
+            external_power_present,
+            secure_element_present,
+            feedback_ok
+        } = payload;
 
         updateDeviceStatus(socket.deviceId, {
             cpuUsage: cpu_usage || 0,
@@ -425,6 +451,23 @@ export class DeviceGateway {
             freeHeap: free_heap,
             wifiRssi: wifi_rssi
         });
+        if (
+            policy_digest
+            || breaker_target
+            || interlock_state
+            || external_power_present !== undefined
+            || secure_element_present !== undefined
+            || feedback_ok !== undefined
+        ) {
+            updateDeviceFinalDefenseState(socket.deviceId, {
+                policyDigest: policy_digest,
+                breakerTarget: breaker_target,
+                interlockState: interlock_state ? normalizeInterlockState(interlock_state) : undefined,
+                externalPowerPresent: external_power_present,
+                secureElementPresent: secure_element_present,
+                feedbackOk: feedback_ok
+            });
+        }
 
         socket.emit('heartbeat_ack', { timestamp: Date.now() });
     }
@@ -467,6 +510,21 @@ export class DeviceGateway {
         });
 
         addDeviceEvent(socket.deviceId, 'data', { payload: decodedPayload ?? {} });
+        if (decodedPayload && typeof decodedPayload === 'object') {
+            const finalDefenseUpdate = {
+                policyDigest: decodedPayload.policyDigest || decodedPayload.policy_digest,
+                breakerTarget: decodedPayload.breakerTarget || decodedPayload.breaker_target,
+                interlockState: decodedPayload.interlockState || decodedPayload.interlock_state
+                    ? normalizeInterlockState(decodedPayload.interlockState || decodedPayload.interlock_state)
+                    : undefined,
+                externalPowerPresent: decodedPayload.externalPowerPresent ?? decodedPayload.external_power_present,
+                secureElementPresent: decodedPayload.secureElementPresent ?? decodedPayload.secure_element_present,
+                feedbackOk: decodedPayload.feedbackOk ?? decodedPayload.feedback_ok
+            };
+            if (Object.values(finalDefenseUpdate).some((value) => value !== undefined && value !== '')) {
+                updateDeviceFinalDefenseState(socket.deviceId, finalDefenseUpdate);
+            }
+        }
         this.emitToDashboard('device:data', {
             deviceId: socket.deviceId,
             data: decodedPayload ?? {},
@@ -645,7 +703,7 @@ export class DeviceGateway {
     }
 
     public async sendCommand(deviceId: string, command: string, params?: any): Promise<boolean> {
-        if (!allowGatewayDestructiveCommands() && requiresPhysicalConfirmation(command)) {
+        if (!allowGatewayDestructiveCommands() && requiresPhysicalConfirmation(command) && !params?.hardwareGrant) {
             logger.warn('[DeviceGateway] Blocked destructive command on experimental gateway in enterprise runtime', {
                 deviceId,
                 command

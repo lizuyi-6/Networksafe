@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pcbnew
@@ -11,6 +12,13 @@ BOARD_W = 72.0
 BOARD_H = 38.0
 EDGE_W = 0.1
 SCH_FILENAME = "esp32-serial-deployer-pcb.kicad_sch"
+ROUTE_OVERLAY_PATH = Path(__file__).resolve().with_name("ev1_route_overlay.json")
+LAYER_BY_NAME = {
+    "F.Cu": pcbnew.F_Cu,
+    "B.Cu": pcbnew.B_Cu,
+    "In1.Cu": pcbnew.In1_Cu,
+    "In2.Cu": pcbnew.In2_Cu,
+}
 
 
 EV1_FOOTPRINT_OVERRIDES = {
@@ -273,6 +281,52 @@ def add_via(
     board.Add(via)
 
 
+def clear_copper_routes(board: pcbnew.BOARD) -> None:
+    for track in list(board.GetTracks()):
+        board.Remove(track)
+
+
+def apply_route_overlay(board: pcbnew.BOARD, nets: dict[str, pcbnew.NETINFO_ITEM]) -> None:
+    """Replay the validated EV1 copper route set used for prototype exports."""
+    data = json.loads(ROUTE_OVERLAY_PATH.read_text(encoding="utf-8"))
+    if data.get("format") != "aetherguard-ev1-route-overlay-v1":
+        raise RuntimeError(f"Unsupported EV1 route overlay format: {data.get('format')}")
+    clear_copper_routes(board)
+    for item in data["items"]:
+        net_name = item["net"]
+        if net_name not in nets:
+            raise RuntimeError(f"Route overlay references unknown net: {net_name}")
+        if item["type"] == "segment":
+            add_track(
+                board,
+                nets[net_name],
+                LAYER_BY_NAME[item["layer"]],
+                tuple(item["start"]),
+                tuple(item["end"]),
+                item["width"],
+            )
+        elif item["type"] == "via":
+            via = pcbnew.PCB_VIA(board)
+            via.SetNet(nets[net_name])
+            via.SetViaType(pcbnew.VIATYPE_THROUGH)
+            via.SetDrill(mm(item["drill"]))
+            via.SetWidth(mm(item["diameter"]))
+            via.SetPosition(vec(*item["at"]))
+            via.SetLayerPair(LAYER_BY_NAME[item["layers"][0]], LAYER_BY_NAME[item["layers"][1]])
+            board.Add(via)
+        else:
+            raise RuntimeError(f"Unsupported route overlay item type: {item['type']}")
+
+
+def add_micro_escape_via(
+    board: pcbnew.BOARD,
+    nets: dict[str, pcbnew.NETINFO_ITEM],
+    net_name: str,
+    at: tuple[float, float],
+) -> None:
+    add_via(board, nets, net_name, at, 0.20, 0.35)
+
+
 def add_filled_via(
     board: pcbnew.BOARD,
     nets: dict[str, pcbnew.NETINFO_ITEM],
@@ -475,6 +529,48 @@ def stitch_net_pads(
             add_filled_via(board, nets, net_name, pad_xy(pad), drill, diameter)
 
 
+def add_plane_stitch_vias(
+    board: pcbnew.BOARD,
+    nets: dict[str, pcbnew.NETINFO_ITEM],
+) -> None:
+    """Fan power/ground SMD pads into the right-side copper planes.
+
+    The ESP32 antenna keepout occupies the left side of the EV1 board.  Vias
+    inside that region become dangling, so only stitch pads inside the routed
+    electronics area where GND/3V3 pours exist.
+    """
+    existing = {
+        (track.GetNetname(), round(pcbnew.ToMM(track.GetPosition().x), 3), round(pcbnew.ToMM(track.GetPosition().y), 3))
+        for track in board.GetTracks()
+        if isinstance(track, pcbnew.PCB_VIA)
+    }
+    qfn_escape_exclusions = {
+        ("U2", "2"),
+        ("U2", "5"),
+        ("U2", "6"),
+        ("U2", "7"),
+        ("U2", "9"),
+        ("U2", "25"),
+        ("U3", "2"),
+        ("U3", "5"),
+        ("U3", "6"),
+        ("U3", "7"),
+        ("U3", "25"),
+    }
+    for pad in net_pads(board, "3V3") + net_pads(board, "GND"):
+        if not pad_is_smd(pad):
+            continue
+        if (pad.GetParentFootprint().GetReference(), pad.GetNumber()) in qfn_escape_exclusions:
+            continue
+        x, y = pad_xy(pad)
+        if x < 18.5:
+            continue
+        key = (pad.GetNetname(), round(x, 3), round(y, 3))
+        if key not in existing:
+            add_filled_via(board, nets, pad.GetNetname(), (x, y), 0.20, 0.45)
+            existing.add(key)
+
+
 def clear_component_silkscreen(fp: pcbnew.FOOTPRINT) -> None:
     for item in list(fp.GraphicalItems()):
         if item.GetLayer() == pcbnew.F_SilkS:
@@ -571,6 +667,153 @@ def add_ev1_routes(board: pcbnew.BOARD, nets: dict[str, pcbnew.NETINFO_ITEM]) ->
     # routing is exported through DSN and must pass DRC before Gerbers are gated
     # open in the factory package.
     add_path(board, nets, "PWR_LED_N", [pp(board, "R16", "2"), pp(board, "D3", "2")], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "USB_C_DP", [(41.25, 8.645), (41.25, 7.45), (42.25, 7.45), (42.25, 8.645)], pcbnew.F_Cu, 0.15)
+    add_path(board, nets, "USB_C_DN", [(41.75, 8.645), (41.75, 9.85), (42.75, 9.85), (42.75, 8.645)], pcbnew.F_Cu, 0.15)
+    add_path(board, nets, "LED_R", [(53.6, 30.85), (56.85, 29.05)], pcbnew.F_Cu, 0.12)
+    add_path(board, nets, "LED_G", [(64.75, 28.3), (59.15, 30.95)], pcbnew.F_Cu, 0.12)
+    add_via(board, nets, "LED_B", (61.15, 32.0), 0.20, 0.45)
+    add_via(board, nets, "LED_B", (59.15, 29.05), 0.20, 0.45)
+    add_path(board, nets, "LED_B", [(61.15, 32.0), (59.15, 29.05)], pcbnew.In2_Cu, 0.12)
+    add_path(board, nets, "BUZZER_CTRL_DRV", [(45.85, 30.0), (50.35, 33.95)], pcbnew.F_Cu, 0.12)
+    add_via(board, nets, "BUZZER_SW", (47.65, 33.0), 0.20, 0.45)
+    add_via(board, nets, "BUZZER_SW", (52.75, 25.8), 0.20, 0.45)
+    add_path(board, nets, "BUZZER_SW", [(47.65, 33.0), (52.75, 25.8)], pcbnew.In2_Cu, 0.18)
+    add_path(board, nets, "3V3", [(44.5375, 17.149999), (44.5375, 17.649999)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "3V3", [(56.0375, 19.65), (56.0375, 19.15)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "3V3", [(44.5375, 17.649999), (45.25, 18.362499)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "3V3", [(56.75, 20.3625), (56.0375, 19.65)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(37.68, 7.73), (38.75, 8.645)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(46.32, 7.73), (45.25, 8.645)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(35.0, 22.55), (36.65, 22.6)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "3V3", [(41.0, 23.65), (39.35, 21.65)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(56.0, 33.5), (56.85, 30.95)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(46.32, 7.73), (48.8, 6.15)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "3V3", [(35.0, 24.25), (35.19, 27.3)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(61.8, 14.55), (65.2, 15.05)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(48.8, 6.15), (46.32, 3.55)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(31.255, 22.715), (35.0, 22.55)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(8.1, 26.0), (8.1, 29.8)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(37.68, 7.73), (37.68, 3.55)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "VBUS_USB_C_PROT", [(38.45, 12.0), (40.6, 15.8)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(41.0, 21.95), (43.75, 25.35)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(13.0, 4.0), (13.745, 8.5)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "5V_SYS", [(41.0, 19.05), (36.65, 21.65)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(50.55, 10.25), (46.32, 7.73)], pcbnew.F_Cu, 0.18)
+    add_path(board, nets, "GND", [(8.1, 26.0), (13.745, 25.5)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "GND", [(56.0, 33.5), (50.35, 32.05)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "GND", [(27.2, 18.95), (21.245, 18.0)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "3V3", [(50.2, 17.65), (56.0375, 19.65)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "GND", [(37.73, 27.3), (38.0, 33.5)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "3V3", [(44.5375, 17.649999), (39.35, 21.65)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "VBUS_HOST_PROT", [(58.0, 14.3), (64.25, 9.5)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "GND", [(30.0, 4.85), (37.68, 7.73)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "GND", [(13.745, 8.5), (13.745, 18.0), (21.245, 18.0)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "GND", [(13.745, 25.5), (13.745, 18.0)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "HOST_CP2102_RST_N", [(57.75, 20.3625), (57.75, 22.2), (60.05, 22.2), (60.05, 24.2)], pcbnew.F_Cu, 0.15)
+    add_path(board, nets, "USB_RTS", [(47.75, 14.4375), (47.75, 13.7375)], pcbnew.F_Cu, 0.12)
+    add_via(board, nets, "USB_RTS", (47.75, 13.7375), 0.20, 0.45)
+    add_via(board, nets, "USB_RTS", (51.85, 17.05), 0.20, 0.45)
+    add_path(board, nets, "USB_RTS", [(47.75, 13.7375), (47.75, 7.0), (51.85, 7.0), (51.85, 17.05)], pcbnew.In1_Cu, 0.12)
+    add_path(board, nets, "USB_RTS", [(51.85, 17.05), (51.85, 16.35)], pcbnew.F_Cu, 0.12)
+    add_path(board, nets, "USB_DTR", [(41.85, 25.35), (41.85, 24.65)], pcbnew.F_Cu, 0.12)
+    add_via(board, nets, "USB_DTR", (41.85, 24.65), 0.20, 0.45)
+    add_via(board, nets, "USB_DTR", (45.75, 13.737499), 0.20, 0.45)
+    add_path(board, nets, "USB_DTR", [(41.85, 24.65), (41.85, 13.737499), (45.75, 13.737499)], pcbnew.In1_Cu, 0.12)
+    add_path(board, nets, "USB_DTR", [(45.75, 13.737499), (45.75, 14.437499)], pcbnew.F_Cu, 0.12)
+    add_path(board, nets, "HOST_DN", [(63.0, 27.15), (63.0, 26.45)], pcbnew.F_Cu, 0.12)
+    add_via(board, nets, "HOST_DN", (63.0, 26.45), 0.20, 0.45)
+    add_via(board, nets, "HOST_DN", (65.2, 19.35), 0.20, 0.45)
+    add_path(board, nets, "HOST_DN", [(63.0, 26.45), (63.0, 19.35), (65.2, 19.35)], pcbnew.In2_Cu, 0.12)
+    add_path(board, nets, "HOST_DN", [(65.2, 19.35), (65.2, 20.05)], pcbnew.F_Cu, 0.12)
+    add_path(board, nets, "HOST_DP", [(56.0375, 18.15), (55.3375, 18.15)], pcbnew.F_Cu, 0.12)
+    add_via(board, nets, "HOST_DP", (55.3375, 18.15), 0.20, 0.45)
+    add_via(board, nets, "HOST_DP", (65.2, 16.85), 0.20, 0.45)
+    add_path(board, nets, "HOST_DP", [(55.3375, 18.15), (55.3375, 16.85), (65.2, 16.85)], pcbnew.In1_Cu, 0.12)
+    add_path(board, nets, "HOST_DP", [(65.2, 16.85), (65.2, 17.55)], pcbnew.F_Cu, 0.12)
+    add_path(board, nets, "HOST_DP", [(63.95, 24.45), (64.65, 24.45)], pcbnew.F_Cu, 0.12)
+    add_via(board, nets, "HOST_DP", (64.65, 24.45), 0.20, 0.45)
+    add_via(board, nets, "HOST_DP", (65.9, 17.55), 0.20, 0.45)
+    add_path(board, nets, "HOST_DP", [(64.65, 24.45), (65.9, 24.45), (65.9, 17.55)], pcbnew.B_Cu, 0.12)
+    add_path(board, nets, "HOST_DP", [(65.9, 17.55), (65.2, 17.55)], pcbnew.F_Cu, 0.12)
+    add_path(board, nets, "HOST_DN", [(56.0375, 18.65), (54.7, 18.65)], pcbnew.F_Cu, 0.10)
+    add_via(board, nets, "HOST_DN", (54.7, 18.65), 0.20, 0.45)
+    add_path(board, nets, "HOST_DN", [(54.7, 18.65), (54.7, 27.2), (63.0, 27.2), (63.0, 26.45)], pcbnew.B_Cu, 0.12)
+    add_path(board, nets, "USB_C_DN", [(44.5375, 16.65), (43.75, 16.65)], pcbnew.F_Cu, 0.09)
+    add_micro_escape_via(board, nets, "USB_C_DN", (43.75, 16.65))
+    add_micro_escape_via(board, nets, "USB_C_DN", (41.75, 10.55))
+    add_path(board, nets, "USB_C_DN", [(43.75, 16.65), (43.75, 10.55), (41.75, 10.55)], pcbnew.B_Cu, 0.10)
+    add_path(board, nets, "USB_C_DN", [(41.75, 10.55), (41.75, 9.85)], pcbnew.F_Cu, 0.10)
+    add_micro_escape_via(board, nets, "USB_C_DN", (51.15, 13.65))
+    add_path(board, nets, "USB_C_DN", [(43.75, 16.65), (51.15, 16.65), (51.15, 13.65)], pcbnew.B_Cu, 0.10)
+    add_path(board, nets, "USB_C_DN", [(51.15, 13.65), (51.5, 12.95)], pcbnew.F_Cu, 0.10)
+    add_path(board, nets, "USB_C_DP", [(44.5375, 16.15), (43.2, 16.15)], pcbnew.F_Cu, 0.09)
+    add_micro_escape_via(board, nets, "USB_C_DP", (43.2, 16.15))
+    add_micro_escape_via(board, nets, "USB_C_DP", (42.25, 7.95))
+    add_path(board, nets, "USB_C_DP", [(43.2, 16.15), (43.2, 7.95), (42.25, 7.95)], pcbnew.In2_Cu, 0.10)
+    add_path(board, nets, "USB_C_DP", [(42.25, 7.95), (42.25, 7.45)], pcbnew.F_Cu, 0.10)
+    add_micro_escape_via(board, nets, "USB_C_DP", (52.8, 9.55))
+    add_path(board, nets, "USB_C_DP", [(43.2, 16.15), (43.2, 12.2), (52.8, 12.2), (52.8, 9.55)], pcbnew.In2_Cu, 0.10)
+    add_path(board, nets, "USB_C_DP", [(52.8, 9.55), (52.45, 10.25)], pcbnew.F_Cu, 0.10)
+    add_path(board, nets, "UART2_RX", [(58.75, 16.4375), (58.75, 15.7375)], pcbnew.F_Cu, 0.10)
+    add_micro_escape_via(board, nets, "UART2_RX", (58.75, 15.7375))
+    add_micro_escape_via(board, nets, "UART2_RX", (55.0, 4.7))
+    add_path(board, nets, "UART2_RX", [(58.75, 15.7375), (58.75, 4.7), (55.0, 4.7)], pcbnew.B_Cu, 0.10)
+    add_path(board, nets, "UART2_RX", [(55.0, 4.7), (55.0, 4.0)], pcbnew.F_Cu, 0.10)
+    add_path(board, nets, "UART2_TX", [(58.25, 16.4375), (58.25, 15.45)], pcbnew.F_Cu, 0.10)
+    add_micro_escape_via(board, nets, "UART2_TX", (58.25, 15.45))
+    add_micro_escape_via(board, nets, "UART2_TX", (52.0, 5.25))
+    add_path(board, nets, "UART2_TX", [(58.25, 15.45), (58.25, 5.25), (52.0, 5.25)], pcbnew.In1_Cu, 0.10)
+    add_path(board, nets, "UART2_TX", [(52.0, 5.25), (52.0, 4.0)], pcbnew.F_Cu, 0.10)
+    add_path(board, nets, "UART0_RX", [(47.25, 14.4375), (47.25, 13.35)], pcbnew.F_Cu, 0.10)
+    add_micro_escape_via(board, nets, "UART0_RX", (47.25, 13.35))
+    add_micro_escape_via(board, nets, "UART0_RX", (49.0, 4.7))
+    add_path(board, nets, "UART0_RX", [(47.25, 13.35), (47.25, 4.7), (49.0, 4.7)], pcbnew.B_Cu, 0.10)
+    add_path(board, nets, "UART0_RX", [(49.0, 4.7), (49.0, 4.0)], pcbnew.F_Cu, 0.10)
+    add_micro_escape_via(board, nets, "BUZZER_CTRL", (28.985, 25.5))
+    add_micro_escape_via(board, nets, "BUZZER_CTRL", (44.15, 30.0))
+    add_path(board, nets, "BUZZER_CTRL", [(28.985, 25.5), (28.985, 30.0), (44.15, 30.0)], pcbnew.B_Cu, 0.10)
+    add_micro_escape_via(board, nets, "BTN_NEXT", (22.635, 8.5))
+    add_micro_escape_via(board, nets, "BTN_NEXT", (38.0, 35.7))
+    add_path(board, nets, "BTN_NEXT", [(22.635, 8.5), (22.635, 36.2), (38.0, 36.2), (38.0, 35.7)], pcbnew.In1_Cu, 0.10)
+    add_micro_escape_via(board, nets, "BTN_OK", (23.905, 8.5))
+    add_micro_escape_via(board, nets, "BTN_OK", (24.0, 35.7))
+    add_path(board, nets, "BTN_OK", [(23.905, 8.5), (23.905, 31.0), (25.6, 31.0), (25.6, 35.7), (24.0, 35.7)], pcbnew.B_Cu, 0.10)
+    add_micro_escape_via(board, nets, "BTN_BACK", (15.015, 8.5))
+    add_micro_escape_via(board, nets, "BTN_BACK", (60.0, 35.7))
+    add_path(board, nets, "BTN_BACK", [(15.015, 8.5), (15.015, 1.0), (63.0, 1.0), (63.0, 15.8), (66.6, 15.8), (66.6, 20.0), (64.0, 20.0), (64.0, 35.7), (60.0, 35.7)], pcbnew.In1_Cu, 0.10)
+    add_micro_escape_via(board, nets, "LED_R_DRV", (25.175, 25.5))
+    add_micro_escape_via(board, nets, "LED_R_DRV", (53.6, 29.15))
+    add_path(board, nets, "LED_R_DRV", [(25.175, 25.5), (25.175, 29.15), (53.6, 29.15)], pcbnew.In1_Cu, 0.10)
+    add_micro_escape_via(board, nets, "LED_B_DRV", (27.715, 25.5))
+    add_micro_escape_via(board, nets, "LED_B_DRV", (62.85, 32.0))
+    add_path(board, nets, "LED_B_DRV", [(27.715, 25.5), (27.715, 36.4), (62.85, 36.4), (62.85, 32.0)], pcbnew.B_Cu, 0.10)
+    add_micro_escape_via(board, nets, "LED_G_DRV", (26.445, 25.5))
+    add_micro_escape_via(board, nets, "LED_G_DRV", (66.45, 28.3))
+    add_path(board, nets, "LED_G_DRV", [(26.445, 25.5), (26.445, 36.9), (65.0, 36.9), (65.0, 28.3), (66.45, 28.3)], pcbnew.B_Cu, 0.10)
+    add_micro_escape_via(board, nets, "3V3", (15.015, 25.5))
+    add_path(board, nets, "3V3", [(15.015, 25.5), (15.015, 20.65), (27.2, 20.65)], pcbnew.In2_Cu, 0.16)
+    add_micro_escape_via(board, nets, "3V3", (10.0, 4.0))
+    add_path(board, nets, "3V3", [(10.0, 4.0), (10.0, 2.8), (27.0, 2.8), (27.0, 4.85)], pcbnew.In2_Cu, 0.16)
+    add_micro_escape_via(board, nets, "3V3", (46.25, 18.3625))
+    add_path(board, nets, "3V3", [(46.25, 18.3625), (46.25, 17.65), (50.2, 17.65)], pcbnew.In2_Cu, 0.14)
+    add_micro_escape_via(board, nets, "5V_SYS", (36.65, 21.65))
+    add_micro_escape_via(board, nets, "5V_SYS", (36.65, 23.55))
+    add_path(board, nets, "5V_SYS", [(36.65, 21.65), (35.6, 21.65), (35.6, 23.55), (36.65, 23.55)], pcbnew.B_Cu, 0.16)
+    add_path(board, nets, "5V_SYS", [(40.6, 12.2), (42.0, 13.4), (42.0, 19.05), (41.0, 19.05)], pcbnew.F_Cu, 0.16)
+    add_path(board, nets, "5V_SYS", [(40.6, 12.2), (49.3, 12.2), (58.0, 10.7)], pcbnew.F_Cu, 0.20)
+    add_micro_escape_via(board, nets, "OLED_SCL", (16.285, 8.5))
+    add_path(board, nets, "OLED_SCL", [(16.285, 8.5), (16.285, 2.0), (40.27, 2.0), (40.27, 27.3)], pcbnew.B_Cu, 0.10)
+    add_micro_escape_via(board, nets, "OLED_SDA", (20.095, 8.5))
+    add_micro_escape_via(board, nets, "OLED_SDA", (18.4, 1.6))
+    add_path(board, nets, "OLED_SDA", [(20.095, 8.5), (20.095, 10.0), (18.4, 10.0), (18.4, 1.6)], pcbnew.In1_Cu, 0.10)
+    add_path(board, nets, "OLED_SDA", [(18.4, 1.6), (41.2, 1.6), (41.2, 12.0), (42.3, 12.0), (42.3, 27.3), (42.81, 27.3)], pcbnew.B_Cu, 0.10)
+    add_micro_escape_via(board, nets, "UART0_RX", (18.825, 8.5))
+    add_path(board, nets, "UART0_RX", [(18.825, 8.5), (18.825, 2.2), (47.25, 2.2), (47.25, 13.35)], pcbnew.In1_Cu, 0.10)
+    add_micro_escape_via(board, nets, "UART2_RX", (27.715, 8.5))
+    add_path(board, nets, "UART2_RX", [(27.715, 8.5), (27.715, 1.8), (55.0, 1.8), (55.0, 4.7)], pcbnew.In2_Cu, 0.10)
+    add_micro_escape_via(board, nets, "UART0_TX", (17.555, 8.5))
+    add_micro_escape_via(board, nets, "UART0_TX", (24.0, 4.0))
+    add_path(board, nets, "UART0_TX", [(17.555, 8.5), (17.555, 4.0), (24.0, 4.0)], pcbnew.B_Cu, 0.10)
 
 
 def add_ev1_fabrication_layers(board: pcbnew.BOARD) -> None:
@@ -583,6 +826,7 @@ def add_ev1_fabrication_layers(board: pcbnew.BOARD) -> None:
 
 
 def build_board() -> pcbnew.BOARD:
+    apply_ev1_overrides()
     board = pcbnew.BOARD()
     board.SetCopperLayerCount(4)
     settings = board.GetDesignSettings()
@@ -604,6 +848,8 @@ def build_board() -> pcbnew.BOARD:
     add_footprints(board, nets)
     add_mounting_holes(board)
     add_ev1_routes(board, nets)
+    add_plane_stitch_vias(board, nets)
+    apply_route_overlay(board, nets)
 
     add_rect_zone(board, nets, "GND", pcbnew.F_Cu, 18.5, 0.5, BOARD_W - 0.5, BOARD_H - 0.5, 0)
     add_rect_zone(board, nets, "GND", pcbnew.In1_Cu, 18.5, 0.5, BOARD_W - 0.5, BOARD_H - 0.5, 0)
@@ -619,12 +865,57 @@ def build_board() -> pcbnew.BOARD:
     return board
 
 
+def fill_zones(board: pcbnew.BOARD) -> None:
+    """Persist copper pours so KiCad DRC sees the same planes sent to fabrication."""
+    filler = pcbnew.ZONE_FILLER(board)
+    filler.Fill(board.Zones())
+
+
+def ensure_saved_zone_fills() -> None:
+    """KiCad can silently leave zones unfilled in scripted saves; guard that."""
+    pcb_text = base.PCB_PATH.read_text(encoding="utf-8")
+    if "(filled_polygon" in pcb_text:
+        return
+    board = pcbnew.LoadBoard(str(base.PCB_PATH))
+    fill_zones(board)
+    pcbnew.SaveBoard(str(base.PCB_PATH), board)
+    pcb_text = base.PCB_PATH.read_text(encoding="utf-8")
+    if "(filled_polygon" not in pcb_text:
+        raise RuntimeError("EV1 PCB generation failed to persist filled copper zones")
+
+
+def normalize_project_settings() -> None:
+    """Keep KiCad project netclass aligned with EV1 manufacturing constraints."""
+    project_path = base.ROOT / f"{base.PROJECT_NAME}.kicad_pro"
+    text = project_path.read_text(encoding="utf-8")
+    replacements = {
+        '"clearance": 0.2': '"clearance": 0.15',
+        '"diff_pair_gap": 0.25': '"diff_pair_gap": 0.15',
+        '"diff_pair_via_gap": 0.25': '"diff_pair_via_gap": 0.15',
+        '"diff_pair_width": 0.2': '"diff_pair_width": 0.15',
+        '"track_width": 0.2': '"track_width": 0.15',
+        '"via_diameter": 0.6': '"via_diameter": 0.45',
+        '"via_drill": 0.3': '"via_drill": 0.2',
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    project_path.write_text(text, encoding="utf-8")
+
+
 def main() -> None:
     base.REPORTS_DIR.mkdir(exist_ok=True)
     apply_ev1_overrides()
     base.write_symbol_library()
     base.write_schematic()
-    pcbnew.SaveBoard(str(base.PCB_PATH), build_board())
+    board = build_board()
+    pcbnew.SaveBoard(str(base.PCB_PATH), board)
+    # KiCad's zone filler only persists filled polygons reliably after the
+    # freshly generated board has been saved and reloaded with project context.
+    board = pcbnew.LoadBoard(str(base.PCB_PATH))
+    fill_zones(board)
+    pcbnew.SaveBoard(str(base.PCB_PATH), board)
+    ensure_saved_zone_fills()
+    normalize_project_settings()
 
 
 if __name__ == "__main__":

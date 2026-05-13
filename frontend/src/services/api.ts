@@ -500,6 +500,56 @@ export interface HardwareGateRecord {
     metadata?: Record<string, any>;
 }
 
+export type InterlockState = 'isolated' | 'armed' | 'released' | 'fault' | 'disabled' | 'unknown';
+
+export interface FinalDefensePolicyRecord {
+    policyId: string;
+    tenantId: string;
+    companionId: string;
+    gateId: string;
+    policyDigest: string;
+    allowedActions: Array<{
+        commandType: string;
+        scriptPath?: string;
+        maxExecutionMs?: number;
+        requiresInterlockRelease?: boolean;
+    }>;
+    breakerTarget: string;
+    releaseTtlMs: number;
+    createdAt: string;
+    updatedAt: string;
+    status: 'active' | 'staged' | 'revoked';
+}
+
+export interface FinalDefenseStatusRecord {
+    tenantId: string;
+    companionId: string;
+    gateId: string;
+    policyId?: string;
+    policyDigest?: string;
+    reportedPolicyDigest?: string;
+    breakerTarget?: string;
+    interlockState: InterlockState;
+    externalPowerPresent: boolean;
+    secureElementPresent: boolean;
+    feedbackOk: boolean;
+    companionOnline: boolean;
+    lastHeartbeatAt?: string;
+    lastVerifiedAt?: string;
+    lastError?: string;
+    active: boolean;
+    degradedReasons: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface FinalDefenseStatusResponse {
+    active: boolean;
+    mode: 'active' | 'degraded' | 'not_configured';
+    statuses: FinalDefenseStatusRecord[];
+    policies: FinalDefensePolicyRecord[];
+}
+
 export interface DeploymentRunRecord {
     id: string;
     tenantId: string;
@@ -2904,6 +2954,78 @@ export const fetchHardwareGates = async (signal?: AbortSignal) => {
     const payload = await response.json();
     const data = unwrapApiEnvelope<{ gates: HardwareGateRecord[] }>(payload);
     return data?.gates || [];
+};
+
+export const fetchFinalDefenseStatus = async (signal?: AbortSignal): Promise<FinalDefenseStatusResponse> => {
+    if (shouldUseDemoData()) {
+        const now = new Date().toISOString();
+        return {
+            active: true,
+            mode: 'active',
+            statuses: [{
+                tenantId: 'demo-tenant',
+                companionId: 'final-defense-companion-01',
+                gateId: 'control-board-v1-01',
+                policyId: 'demo-final-defense-policy',
+                policyDigest: 'b7d8f1e0a9c44d21demo',
+                reportedPolicyDigest: 'b7d8f1e0a9c44d21demo',
+                breakerTarget: 'mgmt-uplink-relay-a',
+                interlockState: 'isolated',
+                externalPowerPresent: true,
+                secureElementPresent: true,
+                feedbackOk: true,
+                companionOnline: true,
+                lastHeartbeatAt: now,
+                lastVerifiedAt: now,
+                active: true,
+                degradedReasons: [],
+                createdAt: now,
+                updatedAt: now
+            }],
+            policies: []
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/status`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-FINAL-DEFENSE-STATUS-${response.status}`);
+    }
+    return readJson<FinalDefenseStatusResponse>(response);
+};
+
+export const createFinalDefensePolicy = async (payload: {
+    companionId: string;
+    gateId: string;
+    allowedActions: FinalDefensePolicyRecord['allowedActions'];
+    breakerTarget: string;
+    releaseTtlMs?: number;
+    status?: FinalDefensePolicyRecord['status'];
+    policyId?: string;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/policies`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-FINAL-DEFENSE-POLICY-${response.status}`);
+    }
+    return readJson<{ policy: FinalDefensePolicyRecord }>(response);
+};
+
+export const requestFinalDefenseAction = async (payload: {
+    companionId: string;
+    commandType: string;
+    payload?: Record<string, any>;
+    challenge?: string;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/actions`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-FINAL-DEFENSE-ACTION-${response.status}`);
+    }
+    return readJson<ActionResponse>(response);
 };
 
 export const enrollHardwareGate = async (payload: {

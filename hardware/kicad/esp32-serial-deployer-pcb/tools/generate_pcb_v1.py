@@ -592,7 +592,7 @@ def write_symbol_library() -> None:
     content = "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"kicad_symbol_editor\")\n\t(generator_version \"9.0\")\n"
     for sym in SYMBOLS:
         content += emit_symbol_def(sym, qualified=False)
-    content += "\t(embedded_fonts no)\n)\n"
+    content += ")\n"
     SYM_PATH.write_text(content, encoding="utf-8")
 
 

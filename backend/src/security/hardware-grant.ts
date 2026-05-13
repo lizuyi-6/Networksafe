@@ -9,6 +9,10 @@ export interface HardwareGrantMessageInput {
   targetId: string;
   commandType: string;
   payloadHash: string;
+  policyDigest?: string;
+  challenge?: string;
+  breakerTarget?: string;
+  interlockAction?: string;
   issuedAt: string;
   expiresAt: string;
   monotonicCounter: number;
@@ -51,6 +55,30 @@ export function buildHardwareGrantMessage(input: HardwareGrantMessageInput): str
     input.targetId,
     input.commandType,
     input.payloadHash,
+    input.policyDigest || '',
+    input.challenge || '',
+    input.breakerTarget || '',
+    input.interlockAction || '',
+    input.issuedAt,
+    input.expiresAt,
+    String(input.monotonicCounter)
+  ].join('\n');
+}
+
+function hasExtendedGrantFields(input: HardwareGrantMessageInput): boolean {
+  return Boolean(input.policyDigest || input.challenge || input.breakerTarget || input.interlockAction);
+}
+
+function buildLegacyHardwareGrantMessage(input: HardwareGrantMessageInput): string {
+  return [
+    input.gateId,
+    input.sessionId,
+    input.actionId,
+    input.tenantId,
+    input.scope,
+    input.targetId,
+    input.commandType,
+    input.payloadHash,
     input.issuedAt,
     input.expiresAt,
     String(input.monotonicCounter)
@@ -66,8 +94,18 @@ export function verifyHardwareGrantSignature(
   }
 
   try {
-    return createVerify('SHA256')
+    const verified = createVerify('SHA256')
       .update(buildHardwareGrantMessage(grant))
+      .end()
+      .verify(publicKeyPem, grant.signature, 'base64');
+    if (verified) {
+      return true;
+    }
+    if (hasExtendedGrantFields(grant)) {
+      return false;
+    }
+    return createVerify('SHA256')
+      .update(buildLegacyHardwareGrantMessage(grant))
       .end()
       .verify(publicKeyPem, grant.signature, 'base64');
   } catch {

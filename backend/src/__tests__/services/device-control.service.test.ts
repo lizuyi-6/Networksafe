@@ -1,40 +1,9 @@
-import { createHash, createSign, generateKeyPairSync } from 'crypto';
+import { createSign, generateKeyPairSync } from 'crypto';
 import { getDatabase, initDatabase } from '../../config/database';
 import { registerDevice } from '../../services/device-registry.service';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { deviceControlService } from '../../services/device-control.service';
-
-function payloadHash(value: Record<string, any>): string {
-  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
-}
-
-function buildMessage(input: {
-  gateId: string;
-  sessionId: string;
-  actionId: string;
-  tenantId: string;
-  scope: 'device';
-  targetId: string;
-  commandType: string;
-  payloadHash: string;
-  issuedAt: string;
-  expiresAt: string;
-  monotonicCounter: number;
-}): string {
-  return [
-    input.gateId,
-    input.sessionId,
-    input.actionId,
-    input.tenantId,
-    input.scope,
-    input.targetId,
-    input.commandType,
-    input.payloadHash,
-    input.issuedAt,
-    input.expiresAt,
-    String(input.monotonicCounter),
-  ].join('\n');
-}
+import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 
 describe('deviceControlService physical confirmation', () => {
   beforeAll(async () => {
@@ -82,7 +51,7 @@ describe('deviceControlService physical confirmation', () => {
     const issuedAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 120000).toISOString();
     const monotonicCounter = 1;
-    const message = buildMessage({
+    const message = buildHardwareGrantMessage({
       gateId: deviceId,
       sessionId: session.id,
       actionId: session.id,
@@ -90,7 +59,7 @@ describe('deviceControlService physical confirmation', () => {
       scope: 'device',
       targetId: deviceId,
       commandType: 'host_remove',
-      payloadHash: payloadHash({ path: '/opt/AetherGuard' }),
+      payloadHash: hashPayload({ path: '/opt/AetherGuard' }),
       issuedAt,
       expiresAt,
       monotonicCounter,

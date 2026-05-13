@@ -1,6 +1,6 @@
 # EV1 Prototype Assembly SOP
 
-Status: `factory-draft`
+Status: `engineering-prototype-draft`
 
 ## Required Inputs
 
@@ -46,4 +46,3 @@ Each unit label should include:
 - PCB revision.
 - Firmware profile: `serial_deployer_pcb_v1`.
 - Factory test result: `PASS` or `HOLD`.
-

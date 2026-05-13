@@ -1,6 +1,6 @@
 # Mechanical Package
 
-Status: `factory-draft`
+Status: `engineering-prototype-draft`
 
 ## Source
 

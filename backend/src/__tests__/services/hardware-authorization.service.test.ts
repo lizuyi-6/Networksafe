@@ -1,39 +1,8 @@
-import { createHash, createSign, generateKeyPairSync } from 'crypto';
+import { createSign, generateKeyPairSync } from 'crypto';
 import { initDatabase } from '../../config/database';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { hardwareAuthorizationService } from '../../services/hardware-authorization.service';
-
-function payloadHash(value: Record<string, any>): string {
-  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
-}
-
-function buildMessage(input: {
-  gateId: string;
-  sessionId: string;
-  actionId: string;
-  tenantId: string;
-  scope: 'device';
-  targetId: string;
-  commandType: string;
-  payloadHash: string;
-  issuedAt: string;
-  expiresAt: string;
-  monotonicCounter: number;
-}): string {
-  return [
-    input.gateId,
-    input.sessionId,
-    input.actionId,
-    input.tenantId,
-    input.scope,
-    input.targetId,
-    input.commandType,
-    input.payloadHash,
-    input.issuedAt,
-    input.expiresAt,
-    String(input.monotonicCounter)
-  ].join('\n');
-}
+import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 
 describe('hardwareAuthorizationService', () => {
   beforeAll(async () => {
@@ -71,6 +40,12 @@ describe('hardwareAuthorizationService', () => {
       targetId: deviceId,
       commandType: 'reboot',
       payload: { delay: 5 },
+      hardwareContext: {
+        policyDigest: 'policy-digest-test',
+        challenge: 'challenge-test',
+        breakerTarget: 'mgmt-uplink-a',
+        interlockAction: 'interlock_release'
+      },
       actorId: 'tester'
     });
 
@@ -81,7 +56,7 @@ describe('hardwareAuthorizationService', () => {
     const expiresAt = request.session!.expiresAt;
     const monotonicCounter = 1;
     const signature = createSign('SHA256')
-      .update(buildMessage({
+      .update(buildHardwareGrantMessage({
         gateId,
         sessionId: request.session!.sessionId,
         actionId: request.intent.actionId,
@@ -89,7 +64,11 @@ describe('hardwareAuthorizationService', () => {
         scope: 'device',
         targetId: deviceId,
         commandType: 'reboot',
-        payloadHash: payloadHash({ delay: 5 }),
+        payloadHash: hashPayload({ delay: 5 }),
+        policyDigest: 'policy-digest-test',
+        challenge: 'challenge-test',
+        breakerTarget: 'mgmt-uplink-a',
+        interlockAction: 'interlock_release',
         issuedAt,
         expiresAt,
         monotonicCounter
@@ -100,6 +79,10 @@ describe('hardwareAuthorizationService', () => {
     const ack = await hardwareAuthorizationService.handlePhysicalConfirmationAck(gateId, {
       confirmationSessionId: request.session!.sessionId,
       confirmed: true,
+      policyDigest: 'policy-digest-test',
+      challenge: 'challenge-test',
+      breakerTarget: 'mgmt-uplink-a',
+      interlockAction: 'interlock_release',
       issuedAt,
       expiresAt,
       monotonicCounter,
@@ -116,5 +99,72 @@ describe('hardwareAuthorizationService', () => {
 
     expect(dispatch.success).toBe(true);
     expect(dispatch.status).toBe('completed');
+  });
+
+  it('rejects a hardware grant when signed final-defense context is tampered', async () => {
+    const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+    const gateId = `gate-tamper-${Date.now()}`;
+    const deviceId = `device-tamper-${Date.now()}`;
+    hardwareAuthorizationService.enrollGate({
+      tenantId: 'tenant-test',
+      gateId,
+      publicKeyPem: keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      status: 'online'
+    });
+
+    const request = await hardwareAuthorizationService.requestPhysicalConfirmation({
+      tenantId: 'tenant-test',
+      scope: 'device',
+      targetId: deviceId,
+      commandType: 'host_remove',
+      payload: { path: '/opt/aetherguard' },
+      hardwareContext: {
+        policyDigest: 'expected-policy-digest',
+        challenge: 'challenge-a',
+        breakerTarget: 'mgmt-uplink-a',
+        interlockAction: 'interlock_release'
+      },
+      actorId: 'tester'
+    });
+
+    const issuedAt = new Date().toISOString();
+    const expiresAt = request.session!.expiresAt;
+    const monotonicCounter = 1;
+    const signature = createSign('SHA256')
+      .update(buildHardwareGrantMessage({
+        gateId,
+        sessionId: request.session!.sessionId,
+        actionId: request.intent.actionId,
+        tenantId: 'tenant-test',
+        scope: 'device',
+        targetId: deviceId,
+        commandType: 'host_remove',
+        payloadHash: hashPayload({ path: '/opt/aetherguard' }),
+        policyDigest: 'expected-policy-digest',
+        challenge: 'challenge-a',
+        breakerTarget: 'mgmt-uplink-a',
+        interlockAction: 'interlock_release',
+        issuedAt,
+        expiresAt,
+        monotonicCounter
+      }))
+      .end()
+      .sign(keyPair.privateKey, 'base64');
+
+    const ack = await hardwareAuthorizationService.handlePhysicalConfirmationAck(gateId, {
+      confirmationSessionId: request.session!.sessionId,
+      confirmed: true,
+      policyDigest: 'tampered-policy-digest',
+      challenge: 'challenge-a',
+      breakerTarget: 'mgmt-uplink-a',
+      interlockAction: 'interlock_release',
+      issuedAt,
+      expiresAt,
+      monotonicCounter,
+      signature
+    });
+
+    expect(ack.confirmed).toBe(false);
+    expect(ack.reason).toBe('policyDigest_mismatch');
   });
 });

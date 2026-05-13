@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
     ArrowLeft,
     ArrowRight,
     Award,
     Building2,
-    CheckCircle2,
     CircuitBoard,
     Cpu,
     Expand,
@@ -18,7 +17,21 @@ import {
 } from 'lucide-react';
 
 type EvidenceLevel = 'repo' | 'inferred' | 'placeholder';
-type SlideLayout = 'hero' | 'statement' | 'problem' | 'solution' | 'innovation' | 'proof' | 'business' | 'xiongan' | 'roadmap' | 'summary' | 'architecture' | 'team';
+type SlideLayout =
+    | 'hero'
+    | 'statement'
+    | 'problem'
+    | 'solution'
+    | 'innovation'
+    | 'proof'
+    | 'business'
+    | 'xiongan'
+    | 'roadmap'
+    | 'summary'
+    | 'architecture'
+    | 'team';
+type SlideTone = 'dark' | 'light' | 'hardware';
+type AccentKey = 'cyan' | 'purple' | 'amber' | 'green';
 
 type SlideVisual =
     | { type: 'image'; src: string; alt: string; caption: string }
@@ -36,7 +49,36 @@ type Slide = {
     speakerNote: string;
     evidenceLevel: EvidenceLevel;
     layout: SlideLayout;
+    tone: SlideTone;
+    accent: AccentKey;
+    stat?: {
+        value: string;
+        label: string;
+        note: string;
+    };
     hidden?: boolean;
+};
+
+const COLORS = {
+    deepCover: '#080E1C',
+    deepSection: '#0F1E3A',
+    panelNavy: '#162B52',
+    lightBg: '#F0F6FF',
+    cyan: '#00BFFF',
+    purple: '#7C4DFF',
+    hardwareAmber: '#FF8C00',
+    successGreen: '#00E5A0',
+    darkText: '#0F1E3A',
+    mutedDark: '#6B8BAD',
+    mutedLight: '#C5D8F0',
+    white: '#FFFFFF',
+} as const;
+
+const ACCENT_COLORS: Record<AccentKey, string> = {
+    cyan: COLORS.cyan,
+    purple: COLORS.purple,
+    amber: COLORS.hardwareAmber,
+    green: COLORS.successGreen,
 };
 
 const pitch = (name: string) => `/pitch/${name}`;
@@ -44,27 +86,33 @@ const pitch = (name: string) => `/pitch/${name}`;
 const slides: Slide[] = [
     {
         title: 'AetherGuard',
-        kicker: '雄才杯决赛路演 · 聚雄才 创未来',
-        claim: '面向雄安新区数字基础设施的智能服务器安全防御平台',
+        kicker: '智能服务器安全防御平台 · 产品展示',
+        claim: '面向数字基础设施的智能服务器安全防御平台',
         bullets: ['服务器安全', '分布式 Agent', 'AI 决策与演练', 'ESP32 物理确认门'],
         visual: { type: 'image', src: pitch('02-dashboard.png'), alt: 'AetherGuard dashboard', caption: '已有控制台界面，可用于现场连续演示' },
         speakerNote: '开场只做一句定义：我们不是单点安全工具，而是把风险识别、判断、处置和物理确认放进同一条闭环。',
         evidenceLevel: 'repo',
         layout: 'hero',
+        tone: 'dark',
+        accent: 'cyan',
+        stat: { value: '4', label: '层防护闭环', note: 'Agent + AI + 控制平面 + ESP32' },
     },
     {
-        title: '决赛一句话',
+        title: '一句话定义',
         kicker: '从想法走到可落地产品',
         claim: '我们解决的是关键服务器操作缺少可信确认的安全断点。',
         bullets: [
             '高危操作一旦被远程账号或服务器权限劫持，纯软件确认容易被绕过',
             'AetherGuard 把危险动作接入串口硬件确认，要求人到现场按键',
-            '即使服务端被入侵，攻击者也无法远程完成 destructive action',
+            '即使服务端被入侵，攻击者也无法远程完成物理按键确认',
         ],
         visual: { type: 'flow', steps: ['风险动作发起', '平台生成确认请求', 'ESP32 本地显示', '人工按键确认', '审计留痕执行'] },
         speakerNote: '这一页要把差异化讲透：硬件不是装饰，而是不可远程替代的最后确认环节。',
         evidenceLevel: 'repo',
         layout: 'statement',
+        tone: 'dark',
+        accent: 'cyan',
+        stat: { value: '0', label: '远程绕过目标', note: '危险操作必须现场按键确认' },
     },
     {
         title: '行业痛点',
@@ -85,9 +133,11 @@ const slides: Slide[] = [
                 { value: '难私有化', label: '数据顾虑', note: '敏感日志和链路不愿外发' },
             ],
         },
-        speakerNote: '不要堆市场大数字，聚焦评委能理解的真实采用障碍。',
+        speakerNote: '不要堆市场大数字，聚焦客户和合作方能理解的真实采用障碍。',
         evidenceLevel: 'inferred',
         layout: 'problem',
+        tone: 'light',
+        accent: 'cyan',
     },
     {
         title: '整体方案',
@@ -103,6 +153,8 @@ const slides: Slide[] = [
         speakerNote: '强调系统已经具备平台级结构，不是临时拼出来的演示页面。',
         evidenceLevel: 'repo',
         layout: 'solution',
+        tone: 'light',
+        accent: 'cyan',
     },
     {
         title: '创新一：Agent-Inside',
@@ -117,6 +169,9 @@ const slides: Slide[] = [
         speakerNote: '不要说替代所有边界设备，讲清楚这是主机侧内生防护思路。',
         evidenceLevel: 'repo',
         layout: 'innovation',
+        tone: 'light',
+        accent: 'cyan',
+        stat: { value: 'Agent', label: '主机侧内生防护', note: '防护贴近业务运行现场' },
     },
     {
         title: '创新二：ESP32 物理确认门',
@@ -129,9 +184,12 @@ const slides: Slide[] = [
             '平台侧保留设备状态、执行过程和证据记录，便于审计',
         ],
         visual: { type: 'image', src: pitch('07-devices.png'), alt: 'Devices screen', caption: '设备管理界面：硬件节点被纳入安全闭环' },
-        speakerNote: '这是决赛最强差异化页，语言要稳：当前是原型和链路设计，不夸大为量产硬件。',
+        speakerNote: '这是方案最强差异化页，语言要稳：当前是原型和链路设计，不夸大为量产硬件。',
         evidenceLevel: 'repo',
         layout: 'innovation',
+        tone: 'hardware',
+        accent: 'amber',
+        stat: { value: 'ESP32', label: '物理可信确认', note: '串口硬件门，现场按键确认' },
     },
     {
         title: '创新三：AI 监控与演练闭环',
@@ -146,15 +204,18 @@ const slides: Slide[] = [
         speakerNote: '避免宣称 AI 已经完全自动替代安全专家，强调可配置和可验证。',
         evidenceLevel: 'repo',
         layout: 'innovation',
+        tone: 'light',
+        accent: 'purple',
+        stat: { value: 'AI', label: '可配置决策', note: '监控、演练、复盘闭环' },
     },
     {
         title: '产品证据',
-        kicker: '决赛不是只讲概念',
+        kicker: '不是只讲概念',
         claim: '从总览、部署、扫描到告警和后台，项目已经形成可连续演示的产品链路。',
         bullets: [
             '已有 React 前端、Node/TypeScript 后端、Socket.IO 实时链路和硬件目录',
             '页面覆盖 Dashboard、Agents、Devices、Deployment、Scanner、Alerts、Admin',
-            '仓库内已有运行截图、双创答辩文档、硬件说明和生成式 PPT 脚本',
+            '仓库内已有运行截图、方案文档、硬件说明和展示脚本',
         ],
         visual: {
             type: 'imageGrid',
@@ -170,6 +231,9 @@ const slides: Slide[] = [
         speakerNote: '这页用于建立可信度：能展示、能讲链路、能继续打磨。',
         evidenceLevel: 'repo',
         layout: 'proof',
+        tone: 'light',
+        accent: 'green',
+        stat: { value: '6+', label: '连续产品界面', note: '不是概念图，已有运行截图' },
     },
     {
         title: '商业模式',
@@ -193,16 +257,18 @@ const slides: Slide[] = [
         speakerNote: '商业模式写方向，不承诺没有验证的收入数字。',
         evidenceLevel: 'inferred',
         layout: 'business',
+        tone: 'light',
+        accent: 'green',
     },
     {
-        title: '为什么适合雄安',
+        title: '典型落地场景',
         kicker: '新一代信息技术 × 人工智能 × 数字城市安全',
-        claim: 'AetherGuard 可以服务新区数字基础设施、AI 应用安全和园区企业服务器防护。',
+        claim: 'AetherGuard 可以服务数字基础设施、AI 应用安全和园区企业服务器防护。',
         bullets: [
-            '匹配雄才杯新一代信息技术、人工智能软件与系统服务方向',
+            '匹配新一代信息技术、人工智能软件与系统服务方向',
             '适合数字城市、园区平台、信创环境和政企私有化安全需求',
             '硬件确认门让关键运维动作更可控、更可审计、更适合高可信场景',
-            '如果落地雄安，优先寻找园区服务器、创新企业和示范应用试点',
+            '优先从园区服务器、创新企业和高可信应用场景切入试点',
         ],
         visual: {
             type: 'metrics',
@@ -213,17 +279,19 @@ const slides: Slide[] = [
                 { value: '园区试点', label: '成果转化', note: '从示范场景切入复制' },
             ],
         },
-        speakerNote: '把项目从泛网络安全拉回雄安：新区需要的是可试点、可复制、可转化的技术项目。',
+        speakerNote: '把项目从泛网络安全拉回真实落地：客户需要的是可试点、可复制、可转化的技术项目。',
         evidenceLevel: 'inferred',
         layout: 'xiongan',
+        tone: 'light',
+        accent: 'purple',
     },
     {
         title: '阶段成果与下一步',
         kicker: '从可演示走向可试点',
         claim: '当前已经具备代码、界面、文档和硬件原型基础，下一阶段聚焦试点验证和交付收敛。',
         bullets: [
-            '已完成核心前端页面、后端模块、硬件目录和答辩材料沉淀',
-            '短期目标：完成决赛演示链路、硬件确认流程和部署证据闭环',
+            '已完成核心前端页面、后端模块、硬件目录和展示材料沉淀',
+            '短期目标：完成产品演示链路、硬件确认流程和部署证据闭环',
             '中期目标：选择 1-2 个服务器场景做小规模试点',
             '长期目标：形成可复制的私有化安全运营包',
         ],
@@ -231,29 +299,34 @@ const slides: Slide[] = [
             type: 'timeline',
             items: [
                 { title: '现在', text: '可演示平台与硬件原型' },
-                { title: '决赛后', text: '打磨部署、确认、审计闭环' },
+                { title: '下一阶段', text: '打磨部署、确认、审计闭环' },
                 { title: '试点期', text: '接入真实服务器场景' },
                 { title: '复制期', text: '沉淀交付包和行业案例' },
             ],
         },
-        speakerNote: '路线图不要贪大，决赛最关心能否向试点走。',
+        speakerNote: '路线图不要贪大，下一步最关键的是能否向试点走。',
         evidenceLevel: 'repo',
         layout: 'roadmap',
+        tone: 'light',
+        accent: 'green',
     },
     {
         title: '总结',
-        kicker: '冲奖收束',
+        kicker: '价值收束',
         claim: 'AetherGuard 的价值在于：技术有差异、产品可演示、场景能落地、团队可推进。',
         bullets: [
             '差异化：软硬件一体化物理确认门',
             '可实现：已有连续产品界面和仓库材料支撑',
-            '可落地：从服务器安全和高危运维确认切入雄安数字场景',
+            '可落地：从服务器安全和高危运维确认切入真实数字场景',
             '可推进：下一步聚焦试点验证，不停留在概念页',
         ],
-        visual: { type: 'flow', steps: ['痛点真实', '方案成形', '创新明确', '产品可演示', '雄安可试点'] },
-        speakerNote: '最后回到评委问题：为什么值得支持，答案是差异化明确且能继续转化。',
+        visual: { type: 'flow', steps: ['痛点真实', '方案成形', '创新明确', '产品可演示', '场景可试点'] },
+        speakerNote: '最后回到核心问题：为什么值得支持，答案是差异化明确且能继续转化。',
         evidenceLevel: 'inferred',
         layout: 'summary',
+        tone: 'dark',
+        accent: 'cyan',
+        stat: { value: '4', label: '个核心答案', note: '差异化、可演示、能落地、可推进' },
     },
     {
         title: '备用：技术架构详解',
@@ -266,9 +339,11 @@ const slides: Slide[] = [
             '受管对象层：Agent、站点、ESP32 串口确认设备和 Rust fastpath',
         ],
         visual: { type: 'flow', steps: ['React 控制台', 'Node 控制平面', '数据与缓存', 'Agent / Site / ESP32', '审计证据'] },
-        speakerNote: '只在评委追问架构时打开。',
+        speakerNote: '只在需要展开架构时打开。',
         evidenceLevel: 'repo',
         layout: 'architecture',
+        tone: 'dark',
+        accent: 'purple',
         hidden: true,
     },
     {
@@ -277,14 +352,14 @@ const slides: Slide[] = [
         claim: '团队信息和知识产权状态需要按真实材料补齐，当前版本保留占位。',
         bullets: [
             '团队名称 / 项目负责人 / 学校或公司：待补充',
-            '成员分工：前后端、安全、AI、硬件、路演材料待补充',
+            '成员分工：前后端、安全、AI、硬件、展示材料待补充',
             '软著编号 / 专利状态 / 奖项经历：待补充',
             '试点单位或合作意向：待补充',
         ],
         visual: {
             type: 'metrics',
             items: [
-                { value: '待补', label: '团队名称', note: '不虚构参赛主体' },
+                { value: '待补', label: '团队名称', note: '不虚构项目主体' },
                 { value: '待补', label: '负责人', note: '按真实报名信息填写' },
                 { value: '待补', label: '知识产权', note: '只填已申请或已授权状态' },
                 { value: '待补', label: '试点', note: '有材料后再写具体单位' },
@@ -293,31 +368,18 @@ const slides: Slide[] = [
         speakerNote: '这页不默认展示，避免占用主线时间。',
         evidenceLevel: 'placeholder',
         layout: 'team',
+        tone: 'light',
+        accent: 'green',
         hidden: true,
     },
 ];
 
 const mainSlides = slides.filter((slide) => !slide.hidden);
 
-const evidenceMap: Record<EvidenceLevel, { label: string; className: string }> = {
-    repo: { label: '仓库可证实', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-    inferred: { label: '推导表达', className: 'border-amber-200 bg-amber-50 text-amber-700' },
-    placeholder: { label: '待补充', className: 'border-slate-200 bg-slate-50 text-slate-600' },
-};
-
-const layoutAccent: Record<SlideLayout, string> = {
-    hero: 'from-cyan-500 to-emerald-500',
-    statement: 'from-blue-600 to-cyan-500',
-    problem: 'from-rose-500 to-amber-500',
-    solution: 'from-emerald-500 to-cyan-500',
-    innovation: 'from-cyan-500 to-blue-600',
-    proof: 'from-emerald-500 to-teal-500',
-    business: 'from-amber-500 to-emerald-500',
-    xiongan: 'from-sky-500 to-emerald-500',
-    roadmap: 'from-blue-500 to-amber-500',
-    summary: 'from-emerald-500 to-blue-600',
-    architecture: 'from-slate-600 to-cyan-500',
-    team: 'from-slate-500 to-amber-500',
+const evidenceMap: Record<EvidenceLevel, { label: string; border: string; background: string; color: string }> = {
+    repo: { label: '仓库可证实', border: COLORS.successGreen, background: 'rgba(0, 229, 160, 0.12)', color: COLORS.successGreen },
+    inferred: { label: '推导表达', border: COLORS.hardwareAmber, background: 'rgba(255, 140, 0, 0.12)', color: COLORS.hardwareAmber },
+    placeholder: { label: '待补充', border: COLORS.mutedDark, background: 'rgba(107, 139, 173, 0.12)', color: COLORS.mutedDark },
 };
 
 const icons = [ShieldCheck, LockKeyhole, CircuitBoard, Cpu, Network, MonitorCheck, Building2, Award];
@@ -346,37 +408,118 @@ function useFullscreen() {
     return { isFullscreen, toggleFullscreen };
 }
 
-function EvidenceBadge({ level }: { level: EvidenceLevel }) {
+function isDarkTone(tone: SlideTone) {
+    return tone === 'dark' || tone === 'hardware';
+}
+
+function getAccent(slide: Slide) {
+    return ACCENT_COLORS[slide.accent];
+}
+
+function getFlowAccent(step: string, fallback: string) {
+    const normalized = step.toLowerCase();
+    if (normalized.includes('esp32') || normalized.includes('物理') || normalized.includes('硬件')) return COLORS.hardwareAmber;
+    if (normalized.includes('ai') || normalized.includes('判断') || normalized.includes('演练')) return COLORS.purple;
+    if (normalized.includes('ok') || normalized.includes('成功') || normalized.includes('审计') || normalized.includes('确认')) return COLORS.successGreen;
+    if (normalized.includes('agent') || normalized.includes('节点')) return COLORS.cyan;
+    return fallback;
+}
+
+function getMetricAccent(item: { value: string; label: string; note: string }, fallback: string) {
+    const text = `${item.value}${item.label}${item.note}`.toLowerCase();
+    if (text.includes('esp32') || text.includes('硬件') || text.includes('物理')) return COLORS.hardwareAmber;
+    if (text.includes('ai') || text.includes('智能') || text.includes('模型')) return COLORS.purple;
+    if (text.includes('成功') || text.includes('防护') || text.includes('服务')) return COLORS.successGreen;
+    return fallback;
+}
+
+function EvidenceBadge({ level, tone }: { level: EvidenceLevel; tone: SlideTone }) {
     const config = evidenceMap[level];
+    const readableColor = tone === 'light' && level === 'placeholder' ? COLORS.darkText : config.color;
     return (
-        <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${config.className}`}>
+        <span
+            className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold"
+            style={{
+                borderColor: config.border,
+                background: tone === 'light' ? config.background : 'rgba(8, 14, 28, 0.58)',
+                color: readableColor,
+            }}
+        >
             {config.label}
         </span>
     );
 }
 
+function ScreenshotCard({ src, alt, caption, compact = false }: { src: string; alt: string; caption: string; compact?: boolean }) {
+    return (
+        <div
+            className="group relative overflow-hidden rounded-[8px] shadow-[0_22px_60px_-38px_rgba(8,14,28,0.82)]"
+            style={{ border: `1px solid ${COLORS.panelNavy}`, background: COLORS.panelNavy }}
+        >
+            <div className="flex h-7 items-center gap-1.5 px-3" style={{ background: COLORS.panelNavy }}>
+                <span className="h-2 w-2 rounded-full" style={{ background: '#FF5F57' }} />
+                <span className="h-2 w-2 rounded-full" style={{ background: COLORS.hardwareAmber }} />
+                <span className="h-2 w-2 rounded-full" style={{ background: COLORS.successGreen }} />
+                <span className="ml-2 truncate font-mono text-[10px]" style={{ color: COLORS.mutedLight }}>{caption}</span>
+            </div>
+            <img src={src} alt={alt} className={`${compact ? 'h-[126px]' : 'h-full min-h-[280px]'} w-full object-cover object-top`} />
+            {!compact && (
+                <div
+                    className="absolute bottom-0 left-0 right-0 px-4 py-3 text-sm font-semibold backdrop-blur"
+                    style={{ background: 'rgba(8, 14, 28, 0.88)', color: COLORS.white }}
+                >
+                    {caption}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function StatPoster({ slide }: { slide: Slide }) {
+    if (!slide.stat) return null;
+    const accent = getAccent(slide);
+    const dark = isDarkTone(slide.tone);
+    return (
+        <div
+            className="rounded-[8px] border p-4"
+            style={{
+                borderColor: `${accent}66`,
+                background: dark ? 'rgba(22, 43, 82, 0.52)' : COLORS.white,
+                boxShadow: dark ? `0 0 42px ${accent}1f` : '0 18px 44px -34px rgba(8,14,28,0.48)',
+            }}
+        >
+            <div className="font-mono text-[clamp(3.5rem,10vh,7.5rem)] font-black leading-none tracking-normal" style={{ color: accent }}>
+                {slide.stat.value}
+            </div>
+            <div className="mt-2 text-lg font-black" style={{ color: dark ? COLORS.white : COLORS.darkText }}>{slide.stat.label}</div>
+            <div className="mt-1 text-sm" style={{ color: dark ? COLORS.mutedLight : COLORS.mutedDark }}>{slide.stat.note}</div>
+        </div>
+    );
+}
+
 function SlideVisualPanel({ visual, slide, slideIndex }: { visual: SlideVisual; slide: Slide; slideIndex: number }) {
+    const accent = getAccent(slide);
+    const dark = isDarkTone(slide.tone);
+    const panelBg = dark ? 'rgba(15, 30, 58, 0.78)' : COLORS.white;
+    const panelBorder = dark ? `${accent}66` : COLORS.panelNavy;
+    const textColor = dark ? COLORS.white : COLORS.darkText;
+    const mutedColor = dark ? COLORS.mutedLight : COLORS.mutedDark;
+
     if (visual.type === 'image') {
         return (
-            <div className="relative h-full min-h-[260px] overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_24px_80px_-46px_rgba(15,23,42,0.55)]">
-                <img src={visual.src} alt={visual.alt} className="h-full w-full object-cover object-top" />
-                <div className="absolute bottom-0 left-0 right-0 bg-white/92 px-4 py-3 text-sm font-medium text-slate-700 backdrop-blur">
-                    {visual.caption}
-                </div>
+            <div className="grid h-full min-h-[360px] gap-4">
+                <ScreenshotCard src={visual.src} alt={visual.alt} caption={visual.caption} />
+                <StatPoster slide={slide} />
             </div>
         );
     }
 
     if (visual.type === 'imageGrid') {
         return (
-            <div className="grid h-full min-h-[360px] grid-cols-2 gap-3 lg:grid-cols-3">
+            <div className="grid h-full min-h-[380px] grid-cols-2 gap-3 lg:grid-cols-3">
                 {visual.images.map((image) => (
-                    <div key={image.src} className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-sm">
-                        <img src={image.src} alt={image.alt} className="h-[78%] w-full object-cover object-top" />
-                        <div className="flex h-[22%] items-center justify-between px-3 text-sm font-semibold text-slate-700">
-                            <span>{image.caption}</span>
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        </div>
+                    <div key={image.src} className="rounded-[8px]">
+                        <ScreenshotCard src={image.src} alt={image.alt} caption={image.caption} compact />
                     </div>
                 ))}
             </div>
@@ -385,20 +528,36 @@ function SlideVisualPanel({ visual, slide, slideIndex }: { visual: SlideVisual; 
 
     if (visual.type === 'flow') {
         return (
-            <div className="flex h-full min-h-[320px] flex-col justify-center rounded-[8px] border border-slate-200 bg-white p-6 shadow-sm">
+            <div
+                className="flex h-full min-h-[360px] flex-col justify-center rounded-[8px] border p-6"
+                style={{ borderColor: panelBorder, background: panelBg }}
+            >
                 <div className="grid gap-3">
                     {visual.steps.map((step, idx) => {
                         const Icon = icons[(idx + slideIndex) % icons.length];
+                        const stepAccent = getFlowAccent(step, accent);
                         return (
-                            <div key={step} className="flex items-center gap-4 rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3">
-                                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] bg-gradient-to-br ${layoutAccent[slide.layout]} text-white`}>
+                            <div
+                                key={step}
+                                className="flex items-center gap-4 rounded-[8px] border px-4 py-3"
+                                style={{
+                                    borderColor: `${stepAccent}55`,
+                                    background: dark ? 'rgba(8, 14, 28, 0.54)' : 'rgba(255,255,255,0.78)',
+                                }}
+                            >
+                                <div
+                                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white"
+                                    style={{ background: stepAccent, boxShadow: `0 0 24px ${stepAccent}55` }}
+                                >
                                     <Icon className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Step {String(idx + 1).padStart(2, '0')}</div>
-                                    <div className="text-lg font-semibold text-slate-900">{step}</div>
+                                    <div className="font-mono text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: mutedColor }}>
+                                        Step {String(idx + 1).padStart(2, '0')}
+                                    </div>
+                                    <div className="text-lg font-black" style={{ color: textColor }}>{step}</div>
                                 </div>
-                                {idx < visual.steps.length - 1 && <ArrowRight className="hidden h-5 w-5 text-slate-300 sm:block" />}
+                                {idx < visual.steps.length - 1 && <ArrowRight className="hidden h-5 w-5 sm:block" style={{ color: stepAccent }} />}
                             </div>
                         );
                     })}
@@ -409,20 +568,31 @@ function SlideVisualPanel({ visual, slide, slideIndex }: { visual: SlideVisual; 
 
     if (visual.type === 'metrics') {
         return (
-            <div className="grid h-full min-h-[320px] grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid h-full min-h-[360px] grid-cols-1 gap-4 sm:grid-cols-2">
                 {visual.items.map((item, idx) => {
                     const Icon = icons[(idx + slideIndex) % icons.length];
+                    const metricAccent = getMetricAccent(item, accent);
                     return (
-                        <div key={`${item.value}-${item.label}`} className="flex flex-col justify-between rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
+                        <div
+                            key={`${item.value}-${item.label}`}
+                            className="flex flex-col justify-between rounded-[8px] border p-5"
+                            style={{
+                                borderColor: dark ? `${metricAccent}66` : `${COLORS.panelNavy}40`,
+                                background: dark ? 'rgba(15, 30, 58, 0.76)' : COLORS.white,
+                                boxShadow: dark ? `0 0 34px ${metricAccent}18` : '0 18px 42px -34px rgba(8,14,28,0.46)',
+                            }}
+                        >
                             <div className="flex items-center justify-between gap-3">
-                                <div className={`flex h-10 w-10 items-center justify-center rounded-[8px] bg-gradient-to-br ${layoutAccent[slide.layout]} text-white`}>
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full text-white" style={{ background: metricAccent }}>
                                     <Icon className="h-5 w-5" />
                                 </div>
-                                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{item.label}</span>
+                                <span className="text-right text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: mutedColor }}>{item.label}</span>
                             </div>
                             <div className="mt-8">
-                                <div className="text-3xl font-black tracking-normal text-slate-950">{item.value}</div>
-                                <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.note}</p>
+                                <div className="font-mono text-[clamp(2.4rem,6vh,4.6rem)] font-black leading-none tracking-normal" style={{ color: metricAccent }}>
+                                    {item.value}
+                                </div>
+                                <p className="mt-4 text-sm leading-relaxed" style={{ color: mutedColor }}>{item.note}</p>
                             </div>
                         </div>
                     );
@@ -432,21 +602,30 @@ function SlideVisualPanel({ visual, slide, slideIndex }: { visual: SlideVisual; 
     }
 
     return (
-        <div className="flex h-full min-h-[320px] items-center rounded-[8px] border border-slate-200 bg-white p-6 shadow-sm">
+        <div
+            className="flex h-full min-h-[360px] items-center rounded-[8px] border p-6"
+            style={{ borderColor: panelBorder, background: panelBg }}
+        >
             <div className="relative w-full">
-                <div className="absolute left-4 top-7 h-[calc(100%-56px)] w-px bg-gradient-to-b from-cyan-400 via-emerald-400 to-amber-400" />
+                <div
+                    className="absolute left-4 top-7 h-[calc(100%-56px)] w-px"
+                    style={{ background: `linear-gradient(${COLORS.cyan}, ${COLORS.purple}, ${COLORS.hardwareAmber}, ${COLORS.successGreen})` }}
+                />
                 <div className="space-y-5">
-                    {visual.items.map((item, idx) => (
-                        <div key={item.title} className="relative flex gap-5">
-                            <div className={`z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${layoutAccent[slide.layout]} text-sm font-bold text-white`}>
-                                {idx + 1}
+                    {visual.items.map((item, idx) => {
+                        const itemAccent = idx === 0 ? COLORS.cyan : idx === 1 ? COLORS.purple : idx === 2 ? COLORS.hardwareAmber : COLORS.successGreen;
+                        return (
+                            <div key={item.title} className="relative flex gap-5">
+                                <div className="z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-sm font-bold text-white" style={{ background: itemAccent }}>
+                                    {idx + 1}
+                                </div>
+                                <div className="rounded-[8px] border px-4 py-3" style={{ borderColor: `${itemAccent}55`, background: dark ? 'rgba(8, 14, 28, 0.48)' : 'rgba(255,255,255,0.8)' }}>
+                                    <div className="text-base font-black" style={{ color: textColor }}>{item.title}</div>
+                                    <div className="mt-1 text-sm leading-relaxed" style={{ color: mutedColor }}>{item.text}</div>
+                                </div>
                             </div>
-                            <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3">
-                                <div className="text-base font-bold text-slate-950">{item.title}</div>
-                                <div className="mt-1 text-sm leading-relaxed text-slate-600">{item.text}</div>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>
@@ -454,7 +633,17 @@ function SlideVisualPanel({ visual, slide, slideIndex }: { visual: SlideVisual; 
 }
 
 function SlideFrame({ slide, slideIndex, total }: { slide: Slide; slideIndex: number; total: number }) {
-    const accent = layoutAccent[slide.layout];
+    const accent = getAccent(slide);
+    const dark = isDarkTone(slide.tone);
+    const background =
+        slide.tone === 'hardware'
+            ? `radial-gradient(circle at 78% 20%, rgba(255, 140, 0, 0.24), transparent 32%), linear-gradient(135deg, #120B05 0%, ${COLORS.deepCover} 58%, #05070D 100%)`
+            : dark
+                ? `radial-gradient(circle at 78% 18%, ${accent}24, transparent 32%), linear-gradient(135deg, ${COLORS.deepCover} 0%, ${COLORS.deepSection} 62%, #05070D 100%)`
+                : `linear-gradient(135deg, ${COLORS.lightBg} 0%, #FFFFFF 58%, #E5F0FF 100%)`;
+    const textColor = dark ? COLORS.white : COLORS.darkText;
+    const mutedColor = dark ? COLORS.mutedLight : COLORS.mutedDark;
+    const cardBackground = dark ? 'rgba(15, 30, 58, 0.58)' : 'rgba(255,255,255,0.78)';
 
     return (
         <motion.section
@@ -463,45 +652,77 @@ function SlideFrame({ slide, slideIndex, total }: { slide: Slide; slideIndex: nu
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -14, scale: 0.985 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="relative h-full overflow-hidden rounded-[8px] border border-slate-200 bg-[#f8fafc] shadow-[0_28px_90px_-44px_rgba(15,23,42,0.5)]"
+            className="relative h-full overflow-hidden rounded-[8px] border shadow-[0_30px_110px_-58px_rgba(0,0,0,0.74)]"
+            style={{ background, borderColor: dark ? `${accent}55` : `${COLORS.panelNavy}38` }}
         >
-            <div className={`absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r ${accent}`} />
-            <div className="absolute right-0 top-0 h-56 w-56 translate-x-24 -translate-y-24 rounded-full border border-cyan-200/70" />
-            <div className="absolute bottom-16 left-10 h-28 w-28 rounded-full border border-emerald-200/70" />
+            <div
+                className="absolute inset-0 opacity-[0.18]"
+                style={{
+                    backgroundImage:
+                        'linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)',
+                    backgroundSize: '34px 34px',
+                }}
+            />
+            <div className="absolute right-0 top-0 h-56 w-56 translate-x-24 -translate-y-24 rounded-full border" style={{ borderColor: `${accent}66` }} />
+            <div className="absolute bottom-12 left-10 h-28 w-28 rounded-full border" style={{ borderColor: dark ? `${COLORS.mutedLight}33` : `${COLORS.panelNavy}22` }} />
+            <div className="absolute left-0 top-0 h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${accent}, ${COLORS.successGreen})` }} />
 
             <div className="relative flex h-full flex-col p-5 sm:p-7 lg:p-9">
                 <header className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-500">
+                            <span
+                                className="rounded-full border px-3 py-1 font-mono text-xs font-bold"
+                                style={{
+                                    borderColor: dark ? `${accent}66` : `${COLORS.panelNavy}44`,
+                                    background: dark ? 'rgba(8,14,28,0.52)' : COLORS.white,
+                                    color: dark ? COLORS.white : COLORS.darkText,
+                                }}
+                            >
                                 {String(slideIndex + 1).padStart(2, '0')} / {total}
                             </span>
-                            <EvidenceBadge level={slide.evidenceLevel} />
+                            <EvidenceBadge level={slide.evidenceLevel} tone={slide.tone} />
                         </div>
-                        <div className="mt-5 text-sm font-bold uppercase tracking-[0.22em] text-cyan-700">{slide.kicker}</div>
+                        <div className="mt-5 text-sm font-black uppercase tracking-[0.22em]" style={{ color: accent }}>{slide.kicker}</div>
                     </div>
                     <div className="hidden items-center gap-3 sm:flex">
-                        <img src="/brand-lockup.png" alt="AetherGuard" className="h-9 w-auto object-contain" />
-                        <div className="h-8 w-px bg-slate-200" />
-                        <div className="text-right text-xs font-semibold leading-tight text-slate-500">
-                            雄才杯决赛<br />网页路演稿
+                        <div
+                            className="flex h-10 items-center rounded-full border px-3"
+                            style={{
+                                borderColor: dark ? `${accent}66` : `${COLORS.panelNavy}33`,
+                                background: dark ? 'rgba(8,14,28,0.45)' : COLORS.white,
+                            }}
+                        >
+                            <span className="text-sm font-black tracking-normal" style={{ color: dark ? COLORS.white : COLORS.darkText }}>
+                                杭州视界奇点科技有限公司
+                            </span>
                         </div>
                     </div>
                 </header>
 
                 <main className="grid min-h-0 flex-1 items-center gap-6 pt-4 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8 lg:pt-6">
                     <div className="min-w-0">
-                        <h1 className="max-w-[12ch] text-[clamp(2rem,6.8vh,4.8rem)] font-black leading-[0.98] tracking-normal text-slate-950">
+                        <h1
+                            className="max-w-[12ch] text-[clamp(2rem,6.8vh,5rem)] font-black leading-[0.98] tracking-normal"
+                            style={{ color: textColor, textShadow: dark ? `0 0 34px ${accent}33` : 'none' }}
+                        >
                             {slide.title}
                         </h1>
-                        <p className="mt-5 max-w-3xl text-[clamp(1.05rem,2.25vh,1.55rem)] font-bold leading-snug text-slate-800">
+                        <p className="mt-5 max-w-3xl text-[clamp(1.05rem,2.25vh,1.55rem)] font-light leading-snug" style={{ color: dark ? COLORS.mutedLight : COLORS.darkText }}>
                             {slide.claim}
                         </p>
                         <div className="mt-6 grid gap-3">
                             {slide.bullets.map((bullet) => (
-                                <div key={bullet} className="flex items-start gap-3 rounded-[8px] border border-slate-200 bg-white/85 px-4 py-3 shadow-sm">
-                                    <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-gradient-to-br ${accent}`} />
-                                    <span className="text-[clamp(0.9rem,1.6vh,1.08rem)] font-medium leading-relaxed text-slate-700">{bullet}</span>
+                                <div
+                                    key={bullet}
+                                    className="flex items-start gap-3 rounded-[8px] border px-4 py-3"
+                                    style={{
+                                        borderColor: dark ? `${accent}40` : `${COLORS.panelNavy}20`,
+                                        background: cardBackground,
+                                    }}
+                                >
+                                    <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: accent, boxShadow: `0 0 16px ${accent}` }} />
+                                    <span className="text-[clamp(0.9rem,1.6vh,1.08rem)] font-light leading-relaxed" style={{ color: dark ? COLORS.white : COLORS.darkText }}>{bullet}</span>
                                 </div>
                             ))}
                         </div>
@@ -512,12 +733,15 @@ function SlideFrame({ slide, slideIndex, total }: { slide: Slide; slideIndex: nu
                     </div>
                 </main>
 
-                <footer className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                <footer
+                    className="mt-4 flex flex-col gap-3 border-t pt-3 text-xs sm:flex-row sm:items-center sm:justify-between"
+                    style={{ borderColor: dark ? `${COLORS.mutedLight}25` : `${COLORS.panelNavy}20`, color: mutedColor }}
+                >
                     <div className="flex min-w-0 items-center gap-2">
-                        <FileText className="h-4 w-4 shrink-0 text-slate-400" />
+                        <FileText className="h-4 w-4 shrink-0" style={{ color: accent }} />
                         <span className="truncate">{slide.speakerNote}</span>
                     </div>
-                    <div className="shrink-0 font-semibold text-slate-500">守望流量，安抵未来</div>
+                    <div className="shrink-0 font-semibold" style={{ color: dark ? COLORS.white : COLORS.darkText }}>守望流量，安抵未来</div>
                 </footer>
             </div>
         </motion.section>
@@ -526,26 +750,35 @@ function SlideFrame({ slide, slideIndex, total }: { slide: Slide; slideIndex: nu
 
 function SlideNav({ current, onSelect, activeSlides }: { current: number; onSelect: (index: number) => void; activeSlides: Slide[] }) {
     return (
-        <div className="hidden w-72 shrink-0 border-l border-slate-200 bg-white/90 p-4 backdrop-blur xl:block">
+        <div
+            className="hidden w-72 shrink-0 border-l p-4 backdrop-blur xl:block"
+            style={{ borderColor: `${COLORS.cyan}26`, background: 'rgba(8, 14, 28, 0.94)' }}
+        >
             <div className="mb-3 flex items-center justify-between">
-                <div className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">目录</div>
-                <div className="text-xs font-semibold text-slate-500">{activeSlides.length} 页</div>
+                <div className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: COLORS.cyan }}>目录</div>
+                <div className="font-mono text-xs font-semibold" style={{ color: COLORS.mutedLight }}>{activeSlides.length} 页</div>
             </div>
             <div className="space-y-2">
-                {activeSlides.map((slide, idx) => (
-                    <button
-                        key={`${slide.title}-${idx}`}
-                        type="button"
-                        onClick={() => onSelect(idx)}
-                        className={`w-full rounded-[8px] border px-3 py-2 text-left transition ${idx === current
-                            ? 'border-cyan-300 bg-cyan-50 text-cyan-900'
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                            }`}
-                    >
-                        <div className="text-[11px] font-bold text-slate-400">{String(idx + 1).padStart(2, '0')}</div>
-                        <div className="mt-0.5 truncate text-sm font-bold">{slide.title}</div>
-                    </button>
-                ))}
+                {activeSlides.map((slide, idx) => {
+                    const accent = getAccent(slide);
+                    const selected = idx === current;
+                    return (
+                        <button
+                            key={`${slide.title}-${idx}`}
+                            type="button"
+                            onClick={() => onSelect(idx)}
+                            className="w-full rounded-[8px] border px-3 py-2 text-left transition"
+                            style={{
+                                borderColor: selected ? accent : 'rgba(197,216,240,0.18)',
+                                background: selected ? `${accent}1F` : 'rgba(15, 30, 58, 0.55)',
+                                color: selected ? COLORS.white : COLORS.mutedLight,
+                            }}
+                        >
+                            <div className="font-mono text-[11px] font-bold" style={{ color: selected ? accent : COLORS.mutedDark }}>{String(idx + 1).padStart(2, '0')}</div>
+                            <div className="mt-0.5 truncate text-sm font-black">{slide.title}</div>
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );
@@ -558,6 +791,7 @@ export default function XiongcaiFinalDeck() {
     const activeSlides = showAppendix ? slides : mainSlides;
     const slide = activeSlides[current];
     const progress = useMemo(() => ((current + 1) / activeSlides.length) * 100, [activeSlides.length, current]);
+    const activeAccent = getAccent(slide);
 
     const goTo = useCallback((index: number) => setCurrent(clampSlide(index, activeSlides.length)), [activeSlides.length]);
     const next = useCallback(() => setCurrent((idx) => clampSlide(idx + 1, activeSlides.length)), [activeSlides.length]);
@@ -596,17 +830,17 @@ export default function XiongcaiFinalDeck() {
     }, [activeSlides.length, goTo, next, prev]);
 
     return (
-        <div className="h-screen w-screen overflow-hidden bg-[#eaf0f6] text-slate-950">
+        <div className="h-screen w-screen overflow-hidden text-white" style={{ background: COLORS.deepCover }}>
             <div className="flex h-full">
                 <main className="flex min-w-0 flex-1 flex-col p-3 sm:p-5">
                     <div className="mb-3 flex items-center justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-slate-950 text-white">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white" style={{ background: activeAccent, boxShadow: `0 0 24px ${activeAccent}66` }}>
                                 <Sparkles className="h-5 w-5" />
                             </div>
                             <div className="min-w-0">
-                                <div className="truncate text-sm font-black text-slate-950">AetherGuard · 雄才杯决赛冲奖版</div>
-                                <div className="truncate text-xs font-medium text-slate-500">键盘左右键翻页，支持全屏路演</div>
+                                <div className="truncate text-sm font-black" style={{ color: COLORS.white }}>AetherGuard · 深海战甲 · 产品展示</div>
+                                <div className="truncate text-xs font-light" style={{ color: COLORS.mutedLight }}>左右键翻页 · A 键切换附录 · 展示场景优化</div>
                             </div>
                         </div>
 
@@ -615,7 +849,8 @@ export default function XiongcaiFinalDeck() {
                                 type="button"
                                 onClick={prev}
                                 disabled={current === 0}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-40"
+                                style={{ borderColor: `${activeAccent}66`, background: 'rgba(15, 30, 58, 0.76)', color: COLORS.white }}
                                 aria-label="Previous slide"
                             >
                                 <ArrowLeft className="h-4 w-4" />
@@ -624,7 +859,8 @@ export default function XiongcaiFinalDeck() {
                                 type="button"
                                 onClick={next}
                                 disabled={current === activeSlides.length - 1}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-40"
+                                style={{ borderColor: `${activeAccent}66`, background: 'rgba(15, 30, 58, 0.76)', color: COLORS.white }}
                                 aria-label="Next slide"
                             >
                                 <ArrowRight className="h-4 w-4" />
@@ -632,17 +868,20 @@ export default function XiongcaiFinalDeck() {
                             <button
                                 type="button"
                                 onClick={() => setShowAppendix((value) => !value)}
-                                className={`hidden h-10 items-center gap-2 rounded-[8px] border px-3 text-sm font-semibold shadow-sm transition sm:inline-flex ${showAppendix
-                                    ? 'border-cyan-300 bg-cyan-50 text-cyan-800'
-                                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                                    }`}
+                                className="inline-flex h-10 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition sm:px-4"
+                                style={{
+                                    borderColor: showAppendix ? activeAccent : 'rgba(197,216,240,0.25)',
+                                    background: showAppendix ? `${activeAccent}22` : 'rgba(15, 30, 58, 0.76)',
+                                    color: showAppendix ? COLORS.white : COLORS.mutedLight,
+                                }}
                             >
                                 附录
                             </button>
                             <button
                                 type="button"
                                 onClick={toggleFullscreen}
-                                className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                                className="inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition"
+                                style={{ borderColor: 'rgba(197,216,240,0.25)', background: 'rgba(15, 30, 58, 0.76)', color: COLORS.mutedLight }}
                             >
                                 <Expand className="h-4 w-4" />
                                 <span className="hidden sm:inline">{isFullscreen ? '退出全屏' : '全屏'}</span>
@@ -656,10 +895,11 @@ export default function XiongcaiFinalDeck() {
                         </AnimatePresence>
                     </div>
 
-                    <div className="mt-3 rounded-full bg-white p-1 shadow-sm">
-                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="mt-3 rounded-full p-1" style={{ background: 'rgba(15, 30, 58, 0.88)' }}>
+                        <div className="h-2 overflow-hidden rounded-full" style={{ background: 'rgba(197,216,240,0.16)' }}>
                             <motion.div
-                                className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400"
+                                className="h-full rounded-full"
+                                style={{ background: `linear-gradient(90deg, ${COLORS.cyan}, ${COLORS.purple}, ${COLORS.hardwareAmber}, ${COLORS.successGreen})` }}
                                 animate={{ width: `${progress}%` }}
                                 transition={{ duration: 0.24 }}
                             />

@@ -1,6 +1,6 @@
 # EV1 Factory Acceptance Test
 
-Status: `factory-draft`
+Status: `engineering-prototype-draft`
 
 Run this test on every assembled engineering prototype.
 
@@ -78,4 +78,3 @@ For each failure record:
 - Observed behavior.
 - Photo if mechanical or soldering related.
 - Serial log if firmware or helper related.
-

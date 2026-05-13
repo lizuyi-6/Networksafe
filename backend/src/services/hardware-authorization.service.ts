@@ -12,6 +12,12 @@ import logger from '../utils/logger';
 
 export type CommandScope = 'agent' | 'device' | 'deployment';
 export type HardwareGateStatus = 'enrolled' | 'online' | 'offline' | 'revoked';
+export interface HardwareGrantContext {
+  policyDigest?: string;
+  challenge?: string;
+  breakerTarget?: string;
+  interlockAction?: string;
+}
 export type CommandIntentStatus =
   | 'pending_hardware_confirmation'
   | 'hardware_confirmed'
@@ -290,12 +296,22 @@ class HardwareAuthorizationService {
     return rows[0] ? this.mapGate(rows[0]) : null;
   }
 
+  private selectGate(tenantId: string, gateId?: string): HardwareGateRecord | null {
+    if (gateId) {
+      const gate = this.getGate(gateId);
+      return gate && gate.tenantId === tenantId && gate.status === 'online' ? gate : null;
+    }
+    return this.selectOnlineGate(tenantId);
+  }
+
   async requestPhysicalConfirmation(input: {
     tenantId: string;
     scope: CommandScope;
     targetId: string;
     commandType: string;
     payload?: Record<string, any>;
+    gateId?: string;
+    hardwareContext?: HardwareGrantContext;
     actorId: string;
     actorEmail?: string;
     actorIp?: string;
@@ -315,7 +331,7 @@ class HardwareAuthorizationService {
     const payloadHash = hashPayload(payload);
     const riskClass = classifyCommandRisk(input.commandType);
     const requestedBy = input.actorEmail || input.actorId;
-    const gate = this.selectOnlineGate(input.tenantId);
+    const gate = this.selectGate(input.tenantId, input.gateId);
 
     getDatabase().prepare(`
       INSERT INTO command_intents (
@@ -369,7 +385,8 @@ class HardwareAuthorizationService {
       riskClass,
       payloadHash,
       payloadShortHash: payloadHash.slice(0, 12),
-      requestedBy
+      requestedBy,
+      ...(input.hardwareContext || {})
     };
 
     getDatabase().prepare(`
@@ -405,6 +422,7 @@ class HardwareAuthorizationService {
       targetId: input.targetId,
       commandType: input.commandType,
       payloadHash,
+      ...(input.hardwareContext || {}),
       prompt,
       summary,
       expiresAt
@@ -485,6 +503,10 @@ class HardwareAuthorizationService {
       targetId: session.intent.targetId,
       commandType: session.intent.commandType,
       payloadHash: session.intent.payloadHash,
+      policyDigest: String(payload?.policyDigest || ''),
+      challenge: String(payload?.challenge || ''),
+      breakerTarget: String(payload?.breakerTarget || ''),
+      interlockAction: String(payload?.interlockAction || ''),
       issuedAt,
       expiresAt,
       monotonicCounter,
@@ -574,6 +596,13 @@ class HardwareAuthorizationService {
     }
     if (input.grant.expiresAt !== input.session.expiresAt) {
       return 'expires_at_mismatch';
+    }
+    for (const field of ['policyDigest', 'challenge', 'breakerTarget', 'interlockAction'] as const) {
+      const expected = String(input.session.summary?.[field] || '');
+      const actual = String(input.grant[field] || '');
+      if (expected && actual !== expected) {
+        return `${field}_mismatch`;
+      }
     }
     if (Date.now() > new Date(input.session.expiresAt).getTime()) {
       return 'session_expired';

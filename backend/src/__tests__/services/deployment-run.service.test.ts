@@ -3,35 +3,7 @@ import { initDatabase } from '../../config/database';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { deploymentRunService } from '../../services/deployment-run.service';
 import { hardwareAuthorizationService } from '../../services/hardware-authorization.service';
-import { hashPayload } from '../../security/hardware-grant';
-
-function buildGrantMessage(input: {
-  gateId: string;
-  sessionId: string;
-  actionId: string;
-  tenantId: string;
-  scope: 'deployment';
-  targetId: string;
-  commandType: string;
-  payloadHash: string;
-  issuedAt: string;
-  expiresAt: string;
-  monotonicCounter: number;
-}): string {
-  return [
-    input.gateId,
-    input.sessionId,
-    input.actionId,
-    input.tenantId,
-    input.scope,
-    input.targetId,
-    input.commandType,
-    input.payloadHash,
-    input.issuedAt,
-    input.expiresAt,
-    String(input.monotonicCounter)
-  ].join('\n');
-}
+import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 
 describe('deploymentRunService', () => {
   beforeAll(async () => {
@@ -153,7 +125,7 @@ describe('deploymentRunService', () => {
       : new Date(Date.now() + 120_000).toISOString();
     const monotonicCounter = 1;
     const signature = createSign('SHA256')
-      .update(buildGrantMessage({
+      .update(buildHardwareGrantMessage({
         gateId,
         sessionId: approval.sessionId!,
         actionId: run.id,

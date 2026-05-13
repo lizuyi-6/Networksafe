@@ -190,7 +190,7 @@ const Sidebar = () => {
     });
 
     // Don't show sidebar on standalone public pages
-    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film' || location.pathname === '/xiongcai-final') return null;
+    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film' || location.pathname === '/aetherguard-deck' || location.pathname === '/xiongcai-final') return null;
 
     const platformItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
@@ -494,7 +494,7 @@ const Header = () => {
     };
 
     // Don't show header on standalone public pages
-    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film' || location.pathname === '/xiongcai-final') return null;
+    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film' || location.pathname === '/aetherguard-deck' || location.pathname === '/xiongcai-final') return null;
 
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-border/50 bg-background px-3 md:px-6">
@@ -608,7 +608,8 @@ const AnimatedRoutes = () => {
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
                 <Route path="/promo" element={<Promo />} />
                 <Route path="/promo-film" element={<PromoFilm />} />
-                <Route path="/xiongcai-final" element={<XiongcaiFinalDeck />} />
+                <Route path="/aetherguard-deck" element={<XiongcaiFinalDeck />} />
+                <Route path="/xiongcai-final" element={<Navigate to="/aetherguard-deck" replace />} />
                 <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
                 <Route path="/privacy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
                 <Route path="/terms" element={<PageWrapper><TermsOfService /></PageWrapper>} />
@@ -668,6 +669,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         location.pathname === '/terms' ||
         location.pathname === '/promo' ||
         location.pathname === '/promo-film' ||
+        location.pathname === '/aetherguard-deck' ||
         location.pathname === '/xiongcai-final';
 
     if (isStandalone) {

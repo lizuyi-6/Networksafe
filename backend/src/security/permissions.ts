@@ -14,6 +14,9 @@ export type Permission =
   | 'gate.read'
   | 'gate.enroll'
   | 'gate.manage'
+  | 'final_defense.read'
+  | 'final_defense.manage'
+  | 'final_defense.execute'
   | 'deployment.run.read'
   | 'deployment.run.create'
   | 'deployment.run.approve'
@@ -45,6 +48,9 @@ const ROLE_PERMISSIONS: Record<EnterpriseRole, Permission[]> = {
     'gate.read',
     'gate.enroll',
     'gate.manage',
+    'final_defense.read',
+    'final_defense.manage',
+    'final_defense.execute',
     'deployment.run.read',
     'deployment.run.create',
     'deployment.run.approve',
@@ -61,6 +67,7 @@ const ROLE_PERMISSIONS: Record<EnterpriseRole, Permission[]> = {
   tenant: [
     'auth.oidc_login',
     'gate.read',
+    'final_defense.read',
     'deployment.run.read',
     'deployment.run.create',
     'deployment.evidence.read'
@@ -75,6 +82,9 @@ const ROLE_PERMISSIONS: Record<EnterpriseRole, Permission[]> = {
     'gate.read',
     'gate.enroll',
     'gate.manage',
+    'final_defense.read',
+    'final_defense.manage',
+    'final_defense.execute',
     'deployment.run.read',
     'deployment.run.create',
     'deployment.run.approve',
@@ -92,6 +102,9 @@ const ROLE_PERMISSIONS: Record<EnterpriseRole, Permission[]> = {
     'auth.oidc_login',
     'gate.read',
     'gate.enroll',
+    'final_defense.read',
+    'final_defense.manage',
+    'final_defense.execute',
     'deployment.run.read',
     'deployment.run.create',
     'deployment.run.approve',
@@ -102,17 +115,21 @@ const ROLE_PERMISSIONS: Record<EnterpriseRole, Permission[]> = {
   tenant_operator: [
     'auth.oidc_login',
     'gate.read',
+    'final_defense.read',
+    'final_defense.execute',
     'deployment.run.read',
     'deployment.run.create',
     'deployment.evidence.read'
   ],
   tenant_viewer: [
     'auth.oidc_login',
+    'final_defense.read',
     'deployment.run.read',
     'deployment.evidence.read'
   ],
   auditor: [
     'auth.oidc_login',
+    'final_defense.read',
     'deployment.run.read',
     'deployment.evidence.read',
     'deployment.evidence.export',

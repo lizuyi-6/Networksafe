@@ -1,8 +1,8 @@
 {
   "package": "aetherguard-serial-deployer-ev1",
-  "status": "factory-draft",
-  "date": "2026-05-12",
-  "purpose": "engineering prototype manufacturing package for factory review and quote",
+  "status": "pcb-prototype-order-ready",
+  "date": "2026-05-13",
+  "purpose": "engineering prototype PCB fabrication package for factory review, quote, and EV1 build preparation",
   "pcbSource": "../../kicad/esp32-serial-deployer-pcb/esp32-serial-deployer-pcb.kicad_pro",
   "mechanicalSource": "../../enclosure.scad",
   "firmwareProfile": "serial_deployer_pcb_v1",
@@ -11,9 +11,17 @@
     "pcb": "4-layer FR-4 1.6mm ENIG black solder mask white silkscreen",
     "enclosure": "black PETG/PLA+ 3D print or black ABS CNC"
   },
+  "generatedOutputs": [
+    "pcb/exports/gerber",
+    "pcb/exports/drill",
+    "pcb/exports/position.csv",
+    "pcb/exports/reports/drc.json",
+    "pcb/exports/reports/schematic-parity.json",
+    "pcb/exports/reports/erc.json"
+  ],
   "blockedGates": [
-    "PCB routing is incomplete: 118 unexpected unconnected items remain",
-    "Gerber/drill/position exports are gated until unconnected items reach 0",
-    "hardware-in-loop acceptance has not been run"
+    "hardware-in-loop acceptance has not been run",
+    "first-article assembly and electrical inspection have not been run",
+    "BOM manufacturer part numbers and alternates require factory lock before assembly quote"
   ]
 }

@@ -11,6 +11,7 @@ import { commandDispatcherService } from './command-dispatcher.service';
 import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
 import { allowGatewayDestructiveCommands } from '../config/enterprise-runtime';
 import { requiresPhysicalConfirmation } from '../security/command-risk-policy';
+import type { InterlockState } from '../security/final-defense-policy';
 
 // ---- Types ----
 
@@ -39,6 +40,14 @@ export interface DeviceInfo {
     };
     physicalAuth?: {
         publicKeyPem: string;
+    };
+    finalDefense?: {
+        policyDigest?: string;
+        breakerTarget?: string;
+        interlockState?: InterlockState;
+        externalPowerPresent?: boolean;
+        secureElementPresent?: boolean;
+        feedbackOk?: boolean;
     };
 }
 
@@ -335,7 +344,7 @@ export async function executeDeviceCommandInternal(input: {
         return { success: false, message: 'Device not found.', reason: 'device_not_found' };
     }
 
-    if (isProductionBlockedDeviceCommand(input.command)) {
+    if (isProductionBlockedDeviceCommand(input.command) && !input.hardwareGrant) {
         return {
             success: false,
             message: `Command ${input.command} is blocked on the experimental device gateway in the current enterprise runtime.`,
@@ -353,7 +362,10 @@ export async function executeDeviceCommandInternal(input: {
     }
 
     if (deviceCommandTransport) {
-        const accepted = await Promise.resolve(deviceCommandTransport(input.deviceId, input.command, input.params || {}));
+        const transportParams = input.hardwareGrant
+            ? { ...(input.params || {}), hardwareGrant: input.hardwareGrant.grant || input.hardwareGrant }
+            : input.params || {};
+        const accepted = await Promise.resolve(deviceCommandTransport(input.deviceId, input.command, transportParams));
         if (!accepted) {
             return { success: false, message: `Device gateway rejected command ${input.command}.`, reason: 'device_gateway_rejected' };
         }
@@ -446,6 +458,18 @@ export function updateDeviceStatus(deviceId: string, status: DeviceInfo['status'
         } catch {
             // Ignore when the security operations database is unavailable.
         }
+    }
+}
+
+export function updateDeviceFinalDefenseState(deviceId: string, state: NonNullable<DeviceInfo['finalDefense']>): void {
+    const device = devices.get(deviceId);
+    if (device) {
+        device.finalDefense = {
+            ...(device.finalDefense || {}),
+            ...state
+        };
+        device.lastHeartbeat = new Date();
+        devices.set(deviceId, device);
     }
 }
 

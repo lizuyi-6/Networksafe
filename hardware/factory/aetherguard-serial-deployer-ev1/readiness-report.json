@@ -1,7 +1,7 @@
 ﻿{
     "package":  "aetherguard-serial-deployer-ev1",
-    "status":  "factory-draft",
-    "generatedAt":  "2026-05-12T18:19:30.7753232+08:00",
+    "status":  "pcb-prototype-order-ready",
+    "generatedAt":  "2026-05-13T09:25:20.9658941+08:00",
     "pcbSource":  "../../kicad/esp32-serial-deployer-pcb/esp32-serial-deployer-pcb.kicad_pro",
     "mechanicalSource":  "../../enclosure.scad",
     "metrics":  {
@@ -12,10 +12,10 @@
                     "drcViolations":  0,
                     "drcErrors":  0,
                     "drcWarnings":  0,
-                    "unconnectedItems":  118,
+                    "unconnectedItems":  0,
                     "schematicParityIssues":  0
                 },
-    "manufacturingExportsGated":  true,
+    "manufacturingExportsGated":  false,
     "gates":  [
                   {
                       "name":  "kicad-cli",
@@ -114,8 +114,8 @@
                   },
                   {
                       "name":  "drc",
-                      "status":  "fail",
-                      "detail":  "0 errors, 0 warnings, 118 unconnected items"
+                      "status":  "pass",
+                      "detail":  "0 DRC violations, 0 unconnected items"
                   },
                   {
                       "name":  "schematic-parity",
@@ -123,9 +123,19 @@
                       "detail":  "0 schematic parity issues"
                   },
                   {
-                      "name":  "manufacturing-export",
-                      "status":  "blocked",
-                      "detail":  "Gerber, drill, and position exports blocked until ERC, DRC, schematic parity, netlist, and BOM gates pass"
+                      "name":  "export:gerber",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:drill",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:position",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
                   },
                   {
                       "name":  "mechanical-export",
