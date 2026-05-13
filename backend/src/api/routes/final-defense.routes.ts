@@ -41,12 +41,18 @@ router.get('/status', authenticate, requirePermission('final_defense.read'), asy
   try {
     const tenantId = tenantOf(req);
     const statuses = finalDefenseService.listStatus(tenantId);
+    const rootResistantGateways = finalDefenseService.listRootResistantGateways(tenantId);
     const policies = finalDefenseService.listPolicies(tenantId);
-    const active = statuses.some((status) => status.active);
+    const rootResistantActive = rootResistantGateways.some((gateway) => gateway.active);
+    const hostCompanionActive = statuses.some((status) => status.active);
+    const active = rootResistantActive;
     return sendSuccess(res, {
       active,
-      mode: active ? 'active' : statuses.length > 0 ? 'degraded' : 'not_configured',
+      rootResistantActive,
+      hostCompanionActive,
+      mode: active ? 'active' : statuses.length > 0 || rootResistantGateways.length > 0 ? 'degraded' : 'not_configured',
       statuses,
+      rootResistantGateways,
       policies
     });
   } catch (error: any) {
@@ -93,6 +99,43 @@ router.post('/status/report', authenticateHelperRequest, async (req: Authenticat
   }
 });
 
+router.post('/gateways/status/report', authenticateHelperRequest, async (req: AuthenticatedRequest, res) => {
+  try {
+    const tenantId = nonEmptyString(req.body?.tenantId);
+    const gatewayId = nonEmptyString(req.body?.gatewayId);
+
+    if (!tenantId || !gatewayId) {
+      return sendError(res, 400, {
+        code: 'ROOT_GATEWAY_STATUS_REQUIRED_FIELDS',
+        message: 'backend.root_gateway_status_required_fields'
+      });
+    }
+
+    const gateway = finalDefenseService.reportRootResistantGatewayStatus({
+      tenantId,
+      gatewayId,
+      policyDigest: nonEmptyString(req.body?.policyDigest) || undefined,
+      reportedPolicyDigest: nonEmptyString(req.body?.reportedPolicyDigest) || undefined,
+      firmwareDigest: nonEmptyString(req.body?.firmwareDigest) || undefined,
+      bridgeState: nonEmptyString(req.body?.bridgeState) || undefined,
+      serverPortLink: Boolean(req.body?.serverPortLink),
+      lanPortLink: Boolean(req.body?.lanPortLink),
+      mgmtPath: nonEmptyString(req.body?.mgmtPath) || undefined,
+      secureElementPresent: Boolean(req.body?.secureElementPresent),
+      lastAttestationAt: nonEmptyString(req.body?.lastAttestationAt) || undefined,
+      isolationReason: nonEmptyString(req.body?.isolationReason) || undefined,
+      lastError: nonEmptyString(req.body?.lastError) || undefined
+    });
+
+    return sendSuccess(res, { gateway }, { legacy: { gateway } });
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'ROOT_GATEWAY_STATUS_REPORT_FAILED',
+      message: error?.message || 'backend.root_gateway_status_report_failed'
+    });
+  }
+});
+
 router.post('/policies', authenticate, requirePermission('final_defense.manage'), async (req: AuthenticatedRequest, res) => {
   try {
     const companionId = nonEmptyString(req.body?.companionId);
@@ -126,6 +169,56 @@ router.post('/policies', authenticate, requirePermission('final_defense.manage')
     return sendError(res, 500, {
       code: 'FINAL_DEFENSE_POLICY_UPSERT_FAILED',
       message: error?.message || 'backend.final_defense_policy_upsert_failed'
+    });
+  }
+});
+
+router.post('/gateways/actions', authenticate, requirePermission('final_defense.execute'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const gatewayId = nonEmptyString(req.body?.gatewayId);
+    const action = nonEmptyString(req.body?.action);
+    const payload = req.body?.payload && typeof req.body.payload === 'object' ? req.body.payload : {};
+
+    if (!gatewayId || !action) {
+      return sendError(res, 400, {
+        code: 'ROOT_GATEWAY_ACTION_REQUIRED_FIELDS',
+        message: 'backend.root_gateway_action_required_fields'
+      });
+    }
+
+    const result = await finalDefenseService.requestGatewayAction({
+      tenantId: tenantOf(req),
+      gatewayId,
+      action,
+      payload,
+      challenge: nonEmptyString(req.body?.challenge) || undefined,
+      actorId: req.user?.userId || 'unknown',
+      actorEmail: req.user?.email,
+      actorIp: req.ip
+    });
+
+    if (!result.success) {
+      const statusCode = result.reason === 'hardware_gate_unavailable' || result.reason === 'root_gateway_not_configured' ? 503 : 400;
+      return sendError(res, statusCode, {
+        code: String(result.reason || 'ROOT_GATEWAY_ACTION_FAILED').toUpperCase(),
+        message: result.message
+      });
+    }
+
+    const intent = 'intent' in result ? result.intent : undefined;
+    const session = 'session' in result ? result.session : undefined;
+    return sendSuccess(res, result, {
+      legacy: {
+        actionId: intent?.actionId,
+        confirmationSessionId: session?.sessionId,
+        hardwareGateId: session?.gateId,
+        status: intent?.status
+      }
+    });
+  } catch (error: any) {
+    return sendError(res, 500, {
+      code: 'ROOT_GATEWAY_ACTION_FAILED',
+      message: error?.message || 'backend.root_gateway_action_failed'
     });
   }
 });

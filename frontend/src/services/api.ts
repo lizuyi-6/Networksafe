@@ -501,6 +501,9 @@ export interface HardwareGateRecord {
 }
 
 export type InterlockState = 'isolated' | 'armed' | 'released' | 'fault' | 'disabled' | 'unknown';
+export type BridgeState = InterlockState;
+export type GatewayProtectionMode = 'host_companion_gate' | 'external_network_gateway';
+export type GatewayMgmtPath = 'dedicated_mgmt' | 'cellular' | 'shared' | 'unknown';
 
 export interface FinalDefensePolicyRecord {
     policyId: string;
@@ -522,6 +525,7 @@ export interface FinalDefensePolicyRecord {
 }
 
 export interface FinalDefenseStatusRecord {
+    gatewayProtectionMode?: GatewayProtectionMode;
     tenantId: string;
     companionId: string;
     gateId: string;
@@ -543,10 +547,36 @@ export interface FinalDefenseStatusRecord {
     updatedAt: string;
 }
 
+export interface RootResistantGatewayStatus {
+    gatewayProtectionMode: 'external_network_gateway';
+    gatewayId: string;
+    tenantId: string;
+    policyDigest?: string;
+    reportedPolicyDigest?: string;
+    firmwareDigest?: string;
+    bridgeState: BridgeState;
+    serverPortLink: boolean;
+    lanPortLink: boolean;
+    mgmtPath: GatewayMgmtPath;
+    secureElementPresent: boolean;
+    gatewayOnline: boolean;
+    lastHeartbeatAt?: string;
+    lastAttestationAt?: string;
+    isolationReason?: string;
+    lastError?: string;
+    active: boolean;
+    degradedReasons: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface FinalDefenseStatusResponse {
     active: boolean;
+    rootResistantActive?: boolean;
+    hostCompanionActive?: boolean;
     mode: 'active' | 'degraded' | 'not_configured';
     statuses: FinalDefenseStatusRecord[];
+    rootResistantGateways?: RootResistantGatewayStatus[];
     policies: FinalDefensePolicyRecord[];
 }
 
@@ -2961,8 +2991,11 @@ export const fetchFinalDefenseStatus = async (signal?: AbortSignal): Promise<Fin
         const now = new Date().toISOString();
         return {
             active: true,
+            rootResistantActive: true,
+            hostCompanionActive: true,
             mode: 'active',
             statuses: [{
+                gatewayProtectionMode: 'host_companion_gate',
                 tenantId: 'demo-tenant',
                 companionId: 'final-defense-companion-01',
                 gateId: 'control-board-v1-01',
@@ -2977,6 +3010,26 @@ export const fetchFinalDefenseStatus = async (signal?: AbortSignal): Promise<Fin
                 companionOnline: true,
                 lastHeartbeatAt: now,
                 lastVerifiedAt: now,
+                active: true,
+                degradedReasons: [],
+                createdAt: now,
+                updatedAt: now
+            }],
+            rootResistantGateways: [{
+                gatewayProtectionMode: 'external_network_gateway',
+                tenantId: 'demo-tenant',
+                gatewayId: 'network-isolation-gateway-v1-01',
+                policyDigest: 'root-gateway-policy-demo',
+                reportedPolicyDigest: 'root-gateway-policy-demo',
+                firmwareDigest: 'fw-nigw-v1-demo',
+                lastAttestationAt: now,
+                bridgeState: 'isolated',
+                serverPortLink: true,
+                lanPortLink: true,
+                mgmtPath: 'dedicated_mgmt',
+                secureElementPresent: true,
+                gatewayOnline: true,
+                lastHeartbeatAt: now,
                 active: true,
                 degradedReasons: [],
                 createdAt: now,
@@ -3024,6 +3077,22 @@ export const requestFinalDefenseAction = async (payload: {
     });
     if (!response.ok) {
         throw new Error(`FG-FINAL-DEFENSE-ACTION-${response.status}`);
+    }
+    return readJson<ActionResponse>(response);
+};
+
+export const requestRootResistantGatewayAction = async (payload: {
+    gatewayId: string;
+    action: 'isolate' | 'arm' | 'release_temporary' | 'attest';
+    payload?: Record<string, any>;
+    challenge?: string;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/gateways/actions`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-ROOT-GATEWAY-ACTION-${response.status}`);
     }
     return readJson<ActionResponse>(response);
 };

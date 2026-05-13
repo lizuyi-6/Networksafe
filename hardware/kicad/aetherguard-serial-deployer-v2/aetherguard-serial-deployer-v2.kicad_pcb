@@ -123,7 +123,7 @@
 	(net 42 "unconnected-(GPIO26)")
 	(net 43 "unconnected-(WS2812B-DOUT)")
 
-	(net_class "Default"
+	(net_class "Default" "Default signal nets"
 		(clearance 0.2)
 		(trace_width 0.25)
 		(via_dia 0.6)
@@ -133,7 +133,7 @@
 		(diff_pair_gap 0.25)
 		(diff_pair_width 0.2)
 	)
-	(net_class "Power"
+	(net_class "Power" "Power distribution nets"
 		(clearance 0.2)
 		(trace_width 0.4)
 		(via_dia 0.6)
@@ -143,7 +143,7 @@
 		(diff_pair_gap 0.25)
 		(diff_pair_width 0.2)
 	)
-	(net_class "USB_Diff"
+	(net_class "USB_Diff" "USB differential pair nets"
 		(clearance 0.2)
 		(trace_width 0.2)
 		(via_dia 0.6)
@@ -154,31 +154,28 @@
 		(diff_pair_width 0.2)
 	)
 
-	;; Board outline 52x29mm
 	(gr_rect
 		(start 0 0)
 		(end 52 29)
 		(stroke (width 0.05) (type solid))
-		(fill none)
+		(fill no)
 		(layer "Edge.Cuts")
 		(uuid "e0000001-0000-0000-0000-000000000001")
 	)
 
-	;; Silkscreen
 	(gr_text "AetherGuard v2"
 		(at 26 14.5 0)
 		(layer "F.SilkS")
 		(uuid "e0000002-0000-0000-0000-000000000001")
-		(effects (font (size 1.0 1.0) (thickness 0.15)) (justify center))
+		(effects (font (size 1.0 1.0) (thickness 0.15)))
 	)
 	(gr_text "2026-03"
 		(at 26 16.0 0)
 		(layer "F.SilkS")
 		(uuid "e0000003-0000-0000-0000-000000000001")
-		(effects (font (size 0.7 0.7) (thickness 0.1)) (justify center))
+		(effects (font (size 0.7 0.7) (thickness 0.1)))
 	)
 
-	;; Layout zone annotations on Dwgs.User
 	(gr_text "LAYOUT ZONES:"
 		(at 26 1.5 0)
 		(layer "Dwgs.User")
@@ -210,7 +207,6 @@
 		(effects (font (size 0.5 0.5) (thickness 0.08)))
 	)
 
-	;; Mounting Holes M2 at corners
 	(footprint "aetherguard-serial-deployer-v2:MountingHole_2.2mm_M2"
 		(at 3 3)
 		(layer "F.Cu")
@@ -244,7 +240,6 @@
 		(pad "" np_thru_hole circle (at 0 0) (size 2.2 2.2) (drill 2.2) (layers "*.Cu" "*.Mask") (uuid "e0000011-0000-0000-0000-000000000004"))
 	)
 
-	;; B.Cu Ground Pour Zone
 	(zone
 		(net 1)
 		(net_name "GND")
@@ -270,7 +265,6 @@
 		)
 	)
 
-	;; F.Cu Ground Pour Zone (secondary, lower priority)
 	(zone
 		(net 1)
 		(net_name "GND")

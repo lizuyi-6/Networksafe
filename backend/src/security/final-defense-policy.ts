@@ -2,6 +2,9 @@ import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { stableStringify } from './hardware-grant';
 
 export type InterlockState = 'isolated' | 'armed' | 'released' | 'fault' | 'disabled' | 'unknown';
+export type BridgeState = InterlockState;
+export type GatewayProtectionMode = 'host_companion_gate' | 'external_network_gateway';
+export type GatewayMgmtPath = 'dedicated_mgmt' | 'cellular' | 'shared' | 'unknown';
 export type FinalDefensePolicyStatus = 'active' | 'staged' | 'revoked';
 
 export interface FinalDefenseAllowedAction {
@@ -45,6 +48,24 @@ export function normalizeInterlockState(value: unknown): InterlockState {
   return VALID_INTERLOCK_STATES.has(normalized as InterlockState)
     ? normalized as InterlockState
     : 'unknown';
+}
+
+export function normalizeBridgeState(value: unknown): BridgeState {
+  return normalizeInterlockState(value);
+}
+
+export function normalizeGatewayProtectionMode(value: unknown): GatewayProtectionMode {
+  return String(value || '').trim().toLowerCase() === 'external_network_gateway'
+    ? 'external_network_gateway'
+    : 'host_companion_gate';
+}
+
+export function normalizeGatewayMgmtPath(value: unknown): GatewayMgmtPath {
+  const normalized = String(value || '').trim().toLowerCase().replace(/-/g, '_');
+  if (normalized === 'dedicated_mgmt' || normalized === 'cellular' || normalized === 'shared') {
+    return normalized;
+  }
+  return 'unknown';
 }
 
 export function policyDigestInput(policy: Partial<SignedFinalDefensePolicyDocument>): FinalDefensePolicyDocument {

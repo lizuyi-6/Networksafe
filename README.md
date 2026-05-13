@@ -2,7 +2,7 @@
 
 AetherGuard is a server security platform with a control plane, distributed host agents, a Rust fastpath sidecar, and hardware-backed safety gates for dangerous operations.
 
-Product claim: **AetherGuard 完全最后防线**. Engineering definition: Final Defense Mode is a detectable, auditable, fail-closed mode where the control plane can request and audit dangerous actions, but the final grant is enforced locally by a host companion and hardware security board.
+Product claim: **AetherGuard 完全最后防线**. Engineering definition: Final Defense Mode is a detectable, auditable, fail-closed mode where the control plane can request and audit dangerous actions, but the final grant is enforced by hardware. The root-resistant variant moves that final network release decision outside the protected server into an external Network Isolation Gateway.
 
 ## Quick Start
 
@@ -60,6 +60,10 @@ flowchart LR
     Agent --> Companion["Local Companion"]
     Companion --> Board["Control Board v1"]
     Board --> Interlock["Management Link Interlock"]
+    Agent --> ServerNIC["Server Network Ports"]
+    ServerNIC --> NIGW["Network Isolation Gateway v1"]
+    NIGW --> Network["LAN / WAN"]
+    NIGW --> Mgmt["Independent MGMT / Cellular"]
 ```
 
 Primary components:
@@ -73,6 +77,7 @@ Primary components:
 | `esp32/` | Legacy ESP32 serial deployment firmware |
 | `deployment/` | Production helper scripts and deploy bundles |
 | `hardware/aetherguard-control-board-v1/` | Final Defense hardware baseline |
+| `hardware/aetherguard-network-isolation-gateway-v1/` | Root-resistant external L2 gateway hardware baseline |
 | `hardware/factory/aetherguard-serial-deployer-ev1/` | Legacy serial deployer factory package |
 | `hardware/kicad/esp32-serial-deployer-pcb/` | KiCad source for the legacy serial deployer PCB |
 | `docs/` | Architecture, product, readiness, and archive index documents |
@@ -101,12 +106,23 @@ Failure behavior is closed by default: signature failure, counter rollback, poli
 
 The external product statement is conditional. “完全最后防线” is only valid when the management link is actually wired through the interlock, Final Defense Mode is enabled, the local policy is signed, the secure element is provisioned, and companion plus board health are confirmed. v1 controls the low-voltage network or management link only; it does not switch mains power or directly cut production host power.
 
+## Root-Resistant Final Defense
+
+Root-resistant mode assumes the protected server OS, local agent, local companion, scripts, and host logs may be fully controlled by an attacker with root. In that threat model, the trusted boundary is no longer the host companion. It is the external Network Isolation Gateway v1:
+
+- Dual 1GbE RJ45 transparent L2 bridge with `SERVER`, `LAN/WAN`, and independent `MGMT` ports; cellular is an optional management path.
+- The `SERVER` to `LAN/WAN` bridge is fail-closed. `isolated` blocks protected server forwarding while preserving the gateway's own management channel.
+- The gateway holds signed policy state, hardware identity, firmware measurement, and secure-element backed release grants outside the protected server.
+- Strong “root-resistant active” status requires an external gateway, policy digest match, firmware digest plus attestation, secure element, both data ports linked, independent management path, and a healthy `armed` or `isolated` bridge state.
+- The claim only covers network links physically cabled through the gateway. Out-of-band BMC, Wi-Fi, spare NICs, local console, direct storage damage, and host disk encryption by root are outside v1 protection unless separately controlled.
+
 ## Hardware Shapes
 
 | Hardware | Status | Role |
 | --- | --- | --- |
 | ESP32 serial deployment dongle | Legacy supported | Physical confirmation for local deployment and removal workflows over USB-TTL serial |
-| Control Board v1 | Final Defense target | ESP32-S3, ATECC608C, isolated interlock output and feedback for local hardware grants |
+| Control Board v1 | Control-plane-compromise defense | ESP32-S3, ATECC608C, isolated interlock output and feedback for local hardware grants |
+| Network Isolation Gateway v1 | Root-resistant Final Defense target | External dual-port 1GbE transparent L2 gateway that controls protected server network release outside the host |
 
 Board protocol for Control Board v1 is newline-delimited JSON:
 
@@ -122,6 +138,8 @@ Final Defense API routes:
 - `GET /api/final-defense/status`
 - `POST /api/final-defense/policies`
 - `POST /api/final-defense/actions`
+- `POST /api/final-defense/gateways/status/report`
+- `POST /api/final-defense/gateways/actions`
 
 Route handlers must use `sendSuccess()` and `sendError()` from `backend/src/core/http/api-response.ts`. Route files under `backend/src/api/routes/` must not access the database directly; use services or repositories.
 
@@ -135,14 +153,14 @@ Validated in the current production baseline:
 - Route DB access guard.
 - Frontend direct API fetch guard.
 - Focused Jest coverage for hardware grant signing, Final Defense service policy checks, companion denial of untrusted scripts, deployment run, and device control paths.
-- UI status model for strong “Final Defense Active / 完全最后防线已启用” only when secure element, policy digest, external DC, feedback, companion, and interlock health are all present.
+- UI status model for root-resistant “Final Defense Active” only when an external Network Isolation Gateway v1 reports secure element, matching policy digest, firmware attestation, linked data ports, independent management path, and healthy bridge state.
 
 Not yet validated in this workspace:
 
 - Real Control Board v1 hardware-in-the-loop release and feedback test.
 - Secure element provisioning ceremony on physical ATECC608C.
-- OS hardening against a fully root-compromised host destroying the local companion.
-- TPM attestation and secure boot integration.
+- Real Network Isolation Gateway v1 hardware-in-the-loop bridge isolation and release test.
+- Secure boot / measured boot chain for physical gateway firmware.
 
 ## Production Rules
 

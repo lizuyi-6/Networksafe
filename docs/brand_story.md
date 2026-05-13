@@ -57,10 +57,10 @@ AetherGuard 不仅仅是一个防火墙，它是为您量身打造的下一代 A
 AetherGuard 独创性地支持 **ESP32 硬件联动**，打破了软件与现实的界限。
 
 *   **状态灯语**：绿色表示 Final Defense Mode 健康，红色表示硬件、策略或反馈链路进入故障/降级状态。
-*   **完全最后防线**：Control Board v1 通过 ESP32-S3、ATECC608C 安全芯片和隔离 interlock 输出/反馈，把危险动作的最终放行权留在本地主机 companion 与硬件安全板。
-*   **条件式承诺**：只有管理链路已接入 interlock、Final Defense Mode 已启用、本地策略已签名、硬件安全芯片已 provision，且 secure element、策略摘要、外部电源、反馈、companion、interlock 六项全部健康时，产品才展示“Final Defense Active / 完全最后防线已启用”。
+*   **完全最后防线**：Control Board v1 防控制平面沦陷；Network Isolation Gateway v1 进一步把网络放行权移出服务器，用外置透明网关对抗服务器 root 沦陷。
+*   **条件式承诺**：只有所有受保护网络链路实际接入外置网关、Final Defense Mode 已启用、本地策略已签名、硬件安全芯片已 provision，且策略摘要、固件度量、独立管理通道、SERVER/LAN 链路和 bridge 状态全部健康时，产品才展示“Root-Resistant Final Defense Active / 可对抗 root 的完全最后防线已启用”。
 
-对外主张：**AetherGuard 完全最后防线：即使控制平面沦陷，危险动作仍需本地硬件放行。**
+对外主张：**AetherGuard 完全最后防线：即使服务器被 root 完全控制，受控网络链路的最终放行仍由服务器外置硬件网关决定。**
 
 ---
 

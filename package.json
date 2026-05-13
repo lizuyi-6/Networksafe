@@ -2,6 +2,7 @@
   "scripts": {
     "build:ppt": "node scripts/generate-aetherguard-pitch-ppt.mjs",
     "build:ppt:product": "node scripts/generate-aetherguard-product-deck.mjs",
+    "build:ppt:xiongcai": "node scripts/generate-aetherguard-xiongcai-final-deck.mjs",
     "build:video:demo": "node scripts/video/build-aetherguard-demo-video.mjs",
     "verify:release": "node scripts/release/verify-release.mjs",
     "replay:dataset:safe": "node scripts/dev/security_dataset_replay_safe.js"
