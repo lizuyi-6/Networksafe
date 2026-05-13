@@ -11,28 +11,32 @@
     (comment 1 "AetherGuard Network Isolation Gateway v1A")
   )
   (lib_symbols
-  (symbol "ARCH_BLOCK"
+  (symbol "AG_REVIEW_BLOCK_4PIN"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
     (on_board yes)
-    (property "Reference" "U" (at -10.16 -7.62 0)
+    (property "Reference" "U" (at -15.24 -12.700000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "ARCH_BLOCK" (at 0 7.62 0)
+    (property "Value" "Review block" (at -15.24 12.700000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "" (at 0 10.16 0)
+    (property "Footprint" "" (at 0 15.24 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (property "Datasheet" "" (at 0 12.7 0)
+    (property "Datasheet" "" (at 0 17.78 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (symbol "ARCH_BLOCK_1_1"
-      (rectangle (start -12.7 -5.08) (end 12.7 5.08)
+    (property "Description" "Stable review symbol for KiCad ERC-safe architecture schematics." (at 0 20.32 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (symbol "AG_REVIEW_BLOCK_4PIN_1_1"
+      (rectangle (start -15.24 8.89) (end 15.24 -8.89)
         (stroke (width 0.15) (type default))
-        (fill (type background))
+        (fill (type none))
       )
+
     )
     (embedded_fonts no)
   )
@@ -42,139 +46,34 @@
     (uuid "924242fd-9c4c-581e-9ab2-7afc1a25fdfb")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "34f79678-bdb0-5ad3-bf1c-7701c27b8622")
-    (property "Reference" "J4" (at 24.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "USB-C debug/power" (at 24.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Connector_USB:USB_C_Receptacle_GCT_USB4125-xx-x-0190_6P_TopMnt_Horizontal" (at 35 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/34f79678-bdb0-5ad3-bf1c-7701c27b8622"
-          (reference "J4") (unit 1)
-        )
-      )
-    )
+  (text "J4: USB-C debug/power"
+    (at 25 58 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "ad22f5a3-3cc7-5746-8d30-d460b5267d7e")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "40fc778a-2b95-57aa-8643-3ff56acc7e67")
-    (property "Reference" "J5" (at 94.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "9-24V DC input" (at 94.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2_1x02_P5.00mm_Horizontal" (at 105 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/40fc778a-2b95-57aa-8643-3ff56acc7e67"
-          (reference "J5") (unit 1)
-        )
-      )
-    )
+  (text "J5: 9-24V DC input"
+    (at 145 58 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "12e03b58-f442-57af-ab30-ba7a77255cc8")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 175 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "6714659c-6d2c-57c2-b3bd-77d47f0ead79")
-    (property "Reference" "U5" (at 164.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "5V buck regulator" (at 164.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Package_TO_SOT_SMD:SOT-23-6" (at 175 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/6714659c-6d2c-57c2-b3bd-77d47f0ead79"
-          (reference "U5") (unit 1)
-        )
-      )
-    )
+  (text "U5: 5V buck regulator"
+    (at 25 66 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "8ed11566-91cb-59ac-b793-f50c6a5e279e")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 83 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "f5feb19b-9415-55dd-ae5a-859f9782df68")
-    (property "Reference" "U6" (at 24.84 75.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "3V3 regulator" (at 24.84 90.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Package_TO_SOT_SMD:SOT-23-5" (at 35 93.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/f5feb19b-9415-55dd-ae5a-859f9782df68"
-          (reference "U6") (unit 1)
-        )
-      )
-    )
+  (text "U6: 3V3 regulator"
+    (at 145 66 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "b87dfc59-f666-5311-8be2-4bb6d7e10df4")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 83 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "274a881c-9500-559c-b79c-ef4fe4f6254f")
-    (property "Reference" "U7" (at 94.84 75.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "Switch core buck/LDO" (at 94.84 90.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Package_TO_SOT_SMD:SOT-23-5" (at 105 93.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/274a881c-9500-559c-b79c-ef4fe4f6254f"
-          (reference "U7") (unit 1)
-        )
-      )
-    )
+  (text "U7: Switch core buck/LDO"
+    (at 25 74 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "8716212e-4792-5957-bd2c-ef566c4b8f5c")
   )
 
 

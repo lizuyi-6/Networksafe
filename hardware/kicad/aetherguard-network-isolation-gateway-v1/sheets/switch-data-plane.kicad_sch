@@ -11,28 +11,32 @@
     (comment 1 "AetherGuard Network Isolation Gateway v1A")
   )
   (lib_symbols
-  (symbol "ARCH_BLOCK"
+  (symbol "AG_REVIEW_BLOCK_4PIN"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
     (on_board yes)
-    (property "Reference" "U" (at -10.16 -7.62 0)
+    (property "Reference" "U" (at -15.24 -12.700000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "ARCH_BLOCK" (at 0 7.62 0)
+    (property "Value" "Review block" (at -15.24 12.700000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "" (at 0 10.16 0)
+    (property "Footprint" "" (at 0 15.24 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (property "Datasheet" "" (at 0 12.7 0)
+    (property "Datasheet" "" (at 0 17.78 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (symbol "ARCH_BLOCK_1_1"
-      (rectangle (start -12.7 -5.08) (end 12.7 5.08)
+    (property "Description" "Stable review symbol for KiCad ERC-safe architecture schematics." (at 0 20.32 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (symbol "AG_REVIEW_BLOCK_4PIN_1_1"
+      (rectangle (start -15.24 8.89) (end 15.24 -8.89)
         (stroke (width 0.15) (type default))
-        (fill (type background))
+        (fill (type none))
       )
+
     )
     (embedded_fonts no)
   )
@@ -42,139 +46,34 @@
     (uuid "dab5f815-a567-584f-bc67-6666ee6eb7c0")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "6a730b92-767c-501e-9951-ee6a6466c222")
-    (property "Reference" "J1" (at 24.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "SERVER 1GbE RJ45 MagJack" (at 24.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Connector_RJ:RJ45_Pulse_JK00177NL_Horizontal" (at 35 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/6a730b92-767c-501e-9951-ee6a6466c222"
-          (reference "J1") (unit 1)
-        )
-      )
-    )
+  (text "J1: SERVER 1GbE RJ45 MagJack"
+    (at 25 58 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "0325d95a-35a1-5c07-bf90-de1c6afa17e1")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "1df71671-37da-5c46-a95c-db61c462a45d")
-    (property "Reference" "J2" (at 94.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "LAN/WAN 1GbE RJ45 MagJack" (at 94.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Connector_RJ:RJ45_Pulse_JK00177NL_Horizontal" (at 105 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/1df71671-37da-5c46-a95c-db61c462a45d"
-          (reference "J2") (unit 1)
-        )
-      )
-    )
+  (text "J2: LAN/WAN 1GbE RJ45 MagJack"
+    (at 145 58 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "2ccf9946-2375-533a-b5b9-18af800c6895")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 175 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "78d1a188-b094-5149-b6e5-e15babf94124")
-    (property "Reference" "U2" (at 164.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "KSZ9563R 3-port GbE switch" (at 164.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Package_DFN_QFN:QFN-64-1EP_8x8mm_P0.4mm_EP6.5x6.5mm" (at 175 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/78d1a188-b094-5149-b6e5-e15babf94124"
-          (reference "U2") (unit 1)
-        )
-      )
-    )
+  (text "U2: KSZ9563R 3-port GbE switch"
+    (at 25 66 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "23dc0328-3d4b-50f9-8225-57efd48d5a03")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 83 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "eeade841-946e-559c-987e-4e060eeb914f")
-    (property "Reference" "Q1" (at 24.84 75.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "Fail-closed switch reset gate" (at 24.84 90.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Package_TO_SOT_SMD:SOT-23" (at 35 93.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/eeade841-946e-559c-987e-4e060eeb914f"
-          (reference "Q1") (unit 1)
-        )
-      )
-    )
+  (text "Q1: Fail-closed switch reset gate"
+    (at 145 66 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "81ee8b1c-53bb-5666-ba5c-d88218de0cd9")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 83 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "e46c1109-6b4c-57c4-9ad0-c34d0f614b3d")
-    (property "Reference" "Y1" (at 94.84 75.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "25MHz switch crystal" (at 94.84 90.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm" (at 105 93.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/e46c1109-6b4c-57c4-9ad0-c34d0f614b3d"
-          (reference "Y1") (unit 1)
-        )
-      )
-    )
+  (text "Y1: 25MHz switch crystal"
+    (at 25 74 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "0d04b8fe-bb8a-58ce-95ab-986eaabd23d0")
   )
 
 

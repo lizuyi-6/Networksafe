@@ -11,28 +11,32 @@
     (comment 1 "AetherGuard Network Isolation Gateway v1A")
   )
   (lib_symbols
-  (symbol "ARCH_BLOCK"
+  (symbol "AG_REVIEW_BLOCK_4PIN"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
     (on_board yes)
-    (property "Reference" "U" (at -10.16 -7.62 0)
+    (property "Reference" "U" (at -15.24 -12.700000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "ARCH_BLOCK" (at 0 7.62 0)
+    (property "Value" "Review block" (at -15.24 12.700000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "" (at 0 10.16 0)
+    (property "Footprint" "" (at 0 15.24 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (property "Datasheet" "" (at 0 12.7 0)
+    (property "Datasheet" "" (at 0 17.78 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (symbol "ARCH_BLOCK_1_1"
-      (rectangle (start -12.7 -5.08) (end 12.7 5.08)
+    (property "Description" "Stable review symbol for KiCad ERC-safe architecture schematics." (at 0 20.32 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (symbol "AG_REVIEW_BLOCK_4PIN_1_1"
+      (rectangle (start -15.24 8.89) (end 15.24 -8.89)
         (stroke (width 0.15) (type default))
-        (fill (type background))
+        (fill (type none))
       )
+
     )
     (embedded_fonts no)
   )
@@ -42,58 +46,16 @@
     (uuid "3ab090ff-4c4e-5088-af5a-855c99349cd5")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "b8a8d73b-3309-53d9-81c7-3c5372c126f0")
-    (property "Reference" "U1" (at 24.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "ESP32-S3-WROOM-1" (at 24.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "RF_Module:ESP32-S3-WROOM-1" (at 35 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/b8a8d73b-3309-53d9-81c7-3c5372c126f0"
-          (reference "U1") (unit 1)
-        )
-      )
-    )
+  (text "U1: ESP32-S3-WROOM-1"
+    (at 25 58 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "d8221c68-c16b-572f-a8c3-222b5da24429")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "3d1a06c6-eb4e-57f1-8581-4db664e920fe")
-    (property "Reference" "U4" (at 94.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "ATECC608C secure element" (at 94.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Package_SO:JEITA_SOIC-8_3.9x4.9mm_P1.27mm" (at 105 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/3d1a06c6-eb4e-57f1-8581-4db664e920fe"
-          (reference "U4") (unit 1)
-        )
-      )
-    )
+  (text "U4: ATECC608C secure element"
+    (at 145 58 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "63f49df4-42b8-5b4e-b193-9c7b7b2c7223")
   )
 
 

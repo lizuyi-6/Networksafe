@@ -25,7 +25,6 @@ This release package is a board-fab engineering review prototype for the root-re
 The board labels and firmware contract align with:
 `gatewayId`, `policyDigest`, `firmwareDigest`, `bridgeState`, `serverPortLink`, `lanPortLink`, `mgmtPath`, `lastAttestationAt`, `isolationReason`, `degradedReasons`.
 
-
 ## KiCad CLI Validation
 - ERC: none; issue classes: none.
 - DRC: none; issue classes: none; unconnected_items=0.

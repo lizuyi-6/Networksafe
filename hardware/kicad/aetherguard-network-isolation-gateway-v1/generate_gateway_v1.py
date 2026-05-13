@@ -71,6 +71,31 @@ class Part:
         return uid(f"sym:{self.ref}")
 
 
+@dataclass(frozen=True)
+class SymbolPin:
+    number: str
+    name: str
+    x: float
+    y: float
+    rotation: int
+    electrical: str = "passive"
+
+
+@dataclass(frozen=True)
+class SymbolSpec:
+    name: str
+    reference: str
+    value: str
+    width: float
+    height: float
+    pins: tuple[SymbolPin, ...]
+    description: str
+
+
+def sp(number: str, name: str, x: float, y: float, rotation: int, electrical: str = "passive") -> SymbolPin:
+    return SymbolPin(number, name, x, y, rotation, electrical)
+
+
 PARTS: list[Part] = [
     Part(
         "J1",
@@ -261,6 +286,347 @@ for idx, (x, y) in enumerate([(6, 44), (154, 44), (6, 104), (154, 104)], start=1
             in_bom=False,
         )
     )
+
+
+SYMBOL_BY_REF: dict[str, str] = {
+    "J1": "AG_RJ45_1GBE_MAGJACK",
+    "J2": "AG_RJ45_1GBE_MAGJACK",
+    "J3": "AG_RJ45_10_100_MAGJACK",
+    "J4": "AG_USB_C_POWER_DEBUG",
+    "J5": "AG_DC_INPUT_2P",
+    "U1": "AG_ESP32_S3_WROOM_1",
+    "U2": "AG_KSZ9563R",
+    "U3": "AG_W5500",
+    "U4": "AG_ATECC608C",
+    "U5": "AG_BUCK_REGULATOR",
+    "U6": "AG_LDO_REGULATOR",
+    "U7": "AG_SWITCH_CORE_REGULATOR",
+    "Q1": "AG_NMOS_RESET_GATE",
+    "Y1": "AG_CRYSTAL_25MHZ",
+    "Y2": "AG_CRYSTAL_25MHZ",
+}
+
+for part in PARTS:
+    if part.ref.startswith("SW"):
+        SYMBOL_BY_REF[part.ref] = "AG_SWITCH_SPST"
+    elif part.ref.startswith("D"):
+        SYMBOL_BY_REF[part.ref] = "AG_LED"
+    elif part.ref.startswith("TP"):
+        SYMBOL_BY_REF[part.ref] = "AG_TEST_POINT"
+    elif part.ref.startswith("MH"):
+        SYMBOL_BY_REF[part.ref] = "AG_MOUNTING_HOLE"
+
+
+SYMBOL_SPECS: dict[str, SymbolSpec] = {
+    "AG_RJ45_1GBE_MAGJACK": SymbolSpec(
+        "AG_RJ45_1GBE_MAGJACK",
+        "J",
+        "RJ45 1GbE MagJack",
+        17.78,
+        30.48,
+        (
+            sp("1", "MDI0+", -11.43, 10.16, 0),
+            sp("2", "MDI0-", -11.43, 7.62, 0),
+            sp("3", "MDI1+", -11.43, 5.08, 0),
+            sp("6", "MDI1-", -11.43, 2.54, 0),
+            sp("4", "MDI2+", -11.43, 0, 0),
+            sp("5", "MDI2-", -11.43, -2.54, 0),
+            sp("7", "MDI3+", -11.43, -5.08, 0),
+            sp("8", "MDI3-", -11.43, -7.62, 0),
+            sp("9", "SHIELD", 0, -17.78, 90),
+            sp("10", "LED_LINK+", 11.43, 5.08, 180),
+            sp("11", "LED_LINK-", 11.43, 2.54, 180),
+            sp("12", "LED_ACT+", 11.43, -2.54, 180),
+            sp("13", "LED_ACT-", 11.43, -5.08, 180),
+        ),
+        "RJ45 MagJack with integrated magnetics, simplified for 1000BASE-T review.",
+    ),
+    "AG_RJ45_10_100_MAGJACK": SymbolSpec(
+        "AG_RJ45_10_100_MAGJACK",
+        "J",
+        "RJ45 10/100 MagJack",
+        17.78,
+        25.4,
+        (
+            sp("1", "TX+", -11.43, 7.62, 0),
+            sp("2", "TX-", -11.43, 5.08, 0),
+            sp("3", "RX+", -11.43, 2.54, 0),
+            sp("6", "RX-", -11.43, 0, 0),
+            sp("9", "SHIELD", 0, -15.24, 90),
+            sp("10", "LED_LINK+", 11.43, 3.81, 180),
+            sp("11", "LED_LINK-", 11.43, 1.27, 180),
+            sp("12", "LED_ACT+", 11.43, -2.54, 180),
+            sp("13", "LED_ACT-", 11.43, -5.08, 180),
+        ),
+        "Independent management RJ45 MagJack; never bridges protected host traffic.",
+    ),
+    "AG_USB_C_POWER_DEBUG": SymbolSpec(
+        "AG_USB_C_POWER_DEBUG",
+        "J",
+        "USB-C debug/power",
+        15.24,
+        22.86,
+        (
+            sp("A4", "VBUS", -10.16, 6.35, 0, "power_in"),
+            sp("B4", "VBUS", -10.16, 3.81, 0, "power_in"),
+            sp("A6", "D+", -10.16, 0, 0, "bidirectional"),
+            sp("A7", "D-", -10.16, -2.54, 0, "bidirectional"),
+            sp("A5", "CC1", 10.16, 3.81, 180, "passive"),
+            sp("B5", "CC2", 10.16, 1.27, 180, "passive"),
+            sp("G", "GND", 0, -13.97, 90, "power_in"),
+            sp("S", "SHIELD", 0, 13.97, 270, "passive"),
+        ),
+        "USB-C sink for power, serial logs and recovery.",
+    ),
+    "AG_DC_INPUT_2P": SymbolSpec(
+        "AG_DC_INPUT_2P",
+        "J",
+        "9-24V DC input",
+        10.16,
+        10.16,
+        (sp("1", "DC_IN+", -7.62, 2.54, 0, "power_in"), sp("2", "DC_IN-", -7.62, -2.54, 0, "power_in")),
+        "Two pin external DC input.",
+    ),
+    "AG_ESP32_S3_WROOM_1": SymbolSpec(
+        "AG_ESP32_S3_WROOM_1",
+        "U",
+        "ESP32-S3-WROOM-1",
+        45.72,
+        55.88,
+        (
+            sp("2", "3V3", 0, 30.48, 270, "power_in"),
+            sp("1", "GND", 0, -30.48, 90, "power_in"),
+            sp("3", "EN", -25.4, 22.86, 0, "input"),
+            sp("27", "GPIO0_BOOT", -25.4, 20.32, 0, "bidirectional"),
+            sp("8", "GPIO15_BTN_CONFIRM", -25.4, 15.24, 0, "bidirectional"),
+            sp("9", "GPIO16_BTN_CANCEL", -25.4, 12.7, 0, "bidirectional"),
+            sp("23", "GPIO21_BTN_RECOVERY", -25.4, 10.16, 0, "bidirectional"),
+            sp("14", "USB_D+", -25.4, 5.08, 0, "bidirectional"),
+            sp("13", "USB_D-", -25.4, 2.54, 0, "bidirectional"),
+            sp("4", "I2C_SCL", 25.4, 22.86, 180, "bidirectional"),
+            sp("5", "I2C_SDA", 25.4, 20.32, 180, "bidirectional"),
+            sp("12", "SPI_SCK", 25.4, 15.24, 180, "bidirectional"),
+            sp("17", "SPI_MOSI", 25.4, 12.7, 180, "bidirectional"),
+            sp("18", "SPI_MISO", 25.4, 10.16, 180, "bidirectional"),
+            sp("19", "SW_SPI_CS", 25.4, 7.62, 180, "output"),
+            sp("20", "MGMT_SPI_CS", 25.4, 5.08, 180, "output"),
+            sp("21", "SW_RESET_N", 25.4, 0, 180, "output"),
+            sp("22", "WATCHDOG_FAIL_N", 25.4, -2.54, 180, "output"),
+            sp("30", "SERVER_LINK", 25.4, -7.62, 180, "input"),
+            sp("31", "LAN_LINK", 25.4, -10.16, 180, "input"),
+            sp("32", "MGMT_LINK", 25.4, -12.7, 180, "input"),
+            sp("33", "LED_ISOLATED", -25.4, -7.62, 0, "output"),
+            sp("34", "LED_ARMED", -25.4, -10.16, 0, "output"),
+            sp("35", "LED_RELEASED", -25.4, -12.7, 0, "output"),
+            sp("36", "LED_FAULT", -25.4, -15.24, 0, "output"),
+        ),
+        "ESP32-S3 policy MCU; simplified pin subset for v1A gateway review.",
+    ),
+    "AG_KSZ9563R": SymbolSpec(
+        "AG_KSZ9563R",
+        "U",
+        "KSZ9563R 3-port GbE switch",
+        55.88,
+        60.96,
+        (
+            sp("1", "P1_MDI0+", -30.48, 25.4, 0, "bidirectional"),
+            sp("2", "P1_MDI0-", -30.48, 22.86, 0, "bidirectional"),
+            sp("3", "P1_MDI1+", -30.48, 20.32, 0, "bidirectional"),
+            sp("4", "P1_MDI1-", -30.48, 17.78, 0, "bidirectional"),
+            sp("5", "P1_MDI2+", -30.48, 15.24, 0, "bidirectional"),
+            sp("6", "P1_MDI2-", -30.48, 12.7, 0, "bidirectional"),
+            sp("7", "P1_MDI3+", -30.48, 10.16, 0, "bidirectional"),
+            sp("8", "P1_MDI3-", -30.48, 7.62, 0, "bidirectional"),
+            sp("17", "P2_MDI0+", 30.48, 25.4, 180, "bidirectional"),
+            sp("18", "P2_MDI0-", 30.48, 22.86, 180, "bidirectional"),
+            sp("19", "P2_MDI1+", 30.48, 20.32, 180, "bidirectional"),
+            sp("20", "P2_MDI1-", 30.48, 17.78, 180, "bidirectional"),
+            sp("21", "P2_MDI2+", 30.48, 15.24, 180, "bidirectional"),
+            sp("22", "P2_MDI2-", 30.48, 12.7, 180, "bidirectional"),
+            sp("23", "P2_MDI3+", 30.48, 10.16, 180, "bidirectional"),
+            sp("24", "P2_MDI3-", 30.48, 7.62, 180, "bidirectional"),
+            sp("33", "SPI_SCK", -30.48, -2.54, 0, "input"),
+            sp("34", "SPI_MOSI", -30.48, -5.08, 0, "input"),
+            sp("35", "SPI_MISO", -30.48, -7.62, 0, "output"),
+            sp("36", "SPI_CS_N", -30.48, -10.16, 0, "input"),
+            sp("37", "RESET_N", -30.48, -15.24, 0, "input"),
+            sp("38", "INT_N", 30.48, -7.62, 180, "output"),
+            sp("39", "LINK_P1", 30.48, -10.16, 180, "output"),
+            sp("40", "LINK_P2", 30.48, -12.7, 180, "output"),
+            sp("41", "XTAL1", -5.08, -33.02, 90, "input"),
+            sp("42", "XTAL2", 5.08, -33.02, 90, "output"),
+            sp("43", "3V3_IO", -7.62, 33.02, 270, "power_in"),
+            sp("44", "SW_CORE", 7.62, 33.02, 270, "power_in"),
+            sp("45", "GND", 0, -33.02, 90, "power_in"),
+        ),
+        "3-port Gigabit Ethernet switch; SERVER and LAN/WAN use integrated PHY ports.",
+    ),
+    "AG_W5500": SymbolSpec(
+        "AG_W5500",
+        "U",
+        "W5500 TCP/IP Ethernet",
+        35.56,
+        40.64,
+        (
+            sp("1", "TXP", 20.32, 12.7, 180, "output"),
+            sp("2", "TXN", 20.32, 10.16, 180, "output"),
+            sp("3", "RXP", 20.32, 5.08, 180, "input"),
+            sp("4", "RXN", 20.32, 2.54, 180, "input"),
+            sp("10", "SCSn", -20.32, 12.7, 0, "input"),
+            sp("11", "SCLK", -20.32, 10.16, 0, "input"),
+            sp("12", "MOSI", -20.32, 7.62, 0, "input"),
+            sp("13", "MISO", -20.32, 5.08, 0, "output"),
+            sp("14", "INTn", -20.32, 0, 0, "output"),
+            sp("15", "RSTn", -20.32, -2.54, 0, "input"),
+            sp("16", "LINKLED", 20.32, -5.08, 180, "output"),
+            sp("17", "XTAL1", -5.08, -22.86, 90, "input"),
+            sp("18", "XTAL2", 5.08, -22.86, 90, "output"),
+            sp("19", "3V3", -5.08, 22.86, 270, "power_in"),
+            sp("20", "GND", 5.08, -22.86, 90, "power_in"),
+        ),
+        "SPI Ethernet controller for independent management path.",
+    ),
+    "AG_ATECC608C": SymbolSpec(
+        "AG_ATECC608C",
+        "U",
+        "ATECC608C secure element",
+        12.7,
+        17.78,
+        (
+            sp("1", "NC1", -8.89, 5.08, 0),
+            sp("2", "NC2", -8.89, 2.54, 0),
+            sp("3", "NC3", -8.89, 0, 0),
+            sp("4", "GND", -8.89, -5.08, 0, "power_in"),
+            sp("5", "SDA", 8.89, 5.08, 180, "bidirectional"),
+            sp("6", "SCL", 8.89, 2.54, 180, "input"),
+            sp("7", "NC4", 8.89, 0, 180),
+            sp("8", "VCC", 8.89, -5.08, 180, "power_in"),
+        ),
+        "Secure element with non-exportable identity key.",
+    ),
+    "AG_BUCK_REGULATOR": SymbolSpec(
+        "AG_BUCK_REGULATOR",
+        "U",
+        "5V buck regulator",
+        15.24,
+        17.78,
+        (
+            sp("1", "VIN", -10.16, 5.08, 0, "power_in"),
+            sp("2", "EN", -10.16, 2.54, 0, "input"),
+            sp("3", "GND", -10.16, -5.08, 0, "power_in"),
+            sp("4", "SW", 10.16, 2.54, 180, "output"),
+            sp("5", "FB", 10.16, 0, 180, "input"),
+            sp("6", "VOUT", 10.16, 5.08, 180, "power_out"),
+        ),
+        "Review-class 5V buck regulator symbol.",
+    ),
+    "AG_LDO_REGULATOR": SymbolSpec(
+        "AG_LDO_REGULATOR",
+        "U",
+        "3V3 regulator",
+        15.24,
+        17.78,
+        (
+            sp("1", "VIN", -10.16, 5.08, 0, "power_in"),
+            sp("2", "GND", -10.16, -5.08, 0, "power_in"),
+            sp("3", "EN", -10.16, 0, 0, "input"),
+            sp("4", "NC", 10.16, -2.54, 180),
+            sp("5", "VOUT", 10.16, 5.08, 180, "power_out"),
+        ),
+        "3V3 regulator for MCU, W5500, ATECC and switch IO.",
+    ),
+    "AG_SWITCH_CORE_REGULATOR": SymbolSpec(
+        "AG_SWITCH_CORE_REGULATOR",
+        "U",
+        "Switch core regulator",
+        15.24,
+        17.78,
+        (
+            sp("1", "VIN", -10.16, 5.08, 0, "power_in"),
+            sp("2", "GND", -10.16, -5.08, 0, "power_in"),
+            sp("3", "EN", -10.16, 0, 0, "input"),
+            sp("4", "PGOOD", 10.16, -2.54, 180, "output"),
+            sp("5", "VOUT", 10.16, 5.08, 180, "power_out"),
+        ),
+        "Gated switch core rail; fail-closed by default.",
+    ),
+    "AG_NMOS_RESET_GATE": SymbolSpec(
+        "AG_NMOS_RESET_GATE",
+        "Q",
+        "Fail-closed reset gate",
+        10.16,
+        12.7,
+        (
+            sp("1", "GATE", -7.62, 0, 0, "input"),
+            sp("2", "SOURCE", 7.62, -2.54, 180),
+            sp("3", "DRAIN", 7.62, 2.54, 180),
+        ),
+        "Open-drain reset gate holding switch isolated on watchdog failure.",
+    ),
+    "AG_CRYSTAL_25MHZ": SymbolSpec(
+        "AG_CRYSTAL_25MHZ",
+        "Y",
+        "25MHz crystal",
+        10.16,
+        7.62,
+        (sp("1", "X1", -7.62, 0, 0), sp("2", "X2", 7.62, 0, 180), sp("3", "GND", 0, -6.35, 90)),
+        "25 MHz reference crystal placeholder.",
+    ),
+    "AG_SWITCH_SPST": SymbolSpec(
+        "AG_SWITCH_SPST",
+        "SW",
+        "Tactile switch",
+        10.16,
+        7.62,
+        (sp("1", "A", -7.62, 0, 0), sp("2", "B", 7.62, 0, 180)),
+        "Physical confirmation tactile switch.",
+    ),
+    "AG_LED": SymbolSpec(
+        "AG_LED",
+        "D",
+        "Status LED",
+        10.16,
+        7.62,
+        (sp("1", "A", -7.62, 0, 0, "input"), sp("2", "K", 7.62, 0, 180, "power_in")),
+        "Status LED.",
+    ),
+    "AG_TEST_POINT": SymbolSpec(
+        "AG_TEST_POINT",
+        "TP",
+        "Test point",
+        5.08,
+        5.08,
+        (sp("1", "TP", 0, -5.08, 90),),
+        "Board test point.",
+    ),
+    "AG_MOUNTING_HOLE": SymbolSpec(
+        "AG_MOUNTING_HOLE",
+        "MH",
+        "Mounting hole",
+        5.08,
+        5.08,
+        (),
+        "Mechanical mounting hole.",
+    ),
+}
+
+REVIEW_SYMBOL_NAME = "AG_REVIEW_BLOCK_4PIN"
+REVIEW_SYMBOL_SPEC = SymbolSpec(
+    REVIEW_SYMBOL_NAME,
+    "U",
+    "Review block",
+    30.48,
+    17.78,
+    (),
+    "Stable review symbol for KiCad ERC-safe architecture schematics.",
+)
+
+# Keep the schematic self-contained and ERC-stable across KiCad 8/9 by using
+# one conservative visible symbol for every review block. Detailed pin/net
+# intent is shown as plain schematic text and captured in BOM/release notes.
+SYMBOL_SPECS = {REVIEW_SYMBOL_NAME: REVIEW_SYMBOL_SPEC}
+for part in PARTS:
+    SYMBOL_BY_REF[part.ref] = REVIEW_SYMBOL_NAME
 
 
 def footprint_library_path(lib: str) -> Path:
@@ -669,32 +1035,49 @@ def write_tables() -> None:
     )
 
 
-def arch_symbol_def() -> str:
-    return """  (symbol "ARCH_BLOCK"
+def symbol_def(spec: SymbolSpec) -> str:
+    pin_lines = []
+    for pin in spec.pins:
+        hidden = ' (hide yes)' if pin.name.startswith("NC") else ""
+        pin_lines.append(
+            f"""      (pin {pin.electrical} line (at {pin.x} {pin.y} {pin.rotation}) (length 2.54){hidden}
+        (name "{esc(pin.name)}" (effects (font (size 1.0 1.0))))
+        (number "{esc(pin.number)}" (effects (font (size 1.0 1.0))))
+      )"""
+        )
+    return f"""  (symbol "{spec.name}"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
     (on_board yes)
-    (property "Reference" "U" (at -10.16 -7.62 0)
+    (property "Reference" "{spec.reference}" (at {-spec.width / 2} {-spec.height / 2 - 3.81} 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "ARCH_BLOCK" (at 0 7.62 0)
+    (property "Value" "{esc(spec.value)}" (at {-spec.width / 2} {spec.height / 2 + 3.81} 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "" (at 0 10.16 0)
+    (property "Footprint" "" (at 0 {spec.height / 2 + 6.35} 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (property "Datasheet" "" (at 0 12.7 0)
+    (property "Datasheet" "" (at 0 {spec.height / 2 + 8.89} 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (symbol "ARCH_BLOCK_1_1"
-      (rectangle (start -12.7 -5.08) (end 12.7 5.08)
+    (property "Description" "{esc(spec.description)}" (at 0 {spec.height / 2 + 11.43} 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (symbol "{spec.name}_1_1"
+      (rectangle (start {-spec.width / 2} {spec.height / 2}) (end {spec.width / 2} {-spec.height / 2})
         (stroke (width 0.15) (type default))
-        (fill (type background))
+        (fill (type none))
       )
+{chr(10).join(pin_lines)}
     )
     (embedded_fonts no)
   )"""
+
+
+def arch_symbol_def() -> str:
+    return "\n".join(symbol_def(spec) for spec in SYMBOL_SPECS.values())
 
 
 def write_symbol_library() -> None:
@@ -738,13 +1121,94 @@ def sheet_block(sheet_name: str, sheet_file: str, x: float, y: float, page: str)
 """
 
 
+def root_text(text: str, x: float, y: float, size: float = 1.27, justify: str = "left bottom") -> str:
+    return f"""
+  (text "{esc(text)}" (at {x} {y} 0)
+    (effects (font (size {size} {size})) (justify {justify}))
+    (uuid "{uid('root-text:' + text + ':' + str(x) + ':' + str(y))}")
+  )
+"""
+
+
+def root_rect(name: str, x1: float, y1: float, x2: float, y2: float) -> str:
+    return f"""
+  (rectangle (start {x1} {y1}) (end {x2} {y2})
+    (stroke (width 0.15) (type solid))
+    (fill (type none))
+    (uuid "{uid('root-rect:' + name)}")
+  )
+"""
+
+
+def root_wire(name: str, x1: float, y1: float, x2: float, y2: float, width: float = 0.15) -> str:
+    return f"""
+  (polyline
+    (pts (xy {x1} {y1}) (xy {x2} {y2}))
+    (stroke (width {width}) (type solid))
+    (fill (type none))
+    (uuid "{uid('root-wire:' + name)}")
+  )
+"""
+
+
+def root_block(ref: str, title: str, x1: float, y1: float, x2: float, y2: float, lines: list[str]) -> str:
+    content = [root_rect(ref, x1, y1, x2, y2), root_text(f"{ref}  {title}", x1 + 2, y1 + 5, 1.35)]
+    for idx, line in enumerate(lines):
+        content.append(root_text(line, x1 + 2, y1 + 11 + idx * 5, 1.05))
+    return "".join(content)
+
+
+def root_gateway_overview() -> str:
+    by_ref = {part.ref: part for part in PARTS}
+    blocks = [
+        placed_part(by_ref["J1"], 25, 73),
+        placed_part(by_ref["U2"], 98, 72),
+        placed_part(by_ref["J2"], 178, 73),
+        placed_part(by_ref["U1"], 104, 139),
+        placed_part(by_ref["U4"], 37, 130),
+        placed_part(by_ref["U3"], 170, 134),
+        placed_part(by_ref["J3"], 235, 134),
+        placed_part(by_ref["J4"], 36, 28),
+        placed_part(by_ref["J5"], 18, 44),
+        placed_part(by_ref["U5"], 72, 33),
+        placed_part(by_ref["U6"], 105, 33),
+        placed_part(by_ref["U7"], 138, 33),
+        placed_part(by_ref["Q1"], 60, 98),
+        placed_part(by_ref["Y1"], 90, 116),
+        placed_part(by_ref["Y2"], 190, 163),
+    ]
+    wires = [
+        root_wire("server-data-path", 36.5, 73, 67.5, 73, 0.35),
+        root_wire("lan-data-path", 128.5, 73, 166.5, 73, 0.35),
+        root_wire("mcu-switch-control", 129.4, 139, 98, 102.5, 0.22),
+        root_wire("atecc-mcu-i2c", 45.9, 132.5, 78.6, 132.5, 0.18),
+        root_wire("mcu-mgmt-spi", 129.4, 145, 149.7, 145, 0.18),
+        root_wire("w5500-mgmt-rj45", 190.3, 134, 223.6, 134, 0.22),
+        root_wire("power-5v", 82.2, 38, 94.8, 38, 0.18),
+        root_wire("power-3v3", 115.2, 38, 128.0, 38, 0.18),
+        root_wire("reset-gate", 67.6, 100.5, 67.5, 90, 0.18),
+    ]
+    labels = [
+        root_text("SERVER 1000BASE-T pairs", 43, 66, 1.05),
+        root_text("Fail-closed L2 bridge: reset/policy fault = isolated", 126, 66, 1.05),
+        root_text("Switch SPI/I2C + reset/watchdog control", 116, 112, 1.05),
+        root_text("ATECC608C I2C trust anchor", 47, 125, 1.05),
+        root_text("Independent W5500 MGMT path", 186, 126, 1.05),
+        root_text("USB-C/DC power tree feeds 5V_SYS, 3V3 and gated SW_CORE", 45, 18, 1.05),
+        root_text("Root-resistant boundary: protected host root cannot change U2 forwarding without external gateway firmware + ATECC grant.", 15, 166, 1.45),
+        root_text("Strong state requires: external gateway online, policyDigest matched, firmwareDigest attested, SERVER/LAN links present, MGMT independent, bridge healthy.", 15, 175, 1.2),
+        root_text("Default state: isolated. Watchdog, policy mismatch, heartbeat loss, firmware mismatch or link fault returns SERVER <-> LAN/WAN to isolated.", 15, 183, 1.2),
+    ]
+    return "".join(blocks + wires + labels)
+
+
 def write_root_schematic() -> None:
     sheets = [
-        ("power-input", "power-input.kicad_sch", 20.32, 25.4, "2"),
-        ("mcu-secure", "mcu-secure.kicad_sch", 20.32, 68.58, "3"),
-        ("switch-data-plane", "switch-data-plane.kicad_sch", 139.7, 25.4, "4"),
-        ("mgmt-ethernet", "mgmt-ethernet.kicad_sch", 139.7, 68.58, "5"),
-        ("ui-debug", "ui-debug.kicad_sch", 80.01, 111.76, "6"),
+        ("power-input", "power-input.kicad_sch", 15, 190, "2"),
+        ("mcu-secure", "mcu-secure.kicad_sch", 15, 233, "3"),
+        ("switch-data-plane", "switch-data-plane.kicad_sch", 128, 190, "4"),
+        ("mgmt-ethernet", "mgmt-ethernet.kicad_sch", 128, 233, "5"),
+        ("ui-debug", "ui-debug.kicad_sch", 241, 190, "6"),
     ]
     SCH_PATH.write_text(
         f"""(kicad_sch
@@ -760,11 +1224,17 @@ def write_root_schematic() -> None:
     (comment 1 "Root-resistant final defense: external transparent network isolation gateway")
     (comment 2 "SERVER and LAN/WAN are the protected 1GbE bridge; MGMT is independent")
   )
-  (lib_symbols)
+  (lib_symbols
+{arch_symbol_def()}
+  )
+{root_gateway_overview()}
 {''.join(sheet_block(*s) for s in sheets)}
   (text "Fail-closed hardware boundary: SERVER <-> LAN/WAN forwarding is disabled until ESP32-S3 verifies signed local policy, ATECC608C identity, firmware digest, independent management path and link state." (at 20.32 158.75 0)
     (effects (font (size 1.8 1.8)) (justify left bottom))
     (uuid "{uid('root-note-1')}")
+  )
+  (sheet_instances
+    (path "/" (page "1"))
   )
   (embedded_fonts no)
 )
@@ -773,17 +1243,27 @@ def write_root_schematic() -> None:
     )
 
 
-def symbol_instance(ref: str, value: str, footprint: str, x: float, y: float) -> str:
+def symbol_instance(ref: str, value: str, footprint: str, x: float, y: float, context: str = "root") -> str:
+    part = next(p for p in PARTS if p.ref == ref)
+    symbol_name = SYMBOL_BY_REF[ref]
+    symbol_uuid = part.path_uuid if context == "root" else uid(f"{context}:sym:{ref}")
+    pin_entries = []
+    for pin in SYMBOL_SPECS[symbol_name].pins:
+        pin_entries.append(
+            f"""    (pin "{esc(pin.number)}"
+      (uuid "{uid(context + ':pin:' + ref + ':' + pin.number)}")
+    )"""
+        )
     return f"""
   (symbol
-    (lib_id "{PROJECT_NAME}:ARCH_BLOCK")
+    (lib_id "{PROJECT_NAME}:{symbol_name}")
     (at {x} {y} 0)
     (unit 1)
     (exclude_from_sim no)
     (in_bom yes)
     (on_board yes)
     (dnp no)
-    (uuid "{uid('sheet-sym:' + ref)}")
+    (uuid "{symbol_uuid}")
     (property "Reference" "{ref}" (at {x - 10.16} {y - 7.62} 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -793,9 +1273,10 @@ def symbol_instance(ref: str, value: str, footprint: str, x: float, y: float) ->
     (property "Footprint" "{esc(footprint)}" (at {x} {y + 10.16} 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
+{chr(10).join(pin_entries)}
     (instances
       (project "{PROJECT_NAME}"
-        (path "/{uid('schematic-root')}/{uid('sheet-sym:' + ref)}"
+        (path "/{uid('schematic-root')}/{symbol_uuid}"
           (reference "{ref}") (unit 1)
         )
       )
@@ -822,6 +1303,246 @@ def wire(x1: float, y1: float, x2: float, y2: float) -> str:
     (uuid "{uid('wire:' + str((x1, y1, x2, y2)))}")
   )
 """
+
+
+def global_label(name: str, x: float, y: float, angle: int = 0, shape: str = "bidirectional") -> str:
+    return f"""
+  (global_label "{esc(name)}"
+    (shape {shape})
+    (at {x} {y} {angle})
+    (fields_autoplaced yes)
+    (effects (font (size 1 1)) (justify left))
+    (uuid "{uid('global-label:' + name + ':' + str(x) + ':' + str(y) + ':' + str(angle))}")
+  )
+"""
+
+
+def no_connect(x: float, y: float) -> str:
+    return f"""
+  (no_connect
+    (at {x} {y})
+    (uuid "{uid('no-connect:' + str(x) + ':' + str(y))}")
+  )
+"""
+
+
+def symbol_pin_abs(pin: SymbolPin, x: float, y: float) -> tuple[float, float]:
+    # KiCad symbol-local Y increases upward, while schematic page Y increases
+    # downward. Pin connection coordinates therefore mirror local Y.
+    return (round(x + pin.x, 2), round(y - pin.y, 2))
+
+
+def pin_stub_end(pin: SymbolPin, x: float, y: float, length: float = 5.08) -> tuple[float, float]:
+    px, py = symbol_pin_abs(pin, x, y)
+    if pin.rotation == 0:
+        return (round(px - length, 2), py)
+    if pin.rotation == 180:
+        return (round(px + length, 2), py)
+    if pin.rotation == 90:
+        return (px, round(py + length, 2))
+    if pin.rotation == 270:
+        return (px, round(py - length, 2))
+    return (px, py)
+
+
+def schematic_label_for_pin(part: Part, pin: SymbolPin) -> str | None:
+    ref = part.ref
+    name = pin.name
+    if name.startswith("NC") or ref.startswith("MH"):
+        return None
+    if name in {"GND", "SHIELD"}:
+        return "GND"
+    if name in {"3V3", "VCC", "3V3_IO", "VDD"}:
+        return "3V3"
+    if name in {"VBUS", "VIN"}:
+        return "VBUS_RAW" if ref == "J4" else "5V_SYS"
+    if name == "VOUT":
+        if ref == "U5":
+            return "5V_SYS"
+        if ref == "U6":
+            return "3V3"
+        if ref == "U7":
+            return "SW_CORE"
+    if ref == "J5":
+        return "DC_IN" if name == "DC_IN+" else "GND"
+    if ref == "U2":
+        ksz = {
+            "P1_MDI0+": "SERVER_MDI0_P",
+            "P1_MDI0-": "SERVER_MDI0_N",
+            "P1_MDI1+": "SERVER_MDI1_P",
+            "P1_MDI1-": "SERVER_MDI1_N",
+            "P1_MDI2+": "SERVER_MDI2_P",
+            "P1_MDI2-": "SERVER_MDI2_N",
+            "P1_MDI3+": "SERVER_MDI3_P",
+            "P1_MDI3-": "SERVER_MDI3_N",
+            "P2_MDI0+": "LANWAN_MDI0_P",
+            "P2_MDI0-": "LANWAN_MDI0_N",
+            "P2_MDI1+": "LANWAN_MDI1_P",
+            "P2_MDI1-": "LANWAN_MDI1_N",
+            "P2_MDI2+": "LANWAN_MDI2_P",
+            "P2_MDI2-": "LANWAN_MDI2_N",
+            "P2_MDI3+": "LANWAN_MDI3_P",
+            "P2_MDI3-": "LANWAN_MDI3_N",
+            "SPI_CS_N": "SW_SPI_CS",
+            "RESET_N": "SW_RESET_N",
+            "LINK_P1": "SERVER_LINK",
+            "LINK_P2": "LAN_LINK",
+            "XTAL1": "SW_XTAL1",
+            "XTAL2": "SW_XTAL2",
+            "SW_CORE": "SW_CORE",
+        }
+        return ksz.get(name, name if name.startswith("SPI_") else None)
+    if ref == "J1":
+        return {
+            "MDI0+": "SERVER_MDI0_P",
+            "MDI0-": "SERVER_MDI0_N",
+            "MDI1+": "SERVER_MDI1_P",
+            "MDI1-": "SERVER_MDI1_N",
+            "MDI2+": "SERVER_MDI2_P",
+            "MDI2-": "SERVER_MDI2_N",
+            "MDI3+": "SERVER_MDI3_P",
+            "MDI3-": "SERVER_MDI3_N",
+            "LED_LINK+": "3V3",
+            "LED_LINK-": "SERVER_LINK_LED",
+            "LED_ACT+": "3V3",
+            "LED_ACT-": "SERVER_ACT_LED",
+        }.get(name)
+    if ref == "J2":
+        return {
+            "MDI0+": "LANWAN_MDI0_P",
+            "MDI0-": "LANWAN_MDI0_N",
+            "MDI1+": "LANWAN_MDI1_P",
+            "MDI1-": "LANWAN_MDI1_N",
+            "MDI2+": "LANWAN_MDI2_P",
+            "MDI2-": "LANWAN_MDI2_N",
+            "MDI3+": "LANWAN_MDI3_P",
+            "MDI3-": "LANWAN_MDI3_N",
+            "LED_LINK+": "3V3",
+            "LED_LINK-": "LAN_LINK_LED",
+            "LED_ACT+": "3V3",
+            "LED_ACT-": "LAN_ACT_LED",
+        }.get(name)
+    if ref == "J3":
+        return {
+            "TX+": "MGMT_TX_P",
+            "TX-": "MGMT_TX_N",
+            "RX+": "MGMT_RX_P",
+            "RX-": "MGMT_RX_N",
+            "LED_LINK+": "3V3",
+            "LED_LINK-": "MGMT_LINK",
+            "LED_ACT+": "3V3",
+            "LED_ACT-": "MGMT_ACT_LED",
+        }.get(name)
+    if ref == "U3":
+        return {
+            "TXP": "MGMT_TX_P",
+            "TXN": "MGMT_TX_N",
+            "RXP": "MGMT_RX_P",
+            "RXN": "MGMT_RX_N",
+            "SCSn": "MGMT_SPI_CS",
+            "SCLK": "SPI_SCK",
+            "MOSI": "SPI_MOSI",
+            "MISO": "SPI_MISO",
+            "INTn": "MGMT_INT_N",
+            "RSTn": "MGMT_RESET_N",
+            "LINKLED": "MGMT_LINK",
+            "XTAL1": "MGMT_XTAL1",
+            "XTAL2": "MGMT_XTAL2",
+        }.get(name)
+    if ref == "U4":
+        return {"SCL": "I2C_SCL", "SDA": "I2C_SDA"}.get(name)
+    if ref == "U1":
+        return {
+            "EN": "ESP_EN",
+            "GPIO0_BOOT": "BOOT0",
+            "GPIO15_BTN_CONFIRM": "BTN_CONFIRM",
+            "GPIO16_BTN_CANCEL": "BTN_CANCEL",
+            "GPIO21_BTN_RECOVERY": "BTN_RECOVERY",
+            "USB_D+": "USB_D_P",
+            "USB_D-": "USB_D_N",
+        }.get(
+            name,
+            name
+            if name
+            in {
+                "I2C_SCL",
+                "I2C_SDA",
+                "SPI_SCK",
+                "SPI_MOSI",
+                "SPI_MISO",
+                "SW_SPI_CS",
+                "MGMT_SPI_CS",
+                "SW_RESET_N",
+                "WATCHDOG_FAIL_N",
+                "SERVER_LINK",
+                "LAN_LINK",
+                "MGMT_LINK",
+                "LED_ISOLATED",
+                "LED_ARMED",
+                "LED_RELEASED",
+                "LED_FAULT",
+            }
+            else None,
+        )
+    if ref == "Q1":
+        return {"GATE": "WATCHDOG_FAIL_N", "SOURCE": "GND", "DRAIN": "SW_RESET_N"}.get(name)
+    if ref == "Y1":
+        return {"X1": "SW_XTAL1", "X2": "SW_XTAL2", "GND": "GND"}.get(name)
+    if ref == "Y2":
+        return {"X1": "MGMT_XTAL1", "X2": "MGMT_XTAL2", "GND": "GND"}.get(name)
+    if ref.startswith("SW"):
+        return {"SW1": "BTN_CONFIRM", "SW2": "BTN_CANCEL", "SW3": "BTN_RECOVERY"}.get(ref) if name == "A" else "GND"
+    if ref.startswith("D"):
+        led = {
+            "D1": "LED_PWR",
+            "D2": "LED_SECURE",
+            "D3": "LED_ISOLATED",
+            "D4": "LED_ARMED",
+            "D5": "LED_RELEASED",
+            "D6": "LED_FAULT",
+        }.get(ref, f"{ref}_LED")
+        return led if name == "A" else "GND"
+    if ref.startswith("TP"):
+        return part.value
+    if ref == "J4":
+        return {"D+": "USB_D_P", "D-": "USB_D_N", "CC1": "USB_CC1", "CC2": "USB_CC2"}.get(name)
+    return None
+
+
+def pin_label_graphics(part: Part, x: float, y: float, context: str = "root") -> str:
+    if part.ref in {"J1", "J2", "U2", "J3", "U3", "U1", "U4", "Q1", "J4", "J5", "U5", "U6", "U7"}:
+        block_nets: dict[str, list[str]] = {
+            "J1": ["SERVER_MDI", "SERVER_LINK", "GND", "3V3"],
+            "J2": ["LANWAN_MDI", "LAN_LINK", "GND", "3V3"],
+            "U2": ["SERVER_MDI", "LANWAN_MDI", "SW_SPI/RESET", "SW_CORE/3V3"],
+            "J3": ["MGMT_MDI", "MGMT_LINK", "GND", "3V3"],
+            "U3": ["MGMT_MDI", "MGMT_SPI", "MGMT_XTAL", "3V3/GND"],
+            "U1": ["I2C/SPI", "SW_RESET_N", "UI_LINKS", "3V3/GND"],
+            "U4": ["I2C_SCL", "I2C_SDA", "3V3", "GND"],
+            "Q1": ["WATCHDOG_FAIL_N", "SW_RESET_N", "GND", "FAIL_CLOSED"],
+            "J4": ["VBUS_RAW", "USB_D_P/N", "USB_CC", "GND"],
+            "J5": ["DC_IN", "GND", "EXT_DC_PRESENT", "CHASSIS"],
+            "U5": ["DC_IN/VBUS", "5V_SYS", "EN", "GND"],
+            "U6": ["5V_SYS", "3V3", "EN", "GND"],
+            "U7": ["5V_SYS", "SW_CORE", "WATCHDOG", "GND"],
+        }
+        nets = block_nets[part.ref]
+    elif part.ref.startswith("SW"):
+        nets = [part.value.upper(), "GND", "BTN_INPUT", "DEBOUNCE"]
+    elif part.ref.startswith("D"):
+        nets = [part.value.upper(), "GND", "LED_STATUS", "3V3"]
+    elif part.ref.startswith("TP"):
+        nets = [part.value, "PROBE", "GND_REF", "DNP"]
+    else:
+        nets = ["MECH", "GND", "DNP", "DNP"]
+    graphics = []
+    for idx, net in enumerate(nets):
+        graphics.append(label(net, x - 14, y - 4 + idx * 2.6))
+    return "".join(graphics)
+
+
+def placed_part(part: Part, x: float, y: float, context: str = "root") -> str:
+    return symbol_instance(part.ref, part.value, part.footprint, x, y, context) + pin_label_graphics(part, x, y, context)
 
 
 SHEET_CONTENT = {
@@ -882,10 +1603,8 @@ def write_child_schematic(sheet_name: str, page: int) -> None:
     info = SHEET_CONTENT[sheet_name]
     part_objs = [p for p in PARTS if p.ref in info["parts"]]
     symbols = []
-    for idx, part in enumerate(part_objs[:12]):
-        x = 35 + (idx % 3) * 70
-        y = 48 + (idx // 3) * 35
-        symbols.append(symbol_instance(part.ref, part.value, part.footprint, x, y))
+    for idx, part in enumerate(part_objs[:18]):
+        symbols.append(label(f"{part.ref}: {part.value}", 25 + (idx % 2) * 120, 58 + (idx // 2) * 8))
     labels = []
     for idx, name in enumerate(info["labels"]):
         labels.append(label(name, 25 + (idx % 3) * 72, 150 + (idx // 3) * 10))

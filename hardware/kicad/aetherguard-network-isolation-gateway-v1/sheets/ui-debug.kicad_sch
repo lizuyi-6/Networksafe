@@ -11,28 +11,32 @@
     (comment 1 "AetherGuard Network Isolation Gateway v1A")
   )
   (lib_symbols
-  (symbol "ARCH_BLOCK"
+  (symbol "AG_REVIEW_BLOCK_4PIN"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
     (on_board yes)
-    (property "Reference" "U" (at -10.16 -7.62 0)
+    (property "Reference" "U" (at -15.24 -12.700000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "ARCH_BLOCK" (at 0 7.62 0)
+    (property "Value" "Review block" (at -15.24 12.700000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "" (at 0 10.16 0)
+    (property "Footprint" "" (at 0 15.24 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (property "Datasheet" "" (at 0 12.7 0)
+    (property "Datasheet" "" (at 0 17.78 0)
       (effects (font (size 1.27 1.27)) (hide yes))
     )
-    (symbol "ARCH_BLOCK_1_1"
-      (rectangle (start -12.7 -5.08) (end 12.7 5.08)
+    (property "Description" "Stable review symbol for KiCad ERC-safe architecture schematics." (at 0 20.32 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (symbol "AG_REVIEW_BLOCK_4PIN_1_1"
+      (rectangle (start -15.24 8.89) (end 15.24 -8.89)
         (stroke (width 0.15) (type default))
-        (fill (type background))
+        (fill (type none))
       )
+
     )
     (embedded_fonts no)
   )
@@ -42,328 +46,112 @@
     (uuid "b19d0ccf-3f0c-5781-a896-b6626dacc4bf")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "2836347f-4aec-5c86-9898-9ebbbd57cbf7")
-    (property "Reference" "SW1" (at 24.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "Confirm" (at 24.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Button_Switch_SMD:Panasonic_EVQPUJ_EVQPUA" (at 35 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/2836347f-4aec-5c86-9898-9ebbbd57cbf7"
-          (reference "SW1") (unit 1)
-        )
-      )
-    )
+  (text "SW1: Confirm"
+    (at 25 58 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "8a57eccd-6c6c-58ed-a3bf-155dd2f01664")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "1ee364fa-ee7c-55c1-8031-873c6a680724")
-    (property "Reference" "SW2" (at 94.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "Cancel" (at 94.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Button_Switch_SMD:Panasonic_EVQPUJ_EVQPUA" (at 105 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/1ee364fa-ee7c-55c1-8031-873c6a680724"
-          (reference "SW2") (unit 1)
-        )
-      )
-    )
+  (text "SW2: Cancel"
+    (at 145 58 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "de408647-ed78-502b-9d9c-5e2caa04d681")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 175 48 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "16389e8a-fd79-5c23-bc32-3c77da3f5cbd")
-    (property "Reference" "SW3" (at 164.84 40.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "Recovery" (at 164.84 55.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Button_Switch_SMD:Panasonic_EVQPUJ_EVQPUA" (at 175 58.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/16389e8a-fd79-5c23-bc32-3c77da3f5cbd"
-          (reference "SW3") (unit 1)
-        )
-      )
-    )
+  (text "SW3: Recovery"
+    (at 25 66 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "add90090-2700-5526-abf0-3c9739a80819")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 83 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "f04057ed-1320-5e61-b112-189c9c28d770")
-    (property "Reference" "D1" (at 24.84 75.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "PWR" (at 24.84 90.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "LED_SMD:LED_0603_1608Metric" (at 35 93.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/f04057ed-1320-5e61-b112-189c9c28d770"
-          (reference "D1") (unit 1)
-        )
-      )
-    )
+  (text "D1: PWR"
+    (at 145 66 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "6ebaa0f1-6d64-5615-9bc4-278064451cfd")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 83 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "61f6b835-2135-5ddb-804f-aa99eb3208b7")
-    (property "Reference" "D2" (at 94.84 75.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "SECURE" (at 94.84 90.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "LED_SMD:LED_0603_1608Metric" (at 105 93.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/61f6b835-2135-5ddb-804f-aa99eb3208b7"
-          (reference "D2") (unit 1)
-        )
-      )
-    )
+  (text "D2: SECURE"
+    (at 25 74 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "8e3d8945-a58a-5cec-8910-b8c62e609012")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 175 83 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "d57f5bf8-48e1-5f85-8f42-609dcab5d5fd")
-    (property "Reference" "D3" (at 164.84 75.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "ISOLATED" (at 164.84 90.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "LED_SMD:LED_0603_1608Metric" (at 175 93.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/d57f5bf8-48e1-5f85-8f42-609dcab5d5fd"
-          (reference "D3") (unit 1)
-        )
-      )
-    )
+  (text "D3: ISOLATED"
+    (at 145 74 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "b28ce434-c635-5b9f-9ae0-9e554ad98b47")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 118 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "57db525c-ccae-5ea7-8651-fa60618b979b")
-    (property "Reference" "D4" (at 24.84 110.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "ARMED" (at 24.84 125.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "LED_SMD:LED_0603_1608Metric" (at 35 128.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/57db525c-ccae-5ea7-8651-fa60618b979b"
-          (reference "D4") (unit 1)
-        )
-      )
-    )
+  (text "D4: ARMED"
+    (at 25 82 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "67dd07e3-0e41-5858-bc82-2139bb8fc693")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 118 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "77cabca5-c49d-5410-b0c3-0bd60926dbe0")
-    (property "Reference" "D5" (at 94.84 110.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "RELEASED" (at 94.84 125.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "LED_SMD:LED_0603_1608Metric" (at 105 128.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/77cabca5-c49d-5410-b0c3-0bd60926dbe0"
-          (reference "D5") (unit 1)
-        )
-      )
-    )
+  (text "D5: RELEASED"
+    (at 145 82 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "241dffcb-586a-5dc4-8203-1ea1886bbc90")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 175 118 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "c98b4f41-e96a-5e66-8320-9d0df95fddc4")
-    (property "Reference" "D6" (at 164.84 110.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "FAULT" (at 164.84 125.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "LED_SMD:LED_0603_1608Metric" (at 175 128.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/c98b4f41-e96a-5e66-8320-9d0df95fddc4"
-          (reference "D6") (unit 1)
-        )
-      )
-    )
+  (text "D6: FAULT"
+    (at 25 90 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "c4687b23-a595-5c14-9417-c1c3b84dd434")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 35 153 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "a1d6558b-0980-562a-9cb4-87031e22871e")
-    (property "Reference" "TP1" (at 24.84 145.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "TP_5V" (at 24.84 160.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm" (at 35 163.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/a1d6558b-0980-562a-9cb4-87031e22871e"
-          (reference "TP1") (unit 1)
-        )
-      )
-    )
+  (text "TP1: TP_5V"
+    (at 145 90 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "504ce8ca-0787-5cc3-848e-6bde9631db86")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 105 153 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "5ade4586-da44-5f26-a8e6-25ab81f7cb5f")
-    (property "Reference" "TP2" (at 94.84 145.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "TP_3V3" (at 94.84 160.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm" (at 105 163.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/5ade4586-da44-5f26-a8e6-25ab81f7cb5f"
-          (reference "TP2") (unit 1)
-        )
-      )
-    )
+  (text "TP2: TP_3V3"
+    (at 25 98 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "5a469afb-d2e5-50aa-992c-400b33ebdf97")
   )
 
-  (symbol
-    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
-    (at 175 153 0)
-    (unit 1)
-    (exclude_from_sim no)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "9ac2ab8c-b8ba-539e-b22b-60dd0deaea99")
-    (property "Reference" "TP3" (at 164.84 145.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "TP_SW_CORE" (at 164.84 160.62 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm" (at 175 163.16 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "aetherguard-network-isolation-gateway-v1"
-        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/9ac2ab8c-b8ba-539e-b22b-60dd0deaea99"
-          (reference "TP3") (unit 1)
-        )
-      )
-    )
+  (text "TP3: TP_SW_CORE"
+    (at 145 98 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "abc3587f-adfe-5618-a1ac-cc31d46e8d24")
+  )
+
+  (text "TP4: TP_GND"
+    (at 25 106 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "a77d985a-8808-52b4-8f07-159fe22d303c")
+  )
+
+  (text "TP5: TP_I2C_SCL"
+    (at 145 106 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "66747f3d-714b-5bbc-850a-dcc2475b52ec")
+  )
+
+  (text "TP6: TP_I2C_SDA"
+    (at 25 114 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "7ae088c7-6428-5ae9-aedc-a765574ec98c")
+  )
+
+  (text "TP7: TP_SPI_SCK"
+    (at 145 114 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "2f58f72f-2168-5f9c-913c-dde41261da6a")
+  )
+
+  (text "TP8: TP_SPI_MOSI"
+    (at 25 122 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "24658f83-404a-5365-b717-5fdf6952d726")
+  )
+
+  (text "TP9: TP_SPI_MISO"
+    (at 145 122 0)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "471b2e96-e197-5dc6-b0d2-859490f7f35f")
   )
 
 
