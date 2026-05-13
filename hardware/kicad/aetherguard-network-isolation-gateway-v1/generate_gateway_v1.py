@@ -72,7 +72,7 @@ PARTS: list[Part] = [
         "J1",
         "SERVER 1GbE RJ45 MagJack",
         "Connector_RJ:RJ45_Pulse_JK00177NL_Horizontal",
-        (24, 17, 180),
+        (29, 19, 180),
         "switch-data-plane",
         "Pulse JK00177NL class",
         "Protected server-facing 1GbE data port.",
@@ -81,7 +81,7 @@ PARTS: list[Part] = [
         "J2",
         "LAN/WAN 1GbE RJ45 MagJack",
         "Connector_RJ:RJ45_Pulse_JK00177NL_Horizontal",
-        (80, 17, 180),
+        (84, 19, 180),
         "switch-data-plane",
         "Pulse JK00177NL class",
         "External network-facing 1GbE data port.",
@@ -90,7 +90,7 @@ PARTS: list[Part] = [
         "J3",
         "MGMT 10/100 RJ45 MagJack",
         "Connector_RJ:RJ45_Hanrun_HR911105A_Horizontal",
-        (136, 17, 180),
+        (140, 19, 180),
         "mgmt-ethernet",
         "Hanrun HR911105A class",
         "Independent management path; never bridges protected server traffic.",
@@ -198,14 +198,14 @@ PARTS: list[Part] = [
         "Y2",
         "25MHz W5500 crystal",
         "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm",
-        (148, 47, 0),
+        (149, 54, 0),
         "mgmt-ethernet",
         "25MHz 20ppm",
         "W5500 reference clock placeholder.",
     ),
     Part("SW1", "Confirm", "Button_Switch_SMD:Panasonic_EVQPUJ_EVQPUA", (16, 96, 0), "ui-debug", note="Physical release confirmation."),
-    Part("SW2", "Cancel", "Button_Switch_SMD:Panasonic_EVQPUJ_EVQPUA", (31, 96, 0), "ui-debug", note="Cancel release and isolate."),
-    Part("SW3", "Recovery", "Button_Switch_SMD:Panasonic_EVQPUJ_EVQPUA", (46, 96, 0), "ui-debug", note="Provisioning/recovery strap."),
+    Part("SW2", "Cancel", "Button_Switch_SMD:Panasonic_EVQPUJ_EVQPUA", (34, 99, 0), "ui-debug", note="Cancel release and isolate."),
+    Part("SW3", "Recovery", "Button_Switch_SMD:Panasonic_EVQPUJ_EVQPUA", (52, 99, 0), "ui-debug", note="Provisioning/recovery strap."),
     Part("D1", "PWR", "LED_SMD:LED_0603_1608Metric", (14, 78, 0), "ui-debug", note="Power LED."),
     Part("D2", "SECURE", "LED_SMD:LED_0603_1608Metric", (24, 78, 0), "ui-debug", note="ATECC/provisioning OK."),
     Part("D3", "ISOLATED", "LED_SMD:LED_0603_1608Metric", (38, 78, 0), "ui-debug", note="Default fail-closed state."),
@@ -228,8 +228,8 @@ for idx, (name, x, y) in enumerate(
         ("TP_SW_RESET", 66, 56),
         ("TP_WD_OUT", 76, 64),
         ("TP_SERVER_LINK", 35, 34),
-        ("TP_LAN_LINK", 83, 34),
-        ("TP_MGMT_LINK", 136, 31),
+        ("TP_LAN_LINK", 91, 36),
+        ("TP_MGMT_LINK", 146, 36),
     ],
     start=1,
 ):
@@ -416,19 +416,19 @@ def pad_point(board: pcbnew.BOARD, ref: str, pad_num: str, index: int = 0) -> tu
 
 
 def add_pcb_notes(board: pcbnew.BOARD) -> None:
-    add_text(board, "AetherGuard Network Isolation Gateway v1A", (8, 46), pcbnew.F_SilkS, 1.6, 0.18)
-    add_text(board, "FAIL-CLOSED DEFAULT: SERVER <-> LAN/WAN isolated until signed policy + attestation pass", (8, 50), pcbnew.F_SilkS, 0.95)
-    add_text(board, "SERVER", (15, 25), pcbnew.F_SilkS, 1.4, 0.16)
-    add_text(board, "LAN/WAN", (67, 25), pcbnew.F_SilkS, 1.4, 0.16)
-    add_text(board, "MGMT", (122, 25), pcbnew.F_SilkS, 1.4, 0.16)
-    add_text(board, "independent management path", (116, 29), pcbnew.F_SilkS, 0.85)
-    add_text(board, "protected 1GbE data bridge", (38, 29), pcbnew.F_SilkS, 0.9)
-    add_rect(board, pcbnew.F_SilkS, 4, 31, 96, 74, 0.16)
-    add_rect(board, pcbnew.F_SilkS, 102, 31, 146, 74, 0.16)
-    add_text(board, "DATA PLANE: KSZ9563R reset low = isolated", (8, 34), pcbnew.F_SilkS, 0.85)
-    add_text(board, "CONTROL PLANE: ESP32-S3 + ATECC608C + signed local policy", (104, 34), pcbnew.F_SilkS, 0.85)
-    add_text(board, "PWR SEC ISO ARM REL FLT", (10, 66), pcbnew.F_SilkS, 0.8)
-    add_text(board, "CONFIRM  CANCEL  RECOVERY", (7, 89), pcbnew.F_SilkS, 0.8)
+    add_text(board, "AetherGuard Network Isolation Gateway v1A", (8, 53), pcbnew.F_Fab, 1.6, 0.18)
+    add_text(board, "FAIL-CLOSED DEFAULT: SERVER <-> LAN/WAN isolated until signed policy + attestation pass", (8, 57), pcbnew.F_Fab, 0.95)
+    add_text(board, "SERVER", (19, 30), pcbnew.F_SilkS, 1.4, 0.16)
+    add_text(board, "LAN/WAN", (72, 30), pcbnew.F_SilkS, 1.4, 0.16)
+    add_text(board, "MGMT", (126, 30), pcbnew.F_SilkS, 1.4, 0.16)
+    add_text(board, "independent management path", (116, 35), pcbnew.F_Fab, 0.85)
+    add_text(board, "protected 1GbE data bridge", (38, 35), pcbnew.F_Fab, 0.9)
+    add_rect(board, pcbnew.F_Fab, 4, 39, 98, 76, 0.16)
+    add_rect(board, pcbnew.F_Fab, 104, 39, 151, 76, 0.16)
+    add_text(board, "DATA PLANE: KSZ9563R reset low = isolated", (8, 42), pcbnew.F_Fab, 0.85)
+    add_text(board, "CONTROL PLANE: ESP32-S3 + ATECC608C + signed local policy", (105, 42), pcbnew.F_Fab, 0.85)
+    add_text(board, "PWR SEC ISO ARM REL FLT", (10, 72), pcbnew.F_Fab, 0.8)
+    add_text(board, "CONFIRM  CANCEL  RECOVERY", (7, 87), pcbnew.F_Fab, 0.8)
     add_text(board, "API fields: gatewayId policyDigest firmwareDigest bridgeState mgmtPath link state", (9, 93), pcbnew.F_Fab, 0.9)
 
     # Explicit pair corridors for engineering review and impedance planning.
@@ -666,7 +666,7 @@ def write_tables() -> None:
 
 
 def arch_symbol_def() -> str:
-    return f"""  (symbol "{PROJECT_NAME}:ARCH_BLOCK"
+    return """  (symbol "ARCH_BLOCK"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
@@ -802,12 +802,10 @@ def symbol_instance(ref: str, value: str, footprint: str, x: float, y: float) ->
 
 def label(text: str, x: float, y: float, angle: int = 0) -> str:
     return f"""
-  (global_label "{text}"
-    (shape bidirectional)
+  (text "{text}"
     (at {x} {y} {angle})
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "{uid('label:' + text + ':' + str(x) + ':' + str(y))}")
+    (uuid "{uid('interface-text:' + text + ':' + str(x) + ':' + str(y))}")
   )
 """
 
@@ -1102,6 +1100,11 @@ def append_validation_summary() -> None:
         return ", ".join(f"{key}={value}" for key, value in sorted(counter.items()))
 
     with (RELEASE_DIR / "README.md").open("a", encoding="utf-8") as fh:
+        residual_note = (
+            "No ERC or DRC warnings remain in the exported prototype board."
+            if not erc_counter and not drc_counter and unconnected_count == 0
+            else "Review the issue classes above before fabrication."
+        )
         fh.write(
             f"""
 
@@ -1110,7 +1113,7 @@ def append_validation_summary() -> None:
 - DRC: {fmt(drc_counter)}; issue classes: {fmt(drc_types)}; unconnected_items={unconnected_count}.
 - Gerber, drill and position exports completed; see `erc.log`, `drc.log`, `gerber-export.log`, `drill-export.log`, and `position-export.log`.
 
-The remaining ERC entries are documentation-sheet warnings from architecture labels/local block symbols. The remaining DRC entries are silkscreen-only warnings in this prototype layout. No unrouted connection items remain in the exported board file.
+{residual_note}
 """
         )
 

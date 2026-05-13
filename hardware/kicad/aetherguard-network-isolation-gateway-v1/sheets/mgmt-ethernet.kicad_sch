@@ -11,7 +11,7 @@
     (comment 1 "AetherGuard Network Isolation Gateway v1A")
   )
   (lib_symbols
-  (symbol "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK"
+  (symbol "ARCH_BLOCK"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
@@ -124,52 +124,40 @@
   )
 
 
-  (global_label "MGMT_SPI_CS"
-    (shape bidirectional)
+  (text "MGMT_SPI_CS"
     (at 25 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "d076f6f7-dcdd-5794-8c73-c556824ef06b")
+    (uuid "e17b0046-4e92-589e-a3be-3bac79b64f0b")
   )
 
-  (global_label "SPI_SCK"
-    (shape bidirectional)
+  (text "SPI_SCK"
     (at 97 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "20a4da75-a0b2-5ee6-bebe-d9789082fb16")
+    (uuid "9d949edc-e34c-5cf1-9408-5bc12e87889d")
   )
 
-  (global_label "SPI_MOSI"
-    (shape bidirectional)
+  (text "SPI_MOSI"
     (at 169 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "02734411-9083-5275-860b-a83e5721941b")
+    (uuid "6a9f9551-94f0-5455-91ad-8fe4f108be1c")
   )
 
-  (global_label "SPI_MISO"
-    (shape bidirectional)
+  (text "SPI_MISO"
     (at 25 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "f2db75da-18d4-568b-92a0-006412f96725")
+    (uuid "b8e2aee1-ef47-5699-bb3c-05aa46fa865a")
   )
 
-  (global_label "MGMT_LINK"
-    (shape bidirectional)
+  (text "MGMT_LINK"
     (at 97 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "3dfd3f8d-20cf-54ba-abb9-394b1c71c5e6")
+    (uuid "c856dc72-388d-5c40-bf11-717d9d308674")
   )
 
-  (global_label "MGMT_INDEPENDENT"
-    (shape bidirectional)
+  (text "MGMT_INDEPENDENT"
     (at 169 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "0e4145f4-d1bc-5de5-9acc-b9d005fd3890")
+    (uuid "4ec6d0b6-f3f4-5960-be16-dfdc56dc0757")
   )
 
   (text "Signals above map to API/status fields: gatewayId, policyDigest, firmwareDigest, bridgeState, serverPortLink, lanPortLink, mgmtPath, lastAttestationAt." (at 20.32 175.26 0)

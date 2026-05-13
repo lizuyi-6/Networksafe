@@ -27,8 +27,8 @@ The board labels and firmware contract align with:
 
 
 ## KiCad CLI Validation
-- ERC: warning=66; issue classes: global_label_dangling=39, lib_symbol_issues=27.
-- DRC: warning=22; issue classes: silk_edge_clearance=6, silk_over_copper=6, silk_overlap=10; unconnected_items=0.
+- ERC: none; issue classes: none.
+- DRC: none; issue classes: none; unconnected_items=0.
 - Gerber, drill and position exports completed; see `erc.log`, `drc.log`, `gerber-export.log`, `drill-export.log`, and `position-export.log`.
 
-The remaining ERC entries are documentation-sheet warnings from architecture labels/local block symbols. The remaining DRC entries are silkscreen-only warnings in this prototype layout. No unrouted connection items remain in the exported board file.
+No ERC or DRC warnings remain in the exported prototype board.

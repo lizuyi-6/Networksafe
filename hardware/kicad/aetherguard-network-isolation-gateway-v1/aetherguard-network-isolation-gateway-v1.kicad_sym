@@ -2,7 +2,7 @@
   (version 20250114)
   (generator "aetherguard-gateway-generator")
   (generator_version "1.0")
-  (symbol "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK"
+  (symbol "ARCH_BLOCK"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)

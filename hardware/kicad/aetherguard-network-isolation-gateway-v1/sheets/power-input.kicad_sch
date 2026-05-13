@@ -11,7 +11,7 @@
     (comment 1 "AetherGuard Network Isolation Gateway v1A")
   )
   (lib_symbols
-  (symbol "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK"
+  (symbol "ARCH_BLOCK"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
@@ -178,60 +178,46 @@
   )
 
 
-  (global_label "VBUS_RAW"
-    (shape bidirectional)
+  (text "VBUS_RAW"
     (at 25 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "8ea46fb6-ef29-5e13-b8d4-cbe3440d12cb")
+    (uuid "398931b0-2c12-5c93-99ab-8ba2854fe049")
   )
 
-  (global_label "DC_IN"
-    (shape bidirectional)
+  (text "DC_IN"
     (at 97 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "b66c767f-6c3c-5e88-9779-de01ce5f2ec2")
+    (uuid "0e76fb13-57a3-5436-9122-aa34b2b83fcd")
   )
 
-  (global_label "5V_SYS"
-    (shape bidirectional)
+  (text "5V_SYS"
     (at 169 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "5a5d8cef-0ef6-5899-aa9d-8d1a6573d7f1")
+    (uuid "b43a15de-1ffc-555d-b588-dba99c40c5c5")
   )
 
-  (global_label "3V3"
-    (shape bidirectional)
+  (text "3V3"
     (at 25 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "88869d49-6b9c-5d8f-9e06-43b0cb55d874")
+    (uuid "7740d0c4-6290-5e6f-8406-6d0e58d0fd1b")
   )
 
-  (global_label "SW_CORE"
-    (shape bidirectional)
+  (text "SW_CORE"
     (at 97 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "fc19de9a-82f9-5a77-bb15-629c14e1eefa")
+    (uuid "bd4ba14b-4f46-5d40-a73c-a114627bbc3e")
   )
 
-  (global_label "EXT_DC_PRESENT"
-    (shape bidirectional)
+  (text "EXT_DC_PRESENT"
     (at 169 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "a516d048-7d15-53d1-b7aa-95fd71501944")
+    (uuid "9a5a7290-8909-5b34-9cb6-7a40b7efcf35")
   )
 
-  (global_label "GND"
-    (shape bidirectional)
+  (text "GND"
     (at 25 170 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "70ec0214-25be-5465-83a5-bb261d9d0072")
+    (uuid "be3ce617-c142-52b9-b696-8b97eb0efce2")
   )
 
   (text "Signals above map to API/status fields: gatewayId, policyDigest, firmwareDigest, bridgeState, serverPortLink, lanPortLink, mgmtPath, lastAttestationAt." (at 20.32 175.26 0)

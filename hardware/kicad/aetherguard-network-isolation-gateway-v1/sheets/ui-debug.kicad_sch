@@ -11,7 +11,7 @@
     (comment 1 "AetherGuard Network Isolation Gateway v1A")
   )
   (lib_symbols
-  (symbol "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK"
+  (symbol "ARCH_BLOCK"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
@@ -367,76 +367,58 @@
   )
 
 
-  (global_label "BTN_CONFIRM"
-    (shape bidirectional)
+  (text "BTN_CONFIRM"
     (at 25 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "4d6f5ed0-e794-501b-9b20-510654b7c725")
+    (uuid "a6492069-e564-5149-8c45-0ea5a2d0d0ef")
   )
 
-  (global_label "BTN_CANCEL"
-    (shape bidirectional)
+  (text "BTN_CANCEL"
     (at 97 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "d17c4e07-492c-574c-b21d-8c4d98e0aa16")
+    (uuid "88c7c486-be2d-50e8-8c07-9fa460a5fdab")
   )
 
-  (global_label "BTN_RECOVERY"
-    (shape bidirectional)
+  (text "BTN_RECOVERY"
     (at 169 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "6b8bbd04-a936-5ea7-afb2-7ae7c1f8da0a")
+    (uuid "5391a6a2-a362-51ad-8bdb-3e2a5f2a5e28")
   )
 
-  (global_label "LED_PWR"
-    (shape bidirectional)
+  (text "LED_PWR"
     (at 25 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "ba183938-317d-530a-820f-12ccca687dde")
+    (uuid "0383d58d-65dd-5157-97c4-89418efacece")
   )
 
-  (global_label "LED_SECURE"
-    (shape bidirectional)
+  (text "LED_SECURE"
     (at 97 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "a0ea75b5-5cae-5c7a-88db-3bb4275339d3")
+    (uuid "8f9d230c-0b70-508c-bec8-bb8cb81986d0")
   )
 
-  (global_label "LED_ISOLATED"
-    (shape bidirectional)
+  (text "LED_ISOLATED"
     (at 169 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "20bd3202-7634-5e00-b52f-adf8e46e1bc7")
+    (uuid "efb425a8-77e8-520e-bc60-0c9a33c59099")
   )
 
-  (global_label "LED_ARMED"
-    (shape bidirectional)
+  (text "LED_ARMED"
     (at 25 170 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "713f191b-40da-50a8-9681-f9c6ccff7efc")
+    (uuid "12be732f-f7b6-5225-9145-9e3eeb8bcdf6")
   )
 
-  (global_label "LED_RELEASED"
-    (shape bidirectional)
+  (text "LED_RELEASED"
     (at 97 170 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "d135ee33-1f66-5bf5-a9de-45881ff790a5")
+    (uuid "11938e88-be84-5a68-aa65-2bd0e731da89")
   )
 
-  (global_label "LED_FAULT"
-    (shape bidirectional)
+  (text "LED_FAULT"
     (at 169 170 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "6fc81329-debc-5e83-9a55-3b19a5d5fbad")
+    (uuid "bb3f62d3-6ef3-5ede-8251-b2fc7a866ece")
   )
 
   (text "Signals above map to API/status fields: gatewayId, policyDigest, firmwareDigest, bridgeState, serverPortLink, lanPortLink, mgmtPath, lastAttestationAt." (at 20.32 175.26 0)

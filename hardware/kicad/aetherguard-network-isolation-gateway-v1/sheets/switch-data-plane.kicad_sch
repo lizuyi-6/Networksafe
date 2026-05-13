@@ -11,7 +11,7 @@
     (comment 1 "AetherGuard Network Isolation Gateway v1A")
   )
   (lib_symbols
-  (symbol "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK"
+  (symbol "ARCH_BLOCK"
     (pin_names)
     (exclude_from_sim no)
     (in_bom yes)
@@ -178,68 +178,52 @@
   )
 
 
-  (global_label "SERVER_MDI0_P/N"
-    (shape bidirectional)
+  (text "SERVER_MDI0_P/N"
     (at 25 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "82d77c66-d8c7-54f9-b269-4fbdbd42878f")
+    (uuid "201a32bd-9607-552d-93ec-49b6fd01c539")
   )
 
-  (global_label "SERVER_MDI1_P/N"
-    (shape bidirectional)
+  (text "SERVER_MDI1_P/N"
     (at 97 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "fda749ec-980c-5462-b688-44b92ca1b371")
+    (uuid "81f81902-55b4-5c46-b8a0-a9d0d5f9ce07")
   )
 
-  (global_label "LANWAN_MDI0_P/N"
-    (shape bidirectional)
+  (text "LANWAN_MDI0_P/N"
     (at 169 150 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "861be244-98a1-5a59-a159-9d102de978f4")
+    (uuid "e9d11f6e-fee6-5bb8-906d-0987223fd315")
   )
 
-  (global_label "LANWAN_MDI1_P/N"
-    (shape bidirectional)
+  (text "LANWAN_MDI1_P/N"
     (at 25 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "1963fb22-20ec-5613-a845-a20213846960")
+    (uuid "74dabee9-6182-57f4-8c9e-3125d8cc21e3")
   )
 
-  (global_label "SW_RESET_N"
-    (shape bidirectional)
+  (text "SW_RESET_N"
     (at 97 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "8e10591f-f2ff-545d-90a7-c9e4f0f0d3bc")
+    (uuid "66d9aea7-3a63-5eab-9874-abd02b5f2584")
   )
 
-  (global_label "BRIDGE_RELEASE_EN"
-    (shape bidirectional)
+  (text "BRIDGE_RELEASE_EN"
     (at 169 160 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "b3120c52-07ff-5207-b794-072ad3690ae4")
+    (uuid "8afa1516-daaf-59ec-9278-2e6319cd08ca")
   )
 
-  (global_label "SERVER_LINK"
-    (shape bidirectional)
+  (text "SERVER_LINK"
     (at 25 170 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "54b58f5f-d7aa-5d18-b5df-a67f32d36050")
+    (uuid "99accb21-d8bb-544a-bc05-8bd17a9213bc")
   )
 
-  (global_label "LAN_LINK"
-    (shape bidirectional)
+  (text "LAN_LINK"
     (at 97 170 0)
-    (fields_autoplaced yes)
     (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "e4f06cdf-0381-576f-86b3-85b418348a2d")
+    (uuid "b0042a15-051f-5547-afa3-015bbaed0275")
   )
 
   (text "Signals above map to API/status fields: gatewayId, policyDigest, firmwareDigest, bridgeState, serverPortLink, lanPortLink, mgmtPath, lastAttestationAt." (at 20.32 175.26 0)
