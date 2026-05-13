@@ -28,6 +28,10 @@ NS = uuid.UUID("e246b2d0-e8da-48bd-b94f-d1c2962bdab6")
 KICAD_SHARE = Path(r"C:\Program Files\KiCad\9.0\share\kicad")
 KICAD_FOOTPRINTS = KICAD_SHARE / "footprints"
 KICAD_CLI = Path(r"C:\Program Files\KiCad\9.0\bin\kicad-cli.exe")
+COMPAT_GENERATOR_VERSION = "8.0"
+COMPAT_SYMBOL_LIB_VERSION = 20231120
+COMPAT_SCHEMATIC_VERSION = 20231120
+COMPAT_PCB_VERSION = 20240108
 
 BOARD_W = 160.0
 BOARD_H = 110.0
@@ -696,9 +700,9 @@ def arch_symbol_def() -> str:
 def write_symbol_library() -> None:
     SYM_PATH.write_text(
         f"""(kicad_symbol_lib
-  (version 20250114)
+  (version {COMPAT_SYMBOL_LIB_VERSION})
   (generator "aetherguard-gateway-generator")
-  (generator_version "1.0")
+  (generator_version "{COMPAT_GENERATOR_VERSION}")
 {arch_symbol_def()}
 )
 """,
@@ -744,9 +748,9 @@ def write_root_schematic() -> None:
     ]
     SCH_PATH.write_text(
         f"""(kicad_sch
-  (version 20250114)
+  (version {COMPAT_SCHEMATIC_VERSION})
   (generator "aetherguard-gateway-generator")
-  (generator_version "1.0")
+  (generator_version "{COMPAT_GENERATOR_VERSION}")
   (uuid "{uid('schematic-root')}")
   (paper "A3")
   (title_block
@@ -888,9 +892,9 @@ def write_child_schematic(sheet_name: str, page: int) -> None:
     note_text = "\\n".join(info["notes"])
     (SHEETS_DIR / f"{sheet_name}.kicad_sch").write_text(
         f"""(kicad_sch
-  (version 20250114)
+  (version {COMPAT_SCHEMATIC_VERSION})
   (generator "aetherguard-gateway-generator")
-  (generator_version "1.0")
+  (generator_version "{COMPAT_GENERATOR_VERSION}")
   (uuid "{uid('child:' + sheet_name)}")
   (paper "A3")
   (title_block
@@ -959,7 +963,7 @@ This release package is a board-fab engineering review prototype for the root-re
 - `release_temporary` may only be armed by firmware after signed local policy, ATECC608C identity, firmware digest, management independence and link-state checks pass.
 
 ## Deliverables
-- KiCad 9 project: `aetherguard-network-isolation-gateway-v1.kicad_pro`
+- KiCad 8-compatible project: `aetherguard-network-isolation-gateway-v1.kicad_pro`
 - PCB: board outline, three RJ45 ports, ESP32-S3-WROOM-1, ATECC608C, KSZ9563R, W5500, rails, UI, test points and fab notes.
 - Assembly: `bom-proto.csv`, `position-proto.csv`
 - Gerbers/drill are exported into `gerbers/` and `drill/` when KiCad CLI export succeeds.
@@ -1007,7 +1011,7 @@ Protected server NIC -> SERVER [AetherGuard Gateway] LAN/WAN -> network
 
 ## Prototype Files
 - `generate_gateway_v1.py`: deterministic KiCad/release generator.
-- `aetherguard-network-isolation-gateway-v1.kicad_pro`: KiCad 9 project.
+- `aetherguard-network-isolation-gateway-v1.kicad_pro`: KiCad 8-compatible project.
 - `aetherguard-network-isolation-gateway-v1.kicad_sch`: root schematic with five child sheets.
 - `aetherguard-network-isolation-gateway-v1.kicad_pcb`: board-fab review PCB.
 - `release/v1-proto/`: BOM, position file, export logs and fabrication outputs.
@@ -1118,6 +1122,22 @@ def append_validation_summary() -> None:
         )
 
 
+def normalize_compat_versions() -> None:
+    files = [SCH_PATH, SYM_PATH, *SHEETS_DIR.glob("*.kicad_sch")]
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        text = text.replace("(version 20250114)", f"(version {COMPAT_SCHEMATIC_VERSION})")
+        text = text.replace('(generator_version "1.0")', f'(generator_version "{COMPAT_GENERATOR_VERSION}")')
+        if path == SYM_PATH:
+            text = text.replace(f"(version {COMPAT_SCHEMATIC_VERSION})", f"(version {COMPAT_SYMBOL_LIB_VERSION})", 1)
+        path.write_text(text, encoding="utf-8")
+
+    pcb_text = PCB_PATH.read_text(encoding="utf-8")
+    pcb_text = pcb_text.replace("(version 20241229)", f"(version {COMPAT_PCB_VERSION})", 1)
+    pcb_text = pcb_text.replace('(generator_version "9.0")', f'(generator_version "{COMPAT_GENERATOR_VERSION}")', 1)
+    PCB_PATH.write_text(pcb_text, encoding="utf-8")
+
+
 def main() -> None:
     for d in (SHEETS_DIR, LOCAL_PRETTY, RELEASE_DIR, GERBER_DIR, DRILL_DIR, ASSEMBLY_DIR):
         d.mkdir(parents=True, exist_ok=True)
@@ -1125,6 +1145,7 @@ def main() -> None:
     write_project_file()
     write_schematics()
     pcbnew.SaveBoard(str(PCB_PATH), build_board())
+    normalize_compat_versions()
     write_release_files()
     write_readme()
     export_release()

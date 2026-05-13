@@ -9,7 +9,7 @@ This release package is a board-fab engineering review prototype for the root-re
 - `release_temporary` may only be armed by firmware after signed local policy, ATECC608C identity, firmware digest, management independence and link-state checks pass.
 
 ## Deliverables
-- KiCad 9 project: `aetherguard-network-isolation-gateway-v1.kicad_pro`
+- KiCad 8-compatible project: `aetherguard-network-isolation-gateway-v1.kicad_pro`
 - PCB: board outline, three RJ45 ports, ESP32-S3-WROOM-1, ATECC608C, KSZ9563R, W5500, rails, UI, test points and fab notes.
 - Assembly: `bom-proto.csv`, `position-proto.csv`
 - Gerbers/drill are exported into `gerbers/` and `drill/` when KiCad CLI export succeeds.

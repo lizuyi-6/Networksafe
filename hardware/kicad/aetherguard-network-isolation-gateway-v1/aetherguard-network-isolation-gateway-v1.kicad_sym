@@ -1,7 +1,7 @@
 (kicad_symbol_lib
-  (version 20250114)
+  (version 20231120)
   (generator "aetherguard-gateway-generator")
-  (generator_version "1.0")
+  (generator_version "8.0")
   (symbol "ARCH_BLOCK"
     (pin_names)
     (exclude_from_sim no)

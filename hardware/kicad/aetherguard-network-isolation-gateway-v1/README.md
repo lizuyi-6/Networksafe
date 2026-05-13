@@ -24,7 +24,7 @@ Protected server NIC -> SERVER [AetherGuard Gateway] LAN/WAN -> network
 
 ## Prototype Files
 - `generate_gateway_v1.py`: deterministic KiCad/release generator.
-- `aetherguard-network-isolation-gateway-v1.kicad_pro`: KiCad 9 project.
+- `aetherguard-network-isolation-gateway-v1.kicad_pro`: KiCad 8-compatible project.
 - `aetherguard-network-isolation-gateway-v1.kicad_sch`: root schematic with five child sheets.
 - `aetherguard-network-isolation-gateway-v1.kicad_pcb`: board-fab review PCB.
 - `release/v1-proto/`: BOM, position file, export logs and fabrication outputs.

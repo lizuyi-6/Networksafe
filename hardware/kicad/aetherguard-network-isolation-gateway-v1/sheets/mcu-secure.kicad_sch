@@ -1,7 +1,7 @@
 (kicad_sch
-  (version 20250114)
+  (version 20231120)
   (generator "aetherguard-gateway-generator")
-  (generator_version "1.0")
+  (generator_version "8.0")
   (uuid "087117f0-bfd8-51f9-b54a-a27046f20783")
   (paper "A3")
   (title_block
