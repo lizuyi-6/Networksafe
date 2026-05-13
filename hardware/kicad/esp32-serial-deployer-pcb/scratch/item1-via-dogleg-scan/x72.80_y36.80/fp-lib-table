@@ -1,3 +1,0 @@
-(fp_lib_table
-  (lib (name "esp32-serial-deployer-pcb") (type "KiCad") (uri "${KIPRJMOD}/esp32-serial-deployer-pcb.pretty") (options "") (descr "Local project footprints"))
-)

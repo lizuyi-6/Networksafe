@@ -95,6 +95,20 @@ yarn-error.log*
 /.trash_cleanup_*/
 /deployment/backend/
 /deployment/frontend/
+/output/
+/outputs/
+/docs/generated/
+/hardware/kicad/**/scratch/
+/hardware/kicad/**/reports/probe-*
+/hardware/kicad/**/reports/probe*.json
+/hardware/kicad/**/*.dsn
+/hardware/kicad/**/*.ses
+/hardware/kicad/**/*.lck
+/hardware/kicad/**/~*.lck
+/hardware/factory/**/pcb/exports/drill/
+/hardware/factory/**/pcb/exports/gerber/
+/hardware/factory/**/pcb/exports/position.csv
+/backend/test-data/artifacts/
 
 # Temporary files
 tmp/

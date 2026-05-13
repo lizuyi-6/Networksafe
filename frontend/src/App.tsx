@@ -80,6 +80,17 @@ import DeploymentRuns from './pages/DeploymentRuns';
 import DeploymentEvidence from './pages/DeploymentEvidence';
 import XiongcaiFinalDeck from './pages/XiongcaiFinalDeck';
 
+const SHOW_PITCH_ROUTES = import.meta.env.VITE_ENABLE_PITCH_ROUTES === 'true';
+const STANDALONE_ROUTES = new Set([
+    '/',
+    '/login',
+    '/privacy',
+    '/terms',
+    '/promo',
+    '/promo-film',
+    ...(SHOW_PITCH_ROUTES ? ['/aetherguard-deck', '/xiongcai-final'] : [])
+]);
+
 const ADMIN_ROLES = new Set(['admin', 'platform_admin']);
 const GOVERNANCE_ROLES = new Set(['admin', 'platform_admin', 'tenant_admin', 'auditor']);
 const isAdminRole = (role?: string | null) => ADMIN_ROLES.has(String(role || ''));
@@ -190,7 +201,7 @@ const Sidebar = () => {
     });
 
     // Don't show sidebar on standalone public pages
-    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film' || location.pathname === '/aetherguard-deck' || location.pathname === '/xiongcai-final') return null;
+    if (STANDALONE_ROUTES.has(location.pathname)) return null;
 
     const platformItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
@@ -494,7 +505,7 @@ const Header = () => {
     };
 
     // Don't show header on standalone public pages
-    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film' || location.pathname === '/aetherguard-deck' || location.pathname === '/xiongcai-final') return null;
+    if (STANDALONE_ROUTES.has(location.pathname)) return null;
 
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-border/50 bg-background px-3 md:px-6">
@@ -608,8 +619,8 @@ const AnimatedRoutes = () => {
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
                 <Route path="/promo" element={<Promo />} />
                 <Route path="/promo-film" element={<PromoFilm />} />
-                <Route path="/aetherguard-deck" element={<XiongcaiFinalDeck />} />
-                <Route path="/xiongcai-final" element={<Navigate to="/aetherguard-deck" replace />} />
+                <Route path="/aetherguard-deck" element={SHOW_PITCH_ROUTES ? <XiongcaiFinalDeck /> : <Navigate to="/dashboard" replace />} />
+                <Route path="/xiongcai-final" element={<Navigate to={SHOW_PITCH_ROUTES ? '/aetherguard-deck' : '/dashboard'} replace />} />
                 <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
                 <Route path="/privacy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
                 <Route path="/terms" element={<PageWrapper><TermsOfService /></PageWrapper>} />
@@ -662,15 +673,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
 
     // Standalone pages that manage their own layout/theme
-    const isStandalone =
-        location.pathname === '/' ||
-        location.pathname === '/login' ||
-        location.pathname === '/privacy' ||
-        location.pathname === '/terms' ||
-        location.pathname === '/promo' ||
-        location.pathname === '/promo-film' ||
-        location.pathname === '/aetherguard-deck' ||
-        location.pathname === '/xiongcai-final';
+    const isStandalone = STANDALONE_ROUTES.has(location.pathname);
 
     if (isStandalone) {
         return <>{children}</>;
