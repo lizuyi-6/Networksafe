@@ -12,6 +12,7 @@ import { postgresShadowStoreService } from '../../services/postgres-shadow-store
 import { auditSegmentService } from '../../services/audit-segment.service';
 import { benchmarkService } from '../../services/benchmark.service';
 import { deviceControlService } from '../../services/device-control.service';
+import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { getDeviceById } from '../../services/device-registry.service';
 import {
     deleteAdminApiKey,
@@ -271,16 +272,40 @@ router.post('/devices/:id/ota', authenticate, requireRole('admin'), async (req: 
             return sendError(res, 400, { code: 'FIRMWARE_ID_REQUIRED', message: 'backend.firmware_id_required' });
         }
 
-        const job = await deviceControlService.triggerOta({
-            tenantId: resolveTenantOrPlatform(req),
+        const firmware = deviceControlService.getFirmware(firmwareId);
+        if (!firmware) {
+            return sendError(res, 404, { code: 'FIRMWARE_NOT_FOUND', message: 'backend.firmware_not_found' });
+        }
+
+        const result = await commandDispatcherService.dispatchDeviceCommand({
             deviceId: req.params.id,
-            firmwareId,
-            actorId: req.user?.userId || 'unknown',
-            actorEmail: req.user?.email,
-            actorIp: req.ip
+            commandType: 'ota_update',
+            payload: {
+                firmwareId: firmware.id,
+                version: firmware.version,
+                channel: firmware.channel,
+                artifactRef: firmware.artifactRef,
+                artifactLocation: firmware.artifactLocation,
+                fileName: firmware.fileName
+            },
+            actor: {
+                tenantId: resolveTenantOrPlatform(req),
+                userId: req.user?.userId || 'unknown',
+                email: req.user?.email,
+                ip: req.ip
+            }
         });
 
-        return sendSuccess(res, job, { legacy: { actionId: job?.id } });
+        if (!result.success && result.status === 'failed') {
+            return sendError(res, result.reason === 'hardware_gate_unavailable' ? 503 : 400, {
+                code: result.reason === 'hardware_gate_unavailable' ? 'HARDWARE_GATE_UNAVAILABLE' : 'OTA_TRIGGER_FAILED',
+                message: result.message
+            }, {
+                legacy: { actionId: result.actionId, status: result.status, confirmationSessionId: result.confirmationSessionId || null }
+            });
+        }
+
+        return sendSuccess(res, result, { legacy: { actionId: result.actionId, status: result.status, message: result.message } });
     } catch (error: any) {
         return sendError(res, 500, { code: 'OTA_TRIGGER_FAILED', message: error?.message || 'backend.failed_to_trigger_ota' });
     }
@@ -294,17 +319,36 @@ router.post('/devices/:id/confirm-required-action', authenticate, requireRole('a
         }
 
         const commandType = String(req.body?.commandType || 'reboot').trim();
-        const session = await deviceControlService.createPhysicalConfirmation({
-            tenantId: resolveTenantOrPlatform(req),
+        const result = await commandDispatcherService.dispatchDeviceCommand({
             deviceId: req.params.id,
             commandType,
             payload: req.body?.payload && typeof req.body.payload === 'object' ? req.body.payload : {},
-            actorId: req.user?.userId || 'unknown',
-            actorEmail: req.user?.email,
-            actorIp: req.ip
+            actor: {
+                tenantId: resolveTenantOrPlatform(req),
+                userId: req.user?.userId || 'unknown',
+                email: req.user?.email,
+                ip: req.ip
+            }
         });
 
-        return sendSuccess(res, session, { legacy: { actionId: session?.id } });
+        const statusCode = result.success ? 200 : result.reason === 'device_not_available' ? 404 : result.reason === 'hardware_gate_unavailable' ? 503 : 400;
+        if (!result.success) {
+            return sendError(res, statusCode, {
+                code: String(result.reason || 'CONFIRMATION_SESSION_FAILED').replace(/[^A-Za-z0-9]+/g, '_').toUpperCase(),
+                message: result.message
+            }, {
+                legacy: { actionId: result.actionId, status: result.status, confirmationSessionId: result.confirmationSessionId || null }
+            });
+        }
+
+        return sendSuccess(res, result, {
+            legacy: {
+                actionId: result.actionId,
+                status: result.status,
+                confirmationSessionId: result.confirmationSessionId || null,
+                message: result.message
+            }
+        });
     } catch (error: any) {
         return sendError(res, 500, { code: 'CONFIRMATION_SESSION_FAILED', message: error?.message || 'backend.failed_to_create_confirmation_session' });
     }

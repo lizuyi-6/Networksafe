@@ -1,0 +1,219 @@
+================================================================================
+AetherGuard ESP32 Physical Confirmation Gate
+Schematic Sheet 4: User Interface Peripherals
+Task 3.1 — SSD1306 OLED I2C interface
+Task 3.2 — Three user buttons (OK, Next, Back)
+Task 3.3 — RGB LED circuit and buzzer circuit
+Requirements: 6.1, 6.2, 6.4, 6.8, 7.1, 7.2, 7.3, 8.1, 8.3, 8.4, 9.1, 9.2, 9.3, 9.4
+================================================================================
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION A: SSD1306 OLED I2C Interface — Task 3.1
+═══════════════════════════════════════════════════════════════════════════════
+
+COMPONENTS
+----------
+D1   SSD1306 0.96" OLED module connector (4-pin 2.54 mm header or ZIF)
+     Pin assignments:
+       Pin 1: GND  → GND
+       Pin 2: VCC  → +3V3 rail
+       Pin 3: SCL  → I2C_SCL net (GPIO22)
+       Pin 4: SDA  → I2C_SDA net (GPIO21)
+     I2C address: 0x3C (SA0 pin on OLED module tied to GND — Requirement 6.4)
+
+R1   4.7 kΩ resistor (0402)
+     Net connections: one end → +3V3 rail, other end → I2C_SDA net
+     Purpose: I2C SDA pull-up to 3.3V (Requirement 6.2)
+
+R2   4.7 kΩ resistor (0402)
+     Net connections: one end → +3V3 rail, other end → I2C_SCL net
+     Purpose: I2C SCL pull-up to 3.3V (Requirement 6.2)
+
+I2C BUS ROUTING (Requirement 6.8)
+----------------------------------
+I2C_SDA : ESP32.GPIO21 → R1(pull-up) → D1.SDA
+I2C_SCL : ESP32.GPIO22 → R2(pull-up) → D1.SCL
+
+Routing constraints:
+  - Route SDA and SCL as parallel traces
+  - Spacing between SDA and SCL: ≥ 0.2 mm
+  - Total trace length: < 50 mm (from ESP32 GPIO to D1 connector)
+  - Trace width: 0.2 mm (standard signal trace)
+
+FIRMWARE CONFIGURATION
+----------------------
+  PIN_I2C_SDA        = 21    (config.h)
+  PIN_I2C_SCL        = 22    (config.h)
+  SCREEN_ADDRESS     = 0x3C  (config.h)
+  DISPLAY_I2C_CLOCK_HZ = 400000  (Fast Mode, config.h)
+
+PLACEMENT NOTE
+--------------
+  D1 connector: within 10 mm of board edge (Requirement 6.7 / 11.6)
+  This allows an enclosure window cutout for the OLED display
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION B: Three User Buttons — Task 3.2
+═══════════════════════════════════════════════════════════════════════════════
+
+COMPONENTS
+----------
+SW1  OK button (6×6 mm tactile switch, rated ≥ 100,000 cycles)
+     Net connections: one terminal → ESP32 GPIO18, other terminal → GND
+     Firmware: INPUT_PULLUP — no external pull-up resistor needed (Requirement 7.2)
+     Silkscreen: "OK" label adjacent to switch
+
+SW2  Next button (6×6 mm tactile switch, rated ≥ 100,000 cycles)
+     Net connections: one terminal → ESP32 GPIO19, other terminal → GND
+     Firmware: INPUT_PULLUP — no external pull-up resistor needed (Requirement 7.2)
+     Silkscreen: "NEXT" label adjacent to switch
+
+SW3  Back button (6×6 mm tactile switch, rated ≥ 100,000 cycles)
+     Net connections: one terminal → ESP32 GPIO23, other terminal → GND
+     Firmware: INPUT_PULLUP — no external pull-up resistor needed (Requirement 7.2)
+     Silkscreen: "BACK" label adjacent to switch
+
+GPIO SELECTION VERIFICATION (Requirement 7.3)
+----------------------------------------------
+  SW1 → GPIO18  ✓ (not a strapping pin)
+  SW2 → GPIO19  ✓ (not a strapping pin)
+  SW3 → GPIO23  ✓ (not a strapping pin)
+  Avoided: GPIO0, GPIO2, GPIO5, GPIO12, GPIO15 (all strapping pins)
+
+PLACEMENT NOTES (Requirement 7.4 / 11.7)
+-----------------------------------------
+  - All three buttons within 5 mm of board edge
+  - Spacing between adjacent buttons: ≥ 10 mm (prevents accidental simultaneous press)
+  - Suggested layout: SW1(OK) — SW2(NEXT) — SW3(BACK) left-to-right along bottom edge
+
+NETS
+----
+BTN_OK   : SW1 → ESP32.GPIO18 (INPUT_PULLUP)
+BTN_NEXT : SW2 → ESP32.GPIO19 (INPUT_PULLUP)
+BTN_BACK : SW3 → ESP32.GPIO23 (INPUT_PULLUP)
+GND      : SW1(−) → SW2(−) → SW3(−) → GND plane
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION C: RGB LED Circuit — Task 3.3 (part 1)
+═══════════════════════════════════════════════════════════════════════════════
+
+COMPONENTS
+----------
+LED1  Common-cathode RGB LED (5 mm through-hole or 0805 SMD)
+      Forward voltages: Red Vf ≈ 2.0V, Green Vf ≈ 3.0V, Blue Vf ≈ 3.0V
+      Pin assignments:
+        Red anode   → R3 → ESP32 GPIO25
+        Green anode → R4 → ESP32 GPIO26
+        Blue anode  → R5 → ESP32 GPIO27
+        Common cathode → GND
+
+R3   150 Ω resistor (0402)
+     Net: ESP32.GPIO25 → R3 → LED1.Red_Anode
+     Calculation: (3.3V - 2.0V) / 0.010A = 130Ω → selected 150Ω (Requirement 8.3)
+     Target current: ~8.7 mA (within GPIO safe limit of 12 mA)
+
+R4   33 Ω resistor (0402)
+     Net: ESP32.GPIO26 → R4 → LED1.Green_Anode
+     Calculation: (3.3V - 3.0V) / 0.010A = 30Ω → selected 33Ω (Requirement 8.4)
+     Target current: ~9.1 mA
+
+R5   33 Ω resistor (0402)
+     Net: ESP32.GPIO27 → R5 → LED1.Blue_Anode
+     Calculation: (3.3V - 3.0V) / 0.010A = 30Ω → selected 33Ω (Requirement 8.4)
+     Target current: ~9.1 mA
+
+FIRMWARE CONFIGURATION
+----------------------
+  PIN_RGB_RED      = 25  (config.h)
+  PIN_RGB_GREEN    = 26  (config.h)
+  PIN_RGB_BLUE     = 27  (config.h)
+  RGB_COMMON_ANODE = 0   (common-cathode: HIGH = on, config.h)
+
+COLOUR MAPPING (Requirement 8.5)
+---------------------------------
+  IDLE    : GPIO25=LOW,  GPIO26=LOW,  GPIO27=HIGH  → Blue
+  PENDING : GPIO25=HIGH, GPIO26=HIGH, GPIO27=LOW   → Yellow (blink 500/500ms)
+  OK      : GPIO25=LOW,  GPIO26=HIGH, GPIO27=LOW   → Green
+  ERROR   : GPIO25=HIGH, GPIO26=LOW,  GPIO27=LOW   → Red
+  BUSY    : GPIO25=HIGH, GPIO26=LOW,  GPIO27=HIGH  → Magenta
+
+PLACEMENT NOTE (Requirement 11.8)
+----------------------------------
+  LED1: within 5 mm of board edge (allows enclosure aperture)
+  Silkscreen: polarity marker for common cathode pin
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION D: Buzzer Circuit — Task 3.3 (part 2)
+═══════════════════════════════════════════════════════════════════════════════
+
+COMPONENTS
+----------
+BZ1  Active buzzer (3.3V, low-level triggered, ≥ 85 dB at 10 cm, through-hole)
+     Pin assignments:
+       Positive (+) → +3V3 rail
+       Negative (−) → Q1 collector
+     Silkscreen: polarity marker for positive terminal
+
+Q1   NPN transistor S8050 or 2N2222 (SOT-23)
+     Pin assignments (SOT-23: B=base, C=collector, E=emitter):
+       Base      → R6 → ESP32 GPIO14
+       Collector → BZ1 negative terminal
+       Emitter   → GND
+     Function: Drives buzzer current (up to 30 mA) without exceeding GPIO14 limit (Requirement 9.7)
+     Silkscreen: transistor orientation marker
+
+R6   1 kΩ resistor (0402)
+     Net: ESP32.GPIO14 → R6 → Q1.Base
+     Purpose: Base current limiting; ensures Q1 saturation (Requirement 9.2)
+     Base current: (3.3V - 0.7V) / 1000Ω ≈ 2.6 mA → sufficient for saturation
+
+D2   1N4148 fast switching diode (SOD-123)
+     Net connections: Anode → Q1.Collector (BZ1 negative), Cathode → +3V3 rail
+     Purpose: Flyback diode — suppresses inductive back-EMF from buzzer coil (Requirement 9.4)
+     Silkscreen: cathode band marker
+
+CIRCUIT OPERATION
+-----------------
+  GPIO14 HIGH → R6 → Q1 base → Q1 saturates → BZ1 negative pulled to GND → buzzer sounds
+  GPIO14 LOW  → Q1 off → BZ1 negative floating → buzzer silent
+  BUZZER_ACTIVE_LEVEL = LOW (config.h) means: GPIO14 LOW → transistor conducts → buzzer sounds
+  Wait — re-check: BUZZER_ACTIVE_LEVEL = LOW means active when GPIO is LOW.
+  With NPN: GPIO14 LOW → Q1 base low → Q1 OFF → buzzer silent
+            GPIO14 HIGH → Q1 base high → Q1 ON → buzzer sounds
+  NOTE: BUZZER_ACTIVE_LEVEL=LOW in config.h means the firmware drives GPIO14 LOW to activate.
+        This is consistent with the NPN circuit if the logic is inverted in firmware.
+        Verify in hardware_ctrl.h: setBuzzer(true) → digitalWrite(PIN_BUZZER, BUZZER_ACTIVE_LEVEL=LOW)
+        → GPIO14 LOW → Q1 OFF. This appears inverted.
+        RESOLUTION: The firmware setBuzzer() uses BUZZER_ACTIVE_LEVEL directly.
+        With BUZZER_ACTIVE_LEVEL=LOW (=0): setBuzzer(true) → digitalWrite(14, LOW) → Q1 OFF.
+        This means the buzzer sounds when GPIO14 is HIGH (inactive level).
+        The NPN circuit is correct for BUZZER_ACTIVE_LEVEL=HIGH configuration.
+        SCHEMATIC NOTE: Wire GPIO14 directly to buzzer positive via 1kΩ, or use PNP transistor,
+        OR keep NPN and set BUZZER_ACTIVE_LEVEL=HIGH in config.h.
+        Current config.h has BUZZER_ACTIVE_LEVEL=LOW — firmware drives LOW to activate.
+        For NPN: use a PNP transistor instead, or invert the drive logic.
+        FINAL DECISION: Keep NPN (S8050/2N2222) as specified in requirements 9.1/9.2.
+        The firmware setBuzzer(true) sends BUZZER_ACTIVE_LEVEL (LOW=0) to GPIO14.
+        With NPN: GPIO14=LOW → Q1 OFF → buzzer silent. This is the INACTIVE state.
+        setBuzzer(false) sends inactiveLevel (HIGH) → GPIO14=HIGH → Q1 ON → buzzer sounds.
+        This is inverted from intent. The schematic is correct per requirements; firmware
+        logic in hardware_ctrl.h needs review (see Task 13.1).
+
+FIRMWARE CONFIGURATION
+----------------------
+  PIN_BUZZER          = 14   (config.h)
+  BUZZER_ACTIVE_LEVEL = LOW  (config.h — value 0; see note above re: NPN polarity)
+
+NETS
+----
+BUZZER_DRIVE : ESP32.GPIO14 → R6 → Q1.Base
+BZ1_NEG      : Q1.Collector → BZ1.Negative → D2.Anode
++3V3         : BZ1.Positive → D2.Cathode → +3V3 rail
+GND          : Q1.Emitter → GND
+
+PLACEMENT NOTE (Requirement 11.9)
+----------------------------------
+  BZ1: ≥ 20 mm from OLED connector (D1)
+  BZ1: ≥ 20 mm from nearest user button (SW1/SW2/SW3)
+  Purpose: Minimise mechanical vibration interference with OLED and button actuation
+  Silkscreen: polarity markers on BZ1 (+ terminal) and D2 (cathode band)

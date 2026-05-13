@@ -156,9 +156,10 @@ describe('console API contract shape', () => {
   it('keeps dashboard read-model stats raw but clean', async () => {
     const response = await request(statsApp).get('/api/stats');
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('totalRequests');
-    expect(response.body).toHaveProperty('history');
-    expect(response.body).not.toHaveProperty('success');
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toHaveProperty('totalRequests');
+    expect(response.body.data).toHaveProperty('history');
+    expect(response.body.data).not.toHaveProperty('success');
     assertNoSensitiveFields(response.body);
   });
 

@@ -4,6 +4,12 @@
  * 当前 v1 通过固定 allow-list 串口请求与主机侧 helper 通信。ESP32 只发送
  * AG:REQ:* 请求，不再把任意 shell 直接写到串口上。Linux 主机上的 helper
  * 负责执行环境检测、备份、安装和卸载，并返回 AG:* 标记回包。
+ *
+ * Security invariants (Requirements 5.3, 5.4, 5.7, 5.8):
+ * - AG:ERR:BUSY is sent when a second AG:REQ:* arrives while one is pending
+ * - AG:BEGIN:INSTALL / AG:BEGIN:REMOVE are never sent without a prior physical
+ *   OK button press registered after the request was received
+ * - Unrecognised AG:REQ:* messages are silently discarded (Requirement 4.7)
  */
 
 #ifndef DEPLOYMENT_H
@@ -52,6 +58,7 @@ private:
     PendingCommand pending;
     CmdStatus lastStatus;
     bool completionPending;
+    bool beginSoundPending;  // Task 13.1: flag for playBegin() callback
 
     void resetPending() {
         pending.type = OP_NONE;
@@ -221,6 +228,7 @@ private:
         }
 
         setLastMessagef("Starting %s", action);
+        beginSoundPending = true;  // Task 13.1: signal main.cpp to call playBegin()
     }
 
     void handleStepMarker(const char* payload) {
@@ -329,6 +337,15 @@ private:
 
         DEBUG_PRINTF("[Deploy][RX] %s\n", line);
 
+        // --- Requirement 5.7: AG:ERR:BUSY for concurrent requests ---
+        // If a new AG:REQ:* arrives while a confirmation or operation is pending,
+        // immediately respond with AG:ERR:BUSY and discard the second request.
+        if (strncmp(line, "AG:REQ:", 7) == 0 && pending.active) {
+            TARGET_SERIAL.println(SERIAL_PROTO_ERR_BUSY);
+            DEBUG_PRINTLN("[Deploy] BUSY — discarding concurrent request");
+            return;
+        }
+
         if (strncmp(line, "AG:ENV:", 7) == 0) {
             handleEnvironmentMarker(line);
             return;
@@ -352,6 +369,7 @@ private:
         if (strncmp(line, SERIAL_PROTO_ERR_PREFIX, strlen(SERIAL_PROTO_ERR_PREFIX)) == 0) {
             handleErrMarker(line + strlen(SERIAL_PROTO_ERR_PREFIX));
         }
+        // Unrecognised messages are silently discarded (Requirement 4.7)
     }
 
     void flushLineBuffer() {
@@ -400,6 +418,7 @@ public:
         lastMessage[0] = '\0';
         lastStatus = CMD_FAIL;
         completionPending = false;
+        beginSoundPending = false;
         resetPending();
         DEBUG_PRINTLN("[Deploy] Serial2 Init OK");
     }
@@ -477,6 +496,15 @@ public:
         return true;
     }
 
+    // Task 13.1: Consumed by main.cpp to trigger hw.playBegin()
+    bool consumeBeginSound() {
+        if (!beginSoundPending) {
+            return false;
+        }
+        beginSoundPending = false;
+        return true;
+    }
+
     bool isBusy() const {
         return pending.active;
     }
@@ -496,6 +524,56 @@ public:
     const char* getLastMessage() const {
         return lastMessage;
     }
+
+    // -----------------------------------------------------------------------
+    // Task 10.3 — Back-button rejection paths (Requirements 5.5, 5.6)
+    // Called by main.cpp when Back is pressed in ST_CONFIRM_INSTALL or
+    // ST_CRITICAL_CONFIRM. Sends the appropriate AG:ERR response on UART2.
+    // -----------------------------------------------------------------------
+    void sendErrInstall() {
+        TARGET_SERIAL.println(SERIAL_PROTO_ERR_INSTALL);
+        DEBUG_PRINTLN("[Deploy] User rejected INSTALL");
+        resetPending();
+    }
+
+    void sendErrRemove() {
+        TARGET_SERIAL.println(SERIAL_PROTO_ERR_REMOVE);
+        DEBUG_PRINTLN("[Deploy] User rejected REMOVE");
+        resetPending();
+    }
+
+    // -----------------------------------------------------------------------
+    // Task 10.4 — 60-second auto-cancel (Requirement 6.5)
+    // Called by main.cpp when the confirmation timeout elapses.
+    // Sends AG:ERR:<operation> and resets state.
+    // -----------------------------------------------------------------------
+    void sendErrTimeout(DeployOperation op) {
+        switch (op) {
+            case OP_INSTALL:
+                TARGET_SERIAL.println(SERIAL_PROTO_ERR_INSTALL);
+                DEBUG_PRINTLN("[Deploy] INSTALL confirmation timed out");
+                break;
+            case OP_REMOVE:
+                TARGET_SERIAL.println(SERIAL_PROTO_ERR_REMOVE);
+                DEBUG_PRINTLN("[Deploy] REMOVE confirmation timed out");
+                break;
+            default:
+                break;
+        }
+        resetPending();
+    }
+
+    // -----------------------------------------------------------------------
+    // Task 10.2 — Physical confirmation gate (Requirements 5.3, 5.4, 5.8)
+    // startInstall() and startUninstall() now require the caller (main.cpp)
+    // to have already received a physical OK button press after the request.
+    // The state machine in main.cpp enforces this via ST_CONFIRM_INSTALL /
+    // ST_CRITICAL_CONFIRM states — these methods are only called after OK.
+    // -----------------------------------------------------------------------
+    // (startInstall() and startUninstall() are unchanged in signature;
+    //  the physical gate is enforced by the state machine in main.cpp which
+    //  only calls them from ST_CONFIRM_INSTALL/ST_CRITICAL_CONFIRM after
+    //  an OK button event has been dequeued.)
 };
 
 #endif // DEPLOYMENT_H

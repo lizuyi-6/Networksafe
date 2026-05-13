@@ -22,6 +22,7 @@ export default function AdminUsers() {
     const [batchValue, setBatchValue] = useState<string>('');
     const [showBatchConfirm, setShowBatchConfirm] = useState(false);
     const [batchLoading, setBatchLoading] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const loadUsers = async () => {
         try {
@@ -45,7 +46,7 @@ export default function AdminUsers() {
             await updateAdminUserPlan(userId, newPlan);
             setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan } : u));
         } catch (e: any) {
-            alert(e.message || t('adminUsers.update_plan_failed'));
+            setActionError(e.message || t('adminUsers.update_plan_failed'));
         }
     };
 
@@ -54,7 +55,7 @@ export default function AdminUsers() {
             await updateAdminUserRole(userId, newRole);
             setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
         } catch (e: any) {
-            alert(e.message || t('adminUsers.update_role_failed'));
+            setActionError(e.message || t('adminUsers.update_role_failed'));
         }
     };
 
@@ -63,7 +64,7 @@ export default function AdminUsers() {
             await updateAdminUserStatus(userId, newStatus);
             setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
         } catch (e: any) {
-            alert(e.message || t('adminUsers.update_status_failed'));
+            setActionError(e.message || t('adminUsers.update_status_failed'));
         }
     };
 
@@ -105,7 +106,7 @@ export default function AdminUsers() {
             setBatchAction('');
             setBatchValue('');
         } catch (e: any) {
-            alert(e.message || t('adminUsers.batch_failed'));
+            setActionError(e.message || t('adminUsers.batch_failed'));
         } finally {
             setBatchLoading(false);
         }
@@ -131,6 +132,12 @@ export default function AdminUsers() {
                     <p className="text-muted-foreground text-sm mt-1">{t('admin_users.desc')}</p>
                 </div>
             </div>
+
+            {actionError && (
+                <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">
+                    {actionError}
+                </div>
+            )}
 
             {/* Batch Actions Bar */}
             {selectedIds.size > 0 && (

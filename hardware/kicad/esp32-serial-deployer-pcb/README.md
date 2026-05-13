@@ -4,7 +4,7 @@ This directory contains the first single-board KiCad project for the ESP32 seria
 
 ## Scope
 
-- Board size: `100 mm x 72 mm`
+- Board size: `72 mm x 38 mm` for the EV1 enclosure-fit PCB
 - Stack-up: `4-layer`, `1.6 mm FR-4`
 - Mounting: `4 x M2` holes, `3.5 mm` inset from each edge
 - Architecture:
@@ -25,13 +25,15 @@ This directory contains the first single-board KiCad project for the ESP32 seria
 - `fp-lib-table`
 - `sym-lib-table`
 - `reports/`
+- `tools/generate_ev1_pcb.py`
 - `tools/generate_pcb_v1.py`
 - `tools/repair_pcb_connectivity.py`
 
 ## Source Of Truth
 
 - The KiCad project files in this directory are the active design source.
-- `tools/generate_pcb_v1.py` is now a reference/base-board generator used to keep symbol, footprint, and net assignments synchronized.
+- `tools/generate_ev1_pcb.py` is the active EV1 board generator for the enclosure-fit prototype PCB.
+- `tools/generate_pcb_v1.py` is retained as the reference/base-board generator used to keep symbol, footprint, and net assignments synchronized.
 - Recovery experiments live in `scratch/` and are not the fabrication source of truth.
 
 ## Interface Baseline
@@ -76,19 +78,26 @@ The project now loads in `KiCad 9.0.7` CLI:
 - `kicad-cli pcb drc` runs and writes `reports/drc.rpt`
 - `kicad-cli pcb drc --schematic-parity` runs and writes `reports/parity.rpt`
 
-Current validation is not yet clean and the board is not fabrication-ready:
+Current validation must be regenerated after every EV1 board-generation pass:
 
-- ERC: currently high-noise and still requires schematic cleanup
-- PCB DRC: stable board baseline is down to `3` DRC violations plus `39` unconnected items
-- The remaining PCB issues are concentrated in explicit ground/power closure, not broad project load failures
-- Schematic parity still needs cleanup after the exposed-pad and ground-net corrections
+- ERC must have zero errors before ordering.
+- PCB DRC must have zero errors before ordering.
+- Schematic parity must have zero errors before ordering.
+- Gerber/drill output in the factory package is only orderable when those gates pass.
 
-This means the project is a KiCad 9 native, editable recovery baseline, but it is not ready for fabrication yet. The remaining work is board-quality cleanup:
+Latest EV1 validation on 2026-05-12:
 
-- finish the remaining ground and power routing closure
-- clean up ERC and schematic-parity drift introduced during recovery
+- ERC: 0 violations
+- PCB DRC: 0 violations
+- Schematic parity: 0 issues
+- Unexpected unconnected items: 118
+
+This means the project is a KiCad 9 native, editable EV1 layout baseline, but it is not ready for fabrication yet. The remaining work is board routing closure:
+
+- finish all ground, power, USB, UART, OLED, button, RGB, buzzer, boot/reset, and test-point routing
+- reduce unexpected unconnected items from 118 to 0
 - verify footprint drill sizes and custom footprints against final purchased parts
-- re-run DRC/DRC parity after the next routing pass
+- re-run DRC and schematic parity after the next routing pass
 
 ## Firmware Profile
 

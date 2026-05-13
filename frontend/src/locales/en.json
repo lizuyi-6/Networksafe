@@ -228,7 +228,15 @@
     "severity_level": "Severity {level}",
     "waiting_chart": "Waiting for chart container...",
     "unavailable": "Dashboard unavailable",
-    "never_used_short": "never"
+    "never_used_short": "never",
+    "time_7d": "7d",
+    "threat_intel": "Threat Intelligence",
+    "security_ops": "Security Operations",
+    "system_resources": "System Resources",
+    "tab_origins": "Attack Origins",
+    "tab_vectors": "Attack Vectors",
+    "tab_rules": "Active Rules",
+    "tab_actions": "Recent Actions"
   },
   "pricing": {
     "title": "Select Your Variant",
@@ -335,7 +343,8 @@
     "learning": "Learning Results & Patterns",
     "no_patterns": "No Composite Patterns",
     "no_patterns_desc": "Patterns appear after case files accumulate.",
-    "no_degradation": "No degraded subsystems detected."
+    "no_degradation": "No degraded subsystems detected.",
+    "loadError": "Failed to load agent data. Please try again."
   },
   "trafficInterceptor": {
     "title": "Traffic Interceptor",
@@ -382,7 +391,8 @@
     "passed": "Passed Detection",
     "deep_inspected": "Deep Inspection Done",
     "throughput": "Total Throughput",
-    "no_active": "No active connections to display"
+    "no_active": "No active connections to display",
+    "loadError": "Failed to load traffic data. Please try again."
   },
   "attackSimulator": {
     "title": "Attack Simulator",
@@ -1121,7 +1131,11 @@
     "title": "System Settings",
     "subtitle": "Manage models, AI endpoints, and system configuration.",
     "other": "Other Settings",
-    "otherSubtitle": "Reserved system-level configuration notes."
+    "otherSubtitle": "Session & system preferences",
+    "liveRefreshDesc": "When enabled, dashboards and monitors auto-poll for the latest data",
+    "logout": "Log Out",
+    "logoutDesc": "Clear current session and return to login page",
+    "loggingOut": "Logging out..."
   },
   "sites": {
     "title": "Title",
@@ -1217,6 +1231,8 @@
     "resolve": "Resolve",
     "suppress": "Suppress",
     "actionFailed": "Action failed",
+    "select": "Select this alert",
+    "deselect": "Deselect this alert",
     "title": "System Alerts"
   },
   "traffic": {

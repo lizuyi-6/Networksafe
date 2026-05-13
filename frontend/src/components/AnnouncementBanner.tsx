@@ -35,7 +35,7 @@ export default function AnnouncementBanner() {
         const load = async () => {
             try {
                 const res = await fetchPublicAnnouncements();
-                setAnnouncements(res.announcements || []);
+                setAnnouncements(Array.isArray(res) ? res : []);
             } catch (err) {
                 console.warn('Failed to fetch announcements:', err);
             } finally {

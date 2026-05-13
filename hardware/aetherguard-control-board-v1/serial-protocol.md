@@ -13,7 +13,7 @@ The board and Linux companion daemon communicate over a newline-delimited JSON p
 ```json
 {"op":"hello","deviceId":"host-edge-01","request":"state"}
 {"op":"command","deviceId":"host-edge-01","command":"collect","params":{},"envelope":{...}}
-{"op":"command","deviceId":"host-edge-01","command":"physical_confirmation_required","params":{"confirmationSessionId":"...","commandType":"host_remove","payloadHash":"...","prompt":"Press the board confirm key to authorize host_remove"},"envelope":{...}}
+{"op":"command","deviceId":"gate-01","command":"physical_confirmation_required","params":{"gateId":"gate-01","sessionId":"...","actionId":"...","tenantId":"...","scope":"device","targetId":"server-01","commandType":"host_remove","payloadHash":"...","prompt":"Press the board confirm key to authorize host_remove","summary":{"payloadShortHash":"..."},"expiresAt":"2026-05-11T12:00:00.000Z"},"envelope":{...}}
 ```
 
 ## Frames From Board To Companion
@@ -24,21 +24,28 @@ The board and Linux companion daemon communicate over a newline-delimited JSON p
 {"op":"telemetry","timestamp":"2026-03-21T10:15:00.000Z","payload":{"pendingPhysicalApproval":true}}
 {"op":"alert","alertType":"interlock_fault","message":"feedback input mismatch"}
 {"op":"ota_status","otaJobId":"...","status":"installed","version":"v1.0.4"}
-{"op":"physical_confirmation_ack","confirmationSessionId":"...","confirmed":true,"button":"confirm","timestamp":1760000000000,"monotonicCounter":42,"signature":"BASE64_SIGNATURE"}
+{"op":"physical_confirmation_ack","confirmationSessionId":"...","confirmed":true,"button":"confirm","issuedAt":"2026-05-11T11:58:00.000Z","expiresAt":"2026-05-11T12:00:00.000Z","monotonicCounter":42,"signature":"BASE64_SIGNATURE"}
 ```
 
 ## Signing Rules
 
 - Message format is fixed to newline-joined fields:
-  - `deviceId`
-  - `confirmationSessionId`
+  - `gateId`
+  - `sessionId`
+  - `actionId`
+  - `tenantId`
+  - `scope`
+  - `targetId`
   - `commandType`
   - `payloadHash`
+  - `issuedAt`
+  - `expiresAt`
   - `monotonicCounter`
-  - `timestamp`
 - The signature is ECDSA over SHA-256 using the private key protected by `ATECC608C`.
 - The board increments `monotonicCounter` on every confirmed physical action.
 - If the board does not have a provisioned key, it must reject confirmation locally and emit an `alert`.
+- `payloadHash` must be computed from stable JSON serialization with sorted keys.
+- `issuedAt` / `expiresAt` define a narrow validity window and are part of the signed material.
 
 ## Failure Behavior
 

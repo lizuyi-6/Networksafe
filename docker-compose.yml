@@ -109,7 +109,7 @@ services:
       - ENABLE_ATTACK_SIM=true
       - ENABLE_DEV_LOGIN_PRESETS=${ENABLE_DEV_LOGIN_PRESETS:-false}
       - ENABLE_RUNTIME_EMULATOR=${ENABLE_RUNTIME_EMULATOR:-false}
-      - SQLITE_FALLBACK_ENABLED=${SQLITE_FALLBACK_ENABLED:-true}
+      - SQLITE_FALLBACK_ENABLED=${SQLITE_FALLBACK_ENABLED:-false}
       - DATABASE_URL=${DATABASE_URL:-}
       - SHADOW_DATABASE_URL=${SHADOW_DATABASE_URL:-postgres://aetherguard:AetherGuardPgShadow2026@postgres:5432/aetherguard}
       - S3_ENDPOINT=${S3_ENDPOINT:-http://minio:9000}
@@ -124,6 +124,9 @@ services:
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost,http://127.0.0.1}
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - AUDIT_LOG_SECRET=${AUDIT_LOG_SECRET:?AUDIT_LOG_SECRET is required}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required (min 12 chars)}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY is required (min 32 chars)}
+      - ENCRYPTION_SALT=${ENCRYPTION_SALT:?ENCRYPTION_SALT is required (min 16 chars)}
       - VALID_API_KEYS=${VALID_API_KEYS:-}
       - DEVICE_API_KEYS=${DEVICE_API_KEYS:-dev-device-key-2026}
       - DEVICE_COMMAND_SECRET=${DEVICE_COMMAND_SECRET:?DEVICE_COMMAND_SECRET is required}

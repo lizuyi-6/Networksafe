@@ -76,6 +76,11 @@ class Instance:
 
 def angle_len_to_stub(pin: PinDef, origin: tuple[float, float], step: float = 2.54) -> tuple[tuple[float, float], tuple[float, float]]:
     px = sch(origin[0]) + sch(pin.x)
+    # Symbol pin Y coordinates are local to the symbol, where positive Y is
+    # upward in KiCad's symbol definition.  Schematic object coordinates grow
+    # downward, so instances must subtract the local Y offset.  Without this
+    # transform the generated netlist attaches labels to vertically mirrored
+    # pins, which breaks schematic-to-PCB parity.
     py = sch(origin[1]) - sch(pin.y)
     if pin.angle == 0:
         return (px, py), (sch(px - step), py)
@@ -587,7 +592,7 @@ def write_symbol_library() -> None:
     content = "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"kicad_symbol_editor\")\n\t(generator_version \"9.0\")\n"
     for sym in SYMBOLS:
         content += emit_symbol_def(sym, qualified=False)
-    content += "\t(embedded_fonts no)\n)\n"
+    content += ")\n"
     SYM_PATH.write_text(content, encoding="utf-8")
 
 
@@ -606,17 +611,16 @@ def emit_wire(p1: tuple[float, float], p2: tuple[float, float], key: str) -> str
     )
 
 
-def emit_label(name: str, at: tuple[float, float], key: str) -> str:
+def emit_label(name: str, at: tuple[float, float], key: str, angle: int = 0) -> str:
     return (
         f'\t(global_label "{esc(name)}"\n'
         "\t\t(shape bidirectional)\n"
-        f"\t\t(at {at[0]} {at[1]} 0)\n"
+        f"\t\t(at {at[0]} {at[1]} {angle})\n"
         "\t\t(fields_autoplaced yes)\n"
         "\t\t(effects\n"
         "\t\t\t(font\n"
         "\t\t\t\t(size 1.0 1.0)\n"
         "\t\t\t)\n"
-        "\t\t\t(justify left)\n"
         "\t\t)\n"
         f'\t\t(uuid "{uid("label:" + key)}")\n'
         "\t)\n"
@@ -672,7 +676,11 @@ def build_instance_symbols(instances: list[Instance], smap: dict[str, SymbolDef]
 
 def write_schematic() -> None:
     smap = symbol_map()
-    lib_body = "".join(emit_symbol_def(sym) for sym in SYMBOLS)
+    # Embedded schematic symbols must use the same library-qualified name that
+    # symbol instances reference in lib_id.  Otherwise KiCad 9 can render the
+    # drawing but exports an empty netlist/BOM, which is not acceptable for a
+    # factory package.
+    lib_body = "".join(emit_symbol_def(sym, qualified=True) for sym in SYMBOLS)
     layout = schematic_layout(INSTANCES, smap)
     conn_objects: list[str] = []
     for inst in INSTANCES:
@@ -684,7 +692,8 @@ def write_schematic() -> None:
             p1, p2 = angle_len_to_stub(pin, inst_at)
             key = f"{inst.ref}:{pin_num}:{net_name}"
             conn_objects.append(emit_wire(p1, p2, key))
-            conn_objects.append(emit_label(net_name, p2, key))
+            label_angle = {0: 180, 180: 0, 90: 270, 270: 90}[pin.angle]
+            conn_objects.append(emit_label(net_name, p2, key, label_angle))
 
     inst_text = "".join(
         emit_symbol_instance(inst, inst.symbol, *layout[inst.ref])

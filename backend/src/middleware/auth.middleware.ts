@@ -12,6 +12,13 @@ import logger from '../utils/logger';
 import redisService from '../security/redis.service';
 import EnvValidator from '../security/env-validator.service';
 import { resolveRequestTenantContext, TenantContext } from '../core/tenant/tenant-context';
+import {
+    getRolePermissions,
+    hasPermission,
+    isPlatformAdminRole,
+    normalizeRole,
+    type Permission
+} from '../security/permissions';
 
 // Validate environment variables at module load
 try {
@@ -35,9 +42,11 @@ export interface AuthenticatedUser {
     userId: string;
     email: string;
     username: string;
-    role: 'admin' | 'tenant' | 'viewer';
+    role: 'admin' | 'tenant' | 'viewer' | 'platform_admin' | 'tenant_admin' | 'tenant_operator' | 'tenant_viewer' | 'auditor';
     plan?: 'starter' | 'pro' | 'ultra';
     tenantId?: string;
+    permissions?: Permission[];
+    authProvider?: 'local' | 'oidc';
 }
 
 /**
@@ -62,7 +71,12 @@ export interface TokenPair {
  * SECURITY FIX: Explicitly specify algorithm for token generation
  */
 export function generateTokens(user: AuthenticatedUser): TokenPair {
-    const accessToken = jwt.sign(user, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' } as jwt.SignOptions);
+    const normalizedUser: AuthenticatedUser = {
+        ...user,
+        role: normalizeRole(user.role),
+        permissions: user.permissions || getRolePermissions(user.role)
+    };
+    const accessToken = jwt.sign(normalizedUser, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' } as jwt.SignOptions);
     const refreshToken = jwt.sign(
         { userId: user.userId, type: 'refresh' },
         JWT_SECRET,
@@ -84,6 +98,8 @@ export function generateTokens(user: AuthenticatedUser): TokenPair {
 export function verifyToken(token: string): AuthenticatedUser | null {
     try {
         const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as AuthenticatedUser;
+        decoded.role = normalizeRole(decoded.role);
+        decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
         return decoded;
     } catch (error) {
         return null;
@@ -103,6 +119,8 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
     let decoded: AuthenticatedUser;
     try {
         decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as AuthenticatedUser;
+        decoded.role = normalizeRole(decoded.role);
+        decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
     } catch (error) {
         return null;
     }
@@ -176,8 +194,8 @@ const isHttpsRequest = (req: Request): boolean => {
 
 export const buildCookieOptions = (req: Request) => ({
     httpOnly: true,
-    secure: isHttpsRequest(req),
-    sameSite: 'strict' as const,
+    secure: process.env.NODE_ENV === 'production' ? isHttpsRequest(req) : false,
+    sameSite: 'lax' as const,
     path: '/',
     maxAge: COOKIE_MAX_AGE // 24 hours
 });
@@ -257,7 +275,7 @@ export async function optionalAuth(req: AuthenticatedRequest, res: Response, nex
 /**
  * Role-based access control middleware
  */
-export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'>) {
+export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer' | 'platform_admin' | 'tenant_admin' | 'tenant_operator' | 'tenant_viewer' | 'auditor'>) {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
         if (!req.user) {
             res.status(401).json({
@@ -267,7 +285,8 @@ export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'
             return;
         }
 
-        if (!allowedRoles.includes(req.user.role)) {
+        const currentRole = normalizeRole(req.user.role);
+        if (!allowedRoles.map((role) => normalizeRole(role)).includes(currentRole)) {
             logger.warn(`Access denied for user ${req.user.email} (role: ${req.user.role}), required: ${allowedRoles.join('/')}`);
             res.status(403).json({
                 error: 'backend.insufficient_permissions',
@@ -292,7 +311,7 @@ export function requireTenantAccess(req: AuthenticatedRequest, res: Response, ne
     }
 
     const context = resolveRequestTenantContext(req, {
-        allowAdminPlatformFallback: req.user.role === 'admin'
+        allowAdminPlatformFallback: isPlatformAdminRole(req.user.role)
     });
 
     if (!context) {
@@ -303,7 +322,7 @@ export function requireTenantAccess(req: AuthenticatedRequest, res: Response, ne
         return;
     }
 
-    if (req.user.role !== 'admin' && context.tenantId !== req.user.tenantId) {
+    if (!isPlatformAdminRole(req.user.role) && context.tenantId !== req.user.tenantId) {
         res.status(403).json({
             error: 'backend.cannot_access_resources_from_another_tenant',
             code: 'TENANT_MISMATCH'
@@ -317,6 +336,31 @@ export function requireTenantAccess(req: AuthenticatedRequest, res: Response, ne
     }
 
     next();
+}
+
+export function requirePermission(...requiredPermissions: Permission[]) {
+    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+        if (!req.user) {
+            res.status(401).json({
+                error: 'backend.authentication_required',
+                code: 'AUTH_REQUIRED'
+            });
+            return;
+        }
+
+        const missing = requiredPermissions.filter((permission) => !hasPermission(req.user?.role, permission));
+        if (missing.length > 0) {
+            res.status(403).json({
+                error: 'backend.insufficient_permissions',
+                code: 'AUTH_PERMISSION_FORBIDDEN',
+                missingPermissions: missing
+            });
+            return;
+        }
+
+        req.user.permissions = req.user.permissions || getRolePermissions(req.user.role);
+        next();
+    };
 }
 
 /**

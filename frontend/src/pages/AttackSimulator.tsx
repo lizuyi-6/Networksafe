@@ -138,6 +138,7 @@ export default function AttackSimulator() {
     const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
     const [attackProgress, setAttackProgress] = useState<AttackProgress[]>([]);
     const [expandedCategories, setExpandedCategories] = useState<string[]>(ATTACK_CATEGORIES_CONFIG.map(c => c.id));
+    const [showAllHistory, setShowAllHistory] = useState(false);
 
     const terminalRef = useRef<HTMLDivElement>(null);
 
@@ -499,12 +500,14 @@ export default function AttackSimulator() {
                         {wsConnected ? t('attackSimulator.liveConnected') : t('attackSimulator.disconnected')}
                     </div>
                     <button
+                        data-testid="attack-select-all"
                         onClick={selectAll}
                         className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"
                     >
                         {selectedAttacks.length === attackTypes.length ? t('attackSimulator.deselectAll') : t('attackSimulator.selectAll')}
                     </button>
                     <button
+                        data-testid="attack-run-simulation"
                         onClick={runSimulation}
                         disabled={isRunning}
                         className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
@@ -564,6 +567,7 @@ export default function AttackSimulator() {
                                 return (
                                     <div key={category.id} className={`overflow-hidden rounded-xl border ${category.borderColor}`}>
                                         <button
+                                            data-testid={`attack-category-${category.id}`}
                                             onClick={() => toggleCategory(category.id)}
                                             className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30 ${category.bgColor}`}
                                         >
@@ -602,6 +606,7 @@ export default function AttackSimulator() {
                                                             return (
                                                                 <button
                                                                     key={attack.id}
+                                                                    data-testid={`attack-toggle-${attack.id}`}
                                                                     onClick={() => toggleAttack(attack.id)}
                                                                     className={`w-full rounded-xl border p-3 text-left transition-colors ${
                                                                         isSelected
@@ -751,7 +756,20 @@ export default function AttackSimulator() {
                         </div>
                     </ConsolePanel>
 
-                    <ConsolePanel title={t('attackSimulator.terminal')} subtitle={t('attackSimulator.log_stream')} icon={Terminal} iconTone="neutral">
+                    <ConsolePanel
+                        title={t('attackSimulator.terminal')}
+                        subtitle={t('attackSimulator.log_stream')}
+                        icon={Terminal}
+                        iconTone="neutral"
+                        headerAction={terminalLogs.length > 0 ? (
+                            <button
+                                onClick={() => setTerminalLogs([])}
+                                className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                Clear
+                            </button>
+                        ) : undefined}
+                    >
                         <div className="rounded-xl border border-border bg-muted/20">
                             <div className="border-b border-border px-4 py-3 text-xs text-muted-foreground">{t('attackSimulator.terminal')}</div>
                             <div ref={terminalRef} className="h-52 overflow-y-auto bg-background/80 px-4 py-4 font-mono text-sm">
@@ -891,7 +909,7 @@ export default function AttackSimulator() {
                 <motion.div variants={itemVariants}>
                     <ConsolePanel title={t('attackSimulator.recentSimulations')} subtitle={t('attackSimulator.recentDrillBatches')} icon={Clock} iconTone="neutral">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            {history.slice(0, 6).map((item, i) => (
+                            {(showAllHistory ? history : history.slice(0, 6)).map((item, i) => (
                                 <motion.div
                                     key={item.id || i}
                                     initial={{ opacity: 0, scale: 0.95 }}
@@ -912,13 +930,23 @@ export default function AttackSimulator() {
                                         </span>
                                     </div>
                                     <div className="mt-3 flex justify-end">
-                                        <Link to={`/attack-sim/runs/${getAttackRunRouteId(item)}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
+                                        <Link data-testid={`attack-run-detail-${getAttackRunRouteId(item)}`} to={`/attack-sim/runs/${getAttackRunRouteId(item)}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
                                             {t('attackSimulator.view_detail')}
                                         </Link>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
+                        {history.length > 6 && (
+                            <div className="mt-4 flex justify-center">
+                                <button
+                                    onClick={() => setShowAllHistory((prev) => !prev)}
+                                    className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    {showAllHistory ? t('attackSimulator.show_less') || 'Show Less' : `${t('attackSimulator.show_more') || 'Show More'} (${history.length - 6})`}
+                                </button>
+                            </div>
+                        )}
                     </ConsolePanel>
                 </motion.div>
             )}

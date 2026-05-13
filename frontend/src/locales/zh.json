@@ -228,7 +228,15 @@
     "severity_level": "严重级别 {level}",
     "waiting_chart": "等待图表容器...",
     "unavailable": "控制台不可用",
-    "never_used_short": "从未使用"
+    "never_used_short": "从未使用",
+    "time_7d": "7 天",
+    "threat_intel": "威胁情报",
+    "security_ops": "安全运营",
+    "system_resources": "系统资源",
+    "tab_origins": "攻击来源",
+    "tab_vectors": "攻击向量",
+    "tab_rules": "活跃规则",
+    "tab_actions": "近期操作"
   },
   "pricing": {
     "title": "选择您的方案",
@@ -335,7 +343,8 @@
     "learning": "学习结果与模式沉淀",
     "no_patterns": "暂无综合模式",
     "no_patterns_desc": "案卷积累后，这里会展示高频归纳模式。",
-    "no_degradation": "当前未发现降级子系统。"
+    "no_degradation": "当前未发现降级子系统。",
+    "loadError": "智能体数据加载失败，请稍后重试"
   },
   "trafficInterceptor": {
     "title": "流量拦截器",
@@ -382,7 +391,8 @@
     "passed": "已通过检测链路",
     "deep_inspected": "已完成深度检查",
     "throughput": "累计吞吐量",
-    "no_active": "当前没有可供查看的活动连接"
+    "no_active": "当前没有可供查看的活动连接",
+    "loadError": "流量数据加载失败，请稍后重试"
   },
   "attackSimulator": {
     "title": "攻击模拟器",
@@ -1092,7 +1102,11 @@
     "save": "保存配置",
     "subtitle": "统一管理模型、AI 端点与系统配置项",
     "other": "其他设置",
-    "otherSubtitle": "保留系统级配置说明"
+    "otherSubtitle": "会话与系统偏好",
+    "liveRefreshDesc": "启用后，仪表盘和监控页面将自动轮询最新数据",
+    "logout": "退出登录",
+    "logoutDesc": "清除当前会话并返回登录页面",
+    "loggingOut": "正在退出..."
   },
   "sites": {
     "title": "站点管理",
@@ -1192,7 +1206,9 @@
     "confirm": "确认",
     "resolve": "解决",
     "suppress": "抑制",
-    "actionFailed": "操作失败"
+    "actionFailed": "操作失败",
+    "select": "选择此告警",
+    "deselect": "取消选择此告警"
   },
   "traffic": {
     "detail_title": "流量会话详情",

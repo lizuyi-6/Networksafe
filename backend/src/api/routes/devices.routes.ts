@@ -9,6 +9,7 @@
 import { Router, Request, Response } from 'express';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import logger from '../../utils/logger';
+import { sendError, sendSuccess } from '../../core/http/api-response';
 import { securityOperationsService } from '../../services/security-operations.service';
 import auditLogger from '../../security/audit-logger.service';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
@@ -130,7 +131,20 @@ function buildDefaultConfig(device: DeviceInfo): DeviceConfig {
         networkProfile: device.mode === 'online' ? 'cloud-mesh' : 'standalone-buffer',
         scanProfile: device.isOnline ? 'balanced' : 'offline-recovery',
         notes: `${device.chipModel} running firmware ${device.version}`,
-        commandPermissions: ['collect', 'reboot', 'sync-config', 'ota_update'],
+        commandPermissions: [
+            'collect',
+            'reboot',
+            'sync-config',
+            'ota_update',
+            'deploy_bundle',
+            'host_install',
+            'host_remove',
+            'recovery_flash',
+            'factory_reset',
+            'diagnostic_unlock',
+            'wipe_data',
+            'critical_config_change'
+        ],
         tags: [device.chipModel.toLowerCase(), device.mode, device.isOnline ? 'online' : 'offline'],
         updatedAt: new Date().toISOString()
     };
@@ -177,6 +191,7 @@ export async function executeDeviceCommandInternal(input: {
     actorEmail?: string;
     actorIp?: string;
     actionId?: string;
+    hardwareGrant?: any;
 }): Promise<{ success: boolean; record?: DeviceCommandRecord; message: string; reason?: string }> {
     const device = devices.get(input.deviceId);
     if (!device) {
@@ -710,7 +725,7 @@ router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: R
         const { command, params } = req.body;
         const device = devices.get(id);
         if (!device) {
-            return res.status(404).json({ success: false, error: 'backend.device_not_found' });
+            return sendError(res, 404, { code: 'DEVICE_NOT_FOUND', message: 'backend.device_not_found' });
         }
 
         const result = await commandDispatcherService.dispatchDeviceCommand({
@@ -722,8 +737,7 @@ router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: R
                 userId: req.user?.userId || 'unknown',
                 email: req.user?.email,
                 ip: req.ip
-            },
-            approved: Boolean(req.body?.approved)
+            }
         });
 
         if (!result.success && result.status === 'failed') {
@@ -732,34 +746,51 @@ router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: R
                     ? 'backend.device_is_offline'
                     : result.reason === 'device_not_found' || result.reason === 'device_not_available'
                         ? 'backend.device_not_found'
+                        : result.reason === 'hardware_gate_unavailable'
+                            ? 'backend.hardware_gate_unavailable'
                         : result.reason === 'command_not_permitted'
                             ? 'backend.device_command_not_permitted'
                             : 'backend.device_command_failed';
             const statusCode =
                 result.reason === 'device_not_found' || result.reason === 'device_not_available'
                     ? 404
+                    : result.reason === 'hardware_gate_unavailable'
+                        ? 503
                     : 400;
 
-            return res.status(statusCode).json({
-                success: false,
-                error: errorCode,
-                message: result.message,
-                status: result.status,
-                actionId: result.actionId
+            return sendError(res, statusCode, {
+                code: errorCode.replace(/^backend\./, '').toUpperCase(),
+                message: result.message
+            }, {
+                legacy: {
+                    message: result.message,
+                    status: result.status,
+                    actionId: result.actionId,
+                    confirmationSessionId: result.confirmationSessionId || null
+                }
             });
         }
 
-        return res.json({
-            success: true,
+        return sendSuccess(res, {
             message: result.message,
             status: result.status,
             actionId: result.actionId,
+            confirmationSessionId: result.confirmationSessionId || null,
             command: result.record || null,
             latestCommand: result.record || null
+        }, {
+            legacy: {
+                message: result.message,
+                status: result.status,
+                actionId: result.actionId,
+                confirmationSessionId: result.confirmationSessionId || null,
+                command: result.record || null,
+                latestCommand: result.record || null
+            }
         });
         } catch (error: any) {
             logger.error('Failed to send command', { error: error.message });
-            return res.status(500).json({ success: false, error: 'backend.internal_server_error' });
+            return sendError(res, 500, { code: 'INTERNAL_SERVER_ERROR', message: 'backend.internal_server_error' });
         }
     })();
 });

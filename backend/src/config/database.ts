@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import logger from '../utils/logger';
+import { getDatabaseMode, isSqliteFallbackEnabled } from './platform-runtime';
 
 // Type for sql.js database
 interface SqlJsDatabase {
@@ -36,6 +37,12 @@ export class DatabaseManager {
    * Initialize database - tries sql.js first, falls back to better-sqlite3
    */
   public async initAsync(): Promise<void> {
+    // Guard: if SQLite fallback is disabled and DB_MODE is postgres, refuse to
+    // silently degrade — the caller must ensure Postgres is available.
+    if (!isSqliteFallbackEnabled() && getDatabaseMode() === 'postgres') {
+      throw new Error('SQLite fallback is disabled. Postgres connection is required.');
+    }
+
     // Try sql.js first
     try {
       SqlJs = require('sql.js');
@@ -204,7 +211,7 @@ export class DatabaseManager {
           email TEXT UNIQUE NOT NULL,
           username TEXT NOT NULL,
           password_hash TEXT NOT NULL,
-          role TEXT DEFAULT 'viewer' CHECK(role IN ('admin', 'tenant', 'viewer')),
+          role TEXT DEFAULT 'viewer' CHECK(role IN ('admin', 'tenant', 'viewer', 'platform_admin', 'tenant_admin', 'tenant_operator', 'tenant_viewer', 'auditor')),
           plan TEXT DEFAULT 'starter' CHECK(plan IN ('starter', 'pro', 'ultra')),
           tenant_id TEXT,
           status TEXT DEFAULT 'active' CHECK(status IN ('active', 'suspended', 'pending')),
@@ -213,6 +220,7 @@ export class DatabaseManager {
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
+      this.migrateUsersRoleConstraint();
 
       // Auto-migrate: add 'plan' column to existing 'users' table if it doesn't have one
       try {
@@ -370,6 +378,51 @@ export class DatabaseManager {
     } catch (error: any) {
       logger.error('Failed to initialize database schema', { error: error.message });
       throw error;
+    }
+  }
+
+  private migrateUsersRoleConstraint(): void {
+    if (!this.db) {
+      return;
+    }
+
+    try {
+      const row = (this.db as any).prepare(`
+        SELECT sql
+        FROM sqlite_master
+        WHERE type = 'table' AND name = 'users'
+        LIMIT 1
+      `).get() as { sql?: string } | undefined;
+      const createSql = String(row?.sql || '');
+      if (!createSql || createSql.includes('platform_admin')) {
+        return;
+      }
+
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS users_enterprise_migration (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          username TEXT NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT DEFAULT 'viewer' CHECK(role IN ('admin', 'tenant', 'viewer', 'platform_admin', 'tenant_admin', 'tenant_operator', 'tenant_viewer', 'auditor')),
+          plan TEXT DEFAULT 'starter' CHECK(plan IN ('starter', 'pro', 'ultra')),
+          tenant_id TEXT,
+          status TEXT DEFAULT 'active' CHECK(status IN ('active', 'suspended', 'pending')),
+          last_login DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        INSERT INTO users_enterprise_migration (
+          id, email, username, password_hash, role, plan, tenant_id, status, last_login, created_at, updated_at
+        )
+        SELECT id, email, username, password_hash, role, plan, tenant_id, status, last_login, created_at, updated_at
+        FROM users;
+        DROP TABLE users;
+        ALTER TABLE users_enterprise_migration RENAME TO users;
+      `);
+      logger.info('Database migration applied: expanded users role constraint for enterprise roles');
+    } catch (error: any) {
+      logger.warn('Error during users role constraint migration', { error: error?.message });
     }
   }
 

@@ -7,6 +7,12 @@ import {
   getRuntimeProfile,
   hasGatewayRole
 } from '../config/platform-runtime';
+import {
+  allowDemoFeatures,
+  getEnterpriseRuntimeMode,
+  isEnterpriseStrictMode,
+  oidcEnabled
+} from '../config/enterprise-runtime';
 
 const WEAK_VALUE_PATTERNS: RegExp[] = [
   /^change_me/i,
@@ -18,6 +24,20 @@ const WEAK_VALUE_PATTERNS: RegExp[] = [
 
 function hasWeakValue(value: string): boolean {
   return WEAK_VALUE_PATTERNS.some((pattern) => pattern.test(value.trim()));
+}
+
+function assertWeakSecretWarning(
+  key: string,
+  warnings: string[]
+): void {
+  const value = String(process.env[key] || '').trim();
+  if (!value) return;
+  if (hasWeakValue(value)) {
+    warnings.push(
+      `[SECURITY WARNING] ${key} is using a known default or placeholder value. ` +
+        'Replace it with a strong secret before exposing this service to production traffic.'
+    );
+  }
 }
 
 function assertStrongSecret(
@@ -64,6 +84,7 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
   const dbMode = getDatabaseMode();
   const artifactStoreMode = getArtifactStoreMode();
   const isProduction = nodeEnv === 'production' || profile === 'prod';
+  const enterpriseRuntimeMode = getEnterpriseRuntimeMode();
 
   EnvValidator.require('JWT_SECRET', {
     minLength: 32,
@@ -83,8 +104,19 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
       assertStrongSecret('DEVICE_COMMAND_SECRET', 24, errors);
     }
 
+    // WARNING-level checks: these fields use known default values but are not
+    // hard-blocked so that operators can still start the service and rotate
+    // secrets without a full outage.
+    assertWeakSecretWarning('POSTGRES_PASSWORD', warnings);
+    assertWeakSecretWarning('S3_SECRET_KEY', warnings);
+    assertWeakSecretWarning('DEVICE_API_KEYS', warnings);
+
     if (String(process.env.APP_MODE || '').trim().toLowerCase() === 'demo') {
       errors.push('APP_MODE=demo is not allowed in production.');
+    }
+
+    if (enterpriseRuntimeMode === 'prod-enterprise' && !oidcEnabled()) {
+      warnings.push('OIDC is not configured; only break-glass local login will be available in prod-enterprise mode.');
     }
 
     if (String(process.env.ENABLE_DEV_LOGIN_PRESETS || '').trim().toLowerCase() === 'true') {
@@ -116,6 +148,14 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
   const allowedOrigins = String(process.env.ALLOWED_ORIGINS || '').trim();
   if (!allowedOrigins) {
     warnings.push('ALLOWED_ORIGINS is empty; browser access will rely on localhost defaults.');
+  }
+
+  if (!allowDemoFeatures() && String(process.env.APP_MODE || '').trim().toLowerCase() === 'demo') {
+    warnings.push(`APP_MODE=demo requested but ENTERPRISE_RUNTIME_MODE=${enterpriseRuntimeMode} disables demo features; runtime will behave as production.`);
+  }
+
+  if (isEnterpriseStrictMode() && String(process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN || '').trim().toLowerCase() !== 'true') {
+    warnings.push('prod-enterprise mode is active; local password login is restricted to break-glass accounts only.');
   }
 
   if (errors.length > 0) {

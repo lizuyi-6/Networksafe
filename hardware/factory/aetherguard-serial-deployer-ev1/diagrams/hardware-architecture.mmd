@@ -1,0 +1,15 @@
+flowchart LR
+    USB_C["Rear USB-C\nservice/debug/power"] --> CP_SERVICE["CP2102N service bridge"]
+    USB_C --> POWER_OR["PTC + Schottky OR\n5V_SYS"]
+    USB_A["Right USB-A pigtail\ntarget host link"] --> CP_HOST["CP2102N host bridge"]
+    USB_A --> POWER_OR
+    POWER_OR --> REG["AP2112K-3.3\n3V3 rail"]
+    REG --> ESP["ESP32-WROOM-32E"]
+    CP_SERVICE -->|"GPIO1/GPIO3"| ESP
+    CP_HOST -->|"GPIO16/GPIO17"| ESP
+    ESP -->|"GPIO21/GPIO22"| OLED["0.96 in SSD1306 OLED"]
+    ESP -->|"GPIO18/GPIO19/GPIO23"| BUTTONS["OK / NEXT / BACK buttons"]
+    ESP -->|"GPIO25/GPIO26/GPIO27"| RGB["RGB status LED"]
+    ESP -->|"GPIO14 active HIGH"| BUZZER["SMD buzzer"]
+    ESP --> TEST["3V3, GND, EN, IO0, TX/RX test pads"]
+

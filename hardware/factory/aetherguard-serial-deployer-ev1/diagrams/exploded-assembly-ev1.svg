@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1200 780">
+  <style>
+    .title { font: 700 28px sans-serif; fill: #111; }
+    .label { font: 18px sans-serif; fill: #111; }
+    .small { font: 14px sans-serif; fill: #333; }
+    .part { fill: #f5f5f5; stroke: #222; stroke-width: 2; }
+    .dark { fill: #171717; stroke: #444; stroke-width: 2; }
+    .pcb { fill: #145c37; stroke: #0b301f; stroke-width: 2; }
+    .lens { fill: #cfeeff; stroke: #3182a6; stroke-width: 2; opacity: 0.75; }
+    .line { stroke: #333; stroke-width: 2; stroke-dasharray: 7 6; fill: none; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+  </defs>
+
+  <text x="52" y="54" class="title">AetherGuard Serial Deployer EV1 - exploded assembly reference</text>
+  <text x="52" y="84" class="small">Factory-draft visual reference. Use generated STL and final PCB files for manufacturing dimensions.</text>
+
+  <rect x="355" y="120" width="490" height="78" rx="28" class="lens"/>
+  <text x="870" y="166" class="label">Top lens</text>
+  <path d="M845 158 C910 158, 930 158, 965 158" class="line"/>
+
+  <rect x="300" y="235" width="600" height="118" rx="38" class="dark"/>
+  <rect x="365" y="260" width="470" height="68" rx="22" class="lens"/>
+  <text x="922" y="304" class="label">Upper bezel</text>
+  <path d="M900 296 C940 296, 952 296, 970 296" class="line"/>
+
+  <g transform="translate(420 390)">
+    <rect x="0" y="0" width="360" height="150" rx="16" class="pcb"/>
+    <rect x="135" y="30" width="90" height="52" rx="6" fill="#1b1b1b" stroke="#aaa" stroke-width="1.5"/>
+    <circle cx="80" cy="120" r="12" fill="#333" stroke="#aaa" stroke-width="1.5"/>
+    <circle cx="180" cy="120" r="12" fill="#333" stroke="#aaa" stroke-width="1.5"/>
+    <circle cx="280" cy="120" r="12" fill="#333" stroke="#aaa" stroke-width="1.5"/>
+    <rect x="148" y="-18" width="64" height="18" rx="4" fill="#ddd" stroke="#555" stroke-width="1.5"/>
+    <path d="M340 125 C410 130, 440 158, 465 190" stroke="#111" stroke-width="10" fill="none" stroke-linecap="round"/>
+  </g>
+  <text x="922" y="466" class="label">Assembled PCB + pigtail</text>
+  <path d="M785 460 C875 460, 905 460, 970 460" class="line"/>
+
+  <rect x="320" y="585" width="560" height="110" rx="38" class="dark"/>
+  <rect x="445" y="620" width="310" height="40" rx="12" class="part"/>
+  <text x="922" y="646" class="label">Lower chassis + service door</text>
+  <path d="M880 640 C930 640, 950 640, 970 640" class="line"/>
+
+  <text x="80" y="160" class="label">Assembly order</text>
+  <text x="80" y="195" class="small">1. SMT PCB and inspect.</text>
+  <text x="80" y="224" class="small">2. Add OLED and pigtail strain relief.</text>
+  <text x="80" y="253" class="small">3. Mount PCB into lower chassis.</text>
+  <text x="80" y="282" class="small">4. Fit upper bezel and button caps.</text>
+  <text x="80" y="311" class="small">5. Fit lens and close case.</text>
+</svg>

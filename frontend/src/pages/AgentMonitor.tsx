@@ -35,7 +35,10 @@ export default function AgentMonitor() {
     const [stats, setStats] = useState<MultiAgentSystemStats | null>(null);
     const [health, setHealth] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [autoRefresh, setAutoRefresh] = useState(true);
+    const asyncReview = stats?.detectionPipeline?.asyncReview;
+    const blockingDiscussion = stats?.detectionPipeline?.blockingDiscussion;
 
     const layerInfo = [
         { id: 1, nameKey: 'agentMonitor.layers.collaboration', icon: Users },
@@ -62,8 +65,9 @@ export default function AgentMonitor() {
             const [statsData, healthData] = await Promise.all([fetchAgentSystemStats(), fetchAgentHealth()]);
             setStats(statsData);
             setHealth(healthData);
-        } catch (e) {
-            console.error('Failed to load agent data', e);
+            setError(null);
+        } catch (e: any) {
+            setError(e?.message || t('agentMonitor.loadError'));
         }
         setLoading(false);
     };
@@ -134,6 +138,12 @@ export default function AgentMonitor() {
                 </div>
             }
         >
+            {error && (
+                <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-300">
+                    {error}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <ConsoleStatCard
                     icon={ShieldAlert}
@@ -151,16 +161,23 @@ export default function AgentMonitor() {
                 />
                 <ConsoleStatCard
                     icon={MessageSquare}
-                    label={t('agentMonitor.queueSize')}
-                    value={stats?.messageBus.queueSize || 0}
-                    hint={t('agentMonitor.queue_hint')}
+                    label="Async Review Queue"
+                    value={asyncReview?.queueDepth || 0}
+                    hint={`running ${asyncReview?.running || 0}, queued ${asyncReview?.queued || 0}`}
                     tone="neutral"
                 />
                 <ConsoleStatCard
                     icon={BarChart3}
-                    label={t('agentMonitor.caseFiles')}
-                    value={stats?.synthesis.totalCaseFiles || 0}
-                    hint={t('agentMonitor.casefile_hint')}
+                    label="Blocking Discussion"
+                    value={stats?.detectionPipeline?.classificationLevel || 'standard'}
+                    hint={`count ${blockingDiscussion?.count || 0}, fail-closed ${blockingDiscussion?.failClosed || 0}, ${blockingDiscussion?.avgLatencyMs?.toFixed(1) || '0.0'} ms`}
+                    tone="warning"
+                />
+                <ConsoleStatCard
+                    icon={BarChart3}
+                    label="Debate Completion"
+                    value={`${(((asyncReview?.debateCompletionRate || 0) * 100)).toFixed(1)}%`}
+                    hint={`${asyncReview?.completed || 0} completed, ${asyncReview?.failed || 0} failed`}
                     tone="warning"
                 />
             </div>
@@ -247,6 +264,14 @@ export default function AgentMonitor() {
                             <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
                                 <p className="text-3xl font-bold text-foreground font-mono">{stats?.orchestrator.activeTasks || 0}</p>
                                 <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.activeTasks')}</p>
+                            </div>
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{asyncReview?.completed || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">Async reviews done</p>
+                            </div>
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{(asyncReview?.avgLatencyMs || 0).toFixed(0)}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">Async review ms</p>
                             </div>
                         </div>
                     </ConsolePanel>

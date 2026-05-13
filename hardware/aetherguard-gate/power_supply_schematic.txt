@@ -1,0 +1,80 @@
+================================================================================
+AetherGuard ESP32 Physical Confirmation Gate
+Schematic Sheet 1: Power Supply & USB-C Input
+Task 1.1 — USB-C input, AMS1117-3.3 LDO, and decoupling network
+Requirements: 1.1, 1.2, 1.3, 1.4, 1.8, 3.6
+================================================================================
+
+COMPONENTS
+----------
+J2   USB Type-C 16P receptacle (SMD)
+     Pins: VBUS(5V), GND, D+, D-, CC1, CC2, SBU1, SBU2
+     Net connections:
+       VBUS → +5V_USB rail
+       GND  → GND
+       D+   → USB_DP (to CH340C, see sheet 2)
+       D-   → USB_DM (to CH340C, see sheet 2)
+       CC1, CC2 → 5.1kΩ pull-down to GND (USB-C sink configuration)
+
+U3   AMS1117-3.3 LDO regulator (SOT-223)
+     Pins: IN(1), GND(2), OUT(3), OUT_tab(exposed pad)
+     Net connections:
+       IN(1)      → +5V_USB rail
+       GND(2)     → GND
+       OUT(3)     → +3V3 rail
+       OUT_tab    → +3V3 rail (also connected to bottom GND plane via thermal vias)
+     Trace width annotation: IN trace ≥ 1.0 mm, OUT trace ≥ 0.5 mm
+     Placement: within 5 mm of J2; thermal pad connected to bottom GND via ≥ 4 thermal vias
+
+C1   100 µF / 10 V electrolytic capacitor (radial, 5 mm pitch)
+     Net connections: + → +5V_USB rail, − → GND
+     Purpose: Bulk input filtering (Requirement 1.3)
+     Placement: near J2 VBUS pin, positive terminal marked in silkscreen
+
+C2   10 µF / 10 V electrolytic capacitor (radial, 5 mm pitch)
+     Net connections: + → +3V3 rail, − → GND
+     Purpose: LDO output filtering (Requirement 1.4)
+     Placement: near U3 OUT pin, positive terminal marked in silkscreen
+
+C_LDO_HF   100 nF MLCC (0402)
+     Net connections: one end → +3V3 rail, other end → GND
+     Purpose: High-frequency decoupling on 3.3 V output rail (Requirement 1.4)
+     Placement: within 2 mm of U3 OUT pin
+
+AUTO-RESET CIRCUIT (Requirement 3.6)
+--------------------------------------
+C_RTS   100 nF MLCC (0402)
+     Net connections: one end → CH340C RTS pin, other end → ESP32 EN pin
+     Purpose: Auto-reset — RTS pulse resets ESP32 via EN
+
+C_DTR   100 nF MLCC (0402)
+     Net connections: one end → CH340C DTR pin, other end → ESP32 GPIO0
+     Purpose: Auto-reset — DTR pulse drives GPIO0 low for download mode
+
+NETS
+----
++5V_USB   : J2.VBUS → C1(+) → U3.IN
++3V3      : U3.OUT → C2(+) → C_LDO_HF → [distributed to all 3.3V consumers]
+GND       : J2.GND → C1(−) → C2(−) → C_LDO_HF → U3.GND → [bottom copper plane]
+
+TRACE WIDTH ANNOTATIONS
+-----------------------
++5V_USB rail : ≥ 1.0 mm (carries up to 1 A peak)
++3V3 rail    : ≥ 0.5 mm (carries up to 610 mA peak)
+GND          : bottom copper flood fill (continuous plane)
+
+POWER BUDGET (from design section 2.2)
+---------------------------------------
+ESP32 peak (Wi-Fi TX) : ~500 mA
+OLED                  : ~20 mA
+RGB LED (all on)      : ~60 mA
+Buzzer                : ~30 mA
+Total peak            : ~610 mA
+AMS1117-3.3 rating    : 1 A continuous — sufficient (Requirement 1.8)
+
+ERC NOTES
+---------
+- All power pins must be connected; no floating VBUS or GND pins
+- CC1/CC2 pull-downs required for USB-C sink operation (5.1 kΩ to GND)
+- Thermal vias under U3 exposed pad: minimum 4 vias, 0.5 mm drill / 1.0 mm pad
+- Polarity-sensitive components C1, C2 must have silkscreen polarity markers (Requirement 10.9)

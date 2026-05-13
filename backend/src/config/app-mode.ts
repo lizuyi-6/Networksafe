@@ -1,7 +1,9 @@
+import { allowDemoFeatures } from './enterprise-runtime';
+
 export type AppMode = 'production' | 'demo';
 
 const normalizeMode = (value?: string): AppMode => {
-  if (value?.toLowerCase() === 'demo') {
+  if (value?.toLowerCase() === 'demo' && allowDemoFeatures()) {
     return 'demo';
   }
   return 'production';
@@ -13,7 +15,7 @@ export let APP_MODE: AppMode = INITIAL_APP_MODE;
 export const getAppMode = (): AppMode => APP_MODE;
 
 export const setAppMode = (mode: AppMode): AppMode => {
-  APP_MODE = mode;
+  APP_MODE = mode === 'demo' && !allowDemoFeatures() ? 'production' : mode;
   return APP_MODE;
 };
 

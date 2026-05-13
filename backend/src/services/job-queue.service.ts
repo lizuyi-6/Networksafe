@@ -1,7 +1,7 @@
 import redisService from '../security/redis.service';
 import logger from '../utils/logger';
 
-type QueueName = 'scanner-runs';
+type QueueName = 'scanner-runs' | 'detection-async-reviews';
 
 class JobQueueService {
   private memoryQueues = new Map<QueueName, string[]>();

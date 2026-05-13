@@ -39,6 +39,8 @@ export interface DetectionRequest {
   channel: DetectionChannel;
   requestId: string;
   timestamp: string;
+  analysisPurpose?: 'primary' | 'deep_analysis' | 'learning_verification' | 'blocking_review';
+  forceDebate?: boolean;
   sourceIp?: string;
   method?: string;
   path?: string;

@@ -47,12 +47,12 @@ fit_clearance = 0.30;
 tray_center_x = body_len / 2;
 tray_center_y = body_wid / 2;
 
-bottom_open_len = 74;
-bottom_open_wid = 40;
+bottom_open_len = 82;
+bottom_open_wid = 48;
 bottom_open_r = 5.6;
 
-tray_outer_len = 70;
-tray_outer_wid = 36;
+tray_outer_len = 78;
+tray_outer_wid = 44;
 tray_outer_h = 9.2;
 tray_wall = 1.8;
 tray_base_th = 1.8;
@@ -92,8 +92,8 @@ door_boss_h = 4.4;
 door_screw_d = 2.4;
 door_counterbore_d = 5.0;
 
-pcb_len = 52;
-pcb_wid = 29;
+pcb_len = 72;
+pcb_wid = 38;
 pcb_origin_x = tray_center_x - pcb_len / 2;
 pcb_origin_y = tray_center_y - pcb_wid / 2;
 pcb_standoff_d = 4.0;

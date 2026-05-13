@@ -89,6 +89,7 @@ export async function initializeAgentSystem(): Promise<void> {
                 tenantId: request.tenantId,
                 routeModeOverride: options?.routeModeOverride,
                 analysisPurpose: options?.analysisPurpose || 'primary',
+                forceDebate: options?.forceDebate,
                 traceContext: undefined
             });
 
@@ -114,7 +115,12 @@ export async function initializeAgentSystem(): Promise<void> {
                     attackFamily: decision.attackFamily,
                     routeMode: decision.routeMode,
                     caseFileId: decision.caseFileId,
-                    analysisPurpose: options?.analysisPurpose || 'primary'
+                    layersActivated: decision.layersActivated || [],
+                    stageLatencies: decision.stageLatencies,
+                    debateTriggered: Boolean(decision.debateSession),
+                    experimentMode: decision.experimentMode,
+                    analysisPurpose: options?.analysisPurpose || 'primary',
+                    forceDebate: options?.forceDebate || false
                 }
             };
         }

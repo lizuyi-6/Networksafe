@@ -1,0 +1,146 @@
+﻿{
+    "package":  "aetherguard-serial-deployer-ev1",
+    "status":  "pcb-prototype-order-ready",
+    "generatedAt":  "2026-05-13T09:25:20.9658941+08:00",
+    "pcbSource":  "../../kicad/esp32-serial-deployer-pcb/esp32-serial-deployer-pcb.kicad_pro",
+    "mechanicalSource":  "../../enclosure.scad",
+    "metrics":  {
+                    "netlistComponents":  55,
+                    "netlistNets":  85,
+                    "bomComponents":  51,
+                    "ercViolations":  0,
+                    "drcViolations":  0,
+                    "drcErrors":  0,
+                    "drcWarnings":  0,
+                    "unconnectedItems":  0,
+                    "schematicParityIssues":  0
+                },
+    "manufacturingExportsGated":  false,
+    "gates":  [
+                  {
+                      "name":  "kicad-cli",
+                      "status":  "pass",
+                      "detail":  "C:\\Program Files\\KiCad\\9.0\\bin\\kicad-cli.exe"
+                  },
+                  {
+                      "name":  "openscad",
+                      "status":  "pass",
+                      "detail":  "OpenSCAD version 2021.01"
+                  },
+                  {
+                      "name":  "source:esp32-serial-deployer-pcb.kicad_pro",
+                      "status":  "pass",
+                      "detail":  "../../kicad/esp32-serial-deployer-pcb/esp32-serial-deployer-pcb.kicad_pro"
+                  },
+                  {
+                      "name":  "source:esp32-serial-deployer-pcb.kicad_pcb",
+                      "status":  "pass",
+                      "detail":  "../../kicad/esp32-serial-deployer-pcb/esp32-serial-deployer-pcb.kicad_pcb"
+                  },
+                  {
+                      "name":  "source:esp32-serial-deployer-pcb.kicad_sch",
+                      "status":  "pass",
+                      "detail":  "../../kicad/esp32-serial-deployer-pcb/esp32-serial-deployer-pcb.kicad_sch"
+                  },
+                  {
+                      "name":  "export:netlist",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:bom-xml",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:schematic-pdf",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:pcb-layout-top-svg",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:pcb-layout-bottom-svg",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:assembly-top-svg",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:assembly-bottom-svg",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:bom-csv",
+                      "status":  "pass",
+                      "detail":  "copied pcb/bom-ev1.csv"
+                  },
+                  {
+                      "name":  "report:erc-json",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "report:drc-json",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "report:schematic-parity-json",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "netlist-non-empty",
+                      "status":  "pass",
+                      "detail":  "55 components, 85 nets"
+                  },
+                  {
+                      "name":  "bom-non-empty",
+                      "status":  "pass",
+                      "detail":  "51 BOM components"
+                  },
+                  {
+                      "name":  "erc",
+                      "status":  "pass",
+                      "detail":  "0 ERC violations"
+                  },
+                  {
+                      "name":  "drc",
+                      "status":  "pass",
+                      "detail":  "0 DRC violations, 0 unconnected items"
+                  },
+                  {
+                      "name":  "schematic-parity",
+                      "status":  "pass",
+                      "detail":  "0 schematic parity issues"
+                  },
+                  {
+                      "name":  "export:gerber",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:drill",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "export:position",
+                      "status":  "pass",
+                      "detail":  "exit code 0"
+                  },
+                  {
+                      "name":  "mechanical-export",
+                      "status":  "pass",
+                      "detail":  "existing OpenSCAD STL manifest found"
+                  }
+              ]
+}

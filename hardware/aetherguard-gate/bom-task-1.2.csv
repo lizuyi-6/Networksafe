@@ -1,0 +1,9 @@
+﻿Reference,Description,Value/Model,Quantity,Package,JLC_PN,Notes
+U1,ESP32 Main Controller Module,ESP32-WROOM-32E (4MB Flash),1,Module 18x25.5mm,C701341,"240MHz dual-core; Wi-Fi+BT; 4MB Flash; 520KB SRAM"
+C3,ESP32 VCC Pin 2 Decoupling,100nF 10V X5R MLCC,1,0402,C1525,"Trace < 5mm to U1 pin 2 (3V3) — Req 1.5"
+C4,ESP32 VCC Pin 20 Decoupling,100nF 10V X5R MLCC,1,0402,C1525,"Trace < 5mm to U1 pin 20 (VCC) — Req 1.5"
+C5,ESP32 VCC Pin 15 Area Decoupling,100nF 10V X5R MLCC,1,0402,C1525,"Trace < 5mm to U1 pin 15 GND/VCC area — Req 1.5"
+C6,ESP32 VCC Pin 21 Area Decoupling,100nF 10V X5R MLCC,1,0402,C1525,"Trace < 5mm to U1 pin 21 GND/VCC area — Req 1.5"
+C7,Wi-Fi Transient Bulk Decoupling,10uF 10V X5R MLCC,1,0805,C15850,"Within 10mm of U1 module — Req 1.6"
+SW4,BOOT Button,6x6mm Tactile Switch SPST-NO,1,SMD 6x6mm,C318884,"GPIO0 → GND; active-low; enables download mode — Req 2.2"
+SW5,EN/RESET Button,6x6mm Tactile Switch SPST-NO,1,SMD 6x6mm,C318884,"EN → GND; active-low; causes ESP32 restart — Req 2.3"

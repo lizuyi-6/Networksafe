@@ -36,6 +36,9 @@ import {
     touchAuthUserLastLogin,
     updateAuthUserPassword
 } from '../../modules/auth/auth-user.repository';
+import { allowPasswordLogin } from '../../config/enterprise-runtime';
+import { isBreakGlassRole } from '../../security/permissions';
+import { oidcAuthService } from '../../services/oidc-auth.service';
 
 const router = Router();
 const isTestEnv = isTestRuntime();
@@ -255,6 +258,13 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             });
         }
 
+        if (!allowPasswordLogin() && !isBreakGlassRole(user.role)) {
+            return sendError(res, 403, {
+                code: 'LOCAL_LOGIN_DISABLED',
+                message: 'backend.local_password_login_disabled'
+            });
+        }
+
         // Check if account is active
         if (user.status === 'suspended') {
             // SECURITY FIX CVE-2026-302: Still run bcrypt.compare to prevent timing leak
@@ -339,7 +349,8 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             username: user.username,
             role: user.role,
             plan: user.plan || 'starter',
-            tenantId: user.tenant_id
+            tenantId: user.tenant_id,
+            authProvider: 'local'
         });
 
         logger.info(`User logged in: ${email}`);
@@ -411,6 +422,71 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             message: 'backend.login_failed'
         });
     }
+});
+
+router.get('/oidc/login', authRateLimitMiddleware, async (_req: AuthenticatedRequest, res: Response) => {
+    try {
+        if (!oidcAuthService.isConfigured()) {
+            return sendError(res, 503, {
+                code: 'OIDC_NOT_CONFIGURED',
+                message: 'backend.oidc_not_configured'
+            });
+        }
+
+        const state = oidcAuthService.buildState();
+        res.cookie('oidcState', state, buildCookieOptions(_req));
+        return sendSuccess(res, {
+            state,
+            authorizationUrl: oidcAuthService.buildAuthorizationUrl(state)
+        });
+    } catch (error: any) {
+        return sendError(res, 500, {
+            code: 'OIDC_LOGIN_INIT_FAILED',
+            message: error?.message || 'backend.oidc_login_init_failed'
+        });
+    }
+});
+
+router.get('/oidc/callback', authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        if (!oidcAuthService.isConfigured()) {
+            return res.redirect(buildOidcRedirectTarget(req, '/login?oidc=not-configured'));
+        }
+
+        const state = String(req.query?.state || '').trim();
+        const expectedState = String(req.cookies?.oidcState || '').trim();
+        const code = String(req.query?.code || '').trim();
+        if (!code || !state || !expectedState || state !== expectedState) {
+            return res.redirect(buildOidcRedirectTarget(req, '/login?oidc=state-mismatch'));
+        }
+
+        const token = await oidcAuthService.exchangeCode(code);
+        const profile = await oidcAuthService.fetchUserProfile(token.accessToken);
+        const user = await oidcAuthService.resolveUser(profile);
+        const sessionUser = oidcAuthService.buildSessionUser(user.row);
+        const tokens = generateTokens({
+            ...sessionUser,
+            authProvider: 'oidc'
+        } as any);
+
+        res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
+        res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
+        res.clearCookie('oidcState', { path: '/' });
+
+        return res.redirect(buildOidcRedirectTarget(req, '/dashboard?auth=oidc'));
+    } catch (error: any) {
+        logger.warn('OIDC callback failed', { error: error?.message });
+        return res.redirect(buildOidcRedirectTarget(req, '/login?oidc=failed'));
+    }
+});
+
+router.post('/oidc/logout', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    res.clearCookie('accessToken', { path: '/' });
+    res.clearCookie('refreshToken', { path: '/' });
+    res.clearCookie('oidcState', { path: '/' });
+    return sendSuccess(res, {
+        message: 'backend.logout_successful'
+    });
 });
 
 /**
@@ -666,4 +742,24 @@ export default router;
 
 function clientIpFromRequest(req: AuthenticatedRequest): string {
     return req.ip || req.connection?.remoteAddress || 'unknown';
+}
+
+function buildOidcRedirectTarget(req: AuthenticatedRequest, path: string): string {
+    const configuredOrigin = String(
+        process.env.OIDC_POST_LOGIN_REDIRECT_ORIGIN
+        || process.env.FRONTEND_APP_URL
+        || process.env.APP_URL
+        || process.env.PUBLIC_URL
+        || String(process.env.ALLOWED_ORIGINS || '').split(',')[0]
+        || ''
+    ).trim();
+
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    if (configuredOrigin) {
+        return `${configuredOrigin.replace(/\/+$/, '')}${normalizedPath}`;
+    }
+
+    const host = req.get('host');
+    const protocol = req.secure ? 'https' : 'http';
+    return `${protocol}://${host}${normalizedPath}`;
 }

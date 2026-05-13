@@ -11,6 +11,7 @@ export type AIRoutingMode = 'cloud_only' | 'local_preferred' | 'local_only' | 'h
 export type PrivacyMode = 'off' | 'strict';
 export type DetectionAIEscalationMode = 'high_risk_allowed_only';
 export type DetectionLearningMode = 'malicious_review_queue';
+export type SecurityClassificationLevel = 'standard' | 'elevated' | 'maximum';
 export type DeploymentTarget =
   | 'nginx'
   | 'apache'
@@ -90,6 +91,11 @@ export interface FastpathSettings {
 export interface DetectionPipelineSettings {
   ruleFirstEnabled: boolean;
   aiEscalationMode: DetectionAIEscalationMode;
+  classificationLevel: SecurityClassificationLevel;
+  blockingDiscussionTimeoutMs: number;
+  hotPathRouteMode: AIRoutingMode;
+  asyncReviewEnabled: boolean;
+  blockingReviewForHighRiskActions: boolean;
   enableHttpApi: boolean;
   enablePacketInterceptor: boolean;
   enableAgentAsyncReview: boolean;
@@ -218,7 +224,7 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     channels: []
   },
   aiRouting: {
-    mode: 'cloud_only',
+    mode: 'local_only',
     localEndpointId: 'default-laptop',
     localHotPathEndpointId: null,
     cloudEndpointId: null,
@@ -247,6 +253,11 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   detectionPipeline: {
     ruleFirstEnabled: true,
     aiEscalationMode: 'high_risk_allowed_only',
+    classificationLevel: 'standard',
+    blockingDiscussionTimeoutMs: 30000,
+    hotPathRouteMode: 'local_only',
+    asyncReviewEnabled: true,
+    blockingReviewForHighRiskActions: true,
     enableHttpApi: true,
     enablePacketInterceptor: true,
     enableAgentAsyncReview: true,
@@ -488,6 +499,17 @@ export function normalizeDetectionLearningMode(
     : fallback;
 }
 
+export function normalizeSecurityClassificationLevel(
+  value: any,
+  fallback: SecurityClassificationLevel = 'standard'
+): SecurityClassificationLevel {
+  const normalized = String(value || fallback).trim().toLowerCase();
+  if (normalized === 'standard' || normalized === 'elevated' || normalized === 'maximum') {
+    return normalized;
+  }
+  return fallback;
+}
+
 export function normalizeDetectionChannels(value: any, fallback: DetectionChannel[]): DetectionChannel[] {
   const allowed: DetectionChannel[] = ['http_api', 'packet', 'agent'];
   const normalized = Array.isArray(value)
@@ -512,6 +534,22 @@ export function normalizeDetectionPipeline(raw: any): DetectionPipelineSettings 
   return {
     ruleFirstEnabled: normalizeBoolean(raw?.ruleFirstEnabled, defaults.ruleFirstEnabled),
     aiEscalationMode: normalizeDetectionAIEscalationMode(raw?.aiEscalationMode, defaults.aiEscalationMode),
+    classificationLevel: normalizeSecurityClassificationLevel(
+      raw?.classificationLevel,
+      defaults.classificationLevel
+    ),
+    blockingDiscussionTimeoutMs: normalizeNumber(
+      raw?.blockingDiscussionTimeoutMs,
+      defaults.blockingDiscussionTimeoutMs,
+      1000,
+      120000
+    ),
+    hotPathRouteMode: normalizeRoutingMode(raw?.hotPathRouteMode, defaults.hotPathRouteMode),
+    asyncReviewEnabled: normalizeBoolean(raw?.asyncReviewEnabled, defaults.asyncReviewEnabled),
+    blockingReviewForHighRiskActions: normalizeBoolean(
+      raw?.blockingReviewForHighRiskActions,
+      defaults.blockingReviewForHighRiskActions
+    ),
     enableHttpApi: normalizeBoolean(raw?.enableHttpApi, defaults.enableHttpApi),
     enablePacketInterceptor: normalizeBoolean(raw?.enablePacketInterceptor, defaults.enablePacketInterceptor),
     enableAgentAsyncReview: normalizeBoolean(raw?.enableAgentAsyncReview, defaults.enableAgentAsyncReview),

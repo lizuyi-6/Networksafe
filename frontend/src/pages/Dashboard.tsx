@@ -1,22 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
 import {
     Activity,
-    Code,
+    AlertTriangle,
     Cpu,
     Database,
-    Download,
     Globe,
     HardDrive,
-    Key,
-    Pause,
-    Search,
     Server,
     Shield,
-    Terminal,
-    AlertTriangle,
     Zap,
 } from 'lucide-react';
 import {
@@ -31,8 +25,17 @@ import { DashboardSecuritySummary, DashboardStats, LogItem } from '../types/api'
 import ErrorDisplay from '../components/ErrorDisplay';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useLiveMode } from '../context/LiveModeContext';
-import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
+import { ConsolePanel } from '../components/ConsolePrimitives';
 import StableResponsiveChart from '../components/StableResponsiveChart';
+
+// New dashboard sub-components
+import { DashboardHeader, TimeRange } from '../components/dashboard/DashboardHeader';
+import { MetricBar, MetricItem } from '../components/dashboard/MetricBar';
+import { SystemGauges, GaugeItem } from '../components/dashboard/SystemGauges';
+import { ThreatIntelPanel } from '../components/dashboard/ThreatIntelPanel';
+import { SecurityOpsPanel } from '../components/dashboard/SecurityOpsPanel';
+import { LiveLogStream } from '../components/dashboard/LiveLogStream';
+import { AdminKeySection } from '../components/dashboard/AdminKeySection';
 
 const defaultSecuritySummary: DashboardSecuritySummary = {
     openCriticalFindings: 0,
@@ -49,8 +52,22 @@ const defaultSecuritySummary: DashboardSecuritySummary = {
     recentValidations: [],
 };
 
+const staggerContainerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: { staggerChildren: 0.06 },
+    },
+};
+
+const fadeUpVariants: Variants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } },
+};
+
+// Traffic chart (kept inline as it's tightly coupled to the page data)
 const TrafficChart = ({ data, loadingText }: { data: { time: string; requests: number; blocked: number }[]; loadingText: string }) => (
-    <StableResponsiveChart minHeight={300} loadingText={loadingText}>
+    <StableResponsiveChart minHeight={280} loadingText={loadingText}>
         <AreaChart data={data}>
             <defs>
                 <linearGradient id="colorRequests" x1="0" y1="0" x2="0" y2="1">
@@ -78,43 +95,6 @@ const TrafficChart = ({ data, loadingText }: { data: { time: string; requests: n
     </StableResponsiveChart>
 );
 
-const LogStream = ({ logs, emptyText }: { logs: LogItem[]; emptyText: string }) => (
-    <div className="h-full rounded-xl border border-border bg-muted/15 p-4">
-        <div className="h-full space-y-2 overflow-y-auto font-mono text-xs">
-            <AnimatePresence>
-                {logs.map((log) => (
-                    <motion.div
-                        key={`${log.id}-${log.time}`}
-                        initial={{ opacity: 0, x: -12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className={`flex gap-4 rounded-lg border p-2.5 ${
-                            log.level === 'ERROR' || log.status === 403
-                                ? 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-300'
-                                : 'border-border bg-card text-foreground'
-                        }`}
-                    >
-                        <span className="w-20 shrink-0 text-muted-foreground">{new Date(log.time).toLocaleTimeString()}</span>
-                        <span className="w-12 shrink-0 font-bold">{log.status || 200}</span>
-                        <span className="w-12 shrink-0 font-semibold text-primary">{log.type}</span>
-                        <span className="break-all">{log.message}</span>
-                    </motion.div>
-                ))}
-            </AnimatePresence>
-            {logs.length === 0 && <div className="py-8 text-center font-sans text-muted-foreground">{emptyText}</div>}
-        </div>
-    </div>
-);
-
-const countryColor = (code: string) => ({
-    CN: 'bg-rose-500',
-    US: 'bg-blue-500',
-    RU: 'bg-rose-600',
-    JP: 'bg-amber-500',
-    DE: 'bg-cyan-500',
-    GB: 'bg-indigo-500',
-    Unknown: 'bg-slate-400',
-}[code] || 'bg-slate-400');
-
 export default function Dashboard() {
     const { subscribe } = useWebSocket();
     const { liveModeEnabled } = useLiveMode();
@@ -125,7 +105,7 @@ export default function Dashboard() {
     const [rulesSummary, setRulesSummary] = useState<{ totalRules: number; topRules: any[] }>({ totalRules: 0, topRules: [] });
     const [apiKeys, setApiKeys] = useState<any[]>([]);
     const [userRole, setUserRole] = useState('viewer');
-    const [timeRange, setTimeRange] = useState<'1h' | '24h'>('1h');
+    const [timeRange, setTimeRange] = useState<TimeRange>('1h');
     const [filterQuery, setFilterQuery] = useState('');
     const [paused, setPaused] = useState(false);
     const [exportMessage, setExportMessage] = useState<string | null>(null);
@@ -138,13 +118,17 @@ export default function Dashboard() {
             .some((value) => String(value).toLowerCase().includes(query));
     }), [filterQuery, logs]);
 
-    const filteredHistory = useMemo(
-        () => stats?.history?.slice(timeRange === '1h' ? -10 : 0) || [],
-        [stats?.history, timeRange],
-    );
+    const filteredHistory = useMemo(() => {
+        const history = stats?.history || [];
+        if (timeRange === '1h') return history.slice(-10);
+        if (timeRange === '24h') return history;
+        // 7d: return all available data
+        return history;
+    }, [stats?.history, timeRange]);
 
     const securitySummary = stats?.securityOperations || defaultSecuritySummary;
 
+    // --- Data fetching (unchanged) ---
     useEffect(() => {
         let disposed = false;
         let controller: AbortController | null = null;
@@ -246,6 +230,7 @@ export default function Dashboard() {
         };
     }, []);
 
+    // --- Error / Loading states ---
     if (error) {
         return <ErrorDisplay title={t('dashboard.unavailable')} message={error} onRetry={() => window.location.reload()} />;
     }
@@ -262,6 +247,7 @@ export default function Dashboard() {
         );
     }
 
+    // --- Export ---
     const exportSnapshot = (format: 'json' | 'csv') => {
         const payload = format === 'json'
             ? JSON.stringify({
@@ -295,7 +281,7 @@ export default function Dashboard() {
         window.setTimeout(() => setExportMessage(null), 2500);
     };
 
-    const healthStatus = stats.successRate >= 99 ? t('dashboard.health_good') : stats.successRate >= 95 ? t('dashboard.health_stable') : t('dashboard.health_warning');
+    // --- Derived values ---
     const emptyAttackDescription = securitySummary.observedSessions || securitySummary.trafficAnomalies
         ? t('dashboard.empty_attack_observed', { sessions: securitySummary.observedSessions || 0, anomalies: securitySummary.trafficAnomalies || 0 })
         : t('dashboard.empty_attack_fallback');
@@ -306,238 +292,113 @@ export default function Dashboard() {
         ? t('dashboard.empty_logs_pending', { pending: securitySummary.pendingActions, failed: securitySummary.failedValidations })
         : t('dashboard.empty_logs_fallback');
 
+    // --- Metric bar items ---
+    const metricItems: MetricItem[] = [
+        { icon: Server, label: t('dashboard.total_requests'), value: stats.totalRequests.toLocaleString(), trend: stats.requestsTrend, tone: 'primary' },
+        { icon: Shield, label: t('dashboard.threats_blocked'), value: stats.blockedRequests.toLocaleString(), trend: stats.blockedTrend, tone: 'danger' },
+        { icon: Globe, label: t('dashboard.success_rate'), value: `${stats.successRate}%`, tone: 'success' },
+        { icon: Zap, label: t('dashboard.avg_latency'), value: `${stats.avgProcessingTime || 0}ms`, tone: 'warning' },
+        { icon: Activity, label: t('dashboard.active_connections'), value: stats.activeConnections.toLocaleString(), tone: 'primary' },
+        { icon: AlertTriangle, label: t('dashboard.high_risk'), value: securitySummary.openCriticalFindings, tone: 'danger' },
+    ];
+
+    // --- System gauges ---
+    const gaugeItems: GaugeItem[] = [
+        { icon: Cpu, label: t('dashboard.cpu_usage'), value: stats.cpuUsage || 0, tone: 'primary' },
+        { icon: HardDrive, label: t('dashboard.memory_usage'), value: stats.memoryUsage || 0, tone: 'warning' },
+        { icon: Database, label: t('dashboard.disk_usage'), value: stats.diskUsage || 0, tone: 'neutral' },
+        { icon: Activity, label: t('dashboard.network_throughput'), value: stats.networkUsage || 0, tone: 'success' },
+    ];
+
     return (
-        <ConsolePage title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={Server} label={t('dashboard.total_requests')} value={stats.totalRequests.toLocaleString()} hint={t('dashboard.scale')} tone="primary" />
-                <ConsoleStatCard icon={Shield} label={t('dashboard.threats_blocked')} value={stats.blockedRequests.toLocaleString()} hint={t('dashboard.recent_events')} tone="danger" />
-                <ConsoleStatCard icon={Zap} label={t('dashboard.avg_latency')} value={`${stats.avgProcessingTime || 0}ms`} hint={`P99 ${stats.p99Latency || 0}ms`} tone="warning" />
-                <ConsoleStatCard icon={Globe} label={t('dashboard.global_health')} value={`${stats.successRate}%`} hint={healthStatus} tone="success" />
-            </div>
+        <motion.div
+            variants={staggerContainerVariants}
+            initial="hidden"
+            animate="visible"
+            className="mx-auto min-h-screen max-w-[1600px] space-y-4 p-6 pb-12"
+        >
+            {/* Header: title + time range + actions */}
+            <DashboardHeader
+                timeRange={timeRange}
+                onTimeRangeChange={setTimeRange}
+                paused={paused}
+                onTogglePause={() => setPaused((c) => !c)}
+                onExport={exportSnapshot}
+            />
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={Cpu} label={t('dashboard.cpu_usage')} value={`${stats.cpuUsage?.toFixed(1) || 0}%`} hint={t('dashboard.host_cpu')} tone="primary" />
-                <ConsoleStatCard icon={HardDrive} label={t('dashboard.memory_usage')} value={`${stats.memoryUsage?.toFixed(1) || 0}%`} hint={t('dashboard.system_memory')} tone="warning" />
-                <ConsoleStatCard icon={Database} label={t('dashboard.disk_usage')} value={`${stats.diskUsage?.toFixed(1) || 0}%`} hint={t('dashboard.root_partition')} tone="neutral" />
-                <ConsoleStatCard icon={Activity} label={t('dashboard.network_throughput')} value={`${stats.networkUsage?.toFixed(2) || 0} MB/s`} hint={t('dashboard.real_time_io')} tone="success" />
-            </div>
+            {/* Export notification */}
+            {exportMessage && (
+                <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600 dark:text-emerald-300"
+                >
+                    {exportMessage}
+                </motion.div>
+            )}
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={AlertTriangle} label={t('dashboard.high_risk')} value={securitySummary.openCriticalFindings} hint={t('dashboard.high_risk_hint').replace('{n}', String(securitySummary.highRiskFindings || 0))} tone="danger" />
-                <ConsoleStatCard icon={Shield} label={t('dashboard.active_alerts')} value={securitySummary.activeAlerts} hint={t('dashboard.pending_actions_hint').replace('{n}', String(securitySummary.pendingActions))} tone="warning" />
-                <ConsoleStatCard icon={Search} label={t('dashboard.scan_tasks')} value={securitySummary.runningScans} hint={t('dashboard.queued_hint').replace('{n}', String(securitySummary.queuedScans || 0))} tone="primary" />
-                <ConsoleStatCard icon={Globe} label={t('dashboard.observed_sessions')} value={securitySummary.observedSessions || 0} hint={t('dashboard.anomaly_hint').replace('{n}', String(securitySummary.trafficAnomalies || 0))} tone="success" />
-            </div>
+            {/* Metric Bar — 6 core KPIs in one row */}
+            <MetricBar items={metricItems} />
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                <div className="lg:col-span-8">
+            {/* Traffic Trend + System Gauges */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                <motion.div variants={fadeUpVariants} className="lg:col-span-8">
                     <ConsolePanel
                         title={t('dashboard.traffic_analysis')}
-                        subtitle={t('dashboard.traffic_trend_subtitle')}
+                        subtitle={t('dashboard.traffic_subtitle')}
                         icon={Activity}
                         iconTone="primary"
                     >
-                        <div className="flex items-center justify-end gap-2 pb-4">
-                            <button
-                                data-testid="dashboard-range-1h"
-                                onClick={() => setTimeRange('1h')}
-                                className={`rounded-lg border px-4 py-1.5 text-xs font-semibold ${
-                                    timeRange === '1h'
-                                        ? 'border-border bg-card text-foreground'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t('dashboard.time_1h')}
-                            </button>
-                            <button
-                                data-testid="dashboard-range-24h"
-                                onClick={() => setTimeRange('24h')}
-                                className={`rounded-lg border px-4 py-1.5 text-xs font-semibold ${
-                                    timeRange === '24h'
-                                        ? 'border-border bg-card text-foreground'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t('dashboard.time_24h')}
-                            </button>
-                        </div>
                         <TrafficChart data={filteredHistory} loadingText={t('dashboard.waiting_chart')} />
                     </ConsolePanel>
-                </div>
+                </motion.div>
 
-                <div className="lg:col-span-4">
-                    <ConsolePanel title={t('dashboard.attack_sources')} subtitle={t('dashboard.attack_sources_subtitle')} icon={Globe} iconTone="warning">
-                        <div className="space-y-5">
-                            {(stats.attackOrigins || []).length > 0 ? (
-                                stats.attackOrigins!.map((item, index) => (
-                                    <div key={`${item.countryCode}-${index}`}>
-                                        <div className="mb-2 flex items-center justify-between text-sm">
-                                            <span className="flex items-center gap-2 font-medium text-foreground">
-                                                <span className={`h-2 w-2 rounded-full ${countryColor(item.countryCode)}`} />
-                                                {item.country}
-                                                <span className="text-muted-foreground">({item.countryCode})</span>
-                                            </span>
-                                            <span className="font-mono font-bold text-foreground">{Math.round(item.percentage)}%</span>
-                                        </div>
-                                        <div className="h-2 overflow-hidden rounded-full border border-border/50 bg-muted">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${item.percentage}%` }}
-                                                transition={{ duration: 0.6, delay: index * 0.06 }}
-                                                className={`h-full ${countryColor(item.countryCode)}`}
-                                            />
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <ConsoleEmptyState title={t('dashboard.no_attack_sources')} description={emptyAttackDescription} />
-                            )}
-                        </div>
-                    </ConsolePanel>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                <div className="lg:col-span-8">
+                <motion.div variants={fadeUpVariants} className="lg:col-span-4">
                     <ConsolePanel
-                        title={t('dashboard.real_time_logs')}
-                        subtitle={t('dashboard.logs_filter_subtitle')}
-                        icon={Terminal}
+                        title={t('dashboard.system_resources')}
+                        subtitle={t('dashboard.system_status')}
+                        icon={Cpu}
                         iconTone="neutral"
-                        headerAction={(
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-2 text-muted-foreground" size={16} />
-                                    <input
-                                        data-testid="dashboard-log-filter"
-                                        type="text"
-                                        value={filterQuery}
-                                        onChange={(event) => setFilterQuery(event.target.value)}
-                                        placeholder={t('dashboard.filter_placeholder')}
-                                        className="w-full rounded-lg border border-border bg-card py-1.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none md:w-64"
-                                    />
-                                </div>
-                                <button
-                                    data-testid="dashboard-log-pause"
-                                    aria-label={paused ? t('dashboard.resume_logs') || 'Resume logs' : t('dashboard.pause_logs') || 'Pause logs'}
-                                    onClick={() => setPaused((current) => !current)}
-                                    className={`rounded-lg border border-border bg-card p-2 transition-colors hover:bg-muted/30 ${
-                                        paused ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    <Pause size={18} />
-                                </button>
-                                <button
-                                    data-testid="dashboard-export-json"
-                                    aria-label={t('dashboard.export_json') || 'Export dashboard JSON'}
-                                    onClick={() => exportSnapshot('json')}
-                                    className="rounded-lg border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
-                                >
-                                    <Download size={18} />
-                                </button>
-                                <button
-                                    data-testid="dashboard-export-csv"
-                                    onClick={() => exportSnapshot('csv')}
-                                    className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
-                                >
-                                    CSV
-                                </button>
-                            </div>
-                        )}
                     >
-                        {exportMessage && (
-                            <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600 dark:text-emerald-300">
-                                {exportMessage}
-                            </div>
-                        )}
-                        <div className="h-[450px]">
-                            <LogStream logs={filteredLogs} emptyText={emptyLogsText} />
-                        </div>
+                        <SystemGauges gauges={gaugeItems} />
                     </ConsolePanel>
-                </div>
-
-                <div className="space-y-6 lg:col-span-4">
-                    <ConsolePanel title={t('dashboard.recent_actions')} subtitle={t('dashboard.recent_actions_subtitle')} icon={Zap} iconTone="success">
-                        {(securitySummary.recentActions || []).length > 0 || (securitySummary.recentValidations || []).length > 0 ? (
-                            <div className="space-y-3">
-                                {(securitySummary.recentActions || []).slice(0, 3).map((action) => (
-                                    <div key={action.actionId} className="rounded-xl border border-border bg-muted/15 p-3">
-                                        <div className="text-sm font-semibold text-foreground">{action.title}</div>
-                                        <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                                            <span>{action.status}</span>
-                                            <span>{new Date(action.updatedAt || action.createdAt).toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                                {(securitySummary.recentValidations || []).slice(0, 2).map((validation) => (
-                                    <div key={validation.validationRunId} className="rounded-xl border border-border bg-muted/15 p-3">
-                                        <div className="text-sm font-semibold text-foreground">{validation.attackName}</div>
-                                        <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                                            <span>{validation.verdict}</span>
-                                            <span>{new Date(validation.completedAt).toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <ConsoleEmptyState title={t('dashboard.no_recent_actions')} description={t('dashboard.no_recent_actions_desc')} />
-                        )}
-                    </ConsolePanel>
-
-                    <ConsolePanel
-                        title={t('dashboard.active_rules')}
-                        subtitle={t('dashboard.active_rules_subtitle')}
-                        icon={Code}
-                        iconTone="primary"
-                        headerAction={(
-                            <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                                {t('dashboard.total_rules', { count: rulesSummary.totalRules || 0 })}
-                            </span>
-                        )}
-                    >
-                        <div className="space-y-4">
-                            {(rulesSummary.topRules || []).length > 0 ? (
-                                (rulesSummary.topRules || []).slice(0, 5).map((rule: any) => (
-                                    <div key={rule.id} className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-3 transition-colors hover:bg-muted/25">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 text-primary">
-                                                <Code size={18} />
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-semibold text-foreground">{rule.name || rule.id}</div>
-                                                <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('dashboard.severity_level', { level: rule.severity || 'unknown' })}</div>
-                                            </div>
-                                        </div>
-                                        <div className="rounded-md border border-primary/15 bg-primary/10 px-2 py-1 font-mono text-sm font-semibold text-primary">
-                                            {rule.count || 0}
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <ConsoleEmptyState title={t('dashboard.no_rules')} description={emptyRulesDescription} />
-                            )}
-                        </div>
-                    </ConsolePanel>
-
-                    {userRole === 'admin' && (
-                        <ConsolePanel title={t('dashboard.admin_api_keys')} subtitle={t('dashboard.admin_api_keys_subtitle')} icon={Key} iconTone="success">
-                            <div className="space-y-4">
-                                <p className="text-sm leading-6 text-muted-foreground">
-                                    {t('dashboard.api_key_desc_full')}
-                                </p>
-                                <div className="flex items-center justify-between rounded-xl border border-border bg-muted p-3">
-                                    <code className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                                        {apiKeys[0]?.prefix ? `${apiKeys[0].prefix}********` : t('dashboard.not_found')}
-                                    </code>
-                                    <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                        {apiKeys[0]?.lastUsed || t('dashboard.never_used_short')}
-                                    </span>
-                                </div>
-                            </div>
-                        </ConsolePanel>
-                    )}
-                </div>
+                </motion.div>
             </div>
-        </ConsolePage>
+
+            {/* Threat Intel + Security Ops */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <motion.div variants={fadeUpVariants}>
+                    <ThreatIntelPanel
+                        origins={stats.attackOrigins || []}
+                        threats={stats.threats || []}
+                        emptyDescription={emptyAttackDescription}
+                    />
+                </motion.div>
+
+                <motion.div variants={fadeUpVariants}>
+                    <SecurityOpsPanel
+                        rules={rulesSummary}
+                        actions={securitySummary.recentActions}
+                        validations={securitySummary.recentValidations}
+                        emptyRulesDescription={emptyRulesDescription}
+                    />
+                </motion.div>
+            </div>
+
+            {/* Live Log Stream — full width */}
+            <motion.div variants={fadeUpVariants}>
+                <LiveLogStream
+                    logs={filteredLogs}
+                    filterQuery={filterQuery}
+                    onFilterChange={setFilterQuery}
+                    emptyText={emptyLogsText}
+                />
+            </motion.div>
+
+            {/* Admin API Keys */}
+            <motion.div variants={fadeUpVariants}>
+                <AdminKeySection apiKeys={apiKeys} visible={userRole === 'admin'} />
+            </motion.div>
+        </motion.div>
     );
 }

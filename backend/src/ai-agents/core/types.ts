@@ -23,7 +23,7 @@ export type AttackFamily =
     | 'authentication'
     | 'business_logic'
     | 'other';
-export type AnalysisPurpose = 'primary' | 'deep_analysis' | 'learning_verification';
+export type AnalysisPurpose = 'primary' | 'deep_analysis' | 'learning_verification' | 'blocking_review';
 export type ExperimentMode =
     | 'single_agent'
     | 'multi_agent_no_debate'
@@ -97,6 +97,7 @@ export interface TrafficRequest {
     tenantId?: string;
     routeModeOverride?: AIRoutingMode;
     analysisPurpose?: AnalysisPurpose;
+    forceDebate?: boolean;
     traceContext?: TraceContext;
 }
 

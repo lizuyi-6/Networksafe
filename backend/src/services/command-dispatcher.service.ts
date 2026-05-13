@@ -1,7 +1,14 @@
 import { randomUUID } from 'crypto';
 import auditLogger from '../security/audit-logger.service';
+import { classifyCommandRisk } from '../security/command-risk-policy';
+import type { HardwareGrantRecord, CommandIntentRecord } from './hardware-authorization.service';
+import { hardwareAuthorizationService } from './hardware-authorization.service';
+import { deploymentRunService } from './deployment-run.service';
 import logger from '../utils/logger';
+import { detectionPipelineService } from './detection-pipeline.service';
 import { securityOperationsService } from './security-operations.service';
+import { cloneDefaultConfig, platformConfigService } from './platform-config.service';
+import type { DetectionRequest } from './detection-engine';
 
 type AgentGatewayLike = {
   getAgent(agentId: string): any;
@@ -18,6 +25,7 @@ type DeviceCommandAdapter = {
     actorEmail?: string;
     actorIp?: string;
     actionId?: string;
+    hardwareGrant?: HardwareGrantRecord;
   }): Promise<{
     success: boolean;
     record?: any;
@@ -40,9 +48,16 @@ type CommandActor = {
 
 type DispatchStatus = 'queued' | 'running' | 'completed' | 'failed' | 'approval_required';
 
-const AUTO_AGENT_COMMANDS = new Set(['scan', 'block_ip', 'unblock_ip']);
-const AUTO_DEVICE_COMMANDS = new Set(['collect', 'sync-config']);
-const APPROVAL_DEVICE_COMMANDS = new Set(['reboot']);
+interface DispatchResult {
+  success: boolean;
+  status: DispatchStatus;
+  actionId: string;
+  message: string;
+  record?: any;
+  reason?: string;
+  confirmationSessionId?: string;
+  hardwareGateId?: string;
+}
 
 class CommandDispatcherService {
   private agentGateway: AgentGatewayLike | null = null;
@@ -88,6 +103,183 @@ class CommandDispatcherService {
       return 'Reboot the device again or power-cycle it if the approval path leaves the node unreachable.';
     }
     return 'Re-run the collection or sync job if the command result is incomplete.';
+  }
+
+  private buildCommandReviewRequest(input: {
+    scope: 'agent' | 'device';
+    targetId: string;
+    commandType: string;
+    payload?: Record<string, any>;
+    actor: CommandActor;
+    actionId: string;
+    classificationLevel: string;
+  }): DetectionRequest {
+    const timestamp = new Date().toISOString();
+    return {
+      tenantId: input.actor.tenantId,
+      channel: 'agent',
+      requestId: input.actionId,
+      timestamp,
+      sourceIp: input.actor.ip,
+      method: 'COMMAND',
+      path: `/${input.scope}/${input.targetId}/${input.commandType}`,
+      headers: {
+        'x-aetherguard-command-type': input.commandType,
+        'x-aetherguard-command-scope': input.scope,
+        'x-aetherguard-classification-level': input.classificationLevel
+      },
+      body: JSON.stringify({
+        scope: input.scope,
+        targetId: input.targetId,
+        commandType: input.commandType,
+        payload: input.payload || {},
+        actionId: input.actionId
+      }),
+      normalizedBody: JSON.stringify({
+        scope: input.scope,
+        targetId: input.targetId,
+        commandType: input.commandType,
+        payload: input.payload || {},
+        actionId: input.actionId
+      }),
+      parsedBody: JSON.stringify({
+        scope: input.scope,
+        targetId: input.targetId,
+        commandType: input.commandType,
+        payload: input.payload || {},
+        actionId: input.actionId
+      }),
+      evidence: JSON.stringify({
+        scope: input.scope,
+        targetId: input.targetId,
+        commandType: input.commandType,
+        payload: input.payload || {},
+        actor: input.actor.email || input.actor.userId,
+        classificationLevel: input.classificationLevel
+      }),
+      rawPayload: JSON.stringify(input.payload || {}),
+      metadata: {
+        scope: input.scope,
+        targetId: input.targetId,
+        commandType: input.commandType,
+        actionId: input.actionId,
+        actorId: input.actor.userId,
+        actorEmail: input.actor.email,
+        classificationLevel: input.classificationLevel
+      }
+    };
+  }
+
+  private async resolveDetectionPipelineSettings(tenantId: string) {
+    try {
+      const config = await platformConfigService.getConfig(tenantId);
+      return config.detectionPipeline;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('Database not initialized')) {
+        return cloneDefaultConfig().detectionPipeline;
+      }
+      throw error;
+    }
+  }
+
+  private async reviewCommandForClassification(input: {
+    scope: 'agent' | 'device';
+    targetId: string;
+    commandType: string;
+    payload?: Record<string, any>;
+    actor: CommandActor;
+    actionId: string;
+    approved?: boolean;
+  }): Promise<{
+    required: boolean;
+    allowed: boolean;
+    status: 'not_required' | 'completed' | 'failed' | 'timeout' | 'unavailable';
+    reason?: string;
+    message?: string;
+    review?: any;
+  }> {
+    const settings = await this.resolveDetectionPipelineSettings(input.actor.tenantId);
+    const classificationLevel = settings.classificationLevel || 'standard';
+    const riskClass = classifyCommandRisk(input.commandType);
+    const reviewRequired = classificationLevel === 'maximum'
+      || (classificationLevel === 'elevated' && (riskClass === 'admin_approval_required' || riskClass === 'physical_confirmation_required'));
+
+    if (!reviewRequired) {
+      return { required: false, allowed: true, status: 'not_required' };
+    }
+
+    const request = this.buildCommandReviewRequest({
+      scope: input.scope,
+      targetId: input.targetId,
+      commandType: input.commandType,
+      payload: input.payload,
+      actor: input.actor,
+      actionId: input.actionId,
+      classificationLevel
+    });
+
+    const review = await detectionPipelineService.runBlockingReview({
+      request,
+      settings,
+      attackFamily: 'automation',
+      classificationLevel,
+      decisionSource: `command:${input.scope}:${input.commandType}`,
+      ruleMatched: false,
+      baseRiskScore: riskClass === 'physical_confirmation_required' ? 1 : riskClass === 'admin_approval_required' ? 0.85 : 0.5,
+      reason: `classification:${classificationLevel}`,
+      forceDebate: true,
+      routeModeOverride: 'local_only'
+    });
+
+    if (!review.allowed || review.status !== 'completed' || !review.aiResult) {
+      return {
+        required: true,
+        allowed: false,
+        status: review.status,
+        reason: review.reason || 'blocking_review_failed',
+        message: review.status === 'timeout'
+          ? 'Command blocked while waiting for multi-agent discussion.'
+          : 'Command rejected by multi-agent discussion.',
+        review
+      };
+    }
+
+    if (classificationLevel === 'maximum') {
+      return {
+        required: true,
+        allowed: true,
+        status: 'completed',
+        review
+      };
+    }
+
+    if (riskClass === 'physical_confirmation_required') {
+      return {
+        required: true,
+        allowed: true,
+        status: 'completed',
+        review
+      };
+    }
+
+    if (riskClass === 'admin_approval_required' && input.approved === false) {
+      return {
+        required: true,
+        allowed: false,
+        status: 'completed',
+        reason: 'approval_required',
+        message: 'Command requires approval before execution.',
+        review
+      };
+    }
+
+    return {
+      required: true,
+      allowed: true,
+      status: 'completed',
+      review
+    };
   }
 
   private async writeAudit(input: {
@@ -138,23 +330,190 @@ class CommandDispatcherService {
     }
   }
 
+  private async requestHardwareConfirmation(input: {
+    scope: 'agent' | 'device';
+    targetId: string;
+    commandType: string;
+    payload?: Record<string, any>;
+    actor: CommandActor;
+    actionId: string;
+  }): Promise<DispatchResult> {
+    const title = this.commandTitle(input.scope, input.commandType, input.targetId, input.payload);
+    const operator = input.actor.email || input.actor.userId;
+    this.safeRecordActionRun({
+      actionId: input.actionId,
+      tenantId: input.actor.tenantId,
+      title,
+      status: 'pending',
+      operator,
+      rollbackNotes: this.rollbackNotes(input.scope, input.commandType),
+      runLog: [
+        {
+          at: new Date().toISOString(),
+          actor: operator,
+          message: `Waiting for hardware confirmation before ${input.commandType}.`,
+          targetId: input.targetId,
+          payload: input.payload || {}
+        }
+      ]
+    });
+
+    const request = await hardwareAuthorizationService.requestPhysicalConfirmation({
+      tenantId: input.actor.tenantId,
+      scope: input.scope,
+      targetId: input.targetId,
+      commandType: input.commandType,
+      payload: input.payload || {},
+      actorId: input.actor.userId,
+      actorEmail: input.actor.email,
+      actorIp: input.actor.ip,
+      actionId: input.actionId
+    });
+
+    if (!request.success) {
+      this.safeUpdateActionRun({
+        tenantId: input.actor.tenantId,
+        actionId: input.actionId,
+        status: 'failed',
+        appendLog: [
+          {
+            at: new Date().toISOString(),
+            actor: 'hardware-authorization',
+            message: request.message,
+            result: request.reason || 'failed'
+          }
+        ]
+      });
+      await this.writeAudit({
+        tenantId: input.actor.tenantId,
+        actor: input.actor,
+        scope: input.scope,
+        targetId: input.targetId,
+        action: input.commandType,
+        severity: 'warning',
+        status: 'failure',
+        details: { actionId: input.actionId, reason: request.reason, payload: input.payload || {} }
+      });
+      return {
+        success: false,
+        status: 'failed',
+        actionId: input.actionId,
+        message: request.message,
+        reason: request.reason,
+        confirmationSessionId: request.session?.sessionId,
+        hardwareGateId: request.session?.gateId
+      };
+    }
+
+    await this.writeAudit({
+      tenantId: input.actor.tenantId,
+      actor: input.actor,
+      scope: input.scope,
+      targetId: input.targetId,
+      action: input.commandType,
+      severity: 'warning',
+      status: 'success',
+      details: {
+        actionId: input.actionId,
+        confirmationSessionId: request.session?.sessionId,
+        gateId: request.session?.gateId,
+        payload: input.payload || {}
+      }
+    });
+
+    return {
+      success: true,
+      status: 'approval_required',
+      actionId: input.actionId,
+      message: request.message,
+      reason: 'hardware_confirmation_required',
+      confirmationSessionId: request.session?.sessionId,
+      hardwareGateId: request.session?.gateId
+    };
+  }
+
   async dispatchAgentCommand(input: {
     agentId: string;
     commandType: string;
     payload?: Record<string, any>;
     actor: CommandActor;
     approved?: boolean;
-  }): Promise<{ success: boolean; status: DispatchStatus; actionId: string; message: string; reason?: string }> {
+  }): Promise<DispatchResult> {
     const actionId = randomUUID();
-    const title = this.commandTitle('agent', input.commandType, input.agentId, input.payload);
-    const operator = input.actor.email || input.actor.userId;
-    const autoAllowed = AUTO_AGENT_COMMANDS.has(input.commandType);
+    const riskClass = classifyCommandRisk(input.commandType);
+    const review = await this.reviewCommandForClassification({
+      scope: 'agent',
+      targetId: input.agentId,
+      commandType: input.commandType,
+      payload: input.payload,
+      actor: input.actor,
+      actionId,
+      approved: input.approved
+    });
+    if (review.required && !review.allowed) {
+      if (review.reason === 'approval_required') {
+        const operator = input.actor.email || input.actor.userId;
+        this.safeRecordActionRun({
+          actionId,
+          tenantId: input.actor.tenantId,
+          title: this.commandTitle('agent', input.commandType, input.agentId, input.payload),
+          status: 'pending',
+          operator,
+          rollbackNotes: this.rollbackNotes('agent', input.commandType),
+          runLog: [
+            {
+              at: new Date().toISOString(),
+              actor: operator,
+              message: review.message || `Command ${input.commandType} queued for approval.`,
+              targetId: input.agentId,
+              payload: input.payload || {},
+              multiAgentReview: review.review?.status || 'completed'
+            }
+          ]
+        });
+        await this.writeAudit({
+          tenantId: input.actor.tenantId,
+          actor: input.actor,
+          scope: 'agent',
+          targetId: input.agentId,
+          action: input.commandType,
+          severity: 'warning',
+          status: 'success',
+          details: { actionId, approvalRequired: true, payload: input.payload || {}, blockingReview: review.review?.status || 'completed' }
+        });
+        return {
+          success: true,
+          status: 'approval_required',
+          actionId,
+          message: review.message || `Command ${input.commandType} requires approval before execution.`,
+          reason: review.reason
+        };
+      }
+      return {
+        success: false,
+        status: 'failed',
+        actionId,
+        message: review.message || 'Command rejected by blocking discussion.',
+        reason: review.reason || 'blocking_review_failed'
+      };
+    }
+    if (riskClass === 'physical_confirmation_required') {
+      return this.requestHardwareConfirmation({
+        scope: 'agent',
+        targetId: input.agentId,
+        commandType: input.commandType,
+        payload: input.payload,
+        actor: input.actor,
+        actionId
+      });
+    }
 
-    if (!autoAllowed && !input.approved) {
+    if (riskClass === 'admin_approval_required' && !input.approved) {
+      const operator = input.actor.email || input.actor.userId;
       this.safeRecordActionRun({
         actionId,
         tenantId: input.actor.tenantId,
-        title,
+        title: this.commandTitle('agent', input.commandType, input.agentId, input.payload),
         status: 'pending',
         operator,
         rollbackNotes: this.rollbackNotes('agent', input.commandType),
@@ -187,126 +546,13 @@ class CommandDispatcherService {
       };
     }
 
-    const agent = this.agentGateway?.getAgent(input.agentId);
-    if (!this.agentGateway || !agent) {
-      await this.writeAudit({
-        tenantId: input.actor.tenantId,
-        actor: input.actor,
-        scope: 'agent',
-        targetId: input.agentId,
-        action: input.commandType,
-        severity: 'warning',
-        status: 'failure',
-        details: { actionId, reason: 'agent_not_available', payload: input.payload || {} }
-      });
-      return {
-        success: false,
-        status: 'failed',
-        actionId,
-        message: 'Agent gateway unavailable or agent offline.',
-        reason: 'agent_not_available'
-      };
-    }
-
-    this.safeRecordActionRun({
+    return this.executeAgentCommand({
       actionId,
-      tenantId: input.actor.tenantId,
-      title,
-      status: 'queued',
-      operator,
-      rollbackNotes: this.rollbackNotes('agent', input.commandType),
-      runLog: [
-        {
-          at: new Date().toISOString(),
-          actor: operator,
-          message: `Queued agent command ${input.commandType}.`,
-          targetId: input.agentId,
-          payload: input.payload || {}
-        }
-      ]
+      agentId: input.agentId,
+      commandType: input.commandType,
+      payload: input.payload,
+      actor: input.actor
     });
-
-    const accepted = this.agentGateway.sendCommandToAgent(
-      input.agentId,
-      {
-        type: input.commandType,
-        payload: {
-          ...(input.payload || {}),
-          actionId
-        },
-        metadata: {
-          actionId,
-          tenantId: input.actor.tenantId,
-          actorId: input.actor.userId,
-          actorEmail: input.actor.email
-        }
-      },
-      input.actor.userId
-    );
-
-    if (!accepted) {
-      this.safeUpdateActionRun({
-        tenantId: input.actor.tenantId,
-        actionId,
-        status: 'failed',
-        appendLog: [
-          {
-            at: new Date().toISOString(),
-            actor: 'agent-gateway',
-            message: 'Agent rejected command or was unavailable.',
-            targetId: input.agentId
-          }
-        ]
-      });
-      await this.writeAudit({
-        tenantId: input.actor.tenantId,
-        actor: input.actor,
-        scope: 'agent',
-        targetId: input.agentId,
-        action: input.commandType,
-        severity: 'warning',
-        status: 'failure',
-        details: { actionId, reason: 'dispatch_rejected', payload: input.payload || {} }
-      });
-      return {
-        success: false,
-        status: 'failed',
-        actionId,
-        message: 'Agent rejected the command.',
-        reason: 'dispatch_rejected'
-      };
-    }
-
-    this.safeUpdateActionRun({
-      tenantId: input.actor.tenantId,
-      actionId,
-      status: 'running',
-      appendLog: [
-        {
-          at: new Date().toISOString(),
-          actor: 'agent-gateway',
-          message: 'Agent command accepted by gateway.',
-          targetId: input.agentId
-        }
-      ]
-    });
-    await this.writeAudit({
-      tenantId: input.actor.tenantId,
-      actor: input.actor,
-      scope: 'agent',
-      targetId: input.agentId,
-      action: input.commandType,
-      severity: input.commandType === 'block_ip' ? 'warning' : 'info',
-      status: 'success',
-      details: { actionId, payload: input.payload || {} }
-    });
-
-    return {
-      success: true,
-      status: 'running',
-      actionId,
-      message: `Agent command ${input.commandType} dispatched successfully.`
-    };
   }
 
   async dispatchDeviceCommand(input: {
@@ -314,15 +560,10 @@ class CommandDispatcherService {
     commandType: string;
     payload?: Record<string, any>;
     actor: CommandActor;
-  approved?: boolean;
-  }): Promise<{ success: boolean; status: DispatchStatus; actionId: string; message: string; record?: any; reason?: string }> {
+    approved?: boolean;
+  }): Promise<DispatchResult> {
     const actionId = randomUUID();
-    const title = this.commandTitle('device', input.commandType, input.deviceId, input.payload);
-    const operator = input.actor.email || input.actor.userId;
     const device = this.deviceAdapter?.getDevice(input.deviceId);
-    const requiresApproval = APPROVAL_DEVICE_COMMANDS.has(input.commandType) && !input.approved;
-    const autoAllowed = AUTO_DEVICE_COMMANDS.has(input.commandType) || input.approved === true;
-
     if (!this.deviceAdapter || !device) {
       await this.writeAudit({
         tenantId: input.actor.tenantId,
@@ -363,11 +604,80 @@ class CommandDispatcherService {
       };
     }
 
-    if (requiresApproval) {
+    const riskClass = classifyCommandRisk(input.commandType);
+    const review = await this.reviewCommandForClassification({
+      scope: 'device',
+      targetId: input.deviceId,
+      commandType: input.commandType,
+      payload: input.payload,
+      actor: input.actor,
+      actionId,
+      approved: input.approved
+    });
+    if (review.required && !review.allowed) {
+      if (review.reason === 'approval_required') {
+        const operator = input.actor.email || input.actor.userId;
+        this.safeRecordActionRun({
+          actionId,
+          tenantId: input.actor.tenantId,
+          title: this.commandTitle('device', input.commandType, input.deviceId, input.payload),
+          status: 'pending',
+          operator,
+          rollbackNotes: this.rollbackNotes('device', input.commandType),
+          runLog: [
+            {
+              at: new Date().toISOString(),
+              actor: operator,
+              message: review.message || `Command ${input.commandType} requires approval before execution.`,
+              targetId: input.deviceId,
+              payload: input.payload || {},
+              multiAgentReview: review.review?.status || 'completed'
+            }
+          ]
+        });
+        await this.writeAudit({
+          tenantId: input.actor.tenantId,
+          actor: input.actor,
+          scope: 'device',
+          targetId: input.deviceId,
+          action: input.commandType,
+          severity: 'warning',
+          status: 'success',
+          details: { actionId, approvalRequired: true, payload: input.payload || {}, blockingReview: review.review?.status || 'completed' }
+        });
+        return {
+          success: true,
+          status: 'approval_required',
+          actionId,
+          message: review.message || `Device command ${input.commandType} requires approval before execution.`,
+          reason: review.reason
+        };
+      }
+      return {
+        success: false,
+        status: 'failed',
+        actionId,
+        message: review.message || 'Command rejected by blocking discussion.',
+        reason: review.reason || 'blocking_review_failed'
+      };
+    }
+    if (riskClass === 'physical_confirmation_required') {
+      return this.requestHardwareConfirmation({
+        scope: 'device',
+        targetId: input.deviceId,
+        commandType: input.commandType,
+        payload: input.payload,
+        actor: input.actor,
+        actionId
+      });
+    }
+
+    if (riskClass === 'admin_approval_required' && !input.approved) {
+      const operator = input.actor.email || input.actor.userId;
       this.safeRecordActionRun({
         actionId,
         tenantId: input.actor.tenantId,
-        title,
+        title: this.commandTitle('device', input.commandType, input.deviceId, input.payload),
         status: 'pending',
         operator,
         rollbackNotes: this.rollbackNotes('device', input.commandType),
@@ -400,30 +710,246 @@ class CommandDispatcherService {
       };
     }
 
-    if (!autoAllowed) {
+    return this.executeDeviceCommand({
+      actionId,
+      deviceId: input.deviceId,
+      commandType: input.commandType,
+      payload: input.payload,
+      actor: input.actor
+    });
+  }
+
+  async dispatchConfirmedDeviceCommand(input: {
+    deviceId: string;
+    commandType: string;
+    payload?: Record<string, any>;
+    actor: CommandActor;
+    actionId: string;
+    hardwareGrant?: HardwareGrantRecord;
+  }): Promise<DispatchResult> {
+    return this.executeDeviceCommand({
+      actionId: input.actionId,
+      deviceId: input.deviceId,
+      commandType: input.commandType,
+      payload: input.payload,
+      actor: input.actor,
+      hardwareGrant: input.hardwareGrant
+    });
+  }
+
+  async dispatchHardwareConfirmedIntent(intent: CommandIntentRecord, grant: HardwareGrantRecord): Promise<DispatchResult> {
+    if (intent.scope === 'deployment') {
+      const run = deploymentRunService.confirmApprovedRun(intent, grant);
+      const result: DispatchResult = {
+        success: Boolean(run),
+        status: run ? 'completed' : 'failed',
+        actionId: intent.actionId,
+        message: run
+          ? 'Deployment run approved and waiting for helper execution.'
+          : 'Deployment run approval target not found.',
+        reason: run ? undefined : 'deployment_run_not_found'
+      };
+      hardwareAuthorizationService.completeIntent(intent.actionId, result.success, {
+        status: result.success ? 'approved' : 'failed',
+        message: result.message,
+        reason: result.reason || null,
+        runId: intent.targetId,
+        hardwareGrantId: grant.grantId
+      });
+      return result;
+    }
+
+    const actor: CommandActor = {
+      tenantId: intent.tenantId,
+      userId: 'hardware-confirmation-gateway',
+      email: intent.requestedBy,
+      ip: `gate:${grant.gateId}`
+    };
+
+    const result = intent.scope === 'agent'
+      ? await this.executeAgentCommand({
+          actionId: intent.actionId,
+          agentId: intent.targetId,
+          commandType: intent.commandType,
+          payload: intent.payload,
+          actor,
+          hardwareGrant: grant
+        })
+      : await this.executeDeviceCommand({
+          actionId: intent.actionId,
+          deviceId: intent.targetId,
+          commandType: intent.commandType,
+          payload: intent.payload,
+          actor,
+          hardwareGrant: grant
+        });
+
+    hardwareAuthorizationService.completeIntent(intent.actionId, result.success, {
+      status: result.status,
+      message: result.message,
+      reason: result.reason || null
+    });
+    return result;
+  }
+
+  private async executeAgentCommand(input: {
+    actionId: string;
+    agentId: string;
+    commandType: string;
+    payload?: Record<string, any>;
+    actor: CommandActor;
+    hardwareGrant?: HardwareGrantRecord;
+  }): Promise<DispatchResult> {
+    const agent = this.agentGateway?.getAgent(input.agentId);
+    if (!this.agentGateway || !agent) {
       await this.writeAudit({
         tenantId: input.actor.tenantId,
         actor: input.actor,
-        scope: 'device',
-        targetId: input.deviceId,
+        scope: 'agent',
+        targetId: input.agentId,
         action: input.commandType,
         severity: 'warning',
         status: 'failure',
-        details: { actionId, reason: 'device_not_available', payload: input.payload || {} }
+        details: { actionId: input.actionId, reason: 'agent_not_available', payload: input.payload || {} }
       });
       return {
         success: false,
         status: 'failed',
-        actionId,
-        message: `Device command ${input.commandType} is not permitted without approval.`,
-        reason: 'command_not_permitted'
+        actionId: input.actionId,
+        message: 'Agent gateway unavailable or agent offline.',
+        reason: 'agent_not_available'
       };
     }
 
+    const operator = input.actor.email || input.actor.userId;
     this.safeRecordActionRun({
-      actionId,
+      actionId: input.actionId,
       tenantId: input.actor.tenantId,
-      title,
+      title: this.commandTitle('agent', input.commandType, input.agentId, input.payload),
+      status: 'queued',
+      operator,
+      rollbackNotes: this.rollbackNotes('agent', input.commandType),
+      runLog: [
+        {
+          at: new Date().toISOString(),
+          actor: operator,
+          message: `Queued agent command ${input.commandType}.`,
+          targetId: input.agentId,
+          payload: input.payload || {},
+          hardwareGrantId: input.hardwareGrant?.grantId || null
+        }
+      ]
+    });
+
+    const accepted = this.agentGateway.sendCommandToAgent(
+      input.agentId,
+      {
+        type: input.commandType,
+        payload: {
+          ...(input.payload || {}),
+          actionId: input.actionId
+        },
+        metadata: {
+          actionId: input.actionId,
+          tenantId: input.actor.tenantId,
+          actorId: input.actor.userId,
+          actorEmail: input.actor.email,
+          hardwareGrant: input.hardwareGrant?.grant || null,
+          hardwareGrantId: input.hardwareGrant?.grantId || null
+        }
+      },
+      input.actor.userId
+    );
+
+    if (!accepted) {
+      this.safeUpdateActionRun({
+        tenantId: input.actor.tenantId,
+        actionId: input.actionId,
+        status: 'failed',
+        appendLog: [
+          {
+            at: new Date().toISOString(),
+            actor: 'agent-gateway',
+            message: 'Agent rejected command or was unavailable.',
+            targetId: input.agentId
+          }
+        ]
+      });
+      await this.writeAudit({
+        tenantId: input.actor.tenantId,
+        actor: input.actor,
+        scope: 'agent',
+        targetId: input.agentId,
+        action: input.commandType,
+        severity: 'warning',
+        status: 'failure',
+        details: { actionId: input.actionId, reason: 'dispatch_rejected', payload: input.payload || {} }
+      });
+      return {
+        success: false,
+        status: 'failed',
+        actionId: input.actionId,
+        message: 'Agent rejected the command.',
+        reason: 'dispatch_rejected'
+      };
+    }
+
+    this.safeUpdateActionRun({
+      tenantId: input.actor.tenantId,
+      actionId: input.actionId,
+      status: 'running',
+      appendLog: [
+        {
+          at: new Date().toISOString(),
+          actor: 'agent-gateway',
+          message: 'Agent command accepted by gateway.',
+          targetId: input.agentId,
+          hardwareGrantId: input.hardwareGrant?.grantId || null
+        }
+      ]
+    });
+    await this.writeAudit({
+      tenantId: input.actor.tenantId,
+      actor: input.actor,
+      scope: 'agent',
+      targetId: input.agentId,
+      action: input.commandType,
+      severity: input.commandType === 'block_ip' ? 'warning' : 'info',
+      status: 'success',
+      details: { actionId: input.actionId, payload: input.payload || {}, hardwareGrantId: input.hardwareGrant?.grantId || null }
+    });
+
+    return {
+      success: true,
+      status: 'running',
+      actionId: input.actionId,
+      message: `Agent command ${input.commandType} dispatched successfully.`
+    };
+  }
+
+  private async executeDeviceCommand(input: {
+    actionId: string;
+    deviceId: string;
+    commandType: string;
+    payload?: Record<string, any>;
+    actor: CommandActor;
+    hardwareGrant?: HardwareGrantRecord;
+  }): Promise<DispatchResult> {
+    if (!this.deviceAdapter) {
+      return {
+        success: false,
+        status: 'failed',
+        actionId: input.actionId,
+        message: 'Device command dispatcher is unavailable.',
+        reason: 'device_not_available'
+      };
+    }
+
+    const operator = input.actor.email || input.actor.userId;
+    this.safeRecordActionRun({
+      actionId: input.actionId,
+      tenantId: input.actor.tenantId,
+      title: this.commandTitle('device', input.commandType, input.deviceId, input.payload),
       status: 'running',
       operator,
       rollbackNotes: this.rollbackNotes('device', input.commandType),
@@ -433,7 +959,8 @@ class CommandDispatcherService {
           actor: operator,
           message: `Executing device command ${input.commandType}.`,
           targetId: input.deviceId,
-          payload: input.payload || {}
+          payload: input.payload || {},
+          hardwareGrantId: input.hardwareGrant?.grantId || null
         }
       ]
     });
@@ -445,12 +972,13 @@ class CommandDispatcherService {
       actorId: input.actor.userId,
       actorEmail: input.actor.email,
       actorIp: input.actor.ip,
-      actionId
+      actionId: input.actionId,
+      hardwareGrant: input.hardwareGrant
     });
 
     this.safeUpdateActionRun({
       tenantId: input.actor.tenantId,
-      actionId,
+      actionId: input.actionId,
       status: result.success ? 'completed' : 'failed',
       appendLog: [
         {
@@ -458,7 +986,8 @@ class CommandDispatcherService {
           actor: 'device-gateway',
           message: result.message,
           targetId: input.deviceId,
-          result: result.success ? 'completed' : 'failed'
+          result: result.success ? 'completed' : 'failed',
+          hardwareGrantId: input.hardwareGrant?.grantId || null
         }
       ]
     });
@@ -469,15 +998,21 @@ class CommandDispatcherService {
       scope: 'device',
       targetId: input.deviceId,
       action: input.commandType,
-      severity: input.commandType === 'reboot' ? 'warning' : 'info',
+      severity: classifyCommandRisk(input.commandType) === 'physical_confirmation_required' ? 'warning' : 'info',
       status: result.success ? 'success' : 'failure',
-      details: { actionId, payload: input.payload || {}, message: result.message, reason: result.reason }
+      details: {
+        actionId: input.actionId,
+        payload: input.payload || {},
+        message: result.message,
+        reason: result.reason,
+        hardwareGrantId: input.hardwareGrant?.grantId || null
+      }
     });
 
     return {
       success: result.success,
       status: result.success ? 'completed' : 'failed',
-      actionId,
+      actionId: input.actionId,
       message: result.message,
       record: result.record,
       reason: result.reason

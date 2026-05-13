@@ -1472,16 +1472,35 @@ export const sendDemoDeviceCommand = (deviceId: string, command: string) => {
         throw new Error('FG-DEMO-DEVICE-OFFLINE');
     }
 
+    const physicalCommands = new Set([
+        'reboot',
+        'host_remove',
+        'host_install',
+        'recovery_flash',
+        'factory_reset',
+        'ota_update',
+        'deploy_bundle',
+        'wipe_data',
+        'diagnostic_unlock',
+        'critical_config_change'
+    ]);
     const now = new Date().toISOString();
+    const isPhysical = physicalCommands.has(command);
     const record: DemoDeviceCommand = {
         id: makeId('cmd-demo'),
         deviceId,
         command,
-        status: 'completed',
-        message: command === 'reboot' ? 'Device rebooted and reported healthy.' : 'Telemetry collection completed.',
+        status: isPhysical
+            ? 'queued'
+            : 'completed',
+        message: isPhysical
+            ? 'Waiting for hardware confirmation.'
+            : command === 'reboot'
+                ? 'Device rebooted and reported healthy.'
+                : 'Telemetry collection completed.',
         executedBy: 'demo-user',
         createdAt: now,
-        completedAt: now
+        completedAt: isPhysical ? undefined : now
     };
 
     demoDeviceCommandsStore[deviceId] = [record, ...(demoDeviceCommandsStore[deviceId] || [])].slice(0, 20);
@@ -1507,7 +1526,14 @@ export const sendDemoDeviceCommand = (deviceId: string, command: string) => {
         }
     });
 
-    return clone({ success: true, message: record.message, command: record, latestCommand: record });
+    return clone({
+        success: true,
+        message: record.message,
+        status: isPhysical ? 'approval_required' : 'completed',
+        confirmationSessionId: isPhysical ? makeId('sess-demo') : null,
+        command: record,
+        latestCommand: record
+    });
 };
 
 export const runDemoAttackSimulation = (attackIds?: string[]): AttackSimulationReport => {

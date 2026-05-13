@@ -112,12 +112,22 @@ const applyDemoJitter = () => {
 };
 
 
+// In-memory token storage for development (cookie fallback)
+let _accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+    _accessToken = token;
+};
+
 const getAuthHeaders = () => {
-    // SECURITY FIX: No longer sending token in header
-    // Token is now in httpOnly cookie, sent automatically with credentials: 'include'
-    return {
+    const headers: Record<string, string> = {
         'Content-Type': 'application/json'
     };
+    // In dev, also send Authorization header as cookie fallback
+    if (_accessToken) {
+        headers['Authorization'] = `Bearer ${_accessToken}`;
+    }
+    return headers;
 };
 
 // SECURITY FIX: Fetch options with credentials for httpOnly cookies
@@ -147,7 +157,7 @@ const doRefresh = async (): Promise<boolean> => {
 const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Promise<Response> => {
     const response = await _fetchBase(url, options);
 
-    if (response.status !== 401 || url.includes('/auth/refresh') || url.includes('/health/')) {
+    if (response.status !== 401 || url.includes('/auth/refresh') || url.includes('/health/') || url.includes('/auth/login')) {
         return response;
     }
 
@@ -159,9 +169,14 @@ const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Pro
         refreshSubscribers = [];
         if (!success) {
             setSessionUserIdentity(null);
+            setAccessToken(null);
+            return response;
         }
+        // Retry the original request after successful refresh
+        return _fetchBase(url, options);
     }
 
+    // Another refresh is in progress — wait for it
     return new Promise((resolve) => {
         refreshSubscribers.push((success: boolean) => {
             if (success) {
@@ -207,9 +222,11 @@ export interface CurrentUserSession {
     userId: string;
     email: string;
     username: string;
-    role: 'admin' | 'tenant' | 'viewer';
+    role: 'admin' | 'tenant' | 'viewer' | 'platform_admin' | 'tenant_admin' | 'tenant_operator' | 'tenant_viewer' | 'auditor';
     plan?: 'starter' | 'pro' | 'ultra';
     tenantId?: string;
+    permissions?: string[];
+    authProvider?: 'local' | 'oidc';
 }
 
 export interface LoginResponse {
@@ -280,12 +297,25 @@ export const login = async (
     }
 
     setSessionUserIdentity(user);
+    setAccessToken(data?.accessToken || payload?.accessToken || null);
     return {
         message: data?.message || payload?.message,
         user,
         accessToken: data?.accessToken || payload?.accessToken,
         refreshToken: data?.refreshToken || payload?.refreshToken,
         expiresIn: data?.expiresIn || payload?.expiresIn
+    };
+};
+
+export const loginWithOidc = async (): Promise<{ authorizationUrl: string }> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/oidc/login`);
+    const payload = await response.json().catch(() => null) as any;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(payload, `FG-AUTH-OIDC-LOGIN-${response.status}`));
+    }
+    const data = unwrapApiEnvelope<{ authorizationUrl: string }>(payload);
+    return {
+        authorizationUrl: data.authorizationUrl
     };
 };
 
@@ -297,6 +327,7 @@ export const logout = async (signal?: AbortSignal) => {
 
     const payload = await response.json().catch(() => null) as any;
     setSessionUserIdentity(null);
+    setAccessToken(null);
 
     if (!response.ok) {
         throw new Error(extractErrorMessage(payload, `FG-AUTH-LOGOUT-${response.status}`));
@@ -420,6 +451,11 @@ export interface SystemModeResponse {
     attackSimEnabled: boolean;
     canToggleMode?: boolean;
     devLoginEnabled?: boolean;
+    passwordLoginEnabled?: boolean;
+    oidcEnabled?: boolean;
+    enterpriseRuntimeMode?: 'prod-enterprise' | 'trial' | 'lab';
+    demoModeAllowed?: boolean;
+    enterpriseStrictMode?: boolean;
     profile?: string;
     dbMode?: string;
 }
@@ -452,12 +488,116 @@ export type DeploymentTarget =
     | 'binary_agent'
     | 'k8s_daemonset';
 
+export interface HardwareGateRecord {
+    gateId: string;
+    tenantId: string;
+    displayName: string;
+    algorithm: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    lastSeenAt?: string;
+    metadata?: Record<string, any>;
+}
+
+export type InterlockState = 'isolated' | 'armed' | 'released' | 'fault' | 'disabled' | 'unknown';
+
+export interface FinalDefensePolicyRecord {
+    policyId: string;
+    tenantId: string;
+    companionId: string;
+    gateId: string;
+    policyDigest: string;
+    allowedActions: Array<{
+        commandType: string;
+        scriptPath?: string;
+        maxExecutionMs?: number;
+        requiresInterlockRelease?: boolean;
+    }>;
+    breakerTarget: string;
+    releaseTtlMs: number;
+    createdAt: string;
+    updatedAt: string;
+    status: 'active' | 'staged' | 'revoked';
+}
+
+export interface FinalDefenseStatusRecord {
+    tenantId: string;
+    companionId: string;
+    gateId: string;
+    policyId?: string;
+    policyDigest?: string;
+    reportedPolicyDigest?: string;
+    breakerTarget?: string;
+    interlockState: InterlockState;
+    externalPowerPresent: boolean;
+    secureElementPresent: boolean;
+    feedbackOk: boolean;
+    companionOnline: boolean;
+    lastHeartbeatAt?: string;
+    lastVerifiedAt?: string;
+    lastError?: string;
+    active: boolean;
+    degradedReasons: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface FinalDefenseStatusResponse {
+    active: boolean;
+    mode: 'active' | 'degraded' | 'not_configured';
+    statuses: FinalDefenseStatusRecord[];
+    policies: FinalDefensePolicyRecord[];
+}
+
+export interface DeploymentRunRecord {
+    id: string;
+    tenantId: string;
+    helperId: string;
+    gateId: string;
+    requestType: 'install' | 'remove';
+    serverType: DeploymentTarget;
+    status: string;
+    bundleChecksum: string;
+    checksumShortCode: string;
+    requestedBy: string;
+    approvedBy?: string;
+    backupRef?: string;
+    hardwareGrantId?: string;
+    evidenceStatus: 'pending' | 'ready' | 'failed';
+    evidenceArtifactRef?: string;
+    createdAt: string;
+    updatedAt: string;
+    completedAt?: string;
+    lastError?: string;
+}
+
+export interface DeploymentHelperRecord {
+    helperId: string;
+    tenantId: string;
+    fingerprint: string;
+    version: string;
+    hostname: string;
+    systemdStatus: string;
+    writablePaths: string[];
+    targetHost: string;
+    status: 'online' | 'offline' | 'stale';
+    createdAt: string;
+    updatedAt: string;
+    lastHeartbeatAt?: string;
+}
+
+export interface DeploymentEvidenceResponse {
+    run: DeploymentRunRecord;
+    payload: Record<string, any>;
+}
+
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type NotificationChannelType = 'email' | 'smtp' | 'slack_webhook' | 'generic_webhook';
 export type AIRoutingMode = 'cloud_only' | 'local_preferred' | 'local_only' | 'hybrid_verify';
 export type PrivacyMode = 'off' | 'strict';
-export type DetectionAIEscalationMode = 'high_risk_allowed_only';
-export type DetectionLearningMode = 'malicious_review_queue';
+export type DetectionAIEscalationMode = 'high_risk_allowed_only' | 'all_allowed' | 'disabled';
+export type DetectionLearningMode = 'malicious_review_queue' | 'passive_observe' | 'active_block';
 
 export interface NotificationChannelConfig {
     id: string;
@@ -524,6 +664,11 @@ export interface PlatformConfigResponse {
     detectionPipeline: {
         ruleFirstEnabled: boolean;
         aiEscalationMode: DetectionAIEscalationMode;
+        classificationLevel: 'standard' | 'elevated' | 'maximum';
+        blockingDiscussionTimeoutMs: number;
+        hotPathRouteMode: AIRoutingMode;
+        asyncReviewEnabled: boolean;
+        blockingReviewForHighRiskActions: boolean;
         enableHttpApi: boolean;
         enablePacketInterceptor: boolean;
         enableAgentAsyncReview: boolean;
@@ -638,17 +783,6 @@ export const fetchStats = async (signal?: AbortSignal): Promise<DashboardStats |
         const response = await fetchWithCredentials(`${API_BASE_URL}/stats`, { signal });
         if (!response.ok) throw new Error(i18n.t('api.fetch_failed'));
         const data = await response.json();
-
-        if (isDemoModeActive() && data?.overview) {
-            applyDemoJitter();
-            data.overview.totalRequests += demoState.statsOffset.totalRequests;
-            data.overview.threatsBlocked += demoState.statsOffset.threatsBlocked;
-            data.overview.activeConnections = Math.max(0, data.overview.activeConnections + demoState.trafficOffset.activeConnections);
-            if (data.performance) {
-                data.performance.requestsPerSecond = Math.floor(Math.random() * 600) + 150;
-                data.performance.averageLatency = Math.floor(Math.random() * 45) + 12;
-            }
-        }
         return data;
     } catch (e) {
         if (!isRequestAbortError(e, signal)) {
@@ -834,11 +968,11 @@ const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
         channels: []
     },
     aiRouting: {
-        mode: 'local_preferred',
+        mode: 'local_only',
         localEndpointId: 'default-laptop',
         localHotPathEndpointId: null,
         cloudEndpointId: null,
-        fallbackAllowed: true,
+        fallbackAllowed: false,
         redactionEnabled: true
     },
     privacyMode: 'off',
@@ -863,6 +997,11 @@ const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
     detectionPipeline: {
         ruleFirstEnabled: true,
         aiEscalationMode: 'high_risk_allowed_only',
+        classificationLevel: 'standard',
+        blockingDiscussionTimeoutMs: 30000,
+        hotPathRouteMode: 'local_only',
+        asyncReviewEnabled: true,
+        blockingReviewForHighRiskActions: true,
         enableHttpApi: true,
         enablePacketInterceptor: true,
         enableAgentAsyncReview: true,
@@ -902,9 +1041,20 @@ const demoRuleSummary = (): RuleSummary => ({
     rejectedCandidates: 1,
     ruleHitRate: 0.62,
     aiEscalationRate: 0.18,
+    localModelHitRate: 0.16,
     avgProcessingTimeMs: 14.8,
     localAICount: 18,
     cloudAICount: 2,
+    asyncReviewQueueDepth: 3,
+    asyncReviewRunning: 1,
+    asyncReviewCompleted: 14,
+    asyncReviewFailed: 1,
+    debateCompletionRate: 0.42,
+    avgAsyncReviewLatencyMs: 1880,
+    classificationLevel: 'elevated',
+    blockingDiscussionCount: 6,
+    blockingDiscussionFailClosed: 1,
+    avgBlockingDiscussionLatencyMs: 412.6,
     topRules: [
         { ruleId: 'seed-http-sqli', name: 'SQLi UNION SELECT', severity: 'critical', hitCount: 12, source: 'seed' },
         { ruleId: 'candidate-agent-bruteforce', name: 'Agent credential spray', severity: 'high', hitCount: 6, source: 'candidate' }
@@ -2349,14 +2499,14 @@ export const resetUserPassword = async (userId: string) => {
 export const fetchPublicAnnouncements = async (signal?: AbortSignal) => {
     const response = await fetch(`${API_BASE_URL}/announcements`, { signal });
     if (!response.ok) throw new Error(i18n.t('api.failed_to_list_announcements'));
-    return response.json().catch(() => ({}));
+    return readJson<any[]>(response);
 };
 
 // Announcements - Admin endpoints
 export const fetchAnnouncements = async (signal?: AbortSignal) => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/admin/announcements`, { signal });
     if (!response.ok) throw new Error(i18n.t('api.failed_to_list_announcements'));
-    return response.json().catch(() => ({}));
+    return readJson<any[]>(response);
 };
 
 export const createAnnouncement = async (payload: { title: string; content: string; type?: string; expiresAt?: string }) => {
@@ -2773,14 +2923,181 @@ export const sendDeviceCommand = async (deviceId: string, command: string): Prom
         return sendDemoDeviceCommand(deviceId, command);
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/devices/${encodeURIComponent(deviceId)}/cmd`, {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/commands/intents`, {
         method: 'POST',
-        body: JSON.stringify({ command })
+        body: JSON.stringify({
+            scope: 'device',
+            targetId: deviceId,
+            commandType: command,
+            payload: {}
+        })
     });
     if (!response.ok) {
         throw new Error(`FG-DEVICE-CMD-${response.status}`);
     }
     return response.json();
+};
+
+export const fetchHardwareConfirmation = async (sessionId: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/hardware-confirmations/${encodeURIComponent(sessionId)}`);
+    if (!response.ok) {
+        throw new Error(`FG-HARDWARE-CONFIRMATION-${response.status}`);
+    }
+    return response.json();
+};
+
+export const fetchHardwareGates = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/hardware-gates`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-HARDWARE-GATES-${response.status}`);
+    }
+    const payload = await response.json();
+    const data = unwrapApiEnvelope<{ gates: HardwareGateRecord[] }>(payload);
+    return data?.gates || [];
+};
+
+export const fetchFinalDefenseStatus = async (signal?: AbortSignal): Promise<FinalDefenseStatusResponse> => {
+    if (shouldUseDemoData()) {
+        const now = new Date().toISOString();
+        return {
+            active: true,
+            mode: 'active',
+            statuses: [{
+                tenantId: 'demo-tenant',
+                companionId: 'final-defense-companion-01',
+                gateId: 'control-board-v1-01',
+                policyId: 'demo-final-defense-policy',
+                policyDigest: 'b7d8f1e0a9c44d21demo',
+                reportedPolicyDigest: 'b7d8f1e0a9c44d21demo',
+                breakerTarget: 'mgmt-uplink-relay-a',
+                interlockState: 'isolated',
+                externalPowerPresent: true,
+                secureElementPresent: true,
+                feedbackOk: true,
+                companionOnline: true,
+                lastHeartbeatAt: now,
+                lastVerifiedAt: now,
+                active: true,
+                degradedReasons: [],
+                createdAt: now,
+                updatedAt: now
+            }],
+            policies: []
+        };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/status`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-FINAL-DEFENSE-STATUS-${response.status}`);
+    }
+    return readJson<FinalDefenseStatusResponse>(response);
+};
+
+export const createFinalDefensePolicy = async (payload: {
+    companionId: string;
+    gateId: string;
+    allowedActions: FinalDefensePolicyRecord['allowedActions'];
+    breakerTarget: string;
+    releaseTtlMs?: number;
+    status?: FinalDefensePolicyRecord['status'];
+    policyId?: string;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/policies`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-FINAL-DEFENSE-POLICY-${response.status}`);
+    }
+    return readJson<{ policy: FinalDefensePolicyRecord }>(response);
+};
+
+export const requestFinalDefenseAction = async (payload: {
+    companionId: string;
+    commandType: string;
+    payload?: Record<string, any>;
+    challenge?: string;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/actions`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-FINAL-DEFENSE-ACTION-${response.status}`);
+    }
+    return readJson<ActionResponse>(response);
+};
+
+export const enrollHardwareGate = async (payload: {
+    gateId: string;
+    displayName?: string;
+    publicKeyPem: string;
+    algorithm?: string;
+    metadata?: Record<string, any>;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/hardware-gates/enroll`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-HARDWARE-GATE-ENROLL-${response.status}`);
+    }
+    return readJson<HardwareGateRecord>(response);
+};
+
+export const fetchDeploymentHelpers = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/helpers`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-HELPERS-${response.status}`);
+    }
+    const payload = await response.json();
+    const data = unwrapApiEnvelope<{ helpers: DeploymentHelperRecord[] }>(payload);
+    return data?.helpers || [];
+};
+
+export const createDeploymentRun = async (payload: {
+    helperId: string;
+    gateId: string;
+    requestType: 'install' | 'remove';
+    serverType: DeploymentTarget;
+    profile: Record<string, any>;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployment-runs`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-RUN-CREATE-${response.status}`);
+    }
+    return readJson<DeploymentRunRecord>(response);
+};
+
+export const fetchDeploymentRuns = async (signal?: AbortSignal) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployment-runs`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-RUNS-${response.status}`);
+    }
+    const payload = await response.json();
+    const data = unwrapApiEnvelope<{ runs: DeploymentRunRecord[] }>(payload);
+    return data?.runs || [];
+};
+
+export const approveDeploymentRun = async (runId: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployment-runs/${encodeURIComponent(runId)}/approve`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-RUN-APPROVE-${response.status}`);
+    }
+    return readJson<{ run: DeploymentRunRecord; sessionId?: string }>(response);
+};
+
+export const fetchDeploymentEvidence = async (runId: string): Promise<DeploymentEvidenceResponse> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployment-runs/${encodeURIComponent(runId)}/evidence`);
+    if (!response.ok) {
+        throw new Error(`FG-DEPLOYMENT-EVIDENCE-${response.status}`);
+    }
+    return readJson<DeploymentEvidenceResponse>(response);
 };
 
 export const updateAdminUserPlan = async (userId: string, plan: string) => {

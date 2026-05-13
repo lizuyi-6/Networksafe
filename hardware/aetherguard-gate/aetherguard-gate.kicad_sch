@@ -1,0 +1,129 @@
+﻿(kicad_sch
+  (version 20231120)
+  (generator "kiro-hardware-design")
+  (generator_version "1.0")
+  (paper "A3")
+  (title_block
+    (title "AetherGuard ESP32 Physical Confirmation Gate")
+    (date "2025-01-01")
+    (rev "1.0")
+    (company "AetherGuard")
+    (comment 1 "Sheet 1 of 1 - Power Supply, USB-C, LDO, Auto-Reset, ESP32 Core")
+    (comment 2 "Requirements: 1.1, 1.2, 1.3, 1.4, 1.8, 3.6")
+    (comment 3 "AMS1117-3.3 LDO: 5V USB input -> 3.3V @ 1A max")
+    (comment 4 "Auto-reset: RTS->EN via 100nF, DTR->GPIO0 via 100nF")
+  )
+
+  (lib_symbols
+    (symbol "USB_C_Receptacle_USB2.0_16P"
+      (pin_names (offset 1.016) hide)
+      (in_bom yes) (on_board yes)
+      (property "Reference" "J" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (property "Value" "USB_C_Receptacle_USB2.0_16P" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (property "Footprint" "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (property "Datasheet" "https://www.usb.org/sites/default/files/USB%20Type-C%20Spec%20R2.0%20-%20August%202019.pdf" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (symbol "USB_C_Receptacle_USB2.0_16P_0_1"
+        (rectangle (start -3.81 -8.89) (end 3.81 8.89) (stroke (width 0.1524) (type default)) (fill (type background)))
+        (pin power_in "GND" (at 0 -11.43 90) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "A1" (effects (font (size 1.27 1.27)))))
+        (pin power_in "VBUS" (at 0 11.43 270) (length 2.54) (name "VBUS" (effects (font (size 1.27 1.27)))) (number "A4" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional "D-" (at -6.35 2.54 0) (length 2.54) (name "D-" (effects (font (size 1.27 1.27)))) (number "A7" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional "D+" (at -6.35 5.08 0) (length 2.54) (name "D+" (effects (font (size 1.27 1.27)))) (number "A6" (effects (font (size 1.27 1.27)))))
+        (pin power_in "GND" (at 0 -11.43 90) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "B1" (effects (font (size 1.27 1.27)))))
+        (pin power_in "VBUS" (at 0 11.43 270) (length 2.54) (name "VBUS" (effects (font (size 1.27 1.27)))) (number "B4" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional "D-" (at -6.35 2.54 0) (length 2.54) (name "D-" (effects (font (size 1.27 1.27)))) (number "B7" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional "D+" (at -6.35 5.08 0) (length 2.54) (name "D+" (effects (font (size 1.27 1.27)))) (number "B6" (effects (font (size 1.27 1.27)))))
+        (pin passive "CC1" (at 6.35 0 180) (length 2.54) (name "CC1" (effects (font (size 1.27 1.27)))) (number "A5" (effects (font (size 1.27 1.27)))))
+        (pin passive "CC2" (at 6.35 -2.54 180) (length 2.54) (name "CC2" (effects (font (size 1.27 1.27)))) (number "B5" (effects (font (size 1.27 1.27)))))
+        (pin passive "SHIELD" (at 0 -11.43 90) (length 2.54) (name "SHIELD" (effects (font (size 1.27 1.27)))) (number "S1" (effects (font (size 1.27 1.27)))))
+      )
+    )
+
+    (symbol "AMS1117-3.3"
+      (pin_names (offset 1.016) hide)
+      (in_bom yes) (on_board yes)
+      (property "Reference" "U" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (property "Value" "AMS1117-3.3" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (property "Footprint" "Package_TO_SOT_SMD:SOT-223-3_TabPin2" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (property "Datasheet" "http://www.advanced-monolithic.com/pdf/ds1117.pdf" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (symbol "AMS1117-3.3_0_1"
+        (rectangle (start -2.54 -2.54) (end 2.54 2.54) (stroke (width 0.1524) (type default)) (fill (type background)))
+        (pin power_in "IN" (at -5.08 0 0) (length 2.54) (name "IN" (effects (font (size 1.27 1.27)))) (number "3" (effects (font (size 1.27 1.27)))))
+        (pin power_out "OUT" (at 5.08 0 180) (length 2.54) (name "OUT" (effects (font (size 1.27 1.27)))) (number "2" (effects (font (size 1.27 1.27)))))
+        (pin power_in "GND" (at 0 -5.08 90) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+      )
+    )
+
+    (symbol "C_Polarized"
+      (pin_names (offset 0.254))
+      (in_bom yes) (on_board yes)
+      (property "Reference" "C" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (property "Value" "C_Polarized" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (property "Footprint" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (symbol "C_Polarized_0_1"
+        (polyline (pts (xy -1.524 -0.508) (xy 1.524 -0.508)) (stroke (width 0.1524) (type default)) (fill (type none)))
+        (polyline (pts (xy -1.524 0.508) (xy 1.524 0.508)) (stroke (width 0.508) (type default)) (fill (type none)))
+        (pin passive "~" (at 0 2.54 270) (length 2.032) (name "~" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+        (pin passive "~" (at 0 -2.54 90) (length 2.032) (name "~" (effects (font (size 1.27 1.27)))) (number "2" (effects (font (size 1.27 1.27)))))
+      )
+    )
+
+    (symbol "C"
+      (pin_names (offset 0.254))
+      (in_bom yes) (on_board yes)
+      (property "Reference" "C" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (property "Value" "C" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (property "Footprint" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (symbol "C_0_1"
+        (polyline (pts (xy -1.524 -0.508) (xy 1.524 -0.508)) (stroke (width 0.1524) (type default)) (fill (type none)))
+        (polyline (pts (xy -1.524 0.508) (xy 1.524 0.508)) (stroke (width 0.1524) (type default)) (fill (type none)))
+        (pin passive "~" (at 0 2.54 270) (length 2.032) (name "~" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+        (pin passive "~" (at 0 -2.54 90) (length 2.032) (name "~" (effects (font (size 1.27 1.27)))) (number "2" (effects (font (size 1.27 1.27)))))
+      )
+    )
+
+    (symbol "PWR_FLAG"
+      (pin_names (offset 0) hide)
+      (in_bom yes) (on_board yes)
+      (property "Reference" "#PWR" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (property "Value" "PWR_FLAG" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (symbol "PWR_FLAG_0_0"
+        (pin power_in "PWR" (at 0 0 270) (length 0) (name "PWR" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+      )
+      (symbol "PWR_FLAG_0_1"
+        (polyline (pts (xy 0 0) (xy 0 1.27) (xy -1.016 1.905) (xy 0 2.54) (xy 1.016 1.905) (xy 0 1.27)) (stroke (width 0) (type default)) (fill (type none)))
+      )
+    )
+
+    (symbol "+5V"
+      (pin_names (offset 0) hide)
+      (in_bom yes) (on_board yes)
+      (property "Reference" "#PWR" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (property "Value" "+5V" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (symbol "+5V_0_1"
+        (polyline (pts (xy -0.762 0.508) (xy 0 1.778) (xy 0.762 0.508)) (stroke (width 0) (type default)) (fill (type none)))
+        (pin power_in "~" (at 0 0 270) (length 0) (name "~" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+      )
+    )
+
+    (symbol "+3.3V"
+      (pin_names (offset 0) hide)
+      (in_bom yes) (on_board yes)
+      (property "Reference" "#PWR" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (property "Value" "+3.3V" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (symbol "+3.3V_0_1"
+        (polyline (pts (xy -0.762 0.508) (xy 0 1.778) (xy 0.762 0.508)) (stroke (width 0) (type default)) (fill (type none)))
+        (pin power_in "~" (at 0 0 270) (length 0) (name "~" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+      )
+    )
+
+    (symbol "GND"
+      (pin_names (offset 0) hide)
+      (in_bom yes) (on_board yes)
+      (property "Reference" "#PWR" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+      (property "Value" "GND" (at 0 0 0) (effects (font (size 1.27 1.27))))
+      (symbol "GND_0_1"
+        (polyline (pts (xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)) (stroke (width 0) (type default)) (fill (type none)))
+        (pin power_in "~" (at 0 0 270) (length 0) (name "~" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+      )
+    )
+  )

@@ -206,7 +206,7 @@ export class AgentOrchestrator {
         try {
             const threatType = this.classifyThreatType(request);
             task.threatType = threatType;
-            const assignedAgents = this.routeToExperts(threatType);
+            const assignedAgents = this.routeToExperts(threatType, request);
 
             logger.debug(`Task ${taskId}: Assigned agents ${assignedAgents.join(', ')} for threat type ${threatType}`);
 
@@ -284,8 +284,13 @@ export class AgentOrchestrator {
         return 'benign';
     }
 
-    private routeToExperts(threatType: AttackFamily): AgentRole[] {
-        if (this.config.experimentMode === 'single_agent') {
+    private routeToExperts(threatType: AttackFamily, request?: TrafficRequest): AgentRole[] {
+        if (request?.analysisPurpose === 'blocking_review' || request?.forceDebate) {
+            const allRoles = Object.keys(this.agents) as AgentRole[];
+            return allRoles.length > 0 ? allRoles : [this.config.primarySingleAgentRole || 'aristotle'];
+        }
+
+        if (this.config.experimentMode === 'single_agent' || request?.analysisPurpose === 'primary') {
             return [this.config.primarySingleAgentRole || 'aristotle'];
         }
 
@@ -320,9 +325,12 @@ export class AgentOrchestrator {
         const aggregateVerdict = dominantVerdict(aggregateDistribution);
         const triggerMetrics = this.shouldTriggerDebate(results);
         const shouldDebate =
+            request.forceDebate === true ||
+            request.analysisPurpose === 'blocking_review' ||
+            (request.analysisPurpose !== 'primary' &&
             this.config.experimentMode !== 'single_agent' &&
             this.config.experimentMode !== 'multi_agent_no_debate' &&
-            triggerMetrics.triggered;
+            triggerMetrics.triggered);
         let finalVerdict: SecurityDecision['verdict'] = verdictToDecision(aggregateVerdict);
         let finalConfidence = confidenceFromDistribution(aggregateDistribution);
         let debateSession;

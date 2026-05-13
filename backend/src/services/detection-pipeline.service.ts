@@ -2,11 +2,14 @@ import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import logger from '../utils/logger';
 import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
+import { jobQueueService } from './job-queue.service';
 import {
   platformConfigService,
   type AIRoutingMode,
   type DetectionPipelineSettings,
   isSeverityAtLeast,
+  normalizeSecurityClassificationLevel,
+  type SecurityClassificationLevel,
   type SeverityLevel
 } from './platform-config.service';
 import { securityOperationsService } from './security-operations.service';
@@ -28,6 +31,39 @@ import {
 } from './detection-engine';
 
 type CandidateStatus = 'pending' | 'approved' | 'rejected';
+type DetectionAsyncReviewStatus = 'queued' | 'running' | 'completed' | 'failed';
+type BlockingDiscussionStatus = 'not_required' | 'completed' | 'failed' | 'timeout' | 'unavailable';
+
+interface DetectionAsyncReviewRecord {
+  reviewId: string;
+  tenantId: string;
+  requestId: string;
+  channel: DetectionChannel;
+  status: DetectionAsyncReviewStatus;
+  reason: string;
+  requestSnapshot: DetectionRequest;
+  primaryAi?: DetectionAIResult | null;
+  finalAi?: DetectionAIResult | null;
+  candidateId?: string | null;
+  error?: string | null;
+  latencyMs?: number | null;
+  debateTriggered: boolean;
+  enqueuedAt: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  updatedAt: string;
+}
+
+export interface DetectionAsyncReviewStats {
+  queueDepth: number;
+  queued: number;
+  running: number;
+  completed: number;
+  failed: number;
+  completionRate: number;
+  debateCompletionRate: number;
+  avgLatencyMs: number;
+}
 
 export interface DetectionAIResult {
   verdict: 'safe' | 'suspicious' | 'malicious';
@@ -38,6 +74,17 @@ export interface DetectionAIResult {
   model?: string | null;
   decisionId?: string;
   rawDecision?: Record<string, any>;
+}
+
+export interface BlockingDiscussionResult {
+  required: boolean;
+  allowed: boolean;
+  status: BlockingDiscussionStatus;
+  latencyMs: number;
+  debateTriggered: boolean;
+  failClosed: boolean;
+  reason?: string;
+  aiResult?: DetectionAIResult;
 }
 
 export interface DetectionDecision {
@@ -54,8 +101,15 @@ export interface DetectionDecision {
   candidateId?: string | null;
   processingTimeMs: number;
   ruleMatches: DetectionRuleRecord[];
+  primaryAiResult?: DetectionAIResult;
   aiResult?: DetectionAIResult;
   learningVerificationAiResult?: DetectionAIResult;
+  classificationLevel?: SecurityClassificationLevel;
+  blockingDiscussion?: boolean;
+  discussionStatus?: BlockingDiscussionStatus;
+  discussionLatencyMs?: number;
+  discussionDebateTriggered?: boolean;
+  discussionFailClosed?: boolean;
 }
 
 export interface DetectionRuleCandidateRecord {
@@ -88,9 +142,20 @@ export interface DetectionRuleSummary {
   rejectedCandidates: number;
   ruleHitRate: number;
   aiEscalationRate: number;
+  localModelHitRate: number;
   avgProcessingTimeMs: number;
   localAICount: number;
   cloudAICount: number;
+  asyncReviewQueueDepth: number;
+  asyncReviewRunning: number;
+  asyncReviewCompleted: number;
+  asyncReviewFailed: number;
+  debateCompletionRate: number;
+  avgAsyncReviewLatencyMs: number;
+  classificationLevel: SecurityClassificationLevel;
+  blockingDiscussionCount: number;
+  blockingDiscussionFailClosed: number;
+  avgBlockingDiscussionLatencyMs: number;
   topRules: Array<{ ruleId: string; name: string; severity: DetectionSeverity; hitCount: number; source: string }>;
 }
 
@@ -103,6 +168,11 @@ export interface DetectionEventRecord {
   matchedRuleIds: string[];
   riskScore: number;
   escalatedToAI: boolean;
+  queuedForAsyncReview: boolean;
+  classificationLevel?: SecurityClassificationLevel;
+  blockingDiscussion?: boolean;
+  discussionStatus?: BlockingDiscussionStatus;
+  discussionLatencyMs?: number;
   aiVerdict?: string | null;
   aiConfidence?: number | null;
   aiRouteMode?: string | null;
@@ -150,8 +220,9 @@ interface EvaluateOptions {
 }
 
 interface DetectionAIAnalyzeOptions {
-  analysisPurpose?: 'primary' | 'deep_analysis' | 'learning_verification';
+  analysisPurpose?: 'primary' | 'deep_analysis' | 'learning_verification' | 'blocking_review';
   routeModeOverride?: AIRoutingMode;
+  forceDebate?: boolean;
 }
 
 function clampConfidence(value: number): number {
@@ -285,6 +356,9 @@ function serializeRequestSnapshot(request: DetectionRequest): Record<string, any
 class DetectionPipelineService {
   private prepared = false;
   private aiAnalyzer: DetectionAIAnalyzer | null = null;
+  private asyncReviewTimer: NodeJS.Timeout | null = null;
+  private asyncReviewDrainScheduled = false;
+  private asyncReviewInFlight = new Set<string>();
 
   prepare(): void {
     if (this.prepared) {
@@ -359,10 +433,32 @@ class DetectionPipelineService {
         created_at TEXT NOT NULL
       );
 
+      CREATE TABLE IF NOT EXISTS sec_detection_async_reviews (
+        review_id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        request_id TEXT NOT NULL,
+        channel TEXT NOT NULL,
+        status TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        request_snapshot_json TEXT NOT NULL,
+        primary_ai_json TEXT,
+        final_ai_json TEXT,
+        candidate_id TEXT,
+        error TEXT,
+        latency_ms INTEGER,
+        debate_triggered INTEGER NOT NULL DEFAULT 0,
+        enqueued_at TEXT NOT NULL,
+        started_at TEXT,
+        completed_at TEXT,
+        updated_at TEXT NOT NULL
+      );
+
       CREATE INDEX IF NOT EXISTS idx_sec_detection_rules_tenant ON sec_detection_rules(tenant_id, scope, enabled, priority DESC);
       CREATE INDEX IF NOT EXISTS idx_sec_rule_candidates_tenant ON sec_rule_candidates(tenant_id, status, updated_at DESC);
       CREATE UNIQUE INDEX IF NOT EXISTS idx_sec_rule_candidates_key ON sec_rule_candidates(tenant_id, channel, attack_family, matcher_fingerprint);
       CREATE INDEX IF NOT EXISTS idx_sec_detection_events_tenant ON sec_detection_events(tenant_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_sec_detection_async_reviews_tenant ON sec_detection_async_reviews(tenant_id, status, updated_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_sec_detection_async_reviews_status ON sec_detection_async_reviews(status, enqueued_at ASC);
     `);
 
     this.prepared = true;
@@ -387,11 +483,201 @@ class DetectionPipelineService {
 
   setAiAnalyzer(analyzer: DetectionAIAnalyzer | null): void {
     this.aiAnalyzer = analyzer;
+    if (analyzer) {
+      this.scheduleAsyncReviewDrain();
+    }
+  }
+
+  startAsyncReviewWorker(intervalMs = 3000): void {
+    if (this.asyncReviewTimer) {
+      return;
+    }
+    this.asyncReviewTimer = setInterval(() => {
+      this.scheduleAsyncReviewDrain();
+    }, Math.max(500, intervalMs));
+    this.asyncReviewTimer.unref?.();
+    this.scheduleAsyncReviewDrain();
+  }
+
+  stopAsyncReviewWorker(): void {
+    if (this.asyncReviewTimer) {
+      clearInterval(this.asyncReviewTimer);
+      this.asyncReviewTimer = null;
+    }
+  }
+
+  async drainAsyncReviewQueueForTests(limit = 50): Promise<void> {
+    await this.drainAsyncReviewQueue(limit);
+  }
+
+  private async withTimeout<T>(operation: Promise<T>, timeoutMs: number, timeoutReason: string): Promise<T> {
+    let timer: NodeJS.Timeout | null = null;
+    try {
+      return await Promise.race([
+        operation,
+        new Promise<T>((_, reject) => {
+          timer = setTimeout(() => reject(new Error(timeoutReason)), Math.max(1000, timeoutMs));
+          timer.unref?.();
+        })
+      ]);
+    } finally {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    }
   }
 
   async getSettings(tenantId: string): Promise<DetectionPipelineSettings> {
     const config = await platformConfigService.getConfig(tenantId);
     return config.detectionPipeline;
+  }
+
+  private buildBlockingDiscussionRequest(
+    request: DetectionRequest,
+    attackFamily: DetectionAttackFamily,
+    context: Record<string, any>
+  ): DetectionRequest {
+    const evidenceEnvelope = {
+      ...(typeof request.evidence === 'string' ? { evidence: request.evidence } : {}),
+      aetherguardBlockingDiscussion: context
+    };
+
+    const evidenceJson = JSON.stringify(evidenceEnvelope);
+    return {
+      ...request,
+      analysisPurpose: 'blocking_review',
+      metadata: {
+        ...(request.metadata || {}),
+        aetherguardBlockingDiscussion: context
+      },
+      evidence: evidenceJson,
+      body: request.body || evidenceJson,
+      normalizedBody: request.normalizedBody || evidenceJson,
+      parsedBody: request.parsedBody || evidenceJson,
+      rawPayload: request.rawPayload || evidenceJson,
+      existingSignals: [
+        ...(request.existingSignals || []),
+        {
+          source: 'existing_signal',
+          key: `classification:${context.classificationLevel || 'standard'}`,
+          score: context.baseRiskScore || 0,
+          severity: context.baseRiskScore >= 0.9 ? 'critical' : context.baseRiskScore >= 0.75 ? 'high' : 'medium',
+          description: `Blocking review for ${context.classificationLevel || 'standard'} classification`,
+          metadata: {
+            attackFamily,
+            classificationLevel: context.classificationLevel,
+            ruleMatched: context.ruleMatched,
+            decisionSource: context.decisionSource,
+            reason: context.reason
+          }
+        }
+      ]
+    };
+  }
+
+  async runBlockingReview(input: {
+    request: DetectionRequest;
+    settings?: DetectionPipelineSettings;
+    attackFamily?: DetectionAttackFamily;
+    classificationLevel?: SecurityClassificationLevel;
+    decisionSource?: string;
+    ruleMatched?: boolean;
+    baseRiskScore?: number;
+    reason: string;
+    forceDebate?: boolean;
+    routeModeOverride?: AIRoutingMode;
+  }): Promise<BlockingDiscussionResult> {
+    const settings = input.settings || await this.getSettings(input.request.tenantId);
+    return this.runBlockingDiscussion({
+      request: input.request,
+      settings,
+      attackFamily: input.attackFamily || inferAttackFamily(input.request),
+      classificationLevel: input.classificationLevel || settings.classificationLevel || 'standard',
+      decisionSource: input.decisionSource || 'blocking_review',
+      ruleMatched: Boolean(input.ruleMatched),
+      baseRiskScore: Number(input.baseRiskScore || 0),
+      reason: input.reason,
+      forceDebate: input.forceDebate,
+      routeModeOverride: input.routeModeOverride || 'local_only'
+    });
+  }
+
+  private async runBlockingDiscussion(input: {
+    request: DetectionRequest;
+    settings: DetectionPipelineSettings;
+    attackFamily: DetectionAttackFamily;
+    classificationLevel: SecurityClassificationLevel;
+    decisionSource: string;
+    ruleMatched: boolean;
+    baseRiskScore: number;
+    reason: string;
+    forceDebate?: boolean;
+    routeModeOverride?: AIRoutingMode;
+  }): Promise<BlockingDiscussionResult> {
+    const startedAt = Date.now();
+    const timeoutMs = Math.max(1000, Number(input.settings.blockingDiscussionTimeoutMs || 30000));
+
+    if (!this.aiAnalyzer) {
+      return {
+        required: true,
+        allowed: false,
+        status: 'unavailable',
+        latencyMs: Date.now() - startedAt,
+        debateTriggered: false,
+        failClosed: true,
+        reason: 'ai_analyzer_unavailable'
+      };
+    }
+
+    try {
+      const analyzeRequest = this.buildBlockingDiscussionRequest(input.request, input.attackFamily, {
+        classificationLevel: input.classificationLevel,
+        decisionSource: input.decisionSource,
+        ruleMatched: input.ruleMatched,
+        baseRiskScore: input.baseRiskScore,
+        reason: input.reason
+      });
+      const rawResult = await this.withTimeout(
+        this.aiAnalyzer.analyze(analyzeRequest, {
+          analysisPurpose: 'blocking_review',
+          routeModeOverride: input.routeModeOverride || 'local_only',
+          forceDebate: Boolean(input.forceDebate)
+        }),
+        timeoutMs,
+        'blocking_discussion_timeout'
+      );
+      const aiResult = normalizeAIResult(rawResult, input.attackFamily);
+      const decision = aiVerdictToDecision(aiResult);
+      const rawDecision = aiResult.rawDecision || {};
+      const debateTriggered = Boolean(
+        rawDecision.debateTriggered ||
+        rawDecision.debateSession ||
+        (Array.isArray(rawDecision.layersActivated) && rawDecision.layersActivated.includes(5)) ||
+        Number(rawDecision.stageLatencies?.debateMs || 0) > 0
+      );
+
+      return {
+        required: true,
+        allowed: decision !== 'block',
+        status: 'completed',
+        latencyMs: Date.now() - startedAt,
+        debateTriggered,
+        failClosed: false,
+        reason: aiResult.reasoning,
+        aiResult
+      };
+    } catch (error: any) {
+      const timeout = String(error?.message || '').includes('blocking_discussion_timeout');
+      return {
+        required: true,
+        allowed: false,
+        status: timeout ? 'timeout' : 'failed',
+        latencyMs: Date.now() - startedAt,
+        debateTriggered: false,
+        failClosed: true,
+        reason: error?.message || 'blocking_discussion_failed'
+      };
+    }
   }
 
   async listRules(tenantId: string): Promise<DetectionRuleRecord[]> {
@@ -742,6 +1028,290 @@ class DetectionPipelineService {
     };
   }
 
+  private shouldQueueAsyncReview(input: {
+    request: DetectionRequest;
+    settings: DetectionPipelineSettings;
+    ruleEscalation: boolean;
+    baseRiskScore: number;
+    primaryAi?: DetectionAIResult | null;
+    primaryConfidencePresent?: boolean;
+    candidateCreated?: boolean;
+  }): boolean {
+    const { settings, request, ruleEscalation, baseRiskScore, primaryAi, primaryConfidencePresent, candidateCreated } = input;
+
+    if (!settings.asyncReviewEnabled || settings.learningMode !== 'malicious_review_queue') {
+      return false;
+    }
+    if (request.channel === 'agent' && !settings.enableAgentAsyncReview) {
+      return false;
+    }
+    if (!settings.learningCloudVerificationChannels.includes(request.channel)) {
+      return false;
+    }
+    if (candidateCreated) {
+      return false;
+    }
+    if (ruleEscalation) {
+      return true;
+    }
+    if (!primaryAi) {
+      return baseRiskScore >= settings.aiEscalationThreshold;
+    }
+    if (primaryAi.verdict === 'suspicious' && settings.learningCloudVerificationOnSuspicious) {
+      return true;
+    }
+    if (!primaryConfidencePresent && settings.learningCloudVerificationOnMissingConfidence) {
+      return true;
+    }
+    if (primaryAi.verdict === 'malicious' && primaryAi.confidence < settings.candidateMinConfidence) {
+      return true;
+    }
+    return baseRiskScore >= Math.max(0.75, settings.aiEscalationThreshold);
+  }
+
+  private shouldRunBlockingDiscussion(input: {
+    request: DetectionRequest;
+    settings: DetectionPipelineSettings;
+    baseRiskScore: number;
+    primaryAi?: DetectionAIResult | null;
+    primaryConfidencePresent?: boolean;
+  }): boolean {
+    if ((input.settings.classificationLevel || 'standard') !== 'elevated') {
+      return false;
+    }
+    if (!input.primaryAi) {
+      return input.baseRiskScore >= Math.max(0.75, input.settings.aiEscalationThreshold);
+    }
+    if (input.primaryAi.verdict === 'suspicious') {
+      return true;
+    }
+    if (!input.primaryConfidencePresent) {
+      return true;
+    }
+    if (input.primaryAi.verdict === 'malicious' && input.primaryAi.confidence < input.settings.candidateMinConfidence) {
+      return true;
+    }
+    return input.baseRiskScore >= Math.max(0.75, input.settings.aiEscalationThreshold);
+  }
+
+  private async enqueueAsyncReview(
+    request: DetectionRequest,
+    reason: string,
+    primaryAi?: DetectionAIResult | null,
+    candidateId?: string | null
+  ): Promise<string | null> {
+    this.assertPrepared();
+    const reviewId = randomUUID();
+    const now = new Date().toISOString();
+    const db = this.getDb();
+    const primaryAiJson = primaryAi ? JSON.stringify(this.serializeAIResult(primaryAi)) : null;
+
+    db.run(`
+      INSERT INTO sec_detection_async_reviews (
+        review_id, tenant_id, request_id, channel, status, reason, request_snapshot_json,
+        primary_ai_json, candidate_id, enqueued_at, updated_at
+      ) VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?)
+    `, [
+      reviewId,
+      request.tenantId,
+      request.requestId,
+      request.channel,
+      reason,
+      JSON.stringify(serializeRequestSnapshot(request)),
+      primaryAiJson,
+      candidateId || null,
+      now,
+      now
+    ]);
+
+    await jobQueueService.enqueue('detection-async-reviews', reviewId);
+    this.scheduleAsyncReviewDrain();
+    return reviewId;
+  }
+
+  private scheduleAsyncReviewDrain(): void {
+    if (process.env.NODE_ENV === 'test' && !this.asyncReviewTimer) {
+      return;
+    }
+    if (this.asyncReviewDrainScheduled) {
+      return;
+    }
+    this.asyncReviewDrainScheduled = true;
+    setImmediate(() => {
+      this.asyncReviewDrainScheduled = false;
+      void this.drainAsyncReviewQueue().catch((error: any) => {
+        logger.warn('Detection async review drain failed', {
+          error: error?.message || String(error)
+        });
+      });
+    });
+  }
+
+  private async listQueuedAsyncReviewIds(limit: number): Promise<string[]> {
+    const db = this.getDb();
+    const rows = db.prepare(`
+      SELECT review_id
+      FROM sec_detection_async_reviews
+      WHERE status = 'queued'
+      ORDER BY enqueued_at ASC
+      LIMIT ?
+    `).all(limit) as any[];
+    return rows.map((row) => String(row.review_id || '')).filter(Boolean);
+  }
+
+  private mapAsyncReview(row: any): DetectionAsyncReviewRecord {
+    return {
+      reviewId: String(row.review_id || ''),
+      tenantId: String(row.tenant_id || PLATFORM_TENANT_ID),
+      requestId: String(row.request_id || ''),
+      channel: normalizeChannel(row.channel),
+      status: row.status === 'running' ? 'running' : row.status === 'completed' ? 'completed' : row.status === 'failed' ? 'failed' : 'queued',
+      reason: String(row.reason || ''),
+      requestSnapshot: parseJson<DetectionRequest>(row.request_snapshot_json, {} as DetectionRequest),
+      primaryAi: row.primary_ai_json ? parseJson<DetectionAIResult | null>(row.primary_ai_json, null) : null,
+      finalAi: row.final_ai_json ? parseJson<DetectionAIResult | null>(row.final_ai_json, null) : null,
+      candidateId: row.candidate_id ? String(row.candidate_id) : null,
+      error: row.error ? String(row.error) : null,
+      latencyMs: row.latency_ms === null || row.latency_ms === undefined ? null : Number(row.latency_ms),
+      debateTriggered: normalizeBoolean(row.debate_triggered),
+      enqueuedAt: String(row.enqueued_at || ''),
+      startedAt: row.started_at ? String(row.started_at) : null,
+      completedAt: row.completed_at ? String(row.completed_at) : null,
+      updatedAt: String(row.updated_at || '')
+    };
+  }
+
+  private async loadAsyncReview(reviewId: string): Promise<DetectionAsyncReviewRecord | null> {
+    const db = this.getDb();
+    const row = db.prepare(`
+      SELECT *
+      FROM sec_detection_async_reviews
+      WHERE review_id = ?
+      LIMIT 1
+    `).get(reviewId) as any;
+    return row ? this.mapAsyncReview(row) : null;
+  }
+
+  private async drainAsyncReviewQueue(limit = 5): Promise<void> {
+    this.assertPrepared();
+    if (!this.aiAnalyzer) {
+      return;
+    }
+
+    const safeLimit = Math.max(1, Math.min(limit, 25));
+    let reviewIds = await jobQueueService.drain('detection-async-reviews', safeLimit);
+    if (reviewIds.length === 0) {
+      reviewIds = await this.listQueuedAsyncReviewIds(safeLimit);
+    }
+
+    const runnableIds = reviewIds.filter((reviewId) => reviewId && !this.asyncReviewInFlight.has(reviewId));
+    await Promise.all(runnableIds.map((reviewId) => this.processAsyncReview(reviewId)));
+  }
+
+  private async processAsyncReview(reviewId: string): Promise<void> {
+    this.asyncReviewInFlight.add(reviewId);
+    const startedAt = new Date().toISOString();
+    const startedMs = Date.now();
+    const db = this.getDb();
+
+    try {
+      const review = await this.loadAsyncReview(reviewId);
+      if (!review || review.status === 'completed' || review.status === 'failed') {
+        return;
+      }
+
+      db.run(`
+        UPDATE sec_detection_async_reviews
+        SET status = 'running',
+            started_at = COALESCE(started_at, ?),
+            updated_at = ?
+        WHERE review_id = ? AND status IN ('queued', 'running')
+      `, [startedAt, startedAt, reviewId]);
+
+      const request = {
+        ...review.requestSnapshot,
+        tenantId: review.tenantId,
+        channel: review.channel,
+        requestId: review.requestId
+      };
+      const settings = await this.getSettings(review.tenantId);
+      const fallbackAttackFamily = normalizeAttackFamily(
+        review.primaryAi?.attackFamily || inferAttackFamily(request)
+      );
+      const rawResult = await this.aiAnalyzer!.analyze(request, {
+        analysisPurpose: 'learning_verification',
+        routeModeOverride: settings.learningCloudVerificationMode
+      });
+      const finalAi = normalizeAIResult(rawResult, fallbackAttackFamily);
+      const candidate = await this.createCandidateFromAI(
+        request,
+        settings,
+        finalAi.attackFamily || fallbackAttackFamily,
+        finalAi,
+        {
+          request: serializeRequestSnapshot(request),
+          ai: this.serializeAIResult(finalAi),
+          primaryAi: this.serializeAIResult(review.primaryAi),
+          learningVerificationAi: this.serializeAIResult(finalAi),
+          asyncReview: {
+            reviewId,
+            reason: review.reason
+          }
+        }
+      );
+      const completedAt = new Date().toISOString();
+      const latencyMs = Date.now() - startedMs;
+      const rawDecision = finalAi.rawDecision || {};
+      const debateTriggered = Boolean(
+        rawDecision.debateTriggered ||
+        rawDecision.debateSession ||
+        (Array.isArray(rawDecision.layersActivated) && rawDecision.layersActivated.includes(5)) ||
+        Number(rawDecision.stageLatencies?.debateMs || 0) > 0
+      );
+
+      db.run(`
+        UPDATE sec_detection_async_reviews
+        SET status = 'completed',
+            final_ai_json = ?,
+            candidate_id = ?,
+            latency_ms = ?,
+            debate_triggered = ?,
+            completed_at = ?,
+            updated_at = ?
+        WHERE review_id = ?
+      `, [
+        JSON.stringify(this.serializeAIResult(finalAi)),
+        candidate?.candidateId || review.candidateId || null,
+        latencyMs,
+        debateTriggered ? 1 : 0,
+        completedAt,
+        completedAt,
+        reviewId
+      ]);
+    } catch (error: any) {
+      const failedAt = new Date().toISOString();
+      db.run(`
+        UPDATE sec_detection_async_reviews
+        SET status = 'failed',
+            error = ?,
+            completed_at = ?,
+            updated_at = ?
+        WHERE review_id = ?
+      `, [
+        error?.message || String(error),
+        failedAt,
+        failedAt,
+        reviewId
+      ]);
+      logger.warn('Detection async review failed', {
+        reviewId,
+        error: error?.message || String(error)
+      });
+    } finally {
+      this.asyncReviewInFlight.delete(reviewId);
+    }
+  }
+
   async evaluateRequest(request: DetectionRequest, options: EvaluateOptions = {}): Promise<DetectionDecision> {
     this.assertPrepared();
     const startedAt = Date.now();
@@ -751,10 +1321,14 @@ class DetectionPipelineService {
     const heuristicAssessment = assessDetectionHeuristics(request);
     const combinedSignals = [...ruleEvaluation.signals, ...heuristicAssessment.signals];
     const baseRiskScore = Math.max(ruleEvaluation.riskScore, heuristicAssessment.riskScore);
+    const classificationLevel = settings.classificationLevel || 'standard';
+    const maximumClassification = classificationLevel === 'maximum';
     let escalatedToAI = false;
     let queuedForAsyncReview = false;
     let aiResult: DetectionAIResult | undefined;
+    let primaryAiResult: DetectionAIResult | undefined;
     let learningVerificationAiResult: DetectionAIResult | undefined;
+    let blockingDiscussion: BlockingDiscussionResult | undefined;
     let candidateId: string | null = null;
     let decisionSource = ruleEvaluation.highestPriorityRule
       ? `${ruleEvaluation.highestPriorityRule.source}:${ruleEvaluation.highestPriorityRule.action}`
@@ -764,103 +1338,319 @@ class DetectionPipelineService {
       ruleEvaluation.highestPriorityRule?.attackFamily || inferAttackFamily(request, combinedSignals)
     );
 
-    const channelEnabled =
+    const hotPathChannelEnabled =
       (request.channel === 'http_api' && settings.enableHttpApi) ||
       (request.channel === 'packet' && settings.enablePacketInterceptor) ||
-      (request.channel === 'agent' && settings.enableAgentAsyncReview);
+      request.channel === 'agent';
 
-    const shouldEscalate =
-      settings.ruleFirstEnabled &&
-      channelEnabled &&
-      (options.forceAiReview || ruleEvaluation.shouldEscalate || baseRiskScore >= settings.aiEscalationThreshold) &&
-      verdict !== 'block' &&
-      settings.aiEscalationMode === 'high_risk_allowed_only';
+    const ruleMatched = ruleEvaluation.matchedRules.length > 0;
+    const hotPathRuleOnly = !maximumClassification && ruleMatched && !options.forceAiReview && verdict !== 'block';
+    const shouldRunHotPathLocalModel = maximumClassification || (!ruleMatched && verdict !== 'block' && hotPathChannelEnabled);
 
-    if (shouldEscalate) {
-      if (request.channel === 'agent' && !options.forceAiReview) {
-        queuedForAsyncReview = true;
-        decisionSource = `${decisionSource}+async_agent_review`;
-      } else if (this.aiAnalyzer) {
-        escalatedToAI = true;
-        const primaryAiRawResult = await this.aiAnalyzer.analyze(request, {
-          analysisPurpose: 'primary'
-        });
-        const primaryConfidencePresent = hasUsableConfidence(primaryAiRawResult.confidence);
-        aiResult = normalizeAIResult(primaryAiRawResult, attackFamily);
-        attackFamily = aiResult.attackFamily || attackFamily;
-        verdict = aiVerdictToDecision(aiResult);
-        decisionSource = `ai:${aiResult.verdict}`;
-        combinedSignals.push({
-          source: 'ai',
-          key: `ai-${aiResult.verdict}`,
-          score: clampConfidence(aiResult.confidence),
-          severity: aiVerdictToSeverity(aiResult),
-          description: aiResult.reasoning,
-          metadata: {
-            routeMode: aiResult.routeMode,
-            model: aiResult.model
-          }
-        });
+    if (maximumClassification && !this.aiAnalyzer) {
+      const blockingFailure: DetectionDecision = {
+        verdict: 'block',
+        matchedRuleIds: ruleEvaluation.matchedRuleIds,
+        riskScore: Number(baseRiskScore.toFixed(4)),
+        escalatedToAI: false,
+        queuedForAsyncReview: false,
+        classificationLevel,
+        blockingDiscussion: false,
+        discussionStatus: 'unavailable',
+        discussionLatencyMs: 0,
+        discussionDebateTriggered: false,
+        discussionFailClosed: true,
+        aiVerdict: undefined,
+        aiConfidence: undefined,
+        decisionSource: 'security_classification:maximum_fail_closed',
+        signals: combinedSignals,
+        attackFamily,
+        candidateId: null,
+        processingTimeMs: Date.now() - startedAt,
+        ruleMatches: ruleEvaluation.matchedRules.map((item) => item.rule),
+        primaryAiResult: undefined,
+        aiResult: undefined,
+        learningVerificationAiResult: undefined
+      };
+      if (!options.skipPersistence) {
+        this.recordDetectionEvent(request, blockingFailure);
+      }
+      return blockingFailure;
+    }
 
+    if (!this.aiAnalyzer && classificationLevel === 'elevated' && baseRiskScore >= settings.aiEscalationThreshold) {
+      const blockingFailure: DetectionDecision = {
+        verdict: 'block',
+        matchedRuleIds: ruleEvaluation.matchedRuleIds,
+        riskScore: Number(baseRiskScore.toFixed(4)),
+        escalatedToAI: false,
+        queuedForAsyncReview: false,
+        classificationLevel,
+        blockingDiscussion: false,
+        discussionStatus: 'unavailable',
+        discussionLatencyMs: 0,
+        discussionDebateTriggered: false,
+        discussionFailClosed: true,
+        aiVerdict: undefined,
+        aiConfidence: undefined,
+        decisionSource: 'security_classification:elevated_fail_closed',
+        signals: combinedSignals,
+        attackFamily,
+        candidateId: null,
+        processingTimeMs: Date.now() - startedAt,
+        ruleMatches: ruleEvaluation.matchedRules.map((item) => item.rule),
+        primaryAiResult: undefined,
+        aiResult: undefined,
+        learningVerificationAiResult: undefined
+      };
+      if (!options.skipPersistence) {
+        this.recordDetectionEvent(request, blockingFailure);
+      }
+      return blockingFailure;
+    }
+
+    if (hotPathRuleOnly) {
+      decisionSource = `${decisionSource}+rule_only`;
+    } else if (shouldRunHotPathLocalModel && this.aiAnalyzer) {
+      escalatedToAI = true;
+      const primaryAiRawResult = await this.aiAnalyzer.analyze(request, {
+        analysisPurpose: options.forceAiReview ? 'learning_verification' : 'primary',
+        routeModeOverride: maximumClassification
+          ? 'local_only'
+          : options.forceAiReview
+            ? settings.learningCloudVerificationMode
+            : 'local_only',
+        ...(maximumClassification ? { forceDebate: true } : {})
+      });
+      const primaryConfidencePresent = hasUsableConfidence(primaryAiRawResult.confidence);
+      primaryAiResult = normalizeAIResult(primaryAiRawResult, attackFamily);
+      aiResult = primaryAiResult;
+      attackFamily = aiResult.attackFamily || attackFamily;
+      verdict = aiVerdictToDecision(aiResult);
+      decisionSource = maximumClassification ? `ai:${aiResult.verdict}` : `ai:${aiResult.verdict}`;
+      combinedSignals.push({
+        source: 'ai',
+        key: `ai-${aiResult.verdict}`,
+        score: clampConfidence(aiResult.confidence),
+        severity: aiVerdictToSeverity(aiResult),
+        description: aiResult.reasoning,
+        metadata: {
+          routeMode: aiResult.routeMode,
+          model: aiResult.model
+        }
+      });
+
+      if (!maximumClassification) {
         const primaryEvidence = {
           request: serializeRequestSnapshot(request),
-          ai: this.serializeAIResult(aiResult),
-          primaryAi: this.serializeAIResult(aiResult)
+          ai: this.serializeAIResult(primaryAiResult),
+          primaryAi: this.serializeAIResult(primaryAiResult)
         };
 
         const primaryCandidate = await this.createCandidateFromAI(
           request,
           settings,
           attackFamily,
-          aiResult,
+          primaryAiResult,
           primaryEvidence
         );
         candidateId = primaryCandidate?.candidateId || null;
+      }
 
-        const shouldVerifyLearning = this.shouldRunLearningVerification(
+      if (maximumClassification) {
+        blockingDiscussion = await this.runBlockingDiscussion({
           request,
           settings,
-          aiResult,
-          primaryConfidencePresent,
-          Boolean(candidateId)
-        );
-
-        if (shouldVerifyLearning) {
-          try {
-            const learningRawResult = await this.aiAnalyzer.analyze(request, {
-              analysisPurpose: 'learning_verification',
-              routeModeOverride: settings.learningCloudVerificationMode
-            });
-            learningVerificationAiResult = normalizeAIResult(learningRawResult, attackFamily);
-            attackFamily = normalizeAttackFamily(learningVerificationAiResult.attackFamily, attackFamily);
-
-            const learningCandidate = await this.createCandidateFromAI(
-              request,
-              settings,
-              attackFamily,
-              learningVerificationAiResult,
-              {
-                request: serializeRequestSnapshot(request),
-                ai: this.serializeAIResult(learningVerificationAiResult),
-                primaryAi: this.serializeAIResult(aiResult),
-                learningVerificationAi: this.serializeAIResult(learningVerificationAiResult)
-              }
-            );
-
-            if (learningCandidate) {
-              candidateId = learningCandidate.candidateId;
+          attackFamily,
+          classificationLevel,
+          decisionSource,
+          ruleMatched,
+          baseRiskScore,
+          reason: 'maximum_classification_blocking_review',
+          forceDebate: true,
+          routeModeOverride: 'local_only'
+        });
+        learningVerificationAiResult = blockingDiscussion.aiResult || undefined;
+        if (blockingDiscussion.status !== 'completed' || !blockingDiscussion.aiResult) {
+          verdict = 'block';
+          decisionSource = 'security_classification:maximum_fail_closed';
+        } else {
+          aiResult = blockingDiscussion.aiResult;
+          attackFamily = aiResult.attackFamily || attackFamily;
+          verdict = aiVerdictToDecision(aiResult);
+          decisionSource = `security_classification:maximum:${aiResult.verdict}`;
+          combinedSignals.push({
+            source: 'ai',
+            key: `blocking-${aiResult.verdict}`,
+            score: clampConfidence(aiResult.confidence),
+            severity: aiVerdictToSeverity(aiResult),
+            description: aiResult.reasoning,
+            metadata: {
+              routeMode: aiResult.routeMode,
+              model: aiResult.model,
+              blockingDiscussion: true
             }
-          } catch (error: any) {
-            logger.warn('Detection learning verification failed', {
-              requestId: request.requestId,
-              channel: request.channel,
-              error: error?.message
-            });
-          }
+          });
+          const blockingCandidate = await this.createCandidateFromAI(
+            request,
+            settings,
+            attackFamily,
+            aiResult,
+            {
+              request: serializeRequestSnapshot(request),
+              ai: this.serializeAIResult(aiResult),
+              primaryAi: this.serializeAIResult(primaryAiResult),
+              blockingDiscussion: {
+                status: blockingDiscussion.status,
+                latencyMs: blockingDiscussion.latencyMs,
+                debateTriggered: blockingDiscussion.debateTriggered,
+                reason: blockingDiscussion.reason
+              }
+            }
+          );
+          candidateId = blockingCandidate?.candidateId || candidateId;
         }
-      } else {
-        decisionSource = `${decisionSource}+ai_unavailable`;
+      } else if (!options.forceAiReview && this.shouldRunBlockingDiscussion({
+        request,
+        settings,
+        baseRiskScore,
+        primaryAi: primaryAiResult,
+        primaryConfidencePresent
+      })) {
+        blockingDiscussion = await this.runBlockingDiscussion({
+          request,
+          settings,
+          attackFamily,
+          classificationLevel,
+          decisionSource,
+          ruleMatched,
+          baseRiskScore,
+          reason: 'elevated_classification_blocking_review',
+          forceDebate: true,
+          routeModeOverride: 'local_only'
+        });
+        learningVerificationAiResult = blockingDiscussion.aiResult || undefined;
+        if (blockingDiscussion.status !== 'completed' || !blockingDiscussion.aiResult) {
+          verdict = 'block';
+          decisionSource = 'security_classification:elevated_fail_closed';
+        } else {
+          aiResult = blockingDiscussion.aiResult;
+          attackFamily = aiResult.attackFamily || attackFamily;
+          verdict = aiVerdictToDecision(aiResult);
+          decisionSource = `security_classification:elevated:${aiResult.verdict}`;
+          combinedSignals.push({
+            source: 'ai',
+            key: `blocking-${aiResult.verdict}`,
+            score: clampConfidence(aiResult.confidence),
+            severity: aiVerdictToSeverity(aiResult),
+            description: aiResult.reasoning,
+            metadata: {
+              routeMode: aiResult.routeMode,
+              model: aiResult.model,
+              blockingDiscussion: true
+            }
+          });
+          const blockingCandidate = await this.createCandidateFromAI(
+            request,
+            settings,
+            attackFamily,
+            aiResult,
+            {
+              request: serializeRequestSnapshot(request),
+              ai: this.serializeAIResult(aiResult),
+              primaryAi: this.serializeAIResult(primaryAiResult),
+              blockingDiscussion: {
+                status: blockingDiscussion.status,
+                latencyMs: blockingDiscussion.latencyMs,
+                debateTriggered: blockingDiscussion.debateTriggered,
+                reason: blockingDiscussion.reason
+              }
+            }
+          );
+          candidateId = blockingCandidate?.candidateId || candidateId;
+        }
+      } else if (!options.forceAiReview && this.shouldQueueAsyncReview({
+        request,
+        settings,
+        ruleEscalation: false,
+        baseRiskScore,
+        primaryAi: primaryAiResult,
+        primaryConfidencePresent,
+        candidateCreated: Boolean(candidateId)
+      })) {
+        const reviewId = await this.enqueueAsyncReview(
+          request,
+          primaryAiResult.verdict === 'suspicious' ? 'local_model_suspicious' : 'local_model_low_confidence',
+          primaryAiResult,
+          candidateId
+        );
+        queuedForAsyncReview = Boolean(reviewId);
+        if (reviewId) {
+          decisionSource = `${decisionSource}+async_review_queued`;
+        }
       }
+    } else if (verdict !== 'block' && !ruleMatched && !options.forceAiReview) {
+      decisionSource = `${decisionSource}+local_ai_unavailable`;
+    } else if (options.forceAiReview && this.aiAnalyzer && verdict !== 'block') {
+      escalatedToAI = true;
+      const primaryAiRawResult = await this.aiAnalyzer.analyze(request, {
+        analysisPurpose: 'learning_verification',
+        routeModeOverride: settings.learningCloudVerificationMode
+      });
+      const primaryConfidencePresent = hasUsableConfidence(primaryAiRawResult.confidence);
+      aiResult = normalizeAIResult(primaryAiRawResult, attackFamily);
+      attackFamily = aiResult.attackFamily || attackFamily;
+      verdict = aiVerdictToDecision(aiResult);
+      decisionSource = `ai:${aiResult.verdict}`;
+      combinedSignals.push({
+        source: 'ai',
+        key: `ai-${aiResult.verdict}`,
+        score: clampConfidence(aiResult.confidence),
+        severity: aiVerdictToSeverity(aiResult),
+        description: aiResult.reasoning,
+        metadata: {
+          routeMode: aiResult.routeMode,
+          model: aiResult.model
+        }
+      });
+
+      const primaryEvidence = {
+        request: serializeRequestSnapshot(request),
+        ai: this.serializeAIResult(aiResult),
+        primaryAi: this.serializeAIResult(aiResult)
+      };
+
+      const primaryCandidate = await this.createCandidateFromAI(
+        request,
+        settings,
+        attackFamily,
+        aiResult,
+        primaryEvidence
+      );
+      candidateId = primaryCandidate?.candidateId || null;
+
+      if (this.shouldQueueAsyncReview({
+        request,
+        settings,
+        ruleEscalation: false,
+        baseRiskScore,
+        primaryAi: aiResult,
+        primaryConfidencePresent,
+        candidateCreated: Boolean(candidateId)
+      })) {
+        const reviewId = await this.enqueueAsyncReview(
+          request,
+          aiResult.verdict === 'suspicious' ? 'local_model_suspicious' : 'local_model_low_confidence',
+          aiResult,
+          candidateId
+        );
+        queuedForAsyncReview = Boolean(reviewId);
+        if (reviewId) {
+          decisionSource = `${decisionSource}+async_review_queued`;
+        }
+      }
+    } else if (verdict !== 'block' && !options.forceAiReview) {
+      // Rule-only or heuristic-only path. No blocking AI work here.
     }
 
     // --- Learning from blocked requests (seed-rule blocks, no AI) ---
@@ -891,6 +1681,12 @@ class DetectionPipelineService {
       riskScore: Number(baseRiskScore.toFixed(4)),
       escalatedToAI,
       queuedForAsyncReview,
+      classificationLevel,
+      blockingDiscussion: Boolean(blockingDiscussion),
+      discussionStatus: blockingDiscussion?.status || 'not_required',
+      discussionLatencyMs: blockingDiscussion?.latencyMs ?? 0,
+      discussionDebateTriggered: blockingDiscussion?.debateTriggered || false,
+      discussionFailClosed: blockingDiscussion?.failClosed || false,
       aiVerdict: aiResult?.verdict,
       aiConfidence: aiResult?.confidence,
       decisionSource,
@@ -899,6 +1695,7 @@ class DetectionPipelineService {
       candidateId,
       processingTimeMs: Date.now() - startedAt,
       ruleMatches: ruleEvaluation.matchedRules.map((item) => item.rule),
+      primaryAiResult: primaryAiResult,
       aiResult,
       learningVerificationAiResult
     };
@@ -971,6 +1768,7 @@ class DetectionPipelineService {
 
   async getSummary(tenantId: string): Promise<DetectionRuleSummary> {
     this.assertPrepared();
+    const settings = await this.getSettings(tenantId);
     const rules = await this.listRules(tenantId);
     const candidates = await this.listRuleCandidates(tenantId);
     const db = this.getDb();
@@ -981,6 +1779,15 @@ class DetectionPipelineService {
       ORDER BY created_at DESC
       LIMIT 1000
     `).all(tenantId) as any[];
+    const asyncReviewRows = db.prepare(`
+      SELECT status, final_ai_json, latency_ms, debate_triggered
+      FROM sec_detection_async_reviews
+      WHERE tenant_id = ?
+      ORDER BY updated_at DESC
+      LIMIT 1000
+    `).all(tenantId) as any[];
+    const asyncReviewStats = await this.getAsyncReviewStats(tenantId);
+    const responseSnapshots = eventRows.map((row) => parseJson<Record<string, any>>(row.response_snapshot_json, {}));
 
     const totalEvents = eventRows.length;
     const aiEvents = eventRows.filter((row) => normalizeBoolean(row.escalated_to_ai)).length;
@@ -999,12 +1806,26 @@ class DetectionPipelineService {
       }
       return acc;
     }, { local: 0, cloud: 0 });
+    for (const row of asyncReviewRows) {
+      const finalAi = parseJson<Record<string, any> | null>(row.final_ai_json, null);
+      const routeMode = String(finalAi?.routeMode || '');
+      if (routeMode.includes('local')) {
+        routeModeCounts.local += 1;
+      } else if (routeMode.includes('cloud') || routeMode.includes('hybrid')) {
+        routeModeCounts.cloud += 1;
+      }
+    }
 
     for (const row of eventRows) {
       for (const ruleId of parseJson<string[]>(row.matched_rule_ids_json, [])) {
         topRuleCounts.set(ruleId, (topRuleCounts.get(ruleId) || 0) + 1);
       }
     }
+    const blockingDiscussionCount = responseSnapshots.filter((snapshot) => Boolean(snapshot.blockingDiscussion)).length;
+    const blockingDiscussionFailClosed = responseSnapshots.filter((snapshot) => normalizeBoolean(snapshot.discussionFailClosed)).length;
+    const blockingDiscussionLatencySamples = responseSnapshots
+      .map((snapshot) => Number(snapshot.discussionLatencyMs || 0))
+      .filter((value) => Number.isFinite(value) && value > 0);
 
     const ruleIndex = rules.reduce<Record<string, DetectionRuleRecord>>((acc, rule) => {
       acc[rule.ruleId] = rule;
@@ -1030,10 +1851,66 @@ class DetectionPipelineService {
       rejectedCandidates: candidates.filter((candidate) => candidate.status === 'rejected').length,
       ruleHitRate: totalEvents > 0 ? Number((ruleHitEvents / totalEvents).toFixed(4)) : 0,
       aiEscalationRate: totalEvents > 0 ? Number((aiEvents / totalEvents).toFixed(4)) : 0,
+      localModelHitRate: totalEvents > 0 ? Number((routeModeCounts.local / totalEvents).toFixed(4)) : 0,
       avgProcessingTimeMs,
       localAICount: routeModeCounts.local,
       cloudAICount: routeModeCounts.cloud,
+      asyncReviewQueueDepth: asyncReviewStats.queueDepth,
+      asyncReviewRunning: asyncReviewStats.running,
+      asyncReviewCompleted: asyncReviewStats.completed,
+      asyncReviewFailed: asyncReviewStats.failed,
+      debateCompletionRate: asyncReviewStats.debateCompletionRate,
+      avgAsyncReviewLatencyMs: asyncReviewStats.avgLatencyMs,
+      classificationLevel: settings.classificationLevel,
+      blockingDiscussionCount,
+      blockingDiscussionFailClosed,
+      avgBlockingDiscussionLatencyMs: blockingDiscussionLatencySamples.length > 0
+        ? Number((blockingDiscussionLatencySamples.reduce((sum, value) => sum + value, 0) / blockingDiscussionLatencySamples.length).toFixed(2))
+        : 0,
       topRules
+    };
+  }
+
+  async getAsyncReviewStats(tenantId: string): Promise<DetectionAsyncReviewStats> {
+    this.assertPrepared();
+    const db = this.getDb();
+    const rows = db.prepare(`
+      SELECT status, latency_ms, debate_triggered
+      FROM sec_detection_async_reviews
+      WHERE tenant_id = ?
+      ORDER BY updated_at DESC
+      LIMIT 1000
+    `).all(tenantId) as any[];
+
+    const counts = rows.reduce((acc, row) => {
+      const status = row.status === 'running'
+        ? 'running'
+        : row.status === 'completed'
+          ? 'completed'
+          : row.status === 'failed'
+            ? 'failed'
+            : 'queued';
+      acc[status] += 1;
+      return acc;
+    }, { queued: 0, running: 0, completed: 0, failed: 0 } as Record<DetectionAsyncReviewStatus, number>);
+    const terminal = counts.completed + counts.failed;
+    const completedRows = rows.filter((row) => row.status === 'completed');
+    const latencies = completedRows
+      .map((row) => Number(row.latency_ms || 0))
+      .filter((value) => Number.isFinite(value) && value > 0);
+    const debateCompleted = completedRows.filter((row) => normalizeBoolean(row.debate_triggered)).length;
+
+    return {
+      queueDepth: counts.queued + counts.running,
+      queued: counts.queued,
+      running: counts.running,
+      completed: counts.completed,
+      failed: counts.failed,
+      completionRate: terminal > 0 ? Number((counts.completed / terminal).toFixed(4)) : 0,
+      debateCompletionRate: completedRows.length > 0 ? Number((debateCompleted / completedRows.length).toFixed(4)) : 0,
+      avgLatencyMs: latencies.length > 0
+        ? Number((latencies.reduce((sum, value) => sum + value, 0) / latencies.length).toFixed(2))
+        : 0
     };
   }
 
@@ -1192,9 +2069,16 @@ class DetectionPipelineService {
         decisionSource: decision.decisionSource,
         riskScore: decision.riskScore,
         queuedForAsyncReview: decision.queuedForAsyncReview,
+        classificationLevel: decision.classificationLevel,
+        blockingDiscussion: decision.blockingDiscussion,
+        discussionStatus: decision.discussionStatus,
+        discussionLatencyMs: decision.discussionLatencyMs,
+        discussionDebateTriggered: decision.discussionDebateTriggered,
+        discussionFailClosed: decision.discussionFailClosed,
         aiVerdict: decision.aiVerdict,
         aiConfidence: decision.aiConfidence,
-        primaryAi: this.serializeAIResult(decision.aiResult),
+        primaryAi: this.serializeAIResult(decision.primaryAiResult),
+        finalAi: this.serializeAIResult(decision.aiResult),
         learningVerificationAi: this.serializeAIResult(decision.learningVerificationAiResult),
         candidateId: decision.candidateId,
         matchedRuleIds: decision.matchedRuleIds
@@ -1290,6 +2174,7 @@ class DetectionPipelineService {
   }
 
   private mapEvent(row: any): DetectionEventRecord {
+    const responseSnapshot = parseJson<Record<string, any>>(row.response_snapshot_json, {});
     return {
       detectionEventId: String(row.detection_event_id || ''),
       tenantId: String(row.tenant_id || PLATFORM_TENANT_ID),
@@ -1299,6 +2184,11 @@ class DetectionPipelineService {
       matchedRuleIds: parseJson<string[]>(row.matched_rule_ids_json, []),
       riskScore: Number(row.risk_score || 0),
       escalatedToAI: normalizeBoolean(row.escalated_to_ai),
+      queuedForAsyncReview: normalizeBoolean(responseSnapshot.queuedForAsyncReview),
+      classificationLevel: responseSnapshot.classificationLevel ? normalizeSecurityClassificationLevel(responseSnapshot.classificationLevel) : undefined,
+      blockingDiscussion: normalizeBoolean(responseSnapshot.blockingDiscussion),
+      discussionStatus: responseSnapshot.discussionStatus ? String(responseSnapshot.discussionStatus) as BlockingDiscussionStatus : undefined,
+      discussionLatencyMs: responseSnapshot.discussionLatencyMs === null || responseSnapshot.discussionLatencyMs === undefined ? undefined : Number(responseSnapshot.discussionLatencyMs),
       aiVerdict: row.ai_verdict ? String(row.ai_verdict) : null,
       aiConfidence: row.ai_confidence === null || row.ai_confidence === undefined ? null : Number(row.ai_confidence),
       aiRouteMode: row.ai_route_mode ? String(row.ai_route_mode) : null,
@@ -1308,7 +2198,7 @@ class DetectionPipelineService {
       decisionSource: String(row.decision_source || ''),
       processingTimeMs: Number(row.processing_time_ms || 0),
       requestSnapshot: parseJson<Record<string, any>>(row.request_snapshot_json, {}),
-      responseSnapshot: parseJson<Record<string, any>>(row.response_snapshot_json, {}),
+      responseSnapshot,
       createdAt: String(row.created_at || '')
     };
   }

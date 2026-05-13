@@ -9,6 +9,9 @@ import logger from '../utils/logger';
 import { securityOperationsService } from './security-operations.service';
 import { commandDispatcherService } from './command-dispatcher.service';
 import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
+import { allowGatewayDestructiveCommands } from '../config/enterprise-runtime';
+import { requiresPhysicalConfirmation } from '../security/command-risk-policy';
+import type { InterlockState } from '../security/final-defense-policy';
 
 // ---- Types ----
 
@@ -37,6 +40,14 @@ export interface DeviceInfo {
     };
     physicalAuth?: {
         publicKeyPem: string;
+    };
+    finalDefense?: {
+        policyDigest?: string;
+        breakerTarget?: string;
+        interlockState?: InterlockState;
+        externalPowerPresent?: boolean;
+        secureElementPresent?: boolean;
+        feedbackOk?: boolean;
     };
 }
 
@@ -80,6 +91,10 @@ const deviceConfigs = new Map<string, DeviceConfig>();
 const deviceCommands = new Map<string, DeviceCommandRecord[]>();
 let deviceCommandTransport: ((deviceId: string, command: string, params?: Record<string, any>) => Promise<boolean> | boolean) | null = null;
 
+function isProductionBlockedDeviceCommand(command: string): boolean {
+    return !allowGatewayDestructiveCommands() && requiresPhysicalConfirmation(command);
+}
+
 // Codebook
 const codebook: Record<string, string> = {
     'E001': 'Connection refused',
@@ -108,7 +123,20 @@ function buildDefaultConfig(device: DeviceInfo): DeviceConfig {
         networkProfile: device.mode === 'online' ? 'cloud-mesh' : 'standalone-buffer',
         scanProfile: device.isOnline ? 'balanced' : 'offline-recovery',
         notes: `${device.chipModel} running firmware ${device.version}`,
-        commandPermissions: ['collect', 'reboot', 'sync-config', 'ota_update'],
+        commandPermissions: [
+            'collect',
+            'reboot',
+            'sync-config',
+            'ota_update',
+            'deploy_bundle',
+            'host_install',
+            'host_remove',
+            'recovery_flash',
+            'factory_reset',
+            'diagnostic_unlock',
+            'wipe_data',
+            'critical_config_change'
+        ],
         tags: [device.chipModel.toLowerCase(), device.mode, device.isOnline ? 'online' : 'offline'],
         updatedAt: new Date().toISOString()
     };
@@ -309,10 +337,19 @@ export async function executeDeviceCommandInternal(input: {
     actorEmail?: string;
     actorIp?: string;
     actionId?: string;
+    hardwareGrant?: any;
 }): Promise<{ success: boolean; record?: DeviceCommandRecord; message: string; reason?: string }> {
     const device = devices.get(input.deviceId);
     if (!device) {
         return { success: false, message: 'Device not found.', reason: 'device_not_found' };
+    }
+
+    if (isProductionBlockedDeviceCommand(input.command) && !input.hardwareGrant) {
+        return {
+            success: false,
+            message: `Command ${input.command} is blocked on the experimental device gateway in the current enterprise runtime.`,
+            reason: 'device_command_requires_enterprise_serial_run'
+        };
     }
 
     const config = ensureDeviceConfig(device);
@@ -325,7 +362,10 @@ export async function executeDeviceCommandInternal(input: {
     }
 
     if (deviceCommandTransport) {
-        const accepted = await Promise.resolve(deviceCommandTransport(input.deviceId, input.command, input.params || {}));
+        const transportParams = input.hardwareGrant
+            ? { ...(input.params || {}), hardwareGrant: input.hardwareGrant.grant || input.hardwareGrant }
+            : input.params || {};
+        const accepted = await Promise.resolve(deviceCommandTransport(input.deviceId, input.command, transportParams));
         if (!accepted) {
             return { success: false, message: `Device gateway rejected command ${input.command}.`, reason: 'device_gateway_rejected' };
         }
@@ -418,6 +458,18 @@ export function updateDeviceStatus(deviceId: string, status: DeviceInfo['status'
         } catch {
             // Ignore when the security operations database is unavailable.
         }
+    }
+}
+
+export function updateDeviceFinalDefenseState(deviceId: string, state: NonNullable<DeviceInfo['finalDefense']>): void {
+    const device = devices.get(deviceId);
+    if (device) {
+        device.finalDefense = {
+            ...(device.finalDefense || {}),
+            ...state
+        };
+        device.lastHeartbeat = new Date();
+        devices.set(deviceId, device);
     }
 }
 

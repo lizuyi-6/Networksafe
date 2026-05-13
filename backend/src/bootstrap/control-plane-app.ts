@@ -22,6 +22,8 @@ import smartFixRouter from '../api/routes/smart-fix.routes';
 import deploymentsRouter from '../api/routes/deployments.routes';
 import agentsRouter from '../api/routes/agents.routes';
 import devicesRouter from '../api/routes/devices.routes';
+import finalDefenseRouter from '../api/routes/final-defense.routes';
+import hardwareAuthorizationRouter from '../api/routes/hardware-authorization.routes';
 import aiEndpointsRouter from '../api/routes/ai-endpoints.routes';
 import authRouter from '../api/routes/auth.routes';
 import attackRoutes from '../api/routes/attack.routes';
@@ -36,6 +38,7 @@ import investigationRoutes from '../api/routes/investigation.routes';
 import seedRoutes from '../api/routes/seed.routes';
 import pipelineRoutes from '../api/routes/pipeline.routes';
 import rulesRoutes from '../api/routes/rules.routes';
+import enterpriseHelperRoutes from '../api/routes/enterprise-helper.routes';
 import announcementsAdminRoutes from '../modules/announcements/announcements.routes';
 import { listPublishedAnnouncements } from '../modules/announcements/announcements.repository';
 
@@ -237,6 +240,8 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
     apiRouter.use('/deployments', deploymentsRouter);
     apiRouter.use('/agents', agentsRouter);
     apiRouter.use('/devices', devicesRouter);
+    apiRouter.use('/final-defense', finalDefenseRouter);
+    apiRouter.use('/', hardwareAuthorizationRouter);
     apiRouter.use('/ai-endpoints', aiEndpointsRouter);
     apiRouter.use('/auth', authRouter);
     apiRouter.use('/ai-system', aiSystemRouter);
@@ -251,6 +256,7 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
     apiRouter.use('/seed', seedRoutes);
     apiRouter.use('/pipeline', pipelineRoutes);
     apiRouter.use('/rules', rulesRoutes);
+    apiRouter.use('/', enterpriseHelperRoutes);
 
     // Announcements admin routes (CRUD, publish, archive)
     apiRouter.use('/admin', announcementsAdminRoutes);

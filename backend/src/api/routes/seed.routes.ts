@@ -6,9 +6,25 @@
  */
 
 import { Router, Response } from 'express';
+import crypto from 'crypto';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { SeedManager, SeedOptions, SeedStatus } from '../../database/seeds/seed-manager';
 import logger from '../../utils/logger';
+
+/**
+ * In-memory store for pending seed force confirmations.
+ * Each entry holds the expiry timestamp, the requesting user's ID, and their IP address.
+ * TTL is 60 seconds (enforced at lookup time).
+ */
+const pendingConfirmations = new Map<string, { expiresAt: number; userId: string; ip: string }>();
+
+/**
+ * Generate a cryptographically random confirmation token.
+ * Returns a 32-character hex string (16 random bytes).
+ */
+function generateConfirmToken(): string {
+  return crypto.randomBytes(16).toString('hex');
+}
 
 const router = Router();
 

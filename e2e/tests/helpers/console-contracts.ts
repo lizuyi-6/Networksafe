@@ -260,4 +260,11 @@ export const cleanupE2EArtifacts = async (request: APIRequestContext) => {
             await request.delete(`/api/ai-endpoints/${encodeURIComponent(endpoint.id)}`);
         }
     }
+
+    const announcements = await readJson(request, '/api/admin/announcements').catch(() => null);
+    for (const announcement of unwrapRows(announcements?.payload)) {
+        if (String(announcement.title || '').startsWith('e2e-') && announcement.id) {
+            await request.delete(`/api/admin/announcements/${encodeURIComponent(announcement.id)}`);
+        }
+    }
 };
