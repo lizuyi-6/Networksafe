@@ -4,14 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AetherGuard (formerly AetherGuard) - 智能服务器安全防御平台。基于 Agent 的分布式安全防御系统，采用"中心化控制 + 分布式执行"架构。
+AetherGuard — 智能服务器安全防御平台。Agent-based distributed security with hardware-enforced safety gates for dangerous operations.
+
+**Product claim**: "AetherGuard 完全最后防线". Engineering definition: **Final Defense Mode** is a detectable, auditable, fail-closed mode where the control plane can request and audit dangerous actions, but the final grant is enforced by hardware. The **root-resistant** variant moves the final network release decision outside the protected server into an external Network Isolation Gateway.
 
 **Core Components:**
-- **Control Plane**: Backend API + SQLite (sql.js / better-sqlite3) + Redis (pub/sub, caching)
+- **Control Plane**: Backend API + SQLite (sql.js / better-sqlite3) + Postgres (production) + Redis (pub/sub, caching)
 - **Distributed Agents**: Node.js processes on Linux servers (attack detection, firewall control)
+- **Local Companion**: Talks to Control Board v1 over serial; verifies signed local policies and hardware grants
 - **Frontend Dashboard**: React SPA for monitoring and management
-- **Rust Fastpath**: High-performance traffic processing sidecar (optional but recommended)
-- **ESP32 Dongles**: Hardware deployment tools (optional)
+- **Rust Fastpath**: High-performance traffic processing sidecar
+- **Hardware**: Control Board v1 (ESP32-S3 + ATECC608C) and Network Isolation Gateway v1 (external L2 bridge); legacy ESP32 serial deployer dongle still supported
 
 ## Quick Start
 
@@ -94,6 +97,19 @@ npm run seed                      # Seed demo data
 npm run seed:clear                # Clear demo data
 npm run cleanup:demo:dry-run      # Preview cleanup
 npm run cleanup:demo              # Execute cleanup
+```
+
+### Final Defense Focused Checks
+
+These targeted Jest suites cover the hardware-gated path. Run them when touching final-defense, hardware, companion, or device-control code:
+
+```bash
+cd backend
+npx jest src/__tests__/services/final-defense.service.test.ts
+npx jest src/__tests__/services/hardware-authorization.service.test.ts
+npx jest src/__tests__/services/deployment-run.service.test.ts
+npx jest src/__tests__/services/device-control.service.test.ts
+npx jest src/__tests__/companion/serial-device-companion.test.ts
 ```
 
 ### Frontend (React/Vite/TypeScript)
@@ -532,6 +548,54 @@ The `services/detection-pipeline.service.ts` and `services/detection-engine.ts` 
 - AI escalation for suspicious traffic
 - Attack family classification (SQL injection, XSS, path traversal, command injection, etc.)
 - Candidate rule suggestions for new attack patterns
+
+### Final Defense Mode
+
+Final Defense Mode treats the backend, database, and API request as potentially untrusted for high-risk actions. High-risk actions (`host_remove`, `wipe_data`, `factory_reset`, `recovery_flash`, `critical_config_change`) must satisfy ALL of:
+
+- Local companion reads a signed local policy from `/etc/aetherguard/final-defense-policy.json`.
+- Action, target, script path, release window, and interlock target are in the local policy allow-list.
+- Hardware grant signature verifies against the provisioned hardware public key.
+- Grant message includes and matches `policyDigest`, `challenge`, `breakerTarget`, `interlockAction`, payload hash, expiry, and monotonic counter.
+- Interlock feedback is healthy and matches the expected state.
+
+Interlock states are normalized as `'isolated' | 'armed' | 'released' | 'fault' | 'disabled' | 'unknown'`. Legacy `asserted` maps to `isolated`. **Failure is fail-closed**: signature failure, counter rollback, policy digest mismatch, expired grant, missing external DC, feedback mismatch, board disconnect, or heartbeat loss returns the management link to `isolated`.
+
+Final Defense API routes:
+- `GET /api/final-defense/status`
+- `POST /api/final-defense/policies`
+- `POST /api/final-defense/actions`
+- `POST /api/final-defense/gateways/status/report`
+- `POST /api/final-defense/gateways/actions`
+
+### Root-Resistant Final Defense
+
+Threat model: protected server OS, local agent, local companion, scripts, and host logs may all be controlled by an attacker with root. The trusted boundary is the **external Network Isolation Gateway v1** — a dual 1GbE RJ45 transparent L2 bridge with `SERVER`, `LAN/WAN`, and independent `MGMT` ports. The `SERVER`↔`LAN/WAN` bridge is fail-closed; `isolated` blocks protected-server forwarding while preserving the gateway's own management channel. The gateway holds signed policy state, hardware identity, firmware measurement, and secure-element-backed release grants outside the protected server.
+
+UI may show "root-resistant active" only when ALL of: external gateway present, policy digest match, firmware digest + attestation, secure element provisioned, both data ports linked, independent management path, and healthy `armed` or `isolated` bridge state. The claim only covers links physically cabled through the gateway; out-of-band BMC, Wi-Fi, spare NICs, local console, direct storage damage, and host disk encryption by root are outside v1 protection.
+
+### Hardware
+
+| Hardware | Status | Role |
+|---|---|---|
+| Legacy ESP32 serial deployment dongle | Supported | Physical confirmation for local deployment/removal over USB-TTL serial; uses `AG:REQ:*` allow-list protocol (`AG:BEGIN/*`, `AG:STEP/*`, `AG:OK/*`, `AG:ERR/*`) |
+| Control Board v1 | Control-plane-compromise defense | ESP32-S3 + ATECC608C, isolated interlock output and feedback for local hardware grants |
+| Network Isolation Gateway v1 | Root-resistant target | External dual-port 1GbE transparent L2 gateway controlling protected-server network release outside the host |
+
+Control Board v1 protocol is newline-delimited JSON:
+- Companion → board: `hello`, `command physical_confirmation_required`, `command interlock_assert`, `command interlock_release`
+- Board → companion: `state`, `heartbeat`, `alert`, `physical_confirmation_ack`, `interlock_result`
+
+The legacy ESP32 deployment dongle's `AG:REQ:*` protocol is separate from Control Board v1.
+
+### Production Rules
+
+- `DB_MODE=postgres` is **required** for production (SQLite is dev/demo only).
+- `DISABLE_REDIS` must NOT be enabled in production.
+- Do NOT call `ensureSchema()` in request handlers or WebSocket processors — prepare service-owned tables in `backend/src/bootstrap/persistence.ts`.
+- Do NOT commit generated outputs, KiCad scratch trees, router exchange files, probe reports, or generated PPTX decks.
+- Demo / pitch-only frontend routes (e.g. `/aetherguard-deck`) are disabled by default. Set `VITE_ENABLE_PITCH_ROUTES=true` only for local demo builds.
+- Large generated artifacts and hardware experiment intermediates have been moved to `X:\repos\Networksafe-archive\20260513-pre-cleanup`. See `docs/artifact-archive-index.md` for the manifest.
 
 ### Architecture Decision Records (ADR)
 

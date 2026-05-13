@@ -1,0 +1,469 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-05-13T22:09:23+0800",
+    "kicad_version": "9.0.7",
+    "schematic_parity": [],
+    "source": "aetherguard-network-isolation-gateway-v1.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "被板边截断的丝印",
+            "items": [
+                {
+                    "description": "Edge.Cuts 上的 线段",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 110.0
+                    },
+                    "uuid": "5ed4d261-df35-405e-9c83-a5dd587ad073"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'CONFIRM  CANCEL  RECOVERY'",
+                    "pos": {
+                        "x": 7.0,
+                        "y": 89.0
+                    },
+                    "uuid": "279702fb-2105-4057-8ac6-6fdef740d1f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "被板边截断的丝印",
+            "items": [
+                {
+                    "description": "Edge.Cuts 上的 线段",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 110.0
+                    },
+                    "uuid": "5ed4d261-df35-405e-9c83-a5dd587ad073"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'DATA PLANE: KSZ9563R reset low = isolated'",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 34.0
+                    },
+                    "uuid": "2e3e24b0-a835-48eb-a7ea-ea3fd5562654"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "被板边截断的丝印",
+            "items": [
+                {
+                    "description": "Edge.Cuts 上的 线段",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 110.0
+                    },
+                    "uuid": "5ed4d261-df35-405e-9c83-a5dd587ad073"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'AetherGuard Network Isolation Gateway v1A'",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 46.0
+                    },
+                    "uuid": "a9528ab5-335e-4f89-8afb-81dc7aee81ce"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "被板边截断的丝印",
+            "items": [
+                {
+                    "description": "Edge.Cuts 上的 线段",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 110.0
+                    },
+                    "uuid": "5ed4d261-df35-405e-9c83-a5dd587ad073"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'FAIL-CLOSED DEFAULT: SERVER <-> LAN/WAN isolated until signed policy + attestation pass'",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 50.0
+                    },
+                    "uuid": "fb8e7ca6-203c-452e-bf97-cbfaeed5ca7a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "被板边截断的丝印",
+            "items": [
+                {
+                    "description": "Edge.Cuts 上的 线段",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 110.0
+                    },
+                    "uuid": "5ed4d261-df35-405e-9c83-a5dd587ad073"
+                },
+                {
+                    "description": "J1 的 线段, 位于 F.Silkscreen",
+                    "pos": {
+                        "x": -2.25,
+                        "y": 3.43
+                    },
+                    "uuid": "d08e0cb6-84f0-406b-b1d5-88211fa143fb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "被板边截断的丝印",
+            "items": [
+                {
+                    "description": "Edge.Cuts 上的 线段",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 110.0
+                    },
+                    "uuid": "5ed4d261-df35-405e-9c83-a5dd587ad073"
+                },
+                {
+                    "description": "J1 的 线段, 位于 F.Silkscreen",
+                    "pos": {
+                        "x": -2.25,
+                        "y": 20.42
+                    },
+                    "uuid": "d954ca3e-18a1-4dec-87d8-536175ef4260"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "被阻焊层截断的丝印",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 102.0,
+                        "y": 31.0
+                    },
+                    "uuid": "03c8fcf6-c6a0-49f1-bb52-0d551a4e7ab4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "被阻焊层截断的丝印",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 96.0,
+                        "y": 31.0
+                    },
+                    "uuid": "184a887f-967f-4e72-b217-63180a17dda9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "被阻焊层截断的丝印",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'AetherGuard Network Isolation Gateway v1A'",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 46.0
+                    },
+                    "uuid": "a9528ab5-335e-4f89-8afb-81dc7aee81ce"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "被阻焊层截断的丝印",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'CONTROL PLANE: ESP32-S3 + ATECC608C + signed local policy'",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 34.0
+                    },
+                    "uuid": "d65cf9fc-ccda-496e-b020-e019c420a0ee"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "被阻焊层截断的丝印",
+            "items": [
+                {
+                    "description": "SW3 的参考字段",
+                    "pos": {
+                        "x": 46.0,
+                        "y": 91.5
+                    },
+                    "uuid": "7d95d30b-a84b-417d-8cbc-278fa7fb0834"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "被阻焊层截断的丝印",
+            "items": [
+                {
+                    "description": "SW2 的参考字段",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 91.5
+                    },
+                    "uuid": "c1aff9c8-33f8-4eac-93dc-04709cf026fe"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 4.0,
+                        "y": 74.0
+                    },
+                    "uuid": "69653c3d-3a8c-4aec-8ae1-0bb80f603595"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'PWR SEC ISO ARM REL FLT'",
+                    "pos": {
+                        "x": 10.0,
+                        "y": 66.0
+                    },
+                    "uuid": "70439b3e-9759-438a-ad69-c47ecb1cbfda"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'DATA PLANE: KSZ9563R reset low = isolated'",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 34.0
+                    },
+                    "uuid": "2e3e24b0-a835-48eb-a7ea-ea3fd5562654"
+                },
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 4.0,
+                        "y": 74.0
+                    },
+                    "uuid": "69653c3d-3a8c-4aec-8ae1-0bb80f603595"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 4.0,
+                        "y": 74.0
+                    },
+                    "uuid": "69653c3d-3a8c-4aec-8ae1-0bb80f603595"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'AetherGuard Network Isolation Gateway v1A'",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 46.0
+                    },
+                    "uuid": "a9528ab5-335e-4f89-8afb-81dc7aee81ce"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 4.0,
+                        "y": 74.0
+                    },
+                    "uuid": "69653c3d-3a8c-4aec-8ae1-0bb80f603595"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'FAIL-CLOSED DEFAULT: SERVER <-> LAN/WAN isolated until signed policy + attestation pass'",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 50.0
+                    },
+                    "uuid": "fb8e7ca6-203c-452e-bf97-cbfaeed5ca7a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 96.0,
+                        "y": 31.0
+                    },
+                    "uuid": "184a887f-967f-4e72-b217-63180a17dda9"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'CONTROL PLANE: ESP32-S3 + ATECC608C + signed local policy'",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 34.0
+                    },
+                    "uuid": "d65cf9fc-ccda-496e-b020-e019c420a0ee"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 102.0,
+                        "y": 74.0
+                    },
+                    "uuid": "a992b736-0f4a-4978-b888-a2321d6a1f6b"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'CONTROL PLANE: ESP32-S3 + ATECC608C + signed local policy'",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 34.0
+                    },
+                    "uuid": "d65cf9fc-ccda-496e-b020-e019c420a0ee"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 102.0,
+                        "y": 31.0
+                    },
+                    "uuid": "03c8fcf6-c6a0-49f1-bb52-0d551a4e7ab4"
+                },
+                {
+                    "description": "TP14 的 圆形, 位于 F.Silkscreen",
+                    "pos": {
+                        "x": 136.0,
+                        "y": 31.0
+                    },
+                    "uuid": "3cc787dc-4eb5-46ff-b109-002dd58c6800"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 146.0,
+                        "y": 31.0
+                    },
+                    "uuid": "3ab4373c-34f1-4681-be92-13c4e7c3c46d"
+                },
+                {
+                    "description": "Y2 的 线段, 位于 F.Silkscreen",
+                    "pos": {
+                        "x": 145.94,
+                        "y": 48.71
+                    },
+                    "uuid": "de57811e-6f56-4bfd-a8a7-89fdd8636920"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "Y2 的 线段, 位于 F.Silkscreen",
+                    "pos": {
+                        "x": 145.94,
+                        "y": 45.29
+                    },
+                    "uuid": "33ca84d6-1313-4185-825c-1a8942a8fb03"
+                },
+                {
+                    "description": "F.Silkscreen 上的 线段",
+                    "pos": {
+                        "x": 146.0,
+                        "y": 31.0
+                    },
+                    "uuid": "3ab4373c-34f1-4681-be92-13c4e7c3c46d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "丝印重叠",
+            "items": [
+                {
+                    "description": "TP13 的 圆形, 位于 F.Silkscreen",
+                    "pos": {
+                        "x": 83.0,
+                        "y": 34.0
+                    },
+                    "uuid": "11a92df0-11e5-4311-8c71-79efa7517c61"
+                },
+                {
+                    "description": "F.Silkscreen 上的 PCB 文本 'CONTROL PLANE: ESP32-S3 + ATECC608C + signed local policy'",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 34.0
+                    },
+                    "uuid": "d65cf9fc-ccda-496e-b020-e019c420a0ee"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

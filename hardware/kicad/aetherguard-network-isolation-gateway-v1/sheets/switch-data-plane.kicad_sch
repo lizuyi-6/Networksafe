@@ -1,0 +1,253 @@
+(kicad_sch
+  (version 20250114)
+  (generator "aetherguard-gateway-generator")
+  (generator_version "1.0")
+  (uuid "4b332dad-7d13-542d-b1f1-bc0a102f49d5")
+  (paper "A3")
+  (title_block
+    (title "Protected 1GbE Transparent Bridge")
+    (date "2026-05-13")
+    (rev "v1-proto")
+    (comment 1 "AetherGuard Network Isolation Gateway v1A")
+  )
+  (lib_symbols
+  (symbol "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK"
+    (pin_names)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (property "Reference" "U" (at -10.16 -7.62 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "ARCH_BLOCK" (at 0 7.62 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 0 10.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (property "Datasheet" "" (at 0 12.7 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (symbol "ARCH_BLOCK_1_1"
+      (rectangle (start -12.7 -5.08) (end 12.7 5.08)
+        (stroke (width 0.15) (type default))
+        (fill (type background))
+      )
+    )
+    (embedded_fonts no)
+  )
+  )
+  (text "KSZ9563R integrated PHY ports connect SERVER and LAN/WAN RJ45 MagJacks.\\nDefault isolated: reset low or policy fault disables forwarding between SERVER and LAN/WAN.\\nrelease_temporary changes bridge/VLAN/port-forwarding state only for a bounded TTL." (at 20.32 22.86 0)
+    (effects (font (size 1.5 1.5)) (justify left bottom))
+    (uuid "dab5f815-a567-584f-bc67-6666ee6eb7c0")
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 35 48 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "6a730b92-767c-501e-9951-ee6a6466c222")
+    (property "Reference" "J1" (at 24.84 40.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "SERVER 1GbE RJ45 MagJack" (at 24.84 55.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Connector_RJ:RJ45_Pulse_JK00177NL_Horizontal" (at 35 58.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/6a730b92-767c-501e-9951-ee6a6466c222"
+          (reference "J1") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 105 48 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "1df71671-37da-5c46-a95c-db61c462a45d")
+    (property "Reference" "J2" (at 94.84 40.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "LAN/WAN 1GbE RJ45 MagJack" (at 94.84 55.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Connector_RJ:RJ45_Pulse_JK00177NL_Horizontal" (at 105 58.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/1df71671-37da-5c46-a95c-db61c462a45d"
+          (reference "J2") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 175 48 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "78d1a188-b094-5149-b6e5-e15babf94124")
+    (property "Reference" "U2" (at 164.84 40.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "KSZ9563R 3-port GbE switch" (at 164.84 55.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Package_DFN_QFN:QFN-64-1EP_8x8mm_P0.4mm_EP6.5x6.5mm" (at 175 58.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/78d1a188-b094-5149-b6e5-e15babf94124"
+          (reference "U2") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 35 83 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "eeade841-946e-559c-987e-4e060eeb914f")
+    (property "Reference" "Q1" (at 24.84 75.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "Fail-closed switch reset gate" (at 24.84 90.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Package_TO_SOT_SMD:SOT-23" (at 35 93.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/eeade841-946e-559c-987e-4e060eeb914f"
+          (reference "Q1") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 105 83 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "e46c1109-6b4c-57c4-9ad0-c34d0f614b3d")
+    (property "Reference" "Y1" (at 94.84 75.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "25MHz switch crystal" (at 94.84 90.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm" (at 105 93.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/e46c1109-6b4c-57c4-9ad0-c34d0f614b3d"
+          (reference "Y1") (unit 1)
+        )
+      )
+    )
+  )
+
+
+  (global_label "SERVER_MDI0_P/N"
+    (shape bidirectional)
+    (at 25 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "82d77c66-d8c7-54f9-b269-4fbdbd42878f")
+  )
+
+  (global_label "SERVER_MDI1_P/N"
+    (shape bidirectional)
+    (at 97 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "fda749ec-980c-5462-b688-44b92ca1b371")
+  )
+
+  (global_label "LANWAN_MDI0_P/N"
+    (shape bidirectional)
+    (at 169 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "861be244-98a1-5a59-a159-9d102de978f4")
+  )
+
+  (global_label "LANWAN_MDI1_P/N"
+    (shape bidirectional)
+    (at 25 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "1963fb22-20ec-5613-a845-a20213846960")
+  )
+
+  (global_label "SW_RESET_N"
+    (shape bidirectional)
+    (at 97 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "8e10591f-f2ff-545d-90a7-c9e4f0f0d3bc")
+  )
+
+  (global_label "BRIDGE_RELEASE_EN"
+    (shape bidirectional)
+    (at 169 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "b3120c52-07ff-5207-b794-072ad3690ae4")
+  )
+
+  (global_label "SERVER_LINK"
+    (shape bidirectional)
+    (at 25 170 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "54b58f5f-d7aa-5d18-b5df-a67f32d36050")
+  )
+
+  (global_label "LAN_LINK"
+    (shape bidirectional)
+    (at 97 170 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "e4f06cdf-0381-576f-86b3-85b418348a2d")
+  )
+
+  (text "Signals above map to API/status fields: gatewayId, policyDigest, firmwareDigest, bridgeState, serverPortLink, lanPortLink, mgmtPath, lastAttestationAt." (at 20.32 175.26 0)
+    (effects (font (size 1.1 1.1)) (justify left bottom))
+    (uuid "3b288ec8-a92c-5ebe-be9a-50d1bf66e7f2")
+  )
+  (sheet_instances
+    (path "/" (page "4"))
+  )
+  (embedded_fonts no)
+)

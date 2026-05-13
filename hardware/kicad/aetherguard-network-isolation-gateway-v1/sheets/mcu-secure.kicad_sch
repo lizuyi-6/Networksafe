@@ -1,0 +1,180 @@
+(kicad_sch
+  (version 20250114)
+  (generator "aetherguard-gateway-generator")
+  (generator_version "1.0")
+  (uuid "087117f0-bfd8-51f9-b54a-a27046f20783")
+  (paper "A3")
+  (title_block
+    (title "MCU, Secure Element and Policy Boundary")
+    (date "2026-05-13")
+    (rev "v1-proto")
+    (comment 1 "AetherGuard Network Isolation Gateway v1A")
+  )
+  (lib_symbols
+  (symbol "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK"
+    (pin_names)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (property "Reference" "U" (at -10.16 -7.62 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "ARCH_BLOCK" (at 0 7.62 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 0 10.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (property "Datasheet" "" (at 0 12.7 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (symbol "ARCH_BLOCK_1_1"
+      (rectangle (start -12.7 -5.08) (end 12.7 5.08)
+        (stroke (width 0.15) (type default))
+        (fill (type background))
+      )
+    )
+    (embedded_fonts no)
+  )
+  )
+  (text "ESP32-S3 verifies local signed policy, firmware digest and gateway state before release.\\nATECC608C stores non-exportable identity key and signs grant/attestation envelopes.\\nRoot on the protected server cannot reach this trust boundary except through network policy requests." (at 20.32 22.86 0)
+    (effects (font (size 1.5 1.5)) (justify left bottom))
+    (uuid "3ab090ff-4c4e-5088-af5a-855c99349cd5")
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 35 48 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "b8a8d73b-3309-53d9-81c7-3c5372c126f0")
+    (property "Reference" "U1" (at 24.84 40.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "ESP32-S3-WROOM-1" (at 24.84 55.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "RF_Module:ESP32-S3-WROOM-1" (at 35 58.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/b8a8d73b-3309-53d9-81c7-3c5372c126f0"
+          (reference "U1") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 105 48 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "3d1a06c6-eb4e-57f1-8581-4db664e920fe")
+    (property "Reference" "U4" (at 94.84 40.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "ATECC608C secure element" (at 94.84 55.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Package_SO:JEITA_SOIC-8_3.9x4.9mm_P1.27mm" (at 105 58.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/3d1a06c6-eb4e-57f1-8581-4db664e920fe"
+          (reference "U4") (unit 1)
+        )
+      )
+    )
+  )
+
+
+  (global_label "I2C_SCL"
+    (shape bidirectional)
+    (at 25 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "4c3ce5ba-7b30-52fb-8eae-a94d57b9c1d5")
+  )
+
+  (global_label "I2C_SDA"
+    (shape bidirectional)
+    (at 97 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "d270084f-5726-552c-8799-76db46f8b880")
+  )
+
+  (global_label "SPI_SCK"
+    (shape bidirectional)
+    (at 169 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "f39864a5-e06a-5a89-9923-60f378e8f4ad")
+  )
+
+  (global_label "SPI_MOSI"
+    (shape bidirectional)
+    (at 25 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "f195a16e-34b3-5113-8fd3-6110321c3070")
+  )
+
+  (global_label "SPI_MISO"
+    (shape bidirectional)
+    (at 97 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "3176dd74-8ef4-57b2-8506-6caaf4c2fa23")
+  )
+
+  (global_label "SW_SPI_CS"
+    (shape bidirectional)
+    (at 169 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "0e26af9e-daac-5a6f-88d0-05a96eba66aa")
+  )
+
+  (global_label "MGMT_SPI_CS"
+    (shape bidirectional)
+    (at 25 170 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "a89d1d10-6350-5847-a12b-6eb8e0301597")
+  )
+
+  (global_label "SW_RESET_N"
+    (shape bidirectional)
+    (at 97 170 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "91a556f9-fada-5e3d-829c-8b89ce2d745f")
+  )
+
+  (global_label "WATCHDOG_FAIL_N"
+    (shape bidirectional)
+    (at 169 170 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "3d39789e-b360-5b83-bee5-fa351840723e")
+  )
+
+  (text "Signals above map to API/status fields: gatewayId, policyDigest, firmwareDigest, bridgeState, serverPortLink, lanPortLink, mgmtPath, lastAttestationAt." (at 20.32 175.26 0)
+    (effects (font (size 1.1 1.1)) (justify left bottom))
+    (uuid "e162fa03-a0ca-59e7-a5a7-8e4705509adf")
+  )
+  (sheet_instances
+    (path "/" (page "3"))
+  )
+  (embedded_fonts no)
+)

@@ -1,0 +1,183 @@
+(kicad_sch
+  (version 20250114)
+  (generator "aetherguard-gateway-generator")
+  (generator_version "1.0")
+  (uuid "ba20f881-f9ce-5268-bf19-caed34fb5ccc")
+  (paper "A3")
+  (title_block
+    (title "Independent Management Ethernet")
+    (date "2026-05-13")
+    (rev "v1-proto")
+    (comment 1 "AetherGuard Network Isolation Gateway v1A")
+  )
+  (lib_symbols
+  (symbol "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK"
+    (pin_names)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (property "Reference" "U" (at -10.16 -7.62 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "ARCH_BLOCK" (at 0 7.62 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 0 10.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (property "Datasheet" "" (at 0 12.7 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (symbol "ARCH_BLOCK_1_1"
+      (rectangle (start -12.7 -5.08) (end 12.7 5.08)
+        (stroke (width 0.15) (type default))
+        (fill (type background))
+      )
+    )
+    (embedded_fonts no)
+  )
+  )
+  (text "W5500 and MGMT RJ45 form an independent control/audit path.\\nMGMT never forwards SERVER traffic; it only reaches gateway firmware and control-plane audit.\\nv1A MGMT is 10/100 by design; root-resistant claim depends on path independence, not MGMT line rate." (at 20.32 22.86 0)
+    (effects (font (size 1.5 1.5)) (justify left bottom))
+    (uuid "60b781e3-4174-5df0-98ec-6a8b773ad688")
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 35 48 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "54507417-5920-5baa-b224-dd834f4cc57e")
+    (property "Reference" "J3" (at 24.84 40.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "MGMT 10/100 RJ45 MagJack" (at 24.84 55.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Connector_RJ:RJ45_Hanrun_HR911105A_Horizontal" (at 35 58.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/54507417-5920-5baa-b224-dd834f4cc57e"
+          (reference "J3") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 105 48 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "20e6d4f3-aecc-5769-b9b1-0ae4f0b3227c")
+    (property "Reference" "U3" (at 94.84 40.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "W5500 TCP/IP Ethernet" (at 94.84 55.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Package_QFP:LQFP-48_7x7mm_P0.5mm" (at 105 58.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/20e6d4f3-aecc-5769-b9b1-0ae4f0b3227c"
+          (reference "U3") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol
+    (lib_id "aetherguard-network-isolation-gateway-v1:ARCH_BLOCK")
+    (at 175 48 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "76e04d52-39bc-5ddd-9f8e-78876c42182d")
+    (property "Reference" "Y2" (at 164.84 40.38 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "25MHz W5500 crystal" (at 164.84 55.62 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm" (at 175 58.16 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "aetherguard-network-isolation-gateway-v1"
+        (path "/651123a3-4541-55c6-a23d-9818f1df1c03/76e04d52-39bc-5ddd-9f8e-78876c42182d"
+          (reference "Y2") (unit 1)
+        )
+      )
+    )
+  )
+
+
+  (global_label "MGMT_SPI_CS"
+    (shape bidirectional)
+    (at 25 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "d076f6f7-dcdd-5794-8c73-c556824ef06b")
+  )
+
+  (global_label "SPI_SCK"
+    (shape bidirectional)
+    (at 97 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "20a4da75-a0b2-5ee6-bebe-d9789082fb16")
+  )
+
+  (global_label "SPI_MOSI"
+    (shape bidirectional)
+    (at 169 150 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "02734411-9083-5275-860b-a83e5721941b")
+  )
+
+  (global_label "SPI_MISO"
+    (shape bidirectional)
+    (at 25 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "f2db75da-18d4-568b-92a0-006412f96725")
+  )
+
+  (global_label "MGMT_LINK"
+    (shape bidirectional)
+    (at 97 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "3dfd3f8d-20cf-54ba-abb9-394b1c71c5e6")
+  )
+
+  (global_label "MGMT_INDEPENDENT"
+    (shape bidirectional)
+    (at 169 160 0)
+    (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid "0e4145f4-d1bc-5de5-9acc-b9d005fd3890")
+  )
+
+  (text "Signals above map to API/status fields: gatewayId, policyDigest, firmwareDigest, bridgeState, serverPortLink, lanPortLink, mgmtPath, lastAttestationAt." (at 20.32 175.26 0)
+    (effects (font (size 1.1 1.1)) (justify left bottom))
+    (uuid "497f463f-b128-5070-99e0-ebaa02a9da49")
+  )
+  (sheet_instances
+    (path "/" (page "5"))
+  )
+  (embedded_fonts no)
+)

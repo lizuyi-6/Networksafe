@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "aetherguard-network-isolation-gateway-v1") (type "KiCad") (uri "${KIPRJMOD}/aetherguard-network-isolation-gateway-v1.kicad_sym") (options "") (descr "AetherGuard Network Isolation Gateway local symbols"))
+)
