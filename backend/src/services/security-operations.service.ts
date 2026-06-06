@@ -1295,6 +1295,17 @@ class SecurityOperationsService {
     return this.getActionById(input.tenantId, actionId)!;
   }
 
+  /**
+   * SECURITY FIX (redteam R3-parallel-ack · V12.8):
+   * Concurrent agent acks for the same actionId could previously both succeed
+   * because updateActionRun used a plain SELECT then UPDATE with no
+   * serialization. Two simultaneous acks would each read status='running',
+   * then both would write status='completed' — granting the same action twice.
+   *
+   * Fix: wrap the read+write in an exclusive transaction and add a
+   * grant_already_consumed guard that rejects any ack arriving after the
+   * action has already transitioned out of 'running'.
+   */
   updateActionRun(input: {
     tenantId: string;
     actionId: string;
@@ -1303,41 +1314,79 @@ class SecurityOperationsService {
     title?: string;
     rollbackNotes?: string;
     appendLog?: Record<string, any>[];
+    // If set, the call rejects when the current status is not one of these values.
+    allowedPriorStatus?: ActionStatus[];
+    // If set, the call rejects when the current status is already one of these values.
+    rejectPriorStatus?: ActionStatus[];
   }): ActionRunRecord | null {
     this.assertPrepared();
     const db = getDatabase();
-    const existing = db.prepare(`
-      SELECT *
-      FROM sec_actions
-      WHERE tenant_id = ? AND action_id = ?
-      LIMIT 1
-    `).get(input.tenantId, input.actionId) as any;
+
+    // db.transaction(fn) runs fn() synchronously, managing BEGIN/COMMIT/ROLLBACK
+    // internally for both sql.js and better-sqlite3. better-sqlite3 additionally
+    // acquires an exclusive write lock so concurrent updates are serialized.
+    let existing: any;
+    try {
+      existing = db.transaction(() => {
+        const row = db.prepare(`
+          SELECT *
+          FROM sec_actions
+          WHERE tenant_id = ? AND action_id = ?
+          LIMIT 1
+        `).get(input.tenantId, input.actionId) as any;
+
+        if (!row) {
+          return null;
+        }
+
+        // Redteam R3: reject if already in a terminal state.
+        if (input.rejectPriorStatus?.includes(row.status as ActionStatus)) {
+          throw new Error(`grant_already_consumed`);
+        }
+
+        // Redteam R3: reject if not in an allowed prior state.
+        if (input.allowedPriorStatus && !input.allowedPriorStatus.includes(row.status as ActionStatus)) {
+          throw new Error(`grant_already_consumed`);
+        }
+
+        const nextLog = [
+          ...this.parseJson(row.run_log_json, []),
+          ...(input.appendLog || [])
+        ];
+
+        db.prepare(`
+          UPDATE sec_actions
+          SET title = ?, status = ?, operator = ?, rollback_notes = ?, run_log_json = ?, updated_at = ?
+          WHERE tenant_id = ? AND action_id = ?
+        `).run(
+          input.title || row.title,
+          input.status || row.status,
+          input.operator || row.operator,
+          input.rollbackNotes ?? row.rollback_notes ?? '',
+          JSON.stringify(nextLog),
+          this.now(),
+          input.tenantId,
+          input.actionId
+        );
+        return row;
+      });
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.includes('grant_already_consumed')) {
+        logger.warn('Concurrent ack rejected: action already consumed', {
+          actionId: input.actionId,
+          tenantId: input.tenantId
+        });
+        return null;
+      }
+      throw err;
+    }
 
     if (!existing) {
       return null;
     }
 
-    const nextLog = [
-      ...this.parseJson(existing.run_log_json, []),
-      ...(input.appendLog || [])
-    ];
-
-    db.prepare(`
-      UPDATE sec_actions
-      SET title = ?, status = ?, operator = ?, rollback_notes = ?, run_log_json = ?, updated_at = ?
-      WHERE tenant_id = ? AND action_id = ?
-    `).run(
-      input.title || existing.title,
-      input.status || existing.status,
-      input.operator || existing.operator,
-      input.rollbackNotes ?? existing.rollback_notes ?? '',
-      JSON.stringify(nextLog),
-      this.now(),
-      input.tenantId,
-      input.actionId
-    );
     this.shadowGet('sec_actions', 'SELECT * FROM sec_actions WHERE action_id = ? LIMIT 1', input.actionId);
-
     return this.getActionById(input.tenantId, input.actionId);
   }
 

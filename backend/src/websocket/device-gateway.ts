@@ -168,6 +168,11 @@ export class DeviceGateway {
                 methods: ['GET', 'POST'],
                 credentials: true
             },
+            // SECURITY FIX: Limit max HTTP buffer size to 1MB to prevent large payload DoS.
+            maxHttpBufferSize: 1e6,
+            // SECURITY FIX: Disable per-message deflate to prevent zip-bomb attacks via
+            // crafted compressed WebSocket frames.
+            perMessageDeflate: false
         });
     }
 

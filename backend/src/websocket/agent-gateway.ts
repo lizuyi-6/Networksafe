@@ -210,7 +210,12 @@ export class AgentGateway {
         methods: ['GET', 'POST'],
         credentials: true
       },
-      maxHttpBufferSize: 1e6 // 1MB
+      maxHttpBufferSize: 1e6, // 1MB
+      // SECURITY FIX: Disable per-message deflate to prevent zip-bomb attacks via
+      // crafted compressed WebSocket frames. With maxHttpBufferSize=1MB the
+      // decompressed stream is already capped, but explicit perMessageDeflate:false
+      // prevents a future regression if the buffer size is ever increased.
+      perMessageDeflate: false
     });
 
     this.setupAuthentication();

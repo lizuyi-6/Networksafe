@@ -1039,9 +1039,18 @@ class CommandDispatcherService {
           data
         }
       ]
-    });
+      // SECURITY FIX redteam R3: only accept this ack if the action is still
+      // in 'running' state. If two acks arrive simultaneously, the second one
+      // sees 'completed' (set by the first) and is silently dropped.
+    }, { allowedPriorStatus: ['running'] });
   }
 
+  /**
+   * SECURITY FIX (redteam R3-parallel-ack · V12.8):
+   * handleAgentCommandFailure is updated with the same replay guard as
+   * handleAgentCommandAck to prevent concurrent failure reports for the same
+   * actionId from both being recorded.
+   */
   handleAgentCommandFailure(agentId: string, data: Record<string, any>): void {
     const tenantId = String(data?.tenantId || 'global');
     const actionId = String(data?.actionId || '').trim();
@@ -1062,7 +1071,8 @@ class CommandDispatcherService {
           data
         }
       ]
-    });
+      // SECURITY FIX redteam R3: same replay guard as handleAgentCommandAck.
+    }, { allowedPriorStatus: ['running'] });
   }
 }
 
