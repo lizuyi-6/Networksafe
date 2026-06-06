@@ -713,10 +713,39 @@ export class CommandInjectionDetector {
         }
 
         // 2. 检测危险命令
+        // SECURITY FIX D38: a dangerous command (cat, id, ls, etc.) is
+        // only a real injection signal when it appears in a SHELL
+        // COMMAND position — i.e. after a shell delimiter (;, |, &,
+        // &&, ||, newline) OR at the start of input AND followed by
+        // a shell argument (space + non-alphanumeric, or end-of-string).
+        // Common URL params (id=123, cat=foo) at start-of-string with
+        // = as separator are NOT shell commands.
         const normalized = input.toLowerCase();
         for (const cmd of this.dangerousCommands) {
-            const regex = new RegExp(`\\b${cmd}\\b`, 'i');
-            if (regex.test(normalized)) {
+            // Case 1: preceded by shell delimiter (pipe / semicolon / ampersand / newline)
+            // then optional whitespace, then cmd, then non-identifier char.
+            const precededByShell = new RegExp(
+                `[;|\n]\\s*${cmd}(\\b|[^a-z0-9_])`,
+                'i'
+            );
+            // Case 2: preceded by && or || (two-char operator)
+            const precededByLogical = new RegExp(
+                `\\|\\|\\s*${cmd}(\\b|[^a-z0-9_])`,
+                'i'
+            );
+            // Case 3: at start of input, followed by whitespace or
+            // a shell delimiter. `id=123` at start is `id` followed
+            // by `=`, which is a URL param, not a shell command. `id `
+            // (with space) or `id;` IS a command. End-of-string is
+            // NOT a shell-command position (bare token in a body is
+            // usually a value, not a command).
+            const atStartAsCommand = new RegExp(
+                `^${cmd}(\\s+|;)`,
+                'i'
+            );
+            if (precededByShell.test(normalized)
+                || precededByLogical.test(normalized)
+                || atStartAsCommand.test(normalized)) {
                 return {
                     isValid: false,
                     reason: `Command Injection - Dangerous Command: ${cmd}`,
@@ -726,7 +755,11 @@ export class CommandInjectionDetector {
         }
 
         // 3. 检测编码绕过
-        if (/base64|xxd|od|hexdump/i.test(normalized)) {
+        // SECURITY FIX D38: encoding-tool detection also requires
+        // word-boundary matches. Otherwise "od" matches the
+        // substring in "products", "decode" etc., and "od"/"xxd"
+        // appear in legitimate HTTP path segments.
+        if (/\b(base64|xxd|od|hexdump)\b/i.test(normalized)) {
             return {
                 isValid: false,
                 reason: 'Command Injection - Encoding Detected',
