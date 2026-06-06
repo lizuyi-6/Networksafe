@@ -108,22 +108,33 @@ function mapSampleToRequest(s: DatasetSample, idx: number): DetectionRequest {
     urlPath = m[2] || '/';
     query = m[3] || '';
   }
+  // For brute_force / credential-stuffing / login samples there is
+  // no payload but explicit username / password fields.
+  let body = isPacket ? '' : payload;
+  if (!body && s.username && s.password) {
+    body = `username=${encodeURIComponent(s.username)}&password=${encodeURIComponent(s.password)}`;
+  } else if (s.username && !body) {
+    body = `username=${encodeURIComponent(s.username)}`;
+  }
+  const metadata: Record<string, any> = { pattern: s.pattern, cve: s.cve, severity: s.severity };
+  if (s.packets_per_second) metadata.packetsPerSecond = s.packets_per_second;
   return {
     tenantId: 'dataset-eval',
     channel: isPacket ? 'packet' : 'http_api',
     requestId: `${s.id || `sample_${idx}`}-${idx}`,
     timestamp: s.timestamp || new Date().toISOString(),
     sourceIp: s.source_ip,
-    method,
+    method: s.username ? 'POST' : method,
     path: urlPath,
     decodedPath: urlPath,
     query,
     decodedQuery: query,
-    body: isPacket ? '' : payload,
-    normalizedBody: isPacket ? '' : payload,
-    rawPayload: payload,
+    body,
+    normalizedBody: body,
+    rawPayload: payload || JSON.stringify({ username: s.username, password: s.password }),
     userAgent: 'dataset-eval/1.0',
-    evidence: s.pattern || s.cve || s.type
+    evidence: s.pattern || s.cve || s.type,
+    metadata
   };
 }
 
