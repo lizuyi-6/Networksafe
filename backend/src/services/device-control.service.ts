@@ -43,8 +43,15 @@ export interface DeviceConfirmationSessionRecord {
   requestedBy: string;
   createdAt: string;
   updatedAt: string;
+  expiresAt?: string;
   confirmedAt?: string;
   result?: Record<string, any>;
+  hardwareContext?: {
+    policyDigest: string;
+    challenge: string;
+    breakerTarget: string;
+    interlockAction: string;
+  };
 }
 
 type GatewayEmitter = (deviceId: string, command: string, params?: Record<string, any>) => Promise<boolean> | boolean;
@@ -297,6 +304,13 @@ class DeviceControlService {
     deviceId: string;
     commandType: string;
     payload?: Record<string, any>;
+    hardwareContext?: {
+      policyDigest?: string;
+      challenge?: string;
+      breakerTarget?: string;
+      interlockAction?: string;
+    };
+    releaseTtlMs?: number;
     actorId: string;
     actorEmail?: string;
     actorIp?: string;
@@ -306,9 +320,29 @@ class DeviceControlService {
       throw new Error('backend.device_gateway_unavailable');
     }
 
+    // SECURITY FIX R3 / V2.4: fail-closed on missing hardware context.
+    // An attacker who can call createPhysicalConfirmation must not be
+    // able to forge a session by omitting policyDigest / breakerTarget
+    // — those fields are part of the signed hardware grant and a
+    // missing value means the companion cannot enforce the policy.
+    const hardwareContext = input.hardwareContext;
+    if (!hardwareContext || typeof hardwareContext !== 'object') {
+      throw new Error('backend.hardware_context_policy_digest_required');
+    }
+    const policyDigest = String(hardwareContext.policyDigest || '').trim();
+    const breakerTarget = String(hardwareContext.breakerTarget || '').trim();
+    if (!policyDigest) {
+      throw new Error('backend.hardware_context_policy_digest_required');
+    }
+    if (!breakerTarget) {
+      throw new Error('backend.hardware_context_breaker_target_required');
+    }
+
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     const payload = input.payload || {};
+    const releaseTtlMs = Math.max(1000, Number(input.releaseTtlMs || 120_000));
+    const expiresAt = new Date(Date.now() + releaseTtlMs).toISOString();
     const accepted = await this.gatewayEmitter(input.deviceId, 'physical_confirmation_required', {
       confirmationSessionId: id,
       commandType: input.commandType,
@@ -325,7 +359,14 @@ class DeviceControlService {
       status: accepted ? 'pending_physical_confirmation' : 'failed',
       requested_by: input.actorEmail || input.actorId,
       result_json: JSON.stringify({
-        accepted
+        accepted,
+        hardwareContext: {
+          policyDigest,
+          challenge: String(hardwareContext.challenge || ''),
+          breakerTarget,
+          interlockAction: String(hardwareContext.interlockAction || '')
+        },
+        releaseTtlMs
       }),
       created_at: createdAt,
       updated_at: createdAt,
@@ -405,7 +446,46 @@ class DeviceControlService {
 
     const device = getDeviceById(deviceId) as any;
     const publicKeyPem = device?.physicalAuth?.publicKeyPem;
+
+    // SECURITY FIX R3 / V2.4: parse the stored hardwareContext that was
+    // attached at session-creation time. The ack's grant MUST match
+    // every field exactly — a forged policyDigest / breakerTarget /
+    // challenge (even one signed with the real hardware key) must be
+    // rejected.
+    const storedResult = parseJson(existing.result_json, {});
+    const storedHC = storedResult?.hardwareContext || {};
+    const storedPolicyDigest = String(storedHC.policyDigest || '');
+    const storedBreakerTarget = String(storedHC.breakerTarget || '');
+    const storedChallenge = String(storedHC.challenge || '');
+    const storedInterlock = String(storedHC.interlockAction || '');
+
+    // SECURITY FIX R3 / V2.4: NaN-poisoning defense for expiresAt.
+    // An attacker can submit "expiresAt": "not-a-date" — we MUST refuse
+    // before any comparison that would coerce to NaN.
+    let expiresAtMs = NaN;
+    if (payload?.expiresAt) {
+      const parsed = Date.parse(String(payload.expiresAt));
+      expiresAtMs = Number.isFinite(parsed) ? parsed : NaN;
+    }
+    if (payload?.expiresAt && Number.isNaN(expiresAtMs)) {
+      getDatabase().prepare(`
+        UPDATE device_confirmation_sessions
+        SET status = 'rejected', result_json = ?, updated_at = ?
+        WHERE id = ? AND device_id = ?
+      `).run(
+        JSON.stringify({ reason: 'unparseable_expires_at', ack: payload }),
+        new Date().toISOString(),
+        confirmationSessionId,
+        deviceId
+      );
+      return;
+    }
+
     let verified = false;
+    let policyDigestMatch = false;
+    let breakerTargetMatch = false;
+    let challengeMatch = false;
+    let interlockMatch = false;
     if (publicKeyPem && payload.signature) {
       verified = verifyHardwareGrantSignature(publicKeyPem, {
         gateId: String(payload?.gateId || deviceId),
@@ -426,9 +506,36 @@ class DeviceControlService {
         signature: String(payload.signature),
         algorithm: 'ECDSA_P256_SHA256'
       });
+
+      // Strict equality on every hardwareContext field.
+      policyDigestMatch = storedPolicyDigest.length > 0
+        && String(payload?.policyDigest || '') === storedPolicyDigest;
+      breakerTargetMatch = storedBreakerTarget.length > 0
+        && String(payload?.breakerTarget || '') === storedBreakerTarget;
+      challengeMatch = !storedChallenge
+        || String(payload?.challenge || '') === storedChallenge;
+      interlockMatch = !storedInterlock
+        || String(payload?.interlockAction || '') === storedInterlock;
     }
 
-    const confirmed = Boolean(payload?.confirmed) && Boolean(payload.signature) && verified;
+    // SECURITY FIX R3 / V2.4: strict === true for the confirmed flag.
+    // Boolean('false') is truthy in JS — we MUST reject the literal
+    // string "false" / "true" (and "0", "1", etc.) and accept only the
+    // boolean primitive.
+    const isConfirmed = payload?.confirmed === true;
+    const allHardwareContextMatch = policyDigestMatch && breakerTargetMatch && challengeMatch && interlockMatch;
+    const confirmed = isConfirmed && Boolean(payload.signature) && verified && allHardwareContextMatch;
+
+    // Determine the rejection reason for forensics
+    let rejectionReason: string | null = null;
+    if (!isConfirmed) rejectionReason = 'missing_signature_or_confirm';
+    else if (!payload.signature) rejectionReason = 'invalid_signature';
+    else if (!verified) rejectionReason = 'invalid_signature';
+    else if (!policyDigestMatch) rejectionReason = 'policy_digest_mismatch';
+    else if (!breakerTargetMatch) rejectionReason = 'breaker_target_mismatch';
+    else if (!challengeMatch) rejectionReason = 'challenge_mismatch';
+    else if (!interlockMatch) rejectionReason = 'interlock_action_mismatch';
+
     const confirmedAt = confirmed ? new Date().toISOString() : null;
     const dispatchResult = confirmed
       ? await commandDispatcherService.dispatchConfirmedDeviceCommand({
@@ -447,11 +554,18 @@ class DeviceControlService {
 
     const result: Record<string, any> = {
       ack: payload,
-      dispatchResult
+      dispatchResult,
+      reason: rejectionReason
     };
     if (payload.signature) {
       result.verified = verified;
     }
+    result.hardwareContextMatch = {
+      policyDigest: policyDigestMatch,
+      breakerTarget: breakerTargetMatch,
+      challenge: challengeMatch,
+      interlockAction: interlockMatch
+    };
 
     getDatabase().prepare(`
       UPDATE device_confirmation_sessions
@@ -509,6 +623,12 @@ class DeviceControlService {
   }
 
   private mapConfirmationRow(row: any): DeviceConfirmationSessionRecord {
+    const result = parseJson(row.result_json, {});
+    // expiresAt is derived from createdAt + releaseTtlMs so we don't
+    // need a schema migration. Default TTL is 120s.
+    const ttlMs = Number(result?.releaseTtlMs || 120_000);
+    const createdMs = row.created_at ? new Date(row.created_at).getTime() : Date.now();
+    const expiresAt = new Date(createdMs + ttlMs).toISOString();
     return {
       id: row.id,
       tenantId: row.tenant_id,
@@ -519,8 +639,10 @@ class DeviceControlService {
       requestedBy: row.requested_by,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      expiresAt,
       confirmedAt: row.confirmed_at || undefined,
-      result: parseJson(row.result_json, {})
+      result,
+      hardwareContext: result?.hardwareContext || undefined
     };
   }
 }

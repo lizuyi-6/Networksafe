@@ -284,10 +284,69 @@ function partiallyRedactSecret(value: unknown): string {
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
 }
 
+// =====================================================================
+// D31: strip log-injection control characters (\n \r \t \0) from any
+// string value, recursing into objects and arrays. Used by the
+// audit logger to sanitize user-supplied `details` before persistence.
+// =====================================================================
+
+const CONTROL_CHAR_PATTERN = /[\n\r\t\0]/g;
+
+/**
+ * Strip control characters from a single string. Returns the original
+ * value untouched if it is not a string.
+ */
+export function stripControlChars(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  return value.replace(CONTROL_CHAR_PATTERN, ' ');
+}
+
+/**
+ * Recursively walk an object/array and strip control characters from
+ * every string value. Combines control-char stripping with
+ * sensitive-pattern redaction (the audit-log details redteam test
+ * expects `password: 'secret\ntoken'` to become `***REDACTED***`).
+ */
+export function recursiveSanitize(value: any, depth: number = 10): any {
+  if (value === null || value === undefined) return value;
+  if (depth <= 0) return value;
+  if (Array.isArray(value)) {
+    const out: any[] = new Array(value.length);
+    for (let i = 0; i < value.length; i++) {
+      out[i] = recursiveSanitize(value[i], depth - 1);
+    }
+    return out;
+  }
+  if (typeof value === 'object') {
+    const out: Record<string, any> = {};
+    for (const key of Object.keys(value)) {
+      const lowerKey = key.toLowerCase();
+      // Sensitive field → redact (full redaction for non-API keys,
+      // partial for api_key/apiKey so support staff can still tell
+      // which key was leaked).
+      const isApiKey = lowerKey.includes('apikey') || lowerKey.includes('api_key');
+      const isSensitive = REDACT_FIELDS.some(s => lowerKey.includes(s.toLowerCase()));
+      if (isSensitive) {
+        out[key] = isApiKey
+          ? partiallyRedactSecret(value[key])
+          : '***REDACTED***';
+      } else {
+        out[key] = recursiveSanitize(value[key], depth - 1);
+      }
+    }
+    return out;
+  }
+  if (typeof value === 'string') return stripControlChars(value);
+  // numbers, booleans, bigints, symbols — pass through
+  return value;
+}
+
 export default {
   sanitize,
   sanitizeObject,
   sanitizeString,
   sanitizeError,
+  recursiveSanitize,
+  stripControlChars,
   ...Sanitizers,
 };

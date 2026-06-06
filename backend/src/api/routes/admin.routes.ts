@@ -1,7 +1,7 @@
 ﻿import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { sendError, sendSuccess } from '../../core/http/api-response';

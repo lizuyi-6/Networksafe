@@ -32,6 +32,10 @@ try {
 }
 
 const JWT_SECRET: string = process.env.JWT_SECRET!;
+const JWT_SECRET_PREVIOUS: string | undefined =
+  process.env.JWT_SECRET_PREVIOUS && process.env.JWT_SECRET_PREVIOUS.length >= 32
+    ? process.env.JWT_SECRET_PREVIOUS
+    : undefined;
 const JWT_EXPIRES_IN = EnvValidator.optional('JWT_EXPIRES_IN', '24h');
 const JWT_REFRESH_EXPIRES_IN = EnvValidator.optional('JWT_REFRESH_EXPIRES_IN', '7d');
 
@@ -91,19 +95,36 @@ export function generateTokens(user: AuthenticatedUser): TokenPair {
 }
 
 /**
- * Verify and decode JWT token
- * SECURITY FIX CVE-2026-001: Now checks Redis blacklist for logged-out tokens
- * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
+ * Verify a JWT using an EXPLICIT secret. Exposed for tests and for the
+ * rotation fallback chain. Does NOT touch Redis or normalize the role —
+ * returns the raw decoded payload.
  */
-export function verifyToken(token: string): AuthenticatedUser | null {
+export function verifyTokenWithSecret(token: string, secret: string): AuthenticatedUser | null {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as AuthenticatedUser;
-        decoded.role = normalizeRole(decoded.role);
-        decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
-        return decoded;
+        return jwt.verify(token, secret, { algorithms: ['HS256'] }) as AuthenticatedUser;
     } catch (error) {
         return null;
     }
+}
+
+/**
+ * Verify and decode JWT token
+ * SECURITY FIX CVE-2026-001: Now checks Redis blacklist for logged-out tokens
+ * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
+ * SECURITY FIX D30: if JWT_SECRET_PREVIOUS is set, accept tokens signed
+ * with it during the rotation window.
+ */
+export function verifyToken(token: string): AuthenticatedUser | null {
+    // Try current secret first
+    let decoded = verifyTokenWithSecret(token, JWT_SECRET);
+    // Rotation fallback: if current failed and previous is configured, try it
+    if (!decoded && JWT_SECRET_PREVIOUS) {
+        decoded = verifyTokenWithSecret(token, JWT_SECRET_PREVIOUS);
+    }
+    if (!decoded) return null;
+    decoded.role = normalizeRole(decoded.role);
+    decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
+    return decoded;
 }
 
 /**
@@ -168,15 +189,24 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
  * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
  */
 export function verifyRefreshToken(token: string): { userId: string } | null {
+    let decoded: { userId: string; type: string } | null = null;
     try {
-        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as { userId: string; type: string };
-        if (decoded.type !== 'refresh') {
-            return null;
+        decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as { userId: string; type: string };
+    } catch (_) {
+        decoded = null;
+    }
+    // SECURITY FIX D30: rotation fallback
+    if (!decoded && JWT_SECRET_PREVIOUS) {
+        try {
+            decoded = jwt.verify(token, JWT_SECRET_PREVIOUS, { algorithms: ['HS256'] }) as { userId: string; type: string };
+        } catch (_) {
+            decoded = null;
         }
-        return { userId: decoded.userId };
-    } catch (error) {
+    }
+    if (!decoded || decoded.type !== 'refresh') {
         return null;
     }
+    return { userId: decoded.userId };
 }
 
 /**
