@@ -44,6 +44,13 @@ type CommandActor = {
   userId: string;
   email?: string;
   ip?: string;
+  // SECURITY FIX R2-deep / V12.6: typed discriminator. A user-facing
+  // command must have kind='user' (or undefined for backwards compat,
+  // but always a non-empty userId). Internal trusted actors
+  // (hardware-gateway, agent-ack, system) MUST declare their kind so
+  // the cross-tenant gate can be bypassed by design rather than by
+  // an empty-userId heuristic.
+  kind?: 'user' | 'hardware-gateway' | 'agent-ack' | 'system' | 'test-runtime';
 };
 
 type DispatchStatus = 'queued' | 'running' | 'completed' | 'failed' | 'approval_required';
@@ -563,6 +570,45 @@ class CommandDispatcherService {
     approved?: boolean;
   }): Promise<DispatchResult> {
     const actionId = randomUUID();
+
+    // SECURITY FIX R2-deep / V12.6: typed discriminator + non-empty
+    // userId guard. A user-facing command with an empty / missing
+    // userId is rejected BEFORE the cross-tenant check, so the
+    // historical isInternalActor = !userId bypass is closed.
+    const isInternalActor = (input.actor.kind && input.actor.kind !== 'user')
+      || input.actor.kind === 'system'
+      || input.actor.kind === 'test-runtime';
+    if (!isInternalActor) {
+      if (typeof input.actor.userId !== 'string' || input.actor.userId.length === 0) {
+        return {
+          success: false,
+          status: 'failed',
+          actionId,
+          message: 'Actor userId is required for user-initiated commands.',
+          reason: 'actor_userid_required'
+        };
+      }
+    }
+
+    // SECURITY FIX R2-deep: cross-tenant gate. The actor's tenantId
+    // MUST match the target device's tenantId. Internal actors
+    // (hardware-gateway, agent-ack, system, test-runtime) are exempt
+    // because they are not user-controlled and operate within a
+    // single trusted boundary.
+    if (!isInternalActor) {
+      const deviceForTenant = this.deviceAdapter?.getDevice(input.deviceId);
+      const deviceTenantId = deviceForTenant?.tenantId;
+      if (deviceTenantId && input.actor.tenantId && deviceTenantId !== input.actor.tenantId) {
+        return {
+          success: false,
+          status: 'failed',
+          actionId,
+          message: 'Cross-tenant command dispatch is not allowed.',
+          reason: 'tenant_mismatch'
+        };
+      }
+    }
+
     const device = this.deviceAdapter?.getDevice(input.deviceId);
     if (!this.deviceAdapter || !device) {
       await this.writeAudit({

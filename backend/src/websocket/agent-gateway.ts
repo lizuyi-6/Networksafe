@@ -195,6 +195,15 @@ export class AgentGateway {
   private agents: Map<string, ConnectedAgent> = new Map();
   private dashboardClients: Map<string, DashboardClient> = new Map();
   private testOnlineCounter = 0;
+  // SECURITY FIX D22: per-IP connection cap using Set<socketId> rather
+  // than a counter, so two concurrent connects cannot both read
+  // count=N and both pass the threshold check (TOCTOU). The set is
+  // keyed by socket.id so disconnect cleanly removes the entry.
+  private ipConnectionCounts: Map<string, Set<string>> = new Map();
+  // SECURITY: the per-IP cap. A single source IP should never open
+  // more than 10 simultaneous sockets to the gateway — a higher number
+  // is either a misconfigured client (loop) or a credential-spray attempt.
+  public static readonly MAX_CONNECTIONS_PER_IP = 10;
 
   /**
    * Broadcast audit log to dashboard clients
@@ -231,6 +240,28 @@ export class AgentGateway {
     this.io.use(async (socket, next) => {
       const clientType = socket.handshake.auth.type || 'dashboard';
       const clientIp = socket.handshake.address;
+
+      // SECURITY FIX D22: per-IP connection cap. Use Set<socketId> so
+      // two simultaneous connects from the same IP cannot both read
+      // size=N and both pass the threshold check. The set is keyed
+      // by socket.id which is unique per connection.
+      if (!this.ipConnectionCounts.has(clientIp)) {
+        this.ipConnectionCounts.set(clientIp, new Set());
+      }
+      const ipSet = this.ipConnectionCounts.get(clientIp)!;
+      if (ipSet.size >= AgentGateway.MAX_CONNECTIONS_PER_IP) {
+        return next(new Error('backend.too_many_connections_from_ip'));
+      }
+      ipSet.add(socket.id);
+      // Register a one-time cleanup so disconnect is reliable
+      // even if the auth flow rejects the connection later.
+      socket.once('disconnect', () => {
+        const s = this.ipConnectionCounts.get(clientIp);
+        if (s) {
+          s.delete(socket.id);
+          if (s.size === 0) this.ipConnectionCounts.delete(clientIp);
+        }
+      });
 
       try {
         if (isTestRuntime()) {

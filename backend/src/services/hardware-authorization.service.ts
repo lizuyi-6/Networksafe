@@ -493,6 +493,18 @@ class HardwareAuthorizationService {
     const issuedAt = String(payload?.issuedAt || '').trim();
     const expiresAt = String(payload?.expiresAt || '').trim();
     const monotonicCounter = Number(payload?.monotonicCounter);
+    // SECURITY FIX: reject non-integer / unsafe-integer counters.
+    // Number(1.5) === 1.5 would otherwise pass silently and let an
+    // attacker replay a fractional counter that the INTEGER column
+    // would round to 1. Also reject anything past MAX_SAFE_INTEGER
+    // where integer addition loses precision.
+    if (!Number.isFinite(monotonicCounter)
+        || !Number.isInteger(monotonicCounter)
+        || monotonicCounter > Number.MAX_SAFE_INTEGER
+        || monotonicCounter < 0) {
+      this.rejectSession(sessionId, session.intent.actionId, 'invalid_monotonic_counter', payload);
+      return { handled: true, confirmed: false, reason: 'invalid_monotonic_counter', session };
+    }
     const signature = String(payload?.signature || '').trim();
     const grant: HardwareGrantEnvelope = {
       gateId,
