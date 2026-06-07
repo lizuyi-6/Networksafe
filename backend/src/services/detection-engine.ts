@@ -835,6 +835,45 @@ const ATTACK_HEURISTIC_PATTERNS: AttackHeuristicPattern[] = [
     score: 0.7,
     severity: 'high',
     description: 'DDoS volumetric signal (packetsPerSecond metadata present)'
+  },
+  // D47 — NoSQL operator injection ($gt, $ne, $where, $expr, ...)
+  {
+    key: 'heuristic-nosql-operator',
+    regex: /"\s*\$\s*(?:gt|gte|lt|lte|ne|eq|in|nin|exists|regex|where|expr|func|mod|all|size|elemMatch|or|and|not|nor|set|unset|push|pull|pop|inc|dec)\b/i,
+    score: 0.92,
+    severity: 'critical',
+    description: 'NoSQL operator injection (MongoDB $gt/$ne/$where/...)'
+  },
+  // D48 — GraphQL introspection / fragment-spread exploit
+  {
+    key: 'heuristic-graphql-introspection',
+    regex: /"query"\s*:\s*"[^"]*(?:__schema|__type|__typename|fragment\s+\w+\s+on\s+\w+|subscription\s+|\.\.\.on\s+\w+)/i,
+    score: 0.78,
+    severity: 'high',
+    description: 'GraphQL introspection or fragment-spread attack pattern'
+  },
+  // D49 — Cache poisoning (request smuggling for cache)
+  {
+    key: 'heuristic-cache-poison-path',
+    regex: /\/[a-z0-9_\-]+\.(?:css|js|jpg|png|svg|gif|html|json|xml|wasm|map|woff2?)\s*$/i,
+    score: 0.35,
+    severity: 'low',
+    description: 'Static-asset path — possible cache-poisoning vector'
+  },
+  // D50 — WebSocket / change_password / origin header abuse
+  {
+    key: 'heuristic-websocket-dangerous-msg',
+    regex: /"type"\s*:\s*"(?:change_password|change_email|change_role|grant_admin|disable_mfa|delete_user|promote_admin|reset_password)"/i,
+    score: 0.78,
+    severity: 'high',
+    description: 'WebSocket message with sensitive command type'
+  },
+  {
+    key: 'heuristic-websocket-cross-origin',
+    regex: /^Origin:\s*https?:\/\/(?!localhost|127\.0\.0\.1|example\.com|api\.example\.com)/im,
+    score: 0.55,
+    severity: 'medium',
+    description: 'WebSocket request with cross-origin Origin header'
   }
 ];
 
