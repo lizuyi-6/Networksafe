@@ -1,0 +1,902 @@
+[
+  {
+    "id": "graphql_0000",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...on User{name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "122.72.156.215",
+    "timestamp": "2026-03-13T21:53:09.063956"
+  },
+  {
+    "id": "graphql_0001",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...F}fragment F on User{password}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "221.64.74.159",
+    "timestamp": "2026-03-13T21:53:09.063961"
+  },
+  {
+    "id": "graphql_0002",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__type(name:\\\"User\\\"){fields{name}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "139.42.230.171",
+    "timestamp": "2026-03-13T21:53:09.063966"
+  },
+  {
+    "id": "graphql_0003",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"subscription{onUserCreated{password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.20.140.110",
+    "timestamp": "2026-03-13T21:53:09.063971"
+  },
+  {
+    "id": "graphql_0004",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema{queryType{fields{name description}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "19.119.109.53",
+    "timestamp": "2026-03-13T21:53:09.063976"
+  },
+  {
+    "id": "graphql_0005",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "157.186.142.134",
+    "timestamp": "2026-03-13T21:53:09.063986"
+  },
+  {
+    "id": "graphql_0006",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "189.193.78.85",
+    "timestamp": "2026-03-13T21:53:09.063991"
+  },
+  {
+    "id": "graphql_0007",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...on User{name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "27.131.186.173",
+    "timestamp": "2026-03-13T21:53:09.063997"
+  },
+  {
+    "id": "graphql_0008",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "153.27.158.19",
+    "timestamp": "2026-03-13T21:53:09.064001"
+  },
+  {
+    "id": "graphql_0009",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema{queryType{fields{name description}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "102.222.254.181",
+    "timestamp": "2026-03-13T21:53:09.064006"
+  },
+  {
+    "id": "graphql_0010",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "46.37.157.139",
+    "timestamp": "2026-03-13T21:53:09.064011"
+  },
+  {
+    "id": "graphql_0011",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__type(name:\\\"User\\\"){fields{name}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "82.163.199.69",
+    "timestamp": "2026-03-13T21:53:09.064015"
+  },
+  {
+    "id": "graphql_0012",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "154.240.91.152",
+    "timestamp": "2026-03-13T21:53:09.064020"
+  },
+  {
+    "id": "graphql_0013",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema { types { name } } }\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.0.214.230",
+    "timestamp": "2026-03-13T21:53:09.064025"
+  },
+  {
+    "id": "graphql_0014",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema{queryType{fields{name description}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "27.135.137.127",
+    "timestamp": "2026-03-13T21:53:09.064029"
+  },
+  {
+    "id": "graphql_0015",
+    "type": "graphql_injection",
+    "payload": "[{\"query\":\"mutation{a:deleteAll}\"},{\"query\":\"mutation{b:deleteAll}\"}]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "113.178.237.212",
+    "timestamp": "2026-03-13T21:53:09.064034"
+  },
+  {
+    "id": "graphql_0016",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user1:user(id:1){name}user2:user(id:2){name}user3:user(id:3){name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "45.24.224.203",
+    "timestamp": "2026-03-13T21:53:09.064038"
+  },
+  {
+    "id": "graphql_0017",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "128.154.56.65",
+    "timestamp": "2026-03-13T21:53:09.064045"
+  },
+  {
+    "id": "graphql_0018",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "116.232.7.76",
+    "timestamp": "2026-03-13T21:53:09.064050"
+  },
+  {
+    "id": "graphql_0019",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "162.170.20.129",
+    "timestamp": "2026-03-13T21:53:09.064054"
+  },
+  {
+    "id": "graphql_0020",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "49.103.38.126",
+    "timestamp": "2026-03-13T21:53:09.064059"
+  },
+  {
+    "id": "graphql_0021",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user1:user(id:1){name}user2:user(id:2){name}user3:user(id:3){name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "98.251.230.192",
+    "timestamp": "2026-03-13T21:53:09.064063"
+  },
+  {
+    "id": "graphql_0022",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__type(name:\\\"User\\\"){fields{name}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.5.20.62",
+    "timestamp": "2026-03-13T21:53:09.064068"
+  },
+  {
+    "id": "graphql_0023",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "113.49.37.17",
+    "timestamp": "2026-03-13T21:53:09.064072"
+  },
+  {
+    "id": "graphql_0024",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "15.102.96.19",
+    "timestamp": "2026-03-13T21:53:09.064077"
+  },
+  {
+    "id": "graphql_0025",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "42.149.53.190",
+    "timestamp": "2026-03-13T21:53:09.064084"
+  },
+  {
+    "id": "graphql_0026",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.37.173.2",
+    "timestamp": "2026-03-13T21:53:09.064090"
+  },
+  {
+    "id": "graphql_0027",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "67.15.203.113",
+    "timestamp": "2026-03-13T21:53:09.064095"
+  },
+  {
+    "id": "graphql_0028",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "213.230.185.186",
+    "timestamp": "2026-03-13T21:53:09.064100"
+  },
+  {
+    "id": "graphql_0029",
+    "type": "graphql_injection",
+    "payload": "[{\"query\":\"mutation{a:deleteAll}\"},{\"query\":\"mutation{b:deleteAll}\"}]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "160.252.71.237",
+    "timestamp": "2026-03-13T21:53:09.064104"
+  },
+  {
+    "id": "graphql_0030",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema{queryType{fields{name description}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "191.31.211.15",
+    "timestamp": "2026-03-13T21:53:09.064109"
+  },
+  {
+    "id": "graphql_0031",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema { types { name } } }\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.44.86.11",
+    "timestamp": "2026-03-13T21:53:09.064113"
+  },
+  {
+    "id": "graphql_0032",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "36.192.230.126",
+    "timestamp": "2026-03-13T21:53:09.064118"
+  },
+  {
+    "id": "graphql_0033",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema { types { name } } }\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "52.147.235.95",
+    "timestamp": "2026-03-13T21:53:09.064122"
+  },
+  {
+    "id": "graphql_0034",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "221.186.186.46",
+    "timestamp": "2026-03-13T21:53:09.064127"
+  },
+  {
+    "id": "graphql_0035",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "150.167.235.53",
+    "timestamp": "2026-03-13T21:53:09.064131"
+  },
+  {
+    "id": "graphql_0036",
+    "type": "graphql_injection",
+    "payload": "[{\"query\":\"mutation{a:deleteAll}\"},{\"query\":\"mutation{b:deleteAll}\"}]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "9.243.56.105",
+    "timestamp": "2026-03-13T21:53:09.064136"
+  },
+  {
+    "id": "graphql_0037",
+    "type": "graphql_injection",
+    "payload": "[{\"query\":\"mutation{a:deleteAll}\"},{\"query\":\"mutation{b:deleteAll}\"}]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "191.64.243.60",
+    "timestamp": "2026-03-13T21:53:09.064140"
+  },
+  {
+    "id": "graphql_0038",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...on User{name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "126.157.156.237",
+    "timestamp": "2026-03-13T21:53:09.064145"
+  },
+  {
+    "id": "graphql_0039",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user{friends{friends{friends{friends{name}}}}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "64.11.162.152",
+    "timestamp": "2026-03-13T21:53:09.064149"
+  },
+  {
+    "id": "graphql_0040",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__type(name:\\\"User\\\"){fields{name}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "119.122.20.235",
+    "timestamp": "2026-03-13T21:53:09.064153"
+  },
+  {
+    "id": "graphql_0041",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__type(name:\\\"User\\\"){fields{name}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "170.63.211.110",
+    "timestamp": "2026-03-13T21:53:09.064158"
+  },
+  {
+    "id": "graphql_0042",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user1:user(id:1){name}user2:user(id:2){name}user3:user(id:3){name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.183.27.44",
+    "timestamp": "2026-03-13T21:53:09.064162"
+  },
+  {
+    "id": "graphql_0043",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"subscription{onUserCreated{password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "190.13.143.169",
+    "timestamp": "2026-03-13T21:53:09.064167"
+  },
+  {
+    "id": "graphql_0044",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "59.229.103.69",
+    "timestamp": "2026-03-13T21:53:09.064173"
+  },
+  {
+    "id": "graphql_0045",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...on User{name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.138.207.33",
+    "timestamp": "2026-03-13T21:53:09.064178"
+  },
+  {
+    "id": "graphql_0046",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "122.18.29.106",
+    "timestamp": "2026-03-13T21:53:09.064182"
+  },
+  {
+    "id": "graphql_0047",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__type(name:\\\"User\\\"){fields{name}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "96.3.11.223",
+    "timestamp": "2026-03-13T21:53:09.064187"
+  },
+  {
+    "id": "graphql_0048",
+    "type": "graphql_injection",
+    "payload": "[{\"query\":\"mutation{a:deleteAll}\"},{\"query\":\"mutation{b:deleteAll}\"}]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.18.170.254",
+    "timestamp": "2026-03-13T21:53:09.064194"
+  },
+  {
+    "id": "graphql_0049",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user1:user(id:1){name}user2:user(id:2){name}user3:user(id:3){name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "202.213.32.253",
+    "timestamp": "2026-03-13T21:53:09.064198"
+  },
+  {
+    "id": "graphql_0050",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "98.102.252.122",
+    "timestamp": "2026-03-13T21:53:09.064203"
+  },
+  {
+    "id": "graphql_0051",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...F}fragment F on User{password}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "71.79.94.245",
+    "timestamp": "2026-03-13T21:53:09.064207"
+  },
+  {
+    "id": "graphql_0052",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"subscription{onUserCreated{password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "217.14.254.77",
+    "timestamp": "2026-03-13T21:53:09.064212"
+  },
+  {
+    "id": "graphql_0053",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...F}fragment F on User{password}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "54.209.27.211",
+    "timestamp": "2026-03-13T21:53:09.064216"
+  },
+  {
+    "id": "graphql_0054",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...F}fragment F on User{password}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.58.221.164",
+    "timestamp": "2026-03-13T21:53:09.064221"
+  },
+  {
+    "id": "graphql_0055",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...on User{name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "190.120.37.129",
+    "timestamp": "2026-03-13T21:53:09.064225"
+  },
+  {
+    "id": "graphql_0056",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user{friends{friends{friends{friends{name}}}}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.59.61.204",
+    "timestamp": "2026-03-13T21:53:09.064230"
+  },
+  {
+    "id": "graphql_0057",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "24.79.25.65",
+    "timestamp": "2026-03-13T21:53:09.064234"
+  },
+  {
+    "id": "graphql_0058",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user{friends{friends{friends{friends{name}}}}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "38.151.32.188",
+    "timestamp": "2026-03-13T21:53:09.064239"
+  },
+  {
+    "id": "graphql_0059",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.41.201.236",
+    "timestamp": "2026-03-13T21:53:09.064244"
+  },
+  {
+    "id": "graphql_0060",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "198.36.115.104",
+    "timestamp": "2026-03-13T21:53:09.064248"
+  },
+  {
+    "id": "graphql_0061",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...F}fragment F on User{password}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "199.177.44.203",
+    "timestamp": "2026-03-13T21:53:09.064252"
+  },
+  {
+    "id": "graphql_0062",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema { types { name } } }\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "99.81.87.231",
+    "timestamp": "2026-03-13T21:53:09.064257"
+  },
+  {
+    "id": "graphql_0063",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user1:user(id:1){name}user2:user(id:2){name}user3:user(id:3){name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "12.138.87.131",
+    "timestamp": "2026-03-13T21:53:09.064261"
+  },
+  {
+    "id": "graphql_0064",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user1:user(id:1){name}user2:user(id:2){name}user3:user(id:3){name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "155.51.253.33",
+    "timestamp": "2026-03-13T21:53:09.064268"
+  },
+  {
+    "id": "graphql_0065",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user{friends{friends{friends{friends{name}}}}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "67.161.49.206",
+    "timestamp": "2026-03-13T21:53:09.064273"
+  },
+  {
+    "id": "graphql_0066",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "174.189.82.251",
+    "timestamp": "2026-03-13T21:53:09.064277"
+  },
+  {
+    "id": "graphql_0067",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "179.24.224.219",
+    "timestamp": "2026-03-13T21:53:09.064282"
+  },
+  {
+    "id": "graphql_0068",
+    "type": "graphql_injection",
+    "payload": "[{\"query\":\"mutation{a:deleteAll}\"},{\"query\":\"mutation{b:deleteAll}\"}]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "72.236.208.77",
+    "timestamp": "2026-03-13T21:53:09.064288"
+  },
+  {
+    "id": "graphql_0069",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "17.249.252.84",
+    "timestamp": "2026-03-13T21:53:09.064295"
+  },
+  {
+    "id": "graphql_0070",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "86.253.149.139",
+    "timestamp": "2026-03-13T21:53:09.064299"
+  },
+  {
+    "id": "graphql_0071",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user{friends{friends{friends{friends{name}}}}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "211.196.36.194",
+    "timestamp": "2026-03-13T21:53:09.064304"
+  },
+  {
+    "id": "graphql_0072",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "215.118.123.77",
+    "timestamp": "2026-03-13T21:53:09.064308"
+  },
+  {
+    "id": "graphql_0073",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user{friends{friends{friends{friends{name}}}}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.209.68.49",
+    "timestamp": "2026-03-13T21:53:09.064313"
+  },
+  {
+    "id": "graphql_0074",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema { types { name } } }\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "28.81.129.131",
+    "timestamp": "2026-03-13T21:53:09.064317"
+  },
+  {
+    "id": "graphql_0075",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.7.150.21",
+    "timestamp": "2026-03-13T21:53:09.064322"
+  },
+  {
+    "id": "graphql_0076",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...F}fragment F on User{password}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "126.1.104.160",
+    "timestamp": "2026-03-13T21:53:09.064326"
+  },
+  {
+    "id": "graphql_0077",
+    "type": "graphql_injection",
+    "payload": "[{\"query\":\"mutation{a:deleteAll}\"},{\"query\":\"mutation{b:deleteAll}\"}]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "144.55.69.98",
+    "timestamp": "2026-03-13T21:53:09.064331"
+  },
+  {
+    "id": "graphql_0078",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__type(name:\\\"User\\\"){fields{name}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "92.70.98.141",
+    "timestamp": "2026-03-13T21:53:09.064336"
+  },
+  {
+    "id": "graphql_0079",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema{queryType{fields{name description}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "221.62.207.237",
+    "timestamp": "2026-03-13T21:53:09.064340"
+  },
+  {
+    "id": "graphql_0080",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...on User{name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.184.89.126",
+    "timestamp": "2026-03-13T21:53:09.064345"
+  },
+  {
+    "id": "graphql_0081",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "205.125.27.37",
+    "timestamp": "2026-03-13T21:53:09.064349"
+  },
+  {
+    "id": "graphql_0082",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{user1:user(id:1){name}user2:user(id:2){name}user3:user(id:3){name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "171.19.55.97",
+    "timestamp": "2026-03-13T21:53:09.064353"
+  },
+  {
+    "id": "graphql_0083",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.241.244.76",
+    "timestamp": "2026-03-13T21:53:09.064360"
+  },
+  {
+    "id": "graphql_0084",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema{queryType{fields{name description}}}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.60.123.74",
+    "timestamp": "2026-03-13T21:53:09.064364"
+  },
+  {
+    "id": "graphql_0085",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...F}fragment F on User{password}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "205.111.110.154",
+    "timestamp": "2026-03-13T21:53:09.064369"
+  },
+  {
+    "id": "graphql_0086",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...on User{name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "217.90.30.147",
+    "timestamp": "2026-03-13T21:53:09.064373"
+  },
+  {
+    "id": "graphql_0087",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "218.148.163.19",
+    "timestamp": "2026-03-13T21:53:09.064378"
+  },
+  {
+    "id": "graphql_0088",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "192.242.183.188",
+    "timestamp": "2026-03-13T21:53:09.064382"
+  },
+  {
+    "id": "graphql_0089",
+    "type": "graphql_injection",
+    "payload": "[{\"query\":\"mutation{a:deleteAll}\"},{\"query\":\"mutation{b:deleteAll}\"}]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "221.175.79.49",
+    "timestamp": "2026-03-13T21:53:09.064386"
+  },
+  {
+    "id": "graphql_0090",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.147.227.6",
+    "timestamp": "2026-03-13T21:53:09.064393"
+  },
+  {
+    "id": "graphql_0091",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...F}fragment F on User{password}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "133.176.207.130",
+    "timestamp": "2026-03-13T21:53:09.064398"
+  },
+  {
+    "id": "graphql_0092",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"subscription{onUserCreated{password}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "178.48.223.150",
+    "timestamp": "2026-03-13T21:53:09.064402"
+  },
+  {
+    "id": "graphql_0093",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{deleteUser(id:1){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.130.120.139",
+    "timestamp": "2026-03-13T21:53:09.064407"
+  },
+  {
+    "id": "graphql_0094",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{...on User{name}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "157.84.152.147",
+    "timestamp": "2026-03-13T21:53:09.064412"
+  },
+  {
+    "id": "graphql_0095",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.246.221.130",
+    "timestamp": "2026-03-13T21:53:09.064417"
+  },
+  {
+    "id": "graphql_0096",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema { types { name } } }\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.20.217.189",
+    "timestamp": "2026-03-13T21:53:09.064421"
+  },
+  {
+    "id": "graphql_0097",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "155.148.64.41",
+    "timestamp": "2026-03-13T21:53:09.064426"
+  },
+  {
+    "id": "graphql_0098",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "140.218.106.247",
+    "timestamp": "2026-03-13T21:53:09.064430"
+  },
+  {
+    "id": "graphql_0099",
+    "type": "graphql_injection",
+    "payload": "{\"query\":\"{__schema { types { name } } }\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "177.141.249.244",
+    "timestamp": "2026-03-13T21:53:09.064435"
+  }
+]

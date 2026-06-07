@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "ddos_0000",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "209.137.99.231",
+    "packets_per_second": 12541,
+    "timestamp": "2026-03-13T21:01:05.766353"
+  },
+  {
+    "id": "ddos_0001",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "122.50.75.79",
+    "packets_per_second": 86440,
+    "timestamp": "2026-03-13T20:46:49.766360"
+  },
+  {
+    "id": "ddos_0002",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "103.197.57.174",
+    "packets_per_second": 94277,
+    "timestamp": "2026-03-13T21:18:08.766367"
+  },
+  {
+    "id": "ddos_0003",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.96.97.181",
+    "packets_per_second": 15782,
+    "timestamp": "2026-03-13T21:11:29.766374"
+  },
+  {
+    "id": "ddos_0004",
+    "type": "ddos",
+    "pattern": "slow_post",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.243.172.23",
+    "packets_per_second": 79823,
+    "timestamp": "2026-03-13T20:30:42.766380"
+  },
+  {
+    "id": "ddos_0005",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.78.17.221",
+    "packets_per_second": 1632,
+    "timestamp": "2026-03-13T20:52:56.766387"
+  },
+  {
+    "id": "ddos_0006",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "38.44.115.37",
+    "packets_per_second": 86616,
+    "timestamp": "2026-03-13T20:58:37.766394"
+  },
+  {
+    "id": "ddos_0007",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "27.226.96.186",
+    "packets_per_second": 98013,
+    "timestamp": "2026-03-13T21:19:11.766405"
+  },
+  {
+    "id": "ddos_0008",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "23.20.31.13",
+    "packets_per_second": 76777,
+    "timestamp": "2026-03-13T20:51:38.766412"
+  },
+  {
+    "id": "ddos_0009",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "168.190.66.87",
+    "packets_per_second": 58952,
+    "timestamp": "2026-03-13T21:11:14.766419"
+  },
+  {
+    "id": "ddos_0010",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "159.233.222.240",
+    "packets_per_second": 89966,
+    "timestamp": "2026-03-13T20:50:00.766425"
+  },
+  {
+    "id": "ddos_0011",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "122.240.104.163",
+    "packets_per_second": 84042,
+    "timestamp": "2026-03-13T21:21:52.766432"
+  },
+  {
+    "id": "ddos_0012",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "101.107.104.142",
+    "packets_per_second": 25758,
+    "timestamp": "2026-03-13T21:18:44.766438"
+  },
+  {
+    "id": "ddos_0013",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "26.81.60.84",
+    "packets_per_second": 24441,
+    "timestamp": "2026-03-13T20:37:34.766447"
+  },
+  {
+    "id": "ddos_0014",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "11.252.237.6",
+    "packets_per_second": 6865,
+    "timestamp": "2026-03-13T20:58:34.766453"
+  },
+  {
+    "id": "ddos_0015",
+    "type": "ddos",
+    "pattern": "slow_post",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "174.138.149.251",
+    "packets_per_second": 14123,
+    "timestamp": "2026-03-13T20:38:11.766459"
+  },
+  {
+    "id": "ddos_0016",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "44.196.206.94",
+    "packets_per_second": 75659,
+    "timestamp": "2026-03-13T21:17:13.766466"
+  },
+  {
+    "id": "ddos_0017",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "194.201.121.141",
+    "packets_per_second": 57677,
+    "timestamp": "2026-03-13T20:38:50.766472"
+  },
+  {
+    "id": "ddos_0018",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.77.16.71",
+    "packets_per_second": 33738,
+    "timestamp": "2026-03-13T21:08:24.766478"
+  },
+  {
+    "id": "ddos_0019",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "44.203.217.32",
+    "packets_per_second": 40184,
+    "timestamp": "2026-03-13T20:31:42.766487"
+  },
+  {
+    "id": "ddos_0020",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "113.79.201.161",
+    "packets_per_second": 67397,
+    "timestamp": "2026-03-13T20:52:02.766493"
+  },
+  {
+    "id": "ddos_0021",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.204.246.217",
+    "packets_per_second": 46937,
+    "timestamp": "2026-03-13T20:39:04.766506"
+  },
+  {
+    "id": "ddos_0022",
+    "type": "ddos",
+    "pattern": "slow_post",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "43.151.222.144",
+    "packets_per_second": 26414,
+    "timestamp": "2026-03-13T20:45:44.766513"
+  },
+  {
+    "id": "ddos_0023",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "197.143.1.54",
+    "packets_per_second": 88049,
+    "timestamp": "2026-03-13T21:09:26.766519"
+  },
+  {
+    "id": "ddos_0024",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "66.75.36.101",
+    "packets_per_second": 55969,
+    "timestamp": "2026-03-13T20:51:44.766525"
+  },
+  {
+    "id": "ddos_0025",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "83.156.143.222",
+    "packets_per_second": 43466,
+    "timestamp": "2026-03-13T20:39:23.766531"
+  },
+  {
+    "id": "ddos_0026",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "68.99.217.55",
+    "packets_per_second": 22867,
+    "timestamp": "2026-03-13T21:10:05.766538"
+  },
+  {
+    "id": "ddos_0027",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "88.230.179.43",
+    "packets_per_second": 43927,
+    "timestamp": "2026-03-13T20:28:53.766544"
+  },
+  {
+    "id": "ddos_0028",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.97.34.91",
+    "packets_per_second": 27334,
+    "timestamp": "2026-03-13T21:14:18.766550"
+  },
+  {
+    "id": "ddos_0029",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "38.34.157.182",
+    "packets_per_second": 69500,
+    "timestamp": "2026-03-13T20:36:04.766557"
+  },
+  {
+    "id": "ddos_0030",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "194.36.225.56",
+    "packets_per_second": 5761,
+    "timestamp": "2026-03-13T21:16:13.766563"
+  },
+  {
+    "id": "ddos_0031",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "127.191.215.85",
+    "packets_per_second": 37105,
+    "timestamp": "2026-03-13T20:35:44.766569"
+  },
+  {
+    "id": "ddos_0032",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "170.137.141.167",
+    "packets_per_second": 20341,
+    "timestamp": "2026-03-13T21:17:42.766576"
+  },
+  {
+    "id": "ddos_0033",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "180.114.205.89",
+    "packets_per_second": 39814,
+    "timestamp": "2026-03-13T21:07:52.766585"
+  },
+  {
+    "id": "ddos_0034",
+    "type": "ddos",
+    "pattern": "slow_post",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.202.46.146",
+    "packets_per_second": 77915,
+    "timestamp": "2026-03-13T20:33:31.766591"
+  },
+  {
+    "id": "ddos_0035",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "190.247.39.7",
+    "packets_per_second": 45104,
+    "timestamp": "2026-03-13T20:49:59.766597"
+  },
+  {
+    "id": "ddos_0036",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.164.16.187",
+    "packets_per_second": 80063,
+    "timestamp": "2026-03-13T20:41:09.766603"
+  },
+  {
+    "id": "ddos_0037",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "144.55.34.71",
+    "packets_per_second": 45034,
+    "timestamp": "2026-03-13T20:43:59.766610"
+  },
+  {
+    "id": "ddos_0038",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "193.70.179.241",
+    "packets_per_second": 23079,
+    "timestamp": "2026-03-13T21:17:08.766617"
+  },
+  {
+    "id": "ddos_0039",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "29.171.211.216",
+    "packets_per_second": 87672,
+    "timestamp": "2026-03-13T20:50:37.766623"
+  },
+  {
+    "id": "ddos_0040",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.42.34.104",
+    "packets_per_second": 75822,
+    "timestamp": "2026-03-13T21:08:45.766629"
+  },
+  {
+    "id": "ddos_0041",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "49.93.36.172",
+    "packets_per_second": 16829,
+    "timestamp": "2026-03-13T21:05:02.766638"
+  },
+  {
+    "id": "ddos_0042",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "64.22.43.83",
+    "packets_per_second": 28765,
+    "timestamp": "2026-03-13T20:51:13.766656"
+  },
+  {
+    "id": "ddos_0043",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "165.60.100.53",
+    "packets_per_second": 45711,
+    "timestamp": "2026-03-13T20:39:42.766666"
+  },
+  {
+    "id": "ddos_0044",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "51.221.100.193",
+    "packets_per_second": 57655,
+    "timestamp": "2026-03-13T20:50:56.766675"
+  },
+  {
+    "id": "ddos_0045",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "163.217.81.110",
+    "packets_per_second": 90220,
+    "timestamp": "2026-03-13T20:46:15.766686"
+  },
+  {
+    "id": "ddos_0046",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "28.255.46.238",
+    "packets_per_second": 11564,
+    "timestamp": "2026-03-13T21:13:52.766695"
+  },
+  {
+    "id": "ddos_0047",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.92.193.170",
+    "packets_per_second": 74590,
+    "timestamp": "2026-03-13T20:56:43.766706"
+  },
+  {
+    "id": "ddos_0048",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.136.185.26",
+    "packets_per_second": 61518,
+    "timestamp": "2026-03-13T20:41:13.766713"
+  },
+  {
+    "id": "ddos_0049",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "39.107.125.37",
+    "packets_per_second": 54463,
+    "timestamp": "2026-03-13T20:36:13.766719"
+  },
+  {
+    "id": "ddos_0050",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "151.10.163.224",
+    "packets_per_second": 91214,
+    "timestamp": "2026-03-13T20:32:07.766726"
+  },
+  {
+    "id": "ddos_0051",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "136.92.93.107",
+    "packets_per_second": 85823,
+    "timestamp": "2026-03-13T20:45:08.766732"
+  },
+  {
+    "id": "ddos_0052",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "25.91.198.192",
+    "packets_per_second": 45314,
+    "timestamp": "2026-03-13T20:36:03.766741"
+  },
+  {
+    "id": "ddos_0053",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "114.57.220.85",
+    "packets_per_second": 35822,
+    "timestamp": "2026-03-13T21:17:57.766748"
+  },
+  {
+    "id": "ddos_0054",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.78.143.252",
+    "packets_per_second": 87029,
+    "timestamp": "2026-03-13T21:08:43.766754"
+  },
+  {
+    "id": "ddos_0055",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "69.71.121.139",
+    "packets_per_second": 76025,
+    "timestamp": "2026-03-13T21:09:24.766760"
+  },
+  {
+    "id": "ddos_0056",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.65.161.27",
+    "packets_per_second": 68602,
+    "timestamp": "2026-03-13T21:11:42.766767"
+  },
+  {
+    "id": "ddos_0057",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "108.190.142.30",
+    "packets_per_second": 73234,
+    "timestamp": "2026-03-13T20:37:58.766773"
+  },
+  {
+    "id": "ddos_0058",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "59.217.136.32",
+    "packets_per_second": 73888,
+    "timestamp": "2026-03-13T20:59:06.766780"
+  },
+  {
+    "id": "ddos_0059",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.45.152.7",
+    "packets_per_second": 86828,
+    "timestamp": "2026-03-13T20:54:43.766789"
+  },
+  {
+    "id": "ddos_0060",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "174.8.123.105",
+    "packets_per_second": 14972,
+    "timestamp": "2026-03-13T20:31:48.766796"
+  },
+  {
+    "id": "ddos_0061",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "154.61.19.155",
+    "packets_per_second": 3120,
+    "timestamp": "2026-03-13T21:18:54.766802"
+  },
+  {
+    "id": "ddos_0062",
+    "type": "ddos",
+    "pattern": "slow_post",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "58.174.128.143",
+    "packets_per_second": 16684,
+    "timestamp": "2026-03-13T21:08:13.766810"
+  },
+  {
+    "id": "ddos_0063",
+    "type": "ddos",
+    "pattern": "slow_post",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.51.71.25",
+    "packets_per_second": 86496,
+    "timestamp": "2026-03-13T21:08:01.766817"
+  },
+  {
+    "id": "ddos_0064",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.65.10.8",
+    "packets_per_second": 25337,
+    "timestamp": "2026-03-13T21:23:53.766823"
+  },
+  {
+    "id": "ddos_0065",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.69.197.151",
+    "packets_per_second": 18530,
+    "timestamp": "2026-03-13T20:43:17.766830"
+  },
+  {
+    "id": "ddos_0066",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "132.189.51.53",
+    "packets_per_second": 83159,
+    "timestamp": "2026-03-13T20:33:34.766836"
+  },
+  {
+    "id": "ddos_0067",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "67.179.113.163",
+    "packets_per_second": 54507,
+    "timestamp": "2026-03-13T20:53:24.766842"
+  },
+  {
+    "id": "ddos_0068",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "114.172.200.27",
+    "packets_per_second": 63063,
+    "timestamp": "2026-03-13T20:29:56.766849"
+  },
+  {
+    "id": "ddos_0069",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "66.85.194.108",
+    "packets_per_second": 56781,
+    "timestamp": "2026-03-13T20:34:25.766855"
+  },
+  {
+    "id": "ddos_0070",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.243.91.153",
+    "packets_per_second": 38768,
+    "timestamp": "2026-03-13T20:55:16.766861"
+  },
+  {
+    "id": "ddos_0071",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.118.176.184",
+    "packets_per_second": 92491,
+    "timestamp": "2026-03-13T21:03:29.766867"
+  },
+  {
+    "id": "ddos_0072",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "184.195.226.214",
+    "packets_per_second": 30568,
+    "timestamp": "2026-03-13T21:06:13.766877"
+  },
+  {
+    "id": "ddos_0073",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "147.235.229.246",
+    "packets_per_second": 50899,
+    "timestamp": "2026-03-13T20:28:57.766883"
+  },
+  {
+    "id": "ddos_0074",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "134.121.122.81",
+    "packets_per_second": 87054,
+    "timestamp": "2026-03-13T21:13:02.766889"
+  },
+  {
+    "id": "ddos_0075",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "74.217.179.161",
+    "packets_per_second": 69362,
+    "timestamp": "2026-03-13T21:16:52.766895"
+  },
+  {
+    "id": "ddos_0076",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "132.253.17.166",
+    "packets_per_second": 23757,
+    "timestamp": "2026-03-13T21:19:51.766902"
+  },
+  {
+    "id": "ddos_0077",
+    "type": "ddos",
+    "pattern": "dns_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.12.236.140",
+    "packets_per_second": 43618,
+    "timestamp": "2026-03-13T20:46:54.766909"
+  },
+  {
+    "id": "ddos_0078",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.50.168.243",
+    "packets_per_second": 38520,
+    "timestamp": "2026-03-13T21:03:28.766915"
+  },
+  {
+    "id": "ddos_0079",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.3.168.94",
+    "packets_per_second": 6467,
+    "timestamp": "2026-03-13T20:39:24.766921"
+  },
+  {
+    "id": "ddos_0080",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "53.129.152.199",
+    "packets_per_second": 51816,
+    "timestamp": "2026-03-13T20:34:38.766928"
+  },
+  {
+    "id": "ddos_0081",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "73.165.43.75",
+    "packets_per_second": 40814,
+    "timestamp": "2026-03-13T21:00:51.766934"
+  },
+  {
+    "id": "ddos_0082",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "93.31.127.139",
+    "packets_per_second": 54606,
+    "timestamp": "2026-03-13T20:41:27.766940"
+  },
+  {
+    "id": "ddos_0083",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "33.81.251.92",
+    "packets_per_second": 36143,
+    "timestamp": "2026-03-13T20:46:29.766948"
+  },
+  {
+    "id": "ddos_0084",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "168.213.140.188",
+    "packets_per_second": 51743,
+    "timestamp": "2026-03-13T21:12:55.766955"
+  },
+  {
+    "id": "ddos_0085",
+    "type": "ddos",
+    "pattern": "icmp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "128.141.147.106",
+    "packets_per_second": 58765,
+    "timestamp": "2026-03-13T20:56:46.766961"
+  },
+  {
+    "id": "ddos_0086",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "78.22.71.97",
+    "packets_per_second": 54936,
+    "timestamp": "2026-03-13T20:33:42.766967"
+  },
+  {
+    "id": "ddos_0087",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.16.168.147",
+    "packets_per_second": 65926,
+    "timestamp": "2026-03-13T20:28:46.766974"
+  },
+  {
+    "id": "ddos_0088",
+    "type": "ddos",
+    "pattern": "slowloris",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "21.78.150.36",
+    "packets_per_second": 23332,
+    "timestamp": "2026-03-13T20:52:59.766980"
+  },
+  {
+    "id": "ddos_0089",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "82.123.38.73",
+    "packets_per_second": 28048,
+    "timestamp": "2026-03-13T21:03:58.766986"
+  },
+  {
+    "id": "ddos_0090",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "121.129.35.85",
+    "packets_per_second": 72445,
+    "timestamp": "2026-03-13T20:49:33.766992"
+  },
+  {
+    "id": "ddos_0091",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "111.232.220.121",
+    "packets_per_second": 89064,
+    "timestamp": "2026-03-13T21:02:04.767000"
+  },
+  {
+    "id": "ddos_0092",
+    "type": "ddos",
+    "pattern": "syn_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.80.226.241",
+    "packets_per_second": 39544,
+    "timestamp": "2026-03-13T21:10:40.767006"
+  },
+  {
+    "id": "ddos_0093",
+    "type": "ddos",
+    "pattern": "ntp_amplification",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "189.57.233.230",
+    "packets_per_second": 57968,
+    "timestamp": "2026-03-13T20:30:58.767013"
+  },
+  {
+    "id": "ddos_0094",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.245.207.151",
+    "packets_per_second": 89737,
+    "timestamp": "2026-03-13T20:59:23.767019"
+  },
+  {
+    "id": "ddos_0095",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "217.191.200.188",
+    "packets_per_second": 99537,
+    "timestamp": "2026-03-13T20:32:22.767025"
+  },
+  {
+    "id": "ddos_0096",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "155.145.110.165",
+    "packets_per_second": 50113,
+    "timestamp": "2026-03-13T21:12:56.767032"
+  },
+  {
+    "id": "ddos_0097",
+    "type": "ddos",
+    "pattern": "ack_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.254.189.65",
+    "packets_per_second": 40483,
+    "timestamp": "2026-03-13T21:18:13.767038"
+  },
+  {
+    "id": "ddos_0098",
+    "type": "ddos",
+    "pattern": "udp_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "77.25.25.65",
+    "packets_per_second": 13123,
+    "timestamp": "2026-03-13T20:47:58.767044"
+  },
+  {
+    "id": "ddos_0099",
+    "type": "ddos",
+    "pattern": "http_flood",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "50.37.134.1",
+    "packets_per_second": 60252,
+    "timestamp": "2026-03-13T21:20:15.767050"
+  }
+]

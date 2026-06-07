@@ -1,0 +1,1802 @@
+[
+  {
+    "id": "sqli_0000",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT table_name FROM information_schema.tables--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "55.31.193.78",
+    "timestamp": "2026-03-13T20:53:41.760267"
+  },
+  {
+    "id": "sqli_0001",
+    "type": "sql_injection",
+    "payload": "' group by 1--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "116.107.51.157",
+    "timestamp": "2026-03-13T21:00:32.760295"
+  },
+  {
+    "id": "sqli_0002",
+    "type": "sql_injection",
+    "payload": "'||'1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.58.169.178",
+    "timestamp": "2026-03-13T20:49:10.760305"
+  },
+  {
+    "id": "sqli_0003",
+    "type": "sql_injection",
+    "payload": "' OR ''='",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "182.19.207.223",
+    "timestamp": "2026-03-13T20:40:02.760314"
+  },
+  {
+    "id": "sqli_0004",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL, NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "156.188.252.23",
+    "timestamp": "2026-03-13T20:39:48.760321"
+  },
+  {
+    "id": "sqli_0005",
+    "type": "sql_injection",
+    "payload": "'%20OR%20'1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "207.5.186.188",
+    "timestamp": "2026-03-13T21:17:54.760328"
+  },
+  {
+    "id": "sqli_0006",
+    "type": "sql_injection",
+    "payload": "admin'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "216.185.148.141",
+    "timestamp": "2026-03-13T21:00:08.760335"
+  },
+  {
+    "id": "sqli_0007",
+    "type": "sql_injection",
+    "payload": "{'$gt': ''}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "16.215.142.246",
+    "timestamp": "2026-03-13T21:18:16.760344"
+  },
+  {
+    "id": "sqli_0008",
+    "type": "sql_injection",
+    "payload": "' AND BENCHMARK(10000000,SHA1('test'))--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.117.221.109",
+    "timestamp": "2026-03-13T21:22:59.760352"
+  },
+  {
+    "id": "sqli_0009",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "20.245.193.227",
+    "timestamp": "2026-03-13T20:53:27.760362"
+  },
+  {
+    "id": "sqli_0010",
+    "type": "sql_injection",
+    "payload": "';%00OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.239.189.144",
+    "timestamp": "2026-03-13T21:06:41.760369"
+  },
+  {
+    "id": "sqli_0011",
+    "type": "sql_injection",
+    "payload": "1 OR 1=1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "193.15.103.69",
+    "timestamp": "2026-03-13T21:14:19.760376"
+  },
+  {
+    "id": "sqli_0012",
+    "type": "sql_injection",
+    "payload": "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT version())),1)--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.146.150.90",
+    "timestamp": "2026-03-13T20:49:22.760382"
+  },
+  {
+    "id": "sqli_0013",
+    "type": "sql_injection",
+    "payload": "' AND BENCHMARK(10000000,SHA1('test'))--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "68.149.124.251",
+    "timestamp": "2026-03-13T21:05:45.760388"
+  },
+  {
+    "id": "sqli_0014",
+    "type": "sql_injection",
+    "payload": "' having 1=1--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.108.142.247",
+    "timestamp": "2026-03-13T20:35:00.760394"
+  },
+  {
+    "id": "sqli_0015",
+    "type": "sql_injection",
+    "payload": "1' /*!50000OR*/ '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.33.91.121",
+    "timestamp": "2026-03-13T20:24:45.760401"
+  },
+  {
+    "id": "sqli_0016",
+    "type": "sql_injection",
+    "payload": "' Or '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "163.32.228.129",
+    "timestamp": "2026-03-13T20:37:24.760407"
+  },
+  {
+    "id": "sqli_0017",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "49.104.194.12",
+    "timestamp": "2026-03-13T21:08:38.760413"
+  },
+  {
+    "id": "sqli_0018",
+    "type": "sql_injection",
+    "payload": "admin'#",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "112.159.243.174",
+    "timestamp": "2026-03-13T20:35:42.760419"
+  },
+  {
+    "id": "sqli_0019",
+    "type": "sql_injection",
+    "payload": "1' /*!50000OR*/ '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "82.66.184.71",
+    "timestamp": "2026-03-13T20:42:26.760426"
+  },
+  {
+    "id": "sqli_0020",
+    "type": "sql_injection",
+    "payload": "1' /*!50000OR*/ '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "134.5.77.22",
+    "timestamp": "2026-03-13T21:15:34.760432"
+  },
+  {
+    "id": "sqli_0021",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT username, password FROM users--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "136.182.255.14",
+    "timestamp": "2026-03-13T20:48:46.760438"
+  },
+  {
+    "id": "sqli_0022",
+    "type": "sql_injection",
+    "payload": "1' order by 2--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "195.96.103.248",
+    "timestamp": "2026-03-13T20:30:41.760444"
+  },
+  {
+    "id": "sqli_0023",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "65.227.187.107",
+    "timestamp": "2026-03-13T21:07:02.760450"
+  },
+  {
+    "id": "sqli_0024",
+    "type": "sql_injection",
+    "payload": "{'$regex': '.*'}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "42.155.196.35",
+    "timestamp": "2026-03-13T21:15:32.760456"
+  },
+  {
+    "id": "sqli_0025",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.111.171.188",
+    "timestamp": "2026-03-13T21:14:13.760462"
+  },
+  {
+    "id": "sqli_0026",
+    "type": "sql_injection",
+    "payload": "{'$ne': ''}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.68.145.249",
+    "timestamp": "2026-03-13T20:33:06.760468"
+  },
+  {
+    "id": "sqli_0027",
+    "type": "sql_injection",
+    "payload": "1' order by 2--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "35.80.31.132",
+    "timestamp": "2026-03-13T20:25:04.760475"
+  },
+  {
+    "id": "sqli_0028",
+    "type": "sql_injection",
+    "payload": "' or 1=1 limit 1 --",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "65.141.244.217",
+    "timestamp": "2026-03-13T20:26:11.760483"
+  },
+  {
+    "id": "sqli_0029",
+    "type": "sql_injection",
+    "payload": "'%2527OR%25271%2527%3D%25271",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.105.184.229",
+    "timestamp": "2026-03-13T21:03:32.760490"
+  },
+  {
+    "id": "sqli_0030",
+    "type": "sql_injection",
+    "payload": "'%27OR%271%27%3D%271",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.238.2.99",
+    "timestamp": "2026-03-13T21:22:25.760499"
+  },
+  {
+    "id": "sqli_0031",
+    "type": "sql_injection",
+    "payload": "' group by 1--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "85.100.74.186",
+    "timestamp": "2026-03-13T21:15:35.760506"
+  },
+  {
+    "id": "sqli_0032",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'/*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "189.27.109.55",
+    "timestamp": "2026-03-13T20:44:03.760513"
+  },
+  {
+    "id": "sqli_0033",
+    "type": "sql_injection",
+    "payload": "' group by 1--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "5.111.202.254",
+    "timestamp": "2026-03-13T20:50:30.760519"
+  },
+  {
+    "id": "sqli_0034",
+    "type": "sql_injection",
+    "payload": "{'$ne': ''}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "207.12.58.229",
+    "timestamp": "2026-03-13T21:16:29.760526"
+  },
+  {
+    "id": "sqli_0035",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "111.57.99.227",
+    "timestamp": "2026-03-13T20:24:32.760533"
+  },
+  {
+    "id": "sqli_0036",
+    "type": "sql_injection",
+    "payload": "admin'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.118.157.206",
+    "timestamp": "2026-03-13T20:34:01.760539"
+  },
+  {
+    "id": "sqli_0037",
+    "type": "sql_injection",
+    "payload": "1' order by 2--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "119.25.105.232",
+    "timestamp": "2026-03-13T20:59:09.760545"
+  },
+  {
+    "id": "sqli_0038",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "157.160.129.31",
+    "timestamp": "2026-03-13T21:06:52.760551"
+  },
+  {
+    "id": "sqli_0039",
+    "type": "sql_injection",
+    "payload": "1' /*!50000OR*/ '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "213.67.254.191",
+    "timestamp": "2026-03-13T21:07:11.760558"
+  },
+  {
+    "id": "sqli_0040",
+    "type": "sql_injection",
+    "payload": "{'$ne': ''}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "18.202.97.57",
+    "timestamp": "2026-03-13T20:39:47.760564"
+  },
+  {
+    "id": "sqli_0041",
+    "type": "sql_injection",
+    "payload": "' Or '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "119.108.142.216",
+    "timestamp": "2026-03-13T20:41:36.760570"
+  },
+  {
+    "id": "sqli_0042",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT username, password FROM users--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "17.168.184.100",
+    "timestamp": "2026-03-13T21:05:44.760576"
+  },
+  {
+    "id": "sqli_0043",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.142.36.34",
+    "timestamp": "2026-03-13T20:26:04.760583"
+  },
+  {
+    "id": "sqli_0044",
+    "type": "sql_injection",
+    "payload": "'||'1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "195.86.44.205",
+    "timestamp": "2026-03-13T21:12:32.760589"
+  },
+  {
+    "id": "sqli_0045",
+    "type": "sql_injection",
+    "payload": "1 OR 1=1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.180.215.228",
+    "timestamp": "2026-03-13T20:29:31.760595"
+  },
+  {
+    "id": "sqli_0046",
+    "type": "sql_injection",
+    "payload": "1' /*!50000OR*/ '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "219.250.94.239",
+    "timestamp": "2026-03-13T21:20:13.760601"
+  },
+  {
+    "id": "sqli_0047",
+    "type": "sql_injection",
+    "payload": "' or 1=1 limit 1 --",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "219.179.210.9",
+    "timestamp": "2026-03-13T20:32:15.760607"
+  },
+  {
+    "id": "sqli_0048",
+    "type": "sql_injection",
+    "payload": "{'$regex': '.*'}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "18.172.179.121",
+    "timestamp": "2026-03-13T21:04:17.760615"
+  },
+  {
+    "id": "sqli_0049",
+    "type": "sql_injection",
+    "payload": "' UNION ALL SELECT NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "143.237.30.126",
+    "timestamp": "2026-03-13T21:08:07.760622"
+  },
+  {
+    "id": "sqli_0050",
+    "type": "sql_injection",
+    "payload": "'; DROP TABLE users--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "135.15.163.170",
+    "timestamp": "2026-03-13T20:24:56.760628"
+  },
+  {
+    "id": "sqli_0051",
+    "type": "sql_injection",
+    "payload": "' Or '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "16.177.62.151",
+    "timestamp": "2026-03-13T21:05:07.760636"
+  },
+  {
+    "id": "sqli_0052",
+    "type": "sql_injection",
+    "payload": "';%00OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "169.200.43.218",
+    "timestamp": "2026-03-13T20:52:25.760662"
+  },
+  {
+    "id": "sqli_0053",
+    "type": "sql_injection",
+    "payload": "{'$where': 'this.password == this.password'}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "85.250.75.153",
+    "timestamp": "2026-03-13T20:51:39.760669"
+  },
+  {
+    "id": "sqli_0054",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "8.166.67.26",
+    "timestamp": "2026-03-13T20:44:21.760676"
+  },
+  {
+    "id": "sqli_0055",
+    "type": "sql_injection",
+    "payload": "';%00OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "223.219.66.126",
+    "timestamp": "2026-03-13T21:09:45.760682"
+  },
+  {
+    "id": "sqli_0056",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "115.60.39.234",
+    "timestamp": "2026-03-13T21:02:30.760688"
+  },
+  {
+    "id": "sqli_0057",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "172.178.209.254",
+    "timestamp": "2026-03-13T20:27:32.760695"
+  },
+  {
+    "id": "sqli_0058",
+    "type": "sql_injection",
+    "payload": "1 UNION SELECT * FROM users--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "211.5.23.88",
+    "timestamp": "2026-03-13T20:54:39.760701"
+  },
+  {
+    "id": "sqli_0059",
+    "type": "sql_injection",
+    "payload": "1 UNION SELECT * FROM users--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "217.25.225.108",
+    "timestamp": "2026-03-13T20:25:28.760707"
+  },
+  {
+    "id": "sqli_0060",
+    "type": "sql_injection",
+    "payload": "admin'/*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "217.166.226.96",
+    "timestamp": "2026-03-13T20:50:03.760714"
+  },
+  {
+    "id": "sqli_0061",
+    "type": "sql_injection",
+    "payload": "' UNION ALL SELECT NULL--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "151.148.37.186",
+    "timestamp": "2026-03-13T21:04:54.760720"
+  },
+  {
+    "id": "sqli_0062",
+    "type": "sql_injection",
+    "payload": "{'$where': 'this.password == this.password'}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "203.122.220.114",
+    "timestamp": "2026-03-13T21:16:44.760726"
+  },
+  {
+    "id": "sqli_0063",
+    "type": "sql_injection",
+    "payload": "1 UNION SELECT * FROM users--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "204.55.213.194",
+    "timestamp": "2026-03-13T21:12:40.760732"
+  },
+  {
+    "id": "sqli_0064",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.237.80.156",
+    "timestamp": "2026-03-13T20:40:58.760739"
+  },
+  {
+    "id": "sqli_0065",
+    "type": "sql_injection",
+    "payload": "1' order by 1--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "142.224.116.188",
+    "timestamp": "2026-03-13T20:51:46.760745"
+  },
+  {
+    "id": "sqli_0066",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.160.254.142",
+    "timestamp": "2026-03-13T20:54:10.760751"
+  },
+  {
+    "id": "sqli_0067",
+    "type": "sql_injection",
+    "payload": "'%2527OR%25271%2527%3D%25271",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "97.59.214.196",
+    "timestamp": "2026-03-13T21:02:58.760761"
+  },
+  {
+    "id": "sqli_0068",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "13.132.65.178",
+    "timestamp": "2026-03-13T20:39:54.760767"
+  },
+  {
+    "id": "sqli_0069",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "69.57.98.9",
+    "timestamp": "2026-03-13T21:21:53.760774"
+  },
+  {
+    "id": "sqli_0070",
+    "type": "sql_injection",
+    "payload": "1' order by 2--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "155.199.221.225",
+    "timestamp": "2026-03-13T20:47:00.760780"
+  },
+  {
+    "id": "sqli_0071",
+    "type": "sql_injection",
+    "payload": "1' order by 2--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "153.92.52.188",
+    "timestamp": "2026-03-13T20:39:26.760787"
+  },
+  {
+    "id": "sqli_0072",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "221.85.95.219",
+    "timestamp": "2026-03-13T20:46:21.760793"
+  },
+  {
+    "id": "sqli_0073",
+    "type": "sql_injection",
+    "payload": "' or 1=1 limit 1 --",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.62.60.72",
+    "timestamp": "2026-03-13T21:13:09.760801"
+  },
+  {
+    "id": "sqli_0074",
+    "type": "sql_injection",
+    "payload": "'%2527OR%25271%2527%3D%25271",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.49.25.109",
+    "timestamp": "2026-03-13T20:35:13.760808"
+  },
+  {
+    "id": "sqli_0075",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL, NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "177.232.210.93",
+    "timestamp": "2026-03-13T21:17:50.760814"
+  },
+  {
+    "id": "sqli_0076",
+    "type": "sql_injection",
+    "payload": "admin'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "85.178.245.116",
+    "timestamp": "2026-03-13T20:27:38.760820"
+  },
+  {
+    "id": "sqli_0077",
+    "type": "sql_injection",
+    "payload": "' OR ''='",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.235.161.244",
+    "timestamp": "2026-03-13T20:29:11.760827"
+  },
+  {
+    "id": "sqli_0078",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'/*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.240.66.242",
+    "timestamp": "2026-03-13T21:07:25.760833"
+  },
+  {
+    "id": "sqli_0079",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL, NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "182.62.115.160",
+    "timestamp": "2026-03-13T21:03:24.760842"
+  },
+  {
+    "id": "sqli_0080",
+    "type": "sql_injection",
+    "payload": "'/**/OR/**/'1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "115.137.229.111",
+    "timestamp": "2026-03-13T21:03:21.760848"
+  },
+  {
+    "id": "sqli_0081",
+    "type": "sql_injection",
+    "payload": "' OR 'x'='x",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "153.187.143.205",
+    "timestamp": "2026-03-13T20:30:48.760855"
+  },
+  {
+    "id": "sqli_0082",
+    "type": "sql_injection",
+    "payload": "'/**/OR/**/'1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "222.161.84.236",
+    "timestamp": "2026-03-13T20:53:41.760861"
+  },
+  {
+    "id": "sqli_0083",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "179.89.86.193",
+    "timestamp": "2026-03-13T20:29:34.760867"
+  },
+  {
+    "id": "sqli_0084",
+    "type": "sql_injection",
+    "payload": "1 OR 1=1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "154.53.26.51",
+    "timestamp": "2026-03-13T21:09:55.760873"
+  },
+  {
+    "id": "sqli_0085",
+    "type": "sql_injection",
+    "payload": "' OR ''='",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "19.187.23.98",
+    "timestamp": "2026-03-13T20:50:11.760879"
+  },
+  {
+    "id": "sqli_0086",
+    "type": "sql_injection",
+    "payload": "'%20OR%20'1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "89.145.255.166",
+    "timestamp": "2026-03-13T20:58:41.760885"
+  },
+  {
+    "id": "sqli_0087",
+    "type": "sql_injection",
+    "payload": "';%00OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "54.144.81.113",
+    "timestamp": "2026-03-13T20:39:52.760894"
+  },
+  {
+    "id": "sqli_0088",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "38.46.116.63",
+    "timestamp": "2026-03-13T21:02:39.760900"
+  },
+  {
+    "id": "sqli_0089",
+    "type": "sql_injection",
+    "payload": "1 OR 1=1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.230.91.226",
+    "timestamp": "2026-03-13T20:34:01.760906"
+  },
+  {
+    "id": "sqli_0090",
+    "type": "sql_injection",
+    "payload": "{'$gt': ''}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "195.232.44.42",
+    "timestamp": "2026-03-13T20:39:38.760913"
+  },
+  {
+    "id": "sqli_0091",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "20.141.100.77",
+    "timestamp": "2026-03-13T20:44:32.760919"
+  },
+  {
+    "id": "sqli_0092",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT username, password FROM users--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "211.108.107.146",
+    "timestamp": "2026-03-13T21:22:06.760925"
+  },
+  {
+    "id": "sqli_0093",
+    "type": "sql_injection",
+    "payload": "' having 1=1--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.80.42.254",
+    "timestamp": "2026-03-13T21:01:53.760932"
+  },
+  {
+    "id": "sqli_0094",
+    "type": "sql_injection",
+    "payload": "'||'1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "182.130.228.106",
+    "timestamp": "2026-03-13T20:51:23.760940"
+  },
+  {
+    "id": "sqli_0095",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "103.199.165.93",
+    "timestamp": "2026-03-13T20:51:16.760947"
+  },
+  {
+    "id": "sqli_0096",
+    "type": "sql_injection",
+    "payload": "{'$where': 'this.password == this.password'}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "42.6.7.116",
+    "timestamp": "2026-03-13T21:18:12.760953"
+  },
+  {
+    "id": "sqli_0097",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'/*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "97.215.75.216",
+    "timestamp": "2026-03-13T21:22:22.760959"
+  },
+  {
+    "id": "sqli_0098",
+    "type": "sql_injection",
+    "payload": "' having 1=1--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.95.53.65",
+    "timestamp": "2026-03-13T21:10:32.760965"
+  },
+  {
+    "id": "sqli_0099",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "72.19.224.57",
+    "timestamp": "2026-03-13T21:16:05.760971"
+  },
+  {
+    "id": "sqli_0100",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.33.228.141",
+    "timestamp": "2026-03-13T20:57:46.760978"
+  },
+  {
+    "id": "sqli_0101",
+    "type": "sql_injection",
+    "payload": "{'$gt': ''}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "86.150.249.129",
+    "timestamp": "2026-03-13T21:16:18.760984"
+  },
+  {
+    "id": "sqli_0102",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT username, password FROM users--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "169.131.118.109",
+    "timestamp": "2026-03-13T20:57:47.760990"
+  },
+  {
+    "id": "sqli_0103",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "219.157.24.24",
+    "timestamp": "2026-03-13T20:30:27.760996"
+  },
+  {
+    "id": "sqli_0104",
+    "type": "sql_injection",
+    "payload": "' UNION ALL SELECT NULL--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "207.114.99.206",
+    "timestamp": "2026-03-13T20:28:27.761002"
+  },
+  {
+    "id": "sqli_0105",
+    "type": "sql_injection",
+    "payload": "'; WAITFOR DELAY '0:0:5'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "222.181.156.7",
+    "timestamp": "2026-03-13T21:17:55.761008"
+  },
+  {
+    "id": "sqli_0106",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'/*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "114.91.38.42",
+    "timestamp": "2026-03-13T20:38:57.761017"
+  },
+  {
+    "id": "sqli_0107",
+    "type": "sql_injection",
+    "payload": "'; INSERT INTO users VALUES('hacker','password')--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "181.56.245.145",
+    "timestamp": "2026-03-13T20:26:47.761023"
+  },
+  {
+    "id": "sqli_0108",
+    "type": "sql_injection",
+    "payload": "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT version())),1)--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "22.128.28.68",
+    "timestamp": "2026-03-13T21:17:04.761029"
+  },
+  {
+    "id": "sqli_0109",
+    "type": "sql_injection",
+    "payload": "' AND BENCHMARK(10000000,SHA1('test'))--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "218.148.84.121",
+    "timestamp": "2026-03-13T20:56:34.761036"
+  },
+  {
+    "id": "sqli_0110",
+    "type": "sql_injection",
+    "payload": "{'$gt': ''}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "3.155.156.244",
+    "timestamp": "2026-03-13T21:03:01.761042"
+  },
+  {
+    "id": "sqli_0111",
+    "type": "sql_injection",
+    "payload": "1' order by 1--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "183.182.44.117",
+    "timestamp": "2026-03-13T21:10:07.761048"
+  },
+  {
+    "id": "sqli_0112",
+    "type": "sql_injection",
+    "payload": "'%2527OR%25271%2527%3D%25271",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "58.156.61.162",
+    "timestamp": "2026-03-13T20:36:39.761054"
+  },
+  {
+    "id": "sqli_0113",
+    "type": "sql_injection",
+    "payload": "' AND SLEEP(5)--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "155.247.83.102",
+    "timestamp": "2026-03-13T21:07:51.761060"
+  },
+  {
+    "id": "sqli_0114",
+    "type": "sql_injection",
+    "payload": "' or 1=1 limit 1 --",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "134.8.158.104",
+    "timestamp": "2026-03-13T20:27:41.761067"
+  },
+  {
+    "id": "sqli_0115",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "214.33.56.220",
+    "timestamp": "2026-03-13T20:45:27.761075"
+  },
+  {
+    "id": "sqli_0116",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL, NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "162.219.170.61",
+    "timestamp": "2026-03-13T20:30:47.761082"
+  },
+  {
+    "id": "sqli_0117",
+    "type": "sql_injection",
+    "payload": "' OR 'x'='x",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "102.219.114.12",
+    "timestamp": "2026-03-13T21:16:56.761088"
+  },
+  {
+    "id": "sqli_0118",
+    "type": "sql_injection",
+    "payload": "' Or '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "24.223.42.175",
+    "timestamp": "2026-03-13T21:17:39.761094"
+  },
+  {
+    "id": "sqli_0119",
+    "type": "sql_injection",
+    "payload": "'%27OR%271%27%3D%271",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "144.92.201.244",
+    "timestamp": "2026-03-13T21:24:10.761100"
+  },
+  {
+    "id": "sqli_0120",
+    "type": "sql_injection",
+    "payload": "'%27OR%271%27%3D%271",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.194.138.1",
+    "timestamp": "2026-03-13T20:29:39.761107"
+  },
+  {
+    "id": "sqli_0121",
+    "type": "sql_injection",
+    "payload": "'%2527OR%25271%2527%3D%25271",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.156.133.68",
+    "timestamp": "2026-03-13T20:40:21.761113"
+  },
+  {
+    "id": "sqli_0122",
+    "type": "sql_injection",
+    "payload": "admin'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "48.98.15.90",
+    "timestamp": "2026-03-13T21:18:47.761119"
+  },
+  {
+    "id": "sqli_0123",
+    "type": "sql_injection",
+    "payload": "{'$gt': ''}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "62.166.213.235",
+    "timestamp": "2026-03-13T21:00:37.761125"
+  },
+  {
+    "id": "sqli_0124",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "55.55.30.154",
+    "timestamp": "2026-03-13T21:07:28.761131"
+  },
+  {
+    "id": "sqli_0125",
+    "type": "sql_injection",
+    "payload": "{'$where': 'this.password == this.password'}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.109.54.162",
+    "timestamp": "2026-03-13T21:13:16.761137"
+  },
+  {
+    "id": "sqli_0126",
+    "type": "sql_injection",
+    "payload": "admin'#",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "150.161.182.173",
+    "timestamp": "2026-03-13T21:12:41.761146"
+  },
+  {
+    "id": "sqli_0127",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'/*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "148.221.61.96",
+    "timestamp": "2026-03-13T20:54:20.761152"
+  },
+  {
+    "id": "sqli_0128",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "116.95.41.152",
+    "timestamp": "2026-03-13T21:18:01.761158"
+  },
+  {
+    "id": "sqli_0129",
+    "type": "sql_injection",
+    "payload": "'; DROP TABLE users--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "162.86.70.198",
+    "timestamp": "2026-03-13T20:50:02.761164"
+  },
+  {
+    "id": "sqli_0130",
+    "type": "sql_injection",
+    "payload": "' group by 1--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "103.78.252.228",
+    "timestamp": "2026-03-13T21:10:26.761173"
+  },
+  {
+    "id": "sqli_0131",
+    "type": "sql_injection",
+    "payload": "admin'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "111.47.26.176",
+    "timestamp": "2026-03-13T21:07:41.761180"
+  },
+  {
+    "id": "sqli_0132",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT table_name FROM information_schema.tables--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "132.250.156.86",
+    "timestamp": "2026-03-13T20:56:35.761186"
+  },
+  {
+    "id": "sqli_0133",
+    "type": "sql_injection",
+    "payload": "'; INSERT INTO users VALUES('hacker','password')--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "196.7.137.118",
+    "timestamp": "2026-03-13T20:48:06.761192"
+  },
+  {
+    "id": "sqli_0134",
+    "type": "sql_injection",
+    "payload": "1 UNION SELECT * FROM users--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "91.9.171.59",
+    "timestamp": "2026-03-13T20:29:21.761198"
+  },
+  {
+    "id": "sqli_0135",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "146.195.158.227",
+    "timestamp": "2026-03-13T20:25:03.761204"
+  },
+  {
+    "id": "sqli_0136",
+    "type": "sql_injection",
+    "payload": "' group by 1--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.77.213.13",
+    "timestamp": "2026-03-13T20:44:11.761213"
+  },
+  {
+    "id": "sqli_0137",
+    "type": "sql_injection",
+    "payload": "';%00OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "12.129.117.231",
+    "timestamp": "2026-03-13T20:44:34.761219"
+  },
+  {
+    "id": "sqli_0138",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT table_name FROM information_schema.tables--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.30.242.106",
+    "timestamp": "2026-03-13T21:12:06.761225"
+  },
+  {
+    "id": "sqli_0139",
+    "type": "sql_injection",
+    "payload": "' AND SLEEP(5)--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "46.2.169.67",
+    "timestamp": "2026-03-13T20:30:34.761232"
+  },
+  {
+    "id": "sqli_0140",
+    "type": "sql_injection",
+    "payload": "1' /*!50000OR*/ '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "8.219.231.101",
+    "timestamp": "2026-03-13T20:49:39.761238"
+  },
+  {
+    "id": "sqli_0141",
+    "type": "sql_injection",
+    "payload": "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT version())),1)--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "45.180.138.248",
+    "timestamp": "2026-03-13T20:57:44.761244"
+  },
+  {
+    "id": "sqli_0142",
+    "type": "sql_injection",
+    "payload": "1' order by 2--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "61.223.35.209",
+    "timestamp": "2026-03-13T20:44:11.761250"
+  },
+  {
+    "id": "sqli_0143",
+    "type": "sql_injection",
+    "payload": "admin'#",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "128.116.243.102",
+    "timestamp": "2026-03-13T21:04:00.761256"
+  },
+  {
+    "id": "sqli_0144",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "43.229.244.21",
+    "timestamp": "2026-03-13T21:06:43.761263"
+  },
+  {
+    "id": "sqli_0145",
+    "type": "sql_injection",
+    "payload": "' having 1=1--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "44.212.146.226",
+    "timestamp": "2026-03-13T20:35:03.761271"
+  },
+  {
+    "id": "sqli_0146",
+    "type": "sql_injection",
+    "payload": "1 OR 1=1--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "157.128.166.174",
+    "timestamp": "2026-03-13T21:05:47.761277"
+  },
+  {
+    "id": "sqli_0147",
+    "type": "sql_injection",
+    "payload": "1' /*!50000OR*/ '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "193.239.158.114",
+    "timestamp": "2026-03-13T20:25:18.761284"
+  },
+  {
+    "id": "sqli_0148",
+    "type": "sql_injection",
+    "payload": "' OR ''='",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "107.235.86.158",
+    "timestamp": "2026-03-13T21:18:11.761290"
+  },
+  {
+    "id": "sqli_0149",
+    "type": "sql_injection",
+    "payload": "'; INSERT INTO users VALUES('hacker','password')--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.168.170.225",
+    "timestamp": "2026-03-13T21:08:14.761296"
+  },
+  {
+    "id": "sqli_0150",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "198.24.178.193",
+    "timestamp": "2026-03-13T20:40:49.761302"
+  },
+  {
+    "id": "sqli_0151",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "199.11.61.65",
+    "timestamp": "2026-03-13T20:27:17.761309"
+  },
+  {
+    "id": "sqli_0152",
+    "type": "sql_injection",
+    "payload": "admin'#",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "40.139.115.58",
+    "timestamp": "2026-03-13T20:25:17.761315"
+  },
+  {
+    "id": "sqli_0153",
+    "type": "sql_injection",
+    "payload": "'%2527OR%25271%2527%3D%25271",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "13.235.152.49",
+    "timestamp": "2026-03-13T21:03:50.761321"
+  },
+  {
+    "id": "sqli_0154",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "38.122.83.123",
+    "timestamp": "2026-03-13T20:38:30.761327"
+  },
+  {
+    "id": "sqli_0155",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL, NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "13.23.23.205",
+    "timestamp": "2026-03-13T20:51:53.761333"
+  },
+  {
+    "id": "sqli_0156",
+    "type": "sql_injection",
+    "payload": "';%00OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.184.217.182",
+    "timestamp": "2026-03-13T21:05:47.761339"
+  },
+  {
+    "id": "sqli_0157",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.40.226.18",
+    "timestamp": "2026-03-13T20:50:48.761345"
+  },
+  {
+    "id": "sqli_0158",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "170.91.41.204",
+    "timestamp": "2026-03-13T21:08:30.761354"
+  },
+  {
+    "id": "sqli_0159",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "202.36.171.60",
+    "timestamp": "2026-03-13T20:41:25.761360"
+  },
+  {
+    "id": "sqli_0160",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "20.104.242.155",
+    "timestamp": "2026-03-13T20:39:22.761366"
+  },
+  {
+    "id": "sqli_0161",
+    "type": "sql_injection",
+    "payload": "{'$gt': ''}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "159.121.19.204",
+    "timestamp": "2026-03-13T21:01:12.761372"
+  },
+  {
+    "id": "sqli_0162",
+    "type": "sql_injection",
+    "payload": "';%00OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "211.17.18.221",
+    "timestamp": "2026-03-13T20:51:57.761378"
+  },
+  {
+    "id": "sqli_0163",
+    "type": "sql_injection",
+    "payload": "' OR 'x'='x",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "136.173.4.195",
+    "timestamp": "2026-03-13T21:10:48.761384"
+  },
+  {
+    "id": "sqli_0164",
+    "type": "sql_injection",
+    "payload": "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "169.107.112.182",
+    "timestamp": "2026-03-13T21:01:24.761391"
+  },
+  {
+    "id": "sqli_0165",
+    "type": "sql_injection",
+    "payload": "{'$where': 'this.password == this.password'}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "125.229.55.218",
+    "timestamp": "2026-03-13T20:24:34.761399"
+  },
+  {
+    "id": "sqli_0166",
+    "type": "sql_injection",
+    "payload": "admin'/*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.243.202.63",
+    "timestamp": "2026-03-13T20:29:27.761406"
+  },
+  {
+    "id": "sqli_0167",
+    "type": "sql_injection",
+    "payload": "'||'1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "36.244.93.59",
+    "timestamp": "2026-03-13T20:53:50.761412"
+  },
+  {
+    "id": "sqli_0168",
+    "type": "sql_injection",
+    "payload": "' AND SLEEP(5)--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "147.141.184.80",
+    "timestamp": "2026-03-13T21:14:17.761418"
+  },
+  {
+    "id": "sqli_0169",
+    "type": "sql_injection",
+    "payload": "'/**/OR/**/'1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.248.194.160",
+    "timestamp": "2026-03-13T20:59:25.761425"
+  },
+  {
+    "id": "sqli_0170",
+    "type": "sql_injection",
+    "payload": "{'$where': 'this.password == this.password'}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.89.160.140",
+    "timestamp": "2026-03-13T20:39:43.761431"
+  },
+  {
+    "id": "sqli_0171",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "102.134.149.228",
+    "timestamp": "2026-03-13T20:35:37.761437"
+  },
+  {
+    "id": "sqli_0172",
+    "type": "sql_injection",
+    "payload": "admin'/*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "221.70.45.45",
+    "timestamp": "2026-03-13T21:15:33.761443"
+  },
+  {
+    "id": "sqli_0173",
+    "type": "sql_injection",
+    "payload": "'||'1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "53.22.212.156",
+    "timestamp": "2026-03-13T20:25:03.761449"
+  },
+  {
+    "id": "sqli_0174",
+    "type": "sql_injection",
+    "payload": "';%00OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "3.102.194.104",
+    "timestamp": "2026-03-13T21:09:48.761455"
+  },
+  {
+    "id": "sqli_0175",
+    "type": "sql_injection",
+    "payload": "' UNION SELECT NULL--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "10.202.108.74",
+    "timestamp": "2026-03-13T20:41:49.761461"
+  },
+  {
+    "id": "sqli_0176",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "182.209.60.125",
+    "timestamp": "2026-03-13T20:44:10.761582"
+  },
+  {
+    "id": "sqli_0177",
+    "type": "sql_injection",
+    "payload": "'/**/OR/**/'1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "70.41.93.138",
+    "timestamp": "2026-03-13T21:02:21.761590"
+  },
+  {
+    "id": "sqli_0178",
+    "type": "sql_injection",
+    "payload": "' having 1=1--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.210.177.230",
+    "timestamp": "2026-03-13T21:20:52.761596"
+  },
+  {
+    "id": "sqli_0179",
+    "type": "sql_injection",
+    "payload": "' having 1=1--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "139.127.11.235",
+    "timestamp": "2026-03-13T21:23:44.761603"
+  },
+  {
+    "id": "sqli_0180",
+    "type": "sql_injection",
+    "payload": "'%20OR%20'1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "144.96.135.250",
+    "timestamp": "2026-03-13T21:06:52.761609"
+  },
+  {
+    "id": "sqli_0181",
+    "type": "sql_injection",
+    "payload": "'%27OR%271%27%3D%271",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "190.84.124.103",
+    "timestamp": "2026-03-13T20:47:18.761615"
+  },
+  {
+    "id": "sqli_0182",
+    "type": "sql_injection",
+    "payload": "{'$where': 'this.password == this.password'}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.44.206.142",
+    "timestamp": "2026-03-13T20:26:27.761621"
+  },
+  {
+    "id": "sqli_0183",
+    "type": "sql_injection",
+    "payload": "'; UPDATE users SET password='hacked'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "108.14.0.175",
+    "timestamp": "2026-03-13T20:42:09.761628"
+  },
+  {
+    "id": "sqli_0184",
+    "type": "sql_injection",
+    "payload": "admin'/*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "42.104.141.244",
+    "timestamp": "2026-03-13T20:41:18.761634"
+  },
+  {
+    "id": "sqli_0185",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.5.12.126",
+    "timestamp": "2026-03-13T20:24:41.761651"
+  },
+  {
+    "id": "sqli_0186",
+    "type": "sql_injection",
+    "payload": "1' OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "156.232.35.19",
+    "timestamp": "2026-03-13T21:07:30.761658"
+  },
+  {
+    "id": "sqli_0187",
+    "type": "sql_injection",
+    "payload": "' AND SLEEP(5)--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "194.181.146.1",
+    "timestamp": "2026-03-13T20:44:37.761664"
+  },
+  {
+    "id": "sqli_0188",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'/*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "97.159.50.34",
+    "timestamp": "2026-03-13T20:59:10.761670"
+  },
+  {
+    "id": "sqli_0189",
+    "type": "sql_injection",
+    "payload": "1' /*!50000OR*/ '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.52.209.176",
+    "timestamp": "2026-03-13T20:41:13.761676"
+  },
+  {
+    "id": "sqli_0190",
+    "type": "sql_injection",
+    "payload": "'; DROP TABLE users--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "61.128.47.176",
+    "timestamp": "2026-03-13T20:24:56.761682"
+  },
+  {
+    "id": "sqli_0191",
+    "type": "sql_injection",
+    "payload": "1 UNION SELECT * FROM users--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.247.137.42",
+    "timestamp": "2026-03-13T20:45:08.761689"
+  },
+  {
+    "id": "sqli_0192",
+    "type": "sql_injection",
+    "payload": "' group by 1--",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "139.209.214.250",
+    "timestamp": "2026-03-13T20:54:34.761695"
+  },
+  {
+    "id": "sqli_0193",
+    "type": "sql_injection",
+    "payload": "admin'/*",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "107.111.129.27",
+    "timestamp": "2026-03-13T20:44:36.761701"
+  },
+  {
+    "id": "sqli_0194",
+    "type": "sql_injection",
+    "payload": "' OR ''='",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "104.234.236.158",
+    "timestamp": "2026-03-13T21:11:53.761708"
+  },
+  {
+    "id": "sqli_0195",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1'--",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "127.128.229.156",
+    "timestamp": "2026-03-13T20:57:55.761714"
+  },
+  {
+    "id": "sqli_0196",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.127.49.21",
+    "timestamp": "2026-03-13T20:55:48.761720"
+  },
+  {
+    "id": "sqli_0197",
+    "type": "sql_injection",
+    "payload": "' OR '1'='1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "215.146.47.153",
+    "timestamp": "2026-03-13T20:24:56.761727"
+  },
+  {
+    "id": "sqli_0198",
+    "type": "sql_injection",
+    "payload": "1 OR 1=1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "10.153.129.48",
+    "timestamp": "2026-03-13T20:58:44.761733"
+  },
+  {
+    "id": "sqli_0199",
+    "type": "sql_injection",
+    "payload": "{'$ne': ''}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.156.44.180",
+    "timestamp": "2026-03-13T21:18:48.761739"
+  }
+]

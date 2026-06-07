@@ -1,0 +1,902 @@
+[
+  {
+    "id": "oauth_0000",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.181.56.109",
+    "timestamp": "2026-03-13T21:47:04.401559"
+  },
+  {
+    "id": "oauth_0001",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "165.62.130.202",
+    "timestamp": "2026-03-13T21:47:04.401564"
+  },
+  {
+    "id": "oauth_0002",
+    "type": "oauth_bypass",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "81.36.94.80",
+    "timestamp": "2026-03-13T21:47:04.401569"
+  },
+  {
+    "id": "oauth_0003",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.222.183.144",
+    "timestamp": "2026-03-13T21:47:04.401576"
+  },
+  {
+    "id": "oauth_0004",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "189.191.150.29",
+    "timestamp": "2026-03-13T21:47:04.401581"
+  },
+  {
+    "id": "oauth_0005",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "168.213.37.238",
+    "timestamp": "2026-03-13T21:47:04.401586"
+  },
+  {
+    "id": "oauth_0006",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "98.131.79.232",
+    "timestamp": "2026-03-13T21:47:04.401593"
+  },
+  {
+    "id": "oauth_0007",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "154.240.48.13",
+    "timestamp": "2026-03-13T21:47:04.401599"
+  },
+  {
+    "id": "oauth_0008",
+    "type": "oauth_bypass",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.10.227.237",
+    "timestamp": "2026-03-13T21:47:04.401604"
+  },
+  {
+    "id": "oauth_0009",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.118.227.102",
+    "timestamp": "2026-03-13T21:47:04.401609"
+  },
+  {
+    "id": "oauth_0010",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.0.122.56",
+    "timestamp": "2026-03-13T21:47:04.401614"
+  },
+  {
+    "id": "oauth_0011",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "66.92.217.20",
+    "timestamp": "2026-03-13T21:47:04.401619"
+  },
+  {
+    "id": "oauth_0012",
+    "type": "oauth_bypass",
+    "payload": "/auth?redirect_uri=http://evil.com/callback",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "33.175.136.126",
+    "timestamp": "2026-03-13T21:47:04.401623"
+  },
+  {
+    "id": "oauth_0013",
+    "type": "oauth_bypass",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "144.247.18.43",
+    "timestamp": "2026-03-13T21:47:04.401634"
+  },
+  {
+    "id": "oauth_0014",
+    "type": "oauth_bypass",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "15.172.175.234",
+    "timestamp": "2026-03-13T21:47:04.401639"
+  },
+  {
+    "id": "oauth_0015",
+    "type": "oauth_bypass",
+    "payload": "Cookie: PHPSESSID=fixed_session_id; session=fixed",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "162.216.146.89",
+    "timestamp": "2026-03-13T21:47:04.401662"
+  },
+  {
+    "id": "oauth_0016",
+    "type": "oauth_bypass",
+    "payload": "/callback?code=stolen_code",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "112.188.5.65",
+    "timestamp": "2026-03-13T21:47:04.401667"
+  },
+  {
+    "id": "oauth_0017",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.118.36.250",
+    "timestamp": "2026-03-13T21:47:04.401671"
+  },
+  {
+    "id": "oauth_0018",
+    "type": "oauth_bypass",
+    "payload": "X-Forwarded-For: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "56.26.167.238",
+    "timestamp": "2026-03-13T21:47:04.401676"
+  },
+  {
+    "id": "oauth_0019",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "208.232.6.86",
+    "timestamp": "2026-03-13T21:47:04.401680"
+  },
+  {
+    "id": "oauth_0020",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "92.207.80.164",
+    "timestamp": "2026-03-13T21:47:04.401685"
+  },
+  {
+    "id": "oauth_0021",
+    "type": "oauth_bypass",
+    "payload": "X-Custom-IP-Authorization: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "8.95.117.251",
+    "timestamp": "2026-03-13T21:47:04.401689"
+  },
+  {
+    "id": "oauth_0022",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "25.68.131.164",
+    "timestamp": "2026-03-13T21:47:04.401698"
+  },
+  {
+    "id": "oauth_0023",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "65.241.13.121",
+    "timestamp": "2026-03-13T21:47:04.401704"
+  },
+  {
+    "id": "oauth_0024",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "82.216.13.100",
+    "timestamp": "2026-03-13T21:47:04.401708"
+  },
+  {
+    "id": "oauth_0025",
+    "type": "oauth_bypass",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "50.209.197.56",
+    "timestamp": "2026-03-13T21:47:04.401713"
+  },
+  {
+    "id": "oauth_0026",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "96.45.57.7",
+    "timestamp": "2026-03-13T21:47:04.401717"
+  },
+  {
+    "id": "oauth_0027",
+    "type": "oauth_bypass",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "131.112.41.168",
+    "timestamp": "2026-03-13T21:47:04.401722"
+  },
+  {
+    "id": "oauth_0028",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "47.18.186.213",
+    "timestamp": "2026-03-13T21:47:04.401726"
+  },
+  {
+    "id": "oauth_0029",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "125.77.193.216",
+    "timestamp": "2026-03-13T21:47:04.401731"
+  },
+  {
+    "id": "oauth_0030",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.x",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "76.110.223.67",
+    "timestamp": "2026-03-13T21:47:04.401735"
+  },
+  {
+    "id": "oauth_0031",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "155.60.135.90",
+    "timestamp": "2026-03-13T21:47:04.401740"
+  },
+  {
+    "id": "oauth_0032",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "81.202.70.206",
+    "timestamp": "2026-03-13T21:47:04.401745"
+  },
+  {
+    "id": "oauth_0033",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "157.64.109.160",
+    "timestamp": "2026-03-13T21:47:04.401749"
+  },
+  {
+    "id": "oauth_0034",
+    "type": "oauth_bypass",
+    "payload": "/auth?redirect_uri=http://evil.com/callback",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "222.221.136.202",
+    "timestamp": "2026-03-13T21:47:04.401756"
+  },
+  {
+    "id": "oauth_0035",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.x",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "130.78.108.6",
+    "timestamp": "2026-03-13T21:47:04.401761"
+  },
+  {
+    "id": "oauth_0036",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.205.75.168",
+    "timestamp": "2026-03-13T21:47:04.401765"
+  },
+  {
+    "id": "oauth_0037",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.62.126.144",
+    "timestamp": "2026-03-13T21:47:04.401770"
+  },
+  {
+    "id": "oauth_0038",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "23.141.51.154",
+    "timestamp": "2026-03-13T21:47:04.401774"
+  },
+  {
+    "id": "oauth_0039",
+    "type": "oauth_bypass",
+    "payload": "X-Custom-IP-Authorization: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "84.158.192.135",
+    "timestamp": "2026-03-13T21:47:04.401779"
+  },
+  {
+    "id": "oauth_0040",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "8.178.28.55",
+    "timestamp": "2026-03-13T21:47:04.401783"
+  },
+  {
+    "id": "oauth_0041",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "157.211.96.17",
+    "timestamp": "2026-03-13T21:47:04.401788"
+  },
+  {
+    "id": "oauth_0042",
+    "type": "oauth_bypass",
+    "payload": "/callback?code=stolen_code",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.182.217.216",
+    "timestamp": "2026-03-13T21:47:04.401795"
+  },
+  {
+    "id": "oauth_0043",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "2.214.66.119",
+    "timestamp": "2026-03-13T21:47:04.401799"
+  },
+  {
+    "id": "oauth_0044",
+    "type": "oauth_bypass",
+    "payload": "/auth?redirect_uri=http://evil.com/callback",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "130.34.149.228",
+    "timestamp": "2026-03-13T21:47:04.401804"
+  },
+  {
+    "id": "oauth_0045",
+    "type": "oauth_bypass",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "122.210.7.106",
+    "timestamp": "2026-03-13T21:47:04.401808"
+  },
+  {
+    "id": "oauth_0046",
+    "type": "oauth_bypass",
+    "payload": "/auth?redirect_uri=http://evil.com/callback",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "220.47.202.133",
+    "timestamp": "2026-03-13T21:47:04.401813"
+  },
+  {
+    "id": "oauth_0047",
+    "type": "oauth_bypass",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "175.221.233.139",
+    "timestamp": "2026-03-13T21:47:04.401817"
+  },
+  {
+    "id": "oauth_0048",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "59.15.130.251",
+    "timestamp": "2026-03-13T21:47:04.401821"
+  },
+  {
+    "id": "oauth_0049",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "156.222.173.46",
+    "timestamp": "2026-03-13T21:47:04.401826"
+  },
+  {
+    "id": "oauth_0050",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "24.137.238.12",
+    "timestamp": "2026-03-13T21:47:04.401831"
+  },
+  {
+    "id": "oauth_0051",
+    "type": "oauth_bypass",
+    "payload": "/callback?code=stolen_code",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.138.173.194",
+    "timestamp": "2026-03-13T21:47:04.401835"
+  },
+  {
+    "id": "oauth_0052",
+    "type": "oauth_bypass",
+    "payload": "Cookie: PHPSESSID=fixed_session_id; session=fixed",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "41.111.239.147",
+    "timestamp": "2026-03-13T21:47:04.401840"
+  },
+  {
+    "id": "oauth_0053",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "15.17.5.183",
+    "timestamp": "2026-03-13T21:47:04.401844"
+  },
+  {
+    "id": "oauth_0054",
+    "type": "oauth_bypass",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.2.35.232",
+    "timestamp": "2026-03-13T21:47:04.401849"
+  },
+  {
+    "id": "oauth_0055",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.x",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "25.81.114.244",
+    "timestamp": "2026-03-13T21:47:04.401853"
+  },
+  {
+    "id": "oauth_0056",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.144.115.120",
+    "timestamp": "2026-03-13T21:47:04.401860"
+  },
+  {
+    "id": "oauth_0057",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "73.17.200.16",
+    "timestamp": "2026-03-13T21:47:04.401867"
+  },
+  {
+    "id": "oauth_0058",
+    "type": "oauth_bypass",
+    "payload": "X-Forwarded-For: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "149.138.50.215",
+    "timestamp": "2026-03-13T21:47:04.401872"
+  },
+  {
+    "id": "oauth_0059",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "72.64.245.234",
+    "timestamp": "2026-03-13T21:47:04.401876"
+  },
+  {
+    "id": "oauth_0060",
+    "type": "oauth_bypass",
+    "payload": "/callback?code=stolen_code",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.146.125.104",
+    "timestamp": "2026-03-13T21:47:04.401881"
+  },
+  {
+    "id": "oauth_0061",
+    "type": "oauth_bypass",
+    "payload": "/auth?redirect_uri=http://evil.com/callback",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "80.119.240.39",
+    "timestamp": "2026-03-13T21:47:04.401888"
+  },
+  {
+    "id": "oauth_0062",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "20.227.2.153",
+    "timestamp": "2026-03-13T21:47:04.401892"
+  },
+  {
+    "id": "oauth_0063",
+    "type": "oauth_bypass",
+    "payload": "X-Custom-IP-Authorization: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "97.61.44.84",
+    "timestamp": "2026-03-13T21:47:04.401897"
+  },
+  {
+    "id": "oauth_0064",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "201.51.157.46",
+    "timestamp": "2026-03-13T21:47:04.401901"
+  },
+  {
+    "id": "oauth_0065",
+    "type": "oauth_bypass",
+    "payload": "X-Forwarded-For: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "15.129.179.69",
+    "timestamp": "2026-03-13T21:47:04.401906"
+  },
+  {
+    "id": "oauth_0066",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "223.153.81.152",
+    "timestamp": "2026-03-13T21:47:04.401910"
+  },
+  {
+    "id": "oauth_0067",
+    "type": "oauth_bypass",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "124.211.47.16",
+    "timestamp": "2026-03-13T21:47:04.401915"
+  },
+  {
+    "id": "oauth_0068",
+    "type": "oauth_bypass",
+    "payload": "/callback?code=stolen_code",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.151.50.84",
+    "timestamp": "2026-03-13T21:47:04.401919"
+  },
+  {
+    "id": "oauth_0069",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "19.83.39.91",
+    "timestamp": "2026-03-13T21:47:04.401924"
+  },
+  {
+    "id": "oauth_0070",
+    "type": "oauth_bypass",
+    "payload": "/api/user?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "109.176.84.115",
+    "timestamp": "2026-03-13T21:47:04.401928"
+  },
+  {
+    "id": "oauth_0071",
+    "type": "oauth_bypass",
+    "payload": "/page#access_token=ya29.a0f...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "83.222.225.164",
+    "timestamp": "2026-03-13T21:47:04.401933"
+  },
+  {
+    "id": "oauth_0072",
+    "type": "oauth_bypass",
+    "payload": "/auth?redirect_uri=http://evil.com/callback",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.149.235.58",
+    "timestamp": "2026-03-13T21:47:04.401937"
+  },
+  {
+    "id": "oauth_0073",
+    "type": "oauth_bypass",
+    "payload": "/callback?code=stolen_code",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.49.97.222",
+    "timestamp": "2026-03-13T21:47:04.401942"
+  },
+  {
+    "id": "oauth_0074",
+    "type": "oauth_bypass",
+    "payload": "X-Forwarded-For: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "128.118.108.185",
+    "timestamp": "2026-03-13T21:47:04.401947"
+  },
+  {
+    "id": "oauth_0075",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "138.253.237.249",
+    "timestamp": "2026-03-13T21:47:04.401951"
+  },
+  {
+    "id": "oauth_0076",
+    "type": "oauth_bypass",
+    "payload": "/auth?redirect_uri=http://evil.com/callback",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "186.89.80.59",
+    "timestamp": "2026-03-13T21:47:04.401956"
+  },
+  {
+    "id": "oauth_0077",
+    "type": "oauth_bypass",
+    "payload": "/auth?redirect_uri=http://evil.com/callback",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "128.99.66.148",
+    "timestamp": "2026-03-13T21:47:04.401963"
+  },
+  {
+    "id": "oauth_0078",
+    "type": "oauth_bypass",
+    "payload": "Cookie: PHPSESSID=fixed_session_id; session=fixed",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "20.234.68.168",
+    "timestamp": "2026-03-13T21:47:04.401967"
+  },
+  {
+    "id": "oauth_0079",
+    "type": "oauth_bypass",
+    "payload": "/page#access_token=ya29.a0f...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "173.104.107.21",
+    "timestamp": "2026-03-13T21:47:04.401972"
+  },
+  {
+    "id": "oauth_0080",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "139.38.120.172",
+    "timestamp": "2026-03-13T21:47:04.401976"
+  },
+  {
+    "id": "oauth_0081",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "95.243.10.84",
+    "timestamp": "2026-03-13T21:47:04.401983"
+  },
+  {
+    "id": "oauth_0082",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "110.251.176.198",
+    "timestamp": "2026-03-13T21:47:04.401987"
+  },
+  {
+    "id": "oauth_0083",
+    "type": "oauth_bypass",
+    "payload": "X-Forwarded-For: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "5.123.102.105",
+    "timestamp": "2026-03-13T21:47:04.401992"
+  },
+  {
+    "id": "oauth_0084",
+    "type": "oauth_bypass",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "27.250.75.242",
+    "timestamp": "2026-03-13T21:47:04.401996"
+  },
+  {
+    "id": "oauth_0085",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.x",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "169.7.14.99",
+    "timestamp": "2026-03-13T21:47:04.402001"
+  },
+  {
+    "id": "oauth_0086",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "154.162.196.228",
+    "timestamp": "2026-03-13T21:47:04.402005"
+  },
+  {
+    "id": "oauth_0087",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.219.157.242",
+    "timestamp": "2026-03-13T21:47:04.402009"
+  },
+  {
+    "id": "oauth_0088",
+    "type": "oauth_bypass",
+    "payload": "Cookie: PHPSESSID=fixed_session_id; session=fixed",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "171.250.10.32",
+    "timestamp": "2026-03-13T21:47:04.402014"
+  },
+  {
+    "id": "oauth_0089",
+    "type": "oauth_bypass",
+    "payload": "Authorization: Basic YWRtaW46YWRtaW4=",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.8.87.219",
+    "timestamp": "2026-03-13T21:47:04.402018"
+  },
+  {
+    "id": "oauth_0090",
+    "type": "oauth_bypass",
+    "payload": "Cookie: PHPSESSID=fixed_session_id; session=fixed",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "198.143.146.63",
+    "timestamp": "2026-03-13T21:47:04.402023"
+  },
+  {
+    "id": "oauth_0091",
+    "type": "oauth_bypass",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "124.232.53.35",
+    "timestamp": "2026-03-13T21:47:04.402027"
+  },
+  {
+    "id": "oauth_0092",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.x",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.65.244.35",
+    "timestamp": "2026-03-13T21:47:04.402032"
+  },
+  {
+    "id": "oauth_0093",
+    "type": "oauth_bypass",
+    "payload": "/callback?code=stolen_code",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "21.171.145.150",
+    "timestamp": "2026-03-13T21:47:04.402037"
+  },
+  {
+    "id": "oauth_0094",
+    "type": "oauth_bypass",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.x",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "173.174.7.83",
+    "timestamp": "2026-03-13T21:47:04.402041"
+  },
+  {
+    "id": "oauth_0095",
+    "type": "oauth_bypass",
+    "payload": "/page#access_token=ya29.a0f...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "115.157.151.130",
+    "timestamp": "2026-03-13T21:47:04.402046"
+  },
+  {
+    "id": "oauth_0096",
+    "type": "oauth_bypass",
+    "payload": "X-Forwarded-For: 127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "44.178.12.122",
+    "timestamp": "2026-03-13T21:47:04.402050"
+  },
+  {
+    "id": "oauth_0097",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "68.255.197.38",
+    "timestamp": "2026-03-13T21:47:04.402055"
+  },
+  {
+    "id": "oauth_0098",
+    "type": "oauth_bypass",
+    "payload": "/page#access_token=ya29.a0f...",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.93.250.88",
+    "timestamp": "2026-03-13T21:47:04.402062"
+  },
+  {
+    "id": "oauth_0099",
+    "type": "oauth_bypass",
+    "payload": "/redirect?url=http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "170.47.251.104",
+    "timestamp": "2026-03-13T21:47:04.402066"
+  }
+]

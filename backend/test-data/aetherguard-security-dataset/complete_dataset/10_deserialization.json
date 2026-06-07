@@ -1,0 +1,902 @@
+[
+  {
+    "id": "deser_0000",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "184.37.77.215",
+    "timestamp": "2026-03-13T21:39:20.653045"
+  },
+  {
+    "id": "deser_0001",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "57.130.204.196",
+    "timestamp": "2026-03-13T21:39:20.653050"
+  },
+  {
+    "id": "deser_0002",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.31.55.27",
+    "timestamp": "2026-03-13T21:39:20.653055"
+  },
+  {
+    "id": "deser_0003",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "1.59.182.228",
+    "timestamp": "2026-03-13T21:39:20.653060"
+  },
+  {
+    "id": "deser_0004",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "77.11.114.156",
+    "timestamp": "2026-03-13T21:39:20.653167"
+  },
+  {
+    "id": "deser_0005",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.143.195.176",
+    "timestamp": "2026-03-13T21:39:20.653173"
+  },
+  {
+    "id": "deser_0006",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "11.73.134.79",
+    "timestamp": "2026-03-13T21:39:20.653178"
+  },
+  {
+    "id": "deser_0007",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "187.70.209.160",
+    "timestamp": "2026-03-13T21:39:20.653185"
+  },
+  {
+    "id": "deser_0008",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "194.37.249.16",
+    "timestamp": "2026-03-13T21:39:20.653190"
+  },
+  {
+    "id": "deser_0009",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.63.69.132",
+    "timestamp": "2026-03-13T21:39:20.653194"
+  },
+  {
+    "id": "deser_0010",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "108.120.179.203",
+    "timestamp": "2026-03-13T21:39:20.653199"
+  },
+  {
+    "id": "deser_0011",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.239.236.221",
+    "timestamp": "2026-03-13T21:39:20.653204"
+  },
+  {
+    "id": "deser_0012",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "201.190.101.121",
+    "timestamp": "2026-03-13T21:39:20.653208"
+  },
+  {
+    "id": "deser_0013",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "97.42.76.119",
+    "timestamp": "2026-03-13T21:39:20.653213"
+  },
+  {
+    "id": "deser_0014",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "158.213.245.242",
+    "timestamp": "2026-03-13T21:39:20.653217"
+  },
+  {
+    "id": "deser_0015",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "154.174.122.130",
+    "timestamp": "2026-03-13T21:39:20.653222"
+  },
+  {
+    "id": "deser_0016",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "103.120.59.74",
+    "timestamp": "2026-03-13T21:39:20.653226"
+  },
+  {
+    "id": "deser_0017",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "207.162.155.45",
+    "timestamp": "2026-03-13T21:39:20.653231"
+  },
+  {
+    "id": "deser_0018",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "31.181.115.83",
+    "timestamp": "2026-03-13T21:39:20.653235"
+  },
+  {
+    "id": "deser_0019",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "51.124.18.48",
+    "timestamp": "2026-03-13T21:39:20.653240"
+  },
+  {
+    "id": "deser_0020",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.171.27.99",
+    "timestamp": "2026-03-13T21:39:20.653244"
+  },
+  {
+    "id": "deser_0021",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "93.57.133.221",
+    "timestamp": "2026-03-13T21:39:20.653249"
+  },
+  {
+    "id": "deser_0022",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "120.220.73.230",
+    "timestamp": "2026-03-13T21:39:20.653254"
+  },
+  {
+    "id": "deser_0023",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.181.84.24",
+    "timestamp": "2026-03-13T21:39:20.653258"
+  },
+  {
+    "id": "deser_0024",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.22.154.244",
+    "timestamp": "2026-03-13T21:39:20.653263"
+  },
+  {
+    "id": "deser_0025",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.213.31.75",
+    "timestamp": "2026-03-13T21:39:20.653267"
+  },
+  {
+    "id": "deser_0026",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "183.179.25.188",
+    "timestamp": "2026-03-13T21:39:20.653272"
+  },
+  {
+    "id": "deser_0027",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "29.144.134.166",
+    "timestamp": "2026-03-13T21:39:20.653276"
+  },
+  {
+    "id": "deser_0028",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "97.210.84.184",
+    "timestamp": "2026-03-13T21:39:20.653281"
+  },
+  {
+    "id": "deser_0029",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "176.224.52.32",
+    "timestamp": "2026-03-13T21:39:20.653285"
+  },
+  {
+    "id": "deser_0030",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "113.62.55.28",
+    "timestamp": "2026-03-13T21:39:20.653290"
+  },
+  {
+    "id": "deser_0031",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.135.3.30",
+    "timestamp": "2026-03-13T21:39:20.653294"
+  },
+  {
+    "id": "deser_0032",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "119.251.134.212",
+    "timestamp": "2026-03-13T21:39:20.653301"
+  },
+  {
+    "id": "deser_0033",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "53.6.167.106",
+    "timestamp": "2026-03-13T21:39:20.653309"
+  },
+  {
+    "id": "deser_0034",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.71.153.164",
+    "timestamp": "2026-03-13T21:39:20.653316"
+  },
+  {
+    "id": "deser_0035",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "52.57.162.167",
+    "timestamp": "2026-03-13T21:39:20.653324"
+  },
+  {
+    "id": "deser_0036",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.222.103.147",
+    "timestamp": "2026-03-13T21:39:20.653331"
+  },
+  {
+    "id": "deser_0037",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "187.23.18.246",
+    "timestamp": "2026-03-13T21:39:20.653338"
+  },
+  {
+    "id": "deser_0038",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "60.152.113.158",
+    "timestamp": "2026-03-13T21:39:20.653343"
+  },
+  {
+    "id": "deser_0039",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.11.166.106",
+    "timestamp": "2026-03-13T21:39:20.653351"
+  },
+  {
+    "id": "deser_0040",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "146.76.209.95",
+    "timestamp": "2026-03-13T21:39:20.653360"
+  },
+  {
+    "id": "deser_0041",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.10.206.34",
+    "timestamp": "2026-03-13T21:39:20.653366"
+  },
+  {
+    "id": "deser_0042",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "135.173.72.201",
+    "timestamp": "2026-03-13T21:39:20.653371"
+  },
+  {
+    "id": "deser_0043",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.33.118.228",
+    "timestamp": "2026-03-13T21:39:20.653376"
+  },
+  {
+    "id": "deser_0044",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "20.117.114.21",
+    "timestamp": "2026-03-13T21:39:20.653380"
+  },
+  {
+    "id": "deser_0045",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "173.78.74.150",
+    "timestamp": "2026-03-13T21:39:20.653385"
+  },
+  {
+    "id": "deser_0046",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "95.245.15.59",
+    "timestamp": "2026-03-13T21:39:20.653390"
+  },
+  {
+    "id": "deser_0047",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.75.163.142",
+    "timestamp": "2026-03-13T21:39:20.653395"
+  },
+  {
+    "id": "deser_0048",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "50.26.166.192",
+    "timestamp": "2026-03-13T21:39:20.653399"
+  },
+  {
+    "id": "deser_0049",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "82.156.149.41",
+    "timestamp": "2026-03-13T21:39:20.653404"
+  },
+  {
+    "id": "deser_0050",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "28.98.39.118",
+    "timestamp": "2026-03-13T21:39:20.653412"
+  },
+  {
+    "id": "deser_0051",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "41.52.20.199",
+    "timestamp": "2026-03-13T21:39:20.653417"
+  },
+  {
+    "id": "deser_0052",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "219.204.5.241",
+    "timestamp": "2026-03-13T21:39:20.653421"
+  },
+  {
+    "id": "deser_0053",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.38.196.233",
+    "timestamp": "2026-03-13T21:39:20.653426"
+  },
+  {
+    "id": "deser_0054",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "158.139.116.98",
+    "timestamp": "2026-03-13T21:39:20.653430"
+  },
+  {
+    "id": "deser_0055",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.241.172.98",
+    "timestamp": "2026-03-13T21:39:20.653435"
+  },
+  {
+    "id": "deser_0056",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "183.60.41.144",
+    "timestamp": "2026-03-13T21:39:20.653439"
+  },
+  {
+    "id": "deser_0057",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "173.89.180.242",
+    "timestamp": "2026-03-13T21:39:20.653444"
+  },
+  {
+    "id": "deser_0058",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "199.68.156.204",
+    "timestamp": "2026-03-13T21:39:20.653448"
+  },
+  {
+    "id": "deser_0059",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "67.11.194.148",
+    "timestamp": "2026-03-13T21:39:20.653453"
+  },
+  {
+    "id": "deser_0060",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "18.94.32.74",
+    "timestamp": "2026-03-13T21:39:20.653457"
+  },
+  {
+    "id": "deser_0061",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "30.105.137.194",
+    "timestamp": "2026-03-13T21:39:20.653462"
+  },
+  {
+    "id": "deser_0062",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "158.150.72.199",
+    "timestamp": "2026-03-13T21:39:20.653467"
+  },
+  {
+    "id": "deser_0063",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "154.103.123.214",
+    "timestamp": "2026-03-13T21:39:20.653471"
+  },
+  {
+    "id": "deser_0064",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "40.184.90.60",
+    "timestamp": "2026-03-13T21:39:20.653476"
+  },
+  {
+    "id": "deser_0065",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.109.207.189",
+    "timestamp": "2026-03-13T21:39:20.653480"
+  },
+  {
+    "id": "deser_0066",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "159.146.16.198",
+    "timestamp": "2026-03-13T21:39:20.653485"
+  },
+  {
+    "id": "deser_0067",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "223.237.85.242",
+    "timestamp": "2026-03-13T21:39:20.653489"
+  },
+  {
+    "id": "deser_0068",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "88.130.187.168",
+    "timestamp": "2026-03-13T21:39:20.653494"
+  },
+  {
+    "id": "deser_0069",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "110.188.145.160",
+    "timestamp": "2026-03-13T21:39:20.653498"
+  },
+  {
+    "id": "deser_0070",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "78.98.142.104",
+    "timestamp": "2026-03-13T21:39:20.653503"
+  },
+  {
+    "id": "deser_0071",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "176.176.113.50",
+    "timestamp": "2026-03-13T21:39:20.653507"
+  },
+  {
+    "id": "deser_0072",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "39.21.21.140",
+    "timestamp": "2026-03-13T21:39:20.653512"
+  },
+  {
+    "id": "deser_0073",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "27.244.43.201",
+    "timestamp": "2026-03-13T21:39:20.653517"
+  },
+  {
+    "id": "deser_0074",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "63.134.171.165",
+    "timestamp": "2026-03-13T21:39:20.653521"
+  },
+  {
+    "id": "deser_0075",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "209.222.17.99",
+    "timestamp": "2026-03-13T21:39:20.653526"
+  },
+  {
+    "id": "deser_0076",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "136.39.220.6",
+    "timestamp": "2026-03-13T21:39:20.653530"
+  },
+  {
+    "id": "deser_0077",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "206.79.128.206",
+    "timestamp": "2026-03-13T21:39:20.653537"
+  },
+  {
+    "id": "deser_0078",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "100.150.241.230",
+    "timestamp": "2026-03-13T21:39:20.653545"
+  },
+  {
+    "id": "deser_0079",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "170.213.49.122",
+    "timestamp": "2026-03-13T21:39:20.653552"
+  },
+  {
+    "id": "deser_0080",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.29.153.240",
+    "timestamp": "2026-03-13T21:39:20.653560"
+  },
+  {
+    "id": "deser_0081",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "62.111.107.52",
+    "timestamp": "2026-03-13T21:39:20.653567"
+  },
+  {
+    "id": "deser_0082",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "197.54.105.99",
+    "timestamp": "2026-03-13T21:39:20.653574"
+  },
+  {
+    "id": "deser_0083",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.15.226.55",
+    "timestamp": "2026-03-13T21:39:20.653582"
+  },
+  {
+    "id": "deser_0084",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "9.172.216.177",
+    "timestamp": "2026-03-13T21:39:20.653590"
+  },
+  {
+    "id": "deser_0085",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "140.71.204.46",
+    "timestamp": "2026-03-13T21:39:20.653596"
+  },
+  {
+    "id": "deser_0086",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "30.77.226.166",
+    "timestamp": "2026-03-13T21:39:20.653601"
+  },
+  {
+    "id": "deser_0087",
+    "type": "deserialization",
+    "payload": "rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAADAAN3cIAAAAQAAAAAB4",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "32.49.167.134",
+    "timestamp": "2026-03-13T21:39:20.653606"
+  },
+  {
+    "id": "deser_0088",
+    "type": "deserialization",
+    "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "84.78.87.146",
+    "timestamp": "2026-03-13T21:39:20.653611"
+  },
+  {
+    "id": "deser_0089",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "189.119.88.60",
+    "timestamp": "2026-03-13T21:39:20.653622"
+  },
+  {
+    "id": "deser_0090",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "207.205.186.225",
+    "timestamp": "2026-03-13T21:39:20.653627"
+  },
+  {
+    "id": "deser_0091",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "63.203.94.185",
+    "timestamp": "2026-03-13T21:39:20.653631"
+  },
+  {
+    "id": "deser_0092",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "71.141.90.97",
+    "timestamp": "2026-03-13T21:39:20.653636"
+  },
+  {
+    "id": "deser_0093",
+    "type": "deserialization",
+    "payload": "O:8:\"stdClass\":1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "28.75.229.19",
+    "timestamp": "2026-03-13T21:39:20.653654"
+  },
+  {
+    "id": "deser_0094",
+    "type": "deserialization",
+    "payload": "a:1:{s:4:\"test\";s:5:\"value\";}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.9.94.83",
+    "timestamp": "2026-03-13T21:39:20.653659"
+  },
+  {
+    "id": "deser_0095",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.213.126.101",
+    "timestamp": "2026-03-13T21:39:20.653663"
+  },
+  {
+    "id": "deser_0096",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "163.56.93.24",
+    "timestamp": "2026-03-13T21:39:20.653668"
+  },
+  {
+    "id": "deser_0097",
+    "type": "deserialization",
+    "payload": "{\"$type\":\"System.IO.FileInfo\",\"fileName\":\"/etc/passwd\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "185.113.169.172",
+    "timestamp": "2026-03-13T21:39:20.653672"
+  },
+  {
+    "id": "deser_0098",
+    "type": "deserialization",
+    "payload": "O:3:\"Foo\":0:{}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "219.253.196.210",
+    "timestamp": "2026-03-13T21:39:20.653677"
+  },
+  {
+    "id": "deser_0099",
+    "type": "deserialization",
+    "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "36.99.217.113",
+    "timestamp": "2026-03-13T21:39:20.653681"
+  }
+]

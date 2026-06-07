@@ -1,0 +1,902 @@
+[
+  {
+    "id": "redos_0000",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "93.2.210.225",
+    "timestamp": "2026-03-13T21:53:09.062934"
+  },
+  {
+    "id": "redos_0001",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "172.108.238.220",
+    "timestamp": "2026-03-13T21:53:09.062940"
+  },
+  {
+    "id": "redos_0002",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "89.240.161.139",
+    "timestamp": "2026-03-13T21:53:09.062945"
+  },
+  {
+    "id": "redos_0003",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "176.252.5.80",
+    "timestamp": "2026-03-13T21:53:09.062950"
+  },
+  {
+    "id": "redos_0004",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "5.113.163.90",
+    "timestamp": "2026-03-13T21:53:09.062955"
+  },
+  {
+    "id": "redos_0005",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "93.111.121.84",
+    "timestamp": "2026-03-13T21:53:09.062960"
+  },
+  {
+    "id": "redos_0006",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "181.120.130.232",
+    "timestamp": "2026-03-13T21:53:09.062965"
+  },
+  {
+    "id": "redos_0007",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "167.53.194.123",
+    "timestamp": "2026-03-13T21:53:09.062970"
+  },
+  {
+    "id": "redos_0008",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "200.19.176.26",
+    "timestamp": "2026-03-13T21:53:09.062975"
+  },
+  {
+    "id": "redos_0009",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "76.217.42.58",
+    "timestamp": "2026-03-13T21:53:09.062979"
+  },
+  {
+    "id": "redos_0010",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "183.24.176.191",
+    "timestamp": "2026-03-13T21:53:09.062986"
+  },
+  {
+    "id": "redos_0011",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "26.242.19.202",
+    "timestamp": "2026-03-13T21:53:09.062991"
+  },
+  {
+    "id": "redos_0012",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "54.150.53.17",
+    "timestamp": "2026-03-13T21:53:09.062996"
+  },
+  {
+    "id": "redos_0013",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "1.136.253.185",
+    "timestamp": "2026-03-13T21:53:09.063003"
+  },
+  {
+    "id": "redos_0014",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "11.58.167.129",
+    "timestamp": "2026-03-13T21:53:09.063009"
+  },
+  {
+    "id": "redos_0015",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "39.4.253.160",
+    "timestamp": "2026-03-13T21:53:09.063014"
+  },
+  {
+    "id": "redos_0016",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "141.68.52.92",
+    "timestamp": "2026-03-13T21:53:09.063019"
+  },
+  {
+    "id": "redos_0017",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "215.27.161.157",
+    "timestamp": "2026-03-13T21:53:09.063023"
+  },
+  {
+    "id": "redos_0018",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "11.190.70.2",
+    "timestamp": "2026-03-13T21:53:09.063028"
+  },
+  {
+    "id": "redos_0019",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "17.55.185.209",
+    "timestamp": "2026-03-13T21:53:09.063032"
+  },
+  {
+    "id": "redos_0020",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "169.42.242.200",
+    "timestamp": "2026-03-13T21:53:09.063037"
+  },
+  {
+    "id": "redos_0021",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "77.64.145.43",
+    "timestamp": "2026-03-13T21:53:09.063041"
+  },
+  {
+    "id": "redos_0022",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "2.10.231.1",
+    "timestamp": "2026-03-13T21:53:09.063046"
+  },
+  {
+    "id": "redos_0023",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "189.137.228.212",
+    "timestamp": "2026-03-13T21:53:09.063050"
+  },
+  {
+    "id": "redos_0024",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "217.76.68.4",
+    "timestamp": "2026-03-13T21:53:09.063055"
+  },
+  {
+    "id": "redos_0025",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "76.31.239.97",
+    "timestamp": "2026-03-13T21:53:09.063060"
+  },
+  {
+    "id": "redos_0026",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "109.231.148.160",
+    "timestamp": "2026-03-13T21:53:09.063064"
+  },
+  {
+    "id": "redos_0027",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "202.88.62.148",
+    "timestamp": "2026-03-13T21:53:09.063069"
+  },
+  {
+    "id": "redos_0028",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "92.100.241.183",
+    "timestamp": "2026-03-13T21:53:09.063073"
+  },
+  {
+    "id": "redos_0029",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "202.69.68.252",
+    "timestamp": "2026-03-13T21:53:09.063078"
+  },
+  {
+    "id": "redos_0030",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "4.24.102.226",
+    "timestamp": "2026-03-13T21:53:09.063085"
+  },
+  {
+    "id": "redos_0031",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "123.133.141.226",
+    "timestamp": "2026-03-13T21:53:09.063089"
+  },
+  {
+    "id": "redos_0032",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "138.235.104.100",
+    "timestamp": "2026-03-13T21:53:09.063093"
+  },
+  {
+    "id": "redos_0033",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "4.41.242.243",
+    "timestamp": "2026-03-13T21:53:09.063098"
+  },
+  {
+    "id": "redos_0034",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "139.214.208.214",
+    "timestamp": "2026-03-13T21:53:09.063103"
+  },
+  {
+    "id": "redos_0035",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "13.117.208.103",
+    "timestamp": "2026-03-13T21:53:09.063110"
+  },
+  {
+    "id": "redos_0036",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "30.1.89.102",
+    "timestamp": "2026-03-13T21:53:09.063115"
+  },
+  {
+    "id": "redos_0037",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "188.145.0.47",
+    "timestamp": "2026-03-13T21:53:09.063120"
+  },
+  {
+    "id": "redos_0038",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "172.234.82.191",
+    "timestamp": "2026-03-13T21:53:09.063124"
+  },
+  {
+    "id": "redos_0039",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "16.108.69.222",
+    "timestamp": "2026-03-13T21:53:09.063129"
+  },
+  {
+    "id": "redos_0040",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "161.213.209.182",
+    "timestamp": "2026-03-13T21:53:09.063133"
+  },
+  {
+    "id": "redos_0041",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "39.83.235.182",
+    "timestamp": "2026-03-13T21:53:09.063138"
+  },
+  {
+    "id": "redos_0042",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "16.240.164.203",
+    "timestamp": "2026-03-13T21:53:09.063143"
+  },
+  {
+    "id": "redos_0043",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "138.248.164.246",
+    "timestamp": "2026-03-13T21:53:09.063147"
+  },
+  {
+    "id": "redos_0044",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "139.94.159.142",
+    "timestamp": "2026-03-13T21:53:09.063152"
+  },
+  {
+    "id": "redos_0045",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "61.181.64.29",
+    "timestamp": "2026-03-13T21:53:09.063156"
+  },
+  {
+    "id": "redos_0046",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "81.46.148.167",
+    "timestamp": "2026-03-13T21:53:09.063161"
+  },
+  {
+    "id": "redos_0047",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "183.205.102.215",
+    "timestamp": "2026-03-13T21:53:09.063165"
+  },
+  {
+    "id": "redos_0048",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "47.130.210.183",
+    "timestamp": "2026-03-13T21:53:09.063170"
+  },
+  {
+    "id": "redos_0049",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "69.95.229.101",
+    "timestamp": "2026-03-13T21:53:09.063177"
+  },
+  {
+    "id": "redos_0050",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "17.75.10.137",
+    "timestamp": "2026-03-13T21:53:09.063182"
+  },
+  {
+    "id": "redos_0051",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "131.153.77.2",
+    "timestamp": "2026-03-13T21:53:09.063186"
+  },
+  {
+    "id": "redos_0052",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "96.225.138.225",
+    "timestamp": "2026-03-13T21:53:09.063191"
+  },
+  {
+    "id": "redos_0053",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "184.124.58.39",
+    "timestamp": "2026-03-13T21:53:09.063195"
+  },
+  {
+    "id": "redos_0054",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "149.165.137.200",
+    "timestamp": "2026-03-13T21:53:09.063200"
+  },
+  {
+    "id": "redos_0055",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "187.111.97.232",
+    "timestamp": "2026-03-13T21:53:09.063204"
+  },
+  {
+    "id": "redos_0056",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "142.205.120.142",
+    "timestamp": "2026-03-13T21:53:09.063211"
+  },
+  {
+    "id": "redos_0057",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "44.122.45.72",
+    "timestamp": "2026-03-13T21:53:09.063216"
+  },
+  {
+    "id": "redos_0058",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "82.98.242.148",
+    "timestamp": "2026-03-13T21:53:09.063220"
+  },
+  {
+    "id": "redos_0059",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "22.120.80.223",
+    "timestamp": "2026-03-13T21:53:09.063225"
+  },
+  {
+    "id": "redos_0060",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "112.59.156.139",
+    "timestamp": "2026-03-13T21:53:09.063229"
+  },
+  {
+    "id": "redos_0061",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "51.216.189.150",
+    "timestamp": "2026-03-13T21:53:09.063234"
+  },
+  {
+    "id": "redos_0062",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "61.173.92.189",
+    "timestamp": "2026-03-13T21:53:09.063238"
+  },
+  {
+    "id": "redos_0063",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "146.131.223.243",
+    "timestamp": "2026-03-13T21:53:09.063243"
+  },
+  {
+    "id": "redos_0064",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "14.130.17.162",
+    "timestamp": "2026-03-13T21:53:09.063250"
+  },
+  {
+    "id": "redos_0065",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "173.137.24.1",
+    "timestamp": "2026-03-13T21:53:09.063255"
+  },
+  {
+    "id": "redos_0066",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "31.49.100.108",
+    "timestamp": "2026-03-13T21:53:09.063259"
+  },
+  {
+    "id": "redos_0067",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "41.113.176.173",
+    "timestamp": "2026-03-13T21:53:09.063263"
+  },
+  {
+    "id": "redos_0068",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "66.78.240.126",
+    "timestamp": "2026-03-13T21:53:09.063268"
+  },
+  {
+    "id": "redos_0069",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "64.61.236.137",
+    "timestamp": "2026-03-13T21:53:09.063275"
+  },
+  {
+    "id": "redos_0070",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "28.137.66.114",
+    "timestamp": "2026-03-13T21:53:09.063279"
+  },
+  {
+    "id": "redos_0071",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "147.81.233.106",
+    "timestamp": "2026-03-13T21:53:09.063283"
+  },
+  {
+    "id": "redos_0072",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "113.79.188.113",
+    "timestamp": "2026-03-13T21:53:09.063288"
+  },
+  {
+    "id": "redos_0073",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "90.194.64.204",
+    "timestamp": "2026-03-13T21:53:09.063292"
+  },
+  {
+    "id": "redos_0074",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "213.123.177.84",
+    "timestamp": "2026-03-13T21:53:09.063297"
+  },
+  {
+    "id": "redos_0075",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "80.49.75.230",
+    "timestamp": "2026-03-13T21:53:09.063301"
+  },
+  {
+    "id": "redos_0076",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "28.80.239.46",
+    "timestamp": "2026-03-13T21:53:09.063305"
+  },
+  {
+    "id": "redos_0077",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "78.168.137.135",
+    "timestamp": "2026-03-13T21:53:09.063310"
+  },
+  {
+    "id": "redos_0078",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "118.237.60.153",
+    "timestamp": "2026-03-13T21:53:09.063317"
+  },
+  {
+    "id": "redos_0079",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "75.148.56.207",
+    "timestamp": "2026-03-13T21:53:09.063322"
+  },
+  {
+    "id": "redos_0080",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "83.121.227.16",
+    "timestamp": "2026-03-13T21:53:09.063326"
+  },
+  {
+    "id": "redos_0081",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "93.105.12.198",
+    "timestamp": "2026-03-13T21:53:09.063331"
+  },
+  {
+    "id": "redos_0082",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "11.248.160.7",
+    "timestamp": "2026-03-13T21:53:09.063335"
+  },
+  {
+    "id": "redos_0083",
+    "type": "redos",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "105.97.111.230",
+    "timestamp": "2026-03-13T21:53:09.063340"
+  },
+  {
+    "id": "redos_0084",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "40.137.45.61",
+    "timestamp": "2026-03-13T21:53:09.063345"
+  },
+  {
+    "id": "redos_0085",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "3.67.197.235",
+    "timestamp": "2026-03-13T21:53:09.063349"
+  },
+  {
+    "id": "redos_0086",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "166.242.108.75",
+    "timestamp": "2026-03-13T21:53:09.063354"
+  },
+  {
+    "id": "redos_0087",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "191.77.224.185",
+    "timestamp": "2026-03-13T21:53:09.063358"
+  },
+  {
+    "id": "redos_0088",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "222.61.34.236",
+    "timestamp": "2026-03-13T21:53:09.063365"
+  },
+  {
+    "id": "redos_0089",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "213.70.57.12",
+    "timestamp": "2026-03-13T21:53:09.063369"
+  },
+  {
+    "id": "redos_0090",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "66.161.234.142",
+    "timestamp": "2026-03-13T21:53:09.063374"
+  },
+  {
+    "id": "redos_0091",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "196.5.19.137",
+    "timestamp": "2026-03-13T21:53:09.063379"
+  },
+  {
+    "id": "redos_0092",
+    "type": "redos",
+    "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "205.16.26.194",
+    "timestamp": "2026-03-13T21:53:09.063394"
+  },
+  {
+    "id": "redos_0093",
+    "type": "redos",
+    "payload": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "32.148.159.32",
+    "timestamp": "2026-03-13T21:53:09.063399"
+  },
+  {
+    "id": "redos_0094",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "91.56.121.20",
+    "timestamp": "2026-03-13T21:53:09.063404"
+  },
+  {
+    "id": "redos_0095",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "59.229.144.112",
+    "timestamp": "2026-03-13T21:53:09.063408"
+  },
+  {
+    "id": "redos_0096",
+    "type": "redos",
+    "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "7.215.101.254",
+    "timestamp": "2026-03-13T21:53:09.063413"
+  },
+  {
+    "id": "redos_0097",
+    "type": "redos",
+    "payload": "((((((aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa))))))",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "8.152.83.188",
+    "timestamp": "2026-03-13T21:53:09.063417"
+  },
+  {
+    "id": "redos_0098",
+    "type": "redos",
+    "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "64.126.181.131",
+    "timestamp": "2026-03-13T21:53:09.063422"
+  },
+  {
+    "id": "redos_0099",
+    "type": "redos",
+    "payload": "{\"key\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "177.247.34.203",
+    "timestamp": "2026-03-13T21:53:09.063429"
+  }
+]

@@ -1,0 +1,902 @@
+[
+  {
+    "id": "type_confuse_0000",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "153.122.180.9",
+    "timestamp": "2026-03-13T21:53:09.062446"
+  },
+  {
+    "id": "type_confuse_0001",
+    "type": "type_confusion",
+    "payload": "{\"password\":0}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "76.34.254.191",
+    "timestamp": "2026-03-13T21:53:09.062451"
+  },
+  {
+    "id": "type_confuse_0002",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "54.71.62.180",
+    "timestamp": "2026-03-13T21:53:09.062455"
+  },
+  {
+    "id": "type_confuse_0003",
+    "type": "type_confusion",
+    "payload": "\"0e123\" == \"0\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "215.179.72.241",
+    "timestamp": "2026-03-13T21:53:09.062461"
+  },
+  {
+    "id": "type_confuse_0004",
+    "type": "type_confusion",
+    "payload": "{\"password\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.92.39.228",
+    "timestamp": "2026-03-13T21:53:09.062468"
+  },
+  {
+    "id": "type_confuse_0005",
+    "type": "type_confusion",
+    "payload": "{\"password\":0}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "207.74.234.4",
+    "timestamp": "2026-03-13T21:53:09.062473"
+  },
+  {
+    "id": "type_confuse_0006",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "18.172.116.67",
+    "timestamp": "2026-03-13T21:53:09.062478"
+  },
+  {
+    "id": "type_confuse_0007",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "94.133.30.123",
+    "timestamp": "2026-03-13T21:53:09.062483"
+  },
+  {
+    "id": "type_confuse_0008",
+    "type": "type_confusion",
+    "payload": "{\"password\":true}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "71.167.93.244",
+    "timestamp": "2026-03-13T21:53:09.062488"
+  },
+  {
+    "id": "type_confuse_0009",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "145.137.241.55",
+    "timestamp": "2026-03-13T21:53:09.062492"
+  },
+  {
+    "id": "type_confuse_0010",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "71.221.178.56",
+    "timestamp": "2026-03-13T21:53:09.062497"
+  },
+  {
+    "id": "type_confuse_0011",
+    "type": "type_confusion",
+    "payload": "\"0e123\" == \"0\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.228.249.78",
+    "timestamp": "2026-03-13T21:53:09.062501"
+  },
+  {
+    "id": "type_confuse_0012",
+    "type": "type_confusion",
+    "payload": "{\"__proto__\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "39.208.2.185",
+    "timestamp": "2026-03-13T21:53:09.062506"
+  },
+  {
+    "id": "type_confuse_0013",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "210.56.100.168",
+    "timestamp": "2026-03-13T21:53:09.062512"
+  },
+  {
+    "id": "type_confuse_0014",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "143.196.198.56",
+    "timestamp": "2026-03-13T21:53:09.062517"
+  },
+  {
+    "id": "type_confuse_0015",
+    "type": "type_confusion",
+    "payload": "0e462097431906509040567677087",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.227.121.144",
+    "timestamp": "2026-03-13T21:53:09.062521"
+  },
+  {
+    "id": "type_confuse_0016",
+    "type": "type_confusion",
+    "payload": "0e490490898989898989898989898989",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "9.30.66.80",
+    "timestamp": "2026-03-13T21:53:09.062526"
+  },
+  {
+    "id": "type_confuse_0017",
+    "type": "type_confusion",
+    "payload": "{\"password\":{}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "98.46.130.182",
+    "timestamp": "2026-03-13T21:53:09.062530"
+  },
+  {
+    "id": "type_confuse_0018",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "45.231.59.112",
+    "timestamp": "2026-03-13T21:53:09.062535"
+  },
+  {
+    "id": "type_confuse_0019",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.126.62.107",
+    "timestamp": "2026-03-13T21:53:09.062539"
+  },
+  {
+    "id": "type_confuse_0020",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "125.171.181.24",
+    "timestamp": "2026-03-13T21:53:09.062544"
+  },
+  {
+    "id": "type_confuse_0021",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "33.10.32.1",
+    "timestamp": "2026-03-13T21:53:09.062548"
+  },
+  {
+    "id": "type_confuse_0022",
+    "type": "type_confusion",
+    "payload": "{\"password\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "219.125.8.100",
+    "timestamp": "2026-03-13T21:53:09.062553"
+  },
+  {
+    "id": "type_confuse_0023",
+    "type": "type_confusion",
+    "payload": "\"0e123\" == \"0\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.115.108.124",
+    "timestamp": "2026-03-13T21:53:09.062557"
+  },
+  {
+    "id": "type_confuse_0024",
+    "type": "type_confusion",
+    "payload": "0e490490898989898989898989898989",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "119.198.147.238",
+    "timestamp": "2026-03-13T21:53:09.062561"
+  },
+  {
+    "id": "type_confuse_0025",
+    "type": "type_confusion",
+    "payload": "{\"password\":null}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "199.236.98.84",
+    "timestamp": "2026-03-13T21:53:09.062566"
+  },
+  {
+    "id": "type_confuse_0026",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "124.146.146.184",
+    "timestamp": "2026-03-13T21:53:09.062572"
+  },
+  {
+    "id": "type_confuse_0027",
+    "type": "type_confusion",
+    "payload": "{\"constructor\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "156.17.186.111",
+    "timestamp": "2026-03-13T21:53:09.062577"
+  },
+  {
+    "id": "type_confuse_0028",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "158.17.220.229",
+    "timestamp": "2026-03-13T21:53:09.062581"
+  },
+  {
+    "id": "type_confuse_0029",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "136.80.5.222",
+    "timestamp": "2026-03-13T21:53:09.062586"
+  },
+  {
+    "id": "type_confuse_0030",
+    "type": "type_confusion",
+    "payload": "{\"password\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.239.145.33",
+    "timestamp": "2026-03-13T21:53:09.062593"
+  },
+  {
+    "id": "type_confuse_0031",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "125.125.108.147",
+    "timestamp": "2026-03-13T21:53:09.062597"
+  },
+  {
+    "id": "type_confuse_0032",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "173.237.112.96",
+    "timestamp": "2026-03-13T21:53:09.062604"
+  },
+  {
+    "id": "type_confuse_0033",
+    "type": "type_confusion",
+    "payload": "{\"password\":null}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "115.147.231.158",
+    "timestamp": "2026-03-13T21:53:09.062608"
+  },
+  {
+    "id": "type_confuse_0034",
+    "type": "type_confusion",
+    "payload": "{\"password\":true}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.4.133.4",
+    "timestamp": "2026-03-13T21:53:09.062613"
+  },
+  {
+    "id": "type_confuse_0035",
+    "type": "type_confusion",
+    "payload": "{\"__proto__\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "47.81.55.220",
+    "timestamp": "2026-03-13T21:53:09.062618"
+  },
+  {
+    "id": "type_confuse_0036",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "14.245.162.215",
+    "timestamp": "2026-03-13T21:53:09.062622"
+  },
+  {
+    "id": "type_confuse_0037",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "84.210.171.94",
+    "timestamp": "2026-03-13T21:53:09.062626"
+  },
+  {
+    "id": "type_confuse_0038",
+    "type": "type_confusion",
+    "payload": "{\"password\":null}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "211.5.63.191",
+    "timestamp": "2026-03-13T21:53:09.062631"
+  },
+  {
+    "id": "type_confuse_0039",
+    "type": "type_confusion",
+    "payload": "0e462097431906509040567677087",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "53.133.116.116",
+    "timestamp": "2026-03-13T21:53:09.062635"
+  },
+  {
+    "id": "type_confuse_0040",
+    "type": "type_confusion",
+    "payload": "{\"password\":null}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "216.56.149.151",
+    "timestamp": "2026-03-13T21:53:09.062648"
+  },
+  {
+    "id": "type_confuse_0041",
+    "type": "type_confusion",
+    "payload": "{\"__proto__\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "5.19.243.147",
+    "timestamp": "2026-03-13T21:53:09.062653"
+  },
+  {
+    "id": "type_confuse_0042",
+    "type": "type_confusion",
+    "payload": "{\"password\":0}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "217.181.44.29",
+    "timestamp": "2026-03-13T21:53:09.062657"
+  },
+  {
+    "id": "type_confuse_0043",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "50.255.179.178",
+    "timestamp": "2026-03-13T21:53:09.062662"
+  },
+  {
+    "id": "type_confuse_0044",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "190.58.35.76",
+    "timestamp": "2026-03-13T21:53:09.062666"
+  },
+  {
+    "id": "type_confuse_0045",
+    "type": "type_confusion",
+    "payload": "0e490490898989898989898989898989",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "151.88.152.99",
+    "timestamp": "2026-03-13T21:53:09.062670"
+  },
+  {
+    "id": "type_confuse_0046",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "22.72.112.67",
+    "timestamp": "2026-03-13T21:53:09.062675"
+  },
+  {
+    "id": "type_confuse_0047",
+    "type": "type_confusion",
+    "payload": "0e462097431906509040567677087",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "81.245.122.34",
+    "timestamp": "2026-03-13T21:53:09.062679"
+  },
+  {
+    "id": "type_confuse_0048",
+    "type": "type_confusion",
+    "payload": "{\"constructor\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.240.234.208",
+    "timestamp": "2026-03-13T21:53:09.062684"
+  },
+  {
+    "id": "type_confuse_0049",
+    "type": "type_confusion",
+    "payload": "0e490490898989898989898989898989",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "50.158.87.212",
+    "timestamp": "2026-03-13T21:53:09.062689"
+  },
+  {
+    "id": "type_confuse_0050",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "91.142.255.130",
+    "timestamp": "2026-03-13T21:53:09.062693"
+  },
+  {
+    "id": "type_confuse_0051",
+    "type": "type_confusion",
+    "payload": "{\"password\":{}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "66.30.172.124",
+    "timestamp": "2026-03-13T21:53:09.062697"
+  },
+  {
+    "id": "type_confuse_0052",
+    "type": "type_confusion",
+    "payload": "{\"password\":null}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "103.73.138.181",
+    "timestamp": "2026-03-13T21:53:09.062704"
+  },
+  {
+    "id": "type_confuse_0053",
+    "type": "type_confusion",
+    "payload": "{\"constructor\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "41.14.71.71",
+    "timestamp": "2026-03-13T21:53:09.062709"
+  },
+  {
+    "id": "type_confuse_0054",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "30.43.122.122",
+    "timestamp": "2026-03-13T21:53:09.062714"
+  },
+  {
+    "id": "type_confuse_0055",
+    "type": "type_confusion",
+    "payload": "{\"password\":null}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "204.0.12.234",
+    "timestamp": "2026-03-13T21:53:09.062719"
+  },
+  {
+    "id": "type_confuse_0056",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "129.45.128.161",
+    "timestamp": "2026-03-13T21:53:09.062725"
+  },
+  {
+    "id": "type_confuse_0057",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "63.237.25.237",
+    "timestamp": "2026-03-13T21:53:09.062730"
+  },
+  {
+    "id": "type_confuse_0058",
+    "type": "type_confusion",
+    "payload": "{\"password\":true}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "35.163.222.49",
+    "timestamp": "2026-03-13T21:53:09.062737"
+  },
+  {
+    "id": "type_confuse_0059",
+    "type": "type_confusion",
+    "payload": "{\"password\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.195.21.80",
+    "timestamp": "2026-03-13T21:53:09.062741"
+  },
+  {
+    "id": "type_confuse_0060",
+    "type": "type_confusion",
+    "payload": "0e462097431906509040567677087",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "174.120.73.16",
+    "timestamp": "2026-03-13T21:53:09.062746"
+  },
+  {
+    "id": "type_confuse_0061",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "30.52.168.169",
+    "timestamp": "2026-03-13T21:53:09.062750"
+  },
+  {
+    "id": "type_confuse_0062",
+    "type": "type_confusion",
+    "payload": "{\"password\":0}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "176.231.26.96",
+    "timestamp": "2026-03-13T21:53:09.062754"
+  },
+  {
+    "id": "type_confuse_0063",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.92.205.175",
+    "timestamp": "2026-03-13T21:53:09.062759"
+  },
+  {
+    "id": "type_confuse_0064",
+    "type": "type_confusion",
+    "payload": "{\"password\":{}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "100.96.1.177",
+    "timestamp": "2026-03-13T21:53:09.062763"
+  },
+  {
+    "id": "type_confuse_0065",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.179.9.202",
+    "timestamp": "2026-03-13T21:53:09.062768"
+  },
+  {
+    "id": "type_confuse_0066",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "167.19.77.14",
+    "timestamp": "2026-03-13T21:53:09.062772"
+  },
+  {
+    "id": "type_confuse_0067",
+    "type": "type_confusion",
+    "payload": "\"0e123\" == \"0\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "38.9.90.183",
+    "timestamp": "2026-03-13T21:53:09.062777"
+  },
+  {
+    "id": "type_confuse_0068",
+    "type": "type_confusion",
+    "payload": "0e490490898989898989898989898989",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "147.38.128.189",
+    "timestamp": "2026-03-13T21:53:09.062781"
+  },
+  {
+    "id": "type_confuse_0069",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "26.234.230.126",
+    "timestamp": "2026-03-13T21:53:09.062786"
+  },
+  {
+    "id": "type_confuse_0070",
+    "type": "type_confusion",
+    "payload": "{\"password\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "107.123.10.163",
+    "timestamp": "2026-03-13T21:53:09.062791"
+  },
+  {
+    "id": "type_confuse_0071",
+    "type": "type_confusion",
+    "payload": "{\"password\":{}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "153.122.101.175",
+    "timestamp": "2026-03-13T21:53:09.062798"
+  },
+  {
+    "id": "type_confuse_0072",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "156.235.71.212",
+    "timestamp": "2026-03-13T21:53:09.062802"
+  },
+  {
+    "id": "type_confuse_0073",
+    "type": "type_confusion",
+    "payload": "0e490490898989898989898989898989",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.205.73.146",
+    "timestamp": "2026-03-13T21:53:09.062807"
+  },
+  {
+    "id": "type_confuse_0074",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "203.35.99.137",
+    "timestamp": "2026-03-13T21:53:09.062811"
+  },
+  {
+    "id": "type_confuse_0075",
+    "type": "type_confusion",
+    "payload": "\"0e123\" == \"0\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "25.170.65.197",
+    "timestamp": "2026-03-13T21:53:09.062815"
+  },
+  {
+    "id": "type_confuse_0076",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "140.185.49.94",
+    "timestamp": "2026-03-13T21:53:09.062820"
+  },
+  {
+    "id": "type_confuse_0077",
+    "type": "type_confusion",
+    "payload": "{\"password\":{}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "160.144.116.75",
+    "timestamp": "2026-03-13T21:53:09.062824"
+  },
+  {
+    "id": "type_confuse_0078",
+    "type": "type_confusion",
+    "payload": "0e462097431906509040567677087",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "87.253.43.122",
+    "timestamp": "2026-03-13T21:53:09.062829"
+  },
+  {
+    "id": "type_confuse_0079",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "147.188.50.103",
+    "timestamp": "2026-03-13T21:53:09.062833"
+  },
+  {
+    "id": "type_confuse_0080",
+    "type": "type_confusion",
+    "payload": "{\"password\":{}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.243.77.208",
+    "timestamp": "2026-03-13T21:53:09.062838"
+  },
+  {
+    "id": "type_confuse_0081",
+    "type": "type_confusion",
+    "payload": "{\"password\":0}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "143.48.18.248",
+    "timestamp": "2026-03-13T21:53:09.062844"
+  },
+  {
+    "id": "type_confuse_0082",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.230.153.13",
+    "timestamp": "2026-03-13T21:53:09.062849"
+  },
+  {
+    "id": "type_confuse_0083",
+    "type": "type_confusion",
+    "payload": "{\"password\":[]}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.251.192.233",
+    "timestamp": "2026-03-13T21:53:09.062853"
+  },
+  {
+    "id": "type_confuse_0084",
+    "type": "type_confusion",
+    "payload": "{\"password\":true}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "39.173.121.250",
+    "timestamp": "2026-03-13T21:53:09.062857"
+  },
+  {
+    "id": "type_confuse_0085",
+    "type": "type_confusion",
+    "payload": "{\"password\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "176.78.67.55",
+    "timestamp": "2026-03-13T21:53:09.062862"
+  },
+  {
+    "id": "type_confuse_0086",
+    "type": "type_confusion",
+    "payload": "0e123456789012345678901234567890",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.40.128.80",
+    "timestamp": "2026-03-13T21:53:09.062866"
+  },
+  {
+    "id": "type_confuse_0087",
+    "type": "type_confusion",
+    "payload": "{\"password\":{}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.50.167.236",
+    "timestamp": "2026-03-13T21:53:09.062871"
+  },
+  {
+    "id": "type_confuse_0088",
+    "type": "type_confusion",
+    "payload": "{\"password\":null}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.90.72.245",
+    "timestamp": "2026-03-13T21:53:09.062875"
+  },
+  {
+    "id": "type_confuse_0089",
+    "type": "type_confusion",
+    "payload": "{\"__proto__\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.57.60.102",
+    "timestamp": "2026-03-13T21:53:09.062879"
+  },
+  {
+    "id": "type_confuse_0090",
+    "type": "type_confusion",
+    "payload": "0e490490898989898989898989898989",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "205.136.54.64",
+    "timestamp": "2026-03-13T21:53:09.062886"
+  },
+  {
+    "id": "type_confuse_0091",
+    "type": "type_confusion",
+    "payload": "{\"password\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.211.111.81",
+    "timestamp": "2026-03-13T21:53:09.062893"
+  },
+  {
+    "id": "type_confuse_0092",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "9.48.90.30",
+    "timestamp": "2026-03-13T21:53:09.062897"
+  },
+  {
+    "id": "type_confuse_0093",
+    "type": "type_confusion",
+    "payload": "{\"password\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "163.31.91.5",
+    "timestamp": "2026-03-13T21:53:09.062902"
+  },
+  {
+    "id": "type_confuse_0094",
+    "type": "type_confusion",
+    "payload": "{\"constructor\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "220.152.76.159",
+    "timestamp": "2026-03-13T21:53:09.062906"
+  },
+  {
+    "id": "type_confuse_0095",
+    "type": "type_confusion",
+    "payload": "{\"__proto__\":1}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.127.31.95",
+    "timestamp": "2026-03-13T21:53:09.062911"
+  },
+  {
+    "id": "type_confuse_0096",
+    "type": "type_confusion",
+    "payload": "Integer.parseInt(\"1e1\")",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "71.203.64.198",
+    "timestamp": "2026-03-13T21:53:09.062915"
+  },
+  {
+    "id": "type_confuse_0097",
+    "type": "type_confusion",
+    "payload": "{\"password\":null}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "27.45.34.206",
+    "timestamp": "2026-03-13T21:53:09.062920"
+  },
+  {
+    "id": "type_confuse_0098",
+    "type": "type_confusion",
+    "payload": "0 == \"password\"",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.52.180.175",
+    "timestamp": "2026-03-13T21:53:09.062924"
+  },
+  {
+    "id": "type_confuse_0099",
+    "type": "type_confusion",
+    "payload": "0e490490898989898989898989898989",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "162.48.103.124",
+    "timestamp": "2026-03-13T21:53:09.062929"
+  }
+]

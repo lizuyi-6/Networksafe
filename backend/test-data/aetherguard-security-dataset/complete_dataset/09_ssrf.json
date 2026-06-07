@@ -1,0 +1,902 @@
+[
+  {
+    "id": "ssrf_0000",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1#example.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "139.16.49.192",
+    "timestamp": "2026-03-13T21:39:20.652526"
+  },
+  {
+    "id": "ssrf_0001",
+    "type": "ssrf",
+    "payload": "dict://127.0.0.1:11211/stat",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "3.117.44.97",
+    "timestamp": "2026-03-13T21:39:20.652531"
+  },
+  {
+    "id": "ssrf_0002",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:22",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "43.126.149.186",
+    "timestamp": "2026-03-13T21:39:20.652536"
+  },
+  {
+    "id": "ssrf_0003",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "37.25.73.122",
+    "timestamp": "2026-03-13T21:39:20.652541"
+  },
+  {
+    "id": "ssrf_0004",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "67.198.40.95",
+    "timestamp": "2026-03-13T21:39:20.652546"
+  },
+  {
+    "id": "ssrf_0005",
+    "type": "ssrf",
+    "payload": "http://metadata.google.internal/computeMetadata/v1/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "181.120.129.4",
+    "timestamp": "2026-03-13T21:39:20.652551"
+  },
+  {
+    "id": "ssrf_0006",
+    "type": "ssrf",
+    "payload": "http://[::1]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "122.97.27.169",
+    "timestamp": "2026-03-13T21:39:20.652558"
+  },
+  {
+    "id": "ssrf_0007",
+    "type": "ssrf",
+    "payload": "http://[0:0:0:0:0:ffff:127.0.0.1]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "147.244.196.8",
+    "timestamp": "2026-03-13T21:39:20.652565"
+  },
+  {
+    "id": "ssrf_0008",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.99.207.43",
+    "timestamp": "2026-03-13T21:39:20.652570"
+  },
+  {
+    "id": "ssrf_0009",
+    "type": "ssrf",
+    "payload": "http://[0:0:0:0:0:ffff:127.0.0.1]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "75.168.135.212",
+    "timestamp": "2026-03-13T21:39:20.652575"
+  },
+  {
+    "id": "ssrf_0010",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "161.1.239.225",
+    "timestamp": "2026-03-13T21:39:20.652579"
+  },
+  {
+    "id": "ssrf_0011",
+    "type": "ssrf",
+    "payload": "dict://127.0.0.1:11211/stat",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "174.234.67.172",
+    "timestamp": "2026-03-13T21:39:20.652584"
+  },
+  {
+    "id": "ssrf_0012",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1.nip.io",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.73.121.118",
+    "timestamp": "2026-03-13T21:39:20.652588"
+  },
+  {
+    "id": "ssrf_0013",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "56.40.68.153",
+    "timestamp": "2026-03-13T21:39:20.652593"
+  },
+  {
+    "id": "ssrf_0014",
+    "type": "ssrf",
+    "payload": "http://[::1]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "53.178.230.167",
+    "timestamp": "2026-03-13T21:39:20.652597"
+  },
+  {
+    "id": "ssrf_0015",
+    "type": "ssrf",
+    "payload": "http://metadata.google.internal/computeMetadata/v1/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "51.125.36.188",
+    "timestamp": "2026-03-13T21:39:20.652604"
+  },
+  {
+    "id": "ssrf_0016",
+    "type": "ssrf",
+    "payload": "http://127.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "180.64.176.78",
+    "timestamp": "2026-03-13T21:39:20.652609"
+  },
+  {
+    "id": "ssrf_0017",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:22",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "16.79.0.157",
+    "timestamp": "2026-03-13T21:39:20.652613"
+  },
+  {
+    "id": "ssrf_0018",
+    "type": "ssrf",
+    "payload": "http://0x7f000001",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "179.160.249.74",
+    "timestamp": "2026-03-13T21:39:20.652618"
+  },
+  {
+    "id": "ssrf_0019",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "109.76.25.80",
+    "timestamp": "2026-03-13T21:39:20.652623"
+  },
+  {
+    "id": "ssrf_0020",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "175.248.34.115",
+    "timestamp": "2026-03-13T21:39:20.652627"
+  },
+  {
+    "id": "ssrf_0021",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1.nip.io",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "87.176.121.199",
+    "timestamp": "2026-03-13T21:39:20.652632"
+  },
+  {
+    "id": "ssrf_0022",
+    "type": "ssrf",
+    "payload": "http://[::1]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "110.229.231.59",
+    "timestamp": "2026-03-13T21:39:20.652636"
+  },
+  {
+    "id": "ssrf_0023",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:3306",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "37.55.142.24",
+    "timestamp": "2026-03-13T21:39:20.652662"
+  },
+  {
+    "id": "ssrf_0024",
+    "type": "ssrf",
+    "payload": "http://127.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "20.9.200.212",
+    "timestamp": "2026-03-13T21:39:20.652667"
+  },
+  {
+    "id": "ssrf_0025",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:22",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "9.19.134.95",
+    "timestamp": "2026-03-13T21:39:20.652672"
+  },
+  {
+    "id": "ssrf_0026",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "114.6.151.168",
+    "timestamp": "2026-03-13T21:39:20.652679"
+  },
+  {
+    "id": "ssrf_0027",
+    "type": "ssrf",
+    "payload": "dict://127.0.0.1:11211/stat",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "138.48.20.30",
+    "timestamp": "2026-03-13T21:39:20.652684"
+  },
+  {
+    "id": "ssrf_0028",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:22",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "48.113.171.242",
+    "timestamp": "2026-03-13T21:39:20.652688"
+  },
+  {
+    "id": "ssrf_0029",
+    "type": "ssrf",
+    "payload": "http://example.com@127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "42.230.143.184",
+    "timestamp": "2026-03-13T21:39:20.652693"
+  },
+  {
+    "id": "ssrf_0030",
+    "type": "ssrf",
+    "payload": "http://localhost",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "156.185.202.124",
+    "timestamp": "2026-03-13T21:39:20.652698"
+  },
+  {
+    "id": "ssrf_0031",
+    "type": "ssrf",
+    "payload": "http://example.com@127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "117.172.22.29",
+    "timestamp": "2026-03-13T21:39:20.652702"
+  },
+  {
+    "id": "ssrf_0032",
+    "type": "ssrf",
+    "payload": "http://localhost",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "99.29.142.64",
+    "timestamp": "2026-03-13T21:39:20.652707"
+  },
+  {
+    "id": "ssrf_0033",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "197.236.237.44",
+    "timestamp": "2026-03-13T21:39:20.652712"
+  },
+  {
+    "id": "ssrf_0034",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "76.227.204.73",
+    "timestamp": "2026-03-13T21:39:20.652716"
+  },
+  {
+    "id": "ssrf_0035",
+    "type": "ssrf",
+    "payload": "http://[::1]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.97.130.13",
+    "timestamp": "2026-03-13T21:39:20.652723"
+  },
+  {
+    "id": "ssrf_0036",
+    "type": "ssrf",
+    "payload": "http://127.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "64.75.216.133",
+    "timestamp": "2026-03-13T21:39:20.652730"
+  },
+  {
+    "id": "ssrf_0037",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:3306",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "184.134.180.25",
+    "timestamp": "2026-03-13T21:39:20.652735"
+  },
+  {
+    "id": "ssrf_0038",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "207.142.187.252",
+    "timestamp": "2026-03-13T21:39:20.652740"
+  },
+  {
+    "id": "ssrf_0039",
+    "type": "ssrf",
+    "payload": "http://localhost",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "168.50.23.64",
+    "timestamp": "2026-03-13T21:39:20.652744"
+  },
+  {
+    "id": "ssrf_0040",
+    "type": "ssrf",
+    "payload": "http://localhost",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "71.119.87.243",
+    "timestamp": "2026-03-13T21:39:20.652748"
+  },
+  {
+    "id": "ssrf_0041",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "179.90.202.108",
+    "timestamp": "2026-03-13T21:39:20.652753"
+  },
+  {
+    "id": "ssrf_0042",
+    "type": "ssrf",
+    "payload": "http://example.com@127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "142.138.204.30",
+    "timestamp": "2026-03-13T21:39:20.652758"
+  },
+  {
+    "id": "ssrf_0043",
+    "type": "ssrf",
+    "payload": "http://127.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "64.119.221.124",
+    "timestamp": "2026-03-13T21:39:20.652762"
+  },
+  {
+    "id": "ssrf_0044",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "130.199.44.107",
+    "timestamp": "2026-03-13T21:39:20.652767"
+  },
+  {
+    "id": "ssrf_0045",
+    "type": "ssrf",
+    "payload": "gopher://127.0.0.1:70",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "221.197.101.201",
+    "timestamp": "2026-03-13T21:39:20.652775"
+  },
+  {
+    "id": "ssrf_0046",
+    "type": "ssrf",
+    "payload": "http://[0:0:0:0:0:ffff:127.0.0.1]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "9.184.30.210",
+    "timestamp": "2026-03-13T21:39:20.652779"
+  },
+  {
+    "id": "ssrf_0047",
+    "type": "ssrf",
+    "payload": "http://localhost",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "184.252.201.195",
+    "timestamp": "2026-03-13T21:39:20.652784"
+  },
+  {
+    "id": "ssrf_0048",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "84.27.157.232",
+    "timestamp": "2026-03-13T21:39:20.652788"
+  },
+  {
+    "id": "ssrf_0049",
+    "type": "ssrf",
+    "payload": "http://2130706433",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "192.54.238.120",
+    "timestamp": "2026-03-13T21:39:20.652793"
+  },
+  {
+    "id": "ssrf_0050",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "94.224.217.85",
+    "timestamp": "2026-03-13T21:39:20.652798"
+  },
+  {
+    "id": "ssrf_0051",
+    "type": "ssrf",
+    "payload": "http://0x7f000001",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "169.50.32.137",
+    "timestamp": "2026-03-13T21:39:20.652802"
+  },
+  {
+    "id": "ssrf_0052",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1.nip.io",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.165.234.204",
+    "timestamp": "2026-03-13T21:39:20.652807"
+  },
+  {
+    "id": "ssrf_0053",
+    "type": "ssrf",
+    "payload": "http://2130706433",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "36.83.137.174",
+    "timestamp": "2026-03-13T21:39:20.652811"
+  },
+  {
+    "id": "ssrf_0054",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "208.38.203.72",
+    "timestamp": "2026-03-13T21:39:20.652816"
+  },
+  {
+    "id": "ssrf_0055",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "220.137.89.156",
+    "timestamp": "2026-03-13T21:39:20.652820"
+  },
+  {
+    "id": "ssrf_0056",
+    "type": "ssrf",
+    "payload": "http://0x7f000001",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "166.118.37.97",
+    "timestamp": "2026-03-13T21:39:20.652825"
+  },
+  {
+    "id": "ssrf_0057",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "192.59.198.137",
+    "timestamp": "2026-03-13T21:39:20.652832"
+  },
+  {
+    "id": "ssrf_0058",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "52.6.247.224",
+    "timestamp": "2026-03-13T21:39:20.652836"
+  },
+  {
+    "id": "ssrf_0059",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "121.156.220.103",
+    "timestamp": "2026-03-13T21:39:20.652841"
+  },
+  {
+    "id": "ssrf_0060",
+    "type": "ssrf",
+    "payload": "http://127.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "197.19.60.170",
+    "timestamp": "2026-03-13T21:39:20.652846"
+  },
+  {
+    "id": "ssrf_0061",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "205.88.182.99",
+    "timestamp": "2026-03-13T21:39:20.652850"
+  },
+  {
+    "id": "ssrf_0062",
+    "type": "ssrf",
+    "payload": "http://2130706433",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "38.61.250.65",
+    "timestamp": "2026-03-13T21:39:20.652855"
+  },
+  {
+    "id": "ssrf_0063",
+    "type": "ssrf",
+    "payload": "http://[0:0:0:0:0:ffff:127.0.0.1]",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.39.212.237",
+    "timestamp": "2026-03-13T21:39:20.652859"
+  },
+  {
+    "id": "ssrf_0064",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.73.239.168",
+    "timestamp": "2026-03-13T21:39:20.652864"
+  },
+  {
+    "id": "ssrf_0065",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:22",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "128.2.30.181",
+    "timestamp": "2026-03-13T21:39:20.652872"
+  },
+  {
+    "id": "ssrf_0066",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1.nip.io",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "217.245.73.186",
+    "timestamp": "2026-03-13T21:39:20.652876"
+  },
+  {
+    "id": "ssrf_0067",
+    "type": "ssrf",
+    "payload": "http://169.254.169.254/latest/meta-data/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "121.11.58.238",
+    "timestamp": "2026-03-13T21:39:20.652881"
+  },
+  {
+    "id": "ssrf_0068",
+    "type": "ssrf",
+    "payload": "http://example.com@127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "32.118.5.236",
+    "timestamp": "2026-03-13T21:39:20.652886"
+  },
+  {
+    "id": "ssrf_0069",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "216.94.68.111",
+    "timestamp": "2026-03-13T21:39:20.652890"
+  },
+  {
+    "id": "ssrf_0070",
+    "type": "ssrf",
+    "payload": "http://metadata.google.internal/computeMetadata/v1/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "136.23.9.195",
+    "timestamp": "2026-03-13T21:39:20.652895"
+  },
+  {
+    "id": "ssrf_0071",
+    "type": "ssrf",
+    "payload": "http://2130706433",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "10.244.206.175",
+    "timestamp": "2026-03-13T21:39:20.652900"
+  },
+  {
+    "id": "ssrf_0072",
+    "type": "ssrf",
+    "payload": "http://2130706433",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "134.182.29.115",
+    "timestamp": "2026-03-13T21:39:20.652904"
+  },
+  {
+    "id": "ssrf_0073",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1.nip.io",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "81.166.117.132",
+    "timestamp": "2026-03-13T21:39:20.652909"
+  },
+  {
+    "id": "ssrf_0074",
+    "type": "ssrf",
+    "payload": "http://metadata.google.internal/computeMetadata/v1/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "137.21.9.207",
+    "timestamp": "2026-03-13T21:39:20.652913"
+  },
+  {
+    "id": "ssrf_0075",
+    "type": "ssrf",
+    "payload": "http://metadata.google.internal/computeMetadata/v1/",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "216.158.87.191",
+    "timestamp": "2026-03-13T21:39:20.652918"
+  },
+  {
+    "id": "ssrf_0076",
+    "type": "ssrf",
+    "payload": "http://0x7f000001",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "34.93.123.61",
+    "timestamp": "2026-03-13T21:39:20.652923"
+  },
+  {
+    "id": "ssrf_0077",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:22",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "123.132.92.13",
+    "timestamp": "2026-03-13T21:39:20.652927"
+  },
+  {
+    "id": "ssrf_0078",
+    "type": "ssrf",
+    "payload": "http://127.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "170.164.48.212",
+    "timestamp": "2026-03-13T21:39:20.652934"
+  },
+  {
+    "id": "ssrf_0079",
+    "type": "ssrf",
+    "payload": "http://localhost",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "205.237.79.129",
+    "timestamp": "2026-03-13T21:39:20.652939"
+  },
+  {
+    "id": "ssrf_0080",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1#example.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "164.119.153.114",
+    "timestamp": "2026-03-13T21:39:20.652943"
+  },
+  {
+    "id": "ssrf_0081",
+    "type": "ssrf",
+    "payload": "http://example.com@127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "210.28.194.188",
+    "timestamp": "2026-03-13T21:39:20.652948"
+  },
+  {
+    "id": "ssrf_0082",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "170.15.153.127",
+    "timestamp": "2026-03-13T21:39:20.652952"
+  },
+  {
+    "id": "ssrf_0083",
+    "type": "ssrf",
+    "payload": "http://example.com@127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "32.130.159.163",
+    "timestamp": "2026-03-13T21:39:20.652957"
+  },
+  {
+    "id": "ssrf_0084",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "16.162.29.212",
+    "timestamp": "2026-03-13T21:39:20.652964"
+  },
+  {
+    "id": "ssrf_0085",
+    "type": "ssrf",
+    "payload": "http://0x7f000001",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "171.229.222.126",
+    "timestamp": "2026-03-13T21:39:20.652969"
+  },
+  {
+    "id": "ssrf_0086",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:80",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "90.192.54.141",
+    "timestamp": "2026-03-13T21:39:20.652975"
+  },
+  {
+    "id": "ssrf_0087",
+    "type": "ssrf",
+    "payload": "dict://127.0.0.1:11211/stat",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "13.97.236.34",
+    "timestamp": "2026-03-13T21:39:20.652980"
+  },
+  {
+    "id": "ssrf_0088",
+    "type": "ssrf",
+    "payload": "http://example.com@127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "116.30.53.196",
+    "timestamp": "2026-03-13T21:39:20.652985"
+  },
+  {
+    "id": "ssrf_0089",
+    "type": "ssrf",
+    "payload": "http://example.com@127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "116.191.207.156",
+    "timestamp": "2026-03-13T21:39:20.652989"
+  },
+  {
+    "id": "ssrf_0090",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:22",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "97.128.118.227",
+    "timestamp": "2026-03-13T21:39:20.652994"
+  },
+  {
+    "id": "ssrf_0091",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.194.153.16",
+    "timestamp": "2026-03-13T21:39:20.652999"
+  },
+  {
+    "id": "ssrf_0092",
+    "type": "ssrf",
+    "payload": "http://localhost",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "136.253.91.28",
+    "timestamp": "2026-03-13T21:39:20.653003"
+  },
+  {
+    "id": "ssrf_0093",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:3306",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "122.192.109.182",
+    "timestamp": "2026-03-13T21:39:20.653008"
+  },
+  {
+    "id": "ssrf_0094",
+    "type": "ssrf",
+    "payload": "http://127.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "190.197.8.133",
+    "timestamp": "2026-03-13T21:39:20.653013"
+  },
+  {
+    "id": "ssrf_0095",
+    "type": "ssrf",
+    "payload": "http://127.1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "170.250.220.38",
+    "timestamp": "2026-03-13T21:39:20.653017"
+  },
+  {
+    "id": "ssrf_0096",
+    "type": "ssrf",
+    "payload": "gopher://127.0.0.1:70",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.79.19.56",
+    "timestamp": "2026-03-13T21:39:20.653022"
+  },
+  {
+    "id": "ssrf_0097",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1#example.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "165.153.231.171",
+    "timestamp": "2026-03-13T21:39:20.653027"
+  },
+  {
+    "id": "ssrf_0098",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1:22",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.225.141.4",
+    "timestamp": "2026-03-13T21:39:20.653031"
+  },
+  {
+    "id": "ssrf_0099",
+    "type": "ssrf",
+    "payload": "http://127.0.0.1#example.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "131.22.200.65",
+    "timestamp": "2026-03-13T21:39:20.653036"
+  }
+]

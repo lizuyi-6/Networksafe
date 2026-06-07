@@ -1,0 +1,902 @@
+[
+  {
+    "id": "nosql_adv_0000",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$expr\":{\"$eq\":[\"$password\",\"secret\"]}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.198.56.116",
+    "timestamp": "2026-03-13T21:53:09.064441"
+  },
+  {
+    "id": "nosql_adv_0001",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$ne\":\"\"},\"password\":{\"$ne\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "129.89.190.106",
+    "timestamp": "2026-03-13T21:53:09.064447"
+  },
+  {
+    "id": "nosql_adv_0002",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":[\"admin\",\"root\"]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "78.58.187.218",
+    "timestamp": "2026-03-13T21:53:09.064452"
+  },
+  {
+    "id": "nosql_adv_0003",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password.match(/.*/)}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.137.160.137",
+    "timestamp": "2026-03-13T21:53:09.064459"
+  },
+  {
+    "id": "nosql_adv_0004",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"return true\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "111.251.85.155",
+    "timestamp": "2026-03-13T21:53:09.064464"
+  },
+  {
+    "id": "nosql_adv_0005",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.97.139.102",
+    "timestamp": "2026-03-13T21:53:09.064469"
+  },
+  {
+    "id": "nosql_adv_0006",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"return true\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "49.218.100.104",
+    "timestamp": "2026-03-13T21:53:09.064474"
+  },
+  {
+    "id": "nosql_adv_0007",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":[\"admin\",\"root\"]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "148.189.95.173",
+    "timestamp": "2026-03-13T21:53:09.064480"
+  },
+  {
+    "id": "nosql_adv_0008",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"return true\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "12.239.78.53",
+    "timestamp": "2026-03-13T21:53:09.064484"
+  },
+  {
+    "id": "nosql_adv_0009",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"sleep(5000)\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.68.66.86",
+    "timestamp": "2026-03-13T21:53:09.064489"
+  },
+  {
+    "id": "nosql_adv_0010",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.4.98.148",
+    "timestamp": "2026-03-13T21:53:09.064493"
+  },
+  {
+    "id": "nosql_adv_0011",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"location\":{\"$near\":{\"$geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.162.101.149",
+    "timestamp": "2026-03-13T21:53:09.064500"
+  },
+  {
+    "id": "nosql_adv_0012",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"password\":{\"$in\":[\"123456\",\"password\"]}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "72.60.184.195",
+    "timestamp": "2026-03-13T21:53:09.064505"
+  },
+  {
+    "id": "nosql_adv_0013",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$ne\":\"\"},\"password\":{\"$ne\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "147.50.96.197",
+    "timestamp": "2026-03-13T21:53:09.064509"
+  },
+  {
+    "id": "nosql_adv_0014",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "146.228.246.165",
+    "timestamp": "2026-03-13T21:53:09.064514"
+  },
+  {
+    "id": "nosql_adv_0015",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "135.119.163.223",
+    "timestamp": "2026-03-13T21:53:09.064518"
+  },
+  {
+    "id": "nosql_adv_0016",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$elemMatch\":{\"$ne\":null}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "108.224.143.213",
+    "timestamp": "2026-03-13T21:53:09.064523"
+  },
+  {
+    "id": "nosql_adv_0017",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":\"admin\",\"password\":{\"$gt\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "97.202.4.177",
+    "timestamp": "2026-03-13T21:53:09.064527"
+  },
+  {
+    "id": "nosql_adv_0018",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$elemMatch\":{\"$ne\":null}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.234.37.36",
+    "timestamp": "2026-03-13T21:53:09.064532"
+  },
+  {
+    "id": "nosql_adv_0019",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password.match(/.*/)}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "117.91.167.22",
+    "timestamp": "2026-03-13T21:53:09.064537"
+  },
+  {
+    "id": "nosql_adv_0020",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$elemMatch\":{\"$ne\":null}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "4.168.130.196",
+    "timestamp": "2026-03-13T21:53:09.064545"
+  },
+  {
+    "id": "nosql_adv_0021",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.username == \\\"admin\\\" || \\\"1\\\" == \\\"1\\\"\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "161.237.149.219",
+    "timestamp": "2026-03-13T21:53:09.064549"
+  },
+  {
+    "id": "nosql_adv_0022",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":[\"admin\",\"root\"]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "175.159.221.160",
+    "timestamp": "2026-03-13T21:53:09.064556"
+  },
+  {
+    "id": "nosql_adv_0023",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$type\":2}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "169.146.39.165",
+    "timestamp": "2026-03-13T21:53:09.064561"
+  },
+  {
+    "id": "nosql_adv_0024",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$elemMatch\":{\"$ne\":null}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "76.169.185.248",
+    "timestamp": "2026-03-13T21:53:09.064565"
+  },
+  {
+    "id": "nosql_adv_0025",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$ne\":\"\"},\"password\":{\"$ne\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "87.103.225.128",
+    "timestamp": "2026-03-13T21:53:09.064570"
+  },
+  {
+    "id": "nosql_adv_0026",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"sleep(5000)\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "168.109.30.53",
+    "timestamp": "2026-03-13T21:53:09.064574"
+  },
+  {
+    "id": "nosql_adv_0027",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":\"admin\",\"password\":{\"$gt\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "159.236.139.21",
+    "timestamp": "2026-03-13T21:53:09.064579"
+  },
+  {
+    "id": "nosql_adv_0028",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$regex\":\".*\"},\"password\":{\"$regex\":\".*\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "146.179.251.183",
+    "timestamp": "2026-03-13T21:53:09.064583"
+  },
+  {
+    "id": "nosql_adv_0029",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"location\":{\"$near\":{\"$geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "214.49.41.195",
+    "timestamp": "2026-03-13T21:53:09.064588"
+  },
+  {
+    "id": "nosql_adv_0030",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$type\":2}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.154.218.198",
+    "timestamp": "2026-03-13T21:53:09.064592"
+  },
+  {
+    "id": "nosql_adv_0031",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"function(){return this.username==\\\"admin\\\"}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.51.179.144",
+    "timestamp": "2026-03-13T21:53:09.064597"
+  },
+  {
+    "id": "nosql_adv_0032",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$type\":2}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "143.0.95.32",
+    "timestamp": "2026-03-13T21:53:09.064603"
+  },
+  {
+    "id": "nosql_adv_0033",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "88.135.60.237",
+    "timestamp": "2026-03-13T21:53:09.064608"
+  },
+  {
+    "id": "nosql_adv_0034",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$expr\":{\"$eq\":[\"$password\",\"secret\"]}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "112.246.213.123",
+    "timestamp": "2026-03-13T21:53:09.064613"
+  },
+  {
+    "id": "nosql_adv_0035",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "146.132.194.196",
+    "timestamp": "2026-03-13T21:53:09.064617"
+  },
+  {
+    "id": "nosql_adv_0036",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$ne\":\"\"},\"password\":{\"$ne\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.18.245.247",
+    "timestamp": "2026-03-13T21:53:09.064622"
+  },
+  {
+    "id": "nosql_adv_0037",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":\"admin\",\"password\":{\"$gt\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "93.74.227.209",
+    "timestamp": "2026-03-13T21:53:09.064626"
+  },
+  {
+    "id": "nosql_adv_0038",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$elemMatch\":{\"$ne\":null}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "70.16.204.214",
+    "timestamp": "2026-03-13T21:53:09.064631"
+  },
+  {
+    "id": "nosql_adv_0039",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$regex\":\".*\"},\"password\":{\"$regex\":\".*\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.99.217.149",
+    "timestamp": "2026-03-13T21:53:09.064635"
+  },
+  {
+    "id": "nosql_adv_0040",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password.match(/.*/)}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "126.229.100.10",
+    "timestamp": "2026-03-13T21:53:09.064662"
+  },
+  {
+    "id": "nosql_adv_0041",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password.match(/.*/)}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "111.177.60.13",
+    "timestamp": "2026-03-13T21:53:09.064667"
+  },
+  {
+    "id": "nosql_adv_0042",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"return true\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "24.26.3.51",
+    "timestamp": "2026-03-13T21:53:09.064674"
+  },
+  {
+    "id": "nosql_adv_0043",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":\"admin\",\"password\":{\"$gt\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "18.226.54.219",
+    "timestamp": "2026-03-13T21:53:09.064678"
+  },
+  {
+    "id": "nosql_adv_0044",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":\"admin\",\"password\":{\"$gt\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "148.170.51.192",
+    "timestamp": "2026-03-13T21:53:09.064683"
+  },
+  {
+    "id": "nosql_adv_0045",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"password\":{\"$in\":[\"123456\",\"password\"]}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "32.76.166.130",
+    "timestamp": "2026-03-13T21:53:09.064688"
+  },
+  {
+    "id": "nosql_adv_0046",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password == this.password\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "88.32.96.121",
+    "timestamp": "2026-03-13T21:53:09.064693"
+  },
+  {
+    "id": "nosql_adv_0047",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password == this.password\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.188.149.251",
+    "timestamp": "2026-03-13T21:53:09.064697"
+  },
+  {
+    "id": "nosql_adv_0048",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password == this.password\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "18.134.110.237",
+    "timestamp": "2026-03-13T21:53:09.064701"
+  },
+  {
+    "id": "nosql_adv_0049",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":\"admin\",\"password\":{\"$gt\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "127.240.79.171",
+    "timestamp": "2026-03-13T21:53:09.064706"
+  },
+  {
+    "id": "nosql_adv_0050",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"location\":{\"$near\":{\"$geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "169.102.236.63",
+    "timestamp": "2026-03-13T21:53:09.064710"
+  },
+  {
+    "id": "nosql_adv_0051",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"sleep(5000)\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "116.57.211.109",
+    "timestamp": "2026-03-13T21:53:09.064715"
+  },
+  {
+    "id": "nosql_adv_0052",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$type\":2}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "212.51.78.215",
+    "timestamp": "2026-03-13T21:53:09.064720"
+  },
+  {
+    "id": "nosql_adv_0053",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":\"admin\",\"password\":{\"$gt\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.86.205.4",
+    "timestamp": "2026-03-13T21:53:09.064724"
+  },
+  {
+    "id": "nosql_adv_0054",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "125.151.35.126",
+    "timestamp": "2026-03-13T21:53:09.064731"
+  },
+  {
+    "id": "nosql_adv_0055",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$ne\":\"\"},\"password\":{\"$ne\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.63.240.165",
+    "timestamp": "2026-03-13T21:53:09.064735"
+  },
+  {
+    "id": "nosql_adv_0056",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password == this.password\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "197.119.16.60",
+    "timestamp": "2026-03-13T21:53:09.064740"
+  },
+  {
+    "id": "nosql_adv_0057",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$ne\":\"\"},\"password\":{\"$ne\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "6.2.94.75",
+    "timestamp": "2026-03-13T21:53:09.064744"
+  },
+  {
+    "id": "nosql_adv_0058",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"return true\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "88.189.221.189",
+    "timestamp": "2026-03-13T21:53:09.064749"
+  },
+  {
+    "id": "nosql_adv_0059",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"password\":{\"$in\":[\"123456\",\"password\"]}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "41.100.36.64",
+    "timestamp": "2026-03-13T21:53:09.064753"
+  },
+  {
+    "id": "nosql_adv_0060",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":[\"admin\",\"root\"]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "188.147.24.133",
+    "timestamp": "2026-03-13T21:53:09.064758"
+  },
+  {
+    "id": "nosql_adv_0061",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"password\":{\"$in\":[\"123456\",\"password\"]}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "188.100.229.95",
+    "timestamp": "2026-03-13T21:53:09.064764"
+  },
+  {
+    "id": "nosql_adv_0062",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"return true\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.16.174.244",
+    "timestamp": "2026-03-13T21:53:09.064769"
+  },
+  {
+    "id": "nosql_adv_0063",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"function(){return this.username==\\\"admin\\\"}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "164.170.89.124",
+    "timestamp": "2026-03-13T21:53:09.064774"
+  },
+  {
+    "id": "nosql_adv_0064",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"location\":{\"$near\":{\"$geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "4.77.254.189",
+    "timestamp": "2026-03-13T21:53:09.064778"
+  },
+  {
+    "id": "nosql_adv_0065",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$regex\":\".*\"},\"password\":{\"$regex\":\".*\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "166.181.131.90",
+    "timestamp": "2026-03-13T21:53:09.064783"
+  },
+  {
+    "id": "nosql_adv_0066",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "173.222.249.209",
+    "timestamp": "2026-03-13T21:53:09.064788"
+  },
+  {
+    "id": "nosql_adv_0067",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "211.67.176.64",
+    "timestamp": "2026-03-13T21:53:09.064792"
+  },
+  {
+    "id": "nosql_adv_0068",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password.match(/.*/)}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.232.193.219",
+    "timestamp": "2026-03-13T21:53:09.064797"
+  },
+  {
+    "id": "nosql_adv_0069",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"location\":{\"$near\":{\"$geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.42.168.238",
+    "timestamp": "2026-03-13T21:53:09.064801"
+  },
+  {
+    "id": "nosql_adv_0070",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":[\"admin\",\"root\"]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "221.84.174.190",
+    "timestamp": "2026-03-13T21:53:09.064808"
+  },
+  {
+    "id": "nosql_adv_0071",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":[\"admin\",\"root\"]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "13.248.141.145",
+    "timestamp": "2026-03-13T21:53:09.064812"
+  },
+  {
+    "id": "nosql_adv_0072",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":[\"admin\",\"root\"]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.26.57.40",
+    "timestamp": "2026-03-13T21:53:09.064817"
+  },
+  {
+    "id": "nosql_adv_0073",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"sleep(5000)\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "165.57.28.238",
+    "timestamp": "2026-03-13T21:53:09.064821"
+  },
+  {
+    "id": "nosql_adv_0074",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"sleep(5000)\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.84.218.253",
+    "timestamp": "2026-03-13T21:53:09.064826"
+  },
+  {
+    "id": "nosql_adv_0075",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$or\":[{\"username\":\"admin\"},{\"username\":\"root\"}]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "107.36.102.159",
+    "timestamp": "2026-03-13T21:53:09.064833"
+  },
+  {
+    "id": "nosql_adv_0076",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"sleep(5000)\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "68.243.93.71",
+    "timestamp": "2026-03-13T21:53:09.064838"
+  },
+  {
+    "id": "nosql_adv_0077",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$type\":2}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.52.115.156",
+    "timestamp": "2026-03-13T21:53:09.064843"
+  },
+  {
+    "id": "nosql_adv_0078",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$regex\":\".*\"},\"password\":{\"$regex\":\".*\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "95.3.223.128",
+    "timestamp": "2026-03-13T21:53:09.064848"
+  },
+  {
+    "id": "nosql_adv_0079",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"function(){return this.username==\\\"admin\\\"}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "119.132.213.234",
+    "timestamp": "2026-03-13T21:53:09.064853"
+  },
+  {
+    "id": "nosql_adv_0080",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$type\":2}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "102.212.111.175",
+    "timestamp": "2026-03-13T21:53:09.064857"
+  },
+  {
+    "id": "nosql_adv_0081",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"sleep(5000)\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "27.237.38.56",
+    "timestamp": "2026-03-13T21:53:09.064864"
+  },
+  {
+    "id": "nosql_adv_0082",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":\"admin\",\"password\":{\"$gt\":\"\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "190.219.178.145",
+    "timestamp": "2026-03-13T21:53:09.064869"
+  },
+  {
+    "id": "nosql_adv_0083",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password == this.password\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "178.180.119.151",
+    "timestamp": "2026-03-13T21:53:09.064873"
+  },
+  {
+    "id": "nosql_adv_0084",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"password\":{\"$in\":[\"123456\",\"password\"]}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.9.145.174",
+    "timestamp": "2026-03-13T21:53:09.064878"
+  },
+  {
+    "id": "nosql_adv_0085",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"location\":{\"$near\":{\"$geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.204.206.13",
+    "timestamp": "2026-03-13T21:53:09.064882"
+  },
+  {
+    "id": "nosql_adv_0086",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"return true\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "74.217.122.11",
+    "timestamp": "2026-03-13T21:53:09.064887"
+  },
+  {
+    "id": "nosql_adv_0087",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password.match(/.*/)}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "188.35.113.153",
+    "timestamp": "2026-03-13T21:53:09.064891"
+  },
+  {
+    "id": "nosql_adv_0088",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password.match(/.*/)}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "180.213.96.112",
+    "timestamp": "2026-03-13T21:53:09.064896"
+  },
+  {
+    "id": "nosql_adv_0089",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.username == \\\"admin\\\" || \\\"1\\\" == \\\"1\\\"\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.63.113.100",
+    "timestamp": "2026-03-13T21:53:09.064900"
+  },
+  {
+    "id": "nosql_adv_0090",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password.match(/.*/)}\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.107.234.32",
+    "timestamp": "2026-03-13T21:53:09.064905"
+  },
+  {
+    "id": "nosql_adv_0091",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$regex\":\".*\"},\"password\":{\"$regex\":\".*\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "195.46.78.227",
+    "timestamp": "2026-03-13T21:53:09.064909"
+  },
+  {
+    "id": "nosql_adv_0092",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$regex\":\".*\"},\"password\":{\"$regex\":\".*\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "153.167.84.203",
+    "timestamp": "2026-03-13T21:53:09.064914"
+  },
+  {
+    "id": "nosql_adv_0093",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":{\"$regex\":\".*\"},\"password\":{\"$regex\":\".*\"}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "74.183.62.219",
+    "timestamp": "2026-03-13T21:53:09.064919"
+  },
+  {
+    "id": "nosql_adv_0094",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"location\":{\"$near\":{\"$geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}}}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "202.154.100.177",
+    "timestamp": "2026-03-13T21:53:09.064924"
+  },
+  {
+    "id": "nosql_adv_0095",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.password == this.password\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "40.85.56.50",
+    "timestamp": "2026-03-13T21:53:09.064928"
+  },
+  {
+    "id": "nosql_adv_0096",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"username\":[\"admin\",\"root\"]}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.163.208.99",
+    "timestamp": "2026-03-13T21:53:09.064935"
+  },
+  {
+    "id": "nosql_adv_0097",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"return true\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "122.28.72.95",
+    "timestamp": "2026-03-13T21:53:09.064940"
+  },
+  {
+    "id": "nosql_adv_0098",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.username == \\\"admin\\\" || \\\"1\\\" == \\\"1\\\"\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "194.231.182.247",
+    "timestamp": "2026-03-13T21:53:09.064945"
+  },
+  {
+    "id": "nosql_adv_0099",
+    "type": "nosql_injection_advanced",
+    "payload": "{\"$where\":\"this.username == \\\"admin\\\" || \\\"1\\\" == \\\"1\\\"\"}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "136.111.123.27",
+    "timestamp": "2026-03-13T21:53:09.064949"
+  }
+]

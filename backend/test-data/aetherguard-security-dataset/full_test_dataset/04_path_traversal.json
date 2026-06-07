@@ -1,0 +1,1352 @@
+[
+  {
+    "id": "path_0000",
+    "type": "path_traversal",
+    "payload": "/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "223.77.224.52",
+    "timestamp": "2026-03-13T20:37:04.764366"
+  },
+  {
+    "id": "path_0001",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "103.168.203.227",
+    "timestamp": "2026-03-13T21:03:01.764383"
+  },
+  {
+    "id": "path_0002",
+    "type": "path_traversal",
+    "payload": "/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "46.219.185.83",
+    "timestamp": "2026-03-13T21:05:37.764390"
+  },
+  {
+    "id": "path_0003",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "179.64.165.75",
+    "timestamp": "2026-03-13T21:06:47.764397"
+  },
+  {
+    "id": "path_0004",
+    "type": "path_traversal",
+    "payload": "/etc/shadow",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "196.98.64.246",
+    "timestamp": "2026-03-13T21:01:33.764403"
+  },
+  {
+    "id": "path_0005",
+    "type": "path_traversal",
+    "payload": "/etc/shadow",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "45.167.149.151",
+    "timestamp": "2026-03-13T21:21:45.764410"
+  },
+  {
+    "id": "path_0006",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "114.106.172.240",
+    "timestamp": "2026-03-13T21:05:08.764417"
+  },
+  {
+    "id": "path_0007",
+    "type": "path_traversal",
+    "payload": "php://filter/convert.base64-encode/resource=/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "96.129.19.135",
+    "timestamp": "2026-03-13T21:01:07.764425"
+  },
+  {
+    "id": "path_0008",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "184.57.113.248",
+    "timestamp": "2026-03-13T20:36:03.764432"
+  },
+  {
+    "id": "path_0009",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "129.70.230.234",
+    "timestamp": "2026-03-13T20:44:12.764438"
+  },
+  {
+    "id": "path_0010",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.126.217.161",
+    "timestamp": "2026-03-13T20:40:10.764444"
+  },
+  {
+    "id": "path_0011",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "51.84.254.173",
+    "timestamp": "2026-03-13T20:48:42.764450"
+  },
+  {
+    "id": "path_0012",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "48.114.98.100",
+    "timestamp": "2026-03-13T21:14:35.764457"
+  },
+  {
+    "id": "path_0013",
+    "type": "path_traversal",
+    "payload": "/var/log/auth.log",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "144.145.199.132",
+    "timestamp": "2026-03-13T20:35:28.764463"
+  },
+  {
+    "id": "path_0014",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "93.147.253.128",
+    "timestamp": "2026-03-13T20:46:27.764470"
+  },
+  {
+    "id": "path_0015",
+    "type": "path_traversal",
+    "payload": "....//....//....//etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "166.36.35.206",
+    "timestamp": "2026-03-13T20:46:29.764476"
+  },
+  {
+    "id": "path_0016",
+    "type": "path_traversal",
+    "payload": "..%2f..%2f..%2fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "28.15.13.123",
+    "timestamp": "2026-03-13T21:08:21.764482"
+  },
+  {
+    "id": "path_0017",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "203.229.121.37",
+    "timestamp": "2026-03-13T20:42:05.764488"
+  },
+  {
+    "id": "path_0018",
+    "type": "path_traversal",
+    "payload": "/root/.ssh/id_rsa",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "117.79.194.249",
+    "timestamp": "2026-03-13T20:41:29.764495"
+  },
+  {
+    "id": "path_0019",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "74.250.123.3",
+    "timestamp": "2026-03-13T21:00:35.764502"
+  },
+  {
+    "id": "path_0020",
+    "type": "path_traversal",
+    "payload": "..%252f..%252f..%252fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "145.122.171.243",
+    "timestamp": "2026-03-13T20:30:13.764508"
+  },
+  {
+    "id": "path_0021",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.3.184.166",
+    "timestamp": "2026-03-13T21:22:05.764516"
+  },
+  {
+    "id": "path_0022",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "170.58.206.206",
+    "timestamp": "2026-03-13T20:56:01.764525"
+  },
+  {
+    "id": "path_0023",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.222.122.57",
+    "timestamp": "2026-03-13T21:02:44.764531"
+  },
+  {
+    "id": "path_0024",
+    "type": "path_traversal",
+    "payload": "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "193.226.55.253",
+    "timestamp": "2026-03-13T20:58:33.764538"
+  },
+  {
+    "id": "path_0025",
+    "type": "path_traversal",
+    "payload": "php://filter/convert.base64-encode/resource=/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "34.126.137.112",
+    "timestamp": "2026-03-13T21:14:29.764544"
+  },
+  {
+    "id": "path_0026",
+    "type": "path_traversal",
+    "payload": "..%2f..%2f..%2fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.103.49.147",
+    "timestamp": "2026-03-13T21:00:05.764550"
+  },
+  {
+    "id": "path_0027",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "111.206.169.163",
+    "timestamp": "2026-03-13T20:45:00.764556"
+  },
+  {
+    "id": "path_0028",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "211.52.123.27",
+    "timestamp": "2026-03-13T21:07:48.764562"
+  },
+  {
+    "id": "path_0029",
+    "type": "path_traversal",
+    "payload": "/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "61.39.14.129",
+    "timestamp": "2026-03-13T20:38:25.764568"
+  },
+  {
+    "id": "path_0030",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "181.82.135.169",
+    "timestamp": "2026-03-13T21:07:11.764574"
+  },
+  {
+    "id": "path_0031",
+    "type": "path_traversal",
+    "payload": "php://filter/convert.base64-encode/resource=/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "131.33.251.40",
+    "timestamp": "2026-03-13T20:41:10.764580"
+  },
+  {
+    "id": "path_0032",
+    "type": "path_traversal",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "174.197.179.199",
+    "timestamp": "2026-03-13T20:34:11.764587"
+  },
+  {
+    "id": "path_0033",
+    "type": "path_traversal",
+    "payload": "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "189.247.50.208",
+    "timestamp": "2026-03-13T20:38:59.764593"
+  },
+  {
+    "id": "path_0034",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.65.192.174",
+    "timestamp": "2026-03-13T21:03:11.764599"
+  },
+  {
+    "id": "path_0035",
+    "type": "path_traversal",
+    "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.239.188.170",
+    "timestamp": "2026-03-13T20:59:10.764605"
+  },
+  {
+    "id": "path_0036",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "113.1.208.169",
+    "timestamp": "2026-03-13T20:51:15.764611"
+  },
+  {
+    "id": "path_0037",
+    "type": "path_traversal",
+    "payload": "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "54.62.141.231",
+    "timestamp": "2026-03-13T21:06:44.764618"
+  },
+  {
+    "id": "path_0038",
+    "type": "path_traversal",
+    "payload": "..%252f..%252f..%252fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "185.255.185.1",
+    "timestamp": "2026-03-13T21:19:53.764624"
+  },
+  {
+    "id": "path_0039",
+    "type": "path_traversal",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.128.21.123",
+    "timestamp": "2026-03-13T20:58:42.764630"
+  },
+  {
+    "id": "path_0040",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.204.13.118",
+    "timestamp": "2026-03-13T20:42:50.764638"
+  },
+  {
+    "id": "path_0041",
+    "type": "path_traversal",
+    "payload": "/etc/shadow",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "153.233.219.102",
+    "timestamp": "2026-03-13T20:45:05.764655"
+  },
+  {
+    "id": "path_0042",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00.jpg",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "17.162.193.186",
+    "timestamp": "2026-03-13T21:01:59.764662"
+  },
+  {
+    "id": "path_0043",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "113.112.211.147",
+    "timestamp": "2026-03-13T20:57:30.764670"
+  },
+  {
+    "id": "path_0044",
+    "type": "path_traversal",
+    "payload": "..%252f..%252f..%252fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "58.24.20.113",
+    "timestamp": "2026-03-13T20:32:46.764677"
+  },
+  {
+    "id": "path_0045",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "171.197.244.13",
+    "timestamp": "2026-03-13T21:14:14.764683"
+  },
+  {
+    "id": "path_0046",
+    "type": "path_traversal",
+    "payload": "..%2f..%2f..%2fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "202.85.52.160",
+    "timestamp": "2026-03-13T21:03:24.764689"
+  },
+  {
+    "id": "path_0047",
+    "type": "path_traversal",
+    "payload": "C:\\Windows\\System32\\config\\SAM",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "15.186.136.135",
+    "timestamp": "2026-03-13T21:15:38.764695"
+  },
+  {
+    "id": "path_0048",
+    "type": "path_traversal",
+    "payload": "../../etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "158.3.225.73",
+    "timestamp": "2026-03-13T20:44:00.764702"
+  },
+  {
+    "id": "path_0049",
+    "type": "path_traversal",
+    "payload": "/var/log/auth.log",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "199.144.235.53",
+    "timestamp": "2026-03-13T21:02:54.764708"
+  },
+  {
+    "id": "path_0050",
+    "type": "path_traversal",
+    "payload": "php://filter/convert.base64-encode/resource=/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "22.132.151.59",
+    "timestamp": "2026-03-13T20:56:17.764714"
+  },
+  {
+    "id": "path_0051",
+    "type": "path_traversal",
+    "payload": "../../etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "204.255.154.121",
+    "timestamp": "2026-03-13T20:35:10.764720"
+  },
+  {
+    "id": "path_0052",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.182.189.149",
+    "timestamp": "2026-03-13T20:31:11.764728"
+  },
+  {
+    "id": "path_0053",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "89.61.171.99",
+    "timestamp": "2026-03-13T21:10:15.764735"
+  },
+  {
+    "id": "path_0054",
+    "type": "path_traversal",
+    "payload": "/etc/shadow",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "30.139.137.254",
+    "timestamp": "2026-03-13T20:58:07.764741"
+  },
+  {
+    "id": "path_0055",
+    "type": "path_traversal",
+    "payload": "..%2f..%2f..%2fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "103.32.7.11",
+    "timestamp": "2026-03-13T20:27:46.764747"
+  },
+  {
+    "id": "path_0056",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "66.249.104.214",
+    "timestamp": "2026-03-13T20:59:17.764753"
+  },
+  {
+    "id": "path_0057",
+    "type": "path_traversal",
+    "payload": "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "15.172.150.198",
+    "timestamp": "2026-03-13T20:56:45.764759"
+  },
+  {
+    "id": "path_0058",
+    "type": "path_traversal",
+    "payload": "..%252f..%252f..%252fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "154.136.249.240",
+    "timestamp": "2026-03-13T21:19:24.764766"
+  },
+  {
+    "id": "path_0059",
+    "type": "path_traversal",
+    "payload": "../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.29.167.76",
+    "timestamp": "2026-03-13T20:50:17.764772"
+  },
+  {
+    "id": "path_0060",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "148.233.51.253",
+    "timestamp": "2026-03-13T21:02:29.764781"
+  },
+  {
+    "id": "path_0061",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "116.45.150.211",
+    "timestamp": "2026-03-13T20:42:32.764787"
+  },
+  {
+    "id": "path_0062",
+    "type": "path_traversal",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "128.75.100.253",
+    "timestamp": "2026-03-13T21:05:54.764794"
+  },
+  {
+    "id": "path_0063",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.236.177.179",
+    "timestamp": "2026-03-13T21:13:42.764800"
+  },
+  {
+    "id": "path_0064",
+    "type": "path_traversal",
+    "payload": "....//....//....//etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.58.165.6",
+    "timestamp": "2026-03-13T20:56:52.764808"
+  },
+  {
+    "id": "path_0065",
+    "type": "path_traversal",
+    "payload": "..%2f..%2f..%2fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.110.135.33",
+    "timestamp": "2026-03-13T20:32:06.764815"
+  },
+  {
+    "id": "path_0066",
+    "type": "path_traversal",
+    "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "54.188.207.93",
+    "timestamp": "2026-03-13T20:52:16.764821"
+  },
+  {
+    "id": "path_0067",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "175.188.27.219",
+    "timestamp": "2026-03-13T20:36:20.764827"
+  },
+  {
+    "id": "path_0068",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "178.220.137.162",
+    "timestamp": "2026-03-13T21:20:01.764834"
+  },
+  {
+    "id": "path_0069",
+    "type": "path_traversal",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "192.69.170.150",
+    "timestamp": "2026-03-13T21:18:44.764840"
+  },
+  {
+    "id": "path_0070",
+    "type": "path_traversal",
+    "payload": "....//....//....//etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.98.25.164",
+    "timestamp": "2026-03-13T21:17:30.764846"
+  },
+  {
+    "id": "path_0071",
+    "type": "path_traversal",
+    "payload": "....//....//....//etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "27.198.137.180",
+    "timestamp": "2026-03-13T20:25:30.764852"
+  },
+  {
+    "id": "path_0072",
+    "type": "path_traversal",
+    "payload": "..%252f..%252f..%252fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "35.218.113.172",
+    "timestamp": "2026-03-13T20:38:45.764858"
+  },
+  {
+    "id": "path_0073",
+    "type": "path_traversal",
+    "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "24.121.169.17",
+    "timestamp": "2026-03-13T20:39:41.764865"
+  },
+  {
+    "id": "path_0074",
+    "type": "path_traversal",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "171.49.190.207",
+    "timestamp": "2026-03-13T20:57:43.764871"
+  },
+  {
+    "id": "path_0075",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00.jpg",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "79.93.197.131",
+    "timestamp": "2026-03-13T20:35:22.764877"
+  },
+  {
+    "id": "path_0076",
+    "type": "path_traversal",
+    "payload": "..%252f..%252f..%252fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "29.221.13.115",
+    "timestamp": "2026-03-13T20:26:26.764883"
+  },
+  {
+    "id": "path_0077",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.49.123.215",
+    "timestamp": "2026-03-13T21:03:15.764890"
+  },
+  {
+    "id": "path_0078",
+    "type": "path_traversal",
+    "payload": "php://filter/convert.base64-encode/resource=/etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.148.120.138",
+    "timestamp": "2026-03-13T20:32:34.764896"
+  },
+  {
+    "id": "path_0079",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "175.235.30.133",
+    "timestamp": "2026-03-13T21:23:44.764904"
+  },
+  {
+    "id": "path_0080",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "140.47.131.43",
+    "timestamp": "2026-03-13T21:06:32.764911"
+  },
+  {
+    "id": "path_0081",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "60.230.111.116",
+    "timestamp": "2026-03-13T20:35:34.764917"
+  },
+  {
+    "id": "path_0082",
+    "type": "path_traversal",
+    "payload": "..%2f..%2f..%2fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "21.162.179.80",
+    "timestamp": "2026-03-13T20:40:44.764923"
+  },
+  {
+    "id": "path_0083",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "139.234.179.86",
+    "timestamp": "2026-03-13T20:33:51.764929"
+  },
+  {
+    "id": "path_0084",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "78.43.235.230",
+    "timestamp": "2026-03-13T21:22:20.764935"
+  },
+  {
+    "id": "path_0085",
+    "type": "path_traversal",
+    "payload": "C:\\Windows\\System32\\config\\SAM",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.151.252.140",
+    "timestamp": "2026-03-13T21:18:09.764941"
+  },
+  {
+    "id": "path_0086",
+    "type": "path_traversal",
+    "payload": "/root/.ssh/id_rsa",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.138.111.11",
+    "timestamp": "2026-03-13T20:57:39.764949"
+  },
+  {
+    "id": "path_0087",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.69.37.90",
+    "timestamp": "2026-03-13T20:31:57.764956"
+  },
+  {
+    "id": "path_0088",
+    "type": "path_traversal",
+    "payload": "../../etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "46.60.127.98",
+    "timestamp": "2026-03-13T20:25:44.764962"
+  },
+  {
+    "id": "path_0089",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "145.91.54.16",
+    "timestamp": "2026-03-13T20:51:25.764968"
+  },
+  {
+    "id": "path_0090",
+    "type": "path_traversal",
+    "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "37.15.83.230",
+    "timestamp": "2026-03-13T20:32:36.764974"
+  },
+  {
+    "id": "path_0091",
+    "type": "path_traversal",
+    "payload": "....//....//....//etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.74.89.156",
+    "timestamp": "2026-03-13T20:31:21.764980"
+  },
+  {
+    "id": "path_0092",
+    "type": "path_traversal",
+    "payload": "/var/log/auth.log",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "181.72.10.45",
+    "timestamp": "2026-03-13T21:08:33.764987"
+  },
+  {
+    "id": "path_0093",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "52.151.242.133",
+    "timestamp": "2026-03-13T20:59:27.764993"
+  },
+  {
+    "id": "path_0094",
+    "type": "path_traversal",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "147.247.22.29",
+    "timestamp": "2026-03-13T21:04:54.764999"
+  },
+  {
+    "id": "path_0095",
+    "type": "path_traversal",
+    "payload": "../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.223.146.177",
+    "timestamp": "2026-03-13T21:21:10.765005"
+  },
+  {
+    "id": "path_0096",
+    "type": "path_traversal",
+    "payload": "....//....//....//etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "47.247.74.53",
+    "timestamp": "2026-03-13T20:59:02.765011"
+  },
+  {
+    "id": "path_0097",
+    "type": "path_traversal",
+    "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.37.196.239",
+    "timestamp": "2026-03-13T21:18:19.765018"
+  },
+  {
+    "id": "path_0098",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00.jpg",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "15.93.102.38",
+    "timestamp": "2026-03-13T21:11:32.765024"
+  },
+  {
+    "id": "path_0099",
+    "type": "path_traversal",
+    "payload": "....//....//....//etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "206.102.21.28",
+    "timestamp": "2026-03-13T21:05:23.765032"
+  },
+  {
+    "id": "path_0100",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.242.166.29",
+    "timestamp": "2026-03-13T20:36:23.765038"
+  },
+  {
+    "id": "path_0101",
+    "type": "path_traversal",
+    "payload": "/var/log/auth.log",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.15.75.251",
+    "timestamp": "2026-03-13T20:38:44.765045"
+  },
+  {
+    "id": "path_0102",
+    "type": "path_traversal",
+    "payload": "../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "63.127.200.172",
+    "timestamp": "2026-03-13T21:15:31.765051"
+  },
+  {
+    "id": "path_0103",
+    "type": "path_traversal",
+    "payload": "/etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "79.212.125.162",
+    "timestamp": "2026-03-13T21:13:55.765059"
+  },
+  {
+    "id": "path_0104",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00.jpg",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.133.174.243",
+    "timestamp": "2026-03-13T20:57:15.765066"
+  },
+  {
+    "id": "path_0105",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "18.157.90.19",
+    "timestamp": "2026-03-13T21:00:13.765072"
+  },
+  {
+    "id": "path_0106",
+    "type": "path_traversal",
+    "payload": "/root/.ssh/id_rsa",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "133.90.203.200",
+    "timestamp": "2026-03-13T20:28:07.765078"
+  },
+  {
+    "id": "path_0107",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.236.227.232",
+    "timestamp": "2026-03-13T21:00:10.765087"
+  },
+  {
+    "id": "path_0108",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00.jpg",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "26.155.66.213",
+    "timestamp": "2026-03-13T20:43:17.765094"
+  },
+  {
+    "id": "path_0109",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "21.227.195.149",
+    "timestamp": "2026-03-13T20:48:16.765100"
+  },
+  {
+    "id": "path_0110",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "53.44.67.79",
+    "timestamp": "2026-03-13T20:49:46.765106"
+  },
+  {
+    "id": "path_0111",
+    "type": "path_traversal",
+    "payload": "php://filter/convert.base64-encode/resource=/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.129.132.133",
+    "timestamp": "2026-03-13T20:31:05.765112"
+  },
+  {
+    "id": "path_0112",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "199.207.217.220",
+    "timestamp": "2026-03-13T20:33:10.765118"
+  },
+  {
+    "id": "path_0113",
+    "type": "path_traversal",
+    "payload": "../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "58.176.26.169",
+    "timestamp": "2026-03-13T20:25:40.765125"
+  },
+  {
+    "id": "path_0114",
+    "type": "path_traversal",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.120.39.68",
+    "timestamp": "2026-03-13T20:59:54.765131"
+  },
+  {
+    "id": "path_0115",
+    "type": "path_traversal",
+    "payload": "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "5.207.64.114",
+    "timestamp": "2026-03-13T21:04:22.765137"
+  },
+  {
+    "id": "path_0116",
+    "type": "path_traversal",
+    "payload": "....//....//....//etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "116.127.189.254",
+    "timestamp": "2026-03-13T21:24:10.765143"
+  },
+  {
+    "id": "path_0117",
+    "type": "path_traversal",
+    "payload": "..%252f..%252f..%252fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.214.137.5",
+    "timestamp": "2026-03-13T20:58:19.765150"
+  },
+  {
+    "id": "path_0118",
+    "type": "path_traversal",
+    "payload": "/etc/shadow",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.191.135.126",
+    "timestamp": "2026-03-13T20:57:47.765159"
+  },
+  {
+    "id": "path_0119",
+    "type": "path_traversal",
+    "payload": "..%2f..%2f..%2fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.30.64.181",
+    "timestamp": "2026-03-13T21:06:30.765165"
+  },
+  {
+    "id": "path_0120",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.201.138.187",
+    "timestamp": "2026-03-13T21:18:56.765171"
+  },
+  {
+    "id": "path_0121",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "91.123.109.13",
+    "timestamp": "2026-03-13T20:24:52.765177"
+  },
+  {
+    "id": "path_0122",
+    "type": "path_traversal",
+    "payload": "..%252f..%252f..%252fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "51.46.210.191",
+    "timestamp": "2026-03-13T20:32:27.765184"
+  },
+  {
+    "id": "path_0123",
+    "type": "path_traversal",
+    "payload": "C:\\Windows\\System32\\config\\SAM",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "165.166.125.69",
+    "timestamp": "2026-03-13T21:02:20.765190"
+  },
+  {
+    "id": "path_0124",
+    "type": "path_traversal",
+    "payload": "/etc/shadow",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "180.39.130.98",
+    "timestamp": "2026-03-13T20:55:11.765196"
+  },
+  {
+    "id": "path_0125",
+    "type": "path_traversal",
+    "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.242.222.231",
+    "timestamp": "2026-03-13T20:52:33.765202"
+  },
+  {
+    "id": "path_0126",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00.jpg",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.250.38.253",
+    "timestamp": "2026-03-13T20:27:05.765209"
+  },
+  {
+    "id": "path_0127",
+    "type": "path_traversal",
+    "payload": "C:\\Windows\\System32\\config\\SAM",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "176.127.118.13",
+    "timestamp": "2026-03-13T21:14:40.765215"
+  },
+  {
+    "id": "path_0128",
+    "type": "path_traversal",
+    "payload": "..%2f..%2f..%2fetc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "203.71.69.168",
+    "timestamp": "2026-03-13T21:18:18.765223"
+  },
+  {
+    "id": "path_0129",
+    "type": "path_traversal",
+    "payload": "C:\\Windows\\System32\\config\\SAM",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.129.199.23",
+    "timestamp": "2026-03-13T20:55:16.765230"
+  },
+  {
+    "id": "path_0130",
+    "type": "path_traversal",
+    "payload": "/root/.bash_history",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "80.180.125.60",
+    "timestamp": "2026-03-13T20:29:33.765236"
+  },
+  {
+    "id": "path_0131",
+    "type": "path_traversal",
+    "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.27.214.6",
+    "timestamp": "2026-03-13T20:27:45.765241"
+  },
+  {
+    "id": "path_0132",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "206.35.32.99",
+    "timestamp": "2026-03-13T21:22:13.765247"
+  },
+  {
+    "id": "path_0133",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "5.151.10.87",
+    "timestamp": "2026-03-13T20:51:07.765253"
+  },
+  {
+    "id": "path_0134",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "101.124.31.254",
+    "timestamp": "2026-03-13T20:56:15.765259"
+  },
+  {
+    "id": "path_0135",
+    "type": "path_traversal",
+    "payload": "/etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "110.41.231.33",
+    "timestamp": "2026-03-13T21:16:40.765266"
+  },
+  {
+    "id": "path_0136",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "136.99.14.177",
+    "timestamp": "2026-03-13T20:45:57.765272"
+  },
+  {
+    "id": "path_0137",
+    "type": "path_traversal",
+    "payload": "/etc/hosts",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.147.94.18",
+    "timestamp": "2026-03-13T20:46:00.765278"
+  },
+  {
+    "id": "path_0138",
+    "type": "path_traversal",
+    "payload": "/root/.ssh/id_rsa",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.106.187.26",
+    "timestamp": "2026-03-13T20:39:08.765286"
+  },
+  {
+    "id": "path_0139",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "215.113.226.58",
+    "timestamp": "2026-03-13T20:27:02.765294"
+  },
+  {
+    "id": "path_0140",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "112.183.191.234",
+    "timestamp": "2026-03-13T20:27:21.765300"
+  },
+  {
+    "id": "path_0141",
+    "type": "path_traversal",
+    "payload": "/etc/passwd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "28.161.134.42",
+    "timestamp": "2026-03-13T21:15:07.765306"
+  },
+  {
+    "id": "path_0142",
+    "type": "path_traversal",
+    "payload": "/etc/shadow",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "76.125.115.40",
+    "timestamp": "2026-03-13T21:13:13.765312"
+  },
+  {
+    "id": "path_0143",
+    "type": "path_traversal",
+    "payload": "php://input",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "38.12.255.189",
+    "timestamp": "2026-03-13T21:01:37.765319"
+  },
+  {
+    "id": "path_0144",
+    "type": "path_traversal",
+    "payload": "/var/log/auth.log",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "68.94.88.89",
+    "timestamp": "2026-03-13T21:21:07.765325"
+  },
+  {
+    "id": "path_0145",
+    "type": "path_traversal",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.222.51.47",
+    "timestamp": "2026-03-13T21:21:37.765331"
+  },
+  {
+    "id": "path_0146",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "118.181.102.94",
+    "timestamp": "2026-03-13T21:07:24.765337"
+  },
+  {
+    "id": "path_0147",
+    "type": "path_traversal",
+    "payload": "../../../etc/passwd%00.jpg",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "189.102.235.46",
+    "timestamp": "2026-03-13T20:44:30.765343"
+  },
+  {
+    "id": "path_0148",
+    "type": "path_traversal",
+    "payload": "../../etc/passwd",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "105.86.79.23",
+    "timestamp": "2026-03-13T20:50:23.765349"
+  },
+  {
+    "id": "path_0149",
+    "type": "path_traversal",
+    "payload": "/proc/self/environ",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "74.255.19.73",
+    "timestamp": "2026-03-13T21:05:20.765358"
+  }
+]

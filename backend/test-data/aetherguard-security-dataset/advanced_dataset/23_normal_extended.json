@@ -1,0 +1,4502 @@
+[
+  {
+    "id": "normal_v3_0000",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "124.18.200.101",
+    "timestamp": "2026-03-13T21:47:04.403810"
+  },
+  {
+    "id": "normal_v3_0001",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "188.110.36.161",
+    "timestamp": "2026-03-13T21:47:04.403818"
+  },
+  {
+    "id": "normal_v3_0002",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "61.163.171.37",
+    "timestamp": "2026-03-13T21:47:04.403823"
+  },
+  {
+    "id": "normal_v3_0003",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "162.19.3.149",
+    "timestamp": "2026-03-13T21:47:04.403827"
+  },
+  {
+    "id": "normal_v3_0004",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "70.80.46.103",
+    "timestamp": "2026-03-13T21:47:04.403832"
+  },
+  {
+    "id": "normal_v3_0005",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "39.21.59.137",
+    "timestamp": "2026-03-13T21:47:04.403837"
+  },
+  {
+    "id": "normal_v3_0006",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "121.208.233.99",
+    "timestamp": "2026-03-13T21:47:04.403842"
+  },
+  {
+    "id": "normal_v3_0007",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "38.26.108.152",
+    "timestamp": "2026-03-13T21:47:04.403848"
+  },
+  {
+    "id": "normal_v3_0008",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "170.245.164.74",
+    "timestamp": "2026-03-13T21:47:04.403852"
+  },
+  {
+    "id": "normal_v3_0009",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "91.146.48.109",
+    "timestamp": "2026-03-13T21:47:04.403859"
+  },
+  {
+    "id": "normal_v3_0010",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "17.10.109.124",
+    "timestamp": "2026-03-13T21:47:04.403864"
+  },
+  {
+    "id": "normal_v3_0011",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "44.140.246.59",
+    "timestamp": "2026-03-13T21:47:04.403868"
+  },
+  {
+    "id": "normal_v3_0012",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "59.36.182.98",
+    "timestamp": "2026-03-13T21:47:04.403873"
+  },
+  {
+    "id": "normal_v3_0013",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "74.70.79.243",
+    "timestamp": "2026-03-13T21:47:04.403877"
+  },
+  {
+    "id": "normal_v3_0014",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "60.80.179.176",
+    "timestamp": "2026-03-13T21:47:04.403882"
+  },
+  {
+    "id": "normal_v3_0015",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "180.177.255.17",
+    "timestamp": "2026-03-13T21:47:04.403889"
+  },
+  {
+    "id": "normal_v3_0016",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "30.111.230.237",
+    "timestamp": "2026-03-13T21:47:04.403893"
+  },
+  {
+    "id": "normal_v3_0017",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "90.195.80.76",
+    "timestamp": "2026-03-13T21:47:04.403898"
+  },
+  {
+    "id": "normal_v3_0018",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "130.231.217.27",
+    "timestamp": "2026-03-13T21:47:04.403903"
+  },
+  {
+    "id": "normal_v3_0019",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "3.117.176.222",
+    "timestamp": "2026-03-13T21:47:04.403907"
+  },
+  {
+    "id": "normal_v3_0020",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "113.135.208.146",
+    "timestamp": "2026-03-13T21:47:04.403912"
+  },
+  {
+    "id": "normal_v3_0021",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "32.245.245.148",
+    "timestamp": "2026-03-13T21:47:04.403918"
+  },
+  {
+    "id": "normal_v3_0022",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "141.203.40.38",
+    "timestamp": "2026-03-13T21:47:04.403923"
+  },
+  {
+    "id": "normal_v3_0023",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "94.55.223.228",
+    "timestamp": "2026-03-13T21:47:04.403928"
+  },
+  {
+    "id": "normal_v3_0024",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "138.101.171.194",
+    "timestamp": "2026-03-13T21:47:04.403932"
+  },
+  {
+    "id": "normal_v3_0025",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "194.206.237.39",
+    "timestamp": "2026-03-13T21:47:04.403936"
+  },
+  {
+    "id": "normal_v3_0026",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "152.61.250.33",
+    "timestamp": "2026-03-13T21:47:04.403941"
+  },
+  {
+    "id": "normal_v3_0027",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "135.217.228.247",
+    "timestamp": "2026-03-13T21:47:04.403946"
+  },
+  {
+    "id": "normal_v3_0028",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "136.51.175.100",
+    "timestamp": "2026-03-13T21:47:04.403950"
+  },
+  {
+    "id": "normal_v3_0029",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "209.94.11.27",
+    "timestamp": "2026-03-13T21:47:04.403955"
+  },
+  {
+    "id": "normal_v3_0030",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "172.195.61.227",
+    "timestamp": "2026-03-13T21:47:04.403962"
+  },
+  {
+    "id": "normal_v3_0031",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "26.255.25.137",
+    "timestamp": "2026-03-13T21:47:04.403966"
+  },
+  {
+    "id": "normal_v3_0032",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "45.66.199.251",
+    "timestamp": "2026-03-13T21:47:04.403971"
+  },
+  {
+    "id": "normal_v3_0033",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "84.193.208.14",
+    "timestamp": "2026-03-13T21:47:04.403976"
+  },
+  {
+    "id": "normal_v3_0034",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "24.91.117.162",
+    "timestamp": "2026-03-13T21:47:04.403980"
+  },
+  {
+    "id": "normal_v3_0035",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "69.0.30.172",
+    "timestamp": "2026-03-13T21:47:04.403985"
+  },
+  {
+    "id": "normal_v3_0036",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "192.154.195.75",
+    "timestamp": "2026-03-13T21:47:04.403989"
+  },
+  {
+    "id": "normal_v3_0037",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "141.158.18.41",
+    "timestamp": "2026-03-13T21:47:04.403994"
+  },
+  {
+    "id": "normal_v3_0038",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "111.186.0.184",
+    "timestamp": "2026-03-13T21:47:04.403998"
+  },
+  {
+    "id": "normal_v3_0039",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "176.118.197.20",
+    "timestamp": "2026-03-13T21:47:04.404003"
+  },
+  {
+    "id": "normal_v3_0040",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "155.61.68.76",
+    "timestamp": "2026-03-13T21:47:04.404010"
+  },
+  {
+    "id": "normal_v3_0041",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "193.138.56.54",
+    "timestamp": "2026-03-13T21:47:04.404015"
+  },
+  {
+    "id": "normal_v3_0042",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "33.101.65.157",
+    "timestamp": "2026-03-13T21:47:04.404031"
+  },
+  {
+    "id": "normal_v3_0043",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "93.57.235.30",
+    "timestamp": "2026-03-13T21:47:04.404036"
+  },
+  {
+    "id": "normal_v3_0044",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "95.20.125.165",
+    "timestamp": "2026-03-13T21:47:04.404040"
+  },
+  {
+    "id": "normal_v3_0045",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "10.37.8.73",
+    "timestamp": "2026-03-13T21:47:04.404045"
+  },
+  {
+    "id": "normal_v3_0046",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "21.3.23.81",
+    "timestamp": "2026-03-13T21:47:04.404049"
+  },
+  {
+    "id": "normal_v3_0047",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "176.186.255.36",
+    "timestamp": "2026-03-13T21:47:04.404054"
+  },
+  {
+    "id": "normal_v3_0048",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "17.160.208.231",
+    "timestamp": "2026-03-13T21:47:04.404059"
+  },
+  {
+    "id": "normal_v3_0049",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "71.4.62.28",
+    "timestamp": "2026-03-13T21:47:04.404063"
+  },
+  {
+    "id": "normal_v3_0050",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "167.138.161.85",
+    "timestamp": "2026-03-13T21:47:04.404068"
+  },
+  {
+    "id": "normal_v3_0051",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "83.127.140.79",
+    "timestamp": "2026-03-13T21:47:04.404075"
+  },
+  {
+    "id": "normal_v3_0052",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "105.223.53.245",
+    "timestamp": "2026-03-13T21:47:04.404080"
+  },
+  {
+    "id": "normal_v3_0053",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "119.172.212.132",
+    "timestamp": "2026-03-13T21:47:04.404084"
+  },
+  {
+    "id": "normal_v3_0054",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "192.207.35.102",
+    "timestamp": "2026-03-13T21:47:04.404089"
+  },
+  {
+    "id": "normal_v3_0055",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "119.93.90.61",
+    "timestamp": "2026-03-13T21:47:04.404093"
+  },
+  {
+    "id": "normal_v3_0056",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "211.33.21.220",
+    "timestamp": "2026-03-13T21:47:04.404098"
+  },
+  {
+    "id": "normal_v3_0057",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "157.242.21.173",
+    "timestamp": "2026-03-13T21:47:04.404102"
+  },
+  {
+    "id": "normal_v3_0058",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "15.195.251.201",
+    "timestamp": "2026-03-13T21:47:04.404107"
+  },
+  {
+    "id": "normal_v3_0059",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "187.19.119.140",
+    "timestamp": "2026-03-13T21:47:04.404112"
+  },
+  {
+    "id": "normal_v3_0060",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "156.143.251.131",
+    "timestamp": "2026-03-13T21:47:04.404119"
+  },
+  {
+    "id": "normal_v3_0061",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "44.209.144.250",
+    "timestamp": "2026-03-13T21:47:04.404123"
+  },
+  {
+    "id": "normal_v3_0062",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "12.3.173.207",
+    "timestamp": "2026-03-13T21:47:04.404128"
+  },
+  {
+    "id": "normal_v3_0063",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "117.101.85.147",
+    "timestamp": "2026-03-13T21:47:04.404132"
+  },
+  {
+    "id": "normal_v3_0064",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "66.132.80.48",
+    "timestamp": "2026-03-13T21:47:04.404137"
+  },
+  {
+    "id": "normal_v3_0065",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "66.251.181.190",
+    "timestamp": "2026-03-13T21:47:04.404141"
+  },
+  {
+    "id": "normal_v3_0066",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "209.96.166.193",
+    "timestamp": "2026-03-13T21:47:04.404146"
+  },
+  {
+    "id": "normal_v3_0067",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "182.46.223.51",
+    "timestamp": "2026-03-13T21:47:04.404153"
+  },
+  {
+    "id": "normal_v3_0068",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "202.95.192.22",
+    "timestamp": "2026-03-13T21:47:04.404158"
+  },
+  {
+    "id": "normal_v3_0069",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "7.45.93.178",
+    "timestamp": "2026-03-13T21:47:04.404163"
+  },
+  {
+    "id": "normal_v3_0070",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "187.186.185.107",
+    "timestamp": "2026-03-13T21:47:04.404167"
+  },
+  {
+    "id": "normal_v3_0071",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "43.55.82.65",
+    "timestamp": "2026-03-13T21:47:04.404172"
+  },
+  {
+    "id": "normal_v3_0072",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "30.148.99.47",
+    "timestamp": "2026-03-13T21:47:04.404176"
+  },
+  {
+    "id": "normal_v3_0073",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "89.95.143.170",
+    "timestamp": "2026-03-13T21:47:04.404183"
+  },
+  {
+    "id": "normal_v3_0074",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "88.132.45.186",
+    "timestamp": "2026-03-13T21:47:04.404188"
+  },
+  {
+    "id": "normal_v3_0075",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "145.141.252.222",
+    "timestamp": "2026-03-13T21:47:04.404192"
+  },
+  {
+    "id": "normal_v3_0076",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "80.97.192.215",
+    "timestamp": "2026-03-13T21:47:04.404197"
+  },
+  {
+    "id": "normal_v3_0077",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "122.71.204.181",
+    "timestamp": "2026-03-13T21:47:04.404202"
+  },
+  {
+    "id": "normal_v3_0078",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "10.198.46.123",
+    "timestamp": "2026-03-13T21:47:04.404207"
+  },
+  {
+    "id": "normal_v3_0079",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "68.152.218.31",
+    "timestamp": "2026-03-13T21:47:04.404213"
+  },
+  {
+    "id": "normal_v3_0080",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "34.73.189.78",
+    "timestamp": "2026-03-13T21:47:04.404218"
+  },
+  {
+    "id": "normal_v3_0081",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "131.136.223.46",
+    "timestamp": "2026-03-13T21:47:04.404223"
+  },
+  {
+    "id": "normal_v3_0082",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "217.15.213.86",
+    "timestamp": "2026-03-13T21:47:04.404227"
+  },
+  {
+    "id": "normal_v3_0083",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "193.116.119.6",
+    "timestamp": "2026-03-13T21:47:04.404232"
+  },
+  {
+    "id": "normal_v3_0084",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "79.107.244.52",
+    "timestamp": "2026-03-13T21:47:04.404237"
+  },
+  {
+    "id": "normal_v3_0085",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "99.15.84.161",
+    "timestamp": "2026-03-13T21:47:04.404241"
+  },
+  {
+    "id": "normal_v3_0086",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "186.123.230.113",
+    "timestamp": "2026-03-13T21:47:04.404246"
+  },
+  {
+    "id": "normal_v3_0087",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "143.213.255.98",
+    "timestamp": "2026-03-13T21:47:04.404250"
+  },
+  {
+    "id": "normal_v3_0088",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "183.104.12.21",
+    "timestamp": "2026-03-13T21:47:04.404255"
+  },
+  {
+    "id": "normal_v3_0089",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "121.217.9.7",
+    "timestamp": "2026-03-13T21:47:04.404259"
+  },
+  {
+    "id": "normal_v3_0090",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "106.128.179.107",
+    "timestamp": "2026-03-13T21:47:04.404264"
+  },
+  {
+    "id": "normal_v3_0091",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "204.250.242.153",
+    "timestamp": "2026-03-13T21:47:04.404269"
+  },
+  {
+    "id": "normal_v3_0092",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "144.13.147.157",
+    "timestamp": "2026-03-13T21:47:04.404273"
+  },
+  {
+    "id": "normal_v3_0093",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "88.126.220.78",
+    "timestamp": "2026-03-13T21:47:04.404278"
+  },
+  {
+    "id": "normal_v3_0094",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "41.135.217.219",
+    "timestamp": "2026-03-13T21:47:04.404288"
+  },
+  {
+    "id": "normal_v3_0095",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "156.61.198.74",
+    "timestamp": "2026-03-13T21:47:04.404292"
+  },
+  {
+    "id": "normal_v3_0096",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "80.186.147.177",
+    "timestamp": "2026-03-13T21:47:04.404297"
+  },
+  {
+    "id": "normal_v3_0097",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "1.16.99.36",
+    "timestamp": "2026-03-13T21:47:04.404301"
+  },
+  {
+    "id": "normal_v3_0098",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "120.135.78.225",
+    "timestamp": "2026-03-13T21:47:04.404306"
+  },
+  {
+    "id": "normal_v3_0099",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "188.249.150.105",
+    "timestamp": "2026-03-13T21:47:04.404312"
+  },
+  {
+    "id": "normal_v3_0100",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "137.245.129.73",
+    "timestamp": "2026-03-13T21:47:04.404317"
+  },
+  {
+    "id": "normal_v3_0101",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "62.147.129.48",
+    "timestamp": "2026-03-13T21:47:04.404321"
+  },
+  {
+    "id": "normal_v3_0102",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "209.244.28.71",
+    "timestamp": "2026-03-13T21:47:04.404326"
+  },
+  {
+    "id": "normal_v3_0103",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "94.23.12.50",
+    "timestamp": "2026-03-13T21:47:04.404331"
+  },
+  {
+    "id": "normal_v3_0104",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "154.241.20.13",
+    "timestamp": "2026-03-13T21:47:04.404335"
+  },
+  {
+    "id": "normal_v3_0105",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "149.81.255.109",
+    "timestamp": "2026-03-13T21:47:04.404340"
+  },
+  {
+    "id": "normal_v3_0106",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "107.224.101.88",
+    "timestamp": "2026-03-13T21:47:04.404344"
+  },
+  {
+    "id": "normal_v3_0107",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "164.241.52.36",
+    "timestamp": "2026-03-13T21:47:04.404348"
+  },
+  {
+    "id": "normal_v3_0108",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "181.118.216.149",
+    "timestamp": "2026-03-13T21:47:04.404353"
+  },
+  {
+    "id": "normal_v3_0109",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "39.13.166.107",
+    "timestamp": "2026-03-13T21:47:04.404358"
+  },
+  {
+    "id": "normal_v3_0110",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "131.170.42.106",
+    "timestamp": "2026-03-13T21:47:04.404362"
+  },
+  {
+    "id": "normal_v3_0111",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "15.59.67.206",
+    "timestamp": "2026-03-13T21:47:04.404367"
+  },
+  {
+    "id": "normal_v3_0112",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "166.136.253.27",
+    "timestamp": "2026-03-13T21:47:04.404372"
+  },
+  {
+    "id": "normal_v3_0113",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "46.140.46.246",
+    "timestamp": "2026-03-13T21:47:04.404376"
+  },
+  {
+    "id": "normal_v3_0114",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "160.50.78.117",
+    "timestamp": "2026-03-13T21:47:04.404381"
+  },
+  {
+    "id": "normal_v3_0115",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "113.74.245.111",
+    "timestamp": "2026-03-13T21:47:04.404387"
+  },
+  {
+    "id": "normal_v3_0116",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "39.146.152.67",
+    "timestamp": "2026-03-13T21:47:04.404392"
+  },
+  {
+    "id": "normal_v3_0117",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "135.252.118.243",
+    "timestamp": "2026-03-13T21:47:04.404399"
+  },
+  {
+    "id": "normal_v3_0118",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "219.83.141.35",
+    "timestamp": "2026-03-13T21:47:04.404405"
+  },
+  {
+    "id": "normal_v3_0119",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "108.100.234.165",
+    "timestamp": "2026-03-13T21:47:04.404410"
+  },
+  {
+    "id": "normal_v3_0120",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "49.132.217.128",
+    "timestamp": "2026-03-13T21:47:04.404415"
+  },
+  {
+    "id": "normal_v3_0121",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "194.97.26.102",
+    "timestamp": "2026-03-13T21:47:04.404420"
+  },
+  {
+    "id": "normal_v3_0122",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "146.29.142.228",
+    "timestamp": "2026-03-13T21:47:04.404424"
+  },
+  {
+    "id": "normal_v3_0123",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "102.179.135.57",
+    "timestamp": "2026-03-13T21:47:04.404429"
+  },
+  {
+    "id": "normal_v3_0124",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "221.5.178.86",
+    "timestamp": "2026-03-13T21:47:04.404433"
+  },
+  {
+    "id": "normal_v3_0125",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "51.210.45.190",
+    "timestamp": "2026-03-13T21:47:04.404438"
+  },
+  {
+    "id": "normal_v3_0126",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "183.230.103.225",
+    "timestamp": "2026-03-13T21:47:04.404443"
+  },
+  {
+    "id": "normal_v3_0127",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "207.101.214.98",
+    "timestamp": "2026-03-13T21:47:04.404447"
+  },
+  {
+    "id": "normal_v3_0128",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "219.249.240.65",
+    "timestamp": "2026-03-13T21:47:04.404452"
+  },
+  {
+    "id": "normal_v3_0129",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "214.34.99.133",
+    "timestamp": "2026-03-13T21:47:04.404456"
+  },
+  {
+    "id": "normal_v3_0130",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "60.70.2.44",
+    "timestamp": "2026-03-13T21:47:04.404461"
+  },
+  {
+    "id": "normal_v3_0131",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "192.115.74.68",
+    "timestamp": "2026-03-13T21:47:04.404466"
+  },
+  {
+    "id": "normal_v3_0132",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "57.230.145.53",
+    "timestamp": "2026-03-13T21:47:04.404470"
+  },
+  {
+    "id": "normal_v3_0133",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "75.41.207.58",
+    "timestamp": "2026-03-13T21:47:04.404475"
+  },
+  {
+    "id": "normal_v3_0134",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "163.92.236.201",
+    "timestamp": "2026-03-13T21:47:04.404479"
+  },
+  {
+    "id": "normal_v3_0135",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "178.154.33.23",
+    "timestamp": "2026-03-13T21:47:04.404484"
+  },
+  {
+    "id": "normal_v3_0136",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "126.245.154.90",
+    "timestamp": "2026-03-13T21:47:04.404490"
+  },
+  {
+    "id": "normal_v3_0137",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "164.154.72.27",
+    "timestamp": "2026-03-13T21:47:04.404495"
+  },
+  {
+    "id": "normal_v3_0138",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "97.205.136.62",
+    "timestamp": "2026-03-13T21:47:04.404502"
+  },
+  {
+    "id": "normal_v3_0139",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "205.33.60.52",
+    "timestamp": "2026-03-13T21:47:04.404506"
+  },
+  {
+    "id": "normal_v3_0140",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "216.255.76.30",
+    "timestamp": "2026-03-13T21:47:04.404511"
+  },
+  {
+    "id": "normal_v3_0141",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "159.66.249.74",
+    "timestamp": "2026-03-13T21:47:04.404515"
+  },
+  {
+    "id": "normal_v3_0142",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "77.70.60.162",
+    "timestamp": "2026-03-13T21:47:04.404520"
+  },
+  {
+    "id": "normal_v3_0143",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "200.165.198.75",
+    "timestamp": "2026-03-13T21:47:04.404524"
+  },
+  {
+    "id": "normal_v3_0144",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "166.210.35.163",
+    "timestamp": "2026-03-13T21:47:04.404529"
+  },
+  {
+    "id": "normal_v3_0145",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "4.192.204.186",
+    "timestamp": "2026-03-13T21:47:04.404533"
+  },
+  {
+    "id": "normal_v3_0146",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "59.137.146.173",
+    "timestamp": "2026-03-13T21:47:04.404538"
+  },
+  {
+    "id": "normal_v3_0147",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "70.107.88.239",
+    "timestamp": "2026-03-13T21:47:04.404542"
+  },
+  {
+    "id": "normal_v3_0148",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "209.15.123.201",
+    "timestamp": "2026-03-13T21:47:04.404547"
+  },
+  {
+    "id": "normal_v3_0149",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "156.106.243.234",
+    "timestamp": "2026-03-13T21:47:04.404552"
+  },
+  {
+    "id": "normal_v3_0150",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "188.46.63.10",
+    "timestamp": "2026-03-13T21:47:04.404556"
+  },
+  {
+    "id": "normal_v3_0151",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "83.226.190.54",
+    "timestamp": "2026-03-13T21:47:04.404561"
+  },
+  {
+    "id": "normal_v3_0152",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "47.210.72.58",
+    "timestamp": "2026-03-13T21:47:04.404565"
+  },
+  {
+    "id": "normal_v3_0153",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "165.186.11.76",
+    "timestamp": "2026-03-13T21:47:04.404570"
+  },
+  {
+    "id": "normal_v3_0154",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "11.179.37.115",
+    "timestamp": "2026-03-13T21:47:04.404574"
+  },
+  {
+    "id": "normal_v3_0155",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "42.169.78.116",
+    "timestamp": "2026-03-13T21:47:04.404579"
+  },
+  {
+    "id": "normal_v3_0156",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "94.17.89.186",
+    "timestamp": "2026-03-13T21:47:04.404583"
+  },
+  {
+    "id": "normal_v3_0157",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "56.168.12.34",
+    "timestamp": "2026-03-13T21:47:04.404590"
+  },
+  {
+    "id": "normal_v3_0158",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "200.70.207.51",
+    "timestamp": "2026-03-13T21:47:04.404597"
+  },
+  {
+    "id": "normal_v3_0159",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "57.29.255.164",
+    "timestamp": "2026-03-13T21:47:04.404602"
+  },
+  {
+    "id": "normal_v3_0160",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "191.212.230.235",
+    "timestamp": "2026-03-13T21:47:04.404607"
+  },
+  {
+    "id": "normal_v3_0161",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "184.241.107.171",
+    "timestamp": "2026-03-13T21:47:04.404611"
+  },
+  {
+    "id": "normal_v3_0162",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "27.89.243.75",
+    "timestamp": "2026-03-13T21:47:04.404616"
+  },
+  {
+    "id": "normal_v3_0163",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "139.36.157.95",
+    "timestamp": "2026-03-13T21:47:04.404620"
+  },
+  {
+    "id": "normal_v3_0164",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "27.146.238.147",
+    "timestamp": "2026-03-13T21:47:04.404626"
+  },
+  {
+    "id": "normal_v3_0165",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "19.164.143.105",
+    "timestamp": "2026-03-13T21:47:04.404630"
+  },
+  {
+    "id": "normal_v3_0166",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "180.71.150.114",
+    "timestamp": "2026-03-13T21:47:04.404635"
+  },
+  {
+    "id": "normal_v3_0167",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "77.30.43.223",
+    "timestamp": "2026-03-13T21:47:04.404639"
+  },
+  {
+    "id": "normal_v3_0168",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "112.149.198.110",
+    "timestamp": "2026-03-13T21:47:04.404660"
+  },
+  {
+    "id": "normal_v3_0169",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "191.0.55.70",
+    "timestamp": "2026-03-13T21:47:04.404669"
+  },
+  {
+    "id": "normal_v3_0170",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "111.62.120.179",
+    "timestamp": "2026-03-13T21:47:04.404676"
+  },
+  {
+    "id": "normal_v3_0171",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "63.26.145.41",
+    "timestamp": "2026-03-13T21:47:04.404683"
+  },
+  {
+    "id": "normal_v3_0172",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "1.62.134.30",
+    "timestamp": "2026-03-13T21:47:04.404690"
+  },
+  {
+    "id": "normal_v3_0173",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "4.122.240.183",
+    "timestamp": "2026-03-13T21:47:04.404697"
+  },
+  {
+    "id": "normal_v3_0174",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "204.222.251.242",
+    "timestamp": "2026-03-13T21:47:04.404703"
+  },
+  {
+    "id": "normal_v3_0175",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "141.116.7.68",
+    "timestamp": "2026-03-13T21:47:04.404708"
+  },
+  {
+    "id": "normal_v3_0176",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "160.106.29.43",
+    "timestamp": "2026-03-13T21:47:04.404713"
+  },
+  {
+    "id": "normal_v3_0177",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "130.203.202.240",
+    "timestamp": "2026-03-13T21:47:04.404720"
+  },
+  {
+    "id": "normal_v3_0178",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "69.239.234.146",
+    "timestamp": "2026-03-13T21:47:04.404724"
+  },
+  {
+    "id": "normal_v3_0179",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "218.70.253.251",
+    "timestamp": "2026-03-13T21:47:04.404731"
+  },
+  {
+    "id": "normal_v3_0180",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "217.172.136.181",
+    "timestamp": "2026-03-13T21:47:04.404736"
+  },
+  {
+    "id": "normal_v3_0181",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "6.69.36.209",
+    "timestamp": "2026-03-13T21:47:04.404740"
+  },
+  {
+    "id": "normal_v3_0182",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "177.141.117.254",
+    "timestamp": "2026-03-13T21:47:04.404745"
+  },
+  {
+    "id": "normal_v3_0183",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "212.237.53.122",
+    "timestamp": "2026-03-13T21:47:04.404749"
+  },
+  {
+    "id": "normal_v3_0184",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "175.154.179.32",
+    "timestamp": "2026-03-13T21:47:04.404754"
+  },
+  {
+    "id": "normal_v3_0185",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "203.206.216.41",
+    "timestamp": "2026-03-13T21:47:04.404758"
+  },
+  {
+    "id": "normal_v3_0186",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "29.178.237.190",
+    "timestamp": "2026-03-13T21:47:04.404762"
+  },
+  {
+    "id": "normal_v3_0187",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "113.108.32.150",
+    "timestamp": "2026-03-13T21:47:04.404767"
+  },
+  {
+    "id": "normal_v3_0188",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "95.127.62.107",
+    "timestamp": "2026-03-13T21:47:04.404771"
+  },
+  {
+    "id": "normal_v3_0189",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "170.255.35.147",
+    "timestamp": "2026-03-13T21:47:04.404776"
+  },
+  {
+    "id": "normal_v3_0190",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "112.111.131.67",
+    "timestamp": "2026-03-13T21:47:04.404780"
+  },
+  {
+    "id": "normal_v3_0191",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "59.234.253.136",
+    "timestamp": "2026-03-13T21:47:04.404785"
+  },
+  {
+    "id": "normal_v3_0192",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "197.228.244.214",
+    "timestamp": "2026-03-13T21:47:04.404789"
+  },
+  {
+    "id": "normal_v3_0193",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "5.222.98.173",
+    "timestamp": "2026-03-13T21:47:04.404794"
+  },
+  {
+    "id": "normal_v3_0194",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "106.181.115.21",
+    "timestamp": "2026-03-13T21:47:04.404799"
+  },
+  {
+    "id": "normal_v3_0195",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "141.114.86.53",
+    "timestamp": "2026-03-13T21:47:04.404803"
+  },
+  {
+    "id": "normal_v3_0196",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "103.100.97.110",
+    "timestamp": "2026-03-13T21:47:04.404810"
+  },
+  {
+    "id": "normal_v3_0197",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "174.71.80.197",
+    "timestamp": "2026-03-13T21:47:04.404814"
+  },
+  {
+    "id": "normal_v3_0198",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "81.162.16.250",
+    "timestamp": "2026-03-13T21:47:04.404819"
+  },
+  {
+    "id": "normal_v3_0199",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "106.26.208.178",
+    "timestamp": "2026-03-13T21:47:04.404823"
+  },
+  {
+    "id": "normal_v3_0200",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "97.189.227.92",
+    "timestamp": "2026-03-13T21:47:04.404830"
+  },
+  {
+    "id": "normal_v3_0201",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "130.132.63.208",
+    "timestamp": "2026-03-13T21:47:04.404835"
+  },
+  {
+    "id": "normal_v3_0202",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "84.114.198.253",
+    "timestamp": "2026-03-13T21:47:04.404840"
+  },
+  {
+    "id": "normal_v3_0203",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "54.208.210.64",
+    "timestamp": "2026-03-13T21:47:04.404844"
+  },
+  {
+    "id": "normal_v3_0204",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "99.15.110.141",
+    "timestamp": "2026-03-13T21:47:04.404849"
+  },
+  {
+    "id": "normal_v3_0205",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "30.86.32.162",
+    "timestamp": "2026-03-13T21:47:04.404853"
+  },
+  {
+    "id": "normal_v3_0206",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "87.89.213.201",
+    "timestamp": "2026-03-13T21:47:04.404858"
+  },
+  {
+    "id": "normal_v3_0207",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "154.34.71.220",
+    "timestamp": "2026-03-13T21:47:04.404862"
+  },
+  {
+    "id": "normal_v3_0208",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "48.50.55.115",
+    "timestamp": "2026-03-13T21:47:04.404867"
+  },
+  {
+    "id": "normal_v3_0209",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "144.36.181.182",
+    "timestamp": "2026-03-13T21:47:04.404871"
+  },
+  {
+    "id": "normal_v3_0210",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "201.223.67.184",
+    "timestamp": "2026-03-13T21:47:04.404876"
+  },
+  {
+    "id": "normal_v3_0211",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "191.177.96.192",
+    "timestamp": "2026-03-13T21:47:04.404880"
+  },
+  {
+    "id": "normal_v3_0212",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "161.229.147.170",
+    "timestamp": "2026-03-13T21:47:04.404885"
+  },
+  {
+    "id": "normal_v3_0213",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "210.195.157.7",
+    "timestamp": "2026-03-13T21:47:04.404890"
+  },
+  {
+    "id": "normal_v3_0214",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "92.4.21.104",
+    "timestamp": "2026-03-13T21:47:04.404894"
+  },
+  {
+    "id": "normal_v3_0215",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "173.25.245.60",
+    "timestamp": "2026-03-13T21:47:04.404899"
+  },
+  {
+    "id": "normal_v3_0216",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "149.9.186.17",
+    "timestamp": "2026-03-13T21:47:04.404906"
+  },
+  {
+    "id": "normal_v3_0217",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "162.232.30.188",
+    "timestamp": "2026-03-13T21:47:04.404910"
+  },
+  {
+    "id": "normal_v3_0218",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "25.237.19.211",
+    "timestamp": "2026-03-13T21:47:04.404915"
+  },
+  {
+    "id": "normal_v3_0219",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "35.25.32.162",
+    "timestamp": "2026-03-13T21:47:04.404922"
+  },
+  {
+    "id": "normal_v3_0220",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "118.236.170.170",
+    "timestamp": "2026-03-13T21:47:04.404926"
+  },
+  {
+    "id": "normal_v3_0221",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "64.76.246.236",
+    "timestamp": "2026-03-13T21:47:04.404933"
+  },
+  {
+    "id": "normal_v3_0222",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "154.250.187.56",
+    "timestamp": "2026-03-13T21:47:04.404937"
+  },
+  {
+    "id": "normal_v3_0223",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "127.110.110.102",
+    "timestamp": "2026-03-13T21:47:04.404942"
+  },
+  {
+    "id": "normal_v3_0224",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "127.89.57.129",
+    "timestamp": "2026-03-13T21:47:04.404946"
+  },
+  {
+    "id": "normal_v3_0225",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "142.153.128.22",
+    "timestamp": "2026-03-13T21:47:04.404951"
+  },
+  {
+    "id": "normal_v3_0226",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "122.224.12.55",
+    "timestamp": "2026-03-13T21:47:04.404956"
+  },
+  {
+    "id": "normal_v3_0227",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "210.189.103.95",
+    "timestamp": "2026-03-13T21:47:04.404960"
+  },
+  {
+    "id": "normal_v3_0228",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "199.60.225.97",
+    "timestamp": "2026-03-13T21:47:04.404965"
+  },
+  {
+    "id": "normal_v3_0229",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "106.118.237.118",
+    "timestamp": "2026-03-13T21:47:04.404969"
+  },
+  {
+    "id": "normal_v3_0230",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "57.164.199.43",
+    "timestamp": "2026-03-13T21:47:04.404974"
+  },
+  {
+    "id": "normal_v3_0231",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "175.47.105.216",
+    "timestamp": "2026-03-13T21:47:04.404979"
+  },
+  {
+    "id": "normal_v3_0232",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "56.124.46.97",
+    "timestamp": "2026-03-13T21:47:04.404983"
+  },
+  {
+    "id": "normal_v3_0233",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "115.102.25.67",
+    "timestamp": "2026-03-13T21:47:04.404988"
+  },
+  {
+    "id": "normal_v3_0234",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "173.163.232.45",
+    "timestamp": "2026-03-13T21:47:04.404992"
+  },
+  {
+    "id": "normal_v3_0235",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "220.215.94.242",
+    "timestamp": "2026-03-13T21:47:04.404999"
+  },
+  {
+    "id": "normal_v3_0236",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "31.92.115.148",
+    "timestamp": "2026-03-13T21:47:04.405004"
+  },
+  {
+    "id": "normal_v3_0237",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "91.219.48.174",
+    "timestamp": "2026-03-13T21:47:04.405009"
+  },
+  {
+    "id": "normal_v3_0238",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "184.71.105.206",
+    "timestamp": "2026-03-13T21:47:04.405013"
+  },
+  {
+    "id": "normal_v3_0239",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "27.213.165.158",
+    "timestamp": "2026-03-13T21:47:04.405018"
+  },
+  {
+    "id": "normal_v3_0240",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "105.58.12.164",
+    "timestamp": "2026-03-13T21:47:04.405022"
+  },
+  {
+    "id": "normal_v3_0241",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "62.236.251.2",
+    "timestamp": "2026-03-13T21:47:04.405027"
+  },
+  {
+    "id": "normal_v3_0242",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "132.8.77.38",
+    "timestamp": "2026-03-13T21:47:04.405031"
+  },
+  {
+    "id": "normal_v3_0243",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "67.217.227.183",
+    "timestamp": "2026-03-13T21:47:04.405038"
+  },
+  {
+    "id": "normal_v3_0244",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "217.106.230.212",
+    "timestamp": "2026-03-13T21:47:04.405042"
+  },
+  {
+    "id": "normal_v3_0245",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "185.218.236.121",
+    "timestamp": "2026-03-13T21:47:04.405047"
+  },
+  {
+    "id": "normal_v3_0246",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "101.3.75.195",
+    "timestamp": "2026-03-13T21:47:04.405052"
+  },
+  {
+    "id": "normal_v3_0247",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "181.130.95.91",
+    "timestamp": "2026-03-13T21:47:04.405057"
+  },
+  {
+    "id": "normal_v3_0248",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "128.59.143.36",
+    "timestamp": "2026-03-13T21:47:04.405061"
+  },
+  {
+    "id": "normal_v3_0249",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "174.37.246.2",
+    "timestamp": "2026-03-13T21:47:04.405066"
+  },
+  {
+    "id": "normal_v3_0250",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "199.182.67.18",
+    "timestamp": "2026-03-13T21:47:04.405070"
+  },
+  {
+    "id": "normal_v3_0251",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "47.193.170.175",
+    "timestamp": "2026-03-13T21:47:04.405075"
+  },
+  {
+    "id": "normal_v3_0252",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "153.137.93.224",
+    "timestamp": "2026-03-13T21:47:04.405079"
+  },
+  {
+    "id": "normal_v3_0253",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "16.173.25.112",
+    "timestamp": "2026-03-13T21:47:04.405084"
+  },
+  {
+    "id": "normal_v3_0254",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "28.8.38.219",
+    "timestamp": "2026-03-13T21:47:04.405088"
+  },
+  {
+    "id": "normal_v3_0255",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "33.198.51.226",
+    "timestamp": "2026-03-13T21:47:04.405095"
+  },
+  {
+    "id": "normal_v3_0256",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "163.97.200.254",
+    "timestamp": "2026-03-13T21:47:04.405100"
+  },
+  {
+    "id": "normal_v3_0257",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "76.9.225.161",
+    "timestamp": "2026-03-13T21:47:04.405105"
+  },
+  {
+    "id": "normal_v3_0258",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "189.238.48.196",
+    "timestamp": "2026-03-13T21:47:04.405110"
+  },
+  {
+    "id": "normal_v3_0259",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "1.21.41.215",
+    "timestamp": "2026-03-13T21:47:04.405114"
+  },
+  {
+    "id": "normal_v3_0260",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "193.130.38.102",
+    "timestamp": "2026-03-13T21:47:04.405119"
+  },
+  {
+    "id": "normal_v3_0261",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "186.174.98.23",
+    "timestamp": "2026-03-13T21:47:04.405124"
+  },
+  {
+    "id": "normal_v3_0262",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "79.172.199.122",
+    "timestamp": "2026-03-13T21:47:04.405128"
+  },
+  {
+    "id": "normal_v3_0263",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "217.88.136.42",
+    "timestamp": "2026-03-13T21:47:04.405133"
+  },
+  {
+    "id": "normal_v3_0264",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "211.197.219.15",
+    "timestamp": "2026-03-13T21:47:04.405140"
+  },
+  {
+    "id": "normal_v3_0265",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "158.172.175.239",
+    "timestamp": "2026-03-13T21:47:04.405145"
+  },
+  {
+    "id": "normal_v3_0266",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "206.75.58.200",
+    "timestamp": "2026-03-13T21:47:04.405149"
+  },
+  {
+    "id": "normal_v3_0267",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "105.32.227.59",
+    "timestamp": "2026-03-13T21:47:04.405154"
+  },
+  {
+    "id": "normal_v3_0268",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "6.138.85.250",
+    "timestamp": "2026-03-13T21:47:04.405158"
+  },
+  {
+    "id": "normal_v3_0269",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "55.217.149.12",
+    "timestamp": "2026-03-13T21:47:04.405163"
+  },
+  {
+    "id": "normal_v3_0270",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "26.206.130.21",
+    "timestamp": "2026-03-13T21:47:04.405168"
+  },
+  {
+    "id": "normal_v3_0271",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "64.135.212.133",
+    "timestamp": "2026-03-13T21:47:04.405176"
+  },
+  {
+    "id": "normal_v3_0272",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "137.155.67.111",
+    "timestamp": "2026-03-13T21:47:04.405181"
+  },
+  {
+    "id": "normal_v3_0273",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "159.229.222.207",
+    "timestamp": "2026-03-13T21:47:04.405185"
+  },
+  {
+    "id": "normal_v3_0274",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "53.252.221.222",
+    "timestamp": "2026-03-13T21:47:04.405192"
+  },
+  {
+    "id": "normal_v3_0275",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "72.43.146.77",
+    "timestamp": "2026-03-13T21:47:04.405197"
+  },
+  {
+    "id": "normal_v3_0276",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "16.155.32.239",
+    "timestamp": "2026-03-13T21:47:04.405201"
+  },
+  {
+    "id": "normal_v3_0277",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "152.149.134.166",
+    "timestamp": "2026-03-13T21:47:04.405206"
+  },
+  {
+    "id": "normal_v3_0278",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "32.124.92.42",
+    "timestamp": "2026-03-13T21:47:04.405211"
+  },
+  {
+    "id": "normal_v3_0279",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "213.195.64.147",
+    "timestamp": "2026-03-13T21:47:04.405215"
+  },
+  {
+    "id": "normal_v3_0280",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "98.130.8.107",
+    "timestamp": "2026-03-13T21:47:04.405220"
+  },
+  {
+    "id": "normal_v3_0281",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "96.103.127.18",
+    "timestamp": "2026-03-13T21:47:04.405224"
+  },
+  {
+    "id": "normal_v3_0282",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "151.131.173.130",
+    "timestamp": "2026-03-13T21:47:04.405229"
+  },
+  {
+    "id": "normal_v3_0283",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "15.56.139.180",
+    "timestamp": "2026-03-13T21:47:04.405233"
+  },
+  {
+    "id": "normal_v3_0284",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "78.165.95.225",
+    "timestamp": "2026-03-13T21:47:04.405238"
+  },
+  {
+    "id": "normal_v3_0285",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "67.39.56.15",
+    "timestamp": "2026-03-13T21:47:04.405244"
+  },
+  {
+    "id": "normal_v3_0286",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "46.43.132.154",
+    "timestamp": "2026-03-13T21:47:04.405249"
+  },
+  {
+    "id": "normal_v3_0287",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "175.222.133.99",
+    "timestamp": "2026-03-13T21:47:04.405254"
+  },
+  {
+    "id": "normal_v3_0288",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "183.85.181.165",
+    "timestamp": "2026-03-13T21:47:04.405258"
+  },
+  {
+    "id": "normal_v3_0289",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "41.73.197.119",
+    "timestamp": "2026-03-13T21:47:04.405263"
+  },
+  {
+    "id": "normal_v3_0290",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "13.220.74.4",
+    "timestamp": "2026-03-13T21:47:04.405268"
+  },
+  {
+    "id": "normal_v3_0291",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "147.253.199.168",
+    "timestamp": "2026-03-13T21:47:04.405272"
+  },
+  {
+    "id": "normal_v3_0292",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "57.141.35.170",
+    "timestamp": "2026-03-13T21:47:04.405277"
+  },
+  {
+    "id": "normal_v3_0293",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "98.224.123.97",
+    "timestamp": "2026-03-13T21:47:04.405282"
+  },
+  {
+    "id": "normal_v3_0294",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "55.110.176.215",
+    "timestamp": "2026-03-13T21:47:04.405289"
+  },
+  {
+    "id": "normal_v3_0295",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "96.78.8.31",
+    "timestamp": "2026-03-13T21:47:04.405293"
+  },
+  {
+    "id": "normal_v3_0296",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "53.55.239.222",
+    "timestamp": "2026-03-13T21:47:04.405298"
+  },
+  {
+    "id": "normal_v3_0297",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "68.230.103.208",
+    "timestamp": "2026-03-13T21:47:04.405302"
+  },
+  {
+    "id": "normal_v3_0298",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "164.12.186.12",
+    "timestamp": "2026-03-13T21:47:04.405307"
+  },
+  {
+    "id": "normal_v3_0299",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "129.185.116.135",
+    "timestamp": "2026-03-13T21:47:04.405312"
+  },
+  {
+    "id": "normal_v3_0300",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "51.86.243.249",
+    "timestamp": "2026-03-13T21:47:04.405316"
+  },
+  {
+    "id": "normal_v3_0301",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "145.107.214.77",
+    "timestamp": "2026-03-13T21:47:04.405321"
+  },
+  {
+    "id": "normal_v3_0302",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "123.197.97.179",
+    "timestamp": "2026-03-13T21:47:04.405325"
+  },
+  {
+    "id": "normal_v3_0303",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "10.61.170.2",
+    "timestamp": "2026-03-13T21:47:04.405330"
+  },
+  {
+    "id": "normal_v3_0304",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "204.26.249.98",
+    "timestamp": "2026-03-13T21:47:04.405334"
+  },
+  {
+    "id": "normal_v3_0305",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "194.212.4.181",
+    "timestamp": "2026-03-13T21:47:04.405339"
+  },
+  {
+    "id": "normal_v3_0306",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "143.171.105.79",
+    "timestamp": "2026-03-13T21:47:04.405346"
+  },
+  {
+    "id": "normal_v3_0307",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "70.87.113.26",
+    "timestamp": "2026-03-13T21:47:04.405351"
+  },
+  {
+    "id": "normal_v3_0308",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "21.21.104.180",
+    "timestamp": "2026-03-13T21:47:04.405355"
+  },
+  {
+    "id": "normal_v3_0309",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "98.192.112.231",
+    "timestamp": "2026-03-13T21:47:04.405360"
+  },
+  {
+    "id": "normal_v3_0310",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "60.166.41.38",
+    "timestamp": "2026-03-13T21:47:04.405365"
+  },
+  {
+    "id": "normal_v3_0311",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "202.193.194.177",
+    "timestamp": "2026-03-13T21:47:04.405369"
+  },
+  {
+    "id": "normal_v3_0312",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "171.193.36.108",
+    "timestamp": "2026-03-13T21:47:04.405374"
+  },
+  {
+    "id": "normal_v3_0313",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "55.169.98.80",
+    "timestamp": "2026-03-13T21:47:04.405381"
+  },
+  {
+    "id": "normal_v3_0314",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "121.140.96.103",
+    "timestamp": "2026-03-13T21:47:04.405385"
+  },
+  {
+    "id": "normal_v3_0315",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "211.45.39.132",
+    "timestamp": "2026-03-13T21:47:04.405390"
+  },
+  {
+    "id": "normal_v3_0316",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "96.224.212.244",
+    "timestamp": "2026-03-13T21:47:04.405394"
+  },
+  {
+    "id": "normal_v3_0317",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "100.7.216.27",
+    "timestamp": "2026-03-13T21:47:04.405399"
+  },
+  {
+    "id": "normal_v3_0318",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "190.189.59.138",
+    "timestamp": "2026-03-13T21:47:04.405403"
+  },
+  {
+    "id": "normal_v3_0319",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "208.166.200.27",
+    "timestamp": "2026-03-13T21:47:04.405408"
+  },
+  {
+    "id": "normal_v3_0320",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "124.132.199.173",
+    "timestamp": "2026-03-13T21:47:04.405413"
+  },
+  {
+    "id": "normal_v3_0321",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "94.27.219.135",
+    "timestamp": "2026-03-13T21:47:04.405419"
+  },
+  {
+    "id": "normal_v3_0322",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "4.147.182.140",
+    "timestamp": "2026-03-13T21:47:04.405424"
+  },
+  {
+    "id": "normal_v3_0323",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "173.144.137.20",
+    "timestamp": "2026-03-13T21:47:04.405429"
+  },
+  {
+    "id": "normal_v3_0324",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "172.106.190.183",
+    "timestamp": "2026-03-13T21:47:04.405434"
+  },
+  {
+    "id": "normal_v3_0325",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "178.200.54.178",
+    "timestamp": "2026-03-13T21:47:04.405439"
+  },
+  {
+    "id": "normal_v3_0326",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "36.16.122.71",
+    "timestamp": "2026-03-13T21:47:04.405443"
+  },
+  {
+    "id": "normal_v3_0327",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "93.75.97.147",
+    "timestamp": "2026-03-13T21:47:04.405448"
+  },
+  {
+    "id": "normal_v3_0328",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "119.24.27.33",
+    "timestamp": "2026-03-13T21:47:04.405455"
+  },
+  {
+    "id": "normal_v3_0329",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "144.178.71.183",
+    "timestamp": "2026-03-13T21:47:04.405460"
+  },
+  {
+    "id": "normal_v3_0330",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "92.98.107.179",
+    "timestamp": "2026-03-13T21:47:04.405464"
+  },
+  {
+    "id": "normal_v3_0331",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "18.164.32.237",
+    "timestamp": "2026-03-13T21:47:04.405469"
+  },
+  {
+    "id": "normal_v3_0332",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "159.61.237.118",
+    "timestamp": "2026-03-13T21:47:04.405474"
+  },
+  {
+    "id": "normal_v3_0333",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "118.13.22.109",
+    "timestamp": "2026-03-13T21:47:04.405481"
+  },
+  {
+    "id": "normal_v3_0334",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "181.221.79.61",
+    "timestamp": "2026-03-13T21:47:04.405485"
+  },
+  {
+    "id": "normal_v3_0335",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "101.159.234.122",
+    "timestamp": "2026-03-13T21:47:04.405490"
+  },
+  {
+    "id": "normal_v3_0336",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "56.9.76.171",
+    "timestamp": "2026-03-13T21:47:04.405495"
+  },
+  {
+    "id": "normal_v3_0337",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "24.115.8.69",
+    "timestamp": "2026-03-13T21:47:04.405500"
+  },
+  {
+    "id": "normal_v3_0338",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "93.219.160.247",
+    "timestamp": "2026-03-13T21:47:04.405504"
+  },
+  {
+    "id": "normal_v3_0339",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "98.215.229.31",
+    "timestamp": "2026-03-13T21:47:04.405509"
+  },
+  {
+    "id": "normal_v3_0340",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "170.23.212.56",
+    "timestamp": "2026-03-13T21:47:04.405514"
+  },
+  {
+    "id": "normal_v3_0341",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "4.16.60.166",
+    "timestamp": "2026-03-13T21:47:04.405518"
+  },
+  {
+    "id": "normal_v3_0342",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "4.9.247.7",
+    "timestamp": "2026-03-13T21:47:04.405523"
+  },
+  {
+    "id": "normal_v3_0343",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "139.166.204.122",
+    "timestamp": "2026-03-13T21:47:04.405528"
+  },
+  {
+    "id": "normal_v3_0344",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "19.21.233.143",
+    "timestamp": "2026-03-13T21:47:04.405533"
+  },
+  {
+    "id": "normal_v3_0345",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "28.9.197.177",
+    "timestamp": "2026-03-13T21:47:04.405537"
+  },
+  {
+    "id": "normal_v3_0346",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "1.22.131.115",
+    "timestamp": "2026-03-13T21:47:04.405542"
+  },
+  {
+    "id": "normal_v3_0347",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "60.158.153.211",
+    "timestamp": "2026-03-13T21:47:04.405547"
+  },
+  {
+    "id": "normal_v3_0348",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "111.8.103.73",
+    "timestamp": "2026-03-13T21:47:04.405551"
+  },
+  {
+    "id": "normal_v3_0349",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "114.23.97.95",
+    "timestamp": "2026-03-13T21:47:04.405558"
+  },
+  {
+    "id": "normal_v3_0350",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "155.137.213.122",
+    "timestamp": "2026-03-13T21:47:04.405563"
+  },
+  {
+    "id": "normal_v3_0351",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "148.20.39.77",
+    "timestamp": "2026-03-13T21:47:04.405568"
+  },
+  {
+    "id": "normal_v3_0352",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "27.149.214.31",
+    "timestamp": "2026-03-13T21:47:04.405577"
+  },
+  {
+    "id": "normal_v3_0353",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "61.192.148.235",
+    "timestamp": "2026-03-13T21:47:04.405582"
+  },
+  {
+    "id": "normal_v3_0354",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "192.31.141.58",
+    "timestamp": "2026-03-13T21:47:04.405587"
+  },
+  {
+    "id": "normal_v3_0355",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "54.85.198.131",
+    "timestamp": "2026-03-13T21:47:04.405592"
+  },
+  {
+    "id": "normal_v3_0356",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "113.157.212.248",
+    "timestamp": "2026-03-13T21:47:04.405596"
+  },
+  {
+    "id": "normal_v3_0357",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "60.93.116.18",
+    "timestamp": "2026-03-13T21:47:04.405601"
+  },
+  {
+    "id": "normal_v3_0358",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "21.137.110.208",
+    "timestamp": "2026-03-13T21:47:04.405606"
+  },
+  {
+    "id": "normal_v3_0359",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "52.134.46.217",
+    "timestamp": "2026-03-13T21:47:04.405610"
+  },
+  {
+    "id": "normal_v3_0360",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "203.113.1.161",
+    "timestamp": "2026-03-13T21:47:04.405615"
+  },
+  {
+    "id": "normal_v3_0361",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "26.233.47.134",
+    "timestamp": "2026-03-13T21:47:04.405619"
+  },
+  {
+    "id": "normal_v3_0362",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "218.240.38.82",
+    "timestamp": "2026-03-13T21:47:04.405624"
+  },
+  {
+    "id": "normal_v3_0363",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "83.76.14.182",
+    "timestamp": "2026-03-13T21:47:04.405629"
+  },
+  {
+    "id": "normal_v3_0364",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "116.166.133.129",
+    "timestamp": "2026-03-13T21:47:04.405633"
+  },
+  {
+    "id": "normal_v3_0365",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "209.79.155.101",
+    "timestamp": "2026-03-13T21:47:04.405638"
+  },
+  {
+    "id": "normal_v3_0366",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "213.151.238.77",
+    "timestamp": "2026-03-13T21:47:04.405667"
+  },
+  {
+    "id": "normal_v3_0367",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "192.204.6.29",
+    "timestamp": "2026-03-13T21:47:04.405672"
+  },
+  {
+    "id": "normal_v3_0368",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "196.52.81.219",
+    "timestamp": "2026-03-13T21:47:04.405676"
+  },
+  {
+    "id": "normal_v3_0369",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "13.73.249.232",
+    "timestamp": "2026-03-13T21:47:04.405681"
+  },
+  {
+    "id": "normal_v3_0370",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "153.69.207.119",
+    "timestamp": "2026-03-13T21:47:04.405688"
+  },
+  {
+    "id": "normal_v3_0371",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "115.210.88.188",
+    "timestamp": "2026-03-13T21:47:04.405693"
+  },
+  {
+    "id": "normal_v3_0372",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "177.254.167.158",
+    "timestamp": "2026-03-13T21:47:04.405702"
+  },
+  {
+    "id": "normal_v3_0373",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "100.44.24.104",
+    "timestamp": "2026-03-13T21:47:04.405707"
+  },
+  {
+    "id": "normal_v3_0374",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "106.40.56.51",
+    "timestamp": "2026-03-13T21:47:04.405711"
+  },
+  {
+    "id": "normal_v3_0375",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "173.145.86.115",
+    "timestamp": "2026-03-13T21:47:04.405716"
+  },
+  {
+    "id": "normal_v3_0376",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "70.4.205.157",
+    "timestamp": "2026-03-13T21:47:04.405721"
+  },
+  {
+    "id": "normal_v3_0377",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "104.83.70.102",
+    "timestamp": "2026-03-13T21:47:04.405725"
+  },
+  {
+    "id": "normal_v3_0378",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "126.55.38.18",
+    "timestamp": "2026-03-13T21:47:04.405730"
+  },
+  {
+    "id": "normal_v3_0379",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "124.231.8.197",
+    "timestamp": "2026-03-13T21:47:04.405735"
+  },
+  {
+    "id": "normal_v3_0380",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "130.50.236.216",
+    "timestamp": "2026-03-13T21:47:04.405739"
+  },
+  {
+    "id": "normal_v3_0381",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "160.138.36.70",
+    "timestamp": "2026-03-13T21:47:04.405744"
+  },
+  {
+    "id": "normal_v3_0382",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "30.233.62.116",
+    "timestamp": "2026-03-13T21:47:04.405748"
+  },
+  {
+    "id": "normal_v3_0383",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "17.211.187.196",
+    "timestamp": "2026-03-13T21:47:04.405753"
+  },
+  {
+    "id": "normal_v3_0384",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "100.246.97.188",
+    "timestamp": "2026-03-13T21:47:04.405757"
+  },
+  {
+    "id": "normal_v3_0385",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "19.16.103.83",
+    "timestamp": "2026-03-13T21:47:04.405762"
+  },
+  {
+    "id": "normal_v3_0386",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "183.188.158.32",
+    "timestamp": "2026-03-13T21:47:04.405767"
+  },
+  {
+    "id": "normal_v3_0387",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "214.103.80.14",
+    "timestamp": "2026-03-13T21:47:04.405771"
+  },
+  {
+    "id": "normal_v3_0388",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "45.24.251.159",
+    "timestamp": "2026-03-13T21:47:04.405776"
+  },
+  {
+    "id": "normal_v3_0389",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "205.93.40.147",
+    "timestamp": "2026-03-13T21:47:04.405780"
+  },
+  {
+    "id": "normal_v3_0390",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "46.6.106.154",
+    "timestamp": "2026-03-13T21:47:04.405785"
+  },
+  {
+    "id": "normal_v3_0391",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "71.176.23.156",
+    "timestamp": "2026-03-13T21:47:04.405794"
+  },
+  {
+    "id": "normal_v3_0392",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "82.233.166.136",
+    "timestamp": "2026-03-13T21:47:04.405799"
+  },
+  {
+    "id": "normal_v3_0393",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "35.205.131.159",
+    "timestamp": "2026-03-13T21:47:04.405804"
+  },
+  {
+    "id": "normal_v3_0394",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "209.99.251.73",
+    "timestamp": "2026-03-13T21:47:04.405808"
+  },
+  {
+    "id": "normal_v3_0395",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "103.2.157.206",
+    "timestamp": "2026-03-13T21:47:04.405813"
+  },
+  {
+    "id": "normal_v3_0396",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "53.201.115.72",
+    "timestamp": "2026-03-13T21:47:04.405817"
+  },
+  {
+    "id": "normal_v3_0397",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "2.103.107.78",
+    "timestamp": "2026-03-13T21:47:04.405822"
+  },
+  {
+    "id": "normal_v3_0398",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "120.247.200.134",
+    "timestamp": "2026-03-13T21:47:04.405827"
+  },
+  {
+    "id": "normal_v3_0399",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "104.136.204.75",
+    "timestamp": "2026-03-13T21:47:04.405832"
+  },
+  {
+    "id": "normal_v3_0400",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "174.13.118.93",
+    "timestamp": "2026-03-13T21:47:04.405836"
+  },
+  {
+    "id": "normal_v3_0401",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "166.144.101.183",
+    "timestamp": "2026-03-13T21:47:04.405841"
+  },
+  {
+    "id": "normal_v3_0402",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "14.126.119.21",
+    "timestamp": "2026-03-13T21:47:04.405846"
+  },
+  {
+    "id": "normal_v3_0403",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "118.96.7.148",
+    "timestamp": "2026-03-13T21:47:04.405851"
+  },
+  {
+    "id": "normal_v3_0404",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "32.137.233.76",
+    "timestamp": "2026-03-13T21:47:04.405855"
+  },
+  {
+    "id": "normal_v3_0405",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "179.149.167.111",
+    "timestamp": "2026-03-13T21:47:04.405860"
+  },
+  {
+    "id": "normal_v3_0406",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "192.229.131.199",
+    "timestamp": "2026-03-13T21:47:04.405864"
+  },
+  {
+    "id": "normal_v3_0407",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "62.184.171.194",
+    "timestamp": "2026-03-13T21:47:04.405869"
+  },
+  {
+    "id": "normal_v3_0408",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "76.127.216.57",
+    "timestamp": "2026-03-13T21:47:04.405873"
+  },
+  {
+    "id": "normal_v3_0409",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "126.114.115.237",
+    "timestamp": "2026-03-13T21:47:04.405878"
+  },
+  {
+    "id": "normal_v3_0410",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "67.2.207.247",
+    "timestamp": "2026-03-13T21:47:04.405883"
+  },
+  {
+    "id": "normal_v3_0411",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "10.22.65.214",
+    "timestamp": "2026-03-13T21:47:04.405890"
+  },
+  {
+    "id": "normal_v3_0412",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "146.222.63.252",
+    "timestamp": "2026-03-13T21:47:04.405895"
+  },
+  {
+    "id": "normal_v3_0413",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "81.111.242.124",
+    "timestamp": "2026-03-13T21:47:04.405901"
+  },
+  {
+    "id": "normal_v3_0414",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "85.57.123.197",
+    "timestamp": "2026-03-13T21:47:04.405906"
+  },
+  {
+    "id": "normal_v3_0415",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "167.158.98.133",
+    "timestamp": "2026-03-13T21:47:04.405911"
+  },
+  {
+    "id": "normal_v3_0416",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "36.158.89.211",
+    "timestamp": "2026-03-13T21:47:04.405915"
+  },
+  {
+    "id": "normal_v3_0417",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "145.53.124.110",
+    "timestamp": "2026-03-13T21:47:04.405920"
+  },
+  {
+    "id": "normal_v3_0418",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "100.182.231.75",
+    "timestamp": "2026-03-13T21:47:04.405925"
+  },
+  {
+    "id": "normal_v3_0419",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "13.146.41.41",
+    "timestamp": "2026-03-13T21:47:04.405930"
+  },
+  {
+    "id": "normal_v3_0420",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "16.212.145.192",
+    "timestamp": "2026-03-13T21:47:04.405934"
+  },
+  {
+    "id": "normal_v3_0421",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "132.170.71.21",
+    "timestamp": "2026-03-13T21:47:04.405939"
+  },
+  {
+    "id": "normal_v3_0422",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "47.11.183.68",
+    "timestamp": "2026-03-13T21:47:04.405944"
+  },
+  {
+    "id": "normal_v3_0423",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "97.109.48.26",
+    "timestamp": "2026-03-13T21:47:04.405950"
+  },
+  {
+    "id": "normal_v3_0424",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "152.67.223.116",
+    "timestamp": "2026-03-13T21:47:04.405955"
+  },
+  {
+    "id": "normal_v3_0425",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "144.119.68.2",
+    "timestamp": "2026-03-13T21:47:04.405960"
+  },
+  {
+    "id": "normal_v3_0426",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "175.106.224.60",
+    "timestamp": "2026-03-13T21:47:04.405964"
+  },
+  {
+    "id": "normal_v3_0427",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "6.112.57.201",
+    "timestamp": "2026-03-13T21:47:04.405969"
+  },
+  {
+    "id": "normal_v3_0428",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "104.56.130.174",
+    "timestamp": "2026-03-13T21:47:04.405973"
+  },
+  {
+    "id": "normal_v3_0429",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "48.46.236.67",
+    "timestamp": "2026-03-13T21:47:04.405978"
+  },
+  {
+    "id": "normal_v3_0430",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "205.217.92.162",
+    "timestamp": "2026-03-13T21:47:04.405985"
+  },
+  {
+    "id": "normal_v3_0431",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "54.6.110.106",
+    "timestamp": "2026-03-13T21:47:04.405989"
+  },
+  {
+    "id": "normal_v3_0432",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "208.127.31.185",
+    "timestamp": "2026-03-13T21:47:04.405994"
+  },
+  {
+    "id": "normal_v3_0433",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "212.140.30.233",
+    "timestamp": "2026-03-13T21:47:04.405999"
+  },
+  {
+    "id": "normal_v3_0434",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "41.156.93.51",
+    "timestamp": "2026-03-13T21:47:04.406006"
+  },
+  {
+    "id": "normal_v3_0435",
+    "type": "normal",
+    "payload": "GET /ws HTTP/1.1\r\nHost: example.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "52.107.189.63",
+    "timestamp": "2026-03-13T21:47:04.406011"
+  },
+  {
+    "id": "normal_v3_0436",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "173.186.197.20",
+    "timestamp": "2026-03-13T21:47:04.406015"
+  },
+  {
+    "id": "normal_v3_0437",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "147.251.190.135",
+    "timestamp": "2026-03-13T21:47:04.406020"
+  },
+  {
+    "id": "normal_v3_0438",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "7.158.42.34",
+    "timestamp": "2026-03-13T21:47:04.406024"
+  },
+  {
+    "id": "normal_v3_0439",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "118.238.253.66",
+    "timestamp": "2026-03-13T21:47:04.406029"
+  },
+  {
+    "id": "normal_v3_0440",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "158.144.137.69",
+    "timestamp": "2026-03-13T21:47:04.406033"
+  },
+  {
+    "id": "normal_v3_0441",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "211.13.252.157",
+    "timestamp": "2026-03-13T21:47:04.406038"
+  },
+  {
+    "id": "normal_v3_0442",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "8.126.7.228",
+    "timestamp": "2026-03-13T21:47:04.406042"
+  },
+  {
+    "id": "normal_v3_0443",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "187.50.32.43",
+    "timestamp": "2026-03-13T21:47:04.406047"
+  },
+  {
+    "id": "normal_v3_0444",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "184.94.237.241",
+    "timestamp": "2026-03-13T21:47:04.406052"
+  },
+  {
+    "id": "normal_v3_0445",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "67.147.30.76",
+    "timestamp": "2026-03-13T21:47:04.406056"
+  },
+  {
+    "id": "normal_v3_0446",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "104.25.137.79",
+    "timestamp": "2026-03-13T21:47:04.406061"
+  },
+  {
+    "id": "normal_v3_0447",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "169.13.183.6",
+    "timestamp": "2026-03-13T21:47:04.406065"
+  },
+  {
+    "id": "normal_v3_0448",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "115.133.35.63",
+    "timestamp": "2026-03-13T21:47:04.406070"
+  },
+  {
+    "id": "normal_v3_0449",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "166.94.55.7",
+    "timestamp": "2026-03-13T21:47:04.406075"
+  },
+  {
+    "id": "normal_v3_0450",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "28.10.156.216",
+    "timestamp": "2026-03-13T21:47:04.406082"
+  },
+  {
+    "id": "normal_v3_0451",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "222.163.111.76",
+    "timestamp": "2026-03-13T21:47:04.406086"
+  },
+  {
+    "id": "normal_v3_0452",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "42.75.61.233",
+    "timestamp": "2026-03-13T21:47:04.406091"
+  },
+  {
+    "id": "normal_v3_0453",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "214.135.130.249",
+    "timestamp": "2026-03-13T21:47:04.406095"
+  },
+  {
+    "id": "normal_v3_0454",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "107.22.170.61",
+    "timestamp": "2026-03-13T21:47:04.406100"
+  },
+  {
+    "id": "normal_v3_0455",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "26.35.52.32",
+    "timestamp": "2026-03-13T21:47:04.406107"
+  },
+  {
+    "id": "normal_v3_0456",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "25.249.136.109",
+    "timestamp": "2026-03-13T21:47:04.406113"
+  },
+  {
+    "id": "normal_v3_0457",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "147.180.186.125",
+    "timestamp": "2026-03-13T21:47:04.406117"
+  },
+  {
+    "id": "normal_v3_0458",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "89.249.6.196",
+    "timestamp": "2026-03-13T21:47:04.406122"
+  },
+  {
+    "id": "normal_v3_0459",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "96.148.75.28",
+    "timestamp": "2026-03-13T21:47:04.406126"
+  },
+  {
+    "id": "normal_v3_0460",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "161.93.116.155",
+    "timestamp": "2026-03-13T21:47:04.406131"
+  },
+  {
+    "id": "normal_v3_0461",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "185.235.115.126",
+    "timestamp": "2026-03-13T21:47:04.406135"
+  },
+  {
+    "id": "normal_v3_0462",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "126.231.106.170",
+    "timestamp": "2026-03-13T21:47:04.406140"
+  },
+  {
+    "id": "normal_v3_0463",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "77.153.251.150",
+    "timestamp": "2026-03-13T21:47:04.406144"
+  },
+  {
+    "id": "normal_v3_0464",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "77.158.150.45",
+    "timestamp": "2026-03-13T21:47:04.406149"
+  },
+  {
+    "id": "normal_v3_0465",
+    "type": "normal",
+    "payload": "DELETE /api/v1/sessions/current HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "68.97.203.48",
+    "timestamp": "2026-03-13T21:47:04.406153"
+  },
+  {
+    "id": "normal_v3_0466",
+    "type": "normal",
+    "payload": "GET /images/logo.png HTTP/1.1\r\nHost: static.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "2.230.85.24",
+    "timestamp": "2026-03-13T21:47:04.406158"
+  },
+  {
+    "id": "normal_v3_0467",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "7.194.11.56",
+    "timestamp": "2026-03-13T21:47:04.406163"
+  },
+  {
+    "id": "normal_v3_0468",
+    "type": "normal",
+    "payload": "PUT /api/v1/users/123 HTTP/1.1\r\nHost: api.example.com\r\n\r\n{\"name\": \"John Doe\"}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "120.134.3.148",
+    "timestamp": "2026-03-13T21:47:04.406167"
+  },
+  {
+    "id": "normal_v3_0469",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "141.101.42.196",
+    "timestamp": "2026-03-13T21:47:04.406174"
+  },
+  {
+    "id": "normal_v3_0470",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "130.103.162.115",
+    "timestamp": "2026-03-13T21:47:04.406179"
+  },
+  {
+    "id": "normal_v3_0471",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "146.220.160.193",
+    "timestamp": "2026-03-13T21:47:04.406184"
+  },
+  {
+    "id": "normal_v3_0472",
+    "type": "normal",
+    "payload": "GET /health HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "12.219.228.151",
+    "timestamp": "2026-03-13T21:47:04.406188"
+  },
+  {
+    "id": "normal_v3_0473",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "165.254.217.213",
+    "timestamp": "2026-03-13T21:47:04.406193"
+  },
+  {
+    "id": "normal_v3_0474",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "93.79.196.223",
+    "timestamp": "2026-03-13T21:47:04.406197"
+  },
+  {
+    "id": "normal_v3_0475",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "66.144.226.234",
+    "timestamp": "2026-03-13T21:47:04.406204"
+  },
+  {
+    "id": "normal_v3_0476",
+    "type": "normal",
+    "payload": "GET /export/data.csv HTTP/1.1\r\nHost: api.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "172.68.18.174",
+    "timestamp": "2026-03-13T21:47:04.406211"
+  },
+  {
+    "id": "normal_v3_0477",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "130.37.88.24",
+    "timestamp": "2026-03-13T21:47:04.406216"
+  },
+  {
+    "id": "normal_v3_0478",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "25.244.48.236",
+    "timestamp": "2026-03-13T21:47:04.406221"
+  },
+  {
+    "id": "normal_v3_0479",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "100.201.17.141",
+    "timestamp": "2026-03-13T21:47:04.406225"
+  },
+  {
+    "id": "normal_v3_0480",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "91.38.221.169",
+    "timestamp": "2026-03-13T21:47:04.406230"
+  },
+  {
+    "id": "normal_v3_0481",
+    "type": "normal",
+    "payload": "POST /subscribe HTTP/1.1\r\nHost: example.com\r\n\r\nemail=user@example.com",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "24.150.204.32",
+    "timestamp": "2026-03-13T21:47:04.406234"
+  },
+  {
+    "id": "normal_v3_0482",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "192.175.203.67",
+    "timestamp": "2026-03-13T21:47:04.406239"
+  },
+  {
+    "id": "normal_v3_0483",
+    "type": "normal",
+    "payload": "GET /static/js/app.js HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "222.160.214.21",
+    "timestamp": "2026-03-13T21:47:04.406244"
+  },
+  {
+    "id": "normal_v3_0484",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "123.141.58.136",
+    "timestamp": "2026-03-13T21:47:04.406249"
+  },
+  {
+    "id": "normal_v3_0485",
+    "type": "normal",
+    "payload": "POST /webhook/payment HTTP/1.1\r\nHost: example.com\r\nX-Signature: sha256=abc123\r\n\r\n{\"event\": \"payment.success\", \"amount\": 100}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "99.146.89.72",
+    "timestamp": "2026-03-13T21:47:04.406253"
+  },
+  {
+    "id": "normal_v3_0486",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "107.3.161.96",
+    "timestamp": "2026-03-13T21:47:04.406258"
+  },
+  {
+    "id": "normal_v3_0487",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "111.53.161.167",
+    "timestamp": "2026-03-13T21:47:04.406263"
+  },
+  {
+    "id": "normal_v3_0488",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "150.33.34.201",
+    "timestamp": "2026-03-13T21:47:04.406267"
+  },
+  {
+    "id": "normal_v3_0489",
+    "type": "normal",
+    "payload": "GET /status HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "20.165.223.89",
+    "timestamp": "2026-03-13T21:47:04.406274"
+  },
+  {
+    "id": "normal_v3_0490",
+    "type": "normal",
+    "payload": "POST /api/v1/orders HTTP/1.1\r\nHost: api.example.com\r\nContent-Type: application/json\r\n\r\n{\"product_id\": 123, \"quantity\": 2}",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "215.151.238.52",
+    "timestamp": "2026-03-13T21:47:04.406279"
+  },
+  {
+    "id": "normal_v3_0491",
+    "type": "normal",
+    "payload": "GET /download/document.pdf HTTP/1.1\r\nHost: files.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "98.29.108.19",
+    "timestamp": "2026-03-13T21:47:04.406283"
+  },
+  {
+    "id": "normal_v3_0492",
+    "type": "normal",
+    "payload": "POST /register HTTP/1.1\r\nHost: example.com\r\n\r\nemail=new@example.com&password=NewPass456!&confirm=NewPass456!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "2.45.166.174",
+    "timestamp": "2026-03-13T21:47:04.406288"
+  },
+  {
+    "id": "normal_v3_0493",
+    "type": "normal",
+    "payload": "GET /static/css/style.css HTTP/1.1\r\nHost: cdn.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "174.4.205.12",
+    "timestamp": "2026-03-13T21:47:04.406293"
+  },
+  {
+    "id": "normal_v3_0494",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "35.154.169.185",
+    "timestamp": "2026-03-13T21:47:04.406297"
+  },
+  {
+    "id": "normal_v3_0495",
+    "type": "normal",
+    "payload": "GET /products?category=electronics&sort=price HTTP/1.1\r\nHost: shop.example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "202.29.254.195",
+    "timestamp": "2026-03-13T21:47:04.406302"
+  },
+  {
+    "id": "normal_v3_0496",
+    "type": "normal",
+    "payload": "GET /search?q=hello+world&page=1 HTTP/1.1\r\nHost: example.com\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "86.143.209.190",
+    "timestamp": "2026-03-13T21:47:04.406306"
+  },
+  {
+    "id": "normal_v3_0497",
+    "type": "normal",
+    "payload": "GET /api/v1/users HTTP/1.1\r\nHost: api.example.com\r\nAuthorization: Bearer eyJ...\r\nAccept: application/json\r\n",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "63.73.117.221",
+    "timestamp": "2026-03-13T21:47:04.406311"
+  },
+  {
+    "id": "normal_v3_0498",
+    "type": "normal",
+    "payload": "POST /contact HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&email=john@example.com&message=Hello",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "173.254.37.96",
+    "timestamp": "2026-03-13T21:47:04.406318"
+  },
+  {
+    "id": "normal_v3_0499",
+    "type": "normal",
+    "payload": "POST /login HTTP/1.1\r\nHost: example.com\r\n\r\nusername=user@example.com&password=SecurePass123!",
+    "severity": "none",
+    "expected_detection": false,
+    "source_ip": "18.151.107.222",
+    "timestamp": "2026-03-13T21:47:04.406322"
+  }
+]

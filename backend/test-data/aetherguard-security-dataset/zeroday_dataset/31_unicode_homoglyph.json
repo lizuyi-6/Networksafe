@@ -1,0 +1,902 @@
+[
+  {
+    "id": "unicode_0000",
+    "type": "unicode_homoglyph",
+    "payload": "admin‍admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "82.126.202.40",
+    "timestamp": "2026-03-13T21:53:09.063435"
+  },
+  {
+    "id": "unicode_0001",
+    "type": "unicode_homoglyph",
+    "payload": "rootаdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "127.64.54.177",
+    "timestamp": "2026-03-13T21:53:09.063440"
+  },
+  {
+    "id": "unicode_0002",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "148.196.136.223",
+    "timestamp": "2026-03-13T21:53:09.063445"
+  },
+  {
+    "id": "unicode_0003",
+    "type": "unicode_homoglyph",
+    "payload": "paypa1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "93.39.155.151",
+    "timestamp": "2026-03-13T21:53:09.063450"
+  },
+  {
+    "id": "unicode_0004",
+    "type": "unicode_homoglyph",
+    "payload": "adminа",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "126.255.182.84",
+    "timestamp": "2026-03-13T21:53:09.063455"
+  },
+  {
+    "id": "unicode_0005",
+    "type": "unicode_homoglyph",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "46.249.179.44",
+    "timestamp": "2026-03-13T21:53:09.063460"
+  },
+  {
+    "id": "unicode_0006",
+    "type": "unicode_homoglyph",
+    "payload": "ｐａｓｓｗｏｒｄ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "145.58.187.193",
+    "timestamp": "2026-03-13T21:53:09.063465"
+  },
+  {
+    "id": "unicode_0007",
+    "type": "unicode_homoglyph",
+    "payload": "adminа",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "81.206.102.223",
+    "timestamp": "2026-03-13T21:53:09.063470"
+  },
+  {
+    "id": "unicode_0008",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "171.148.114.96",
+    "timestamp": "2026-03-13T21:53:09.063477"
+  },
+  {
+    "id": "unicode_0009",
+    "type": "unicode_homoglyph",
+    "payload": "admin‍admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "198.236.108.59",
+    "timestamp": "2026-03-13T21:53:09.063482"
+  },
+  {
+    "id": "unicode_0010",
+    "type": "unicode_homoglyph",
+    "payload": "userτ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "190.41.75.82",
+    "timestamp": "2026-03-13T21:53:09.063487"
+  },
+  {
+    "id": "unicode_0011",
+    "type": "unicode_homoglyph",
+    "payload": "admin‮admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "215.122.152.14",
+    "timestamp": "2026-03-13T21:53:09.063491"
+  },
+  {
+    "id": "unicode_0012",
+    "type": "unicode_homoglyph",
+    "payload": "logіn",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "106.119.24.148",
+    "timestamp": "2026-03-13T21:53:09.063496"
+  },
+  {
+    "id": "unicode_0013",
+    "type": "unicode_homoglyph",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "118.218.46.136",
+    "timestamp": "2026-03-13T21:53:09.063500"
+  },
+  {
+    "id": "unicode_0014",
+    "type": "unicode_homoglyph",
+    "payload": "admin﻿admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "83.83.158.224",
+    "timestamp": "2026-03-13T21:53:09.063505"
+  },
+  {
+    "id": "unicode_0015",
+    "type": "unicode_homoglyph",
+    "payload": "admin‮admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "109.215.48.245",
+    "timestamp": "2026-03-13T21:53:09.063509"
+  },
+  {
+    "id": "unicode_0016",
+    "type": "unicode_homoglyph",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "213.140.39.39",
+    "timestamp": "2026-03-13T21:53:09.063517"
+  },
+  {
+    "id": "unicode_0017",
+    "type": "unicode_homoglyph",
+    "payload": "rootаdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "72.123.146.157",
+    "timestamp": "2026-03-13T21:53:09.063521"
+  },
+  {
+    "id": "unicode_0018",
+    "type": "unicode_homoglyph",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "172.178.218.6",
+    "timestamp": "2026-03-13T21:53:09.063526"
+  },
+  {
+    "id": "unicode_0019",
+    "type": "unicode_homoglyph",
+    "payload": "admin‍admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "15.186.2.160",
+    "timestamp": "2026-03-13T21:53:09.063530"
+  },
+  {
+    "id": "unicode_0020",
+    "type": "unicode_homoglyph",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "208.111.92.211",
+    "timestamp": "2026-03-13T21:53:09.063535"
+  },
+  {
+    "id": "unicode_0021",
+    "type": "unicode_homoglyph",
+    "payload": "admin‮admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "6.115.4.243",
+    "timestamp": "2026-03-13T21:53:09.063542"
+  },
+  {
+    "id": "unicode_0022",
+    "type": "unicode_homoglyph",
+    "payload": "micros0ft",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "99.134.55.138",
+    "timestamp": "2026-03-13T21:53:09.063546"
+  },
+  {
+    "id": "unicode_0023",
+    "type": "unicode_homoglyph",
+    "payload": "admin​admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "185.29.178.105",
+    "timestamp": "2026-03-13T21:53:09.063551"
+  },
+  {
+    "id": "unicode_0024",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "100.180.103.160",
+    "timestamp": "2026-03-13T21:53:09.063555"
+  },
+  {
+    "id": "unicode_0025",
+    "type": "unicode_homoglyph",
+    "payload": "g00gle",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "43.205.17.88",
+    "timestamp": "2026-03-13T21:53:09.063560"
+  },
+  {
+    "id": "unicode_0026",
+    "type": "unicode_homoglyph",
+    "payload": "admin​admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "57.77.40.102",
+    "timestamp": "2026-03-13T21:53:09.063564"
+  },
+  {
+    "id": "unicode_0027",
+    "type": "unicode_homoglyph",
+    "payload": "micros0ft",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "199.141.140.47",
+    "timestamp": "2026-03-13T21:53:09.063571"
+  },
+  {
+    "id": "unicode_0028",
+    "type": "unicode_homoglyph",
+    "payload": "rootаdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "122.223.24.147",
+    "timestamp": "2026-03-13T21:53:09.063576"
+  },
+  {
+    "id": "unicode_0029",
+    "type": "unicode_homoglyph",
+    "payload": "admin‭admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "113.139.115.233",
+    "timestamp": "2026-03-13T21:53:09.063580"
+  },
+  {
+    "id": "unicode_0030",
+    "type": "unicode_homoglyph",
+    "payload": "micros0ft",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "4.74.114.122",
+    "timestamp": "2026-03-13T21:53:09.063585"
+  },
+  {
+    "id": "unicode_0031",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "91.199.74.204",
+    "timestamp": "2026-03-13T21:53:09.063590"
+  },
+  {
+    "id": "unicode_0032",
+    "type": "unicode_homoglyph",
+    "payload": "admin​admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "77.67.60.220",
+    "timestamp": "2026-03-13T21:53:09.063594"
+  },
+  {
+    "id": "unicode_0033",
+    "type": "unicode_homoglyph",
+    "payload": "admin﻿admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "78.108.156.225",
+    "timestamp": "2026-03-13T21:53:09.063599"
+  },
+  {
+    "id": "unicode_0034",
+    "type": "unicode_homoglyph",
+    "payload": "ｐａｓｓｗｏｒｄ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "210.251.150.91",
+    "timestamp": "2026-03-13T21:53:09.063603"
+  },
+  {
+    "id": "unicode_0035",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "162.185.35.109",
+    "timestamp": "2026-03-13T21:53:09.063608"
+  },
+  {
+    "id": "unicode_0036",
+    "type": "unicode_homoglyph",
+    "payload": "rootаdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "12.252.113.22",
+    "timestamp": "2026-03-13T21:53:09.063612"
+  },
+  {
+    "id": "unicode_0037",
+    "type": "unicode_homoglyph",
+    "payload": "ａｄｍｉｎ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "146.221.236.174",
+    "timestamp": "2026-03-13T21:53:09.063617"
+  },
+  {
+    "id": "unicode_0038",
+    "type": "unicode_homoglyph",
+    "payload": "admin‌admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "157.207.150.126",
+    "timestamp": "2026-03-13T21:53:09.063621"
+  },
+  {
+    "id": "unicode_0039",
+    "type": "unicode_homoglyph",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "121.181.109.214",
+    "timestamp": "2026-03-13T21:53:09.063626"
+  },
+  {
+    "id": "unicode_0040",
+    "type": "unicode_homoglyph",
+    "payload": "admin﻿admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "125.131.181.93",
+    "timestamp": "2026-03-13T21:53:09.063630"
+  },
+  {
+    "id": "unicode_0041",
+    "type": "unicode_homoglyph",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "93.148.186.233",
+    "timestamp": "2026-03-13T21:53:09.063635"
+  },
+  {
+    "id": "unicode_0042",
+    "type": "unicode_homoglyph",
+    "payload": "logіn",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "85.151.179.6",
+    "timestamp": "2026-03-13T21:53:09.063655"
+  },
+  {
+    "id": "unicode_0043",
+    "type": "unicode_homoglyph",
+    "payload": "logіn",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "157.34.99.65",
+    "timestamp": "2026-03-13T21:53:09.063663"
+  },
+  {
+    "id": "unicode_0044",
+    "type": "unicode_homoglyph",
+    "payload": "userτ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "98.162.109.96",
+    "timestamp": "2026-03-13T21:53:09.063670"
+  },
+  {
+    "id": "unicode_0045",
+    "type": "unicode_homoglyph",
+    "payload": "admin‌admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "194.190.19.47",
+    "timestamp": "2026-03-13T21:53:09.063677"
+  },
+  {
+    "id": "unicode_0046",
+    "type": "unicode_homoglyph",
+    "payload": "userτ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "161.173.40.230",
+    "timestamp": "2026-03-13T21:53:09.063685"
+  },
+  {
+    "id": "unicode_0047",
+    "type": "unicode_homoglyph",
+    "payload": "admin‌admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "27.96.224.127",
+    "timestamp": "2026-03-13T21:53:09.063696"
+  },
+  {
+    "id": "unicode_0048",
+    "type": "unicode_homoglyph",
+    "payload": "userτ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "40.165.160.86",
+    "timestamp": "2026-03-13T21:53:09.063704"
+  },
+  {
+    "id": "unicode_0049",
+    "type": "unicode_homoglyph",
+    "payload": "ｐａｓｓｗｏｒｄ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "212.87.78.15",
+    "timestamp": "2026-03-13T21:53:09.063711"
+  },
+  {
+    "id": "unicode_0050",
+    "type": "unicode_homoglyph",
+    "payload": "paypa1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "20.127.105.36",
+    "timestamp": "2026-03-13T21:53:09.063716"
+  },
+  {
+    "id": "unicode_0051",
+    "type": "unicode_homoglyph",
+    "payload": "g00gle",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "162.118.170.64",
+    "timestamp": "2026-03-13T21:53:09.063720"
+  },
+  {
+    "id": "unicode_0052",
+    "type": "unicode_homoglyph",
+    "payload": "adminа",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "23.36.134.94",
+    "timestamp": "2026-03-13T21:53:09.063725"
+  },
+  {
+    "id": "unicode_0053",
+    "type": "unicode_homoglyph",
+    "payload": "admin‮admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "138.7.17.56",
+    "timestamp": "2026-03-13T21:53:09.063729"
+  },
+  {
+    "id": "unicode_0054",
+    "type": "unicode_homoglyph",
+    "payload": "admin‭admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "47.161.145.161",
+    "timestamp": "2026-03-13T21:53:09.063734"
+  },
+  {
+    "id": "unicode_0055",
+    "type": "unicode_homoglyph",
+    "payload": "paypa1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "96.144.30.183",
+    "timestamp": "2026-03-13T21:53:09.063738"
+  },
+  {
+    "id": "unicode_0056",
+    "type": "unicode_homoglyph",
+    "payload": "logіn",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "122.55.221.70",
+    "timestamp": "2026-03-13T21:53:09.063743"
+  },
+  {
+    "id": "unicode_0057",
+    "type": "unicode_homoglyph",
+    "payload": "rootаdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "222.117.255.253",
+    "timestamp": "2026-03-13T21:53:09.063748"
+  },
+  {
+    "id": "unicode_0058",
+    "type": "unicode_homoglyph",
+    "payload": "logіn",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "220.87.60.11",
+    "timestamp": "2026-03-13T21:53:09.063752"
+  },
+  {
+    "id": "unicode_0059",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "7.220.250.190",
+    "timestamp": "2026-03-13T21:53:09.063757"
+  },
+  {
+    "id": "unicode_0060",
+    "type": "unicode_homoglyph",
+    "payload": "paypa1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "54.105.184.245",
+    "timestamp": "2026-03-13T21:53:09.063761"
+  },
+  {
+    "id": "unicode_0061",
+    "type": "unicode_homoglyph",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "40.54.27.231",
+    "timestamp": "2026-03-13T21:53:09.063766"
+  },
+  {
+    "id": "unicode_0062",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "135.150.54.77",
+    "timestamp": "2026-03-13T21:53:09.063770"
+  },
+  {
+    "id": "unicode_0063",
+    "type": "unicode_homoglyph",
+    "payload": "admin‌admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "163.139.66.247",
+    "timestamp": "2026-03-13T21:53:09.063777"
+  },
+  {
+    "id": "unicode_0064",
+    "type": "unicode_homoglyph",
+    "payload": "admin​admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "140.151.186.171",
+    "timestamp": "2026-03-13T21:53:09.063782"
+  },
+  {
+    "id": "unicode_0065",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "65.143.201.165",
+    "timestamp": "2026-03-13T21:53:09.063787"
+  },
+  {
+    "id": "unicode_0066",
+    "type": "unicode_homoglyph",
+    "payload": "admin‍admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "39.80.174.247",
+    "timestamp": "2026-03-13T21:53:09.063796"
+  },
+  {
+    "id": "unicode_0067",
+    "type": "unicode_homoglyph",
+    "payload": "logіn",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "158.3.253.162",
+    "timestamp": "2026-03-13T21:53:09.063801"
+  },
+  {
+    "id": "unicode_0068",
+    "type": "unicode_homoglyph",
+    "payload": "admin‍admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "70.47.140.194",
+    "timestamp": "2026-03-13T21:53:09.063805"
+  },
+  {
+    "id": "unicode_0069",
+    "type": "unicode_homoglyph",
+    "payload": "userτ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "174.189.144.185",
+    "timestamp": "2026-03-13T21:53:09.063809"
+  },
+  {
+    "id": "unicode_0070",
+    "type": "unicode_homoglyph",
+    "payload": "g00gle",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "82.165.253.142",
+    "timestamp": "2026-03-13T21:53:09.063814"
+  },
+  {
+    "id": "unicode_0071",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "27.71.212.231",
+    "timestamp": "2026-03-13T21:53:09.063818"
+  },
+  {
+    "id": "unicode_0072",
+    "type": "unicode_homoglyph",
+    "payload": "g00gle",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "175.0.184.199",
+    "timestamp": "2026-03-13T21:53:09.063823"
+  },
+  {
+    "id": "unicode_0073",
+    "type": "unicode_homoglyph",
+    "payload": "admin﻿admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "20.172.191.155",
+    "timestamp": "2026-03-13T21:53:09.063827"
+  },
+  {
+    "id": "unicode_0074",
+    "type": "unicode_homoglyph",
+    "payload": "admin‍admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "103.103.31.174",
+    "timestamp": "2026-03-13T21:53:09.063832"
+  },
+  {
+    "id": "unicode_0075",
+    "type": "unicode_homoglyph",
+    "payload": "ｐａｓｓｗｏｒｄ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "101.197.92.85",
+    "timestamp": "2026-03-13T21:53:09.063836"
+  },
+  {
+    "id": "unicode_0076",
+    "type": "unicode_homoglyph",
+    "payload": "paypa1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "130.90.123.74",
+    "timestamp": "2026-03-13T21:53:09.063841"
+  },
+  {
+    "id": "unicode_0077",
+    "type": "unicode_homoglyph",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "105.77.187.37",
+    "timestamp": "2026-03-13T21:53:09.063846"
+  },
+  {
+    "id": "unicode_0078",
+    "type": "unicode_homoglyph",
+    "payload": "ｐａｓｓｗｏｒｄ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "83.85.244.209",
+    "timestamp": "2026-03-13T21:53:09.063850"
+  },
+  {
+    "id": "unicode_0079",
+    "type": "unicode_homoglyph",
+    "payload": "micros0ft",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "199.72.255.116",
+    "timestamp": "2026-03-13T21:53:09.063855"
+  },
+  {
+    "id": "unicode_0080",
+    "type": "unicode_homoglyph",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "26.116.224.12",
+    "timestamp": "2026-03-13T21:53:09.063859"
+  },
+  {
+    "id": "unicode_0081",
+    "type": "unicode_homoglyph",
+    "payload": "ａｄｍｉｎ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "183.86.38.210",
+    "timestamp": "2026-03-13T21:53:09.063864"
+  },
+  {
+    "id": "unicode_0082",
+    "type": "unicode_homoglyph",
+    "payload": "admin‭admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "210.87.75.119",
+    "timestamp": "2026-03-13T21:53:09.063868"
+  },
+  {
+    "id": "unicode_0083",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "67.251.19.115",
+    "timestamp": "2026-03-13T21:53:09.063872"
+  },
+  {
+    "id": "unicode_0084",
+    "type": "unicode_homoglyph",
+    "payload": "admin‍admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "194.80.30.170",
+    "timestamp": "2026-03-13T21:53:09.063879"
+  },
+  {
+    "id": "unicode_0085",
+    "type": "unicode_homoglyph",
+    "payload": "ａｄｍｉｎ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "100.62.37.2",
+    "timestamp": "2026-03-13T21:53:09.063884"
+  },
+  {
+    "id": "unicode_0086",
+    "type": "unicode_homoglyph",
+    "payload": "paypa1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "39.220.95.162",
+    "timestamp": "2026-03-13T21:53:09.063890"
+  },
+  {
+    "id": "unicode_0087",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "69.159.42.244",
+    "timestamp": "2026-03-13T21:53:09.063895"
+  },
+  {
+    "id": "unicode_0088",
+    "type": "unicode_homoglyph",
+    "payload": "micros0ft",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "19.223.2.251",
+    "timestamp": "2026-03-13T21:53:09.063899"
+  },
+  {
+    "id": "unicode_0089",
+    "type": "unicode_homoglyph",
+    "payload": "userτ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "170.155.255.248",
+    "timestamp": "2026-03-13T21:53:09.063904"
+  },
+  {
+    "id": "unicode_0090",
+    "type": "unicode_homoglyph",
+    "payload": "admin​admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "185.132.226.116",
+    "timestamp": "2026-03-13T21:53:09.063908"
+  },
+  {
+    "id": "unicode_0091",
+    "type": "unicode_homoglyph",
+    "payload": "micros0ft",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "101.55.184.29",
+    "timestamp": "2026-03-13T21:53:09.063913"
+  },
+  {
+    "id": "unicode_0092",
+    "type": "unicode_homoglyph",
+    "payload": "logіn",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "64.33.199.153",
+    "timestamp": "2026-03-13T21:53:09.063917"
+  },
+  {
+    "id": "unicode_0093",
+    "type": "unicode_homoglyph",
+    "payload": "logіn",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "143.129.77.186",
+    "timestamp": "2026-03-13T21:53:09.063922"
+  },
+  {
+    "id": "unicode_0094",
+    "type": "unicode_homoglyph",
+    "payload": "admin‮admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "91.120.174.184",
+    "timestamp": "2026-03-13T21:53:09.063926"
+  },
+  {
+    "id": "unicode_0095",
+    "type": "unicode_homoglyph",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "222.16.3.160",
+    "timestamp": "2026-03-13T21:53:09.063931"
+  },
+  {
+    "id": "unicode_0096",
+    "type": "unicode_homoglyph",
+    "payload": "admin﻿admin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "144.98.50.156",
+    "timestamp": "2026-03-13T21:53:09.063935"
+  },
+  {
+    "id": "unicode_0097",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "142.34.16.81",
+    "timestamp": "2026-03-13T21:53:09.063940"
+  },
+  {
+    "id": "unicode_0098",
+    "type": "unicode_homoglyph",
+    "payload": "faceb00k",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "114.1.11.8",
+    "timestamp": "2026-03-13T21:53:09.063945"
+  },
+  {
+    "id": "unicode_0099",
+    "type": "unicode_homoglyph",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "39.151.173.117",
+    "timestamp": "2026-03-13T21:53:09.063949"
+  }
+]
