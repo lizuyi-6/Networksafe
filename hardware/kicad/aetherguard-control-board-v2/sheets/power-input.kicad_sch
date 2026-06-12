@@ -1,0 +1,2532 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "b21e78e1-815d-472e-9b16-288fa8b5602f")
+	(paper "A3")
+	(title_block
+		(title "AetherGuard Control Board v2")
+		(date "2026-05-20")
+		(rev "power-input"))
+	(no_connect
+		(at 66.04 68.58)
+		(uuid "bbc165cd-8f6e-4c32-9366-7e8c5ba3c439"))
+	(no_connect
+		(at 106.68 142.24)
+		(uuid "60463040-8a2f-4fa3-ad34-c5b690445ac7"))
+	(no_connect
+		(at 168.91 105.41)
+		(uuid "0af028f0-5b08-4af2-a277-baa7501815d4"))
+	(no_connect
+		(at 168.91 102.87)
+		(uuid "5e0e3f25-c358-45b3-bf20-803f35f81cb7"))
+	(no_connect
+		(at 223.52 142.24)
+		(uuid "d4ba2343-6c23-4043-806d-c2653e05b8ca"))
+	(no_connect
+		(at 168.91 107.95)
+		(uuid "17c9f24d-99b4-4aba-bf84-5fff38992f61"))
+	(no_connect
+		(at 181.61 106.68)
+		(uuid "aefa8aa4-57dc-4811-b2b9-35c3b2f24d6c"))
+	(wire
+		(pts
+			(xy 40.64 93.98)
+			(xy 45.72 93.98))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "cf7bad4e-31e6-4e9f-bf40-1e2065a5727f"))
+	(wire
+		(pts
+			(xy 40.64 91.44)
+			(xy 45.72 91.44))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "4654f64a-0f22-4c27-b72d-5199c4adbbda"))
+	(wire
+		(pts
+			(xy 40.64 88.9)
+			(xy 45.72 88.9))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "55ac5f8a-35aa-4b51-b75b-48a2a22b28b1"))
+	(wire
+		(pts
+			(xy 40.64 86.36)
+			(xy 45.72 86.36))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "dd1c3d03-b44e-42ad-9604-08c738713377"))
+	(wire
+		(pts
+			(xy 40.64 83.82)
+			(xy 45.72 83.82))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "e8b8b429-1d85-4dba-8d4b-fbff2d633de1"))
+	(wire
+		(pts
+			(xy 40.64 81.28)
+			(xy 45.72 81.28))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "627394a4-444c-4862-b7e1-5fa332cd591c"))
+	(wire
+		(pts
+			(xy 40.64 78.74)
+			(xy 45.72 78.74))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "ca464ba5-4d2b-49cf-87da-a5447614eb6b"))
+	(wire
+		(pts
+			(xy 71.12 93.98)
+			(xy 66.04 93.98))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "ed3ca660-8c44-42a8-9eda-64a9962e9cec"))
+	(wire
+		(pts
+			(xy 71.12 91.44)
+			(xy 66.04 91.44))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "b4859641-d006-4a3e-83fa-6560bec9ac54"))
+	(wire
+		(pts
+			(xy 71.12 86.36)
+			(xy 66.04 86.36))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "b100a5a2-83cf-4b50-84d3-a7d5d2b94862"))
+	(wire
+		(pts
+			(xy 71.12 83.82)
+			(xy 66.04 83.82))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "b17650ea-4a5e-404d-a2ef-dbc2fce1cded"))
+	(wire
+		(pts
+			(xy 71.12 81.28)
+			(xy 66.04 81.28))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "3778104d-6f1c-46d3-9a73-df5bc20a00e8"))
+	(wire
+		(pts
+			(xy 71.12 78.74)
+			(xy 66.04 78.74))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "26bce333-8492-4b8d-8d38-8ccc767513da"))
+	(wire
+		(pts
+			(xy 71.12 76.2)
+			(xy 66.04 76.2))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "f2f3840c-581b-4eb8-a6d8-40c6b8b06416"))
+	(wire
+		(pts
+			(xy 55.88 104.14)
+			(xy 55.88 99.06))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "96f5ad31-fc37-4456-ae6f-94693315f070"))
+	(wire
+		(pts
+			(xy 88.9 90.17)
+			(xy 93.98 90.17))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "12b377a2-7659-4a40-9de1-61a2a2145e9b"))
+	(wire
+		(pts
+			(xy 88.9 87.63)
+			(xy 93.98 87.63))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "8babb902-651d-4522-8088-57a0b5c9f291"))
+	(wire
+		(pts
+			(xy 88.9 85.09)
+			(xy 93.98 85.09))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "cb484388-36af-45ce-b8e6-d31b73911839"))
+	(wire
+		(pts
+			(xy 88.9 82.55)
+			(xy 93.98 82.55))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "efa01d5a-dc6e-49d7-9d90-b56f725615aa"))
+	(wire
+		(pts
+			(xy 109.22 86.36)
+			(xy 104.14 86.36))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "2c7df72c-4fe9-461c-a353-9bb8e4d8eb52"))
+	(wire
+		(pts
+			(xy 62.23 86.36)
+			(xy 67.31 86.36))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "4523c15f-018a-4547-87b1-a4ed4b214542"))
+	(wire
+		(pts
+			(xy 80.01 86.36)
+			(xy 74.93 86.36))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "673456d1-14f4-471c-99de-2fe2117adb2f"))
+	(wire
+		(pts
+			(xy 59.69 106.68)
+			(xy 64.77 106.68))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "46844ae0-a0cf-4121-bfd5-5a7f4bb89fe6"))
+	(wire
+		(pts
+			(xy 77.47 106.68)
+			(xy 72.39 106.68))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "e1a2b1db-c99d-435f-8f5e-46a2a84f4791"))
+	(wire
+		(pts
+			(xy 74.93 111.76)
+			(xy 80.01 111.76))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "0bec822c-18b4-4715-9980-9a9d79b71f02"))
+	(wire
+		(pts
+			(xy 92.71 111.76)
+			(xy 87.63 111.76))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "5ad8ca11-a21b-4999-a038-9fd0a41178af"))
+	(wire
+		(pts
+			(xy 33.02 143.51)
+			(xy 38.1 143.51))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "85bfe2b1-f7cb-4428-a64f-2740854d2f81"))
+	(wire
+		(pts
+			(xy 33.02 140.97)
+			(xy 38.1 140.97))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "689fd124-a998-4b5f-aa78-74c8e790d865"))
+	(wire
+		(pts
+			(xy 52.07 142.24)
+			(xy 57.15 142.24))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "b773f94a-6cb2-4219-b768-07a09743b90d"))
+	(wire
+		(pts
+			(xy 69.85 142.24)
+			(xy 64.77 142.24))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "a3bbf097-fda0-4662-8ab2-d049a3f21cea"))
+	(wire
+		(pts
+			(xy 67.31 147.32)
+			(xy 72.39 147.32))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "1ccd28a3-1023-4c13-9ef6-31806e87b589"))
+	(wire
+		(pts
+			(xy 85.09 147.32)
+			(xy 80.01 147.32))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "ce34139c-cbe3-4bd8-93e4-34897a2b7e5a"))
+	(wire
+		(pts
+			(xy 87.63 132.08)
+			(xy 92.71 132.08))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "edeff8d4-eb05-460f-8904-6aba24332d31"))
+	(wire
+		(pts
+			(xy 105.41 132.08)
+			(xy 100.33 132.08))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "ac4082f0-04c1-4e75-9cf8-d6ceeb856440"))
+	(wire
+		(pts
+			(xy 101.6 137.16)
+			(xy 106.68 137.16))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "ff1cf9c3-c62a-48a3-ba2a-79ee883fccb5"))
+	(wire
+		(pts
+			(xy 101.6 139.7)
+			(xy 106.68 139.7))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "0f71ffb3-28cc-450b-a5c7-99298ebc4bc4"))
+	(wire
+		(pts
+			(xy 101.6 144.78)
+			(xy 106.68 144.78))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "451548c6-4fcb-4c44-b9b6-26af1fe52f1c"))
+	(wire
+		(pts
+			(xy 121.92 139.7)
+			(xy 116.84 139.7))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "a6b4e218-caa3-4c44-ba6d-4728c9038219"))
+	(wire
+		(pts
+			(xy 121.92 144.78)
+			(xy 116.84 144.78))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "e7231d1e-cc34-4c2a-9539-f20871d759ea"))
+	(wire
+		(pts
+			(xy 121.92 147.32)
+			(xy 127 147.32))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "da928987-5a0e-40fa-a286-e960cb2dfdc8"))
+	(wire
+		(pts
+			(xy 139.7 147.32)
+			(xy 134.62 147.32))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "2baa400c-47b9-4d1c-a64d-41d45ea90ca5"))
+	(wire
+		(pts
+			(xy 121.92 157.48)
+			(xy 127 157.48))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "33b91eeb-9403-4515-9901-5e9d153005ee"))
+	(wire
+		(pts
+			(xy 139.7 157.48)
+			(xy 134.62 157.48))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "6cd673fa-9f9f-4db4-ad89-7029ab82f3bf"))
+	(wire
+		(pts
+			(xy 138.43 139.7)
+			(xy 143.51 139.7))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "cf9befc6-7011-47d2-ac3b-05d1eb864ef8"))
+	(wire
+		(pts
+			(xy 156.21 139.7)
+			(xy 151.13 139.7))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "9ed154c0-681c-4d3d-a58f-d92bc40d4f2d"))
+	(wire
+		(pts
+			(xy 121.92 139.7)
+			(xy 127 139.7))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "f2948891-b2bf-4c86-bfb6-dfacb8c18c81"))
+	(wire
+		(pts
+			(xy 139.7 139.7)
+			(xy 134.62 139.7))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "23ead08f-5c62-4d1e-8002-4cb817e95bc5"))
+	(wire
+		(pts
+			(xy 121.92 134.62)
+			(xy 127 134.62))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "78535e3e-114e-48eb-859e-dce56cf4880b"))
+	(wire
+		(pts
+			(xy 139.7 134.62)
+			(xy 134.62 134.62))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "4e117a45-9b68-4f7d-8d55-05933af539d5"))
+	(wire
+		(pts
+			(xy 163.83 110.49)
+			(xy 168.91 110.49))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "dcbd2501-5ffc-4e40-a5ce-d5b173833224"))
+	(wire
+		(pts
+			(xy 163.83 100.33)
+			(xy 168.91 100.33))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "d4877552-7f7e-48fe-8df7-41fd19b176e9"))
+	(wire
+		(pts
+			(xy 186.69 101.6)
+			(xy 181.61 101.6))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "a4f9d4e3-5bcd-496c-b238-29383f032154"))
+	(wire
+		(pts
+			(xy 199.39 106.68)
+			(xy 194.31 106.68))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "b5a25617-bad2-4992-8aab-eefac9c2b834"))
+	(wire
+		(pts
+			(xy 208.28 147.32)
+			(xy 213.36 147.32))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "ed7d0227-7a95-44fa-942c-ee5a21372aea"))
+	(wire
+		(pts
+			(xy 208.28 142.24)
+			(xy 213.36 142.24))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "531c252f-9824-40e4-8178-c5fc073ad67b"))
+	(wire
+		(pts
+			(xy 208.28 137.16)
+			(xy 213.36 137.16))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "a280850c-2b6a-449b-b0d7-a1da08ca10ef"))
+	(wire
+		(pts
+			(xy 228.6 137.16)
+			(xy 223.52 137.16))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "b7f008e4-7f46-438d-946f-8538769b6635"))
+	(wire
+		(pts
+			(xy 194.31 142.24)
+			(xy 199.39 142.24))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "3e8bb778-7f48-49f8-b286-057f557279b6"))
+	(wire
+		(pts
+			(xy 212.09 142.24)
+			(xy 207.01 142.24))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "65d44a1f-5159-417d-8fbd-8c648a0953ff"))
+	(wire
+		(pts
+			(xy 224.79 142.24)
+			(xy 229.87 142.24))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "b29dbe27-9a8e-45f6-ab1c-dc08d75b4077"))
+	(wire
+		(pts
+			(xy 242.57 142.24)
+			(xy 237.49 142.24))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "b07afef3-6afa-46c1-b77a-69dac2c8c8ed"))
+	(wire
+		(pts
+			(xy 45.72 63.5)
+			(xy 45.72 93.98))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "3874695c-b632-4646-a7ce-ba091add138f"))
+	(wire
+		(pts
+			(xy 45.72 66.04)
+			(xy 45.72 91.44))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "00197948-ba98-4560-b4b3-89a56f8d40c5"))
+	(wire
+		(pts
+			(xy 45.72 68.58)
+			(xy 45.72 88.9))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "db91c23b-860d-4b5a-96c2-5ff4070a6353"))
+	(wire
+		(pts
+			(xy 45.72 71.12)
+			(xy 45.72 86.36))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "930369fa-c3ae-476c-9754-fa0321cbd453"))
+	(wire
+		(pts
+			(xy 45.72 73.66)
+			(xy 45.72 83.82))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "0e7a1c29-48b4-4f48-82fe-2ec137156a3c"))
+	(wire
+		(pts
+			(xy 45.72 76.2)
+			(xy 45.72 81.28))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "36c9fcc7-4398-4bfe-8d32-65ae1767884e"))
+	(wire
+		(pts
+			(xy 66.04 63.5)
+			(xy 66.04 93.98))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "490b3a8c-7b7a-4223-a66e-2de69586a017"))
+	(wire
+		(pts
+			(xy 66.04 66.04)
+			(xy 66.04 91.44))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "7b06da12-f6cd-4fc5-8f7f-2050fff66a86"))
+	(wire
+		(pts
+			(xy 66.04 71.12)
+			(xy 66.04 86.36))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "79bb49d3-9cb8-4e39-8fae-953f3dbf612e"))
+	(wire
+		(pts
+			(xy 66.04 73.66)
+			(xy 66.04 83.82))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "66d206d4-2658-48f6-8487-6d04bfda479c"))
+	(wire
+		(pts
+			(xy 55.88 58.42)
+			(xy 55.88 99.06))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "9e89497b-411f-4bab-8a79-4a309b1fbe91"))
+	(wire
+		(pts
+			(xy 186.69 101.6)
+			(xy 186.69 106.68))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "c6182dff-7645-4521-9ace-729e76ea8c72"))
+	(wire
+		(pts
+			(xy 163.83 97.79)
+			(xy 168.91 97.79))
+		(stroke
+			(width 0)
+			(type solid))
+		(uuid "3612d086-cfdb-409c-90d7-5f070152a13c"))
+	(text "USB sink-only front end, external DC buck stage, power mux, and 3V3 generation."
+		(at 20.32 17.78 0)
+		(effects
+			(font
+				(size 1.27 1.27))
+			(justify left))
+		(uuid "6105263f-8c6c-48cd-ba41-10d68b83177d"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 40.64 93.98 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "ac867e92-25f3-4ce1-8492-685fe4a7987f"))
+	(global_label "USB_VBUS_RAW"
+		(shape bidirectional)
+		(at 40.64 91.44 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "a92c45a5-9dfc-41bc-8e47-d7fae5abb5a3"))
+	(global_label "USB_CC1"
+		(shape bidirectional)
+		(at 40.64 88.9 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "d53712f8-a533-4895-94ea-41cbaadeb217"))
+	(global_label "USB_D_P"
+		(shape bidirectional)
+		(at 40.64 86.36 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "4b6e0806-6909-4a7c-9062-5c22b3352e56"))
+	(global_label "USB_D_N"
+		(shape bidirectional)
+		(at 40.64 83.82 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "26ea3766-04c3-49de-a3c6-86662b231d63"))
+	(global_label "USB_VBUS_RAW"
+		(shape bidirectional)
+		(at 40.64 81.28 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "65b42f6e-4249-45a3-9f21-2c90e08d64a2"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 40.64 78.74 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "2efc3ff0-3bb3-4425-a2ad-a40f42c8c02b"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 71.12 93.98 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "21a0dd5b-ad44-414c-8ed8-c3bdb0ca2a83"))
+	(global_label "USB_VBUS_RAW"
+		(shape bidirectional)
+		(at 71.12 91.44 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "96b47fcb-fff1-4d4d-9045-d927b7af31f8"))
+	(global_label "USB_D_N"
+		(shape bidirectional)
+		(at 71.12 86.36 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "991a9f2d-9247-4fe8-b0c9-da076164ce58"))
+	(global_label "USB_D_P"
+		(shape bidirectional)
+		(at 71.12 83.82 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "3e9a0e6a-b20f-4d0f-a659-70f57c700f71"))
+	(global_label "USB_CC2"
+		(shape bidirectional)
+		(at 71.12 81.28 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "e1a3a632-afbb-4ebf-bfdc-ba9a2a1327c2"))
+	(global_label "USB_VBUS_RAW"
+		(shape bidirectional)
+		(at 71.12 78.74 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "041fb5f1-1e7f-4f68-b778-9adaa5e66ca5"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 71.12 76.2 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "09babb49-abc5-42f5-be39-bf06961b3113"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 55.88 104.14 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "b8cdd3ad-01f9-4a69-9a9d-505fc812a4d7"))
+	(global_label "USB_CC1"
+		(shape bidirectional)
+		(at 88.9 90.17 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "3b10a247-5089-4415-b1ab-4be79d276c33"))
+	(global_label "USB_D_P"
+		(shape bidirectional)
+		(at 88.9 87.63 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "dc0686de-08f9-4178-b2da-d3d92aaf0bef"))
+	(global_label "USB_D_N"
+		(shape bidirectional)
+		(at 88.9 85.09 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "2d92a083-369b-45d6-98cc-faae8b02a6ee"))
+	(global_label "USB_CC2"
+		(shape bidirectional)
+		(at 88.9 82.55 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "358c0dbb-e755-46c5-ad6a-d442b20028c1"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 109.22 86.36 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "cda13ffb-c7df-4537-88c2-9d97aaff113d"))
+	(global_label "USB_VBUS_RAW"
+		(shape bidirectional)
+		(at 62.23 86.36 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "df112d5a-f2dd-4df8-9e03-81a80d90e06f"))
+	(global_label "USB_VBUS_FUSED"
+		(shape bidirectional)
+		(at 80.01 86.36 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "adc2d1e4-9505-40e4-a789-ad6c3c2aed8e"))
+	(global_label "USB_CC1"
+		(shape bidirectional)
+		(at 59.69 106.68 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "b960005f-7115-4ebf-b620-d7f9407d3d55"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 77.47 106.68 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "7b4cb297-be99-400e-818c-aded50e33522"))
+	(global_label "USB_CC2"
+		(shape bidirectional)
+		(at 74.93 111.76 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "59f20308-403e-4d31-bf72-7f6e9071f321"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 92.71 111.76 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "93617944-03a4-4525-8dbd-48c58bda0614"))
+	(global_label "VIN_EXT_RAW"
+		(shape bidirectional)
+		(at 33.02 143.51 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "b200c4ae-9a3f-47f0-8d2d-0f7260769671"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 33.02 140.97 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "9fac261f-71ab-41ca-98fc-5aec4271c753"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 52.07 142.24 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "f0b6e7d0-d692-4436-a7cf-4bf03f232043"))
+	(global_label "VIN_EXT_RAW"
+		(shape bidirectional)
+		(at 69.85 142.24 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "0ae0e0cf-d397-4af1-a100-40004ddccd23"))
+	(global_label "VIN_EXT_RAW"
+		(shape bidirectional)
+		(at 67.31 147.32 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "76d24fe5-a029-43ce-b4d5-c3780d6cc5fe"))
+	(global_label "VIN_EXT_PROT"
+		(shape bidirectional)
+		(at 85.09 147.32 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "f3a2b085-e571-4c1a-9170-92b3148f1522"))
+	(global_label "VIN_EXT_PROT"
+		(shape bidirectional)
+		(at 87.63 132.08 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "43a72ae0-611e-4021-ba59-39a614ba42ed"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 105.41 132.08 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "4aece728-ef98-4144-a5a9-bf9bfc3ad814"))
+	(global_label "VIN_EXT_PROT"
+		(shape bidirectional)
+		(at 101.6 137.16 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "2caad160-ef4d-4eea-95aa-ffca44ce05af"))
+	(global_label "VIN_EXT_PROT"
+		(shape bidirectional)
+		(at 101.6 139.7 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "671840a1-949a-4761-a6fa-34ff18042d37"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 101.6 144.78 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "24f58d6c-c3b7-44f4-81fe-f31dde4457c8"))
+	(global_label "BUCK_FB"
+		(shape bidirectional)
+		(at 121.92 139.7 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "adb5f9a3-9d99-4945-9882-f47c87aa8162"))
+	(global_label "BUCK_SW"
+		(shape bidirectional)
+		(at 121.92 144.78 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "55e767a7-c3bb-4f40-8856-ea2616f71818"))
+	(global_label "BUCK_SW"
+		(shape bidirectional)
+		(at 121.92 147.32 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "fb8fef38-12c2-46bd-9b48-75dff5b7cee9"))
+	(global_label "5V_BUCK"
+		(shape bidirectional)
+		(at 139.7 147.32 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "a93bdb73-b073-4fed-b24b-d98a5d804b49"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 121.92 157.48 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "6aba5af4-639b-44e6-9006-fe8bbcec7696"))
+	(global_label "BUCK_SW"
+		(shape bidirectional)
+		(at 139.7 157.48 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "ebda69d4-dbc5-4a42-b697-d611bbc93f74"))
+	(global_label "5V_BUCK"
+		(shape bidirectional)
+		(at 138.43 139.7 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "9574d74a-e871-4bd2-a102-8211e84c6018"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 156.21 139.7 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "1383ad09-6924-4fac-946d-9a7b1e310739"))
+	(global_label "BUCK_FB"
+		(shape bidirectional)
+		(at 121.92 139.7 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "1cc9df24-b4db-4fa5-8abf-e354377ed6ea"))
+	(global_label "5V_BUCK"
+		(shape bidirectional)
+		(at 139.7 139.7 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "3d1961b2-b004-4c7a-8311-846201288d8c"))
+	(global_label "BUCK_FB"
+		(shape bidirectional)
+		(at 121.92 134.62 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "03a9622d-5fab-4eb2-a423-79175a6a8c82"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 139.7 134.62 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "8ae3ca4d-1cea-4966-b579-a109c2fe8c9a"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 163.83 110.49 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "b1d8fbc3-ad95-404c-bbd8-1514557185b7"))
+	(global_label "5V_BUCK"
+		(shape bidirectional)
+		(at 163.83 97.79 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "88843035-7031-4d5b-b446-2e03d8eae9f7"))
+	(global_label "USB_VBUS_FUSED"
+		(shape bidirectional)
+		(at 163.83 100.33 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "2eb1785f-eaf1-4db1-b696-bdfa51d16a07"))
+	(global_label "5V_SYS"
+		(shape bidirectional)
+		(at 186.69 101.6 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "1e3dae27-27d9-47c5-a61f-2011eba9eb3d"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 199.39 106.68 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "659c1165-9ec2-4ca4-b983-f038cca60e2a"))
+	(global_label "5V_SYS"
+		(shape bidirectional)
+		(at 208.28 147.32 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "590949db-3433-41e4-8969-dee6c848a7f8"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 208.28 142.24 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "35079563-eabf-4bcc-afa0-f60b9153bdd3"))
+	(global_label "5V_SYS"
+		(shape bidirectional)
+		(at 208.28 137.16 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "431ee46e-3e06-4ec8-aebb-23602bc0e837"))
+	(global_label "3V3"
+		(shape bidirectional)
+		(at 228.6 137.16 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "2b8e45f1-da41-4dcf-9daa-856ddb9ffc3d"))
+	(global_label "5V_SYS"
+		(shape bidirectional)
+		(at 194.31 142.24 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "367cb1f7-a20b-4542-8461-a8549183bb16"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 212.09 142.24 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "5ce8aef6-3356-42d6-9b1e-cb6b180373ab"))
+	(global_label "3V3"
+		(shape bidirectional)
+		(at 224.79 142.24 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "a844d38f-7cd0-4d3b-9ea8-3e7807a850ca"))
+	(global_label "GND"
+		(shape bidirectional)
+		(at 242.57 142.24 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "32eb706c-9768-42b9-90f3-751790575e62"))
+	(global_label "3V3"
+		(shape bidirectional)
+		(at 231.14 149.86 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "ee40a888-081e-4462-b352-9f54d176c919"))
+	(global_label "5V_SYS"
+		(shape bidirectional)
+		(at 231.14 154.94 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "aa5c679b-62b1-4eea-9431-d3f449adc4f2"))
+	(global_label "I2C_SCL"
+		(shape bidirectional)
+		(at 231.14 160.02 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "9fb0ebf7-7c5b-40f6-803a-1b7b650f7a0a"))
+	(global_label "I2C_SDA"
+		(shape bidirectional)
+		(at 231.14 165.10 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "966495a8-2482-43cb-b929-0440647dd5eb"))
+	(global_label "ESP_EN"
+		(shape bidirectional)
+		(at 231.14 170.18 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "f7aa4113-9211-4189-aeb2-fc7d71fe4c48"))
+	(global_label "ESP_BOOT"
+		(shape bidirectional)
+		(at 231.14 175.26 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1 1))
+			(justify left))
+		(uuid "2e01db36-340e-4117-b62a-fb3e48689943"))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_PWR_FLAG")
+		(at 82.55 147.32 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(dnp no)
+		(uuid "5c4a0926-d202-49fd-ac26-2f156946fda8")
+		(property "Reference" "#FLG1"
+			(at 80.01 142.24 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Value" "PWR_FLAG"
+			(at 82.55 152.4 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" ""
+			(at 82.55 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 82.55 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Power flag"
+			(at 82.55 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "611c2906-6550-5698-b1cc-e5bde49625bf"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "#FLG1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_USB_C_16P")
+		(at 55.88 78.74 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "88e73253-7208-4259-b635-8cb228def892")
+		(property "Reference" "J1"
+			(at 48.26 68.58 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "USB4110-GF-A"
+			(at 55.88 88.9 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "aetherguard-control-board-v1:AetherGuard_USB4110_GFA"
+			(at 55.88 91.44 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" "https://gct.co/files/drawings/usb4110.pdf"
+			(at 55.88 93.98 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "USB Type-C receptacle for USB 2.0 sink-only designs"
+			(at 55.88 93.98 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "A1"
+			(uuid "bacc6c7e-2362-59e4-98da-d71934eb90eb"))
+		(pin "A4"
+			(uuid "1fe84cc5-93e0-54c8-8d7e-3470dd77d7cd"))
+		(pin "A5"
+			(uuid "0a1d617f-c0b7-5c00-a4e6-468628d8b34c"))
+		(pin "A6"
+			(uuid "8f300766-c7f0-5ba4-b97f-4880de7389b0"))
+		(pin "A7"
+			(uuid "11e48854-3439-5a48-bb98-3ac0b9c1c0a2"))
+		(pin "A9"
+			(uuid "588f19e6-2c1f-554c-9cfd-e9ca5987020d"))
+		(pin "A12"
+			(uuid "445a9814-b3f0-5c5f-aa06-483d0d3244c9"))
+		(pin "B12"
+			(uuid "7e722447-80cd-5ccf-a015-1ed11b2addff"))
+		(pin "B9"
+			(uuid "246961cb-a70c-54a4-93e1-1751f3df75ae"))
+		(pin "B8"
+			(uuid "b3201b7d-4499-59fe-a054-14f2908aa0f1"))
+		(pin "B7"
+			(uuid "346f2c53-04c1-50ce-92c8-534236b1a4fb"))
+		(pin "B6"
+			(uuid "b5e33dc2-7093-5a91-bb26-d93c1d434711"))
+		(pin "B5"
+			(uuid "5aaa3c6c-a41b-58e5-8671-4273993e3766"))
+		(pin "B4"
+			(uuid "89f81663-45aa-59b2-96dd-271a3c75757e"))
+		(pin "B1"
+			(uuid "50e01659-dbcc-5109-8d5f-b3b211e47825"))
+		(pin "S1"
+			(uuid "f5c0cb79-68ac-5dab-9bf9-027af55d94b6"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "J1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_TPD4EUSB30")
+		(at 99.06 86.36 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ae6d2b82-6136-414e-8619-977ad963321d")
+		(property "Reference" "TVS1"
+			(at 91.44 76.2 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "TPD4EUSB30DQAR"
+			(at 99.06 96.52 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Package_DFN_QFN:Texas_DSQ0010A_WSON-10-1EP_2x2mm_P0.4mm_EP0.9x1.5mm"
+			(at 99.06 99.06 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 99.06 101.6 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "USB ESD array simplified symbol"
+			(at 99.06 101.6 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "fbe58af5-d31c-593e-a7ff-01bab0efa7c9"))
+		(pin "2"
+			(uuid "adb4cc33-4659-5319-a3aa-bd67524325e7"))
+		(pin "3"
+			(uuid "4ef48e01-8e7b-5758-9e28-59bc9fc19957"))
+		(pin "4"
+			(uuid "b29665a5-472a-57b1-a26b-1758effbc477"))
+		(pin "5"
+			(uuid "6287f9ec-95a1-5840-9939-130eadae252f"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "TVS1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_FUSE")
+		(at 71.12 86.36 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6c894c90-0ebf-42f8-b3fb-ef5a09bd1535")
+		(property "Reference" "F1"
+			(at 63.5 76.2 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "500mA"
+			(at 71.12 96.52 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Fuse:Fuse_1206_3216Metric"
+			(at 71.12 99.06 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 71.12 101.6 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Fuse"
+			(at 71.12 101.6 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "cbb4e2d8-f01c-55ea-8121-b70a63f07dbb"))
+		(pin "2"
+			(uuid "0f064401-5246-5772-9395-eb519f633dd0"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "F1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_RESISTOR")
+		(at 68.58 106.68 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "bbda579e-8518-427e-8dc0-92268fc8d1b2")
+		(property "Reference" "R1"
+			(at 60.96 96.52 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "5.1k"
+			(at 68.58 116.84 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 68.58 119.38 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 68.58 121.92 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Resistor"
+			(at 68.58 121.92 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "213bbbbe-288b-5b66-8eb8-2b1f8a65246f"))
+		(pin "2"
+			(uuid "789c3bf0-2b2b-5c9b-a4c2-2b73cf702d2b"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "R1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_RESISTOR")
+		(at 83.82 111.76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8b5e2827-de97-4718-a114-ccff8b9f4d00")
+		(property "Reference" "R2"
+			(at 76.2 101.6 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "5.1k"
+			(at 83.82 121.92 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 83.82 124.46 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 83.82 127 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Resistor"
+			(at 83.82 127 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "ab1c2bc4-33fe-5421-8931-8be957bbc079"))
+		(pin "2"
+			(uuid "060b02d3-a421-502c-b139-69eda66a370e"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "R2")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_CONN_2")
+		(at 43.18 142.24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "eb5a76f4-e3d2-47a7-a20e-5b2a1619edcb")
+		(property "Reference" "J2"
+			(at 35.56 132.08 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "VIN_EXT_12V_24V"
+			(at 43.18 152.4 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Connector_Phoenix_MC:PhoenixContact_MCV_1,5_2-G-3.5_1x02_P3.50mm_Vertical"
+			(at 43.18 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 43.18 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Two-pin terminal"
+			(at 43.18 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "aaba0499-94ad-5252-b4bd-7f30957997d8"))
+		(pin "2"
+			(uuid "42e7fe37-efc0-5f71-ba25-e9ab79860d9a"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "J2")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_DIODE")
+		(at 60.96 142.24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4b539c1c-4137-46df-93a2-cbcb10712c65")
+		(property "Reference" "TVS2"
+			(at 53.34 132.08 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "SMBJ33A"
+			(at 60.96 152.4 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Diode_SMD:D_SMB"
+			(at 60.96 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 60.96 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Diode"
+			(at 60.96 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "711e1cc2-750c-5edb-8c47-dc047515e48f"))
+		(pin "2"
+			(uuid "2ab830ce-b001-55be-962a-86ea0e8997a9"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "TVS2")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_DIODE")
+		(at 76.2 147.32 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1f524404-eabe-4c10-a5c6-4e2c73e29c4d")
+		(property "Reference" "D1"
+			(at 68.58 137.16 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "SS34"
+			(at 76.2 157.48 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Diode_SMD:D_SMA"
+			(at 76.2 160.02 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 76.2 162.56 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Diode"
+			(at 76.2 162.56 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "cef7f04b-1edd-58cd-a53f-3a38118c897d"))
+		(pin "2"
+			(uuid "b8600d42-27d7-51bb-b559-8322acb795a0"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "D1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_CAPACITOR")
+		(at 96.52 132.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "39a97a72-9809-4dfe-8cf9-c77d42af4e88")
+		(property "Reference" "C1"
+			(at 88.9 121.92 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "10uF/50V"
+			(at 96.52 142.24 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
+			(at 96.52 144.78 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 96.52 147.32 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Capacitor"
+			(at 96.52 147.32 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "4046dd20-bf0b-5612-abc3-3f728bda734b"))
+		(pin "2"
+			(uuid "115a11f5-9c7c-5c20-a7fe-60466beeeff4"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "C1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_LMR16006")
+		(at 111.76 142.24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9a888ace-bee2-4f7d-84f3-e0a78d87da53")
+		(property "Reference" "U3"
+			(at 104.14 132.08 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "LMR16006YDDCR"
+			(at 111.76 152.4 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-6"
+			(at 111.76 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 111.76 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "6-pin buck regulator simplified symbol"
+			(at 111.76 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "82ef00ea-5227-5184-a879-f77fe4e4893f"))
+		(pin "2"
+			(uuid "dfa17e1d-e0ec-5534-a1cd-4d660c0503d3"))
+		(pin "3"
+			(uuid "9983f5cc-ff2e-5b90-9c82-894ac80f8c48"))
+		(pin "4"
+			(uuid "3dcf708a-88d4-5797-acf0-f687e2620f49"))
+		(pin "5"
+			(uuid "bfdf706c-9fa9-5b1e-b7a6-09e77a8aed06"))
+		(pin "6"
+			(uuid "14838d8f-a0f2-5319-bd2c-1c3112356919"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "U3")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_INDUCTOR")
+		(at 130.81 147.32 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "24c3811e-1a42-4f10-9d08-fd4ac170f17c")
+		(property "Reference" "L1"
+			(at 123.19 137.16 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "10uH"
+			(at 130.81 157.48 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Inductor_SMD:L_6.3x6.3_H3"
+			(at 130.81 160.02 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 130.81 162.56 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Inductor"
+			(at 130.81 162.56 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "8b7459b4-d5fe-52bc-bb10-ad0c090fa8e5"))
+		(pin "2"
+			(uuid "bc6e3054-a83d-54b8-a85a-ec5e09649001"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "L1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_DIODE")
+		(at 130.81 157.48 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "3b7856f7-1c21-4f65-9e75-f1255069c1a0")
+		(property "Reference" "D2"
+			(at 123.19 147.32 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "B5819W"
+			(at 130.81 167.64 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Diode_SMD:D_SOD-123"
+			(at 130.81 170.18 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 130.81 172.72 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Diode"
+			(at 130.81 172.72 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "4d486d85-4de1-5fc4-895b-2b2e84b02045"))
+		(pin "2"
+			(uuid "9eb83f42-351b-58c6-9ecc-0595238ffddb"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "D2")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_CAPACITOR")
+		(at 147.32 139.7 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "04ad196a-0232-43dd-894f-3d53cc88e8af")
+		(property "Reference" "C2"
+			(at 139.7 129.54 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "22uF/10V"
+			(at 147.32 149.86 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
+			(at 147.32 152.4 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 147.32 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Capacitor"
+			(at 147.32 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "f91a9f7f-5a54-5b6c-ae1f-5f0956bdc999"))
+		(pin "2"
+			(uuid "d07a5ddd-2bb9-516d-a88d-89b0360defb1"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "C2")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_RESISTOR")
+		(at 130.81 139.7 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "da1a0f9d-324b-45ff-bdd6-d2c8ccefb049")
+		(property "Reference" "R3"
+			(at 123.19 129.54 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "78.7k"
+			(at 130.81 149.86 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 130.81 152.4 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 130.81 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Resistor"
+			(at 130.81 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "a2be95e0-51c8-5f58-a39f-3fa163b48483"))
+		(pin "2"
+			(uuid "7fdf8b13-a094-578f-847b-394179f38515"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "R3")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_RESISTOR")
+		(at 130.81 134.62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "138d96e0-8437-4829-ac04-da2aa58890c0")
+		(property "Reference" "R4"
+			(at 123.19 124.46 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "10k"
+			(at 130.81 144.78 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 130.81 147.32 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 130.81 149.86 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Resistor"
+			(at 130.81 149.86 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "d96f2233-b157-5788-9681-3db217dce1f7"))
+		(pin "2"
+			(uuid "e9e41277-2689-5749-9235-05253b07cc6a"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "R4")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_TPS2121")
+		(at 175.26 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1edb100b-0a90-4284-aa52-ead6a51dbc86")
+		(property "Reference" "U5"
+			(at 167.64 93.98 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "TPS2121DRLR"
+			(at 175.26 114.3 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Package_DFN_QFN:DHWQFN-14-1EP_2.5x3mm_P0.5mm_EP1x1.5mm"
+			(at 175.26 116.84 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 175.26 119.38 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Power mux simplified symbol"
+			(at 175.26 119.38 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "363f33b5-1a81-543b-952e-4e761d5d9126"))
+		(pin "2"
+			(uuid "7689eb94-875a-5392-9ca9-c1130877b9bc"))
+		(pin "3"
+			(uuid "0694989d-151b-5a83-b6bb-91f1376ddadb"))
+		(pin "4"
+			(uuid "b34dabb0-3d9b-5681-9544-1e125b27eab3"))
+		(pin "5"
+			(uuid "3e04c2ee-879d-5b3c-a74f-0a1f12b40113"))
+		(pin "6"
+			(uuid "94c96863-02e0-5acf-b1dc-6427316f02d8"))
+		(pin "7"
+			(uuid "e6ced5ac-e1a8-5156-bb97-d9fd071b4dd0"))
+		(pin "8"
+			(uuid "762d2efa-7d98-5fa3-8523-ff2bbb6e30aa"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "U5")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_CAPACITOR")
+		(at 190.5 106.68 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4258d052-7adf-4b64-a92b-f88de568b36c")
+		(property "Reference" "C3"
+			(at 182.88 96.52 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "22uF/10V"
+			(at 190.5 116.84 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
+			(at 190.5 119.38 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 190.5 121.92 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Capacitor"
+			(at 190.5 121.92 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "05d7afd3-af8b-5cc6-a295-04c00c9dd7c4"))
+		(pin "2"
+			(uuid "64c5d793-17f1-582b-aef5-85b8f1d90d4c"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "C3")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_AP2112K")
+		(at 218.44 142.24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "18e24425-c6bd-464f-a69d-de0d08fbbbda")
+		(property "Reference" "U4"
+			(at 210.82 132.08 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "AP2112K-3.3TRG1"
+			(at 218.44 152.4 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
+			(at 218.44 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 218.44 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "LDO simplified symbol"
+			(at 218.44 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "951a8974-c952-5636-85cb-88ec1cc4e131"))
+		(pin "2"
+			(uuid "d1cc598f-7901-5d2a-b827-6127f094bf4f"))
+		(pin "3"
+			(uuid "7986bc5b-287f-5555-9271-aa705336a586"))
+		(pin "4"
+			(uuid "4bca810b-e6e8-530e-9e56-d12caa636b1f"))
+		(pin "5"
+			(uuid "d06165dd-52f9-56dd-80a7-77e6e54cbceb"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "U4")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_CAPACITOR")
+		(at 203.2 142.24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "de7d8c5d-d5df-4f05-842b-1cdde33c9b0a")
+		(property "Reference" "C4"
+			(at 195.58 132.08 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "1uF"
+			(at 203.2 152.4 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 203.2 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 203.2 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Capacitor"
+			(at 203.2 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "915b83cd-02b5-5ed8-b873-1f042385a595"))
+		(pin "2"
+			(uuid "dd89342a-eeda-5e4e-a8bd-b816ed97119e"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "C4")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_CAPACITOR")
+		(at 233.68 142.24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b9e01d58-7f31-4a56-ba9f-2ad15125542c")
+		(property "Reference" "C5"
+			(at 226.06 132.08 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "1uF"
+			(at 233.68 152.4 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 233.68 154.94 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 233.68 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Capacitor"
+			(at 233.68 157.48 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "47cb38b1-f947-5d0a-b509-4b3304c66c05"))
+		(pin "2"
+			(uuid "39292a50-171c-5a8a-b9ab-67564710f396"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "C5")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_TP")
+		(at 231.14 146.05 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "67dc5a73-49f0-4d0f-908f-850f78e78b5e")
+		(property "Reference" "TP1"
+			(at 223.52 135.89 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "3V3"
+			(at 231.14 156.21 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
+			(at 231.14 158.75 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 231.14 161.29 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Test point"
+			(at 231.14 161.29 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "20d3ecd5-cceb-581e-99cc-d9ede2c5f01e"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "TP1")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_TP")
+		(at 231.14 151.13 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "0f609fbc-6538-4f3c-b4a0-2d7734ec546c")
+		(property "Reference" "TP2"
+			(at 223.52 140.97 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "5V_SYS"
+			(at 231.14 161.29 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
+			(at 231.14 163.83 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 231.14 166.37 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Test point"
+			(at 231.14 166.37 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "2c4c457b-5114-55d0-ab1f-1f28e44458ba"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "TP2")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_TP")
+		(at 231.14 156.21 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c90e2a92-2afe-4011-8157-bea0c8b9bba2")
+		(property "Reference" "TP3"
+			(at 223.52 146.05 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "I2C_SCL"
+			(at 231.14 166.37 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
+			(at 231.14 168.91 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 231.14 171.45 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Test point"
+			(at 231.14 171.45 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "b9f1c513-cc25-5841-841f-88ab34596eae"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "TP3")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_TP")
+		(at 231.14 161.29 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "19736e88-2dee-43b9-a8d9-9580a201513c")
+		(property "Reference" "TP4"
+			(at 223.52 151.13 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "I2C_SDA"
+			(at 231.14 171.45 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
+			(at 231.14 173.99 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 231.14 176.53 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Test point"
+			(at 231.14 176.53 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "bd0e864e-434d-576e-8964-407c45663d27"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "TP4")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_TP")
+		(at 231.14 166.37 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "0370ba6d-bd9b-4534-9c10-ec6a309cfd46")
+		(property "Reference" "TP5"
+			(at 223.52 156.21 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "EN"
+			(at 231.14 176.53 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
+			(at 231.14 179.07 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 231.14 181.61 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Test point"
+			(at 231.14 181.61 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "01ddbe5b-1c6b-5392-bc78-46f05e8f4244"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "TP5")
+					(unit 1)))))
+	(symbol
+		(lib_id "aetherguard-control-board-v1:AG_TP")
+		(at 231.14 171.45 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d1471413-b58c-47f4-b9a9-d33bbfa3fa30")
+		(property "Reference" "TP6"
+			(at 223.52 161.29 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Value" "BOOT"
+			(at 231.14 181.61 0)
+			(effects
+				(font
+					(size 1 1))))
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
+			(at 231.14 184.15 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Datasheet" ""
+			(at 231.14 186.69 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(property "Description" "Test point"
+			(at 231.14 186.69 0)
+			(effects
+				(font
+					(size 1 1))
+				(hide yes)))
+		(pin "1"
+			(uuid "3d5ea18f-257c-5e9a-8adf-4ceb8ce84264"))
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001/2ec4b955-5188-40d4-9c7a-7d71d6161001"
+					(reference "TP6")
+					(unit 1)))))
+	(embedded_fonts no))

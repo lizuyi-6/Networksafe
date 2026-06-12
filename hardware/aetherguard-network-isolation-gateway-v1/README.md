@@ -1,6 +1,8 @@
-# AetherGuard Network Isolation Gateway v1
+# AetherGuard Root-Resistant Gateway Appliance
 
 Root-resistant Final Defense hardware baseline for AetherGuard.
+
+> **Note:** This directory retains the legacy path name `aetherguard-network-isolation-gateway-v1` for repository continuity. The product is now the **AetherGuard Root-Resistant Gateway Appliance**, comprising an industrial multi-port gateway, an independent STM32H5/U5 security controller, a Secure Element / TPM, and a hardware-level fail-closed interlock.
 
 ## Scope
 
@@ -13,7 +15,7 @@ Root-resistant Final Defense hardware baseline for AetherGuard.
 
 ## Trust Boundary
 
-Network Isolation Gateway v1 is designed for the threat model where the protected server is root-compromised. The server OS, host agent, local companion, scripts, and host-side logs are not trusted to authorize release.
+The Gateway Appliance is designed for the threat model where the protected server is root-compromised. The server OS, host agent, local companion, scripts, and host-side logs are not trusted to authorize release.
 
 The trusted boundary is:
 

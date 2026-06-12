@@ -1,0 +1,307 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "a1b2c3d4-rtc0-stor-age0-000000000001")
+	(paper "A3")
+	(title_block
+		(title "AetherGuard Control Board v2")
+		(date "2026-05-20")
+		(rev "rtc-storage"))
+	(lib_symbols)
+	(text "RTC + SD Card Storage\nPCF8563 I2C RTC with CR1220 backup\nMicro-SD SPI for audit log"
+		(exclude_from_sim no)
+		(at 30.48 25.4 0)
+		(effects
+			(font (size 2.54 2.54))
+			(justify left)
+		)
+		(uuid "a1b2c3d4-rtc0-stor-text-000000000001")
+	)
+	(symbol
+		(lib_id "aetherguard-control-board-v2:AG_PCF8563")
+		(at 63.5 63.5 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-u901-000000000001")
+		(property "Reference" "U9"
+			(at 55.88 52.07 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Value" "PCF8563T/5"
+			(at 55.88 54.61 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
+			(at 63.5 76.2 0)
+			(effects (font (size 1.27 1.27)) hide))
+		(property "LCSC" "C7488"
+			(at 63.5 78.74 0)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "aetherguard-control-board-v2:AG_CR1220_Holder")
+		(at 109.22 63.5 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-bt01-000000000001")
+		(property "Reference" "BT1"
+			(at 104.14 58.42 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Value" "CR1220"
+			(at 104.14 60.96 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Footprint" "aetherguard-control-board-v2:AetherGuard_CR1220_Holder"
+			(at 109.22 71.12 0)
+			(effects (font (size 1.27 1.27)) hide))
+		(property "LCSC" "C70377"
+			(at 109.22 73.66 0)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "aetherguard-control-board-v2:AG_MicroSD_SPI")
+		(at 63.5 127 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-j601-000000000001")
+		(property "Reference" "J6"
+			(at 53.34 113.03 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Value" "Micro_SD_Card"
+			(at 53.34 115.57 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Footprint" "aetherguard-control-board-v2:AetherGuard_MicroSD_Push_Push"
+			(at 63.5 144.78 0)
+			(effects (font (size 1.27 1.27)) hide))
+		(property "LCSC" "C393941"
+			(at 63.5 147.32 0)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 38.1 55.88 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-r291-000000000001")
+		(property "Reference" "R29"
+			(at 38.1 53.34 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Value" "100k"
+			(at 38.1 55.88 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 38.1 57.15 90)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 38.1 119.38 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-r251-000000000001")
+		(property "Reference" "R25"
+			(at 38.1 116.84 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Value" "10k"
+			(at 38.1 119.38 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 38.1 120.65 90)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 38.1 124.46 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-r261-000000000001")
+		(property "Reference" "R26"
+			(at 38.1 121.92 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Value" "10k"
+			(at 38.1 124.46 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 38.1 125.73 90)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 38.1 129.54 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-r271-000000000001")
+		(property "Reference" "R27"
+			(at 38.1 127 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Value" "10k"
+			(at 38.1 129.54 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 38.1 130.81 90)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 38.1 134.62 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-r281-000000000001")
+		(property "Reference" "R28"
+			(at 38.1 132.08 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Value" "10k"
+			(at 38.1 134.62 90)
+			(effects (font (size 1.27 1.27))))
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 38.1 135.89 90)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 88.9 68.58 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-c081-000000000001")
+		(property "Reference" "C8"
+			(at 91.44 66.04 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Value" "100nF"
+			(at 91.44 68.58 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 89.8652 72.39 0)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 88.9 132.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-c091-000000000001")
+		(property "Reference" "C9"
+			(at 91.44 129.54 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Value" "100nF"
+			(at 91.44 132.08 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 89.8652 135.89 0)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 99.06 132.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1b2c3d4-rtc0-stor-c101-000000000001")
+		(property "Reference" "C10"
+			(at 101.6 129.54 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Value" "10uF"
+			(at 101.6 132.08 0)
+			(effects (font (size 1.27 1.27)) (justify left)))
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 100.0252 135.89 0)
+			(effects (font (size 1.27 1.27)) hide))
+	)
+	(wire
+		(pts (xy 73.66 58.42) (xy 78.74 58.42))
+		(stroke (width 0) (type solid))
+		(uuid "a1b2c3d4-rtc0-wire-0001-000000000001"))
+	(wire
+		(pts (xy 73.66 60.96) (xy 78.74 60.96))
+		(stroke (width 0) (type solid))
+		(uuid "a1b2c3d4-rtc0-wire-0002-000000000001"))
+	(wire
+		(pts (xy 73.66 66.04) (xy 78.74 66.04))
+		(stroke (width 0) (type solid))
+		(uuid "a1b2c3d4-rtc0-wire-0003-000000000001"))
+	(label "I2C_SDA"
+		(at 78.74 58.42 0)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "a1b2c3d4-rtc0-labl-0001-000000000001"))
+	(label "I2C_SCL"
+		(at 78.74 60.96 0)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "a1b2c3d4-rtc0-labl-0002-000000000001"))
+	(label "RTC_INT"
+		(at 78.74 66.04 0)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "a1b2c3d4-rtc0-labl-0003-000000000001"))
+	(label "SD_MOSI"
+		(at 45.72 119.38 0)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "a1b2c3d4-rtc0-labl-0004-000000000001"))
+	(label "SD_MISO"
+		(at 45.72 124.46 0)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "a1b2c3d4-rtc0-labl-0005-000000000001"))
+	(label "SD_SCK"
+		(at 45.72 129.54 0)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "a1b2c3d4-rtc0-labl-0006-000000000001"))
+	(label "SD_CS"
+		(at 45.72 134.62 0)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "a1b2c3d4-rtc0-labl-0007-000000000001"))
+	(power_port
+		(at 63.5 53.34 0)
+		(effects (font (size 1.27 1.27)))
+		(pins
+			(pin "1" (uuid "a1b2c3d4-rtc0-pwr0-0001-000000000001")))
+		(lib_id "power:+3V3")
+		(uuid "a1b2c3d4-rtc0-pwr1-0001-000000000001"))
+	(power_port
+		(at 63.5 73.66 180)
+		(effects (font (size 1.27 1.27)))
+		(pins
+			(pin "1" (uuid "a1b2c3d4-rtc0-pwr0-0002-000000000001")))
+		(lib_id "power:GND")
+		(uuid "a1b2c3d4-rtc0-pwr1-0002-000000000001"))
+	(power_port
+		(at 66.04 114.3 0)
+		(effects (font (size 1.27 1.27)))
+		(pins
+			(pin "1" (uuid "a1b2c3d4-rtc0-pwr0-0003-000000000001")))
+		(lib_id "power:+3V3")
+		(uuid "a1b2c3d4-rtc0-pwr1-0003-000000000001"))
+	(power_port
+		(at 63.5 139.7 180)
+		(effects (font (size 1.27 1.27)))
+		(pins
+			(pin "1" (uuid "a1b2c3d4-rtc0-pwr0-0004-000000000001")))
+		(lib_id "power:GND")
+		(uuid "a1b2c3d4-rtc0-pwr1-0004-000000000001"))
+)

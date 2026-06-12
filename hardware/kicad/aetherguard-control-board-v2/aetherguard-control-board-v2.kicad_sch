@@ -1,0 +1,234 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "2ec4b955-5188-40d4-9c7a-7d71d6260001")
+	(paper "A3")
+	(title_block
+		(title "AetherGuard Control Board v2")
+		(date "2026-05-20")
+		(rev "v2-schematic-baseline")
+		(comment 1 "Full hierarchy: power, MCU, UI, isolated-IO, RTC+storage")
+	)
+	(lib_symbols)
+	(sheet
+		(at 25.4 25.4)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6261001")
+		(property "Sheetname" "power-input"
+			(id 0)
+			(at 25.4 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/power-input.kicad_sch"
+			(id 1)
+			(at 25.4 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v2"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6260001"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 25.4 68.58)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6261002")
+		(property "Sheetname" "mcu-usb-secure"
+			(id 0)
+			(at 25.4 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/mcu-usb-secure.kicad_sch"
+			(id 1)
+			(at 25.4 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v2"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6260001"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 25.4 111.76)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6261003")
+		(property "Sheetname" "ui-panel"
+			(id 0)
+			(at 25.4 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/ui-panel.kicad_sch"
+			(id 1)
+			(at 25.4 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v2"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6260001"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 25.4 154.94)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6261004")
+		(property "Sheetname" "isolated-io"
+			(id 0)
+			(at 25.4 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/isolated-io.kicad_sch"
+			(id 1)
+			(at 25.4 187.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v2"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6260001"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 25.4 198.12)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6261005")
+		(property "Sheetname" "rtc-storage"
+			(id 0)
+			(at 25.4 195.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/rtc-storage.kicad_sch"
+			(id 1)
+			(at 25.4 231.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v2"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6260001"
+					(page "6")
+				)
+			)
+		)
+	)
+)

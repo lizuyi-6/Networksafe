@@ -1,0 +1,73 @@
+(footprint "aetherguard-network-isolation-gateway-v1:AG_TESTPOINT_REVIEW"
+		(layer "F.Cu")
+		(uuid "f9e31bcf-ed69-4c09-82f6-d66c06e10b9b")
+		(at 0 0)
+		(property "Reference" "TP14"
+			(at 0 -5 0)
+			(layer "F.SilkS")
+			(uuid "cbf99ba1-9329-4b45-b273-883c37246f73")
+			(effects
+				(font
+					(size 0.9 0.9)
+					(thickness 0.12)
+				)
+			)
+		)
+		(property "Value" "TP_MGMT_LINK"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "ac65c67c-8a0d-4be4-9119-f474c8ae2925")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "629abf5c-b736-4a53-bbdf-6efc55e138f3")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "37cb0851-4346-44c3-b598-ede83b9034a7")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(fp_text user "MGMT_LINK"
+			(at 0 -1.9 0)
+			(layer "F.Fab")
+			(uuid "994f6b03-54fd-4b36-a869-e26660b6f618")
+			(effects
+				(font
+					(size 0.45 0.45)
+					(thickness 0.07)
+				)
+			)
+		)
+		(pad "1" thru_hole circle
+			(at 0 0)
+			(size 1 1)
+			(drill 0.4)
+			(layers "*.Cu")
+			(remove_unused_layers no)
+			(solder_mask_margin -0.02)
+			(uuid "e0725516-5407-4a5c-a6e7-35ac080242ef")
+		)
+		(embedded_fonts no)
+	)
