@@ -409,7 +409,7 @@ const Devices = () => {
     const rootFinalDefenseTitle = rootResistantActive
         ? 'Root-Resistant Final Defense Active'
         : 'Root-Resistant Final Defense Degraded';
-    const rootFinalDefenseSubtitle = 'External Network Isolation Gateway v1 keeps the protected network link under hardware control even if the server OS is root-compromised.';
+    const rootFinalDefenseSubtitle = 'External Root-Resistant Gateway Appliance keeps the protected network link under hardware control even if the server OS is root-compromised.';
 
     return (
         <div className="relative p-6 space-y-6 max-w-[1600px] mx-auto">
@@ -457,7 +457,7 @@ const Devices = () => {
                             </div>
                         )) : (
                             <div className="col-span-2 rounded-lg border border-border bg-card/70 px-3 py-2 text-muted-foreground sm:col-span-3">
-                                No external Network Isolation Gateway v1 has reported root-resistant status.
+                                No external Root-Resistant Gateway Appliance has reported root-resistant status.
                             </div>
                         )}
                     </div>
@@ -476,7 +476,7 @@ const Devices = () => {
                     </div>
                 ) : null}
                 <div className="mt-4 rounded-lg border border-border bg-card/70 p-3">
-                    <div className="text-xs font-semibold text-foreground">Control Board v1 compatibility status</div>
+                    <div className="text-xs font-semibold text-foreground">Security Controller compatibility status</div>
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
                         {hostCompanionConditionRows.length > 0 ? hostCompanionConditionRows.map(([label, ok]) => (
                             <div key={label} className="flex items-center justify-between gap-2 rounded-md bg-muted/30 px-2 py-1.5">

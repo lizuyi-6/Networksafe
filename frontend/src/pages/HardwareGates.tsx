@@ -84,7 +84,7 @@ const HardwareGates = () => {
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_420px]">
                 <ConsolePanel title="Hardware Gates" subtitle="Experimental websocket devices stay separate from production gates." icon={ShieldCheck}>
                     {gates.length === 0 && !loading ? (
-                        <ConsoleEmptyState title="No gates enrolled" description="Enroll an ESP32 serial gate before approving deployment runs." />
+                        <ConsoleEmptyState title="No gates enrolled" description="Enroll a Gateway Appliance security gate before approving deployment runs." />
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
@@ -116,7 +116,7 @@ const HardwareGates = () => {
                     )}
                 </ConsolePanel>
 
-                <ConsolePanel title="Enroll Gate" subtitle="Paste the ESP32 public key exported during gate provisioning." icon={Plus}>
+                <ConsolePanel title="Enroll Gate" subtitle="Paste the Gateway Appliance public key exported during gate provisioning." icon={Plus}>
                     <form onSubmit={submit} className="space-y-4">
                         <label className="block space-y-2 text-sm">
                             <span className="text-muted-foreground">Gate ID</span>

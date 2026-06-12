@@ -15,17 +15,6 @@ interface SerialPort {
     getInfo(): { usbVendorId?: number; usbProductId?: number };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getSerial = (): any => (navigator as any).serial;
-
-// Web Serial API type declarations
-interface SerialPort {
-    readable: ReadableStream | null;
-    writable: WritableStream | null;
-    open(options: { baudRate: number }): Promise<void>;
-    close(): Promise<void>;
-}
-
 interface Serial {
     requestPort(): Promise<SerialPort>;
     getPorts(): Promise<SerialPort[]>;
@@ -36,6 +25,8 @@ declare global {
         serial?: Serial;
     }
 }
+
+const getSerial = (): Serial | undefined => navigator.serial;
 
 interface GeneratedConfig {
     configText: string;
@@ -153,12 +144,14 @@ const DeploymentWizard = () => {
         }
     };
 
-    // --- Web Serial API for direct browser-to-ESP32 transfer ---
+    // --- Web Serial API for direct browser-to-hardware transfer ---
     const connectSerial = useCallback(async () => {
         if (!serialSupported) return;
         setError(null);
         try {
-            const port = await getSerial().requestPort();
+            const serial = getSerial();
+            if (!serial) return;
+            const port = await serial.requestPort();
             await port.open({ baudRate: 115200 });
             setSerialPort(port);
             setSerialConnected(true);
@@ -191,7 +184,7 @@ const DeploymentWizard = () => {
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
-                // Read and discard ESP32 responses (value is Uint8Array from serial)
+                // Read and discard device responses (value is Uint8Array from serial)
                 decoder.decode(value as Uint8Array);
             }
         } catch { /* port closed */ }
@@ -238,7 +231,7 @@ const DeploymentWizard = () => {
             const bundleBytes = atob(bundle.bundleBase64);
             const totalSize = bundleBytes.length;
 
-            // Step 2: Send WRITE_BUNDLE command to ESP32
+            // Step 2: Send WRITE_BUNDLE command to hardware device
             setWritePhase('initiating');
             const filename = `deploy-${serverType}.sh`;
             await sendSerialLine(`AG:REQ:WRITE_BUNDLE:${totalSize}:${filename}`);
@@ -459,7 +452,7 @@ const DeploymentWizard = () => {
                                             {t('deploymentWizard.disconnect_serial')}
                                         </button>
 
-                                        {/* Write to ESP32 */}
+                                        {/* Write to hardware device */}
                                         <button
                                             data-testid="deploy-write-esp32"
                                             onClick={doWriteToEsp32}

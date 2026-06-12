@@ -350,7 +350,7 @@ const content: Record<LandingLanguage, LandingCopy> = {
             deviceTitle: 'Edge control card',
             deviceDescription: 'A dedicated device view keeps runtime trust close to live policy distribution.',
             deviceRows: [
-                { label: 'Chipset', value: 'ESP32-S3 secure element' },
+                { label: 'Chipset', value: 'STM32H5 Secure Element' },
                 { label: 'Policy sync', value: '2 minutes ago' },
                 { label: 'Key rotation', value: 'Scheduled for next wave' },
                 { label: 'Integrity state', value: 'Verified across active nodes' },
@@ -615,7 +615,7 @@ const content: Record<LandingLanguage, LandingCopy> = {
             deviceTitle: '边缘控制卡片',
             deviceDescription: '专门的设备视图让运行时信任始终贴着真实的策略分发流程。',
             deviceRows: [
-                { label: '芯片组', value: 'ESP32-S3 安全元件' },
+                { label: '芯片组', value: 'STM32H5 安全元件' },
                 { label: '策略同步', value: '2 分钟前' },
                 { label: '密钥轮换', value: '下一轮波次已排程' },
                 { label: '完整性状态', value: '活跃节点全部已验证' },

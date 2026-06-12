@@ -88,14 +88,14 @@ const slides: Slide[] = [
         title: 'AetherGuard',
         kicker: '智能服务器安全防御平台 · 产品展示',
         claim: '面向数字基础设施的智能服务器安全防御平台',
-        bullets: ['服务器安全', '分布式 Agent', 'AI 决策与演练', 'ESP32 物理确认门'],
+        bullets: ['服务器安全', '分布式 Agent', 'AI 决策与演练', 'Gateway Appliance 物理确认门'],
         visual: { type: 'image', src: pitch('02-dashboard.png'), alt: 'AetherGuard dashboard', caption: '已有控制台界面，可用于现场连续演示' },
         speakerNote: '开场只做一句定义：我们不是单点安全工具，而是把风险识别、判断、处置和物理确认放进同一条闭环。',
         evidenceLevel: 'repo',
         layout: 'hero',
         tone: 'dark',
         accent: 'cyan',
-        stat: { value: '4', label: '层防护闭环', note: 'Agent + AI + 控制平面 + ESP32' },
+        stat: { value: '4', label: '层防护闭环', note: 'Agent + AI + 控制平面 + Gateway Appliance' },
     },
     {
         title: '一句话定义',
@@ -106,7 +106,7 @@ const slides: Slide[] = [
             'AetherGuard 把危险动作接入串口硬件确认，要求人到现场按键',
             '即使服务端被入侵，攻击者也无法远程完成物理按键确认',
         ],
-        visual: { type: 'flow', steps: ['风险动作发起', '平台生成确认请求', 'ESP32 本地显示', '人工按键确认', '审计留痕执行'] },
+        visual: { type: 'flow', steps: ['风险动作发起', '平台生成确认请求', 'Gateway Appliance 本地显示', '人工按键确认', '审计留痕执行'] },
         speakerNote: '这一页要把差异化讲透：硬件不是装饰，而是不可远程替代的最后确认环节。',
         evidenceLevel: 'repo',
         layout: 'statement',
@@ -142,12 +142,12 @@ const slides: Slide[] = [
     {
         title: '整体方案',
         kicker: '一条闭环，不是几个孤立功能',
-        claim: '控制平面、分布式 Agent、AI 分析和 ESP32 硬件门共同组成主动防御闭环。',
+        claim: '控制平面、分布式 Agent、AI 分析和 Gateway Appliance 硬件门共同组成主动防御闭环。',
         bullets: [
             '前端控制台统一管理节点、站点、设备、扫描、告警与审计',
             '后端控制平面承接认证、实时通信、任务编排和结果沉淀',
             'Agent 更接近业务服务器现场，降低只靠边界设备的盲区',
-            'ESP32 通过串口 allow-list 协议承接高风险动作的物理确认',
+            'Gateway Appliance 通过串口 allow-list 协议承接高风险动作的物理确认',
         ],
         visual: { type: 'flow', steps: ['控制台', '控制平面', 'Agent / 站点 / 设备', 'AI 判断与演练', '物理确认与审计'] },
         speakerNote: '强调系统已经具备平台级结构，不是临时拼出来的演示页面。',
@@ -174,11 +174,11 @@ const slides: Slide[] = [
         stat: { value: 'Agent', label: '主机侧内生防护', note: '防护贴近业务运行现场' },
     },
     {
-        title: '创新二：ESP32 物理确认门',
+        title: '创新二：Gateway Appliance 物理确认门',
         kicker: '危险操作必须有人在现场',
         claim: '硬件确认把纯软件信任链延伸到物理世界，给高危动作增加不可远程伪造的门槛。',
         bullets: [
-            'ESP32 只通过 USB-TTL 串口通信，不暴露网络控制面',
+            'Gateway Appliance 只通过 USB-TTL 串口通信，不暴露网络控制面',
             '协议采用 allow-list：AG:REQ 到 AG:BEGIN / STEP / OK / ERR',
             '适用于安装/卸载 Agent、擦除数据、关键配置变更等危险动作',
             '平台侧保留设备状态、执行过程和证据记录，便于审计',
@@ -189,7 +189,7 @@ const slides: Slide[] = [
         layout: 'innovation',
         tone: 'hardware',
         accent: 'amber',
-        stat: { value: 'ESP32', label: '物理可信确认', note: '串口硬件门，现场按键确认' },
+        stat: { value: 'AG', label: '物理可信确认', note: '串口硬件门，现场按键确认' },
     },
     {
         title: '创新三：AI 监控与演练闭环',
@@ -241,7 +241,7 @@ const slides: Slide[] = [
         claim: '以软件订阅建立持续收入，以硬件配套形成差异化，以私有化交付和安全服务承接高价值客户。',
         bullets: [
             '软件订阅：按节点、站点或企业版本提供持续防护与运营能力',
-            '硬件配套：ESP32 确认门作为部署包和高危操作安全配件',
+            '硬件配套：Gateway Appliance 确认门作为部署包和高危操作安全配件',
             '私有化交付：面向政企、园区、信创和合规敏感场景',
             '增值服务：安全配置、演练验证、合规材料和响应支持',
         ],
@@ -336,9 +336,9 @@ const slides: Slide[] = [
             '访问层：React 控制台负责展示、操作和演示入口',
             '控制平面：Express、Socket.IO、业务模块和服务编排',
             '支撑层：SQLite / Postgres shadow writes、Redis、审计与配置',
-            '受管对象层：Agent、站点、ESP32 串口确认设备和 Rust fastpath',
+            '受管对象层：Agent、站点、Gateway Appliance 串口确认设备和 Rust fastpath',
         ],
-        visual: { type: 'flow', steps: ['React 控制台', 'Node 控制平面', '数据与缓存', 'Agent / Site / ESP32', '审计证据'] },
+        visual: { type: 'flow', steps: ['React 控制台', 'Node 控制平面', '数据与缓存', 'Agent / Site / Gateway Appliance', '审计证据'] },
         speakerNote: '只在需要展开架构时打开。',
         evidenceLevel: 'repo',
         layout: 'architecture',
@@ -418,7 +418,7 @@ function getAccent(slide: Slide) {
 
 function getFlowAccent(step: string, fallback: string) {
     const normalized = step.toLowerCase();
-    if (normalized.includes('esp32') || normalized.includes('物理') || normalized.includes('硬件')) return COLORS.hardwareAmber;
+    if (normalized.includes('esp32') || normalized.includes('gateway') || normalized.includes('appliance') || normalized.includes('物理') || normalized.includes('硬件')) return COLORS.hardwareAmber;
     if (normalized.includes('ai') || normalized.includes('判断') || normalized.includes('演练')) return COLORS.purple;
     if (normalized.includes('ok') || normalized.includes('成功') || normalized.includes('审计') || normalized.includes('确认')) return COLORS.successGreen;
     if (normalized.includes('agent') || normalized.includes('节点')) return COLORS.cyan;
@@ -427,7 +427,7 @@ function getFlowAccent(step: string, fallback: string) {
 
 function getMetricAccent(item: { value: string; label: string; note: string }, fallback: string) {
     const text = `${item.value}${item.label}${item.note}`.toLowerCase();
-    if (text.includes('esp32') || text.includes('硬件') || text.includes('物理')) return COLORS.hardwareAmber;
+    if (text.includes('esp32') || text.includes('gateway') || text.includes('appliance') || text.includes('硬件') || text.includes('物理')) return COLORS.hardwareAmber;
     if (text.includes('ai') || text.includes('智能') || text.includes('模型')) return COLORS.purple;
     if (text.includes('成功') || text.includes('防护') || text.includes('服务')) return COLORS.successGreen;
     return fallback;

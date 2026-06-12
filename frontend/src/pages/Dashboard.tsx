@@ -294,11 +294,11 @@ export default function Dashboard() {
 
     // --- Metric bar items ---
     const metricItems: MetricItem[] = [
-        { icon: Server, label: t('dashboard.total_requests'), value: stats.totalRequests.toLocaleString(), trend: stats.requestsTrend, tone: 'primary' },
-        { icon: Shield, label: t('dashboard.threats_blocked'), value: stats.blockedRequests.toLocaleString(), trend: stats.blockedTrend, tone: 'danger' },
-        { icon: Globe, label: t('dashboard.success_rate'), value: `${stats.successRate}%`, tone: 'success' },
+        { icon: Server, label: t('dashboard.total_requests'), value: (stats.totalRequests ?? 0).toLocaleString(), trend: stats.requestsTrend, tone: 'primary' },
+        { icon: Shield, label: t('dashboard.threats_blocked'), value: (stats.blockedRequests ?? 0).toLocaleString(), trend: stats.blockedTrend, tone: 'danger' },
+        { icon: Globe, label: t('dashboard.success_rate'), value: `${stats.successRate ?? 0}%`, tone: 'success' },
         { icon: Zap, label: t('dashboard.avg_latency'), value: `${stats.avgProcessingTime || 0}ms`, tone: 'warning' },
-        { icon: Activity, label: t('dashboard.active_connections'), value: stats.activeConnections.toLocaleString(), tone: 'primary' },
+        { icon: Activity, label: t('dashboard.active_connections'), value: (stats.activeConnections ?? 0).toLocaleString(), tone: 'primary' },
         { icon: AlertTriangle, label: t('dashboard.high_risk'), value: securitySummary.openCriticalFindings, tone: 'danger' },
     ];
 
