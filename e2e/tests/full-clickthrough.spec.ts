@@ -172,7 +172,7 @@ test.describe('full clickthrough巡检', () => {
             }, true);
         });
 
-        test('covers settings, admin writes, deployment generation, and ESP32 gate fallback', async ({ page, baseURL }) => {
+        test('covers settings, admin writes, deployment generation, and hardware gate fallback', async ({ page, baseURL }) => {
             const monitor = createIssueMonitor(page, baseURL!);
             const { payload: platformConfigPayload } = await readJson(page.request, '/api/config');
             const basePlatformConfig: any = (platformConfigPayload as any)?.data ?? platformConfigPayload;
