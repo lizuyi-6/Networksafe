@@ -6,7 +6,7 @@ This file provides guidance to OpenCode when working with code in this repositor
 
 AetherGuard — 智能服务器安全防御平台。Agent-based distributed security + physical hardware safety gate.
 
-The core differentiator: **ESP32 hardware dongles act as an air-gapped physical confirmation gate**. Dangerous server operations (install/uninstall agents, wipe data, critical config changes) require a human to physically press buttons on the ESP32 device. The dongle communicates only via serial (UART), using an allow-list protocol (`AG:REQ:*` → `AG:BEGIN/*`, `AG:STEP/*`, `AG:OK/*`, `AG:ERR/*`). Even if the server is fully compromised, an attacker cannot execute destructive operations without physical presence.
+The core differentiator: **AetherGuard Root-Resistant Gateway Appliance acts as a root-resistant external network isolation and authorization boundary**. The self-developed appliance integrates an industrial multi-port gateway (dual 1GbE + independent MGMT), an independent STM32H5/U5 security authorization controller, a Secure Element / TPM for hardware root of trust, and a hardware-level fail-closed interlock with feedback verification. Dangerous server operations (install/uninstall agents, wipe data, critical config changes, network release) require hardware authorization through the appliance's security controller — even if the server is fully compromised, an attacker cannot restore SERVER ↔ LAN/WAN network connectivity without passing through the appliance's full authorization chain (policy digest, challenge, monotonic counter, expiry, Secure Element signature, physical confirmation, and interlock feedback).
 
 | Component | Stack |
 |-----------|-------|
@@ -14,7 +14,7 @@ The core differentiator: **ESP32 hardware dongles act as an air-gapped physical 
 | Frontend | React 18, Vite, TailwindCSS, Recharts, Socket.IO Client, i18next |
 | Fastpath | Rust sidecar for high-throughput traffic processing |
 | E2E | Playwright |
-| Hardware | ESP32-WROOM-32 + OLED + 3-button + RGB + buzzer, over USB-TTL serial |
+| Hardware | AetherGuard Root-Resistant Gateway Appliance: industrial multi-port gateway + STM32H5/U5 security controller + Secure Element / TPM + fail-closed interlock |
 
 ## Quick Start
 

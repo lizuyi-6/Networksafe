@@ -6,21 +6,21 @@
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
 
 ## 1. 产品愿景
 
 在万物互联的今天，API 和服务器基础设施已成为企业数字资产的核心载体。然而，传统的防火墙（WAF）和网关常常通过静态规则进行被动防御，不仅难以应对 AI 驱动的新型攻击，更无法防御深层的业务逻辑漏洞。
 
-**AetherGuard** (前身为 API Security Middleware) 正是为解决这一痛点而生。我们重新定义了服务器安全——**从 "被动拦截" 进化为 "主动免疫"**。通过独创的 **"Agent-Inside"** 技术，我们的防御引擎直接驻留在业务服务器内部，结合本地化 AI 分析与 ESP32 硬件运维工具，构建了一套从代码层到物理层的全方位防御体系。
+**AetherGuard** (前身为 API Security Middleware) 正是为解决这一痛点而生。我们重新定义了服务器安全——**从 "被动拦截" 进化为 "主动免疫"**。通过独创的 **"Agent-Inside"** 技术，我们的防御引擎直接驻留在业务服务器内部，结合本地化 AI 分析与 Gateway Appliance 硬件授权设备，构建了一套从代码层到物理层的全方位防御体系。
 
 新的产品主张是 **“AetherGuard 完全最后防线：即使控制平面沦陷，危险动作仍需本地硬件放行。”** 在工程定义上，它对应 Final Defense Mode：控制平面只发起请求和记录审计，最终授权由本地主机 companion、离线签名本地策略、硬件安全芯片签名 grant、单调计数器、payload hash、策略摘要和 interlock 反馈共同决定。
 
-该主张成立的前提必须明确：管理链路已接入 Control Board v1 interlock，Final Defense Mode 已启用，本地策略已签名，ATECC608C 安全芯片已 provision，外部 DC、反馈回路、companion 心跳和策略摘要均健康。第一版物理断路只控制低压网络/管理链路，不切换市电或直接切断业务主机电源。
+该主张成立的前提必须明确：管理链路已接入 Gateway Appliance 安全授权控制器 interlock，Final Defense Mode 已启用，本地策略已签名，安全芯片（OPTIGA Trust M / ATECC608C）已 provision，外部 DC、反馈回路、companion 心跳和策略摘要均健康。第一版物理断路只控制低压网络/管理链路，不切换市电或直接切断业务主机电源。
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
 
 ## 2. 核心价值主张
 
@@ -28,12 +28,12 @@
 | :--- | :--- | :--- |
 | **流量清洗** (黑盒) | **应用内 Hook** (白盒) | 直达业务逻辑，误报率降低 90% |
 | **IP 封禁** | **身份指纹封禁** | 更精准识别伪造 IP 的攻击者 |
-| **人工运维** | **ESP32 硬件运维 + Final Defense Mode** | 高危动作需要本地硬件 grant 与签名策略共同放行 |
+| **人工运维** | **Gateway Appliance 硬件授权 + Final Defense Mode** | 高危动作需要本地硬件 grant 与签名策略共同放行 |
 | **规则死板** | **AI 动态分析** | 自适应未知的 0-Day 攻击模式 |
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
 
 ## 3. 十大核心功能模块详解
 
@@ -55,8 +55,8 @@ AetherGuard 提供了一个一体化的安全管控平台，涵盖从态势感�
 极简的服务器接入体验。无论您的基础设施是基于 Linux、Docker 还是 Kubernetes，系统都能自动生成适配的安装脚本。运维人员只需一行命令即可完成从 Agent 下载、安装到注册的全流程。
 ![Deployment](assets/deploy.png)
 
-### 3.5 硬件网关与 ESP32 工具 (Devices)
-AetherGuard 独有的硬件创新包含两种形态：legacy **ESP32 Deployment Dongle** 用于本地串口部署确认；新增 **Control Board v1** 用于 Final Defense Mode。Control Board v1 基于 ESP32-S3 + ATECC608C + 隔离 interlock 输出/反馈，只有 secure element、策略摘要、外部电源、反馈、companion 和 interlock 全部健康时，控制台才显示 “Final Defense Active / 完全最后防线已启用”。
+### 3.5 硬件网关与 Gateway Appliance (Devices)
+AetherGuard 独有的硬件创新已演进为 **Root-Resistant Gateway Appliance** 统一形态：工业级多网口网关提供透明 L2 桥接 + 独立 MGMT 口；内置独立 STM32H5/U5 安全授权控制器负责 grant 签名与策略执行；Secure Element（OPTIGA Trust M）提供不可导出的 ECDSA P-256 密钥；硬件级 fail-closed interlock 确保默认失败关闭。legacy ESP32 Deployment Dongle 已归档。Control Board v1 已归档为 legacy 安全控制器。，只有 secure element、策略摘要、外部电源、反馈、companion 和 interlock 全部健康时，控制台才显示 “Final Defense Active / 完全最后防线已启用”。
 ![Devices](assets/devices.png)
 
 ### 3.6 主动漏洞扫描 (Scanner)
@@ -81,25 +81,25 @@ AetherGuard 独有的硬件创新包含两种形态：legacy **ESP32 Deployment 
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
 
-## 4. 硬件创新：ESP32 Deployment Dongle
+## 4. 硬件创新：Root-Resistant Gateway Appliance
 
-AetherGuard 不仅仅是软件。我们引入了标准化的硬件运维工具，将复杂的服务器初始化工作封装在一个 U 盘大小的设备中。
+AetherGuard 不仅仅是软件。我们引入了自研的 Root-Resistant Gateway Appliance，将复杂的服务器安全授权与网络隔离工作封装在一台工业级硬件设备中。
 
-- **可视化交互**: 自带 OLED 屏幕，实时显示安装进度与服务器健康状态。
-- **物理安全确认**: 涉及删库等高危操作时，必须由运维人员物理按下设备上的确认键，从根本上杜绝远程黑客的破坏性指令。
-- **离线能力**: 内置 Codebook 压缩协议，支持在弱网环境下高效传输指令。
+- **三平面架构**: 数据平面（SERVER↔LAN/WAN 透明桥接）、管理平面（独立 MGMT 口↔Backend）、控制平面（安全控制器↔Gateway Daemon↔Backend）。
+- **物理安全确认**: 涉及删库等高危操作时，必须由安全控制器上的独立确认流程完成 grant 签名，从根本上杜绝远程黑客的破坏性指令。
+- **离线能力**: 安全控制器内置签名策略验证，支持在断网环境下独立完成授权决策。
 
 ### 4.1 Final Defense Mode：完全最后防线
 
-Control Board v1 将物理确认升级为失败关闭的本地授权边界。控制平面返回的任意脚本对高危动作无效；`host_remove`、`wipe_data`、`factory_reset`、`recovery_flash`、`critical_config_change` 和 `interlock_release` 等动作必须同时满足本地签名策略和硬件 grant。grant 签名消息包含 `policyDigest`、`challenge`、`breakerTarget`、`interlockAction`，并由 ATECC608C 内不可导出的 ECDSA 私钥签名。
+Gateway Appliance 安全授权控制器将物理确认升级为失败关闭的本地授权边界。控制平面返回的任意脚本对高危动作无效；`host_remove`、`wipe_data`、`factory_reset`、`recovery_flash`、`critical_config_change` 和 `interlock_release` 等动作必须同时满足本地签名策略和硬件 grant。grant 签名消息包含 `policyDigest`、`challenge`、`breakerTarget`、`interlockAction`，并由 Secure Element 内不可导出的 ECDSA P-256 私钥签名。
 
-Interlock 状态统一为 `isolated`、`armed`、`released`、`fault`、`disabled`、`unknown`，旧 `asserted` 兼容映射为 `isolated`。默认失败关闭：外部电源缺失、反馈不一致、签名失败、计数器回退、策略摘要不匹配、会话过期或 board 心跳丢失时，管理链路保持或回到 `isolated`。
+Interlock 状态统一为 `isolated`、`armed`、`released`、`fault`、`disabled`、`unknown`，旧 `asserted` 兼容映射为 `isolated`。默认失败关闭：外部电源缺失、反馈不一致、签名失败、计数器回退、策略摘要不匹配、会话过期或 controller 心跳丢失时，管理链路保持或回到 `isolated`。
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
 
 ## 5. 技术规格
 
@@ -113,7 +113,7 @@ Interlock 状态统一为 `isolated`、`armed`、`released`、`fault`、`disable
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical ESP32 board flashing, and external Linux binary rollout are not yet validated here.
+> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
 
 ### 📞 立即联系我们
 

@@ -136,6 +136,8 @@ temp/
 # Generated legal artifacts (kept in external archive)
 docs/legal/softcopyright/*.html
 docs/legal/softcopyright/*.txt
+docs/legal/softcopyright/*.docx
+docs/legal/softcopyright/*.pdf
 
 # Generated security-test reports (re-run with `npm run eval:owasp`)
 security-tests/reports/
