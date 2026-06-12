@@ -118,3 +118,63 @@ temp/
 
 # Project specific
 .nul
+
+# Local dev tooling — must not be committed
+.playwright-mcp/
+.claude/worktrees/
+.claude/local/
+
+# Root-level diagnostics & screenshots from QA / manual debugging
+/[0-9]*-*.png
+/screenshot-*.png
+/screenshot-*.jpg
+/diff-*.patch
+/diff-*.txt
+/typecheck-out.txt
+/typecheck-out-*.txt
+
+# Generated legal artifacts (kept in external archive)
+docs/legal/softcopyright/*.html
+docs/legal/softcopyright/*.txt
+
+# Generated security-test reports (re-run with `npm run eval:owasp`)
+security-tests/reports/
+
+# Generated PCB manufacturing outputs (re-built from KiCad sources)
+# Ignore the whole release/ tree: gerbers, drill, BOM, pick-and-place,
+# DRC/ERC reports, assembly PDFs, export logs, preview renders.
+hardware/kicad/**/release/
+hardware/kicad/**/*.drc
+hardware/kicad/**/*.rpt
+hardware/kicad/**/*.erc
+hardware/kicad/**/erc.log
+hardware/kicad/**/drc.log
+hardware/kicad/**/fp-info-cache
+hardware/kicad/**/-cache.lib
+hardware/kicad/**/*-bak
+hardware/kicad/**/*.bak
+
+# Rust fastpath build artifacts
+rust-fastpath/target/
+
+# Runtime SQLite database (test-data is reset by seed scripts)
+backend/test-data/*.db
+backend/test-data/*.db-journal
+backend/test-data/*.db-shm
+backend/test-data/*.db-wal
+
+# Local scratch / debug output from test + typecheck runs
+/all-test-errors.txt
+/all-test-errors-*.txt
+/err-group-*.txt
+/remaining-errors.txt
+/tt.txt
+
+# QA black-box screenshots (manual, not source-controlled)
+/qa-blackbox-screenshots/
+
+# Generated demo video renders (keep shot-list / subtitles / scripts)
+docs/video/**/*.wav
+docs/video/**/*.mp4
+docs/video/**/*.png
+docs/video/**/*.jpg
