@@ -20,13 +20,13 @@ describe('AIEngine', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    engine = new AIEngine({ provider: 'ollama', apiKey: 'test-key', model: 'llama2', baseURL: 'http://localhost:11434' });
+    engine = new AIEngine({ name: 'ollama', apiKey: 'test-key', model: 'llama2', baseURL: 'http://localhost:11434' });
   });
 
   describe('constructor', () => {
     it('creates instance with provider config', () => {
       const customEngine = new AIEngine({
-        provider: 'ollama',
+        name: 'ollama',
         apiKey: 'my-key',
         model: 'llama2',
         baseURL: 'http://localhost:11434'

@@ -3,7 +3,24 @@ import { initDatabase } from '../../config/database';
 import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 import { normalizeInterlockState } from '../../security/final-defense-policy';
 import { finalDefenseService } from '../../services/final-defense.service';
-import { hardwareAuthorizationService } from '../../services/hardware-authorization.service';
+import {
+  hardwareAuthorizationService,
+  type HardwareConfirmationSessionRecord,
+  type CommandIntentRecord
+} from '../../services/hardware-authorization.service';
+
+// requestAction()/requestGatewayAction() return a success | failure union.
+// In success-path tests we already assert success === true; this helper narrows
+// the union to the success member so .session / .intent are accessible without
+// weakening assertions.
+interface RequestSuccess {
+  success: true;
+  intent: CommandIntentRecord;
+  session?: HardwareConfirmationSessionRecord;
+}
+function asSuccess(result: unknown): RequestSuccess {
+  return result as unknown as RequestSuccess;
+}
 
 describe('finalDefenseService', () => {
   beforeAll(async () => {
@@ -184,12 +201,13 @@ describe('finalDefenseService', () => {
       secureElementPresent: true
     });
 
-    const allowed = await finalDefenseService.requestAction({
+    const allowedRaw = await finalDefenseService.requestAction({
       tenantId,
       companionId,
       commandType: 'host_remove',
       actorId: 'tester'
     });
+    const allowed = asSuccess(allowedRaw);
 
     expect(allowed.success).toBe(true);
     expect(allowed.session?.summary.policyDigest).toBeDefined();
@@ -220,13 +238,14 @@ describe('finalDefenseService', () => {
       secureElementPresent: true
     });
 
-    const request = await finalDefenseService.requestGatewayAction({
+    const requestRaw = await finalDefenseService.requestGatewayAction({
       tenantId,
       gatewayId,
       action: 'release_temporary',
       actorId: 'tester',
       challenge: 'root-release-challenge'
     });
+    const request = asSuccess(requestRaw);
 
     expect(request.success).toBe(true);
     expect(request.session?.summary.policyDigest).toBe('digest-root-release');
@@ -256,13 +275,14 @@ describe('finalDefenseService', () => {
       allowedActions: [{ commandType: 'interlock_release', requiresInterlockRelease: true }]
     });
 
-    const request = await finalDefenseService.requestAction({
+    const requestRaw = await finalDefenseService.requestAction({
       tenantId,
       companionId,
       commandType: 'interlock_release',
       actorId: 'tester',
       challenge: 'challenge-final-defense'
     });
+    const request = asSuccess(requestRaw);
 
     expect(request.success).toBe(true);
     expect(request.session?.summary.policyDigest).toBe(policy.policyDigest);

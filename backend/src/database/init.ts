@@ -1,7 +1,7 @@
-﻿
+
 import { initDatabase, getDatabase } from '../config/database';
-import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
+import { uuidv4 } from '../utils/uuid';
 import crypto from 'crypto';
 import logger from '../utils/logger';
 import { isDevLoginPresetEnabled } from '../config/runtime-capabilities';

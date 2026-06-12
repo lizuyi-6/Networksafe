@@ -11,11 +11,11 @@ import systemRouter from '../../api/routes/system.routes';
 // Mock auth
 jest.mock('../../middleware/auth.middleware', () => ({
   authenticate: jest.fn((req: any, _res: any, next: any) => {
-    req.user = { userId: 'admin-001', role: 'admin', tenantId: 'tenant-001' };
+    req.user = { userId: 'admin-001', role: 'platform_admin', tenantId: 'tenant-001' };
     next();
   }),
   optionalAuth: jest.fn((req: any, _res: any, next: any) => {
-    req.user = { userId: 'admin-001', role: 'admin', tenantId: 'tenant-001' };
+    req.user = { userId: 'admin-001', role: 'platform_admin', tenantId: 'tenant-001' };
     next();
   }),
   requireRole: jest.fn(() => (req: any, _res: any, next: any) => next()),
@@ -29,6 +29,17 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 // Mock runtime capabilities
+// Mock enterprise-runtime so allowDemoFeatures() is true (lab mode) —
+// otherwise POST /mode refuses to switch to demo with a 403.
+jest.mock('../../config/enterprise-runtime', () => ({
+  allowDemoFeatures: jest.fn(() => true),
+  allowPasswordLogin: jest.fn(() => true),
+  isEnterpriseStrictMode: jest.fn(() => false),
+  isEnterpriseRuntime: jest.fn(() => false),
+  isLabRuntime: jest.fn(() => true),
+  getEnterpriseRuntimeMode: jest.fn(() => 'lab')
+}));
+
 jest.mock('../../config/runtime-capabilities', () => ({
   getRuntimeCapabilities: jest.fn(() => ({
     devLoginEnabled: false,

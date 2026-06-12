@@ -243,7 +243,7 @@ describe('AgentGateway per-IP connection cap (redteam)', () => {
     );
     connected.forEach((s) => expect(s.connected).toBe(true));
 
-    const ipMap = (gateway as any).ipConnectionCounts as Map<string, number>;
+    const ipMap = (gateway as any).ipConnectionCounts as Map<string, Set<string>>;
     expect(ipMap.size).toBeGreaterThan(0);
 
     // Sum of all Set sizes should be at least 5

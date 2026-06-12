@@ -21,7 +21,7 @@ jest.mock('../../middleware/auth.middleware', () => ({
     };
     next();
   }),
-  requireTenantAccess: jest.fn((req: any, _res: any, next: any) => next()),
+  requireTenantAccess: jest.fn(() => (req: any, _res: any, next: any) => next()),
   AuthenticatedRequest: jest.fn()
 }));
 
@@ -41,7 +41,7 @@ jest.mock('../../config/database', () => ({
           tenant_id: 'tenant-001'
         }
       ]),
-      get: jest.fn((id: string) => {
+      get: jest.fn((id: string | number) => {
         if (id === '1' || id === 1) {
           return {
             id: 1,

@@ -452,12 +452,13 @@ describe('OidcAuthService buildSessionUser', () => {
       id: 'user-session-id',
       email: 'session@corp.example',
       username: 'session_user',
+      password_hash: 'hashed',
       role: 'tenant_admin',
-      plan: 'enterprise',
+      plan: 'enterprise' as any,
       tenant_id: 'tenant-session'
     };
 
-    const session = oidcAuthService.buildSessionUser(row);
+    const session = oidcAuthService.buildSessionUser(row as any);
 
     expect(session.userId).toBe('user-session-id');
     expect(session.email).toBe('session@corp.example');
@@ -473,12 +474,13 @@ describe('OidcAuthService buildSessionUser', () => {
       id: 'user-unknown-role',
       email: 'unknown@corp.example',
       username: 'unknown',
-      role: 'super_admin_unk',
+      password_hash: 'hashed',
+      role: 'super_admin_unk' as any,
       plan: 'starter',
       tenant_id: 'tenant-1'
     };
 
-    const session = oidcAuthService.buildSessionUser(row);
+    const session = oidcAuthService.buildSessionUser(row as any);
 
     expect(session.role).toBe('tenant_viewer');
   });

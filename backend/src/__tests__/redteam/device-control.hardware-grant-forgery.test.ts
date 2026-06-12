@@ -84,8 +84,7 @@ describe('REDTEAM hardware-grant forgery — V2.4 fail-closed fix', () => {
       freeHeap: 200000,
       sdkVersion: 'idf-5.x',
       mode: 'online',
-      transport: 'usb_serial',
-      secureElementPresent: true,
+      finalDefense: { secureElementPresent: true },
       physicalAuth: {
         publicKeyPem: keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString()
       }

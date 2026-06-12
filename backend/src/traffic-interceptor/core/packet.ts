@@ -2,7 +2,7 @@
  * Packet Abstraction - Zero-copy packet handling
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     PacketMetadata,
     IPHeader,

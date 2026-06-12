@@ -109,17 +109,21 @@ async function resolvesToPrivateAddress(hostname: string): Promise<boolean> {
   if (normalized === 'localhost' || normalized.endsWith('.localhost')) return true;
   if (net.isIP(normalized)) return false;
 
-  const dnsLookup = (host: string, opts: object) =>
-    new Promise<dns.LookupAllResult>((res, rej) => {
-      dns.lookup(host, opts, (err, ...args) => {
-        if (err) rej(err);
-        else res(args[0] as dns.LookupAllResult);
-      });
+  const dnsLookupAll = (host: string) =>
+    new Promise<dns.LookupAddress[]>((res, rej) => {
+      dns.lookup(
+        host,
+        { all: true },
+        (err: NodeJS.ErrnoException | null, addresses: dns.LookupAddress[]) => {
+          if (err) rej(err);
+          else res(addresses);
+        }
+      );
     });
 
   try {
-    const results = await dnsLookup(normalized, { all: true });
-    return results.some((result) => isPrivateIP(result.address));
+    const results = await dnsLookupAll(normalized);
+    return results.some((result: dns.LookupAddress) => isPrivateIP(result.address));
   } catch {
     // FAIL-CLOSED: treat unresolvable as private
     return true;

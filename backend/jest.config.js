@@ -26,12 +26,6 @@ module.exports = {
         'src/testing/',
     ],
     coverageDirectory: 'coverage',
-    transform: {
-        '^.+\\.ts$': [require.resolve('ts-jest'), {
-            tsconfig: 'tsconfig.test.json',
-            diagnostics: false
-        }]
-    },
     testPathIgnorePatterns: [
         '/node_modules/',
         '/dist/',
@@ -39,7 +33,25 @@ module.exports = {
         '/src/ai-agents/tests/'
     ],
     watchman: false,
-    maxWorkers: 1,
+    // OOM FIX: ts-jest accumulates compiled module memory across suites
+    // within a single worker. With maxWorkers: 1 all 186 suites shared
+    // one V8 heap and OOM'd around suite ~130. A worker pool forks a
+    // fresh process per worker, so each gets a bounded heap. Paired
+    // with NODE_OPTIONS=--max-old-space-size=4096 in package.json's
+    // `test` script, the full suite runs in well under the per-worker
+    // ceiling. CI may override with --maxWorkers=1 for logs.
+    maxWorkers: '50%',
+    // OOM FIX: recycle a worker once its idle heap exceeds 1GB so
+    // ts-jest accumulated memory never reaches the V8 ceiling.
+    // SECURITY: re-enable ts-jest diagnostics so type regressions in
+    // tests fail the run instead of silently passing (was disabled to
+    // mask the 354 pre-existing errors that are now fixed).
+    transform: {
+        '^.+\\.ts$': [require.resolve('ts-jest'), {
+            tsconfig: 'tsconfig.test.json',
+            diagnostics: true
+        }]
+    },
     forceExit: true,
     testTimeout: 30000
 };

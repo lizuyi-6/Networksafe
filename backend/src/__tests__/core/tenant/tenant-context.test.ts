@@ -56,12 +56,12 @@ describe('resolveUserTenantContext', () => {
     expect(resolveUserTenantContext(null as any)).toBeNull();
   });
 
-  it('prefers requestedTenantId over user tenant', () => {
+  it('SECURITY (V1.1): requestedTenantId is IGNORED — user tenant is authoritative', () => {
     const user = { tenantId: 'user-tenant', role: 'user' } as any;
     const ctx = resolveUserTenantContext(user, { requestedTenantId: 'requested-tenant' });
     expect(ctx).not.toBeNull();
-    expect(ctx!.tenantId).toBe('requested-tenant');
-    expect(ctx!.source).toBe('request');
+    expect(ctx!.tenantId).toBe('user-tenant');
+    expect(ctx!.source).toBe('user');
   });
 
   it('falls back to user tenantId when no requested', () => {
@@ -92,11 +92,12 @@ describe('resolveUserTenantContext', () => {
     expect(ctx).toBeNull();
   });
 
-  it('normalizes whitespace in requestedTenantId', () => {
+  it('SECURITY (V1.1): requestedTenantId with whitespace is ALSO ignored', () => {
     const user = { tenantId: 'x' } as any;
     const ctx = resolveUserTenantContext(user, { requestedTenantId: '  t1  ' });
     expect(ctx).not.toBeNull();
-    expect(ctx!.tenantId).toBe('t1');
+    expect(ctx!.tenantId).toBe('x');
+    expect(ctx!.source).toBe('user');
   });
 
   it('ignores empty requestedTenantId and uses user tenant', () => {

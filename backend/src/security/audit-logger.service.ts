@@ -3,7 +3,7 @@
  * SECURE FIX: Tamper-evident logging for all security events
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../utils/uuid';
 import logger from '../utils/logger';
 import { getDatabase } from '../config/database';
 import { postgresShadowStoreService } from '../services/postgres-shadow-store.service';

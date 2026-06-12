@@ -104,6 +104,19 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
       assertStrongSecret('DEVICE_COMMAND_SECRET', 24, errors);
     }
 
+    // V2.1: SERIAL_HELPER_SHARED_SECRET is a trust anchor for the
+    // hardware companion — a leaked helper secret lets the holder
+    // fabricate Final Defense "active" state for any tenant. Require
+    // ≥32 chars AND distinct from DEVICE_COMMAND_SECRET.
+    if (hasGatewayRole() || appRole === 'all') {
+      assertStrongSecret('SERIAL_HELPER_SHARED_SECRET', 32, errors);
+      const helperSecret = String(process.env.SERIAL_HELPER_SHARED_SECRET || '').trim();
+      const deviceSecret = String(process.env.DEVICE_COMMAND_SECRET || '').trim();
+      if (helperSecret && deviceSecret && helperSecret === deviceSecret) {
+        errors.push('SERIAL_HELPER_SHARED_SECRET must be a distinct secret from DEVICE_COMMAND_SECRET.');
+      }
+    }
+
     // WARNING-level checks: these fields use known default values but are not
     // hard-blocked so that operators can still start the service and rotate
     // secrets without a full outage.

@@ -5,7 +5,7 @@
  */
 
 import crypto from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../utils/uuid';
 import { getDatabase } from '../config/database';
 import logger from '../utils/logger';
 import redisService from './redis.service';

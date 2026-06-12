@@ -5,8 +5,8 @@
  * All test data is generated with sensible defaults and can be customized.
  */
 
-import { v4 as uuidv4 } from 'uuid';
-import bcrypt from 'bcrypt';
+import { uuidv4 } from '../utils/uuid';
+import bcrypt from 'bcryptjs';
 
 /**
  * User data interface

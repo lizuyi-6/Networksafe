@@ -80,6 +80,11 @@ jest.mock('jsonwebtoken', () => ({
   verify: jest.fn(),
 }));
 
+jest.mock('../../config/enterprise-runtime', () => ({
+  ...jest.requireActual('../../config/enterprise-runtime'),
+  allowPasswordLogin: jest.fn().mockReturnValue(true),
+}));
+
 import { findAuthUserByEmail, createAuthUser } from '../../modules/auth/auth-user.repository';
 import { authenticate } from '../../middleware/auth.middleware';
 

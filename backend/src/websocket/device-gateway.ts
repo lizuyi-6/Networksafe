@@ -778,22 +778,56 @@ export class DeviceGateway {
         return true;
     }
 
+    /**
+     * SECURITY (V4.1): fail-closed signature gate. If signCommand() cannot
+     * produce a valid HMAC (no DEVICE_COMMAND_SECRET, secret too short, or
+     * no device-specific key), the gateway MUST NOT fall back to emitting
+     * an unsigned command. Unsigned packets would bypass the HMAC gate the
+     * firmware enforces, allowing destructive operations (reboot /
+     * factory_reset / wipe_data / recovery_flash) from any bus injector.
+     *
+     * Returns the count of devices that actually received a SIGNED frame.
+     * Refused devices are logged and recorded as a rejection audit event.
+     */
     public async broadcastCommand(command: string, params?: any): Promise<number> {
         let count = 0;
+        const rejectedDeviceIds: string[] = [];
 
         for (const [deviceId, socket] of this.deviceSockets.entries()) {
             if (socket.connected) {
                 const signedCommand = this.signCommand(deviceId, command, params);
-                
+
                 if (signedCommand) {
                     socket.emit('command', signedCommand);
+                    addDeviceEvent(deviceId, 'command', { command, params });
+                    count++;
                 } else {
-                    socket.emit('command', { cmd: command, params, timestamp: Date.now() });
+                    // FAIL-CLOSED: do not emit any frame. Record the refusal
+                    // loudly so operators detect the misconfiguration.
+                    logger.error(
+                        '[DeviceGateway] Refusing to broadcast unsigned command (signCommand failed)',
+                        { deviceId, command, params, reason: 'sign_failed' }
+                    );
+                    rejectedDeviceIds.push(deviceId);
                 }
-                
-                addDeviceEvent(deviceId, 'command', { command, params });
-                count++;
             }
+        }
+
+        if (rejectedDeviceIds.length > 0) {
+            await auditLogger.log({
+                eventType: 'device_broadcast_rejected',
+                category: 'command',
+                severity: 'critical',
+                actor: { type: 'system', id: 'device-gateway' },
+                action: 'broadcast_command',
+                details: {
+                    command,
+                    reason: 'sign_failed',
+                    rejectedCount: rejectedDeviceIds.length,
+                    rejectedDeviceIds
+                },
+                status: 'failure'
+            });
         }
 
         await auditLogger.log({
@@ -802,13 +836,18 @@ export class DeviceGateway {
             severity: 'info',
             actor: { type: 'system', id: 'device-gateway' },
             action: 'broadcast_command',
-            details: { command, deviceCount: count },
+            details: {
+                command,
+                deviceCount: count,
+                rejectedCount: rejectedDeviceIds.length
+            },
             status: 'success'
         });
 
         logger.info('[DeviceGateway] Broadcast command', {
             command,
             deviceCount: count,
+            rejectedCount: rejectedDeviceIds.length
         });
 
         return count;

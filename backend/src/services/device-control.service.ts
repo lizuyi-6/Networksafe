@@ -119,12 +119,28 @@ class DeviceControlService {
         status TEXT NOT NULL,
         requested_by TEXT NOT NULL,
         result_json TEXT,
+        -- V2.4 hardened-session columns (nullable for backward compat).
+        summary_json TEXT,
+        expires_at TEXT,
+        last_monotonic_counter INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         confirmed_at TEXT
       );
       CREATE INDEX IF NOT EXISTS idx_device_confirmation_device ON device_confirmation_sessions(device_id, created_at DESC);
     `);
+
+    // V2.4 soft-migration: add hardened-session columns to existing tables
+    // (CREATE TABLE IF NOT EXISTS will not ALTER a pre-existing table).
+    for (const col of ['summary_json TEXT', 'expires_at TEXT', 'last_monotonic_counter INTEGER']) {
+      try {
+        getDatabase().exec('ALTER TABLE device_confirmation_sessions ADD COLUMN ' + col);
+      } catch (e: any) {
+        if (!(e.message && e.message.includes('duplicate column name'))) {
+          logger.warn('device_confirmation_sessions migration skipped', { error: e.message });
+        }
+      }
+    }
 
     this.schemaReady = true;
   }
@@ -452,7 +468,7 @@ class DeviceControlService {
     // every field exactly — a forged policyDigest / breakerTarget /
     // challenge (even one signed with the real hardware key) must be
     // rejected.
-    const storedResult = parseJson(existing.result_json, {});
+    const storedResult = parseJson<any>(existing.result_json, {});
     const storedHC = storedResult?.hardwareContext || {};
     const storedPolicyDigest = String(storedHC.policyDigest || '');
     const storedBreakerTarget = String(storedHC.breakerTarget || '');
@@ -473,7 +489,7 @@ class DeviceControlService {
         SET status = 'rejected', result_json = ?, updated_at = ?
         WHERE id = ? AND device_id = ?
       `).run(
-        JSON.stringify({ reason: 'unparseable_expires_at', ack: payload }),
+        JSON.stringify({ reason: 'session_expires_at_unparseable', ack: payload }),
         new Date().toISOString(),
         confirmationSessionId,
         deviceId
@@ -623,7 +639,7 @@ class DeviceControlService {
   }
 
   private mapConfirmationRow(row: any): DeviceConfirmationSessionRecord {
-    const result = parseJson(row.result_json, {});
+    const result = parseJson<any>(row.result_json, {});
     // expiresAt is derived from createdAt + releaseTtlMs so we don't
     // need a schema migration. Default TTL is 120s.
     const ttlMs = Number(result?.releaseTtlMs || 120_000);

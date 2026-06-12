@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import { postgresShadowStoreService } from './postgres-shadow-store.service';
 import { notificationDispatcherService } from './notification-dispatcher.service';
+import logger from '../utils/logger';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 type FindingStatus = 'open' | 'acknowledged' | 'investigating' | 'resolved' | 'suppressed' | 'ignored';

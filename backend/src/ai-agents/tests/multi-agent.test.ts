@@ -14,7 +14,8 @@ import {
     AristotleAgent,
     ProbeAgent,
     ToolExecutor,
-    SynthesisEngine
+    SynthesisEngine,
+    AnalysisResult
 } from '../index';
 
 describe('Multi-Agent Decision System', () => {
@@ -353,12 +354,13 @@ describe('DebateProtocol', () => {
     });
 
     test('should create debate session', async () => {
-        const results = [
+        const results: AnalysisResult[] = [
             {
                 agentId: 'socrates-001',
                 role: 'socrates' as const,
                 verdict: 'malicious' as const,
                 confidence: 0.9,
+                classScores: { safe: 0.05, suspicious: 0.05, malicious: 0.9 },
                 reasoning: 'SQL injection detected',
                 evidence: []
             },
@@ -367,6 +369,7 @@ describe('DebateProtocol', () => {
                 role: 'plato' as const,
                 verdict: 'safe' as const,
                 confidence: 0.7,
+                classScores: { safe: 0.7, suspicious: 0.2, malicious: 0.1 },
                 reasoning: 'Schema compliant',
                 evidence: []
             }

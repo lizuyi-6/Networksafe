@@ -10,7 +10,16 @@ import { initDatabase } from '../../config/database';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
 import { platformConfigService } from '../../services/platform-config.service';
 import type { DetectionRequest } from '../../services/detection-engine';
-import type { DetectionAIAnalyzer, DetectionAIResult } from '../../services/detection-pipeline.service';
+import type { DetectionAIResult } from '../../services/detection-pipeline.service';
+
+// DetectionAIAnalyzer is not exported by the production module; define a
+// structurally-compatible local type so the mock satisfies setAiAnalyzer().
+interface DetectionAIAnalyzer {
+  analyze(
+    request: DetectionRequest,
+    options?: Record<string, unknown>
+  ): Promise<DetectionAIResult>;
+}
 
 jest.mock('../../utils/logger', () => ({
   __esModule: true,

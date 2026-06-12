@@ -59,3 +59,7 @@ export function oidcEnabled(): boolean {
     && String(process.env.OIDC_USERINFO_ENDPOINT || '').trim()
   );
 }
+
+export function oidcRequireMfa(): boolean {
+  return String(process.env.OIDC_REQUIRE_MFA || '').trim().toLowerCase() === 'true';
+}

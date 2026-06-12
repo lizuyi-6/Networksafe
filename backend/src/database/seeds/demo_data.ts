@@ -1,11 +1,11 @@
-﻿/**
+/**
  * Database Seed Script
  * 
  * Creates demo data for development and testing
  */
 
-import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
+import { uuidv4 } from '../../utils/uuid';
 import { initDatabase, getDatabase, closeDatabase } from '../../config/database';
 import logger from '../../utils/logger';
 import { isDemoMode } from '../../config/app-mode';

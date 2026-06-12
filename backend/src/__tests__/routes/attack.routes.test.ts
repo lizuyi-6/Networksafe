@@ -142,7 +142,7 @@ describe('attack.routes', () => {
         expect(res.body).toHaveProperty('total');
         expect(res.body).toHaveProperty('results');
       } finally {
-        (global.setTimeout as jest.Mock).mockRestore();
+        (global.setTimeout as unknown as jest.Mock).mockRestore();
       }
     });
 
@@ -181,7 +181,7 @@ describe('attack.routes', () => {
         expect(ids).toContain('sql-1');
         expect(ids).toContain('xss-1');
       } finally {
-        (global.setTimeout as jest.Mock).mockRestore();
+        (global.setTimeout as unknown as jest.Mock).mockRestore();
       }
     });
 
@@ -217,7 +217,7 @@ describe('attack.routes', () => {
         expect(res.status).toBe(200);
         expect(res.body.results.length).toBe(8);
       } finally {
-        (global.setTimeout as jest.Mock).mockRestore();
+        (global.setTimeout as unknown as jest.Mock).mockRestore();
       }
     });
   });

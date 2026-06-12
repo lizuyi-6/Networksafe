@@ -38,13 +38,17 @@ describe('deviceControlService physical confirmation', () => {
       physicalAuth: {
         publicKeyPem: keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString()
       }
-    });
+    } as any);
 
     const session = await deviceControlService.createPhysicalConfirmation({
       tenantId: 'tenant-test',
       deviceId,
       commandType: 'host_remove',
       payload: { path: '/opt/AetherGuard' },
+      hardwareContext: {
+        policyDigest: 'sha256:deadbeef-test-policy-digest-0123456789abcdef',
+        breakerTarget: 'server-nic-0'
+      },
       actorId: 'tester'
     });
 
@@ -60,6 +64,8 @@ describe('deviceControlService physical confirmation', () => {
       targetId: deviceId,
       commandType: 'host_remove',
       payloadHash: hashPayload({ path: '/opt/AetherGuard' }),
+      policyDigest: 'sha256:deadbeef-test-policy-digest-0123456789abcdef',
+      breakerTarget: 'server-nic-0',
       issuedAt,
       expiresAt,
       monotonicCounter,
@@ -72,6 +78,8 @@ describe('deviceControlService physical confirmation', () => {
       monotonicCounter,
       issuedAt,
       expiresAt,
+      policyDigest: 'sha256:deadbeef-test-policy-digest-0123456789abcdef',
+      breakerTarget: 'server-nic-0',
       signature
     });
 

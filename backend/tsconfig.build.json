@@ -12,7 +12,7 @@
     "rootDir": "./src",
     "removeComments": true,
     "strict": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

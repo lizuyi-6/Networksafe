@@ -429,6 +429,19 @@ export interface MessageEnvelope {
     routingKey: string;
     ttl: number;
     retryCount: number;
+    /**
+     * SECURITY (V12.18): tenant tag bound at publish time. Subscribers
+     * bound to a different tenant never receive the envelope. Undefined
+     * on envelopes produced by older code paths (treated as platform-scope).
+     */
+    tenantId?: string;
+    /**
+     * SECURITY (V12.18): HMAC-SHA256 over the canonical (type, from, to,
+     * payload JSON, tenantId) tuple using MESSAGE_BUS_SIGNING_KEY. The
+     * processor drops envelopes whose signature is missing or does not
+     * recompute, so an in-process agent cannot forge a foreign envelope.
+     */
+    signature?: string;
 }
 
 // ============================================================================

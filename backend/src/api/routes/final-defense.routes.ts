@@ -65,16 +65,27 @@ router.get('/status', authenticate, requirePermission('final_defense.read'), asy
 
 router.post('/status/report', authenticateHelperRequest, async (req: AuthenticatedRequest, res) => {
   try {
-    const tenantId = nonEmptyString(req.body?.tenantId);
     const companionId = nonEmptyString(req.body?.companionId);
     const gateId = nonEmptyString(req.body?.gateId);
 
-    if (!tenantId || !companionId || !gateId) {
+    if (!companionId || !gateId) {
       return sendError(res, 400, {
         code: 'FINAL_DEFENSE_STATUS_REQUIRED_FIELDS',
         message: 'backend.final_defense_status_required_fields'
       });
     }
+
+    // SECURITY (V2.2): tenant comes from the EXISTING provisioned status
+    // row, never from the request body. An attacker with the helper secret
+    // must not be able to re-tenant a companion.
+    const provisioned = finalDefenseService.getStatus(companionId);
+    if (!provisioned || !provisioned.tenantId) {
+      return sendError(res, 403, {
+        code: 'FINAL_DEFENSE_COMPANION_NOT_PROVISIONED',
+        message: 'backend.final_defense_companion_not_provisioned'
+      });
+    }
+    const tenantId = provisioned.tenantId;
 
     const status = finalDefenseService.reportStatus({
       tenantId,
@@ -101,15 +112,25 @@ router.post('/status/report', authenticateHelperRequest, async (req: Authenticat
 
 router.post('/gateways/status/report', authenticateHelperRequest, async (req: AuthenticatedRequest, res) => {
   try {
-    const tenantId = nonEmptyString(req.body?.tenantId);
     const gatewayId = nonEmptyString(req.body?.gatewayId);
 
-    if (!tenantId || !gatewayId) {
+    if (!gatewayId) {
       return sendError(res, 400, {
         code: 'ROOT_GATEWAY_STATUS_REQUIRED_FIELDS',
         message: 'backend.root_gateway_status_required_fields'
       });
     }
+
+    // SECURITY (V2.2): tenant comes from the EXISTING provisioned gateway
+    // record, never from the request body.
+    const provisioned = finalDefenseService.getRootResistantGatewayStatus(gatewayId);
+    if (!provisioned || !provisioned.tenantId) {
+      return sendError(res, 403, {
+        code: 'ROOT_GATEWAY_NOT_PROVISIONED',
+        message: 'backend.root_gateway_not_provisioned'
+      });
+    }
+    const tenantId = provisioned.tenantId;
 
     const gateway = finalDefenseService.reportRootResistantGatewayStatus({
       tenantId,

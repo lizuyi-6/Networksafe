@@ -43,7 +43,8 @@ export { TraceContextManager, traceContextManager } from './tracing/trace-contex
 export { ToolExecutor, toolExecutor } from './capabilities/tool-executor';
 export { ModelRouter, modelRouter } from './models/model-router';
 export { SynthesisEngine, synthesisEngine } from './synthesis/synthesis-engine';
-export { ProbeAgent, ProbeReport, AgentHeartbeat, SystemMetrics, ProbeAlert, ProbeConfig } from './monitoring/probe-agent';
+export { ProbeAgent } from './monitoring/probe-agent';
+export type { ProbeReport, AgentHeartbeat, SystemMetrics, ProbeAlert, ProbeConfig } from './monitoring/probe-agent';
 
 const DEFAULT_CONFIG: MultiAgentConfig = {
     enabled: true,

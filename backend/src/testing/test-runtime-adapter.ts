@@ -1,12 +1,40 @@
-﻿import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 type PasswordValidation = {
   valid: boolean;
   errors: string[];
 };
 
+/**
+ * V4.3 multi-factor gate: being in "test" mode is a privileged runtime
+ * that relaxes auth, rate limits, and password checks. A single
+ * NODE_ENV=test flag is too easy to leak into a production deployment
+ * (the original V4.3 PoC misconfiguration trap). Require ALL of:
+ *   - NODE_ENV === 'test'
+ *   - ALLOW_TEST_RUNTIME === 'true' (explicit opt-in)
+ *   - NOT in prod-enterprise enterprise-runtime mode
+ * Fail-closed on any missing/contradictory signal.
+ */
 export function isTestRuntime(): boolean {
-  return process.env.NODE_ENV === 'test';
+  if (process.env.NODE_ENV !== 'test') {
+    return false;
+  }
+  if (String(process.env.ALLOW_TEST_RUNTIME || '').trim().toLowerCase() !== 'true') {
+    return false;
+  }
+  // prod-enterprise must never allow test-runtime backdoors even if the
+  // env flags are set. Lazy-require to avoid a module-cycle at load time.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { isEnterpriseStrictMode } = require('../config/enterprise-runtime');
+  try {
+    if (isEnterpriseStrictMode()) {
+      return false;
+    }
+  } catch {
+    // If the enterprise-runtime helper is unavailable, fail-closed.
+    return false;
+  }
+  return true;
 }
 
 export function authRateLimitAdapter<T extends (req: Request, res: Response, next: NextFunction) => any>(

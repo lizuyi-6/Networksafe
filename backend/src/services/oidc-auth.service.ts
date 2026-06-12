@@ -1,6 +1,6 @@
 import { createPublicKey, createVerify, createHash, randomUUID, randomBytes, type KeyObject } from 'crypto';
 import type { WritableOptions } from 'stream';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../utils/uuid';
 import { createAuthUser, findAuthUserByEmail, type AuthUserRow } from '../modules/auth/auth-user.repository';
 import { getRolePermissions, normalizeRole } from '../security/permissions';
 import { oidcRequireMfa } from '../config/enterprise-runtime';

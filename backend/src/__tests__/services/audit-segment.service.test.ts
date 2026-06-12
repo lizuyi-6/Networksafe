@@ -7,6 +7,8 @@
  */
 
 // Shared object — set by factory, read by tests
+export {}; // Mark as module so top-level declarations are file-scoped, not global.
+
 const mocks = {
   prepareExec: null as jest.Mock | null,
   prepareAll: null as jest.Mock | null,

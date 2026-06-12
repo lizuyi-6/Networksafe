@@ -60,7 +60,7 @@ describe('JWT secret rotation (D30)', () => {
     // -------------------------------------------------------------------------
     describe('with JWT_SECRET_PREVIOUS configured (rotation window)', () => {
         it('accepts PREV-signed token via verifyToken fallback', async () => {
-            let mod: ReturnType<typeof import('../../middleware/auth.middleware')>;
+            let mod: typeof import('../../middleware/auth.middleware');
             await jest.isolateModulesAsync(async () => {
                 process.env.JWT_SECRET_PREVIOUS = PREV_SECRET;
                 mod = await import('../../middleware/auth.middleware');
@@ -72,7 +72,7 @@ describe('JWT secret rotation (D30)', () => {
         });
 
         it('accepts PREV-signed refresh token via verifyRefreshToken fallback', async () => {
-            let mod: ReturnType<typeof import('../../middleware/auth.middleware')>;
+            let mod: typeof import('../../middleware/auth.middleware');
             await jest.isolateModulesAsync(async () => {
                 process.env.JWT_SECRET_PREVIOUS = PREV_SECRET;
                 mod = await import('../../middleware/auth.middleware');
@@ -88,7 +88,7 @@ describe('JWT secret rotation (D30)', () => {
         });
 
         it('still accepts CURRENT-signed token', async () => {
-            let mod: ReturnType<typeof import('../../middleware/auth.middleware')>;
+            let mod: typeof import('../../middleware/auth.middleware');
             await jest.isolateModulesAsync(async () => {
                 process.env.JWT_SECRET_PREVIOUS = PREV_SECRET;
                 mod = await import('../../middleware/auth.middleware');
@@ -100,7 +100,7 @@ describe('JWT secret rotation (D30)', () => {
         });
 
         it('rejects INVALID-signed token', async () => {
-            let mod: ReturnType<typeof import('../../middleware/auth.middleware')>;
+            let mod: typeof import('../../middleware/auth.middleware');
             await jest.isolateModulesAsync(async () => {
                 process.env.JWT_SECRET_PREVIOUS = PREV_SECRET;
                 mod = await import('../../middleware/auth.middleware');

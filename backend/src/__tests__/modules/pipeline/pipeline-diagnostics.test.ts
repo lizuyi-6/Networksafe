@@ -8,6 +8,8 @@
 // ---------------------------------------------------------------------------
 // Mock bridge
 // ---------------------------------------------------------------------------
+export {}; // Mark as module so top-level declarations are file-scoped, not global.
+
 const mocks = {
   dbPrepare: null as jest.Mock | null,
   dbMode: 'sqlite',
@@ -41,7 +43,7 @@ jest.doMock('../../../services/agent-system.service', () => ({
   getAgentGateway: () => mocks.agentGateway,
 }));
 
-let PipelineDiagnosticsService: typeof import('../../modules/pipeline/pipeline-diagnostics.service').PipelineDiagnosticsService;
+let PipelineDiagnosticsService: typeof import('../../../modules/pipeline/pipeline-diagnostics.service').PipelineDiagnosticsService;
 
 beforeAll(() => {
   ({ PipelineDiagnosticsService } = require('../../../modules/pipeline/pipeline-diagnostics.service'));

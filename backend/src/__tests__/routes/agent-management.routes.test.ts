@@ -119,7 +119,7 @@ describe('Agent Management Routes', () => {
     });
 
     it('returns 404 when agent not found', async () => {
-      agentAuthService.revokeAgent.mockReturnValueOnce(false);
+      (agentAuthService.revokeAgent as jest.Mock).mockReturnValueOnce(false);
 
       const response = await request(app).delete('/nonexistent-agent');
 

@@ -62,8 +62,8 @@ describe('safeMergeObject — null-prototype merged objects', () => {
         { classification: 'high-severity', runId: 'task-002' }
       );
       expect(result.origin).toBe('scanner');
-      expect(result.classification).toBe('high-severity');
-      expect(result.runId).toBe('task-002');
+      expect((result as Record<string, unknown>).classification).toBe('high-severity');
+      expect((result as Record<string, unknown>).runId).toBe('task-002');
     });
 
     it('source keys should overwrite base keys', () => {

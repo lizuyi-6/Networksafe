@@ -225,7 +225,7 @@ describe('runtimeEmulatorService', () => {
       // bootstrapDevices registers 4 devices, and tickDevice may re-register
       // when getDeviceList returns empty (default mock)
       expect(devicesRoutes.registerDevice).toHaveBeenCalled();
-      const registeredIds = devicesRoutes.registerDevice.mock.calls.map((c: any[]) => c[0].deviceId);
+      const registeredIds = (devicesRoutes.registerDevice as jest.Mock).mock.calls.map((c: any[]) => c[0].deviceId);
       expect(registeredIds).toContain('esp32-core-01');
       expect(registeredIds).toContain('esp32-floor-02');
       expect(registeredIds).toContain('esp32-plant-03');
@@ -245,7 +245,7 @@ describe('runtimeEmulatorService', () => {
       (isRuntimeEmulatorEnabled as jest.Mock).mockReturnValue(true);
 
       runtimeEmulatorService.start(mockGateway);
-      const callsAfterFirstStart = devicesRoutes.registerDevice.mock.calls.length;
+      const callsAfterFirstStart = (devicesRoutes.registerDevice as jest.Mock).mock.calls.length;
 
       runtimeEmulatorService.start(mockGateway);
       // No additional bootstrap calls
@@ -355,7 +355,7 @@ describe('runtimeEmulatorService', () => {
       runtimeEmulatorService.start(mockGateway);
 
       // upsertAsset called for agent assets (3 agents + flow source/dest assets)
-      const assetCalls = securityOperationsService.upsertAsset.mock.calls;
+      const assetCalls = (securityOperationsService.upsertAsset as jest.Mock).mock.calls;
       expect(assetCalls.length).toBeGreaterThanOrEqual(3);
 
       // 3 agent assets from tickAgent (first 3) + 3 agent-type flow source assets from tickTraffic = 6
@@ -390,10 +390,10 @@ describe('runtimeEmulatorService', () => {
       // 3 agents x 3 signal findings = 9 calls
       expect(securityOperationsService.syncSignalFinding).toHaveBeenCalledTimes(9);
 
-      const allCalls = securityOperationsService.syncSignalFinding.mock.calls;
+      const allCalls = (securityOperationsService.syncSignalFinding as jest.Mock).mock.calls;
       const categories = allCalls.map((c: any[]) => c[0].category);
       // Each agent gets 3 findings: offline, cpu, memory
-      expect(categories.filter(c => c === 'agent-health').length).toBe(9);
+      expect(categories.filter((c: string) => c === 'agent-health').length).toBe(9);
 
       // Check structure of findings
       for (const call of allCalls) {
@@ -456,7 +456,7 @@ describe('runtimeEmulatorService', () => {
 
       runtimeEmulatorService.start(mockGateway);
 
-      const deviceIds = devicesRoutes.registerDevice.mock.calls.map((c: any[]) => c[0].deviceId);
+      const deviceIds = (devicesRoutes.registerDevice as jest.Mock).mock.calls.map((c: any[]) => c[0].deviceId);
       expect(deviceIds).toContain('esp32-core-01');
       expect(deviceIds).toContain('esp32-floor-02');
       expect(deviceIds).toContain('esp32-plant-03');
@@ -469,7 +469,7 @@ describe('runtimeEmulatorService', () => {
       runtimeEmulatorService.start(mockGateway);
 
       // Check a registration call
-      const call = devicesRoutes.registerDevice.mock.calls[0][0];
+      const call = (devicesRoutes.registerDevice as jest.Mock).mock.calls[0][0];
       expect(call).toHaveProperty('deviceId');
       expect(call).toHaveProperty('version');
       expect(call).toHaveProperty('chipModel');
@@ -518,7 +518,7 @@ describe('runtimeEmulatorService', () => {
       runtimeEmulatorService.start(mockGateway);
 
       // Heartbeat events for all 4 devices
-      const heartbeatCalls = devicesRoutes.addDeviceEvent.mock.calls.filter(
+      const heartbeatCalls = (devicesRoutes.addDeviceEvent as jest.Mock).mock.calls.filter(
         (c: any[]) => c[1] === 'heartbeat'
       );
       expect(heartbeatCalls.length).toBe(4);
@@ -553,7 +553,7 @@ describe('runtimeEmulatorService', () => {
         jest.advanceTimersByTime(8000);
       }
 
-      const disconnectCalls = devicesRoutes.addDeviceEvent.mock.calls.filter(
+      const disconnectCalls = (devicesRoutes.addDeviceEvent as jest.Mock).mock.calls.filter(
         (c: any[]) => c[1] === 'disconnect'
       );
       expect(disconnectCalls.length).toBeGreaterThanOrEqual(1);
@@ -601,7 +601,7 @@ describe('runtimeEmulatorService', () => {
       runtimeEmulatorService.start(mockGateway);
 
       // 4 synthetic flows
-      const sessionCalls = securityOperationsService.upsertTrafficSession.mock.calls;
+      const sessionCalls = (securityOperationsService.upsertTrafficSession as jest.Mock).mock.calls;
       expect(sessionCalls.length).toBe(4);
 
       for (const call of sessionCalls) {
@@ -631,7 +631,7 @@ describe('runtimeEmulatorService', () => {
       runtimeEmulatorService.start(mockGateway);
 
       // 4 flows x 2 (source + dest) = 8 flow assets + 3 agent assets = 11 total
-      const assetCalls = securityOperationsService.upsertAsset.mock.calls;
+      const assetCalls = (securityOperationsService.upsertAsset as jest.Mock).mock.calls;
       expect(assetCalls.length).toBe(11);
 
       // Verify source and dest types

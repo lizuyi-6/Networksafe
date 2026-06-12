@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import auditLogger from '../../security/audit-logger.service';

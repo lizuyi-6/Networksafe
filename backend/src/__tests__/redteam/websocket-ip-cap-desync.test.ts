@@ -256,12 +256,12 @@ describe('AgentGateway IP cap desync (redteam)', () => {
       const s1 = await connectAgent('rt-e1');
       const s2 = await connectAgent('rt-e2');
 
-      const firstIp = Array.from(ipMap.keys())[0];
+      const firstIp = Array.from(ipMap.keys())[0]!;
       expect(ipMap.get(firstIp)?.size).toBe(2);
 
       // SIMULATE DESYNC: remove s1's id from ipSet WITHOUT calling disconnect.
       // This models the bug where agents Map is cleared but ipSet is not.
-      ipMap.get(firstIp)?.delete(s1.id);
+      ipMap.get(firstIp)?.delete(s1.id!);
       expect(ipMap.get(firstIp)?.size).toBe(1); // Now shows 1 even though s1 is still connected
 
       // Disconnect s1 (its id is already gone from ipSet).

@@ -5,9 +5,9 @@
  */
 
 import { Router, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     AuthenticatedRequest,
     generateTokens,
@@ -491,7 +491,7 @@ router.get('/oidc/callback', authRateLimitMiddleware, async (req: AuthenticatedR
             return res.redirect(buildOidcRedirectTarget(req, '/login?oidc=state-mismatch'));
         }
 
-        const token = await oidcAuthService.exchangeCode(code);
+        const token = await oidcAuthService.exchangeCode(code, state);
         const profile = await oidcAuthService.fetchUserProfile(token.accessToken);
         const user = await oidcAuthService.resolveUser(profile);
         const sessionUser = oidcAuthService.buildSessionUser(user.row);

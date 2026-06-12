@@ -37,6 +37,10 @@ jest.mock('../../scanner/ai-engine', () => ({
 }));
 
 import { SmartFixer } from '../../scanner/smart-fixer';
+import { Recommendation } from '../../database/models/scan-result';
+
+// Test fixtures carry an extra `id` field the production Recommendation omits.
+type TestRecommendation = Recommendation & { id: string };
 
 describe('SmartFixer', () => {
   let fixer: SmartFixer;
@@ -64,7 +68,7 @@ describe('SmartFixer', () => {
 
   describe('fixProblem with AI enabled', () => {
     it('uses AI recommendations when available', async () => {
-      const recommendation = {
+      const recommendation: TestRecommendation = {
         id: '1',
         category: 'security',
         priority: 'high',
@@ -84,7 +88,7 @@ describe('SmartFixer', () => {
 
   describe('dryFix', () => {
     it('returns plan without executing', async () => {
-      const recommendation = {
+      const recommendation: TestRecommendation = {
         id: '1',
         category: 'security',
         priority: 'high',

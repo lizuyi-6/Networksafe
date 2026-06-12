@@ -228,6 +228,16 @@ class FinalDefenseService {
     status?: FinalDefensePolicyStatus;
     policyId?: string;
     createdAt?: string;
+    /**
+     * SECURITY (V12.26): optimistic-concurrency guard. When supplied on
+     * an UPDATE (i.e. policyId is set and a row already exists), the
+     * caller asserts it knows the CURRENT stored digest. If the stored
+     * digest no longer matches (another writer updated the policy in
+     * the meantime), the upsert is refused with `policy_digest_conflict`
+     * so the caller re-reads and retries instead of silently clobbering
+     * the intervening change.
+     */
+    expectedPolicyDigest?: string;
   }): FinalDefensePolicyRecord {
     this.assertPrepared();
     const now = isoNow();
@@ -235,6 +245,20 @@ class FinalDefenseService {
     const createdAt = input.createdAt || now;
     const status = input.status || 'active';
     const releaseTtlMs = Math.max(5_000, Math.min(Number(input.releaseTtlMs || 120_000), 15 * 60_000));
+
+    // SECURITY (V12.26): if this is an update AND the caller supplied an
+    // expected digest, verify the stored row still matches. A mismatch
+    // means another writer won the race — refuse rather than overwrite.
+    if (input.policyId && typeof input.expectedPolicyDigest === 'string') {
+      const existing = this.getPolicy(input.policyId);
+      if (existing && existing.policyDigest !== input.expectedPolicyDigest) {
+        throw new Error(
+          `policy_digest_conflict: expected ${input.expectedPolicyDigest}, `
+          + `stored ${existing.policyDigest}`
+        );
+      }
+    }
+
     const policyDigest = computeFinalDefensePolicyDigest({
       policyId,
       tenantId: input.tenantId,

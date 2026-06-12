@@ -3,7 +3,7 @@
  * Core innovation: Multi-agent debate with arbitrator resolution
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     DebateSession,
     DebateRound,

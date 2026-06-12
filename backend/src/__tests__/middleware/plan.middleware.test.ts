@@ -55,6 +55,7 @@ describe('requirePlanQuota', () => {
       user: {
         userId: 'user-001',
         email: 'test@example.com',
+        username: 'testuser',
         role: 'tenant',
         tenantId: 'tenant-001'
       }

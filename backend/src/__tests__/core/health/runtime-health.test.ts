@@ -5,6 +5,12 @@
  * and dependency health checks.
  */
 
+// Force module scope so the top-level `mocks` const does not collide with
+// the same-named const in other script-style test files.
+export {};
+
+import type { RuntimeProfile } from '../../../config/platform-runtime';
+
 // ---------------------------------------------------------------------------
 // Mock bridge: factories capture these at hoist time, tests read them later.
 // ---------------------------------------------------------------------------
@@ -106,7 +112,7 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 const defaultInput = () => ({
   runtime: {
-    profile: 'dev' as const,
+    profile: 'dev' as RuntimeProfile,
     dbMode: 'sqlite',
     sqliteFallbackEnabled: false,
     extra: true,
@@ -188,7 +194,7 @@ describe('dependency health: redis', () => {
     const snapshot = await buildRuntimeHealthSnapshot(defaultInput());
     expect(snapshot.dependencies.redis.status).toBe('degraded');
     expect(snapshot.dependencies.redis.message).toBe('Connection refused');
-    expect(snapshot.dependencies.redis.details.disabled).toBe(false);
+    expect(snapshot.dependencies.redis.details!.disabled).toBe(false);
   });
 
   it('redis is disabled when DISABLED_REDIS and healthCheck reports not healthy', async () => {
@@ -196,13 +202,13 @@ describe('dependency health: redis', () => {
     mocks.redisIsDisabled!.mockReturnValue(true);
     const snapshot = await buildRuntimeHealthSnapshot(defaultInput());
     expect(snapshot.dependencies.redis.status).toBe('disabled');
-    expect(snapshot.dependencies.redis.details.disabled).toBe(true);
+    expect(snapshot.dependencies.redis.details!.disabled).toBe(true);
   });
 
   it('redis healthy includes latencyMs in details', async () => {
     mocks.redisHealthCheck!.mockResolvedValue({ healthy: true, latency: 5 });
     const snapshot = await buildRuntimeHealthSnapshot(defaultInput());
-    expect(snapshot.dependencies.redis.details.latencyMs).toBe(5);
+    expect(snapshot.dependencies.redis.details!.latencyMs).toBe(5);
   });
 });
 

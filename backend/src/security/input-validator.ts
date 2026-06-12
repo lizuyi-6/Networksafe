@@ -733,12 +733,14 @@ export class CommandInjectionDetector {
                 `\\|\\|\\s*${cmd}(\\b|[^a-z0-9_])`,
                 'i'
             );
-            // Case 3: at start of input, followed by whitespace or
-            // a shell delimiter. `id=123` at start is `id` followed
-            // by `=`, which is a URL param, not a shell command. `id `
-            // (with space) or `id;` IS a command. End-of-string is
-            // NOT a shell-command position (bare token in a body is
-            // usually a value, not a command).
+            // Case 3: at start of input, followed by whitespace or a
+            // shell delimiter. `id=123` at start is `id` followed by
+            // `=`, which is a URL param, not a shell command. `id `
+            // (with space) or `id;` IS a command. A bare token at end-
+            // of-string (`id`, `cat`, `hostname`) is treated as a value,
+            // not a command — this is the D38 false-positive guard so
+            // common URL params / form values don't trip the detector.
+            // (D38 regression suite pins this contract.)
             const atStartAsCommand = new RegExp(
                 `^${cmd}(\\s+|;)`,
                 'i'

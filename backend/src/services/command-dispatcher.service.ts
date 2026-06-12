@@ -447,6 +447,41 @@ class CommandDispatcherService {
     approved?: boolean;
   }): Promise<DispatchResult> {
     const actionId = randomUUID();
+
+    // SECURITY FIX R2-deep / V12.6: typed discriminator + non-empty
+    // userId guard, identical to the device-command path. A user-facing
+    // command with an empty / missing userId is rejected BEFORE the
+    // cross-tenant check, closing the historical isInternalActor bypass.
+    const isInternalActor = !!(input.actor.kind && input.actor.kind !== 'user');
+    if (!isInternalActor) {
+      if (typeof input.actor.userId !== 'string' || input.actor.userId.length === 0) {
+        return {
+          success: false,
+          status: 'failed',
+          actionId,
+          message: 'Actor userId is required for user-initiated commands.',
+          reason: 'actor_userid_required'
+        };
+      }
+    }
+
+    // SECURITY FIX R2-deep / V12.6: cross-tenant gate for the AGENT
+    // path (mirrors dispatchDeviceCommand). The actor's tenantId MUST
+    // match the target agent's tenantId. Internal actors are exempt.
+    if (!isInternalActor) {
+      const agent = this.agentGateway?.getAgent(input.agentId);
+      const agentTenantId = agent?.tenantId;
+      if (agentTenantId && input.actor.tenantId && agentTenantId !== input.actor.tenantId) {
+        return {
+          success: false,
+          status: 'failed',
+          actionId,
+          message: 'Cross-tenant command dispatch is not allowed.',
+          reason: 'tenant_mismatch'
+        };
+      }
+    }
+
     const riskClass = classifyCommandRisk(input.commandType);
     const review = await this.reviewCommandForClassification({
       scope: 'agent',
@@ -575,9 +610,7 @@ class CommandDispatcherService {
     // userId guard. A user-facing command with an empty / missing
     // userId is rejected BEFORE the cross-tenant check, so the
     // historical isInternalActor = !userId bypass is closed.
-    const isInternalActor = (input.actor.kind && input.actor.kind !== 'user')
-      || input.actor.kind === 'system'
-      || input.actor.kind === 'test-runtime';
+    const isInternalActor = !!(input.actor.kind && input.actor.kind !== 'user');
     if (!isInternalActor) {
       if (typeof input.actor.userId !== 'string' || input.actor.userId.length === 0) {
         return {
@@ -1084,11 +1117,12 @@ class CommandDispatcherService {
           agentId,
           data
         }
-      ]
+      ],
       // SECURITY FIX redteam R3: only accept this ack if the action is still
       // in 'running' state. If two acks arrive simultaneously, the second one
       // sees 'completed' (set by the first) and is silently dropped.
-    }, { allowedPriorStatus: ['running'] });
+      allowedPriorStatus: ['running']
+    });
   }
 
   /**
@@ -1116,9 +1150,10 @@ class CommandDispatcherService {
           agentId,
           data
         }
-      ]
+      ],
       // SECURITY FIX redteam R3: same replay guard as handleAgentCommandAck.
-    }, { allowedPriorStatus: ['running'] });
+      allowedPriorStatus: ['running']
+    });
   }
 }
 

@@ -84,6 +84,6 @@ describe('AI debate orchestration', () => {
     const session = await debateProtocol.initiateDebate(request.id, results, request, triggerMetrics);
 
     expect(session.finalVerdict?.decision).toBe('malicious');
-    expect(session.finalVerdict?.aggregatedDistribution.malicious).toBeGreaterThan(0.5);
+    expect(session.finalVerdict?.aggregatedDistribution?.malicious).toBeGreaterThan(0.5);
   });
 });

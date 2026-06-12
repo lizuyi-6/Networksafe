@@ -3,8 +3,10 @@
  * Safe execution of security analysis tools
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import { spawn } from 'child_process';
+import crypto from 'crypto';
+import dns from 'dns';
 import {
     ToolDefinition,
     ToolExecutionRequest,
@@ -30,6 +32,70 @@ export class ToolExecutor {
         this.defaultSandbox = { ...DEFAULT_SANDBOX_OPTIONS, ...sandboxOptions };
         this.registerBuiltinTools();
     }
+    private sanitizeToolOutput(value: unknown): unknown {
+        if (typeof value === "string") {
+            const stripped = value.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "");
+            return stripped.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+        if (Array.isArray(value)) return value.map((v) => this.sanitizeToolOutput(v));
+        if (value && typeof value === "object") {
+            const out: Record<string, unknown> = {};
+            for (const [k, v] of Object.entries(value)) out[k] = this.sanitizeToolOutput(v);
+            return out;
+        }
+        return value;
+    }
+    private sanitizeErrorMessage(message: unknown): string {
+        const text = typeof message === "string" ? message : String(message ?? "");
+        const truncated = text.length > 500 ? text.slice(0, 500) + "...[truncated]" : text;
+        const stripped = truncated.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "");
+        return stripped.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+    private classifyUnsafePattern(pattern: string): string | null {
+        if (pattern.length > 200) return "pattern exceeds the safe length ceiling";
+        let depth = 0, maxDepth = 0;
+        for (let i = 0; i < pattern.length; i++) {
+            const ch = pattern[i];
+            if (ch === "\\") { i++; continue; }
+            if (ch === "(" && pattern[i + 1] !== "?") { depth++; if (depth > maxDepth) maxDepth = depth; }
+            else if (ch === ")") { if (depth > 0) depth--; }
+        }
+        if (maxDepth > 2) return "nesting depth exceeds the safe ceiling";
+        const stripped = pattern.replace(/\./g, "").replace(/\[[^\]]*\]/g, "");
+        if (/\([^)]*[+*?][^)]*\)[+*?]/.test(stripped)) return "catastrophic backtracking (nested quantifier)";
+        if (/\\[1-9]/.test(pattern) && /[+*?]/.test(stripped)) return "catastrophic backtracking (back-reference with quantifier)";
+        return null;
+    }
+    private async checkSsrfSafety(url: string): Promise<string | null> {
+        let parsed: URL;
+        try { parsed = new URL(url); } catch { return "invalid_url"; }
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "unsupported_protocol:" + parsed.protocol;
+        const host = parsed.hostname.replace(/^\[|\]$/g, "");
+        if (this.isPrivateOrLoopbackAddress(host)) return "private_or_loopback_address:" + host;
+        const lh = host.toLowerCase();
+        if (lh === "localhost" || lh.endsWith(".localhost") || lh === "metadata.google.internal" || lh.endsWith(".internal")) return "private_or_loopback_address:" + host;
+        try {
+            const resolved = await dns.promises.lookup(host, { all: true });
+            for (const addr of resolved) if (this.isPrivateOrLoopbackAddress(addr.address)) return "private_or_loopback_address:" + host;
+        } catch {}
+        return null;
+    }
+    private isPrivateOrLoopbackAddress(host: string): boolean {
+        const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+        if (m) {
+            const a = Number(m[1]), b = Number(m[2]);
+            if (a === 10 || a === 127 || a === 0) return true;
+            if (a === 169 && b === 254) return true;
+            if (a === 172 && b >= 16 && b <= 31) return true;
+            if (a === 192 && b === 168) return true;
+            if (a === 100 && b >= 64 && b <= 127) return true;
+        }
+        if (host === "::1" || host === "::" || host === "0:0:0:0:0:0:0:1") return true;
+        if (/^fe[89ab][0-9a-f]:/i.test(host)) return true;
+        if (/^fc[0-9a-f]{2}:/i.test(host) || /^fd[0-9a-f]{2}:/i.test(host)) return true;
+        return false;
+    }
+
 
     private registerBuiltinTools(): void {
         this.registerTool({
@@ -137,7 +203,7 @@ export class ToolExecutor {
                 requestId: request.requestId,
                 toolName: request.toolName,
                 success: true,
-                output,
+                output: this.sanitizeToolOutput(output),
                 executionTime: Date.now() - startTime,
                 sandboxed: sandbox.enabled
             };
@@ -151,7 +217,7 @@ export class ToolExecutor {
                 toolName: request.toolName,
                 success: false,
                 output: null,
-                error: error.message,
+                error: this.sanitizeErrorMessage(error?.message ?? String(error)),
                 executionTime: Date.now() - startTime,
                 sandboxed: sandbox.enabled
             };
@@ -233,6 +299,11 @@ export class ToolExecutor {
     ): Promise<any> {
         const { url, method = 'GET', headers = {} } = params;
 
+        const ssrfReason = await this.checkSsrfSafety(url);
+        if (ssrfReason) {
+            return { status: 'blocked', reason: 'ssrf_blocked:' + ssrfReason, url: this.sanitizeURL(url) };
+        }
+
         if (!sandbox.networkAccess) {
             return {
                 status: 'blocked',
@@ -296,14 +367,14 @@ export class ToolExecutor {
                         decoded = Buffer.from(payload.replace(/\s/g, ''), 'hex').toString('utf-8');
                         break;
                     case 'unicode':
-                        decoded = payload.replace(/\\u([0-9a-f]{4})/gi, (_, hex) => 
+                        decoded = payload.replace(/\\u([0-9a-f]{4})/gi, (_: string, hex: string) => 
                             String.fromCharCode(parseInt(hex, 16))
                         );
                         break;
                     case 'html':
-                        decoded = payload.replace(/&#x([0-9a-f]+);/gi, (_, hex) =>
+                        decoded = payload.replace(/&#x([0-9a-f]+);/gi, (_: string, hex: string) =>
                             String.fromCharCode(parseInt(hex, 16))
-                        ).replace(/&#(\d+);/g, (_, dec) =>
+                        ).replace(/&#(\d+);/g, (_: string, dec: string) =>
                             String.fromCharCode(parseInt(dec, 10))
                         );
                         break;
@@ -394,6 +465,18 @@ export class ToolExecutor {
         const { content, patterns = [] } = params;
         const matches: { pattern: string; match: string; position: number }[] = [];
 
+        const CONTENT_BYTE_LIMIT = 1024 * 1024;
+        if (typeof content === 'string' && Buffer.byteLength(content) > CONTENT_BYTE_LIMIT) {
+            throw new Error('unsafe content size rejected: input exceeds the 1MB byte limit');
+        }
+        const userPatterns = Array.isArray(patterns) ? patterns : [];
+        for (const p of userPatterns) {
+            if (typeof p === 'string') {
+                const reason = this.classifyUnsafePattern(p);
+                if (reason) throw new Error('unsafe regex pattern rejected (' + reason + '): ' + p);
+            }
+        }
+
         const defaultPatterns = [
             { name: 'sql_injection', pattern: /'\s*(or|and)\s+('|\d)/i },
             { name: 'xss_script', pattern: /<script[^>]*>/i },
@@ -407,7 +490,9 @@ export class ToolExecutor {
             ? patterns.map((p: string) => ({ name: p, pattern: new RegExp(p, 'gi') }))
             : defaultPatterns;
 
-        for (const { name, pattern } of patternsToCheck) {
+        const MATCH_CAP = 1000;
+        let matchesCapped = false;
+        cap: for (const { name, pattern } of patternsToCheck) {
             const regex = pattern instanceof RegExp ? pattern : new RegExp(pattern, 'gi');
             let match;
             
@@ -417,6 +502,7 @@ export class ToolExecutor {
                     match: match[0].substring(0, 50),
                     position: match.index
                 });
+                if (matches.length >= MATCH_CAP) { matchesCapped = true; break cap; }
             }
         }
 
@@ -425,6 +511,7 @@ export class ToolExecutor {
             patternsChecked: patternsToCheck.length,
             matchesFound: matches.length,
             matches: matches.slice(0, 20),
+            matchesCapped,
             riskLevel: matches.length > 5 ? 'high' : matches.length > 0 ? 'medium' : 'low'
         };
     }
@@ -448,7 +535,7 @@ export class ToolExecutor {
             toolName: request.toolName,
             success: false,
             output: null,
-            error,
+            error: this.sanitizeErrorMessage(error),
             executionTime: 0,
             sandboxed: false
         };

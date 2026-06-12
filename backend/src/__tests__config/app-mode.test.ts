@@ -13,7 +13,7 @@ import {
   isDemoMode,
   isAttackSimulatorEnabled,
   isDemoAutoSeedEnabled
-} from '../../config/app-mode';
+} from '../config/app-mode';
 
 describe('app-mode', () => {
   beforeEach(() => {

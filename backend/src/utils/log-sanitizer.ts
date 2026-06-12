@@ -45,6 +45,11 @@ const SENSITIVE_PATTERNS = [
 
 /**
  * Fields to completely remove (redact with asterisks)
+ *
+ * NOTE: `jwt` is intentionally NOT in this list. JWTs are redacted via
+ * the SENSITIVE_PATTERNS regex (`eyJ...`), which preserves a first4…last4
+ * partial reveal for operator diagnostics. Putting `jwt` here would fully
+ * REDACT it and break that partial-reveal contract.
  */
 const REDACT_FIELDS = [
   'password',
@@ -69,15 +74,22 @@ const REDACT_FIELDS = [
 
 /**
  * Sanitize an object by removing sensitive fields
+ *
+ * SECURITY (R7 V7.5 Issue 1 regression): primitive leaf values that are
+ * strings are run through `sanitizeString` so JWTs / API keys / IPs that
+ * appear inside non-redacted fields (or as raw error messages) are
+ * pattern-redacted. Previously only structural field-name redaction ran,
+ * which meant a `jwt` field whose key wasn't in REDACT_FIELDS, or any
+ * string containing a token, leaked verbatim into operator logs.
  */
 export function sanitizeObject(obj: any, maxDepth: number = 10): any {
   if (obj === null || obj === undefined) {
     return obj;
   }
 
-  // Primitive types
+  // Primitive leaf — sanitize strings so embedded secrets are redacted.
   if (typeof obj !== 'object') {
-    return obj;
+    return typeof obj === 'string' ? sanitizeString(obj) : obj;
   }
 
   // Arrays
@@ -104,7 +116,7 @@ export function sanitizeObject(obj: any, maxDepth: number = 10): any {
     } else if (maxDepth > 0 && typeof value === 'object') {
       sanitized[key] = sanitizeObject(value, maxDepth - 1);
     } else {
-      sanitized[key] = value;
+      sanitized[key] = typeof value === 'string' ? sanitizeString(value) : value;
     }
   }
 

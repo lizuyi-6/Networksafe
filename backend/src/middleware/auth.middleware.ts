@@ -330,43 +330,7 @@ export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'
     };
 }
 
-/**
- * Tenant isolation middleware - ensures users can only access their tenant's resources
- * SECURITY FIX CVE-2026-010: Reject requests without tenantId for non-admin users
- */
-export function requireTenantAccess(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
-    if (!req.user) {
-        res.status(401).json({ error: 'backend.authentication_required' });
-        return;
-    }
-
-    const context = resolveRequestTenantContext(req, {
-        allowAdminPlatformFallback: isPlatformAdminRole(req.user.role)
-    });
-
-    if (!context) {
-        res.status(403).json({
-            error: 'backend.tenant_resolution_required',
-            code: 'TENANT_REQUIRED'
-        });
-        return;
-    }
-
-    if (!isPlatformAdminRole(req.user.role) && context.tenantId !== req.user.tenantId) {
-        res.status(403).json({
-            error: 'backend.cannot_access_resources_from_another_tenant',
-            code: 'TENANT_MISMATCH'
-        });
-        return;
-    }
-
-    if (!req.body) req.body = {};
-    if (!req.body.tenantId) {
-        req.body.tenantId = context.tenantId;
-    }
-
-    next();
-}
+export { requireTenantAccess } from './tenant-access.middleware';
 
 export function requirePermission(...requiredPermissions: Permission[]) {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {

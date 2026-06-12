@@ -6,6 +6,11 @@ import cookieParser from 'cookie-parser';
 import { requestTimingMiddleware } from '../middleware/auth.middleware';
 import { apiRateLimit } from '../middleware/rate-limit.middleware';
 import { apiTrafficShadowMiddleware } from '../middleware/api-traffic-shadow.middleware';
+import { metricsMiddleware } from '../middleware/metrics.middleware';
+import {
+  preParsePrototypePollutionGuard,
+  postParsePrototypePollutionGuard
+} from '../middleware/prototype-pollution-guard.middleware';
 import logger from '../utils/logger';
 import { sendError, sendSuccess } from '../core/http/api-response';
 import { buildRuntimeHealthSnapshot } from '../core/health/runtime-health';
@@ -112,6 +117,16 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
   app.use(cookieParser());
   app.use(requestTimingMiddleware);
 
+  // SECURITY (R6 V1.6): Reject prototype-pollution attempts at the URL level
+  // BEFORE the body parsers see them. Mounted at the app root so it covers
+  // every route, including health checks.
+  app.use(preParsePrototypePollutionGuard);
+
+  // Observability: count and time every HTTP request, including 4xx/5xx and
+  // pre-route rejections. Mounted before the body parsers so the latency
+  // measurement starts as early as possible.
+  app.use(metricsMiddleware);
+
   const captureRawBody = (req: express.Request, _res: express.Response, buffer: Buffer): void => {
     if (buffer.length > 0) {
       (req as any).rawBody = Buffer.from(buffer);
@@ -121,6 +136,11 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
   app.use(express.json({ limit: '25mb', verify: captureRawBody }));
   app.use(express.urlencoded({ extended: true, limit: '1mb', verify: captureRawBody }));
   app.use(express.text({ type: 'text/*', limit: '1mb', verify: captureRawBody }));
+
+  // SECURITY (R6 V1.6): Walk parsed body / query / params for prototype-
+  // pollution keys (`__proto__`, `constructor`, `prototype`). Catches the
+  // attack vector where JSON.parse surfaces an own `__proto__` property.
+  app.use(postParsePrototypePollutionGuard);
 
   app.use((req, _res, next) => {
     logger.info(`${req.method} ${req.path}`, {

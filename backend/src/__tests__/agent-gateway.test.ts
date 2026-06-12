@@ -67,6 +67,7 @@ jest.mock('../services/detection-pipeline.service', () => {
 
 // Import the mocked module for test-specific behavior
 import { detectionPipelineService } from '../services/detection-pipeline.service';
+import type { DetectionDecision } from '../services/detection-pipeline.service';
 
 jest.mock('../security/command-signing.service', () => ({
     commandSigningService: {
@@ -550,7 +551,7 @@ describe('AgentGateway', () => {
         });
 
         it('denies access to non-existent agent', () => {
-            const result = gateway.sendCommandToAgent('definitely-does-not-exist', { type: 'block_ip' }, { ip: '1.2.3.4' });
+            const result = gateway.sendCommandToAgent('definitely-does-not-exist', { type: 'block_ip', payload: { ip: '1.2.3.4' } });
             expect(result).toBe(false);
         });
     });
@@ -561,11 +562,11 @@ describe('AgentGateway', () => {
             jest.mocked(detectionPipelineService.reviewAgentSample).mockResolvedValueOnce({
                 aiVerdict: 'malicious',
                 matchedRuleIds: ['rule-1'],
-                attackFamily: 'sql_injection',
+                attackFamily: 'sqli',
                 riskScore: 0.95,
                 decisionSource: 'test',
                 candidateId: null
-            });
+            } as DetectionDecision);
 
             dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
                 auth: { type: 'dashboard' }
@@ -605,10 +606,10 @@ describe('AgentGateway', () => {
             jest.mocked(detectionPipelineService.reviewAgentSample).mockResolvedValueOnce({
                 aiVerdict: 'safe',
                 matchedRuleIds: [],
-                attackFamily: 'unknown',
+                attackFamily: 'benign',
                 riskScore: 0.1,
                 decisionSource: 'test'
-            });
+            } as unknown as DetectionDecision);
 
             dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
                 auth: { type: 'dashboard' }
@@ -792,7 +793,17 @@ describe('AgentGateway', () => {
             gateway.upsertSyntheticAgent({
                 agentId: 'synthetic-001',
                 hostname: 'synthetic-host-updated',
-                status: { isOnline: true, cpuUsage: 10 }
+                platform: 'synthetic',
+                status: {
+                    agentId: 'synthetic-001',
+                    hostname: 'synthetic-host-updated',
+                    platform: 'synthetic',
+                    uptime: 0,
+                    cpuUsage: 10,
+                    memoryUsage: 0,
+                    lastHeartbeat: new Date().toISOString(),
+                    isOnline: true,
+                }
             });
 
             agents = gateway.getAgentList();

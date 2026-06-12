@@ -118,7 +118,7 @@ describe('REDTEAM WebSocket event auth — device-gateway events (R4-w2 · V12.2
 
     it('rejects a payload whose signature is tampered with after signing', () => {
       const { payload } = signDevicePayload({ foo: 'bar' }, SECRET);
-      (payload as any).signature = payload.signature!.replace(/^./, '0');
+      (payload as any).signature = (payload.signature as string).replace(/^./, '0');
       expect(verifyDeviceMessageResult(payload, SECRET)).toBe(false);
     });
   });
@@ -221,7 +221,7 @@ describe('REDTEAM WebSocket event auth — agent-gateway agent:scan_result (R4-w
 
   it('rejects a scan_result payload whose signature is tampered with', () => {
     const { payload } = signAgentPayload({ scanId: 'scan-001' }, SECRET);
-    (payload as any).signature = payload.signature!.replace(/^./, 'a');
+    (payload as any).signature = (payload.signature as string).replace(/^./, 'a');
     expect(verifyAgentMessageResult(payload, SECRET)).toBe(false);
   });
 });

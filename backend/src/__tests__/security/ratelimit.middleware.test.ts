@@ -151,7 +151,7 @@ describe('rateLimitMiddleware', () => {
     });
 
     it('should use custom rate limit from apiKey', async () => {
-      mockReq.apiKey = {
+      (mockReq as { apiKey: { userId: string; rateLimit: { requestsPerMinute: number } } }).apiKey = {
         userId: `user-${Date.now()}`,
         rateLimit: {
           requestsPerMinute: 10,
@@ -172,7 +172,7 @@ describe('rateLimitMiddleware', () => {
       }
 
       // Switch to user 2
-      mockReq.apiKey!.userId = `user-${Date.now()}-new`;
+      (mockReq as { apiKey: { userId: string } }).apiKey!.userId = `user-${Date.now()}-new`;
       jest.clearAllMocks();
 
       await rateLimitMiddleware(mockReq as Request, mockRes as Response, mockNext);

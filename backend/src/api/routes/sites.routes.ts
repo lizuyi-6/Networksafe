@@ -136,6 +136,11 @@ function hydrateSiteSecurity(tenantId: string, site: any) {
 // SECURITY FIX: Apply authentication to all routes
 router.use(authenticate);
 
+// SECURITY FIX (R1 V1.1): Apply the new tenant-access middleware AFTER
+// authenticate so every site-scoped route resolves its tenant from the
+// JWT claim, never from a request-supplied tenantId.
+router.use(requireTenantAccess());
+
 /**
  * SECURITY FIX CVE-2026-006: Enhanced SSRF protection
  * Validates URL and resolved IP against private ranges

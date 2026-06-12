@@ -29,7 +29,6 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { initDatabase, closeDatabase, getDatabase } from '../../config/database';
-import authRouter from '../../api/routes/auth.routes';
 import authSecurityService from '../../security/auth-security.service';
 import auditLogger from '../../security/audit-logger.service';
 

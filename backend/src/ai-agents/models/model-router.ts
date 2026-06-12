@@ -3,7 +3,7 @@
  * Routes between local and cloud models based on complexity
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     ModelRequest,
     ModelResponse,

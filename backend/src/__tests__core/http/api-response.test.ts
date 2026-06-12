@@ -48,7 +48,7 @@ describe('sendSuccess', () => {
   it('uses custom statusCode', () => {
     const res = createMockRes();
 
-    sendSuccess(res, { created: true }, { statusCode: 201 });
+    sendSuccess(res, { created: true }, {}, 201);
 
     expect(res.status).toHaveBeenCalledWith(201);
   });

@@ -52,7 +52,10 @@ function createMockAgentGateway(online = true, acceptsCommand = true) {
   };
 }
 
-function createMockDeviceAdapter(online = true, commandResult = { success: true, message: 'OK' }) {
+function createMockDeviceAdapter(
+  online = true,
+  commandResult: { success: boolean; message: string; reason?: string } = { success: true, message: 'OK' }
+) {
   return {
     getDevice: jest.fn().mockReturnValue({ id: 'device-001', isOnline: online }),
     executeCommand: jest.fn().mockReturnValue(commandResult),

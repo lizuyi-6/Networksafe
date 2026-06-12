@@ -76,7 +76,7 @@ jest.mock('../../services/oidc-auth.service', () => ({
 }));
 
 jest.mock('../../middleware/rate-limit.middleware', () => ({
-    authRateLimit: jest.fn(),
+    authRateLimit: jest.fn((_req: any, _res: any, next: any) => next()),
 }));
 
 jest.mock('../../modules/auth/auth-user.repository', () => ({
@@ -139,7 +139,7 @@ describe('Refresh token replay detection', () => {
             .send({ email: TEST_EMAIL, password: TEST_PASSWORD, username: TEST_USERNAME });
 
         expect(res.status).toBe(201);
-        const cookies: string[] = res.headers['set-cookie'] || [];
+        const cookies: string[] = (res.headers['set-cookie'] as unknown as string[]) || [];
         const refreshCookie = cookies.find((c: string) => c.startsWith('refreshToken='));
         expect(refreshCookie).toBeDefined();
         refreshToken = refreshCookie!.split(';')[0].replace('refreshToken=', '');

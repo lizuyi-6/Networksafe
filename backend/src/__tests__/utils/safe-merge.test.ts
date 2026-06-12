@@ -50,7 +50,7 @@ describe('safeMerge / stripProtoKeys', () => {
       // mutating result.tags must not affect the source array
       result.tags.push('d');
       // re-run with a fresh source to confirm no shared reference
-      const r2 = safeMerge({}, { tags: ['a', 'b'] });
+      const r2 = safeMerge<Record<string, any>>({}, { tags: ['a', 'b'] });
       expect(r2.tags).toEqual(['a', 'b']);
     });
 

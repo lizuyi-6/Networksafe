@@ -124,7 +124,7 @@ jest.mock('../../middleware/auth.middleware', () => ({
   AuthenticatedRequest: jest.fn()
 }));
 
-jest.mock('bcrypt', () => ({
+jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashed_password'),
   compare: jest.fn().mockResolvedValue(true),
 }));
@@ -153,7 +153,7 @@ describe('Auth login audit (redteam)', () => {
 
   it('fires 5 audit events for 5 wrong-password attempts (failed_login)', async () => {
     const targetEmail = 'wrongpw@example.com';
-    const bcrypt = require('bcrypt');
+    const bcrypt = require('bcryptjs');
 
     (findAuthUserByEmail as jest.Mock).mockResolvedValue({
       id: 'audit-user-id',
@@ -232,7 +232,7 @@ describe('Auth login audit (redteam)', () => {
 
     (authSecurityService.getLockInfo as jest.Mock).mockResolvedValue({ remainingTime: 600 });
 
-    const bcrypt = require('bcrypt');
+    const bcrypt = require('bcryptjs');
     // First 3 attempts: not locked yet, bcrypt returns false
     for (let i = 0; i < 3; i++) {
       (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);

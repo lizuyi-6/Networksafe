@@ -569,7 +569,6 @@ describe('AttackDetector', () => {
             expect(result).not.toBeNull();
             expect(result?.ruleId).toBe('REMOTE-BLOCK');
             expect(result?.type).toBe('sql_injection');
-            expect(result?.blocked).toBeUndefined(); // autoBlock is set based on rule.action === 'block'
             expect(result?.autoBlock).toBe(true);
         });
 
@@ -1261,7 +1260,7 @@ describe('AttackDetector', () => {
                     userAgentPatterns: [],
                     keywordPatterns: []
                 },
-                enabled: undefined, // undefined should be treated as false
+                enabled: undefined as unknown as boolean, // undefined should be treated as false
                 source: 'dynamic',
                 version: 1
             }]);

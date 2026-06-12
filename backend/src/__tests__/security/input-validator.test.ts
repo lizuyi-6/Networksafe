@@ -823,13 +823,17 @@ describe('CommandInjectionDetector', () => {
     });
 
     test('whoami detected', () => {
-        const r = cmd.detect('whoami');
+        // D38 contract: a bare token alone is a value, not a command.
+        // `whoami` with a trailing arg (shell-position) IS detected.
+        const r = cmd.detect('whoami -a');
         expect(r.isValid).toBe(false);
         expect(r.reason).toContain('whoami');
     });
 
     test('id detected', () => {
-        const r = cmd.detect('id');
+        // D38 contract: bare `id` is a URL-param-like value; `id ` or
+        // `id;` at shell position is detected.
+        const r = cmd.detect('id -u');
         expect(r.isValid).toBe(false);
         expect(r.reason).toContain('id');
     });
@@ -853,7 +857,9 @@ describe('CommandInjectionDetector', () => {
     });
 
     test('env detected', () => {
-        const r = cmd.detect('env');
+        // D38 contract: bare `env` is a value; `env ` at shell position
+        // is detected.
+        const r = cmd.detect('env grep SECRET');
         expect(r.isValid).toBe(false);
         expect(r.reason).toContain('env');
     });

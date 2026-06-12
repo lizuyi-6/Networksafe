@@ -1,8 +1,8 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
+import { uuidv4 } from '../../utils/uuid';
 import crypto from 'crypto';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';

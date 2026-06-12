@@ -1,10 +1,20 @@
 /**
  * Message Bus - Inter-Agent Communication System
  * L1: Collaboration Layer - Message Routing
+ *
+ * SECURITY (V12.18): cross-tenant defense + envelope signing.
+ *  - publish() signs the envelope (HMAC-SHA256 over canonical
+ *    message + tenant tag) and tags it with the active tenant.
+ *  - deliverMessage() drops envelopes with a missing, invalid, or
+ *    cross-tenant signature.
+ *  - In production the module refuses to load without a signing key
+ *    (MESSAGE_BUS_SIGNING_KEY or AUDIT_LOG_SECRET); in non-production
+ *    it falls back to a per-process random key.
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import { EventEmitter } from 'events';
+import crypto from 'crypto';
 import {
     AgentMessage,
     AgentRole,
@@ -32,6 +42,48 @@ interface PendingRequest {
 const MESSAGE_EVENT = 'message_queued';
 const SHUTDOWN_EVENT = 'shutdown';
 
+/**
+ * Resolve the HMAC signing key for envelope signatures.
+ *
+ * Production MUST supply MESSAGE_BUS_SIGNING_KEY (or fall back to
+ * AUDIT_LOG_SECRET). Non-production environments get a per-process
+ * random key so dev / test still has signature integrity without
+ * forcing operators to set a secret.
+ */
+function resolveSigningKey(): string {
+    const isProduction = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+    const explicit = process.env.MESSAGE_BUS_SIGNING_KEY || process.env.AUDIT_LOG_SECRET;
+    if (explicit && typeof explicit === 'string' && explicit.length > 0) {
+        return explicit;
+    }
+    if (isProduction) {
+        throw new Error(
+            'MESSAGE_BUS_SIGNING_KEY environment variable is not set. '
+            + 'Set MESSAGE_BUS_SIGNING_KEY (or AUDIT_LOG_SECRET) before starting the control plane in production.'
+        );
+    }
+    // Dev/test fallback — random per-process key. Preserves signature
+    // integrity within a single run without forcing a secret.
+    return crypto.randomBytes(32).toString('hex');
+}
+
+const SIGNING_KEY = resolveSigningKey();
+
+function canonicalMessageString(message: AgentMessage, tenantId: string | undefined): string {
+    return [
+        message.id,
+        message.type,
+        message.from,
+        message.to,
+        JSON.stringify(message.payload || {})
+    ].join('|') + '|' + (tenantId || '');
+}
+
+function signEnvelope(envelope: MessageEnvelope): string {
+    const canonical = canonicalMessageString(envelope.message, envelope.tenantId);
+    return crypto.createHmac('sha256', SIGNING_KEY).update(canonical).digest('hex');
+}
+
 export class MessageBus extends EventEmitter {
     private subscriptions: Map<AgentRole, Subscription[]> = new Map();
     private messageQueue: MessageEnvelope[] = [];
@@ -45,10 +97,42 @@ export class MessageBus extends EventEmitter {
     private processingTimeout: NodeJS.Timeout | null = null;
     private readonly PROCESSING_TIMEOUT_MS: number = 30000;
 
+    /**
+     * SECURITY (V12.18): active tenant tag. Once bound (typically at
+     * request-scope setup), all subsequently published envelopes carry
+     * it and only same-tenant subscribers receive them. Re-binding to a
+     * DIFFERENT tenant is refused — the first binding wins — so a
+     * compromised mid-pipeline agent cannot retag its messages.
+     */
+    private activeTenantId: string | undefined;
+    private tenantBindingLocked: boolean = false;
+
     constructor() {
         super();
         this.setMaxListeners(100);
         this.startProcessing();
+    }
+
+    /**
+     * Bind this bus instance to a tenant scope. The FIRST binding wins;
+     * subsequent calls to a different tenant are ignored (fail-still).
+     * Returns the currently active tenant id.
+     */
+    bindTenant(tenantId: string): string {
+        if (!this.tenantBindingLocked) {
+            this.activeTenantId = tenantId;
+            this.tenantBindingLocked = true;
+            logger.debug(`MessageBus bound to tenant: ${tenantId}`);
+        } else if (this.activeTenantId !== tenantId) {
+            logger.warn(
+                `MessageBus refused tenant rebind: active=${this.activeTenantId} requested=${tenantId}`
+            );
+        }
+        return this.activeTenantId!;
+    }
+
+    getActiveTenantId(): string | undefined {
+        return this.activeTenantId;
     }
 
     subscribe(role: AgentRole, handler: MessageHandler): () => void {
@@ -88,12 +172,14 @@ export class MessageBus extends EventEmitter {
             message,
             routingKey: this.createRoutingKey(message),
             ttl: this.defaultTTL,
-            retryCount: 0
+            retryCount: 0,
+            tenantId: this.activeTenantId
         };
+        envelope.signature = signEnvelope(envelope);
 
         this.messageQueue.push(envelope);
         logger.debug(`Message published: ${message.type} from ${message.from} to ${message.to}`);
-        
+
         this.emit(MESSAGE_EVENT);
     }
 
@@ -177,6 +263,16 @@ export class MessageBus extends EventEmitter {
                     continue;
                 }
 
+                // SECURITY (V12.18): drop forged or cross-tenant envelopes
+                // before any subscriber sees them.
+                if (!this.isEnvelopeAuthorized(envelope)) {
+                    logger.warn('Dropping unauthorized message bus envelope', {
+                        messageId: envelope.message.id,
+                        reason: 'signature_or_tenant_mismatch'
+                    });
+                    continue;
+                }
+
                 await this.deliverMessage(envelope);
             }
 
@@ -191,6 +287,24 @@ export class MessageBus extends EventEmitter {
                 break;
             }
         }
+    }
+
+    /**
+     * SECURITY (V12.18): an envelope is deliverable only when:
+     *   1. it carries a signature that recomputes against its current
+     *      message + tenant tag (tamper protection), AND
+     *   2. its tenant tag matches this bus's active tenant (or both
+     *      are undefined — platform scope).
+     */
+    private isEnvelopeAuthorized(envelope: MessageEnvelope): boolean {
+        const expected = signEnvelope(envelope);
+        if (!envelope.signature || envelope.signature !== expected) {
+            return false;
+        }
+        if (this.activeTenantId && envelope.tenantId !== this.activeTenantId) {
+            return false;
+        }
+        return true;
     }
 
     private waitForNewMessage(): Promise<void> {
@@ -227,7 +341,7 @@ export class MessageBus extends EventEmitter {
 
     private async deliverMessage(envelope: MessageEnvelope): Promise<void> {
         const { message } = envelope;
-        const targetRoles = message.to === 'broadcast' 
+        const targetRoles = message.to === 'broadcast'
             ? Array.from(this.subscriptions.keys())
             : [message.to as AgentRole];
 
@@ -246,6 +360,9 @@ export class MessageBus extends EventEmitter {
 
                     if (envelope.retryCount < this.maxRetries) {
                         envelope.retryCount++;
+                        // Re-sign so the retried envelope still passes the
+                        // authorization check (retryCount is not in the
+                        // canonical string, so signature is unchanged).
                         this.messageQueue.unshift(envelope);
                         logger.debug(`Retrying message delivery (attempt ${envelope.retryCount})`);
                     }
@@ -266,7 +383,7 @@ export class MessageBus extends EventEmitter {
     shutdown(): void {
         this.isProcessing = false;
         this.emit(SHUTDOWN_EVENT);
-        
+
         if (this.processingTimeout) {
             clearTimeout(this.processingTimeout);
             this.processingTimeout = null;

@@ -410,8 +410,8 @@ export function normalizeNotifications(raw: any): NotificationSettings {
   const defaults = cloneDefaultConfig().notifications;
   const retryDelays = Array.isArray(raw?.retryDelaysSeconds)
     ? raw.retryDelaysSeconds
-        .map((value) => normalizeNumber(value, 0, 0, 86400))
-        .filter((value, index, arr) => value > 0 && arr.indexOf(value) === index)
+        .map((value: unknown) => normalizeNumber(value, 0, 0, 86400))
+        .filter((value: number, index: number, arr: number[]) => value > 0 && arr.indexOf(value) === index)
     : defaults.retryDelaysSeconds;
 
   return {

@@ -42,7 +42,7 @@ describe('security-operations helpers', () => {
     });
 
     it('returns fallback for undefined input', () => {
-      const fallback = [];
+      const fallback: unknown[] = [];
       const result = parseJson(undefined, fallback);
       expect(result).toBe(fallback);
     });

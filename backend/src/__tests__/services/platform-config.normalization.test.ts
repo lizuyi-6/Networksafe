@@ -99,51 +99,51 @@ describe('normalizeNumber', () => {
 
 describe('normalizeBoolean', () => {
   it('returns true for boolean true', () => {
-    expect(normalizeBoolean(true)).toBe(true);
+    expect(normalizeBoolean(true, false)).toBe(true);
   });
 
   it('returns true for string "yes"', () => {
-    expect(normalizeBoolean('yes')).toBe(true);
+    expect(normalizeBoolean('yes', false)).toBe(true);
   });
 
   it('returns true for string "on"', () => {
-    expect(normalizeBoolean('on')).toBe(true);
+    expect(normalizeBoolean('on', false)).toBe(true);
   });
 
   it('returns true for string "true"', () => {
-    expect(normalizeBoolean('true')).toBe(true);
+    expect(normalizeBoolean('true', false)).toBe(true);
   });
 
   it('returns true for number 1', () => {
-    expect(normalizeBoolean(1)).toBe(true);
+    expect(normalizeBoolean(1, false)).toBe(true);
   });
 
   it('returns true for string "1"', () => {
-    expect(normalizeBoolean('1')).toBe(true);
+    expect(normalizeBoolean('1', false)).toBe(true);
   });
 
   it('returns false for boolean false', () => {
-    expect(normalizeBoolean(false)).toBe(false);
+    expect(normalizeBoolean(false, true)).toBe(false);
   });
 
   it('returns false for string "false"', () => {
-    expect(normalizeBoolean('false')).toBe(false);
+    expect(normalizeBoolean('false', true)).toBe(false);
   });
 
   it('returns false for string "no"', () => {
-    expect(normalizeBoolean('no')).toBe(false);
+    expect(normalizeBoolean('no', true)).toBe(false);
   });
 
   it('returns false for string "off"', () => {
-    expect(normalizeBoolean('off')).toBe(false);
+    expect(normalizeBoolean('off', true)).toBe(false);
   });
 
   it('returns false for number 0', () => {
-    expect(normalizeBoolean(0)).toBe(false);
+    expect(normalizeBoolean(0, true)).toBe(false);
   });
 
   it('returns false for string "0"', () => {
-    expect(normalizeBoolean('0')).toBe(false);
+    expect(normalizeBoolean('0', true)).toBe(false);
   });
 
   it('uses fallback for unrecognized values', () => {
@@ -152,14 +152,14 @@ describe('normalizeBoolean', () => {
   });
 
   it('trims whitespace before checking', () => {
-    expect(normalizeBoolean('  true  ')).toBe(true);
-    expect(normalizeBoolean('  false  ')).toBe(false);
+    expect(normalizeBoolean('  true  ', false)).toBe(true);
+    expect(normalizeBoolean('  false  ', true)).toBe(false);
   });
 });
 
 describe('normalizeString', () => {
   it('trims whitespace', () => {
-    expect(normalizeString('  test  ')).toBe('test');
+    expect(normalizeString('  test  ', '')).toBe('test');
   });
 
   it('returns fallback for undefined', () => {
@@ -237,7 +237,7 @@ describe('severityRank', () => {
   });
 
   it('returns 1 for unknown (default case)', () => {
-    expect(severityRank('unknown')).toBe(1);
+    expect(severityRank('unknown' as any)).toBe(1);
   });
 });
 
@@ -564,7 +564,7 @@ describe('normalizePlatformConfig', () => {
       deviceGateway: { primaryPath: '/ws/device', aliases: [], syncMaskApiKeys: true, firmwareLocalHost: '', wifiSSID: '', localPort: 8080, firmwareChannel: 'stable', firmwareRetentionDays: 30, statusAliasEnabled: true },
     };
     const input = { antiBot: { enabled: true } };
-    const result = normalizePlatformConfig(input as any, current);
+    const result = normalizePlatformConfig(input as any, current as any);
     expect(result.antiBot.enabled).toBe(true);
     expect(result.antiBot.requestThreshold).toBe(50);
   });
