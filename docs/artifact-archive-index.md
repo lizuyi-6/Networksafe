@@ -1,24 +1,27 @@
 # Artifact Archive Index
 
-Date: 2026-05-13 (initial cleanup) · updated 2026-06-13 (full ESP32 hardware retirement)
+Date: 2026-05-13 (initial cleanup) · updated 2026-06-13 (full ESP32 hardware retirement) · updated 2026-06-15 (ESP32-era KiCad and enclosure designs archived)
 
 External archive root: `X:\repos\Networksafe-archive\20260513-pre-cleanup`
 
 This cleanup moves generated artifacts and hardware experiment intermediates out of the production repository while preserving them locally for inspection. The archive is not part of Git; use release artifacts, object storage, or a separate asset repository if these files need to be shared.
 
-## Active Hardware Baseline (post-2026-06-13)
+## Active Hardware Baseline (post-2026-06-11)
 
-The **AetherGuard Root-Resistant Gateway Appliance** (STM32H5/U5 security controller, dual 1GbE L2 bridge + independent MGMT, hardware fail-closed interlock) is the sole active hardware baseline. Product framing: `docs/root-resistant-gateway-prd.md` §1.4.
+The **AetherGuard Root-Resistant Gateway Appliance** is a four-module integration of commercial off-the-shelf components (M1 Protectli gateway + M2 NUCLEO-H563ZI controller + M3 OPTIGA Trust M SE + M4 DIN-rail relay + interlock). No custom PCB design is required for the Phase 0-4 prototype. Product framing: `docs/root-resistant-gateway-prd.md` v0.3 (2026-06-12).
 
-The legacy ESP32 hardware family has been **fully retired and archived** to `X:\repos\Networksafe-archive\20260513-pre-cleanup`. This includes:
+The legacy ESP32 hardware family and **all ESP32-era KiCad/OpenSCAD designs** have been **fully retired and archived** to `X:\repos\Networksafe-archive\20260513-pre-cleanup`. This includes:
 
 - ESP32-WROOM-32 serial-deployer dongle firmware and bundles.
 - ESP32-S3 Control Board v1 / v2 KiCad trees, gerbers, drill, pick-and-place, and ERC reports.
 - `esp32-serial-deployer-pcb` KiCad project, scratch routing experiments, probe reports, and Freerouting exchange files.
 - The `esp32/` firmware source directory (formerly in-repo) and the legacy `AG:REQ:*` USB-TTL serial protocol.
 - Any `aetherguard-gate` physical-confirmation board intermediates.
+- **`hardware/kicad/aetherguard-network-isolation-gateway-v1/`** — KiCad design from ESP32 era (predates the 2026-06-11 Protectli+NUCLEO+relay module decision), now archived to `hardware-legacy-esp32-era/kicad/`.
+- **`hardware/*.scad`, `*.stl`** — OpenSCAD enclosure designs (chassis, bridge, raceway_lid, clip), archived to `hardware-legacy-esp32-era/`.
+- **`hardware/aetherguard-network-isolation-gateway-v1/README.md`** and associated specs, archived.
 
-The active controller protocol is newline-delimited JSON (see `docs/root-resistant-gateway-prd.md`). Backend route names containing `esp32` (e.g. `/api/deployments/esp32-status`) are retained only for backward-compat with historically-registered legacy devices; new flows must target the Gateway Appliance.
+The active controller protocol is newline-delimited JSON (see `docs/root-resistant-gateway-prd.md` §4.2). Backend route names containing `esp32` (e.g. `/api/deployments/esp32-status`) are retained only for backward-compat with historically-registered legacy devices; new flows must target the Gateway Appliance.
 
 ## Archived Categories
 
@@ -38,6 +41,7 @@ The active controller protocol is newline-delimited JSON (see `docs/root-resista
 | `hardware/kicad/esp32-serial-deployer-pcb/reports/ev1-routing-all.svg` | `X:\repos\Networksafe-archive\20260513-pre-cleanup\hardware\kicad\esp32-serial-deployer-pcb\reports\ev1-routing-all.svg` | Temporary routing visualization | Generated visual diagnostic |
 | `esp32-serial-deployer-pcb-erc.rpt` | `X:\repos\Networksafe-archive\20260513-pre-cleanup\esp32-serial-deployer-pcb-erc.rpt` | Root-level KiCad ERC report | Generated diagnostic misplaced at repository root |
 | KiCad lock files | Preserved under matching archive path | Local editor locks | Machine-local transient files |
+| `hardware/` (entire directory) | `X:\repos\Networksafe-archive\20260513-pre-cleanup\hardware-legacy-esp32-era\` | All ESP32-era hardware designs: KiCad gateway-v1 PCB (49 files, 18453 lines), OpenSCAD enclosures, bring-up/, factory/, renders/ | **2026-06-15:** Replaced by COTS module integration (Protectli+NUCLEO+relay); no custom PCB for Phase 0-4 |
 
 The full file-level archive manifest is stored at `X:\repos\Networksafe-archive\20260513-pre-cleanup\archive-manifest.txt`.
 
