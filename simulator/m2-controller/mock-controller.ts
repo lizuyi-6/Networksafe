@@ -63,13 +63,13 @@ export class MockController extends EventEmitter {
 
   handleReleaseRequest(grant: HardwareGrantEnvelope): 'released' | 'denied' {
     // Task 2: challenge must not be reused
-    if (this.usedChallenges.has(grant.challenge)) {
-      console.log('🟡 [M2 Controller] ❌ Challenge reuse detected');
+    if (!grant.challenge || this.usedChallenges.has(grant.challenge)) {
+      console.log('🟡 [M2 Controller] ❌ Challenge missing or reused');
       return 'denied';
     }
     // Task 3: policyDigest must match
-    if (grant.policyDigest !== this.policyDigest) {
-      console.log('🟡 [M2 Controller] ❌ Policy digest mismatch');
+    if (!grant.policyDigest || grant.policyDigest !== this.policyDigest) {
+      console.log('🟡 [M2 Controller] ❌ Policy digest missing or mismatch');
       return 'denied';
     }
     // Task 4: counter must advance
