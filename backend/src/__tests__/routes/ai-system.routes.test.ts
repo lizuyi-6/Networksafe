@@ -175,6 +175,12 @@ describe('AI System Routes (smoke)', () => {
       const response = await request(app).get('/api/ai-system/agents/topology');
 
       expect(response.status).toBe(200);
+      // The route now wraps in the repo API envelope (success/data/error) while
+      // preserving the raw topology fields at the top level via `legacy` so the
+      // existing frontend's direct response.json() parse keeps working.
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeDefined();
+      expect(response.body.error).toBeNull();
       expect(response.body.initialized).toBe(false);
       expect(Array.isArray(response.body.layers)).toBe(true);
       expect(response.body.roles).toHaveLength(4);
@@ -249,7 +255,10 @@ describe('AI System Routes (smoke)', () => {
         .send({});
 
       expect(response.status).toBe(500);
-      expect(response.body.error).toBe('evaluation_failed');
+      // OWASP error path now uses the repo sendError() envelope (success:false,
+      // data:null, error:{code,message}) rather than the raw {error,message} shape.
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('evaluation_failed');
     });
   });
 });

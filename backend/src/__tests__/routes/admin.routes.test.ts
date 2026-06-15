@@ -61,8 +61,8 @@ jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('$2a$10$hashedkey')
 }));
 
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'test-uuid-001')
+jest.mock('../../utils/uuid', () => ({
+  uuidv4: jest.fn(() => 'test-uuid-001')
 }));
 
 jest.mock('crypto', () => ({
