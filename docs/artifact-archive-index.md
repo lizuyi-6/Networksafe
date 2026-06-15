@@ -1,10 +1,24 @@
 # Artifact Archive Index
 
-Date: 2026-05-13
+Date: 2026-05-13 (initial cleanup) · updated 2026-06-13 (full ESP32 hardware retirement)
 
 External archive root: `X:\repos\Networksafe-archive\20260513-pre-cleanup`
 
 This cleanup moves generated artifacts and hardware experiment intermediates out of the production repository while preserving them locally for inspection. The archive is not part of Git; use release artifacts, object storage, or a separate asset repository if these files need to be shared.
+
+## Active Hardware Baseline (post-2026-06-13)
+
+The **AetherGuard Root-Resistant Gateway Appliance** (STM32H5/U5 security controller, dual 1GbE L2 bridge + independent MGMT, hardware fail-closed interlock) is the sole active hardware baseline. Product framing: `docs/root-resistant-gateway-prd.md` §1.4.
+
+The legacy ESP32 hardware family has been **fully retired and archived** to `X:\repos\Networksafe-archive\20260513-pre-cleanup`. This includes:
+
+- ESP32-WROOM-32 serial-deployer dongle firmware and bundles.
+- ESP32-S3 Control Board v1 / v2 KiCad trees, gerbers, drill, pick-and-place, and ERC reports.
+- `esp32-serial-deployer-pcb` KiCad project, scratch routing experiments, probe reports, and Freerouting exchange files.
+- The `esp32/` firmware source directory (formerly in-repo) and the legacy `AG:REQ:*` USB-TTL serial protocol.
+- Any `aetherguard-gate` physical-confirmation board intermediates.
+
+The active controller protocol is newline-delimited JSON (see `docs/root-resistant-gateway-prd.md`). Backend route names containing `esp32` (e.g. `/api/deployments/esp32-status`) are retained only for backward-compat with historically-registered legacy devices; new flows must target the Gateway Appliance.
 
 ## Archived Categories
 

@@ -81,7 +81,8 @@ jest.mock('../../services/detection-pipeline.service', () => ({
       avgBlockingDiscussionLatencyMs: null,
       classificationLevel: 'medium'
     }),
-    setAiAnalyzer: jest.fn()
+    setAiAnalyzer: jest.fn(),
+    getAiLayerHealth: jest.fn().mockReturnValue({ available: false, degraded: true, prepared: true, mode: 'fail-closed-degraded', message: 'AI analyzer unavailable.' })
   }
 }));
 
@@ -164,6 +165,63 @@ describe('AI System Routes (smoke)', () => {
       expect(response.body).toHaveProperty('detectionPipeline');
       expect(response.body).toHaveProperty('health');
       expect(response.body).toHaveProperty('agents');
+    });
+  });
+
+  // ---- GET /api/ai-system/agents/topology ---------------------------------
+
+  describe('GET /agents/topology', () => {
+    it('returns 200 with the topology shape when the system is offline (roles always present)', async () => {
+      const response = await request(app).get('/api/ai-system/agents/topology');
+
+      expect(response.status).toBe(200);
+      expect(response.body.initialized).toBe(false);
+      expect(Array.isArray(response.body.layers)).toBe(true);
+      expect(response.body.roles).toHaveLength(4);
+      expect(response.body.telemetry).toBeDefined();
+      expect(response.body.telemetry).toHaveProperty('asyncReview');
+    });
+
+    it('returns the 7 differentiated layers with thinking depth + activation when the system is online', async () => {
+      const { getAgentSystem } = require('../../services/agent-system.service');
+      getAgentSystem.mockReturnValue({
+        isInitialized: () => true,
+        getConfig: () => ({
+          experimentMode: 'multi_agent_with_debate',
+          primarySingleAgentRole: 'aristotle',
+          thresholds: { debateTrigger: 0.3, debateDivergence: 0.3, debateConfidenceRange: 0.3, cloudEscalation: 0.6, autoBlock: 0.85 },
+          models: { local: { model: 'llama3:8b' }, cloud: { model: 'glm-4' } },
+          layers: {
+            l1_collaboration: { enabled: true, priority: 1, timeout: 5000, maxConcurrency: 10, thinkingDepth: 'shallow', modelTier: 'local', activation: { always: true } },
+            l2_rolePlaying: { enabled: true, priority: 2, timeout: 10000, maxConcurrency: 3, thinkingDepth: 'standard', modelTier: 'local', activation: { requiresLayers: [1] } },
+            l3_sceneTraversal: { enabled: true, priority: 3, timeout: 5000, maxConcurrency: 5, thinkingDepth: 'standard', activation: { requiresLayers: [2], minRiskScore: 0.4 } },
+            l4_capability: { enabled: true, priority: 4, timeout: 30000, maxConcurrency: 5, thinkingDepth: 'standard', activation: { requiresLayers: [2], minRiskScore: 0.6 } },
+            l5_debate: { enabled: true, priority: 5, timeout: 60000, maxConcurrency: 3, thinkingDepth: 'deep', modelTier: 'cloud', activation: { requiresLayers: [2], requiresDebateTrigger: true } },
+            l6_heterogeneous: { enabled: true, priority: 6, timeout: 30000, maxConcurrency: 10, thinkingDepth: 'deliberative', modelTier: 'cloud', activation: { requiresLayers: [2], requiresEscalation: true } },
+            l7_synthesis: { enabled: true, priority: 7, timeout: 5000, maxConcurrency: 5, thinkingDepth: 'standard', activation: { always: true } }
+          }
+        }),
+        getStats: () => ({
+          orchestrator: { activeTasks: 2, registeredAgents: 3 },
+          messageBus: { queueSize: 1 },
+          modelRouter: { total: 8, local: 3, cloud: 5, localRatio: 0.375 },
+          synthesis: { totalCaseFiles: 4, totalLessons: 7, totalPolicyUpdates: 1, topPatterns: [] }
+        }),
+        getHealthStatus: () => ({ status: 'healthy', details: {} })
+      });
+
+      const response = await request(app).get('/api/ai-system/agents/topology');
+
+      expect(response.status).toBe(200);
+      expect(response.body.initialized).toBe(true);
+      expect(response.body.layers).toHaveLength(7);
+      expect(response.body.layers[0]).toMatchObject({ num: 1, thinkingDepth: 'shallow', modelTier: 'local' });
+      expect(response.body.layers[4]).toMatchObject({ num: 5, thinkingDepth: 'deep', modelTier: 'cloud' });
+      expect(response.body.layers[5]).toMatchObject({ num: 6, thinkingDepth: 'deliberative' });
+      expect(response.body.layers[4].activation).toMatchObject({ requiresDebateTrigger: true });
+      expect(response.body.models).toEqual({ local: 'llama3:8b', cloud: 'glm-4' });
+      expect(response.body.telemetry.modelRouter.cloud).toBe(5);
+      expect(Array.isArray(response.body.recentCascadeTraces)).toBe(true);
     });
   });
 

@@ -1,7 +1,7 @@
 /**
  * Device Registry Service
  *
- * Pure state container for ESP32 device registry.
+ * Pure state container for the Gateway Appliance / device registry.
  * Extracted from devices.routes.ts – no Express/Router dependency.
  */
 

@@ -107,10 +107,24 @@ function scriptFile(path: string, content: string) {
   };
 }
 
+// Coerce a deployment profile port to a safe integer in the valid range,
+// falling back to 8080 for missing/non-numeric/out-of-range values. Avoids
+// emitting `http://127.0.0.1:NaN/...` or `${NaN}:8080` in generated scripts.
+function resolvePort(profile: Record<string, any>): number {
+  const raw = Number(profile?.port);
+  return Number.isFinite(raw) && raw > 0 && raw <= 65535 ? raw : 8080;
+}
+
 function renderInstallScript(profile: Record<string, any>, serverType: DeploymentTarget): string {
+  const port = resolvePort(profile);
   if (serverType === 'docker_compose') {
     return `#!/usr/bin/env bash
 set -euo pipefail
+# Back up any prior compose file so rollback can restore it.
+if [ -f docker-compose.enterprise.yml ]; then
+  cp -a docker-compose.enterprise.yml "docker-compose.enterprise.yml.$(date +%Y%m%d%H%M%S).prev"
+fi
+
 cat > docker-compose.enterprise.yml <<'EOF'
 version: "3.9"
 services:
@@ -122,7 +136,7 @@ services:
       AETHERGUARD_RATE_LIMIT: "${Number(profile.rateLimit || 100)}"
       AETHERGUARD_UPSTREAM: ${String(profile.upstream || 'http://backend:3005')}
     ports:
-      - "${Number(profile.port || 8080)}:8080"
+      - "${port}:8080"
 EOF
 docker compose -f docker-compose.enterprise.yml up -d
 `;
@@ -131,11 +145,16 @@ docker compose -f docker-compose.enterprise.yml up -d
   return `#!/usr/bin/env bash
 set -euo pipefail
 install -d /etc/aetherguard
+# Back up any prior agent.env so rollback can restore it.
+if [ -f /etc/aetherguard/agent.env ]; then
+  cp -a /etc/aetherguard/agent.env "/etc/aetherguard/agent.env.$(date +%Y%m%d%H%M%S).prev"
+fi
+
 cat > /etc/aetherguard/agent.env <<'EOF'
 AETHERGUARD_SERVER_NAME=${String(profile.serverName || 'localhost')}
 AETHERGUARD_RATE_LIMIT=${Number(profile.rateLimit || 100)}
 AETHERGUARD_UPSTREAM=${String(profile.upstream || 'http://backend:3005')}
-LISTEN_PORT=${Number(profile.port || 8080)}
+LISTEN_PORT=${port}
 EOF
 echo "AetherGuard enterprise install prepared"
 `;
@@ -157,28 +176,45 @@ rm -f /etc/aetherguard/agent.env
 `;
 }
 
-function renderRollbackScript(serverType: DeploymentTarget): string {
+export function renderRollbackScript(serverType: DeploymentTarget): string {
   if (serverType === 'docker_compose') {
     return `#!/usr/bin/env bash
 set -euo pipefail
-if [ -f docker-compose.enterprise.yml ]; then
-  docker compose -f docker-compose.enterprise.yml down
+# Restore the prior compose file captured at install time, if any.
+LATEST_COMPOSE=$(ls -1t docker-compose.enterprise.yml.*.prev 2>/dev/null | head -n 1 || true)
+if [ -n "$LATEST_COMPOSE" ] && [ -f "$LATEST_COMPOSE" ]; then
+  mv -f "$LATEST_COMPOSE" docker-compose.enterprise.yml
+  docker compose -f docker-compose.enterprise.yml up -d
+  echo "Rolled back docker-compose.enterprise.yml from $(basename "$LATEST_COMPOSE")"
+elif [ -f docker-compose.enterprise.yml ]; then
+  echo "No prior compose backup found; leaving current deployment running (nothing to roll back to)"
+else
+  echo "No enterprise deployment to roll back"
 fi
-echo "Rollback executed"
 `;
   }
 
   return `#!/usr/bin/env bash
 set -euo pipefail
-echo "Rollback placeholder executed"
+# Restore the most recent agent.env backup captured at install time, if any.
+LATEST=$(ls -1t /etc/aetherguard/agent.env.*.prev 2>/dev/null | head -n 1 || true)
+if [ -n "$LATEST" ] && [ -f "$LATEST" ]; then
+  mv -f "$LATEST" /etc/aetherguard/agent.env
+  echo "Rolled back agent.env from $(basename "$LATEST")"
+else
+  echo "No prior agent.env backup found; nothing to roll back"
+fi
 `;
 }
-
-function renderHealthcheckScript(profile: Record<string, any>): string {
+export function renderHealthcheckScript(profile: Record<string, any>): string {
+  const port = resolvePort(profile);
   return `#!/usr/bin/env bash
 set -euo pipefail
-curl -fsS "http://127.0.0.1:${Number(profile.port || 8080)}/api/health" >/dev/null 2>&1 || true
-echo "healthcheck completed"
+if ! curl -fsS "http://127.0.0.1:${port}/api/health" >/dev/null 2>&1; then
+  echo "healthcheck FAILED: /api/health not reachable on port ${port}"
+  exit 1
+fi
+echo "healthcheck passed: /api/health reachable"
 `;
 }
 

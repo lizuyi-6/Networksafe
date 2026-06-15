@@ -1,13 +1,18 @@
-﻿﻿﻿﻿/**
- * AetherGuard - ESP32 设备 WebSocket 网关
+﻿/**
+ * AetherGuard - Device WebSocket Gateway (Gateway Appliance / devices)
  *
- * 处理实验性 ESP32 云设备/模拟设备网关的 WebSocket 连接
+ * Handles WebSocket connections for the AetherGuard Root-Resistant Gateway
+ * Appliance and registered devices — device registration, heartbeat monitoring,
+ * data reception, and command dispatch over /ws/device (alias /ws/status).
  * - 设备注册
  * - 心跳监控
  * - 数据接收
  * - 命令下发
  *
- * NOTE: This gateway is not the current v1 USB-TTL serial deployer firmware.
+ * This is the active appliance/device control channel. The legacy ESP32
+ * serial-deployer hardware has been retired (2026-06-13) and archived out of
+ * this repo; see docs/root-resistant-gateway-prd.md for the current Gateway
+ * Appliance (STM32H5/U5) baseline.
  *
  * SECURITY FIX CVE-2026-032/033: Added CORS restrictions and API key validation
  * SECURITY FIX CVE-2026-DEV001: Added rate limiting

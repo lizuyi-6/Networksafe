@@ -178,8 +178,8 @@ const slides: Slide[] = [
         kicker: '危险操作必须有人在现场',
         claim: '硬件确认把纯软件信任链延伸到物理世界，给高危动作增加不可远程伪造的门槛。',
         bullets: [
-            'Gateway Appliance 只通过 USB-TTL 串口通信，不暴露网络控制面',
-            '协议采用 allow-list：AG:REQ 到 AG:BEGIN / STEP / OK / ERR',
+            'Gateway Appliance 控制器通过独立管理通道（MGMT）通信，数据面 SERVER↔LAN/WAN 桥接不暴露给被保护服务器',
+            '控制器协议为换行分隔 JSON（hello / command / state / heartbeat / interlock_result）；前代 AG:REQ 串口协议随 ESP32 退役',
             '适用于安装/卸载 Agent、擦除数据、关键配置变更等危险动作',
             '平台侧保留设备状态、执行过程和证据记录，便于审计',
         ],
@@ -189,7 +189,7 @@ const slides: Slide[] = [
         layout: 'innovation',
         tone: 'hardware',
         accent: 'amber',
-        stat: { value: 'AG', label: '物理可信确认', note: '串口硬件门，现场按键确认' },
+        stat: { value: 'AG', label: '物理可信确认', note: '硬件 interlock 门，现场按键确认' },
     },
     {
         title: '创新三：AI 监控与演练闭环',

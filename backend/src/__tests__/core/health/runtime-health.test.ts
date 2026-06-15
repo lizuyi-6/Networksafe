@@ -22,6 +22,7 @@ const mocks = {
   redisIsDisabled: null as jest.Mock | null,
   fastpathHealth: null as jest.Mock | null,
   queueBackend: null as jest.Mock | null,
+  aiLayerHealth: null as jest.Mock | null,
 };
 
 // Populate BEFORE jest.doMock factories run (hoisted).
@@ -41,6 +42,7 @@ mocks.redisHealthCheck = jest.fn().mockResolvedValue({ healthy: true, latency: 2
 mocks.redisIsDisabled = jest.fn().mockReturnValue(false);
 mocks.fastpathHealth = jest.fn().mockResolvedValue(true);
 mocks.queueBackend = jest.fn().mockReturnValue('memory');
+mocks.aiLayerHealth = jest.fn().mockReturnValue({ available: true, degraded: false, prepared: true, mode: 'multi-agent', message: 'Multi-agent analyzer is wired and active.' });
 
 // ---------------------------------------------------------------------------
 // Module mocks (hoisted by jest)
@@ -53,6 +55,9 @@ jest.doMock('../../../services/artifact-store.service', () => ({
 }));
 jest.doMock('../../../services/runtime-emulator.service', () => ({
   runtimeEmulatorService: { describe: mocks.emulatorDescribe },
+}));
+jest.doMock('../../../services/detection-pipeline.service', () => ({
+  detectionPipelineService: { getAiLayerHealth: mocks.aiLayerHealth },
 }));
 jest.doMock('../../../security/redis.service', () => ({
   __esModule: true,
@@ -322,6 +327,37 @@ describe('dependency health: AI provider', () => {
   });
 });
 
+describe('dependency health: AI layer (multi-agent analyzer)', () => {
+  afterEach(() => {
+    mocks.aiLayerHealth!.mockReturnValue({ available: true, degraded: false, prepared: true, mode: 'multi-agent', message: 'Multi-agent analyzer is wired and active.' });
+  });
+
+  it('aiLayer is healthy when the analyzer is wired', async () => {
+    const snapshot = await buildRuntimeHealthSnapshot(defaultInput());
+    expect(snapshot.dependencies.aiLayer.status).toBe('healthy');
+    expect(snapshot.dependencies.aiLayer.details.mode).toBe('multi-agent');
+  });
+
+  it('aiLayer is degraded in non-prod when the analyzer is unavailable (fail-closed)', async () => {
+    mocks.aiLayerHealth!.mockReturnValue({ available: false, degraded: true, prepared: true, mode: 'fail-closed-degraded', message: 'AI analyzer unavailable — pipeline is in fail-closed degraded mode (rules guardrail only).' });
+    const snapshot = await buildRuntimeHealthSnapshot(defaultInput());
+    expect(snapshot.dependencies.aiLayer.status).toBe('degraded');
+    expect(snapshot.dependencies.aiLayer.details.mode).toBe('fail-closed-degraded');
+  });
+
+  it('aiLayer is unhealthy in prod when the analyzer is unavailable', async () => {
+    mocks.aiLayerHealth!.mockReturnValue({ available: false, degraded: true, prepared: true, mode: 'fail-closed-degraded', message: 'degraded' });
+    process.env.NODE_ENV = 'production';
+    try {
+      const input = defaultInput();
+      input.runtime.profile = 'prod';
+      const snapshot = await buildRuntimeHealthSnapshot(input);
+      expect(snapshot.dependencies.aiLayer.status).toBe('unhealthy');
+    } finally {
+      delete process.env.NODE_ENV;
+    }
+  });
+});
 describe('overall status computation', () => {
   it('overall status is healthy when all dependencies healthy', async () => {
     const snapshot = await buildRuntimeHealthSnapshot(defaultInput());

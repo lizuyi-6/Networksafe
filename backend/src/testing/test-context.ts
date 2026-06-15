@@ -142,7 +142,7 @@ function ensureTestSchema(db: any): void {
   execSql(db, `
     CREATE TABLE IF NOT EXISTS devices (
       id TEXT PRIMARY KEY,
-      device_type TEXT DEFAULT 'esp32',
+      device_type TEXT DEFAULT 'gateway_appliance',
       mac_address TEXT UNIQUE,
       firmware_version TEXT,
       status TEXT DEFAULT 'offline',

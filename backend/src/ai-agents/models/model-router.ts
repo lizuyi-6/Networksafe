@@ -221,6 +221,14 @@ export class ModelRouter {
         const aiRouting: AIRoutingSettings | undefined = runtimeConfig?.aiRouting;
         const privacyMode = runtimeConfig?.privacyMode || 'off';
         const hotPathLocalOnly = request.analysisPurpose === 'primary' || request.analysisPurpose === 'blocking_review';
+        // Per-agent tier (heterogeneous routing): when the calling agent declares
+        // tier 'local' (e.g. the fast triage role on a local base model), honour it
+        // as long as the local engine is available and the purpose is not a forced
+        // cloud verification. Makes fast-role vs arbitrator route to genuinely
+        // different models instead of every agent hitting the cloud.
+        const honourLocalTier = request.tier === 'local'
+            && this.localEngine !== null
+            && request.analysisPurpose !== 'learning_verification';
         const overrideMode = request.routeModeOverride;
         const mode = hotPathLocalOnly
             ? 'local_only'
@@ -230,6 +238,20 @@ export class ModelRouter {
         const reasonPrefix = overrideMode
             ? `Request-scoped override forces ${overrideMode}`
             : null;
+
+        // Honour the per-agent local tier only when neither an explicit request
+        // override (routeModeOverride) nor the hybrid_verify platform mode demands
+        // cloud verification — otherwise a local-tier agent would silently bypass
+        // a cloud_only / hybrid_verify directive.
+        if (honourLocalTier && !overrideMode && mode !== 'hybrid_verify') {
+            return {
+                tier: 'local',
+                model: this.config.localModel.model,
+                reason: 'Agent tier local forces local execution',
+                estimatedLatency: 1500,
+                estimatedCost: 0
+            };
+        }
 
         if (mode === 'local_only') {
             return {
@@ -381,11 +403,15 @@ export class ModelRouter {
 
         const startTime = Date.now();
         const modelId = this.resolveStageModel(request);
+        const samplingOptions = (request.temperature !== undefined || request.maxTokens !== undefined)
+            ? { temperature: request.temperature, maxTokens: request.maxTokens }
+            : undefined;
 
         try {
             const content = await this.cloudClient.generateCompletion(
                 request.prompt,
-                modelId
+                modelId,
+                samplingOptions
             );
 
             return {

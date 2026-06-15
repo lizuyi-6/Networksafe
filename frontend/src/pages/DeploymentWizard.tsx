@@ -200,6 +200,11 @@ const DeploymentWizard = () => {
         writerRef.current = null;
     };
 
+    // LEGACY SERIAL WRITE PATH (deprecated): This callback drives the retired ESP32 serial-deployer
+    // dongle flow (AG:REQ:WRITE_BUNDLE USB-TTL protocol, archived 2026-06-13). The active hardware is the
+    // AetherGuard Root-Resistant Gateway Appliance (STM32H5/U5, newline-JSON protocol). The function name
+    // `doWriteToEsp32` and testid `deploy-write-esp32` are retained for backward-compat with any legacy-registered
+    // device still using the serial path; do not extend. New deployments should target the Gateway Appliance flow.
     const doWriteToEsp32 = useCallback(async () => {
         if (!serverType || !serialConnected) return;
 

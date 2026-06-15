@@ -1,3 +1,0 @@
-﻿(sym_lib_table
-  (lib (name "aetherguard-gate") (type "KiCad") (uri "${KIPRJMOD}/aetherguard-gate.kicad_sym") (options "") (descr "AetherGuard Gate custom symbols"))
-)

@@ -1,7 +1,8 @@
 import { DebateProtocol } from '../ai-agents/debate/debate-protocol';
 import { MessageBus } from '../ai-agents/core/message-bus';
 import { buildDebateTriggerMetrics } from '../ai-agents/core/scoring';
-import { AnalysisResult, TrafficRequest } from '../ai-agents/core/types';
+import { AnalysisResult, TrafficRequest, ModelResponse } from '../ai-agents/core/types';
+import { createMultiAgentSystem } from '../ai-agents';
 
 function createResult(
   role: AnalysisResult['role'],
@@ -85,5 +86,103 @@ describe('AI debate orchestration', () => {
 
     expect(session.finalVerdict?.decision).toBe('malicious');
     expect(session.finalVerdict?.aggregatedDistribution?.malicious).toBeGreaterThan(0.5);
+  });
+
+  test('debate rounds call the model and carry its output — agents genuinely discuss, not canned templates', async () => {
+    const calls: string[] = [];
+    const sampling: Array<{ temperature?: number; maxTokens?: number }> = [];
+    messageBus.setModelRequestHandler(async (req): Promise<ModelResponse> => {
+      calls.push(req.prompt);
+      sampling.push({ temperature: req.temperature, maxTokens: req.maxTokens });
+      return {
+        id: req.id,
+        content: `${req.context.role} argues from the model: round artifact ${calls.length}`,
+        model: 'test-model',
+        tier: 'cloud',
+        latency: 1,
+        tokensUsed: 0,
+        sanitized: false
+      };
+    });
+
+    const results = [
+      createResult('socrates', 'malicious', 0.9, { safe: 0.05, suspicious: 0.15, malicious: 0.8 }),
+      createResult('plato', 'safe', 0.8, { safe: 0.8, suspicious: 0.12, malicious: 0.08 }),
+      createResult('aristotle', 'suspicious', 0.7, { safe: 0.2, suspicious: 0.55, malicious: 0.25 })
+    ];
+    const triggerMetrics = buildDebateTriggerMetrics(results, 0.05, 0.05);
+    const session = await debateProtocol.initiateDebate(request.id, results, request, triggerMetrics);
+
+    // Every executed round actually invoked the model.
+    expect(session.rounds.length).toBeGreaterThan(0);
+    expect(calls.length).toBeGreaterThanOrEqual(session.rounds.length);
+    // The agents argued using the model's real output, not the deterministic fallback.
+    expect(session.rounds.every((r) => r.argument.includes('argues from the model'))).toBe(true);
+    // From round 2 on, later speakers saw earlier arguments in context — real response.
+    if (session.rounds.length > 1) {
+      expect(calls.some((p) => p.includes('PREVIOUS ARGUMENTS'))).toBe(true);
+    }
+    // The L5 (deep) thinking depth drove the model's sampling budget — depth is real,
+    // not cosmetic.
+    expect(sampling[0]?.temperature).toBe(0.4);
+    expect(sampling[0]?.maxTokens).toBe(2000);
+  });
+
+  test('layer cascade activates deeper layers only when their activation conditions hold', () => {
+    // White-box: the cascade is what makes the seven layers differentiated teams
+    // (distinct thinking depth + activation triggers), not a flat always-on pipeline.
+    const sys: any = createMultiAgentSystem();
+    const orch: any = sys.orchestrator;
+
+    const safeResults = [
+      createResult('socrates', 'safe', 0.9, { safe: 0.9, suspicious: 0.07, malicious: 0.03 }),
+      createResult('plato', 'safe', 0.9, { safe: 0.9, suspicious: 0.07, malicious: 0.03 }),
+      createResult('aristotle', 'safe', 0.9, { safe: 0.9, suspicious: 0.07, malicious: 0.03 })
+    ];
+    const benign = orch.evaluateLayerCascade({
+      results: safeResults,
+      primaryConfidence: 0.9,
+      threatType: 'benign',
+      debateTriggered: false,
+      escalationReached: false,
+      forceDebate: false
+    });
+    expect(benign).toEqual(expect.arrayContaining([1, 2, 7]));
+    expect(benign).not.toContain(5); // no disagreement → no debate layer
+    expect(benign).not.toContain(6); // no escalation → no deliberative cloud layer
+
+    const conflictResults = [
+      createResult('socrates', 'malicious', 0.9, { safe: 0.05, suspicious: 0.15, malicious: 0.8 }),
+      createResult('plato', 'safe', 0.8, { safe: 0.8, suspicious: 0.12, malicious: 0.08 }),
+      createResult('aristotle', 'suspicious', 0.7, { safe: 0.2, suspicious: 0.55, malicious: 0.25 })
+    ];
+    const engaged = orch.evaluateLayerCascade({
+      results: conflictResults,
+      primaryConfidence: 0.6,
+      threatType: 'sqli',
+      debateTriggered: true,
+      escalationReached: true,
+      forceDebate: false
+    });
+    expect(engaged).toContain(3); // high risk → scene traversal engages
+    expect(engaged).toContain(5); // disagreement → debate engages
+    expect(engaged).toContain(6); // escalation → deliberative cloud engages
+  });
+
+  test('heterogeneous routing: fast triage role targets the local tier, verify roles stay cloud', () => {
+    // Socrates (fast triage) is configured on the local base model; Plato /
+    // Aristotle / arbitrator stay on cloud. This is what makes the debate a real
+    // local-vs-cloud disagreement rather than one model arguing with itself.
+    const sys: any = createMultiAgentSystem();
+    const orch: any = sys.orchestrator;
+    const configs = orch.createAgentConfigs();
+
+    const socratesTier = configs.socrates.modelConfig.provider === 'ollama' ? 'local' : 'cloud';
+    const platoTier = configs.plato.modelConfig.provider === 'ollama' ? 'local' : 'cloud';
+    const aristotleTier = configs.aristotle.modelConfig.provider === 'ollama' ? 'local' : 'cloud';
+
+    expect(socratesTier).toBe('local');
+    expect(platoTier).toBe('cloud');
+    expect(aristotleTier).toBe('cloud');
   });
 });

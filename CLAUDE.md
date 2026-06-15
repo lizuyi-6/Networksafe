@@ -52,6 +52,9 @@ npm run test:routes
 npm run test:controllers
 npm run test:module                 # Uses jest.config.modular.js; set TEST_MODULE as needed
 
+npm run test:all                    # Full suite via 4 shards — preferred over `npm test`, which OOMs in one process
+npm run test:shard1                 # ...shard2 / shard3 / shard4 — each shard uses --maxWorkers=50% and 4GB heap
+
 npx jest src/__tests__/agent-gateway.test.ts
 npm test -- --testPathPattern="controller"
 npx jest --verbose --testNamePattern="should detect attacks"
@@ -115,6 +118,7 @@ cargo build --release
 # From repo root
 node scripts/guards/check-route-db-access.mjs           # route handlers must go through services/repositories
 node scripts/guards/check-no-direct-api-fetch.mjs       # frontend must route every backend call through services/api.ts
+node scripts/guards/check-frontend-api-contract.mjs     # every frontend API call resolves to a registered backend route
 node scripts/guards/check-repository-hygiene.mjs        # blocks committing runtime DBs, generated legal/video/PCB artifacts, QA screenshots, Playwright-MCP state
 ```
 
@@ -155,11 +159,12 @@ Primary components:
 | `frontend/` | React/Vite dashboard, typed API client, pages, context providers, demo data |
 | `rust-fastpath/` | High-throughput traffic processing sidecar |
 | `e2e/` | Playwright smoke, release, visual, and walkthrough tests |
-| `esp32/` | Archived — legacy ESP32 serial deployment firmware (superseded by Gateway Appliance) |
-| `hardware/aetherguard-control-board-v1/` | Archived — Control Board v1 hardware baseline (superseded by Gateway Appliance Controller) |
-| `hardware/aetherguard-network-isolation-gateway-v1/` | AetherGuard Root-Resistant Gateway Appliance hardware baseline |
+| `hardware/aetherguard-network-isolation-gateway-v1/` | AetherGuard Root-Resistant Gateway Appliance hardware baseline (active primary hardware) |
+| `hardware/kicad/aetherguard-network-isolation-gateway-v1/` | Gateway Appliance v1 KiCad design |
 | `deployment/` | Production helper scripts and deploy bundles |
 | `docs/` | Architecture, ADRs, product, readiness, and archive-index documents |
+
+> Legacy ESP32 hardware (serial-deployer dongle, ESP32-S3 control board v1/v2, `aetherguard-gate` physical-confirmation board) and its firmware/bundle/specs were fully retired on 2026-06-13 and moved out of this repo to the external archive (see below). Only the Gateway Appliance hardware line remains in `hardware/`.
 
 ## Backend Architecture
 
@@ -289,10 +294,10 @@ Gateway Appliance controller protocol is newline-delimited JSON: companion sends
 
 Architecture decision records live in `docs/adr/`, including API envelope compatibility, module boundaries/bootstrap, Postgres primary write path, startup entrypoint unification, and legacy serial deployer wiring baseline (archived).
 
-Large generated artifacts and hardware experiment intermediates were moved to `X:\repos\Networksafe-archive\20260513-pre-cleanup`; see `docs/artifact-archive-index.md` for the manifest. That archive holds the legacy `esp32-serial-deployer-pcb` KiCad tree, generated gerbers/output bundles, ERC reports, and the bulky `docs/`/`hardware/` intermediates that used to live in-repo — if a path referenced in old docs is no longer present here, check the archive before assuming it was deleted.
+The full legacy ESP32 hardware line — the top-level `esp32/` firmware tree, `deployment/esp32-serial-deployer-bundle/`, `hardware/aetherguard-control-board-v1/` and `hardware/aetherguard-gate/` docs, the `hardware/kicad/aetherguard-control-board-v1|v2/`, `hardware/kicad/aetherguard-serial-deployer-v2/`, and `hardware/kicad/esp32-serial-deployer-pcb/` KiCad projects (incl. the freerouting autorouter scratch trees), the `hardware/factory/aetherguard-serial-deployer-ev1*/` factory packages, the retired host-helper scripts, `scripts/esp32_*`, and the `.kiro`/`.trae` ESP32 specs — was retired on 2026-06-13 and moved to `X:\repos\Networksafe-archive\20260513-pre-cleanup`; see `docs/artifact-archive-index.md` for the manifest. If a path referenced in old docs is no longer present here, check the archive before assuming it was deleted.
 
 ## Companion Docs
 
-- `AGENTS.md` — OpenCode-facing twin of this file. Hardware/product framing must stay in sync between the two; when one shifts (e.g. the ESP32-dongle → Gateway-Appliance rename currently in flight), update both.
+- `AGENTS.md` — OpenCode-facing twin of this file. Hardware/product framing must stay in sync between the two.
 - `README.md` — externally visible product framing; the engineering qualifications on the "完全最后防线" claim live in `Final Defense Mode` / `Root-Resistant Final Defense` here, not in the README.
 - `docs/adr/` — binding architectural decisions (API envelope compatibility, module boundaries/bootstrap, Postgres primary write path, startup-entrypoint unification, legacy serial deployer wiring baseline [archived]).

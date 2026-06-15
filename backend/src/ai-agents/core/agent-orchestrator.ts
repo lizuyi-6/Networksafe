@@ -15,6 +15,10 @@ import {
     Evidence,
     CaseAction,
     AttackFamily,
+    LayerConfig,
+    LayerActivation,
+    LayerTrace,
+    THINKING_DEPTH_PARAMS,
     AnalysisResult as AgentAnalysisResult
 } from './types';
 import { BaseAgent, ExpertAgent } from './base-agent';
@@ -23,6 +27,8 @@ import { SocratesAgent } from '../roles/socrates-agent';
 import { PlatoAgent } from '../roles/plato-agent';
 import { AristotleAgent } from '../roles/aristotle-agent';
 import { DebateProtocol } from '../debate/debate-protocol';
+import { traceContextManager } from '../tracing/trace-context';
+import { toolExecutor } from '../capabilities/tool-executor';
 import {
     blendDistributions,
     buildDebateTriggerMetrics,
@@ -51,6 +57,9 @@ export class AgentOrchestrator {
     private messageBus: MessageBus;
     private config: MultiAgentConfig;
     private activeTasks: Map<string, AnalysisTask> = new Map();
+    /** Ring buffer of recent per-layer cascade traces for observability. */
+    private recentTraces: Array<{ requestId: string; verdict: SecurityDecision['verdict']; traces: LayerTrace[]; timestamp: Date }> = [];
+    private static readonly MAX_RECENT_TRACES = 25;
     private expertRouting: Map<string, AgentRole[]> = new Map();
     private debateProtocol: DebateProtocol;
 
@@ -97,6 +106,26 @@ export class AgentOrchestrator {
             maxRetries: 3,
             heuristicOnly: this.config.heuristicOnly
         };
+        // L2 role-playing team reasons at its configured thinking depth: the layer's
+        // temperature / token budget is stamped onto each role agent so the team
+        // genuinely thinks at that depth (vs. the deeper L5 debate budget).
+        const roleDepth = THINKING_DEPTH_PARAMS[this.config.layers.l2_rolePlaying.thinkingDepth || 'standard'];
+        const roleModelConfig = {
+            ...this.config.models.cloud,
+            temperature: roleDepth.temperature,
+            maxTokens: roleDepth.maxTokens
+        };
+        // Fast triage role (Socrates, red-team) runs on the LOCAL base model at shallow
+        // depth so the heterogeneous routing is real: a fast local judgement vs. the
+        // cloud-backed verify/arbitrate path. Falls back to cloud behaviour via the
+        // shared config when no local model is configured (provider stays ollama but
+        // the router degrades gracefully if Ollama is unreachable).
+        const fastRoleModelConfig = {
+            ...this.config.models.local,
+            temperature: THINKING_DEPTH_PARAMS['shallow'].temperature,
+            maxTokens: THINKING_DEPTH_PARAMS['shallow'].maxTokens
+        };
+
 
         return {
             socrates: {
@@ -108,7 +137,7 @@ export class AgentOrchestrator {
                     description: 'Red team agent - Attempts to find bypasses and mutations',
                     capabilities: ['mutation', 'bypass_detection', 'attack_simulation']
                 },
-                modelConfig: this.config.models.cloud,
+                modelConfig: fastRoleModelConfig,
                 ...baseConfig
             },
             plato: {
@@ -120,7 +149,7 @@ export class AgentOrchestrator {
                     description: 'Blue team agent - Schema validation and compliance checking',
                     capabilities: ['schema_validation', 'compliance_check', 'pattern_matching']
                 },
-                modelConfig: this.config.models.cloud,
+                modelConfig: roleModelConfig,
                 ...baseConfig
             },
             aristotle: {
@@ -132,7 +161,7 @@ export class AgentOrchestrator {
                     description: 'Analyst agent - Historical behavior and anomaly analysis',
                     capabilities: ['anomaly_detection', 'behavior_analysis', 'statistical_analysis']
                 },
-                modelConfig: this.config.models.cloud,
+                modelConfig: roleModelConfig,
                 ...baseConfig
             },
             arbitrator: {
@@ -144,7 +173,7 @@ export class AgentOrchestrator {
                     description: 'Final decision maker - Resolves debates and makes final calls',
                     capabilities: ['debate_resolution', 'final_decision', 'policy_enforcement']
                 },
-                modelConfig: this.config.models.cloud,
+                modelConfig: roleModelConfig,
                 ...baseConfig
             },
             orchestrator: {
@@ -156,7 +185,7 @@ export class AgentOrchestrator {
                     description: 'System coordinator - Routes requests and manages agents',
                     capabilities: ['routing', 'coordination', 'task_management']
                 },
-                modelConfig: this.config.models.cloud,
+                modelConfig: roleModelConfig,
                 ...baseConfig
             }
         };
@@ -233,6 +262,12 @@ export class AgentOrchestrator {
 
             task.status = 'completed';
             task.finalDecision = decision;
+            if (decision.cascadeTrace) {
+                this.recentTraces.unshift({ requestId: request.id, verdict: decision.verdict, traces: decision.cascadeTrace, timestamp: new Date() });
+                if (this.recentTraces.length > AgentOrchestrator.MAX_RECENT_TRACES) {
+                    this.recentTraces.pop();
+                }
+            }
 
             return decision;
         } catch (error: any) {
@@ -303,7 +338,7 @@ export class AgentOrchestrator {
         threatType: AttackFamily
     ): Promise<SecurityDecision> {
         const results = Array.from(task.results.values());
-        
+
         if (results.length === 0) {
             return this.createDefaultDecision(request, task.id, threatType);
         }
@@ -324,18 +359,26 @@ export class AgentOrchestrator {
         const aggregateDistribution = blendDistributions(results);
         const aggregateVerdict = dominantVerdict(aggregateDistribution);
         const triggerMetrics = this.shouldTriggerDebate(results);
-        const shouldDebate =
+        const debateWillRun =
             request.forceDebate === true ||
             request.analysisPurpose === 'blocking_review' ||
             (request.analysisPurpose !== 'primary' &&
             this.config.experimentMode !== 'single_agent' &&
             this.config.experimentMode !== 'multi_agent_no_debate' &&
             triggerMetrics.triggered);
+        // L3/L4 execute as real evidence-producing steps (not verdict-changing) when
+        // their cascade gate holds, then the full 7-layer trace is assembled for the
+        // returned decision so the Athens Academy is an inspectable cascade end to end.
+        const { evidence: cascadeEvidence, traces } = await this.runCascadeSteps({
+            request, results, threatType,
+            debateTriggered: debateWillRun
+        });
+        allEvidence.push(...cascadeEvidence);
         let finalVerdict: SecurityDecision['verdict'] = verdictToDecision(aggregateVerdict);
         let finalConfidence = confidenceFromDistribution(aggregateDistribution);
         let debateSession;
 
-        if (shouldDebate) {
+        if (debateWillRun) {
             logger.info(`Debate triggered for request ${request.id}`);
             debateSession = await this.triggerDebate(task, request, results, triggerMetrics);
             if (debateSession.finalVerdict) {
@@ -354,13 +397,18 @@ export class AgentOrchestrator {
         );
         const debateMs = Number((debateSession?.latencyMs || 0).toFixed(2));
         const endToEndMs = Number((Date.now() - task.startTime.getTime()).toFixed(2));
-        const layersActivated = [1, 2];
-        if (results.some((result) => result.modelTier)) {
-            layersActivated.push(6);
-        }
-        if (debateSession) {
-            layersActivated.push(5);
-        }
+        // Truthful cascade: each layer is recorded as activated only when its
+        // activation condition holds against the real accumulated state (risk,
+        // confidence, debate trigger, escalation, layer dependencies). Replaces the
+        // old hardcoded [1,2] + push(5/6) which made every layer look always-on.
+        const layersActivated = this.evaluateLayerCascade({
+            results,
+            primaryConfidence: finalConfidence,
+            threatType,
+            debateTriggered: Boolean(debateSession) || triggerMetrics.triggered,
+            escalationReached: results.some((r) => r && (r.modelTier === 'cloud' || r.modelTier === 'hybrid')),
+            forceDebate: request.forceDebate === true || request.analysisPurpose === 'blocking_review'
+        });
 
         return {
             id: uuidv4(),
@@ -375,6 +423,7 @@ export class AgentOrchestrator {
             caseFileId: task.id,
             processingTime: endToEndMs,
             layersActivated,
+            cascadeTrace: traces,
             aggregatedDistribution: debateSession?.finalVerdict?.aggregatedDistribution || aggregateDistribution,
             analysisResults: results,
             experimentMode: this.config.experimentMode || 'multi_agent_with_debate',
@@ -410,6 +459,254 @@ export class AgentOrchestrator {
             'unknown': 'challenge'
         };
         return mapping[verdict] || 'challenge';
+    }
+
+    /**
+     * Execute the evidence-producing cascade steps (L3 scene traversal, L4
+     * capability) and return their evidence plus a trace entry for every layer.
+     *
+     * L3 reconstructs the attack narrative from the trace context and folds its
+     * findings into evidence. L4 runs a sandboxed capability tool (e.g. SQL
+     * explain, HTTP probe) when the risk gate clears. Neither changes the verdict —
+     * they enrich evidence only, preserving the 0%-FPR / fail-closed invariants.
+     * L6 (heterogeneous verification) executes asynchronously via the detection
+     * pipeline's cloud re-review and disagreement capture; its trace note points
+     * there. This makes L3/L4 real, inspectable steps instead of dormant layers.
+     */
+    private async runCascadeSteps(ctx: {
+        request: TrafficRequest;
+        results: (AnalysisResult | null)[];
+        threatType: AttackFamily;
+        debateTriggered: boolean;
+    }): Promise<{ evidence: Evidence[]; traces: LayerTrace[] }> {
+        const L = this.config.layers;
+        const riskScore = this.estimateRiskScore(ctx.results);
+        const escalationReached = ctx.results.some((r) => r && (r.modelTier === 'cloud' || r.modelTier === 'hybrid'));
+        const evidence: Evidence[] = [];
+        const traces: LayerTrace[] = [];
+
+        const activated = new Set<number>([1, 2]);
+
+        // L3 — Scene traversal: build the attack narrative from trace context.
+        const l3Cfg = L.l3_sceneTraversal;
+        const l3Active = l3Cfg.enabled
+            && this.evaluateLayerActivation(l3Cfg.activation, { activatedLayers: activated, riskScore, primaryConfidence: this.bestConfidence(ctx.results), debateTriggered: ctx.debateTriggered, escalationReached, attackFamily: ctx.threatType });
+        const l3Start = Date.now();
+        if (l3Active) {
+            try {
+                const traceId = ctx.request.traceContext?.traceId;
+                const narrative = traceContextManager.buildAttackNarrative(
+                    traceId || `req-${ctx.request.id}`
+                );
+                if (narrative && narrative.attackChain.length > 0) {
+                    evidence.push({
+                        type: 'behavior',
+                        description: `Attack narrative reconstructed: ${narrative.attackChain.length} step(s) across ${narrative.services.length || 1} service(s)`,
+                        severity: narrative.riskLevel === 'critical' || narrative.riskLevel === 'high' ? 'high' : 'medium',
+                        data: { chain: narrative.attackChain.map((s) => s.action), riskLevel: narrative.riskLevel },
+                        source: 'L3-scene-traversal'
+                    });
+                }
+            } catch (error: any) {
+                logger.debug('L3 scene traversal skipped', { error: error?.message });
+            }
+            activated.add(3);
+        }
+
+        // L4 — Capability: run a sandboxed tool when the risk gate clears.
+        const l4Cfg = L.l4_capability;
+        const l4Active = l4Cfg.enabled
+            && this.evaluateLayerActivation(l4Cfg.activation, { activatedLayers: activated, riskScore, primaryConfidence: this.bestConfidence(ctx.results), debateTriggered: ctx.debateTriggered, escalationReached, attackFamily: ctx.threatType });
+        const l4Start = Date.now();
+        let l4ProducedEvidence = false;
+        if (l4Active) {
+            const tool = this.selectCapabilityTool(ctx.threatType, ctx.request);
+            if (tool) {
+                try {
+                    const result = await toolExecutor.execute({
+                        toolName: tool.name,
+                        parameters: tool.parameters,
+                        requestId: ctx.request.id,
+                        timeout: Math.min(l4Cfg.timeout, 8000),
+                        sandboxOptions: { enabled: true, timeout: 8000, memoryLimit: 256, networkAccess: false, fileSystemAccess: false }
+                    });
+                    // A tool that ran but was blocked/denied by the sandbox (e.g.
+                    // http_probe, which needs network the sandbox forbids) did not
+                    // produce usable evidence — do not record it as a positive L4
+                    // finding, or the trace would claim capability ran when it didn't.
+                    const blocked = this.toolOutputWasBlocked(result.output);
+                    if (result.success && !blocked) {
+                        evidence.push({
+                            type: 'tool_result',
+                            description: `Capability tool ${tool.name} executed (sandboxed)`,
+                            severity: 'medium',
+                            data: { tool: tool.name, output: typeof result.output === 'string' ? result.output.slice(0, 240) : result.output },
+                            source: 'L4-capability'
+                        });
+                        l4ProducedEvidence = true;
+                    } else if (result.success && blocked) {
+                        logger.debug('L4 capability tool produced no usable evidence (sandboxed)', { tool: tool.name });
+                    }
+                } catch (error: any) {
+                    logger.debug('L4 capability tool skipped', { error: error?.message });
+                }
+            }
+            activated.add(4);
+        }
+
+        // Assemble a trace entry for every layer, dormant or active, so the
+        // returned decision carries a complete inspectable cascade.
+        const layerDefs: Array<{ num: number; cfg: LayerConfig; name: string; note: string }> = [
+            { num: 1, cfg: L.l1_collaboration, name: 'Collaboration', note: `Routed to ${ctx.results.length} role agent(s)` },
+            { num: 2, cfg: L.l2_rolePlaying, name: 'Role Playing', note: 'Role team analyzed in parallel' },
+            { num: 3, cfg: L.l3_sceneTraversal, name: 'Scene Traversal', note: l3Active ? 'Attack narrative reconstructed from trace' : `Dormant: risk ${riskScore.toFixed(2)} below gate` },
+            { num: 4, cfg: L.l4_capability, name: 'Capability', note: l4Active ? (l4ProducedEvidence ? 'Sandboxed capability tool executed' : 'Capability tool ran but produced no usable evidence (sandboxed)') : `Dormant: risk ${riskScore.toFixed(2)} below gate` },
+            { num: 5, cfg: L.l5_debate, name: 'Debate', note: ctx.debateTriggered ? 'Debate ran with real model rounds' : 'Dormant: no disagreement' },
+            { num: 6, cfg: L.l6_heterogeneous, name: 'Heterogeneous Model', note: escalationReached ? 'Cloud verification via detection async review' : 'Dormant: below escalation threshold (async review off)' },
+            { num: 7, cfg: L.l7_synthesis, name: 'Synthesis', note: 'Case file + lessons + policy suggestions synthesized' }
+        ];
+        for (const def of layerDefs) {
+            traces.push({
+                layer: def.num,
+                name: def.name,
+                activated: activated.has(def.num) || def.num === 5 && ctx.debateTriggered || def.num === 7 || def.num === 1,
+                thinkingDepth: def.cfg.thinkingDepth,
+                modelTier: def.cfg.modelTier,
+                latencyMs: def.num === 3 && l3Active ? Date.now() - l3Start : def.num === 4 && l4Active ? Date.now() - l4Start : undefined,
+                note: def.note
+            });
+        }
+        return { evidence, traces };
+    }
+
+    private estimateRiskScore(results: (AnalysisResult | null)[]): number {
+        return results.reduce((max, r) => {
+            if (!r) return max;
+            const sev = r.verdict === 'malicious' ? 1 : r.verdict === 'suspicious' ? 0.6 : r.verdict === 'unknown' ? 0.3 : 0.1;
+            return Math.max(max, Math.min(1, sev * Math.max(r.confidence, 0.5)));
+        }, 0);
+    }
+
+    private bestConfidence(results: (AnalysisResult | null)[]): number {
+        const best = results.reduce((max, r) => (r && r.confidence > max ? r.confidence : max), 0);
+        return best;
+    }
+
+    private selectCapabilityTool(threatType: AttackFamily, request: TrafficRequest): { name: string; parameters: Record<string, any> } | null {
+        const registered = new Set(toolExecutor.listTools().map((t) => t.name));
+        const body = request.body || request.path || '';
+
+        if (threatType === 'sqli' && registered.has('explain_sql')) {
+            return { name: 'explain_sql', parameters: { query: body } };
+        }
+        if ((threatType === 'ssrf' || threatType === 'automation') && registered.has('http_probe')) {
+            return { name: 'http_probe', parameters: { url: request.path || '', method: request.method || 'GET' } };
+        }
+        // Payload-bearing attack families -> pattern check against the request body/path.
+        if (
+            (threatType === 'xss' || threatType === 'path_traversal' || threatType === 'command_injection')
+            && registered.has('check_pattern')
+        ) {
+            return { name: 'check_pattern', parameters: { content: body } };
+        }
+        // Authentication / business-logic -> header analysis when headers are present.
+        if (
+            (threatType === 'authentication' || threatType === 'business_logic')
+            && registered.has('analyze_headers')
+            && request.headers
+            && Object.keys(request.headers).length > 0
+        ) {
+            return { name: 'analyze_headers', parameters: { headers: request.headers } };
+        }
+        // Encoded/obfuscated payloads -> attempt decode.
+        if ((threatType === 'other') && registered.has('decode_payload') && body) {
+            return { name: 'decode_payload', parameters: { payload: body } };
+        }
+        return null;
+    }
+
+    private toolOutputWasBlocked(output: unknown): boolean {
+        if (!output || typeof output !== 'object' || Array.isArray(output)) {
+            return false;
+        }
+        const status = (output as { status?: unknown }).status;
+        return status === 'blocked' || status === 'denied' || status === 'ssrf_blocked';
+    }
+
+    /**
+     * Evaluate the 7-layer cascade against the real decision state and return the
+     * layers that actually activated, in order. Each layer fires only when its
+     * activation condition holds AND its lower-layer dependencies fired — so the
+     * seven layers behave as differentiated teams that engage at different depths
+     * and triggers, not a flat always-on pipeline.
+     */
+    private evaluateLayerCascade(ctx: {
+        results: (AnalysisResult | null)[];
+        primaryConfidence: number;
+        threatType: AttackFamily;
+        debateTriggered: boolean;
+        escalationReached: boolean;
+        forceDebate: boolean;
+    }): number[] {
+        const layers = this.config.layers;
+        const order: Array<{ num: number; cfg: LayerConfig }> = [
+            { num: 1, cfg: layers.l1_collaboration },
+            { num: 2, cfg: layers.l2_rolePlaying },
+            { num: 3, cfg: layers.l3_sceneTraversal },
+            { num: 4, cfg: layers.l4_capability },
+            { num: 5, cfg: layers.l5_debate },
+            { num: 6, cfg: layers.l6_heterogeneous },
+            { num: 7, cfg: layers.l7_synthesis }
+        ];
+        // Risk proxy: confidence-weighted severity of the strongest role result.
+        const riskScore = ctx.results.reduce((max, r) => {
+            if (!r) return max;
+            const sev = r.verdict === 'malicious' ? 1
+                : r.verdict === 'suspicious' ? 0.6
+                : r.verdict === 'unknown' ? 0.3 : 0.1;
+            return Math.max(max, Math.min(1, sev * Math.max(r.confidence, 0.5)));
+        }, 0);
+
+        const activated = new Set<number>();
+        for (const { num, cfg } of order) {
+            if (!cfg.enabled) continue;
+            if (!this.evaluateLayerActivation(cfg.activation, {
+                activatedLayers: activated,
+                riskScore,
+                primaryConfidence: ctx.primaryConfidence,
+                debateTriggered: ctx.debateTriggered || ctx.forceDebate,
+                escalationReached: ctx.escalationReached,
+                attackFamily: ctx.threatType
+            })) {
+                continue;
+            }
+            activated.add(num);
+        }
+        return Array.from(activated).sort((a, b) => a - b);
+    }
+
+    private evaluateLayerActivation(
+        activation: LayerActivation | undefined,
+        ctx: {
+            activatedLayers: Set<number>;
+            riskScore: number;
+            primaryConfidence: number;
+            debateTriggered: boolean;
+            escalationReached: boolean;
+            attackFamily: AttackFamily;
+        }
+    ): boolean {
+        if (!activation || activation.always) return true;
+        if (activation.requiresLayers && !activation.requiresLayers.every((n) => ctx.activatedLayers.has(n))) {
+            return false;
+        }
+        if (typeof activation.minRiskScore === 'number' && ctx.riskScore < activation.minRiskScore) return false;
+        if (typeof activation.maxPrimaryConfidence === 'number' && ctx.primaryConfidence > activation.maxPrimaryConfidence) return false;
+        if (typeof activation.minPrimaryConfidence === 'number' && ctx.primaryConfidence < activation.minPrimaryConfidence) return false;
+        if (activation.requiresDebateTrigger && !ctx.debateTriggered) return false;
+        if (activation.requiresEscalation && !ctx.escalationReached) return false;
+        if (activation.attackFamilies && activation.attackFamilies.length > 0 && !activation.attackFamilies.includes(ctx.attackFamily)) return false;
+        return true;
     }
 
     private shouldTriggerDebate(results: AgentAnalysisResult[]): ReturnType<typeof buildDebateTriggerMetrics> {
@@ -603,6 +900,16 @@ export class AgentOrchestrator {
 
     getAgents(): Record<string, BaseAgent> {
         return { ...this.agents };
+    }
+
+    /** Recent per-layer cascade traces, newest first (observability for the viz). */
+    getRecentCascadeTraces() {
+        return this.recentTraces.map((entry) => ({
+            requestId: entry.requestId,
+            verdict: entry.verdict,
+            timestamp: entry.timestamp,
+            traces: entry.traces
+        }));
     }
 }
 

@@ -102,7 +102,7 @@ for (const entry of fs.readdirSync(routesRoot, { withFileTypes: true })) {
 | 11 | `dashboard.routes.ts` | 1 | `detectionPipelineService` | ❌ |
 | 12 | `deployments.routes.ts` | 3 | `commandDispatcherService`, `deployment-profile.repository` | ❌ |
 | 13 | `devices.routes.ts` | 18 | `securityOperationsService`, `commandDispatcherService` + 内存 Map（`devices`/`deviceEvents`/`deviceConfigs`/`deviceCommands`） | ❌（业务态用 Map） |
-| 14 | `enterprise-helper.routes.ts` | 1 | `serial-deployer-protocol` helpers | ❌ |
+| 14 | `enterprise-helper.routes.ts` | 1 | `serial-deployer-protocol` helpers (legacy ESP32 USB-TTL protocol, archived 2026-06-13; Gateway Appliance uses newline-JSON) | ❌ |
 | 15 | `final-defense.routes.ts` | 1 | `finalDefenseService` | ❌ |
 | 16 | `fix-history.routes.ts` | 2 | `scanner-task.service`, `scanner-route.repository` | ❌ |
 | 17 | `hardware-authorization.routes.ts` | 5 | `commandDispatcherService`, `hardwareAuthorizationService`, `deploymentRunService` | ❌ |

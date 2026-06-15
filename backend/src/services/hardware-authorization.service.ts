@@ -9,6 +9,7 @@ import {
   verifyHardwareGrantSignature
 } from '../security/hardware-grant';
 import logger from '../utils/logger';
+import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
 
 export type CommandScope = 'agent' | 'device' | 'deployment';
 export type HardwareGateStatus = 'enrolled' | 'online' | 'offline' | 'revoked';
@@ -668,6 +669,37 @@ class HardwareAuthorizationService {
   private rejectSession(sessionId: string, actionId: string, reason: string, payload: Record<string, any>): void {
     this.updateSession(sessionId, reason === 'session_expired' ? 'expired' : 'rejected', { reason, ack: payload });
     this.updateIntent(actionId, reason === 'session_expired' ? 'expired' : 'rejected', { reason, ack: payload });
+    // PRD §7: every authorization decision (including rejections / fail-closed
+    // triggers) must leave a tamper-evident audit event, not just a DB column.
+    this.auditRejection(sessionId, actionId, reason, payload);
+  }
+
+  private auditRejection(sessionId: string, actionId: string, reason: string, payload: Record<string, any>): void {
+    const intent = this.getIntent(actionId);
+    const session = this.getConfirmationSession(sessionId);
+    const severity: 'warning' | 'critical' =
+      reason === 'invalid_signature' || reason === 'monotonic_counter_rollback' || reason === 'policy_digest_mismatch'
+        ? 'critical'
+        : 'warning';
+    auditLogger.log({
+      tenantId: intent?.tenantId || session?.tenantId || PLATFORM_TENANT_ID,
+      eventType: 'hardware_confirmation_rejected',
+      category: 'command',
+      severity,
+      actor: { type: 'user', id: intent?.requestedBy || 'unknown' },
+      target: { type: 'action', id: actionId },
+      action: intent?.commandType || 'hardware_grant',
+      details: { actionId, sessionId, gateId: session?.gateId, reason, ackSummary: this.summarizeAck(payload) },
+      status: 'failure'
+    }).catch((error: any) => {
+      logger.warn('Hardware confirmation rejection audit log unavailable', { actionId, reason, error: error?.message });
+    });
+  }
+
+  private summarizeAck(payload: Record<string, any>): Record<string, any> {
+    // Avoid logging full grant envelopes; surface only the fields useful for forensics.
+    const { gateId, sessionId, actionId, commandType, monotonicCounter, expiresAt } = payload || {};
+    return { gateId, sessionId, actionId, commandType, monotonicCounter, expiresAt };
   }
 
   private updateSession(sessionId: string, status: string, result?: Record<string, any>): void {

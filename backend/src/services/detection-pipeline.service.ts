@@ -62,6 +62,8 @@ export interface DetectionAsyncReviewStats {
   failed: number;
   completionRate: number;
   debateCompletionRate: number;
+  disagreements: number;
+  disagreementRate: number;
   avgLatencyMs: number;
 }
 
@@ -447,6 +449,8 @@ class DetectionPipelineService {
         error TEXT,
         latency_ms INTEGER,
         debate_triggered INTEGER NOT NULL DEFAULT 0,
+        disagreement INTEGER NOT NULL DEFAULT 0,
+        disagreement_json TEXT,
         enqueued_at TEXT NOT NULL,
         started_at TEXT,
         completed_at TEXT,
@@ -460,6 +464,17 @@ class DetectionPipelineService {
       CREATE INDEX IF NOT EXISTS idx_sec_detection_async_reviews_tenant ON sec_detection_async_reviews(tenant_id, status, updated_at DESC);
       CREATE INDEX IF NOT EXISTS idx_sec_detection_async_reviews_status ON sec_detection_async_reviews(status, enqueued_at ASC);
     `);
+
+    // Additive migration: track primary-vs-verification disagreement for the
+    // learning loop. Idempotent — only adds columns missing on older DBs.
+    const reviewCols = db.prepare(`PRAGMA table_info(sec_detection_async_reviews)`).all() as any[];
+    const reviewColNames = new Set(reviewCols.map((c) => c.name));
+    if (!reviewColNames.has('disagreement')) {
+      db.exec(`ALTER TABLE sec_detection_async_reviews ADD COLUMN disagreement INTEGER NOT NULL DEFAULT 0`);
+    }
+    if (!reviewColNames.has('disagreement_json')) {
+      db.exec(`ALTER TABLE sec_detection_async_reviews ADD COLUMN disagreement_json TEXT`);
+    }
 
     this.prepared = true;
   }
@@ -1269,6 +1284,30 @@ class DetectionPipelineService {
         Number(rawDecision.stageLatencies?.debateMs || 0) > 0
       );
 
+      // Learning-loop signal: did the hot-path verdict (primaryAi) disagree with
+      // the authoritative cloud re-review (finalAi)? Verdict mismatch, or a large
+      // confidence gap, marks the record as a candidate training pair. This is the
+      // "eyes" of the student/teacher loop — capture now, train weights later.
+      const primaryAi = review.primaryAi;
+      const primaryVerdict = primaryAi?.verdict;
+      const verifiedVerdict = finalAi.verdict;
+      const primaryConfidence = Number(primaryAi?.confidence ?? 0);
+      const verifiedConfidence = Number(finalAi.confidence ?? 0);
+      const confidenceGap = Math.abs(primaryConfidence - verifiedConfidence);
+      const verdictDisagree = Boolean(primaryVerdict) && primaryVerdict !== verifiedVerdict;
+      const DISAGREEMENT_CONFIDENCE_GAP = 0.3;
+      const disagree = verdictDisagree || confidenceGap >= DISAGREEMENT_CONFIDENCE_GAP;
+      const disagreement = {
+        disagree,
+        verdictDisagree,
+        confidenceGap: Number(confidenceGap.toFixed(4)),
+        primaryVerdict: primaryVerdict || null,
+        verifiedVerdict,
+        primaryConfidence: Number(primaryConfidence.toFixed(4)),
+        verifiedConfidence: Number(verifiedConfidence.toFixed(4)),
+        flippedTo: verdictDisagree ? verifiedVerdict : null
+      };
+
       db.run(`
         UPDATE sec_detection_async_reviews
         SET status = 'completed',
@@ -1276,6 +1315,8 @@ class DetectionPipelineService {
             candidate_id = ?,
             latency_ms = ?,
             debate_triggered = ?,
+            disagreement = ?,
+            disagreement_json = ?,
             completed_at = ?,
             updated_at = ?
         WHERE review_id = ?
@@ -1284,6 +1325,8 @@ class DetectionPipelineService {
         candidate?.candidateId || review.candidateId || null,
         latencyMs,
         debateTriggered ? 1 : 0,
+        disagree ? 1 : 0,
+        JSON.stringify(disagreement),
         completedAt,
         completedAt,
         reviewId
@@ -1333,6 +1376,14 @@ class DetectionPipelineService {
     let decisionSource = ruleEvaluation.highestPriorityRule
       ? `${ruleEvaluation.highestPriorityRule.source}:${ruleEvaluation.highestPriorityRule.action}`
       : 'heuristic_only';
+    // Decision spine design (AI-primary with rule guardrail + fail-closed):
+    //  - Rules are the deterministic BLOCK guardrail: a rule malicious verdict is
+    //    adopted first and the AI layer cannot override it (0%-FPR + fail-closed).
+    //  - When the AI analyzer runs, its verdict BECOMES the primary decision via
+    //    aiVerdictToDecision(), with a 0.6 confidence gate so a low-confidence AI
+    //    "malicious" degrades to allow rather than blocking benign traffic.
+    //  - When the AI analyzer is unavailable, maximum/elevated high-risk requests
+    //    fail closed to block; this default verdict is the rule-only fallback.
     let verdict: DetectionVerdict = ruleEvaluation.ruleVerdict || (baseRiskScore >= settings.aiEscalationThreshold ? 'monitor' : 'allow');
     let attackFamily = normalizeAttackFamily(
       ruleEvaluation.highestPriorityRule?.attackFamily || inferAttackFamily(request, combinedSignals)
@@ -1871,11 +1922,35 @@ class DetectionPipelineService {
     };
   }
 
+  /**
+   * Health of the AI decision layer. When the multi-agent analyzer is not wired,
+   * the pipeline runs in explicit fail-closed degraded mode: rules remain the
+   * deterministic block guardrail, non-block verdicts fall back to risk-based
+   * monitor/allow, and elevated-risk requests are blocked rather than silently
+   * passed. This surfaces that state so operators and the /cognition view can see
+   * the AI layer is degraded rather than assuming it is active.
+   */
+  getAiLayerHealth(): { available: boolean; degraded: boolean; prepared: boolean; mode: string; message: string } {
+    const prepared = this.prepared;
+    const available = prepared && this.aiAnalyzer !== null;
+    return {
+      available,
+      degraded: prepared && !available,
+      prepared,
+      mode: available ? 'multi-agent' : 'fail-closed-degraded',
+      message: available
+        ? 'Multi-agent analyzer is wired and active.'
+        : (prepared
+          ? 'AI analyzer unavailable — pipeline is in fail-closed degraded mode (rules guardrail only).'
+          : 'Detection pipeline storage not prepared.')
+    };
+  }
+
   async getAsyncReviewStats(tenantId: string): Promise<DetectionAsyncReviewStats> {
     this.assertPrepared();
     const db = this.getDb();
     const rows = db.prepare(`
-      SELECT status, latency_ms, debate_triggered
+      SELECT status, latency_ms, debate_triggered, disagreement
       FROM sec_detection_async_reviews
       WHERE tenant_id = ?
       ORDER BY updated_at DESC
@@ -1899,6 +1974,7 @@ class DetectionPipelineService {
       .map((row) => Number(row.latency_ms || 0))
       .filter((value) => Number.isFinite(value) && value > 0);
     const debateCompleted = completedRows.filter((row) => normalizeBoolean(row.debate_triggered)).length;
+    const disagreementCompleted = completedRows.filter((row) => normalizeBoolean(row.disagreement)).length;
 
     return {
       queueDepth: counts.queued + counts.running,
@@ -1908,6 +1984,8 @@ class DetectionPipelineService {
       failed: counts.failed,
       completionRate: terminal > 0 ? Number((counts.completed / terminal).toFixed(4)) : 0,
       debateCompletionRate: completedRows.length > 0 ? Number((debateCompleted / completedRows.length).toFixed(4)) : 0,
+      disagreements: disagreementCompleted,
+      disagreementRate: completedRows.length > 0 ? Number((disagreementCompleted / completedRows.length).toFixed(4)) : 0,
       avgLatencyMs: latencies.length > 0
         ? Number((latencies.reduce((sum, value) => sum + value, 0) / latencies.length).toFixed(2))
         : 0

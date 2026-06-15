@@ -4,7 +4,7 @@ This repository should stay focused on source, tests, hand-authored documentatio
 
 ## Keep In Git
 
-- Application source under `backend/src`, `frontend/src`, `rust-fastpath/src`, `esp32/src`, and supporting scripts.
+- Application source under `backend/src`, `frontend/src`, `rust-fastpath/src`, Gateway Appliance hardware source under `hardware/`, and supporting scripts. (The legacy `esp32/src` firmware directory was retired 2026-06-13 and archived out of repo; see `docs/artifact-archive-index.md`.)
 - Tests and test fixtures that are small, deterministic, and required by CI.
 - Hand-authored architecture, operations, hardware, and security documentation.
 - KiCad source files and reviewed hardware source assets.

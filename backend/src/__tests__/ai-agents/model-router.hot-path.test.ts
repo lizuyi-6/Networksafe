@@ -43,4 +43,32 @@ describe('ModelRouter hot-path routing', () => {
 
     expect(decision.tier).toBe('cloud');
   });
+
+  it('does not force a local-tier agent to local when an explicit cloud_only override is set', () => {
+    const router = new ModelRouter();
+    const config = cloneDefaultConfig();
+    config.aiRouting.mode = 'cloud_only';
+
+    const decision = router.makeRoutingDecision(
+      // Non-hot, non-learning purpose so the per-agent local tier would normally
+      // be honoured — but the explicit cloud_only override must win.
+      buildRequest({ tier: 'local', analysisPurpose: 'deep_analysis', routeModeOverride: 'cloud_only' }),
+      config
+    );
+
+    expect(decision.tier).toBe('cloud');
+  });
+
+  it('does not force a local-tier agent to local under hybrid_verify (keeps the cloud half)', () => {
+    const router = new ModelRouter();
+    const config = cloneDefaultConfig();
+    config.aiRouting.mode = 'hybrid_verify';
+
+    const decision = router.makeRoutingDecision(
+      buildRequest({ tier: 'local', analysisPurpose: 'deep_analysis' }),
+      config
+    );
+
+    expect(decision.tier).toBe('hybrid');
+  });
 });

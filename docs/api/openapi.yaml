@@ -7,7 +7,7 @@ info:
     本 API 提供完整的安全运维管理功能，包括：
     - 🔐 用户认证与权限管理
     - 🖥️ 分布式 Agent 管理
-    - 📡 ESP32 硬件设备控制
+    - 📡 外部硬件设备控制（当前为 Gateway Appliance；ESP32 设备类型为已退役遗留兼容）
     - 🔍 漏洞扫描与安全监控
     - 📊 实时告警与日志分析
     
@@ -45,7 +45,7 @@ tags:
   - name: Agents
     description: 分布式 Agent 管理
   - name: Devices
-    description: ESP32 硬件设备管理
+    description: 外部硬件设备管理（Gateway Appliance 为当前主设备；ESP32 deviceType 为已退役遗留兼容，schema 保留以服务历史注册设备）
   - name: Sites
     description: 受保护站点管理
   - name: Scanner
@@ -562,7 +562,7 @@ components:
           type: string
         deviceType:
           type: string
-          example: esp32
+          example: gateway_appliance  # legacy: esp32 (archived 2026-06-13); schema kept for backward-compat with historically-registered devices
         macAddress:
           type: string
         firmwareVersion:

@@ -167,4 +167,76 @@ describe('hardwareAuthorizationService', () => {
     expect(ack.confirmed).toBe(false);
     expect(ack.reason).toBe('policyDigest_mismatch');
   });
+
+  it('emits a tamper-evident audit event when a hardware grant is rejected (PRD §7)', async () => {
+    const auditSpy = jest.spyOn(require('../../security/audit-logger.service').default, 'log').mockResolvedValue(undefined);
+    try {
+      const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+      const attacker = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+      const gateId = `gate-audit-${Date.now()}`;
+      const deviceId = `device-audit-${Date.now()}`;
+      hardwareAuthorizationService.enrollGate({
+        tenantId: 'tenant-test',
+        gateId,
+        publicKeyPem: keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+        status: 'online'
+      });
+
+      const request = await hardwareAuthorizationService.requestPhysicalConfirmation({
+        tenantId: 'tenant-test',
+        scope: 'device',
+        targetId: deviceId,
+        commandType: 'host_remove',
+        payload: { path: '/opt/aetherguard' },
+        hardwareContext: {
+          policyDigest: 'policy-a', challenge: 'challenge-a',
+          breakerTarget: 'mgmt-uplink-a', interlockAction: 'interlock_release'
+        },
+        actorId: 'tester-audit'
+      });
+
+      // Sign with the ATTACKER key — signature verification must fail and the
+      // rejection must be audited, not just written to a DB result_json column.
+      const signature = createSign('SHA256')
+        .update(buildHardwareGrantMessage({
+          gateId,
+          sessionId: request.session!.sessionId,
+          actionId: request.intent.actionId,
+          tenantId: 'tenant-test', scope: 'device', targetId: deviceId,
+          commandType: 'host_remove',
+          payloadHash: hashPayload({ path: '/opt/aetherguard' }),
+          policyDigest: 'policy-a', challenge: 'challenge-a',
+          breakerTarget: 'mgmt-uplink-a', interlockAction: 'interlock_release',
+          issuedAt: new Date().toISOString(),
+          expiresAt: request.session!.expiresAt,
+          monotonicCounter: 1
+        }))
+        .end()
+        .sign(attacker.privateKey, 'base64');
+
+      const ack = await hardwareAuthorizationService.handlePhysicalConfirmationAck(gateId, {
+        confirmationSessionId: request.session!.sessionId,
+        confirmed: true,
+        policyDigest: 'policy-a', challenge: 'challenge-a',
+        breakerTarget: 'mgmt-uplink-a', interlockAction: 'interlock_release',
+        issuedAt: new Date().toISOString(),
+        expiresAt: request.session!.expiresAt,
+        monotonicCounter: 1,
+        signature
+      });
+
+      expect(ack.confirmed).toBe(false);
+      // Flush the async auditLogger.log promise.
+      await new Promise(r => setImmediate(r));
+      const rejectionAudit = auditSpy.mock.calls.find(
+        (c: any[]) => c[0]?.eventType === 'hardware_confirmation_rejected'
+      );
+      expect(rejectionAudit).toBeDefined();
+      expect(rejectionAudit[0].status).toBe('failure');
+      expect(rejectionAudit[0].severity).toBe('critical');
+      expect(rejectionAudit[0].details.reason).toBe('invalid_signature');
+    } finally {
+      auditSpy.mockRestore();
+    }
+  });
 });

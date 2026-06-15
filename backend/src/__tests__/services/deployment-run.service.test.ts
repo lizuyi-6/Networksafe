@@ -1,7 +1,7 @@
 import { createHash, createSign, generateKeyPairSync } from 'crypto';
 import { initDatabase } from '../../config/database';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
-import { deploymentRunService } from '../../services/deployment-run.service';
+import { deploymentRunService, renderRollbackScript, renderHealthcheckScript } from '../../services/deployment-run.service';
 import { hardwareAuthorizationService } from '../../services/hardware-authorization.service';
 import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 
@@ -156,5 +156,25 @@ describe('deploymentRunService', () => {
     const nextRun = deploymentRunService.getRun(run.id, tenantId);
     expect(nextRun?.status).toBe('approved');
     expect(nextRun?.hardwareGrantId).toBe(ack.grant?.grantId);
+  });
+});
+
+describe('deployment-run render scripts (real, not placeholders)', () => {
+  it('rollback restores the prior backup instead of echoing a placeholder', () => {
+    const rollback = renderRollbackScript('binary_agent');
+    expect(rollback).not.toContain('Rollback placeholder executed');
+    expect(rollback).toContain('agent.env.*.prev');
+    expect(rollback).toContain('mv -f');
+
+    const dockerRollback = renderRollbackScript('docker_compose');
+    expect(dockerRollback).not.toContain('Rollback placeholder executed');
+    expect(dockerRollback).toContain('.prev');
+  });
+
+  it('healthcheck fails (exit 1) when /api/health is unreachable, not always-success', () => {
+    const hc = renderHealthcheckScript({ port: 8080 });
+    expect(hc).not.toMatch(/\|\|\s*true/);
+    expect(hc).toContain('exit 1');
+    expect(hc).toContain('8080');
   });
 });

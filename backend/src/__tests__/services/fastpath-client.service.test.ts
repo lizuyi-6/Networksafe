@@ -294,4 +294,58 @@ describe('FastpathClientService', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('evaluateProtocol (multi-protocol plugin API)', () => {
+    it('returns the protocol evaluation result', async () => {
+      mockPlatformGetConfig.mockResolvedValue(defaultConfig);
+      mockAxiosPost.mockResolvedValue({
+        status: 200,
+        data: { protocol: 'canbus', verdict: 'block', action: 'block', findings: [{ code: 'CAN_DIAGNOSTIC_FRAME', severity: 'high', message: 'diag' }] }
+      });
+
+      const result = await fastpathClientService.evaluateProtocol({ tenantId: 't1', protocol: 'canbus', metadata: { canId: 2015 } });
+      expect(result).not.toBeNull();
+      expect(result!.verdict).toBe('block');
+      expect(mockAxiosPost).toHaveBeenCalledWith('/v1/protocols/evaluate', expect.objectContaining({ protocol: 'canbus' }));
+    });
+
+    it('forwards per-protocol policy metadata (e.g. canbus enabled/blockDiagnosticFrames) verbatim', async () => {
+      mockPlatformGetConfig.mockResolvedValue(defaultConfig);
+      mockAxiosPost.mockResolvedValue({ status: 200, data: { protocol: 'canbus', verdict: 'allow', action: 'inspect', findings: [] } });
+
+      await fastpathClientService.evaluateProtocol({
+        tenantId: 't1',
+        protocol: 'canbus',
+        metadata: { canId: 0x7DF, canDlc: 8, enabled: false, blockDiagnosticFrames: false }
+      });
+      expect(mockAxiosPost).toHaveBeenCalledWith(
+        '/v1/protocols/evaluate',
+        expect.objectContaining({
+          metadata: expect.objectContaining({ enabled: false, blockDiagnosticFrames: false, canId: 0x7DF })
+        })
+      );
+    });
+
+    it('returns null when fastpath is disabled', async () => {
+      mockPlatformGetConfig.mockResolvedValue({ ...defaultConfig, fastpath: { ...defaultConfig.fastpath, enabled: false } });
+      const result = await fastpathClientService.evaluateProtocol({ protocol: 'mqtt' });
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('listProtocolManifests', () => {
+    it('returns the registered protocol manifests', async () => {
+      mockPlatformGetConfig.mockResolvedValue(defaultConfig);
+      mockAxiosGet.mockResolvedValue({ status: 200, data: { protocols: [{ id: 'http' }, { id: 'canbus' }] } });
+      const result = await fastpathClientService.listProtocolManifests('t1');
+      expect(result).toEqual([{ id: 'http' }, { id: 'canbus' }]);
+      expect(mockAxiosGet).toHaveBeenCalledWith('/v1/protocols/manifests');
+    });
+
+    it('returns null for non-2xx', async () => {
+      mockPlatformGetConfig.mockResolvedValue(defaultConfig);
+      mockAxiosGet.mockResolvedValue({ status: 500, data: {} });
+      expect(await fastpathClientService.listProtocolManifests('t1')).toBeNull();
+    });
+  });
 });

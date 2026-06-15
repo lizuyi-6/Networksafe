@@ -519,6 +519,11 @@ const demoAgentsBase: DemoAgent[] = [
 ];
 
 const demoDevicesBase: DemoDevice[] = [
+    // NOTE: These demo devices model the AetherGuard Gateway Appliance (STM32H5/U5 + Zephyr RTOS,
+    // the active hardware since 2026-06-13). The deviceId prefix `esp32-gw-*` and tag values `esp32-s3`/`esp32-c6`
+    // are retained for backward-compat because the IDs are used as keys in demoDeviceEventsBase /
+    // demoDeviceCommandsStore below; they are legacy demo-fixture names, NOT indicators of active ESP32 hardware.
+    // ESP32 serial-deployer / control-board hardware is retired and archived.
     {
         deviceId: 'esp32-gw-01',
         version: '1.8.4',
@@ -540,7 +545,7 @@ const demoDevicesBase: DemoDevice[] = [
             scanProfile: 'balanced',
             notes: 'Primary ingestion gateway for the north plant.',
             commandPermissions: ['collect', 'reboot', 'sync-config'],
-            tags: ['esp32-s3', 'north', 'production'],
+            tags: ['stm32h5', 'gateway-appliance', 'north', 'production'],
             updatedAt: timestampMinutesAgo(14)
         },
         latestCommand: null
@@ -566,7 +571,7 @@ const demoDevicesBase: DemoDevice[] = [
             scanProfile: 'conservative',
             notes: 'Intermittent uplink, buffers telemetry locally.',
             commandPermissions: ['collect', 'sync-config'],
-            tags: ['esp32-c6', 'field', 'standalone'],
+            tags: ['stm32u5', 'gateway-appliance', 'field', 'standalone'],
             updatedAt: timestampMinutesAgo(21)
         },
         latestCommand: null
@@ -592,7 +597,7 @@ const demoDevicesBase: DemoDevice[] = [
             scanProfile: 'offline-recovery',
             notes: 'Awaiting power recovery and heap diagnostics.',
             commandPermissions: ['sync-config'],
-            tags: ['esp32-s3', 'warehouse', 'recovery'],
+            tags: ['stm32h5', 'gateway-appliance', 'warehouse', 'recovery'],
             updatedAt: timestampMinutesAgo(53)
         },
         latestCommand: null

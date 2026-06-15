@@ -193,7 +193,7 @@ export class TestDataFixtures {
 
     return {
       id: deviceId,
-      device_type: overrides.device_type || 'esp32',
+      device_type: overrides.device_type || 'esp32',  // LEGACY default: ESP32 deviceType retired 2026-06-13; kept here for backward-compat in tests that exercise the legacy serial-deployer path. New tests should override with 'gateway_appliance' (matches production DB schema default in src/config/database.ts).
       mac_address: overrides.mac_address || `AA:BB:CC:DD:EE:${Math.floor(Math.random() * 99).toString().padStart(2, '0')}`,
       firmware_version: overrides.firmware_version || '1.0.0',
       status: overrides.status || 'offline',

@@ -13,6 +13,7 @@ import {
   normalizeInterlockState
 } from '../security/final-defense-policy';
 import { hardwareAuthorizationService } from './hardware-authorization.service';
+import { GatewayDaemon, type GatewayDaemonOptions } from '../companion/gateway-daemon';
 
 export interface FinalDefensePolicyRecord {
   policyId: string;
@@ -93,11 +94,17 @@ function isoNow(): string {
   return new Date().toISOString();
 }
 
+// PRD §4.4 fail-closed trigger #7 mandates isolation when a controller
+// heartbeat is lost for > 45 seconds. Treat a gateway/companion as stale
+// past that window so root-resistant-active reflects the PRD threshold
+// (the previous 90s value was a 2x fail-open drift).
+const HEARTBEAT_STALE_MS = 45_000;
+
 function stale(lastHeartbeatAt?: string): boolean {
   if (!lastHeartbeatAt) {
     return true;
   }
-  return Date.now() - new Date(lastHeartbeatAt).getTime() > 90_000;
+  return Date.now() - new Date(lastHeartbeatAt).getTime() > HEARTBEAT_STALE_MS;
 }
 
 const ROOT_RESISTANT_REQUIRED_COMMANDS = new Set([
@@ -658,6 +665,39 @@ class FinalDefenseService {
       actorId: input.actorId,
       actorEmail: input.actorEmail,
       actorIp: input.actorIp
+    });
+  }
+
+  /**
+   * Construct the appliance-side GatewayDaemon for a registered root-resistant
+   * gateway, resolving its provisioned Secure Element public key from the
+   * enrolled gate. Returns null when the gateway/gate is unknown or has no
+   * provisioned key, so callers can degrade without throwing.
+   *
+   * This is the seam the appliance integration binds to: instantiate per
+   * gateway, feed controller WebSocket frames into daemon.handleControllerFrame,
+   * and route verified releases through daemon.requestRelease. The control-plane
+   * confirmation loop (requestGatewayAction) is unchanged; the daemon is the
+   * physical enforcement point that consumes its verified grants.
+   */
+  createGatewayDaemon(
+    gatewayId: string,
+    extra?: Partial<GatewayDaemonOptions>
+  ): GatewayDaemon | null {
+    this.assertPrepared();
+    const status = this.getRootResistantGatewayStatus(gatewayId);
+    if (!status) {
+      return null;
+    }
+    const gate = hardwareAuthorizationService.getGate(gatewayId);
+    if (!gate || !gate.publicKeyPem) {
+      return null;
+    }
+    return new GatewayDaemon({
+      gatewayId,
+      secureElementPublicKeyPem: gate.publicKeyPem,
+      breakerTarget: 'server-lan-transparent-bridge',
+      ...extra
     });
   }
 

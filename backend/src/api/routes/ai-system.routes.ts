@@ -208,6 +208,90 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
     }
 });
 
+// Multi-Agent 7-Layer Topology — drives the interactive Athens Academy
+// visualization. Returns each layer's real config (thinking depth, activation
+// gating, model tier) plus the live telemetry each layer owns, so the frontend
+// can render a clickable layered map with an audit panel per node.
+router.get('/agents/topology', authenticate, async (req: Request, res: Response) => {
+    try {
+        const system = getSharedAgentSystem() || getAgentSystem();
+        const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
+        const cfg = system?.getConfig();
+        const L = cfg?.layers;
+        const layers = L ? [
+            { num: 1, key: 'l1_collaboration', name: 'Collaboration', ...L.l1_collaboration },
+            { num: 2, key: 'l2_rolePlaying', name: 'Role Playing', ...L.l2_rolePlaying },
+            { num: 3, key: 'l3_sceneTraversal', name: 'Scene Traversal', ...L.l3_sceneTraversal },
+            { num: 4, key: 'l4_capability', name: 'Capability', ...L.l4_capability },
+            { num: 5, key: 'l5_debate', name: 'Debate', ...L.l5_debate },
+            { num: 6, key: 'l6_heterogeneous', name: 'Heterogeneous Model', ...L.l6_heterogeneous },
+            { num: 7, key: 'l7_synthesis', name: 'Synthesis', ...L.l7_synthesis }
+        ] : [];
+
+        const roles = [
+            { role: 'socrates', team: 'red', color: '#ef4444', name: 'Socrates', position: 'attack', capabilities: ['mutation', 'bypass_detection', 'attack_simulation'], layer: 2 },
+            { role: 'plato', team: 'blue', color: '#3b82f6', name: 'Plato', position: 'defend', capabilities: ['schema_validation', 'compliance_check', 'pattern_matching'], layer: 2 },
+            { role: 'aristotle', team: 'analyst', color: '#a855f7', name: 'Aristotle', position: 'analyze', capabilities: ['anomaly_detection', 'behavior_analysis', 'statistical_analysis'], layer: 2 },
+            { role: 'arbitrator', team: 'arbitrator', color: '#f59e0b', name: 'Arbitrator', position: 'resolve', capabilities: ['debate_resolution', 'final_decision', 'policy_enforcement'], layer: 5 }
+        ];
+
+        const rawStats = system?.getStats();
+
+        // Detection telemetry is best-effort: if the detection pipeline is not
+        // prepared yet (fresh boot before prepare() completes), degrade to nulls
+        // instead of failing the whole topology view with a 500. getSummary()
+        // already returns the async-review stats, so read them from it rather than
+        // calling getAsyncReviewStats() a second time.
+        let asyncReview: any = null;
+        let blockingDiscussion = { count: 0, failClosed: 0, avgLatencyMs: 0 };
+        let aiLayer: any = null;
+        try {
+            const detectionSummary = await detectionPipelineService.getSummary(tenantId);
+            asyncReview = {
+                queueDepth: detectionSummary.asyncReviewQueueDepth,
+                running: detectionSummary.asyncReviewRunning,
+                completed: detectionSummary.asyncReviewCompleted,
+                failed: detectionSummary.asyncReviewFailed,
+                debateCompletionRate: detectionSummary.debateCompletionRate,
+                avgLatencyMs: detectionSummary.avgAsyncReviewLatencyMs
+            };
+            blockingDiscussion = {
+                count: detectionSummary.blockingDiscussionCount,
+                failClosed: detectionSummary.blockingDiscussionFailClosed,
+                avgLatencyMs: detectionSummary.avgBlockingDiscussionLatencyMs
+            };
+            aiLayer = detectionPipelineService.getAiLayerHealth();
+        } catch (error: any) {
+            logger.warn('Detection pipeline unavailable for agent topology; returning degraded telemetry', { error: error.message });
+        }
+
+        res.json({
+            initialized: system?.isInitialized() ?? false,
+            experimentMode: cfg?.experimentMode,
+            primarySingleAgentRole: cfg?.primarySingleAgentRole,
+            thresholds: cfg?.thresholds,
+            models: cfg ? { local: cfg.models.local.model, cloud: cfg.models.cloud.model } : undefined,
+            layers,
+            roles,
+            recentCascadeTraces: (typeof system?.getRecentCascadeTraces === 'function' ? system.getRecentCascadeTraces() : []) ?? [],
+            telemetry: {
+                orchestrator: rawStats?.orchestrator ?? null,
+                messageBus: rawStats?.messageBus ?? null,
+                modelRouter: rawStats?.modelRouter ?? null,
+                traceManager: rawStats?.traceManager ?? null,
+                synthesis: rawStats?.synthesis ?? null,
+                asyncReview,
+                blockingDiscussion,
+                health: system?.getHealthStatus() ?? null,
+                aiLayer
+            }
+        });
+    } catch (error: any) {
+        logger.error('Failed to get agent topology:', { error: error.message });
+        res.status(500).json({ error: 'internal_error', message: error.message });
+    }
+});
+
 router.post('/evaluation/owasp', authenticate, async (req: Request, res: Response) => {
     try {
         const report = await owaspWebEvaluationService.evaluate({

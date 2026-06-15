@@ -259,11 +259,13 @@ export class DatabaseManager {
         )
       `);
 
-      // Devices table (for ESP32 dongles)
+      // Devices table (Gateway Appliance + registered devices). The legacy
+      // ESP32 serial-deployer hardware is retired; default reflects the active
+      // Root-Resistant Gateway Appliance baseline.
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS devices (
           id TEXT PRIMARY KEY,
-          device_type TEXT DEFAULT 'esp32',
+          device_type TEXT DEFAULT 'gateway_appliance',
           mac_address TEXT UNIQUE,
           firmware_version TEXT,
           status TEXT DEFAULT 'offline',

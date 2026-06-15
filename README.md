@@ -74,10 +74,8 @@ Primary components:
 | `frontend/` | React console, typed API client, pages, demo data |
 | `rust-fastpath/` | High-throughput traffic processing sidecar |
 | `e2e/` | Playwright release and UI verification |
-| `esp32/` | Archived — legacy ESP32 serial deployment firmware (superseded by Gateway Appliance) |
 | `deployment/` | Production helper scripts and deploy bundles |
-| `hardware/aetherguard-control-board-v1/` | Archived — Control Board v1 hardware baseline (superseded by Gateway Appliance Controller) |
-| `hardware/aetherguard-network-isolation-gateway-v1/` | AetherGuard Root-Resistant Gateway Appliance hardware baseline |
+| `hardware/aetherguard-network-isolation-gateway-v1/` | AetherGuard Root-Resistant Gateway Appliance hardware baseline (active primary hardware) |
 | `hardware/factory/aetherguard-serial-deployer-ev1/` | Archived — legacy serial deployer factory package |
 | `hardware/kicad/esp32-serial-deployer-pcb/` | Archived — KiCad source for the legacy serial deployer PCB |
 | `docs/` | Architecture, product, readiness, and archive index documents |

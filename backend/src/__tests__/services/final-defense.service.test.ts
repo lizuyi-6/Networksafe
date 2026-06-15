@@ -157,6 +157,107 @@ describe('finalDefenseService', () => {
     expect(activeGateway.degradedReasons).toEqual([]);
   });
 
+  it('creates an appliance GatewayDaemon bound to a registered gateway\'s SE key', () => {
+    const tenantId = `tenant-daemon-seam-${Date.now()}`;
+    const { generateKeyPairSync } = require('crypto');
+    const kp = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+    const publicKeyPem = kp.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+    const gatewayId = `gateway-daemon-${Date.now()}`;
+
+    // Register the root-resistant gateway and enroll its gate (SE public key).
+    finalDefenseService.reportRootResistantGatewayStatus({
+      tenantId,
+      gatewayId,
+      policyDigest: 'digest-daemon',
+      reportedPolicyDigest: 'digest-daemon',
+      firmwareDigest: 'firmware-daemon',
+      lastAttestationAt: new Date().toISOString(),
+      bridgeState: 'isolated',
+      serverPortLink: true,
+      lanPortLink: true,
+      mgmtPath: 'dedicated_mgmt',
+      secureElementPresent: true
+    });
+    hardwareAuthorizationService.enrollGate({
+      tenantId,
+      gateId: gatewayId,
+      publicKeyPem,
+      status: 'online'
+    });
+
+    const daemon = finalDefenseService.createGatewayDaemon(gatewayId);
+    expect(daemon).not.toBeNull();
+    try {
+      // Daemon boots fail-closed (isolated / deny-forward ruleset).
+      expect(daemon!.getBridgeState()).toBe('isolated');
+      expect(daemon!.isReleased()).toBe(false);
+
+      // A grant signed by the gateway's own SE key releases the bridge.
+      const { buildHardwareGrantMessage } = require('../../security/hardware-grant');
+      const grant = {
+        gateId: gatewayId, sessionId: 's', actionId: 'a', tenantId,
+        scope: 'device', targetId: gatewayId, commandType: 'interlock_release',
+        payloadHash: '0'.repeat(64), policyDigest: 'digest-daemon',
+        challenge: 'c', breakerTarget: 'server-lan-transparent-bridge',
+        interlockAction: 'release', issuedAt: '1700000000',
+        expiresAt: String(Math.floor(Date.now() / 1000) + 3600),
+        monotonicCounter: 1,
+        signature: require('crypto').createSign('SHA256')
+          .update(buildHardwareGrantMessage({
+            gateId: gatewayId, sessionId: 's', actionId: 'a', tenantId,
+            scope: 'device', targetId: gatewayId, commandType: 'interlock_release',
+            payloadHash: '0'.repeat(64), policyDigest: 'digest-daemon',
+            challenge: 'c', breakerTarget: 'server-lan-transparent-bridge',
+            interlockAction: 'release', issuedAt: '1700000000',
+            expiresAt: String(Math.floor(Date.now() / 1000) + 3600),
+            monotonicCounter: 1
+          })).end().sign(kp.privateKey, 'base64')
+      };
+      expect(daemon!.requestRelease(grant)).toBe(true);
+      expect(daemon!.isReleased()).toBe(true);
+    } finally {
+      daemon!.shutdown();
+    }
+
+    // Unknown gateway -> null (graceful degrade).
+    expect(finalDefenseService.createGatewayDaemon('does-not-exist')).toBeNull();
+  });
+
+  it('marks a gateway stale at the PRD-mandated 45s controller-heartbeat threshold (not 90s)', () => {
+    const tenantId = `tenant-root-stale-${Date.now()}`;
+    // Register an otherwise-healthy gateway so the only variable is heartbeat age.
+    finalDefenseService.reportRootResistantGatewayStatus({
+      tenantId,
+      gatewayId: 'gateway-heartbeat-stale',
+      policyDigest: 'digest-stale',
+      reportedPolicyDigest: 'digest-stale',
+      firmwareDigest: 'firmware-stale',
+      lastAttestationAt: new Date().toISOString(),
+      bridgeState: 'isolated',
+      serverPortLink: true,
+      lanPortLink: true,
+      mgmtPath: 'dedicated_mgmt',
+      secureElementPresent: true
+    });
+
+    const fresh = finalDefenseService.listRootResistantGateways(tenantId).find(g => g.gatewayId === 'gateway-heartbeat-stale');
+    expect(fresh?.gatewayOnline).toBe(true);
+    expect(fresh?.active).toBe(true);
+
+    // Backdate the heartbeat to 50s ago — beyond the PRD §4.4 trigger-#7 45s
+    // threshold but well inside the old (incorrect) 90s window. A compliant
+    // implementation must treat this gateway as stale.
+    const { getDatabase } = require('../../config/database');
+    const staleHeartbeat = new Date(Date.now() - 50_000).toISOString();
+    getDatabase().prepare(`UPDATE root_resistant_gateways SET last_heartbeat_at = ? WHERE gateway_id = ?`)
+      .run(staleHeartbeat, 'gateway-heartbeat-stale');
+
+    const staleStatus = finalDefenseService.listRootResistantGateways(tenantId).find(g => g.gatewayId === 'gateway-heartbeat-stale');
+    expect(staleStatus?.gatewayOnline).toBe(false);
+    expect(staleStatus?.degradedReasons).toEqual(expect.arrayContaining(['gateway_stale']));
+    expect(staleStatus?.active).toBe(false);
+  });
+
   it('blocks root-resistant high-risk actions until an external gateway is active', async () => {
     const tenantId = `tenant-root-action-${Date.now()}`;
     const companionId = `companion-root-action-${Date.now()}`;

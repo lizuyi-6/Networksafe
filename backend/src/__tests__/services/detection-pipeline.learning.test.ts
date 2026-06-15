@@ -277,4 +277,47 @@ describe('detectionPipelineService learning verification', () => {
     expect(decision.queuedForAsyncReview).toBe(false);
     expect(analyze).not.toHaveBeenCalled();
   });
+
+  it('flags a disagreement when cloud verification flips the primary verdict', async () => {
+    const analyze = jest.fn<Promise<DetectionAIResult>, any[]>()
+      .mockResolvedValueOnce({
+        verdict: 'suspicious',
+        confidence: 0.6,
+        reasoning: 'Local hot path treats this as borderline suspicious.',
+        attackFamily: 'ssrf',
+        routeMode: 'local_only',
+        model: 'local-hot-path'
+      })
+      .mockResolvedValueOnce({
+        verdict: 'malicious',
+        confidence: 0.95,
+        reasoning: 'Cloud verification flips to malicious — real SSRF metadata access.',
+        attackFamily: 'ssrf',
+        routeMode: 'cloud_only',
+        model: 'glm-5'
+      });
+
+    detectionPipelineService.setAiAnalyzer({ analyze });
+
+    await detectionPipelineService.evaluateRequest(buildRequest('http_api', {
+      requestId: 'disagreement-flip-1'
+    }));
+    await detectionPipelineService.drainAsyncReviewQueueForTests();
+
+    // Surfaces in stats (observability for the learning loop).
+    const stats = await detectionPipelineService.getAsyncReviewStats(tenantId);
+    expect(stats.completed).toBe(1);
+    expect(stats.disagreements).toBe(1);
+    expect(stats.disagreementRate).toBe(1);
+
+    // Persisted on the review row with structured detail for future training pairs.
+    const db = getDatabase();
+    const row = db.prepare(`SELECT disagreement, disagreement_json FROM sec_detection_async_reviews WHERE request_id = ?`).get('disagreement-flip-1') as any;
+    expect(row.disagreement).toBe(1);
+    const detail = JSON.parse(row.disagreement_json);
+    expect(detail.verdictDisagree).toBe(true);
+    expect(detail.primaryVerdict).toBe('suspicious');
+    expect(detail.verifiedVerdict).toBe('malicious');
+    expect(detail.flippedTo).toBe('malicious');
+  });
 });

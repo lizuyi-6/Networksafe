@@ -811,12 +811,18 @@ router.get('/:id/download', async (req: AuthenticatedRequest, res: Response) => 
   }
 });
 
-// --- ESP32 Deploy Bundle APIs ---
+// --- ESP32 Deploy Bundle APIs (LEGACY) ---
+// NOTE: ESP32 serial-deployer dongle hardware was retired 2026-06-13 and archived out of repo.
+// Active hardware is the AetherGuard Root-Resistant Gateway Appliance (STM32H5/U5, newline-JSON protocol).
+// These routes are retained for backward-compat: they filter by deviceType === 'esp32' / deviceId contains 'esp32'/'dongle'
+// at runtime and may still serve historically-registered legacy devices. Do not extend; new flows use the
+// Gateway Appliance newline-JSON protocol (see final-defense / device gateways).
 
 /**
- * GET /api/deployments/esp32-status
- * Query ESP32 dongle status (bundle cache state)
- * Uses DeviceGateway for real ESP32 hardware devices connected via WebSocket
+ * GET /api/deployments/esp32-status  (LEGACY)
+ * Query legacy ESP32 dongle status (bundle cache state).
+ * NOTE: AG:REQ serial protocol (USB-TTL) is archived; Gateway Appliance uses newline-delimited JSON.
+ * Uses DeviceGateway for any still-connected legacy ESP32 hardware devices via WebSocket.
  */
 router.get('/esp32-status', async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -858,9 +864,9 @@ router.get('/esp32-status', async (req: AuthenticatedRequest, res: Response) => 
 });
 
 /**
- * POST /api/deployments/esp32-execute
- * Trigger bundle deployment on a connected ESP32 device
- * Sends AG:REQ:DEPLOY command via DeviceGateway
+ * POST /api/deployments/esp32-execute  (LEGACY)
+ * Trigger bundle deployment on a connected legacy ESP32 device.
+ * Sends AG:REQ:DEPLOY command via DeviceGateway (AG:REQ protocol is archived; Gateway Appliance uses newline-JSON).
  */
 router.post('/esp32-execute', async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -927,7 +933,8 @@ router.post('/esp32-execute', async (req: AuthenticatedRequest, res: Response) =
 
 /**
  * POST /api/deployments/generate-bundle
- * Generate a deployment bundle as base64 for writing to ESP32
+ * Generate a deployment bundle as base64 for writing to a legacy ESP32 device (serial transfer).
+ * NOTE: ESP32 serial-deployer hardware is archived; Gateway Appliance uses newline-JSON.
  * Returns the full bundle content encoded for serial transfer
  */
 router.post('/generate-bundle', async (req: AuthenticatedRequest, res: Response) => {
