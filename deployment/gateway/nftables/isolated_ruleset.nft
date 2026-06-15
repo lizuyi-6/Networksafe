@@ -1,0 +1,70 @@
+#!/usr/sbin/nft -f
+#
+# AetherGuard Gateway Appliance: Isolated Ruleset
+#
+# Applied when bridge state is 'isolated' (default fail-closed).
+# SERVER <-> LAN/WAN forwarding is BLOCKED.
+# MGMT port remains reachable for appliance management.
+#
+# This ruleset is applied by the Gateway Daemon on:
+# - Boot (default isolated)
+# - Any fail-closed trigger (PRD §4.4: invalid sig, counter rollback,
+#   heartbeat stale, feedback mismatch, SE unavailable, etc.)
+# - Release window expiry
+# - Emergency stop
+#
+
+flush ruleset
+
+# Define interfaces (adjust to actual interface names on deployment)
+define SERVER = eth0
+define LANWAN = eth1
+define MGMT = eth2
+
+table inet filter {
+  chain input {
+    type filter hook input priority filter; policy drop;
+
+    # Allow loopback
+    iif lo accept
+
+    # Allow established/related
+    ct state established,related accept
+
+    # Allow MGMT port (appliance management, SSH, gateway daemon API)
+    iif $MGMT accept
+
+    # Allow ICMP (ping for diagnostics)
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+
+    # Log and drop everything else
+    log prefix "INPUT-DROP: "
+    drop
+  }
+
+  chain forward {
+    type filter hook forward priority filter; policy drop;
+
+    # ISOLATED: Block SERVER <-> LAN/WAN forwarding
+    # This is the core fail-closed enforcement.
+    iif $SERVER oif $LANWAN drop
+    iif $LANWAN oif $SERVER drop
+
+    # Allow MGMT <-> any (appliance can reach backend control plane)
+    iif $MGMT accept
+    oif $MGMT accept
+
+    # Log blocked attempts
+    log prefix "FORWARD-ISOLATED: "
+    drop
+  }
+
+  chain output {
+    type filter hook output priority filter; policy accept;
+    # Gateway daemon and system utilities can send traffic
+  }
+}
+
+# No NAT, no bridge netfilter in isolated mode.
+# The protected server is network-isolated from LAN/WAN.
