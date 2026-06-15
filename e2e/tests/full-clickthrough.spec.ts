@@ -300,6 +300,10 @@ test.describe('full clickthrough巡检', () => {
                     await expect(page.locator('main')).toContainText(/serial|串口|unsupported|not supported|不支持/i);
                 }
 
+                // LEGACY route coverage: /api/deployments/esp32-status is the retained legacy ESP32 serial-deployer
+                // route (archived hardware, 2026-06-13). It is kept for backward-compat with historically-registered
+                // devices; active hardware uses the Gateway Appliance newline-JSON protocol. Asserting the route still
+                // responds with { success: true } here exercises that legacy-compat surface.
                 const { payload } = await readJson(page.request, '/api/deployments/esp32-status');
                 expect(payload).toMatchObject({ success: true });
                 await page.getByTestId('deploy-start-over').click();

@@ -22,7 +22,8 @@ import {
     XCircle,
     UserCog,
     HardDriveDownload,
-    ScrollText
+    ScrollText,
+    Layers
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -50,6 +51,7 @@ import DeploymentWizard from './pages/DeploymentWizard';
 import Scanner from './pages/Scanner';
 import FixHistory from './pages/FixHistory';
 import SettingsPage from './pages/Settings';
+import MultiAgentTopology from './pages/MultiAgentTopology';
 import SuperAdmin from './pages/SuperAdmin';
 import AdminUsers from './pages/AdminUsers';
 import UserDetail from './pages/UserDetail';
@@ -206,6 +208,7 @@ const Sidebar = () => {
     const platformItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
         { icon: Users, label: t('nav.agents'), path: '/agents', badge: badges.agents > 0 ? badges.agents : undefined },
+    { icon: Layers, label: 'Cognition', path: '/cognition' },
         { icon: Brain, label: t('nav.agent_monitor'), path: '/agent-monitor', badge: badges.agentMonitor > 0 ? badges.agentMonitor : undefined },
         { icon: Network, label: t('nav.traffic_interceptor'), path: '/traffic', badge: badges.traffic > 0 ? badges.traffic : undefined },
         ...(attackSimEnabled ? [{ icon: Shield, label: t('nav.attack_simulator'), path: '/attack-sim' }] : []),
@@ -628,6 +631,7 @@ const AnimatedRoutes = () => {
                 {/* SECURITY FIX CVE-2026-012: Protected routes require authentication */}
                 <Route path="/dashboard" element={<PrivateRoute><PageWrapper><Dashboard /></PageWrapper></PrivateRoute>} />
                 <Route path="/agents" element={<PrivateRoute><PageWrapper><Agents /></PageWrapper></PrivateRoute>} />
+                <Route path="/cognition" element={<PrivateRoute><PageWrapper><MultiAgentTopology /></PageWrapper></PrivateRoute>} />
                 <Route path="/agent-monitor" element={<PrivateRoute><PageWrapper><AgentMonitor /></PageWrapper></PrivateRoute>} />
                 <Route path="/traffic" element={<PrivateRoute><PageWrapper><TrafficInterceptor /></PageWrapper></PrivateRoute>} />
                 <Route

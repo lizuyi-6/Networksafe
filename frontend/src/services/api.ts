@@ -1636,6 +1636,101 @@ export const suppressAlert = async (alertId: string) => {
 
 // --- Multi-Agent System API ---
 
+export interface MultiAgentLayerNode {
+    num: number;
+    key: string;
+    name: string;
+    enabled: boolean;
+    priority: number;
+    timeout: number;
+    maxConcurrency: number;
+    thinkingDepth?: 'shallow' | 'standard' | 'deep' | 'deliberative';
+    modelTier?: 'local' | 'cloud' | 'hybrid';
+    activation?: {
+        always?: boolean;
+        minRiskScore?: number;
+        maxPrimaryConfidence?: number;
+        minPrimaryConfidence?: number;
+        requiresDebateTrigger?: boolean;
+        requiresEscalation?: boolean;
+        attackFamilies?: string[];
+        requiresLayers?: number[];
+    };
+}
+
+export interface MultiAgentRoleNode {
+    role: string;
+    team: string;
+    color: string;
+    name: string;
+    position: string;
+    capabilities: string[];
+    layer: number;
+}
+
+export interface MultiAgentLayerTrace {
+    layer: number;
+    name: string;
+    activated: boolean;
+    thinkingDepth?: 'shallow' | 'standard' | 'deep' | 'deliberative';
+    modelTier?: 'local' | 'cloud' | 'hybrid';
+    latencyMs?: number;
+    note?: string;
+}
+
+export interface MultiAgentCascadeTraceEntry {
+    requestId: string;
+    verdict: string;
+    timestamp: string;
+    traces: MultiAgentLayerTrace[];
+}
+
+export interface MultiAgentTopology {
+    initialized: boolean;
+    experimentMode?: string;
+    primarySingleAgentRole?: string;
+    thresholds?: {
+        debateTrigger: number;
+        debateDivergence: number;
+        debateConfidenceRange: number;
+        cloudEscalation: number;
+        autoBlock: number;
+    };
+    models?: { local: string; cloud: string };
+    layers: MultiAgentLayerNode[];
+    roles: MultiAgentRoleNode[];
+    recentCascadeTraces?: MultiAgentCascadeTraceEntry[];
+    telemetry: {
+        orchestrator?: { activeTasks?: number; registeredAgents?: number } | null;
+        messageBus?: { queueSize?: number; subscriptionCount?: number; pendingRequests?: number } | null;
+        modelRouter?: { total?: number; local?: number; cloud?: number; localRatio?: number; avgLocalLatency?: number; avgCloudLatency?: number } | null;
+        synthesis?: { totalCaseFiles?: number; totalLessons?: number; totalPolicyUpdates?: number; topPatterns?: { pattern: string; frequency: number }[] } | null;
+        asyncReview?: {
+            queueDepth?: number;
+            completed?: number;
+            failed?: number;
+            disagreements?: number;
+            disagreementRate?: number;
+            debateCompletionRate?: number;
+            avgLatencyMs?: number;
+        } | null;
+        blockingDiscussion?: { count?: number; failClosed?: number; avgLatencyMs?: number } | null;
+        health?: { status?: string; details?: Record<string, string> } | null;
+        aiLayer?: { available?: boolean; degraded?: boolean; prepared?: boolean; mode?: string; message?: string } | null;
+    };
+}
+
+export const fetchMultiAgentTopology = async (signal?: AbortSignal): Promise<MultiAgentTopology | null> => {
+    try {
+        const response = await fetchWithCredentials(`${API_BASE_URL}/ai-system/agents/topology`, { signal });
+        if (!response.ok) throw new Error('Failed to fetch multi-agent topology');
+        return await response.json();
+    } catch (e) {
+        if (!isRequestAbortError(e)) console.error('Failed to fetch multi-agent topology:', e);
+        return null;
+    }
+};
+
 
 export const fetchAgentSystemStats = async (): Promise<MultiAgentSystemStats | null> => {
     try {
