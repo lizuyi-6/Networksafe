@@ -1,7 +1,7 @@
 # ADR: ESP32 Jumper-Prototype Wiring Baseline
 
 - Date: 2026-03-14
-- Status: Accepted
+- Status: Superseded (2026-06-13 — ESP32 serial deployment has been retired; the Gateway Appliance is the active hardware baseline. This ADR is retained for historical reference.)
 
 ## Context
 

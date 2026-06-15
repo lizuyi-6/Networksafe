@@ -159,6 +159,14 @@ hardware/kicad/**/*.bak
 # Rust fastpath build artifacts
 rust-fastpath/target/
 
+# Bundled third-party routing/JDK tooling inside archived KiCad trees
+# (freerouting installer + JRE — large, regenerable, must not be tracked)
+hardware/kicad/**/tools/freerouting/
+hardware/kicad/**/tools/jre*/
+hardware/kicad/**/*.msi
+hardware/kicad/**/*.jar
+hardware/kicad/**/tools/**/*.exe
+
 # Runtime SQLite database (test-data is reset by seed scripts)
 backend/test-data/*.db
 backend/test-data/*.db-journal
