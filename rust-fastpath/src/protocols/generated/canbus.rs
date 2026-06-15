@@ -39,7 +39,13 @@ impl ProtocolPlugin for CanbusModuleProtocolPlugin {
     }
 
     fn default_policy(&self) -> serde_json::Value {
-        json!({ "enabled": false, "blockDiagnosticFrames": true })
+        // Advertised policy MUST match evaluate()'s defaults. evaluate() defaults
+        // fail-closed: inspection ON (enabled: true) and diagnostic-frame blocking
+        // ON (blockDiagnosticFrames: true) unless an operator overrides them via
+        // request metadata. Advertising enabled:false here while executing with
+        // enabled:true would mislead operators who read /v1/protocols/policies
+        // into believing CAN inspection is off when it is not.
+        json!({ "enabled": true, "blockDiagnosticFrames": true })
     }
 
     fn empty_stats(&self) -> serde_json::Value {
@@ -75,29 +81,56 @@ impl ProtocolPlugin for CanbusModuleProtocolPlugin {
 
         let mut findings: Vec<ProtocolFinding> = Vec::new();
 
-        // Resolve the CAN identifier. Prefer explicit metadata, else decode the
-        // first 4 bytes of the base64 payload as a big-endian CAN id.
+        // Decode the base64 payload once. An empty payload with no metadata is a
+        // normal "no frame" probe (allow). But a non-empty payload that fails to
+        // base64-decode, or decodes to fewer than the 4 bytes needed for a CAN id,
+        // is a malformed/injection frame — fail-closed (block) rather than silently
+        // allowed. Previously such frames set can_id/dlc to None and skipped every
+        // check, emitting verdict "allow" — contradicting the malformed-frame intent.
+        let raw_payload = input.payload_base64.as_deref().unwrap_or("");
+        let decoded: Option<Vec<u8>> = if raw_payload.trim().is_empty() {
+            None
+        } else {
+            match BASE64_STANDARD.decode(raw_payload) {
+                Ok(b) => Some(b),
+                Err(_) => {
+                    findings.push(ProtocolFinding {
+                        code: "CAN_MALFORMED_FRAME".to_string(),
+                        severity: "high".to_string(),
+                        message: "CAN payload is not valid base64".to_string(),
+                        metadata: None,
+                    });
+                    None
+                }
+            }
+        };
+        let short_frame = decoded.as_ref().is_some_and(|b| b.len() < 4);
+        if short_frame {
+            findings.push(ProtocolFinding {
+                code: "CAN_MALFORMED_FRAME".to_string(),
+                severity: "high".to_string(),
+                message: format!(
+                    "CAN frame is {} bytes; a valid frame needs at least the 4-byte id",
+                    decoded.as_ref().map_or(0, |b| b.len())
+                ),
+                metadata: Some(json!({ "decodedBytes": decoded.as_ref().map_or(0, |b| b.len()) })),
+            });
+        }
+
+        // Resolve the CAN identifier. Prefer explicit metadata, else the decoded
+        // payload's first 4 bytes as a big-endian CAN id (only when fully decoded).
         let can_id = metadata_u64(input.metadata.as_ref(), "canId").or_else(|| {
-            let raw = input.payload_base64.as_deref().unwrap_or("");
-            if raw.trim().is_empty() {
-                return None;
-            }
-            let bytes = BASE64_STANDARD.decode(raw).ok()?;
-            if bytes.len() >= 4 {
-                Some(u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as u64)
-            } else {
-                None
-            }
+            decoded.as_ref().and_then(|bytes| {
+                if bytes.len() >= 4 {
+                    Some(u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as u64)
+                } else {
+                    None
+                }
+            })
         });
 
         let dlc = metadata_u64(input.metadata.as_ref(), "canDlc").or_else(|| {
-            input.payload_base64.as_deref().and_then(|raw| {
-                if raw.trim().is_empty() {
-                    None
-                } else {
-                    BASE64_STANDARD.decode(raw).ok().map(|b| b.len().saturating_sub(4) as u64)
-                }
-            })
+            decoded.as_ref().map(|bytes| bytes.len().saturating_sub(4) as u64)
         });
 
         if let (Some(id), Some(dlc)) = (can_id, dlc) {

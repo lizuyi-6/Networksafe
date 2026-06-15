@@ -1,8 +1,9 @@
+use serde::Serialize;
 use serde_json::Value;
 
 use crate::{ProtocolEvaluateRequest, ProtocolEvaluateResponse};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ProtocolPluginManifest {
     pub id: &'static str,
     pub display_name: &'static str,

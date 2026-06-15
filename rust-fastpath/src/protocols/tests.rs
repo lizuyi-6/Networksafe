@@ -159,3 +159,50 @@ fn canbus_block_diagnostic_false_allows_uds() {
     assert!(response.findings.iter().all(|f| f.code != "CAN_DIAGNOSTIC_FRAME"));
     assert_ne!(response.verdict, "block");
 }
+
+#[test]
+fn canbus_blocks_invalid_base64_payload() {
+    // A non-empty payload that is not valid base64 must NOT be silently allowed.
+    // Previously this set can_id/dlc to None, skipped every check, and emitted
+    // verdict "allow" — contradicting the malformed-frame intent.
+    let request = ProtocolEvaluateRequest {
+        tenant_id: "global".to_string(),
+        request_id: "can-bad-b64-1".to_string(),
+        protocol: "canbus".to_string(),
+        direction: None,
+        source_ref: None,
+        dest_ref: None,
+        channel: None,
+        headers: None,
+        metadata: None,
+        payload_base64: Some("!!!not-base64!!!".to_string()),
+        truncated: None,
+        timestamp: None,
+    };
+    let response = evaluate_protocol_request(&request).expect("evaluation");
+    assert!(response.findings.iter().any(|f| f.code == "CAN_MALFORMED_FRAME"));
+    assert_eq!(response.verdict, "block");
+}
+
+#[test]
+fn canbus_blocks_short_frame() {
+    // A decoded payload shorter than the 4-byte CAN id is a malformed frame.
+    let request = ProtocolEvaluateRequest {
+        tenant_id: "global".to_string(),
+        request_id: "can-short-1".to_string(),
+        protocol: "canbus".to_string(),
+        direction: None,
+        source_ref: None,
+        dest_ref: None,
+        channel: None,
+        headers: None,
+        metadata: None,
+        // base64 of 2 bytes — too short to carry a CAN id.
+        payload_base64: Some("AAA=".to_string()),
+        truncated: None,
+        timestamp: None,
+    };
+    let response = evaluate_protocol_request(&request).expect("evaluation");
+    assert!(response.findings.iter().any(|f| f.code == "CAN_MALFORMED_FRAME"));
+    assert_eq!(response.verdict, "block");
+}
