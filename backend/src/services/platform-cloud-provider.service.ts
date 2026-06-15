@@ -64,13 +64,17 @@ export class PlatformCloudClient {
     private readonly temperature: number = 0.2
   ) {}
 
-  async generateCompletion(prompt: string, modelOverride?: string): Promise<string> {
+  async generateCompletion(
+    prompt: string,
+    modelOverride?: string,
+    options?: { maxTokens?: number; temperature?: number }
+  ): Promise<string> {
     const messages: PlatformChatMessage[] = [];
     messages.push({ role: 'user', content: prompt });
     const model = modelOverride || this.model;
     const response = await invokePlatformCloudModel(model, messages, {
-      maxTokens: this.maxTokens,
-      temperature: this.temperature
+      maxTokens: options?.maxTokens ?? this.maxTokens,
+      temperature: options?.temperature ?? this.temperature
     });
     return response.content;
   }

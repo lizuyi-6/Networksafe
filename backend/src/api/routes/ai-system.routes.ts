@@ -20,6 +20,7 @@ import {
     getAgentSystem as getSharedAgentSystem
 } from '../../services/agent-system.service';
 import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
+import { sendSuccess, sendError } from '../../core/http/api-response';
 
 const router = Router();
 
@@ -265,7 +266,12 @@ router.get('/agents/topology', authenticate, async (req: Request, res: Response)
             logger.warn('Detection pipeline unavailable for agent topology; returning degraded telemetry', { error: error.message });
         }
 
-        res.json({
+        // Wrap in the repo's API envelope while preserving the raw shape at the
+        // top level via `legacy` — the existing frontend parses response.json()
+        // directly (reads layers/roles/telemetry at top level), so the legacy
+        // spread keeps it working AND adds success/data/error for future unified
+        // client + the check-frontend-api-contract guard.
+        const topology = {
             initialized: system?.isInitialized() ?? false,
             experimentMode: cfg?.experimentMode,
             primarySingleAgentRole: cfg?.primarySingleAgentRole,
@@ -285,10 +291,11 @@ router.get('/agents/topology', authenticate, async (req: Request, res: Response)
                 health: system?.getHealthStatus() ?? null,
                 aiLayer
             }
-        });
+        };
+        sendSuccess(res, topology, { legacy: topology });
     } catch (error: any) {
         logger.error('Failed to get agent topology:', { error: error.message });
-        res.status(500).json({ error: 'internal_error', message: error.message });
+        sendError(res, 500, { code: 'internal_error', message: 'Failed to get agent topology' });
     }
 });
 
@@ -302,7 +309,7 @@ router.post('/evaluation/owasp', authenticate, async (req: Request, res: Respons
         res.json(report);
     } catch (error: any) {
         logger.error('Failed to run OWASP web evaluation:', { error: error.message });
-        res.status(500).json({ error: 'evaluation_failed', message: error.message });
+        sendError(res, 500, { code: 'evaluation_failed', message: 'Failed to run OWASP web evaluation' });
     }
 });
 

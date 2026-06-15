@@ -17,13 +17,18 @@ export class ZhipuClient {
   /**
    * Generate completion using GLM model
    */
-  async generateCompletion(prompt: string, model: string = 'glm-4'): Promise<string> {
+  async generateCompletion(
+    prompt: string,
+    model: string = 'glm-4',
+    options?: { maxTokens?: number; temperature?: number }
+  ): Promise<string> {
     try {
       const response = await axios.post(
         `${this.baseURL}/v1/messages`,
         {
           model: model,
-          max_tokens: 2000,
+          max_tokens: options?.maxTokens ?? 2000,
+          ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
           messages: [
             {
               role: 'user',

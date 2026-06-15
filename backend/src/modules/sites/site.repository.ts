@@ -85,6 +85,8 @@ export async function getSiteForUser(id: string, role: string, tenantId?: string
 }
 
 export async function createSite(row: Omit<SiteRow, 'id'>): Promise<number | null> {
+  let authoritativeId: number | null = null;
+
   if (getDatabaseMode() === 'postgres') {
     const inserted = await postgresShadowStoreService.queryOne<{ id: number }>(`
       INSERT INTO sites (
@@ -107,14 +109,45 @@ export async function createSite(row: Omit<SiteRow, 'id'>): Promise<number | nul
       row.createdAt || new Date().toISOString(),
       row.updatedAt || new Date().toISOString()
     ]);
-
+    // Postgres is the source of truth — its id is what we return and what the
+    // SQLite fallback row must carry, so GET/PUT/DELETE (which read Postgres)
+    // resolve the same site the POST just created.
+    authoritativeId = inserted?.id ?? null;
     if (!shouldWriteSqliteFallback()) {
-      return inserted?.id ?? null;
+      return authoritativeId;
     }
   }
 
   if (shouldWriteSqliteFallback()) {
     const db = getDb();
+    if (getDatabaseMode() === 'postgres' && authoritativeId !== null) {
+      // Write the fallback row with the SAME id Postgres assigned, so the two
+      // stores agree. (Previously the SQLite AUTOINCREMENT id was returned and
+      // the Postgres id was lost — a later GET by id 404'd if sequences differed.)
+      db.prepare(`
+        INSERT OR REPLACE INTO sites (
+          id, domain, target, sslEnabled, tenant_id,
+          antiBotEnabled, rateLimitEnabled, concurrencyEnabled,
+          rateLimitRequests, concurrencyMax, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        authoritativeId,
+        row.domain,
+        row.target,
+        row.sslEnabled ? 1 : 0,
+        row.tenant_id || null,
+        row.antiBotEnabled ? 1 : 0,
+        row.rateLimitEnabled ? 1 : 0,
+        row.concurrencyEnabled ? 1 : 0,
+        row.rateLimitRequests || 60,
+        row.concurrencyMax || 5,
+        row.createdAt || new Date().toISOString(),
+        row.updatedAt || new Date().toISOString()
+      );
+      return authoritativeId;
+    }
+
+    // SQLite is the source of truth (mode === sqlite, or postgres-reads-from-sqlite).
     db.prepare(`
       INSERT INTO sites (
         domain, target, sslEnabled, tenant_id,
@@ -219,23 +252,39 @@ export async function updateSite(
 
 export async function deleteSiteForUser(id: string, role: string, tenantId?: string): Promise<number> {
   if (getDatabaseMode() === 'postgres') {
-    if (role === 'admin') {
-      const deleted = await postgresShadowStoreService.execute('DELETE FROM sites WHERE id = $1', [id]);
-      if (!shouldWriteSqliteFallback()) {
-        return deleted;
-      }
-    } else {
-      const deleted = await postgresShadowStoreService.execute('DELETE FROM sites WHERE id = $1 AND tenant_id = $2', [id, tenantId]);
-      if (!shouldWriteSqliteFallback()) {
-        return deleted;
+    // Postgres is the source of truth; the delete count comes from it.
+    const deleted = role === 'admin'
+      ? await postgresShadowStoreService.execute('DELETE FROM sites WHERE id = $1', [id])
+      : await postgresShadowStoreService.execute('DELETE FROM sites WHERE id = $1 AND tenant_id = $2', [id, tenantId]);
+    if (shouldWriteSqliteFallback()) {
+      // Mirror the delete into SQLite WITHOUT consulting getSiteForUser():
+      // getSiteForUser() may read from Postgres, which we just deleted from, so
+      // it would return null and wrongly skip the SQLite fallback delete —
+      // leaving a stale row in the fallback DB.
+      const db = getDb();
+      if (role === 'admin') {
+        db.prepare('DELETE FROM sites WHERE id = ?').run(id);
+      } else {
+        db.prepare('DELETE FROM sites WHERE id = ? AND tenant_id = ?').run(id, tenantId);
       }
     }
+    return deleted;
+  }
+
+  // SQLite-only mode. Avoid relying on .run().changes — its return shape differs
+  // between better-sqlite3 ({ changes }) and sql.js (no changes field), so a
+  // prior existence check (already tenant-scoped via getSiteForUser) reports an
+  // accurate count that is consistent across both drivers.
+  const existing = await getSiteForUser(id, role, tenantId);
+  if (!existing) {
+    return 0;
   }
 
   const db = getDb();
-  const result = (role === 'admin'
-    ? db.prepare('DELETE FROM sites WHERE id = ?').run(id)
-    : db.prepare('DELETE FROM sites WHERE id = ? AND tenant_id = ?').run(id, tenantId)) as unknown as { changes?: number };
-
-  return Number(result?.changes || 0);
+  if (role === 'admin') {
+    db.prepare('DELETE FROM sites WHERE id = ?').run(id);
+  } else {
+    db.prepare('DELETE FROM sites WHERE id = ? AND tenant_id = ?').run(id, tenantId);
+  }
+  return 1;
 }

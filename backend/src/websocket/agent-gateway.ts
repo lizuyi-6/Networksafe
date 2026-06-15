@@ -663,29 +663,29 @@ export class AgentGateway {
           }
         }
 
-        // Feature: Drive multi-agent metrics by injecting proportional completions based on traffic volume
+        // Broadcast real multi-agent telemetry (no synthetic injection). The
+        // previous implementation fabricated socrates/plato/aristotle heartbeats
+        // with Math.random(); dashboards now consume the actual orchestrator /
+        // message-bus / model-router / synthesis stats emitted by the live system.
         try {
           const aiSystem = getAgentSystem();
-          const processed = probeStats.packetsProcessed || 0;
-          if (aiSystem && (aiSystem as any).probeAgent && processed > 0) {
-            const roles = ['socrates', 'plato', 'aristotle'];
-            roles.forEach(role => {
-              const currentStates = (aiSystem as any).probeAgent.getAgentStates();
-              const state = currentStates.find((a: any) => a.role === role) || { agentId: `dummy-${role}`, tasksCompleted: 0 };
-
-              // Predictable random variation to simulate live metrics
-              (aiSystem as any).probeAgent.updateAgentHeartbeat({
-                agentId: state.agentId || `dummy-${role}`,
-                role: role as any,
-                tasksCompleted: state.tasksCompleted + Math.floor(processed / 10) + Math.floor(Math.random() * 2),
-                responseTime: Math.floor(Math.random() * 30) + 10,
-                memoryUsage: Math.floor(Math.random() * 50) + 80,
-                cpuUsage: Math.random() * 20 + 2
-              });
-            });
+          if (aiSystem && aiSystem.isInitialized()) {
+            // getStats() returns { orchestrator, messageBus, traceManager,
+            // modelRouter, synthesis } — spread at the top level so subscribers
+            // receive each subsystem directly (not nested under orchestrator).
+            const stats = (aiSystem as any).getStats?.() ?? {};
+            this.broadcastToDashboards('ai-system:stats', {
+              ...stats,
+              health: (aiSystem as any).getHealthStatus?.() ?? null,
+              recentCascadeTraces: (typeof (aiSystem as any).getRecentCascadeTraces === 'function'
+                ? (aiSystem as any).getRecentCascadeTraces()
+                : []),
+              source: 'agent-gateway',
+              timestamp: new Date().toISOString()
+            }, { tenantId: tenantContext.tenantId });
           }
         } catch (err: any) {
-          logger.warn('Failed to synthesize agent stat updates', { error: err.message });
+          logger.debug('Skipped ai-system stats broadcast', { error: err?.message });
         }
       }
 

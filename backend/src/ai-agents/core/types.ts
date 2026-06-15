@@ -333,6 +333,9 @@ export interface ModelRequest {
     sanitizationLevel: 'none' | 'basic' | 'aggressive';
     routeModeOverride?: AIRoutingMode;
     analysisPurpose?: AnalysisPurpose;
+    /** Per-call sampling override, typically derived from the calling layer's thinking depth. */
+    temperature?: number;
+    maxTokens?: number;
 }
 
 export interface ModelResponse {
@@ -461,6 +464,14 @@ export interface SecurityDecision {
     caseFileId: string;
     processingTime: number;
     layersActivated: number[];
+    /**
+     * Per-layer execution trace for the 7-layer cascade. Every layer appears once,
+     * marked activated/dormant with its thinking depth, model tier, step latency,
+     * and a short note describing what it did (or why it stayed dormant). This is
+     * the observable backbone that makes the Athens Academy a real, inspectable
+     * cascade rather than a flat pipeline.
+     */
+    cascadeTrace?: LayerTrace[];
     aggregatedDistribution?: VerdictDistribution;
     analysisResults?: AnalysisResult[];
     experimentMode?: ExperimentMode;
@@ -468,6 +479,16 @@ export interface SecurityDecision {
     routeMode?: AIRoutingMode | 'unknown';
     stageLatencies?: StageLatencyBreakdown;
     debateSession?: DebateSession;
+}
+
+export interface LayerTrace {
+    layer: number;
+    name: string;
+    activated: boolean;
+    thinkingDepth?: ThinkingDepth;
+    modelTier?: ModelTier;
+    latencyMs?: number;
+    note?: string;
 }
 
 // ============================================================================
@@ -515,4 +536,59 @@ export interface LayerConfig {
     priority: number;
     timeout: number;
     maxConcurrency: number;
+    /**
+     * How deeply this layer's agent team reasons. Maps to concrete model
+     * temperature / max-token budget via THINKING_DEPTH_PARAMS so each layer
+     * genuinely thinks at a different depth rather than being a relabeled stage.
+     */
+    thinkingDepth?: ThinkingDepth;
+    /**
+     * When this layer's team activates. A layer only fires when its activation
+     * condition holds against the accumulated cascade state (risk, confidence,
+     * debate trigger, escalation). Omitted = always-on foundation/synthesis.
+     */
+    activation?: LayerActivation;
+    /** Preferred model tier for this layer's team (local = fast/cheap, cloud = deep). */
+    modelTier?: ModelTier;
 }
+
+/**
+ * Reasoning depth per layer. Shallow = fast triage on the local model;
+ * deliberative = slow, high-token cloud reasoning reserved for the hardest
+ * calls. The seven layers span this spectrum so the system spends compute
+ * proportional to ambiguity and stakes.
+ */
+export type ThinkingDepth = 'shallow' | 'standard' | 'deep' | 'deliberative';
+
+/**
+ * Cascade activation condition for a layer's agent team.
+ */
+export interface LayerActivation {
+    /** Fire on every request (foundation / synthesis layers). */
+    always?: boolean;
+    /** Fire only when the upstream risk score is at least this high. */
+    minRiskScore?: number;
+    /** Fire when the primary-path confidence drops below this (uncertainty). */
+    maxPrimaryConfidence?: number;
+    /** Fire when the primary-path confidence is at least this (high-stakes). */
+    minPrimaryConfidence?: number;
+    /** Fire only when the debate trigger conditions are met (divergence / label conflict). */
+    requiresDebateTrigger?: boolean;
+    /** Fire only when the cloud-escalation threshold is reached. */
+    requiresEscalation?: boolean;
+    /** Restrict to specific attack families (empty/undefined = any). */
+    attackFamilies?: AttackFamily[];
+    /** Lower-layer numbers that must have activated first (cascade dependency). */
+    requiresLayers?: number[];
+}
+
+/**
+ * Concrete model sampling parameters for each thinking depth. Layers derive
+ * their temperature and token budget from this so depth is enforced, not cosmetic.
+ */
+export const THINKING_DEPTH_PARAMS: Record<ThinkingDepth, { temperature: number; maxTokens: number }> = {
+    shallow: { temperature: 0.1, maxTokens: 400 },
+    standard: { temperature: 0.3, maxTokens: 1000 },
+    deep: { temperature: 0.4, maxTokens: 2000 },
+    deliberative: { temperature: 0.5, maxTokens: 4000 }
+};
