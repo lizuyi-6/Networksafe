@@ -60,7 +60,7 @@
   "hardware": {
     "chipset": "芯片架构 v4.2",
     "title": "硬件信任根",
-    "description": "AetherGuard 的核心是 ESP32-S3 安全元件。这款专用微控制器主要负责密码学操作和密钥存储，与主应用处理器完全物理隔离。",
+    "description": "AetherGuard 的核心是 Gateway Appliance 安全授权控制器及其 Secure Element。这款专用安全控制器负责密码学操作和密钥存储，与主应用服务器完全物理隔离。",
     "aes": "硬件加速加密",
     "rsa": "安全启动验证",
     "trng": "真随机数发生器",
@@ -228,7 +228,15 @@
     "severity_level": "严重级别 {level}",
     "waiting_chart": "等待图表容器...",
     "unavailable": "控制台不可用",
-    "never_used_short": "从未使用"
+    "never_used_short": "从未使用",
+    "time_7d": "7 天",
+    "threat_intel": "威胁情报",
+    "security_ops": "安全运营",
+    "system_resources": "系统资源",
+    "tab_origins": "攻击来源",
+    "tab_vectors": "攻击向量",
+    "tab_rules": "活跃规则",
+    "tab_actions": "近期操作"
   },
   "pricing": {
     "title": "选择您的方案",
@@ -335,7 +343,8 @@
     "learning": "学习结果与模式沉淀",
     "no_patterns": "暂无综合模式",
     "no_patterns_desc": "案卷积累后，这里会展示高频归纳模式。",
-    "no_degradation": "当前未发现降级子系统。"
+    "no_degradation": "当前未发现降级子系统。",
+    "loadError": "智能体数据加载失败，请稍后重试"
   },
   "trafficInterceptor": {
     "title": "流量拦截器",
@@ -382,7 +391,8 @@
     "passed": "已通过检测链路",
     "deep_inspected": "已完成深度检查",
     "throughput": "累计吞吐量",
-    "no_active": "当前没有可供查看的活动连接"
+    "no_active": "当前没有可供查看的活动连接",
+    "loadError": "流量数据加载失败，请稍后重试"
   },
   "attackSimulator": {
     "title": "攻击模拟器",
@@ -932,11 +942,11 @@
     "invalid_profile": "配置无效",
     "failed_to_generate_bundle": "生成部署包失败",
     "device_gateway_unavailable": "设备网关不可用",
-    "no_esp32_connected": "没有 ESP32 设备连接",
-    "esp32_status_failed": "查询 ESP32 状态失败",
-    "esp32_not_found": "未找到 ESP32 设备",
+    "no_esp32_connected": "没有硬件设备连接",
+    "esp32_status_failed": "查询硬件设备状态失败",
+    "esp32_not_found": "未找到硬件设备",
     "deploy_command_sent": "部署命令已发送",
-    "esp32_execute_failed": "执行 ESP32 部署失败",
+    "esp32_execute_failed": "执行硬件部署失败",
     "cannot_modify_self_role": "不能修改自己的角色",
     "cannot_suspend_self": "不能封禁自己的账户",
     "cannot_remove_last_admin": "不能移除最后一个管理员角色",
@@ -1056,7 +1066,7 @@
     "back": "上一步",
     "next": "下一步",
     "download": "下载",
-    "subtitle": "部署 ESP32 网关"
+    "subtitle": "部署硬件网关"
   },
   "admin": {
     "clients_summary": "客户端概况",
@@ -1092,7 +1102,11 @@
     "save": "保存配置",
     "subtitle": "统一管理模型、AI 端点与系统配置项",
     "other": "其他设置",
-    "otherSubtitle": "保留系统级配置说明"
+    "otherSubtitle": "会话与系统偏好",
+    "liveRefreshDesc": "启用后，仪表盘和监控页面将自动轮询最新数据",
+    "logout": "退出登录",
+    "logoutDesc": "清除当前会话并返回登录页面",
+    "loggingOut": "正在退出..."
   },
   "sites": {
     "title": "站点管理",
@@ -1192,7 +1206,9 @@
     "confirm": "确认",
     "resolve": "解决",
     "suppress": "抑制",
-    "actionFailed": "操作失败"
+    "actionFailed": "操作失败",
+    "select": "选择此告警",
+    "deselect": "取消选择此告警"
   },
   "traffic": {
     "detail_title": "流量会话详情",
@@ -1335,24 +1351,24 @@
     "history_subtitle": "查看历史部署记录",
     "no_saved_configs": "暂无已保存的配置",
     "step4_write": "写入设备",
-    "step4_title": "将部署包写入 ESP32",
-    "step4_desc": "通过 USB 串口连接 ESP32 部署器，将部署包写入设备用于离线部署到封闭网络服务器。",
-    "serial_connected": "ESP32 已连接",
-    "serial_disconnected": "ESP32 未连接",
+    "step4_title": "将部署包写入硬件设备",
+    "step4_desc": "通过 USB 串口连接硬件部署器，将部署包写入设备用于离线部署到封闭网络服务器。",
+    "serial_connected": "硬件设备已连接",
+    "serial_disconnected": "硬件设备未连接",
     "serial_not_supported": "当前浏览器不支持 Web Serial API（请使用 Chrome 或 Edge）",
-    "connect_serial": "通过 USB 连接 ESP32",
+    "connect_serial": "通过 USB 连接硬件设备",
     "disconnect_serial": "断开连接",
-    "write_to_device": "写入部署包到 ESP32",
+    "write_to_device": "写入部署包到硬件设备",
     "writing_bundle": "正在写入...",
-    "serial_connect_failed": "连接 ESP32 失败",
-    "write_failed": "写入部署包到 ESP32 失败",
+    "serial_connect_failed": "连接硬件设备失败",
+    "write_failed": "写入部署包到硬件设备失败",
     "phase_generating": "正在生成部署包...",
     "phase_initiating": "正在初始化传输...",
-    "phase_transferring": "正在传输数据到 ESP32...",
+    "phase_transferring": "正在传输数据到硬件设备...",
     "phase_finalizing": "正在完成传输...",
     "phase_complete": "传输完成",
     "phase_error": "传输失败",
-    "write_success": "部署包已成功写入 ESP32。拔出设备并连接到目标服务器即可部署。",
+    "write_success": "部署包已成功写入硬件设备。拔出设备并连接到目标服务器即可部署。",
     "alternative_download": "备选方案：下载部署包",
     "alternative_download_desc": "下载自解压部署包文件，手动传输到目标服务器。",
     "save_first_hint": "请先保存配置以启用下载功能。",

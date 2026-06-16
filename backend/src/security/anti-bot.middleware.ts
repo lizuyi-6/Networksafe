@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../utils/uuid';
 import redisService from './redis.service';
 import logger from '../utils/logger';
 import { defaultConfig as config } from '../config';

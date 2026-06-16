@@ -4,6 +4,7 @@ use crate::{ProtocolCostMetrics, ProtocolEvaluateRequest, ProtocolEvaluateRespon
 
 use super::traits::ProtocolPlugin;
 
+#[allow(dead_code)]
 pub struct TemplateProtocolPlugin;
 
 impl ProtocolPlugin for TemplateProtocolPlugin {

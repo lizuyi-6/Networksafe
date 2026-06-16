@@ -285,7 +285,7 @@ describe('normalizeSeverity', () => {
 
   it('handles null/undefined', () => {
     expect(normalizeSeverity(null as any)).toBe('medium');
-    expect(normalizeSeverity(undefined)).toBe('medium');
+    expect(normalizeSeverity(undefined as any)).toBe('medium');
   });
 
   it('handles numeric input', () => {

@@ -77,8 +77,9 @@ describe('ExecutionMonitor', () => {
     const executePromise = monitor.execute('systemctl start nginx');
 
     // Simulate process completion
-    if (closeCallback) {
-      closeCallback(0);
+    const cb = closeCallback as ((code: number) => void) | null;
+    if (cb) {
+      cb(0);
     }
 
     const result = await executePromise;

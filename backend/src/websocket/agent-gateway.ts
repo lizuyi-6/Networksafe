@@ -53,11 +53,83 @@ const MAX_REQUESTS_PER_WINDOW = 100;
 const USER_RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_USER_REQUESTS_PER_WINDOW = 150; // Slightly higher than per-socket limit
 
+/**
+ * SECURITY (Sprint 5 Wave 2 · F5): per-agent-event rate limits. Each
+ * inbound agent event has its own budget so a noisy emitter on one
+ * channel (e.g. traffic_stats) cannot drown out a critical channel
+ * (e.g. threat). The composite key is .
+ */
+const AGENT_EVENT_LIMITS: Record<string, number> = {
+  'agent:heartbeat': 100,
+  'agent:traffic_stats': 200,
+  'agent:threat': 30,
+  'agent:scan_result': 30,
+  'agent:command_ack': 30,
+  'agent:command_failed': 30,
+  'agent:log': 60,
+  'agent:review_sample': 60
+};
+
 function isDetectionBootstrapError(error: any): boolean {
   const message = String(error?.message || '').toLowerCase();
   return message.includes('database not initialized')
     || message.includes('call initdatabase() first')
     || message.includes('detection pipeline storage not initialized');
+}
+
+/**
+ * SECURITY (Sprint 5 Wave 2 · F5): enforce a per-agent-event rate limit
+ * for one of the 8 inbound agent events. Returns true when the event is
+ * allowed to proceed, false when it was rate-limited (in which case the
+ * socket has already been sent a  frame and a
+ * tamper-evident audit row recorded).
+ */
+async function enforceAgentEventRateLimit(
+  socket: Socket,
+  agentId: string,
+  eventName: string,
+  tenantId: string
+): Promise<boolean> {
+  const limit = AGENT_EVENT_LIMITS[eventName];
+  if (!limit) {
+    return true; // event has no per-event budget configured
+  }
+  const result = await socketRateLimitService.check({
+    tenantId,
+    key: `agent-event:${agentId}:${eventName}`,
+    windowMs: RATE_LIMIT_WINDOW,
+    limit,
+    sourceIp: socket.handshake.address,
+    sessionId: socket.id,
+    headers: socket.handshake.headers as Record<string, any>,
+    protocol: 'ws-agent'
+  });
+  if (!result.allowed) {
+    socket.emit('rate_limit_exceeded', {
+      event: eventName,
+      limit,
+      windowMs: RATE_LIMIT_WINDOW,
+      retryAfterMs: Math.max(0, (result.resetAtMs || 0) - Date.now()),
+      remaining: result.remaining ?? 0
+    });
+    auditLogger.log({
+      eventType: 'rate_limit_exceeded',
+      category: 'agent',
+      severity: 'warning',
+      actor: { type: 'agent', id: agentId },
+      action: "agent_event_rate_limit",
+      details: {
+        event: eventName,
+        limit,
+        windowMs: RATE_LIMIT_WINDOW,
+        decisionSource: result.decisionSource,
+        riskFlags: result.riskFlags
+      },
+      status: 'failure'
+    });
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -195,6 +267,15 @@ export class AgentGateway {
   private agents: Map<string, ConnectedAgent> = new Map();
   private dashboardClients: Map<string, DashboardClient> = new Map();
   private testOnlineCounter = 0;
+  // SECURITY FIX D22: per-IP connection cap using Set<socketId> rather
+  // than a counter, so two concurrent connects cannot both read
+  // count=N and both pass the threshold check (TOCTOU). The set is
+  // keyed by socket.id so disconnect cleanly removes the entry.
+  private ipConnectionCounts: Map<string, Set<string>> = new Map();
+  // SECURITY: the per-IP cap. A single source IP should never open
+  // more than 10 simultaneous sockets to the gateway — a higher number
+  // is either a misconfigured client (loop) or a credential-spray attempt.
+  public static readonly MAX_CONNECTIONS_PER_IP = 10;
 
   /**
    * Broadcast audit log to dashboard clients
@@ -210,7 +291,12 @@ export class AgentGateway {
         methods: ['GET', 'POST'],
         credentials: true
       },
-      maxHttpBufferSize: 1e6 // 1MB
+      maxHttpBufferSize: 1e6, // 1MB
+      // SECURITY FIX: Disable per-message deflate to prevent zip-bomb attacks via
+      // crafted compressed WebSocket frames. With maxHttpBufferSize=1MB the
+      // decompressed stream is already capped, but explicit perMessageDeflate:false
+      // prevents a future regression if the buffer size is ever increased.
+      perMessageDeflate: false
     });
 
     this.setupAuthentication();
@@ -226,6 +312,28 @@ export class AgentGateway {
     this.io.use(async (socket, next) => {
       const clientType = socket.handshake.auth.type || 'dashboard';
       const clientIp = socket.handshake.address;
+
+      // SECURITY FIX D22: per-IP connection cap. Use Set<socketId> so
+      // two simultaneous connects from the same IP cannot both read
+      // size=N and both pass the threshold check. The set is keyed
+      // by socket.id which is unique per connection.
+      if (!this.ipConnectionCounts.has(clientIp)) {
+        this.ipConnectionCounts.set(clientIp, new Set());
+      }
+      const ipSet = this.ipConnectionCounts.get(clientIp)!;
+      if (ipSet.size >= AgentGateway.MAX_CONNECTIONS_PER_IP) {
+        return next(new Error('backend.too_many_connections_from_ip'));
+      }
+      ipSet.add(socket.id);
+      // Register a one-time cleanup so disconnect is reliable
+      // even if the auth flow rejects the connection later.
+      socket.once('disconnect', () => {
+        const s = this.ipConnectionCounts.get(clientIp);
+        if (s) {
+          s.delete(socket.id);
+          if (s.size === 0) this.ipConnectionCounts.delete(clientIp);
+        }
+      });
 
       try {
         if (isTestRuntime()) {
@@ -482,6 +590,7 @@ export class AgentGateway {
     // Heartbeat handler
     // SECURITY FIX CVE-2026-201: Validate heartbeat comes from authenticated agent
     socket.on('agent:heartbeat', async (status: AgentStatus) => {
+      if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:heartbeat', tenantContext.tenantId))) return;
       const validatedStatus = validateAgentHeartbeatPayload(status);
       if (!validatedStatus) {
         socket.emit('error', { message: 'backend.invalid_agent_heartbeat_payload', reason: 'invalid_payload' });
@@ -529,6 +638,7 @@ export class AgentGateway {
 
     // Traffic stats handler (added for real data loop)
     socket.on('agent:traffic_stats', async (data: { agentId: string, stats: any, timestamp: string }) => {
+      if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:traffic_stats', tenantContext.tenantId))) return;
       if (data?.agentId && data.agentId !== agent.agentId) return;
 
       const globalStats = getTrafficStats();
@@ -553,29 +663,29 @@ export class AgentGateway {
           }
         }
 
-        // Feature: Drive multi-agent metrics by injecting proportional completions based on traffic volume
+        // Broadcast real multi-agent telemetry (no synthetic injection). The
+        // previous implementation fabricated socrates/plato/aristotle heartbeats
+        // with Math.random(); dashboards now consume the actual orchestrator /
+        // message-bus / model-router / synthesis stats emitted by the live system.
         try {
           const aiSystem = getAgentSystem();
-          const processed = probeStats.packetsProcessed || 0;
-          if (aiSystem && (aiSystem as any).probeAgent && processed > 0) {
-            const roles = ['socrates', 'plato', 'aristotle'];
-            roles.forEach(role => {
-              const currentStates = (aiSystem as any).probeAgent.getAgentStates();
-              const state = currentStates.find((a: any) => a.role === role) || { agentId: `dummy-${role}`, tasksCompleted: 0 };
-
-              // Predictable random variation to simulate live metrics
-              (aiSystem as any).probeAgent.updateAgentHeartbeat({
-                agentId: state.agentId || `dummy-${role}`,
-                role: role as any,
-                tasksCompleted: state.tasksCompleted + Math.floor(processed / 10) + Math.floor(Math.random() * 2),
-                responseTime: Math.floor(Math.random() * 30) + 10,
-                memoryUsage: Math.floor(Math.random() * 50) + 80,
-                cpuUsage: Math.random() * 20 + 2
-              });
-            });
+          if (aiSystem && aiSystem.isInitialized()) {
+            // getStats() returns { orchestrator, messageBus, traceManager,
+            // modelRouter, synthesis } — spread at the top level so subscribers
+            // receive each subsystem directly (not nested under orchestrator).
+            const stats = (aiSystem as any).getStats?.() ?? {};
+            this.broadcastToDashboards('ai-system:stats', {
+              ...stats,
+              health: (aiSystem as any).getHealthStatus?.() ?? null,
+              recentCascadeTraces: (typeof (aiSystem as any).getRecentCascadeTraces === 'function'
+                ? (aiSystem as any).getRecentCascadeTraces()
+                : []),
+              source: 'agent-gateway',
+              timestamp: new Date().toISOString()
+            }, { tenantId: tenantContext.tenantId });
           }
         } catch (err: any) {
-          logger.warn('Failed to synthesize agent stat updates', { error: err.message });
+          logger.debug('Skipped ai-system stats broadcast', { error: err?.message });
         }
       }
 
@@ -588,6 +698,7 @@ export class AgentGateway {
 
     // Threat alert handler
     socket.on('agent:threat', async (data: { threat: ThreatAlert }) => {
+      if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:threat', tenantContext.tenantId))) return;
       const threat = data?.threat;
       if (!threat || typeof threat !== 'object') {
         socket.emit('error', { message: 'backend.invalid_threat_payload', reason: 'invalid_payload' });
@@ -636,6 +747,7 @@ export class AgentGateway {
     });
 
     socket.on('agent:review_sample', async (data: { sample?: Record<string, any>; timestamp?: string }) => {
+      if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:review_sample', tenantContext.tenantId))) return;
       const sample = data?.sample;
       if (!sample || typeof sample !== 'object') {
         socket.emit('error', { message: 'backend.invalid_review_sample_payload', reason: 'invalid_payload' });
@@ -694,6 +806,7 @@ export class AgentGateway {
 
     // Scan result handler
     socket.on('agent:scan_result', async (data: any) => {
+      if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:scan_result', tenantContext.tenantId))) return;
       await auditLogger.log({
         eventType: 'scan_completed',
         category: 'agent',
@@ -712,7 +825,8 @@ export class AgentGateway {
     });
 
     // Agent log handler
-    socket.on('agent:log', (data: any) => {
+    socket.on('agent:log', async (data: any) => {
+      if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:log', tenantContext.tenantId))) return;
       this.broadcastToDashboards('agent:log', {
         agentId: agent.agentId,
         ...data,
@@ -721,6 +835,7 @@ export class AgentGateway {
     });
 
     socket.on('agent:command_ack', async (data: any) => {
+      if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:command_ack', tenantContext.tenantId))) return;
       await auditLogger.log({
         eventType: 'command_ack',
         category: 'agent',
@@ -739,6 +854,7 @@ export class AgentGateway {
     });
 
     socket.on('agent:command_failed', async (data: any) => {
+      if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:command_failed', tenantContext.tenantId))) return;
       await auditLogger.log({
         eventType: 'command_failed',
         category: 'agent',

@@ -43,7 +43,8 @@ export { TraceContextManager, traceContextManager } from './tracing/trace-contex
 export { ToolExecutor, toolExecutor } from './capabilities/tool-executor';
 export { ModelRouter, modelRouter } from './models/model-router';
 export { SynthesisEngine, synthesisEngine } from './synthesis/synthesis-engine';
-export { ProbeAgent, ProbeReport, AgentHeartbeat, SystemMetrics, ProbeAlert, ProbeConfig } from './monitoring/probe-agent';
+export { ProbeAgent } from './monitoring/probe-agent';
+export type { ProbeReport, AgentHeartbeat, SystemMetrics, ProbeAlert, ProbeConfig } from './monitoring/probe-agent';
 
 const DEFAULT_CONFIG: MultiAgentConfig = {
     enabled: true,
@@ -52,13 +53,13 @@ const DEFAULT_CONFIG: MultiAgentConfig = {
     heuristicOnly: false,
     useIsolatedBus: false,
     layers: {
-        l1_collaboration: { enabled: true, priority: 1, timeout: 5000, maxConcurrency: 10 },
-        l2_rolePlaying: { enabled: true, priority: 2, timeout: 10000, maxConcurrency: 3 },
-        l3_sceneTraversal: { enabled: true, priority: 3, timeout: 5000, maxConcurrency: 5 },
-        l4_capability: { enabled: true, priority: 4, timeout: 30000, maxConcurrency: 5 },
-        l5_debate: { enabled: true, priority: 5, timeout: 60000, maxConcurrency: 3 },
-        l6_heterogeneous: { enabled: true, priority: 6, timeout: 30000, maxConcurrency: 10 },
-        l7_synthesis: { enabled: true, priority: 7, timeout: 5000, maxConcurrency: 5 }
+        l1_collaboration: { enabled: true, priority: 1, timeout: 5000, maxConcurrency: 10, thinkingDepth: 'shallow', modelTier: 'local', activation: { always: true } },
+        l2_rolePlaying: { enabled: true, priority: 2, timeout: 10000, maxConcurrency: 3, thinkingDepth: 'standard', modelTier: 'local', activation: { requiresLayers: [1] } },
+        l3_sceneTraversal: { enabled: true, priority: 3, timeout: 5000, maxConcurrency: 5, thinkingDepth: 'standard', activation: { requiresLayers: [2], minRiskScore: 0.4 } },
+        l4_capability: { enabled: true, priority: 4, timeout: 30000, maxConcurrency: 5, thinkingDepth: 'standard', activation: { requiresLayers: [2], minRiskScore: 0.6 } },
+        l5_debate: { enabled: true, priority: 5, timeout: 60000, maxConcurrency: 3, thinkingDepth: 'deep', modelTier: 'cloud', activation: { requiresLayers: [2], requiresDebateTrigger: true } },
+        l6_heterogeneous: { enabled: true, priority: 6, timeout: 30000, maxConcurrency: 10, thinkingDepth: 'deliberative', modelTier: 'cloud', activation: { requiresLayers: [2], requiresEscalation: true } },
+        l7_synthesis: { enabled: true, priority: 7, timeout: 5000, maxConcurrency: 5, thinkingDepth: 'standard', activation: { always: true } }
     },
     models: {
         local: {
@@ -90,6 +91,39 @@ const DEFAULT_CONFIG: MultiAgentConfig = {
     }
 };
 
+// Deep-merge nested config maps (layers/models/thresholds/timeouts) so a caller
+// passing a partial `layers`/`models` override does not replace the default and
+// silently drop fields like `activation` (which would make gating always-on).
+function mergeMultiAgentConfig(
+    defaults: MultiAgentConfig,
+    override: Partial<MultiAgentConfig>
+): MultiAgentConfig {
+    const merged: MultiAgentConfig = { ...defaults, ...override };
+    if (override.layers) {
+        const defaultLayers = defaults.layers;
+        merged.layers = { ...defaultLayers };
+        for (const key of Object.keys(override.layers) as Array<keyof typeof defaultLayers>) {
+            const partial = override.layers[key];
+            if (partial) {
+                merged.layers[key] = { ...defaultLayers[key], ...partial };
+            }
+        }
+    }
+    if (override.models) {
+        merged.models = {
+            local: { ...defaults.models.local, ...override.models.local },
+            cloud: { ...defaults.models.cloud, ...override.models.cloud }
+        };
+    }
+    if (override.thresholds) {
+        merged.thresholds = { ...defaults.thresholds, ...override.thresholds };
+    }
+    if (override.timeouts) {
+        merged.timeouts = { ...defaults.timeouts, ...override.timeouts };
+    }
+    return merged;
+}
+
 export class MultiAgentDecisionSystem {
     private config: MultiAgentConfig;
     private orchestrator: AgentOrchestrator;
@@ -104,7 +138,7 @@ export class MultiAgentDecisionSystem {
     private probeReportCallback: ((report: ProbeReport) => void) | null = null;
 
     constructor(config: Partial<MultiAgentConfig> = {}) {
-        this.config = { ...DEFAULT_CONFIG, ...config };
+        this.config = mergeMultiAgentConfig(DEFAULT_CONFIG, config);
         this.messageBus = this.config.useIsolatedBus ? new MessageBus() : globalMessageBus;
         this.orchestrator = new AgentOrchestrator(this.config, this.messageBus);
         this.debateProtocol = new DebateProtocol(this.messageBus);
@@ -294,6 +328,10 @@ export class MultiAgentDecisionSystem {
 
     getHealthStatus(): { status: 'healthy' | 'degraded' | 'unhealthy'; details: Record<string, string> } {
         return this.probeAgent.getHealthStatus();
+    }
+
+    getRecentCascadeTraces(): ReturnType<AgentOrchestrator['getRecentCascadeTraces']> {
+        return this.orchestrator.getRecentCascadeTraces();
     }
 
     getStats(): {

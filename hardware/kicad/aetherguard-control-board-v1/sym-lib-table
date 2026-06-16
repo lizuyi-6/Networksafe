@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name "aetherguard-control-board-v1") (type "KiCad") (uri "${KIPRJMOD}/aetherguard-control-board-v1.kicad_sym") (options "") (descr "Local project symbols"))
-)

@@ -4,7 +4,9 @@ import { posix as pathPosix } from 'path';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
 import { InputValidator } from '../../security/input-validator';
 import auditLogger from '../../security/audit-logger.service';
+import { sendError, sendSuccess } from '../../core/http/api-response';
 import { DeploymentTarget } from '../../services/platform-config.service';
+import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import {
   getDeploymentProfile,
   getNextDeploymentProfileVersion,
@@ -809,12 +811,18 @@ router.get('/:id/download', async (req: AuthenticatedRequest, res: Response) => 
   }
 });
 
-// --- ESP32 Deploy Bundle APIs ---
+// --- ESP32 Deploy Bundle APIs (LEGACY) ---
+// NOTE: ESP32 serial-deployer dongle hardware was retired 2026-06-13 and archived out of repo.
+// Active hardware is the AetherGuard Root-Resistant Gateway Appliance (STM32H5/U5, newline-JSON protocol).
+// These routes are retained for backward-compat: they filter by deviceType === 'esp32' / deviceId contains 'esp32'/'dongle'
+// at runtime and may still serve historically-registered legacy devices. Do not extend; new flows use the
+// Gateway Appliance newline-JSON protocol (see final-defense / device gateways).
 
 /**
- * GET /api/deployments/esp32-status
- * Query ESP32 dongle status (bundle cache state)
- * Uses DeviceGateway for real ESP32 hardware devices connected via WebSocket
+ * GET /api/deployments/esp32-status  (LEGACY)
+ * Query legacy ESP32 dongle status (bundle cache state).
+ * NOTE: AG:REQ serial protocol (USB-TTL) is archived; Gateway Appliance uses newline-delimited JSON.
+ * Uses DeviceGateway for any still-connected legacy ESP32 hardware devices via WebSocket.
  */
 router.get('/esp32-status', async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -856,9 +864,9 @@ router.get('/esp32-status', async (req: AuthenticatedRequest, res: Response) => 
 });
 
 /**
- * POST /api/deployments/esp32-execute
- * Trigger bundle deployment on a connected ESP32 device
- * Sends AG:REQ:DEPLOY command via DeviceGateway
+ * POST /api/deployments/esp32-execute  (LEGACY)
+ * Trigger bundle deployment on a connected legacy ESP32 device.
+ * Sends AG:REQ:DEPLOY command via DeviceGateway (AG:REQ protocol is archived; Gateway Appliance uses newline-JSON).
  */
 router.post('/esp32-execute', async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -867,7 +875,7 @@ router.post('/esp32-execute', async (req: AuthenticatedRequest, res: Response) =
     const { getDeviceGateway } = await import('../../index');
     const gateway = getDeviceGateway();
     if (!gateway) {
-      return res.status(503).json({ success: false, error: 'backend.device_gateway_unavailable' });
+      return sendError(res, 503, { code: 'DEVICE_GATEWAY_UNAVAILABLE', message: 'backend.device_gateway_unavailable' });
     }
 
     // Find target device
@@ -881,24 +889,52 @@ router.post('/esp32-execute', async (req: AuthenticatedRequest, res: Response) =
         );
 
     if (!targetDevice) {
-      return res.status(404).json({ success: false, error: 'backend.esp32_not_found' });
+      return sendError(res, 404, { code: 'ESP32_NOT_FOUND', message: 'backend.esp32_not_found' });
     }
 
-    // Send deploy command to ESP32
-    await gateway.sendCommand(targetDevice.deviceId, 'DEPLOY_BUNDLE', {});
-    return res.json({
-      success: true,
-      message: 'backend.deploy_command_sent',
-      deviceId: targetDevice.deviceId
+    const result = await commandDispatcherService.dispatchDeviceCommand({
+      deviceId: targetDevice.deviceId,
+      commandType: 'deploy_bundle',
+      payload: {},
+      actor: {
+        tenantId: tenantOf(req),
+        userId: req.user?.userId || 'unknown',
+        email: req.user?.email,
+        ip: req.ip
+      }
+    });
+
+    if (!result.success && result.status === 'failed') {
+      return sendError(res, result.reason === 'hardware_gate_unavailable' ? 503 : 400, {
+        code: String(result.reason || 'ESP32_EXECUTE_FAILED').replace(/[^A-Za-z0-9]+/g, '_').toUpperCase(),
+        message: result.message
+      });
+    }
+
+    return sendSuccess(res, {
+      message: result.message || 'backend.deploy_command_sent',
+      deviceId: targetDevice.deviceId,
+      status: result.status,
+      actionId: result.actionId,
+      confirmationSessionId: result.confirmationSessionId || null
+    }, {
+      legacy: {
+        message: result.message || 'backend.deploy_command_sent',
+        deviceId: targetDevice.deviceId,
+        status: result.status,
+        actionId: result.actionId,
+        confirmationSessionId: result.confirmationSessionId || null
+      }
     });
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error?.message || 'backend.esp32_execute_failed' });
+    return sendError(res, 500, { code: 'ESP32_EXECUTE_FAILED', message: error?.message || 'backend.esp32_execute_failed' });
   }
 });
 
 /**
  * POST /api/deployments/generate-bundle
- * Generate a deployment bundle as base64 for writing to ESP32
+ * Generate a deployment bundle as base64 for writing to a legacy ESP32 device (serial transfer).
+ * NOTE: ESP32 serial-deployer hardware is archived; Gateway Appliance uses newline-JSON.
  * Returns the full bundle content encoded for serial transfer
  */
 router.post('/generate-bundle', async (req: AuthenticatedRequest, res: Response) => {

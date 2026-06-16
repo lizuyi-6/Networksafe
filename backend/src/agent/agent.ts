@@ -22,12 +22,15 @@ import logger from '../utils/logger';
 import { TrafficMonitor } from './traffic-monitor';
 import { AgentReviewSample, AttackDetector } from './attack-detector';
 import { FirewallController } from './firewall-controller';
+import { classifyCommandRisk } from '../security/command-risk-policy';
+import { hashPayload, verifyHardwareGrantSignature } from '../security/hardware-grant';
 
 export interface AgentConfig {
     serverUrl: string;       // 中央管控平台地址
     agentId?: string;        // Agent 唯一标识 (服务端生成)
     apiKey?: string;         // API Key (服务端生成)
     secretKey?: string;      // Secret Key for command verification (服务端生成)
+    hardwareGatePublicKey?: string;
     heartbeatInterval?: number; // 心跳间隔 (ms)
 }
 
@@ -65,6 +68,7 @@ export class Agent {
     private attackDetector: AttackDetector;
     private firewallController: FirewallController;
     private usedNonces: Set<string> = new Set();
+    private hardwareGatePublicKey?: string;
 
     // Local traffic accumulators
     private localTrafficStats = {
@@ -100,6 +104,7 @@ export class Agent {
         this.trafficMonitor = new TrafficMonitor();
         this.attackDetector = new AttackDetector();
         this.firewallController = new FirewallController();
+        this.hardwareGatePublicKey = config.hardwareGatePublicKey || process.env.AETHERGUARD_HARDWARE_GATE_PUBLIC_KEY || process.env.AETHERGUARD_HARDWARE_GATE_PUBLIC_KEY_PEM;
     }
 
     /**
@@ -367,6 +372,75 @@ export class Agent {
         this.usedNonces.add(command.nonce);
         setTimeout(() => this.usedNonces.delete(command.nonce), 10 * 60 * 1000);
 
+        const riskClass = classifyCommandRisk(command.type);
+        if (riskClass === 'physical_confirmation_required') {
+            const hardwareGrant = metadata?.hardwareGrant;
+            if (!hardwareGrant) {
+                logger.error('Physical command rejected - missing hardware grant', { commandType: command.type });
+                return;
+            }
+
+            if (!this.hardwareGatePublicKey) {
+                logger.error('Physical command rejected - hardware gate public key not configured', { commandType: command.type });
+                return;
+            }
+
+            const grantPayload: any = {
+                gateId: String(hardwareGrant.gateId || ''),
+                sessionId: String(hardwareGrant.sessionId || ''),
+                actionId: String(hardwareGrant.actionId || ''),
+                tenantId: String(hardwareGrant.tenantId || metadata?.tenantId || ''),
+                scope: String(hardwareGrant.scope || ''),
+                targetId: String(hardwareGrant.targetId || this.agentId || ''),
+                commandType: String(hardwareGrant.commandType || command.type),
+                payloadHash: String(hardwareGrant.payloadHash || ''),
+                policyDigest: String(hardwareGrant.policyDigest || ''),
+                challenge: String(hardwareGrant.challenge || ''),
+                breakerTarget: String(hardwareGrant.breakerTarget || ''),
+                interlockAction: String(hardwareGrant.interlockAction || ''),
+                issuedAt: String(hardwareGrant.issuedAt || ''),
+                expiresAt: String(hardwareGrant.expiresAt || ''),
+                monotonicCounter: Number(hardwareGrant.monotonicCounter || 0),
+                signature: String(hardwareGrant.signature || ''),
+                algorithm: String(hardwareGrant.algorithm || 'ECDSA_P256_SHA256')
+            };
+
+            if (!verifyHardwareGrantSignature(this.hardwareGatePublicKey, grantPayload)) {
+                logger.error('Physical command rejected - invalid hardware grant signature', {
+                    commandType: command.type,
+                    actionId: grantPayload.actionId
+                });
+                return;
+            }
+
+            if (grantPayload.actionId !== String(metadata?.actionId || command.payload?.actionId || '')) {
+                logger.error('Physical command rejected - actionId mismatch', {
+                    commandType: command.type,
+                    actionId: grantPayload.actionId
+                });
+                return;
+            }
+
+            const commandPayloadForGrant = { ...(command.payload || {}) };
+            delete commandPayloadForGrant.actionId;
+            const expectedPayloadHash = hashPayload(commandPayloadForGrant);
+            if (expectedPayloadHash !== grantPayload.payloadHash) {
+                logger.error('Physical command rejected - payload hash mismatch', {
+                    commandType: command.type,
+                    actionId: grantPayload.actionId
+                });
+                return;
+            }
+
+            if (Date.now() > new Date(grantPayload.expiresAt).getTime()) {
+                logger.error('Physical command rejected - grant expired', {
+                    commandType: command.type,
+                    actionId: grantPayload.actionId
+                });
+                return;
+            }
+        }
+
         // All security checks passed - execute command
         logger.info(`Executing verified command: ${command.type}`);
         try {
@@ -552,12 +626,16 @@ export async function startAgent(serverUrl: string): Promise<Agent> {
         throw new Error('AETHERGUARD_AGENT_API_KEY or AGENT_API_KEY environment variable is required');
     }
     const secretKey = process.env.AETHERGUARD_AGENT_SECRET_KEY || process.env.AetherGuard_AGENT_SECRET_KEY || process.env.AGENT_SECRET_KEY;
+    const hardwareGatePublicKey = process.env.AETHERGUARD_HARDWARE_GATE_PUBLIC_KEY
+        || process.env.AETHERGUARD_HARDWARE_GATE_PUBLIC_KEY_PEM
+        || process.env.AetherGuard_HARDWARE_GATE_PUBLIC_KEY
+        || process.env.AetherGuard_HARDWARE_GATE_PUBLIC_KEY_PEM;
     const heartbeatIntervalSource = process.env.AETHERGUARD_HEARTBEAT_INTERVAL_MS || process.env.AetherGuard_HEARTBEAT_INTERVAL_MS;
     const heartbeatInterval = heartbeatIntervalSource
         ? Number(heartbeatIntervalSource)
         : undefined;
 
-    const agent = new Agent({ serverUrl, agentId, apiKey, secretKey, heartbeatInterval });
+    const agent = new Agent({ serverUrl, agentId, apiKey, secretKey, hardwareGatePublicKey, heartbeatInterval });
     await agent.start();
     return agent;
 }

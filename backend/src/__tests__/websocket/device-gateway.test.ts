@@ -80,7 +80,7 @@ jest.mock('crypto', () => ({
 }));
 
 // Mock socket.io Server
-const mockSocket = {
+const mockSocket: any = {
   on: jest.fn(),
   emit: jest.fn(),
   disconnect: jest.fn(),
@@ -104,6 +104,29 @@ const mockServer: any = {
   emit: jest.fn(),
 };
 
+// Mock the @aws-sdk module to avoid loading the @smithy/uuid chain, which
+// breaks on Node >= 22 due to crypto.randomUUID.bind evaluating at
+// module-load time. (Same workaround as device-gateway.broadcast-signature.)
+jest.mock('@aws-sdk/client-s3', () => ({
+  S3Client: jest.fn(),
+  CreateBucketCommand: jest.fn(),
+  GetObjectCommand: jest.fn(),
+  HeadBucketCommand: jest.fn(),
+  PutObjectCommand: jest.fn(),
+  DeleteObjectCommand: jest.fn(),
+  DeleteObjectsCommand: jest.fn(),
+  ListObjectsV2Command: jest.fn(),
+}));
+
+// Allow destructive gateway commands in the test (simulates lab runtime mode)
+jest.mock('../../config/enterprise-runtime', () => ({
+  allowGatewayDestructiveCommands: jest.fn(() => true),
+  allowPasswordLogin: jest.fn(() => true),
+  isEnterpriseStrictMode: jest.fn(() => false),
+  isLabRuntime: jest.fn(() => true),
+  getEnterpriseRuntimeMode: jest.fn(() => 'lab')
+}));
+
 jest.mock('socket.io', () => ({
   Server: jest.fn().mockImplementation(() => mockServer),
 }));
@@ -113,12 +136,13 @@ import { DeviceGateway } from '../../websocket/device-gateway';
 import * as deviceRoutes from '../../services/device-registry.service';
 import * as payloadValidator from '../../websocket/socket-payload-validator';
 import * as socketRateLimit from '../../services/socket-rate-limit.service';
+import type { SocketRateLimitResult } from '../../services/socket-rate-limit.service';
 import * as auditLoggerMod from '../../security/audit-logger.service';
 import * as deviceControlServiceMod from '../../services/device-control.service';
 import logger from '../../utils/logger';
 
 describe('DeviceGateway', () => {
-  let mockHttpServer: Partial<HttpServer>;
+  let mockHttpServer: Partial<HttpServer> = {};
 
   // Helper to extract a registered handler for a given event name
   function getHandler(eventName: string, calls?: [string, Function][]): Function {
@@ -363,7 +387,7 @@ describe('DeviceGateway', () => {
         allowed: false,
         decisionSource: 'memory',
         riskFlags: [],
-      });
+      } as unknown as SocketRateLimitResult);
       new DeviceGateway(mockHttpServer as HttpServer);
       const handler = getHandler('register');
 
@@ -497,7 +521,7 @@ describe('DeviceGateway', () => {
         allowed: false,
         decisionSource: 'redis',
         riskFlags: ['high_frequency'],
-      });
+      } as SocketRateLimitResult);
       new DeviceGateway(mockHttpServer as HttpServer);
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('heartbeat');
@@ -532,7 +556,7 @@ describe('DeviceGateway', () => {
         allowed: false,
         decisionSource: 'memory',
         riskFlags: [],
-      });
+      } as unknown as SocketRateLimitResult);
       new DeviceGateway(mockHttpServer as HttpServer);
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('heartbeat');
@@ -581,7 +605,7 @@ describe('DeviceGateway', () => {
         allowed: false,
         decisionSource: 'memory',
         riskFlags: [],
-      });
+      } as unknown as SocketRateLimitResult);
       new DeviceGateway(mockHttpServer as HttpServer);
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('data');
@@ -691,7 +715,7 @@ describe('DeviceGateway', () => {
         allowed: false,
         decisionSource: 'memory',
         riskFlags: [],
-      });
+      } as unknown as SocketRateLimitResult);
       new DeviceGateway(mockHttpServer as HttpServer);
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('alert');

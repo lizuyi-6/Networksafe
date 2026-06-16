@@ -15,17 +15,6 @@ interface SerialPort {
     getInfo(): { usbVendorId?: number; usbProductId?: number };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getSerial = (): any => (navigator as any).serial;
-
-// Web Serial API type declarations
-interface SerialPort {
-    readable: ReadableStream | null;
-    writable: WritableStream | null;
-    open(options: { baudRate: number }): Promise<void>;
-    close(): Promise<void>;
-}
-
 interface Serial {
     requestPort(): Promise<SerialPort>;
     getPorts(): Promise<SerialPort[]>;
@@ -36,6 +25,8 @@ declare global {
         serial?: Serial;
     }
 }
+
+const getSerial = (): Serial | undefined => navigator.serial;
 
 interface GeneratedConfig {
     configText: string;
@@ -153,12 +144,14 @@ const DeploymentWizard = () => {
         }
     };
 
-    // --- Web Serial API for direct browser-to-ESP32 transfer ---
+    // --- Web Serial API for direct browser-to-hardware transfer ---
     const connectSerial = useCallback(async () => {
         if (!serialSupported) return;
         setError(null);
         try {
-            const port = await getSerial().requestPort();
+            const serial = getSerial();
+            if (!serial) return;
+            const port = await serial.requestPort();
             await port.open({ baudRate: 115200 });
             setSerialPort(port);
             setSerialConnected(true);
@@ -191,7 +184,7 @@ const DeploymentWizard = () => {
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
-                // Read and discard ESP32 responses (value is Uint8Array from serial)
+                // Read and discard device responses (value is Uint8Array from serial)
                 decoder.decode(value as Uint8Array);
             }
         } catch { /* port closed */ }
@@ -207,6 +200,11 @@ const DeploymentWizard = () => {
         writerRef.current = null;
     };
 
+    // LEGACY SERIAL WRITE PATH (deprecated): This callback drives the retired ESP32 serial-deployer
+    // dongle flow (AG:REQ:WRITE_BUNDLE USB-TTL protocol, archived 2026-06-13). The active hardware is the
+    // AetherGuard Root-Resistant Gateway Appliance (STM32H5/U5, newline-JSON protocol). The function name
+    // `doWriteToEsp32` and testid `deploy-write-esp32` are retained for backward-compat with any legacy-registered
+    // device still using the serial path; do not extend. New deployments should target the Gateway Appliance flow.
     const doWriteToEsp32 = useCallback(async () => {
         if (!serverType || !serialConnected) return;
 
@@ -238,7 +236,7 @@ const DeploymentWizard = () => {
             const bundleBytes = atob(bundle.bundleBase64);
             const totalSize = bundleBytes.length;
 
-            // Step 2: Send WRITE_BUNDLE command to ESP32
+            // Step 2: Send WRITE_BUNDLE command to hardware device
             setWritePhase('initiating');
             const filename = `deploy-${serverType}.sh`;
             await sendSerialLine(`AG:REQ:WRITE_BUNDLE:${totalSize}:${filename}`);
@@ -317,6 +315,7 @@ const DeploymentWizard = () => {
                                 {deploymentTargets.map((type) => (
                                     <div
                                         key={type}
+                                        data-testid={`deploy-target-${type}`}
                                         onClick={() => setServerType(type)}
                                         className={clsx(
                                             'flex cursor-pointer flex-col items-center gap-4 rounded-xl border p-6 transition-colors',
@@ -339,6 +338,7 @@ const DeploymentWizard = () => {
                                 <div>
                                     <label className="mb-2 block text-xs text-muted-foreground">{t('deploy.listen_port')}</label>
                                     <input
+                                        data-testid="deploy-port"
                                         type="text"
                                         value={config.port}
                                         onChange={(e) => setConfig({ ...config, port: e.target.value })}
@@ -348,6 +348,7 @@ const DeploymentWizard = () => {
                                 <div>
                                     <label className="mb-2 block text-xs text-muted-foreground">{t('deploy.server_name')}</label>
                                     <input
+                                        data-testid="deploy-server-name"
                                         type="text"
                                         value={config.serverName}
                                         onChange={(e) => setConfig({ ...config, serverName: e.target.value })}
@@ -357,6 +358,7 @@ const DeploymentWizard = () => {
                                 <div>
                                     <label className="mb-2 block text-xs text-muted-foreground">{t('deploy.rate_limit')}</label>
                                     <input
+                                        data-testid="deploy-rate-limit"
                                         type="text"
                                         value={config.rateLimit}
                                         onChange={(e) => setConfig({ ...config, rateLimit: e.target.value })}
@@ -366,6 +368,7 @@ const DeploymentWizard = () => {
                                 <div>
                                     <label className="mb-2 block text-xs text-muted-foreground">{t('wizard.upstream')}</label>
                                     <input
+                                        data-testid="deploy-upstream"
                                         type="text"
                                         value={config.upstream}
                                         onChange={(e) => setConfig({ ...config, upstream: e.target.value })}
@@ -432,6 +435,7 @@ const DeploymentWizard = () => {
 
                                 {!serialConnected ? (
                                     <button
+                                        data-testid="deploy-connect-serial"
                                         onClick={connectSerial}
                                         disabled={!serialSupported}
                                         className={clsx(
@@ -446,14 +450,16 @@ const DeploymentWizard = () => {
                                 ) : (
                                     <div className="space-y-3">
                                         <button
+                                            data-testid="deploy-disconnect-serial"
                                             onClick={disconnectSerial}
                                             className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-muted/20 px-4 py-2 text-sm text-muted-foreground hover:bg-muted/30"
                                         >
                                             {t('deploymentWizard.disconnect_serial')}
                                         </button>
 
-                                        {/* Write to ESP32 */}
+                                        {/* Write to hardware device */}
                                         <button
+                                            data-testid="deploy-write-esp32"
                                             onClick={doWriteToEsp32}
                                             disabled={writingBundle}
                                             className={clsx(
@@ -509,6 +515,7 @@ const DeploymentWizard = () => {
                                 <h3 className="mb-2 text-sm font-medium text-foreground">{t('deploymentWizard.alternative_download')}</h3>
                                 <p className="mb-3 text-xs text-muted-foreground">{t('deploymentWizard.alternative_download_desc')}</p>
                                 <a
+                                    data-testid="deploy-download-bundle"
                                     href={savedId ? getDeploymentDownloadUrl(savedId, 'bundle') : '#'}
                                     className={clsx(
                                         'flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500',
@@ -527,6 +534,7 @@ const DeploymentWizard = () => {
                     {/* Navigation buttons */}
                     <div className="mt-8 flex justify-between border-t border-border pt-6">
                         <button
+                            data-testid="deploy-back"
                             onClick={handleBack}
                             disabled={step === 1 || loading || saving}
                             className={clsx('rounded-lg px-4 py-2 text-sm font-medium transition-colors', step === 1 ? 'cursor-not-allowed text-muted-foreground' : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground')}
@@ -536,6 +544,7 @@ const DeploymentWizard = () => {
 
                         {step < 3 ? (
                             <button
+                                data-testid="deploy-next"
                                 onClick={handleNext}
                                 disabled={(step === 1 && !serverType) || loading}
                                 className={clsx(
@@ -548,6 +557,7 @@ const DeploymentWizard = () => {
                         ) : step === 3 ? (
                             <div className="flex gap-2">
                                 <button
+                                    data-testid="deploy-save-version"
                                     onClick={doSave}
                                     disabled={saving || !generated}
                                     className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30 disabled:opacity-60"
@@ -555,12 +565,14 @@ const DeploymentWizard = () => {
                                     <Save size={16} /> {saving ? t('wizard.saving') : t('wizard.save_version')}
                                 </button>
                                 <button
+                                    data-testid="deploy-go-device-write"
                                     onClick={() => setStep(4)}
                                     className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                                 >
                                     <Usb size={16} /> {t('deploymentWizard.go_to_device_write')}
                                 </button>
                                 <a
+                                    data-testid="deploy-preview-download-bundle"
                                     href={savedId ? getDeploymentDownloadUrl(savedId, 'bundle') : '#'}
                                     className={clsx('flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500', !savedId && 'pointer-events-none opacity-50')}
                                 >
@@ -570,7 +582,8 @@ const DeploymentWizard = () => {
                         ) : (
                             /* Step 4: back to step 3 or restart */
                             <button
-                                onClick={() => { setStep(1); setGenerated(null); setSavedId(null); setWriteProgress(0); setWritePhase(''); }}
+                                data-testid="deploy-start-over"
+                                onClick={() => { setStep(1); setServerType(null); setGenerated(null); setSavedId(null); setWriteProgress(0); setWritePhase(''); }}
                                 className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                             >
                                 {t('deploymentWizard.start_over')}

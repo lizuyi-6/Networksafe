@@ -3,7 +3,7 @@
  * Routes between local and cloud models based on complexity
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     ModelRequest,
     ModelResponse,
@@ -140,7 +140,8 @@ export class ModelRouter {
         const decision = this.makeRoutingDecision(request, runtimeConfig);
         const startTime = Date.now();
         const tenantId = this.getTenantId(request);
-        const effectiveRouteMode = request.routeModeOverride || runtimeConfig.aiRouting.mode;
+        const hotPathLocalOnly = request.analysisPurpose === 'primary' || request.analysisPurpose === 'blocking_review';
+        const effectiveRouteMode = hotPathLocalOnly ? 'local_only' : (request.routeModeOverride || runtimeConfig.aiRouting.mode);
 
         this.requestStats.total++;
 
@@ -156,7 +157,8 @@ export class ModelRouter {
                         response = await this.executeLocal(request);
                         this.requestStats.local++;
                     } catch (localError: any) {
-                        const allowFallback = runtimeConfig.aiRouting.mode === 'local_preferred'
+                        const allowFallback = !hotPathLocalOnly
+                            && runtimeConfig.aiRouting.mode === 'local_preferred'
                             && runtimeConfig.aiRouting.fallbackAllowed
                             && runtimeConfig.privacyMode !== 'strict';
                         if (!allowFallback) {
@@ -218,19 +220,46 @@ export class ModelRouter {
     makeRoutingDecision(request: ModelRequest, runtimeConfig?: PlatformConfig): ModelRoutingDecision {
         const aiRouting: AIRoutingSettings | undefined = runtimeConfig?.aiRouting;
         const privacyMode = runtimeConfig?.privacyMode || 'off';
+        const hotPathLocalOnly = request.analysisPurpose === 'primary' || request.analysisPurpose === 'blocking_review';
+        // Per-agent tier (heterogeneous routing): when the calling agent declares
+        // tier 'local' (e.g. the fast triage role on a local base model), honour it
+        // as long as the local engine is available and the purpose is not a forced
+        // cloud verification. Makes fast-role vs arbitrator route to genuinely
+        // different models instead of every agent hitting the cloud.
+        const honourLocalTier = request.tier === 'local'
+            && this.localEngine !== null
+            && request.analysisPurpose !== 'learning_verification';
         const overrideMode = request.routeModeOverride;
-        const mode = overrideMode || (privacyMode === 'strict'
+        const mode = hotPathLocalOnly
+            ? 'local_only'
+            : overrideMode || (privacyMode === 'strict'
             ? 'local_only'
             : aiRouting?.mode || 'cloud_only');
         const reasonPrefix = overrideMode
             ? `Request-scoped override forces ${overrideMode}`
             : null;
 
+        // Honour the per-agent local tier only when neither an explicit request
+        // override (routeModeOverride) nor the hybrid_verify platform mode demands
+        // cloud verification — otherwise a local-tier agent would silently bypass
+        // a cloud_only / hybrid_verify directive.
+        if (honourLocalTier && !overrideMode && mode !== 'hybrid_verify') {
+            return {
+                tier: 'local',
+                model: this.config.localModel.model,
+                reason: 'Agent tier local forces local execution',
+                estimatedLatency: 1500,
+                estimatedCost: 0
+            };
+        }
+
         if (mode === 'local_only') {
             return {
                 tier: 'local',
                 model: this.config.localModel.model,
-                reason: reasonPrefix || (privacyMode === 'strict'
+                reason: hotPathLocalOnly
+                    ? 'Production hot path forces local-only execution'
+                    : reasonPrefix || (privacyMode === 'strict'
                     ? 'Strict privacy mode forces local execution'
                     : 'AI routing mode is local_only'),
                 estimatedLatency: 1500,
@@ -374,11 +403,15 @@ export class ModelRouter {
 
         const startTime = Date.now();
         const modelId = this.resolveStageModel(request);
+        const samplingOptions = (request.temperature !== undefined || request.maxTokens !== undefined)
+            ? { temperature: request.temperature, maxTokens: request.maxTokens }
+            : undefined;
 
         try {
             const content = await this.cloudClient.generateCompletion(
                 request.prompt,
-                modelId
+                modelId,
+                samplingOptions
             );
 
             return {

@@ -1,0 +1,902 @@
+[
+  {
+    "id": "proto_pollute_0000",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.1.140.112",
+    "timestamp": "2026-03-13T21:53:09.061461"
+  },
+  {
+    "id": "proto_pollute_0001",
+    "type": "prototype_pollution",
+    "payload": "Object.assign({__proto__:{polluted:1}}, JSON.parse(str))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "105.242.139.219",
+    "timestamp": "2026-03-13T21:53:09.061467"
+  },
+  {
+    "id": "proto_pollute_0002",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "133.107.45.198",
+    "timestamp": "2026-03-13T21:53:09.061472"
+  },
+  {
+    "id": "proto_pollute_0003",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"admin\":true}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "182.236.139.248",
+    "timestamp": "2026-03-13T21:53:09.061479"
+  },
+  {
+    "id": "proto_pollute_0004",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "7.171.22.132",
+    "timestamp": "2026-03-13T21:53:09.061484"
+  },
+  {
+    "id": "proto_pollute_0005",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "133.232.137.40",
+    "timestamp": "2026-03-13T21:53:09.061489"
+  },
+  {
+    "id": "proto_pollute_0006",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"0\":\"polluted\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "159.141.168.29",
+    "timestamp": "2026-03-13T21:53:09.061494"
+  },
+  {
+    "id": "proto_pollute_0007",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "133.230.109.80",
+    "timestamp": "2026-03-13T21:53:09.061499"
+  },
+  {
+    "id": "proto_pollute_0008",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"argv\":[\"-c\",\"id\"]}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "221.40.176.207",
+    "timestamp": "2026-03-13T21:53:09.061504"
+  },
+  {
+    "id": "proto_pollute_0009",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "36.147.145.214",
+    "timestamp": "2026-03-13T21:53:09.061509"
+  },
+  {
+    "id": "proto_pollute_0010",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "6.42.14.70",
+    "timestamp": "2026-03-13T21:53:09.061513"
+  },
+  {
+    "id": "proto_pollute_0011",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"__proto__\":{\"polluted\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "177.128.91.222",
+    "timestamp": "2026-03-13T21:53:09.061518"
+  },
+  {
+    "id": "proto_pollute_0012",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "111.76.86.149",
+    "timestamp": "2026-03-13T21:53:09.061522"
+  },
+  {
+    "id": "proto_pollute_0013",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "151.88.35.239",
+    "timestamp": "2026-03-13T21:53:09.061527"
+  },
+  {
+    "id": "proto_pollute_0014",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "99.178.118.6",
+    "timestamp": "2026-03-13T21:53:09.061531"
+  },
+  {
+    "id": "proto_pollute_0015",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "161.99.156.135",
+    "timestamp": "2026-03-13T21:53:09.061536"
+  },
+  {
+    "id": "proto_pollute_0016",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "44.239.93.124",
+    "timestamp": "2026-03-13T21:53:09.061540"
+  },
+  {
+    "id": "proto_pollute_0017",
+    "type": "prototype_pollution",
+    "payload": "Object.assign({__proto__:{polluted:1}}, JSON.parse(str))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "181.107.74.54",
+    "timestamp": "2026-03-13T21:53:09.061545"
+  },
+  {
+    "id": "proto_pollute_0018",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.81.111.229",
+    "timestamp": "2026-03-13T21:53:09.061551"
+  },
+  {
+    "id": "proto_pollute_0019",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"0\":\"polluted\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "182.120.108.31",
+    "timestamp": "2026-03-13T21:53:09.061556"
+  },
+  {
+    "id": "proto_pollute_0020",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "16.133.54.172",
+    "timestamp": "2026-03-13T21:53:09.061561"
+  },
+  {
+    "id": "proto_pollute_0021",
+    "type": "prototype_pollution",
+    "payload": "Object.assign({__proto__:{polluted:1}}, JSON.parse(str))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "84.124.125.36",
+    "timestamp": "2026-03-13T21:53:09.061565"
+  },
+  {
+    "id": "proto_pollute_0022",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "135.9.160.235",
+    "timestamp": "2026-03-13T21:53:09.061569"
+  },
+  {
+    "id": "proto_pollute_0023",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"__proto__\":{\"polluted\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.35.27.237",
+    "timestamp": "2026-03-13T21:53:09.061574"
+  },
+  {
+    "id": "proto_pollute_0024",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"admin\":true}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "70.177.127.194",
+    "timestamp": "2026-03-13T21:53:09.061578"
+  },
+  {
+    "id": "proto_pollute_0025",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "102.209.121.117",
+    "timestamp": "2026-03-13T21:53:09.061583"
+  },
+  {
+    "id": "proto_pollute_0026",
+    "type": "prototype_pollution",
+    "payload": "{\"prototype\":\"polluted\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "147.133.76.241",
+    "timestamp": "2026-03-13T21:53:09.061589"
+  },
+  {
+    "id": "proto_pollute_0027",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.84.12.31",
+    "timestamp": "2026-03-13T21:53:09.061594"
+  },
+  {
+    "id": "proto_pollute_0028",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "82.68.74.51",
+    "timestamp": "2026-03-13T21:53:09.061599"
+  },
+  {
+    "id": "proto_pollute_0029",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "32.234.20.52",
+    "timestamp": "2026-03-13T21:53:09.061603"
+  },
+  {
+    "id": "proto_pollute_0030",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "26.109.118.94",
+    "timestamp": "2026-03-13T21:53:09.061608"
+  },
+  {
+    "id": "proto_pollute_0031",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "138.101.195.90",
+    "timestamp": "2026-03-13T21:53:09.061612"
+  },
+  {
+    "id": "proto_pollute_0032",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "35.137.215.186",
+    "timestamp": "2026-03-13T21:53:09.061617"
+  },
+  {
+    "id": "proto_pollute_0033",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"__proto__\":{\"polluted\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "42.100.103.26",
+    "timestamp": "2026-03-13T21:53:09.061621"
+  },
+  {
+    "id": "proto_pollute_0034",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "102.178.58.29",
+    "timestamp": "2026-03-13T21:53:09.061626"
+  },
+  {
+    "id": "proto_pollute_0035",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "100.1.214.11",
+    "timestamp": "2026-03-13T21:53:09.061633"
+  },
+  {
+    "id": "proto_pollute_0036",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"0\":\"polluted\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.55.131.248",
+    "timestamp": "2026-03-13T21:53:09.061637"
+  },
+  {
+    "id": "proto_pollute_0037",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"argv\":[\"-c\",\"id\"]}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "76.35.180.158",
+    "timestamp": "2026-03-13T21:53:09.061653"
+  },
+  {
+    "id": "proto_pollute_0038",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "197.69.220.95",
+    "timestamp": "2026-03-13T21:53:09.061658"
+  },
+  {
+    "id": "proto_pollute_0039",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"__proto__\":{\"polluted\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "144.41.71.112",
+    "timestamp": "2026-03-13T21:53:09.061662"
+  },
+  {
+    "id": "proto_pollute_0040",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.156.4.36",
+    "timestamp": "2026-03-13T21:53:09.061667"
+  },
+  {
+    "id": "proto_pollute_0041",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "61.109.157.154",
+    "timestamp": "2026-03-13T21:53:09.061671"
+  },
+  {
+    "id": "proto_pollute_0042",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "43.221.242.33",
+    "timestamp": "2026-03-13T21:53:09.061676"
+  },
+  {
+    "id": "proto_pollute_0043",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "38.162.34.34",
+    "timestamp": "2026-03-13T21:53:09.061680"
+  },
+  {
+    "id": "proto_pollute_0044",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "86.78.232.146",
+    "timestamp": "2026-03-13T21:53:09.061685"
+  },
+  {
+    "id": "proto_pollute_0045",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "197.144.71.149",
+    "timestamp": "2026-03-13T21:53:09.061689"
+  },
+  {
+    "id": "proto_pollute_0046",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "162.35.128.74",
+    "timestamp": "2026-03-13T21:53:09.061694"
+  },
+  {
+    "id": "proto_pollute_0047",
+    "type": "prototype_pollution",
+    "payload": "{\"prototype\":\"polluted\"}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "222.195.7.71",
+    "timestamp": "2026-03-13T21:53:09.061699"
+  },
+  {
+    "id": "proto_pollute_0048",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "50.123.195.205",
+    "timestamp": "2026-03-13T21:53:09.061703"
+  },
+  {
+    "id": "proto_pollute_0049",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "122.124.251.167",
+    "timestamp": "2026-03-13T21:53:09.061708"
+  },
+  {
+    "id": "proto_pollute_0050",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "80.226.93.108",
+    "timestamp": "2026-03-13T21:53:09.061712"
+  },
+  {
+    "id": "proto_pollute_0051",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"__proto__\":{\"polluted\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "59.115.189.233",
+    "timestamp": "2026-03-13T21:53:09.061717"
+  },
+  {
+    "id": "proto_pollute_0052",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.22.89.65",
+    "timestamp": "2026-03-13T21:53:09.061724"
+  },
+  {
+    "id": "proto_pollute_0053",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"0\":\"polluted\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.196.187.97",
+    "timestamp": "2026-03-13T21:53:09.061729"
+  },
+  {
+    "id": "proto_pollute_0054",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"argv\":[\"-c\",\"id\"]}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "79.138.248.121",
+    "timestamp": "2026-03-13T21:53:09.061734"
+  },
+  {
+    "id": "proto_pollute_0055",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "86.39.62.124",
+    "timestamp": "2026-03-13T21:53:09.061738"
+  },
+  {
+    "id": "proto_pollute_0056",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"__proto__\":{\"polluted\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.114.120.187",
+    "timestamp": "2026-03-13T21:53:09.061743"
+  },
+  {
+    "id": "proto_pollute_0057",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.96.98.139",
+    "timestamp": "2026-03-13T21:53:09.061750"
+  },
+  {
+    "id": "proto_pollute_0058",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "39.254.126.26",
+    "timestamp": "2026-03-13T21:53:09.061754"
+  },
+  {
+    "id": "proto_pollute_0059",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "16.198.241.155",
+    "timestamp": "2026-03-13T21:53:09.061759"
+  },
+  {
+    "id": "proto_pollute_0060",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "87.5.169.197",
+    "timestamp": "2026-03-13T21:53:09.061763"
+  },
+  {
+    "id": "proto_pollute_0061",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"admin\":true}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "176.143.255.224",
+    "timestamp": "2026-03-13T21:53:09.061768"
+  },
+  {
+    "id": "proto_pollute_0062",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "219.132.28.1",
+    "timestamp": "2026-03-13T21:53:09.061772"
+  },
+  {
+    "id": "proto_pollute_0063",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.208.13.99",
+    "timestamp": "2026-03-13T21:53:09.061777"
+  },
+  {
+    "id": "proto_pollute_0064",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"0\":\"polluted\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "50.186.47.158",
+    "timestamp": "2026-03-13T21:53:09.061781"
+  },
+  {
+    "id": "proto_pollute_0065",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "93.214.6.172",
+    "timestamp": "2026-03-13T21:53:09.061786"
+  },
+  {
+    "id": "proto_pollute_0066",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.115.158.65",
+    "timestamp": "2026-03-13T21:53:09.061791"
+  },
+  {
+    "id": "proto_pollute_0067",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "87.41.119.92",
+    "timestamp": "2026-03-13T21:53:09.061797"
+  },
+  {
+    "id": "proto_pollute_0068",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"admin\":true}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "52.184.180.226",
+    "timestamp": "2026-03-13T21:53:09.061802"
+  },
+  {
+    "id": "proto_pollute_0069",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"__proto__\":{\"polluted\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "65.173.178.30",
+    "timestamp": "2026-03-13T21:53:09.061806"
+  },
+  {
+    "id": "proto_pollute_0070",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.254.37.203",
+    "timestamp": "2026-03-13T21:53:09.061811"
+  },
+  {
+    "id": "proto_pollute_0071",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"admin\":true}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "87.215.112.248",
+    "timestamp": "2026-03-13T21:53:09.061815"
+  },
+  {
+    "id": "proto_pollute_0072",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"0\":\"polluted\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "134.148.177.196",
+    "timestamp": "2026-03-13T21:53:09.061820"
+  },
+  {
+    "id": "proto_pollute_0073",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"admin\":true}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.36.228.43",
+    "timestamp": "2026-03-13T21:53:09.061824"
+  },
+  {
+    "id": "proto_pollute_0074",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "61.140.16.23",
+    "timestamp": "2026-03-13T21:53:09.061829"
+  },
+  {
+    "id": "proto_pollute_0075",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"__proto__\":{\"polluted\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "84.244.190.27",
+    "timestamp": "2026-03-13T21:53:09.061833"
+  },
+  {
+    "id": "proto_pollute_0076",
+    "type": "prototype_pollution",
+    "payload": "Object.assign({__proto__:{polluted:1}}, JSON.parse(str))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "85.165.183.199",
+    "timestamp": "2026-03-13T21:53:09.061840"
+  },
+  {
+    "id": "proto_pollute_0077",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "207.166.212.34",
+    "timestamp": "2026-03-13T21:53:09.061847"
+  },
+  {
+    "id": "proto_pollute_0078",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"__proto__\":{\"b\":1}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "43.33.215.202",
+    "timestamp": "2026-03-13T21:53:09.061851"
+  },
+  {
+    "id": "proto_pollute_0079",
+    "type": "prototype_pollution",
+    "payload": "Object.assign({__proto__:{polluted:1}}, JSON.parse(str))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.151.55.217",
+    "timestamp": "2026-03-13T21:53:09.061856"
+  },
+  {
+    "id": "proto_pollute_0080",
+    "type": "prototype_pollution",
+    "payload": "Object.assign({__proto__:{polluted:1}}, JSON.parse(str))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.33.3.84",
+    "timestamp": "2026-03-13T21:53:09.061861"
+  },
+  {
+    "id": "proto_pollute_0081",
+    "type": "prototype_pollution",
+    "payload": "Object.assign({__proto__:{polluted:1}}, JSON.parse(str))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "65.219.117.238",
+    "timestamp": "2026-03-13T21:53:09.061865"
+  },
+  {
+    "id": "proto_pollute_0082",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "144.102.140.5",
+    "timestamp": "2026-03-13T21:53:09.061870"
+  },
+  {
+    "id": "proto_pollute_0083",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"0\":\"polluted\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "159.195.124.67",
+    "timestamp": "2026-03-13T21:53:09.061874"
+  },
+  {
+    "id": "proto_pollute_0084",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "134.110.99.248",
+    "timestamp": "2026-03-13T21:53:09.061879"
+  },
+  {
+    "id": "proto_pollute_0085",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.8.163.17",
+    "timestamp": "2026-03-13T21:53:09.061883"
+  },
+  {
+    "id": "proto_pollute_0086",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.174.154.111",
+    "timestamp": "2026-03-13T21:53:09.061888"
+  },
+  {
+    "id": "proto_pollute_0087",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"argv\":[\"-c\",\"id\"]}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "161.241.44.236",
+    "timestamp": "2026-03-13T21:53:09.061892"
+  },
+  {
+    "id": "proto_pollute_0088",
+    "type": "prototype_pollution",
+    "payload": "{\"a\":{\"constructor\":{\"prototype\":{\"b\":1}}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "64.149.227.161",
+    "timestamp": "2026-03-13T21:53:09.061896"
+  },
+  {
+    "id": "proto_pollute_0089",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "177.110.68.175",
+    "timestamp": "2026-03-13T21:53:09.061901"
+  },
+  {
+    "id": "proto_pollute_0090",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.109.85.157",
+    "timestamp": "2026-03-13T21:53:09.061905"
+  },
+  {
+    "id": "proto_pollute_0091",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "191.146.5.103",
+    "timestamp": "2026-03-13T21:53:09.061910"
+  },
+  {
+    "id": "proto_pollute_0092",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "39.193.39.60",
+    "timestamp": "2026-03-13T21:53:09.061914"
+  },
+  {
+    "id": "proto_pollute_0093",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "172.137.123.105",
+    "timestamp": "2026-03-13T21:53:09.061919"
+  },
+  {
+    "id": "proto_pollute_0094",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"0\":\"polluted\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.27.245.73",
+    "timestamp": "2026-03-13T21:53:09.061924"
+  },
+  {
+    "id": "proto_pollute_0095",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "94.212.181.62",
+    "timestamp": "2026-03-13T21:53:09.061928"
+  },
+  {
+    "id": "proto_pollute_0096",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "48.90.11.25",
+    "timestamp": "2026-03-13T21:53:09.061935"
+  },
+  {
+    "id": "proto_pollute_0097",
+    "type": "prototype_pollution",
+    "payload": "_.merge({}, JSON.parse('{\"__proto__\":{\"polluted\":1}}'))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "8.255.43.9",
+    "timestamp": "2026-03-13T21:53:09.061939"
+  },
+  {
+    "id": "proto_pollute_0098",
+    "type": "prototype_pollution",
+    "payload": "{\"__proto__\":{\"shell\":\"/proc/self/exe\"}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "82.194.6.109",
+    "timestamp": "2026-03-13T21:53:09.061944"
+  },
+  {
+    "id": "proto_pollute_0099",
+    "type": "prototype_pollution",
+    "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "207.115.140.2",
+    "timestamp": "2026-03-13T21:53:09.061951"
+  }
+]

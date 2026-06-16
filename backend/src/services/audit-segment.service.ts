@@ -560,7 +560,54 @@ class AuditSegmentService {
           recordCount: rows.length,
           records
         };
-        const auditArchive = await auditArchiveService.writeLockedJson(tenantId, 'audit/segments', segmentKey, payload);
+        // SECURITY FIX R14 / V12.14: archive fallback chain. Primary is
+        // S3 (auditArchiveService.writeLockedJson). If that throws
+        // (S3 unavailable, network blip, IAM denial) we fall back to
+        // the always-on local artifact store. If even that fails we
+        // STILL persist a verify_status=corrupt segment row so the
+        // chain hash and record count survive a forensic review — we
+        // never silently drop audit history.
+        let auditArchive: any;
+        let archiveSource: 's3' | 'local' | 'degraded' = 's3';
+        try {
+          auditArchive = await auditArchiveService.writeLockedJson(tenantId, 'audit/segments', segmentKey, payload);
+        } catch (primaryErr) {
+          logger.warn('Primary archive write failed, falling back to artifact store', {
+            tenantId,
+            segmentKey,
+            error: (primaryErr as Error)?.message
+          });
+          try {
+            const fallback = await artifactStoreService.writeJson('audit-segments-fallback', `${tenantId}/${segmentKey}.json`, payload);
+            auditArchive = {
+              artifactRef: fallback.artifactRef,
+              location: fallback.location,
+              bucket: null,
+              objectKey: `${tenantId}/${segmentKey}.json`,
+              versionId: null,
+              retentionUntil: null,
+              objectLockEnabled: false
+            };
+            archiveSource = 'local';
+          } catch (fallbackErr) {
+            logger.error('Both primary and fallback archive writes failed; persisting degraded segment row', {
+              tenantId,
+              segmentKey,
+              primaryError: (primaryErr as Error)?.message,
+              fallbackError: (fallbackErr as Error)?.message
+            });
+            auditArchive = {
+              artifactRef: null,
+              location: null,
+              bucket: null,
+              objectKey: `${tenantId}/${segmentKey}.json`,
+              versionId: null,
+              retentionUntil: null,
+              objectLockEnabled: false
+            };
+            archiveSource = 'degraded';
+          }
+        }
         const lockMode = auditArchive.objectLockEnabled ? 'object_lock' : 'hash_chain';
 
         const metadata: AuditSegmentMetadata = {
@@ -578,10 +625,12 @@ class AuditSegmentService {
           objectKey: auditArchive.objectKey,
           versionId: auditArchive.versionId || null,
           retentionUntil: auditArchive.retentionUntil || null,
-          storeMode: auditArchive.objectLockEnabled ? 's3' : artifactStoreService.describe().activeMode,
+          storeMode: auditArchive.objectLockEnabled
+            ? 's3'
+            : (archiveSource === 'local' ? 'local' : artifactStoreService.describe().activeMode),
           objectLockRequested: lockMode === 'object_lock',
           objectLockEnabled: auditArchive.objectLockEnabled,
-          verifyStatus: 'pending'
+          verifyStatus: archiveSource === 'degraded' ? 'corrupt' : 'pending'
         };
 
         const row: PersistedSegmentRow = {
@@ -593,7 +642,7 @@ class AuditSegmentService {
           version_id: auditArchive.versionId || null,
           retention_until: auditArchive.retentionUntil || null,
           object_lock_enabled: auditArchive.objectLockEnabled,
-          verify_status: 'pending',
+          verify_status: archiveSource === 'degraded' ? 'corrupt' : 'pending',
           lock_mode: lockMode,
           status: 'archived',
           metadata_json: JSON.stringify(metadata),

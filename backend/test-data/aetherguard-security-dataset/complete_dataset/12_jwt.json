@@ -1,0 +1,902 @@
+[
+  {
+    "id": "jwt_0000",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.7.75.133",
+    "timestamp": "2026-03-13T21:39:20.654197"
+  },
+  {
+    "id": "jwt_0001",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "137.68.194.220",
+    "timestamp": "2026-03-13T21:39:20.654202"
+  },
+  {
+    "id": "jwt_0002",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "141.123.18.127",
+    "timestamp": "2026-03-13T21:39:20.654207"
+  },
+  {
+    "id": "jwt_0003",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "124.208.220.131",
+    "timestamp": "2026-03-13T21:39:20.654215"
+  },
+  {
+    "id": "jwt_0004",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "99.245.254.207",
+    "timestamp": "2026-03-13T21:39:20.654221"
+  },
+  {
+    "id": "jwt_0005",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "67.141.62.172",
+    "timestamp": "2026-03-13T21:39:20.654226"
+  },
+  {
+    "id": "jwt_0006",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.186.116.141",
+    "timestamp": "2026-03-13T21:39:20.654234"
+  },
+  {
+    "id": "jwt_0007",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.121.85.152",
+    "timestamp": "2026-03-13T21:39:20.654240"
+  },
+  {
+    "id": "jwt_0008",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "164.116.245.199",
+    "timestamp": "2026-03-13T21:39:20.654247"
+  },
+  {
+    "id": "jwt_0009",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.106.220.237",
+    "timestamp": "2026-03-13T21:39:20.654252"
+  },
+  {
+    "id": "jwt_0010",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "55.137.212.191",
+    "timestamp": "2026-03-13T21:39:20.654257"
+  },
+  {
+    "id": "jwt_0011",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "149.149.4.177",
+    "timestamp": "2026-03-13T21:39:20.654262"
+  },
+  {
+    "id": "jwt_0012",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "6.70.40.75",
+    "timestamp": "2026-03-13T21:39:20.654266"
+  },
+  {
+    "id": "jwt_0013",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "125.124.89.233",
+    "timestamp": "2026-03-13T21:39:20.654271"
+  },
+  {
+    "id": "jwt_0014",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "220.124.104.101",
+    "timestamp": "2026-03-13T21:39:20.654276"
+  },
+  {
+    "id": "jwt_0015",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "136.253.145.121",
+    "timestamp": "2026-03-13T21:39:20.654280"
+  },
+  {
+    "id": "jwt_0016",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "132.113.84.190",
+    "timestamp": "2026-03-13T21:39:20.654285"
+  },
+  {
+    "id": "jwt_0017",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "65.62.36.197",
+    "timestamp": "2026-03-13T21:39:20.654289"
+  },
+  {
+    "id": "jwt_0018",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.184.197.58",
+    "timestamp": "2026-03-13T21:39:20.654294"
+  },
+  {
+    "id": "jwt_0019",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "193.92.156.104",
+    "timestamp": "2026-03-13T21:39:20.654298"
+  },
+  {
+    "id": "jwt_0020",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.179.100.132",
+    "timestamp": "2026-03-13T21:39:20.654303"
+  },
+  {
+    "id": "jwt_0021",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "36.53.187.150",
+    "timestamp": "2026-03-13T21:39:20.654307"
+  },
+  {
+    "id": "jwt_0022",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "84.98.181.202",
+    "timestamp": "2026-03-13T21:39:20.654312"
+  },
+  {
+    "id": "jwt_0023",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.77.47.227",
+    "timestamp": "2026-03-13T21:39:20.654317"
+  },
+  {
+    "id": "jwt_0024",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "144.64.146.198",
+    "timestamp": "2026-03-13T21:39:20.654321"
+  },
+  {
+    "id": "jwt_0025",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "158.200.152.61",
+    "timestamp": "2026-03-13T21:39:20.654326"
+  },
+  {
+    "id": "jwt_0026",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "153.90.219.142",
+    "timestamp": "2026-03-13T21:39:20.654333"
+  },
+  {
+    "id": "jwt_0027",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "135.1.83.165",
+    "timestamp": "2026-03-13T21:39:20.654337"
+  },
+  {
+    "id": "jwt_0028",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "199.183.238.237",
+    "timestamp": "2026-03-13T21:39:20.654342"
+  },
+  {
+    "id": "jwt_0029",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.186.147.2",
+    "timestamp": "2026-03-13T21:39:20.654347"
+  },
+  {
+    "id": "jwt_0030",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "85.10.230.49",
+    "timestamp": "2026-03-13T21:39:20.654354"
+  },
+  {
+    "id": "jwt_0031",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "192.216.108.170",
+    "timestamp": "2026-03-13T21:39:20.654358"
+  },
+  {
+    "id": "jwt_0032",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.114.11.38",
+    "timestamp": "2026-03-13T21:39:20.654363"
+  },
+  {
+    "id": "jwt_0033",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.143.122.132",
+    "timestamp": "2026-03-13T21:39:20.654368"
+  },
+  {
+    "id": "jwt_0034",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "217.162.161.92",
+    "timestamp": "2026-03-13T21:39:20.654372"
+  },
+  {
+    "id": "jwt_0035",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "64.227.255.193",
+    "timestamp": "2026-03-13T21:39:20.654377"
+  },
+  {
+    "id": "jwt_0036",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "134.123.221.127",
+    "timestamp": "2026-03-13T21:39:20.654381"
+  },
+  {
+    "id": "jwt_0037",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "47.187.11.199",
+    "timestamp": "2026-03-13T21:39:20.654386"
+  },
+  {
+    "id": "jwt_0038",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "170.99.69.47",
+    "timestamp": "2026-03-13T21:39:20.654390"
+  },
+  {
+    "id": "jwt_0039",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "64.142.243.147",
+    "timestamp": "2026-03-13T21:39:20.654395"
+  },
+  {
+    "id": "jwt_0040",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "10.111.65.181",
+    "timestamp": "2026-03-13T21:39:20.654399"
+  },
+  {
+    "id": "jwt_0041",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "20.134.9.159",
+    "timestamp": "2026-03-13T21:39:20.654404"
+  },
+  {
+    "id": "jwt_0042",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "4.127.186.8",
+    "timestamp": "2026-03-13T21:39:20.654409"
+  },
+  {
+    "id": "jwt_0043",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "180.17.30.237",
+    "timestamp": "2026-03-13T21:39:20.654413"
+  },
+  {
+    "id": "jwt_0044",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.212.28.112",
+    "timestamp": "2026-03-13T21:39:20.654418"
+  },
+  {
+    "id": "jwt_0045",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.174.222.109",
+    "timestamp": "2026-03-13T21:39:20.654425"
+  },
+  {
+    "id": "jwt_0046",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "218.104.65.155",
+    "timestamp": "2026-03-13T21:39:20.654429"
+  },
+  {
+    "id": "jwt_0047",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.187.78.45",
+    "timestamp": "2026-03-13T21:39:20.654434"
+  },
+  {
+    "id": "jwt_0048",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "136.26.107.31",
+    "timestamp": "2026-03-13T21:39:20.654439"
+  },
+  {
+    "id": "jwt_0049",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "119.65.252.10",
+    "timestamp": "2026-03-13T21:39:20.654443"
+  },
+  {
+    "id": "jwt_0050",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "44.216.21.150",
+    "timestamp": "2026-03-13T21:39:20.654448"
+  },
+  {
+    "id": "jwt_0051",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "96.76.5.111",
+    "timestamp": "2026-03-13T21:39:20.654455"
+  },
+  {
+    "id": "jwt_0052",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.250.216.191",
+    "timestamp": "2026-03-13T21:39:20.654460"
+  },
+  {
+    "id": "jwt_0053",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.99.245.146",
+    "timestamp": "2026-03-13T21:39:20.654467"
+  },
+  {
+    "id": "jwt_0054",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.152.113.7",
+    "timestamp": "2026-03-13T21:39:20.654472"
+  },
+  {
+    "id": "jwt_0055",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "223.130.139.212",
+    "timestamp": "2026-03-13T21:39:20.654476"
+  },
+  {
+    "id": "jwt_0056",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "20.117.200.67",
+    "timestamp": "2026-03-13T21:39:20.654480"
+  },
+  {
+    "id": "jwt_0057",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "162.116.112.223",
+    "timestamp": "2026-03-13T21:39:20.654485"
+  },
+  {
+    "id": "jwt_0058",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "145.126.252.63",
+    "timestamp": "2026-03-13T21:39:20.654490"
+  },
+  {
+    "id": "jwt_0059",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.238.200.76",
+    "timestamp": "2026-03-13T21:39:20.654494"
+  },
+  {
+    "id": "jwt_0060",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "48.163.46.62",
+    "timestamp": "2026-03-13T21:39:20.654499"
+  },
+  {
+    "id": "jwt_0061",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "165.49.227.122",
+    "timestamp": "2026-03-13T21:39:20.654503"
+  },
+  {
+    "id": "jwt_0062",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "131.151.198.149",
+    "timestamp": "2026-03-13T21:39:20.654508"
+  },
+  {
+    "id": "jwt_0063",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "96.78.10.43",
+    "timestamp": "2026-03-13T21:39:20.654512"
+  },
+  {
+    "id": "jwt_0064",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "197.50.225.46",
+    "timestamp": "2026-03-13T21:39:20.654517"
+  },
+  {
+    "id": "jwt_0065",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "89.38.160.245",
+    "timestamp": "2026-03-13T21:39:20.654524"
+  },
+  {
+    "id": "jwt_0066",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "16.35.163.161",
+    "timestamp": "2026-03-13T21:39:20.654529"
+  },
+  {
+    "id": "jwt_0067",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "134.9.221.21",
+    "timestamp": "2026-03-13T21:39:20.654534"
+  },
+  {
+    "id": "jwt_0068",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "9.187.147.15",
+    "timestamp": "2026-03-13T21:39:20.654538"
+  },
+  {
+    "id": "jwt_0069",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "132.103.255.94",
+    "timestamp": "2026-03-13T21:39:20.654543"
+  },
+  {
+    "id": "jwt_0070",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "53.93.35.107",
+    "timestamp": "2026-03-13T21:39:20.654547"
+  },
+  {
+    "id": "jwt_0071",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "221.50.254.101",
+    "timestamp": "2026-03-13T21:39:20.654552"
+  },
+  {
+    "id": "jwt_0072",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.157.170.53",
+    "timestamp": "2026-03-13T21:39:20.654556"
+  },
+  {
+    "id": "jwt_0073",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "91.229.119.81",
+    "timestamp": "2026-03-13T21:39:20.654563"
+  },
+  {
+    "id": "jwt_0074",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.12.151.202",
+    "timestamp": "2026-03-13T21:39:20.654568"
+  },
+  {
+    "id": "jwt_0075",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "171.142.240.140",
+    "timestamp": "2026-03-13T21:39:20.654572"
+  },
+  {
+    "id": "jwt_0076",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "133.177.21.250",
+    "timestamp": "2026-03-13T21:39:20.654577"
+  },
+  {
+    "id": "jwt_0077",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.81.88.155",
+    "timestamp": "2026-03-13T21:39:20.654582"
+  },
+  {
+    "id": "jwt_0078",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.88.26.248",
+    "timestamp": "2026-03-13T21:39:20.654586"
+  },
+  {
+    "id": "jwt_0079",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.196.53.198",
+    "timestamp": "2026-03-13T21:39:20.654591"
+  },
+  {
+    "id": "jwt_0080",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "90.120.43.16",
+    "timestamp": "2026-03-13T21:39:20.654596"
+  },
+  {
+    "id": "jwt_0081",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "178.152.150.129",
+    "timestamp": "2026-03-13T21:39:20.654601"
+  },
+  {
+    "id": "jwt_0082",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.199.174.182",
+    "timestamp": "2026-03-13T21:39:20.654606"
+  },
+  {
+    "id": "jwt_0083",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "204.66.87.5",
+    "timestamp": "2026-03-13T21:39:20.654610"
+  },
+  {
+    "id": "jwt_0084",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "29.79.175.43",
+    "timestamp": "2026-03-13T21:39:20.654617"
+  },
+  {
+    "id": "jwt_0085",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "21.40.251.93",
+    "timestamp": "2026-03-13T21:39:20.654622"
+  },
+  {
+    "id": "jwt_0086",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.179.190.149",
+    "timestamp": "2026-03-13T21:39:20.654626"
+  },
+  {
+    "id": "jwt_0087",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "34.134.238.32",
+    "timestamp": "2026-03-13T21:39:20.654630"
+  },
+  {
+    "id": "jwt_0088",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "92.176.52.76",
+    "timestamp": "2026-03-13T21:39:20.654635"
+  },
+  {
+    "id": "jwt_0089",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "177.177.124.134",
+    "timestamp": "2026-03-13T21:39:20.654653"
+  },
+  {
+    "id": "jwt_0090",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "135.158.118.252",
+    "timestamp": "2026-03-13T21:39:20.654662"
+  },
+  {
+    "id": "jwt_0091",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "17.49.178.224",
+    "timestamp": "2026-03-13T21:39:20.654669"
+  },
+  {
+    "id": "jwt_0092",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.28.117.172",
+    "timestamp": "2026-03-13T21:39:20.654674"
+  },
+  {
+    "id": "jwt_0093",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "105.6.50.93",
+    "timestamp": "2026-03-13T21:39:20.654679"
+  },
+  {
+    "id": "jwt_0094",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "171.136.64.18",
+    "timestamp": "2026-03-13T21:39:20.654688"
+  },
+  {
+    "id": "jwt_0095",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "75.72.12.156",
+    "timestamp": "2026-03-13T21:39:20.654694"
+  },
+  {
+    "id": "jwt_0096",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "205.87.86.249",
+    "timestamp": "2026-03-13T21:39:20.654699"
+  },
+  {
+    "id": "jwt_0097",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "202.53.127.150",
+    "timestamp": "2026-03-13T21:39:20.654703"
+  },
+  {
+    "id": "jwt_0098",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.INVALID_SIGNATURE",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "201.36.125.81",
+    "timestamp": "2026-03-13T21:39:20.654708"
+  },
+  {
+    "id": "jwt_0099",
+    "type": "jwt_attack",
+    "payload": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "73.137.180.180",
+    "timestamp": "2026-03-13T21:39:20.654713"
+  }
+]

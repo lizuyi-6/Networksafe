@@ -1,0 +1,902 @@
+[
+  {
+    "id": "smuggle_adv_0000",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "50.211.135.114",
+    "timestamp": "2026-03-13T21:53:09.061957"
+  },
+  {
+    "id": "smuggle_adv_0001",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "116.178.198.109",
+    "timestamp": "2026-03-13T21:53:09.061962"
+  },
+  {
+    "id": "smuggle_adv_0002",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "141.32.47.185",
+    "timestamp": "2026-03-13T21:53:09.061969"
+  },
+  {
+    "id": "smuggle_adv_0003",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.230.151.181",
+    "timestamp": "2026-03-13T21:53:09.061974"
+  },
+  {
+    "id": "smuggle_adv_0004",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.89.218.200",
+    "timestamp": "2026-03-13T21:53:09.061979"
+  },
+  {
+    "id": "smuggle_adv_0005",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.104.44.205",
+    "timestamp": "2026-03-13T21:53:09.061984"
+  },
+  {
+    "id": "smuggle_adv_0006",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "172.167.170.135",
+    "timestamp": "2026-03-13T21:53:09.061989"
+  },
+  {
+    "id": "smuggle_adv_0007",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "76.161.157.180",
+    "timestamp": "2026-03-13T21:53:09.061994"
+  },
+  {
+    "id": "smuggle_adv_0008",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "15.53.37.50",
+    "timestamp": "2026-03-13T21:53:09.061999"
+  },
+  {
+    "id": "smuggle_adv_0009",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "102.52.144.26",
+    "timestamp": "2026-03-13T21:53:09.062004"
+  },
+  {
+    "id": "smuggle_adv_0010",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.165.226.235",
+    "timestamp": "2026-03-13T21:53:09.062009"
+  },
+  {
+    "id": "smuggle_adv_0011",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "13.36.205.37",
+    "timestamp": "2026-03-13T21:53:09.062013"
+  },
+  {
+    "id": "smuggle_adv_0012",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "2.246.139.127",
+    "timestamp": "2026-03-13T21:53:09.062018"
+  },
+  {
+    "id": "smuggle_adv_0013",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.101.105.208",
+    "timestamp": "2026-03-13T21:53:09.062022"
+  },
+  {
+    "id": "smuggle_adv_0014",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "112.82.51.223",
+    "timestamp": "2026-03-13T21:53:09.062027"
+  },
+  {
+    "id": "smuggle_adv_0015",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.188.227.246",
+    "timestamp": "2026-03-13T21:53:09.062033"
+  },
+  {
+    "id": "smuggle_adv_0016",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "9.184.13.111",
+    "timestamp": "2026-03-13T21:53:09.062038"
+  },
+  {
+    "id": "smuggle_adv_0017",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "24.64.76.11",
+    "timestamp": "2026-03-13T21:53:09.062043"
+  },
+  {
+    "id": "smuggle_adv_0018",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "118.74.39.100",
+    "timestamp": "2026-03-13T21:53:09.062047"
+  },
+  {
+    "id": "smuggle_adv_0019",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "140.50.110.54",
+    "timestamp": "2026-03-13T21:53:09.062052"
+  },
+  {
+    "id": "smuggle_adv_0020",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "148.248.210.241",
+    "timestamp": "2026-03-13T21:53:09.062056"
+  },
+  {
+    "id": "smuggle_adv_0021",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "197.39.19.234",
+    "timestamp": "2026-03-13T21:53:09.062061"
+  },
+  {
+    "id": "smuggle_adv_0022",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "135.124.38.204",
+    "timestamp": "2026-03-13T21:53:09.062065"
+  },
+  {
+    "id": "smuggle_adv_0023",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "77.224.211.117",
+    "timestamp": "2026-03-13T21:53:09.062069"
+  },
+  {
+    "id": "smuggle_adv_0024",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "198.227.192.105",
+    "timestamp": "2026-03-13T21:53:09.062074"
+  },
+  {
+    "id": "smuggle_adv_0025",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "207.162.123.148",
+    "timestamp": "2026-03-13T21:53:09.062079"
+  },
+  {
+    "id": "smuggle_adv_0026",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "207.217.134.10",
+    "timestamp": "2026-03-13T21:53:09.062084"
+  },
+  {
+    "id": "smuggle_adv_0027",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "35.146.31.110",
+    "timestamp": "2026-03-13T21:53:09.062090"
+  },
+  {
+    "id": "smuggle_adv_0028",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "3.172.212.206",
+    "timestamp": "2026-03-13T21:53:09.062095"
+  },
+  {
+    "id": "smuggle_adv_0029",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "41.255.119.37",
+    "timestamp": "2026-03-13T21:53:09.062099"
+  },
+  {
+    "id": "smuggle_adv_0030",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.67.73.122",
+    "timestamp": "2026-03-13T21:53:09.062106"
+  },
+  {
+    "id": "smuggle_adv_0031",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "8.106.206.207",
+    "timestamp": "2026-03-13T21:53:09.062111"
+  },
+  {
+    "id": "smuggle_adv_0032",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "181.43.141.180",
+    "timestamp": "2026-03-13T21:53:09.062115"
+  },
+  {
+    "id": "smuggle_adv_0033",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "54.47.26.212",
+    "timestamp": "2026-03-13T21:53:09.062120"
+  },
+  {
+    "id": "smuggle_adv_0034",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "112.234.223.220",
+    "timestamp": "2026-03-13T21:53:09.062124"
+  },
+  {
+    "id": "smuggle_adv_0035",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.161.193.235",
+    "timestamp": "2026-03-13T21:53:09.062131"
+  },
+  {
+    "id": "smuggle_adv_0036",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.231.164.107",
+    "timestamp": "2026-03-13T21:53:09.062136"
+  },
+  {
+    "id": "smuggle_adv_0037",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "110.71.83.1",
+    "timestamp": "2026-03-13T21:53:09.062141"
+  },
+  {
+    "id": "smuggle_adv_0038",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "221.229.154.83",
+    "timestamp": "2026-03-13T21:53:09.062145"
+  },
+  {
+    "id": "smuggle_adv_0039",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "46.183.215.232",
+    "timestamp": "2026-03-13T21:53:09.062150"
+  },
+  {
+    "id": "smuggle_adv_0040",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.164.85.72",
+    "timestamp": "2026-03-13T21:53:09.062154"
+  },
+  {
+    "id": "smuggle_adv_0041",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.114.185.11",
+    "timestamp": "2026-03-13T21:53:09.062159"
+  },
+  {
+    "id": "smuggle_adv_0042",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "195.250.197.86",
+    "timestamp": "2026-03-13T21:53:09.062164"
+  },
+  {
+    "id": "smuggle_adv_0043",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "129.112.178.60",
+    "timestamp": "2026-03-13T21:53:09.062168"
+  },
+  {
+    "id": "smuggle_adv_0044",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.243.113.227",
+    "timestamp": "2026-03-13T21:53:09.062172"
+  },
+  {
+    "id": "smuggle_adv_0045",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.178.1.62",
+    "timestamp": "2026-03-13T21:53:09.062177"
+  },
+  {
+    "id": "smuggle_adv_0046",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "182.71.81.242",
+    "timestamp": "2026-03-13T21:53:09.062182"
+  },
+  {
+    "id": "smuggle_adv_0047",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.174.91.232",
+    "timestamp": "2026-03-13T21:53:09.062186"
+  },
+  {
+    "id": "smuggle_adv_0048",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "141.63.143.33",
+    "timestamp": "2026-03-13T21:53:09.062191"
+  },
+  {
+    "id": "smuggle_adv_0049",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.46.113.243",
+    "timestamp": "2026-03-13T21:53:09.062195"
+  },
+  {
+    "id": "smuggle_adv_0050",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "29.96.226.75",
+    "timestamp": "2026-03-13T21:53:09.062200"
+  },
+  {
+    "id": "smuggle_adv_0051",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.96.89.13",
+    "timestamp": "2026-03-13T21:53:09.062204"
+  },
+  {
+    "id": "smuggle_adv_0052",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.153.198.166",
+    "timestamp": "2026-03-13T21:53:09.062209"
+  },
+  {
+    "id": "smuggle_adv_0053",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "60.196.76.31",
+    "timestamp": "2026-03-13T21:53:09.062216"
+  },
+  {
+    "id": "smuggle_adv_0054",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.2.249.152",
+    "timestamp": "2026-03-13T21:53:09.062223"
+  },
+  {
+    "id": "smuggle_adv_0055",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "211.119.158.163",
+    "timestamp": "2026-03-13T21:53:09.062227"
+  },
+  {
+    "id": "smuggle_adv_0056",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "29.115.59.217",
+    "timestamp": "2026-03-13T21:53:09.062232"
+  },
+  {
+    "id": "smuggle_adv_0057",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "137.164.242.79",
+    "timestamp": "2026-03-13T21:53:09.062236"
+  },
+  {
+    "id": "smuggle_adv_0058",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "117.44.156.13",
+    "timestamp": "2026-03-13T21:53:09.062241"
+  },
+  {
+    "id": "smuggle_adv_0059",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "156.241.229.221",
+    "timestamp": "2026-03-13T21:53:09.062245"
+  },
+  {
+    "id": "smuggle_adv_0060",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "155.214.91.115",
+    "timestamp": "2026-03-13T21:53:09.062250"
+  },
+  {
+    "id": "smuggle_adv_0061",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "47.240.12.78",
+    "timestamp": "2026-03-13T21:53:09.062254"
+  },
+  {
+    "id": "smuggle_adv_0062",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "162.122.127.135",
+    "timestamp": "2026-03-13T21:53:09.062261"
+  },
+  {
+    "id": "smuggle_adv_0063",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.65.3.150",
+    "timestamp": "2026-03-13T21:53:09.062265"
+  },
+  {
+    "id": "smuggle_adv_0064",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "10.77.113.158",
+    "timestamp": "2026-03-13T21:53:09.062270"
+  },
+  {
+    "id": "smuggle_adv_0065",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "162.33.228.108",
+    "timestamp": "2026-03-13T21:53:09.062274"
+  },
+  {
+    "id": "smuggle_adv_0066",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "152.255.118.179",
+    "timestamp": "2026-03-13T21:53:09.062279"
+  },
+  {
+    "id": "smuggle_adv_0067",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "54.17.60.147",
+    "timestamp": "2026-03-13T21:53:09.062283"
+  },
+  {
+    "id": "smuggle_adv_0068",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.35.50.153",
+    "timestamp": "2026-03-13T21:53:09.062287"
+  },
+  {
+    "id": "smuggle_adv_0069",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "207.142.150.93",
+    "timestamp": "2026-03-13T21:53:09.062292"
+  },
+  {
+    "id": "smuggle_adv_0070",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "62.196.21.212",
+    "timestamp": "2026-03-13T21:53:09.062296"
+  },
+  {
+    "id": "smuggle_adv_0071",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "135.45.40.148",
+    "timestamp": "2026-03-13T21:53:09.062301"
+  },
+  {
+    "id": "smuggle_adv_0072",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.130.221.163",
+    "timestamp": "2026-03-13T21:53:09.062305"
+  },
+  {
+    "id": "smuggle_adv_0073",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "120.244.134.127",
+    "timestamp": "2026-03-13T21:53:09.062309"
+  },
+  {
+    "id": "smuggle_adv_0074",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.110.145.87",
+    "timestamp": "2026-03-13T21:53:09.062316"
+  },
+  {
+    "id": "smuggle_adv_0075",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "11.159.188.49",
+    "timestamp": "2026-03-13T21:53:09.062321"
+  },
+  {
+    "id": "smuggle_adv_0076",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "208.9.141.208",
+    "timestamp": "2026-03-13T21:53:09.062325"
+  },
+  {
+    "id": "smuggle_adv_0077",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "179.88.76.173",
+    "timestamp": "2026-03-13T21:53:09.062330"
+  },
+  {
+    "id": "smuggle_adv_0078",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.3.254.181",
+    "timestamp": "2026-03-13T21:53:09.062340"
+  },
+  {
+    "id": "smuggle_adv_0079",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "205.193.150.161",
+    "timestamp": "2026-03-13T21:53:09.062344"
+  },
+  {
+    "id": "smuggle_adv_0080",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: xchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "27.229.136.155",
+    "timestamp": "2026-03-13T21:53:09.062349"
+  },
+  {
+    "id": "smuggle_adv_0081",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "47.7.80.84",
+    "timestamp": "2026-03-13T21:53:09.062354"
+  },
+  {
+    "id": "smuggle_adv_0082",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "82.108.206.9",
+    "timestamp": "2026-03-13T21:53:09.062358"
+  },
+  {
+    "id": "smuggle_adv_0083",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "195.7.252.216",
+    "timestamp": "2026-03-13T21:53:09.062363"
+  },
+  {
+    "id": "smuggle_adv_0084",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "126.253.31.60",
+    "timestamp": "2026-03-13T21:53:09.062367"
+  },
+  {
+    "id": "smuggle_adv_0085",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "159.47.182.32",
+    "timestamp": "2026-03-13T21:53:09.062372"
+  },
+  {
+    "id": "smuggle_adv_0086",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "64.7.15.69",
+    "timestamp": "2026-03-13T21:53:09.062376"
+  },
+  {
+    "id": "smuggle_adv_0087",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "55.55.76.1",
+    "timestamp": "2026-03-13T21:53:09.062381"
+  },
+  {
+    "id": "smuggle_adv_0088",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "1.2.22.56",
+    "timestamp": "2026-03-13T21:53:09.062385"
+  },
+  {
+    "id": "smuggle_adv_0089",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "41.254.41.121",
+    "timestamp": "2026-03-13T21:53:09.062390"
+  },
+  {
+    "id": "smuggle_adv_0090",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "117.227.79.6",
+    "timestamp": "2026-03-13T21:53:09.062395"
+  },
+  {
+    "id": "smuggle_adv_0091",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "111.201.164.213",
+    "timestamp": "2026-03-13T21:53:09.062399"
+  },
+  {
+    "id": "smuggle_adv_0092",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding : chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "220.26.130.193",
+    "timestamp": "2026-03-13T21:53:09.062403"
+  },
+  {
+    "id": "smuggle_adv_0093",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "66.140.168.48",
+    "timestamp": "2026-03-13T21:53:09.062410"
+  },
+  {
+    "id": "smuggle_adv_0094",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.41.52.97",
+    "timestamp": "2026-03-13T21:53:09.062417"
+  },
+  {
+    "id": "smuggle_adv_0095",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "80.235.27.235",
+    "timestamp": "2026-03-13T21:53:09.062421"
+  },
+  {
+    "id": "smuggle_adv_0096",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Ignore: X",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "50.99.11.117",
+    "timestamp": "2026-03-13T21:53:09.062426"
+  },
+  {
+    "id": "smuggle_adv_0097",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTRANSFER-ENCODING: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "68.2.252.91",
+    "timestamp": "2026-03-13T21:53:09.062430"
+  },
+  {
+    "id": "smuggle_adv_0098",
+    "type": "http_smuggling_advanced",
+    "payload": "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding:\tchunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "4.168.172.134",
+    "timestamp": "2026-03-13T21:53:09.062435"
+  },
+  {
+    "id": "smuggle_adv_0099",
+    "type": "http_smuggling_advanced",
+    "payload": "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "159.45.86.247",
+    "timestamp": "2026-03-13T21:53:09.062439"
+  }
+]

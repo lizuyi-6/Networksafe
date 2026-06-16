@@ -6,7 +6,16 @@ import {
     Cpu, HardDrive, Wifi, WifiOff, Radio, RefreshCw, Terminal, Power, Settings, X,
     Server, Activity, Shield, Globe, Zap, ChevronRight, Save, RotateCcw, History, CheckCircle2
 } from 'lucide-react';
-import { fetchDeviceConfig, fetchDevicesList, fetchSystemBadges, isRequestAbortError, saveDeviceConfig, sendDeviceCommand } from '../services/api';
+import {
+    fetchDeviceConfig,
+    fetchDevicesList,
+    fetchFinalDefenseStatus,
+    fetchSystemBadges,
+    FinalDefenseStatusResponse,
+    isRequestAbortError,
+    saveDeviceConfig,
+    sendDeviceCommand
+} from '../services/api';
 
 interface DeviceCommandRecord {
     id: string;
@@ -76,7 +85,20 @@ const defaultConfig = (device: Device): DeviceConfig => ({
     networkProfile: device.config?.networkProfile || 'cloud-mesh',
     scanProfile: device.config?.scanProfile || 'balanced',
     notes: device.config?.notes || '',
-    commandPermissions: device.config?.commandPermissions || ['collect', 'reboot', 'sync-config'],
+    commandPermissions: device.config?.commandPermissions || [
+        'collect',
+        'reboot',
+        'sync-config',
+        'ota_update',
+        'deploy_bundle',
+        'host_install',
+        'host_remove',
+        'recovery_flash',
+        'factory_reset',
+        'diagnostic_unlock',
+        'wipe_data',
+        'critical_config_change'
+    ],
     tags: device.config?.tags || []
 });
 
@@ -216,6 +238,8 @@ const Devices = () => {
     const [commandHistory, setCommandHistory] = useState<DeviceCommandRecord[]>([]);
     const [commandBusyByDevice, setCommandBusyByDevice] = useState<Record<string, string | null>>({});
     const [platformBadges, setPlatformBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
+    const [finalDefense, setFinalDefense] = useState<FinalDefenseStatusResponse | null>(null);
+    const [, setShowResetConfirm] = useState(false);
 
     const fetchDevices = async (signal?: AbortSignal) => {
         setLoading(true);
@@ -225,12 +249,14 @@ const Devices = () => {
                 fetchDevicesList(signal),
                 fetchSystemBadges(signal),
             ]);
+            const finalDefenseStatus = await fetchFinalDefenseStatus(signal).catch(() => null);
             if (signal?.aborted) {
                 return;
             }
             const nextDevices = data.devices || [];
             setDevices(nextDevices);
             setPlatformBadges(badges);
+            setFinalDefense(finalDefenseStatus);
             setSelectedDevice((current) => current && nextDevices.some((device: Device) => device.deviceId === current) ? current : nextDevices[0]?.deviceId || null);
         } catch (e: any) {
             if (!isRequestAbortError(e, signal)) {
@@ -313,7 +339,11 @@ const Devices = () => {
         setCommandBusyByDevice((current) => ({ ...current, [deviceId]: command }));
         try {
             const response = await sendDeviceCommand(deviceId, command);
-            setActionMessage(response.message || `Command ${command} completed`);
+            setActionMessage(
+                response.status === 'approval_required'
+                    ? `${response.message || `Command ${command} is waiting for hardware confirmation.`}${response.confirmationSessionId ? ` (${response.confirmationSessionId})` : ''}`
+                    : response.message || `Command ${command} completed`
+            );
             await fetchDevices();
             if (settingsOpen && settingsDeviceId === deviceId) {
                 await loadDeviceConfig(deviceId);
@@ -355,6 +385,31 @@ const Devices = () => {
         () => devices.filter((device) => device.latestCommand || device.securitySummary?.latestCommand).length,
         [devices]
     );
+    const primaryRootGateway = finalDefense?.rootResistantGateways?.[0] || null;
+    const primaryFinalDefense = finalDefense?.statuses?.[0] || null;
+    const rootResistantActive = Boolean(finalDefense?.rootResistantActive && primaryRootGateway?.active);
+    const rootGatewayConditionRows = primaryRootGateway ? [
+        ['External gateway online', primaryRootGateway.gatewayOnline],
+        ['Policy digest matched', Boolean(primaryRootGateway.policyDigest && primaryRootGateway.policyDigest === primaryRootGateway.reportedPolicyDigest)],
+        ['Firmware measured', Boolean(primaryRootGateway.firmwareDigest && primaryRootGateway.lastAttestationAt)],
+        ['SERVER port linked', primaryRootGateway.serverPortLink],
+        ['LAN/WAN port linked', primaryRootGateway.lanPortLink],
+        ['Independent MGMT path', primaryRootGateway.mgmtPath === 'dedicated_mgmt' || primaryRootGateway.mgmtPath === 'cellular'],
+        ['Secure element', primaryRootGateway.secureElementPresent],
+        ['Bridge fail-closed ready', primaryRootGateway.bridgeState === 'armed' || primaryRootGateway.bridgeState === 'isolated']
+    ] as Array<[string, boolean]> : [];
+    const hostCompanionConditionRows = primaryFinalDefense ? [
+        ['Companion secure element', primaryFinalDefense.secureElementPresent],
+        ['Companion policy matched', Boolean(primaryFinalDefense.policyDigest && primaryFinalDefense.policyDigest === primaryFinalDefense.reportedPolicyDigest)],
+        ['External DC present', primaryFinalDefense.externalPowerPresent],
+        ['Feedback OK', primaryFinalDefense.feedbackOk],
+        ['Companion online', primaryFinalDefense.companionOnline],
+        ['Interlock healthy', primaryFinalDefense.interlockState === 'armed' || primaryFinalDefense.interlockState === 'isolated']
+    ] as Array<[string, boolean]> : [];
+    const rootFinalDefenseTitle = rootResistantActive
+        ? 'Root-Resistant Final Defense Active'
+        : 'Root-Resistant Final Defense Degraded';
+    const rootFinalDefenseSubtitle = 'External Root-Resistant Gateway Appliance keeps the protected network link under hardware control even if the server OS is root-compromised.';
 
     return (
         <div className="relative p-6 space-y-6 max-w-[1600px] mx-auto">
@@ -378,6 +433,64 @@ const Devices = () => {
             )}
 
             {error && <div className="p-3 rounded border border-red-500/30 text-red-300 bg-red-500/10 text-sm">{error}</div>}
+
+            <div className={`border rounded-xl p-5 shadow-sm ${
+                rootResistantActive
+                    ? 'border-emerald-500/30 bg-emerald-500/10'
+                    : 'border-amber-500/30 bg-amber-500/10'
+            }`}>
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                            <Shield size={18} className={rootResistantActive ? 'text-emerald-500' : 'text-amber-500'} />
+                            {rootFinalDefenseTitle}
+                        </div>
+                        <div className="mt-2 text-sm text-muted-foreground">
+                            {rootFinalDefenseSubtitle}
+                        </div>
+                    </div>
+                    <div className="grid min-w-0 grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:min-w-[560px]">
+                        {rootGatewayConditionRows.length > 0 ? rootGatewayConditionRows.map(([label, ok]) => (
+                            <div key={label} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card/70 px-3 py-2">
+                                <span className="truncate text-muted-foreground">{label}</span>
+                                <span className={`font-medium ${ok ? 'text-emerald-500' : 'text-amber-500'}`}>{ok ? 'OK' : 'Check'}</span>
+                            </div>
+                        )) : (
+                            <div className="col-span-2 rounded-lg border border-border bg-card/70 px-3 py-2 text-muted-foreground sm:col-span-3">
+                                No external Root-Resistant Gateway Appliance has reported root-resistant status.
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {primaryRootGateway && (
+                    <div className="mt-4 grid grid-cols-1 gap-3 text-xs text-muted-foreground md:grid-cols-4">
+                        <div>Gateway: <span className="font-medium text-foreground">{primaryRootGateway.gatewayId}</span></div>
+                        <div>Bridge: <span className="font-medium text-foreground">{primaryRootGateway.bridgeState}</span></div>
+                        <div>MGMT: <span className="font-medium text-foreground">{primaryRootGateway.mgmtPath}</span></div>
+                        <div>Policy: <span className="font-medium text-foreground">{primaryRootGateway.policyDigest?.slice(0, 12) || '--'}</span></div>
+                    </div>
+                )}
+                {primaryRootGateway?.degradedReasons?.length ? (
+                    <div className="mt-3 text-xs text-amber-600 dark:text-amber-300">
+                        {primaryRootGateway.degradedReasons.join(', ')}
+                    </div>
+                ) : null}
+                <div className="mt-4 rounded-lg border border-border bg-card/70 p-3">
+                    <div className="text-xs font-semibold text-foreground">Security Controller compatibility status</div>
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+                        {hostCompanionConditionRows.length > 0 ? hostCompanionConditionRows.map(([label, ok]) => (
+                            <div key={label} className="flex items-center justify-between gap-2 rounded-md bg-muted/30 px-2 py-1.5">
+                                <span className="truncate text-muted-foreground">{label}</span>
+                                <span className={`font-medium ${ok ? 'text-emerald-500' : 'text-amber-500'}`}>{ok ? 'OK' : 'Check'}</span>
+                            </div>
+                        )) : (
+                            <div className="col-span-2 text-muted-foreground sm:col-span-3">
+                                No host companion gate has reported. This does not satisfy root-resistant protection by itself.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
@@ -600,7 +713,7 @@ const Devices = () => {
 
                             <div className="border-t border-border px-6 py-4">
                                 <div className="flex items-center justify-between gap-3">
-                                    <button onClick={() => activeConfigDevice && setConfigDraft(defaultConfig(activeConfigDevice))} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">
+                                    <button onClick={() => setShowResetConfirm(true)} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">
                                         <RotateCcw size={14} /> {t('devices.reset')}
                                     </button>
                                     <div className="flex gap-3">

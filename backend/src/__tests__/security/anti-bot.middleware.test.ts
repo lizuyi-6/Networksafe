@@ -42,7 +42,7 @@ describe('AntiBotMiddleware', () => {
   let middleware: AntiBotMiddleware;
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
-  let mockNext: NextFunction;
+  let mockNext: jest.Mock;
   let jsonMock: jest.Mock;
   let statusMock: jest.Mock;
   let setMock: jest.Mock;
@@ -244,13 +244,13 @@ describe('AntiBotMiddleware', () => {
 
   describe('Localhost Bypass', () => {
     it('should allow localhost IPv4', async () => {
-      mockReq.ip = '127.0.0.1';
+      (mockReq as { ip: string }).ip = '127.0.0.1';
       await middleware.protect(mockReq as Request, mockRes as Response, mockNext);
       expect(mockNext).toHaveBeenCalled();
     });
 
     it('should allow localhost IPv6', async () => {
-      mockReq.ip = '::1';
+      (mockReq as { ip: string }).ip = '::1';
       await middleware.protect(mockReq as Request, mockRes as Response, mockNext);
       expect(mockNext).toHaveBeenCalled();
     });

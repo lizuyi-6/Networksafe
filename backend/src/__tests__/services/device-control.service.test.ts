@@ -1,30 +1,9 @@
-import { createHash, createSign, generateKeyPairSync } from 'crypto';
+import { createSign, generateKeyPairSync } from 'crypto';
 import { getDatabase, initDatabase } from '../../config/database';
 import { registerDevice } from '../../services/device-registry.service';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { deviceControlService } from '../../services/device-control.service';
-
-function payloadHash(value: Record<string, any>): string {
-  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
-}
-
-function buildMessage(input: {
-  deviceId: string;
-  confirmationSessionId: string;
-  commandType: string;
-  payloadHash: string;
-  monotonicCounter: number;
-  timestamp: number;
-}): string {
-  return [
-    input.deviceId,
-    input.confirmationSessionId,
-    input.commandType,
-    input.payloadHash,
-    String(input.monotonicCounter),
-    String(input.timestamp)
-  ].join('\n');
-}
+import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 
 describe('deviceControlService physical confirmation', () => {
   beforeAll(async () => {
@@ -59,25 +38,37 @@ describe('deviceControlService physical confirmation', () => {
       physicalAuth: {
         publicKeyPem: keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString()
       }
-    });
+    } as any);
 
     const session = await deviceControlService.createPhysicalConfirmation({
       tenantId: 'tenant-test',
       deviceId,
       commandType: 'host_remove',
       payload: { path: '/opt/AetherGuard' },
+      hardwareContext: {
+        policyDigest: 'sha256:deadbeef-test-policy-digest-0123456789abcdef',
+        breakerTarget: 'server-nic-0'
+      },
       actorId: 'tester'
     });
 
-    const timestamp = Date.now();
+    const issuedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 120000).toISOString();
     const monotonicCounter = 1;
-    const message = buildMessage({
-      deviceId,
-      confirmationSessionId: session.id,
+    const message = buildHardwareGrantMessage({
+      gateId: deviceId,
+      sessionId: session.id,
+      actionId: session.id,
+      tenantId: 'tenant-test',
+      scope: 'device',
+      targetId: deviceId,
       commandType: 'host_remove',
-      payloadHash: payloadHash({ path: '/opt/AetherGuard' }),
+      payloadHash: hashPayload({ path: '/opt/AetherGuard' }),
+      policyDigest: 'sha256:deadbeef-test-policy-digest-0123456789abcdef',
+      breakerTarget: 'server-nic-0',
+      issuedAt,
+      expiresAt,
       monotonicCounter,
-      timestamp
     });
     const signature = createSign('SHA256').update(message).end().sign(keyPair.privateKey, 'base64');
 
@@ -85,7 +76,10 @@ describe('deviceControlService physical confirmation', () => {
       confirmationSessionId: session.id,
       confirmed: true,
       monotonicCounter,
-      timestamp,
+      issuedAt,
+      expiresAt,
+      policyDigest: 'sha256:deadbeef-test-policy-digest-0123456789abcdef',
+      breakerTarget: 'server-nic-0',
       signature
     });
 

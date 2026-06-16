@@ -1,0 +1,902 @@
+[
+  {
+    "id": "api_0000",
+    "type": "api_abuse",
+    "payload": "/api/orders/123",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "51.86.112.231",
+    "timestamp": "2026-03-13T21:47:04.402074"
+  },
+  {
+    "id": "api_0001",
+    "type": "api_abuse",
+    "payload": "/api/users?page=1&size=1000",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "41.207.222.254",
+    "timestamp": "2026-03-13T21:47:04.402080"
+  },
+  {
+    "id": "api_0002",
+    "type": "api_abuse",
+    "payload": "/api/user/1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "151.17.236.106",
+    "timestamp": "2026-03-13T21:47:04.402085"
+  },
+  {
+    "id": "api_0003",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ __type(name: \"User\") { fields { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "112.116.37.188",
+    "timestamp": "2026-03-13T21:47:04.402089"
+  },
+  {
+    "id": "api_0004",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{__schema { types { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "159.171.164.85",
+    "timestamp": "2026-03-13T21:47:04.402094"
+  },
+  {
+    "id": "api_0005",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"mutation { deleteUser(id: 1) }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "186.165.31.63",
+    "timestamp": "2026-03-13T21:47:04.402100"
+  },
+  {
+    "id": "api_0006",
+    "type": "api_abuse",
+    "payload": "/api/user/1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "207.160.89.79",
+    "timestamp": "2026-03-13T21:47:04.402105"
+  },
+  {
+    "id": "api_0007",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "56.70.127.124",
+    "timestamp": "2026-03-13T21:47:04.402110"
+  },
+  {
+    "id": "api_0008",
+    "type": "api_abuse",
+    "payload": "/api/users?page=1&size=1000",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "114.29.165.233",
+    "timestamp": "2026-03-13T21:47:04.402115"
+  },
+  {
+    "id": "api_0009",
+    "type": "api_abuse",
+    "payload": "/api/documents/457",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "179.160.175.156",
+    "timestamp": "2026-03-13T21:47:04.402123"
+  },
+  {
+    "id": "api_0010",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ __type(name: \"User\") { fields { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "163.120.56.222",
+    "timestamp": "2026-03-13T21:47:04.402128"
+  },
+  {
+    "id": "api_0011",
+    "type": "api_abuse",
+    "payload": "/api/user/2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "170.142.15.195",
+    "timestamp": "2026-03-13T21:47:04.402132"
+  },
+  {
+    "id": "api_0012",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "97.67.190.108",
+    "timestamp": "2026-03-13T21:47:04.402137"
+  },
+  {
+    "id": "api_0013",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "169.241.249.245",
+    "timestamp": "2026-03-13T21:47:04.402141"
+  },
+  {
+    "id": "api_0014",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "26.40.65.250",
+    "timestamp": "2026-03-13T21:47:04.402146"
+  },
+  {
+    "id": "api_0015",
+    "type": "api_abuse",
+    "payload": "Client-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "2.104.145.122",
+    "timestamp": "2026-03-13T21:47:04.402151"
+  },
+  {
+    "id": "api_0016",
+    "type": "api_abuse",
+    "payload": "/api/orders/123",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "222.55.193.221",
+    "timestamp": "2026-03-13T21:47:04.402156"
+  },
+  {
+    "id": "api_0017",
+    "type": "api_abuse",
+    "payload": "/api/documents/457",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "134.248.50.72",
+    "timestamp": "2026-03-13T21:47:04.402160"
+  },
+  {
+    "id": "api_0018",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "161.158.235.66",
+    "timestamp": "2026-03-13T21:47:04.402165"
+  },
+  {
+    "id": "api_0019",
+    "type": "api_abuse",
+    "payload": "/api/documents/457",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "147.117.199.157",
+    "timestamp": "2026-03-13T21:47:04.402172"
+  },
+  {
+    "id": "api_0020",
+    "type": "api_abuse",
+    "payload": "/api/search?q=*&limit=999999",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "183.236.215.28",
+    "timestamp": "2026-03-13T21:47:04.402179"
+  },
+  {
+    "id": "api_0021",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "34.56.102.92",
+    "timestamp": "2026-03-13T21:47:04.402184"
+  },
+  {
+    "id": "api_0022",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "17.140.54.170",
+    "timestamp": "2026-03-13T21:47:04.402188"
+  },
+  {
+    "id": "api_0023",
+    "type": "api_abuse",
+    "payload": "/api/search?q=*&limit=999999",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "70.157.240.118",
+    "timestamp": "2026-03-13T21:47:04.402193"
+  },
+  {
+    "id": "api_0024",
+    "type": "api_abuse",
+    "payload": "/api/orders/124",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "48.94.15.112",
+    "timestamp": "2026-03-13T21:47:04.402197"
+  },
+  {
+    "id": "api_0025",
+    "type": "api_abuse",
+    "payload": "/api/user/3",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "223.166.148.155",
+    "timestamp": "2026-03-13T21:47:04.402202"
+  },
+  {
+    "id": "api_0026",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "144.52.218.207",
+    "timestamp": "2026-03-13T21:47:04.402207"
+  },
+  {
+    "id": "api_0027",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "18.2.139.75",
+    "timestamp": "2026-03-13T21:47:04.402212"
+  },
+  {
+    "id": "api_0028",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "136.89.28.111",
+    "timestamp": "2026-03-13T21:47:04.402216"
+  },
+  {
+    "id": "api_0029",
+    "type": "api_abuse",
+    "payload": "X-Real-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "145.51.132.235",
+    "timestamp": "2026-03-13T21:47:04.402221"
+  },
+  {
+    "id": "api_0030",
+    "type": "api_abuse",
+    "payload": "X-Real-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "113.86.192.13",
+    "timestamp": "2026-03-13T21:47:04.402225"
+  },
+  {
+    "id": "api_0031",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"mutation { deleteUser(id: 1) }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "197.170.74.96",
+    "timestamp": "2026-03-13T21:47:04.402230"
+  },
+  {
+    "id": "api_0032",
+    "type": "api_abuse",
+    "payload": "/api/user/2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "66.243.7.203",
+    "timestamp": "2026-03-13T21:47:04.402234"
+  },
+  {
+    "id": "api_0033",
+    "type": "api_abuse",
+    "payload": "POST /api/batch HTTP/1.1\r\n\r\n[{\"method\":\"GET\",\"url\":\"/api/user/1\"},{\"method\":\"DELETE\",\"url\":\"/api/user/1\"}]",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "4.204.48.92",
+    "timestamp": "2026-03-13T21:47:04.402239"
+  },
+  {
+    "id": "api_0034",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"mutation { deleteUser(id: 1) }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "30.138.87.229",
+    "timestamp": "2026-03-13T21:47:04.402243"
+  },
+  {
+    "id": "api_0035",
+    "type": "api_abuse",
+    "payload": "POST /api/batch HTTP/1.1\r\n\r\n[{\"method\":\"GET\",\"url\":\"/api/user/1\"},{\"method\":\"DELETE\",\"url\":\"/api/user/1\"}]",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "223.55.125.177",
+    "timestamp": "2026-03-13T21:47:04.402248"
+  },
+  {
+    "id": "api_0036",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{__schema { types { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "34.80.44.163",
+    "timestamp": "2026-03-13T21:47:04.402252"
+  },
+  {
+    "id": "api_0037",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"mutation { deleteUser(id: 1) }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "12.12.63.64",
+    "timestamp": "2026-03-13T21:47:04.402257"
+  },
+  {
+    "id": "api_0038",
+    "type": "api_abuse",
+    "payload": "/api/search?q=*&limit=999999",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "60.144.112.132",
+    "timestamp": "2026-03-13T21:47:04.402261"
+  },
+  {
+    "id": "api_0039",
+    "type": "api_abuse",
+    "payload": "X-Real-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "131.207.73.211",
+    "timestamp": "2026-03-13T21:47:04.402268"
+  },
+  {
+    "id": "api_0040",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "213.241.194.13",
+    "timestamp": "2026-03-13T21:47:04.402273"
+  },
+  {
+    "id": "api_0041",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{__schema { types { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "100.160.26.249",
+    "timestamp": "2026-03-13T21:47:04.402280"
+  },
+  {
+    "id": "api_0042",
+    "type": "api_abuse",
+    "payload": "Client-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "44.157.235.253",
+    "timestamp": "2026-03-13T21:47:04.402285"
+  },
+  {
+    "id": "api_0043",
+    "type": "api_abuse",
+    "payload": "/api/documents/457",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "171.32.200.8",
+    "timestamp": "2026-03-13T21:47:04.402289"
+  },
+  {
+    "id": "api_0044",
+    "type": "api_abuse",
+    "payload": "/api/orders/124",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "64.45.166.19",
+    "timestamp": "2026-03-13T21:47:04.402294"
+  },
+  {
+    "id": "api_0045",
+    "type": "api_abuse",
+    "payload": "/api/documents/457",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "64.143.156.145",
+    "timestamp": "2026-03-13T21:47:04.402299"
+  },
+  {
+    "id": "api_0046",
+    "type": "api_abuse",
+    "payload": "Client-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "52.245.43.246",
+    "timestamp": "2026-03-13T21:47:04.402303"
+  },
+  {
+    "id": "api_0047",
+    "type": "api_abuse",
+    "payload": "/api/user/2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "193.22.194.172",
+    "timestamp": "2026-03-13T21:47:04.402308"
+  },
+  {
+    "id": "api_0048",
+    "type": "api_abuse",
+    "payload": "/api/documents/457",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "43.115.219.91",
+    "timestamp": "2026-03-13T21:47:04.402312"
+  },
+  {
+    "id": "api_0049",
+    "type": "api_abuse",
+    "payload": "/api/users?page=1&size=1000",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "68.13.47.105",
+    "timestamp": "2026-03-13T21:47:04.402317"
+  },
+  {
+    "id": "api_0050",
+    "type": "api_abuse",
+    "payload": "/api/users?page=1&size=1000",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "95.155.45.69",
+    "timestamp": "2026-03-13T21:47:04.402321"
+  },
+  {
+    "id": "api_0051",
+    "type": "api_abuse",
+    "payload": "/api/users?page=1&size=1000",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "184.86.203.50",
+    "timestamp": "2026-03-13T21:47:04.402326"
+  },
+  {
+    "id": "api_0052",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "7.243.29.65",
+    "timestamp": "2026-03-13T21:47:04.402330"
+  },
+  {
+    "id": "api_0053",
+    "type": "api_abuse",
+    "payload": "/api/users?page=1&size=1000",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "144.103.165.47",
+    "timestamp": "2026-03-13T21:47:04.402335"
+  },
+  {
+    "id": "api_0054",
+    "type": "api_abuse",
+    "payload": "POST /api/batch HTTP/1.1\r\n\r\n[{\"method\":\"GET\",\"url\":\"/api/user/1\"},{\"method\":\"DELETE\",\"url\":\"/api/user/1\"}]",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "42.146.27.194",
+    "timestamp": "2026-03-13T21:47:04.402339"
+  },
+  {
+    "id": "api_0055",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"mutation { deleteUser(id: 1) }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "58.7.159.194",
+    "timestamp": "2026-03-13T21:47:04.402344"
+  },
+  {
+    "id": "api_0056",
+    "type": "api_abuse",
+    "payload": "/api/search?q=*&limit=999999",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "165.168.129.52",
+    "timestamp": "2026-03-13T21:47:04.402349"
+  },
+  {
+    "id": "api_0057",
+    "type": "api_abuse",
+    "payload": "/api/orders/123",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "88.119.78.4",
+    "timestamp": "2026-03-13T21:47:04.402353"
+  },
+  {
+    "id": "api_0058",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ user(id: 1) { password } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "173.17.68.87",
+    "timestamp": "2026-03-13T21:47:04.402358"
+  },
+  {
+    "id": "api_0059",
+    "type": "api_abuse",
+    "payload": "Client-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "14.153.104.149",
+    "timestamp": "2026-03-13T21:47:04.402367"
+  },
+  {
+    "id": "api_0060",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "97.45.245.245",
+    "timestamp": "2026-03-13T21:47:04.402372"
+  },
+  {
+    "id": "api_0061",
+    "type": "api_abuse",
+    "payload": "X-Real-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "97.82.138.130",
+    "timestamp": "2026-03-13T21:47:04.402376"
+  },
+  {
+    "id": "api_0062",
+    "type": "api_abuse",
+    "payload": "/api/users?page=1&size=1000",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "104.173.49.250",
+    "timestamp": "2026-03-13T21:47:04.402383"
+  },
+  {
+    "id": "api_0063",
+    "type": "api_abuse",
+    "payload": "X-Real-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "49.123.221.35",
+    "timestamp": "2026-03-13T21:47:04.402388"
+  },
+  {
+    "id": "api_0064",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ user(id: 1) { password } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "18.3.56.41",
+    "timestamp": "2026-03-13T21:47:04.402392"
+  },
+  {
+    "id": "api_0065",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "80.185.163.206",
+    "timestamp": "2026-03-13T21:47:04.402397"
+  },
+  {
+    "id": "api_0066",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "122.246.15.112",
+    "timestamp": "2026-03-13T21:47:04.402402"
+  },
+  {
+    "id": "api_0067",
+    "type": "api_abuse",
+    "payload": "/api/user/3",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "71.194.161.184",
+    "timestamp": "2026-03-13T21:47:04.402407"
+  },
+  {
+    "id": "api_0068",
+    "type": "api_abuse",
+    "payload": "/api/user/2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "115.211.54.160",
+    "timestamp": "2026-03-13T21:47:04.402411"
+  },
+  {
+    "id": "api_0069",
+    "type": "api_abuse",
+    "payload": "Client-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "104.118.158.52",
+    "timestamp": "2026-03-13T21:47:04.402416"
+  },
+  {
+    "id": "api_0070",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ user(id: 1) { password } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "118.1.202.224",
+    "timestamp": "2026-03-13T21:47:04.402420"
+  },
+  {
+    "id": "api_0071",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{__schema { types { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "63.22.247.233",
+    "timestamp": "2026-03-13T21:47:04.402425"
+  },
+  {
+    "id": "api_0072",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{__schema { types { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "108.220.109.133",
+    "timestamp": "2026-03-13T21:47:04.402429"
+  },
+  {
+    "id": "api_0073",
+    "type": "api_abuse",
+    "payload": "/api/user/2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "131.187.139.98",
+    "timestamp": "2026-03-13T21:47:04.402434"
+  },
+  {
+    "id": "api_0074",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ __type(name: \"User\") { fields { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "128.221.108.191",
+    "timestamp": "2026-03-13T21:47:04.402438"
+  },
+  {
+    "id": "api_0075",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "65.201.163.227",
+    "timestamp": "2026-03-13T21:47:04.402443"
+  },
+  {
+    "id": "api_0076",
+    "type": "api_abuse",
+    "payload": "/api/orders/123",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "167.21.192.198",
+    "timestamp": "2026-03-13T21:47:04.402447"
+  },
+  {
+    "id": "api_0077",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ __type(name: \"User\") { fields { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "63.4.38.185",
+    "timestamp": "2026-03-13T21:47:04.402452"
+  },
+  {
+    "id": "api_0078",
+    "type": "api_abuse",
+    "payload": "/api/user/3",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "20.29.23.26",
+    "timestamp": "2026-03-13T21:47:04.402459"
+  },
+  {
+    "id": "api_0079",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "193.144.207.10",
+    "timestamp": "2026-03-13T21:47:04.402464"
+  },
+  {
+    "id": "api_0080",
+    "type": "api_abuse",
+    "payload": "/api/user/1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "120.42.42.54",
+    "timestamp": "2026-03-13T21:47:04.402468"
+  },
+  {
+    "id": "api_0081",
+    "type": "api_abuse",
+    "payload": "/api/orders/123",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "173.78.175.129",
+    "timestamp": "2026-03-13T21:47:04.402473"
+  },
+  {
+    "id": "api_0082",
+    "type": "api_abuse",
+    "payload": "Client-IP: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "218.78.157.243",
+    "timestamp": "2026-03-13T21:47:04.402477"
+  },
+  {
+    "id": "api_0083",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "130.66.96.147",
+    "timestamp": "2026-03-13T21:47:04.402484"
+  },
+  {
+    "id": "api_0084",
+    "type": "api_abuse",
+    "payload": "/api/user/3",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "180.147.18.239",
+    "timestamp": "2026-03-13T21:47:04.402489"
+  },
+  {
+    "id": "api_0085",
+    "type": "api_abuse",
+    "payload": "/api/orders/123",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "193.191.111.89",
+    "timestamp": "2026-03-13T21:47:04.402494"
+  },
+  {
+    "id": "api_0086",
+    "type": "api_abuse",
+    "payload": "/api/documents/456",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "35.37.14.95",
+    "timestamp": "2026-03-13T21:47:04.402498"
+  },
+  {
+    "id": "api_0087",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "36.246.235.102",
+    "timestamp": "2026-03-13T21:47:04.402502"
+  },
+  {
+    "id": "api_0088",
+    "type": "api_abuse",
+    "payload": "/api/user/1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "85.4.172.37",
+    "timestamp": "2026-03-13T21:47:04.402507"
+  },
+  {
+    "id": "api_0089",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "120.71.67.122",
+    "timestamp": "2026-03-13T21:47:04.402512"
+  },
+  {
+    "id": "api_0090",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ __type(name: \"User\") { fields { name } } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "202.202.200.3",
+    "timestamp": "2026-03-13T21:47:04.402516"
+  },
+  {
+    "id": "api_0091",
+    "type": "api_abuse",
+    "payload": "X-Forwarded-For: 10.0.0.1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "216.202.186.230",
+    "timestamp": "2026-03-13T21:47:04.402521"
+  },
+  {
+    "id": "api_0092",
+    "type": "api_abuse",
+    "payload": "/api/user/3",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "127.236.243.26",
+    "timestamp": "2026-03-13T21:47:04.402525"
+  },
+  {
+    "id": "api_0093",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"mutation { deleteUser(id: 1) }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "96.11.235.127",
+    "timestamp": "2026-03-13T21:47:04.402530"
+  },
+  {
+    "id": "api_0094",
+    "type": "api_abuse",
+    "payload": "/api/user/2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "146.153.96.57",
+    "timestamp": "2026-03-13T21:47:04.402535"
+  },
+  {
+    "id": "api_0095",
+    "type": "api_abuse",
+    "payload": "/api/documents/457",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "115.140.172.107",
+    "timestamp": "2026-03-13T21:47:04.402539"
+  },
+  {
+    "id": "api_0096",
+    "type": "api_abuse",
+    "payload": "/api/user/1",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "150.52.10.235",
+    "timestamp": "2026-03-13T21:47:04.402544"
+  },
+  {
+    "id": "api_0097",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"{ user(id: 1) { password } }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "203.57.191.224",
+    "timestamp": "2026-03-13T21:47:04.402548"
+  },
+  {
+    "id": "api_0098",
+    "type": "api_abuse",
+    "payload": "/api/user/2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "54.232.197.205",
+    "timestamp": "2026-03-13T21:47:04.402555"
+  },
+  {
+    "id": "api_0099",
+    "type": "api_abuse",
+    "payload": "{\"query\": \"mutation { deleteUser(id: 1) }\"}",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "102.210.98.97",
+    "timestamp": "2026-03-13T21:47:04.402560"
+  }
+]

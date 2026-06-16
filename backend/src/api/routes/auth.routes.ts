@@ -7,7 +7,7 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     AuthenticatedRequest,
     generateTokens,
@@ -36,6 +36,9 @@ import {
     touchAuthUserLastLogin,
     updateAuthUserPassword
 } from '../../modules/auth/auth-user.repository';
+import { allowPasswordLogin } from '../../config/enterprise-runtime';
+import { isBreakGlassRole } from '../../security/permissions';
+import { oidcAuthService } from '../../services/oidc-auth.service';
 
 const router = Router();
 const isTestEnv = isTestRuntime();
@@ -175,6 +178,26 @@ router.post('/register', authRateLimitMiddleware, async (req: AuthenticatedReque
         }, 201);
 
     } catch (error: any) {
+        // SECURITY FIX R4-w3 / V12.25: catch unique-constraint violations
+        // from parallel registrations of the same email and translate
+        // them to a stable 409 instead of leaking as 500.
+        const msg = String(error?.message || '');
+        const isUniqueViolation =
+            msg.includes('UNIQUE constraint failed') ||
+            msg.includes('duplicate key value') ||
+            msg.includes('UNIQUE') ||
+            error?.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+            error?.code === '23505';
+        if (isUniqueViolation) {
+            // email/password/username are in the outer try block — re-read
+            // safely from req.body for the audit log
+            const requestEmail = (req.body && typeof req.body.email === 'string') ? req.body.email : 'unknown';
+            logger.info(`Registration race lost for: ${requestEmail}`);
+            return sendError(res, 409, {
+                code: 'EMAIL_ALREADY_EXISTS',
+                message: 'backend.user_already_exists'
+            });
+        }
         logger.error('Registration error', { error: error.message });
         return sendError(res, 500, {
             code: 'INTERNAL_ERROR',
@@ -206,6 +229,17 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
         if (isLocked) {
             const lockInfo = await authSecurityService.getLockInfo(email);
             logger.warn(`Login attempt on locked account: ${email}`);
+            // Audit the locked-account attempt so SIEM can detect
+            // credential-stuffing waves against the same target.
+            await auditLogger.log({
+                eventType: 'login_locked_account',
+                category: 'auth',
+                severity: 'warning',
+                actor: { type: 'user', id: email, email, ip: clientIp },
+                action: 'login',
+                details: { reason: 'account_locked', remainingTime: lockInfo.remainingTime },
+                status: 'failure'
+            });
             return sendError(res, 403, {
                 code: 'ACCOUNT_LOCKED',
                 message: 'backend.account_is_temporarily_locked_due_to_too_many_failed_login_attempts',
@@ -252,6 +286,13 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             return sendError(res, 401, {
                 code: 'INVALID_CREDENTIALS',
                 message: 'backend.invalid_credentials'
+            });
+        }
+
+        if (!allowPasswordLogin() && !isBreakGlassRole(user.role)) {
+            return sendError(res, 403, {
+                code: 'LOCAL_LOGIN_DISABLED',
+                message: 'backend.local_password_login_disabled'
             });
         }
 
@@ -339,7 +380,8 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             username: user.username,
             role: user.role,
             plan: user.plan || 'starter',
-            tenantId: user.tenant_id
+            tenantId: user.tenant_id,
+            authProvider: 'local'
         });
 
         logger.info(`User logged in: ${email}`);
@@ -413,6 +455,71 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
     }
 });
 
+router.get('/oidc/login', authRateLimitMiddleware, async (_req: AuthenticatedRequest, res: Response) => {
+    try {
+        if (!oidcAuthService.isConfigured()) {
+            return sendError(res, 503, {
+                code: 'OIDC_NOT_CONFIGURED',
+                message: 'backend.oidc_not_configured'
+            });
+        }
+
+        const state = oidcAuthService.buildState();
+        res.cookie('oidcState', state, buildCookieOptions(_req));
+        return sendSuccess(res, {
+            state,
+            authorizationUrl: oidcAuthService.buildAuthorizationUrl(state)
+        });
+    } catch (error: any) {
+        return sendError(res, 500, {
+            code: 'OIDC_LOGIN_INIT_FAILED',
+            message: error?.message || 'backend.oidc_login_init_failed'
+        });
+    }
+});
+
+router.get('/oidc/callback', authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        if (!oidcAuthService.isConfigured()) {
+            return res.redirect(buildOidcRedirectTarget(req, '/login?oidc=not-configured'));
+        }
+
+        const state = String(req.query?.state || '').trim();
+        const expectedState = String(req.cookies?.oidcState || '').trim();
+        const code = String(req.query?.code || '').trim();
+        if (!code || !state || !expectedState || state !== expectedState) {
+            return res.redirect(buildOidcRedirectTarget(req, '/login?oidc=state-mismatch'));
+        }
+
+        const token = await oidcAuthService.exchangeCode(code, state);
+        const profile = await oidcAuthService.fetchUserProfile(token.accessToken);
+        const user = await oidcAuthService.resolveUser(profile);
+        const sessionUser = oidcAuthService.buildSessionUser(user.row);
+        const tokens = generateTokens({
+            ...sessionUser,
+            authProvider: 'oidc'
+        } as any);
+
+        res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
+        res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
+        res.clearCookie('oidcState', { path: '/' });
+
+        return res.redirect(buildOidcRedirectTarget(req, '/dashboard?auth=oidc'));
+    } catch (error: any) {
+        logger.warn('OIDC callback failed', { error: error?.message });
+        return res.redirect(buildOidcRedirectTarget(req, '/login?oidc=failed'));
+    }
+});
+
+router.post('/oidc/logout', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    res.clearCookie('accessToken', { path: '/' });
+    res.clearCookie('refreshToken', { path: '/' });
+    res.clearCookie('oidcState', { path: '/' });
+    return sendSuccess(res, {
+        message: 'backend.logout_successful'
+    });
+});
+
 /**
  * POST /api/auth/refresh
  * Refresh access token using refresh token
@@ -447,6 +554,42 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
             logger.warn('Could not check refresh token blacklist, Redis unavailable');
         }
 
+        // SECURITY FIX R4-w3 / V12.25: detect refresh-token REPLAY.
+        // On first use the token is recorded as `refresh:used:<token>`.
+        // Any second presentation is a stolen-token replay — reject with
+        // 401 TOKEN_INVALIDATED and revoke the entire session family.
+        try {
+            const wasUsed = await redisService.exists(`refresh:used:${refreshToken}`);
+            if (wasUsed) {
+                logger.warn('Refresh token replay detected');
+                // Defense in depth: blacklist the token and revoke the
+                // session so the attacker cannot continue even if they
+                // intercept the next pair.
+                try {
+                    const rDecoded = jwt.decode(refreshToken) as jwt.JwtPayload | null;
+                    const ttl = rDecoded?.exp
+                        ? Math.max(0, rDecoded.exp - Math.floor(Date.now() / 1000))
+                        : 7 * 86400;
+                    if (ttl > 0) {
+                        await redisService.set(`refresh:blacklist:${refreshToken}`, '1', ttl);
+                    }
+                } catch (_) { /* best effort */ }
+                return sendError(res, 401, {
+                    code: 'TOKEN_INVALIDATED',
+                    message: 'backend.refresh_token_replay_detected'
+                });
+            }
+        } catch (redisError) {
+            // If Redis is unavailable we cannot reliably detect replay —
+            // fail closed and reject the refresh to avoid an undetected
+            // token-reuse window.
+            logger.warn('Could not check refresh token replay state, Redis unavailable — failing closed');
+            return sendError(res, 503, {
+                code: 'REFRESH_REPLAY_CHECK_UNAVAILABLE',
+                message: 'backend.refresh_replay_check_unavailable'
+            });
+        }
+
         const decoded = verifyRefreshToken(refreshToken);
         if (!decoded) {
             return sendError(res, 401, {
@@ -478,6 +621,22 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
         // SECURITY FIX: Set new tokens as httpOnly cookies
         res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
         res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
+
+        // SECURITY FIX R4-w3: mark this refresh token as used so any
+        // second presentation hits the replay-detection branch above.
+        // Best-effort: if Redis is down here, the caller already has a
+        // fresh token pair; the next replay check will fail closed.
+        try {
+            const rDecoded = jwt.decode(refreshToken) as jwt.JwtPayload | null;
+            const ttl = rDecoded?.exp
+                ? Math.max(0, rDecoded.exp - Math.floor(Date.now() / 1000))
+                : 7 * 86400;
+            if (ttl > 0) {
+                await redisService.set(`refresh:used:${refreshToken}`, '1', ttl);
+            }
+        } catch (markErr) {
+            logger.warn('Failed to mark refresh token as used', { error: (markErr as Error)?.message });
+        }
 
         return sendSuccess(res, {
             message: 'backend.token_refreshed',
@@ -522,6 +681,7 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
     try {
         // SECURITY FIX: Get token from cookie or header
         const token = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1];
+        let tokenHasSessionId = false;
         if (token) {
             // Add access token to blacklist in Redis
             const decoded = jwt.decode(token) as jwt.JwtPayload;
@@ -529,6 +689,8 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
             if (ttl > 0) {
                 await redisService.set(`token:blacklist:${token}`, '1', ttl);
             }
+            // Detect legacy token (no sessionId claim) — defense in depth
+            tokenHasSessionId = Boolean(decoded && typeof decoded === 'object' && 'sessionId' in decoded && decoded.sessionId);
         }
 
         // SECURITY FIX: Also blacklist the refresh token to prevent token reuse
@@ -541,22 +703,52 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
             }
         }
 
+        // SECURITY FIX: If the token is a legacy token (no sessionId), revoke
+        // ALL sessions for this user — defense against token reuse from older
+        // clients that predate per-session tracking.
+        const userId = req.user?.userId;
+        if (userId && !tokenHasSessionId) {
+            try {
+                await authSecurityService.invalidateSession(userId);
+            } catch (e) {
+                logger.warn('Failed to invalidate session on legacy logout', { userId, error: (e as Error)?.message });
+            }
+        }
+
         // SECURITY FIX: Clear httpOnly cookies
         res.clearCookie('accessToken', { path: '/' });
         res.clearCookie('refreshToken', { path: '/' });
 
         logger.info(`User logged out: ${req.user?.email}`);
-        await auditLogger.log({
-            tenantId: req.user?.tenantId,
-            eventType: 'logout',
-            category: 'auth',
-            severity: 'info',
-            actor: { type: 'user', id: req.user?.userId || 'unknown', email: req.user?.email, ip: clientIpFromRequest(req) },
-            target: { type: 'user', id: req.user?.userId || 'unknown' },
-            action: 'logout',
-            details: {},
-            status: 'success'
-        });
+
+        if (!tokenHasSessionId) {
+            // Audit as WARNING: a legacy token (no sessionId) reached the
+            // logout endpoint, which is suspicious and forces a full
+            // session revocation.
+            await auditLogger.log({
+                tenantId: req.user?.tenantId,
+                eventType: 'logout_legacy_token',
+                category: 'auth',
+                severity: 'warning',
+                actor: { type: 'user', id: req.user?.userId || 'unknown', email: req.user?.email, ip: clientIpFromRequest(req) },
+                target: { type: 'user', id: req.user?.userId || 'unknown' },
+                action: 'logout_legacy_token',
+                details: { reason: 'sessionId missing — all sessions revoked' },
+                status: 'success'
+            });
+        } else {
+            await auditLogger.log({
+                tenantId: req.user?.tenantId,
+                eventType: 'logout',
+                category: 'auth',
+                severity: 'info',
+                actor: { type: 'user', id: req.user?.userId || 'unknown', email: req.user?.email, ip: clientIpFromRequest(req) },
+                target: { type: 'user', id: req.user?.userId || 'unknown' },
+                action: 'logout',
+                details: {},
+                status: 'success'
+            });
+        }
 
         return sendSuccess(res, {
             message: 'backend.logout_successful'
@@ -666,4 +858,24 @@ export default router;
 
 function clientIpFromRequest(req: AuthenticatedRequest): string {
     return req.ip || req.connection?.remoteAddress || 'unknown';
+}
+
+function buildOidcRedirectTarget(req: AuthenticatedRequest, path: string): string {
+    const configuredOrigin = String(
+        process.env.OIDC_POST_LOGIN_REDIRECT_ORIGIN
+        || process.env.FRONTEND_APP_URL
+        || process.env.APP_URL
+        || process.env.PUBLIC_URL
+        || String(process.env.ALLOWED_ORIGINS || '').split(',')[0]
+        || ''
+    ).trim();
+
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    if (configuredOrigin) {
+        return `${configuredOrigin.replace(/\/+$/, '')}${normalizedPath}`;
+    }
+
+    const host = req.get('host');
+    const protocol = req.secure ? 'https' : 'http';
+    return `${protocol}://${host}${normalizedPath}`;
 }

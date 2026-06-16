@@ -24,6 +24,8 @@ import { commandDispatcherService } from './services/command-dispatcher.service'
 import { postgresShadowStoreService } from './services/postgres-shadow-store.service';
 import { notificationDispatcherService } from './services/notification-dispatcher.service';
 import { deviceControlService } from './services/device-control.service';
+import { hardwareAuthorizationService } from './services/hardware-authorization.service';
+import { detectionPipelineService } from './services/detection-pipeline.service';
 import { artifactStoreService } from './services/artifact-store.service';
 import { jobQueueService } from './services/job-queue.service';
 import { dashboardBroadcastService } from './services/dashboard-broadcast.service';
@@ -50,6 +52,9 @@ function configureRealtimeRuntime(): void {
     });
     deviceControlService.setGatewayEmitter((deviceId, command, params) =>
       deviceGateway!.sendCommand(deviceId, command, params)
+    );
+    hardwareAuthorizationService.setGatewayEmitter((gateId, command, params) =>
+      deviceGateway!.sendCommand(gateId, command, params)
     );
 
     setAgentGateway(agentGateway);
@@ -80,6 +85,7 @@ function configureRealtimeRuntime(): void {
   commandDispatcherService.setDeviceAdapter(null);
   setDeviceCommandTransport(null);
   deviceControlService.setGatewayEmitter(null);
+  hardwareAuthorizationService.setGatewayEmitter(null);
   dashboardBroadcastService.setBroadcaster(null);
   scannerTaskService.setBroadcaster(() => undefined);
   runtimeEmulatorService.stop();
@@ -98,6 +104,7 @@ async function start(): Promise<void> {
     }
 
     notificationDispatcherService.startWorker();
+    detectionPipelineService.startAsyncReviewWorker();
 
     if (runtime.schedulerEnabled) {
       postgresShadowStoreService.startResyncLoop();
@@ -136,6 +143,7 @@ async function shutdown(): Promise<void> {
   try {
     scannerTaskService.stopWorker();
     notificationDispatcherService.stopWorker();
+    detectionPipelineService.stopAsyncReviewWorker();
 
     if (agentGateway) {
       agentGateway.close();

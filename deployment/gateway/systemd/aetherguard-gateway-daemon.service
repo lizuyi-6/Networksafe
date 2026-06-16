@@ -1,0 +1,53 @@
+[Unit]
+Description=AetherGuard Gateway Daemon (M1 fail-closed bridge controller)
+Documentation=https://github.com/yourorg/Networksafe/docs/root-resistant-gateway-prd.md
+After=network-online.target nftables.service
+Wants=network-online.target
+ConditionPathExists=/etc/aetherguard/gateway.conf
+ConditionPathExists=/etc/aetherguard/se-public-key.pem
+
+[Service]
+Type=simple
+User=aetherguard
+Group=aetherguard
+ExecStartPre=/usr/local/bin/aetherguard-gateway-preflight-check
+ExecStart=/usr/local/bin/aetherguard-gateway-daemon --config /etc/aetherguard/gateway.conf
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=30s
+TimeoutStopSec=10s
+
+# Security: fail-closed on crash
+# If the daemon crashes, nftables should default to isolated_ruleset.
+# This is enforced by the preflight check and a systemd drop-in that applies
+# isolated_ruleset.nft before starting the daemon.
+ExecStopPost=/usr/sbin/nft -f /etc/aetherguard/nftables/isolated_ruleset.nft
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/aetherguard /var/log/aetherguard
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+
+# Capabilities: daemon needs CAP_NET_ADMIN for nftables control
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aetherguard-gateway
+
+[Install]
+WantedBy=multi-user.target

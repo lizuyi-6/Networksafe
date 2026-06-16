@@ -1,4 +1,0 @@
-(fp_lib_table
-  (version 7)
-  (lib (name "aetherguard-serial-deployer-v2")(type "KiCad")(uri "${KIPRJMOD}/aetherguard-serial-deployer-v2.pretty")(options "")(descr "AetherGuard Serial Deployer v2 project footprints"))
-)

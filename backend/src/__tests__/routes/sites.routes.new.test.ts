@@ -77,7 +77,7 @@ jest.mock('../../middleware/auth.middleware', () => ({
     };
     next();
   }),
-  requireTenantAccess: jest.fn((req: any, _res: any, next: any) => next()),
+  requireTenantAccess: jest.fn(() => (req: any, _res: any, next: any) => next()),
   AuthenticatedRequest: jest.fn()
 }));
 

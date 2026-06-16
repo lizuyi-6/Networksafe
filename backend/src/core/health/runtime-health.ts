@@ -5,6 +5,7 @@ import { fastpathClientService } from '../../services/fastpath-client.service';
 import { jobQueueService } from '../../services/job-queue.service';
 import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
 import { runtimeEmulatorService } from '../../services/runtime-emulator.service';
+import { detectionPipelineService } from '../../services/detection-pipeline.service';
 import redisService from '../../security/redis.service';
 
 export type DependencyStatus = 'healthy' | 'degraded' | 'unhealthy' | 'disabled';
@@ -31,6 +32,7 @@ export interface RuntimeHealthSnapshot {
     artifactStore: DependencyHealth;
     fastpath: DependencyHealth;
     aiProvider: DependencyHealth;
+    aiLayer: DependencyHealth;
   };
   runtime: Record<string, any>;
   queueBackend: 'redis' | 'memory';
@@ -65,6 +67,34 @@ function getAiProviderHealth(profile: RuntimeProfile): DependencyHealth {
   };
 }
 
+function getAiLayerHealth(profile: RuntimeProfile): DependencyHealth {
+  try {
+    const aiLayer = detectionPipelineService.getAiLayerHealth();
+    if (aiLayer.available) {
+      return {
+        status: 'healthy',
+        message: aiLayer.message,
+        details: { mode: aiLayer.mode, prepared: aiLayer.prepared }
+      };
+    }
+    // Degraded (fail-closed) AI layer is unhealthy in prod so its status is
+    // reported accurately; in non-prod it surfaces as degraded rather than
+    // blocking boot. Use the runtime profile (PROFILE/APP_PROFILE), not
+    // NODE_ENV, so a prod deployment driven by PROFILE=prod classifies a down
+    // AI decision layer as unhealthy even when NODE_ENV is not 'production'.
+    const isProd = profile === 'prod';
+    return {
+      status: isProd ? 'unhealthy' : 'degraded',
+      message: aiLayer.message,
+      details: { mode: aiLayer.mode, prepared: aiLayer.prepared, degraded: aiLayer.degraded }
+    };
+  } catch (error: any) {
+    return {
+      status: 'degraded',
+      message: `AI layer health unavailable: ${error?.message || 'unknown'}`
+    };
+  }
+}
 export async function buildRuntimeHealthSnapshot(input: {
   runtime: Record<string, any> & { profile: RuntimeProfile; dbMode: string; sqliteFallbackEnabled: boolean; };
   agentCount: number;
@@ -128,7 +158,8 @@ export async function buildRuntimeHealthSnapshot(input: {
             ? 'Fastpath is unavailable; fallback path will be used.'
             : 'Fastpath is disabled or unavailable in the current profile.'
         },
-    aiProvider: getAiProviderHealth(input.runtime.profile)
+    aiProvider: getAiProviderHealth(input.runtime.profile),
+    aiLayer: getAiLayerHealth(input.runtime.profile)
   };
 
   if (input.runtime.dbMode === 'postgres' && dependencies.postgres.status === 'unhealthy') {

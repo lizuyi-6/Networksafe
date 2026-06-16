@@ -1,0 +1,452 @@
+[
+  {
+    "id": "proto_0000",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.217.131.85",
+    "timestamp": "2026-03-13T21:47:04.403560"
+  },
+  {
+    "id": "proto_0001",
+    "type": "protocol_pollution",
+    "payload": "test\r\nSet-Cookie: session=attacker",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "23.240.244.53",
+    "timestamp": "2026-03-13T21:47:04.403565"
+  },
+  {
+    "id": "proto_0002",
+    "type": "protocol_pollution",
+    "payload": "GET / HTTP/1.1\r\nHost: a.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: b.com\r\n\r\n",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "132.64.227.243",
+    "timestamp": "2026-03-13T21:47:04.403570"
+  },
+  {
+    "id": "proto_0003",
+    "type": "protocol_pollution",
+    "payload": ":method: GET\r\n:path: /admin\r\n:authority: internal.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.252.117.163",
+    "timestamp": "2026-03-13T21:47:04.403575"
+  },
+  {
+    "id": "proto_0004",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0aSet-Cookie: hacked=true",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "97.167.171.57",
+    "timestamp": "2026-03-13T21:47:04.403579"
+  },
+  {
+    "id": "proto_0005",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "65.189.175.151",
+    "timestamp": "2026-03-13T21:47:04.403584"
+  },
+  {
+    "id": "proto_0006",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "204.105.29.17",
+    "timestamp": "2026-03-13T21:47:04.403590"
+  },
+  {
+    "id": "proto_0007",
+    "type": "protocol_pollution",
+    "payload": "GET / HTTP/1.1\r\nHost: a.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: b.com\r\n\r\n",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "146.103.45.19",
+    "timestamp": "2026-03-13T21:47:04.403595"
+  },
+  {
+    "id": "proto_0008",
+    "type": "protocol_pollution",
+    "payload": "test\r\nSet-Cookie: session=attacker",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "32.107.10.224",
+    "timestamp": "2026-03-13T21:47:04.403599"
+  },
+  {
+    "id": "proto_0009",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0aSet-Cookie: hacked=true",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "10.171.73.153",
+    "timestamp": "2026-03-13T21:47:04.403604"
+  },
+  {
+    "id": "proto_0010",
+    "type": "protocol_pollution",
+    "payload": ":method: GET\r\n:path: /admin\r\n:authority: internal.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "223.93.81.70",
+    "timestamp": "2026-03-13T21:47:04.403608"
+  },
+  {
+    "id": "proto_0011",
+    "type": "protocol_pollution",
+    "payload": "Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "118.94.112.126",
+    "timestamp": "2026-03-13T21:47:04.403613"
+  },
+  {
+    "id": "proto_0012",
+    "type": "protocol_pollution",
+    "payload": ":method: GET\r\n:path: /admin\r\n:authority: internal.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "55.32.152.54",
+    "timestamp": "2026-03-13T21:47:04.403620"
+  },
+  {
+    "id": "proto_0013",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "14.122.158.80",
+    "timestamp": "2026-03-13T21:47:04.403624"
+  },
+  {
+    "id": "proto_0014",
+    "type": "protocol_pollution",
+    "payload": ":method: GET\r\n:path: /admin\r\n:authority: internal.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.191.125.100",
+    "timestamp": "2026-03-13T21:47:04.403631"
+  },
+  {
+    "id": "proto_0015",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "218.129.123.172",
+    "timestamp": "2026-03-13T21:47:04.403636"
+  },
+  {
+    "id": "proto_0016",
+    "type": "protocol_pollution",
+    "payload": "Host: target.com\r\nX-Forwarded-Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "87.56.14.150",
+    "timestamp": "2026-03-13T21:47:04.403650"
+  },
+  {
+    "id": "proto_0017",
+    "type": "protocol_pollution",
+    "payload": "Host: target.com\r\nX-Forwarded-Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "157.170.191.93",
+    "timestamp": "2026-03-13T21:47:04.403655"
+  },
+  {
+    "id": "proto_0018",
+    "type": "protocol_pollution",
+    "payload": "Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "30.105.95.196",
+    "timestamp": "2026-03-13T21:47:04.403660"
+  },
+  {
+    "id": "proto_0019",
+    "type": "protocol_pollution",
+    "payload": "GET / HTTP/1.1\r\nHost: a.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: b.com\r\n\r\n",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "128.213.141.185",
+    "timestamp": "2026-03-13T21:47:04.403664"
+  },
+  {
+    "id": "proto_0020",
+    "type": "protocol_pollution",
+    "payload": "test\r\nSet-Cookie: session=attacker",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.69.170.111",
+    "timestamp": "2026-03-13T21:47:04.403669"
+  },
+  {
+    "id": "proto_0021",
+    "type": "protocol_pollution",
+    "payload": "Host: target.com\r\nX-Forwarded-Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "49.134.5.158",
+    "timestamp": "2026-03-13T21:47:04.403673"
+  },
+  {
+    "id": "proto_0022",
+    "type": "protocol_pollution",
+    "payload": "Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "185.187.220.148",
+    "timestamp": "2026-03-13T21:47:04.403678"
+  },
+  {
+    "id": "proto_0023",
+    "type": "protocol_pollution",
+    "payload": "Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.185.200.142",
+    "timestamp": "2026-03-13T21:47:04.403682"
+  },
+  {
+    "id": "proto_0024",
+    "type": "protocol_pollution",
+    "payload": "Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "112.157.72.14",
+    "timestamp": "2026-03-13T21:47:04.403686"
+  },
+  {
+    "id": "proto_0025",
+    "type": "protocol_pollution",
+    "payload": "test\r\nSet-Cookie: session=attacker",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "165.169.72.164",
+    "timestamp": "2026-03-13T21:47:04.403691"
+  },
+  {
+    "id": "proto_0026",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "115.161.190.243",
+    "timestamp": "2026-03-13T21:47:04.403695"
+  },
+  {
+    "id": "proto_0027",
+    "type": "protocol_pollution",
+    "payload": "Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.233.39.15",
+    "timestamp": "2026-03-13T21:47:04.403700"
+  },
+  {
+    "id": "proto_0028",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "75.150.108.217",
+    "timestamp": "2026-03-13T21:47:04.403704"
+  },
+  {
+    "id": "proto_0029",
+    "type": "protocol_pollution",
+    "payload": "Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "112.201.221.228",
+    "timestamp": "2026-03-13T21:47:04.403709"
+  },
+  {
+    "id": "proto_0030",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "139.146.206.131",
+    "timestamp": "2026-03-13T21:47:04.403713"
+  },
+  {
+    "id": "proto_0031",
+    "type": "protocol_pollution",
+    "payload": "test\r\nSet-Cookie: session=attacker",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "20.53.78.129",
+    "timestamp": "2026-03-13T21:47:04.403718"
+  },
+  {
+    "id": "proto_0032",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0aSet-Cookie: hacked=true",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.60.218.159",
+    "timestamp": "2026-03-13T21:47:04.403725"
+  },
+  {
+    "id": "proto_0033",
+    "type": "protocol_pollution",
+    "payload": ":method: GET\r\n:path: /admin\r\n:authority: internal.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "148.224.94.12",
+    "timestamp": "2026-03-13T21:47:04.403729"
+  },
+  {
+    "id": "proto_0034",
+    "type": "protocol_pollution",
+    "payload": ":method: GET\r\n:path: /admin\r\n:authority: internal.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "52.113.207.236",
+    "timestamp": "2026-03-13T21:47:04.403734"
+  },
+  {
+    "id": "proto_0035",
+    "type": "protocol_pollution",
+    "payload": "GET / HTTP/1.1\r\nHost: a.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: b.com\r\n\r\n",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "120.249.42.159",
+    "timestamp": "2026-03-13T21:47:04.403738"
+  },
+  {
+    "id": "proto_0036",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "129.226.245.193",
+    "timestamp": "2026-03-13T21:47:04.403743"
+  },
+  {
+    "id": "proto_0037",
+    "type": "protocol_pollution",
+    "payload": "Host: target.com\r\nX-Forwarded-Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "203.18.134.86",
+    "timestamp": "2026-03-13T21:47:04.403747"
+  },
+  {
+    "id": "proto_0038",
+    "type": "protocol_pollution",
+    "payload": "GET / HTTP/1.1\r\nHost: a.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: b.com\r\n\r\n",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "102.60.111.243",
+    "timestamp": "2026-03-13T21:47:04.403754"
+  },
+  {
+    "id": "proto_0039",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0aSet-Cookie: hacked=true",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "92.113.3.71",
+    "timestamp": "2026-03-13T21:47:04.403758"
+  },
+  {
+    "id": "proto_0040",
+    "type": "protocol_pollution",
+    "payload": "test\r\nSet-Cookie: session=attacker",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "3.92.209.95",
+    "timestamp": "2026-03-13T21:47:04.403763"
+  },
+  {
+    "id": "proto_0041",
+    "type": "protocol_pollution",
+    "payload": "Host: target.com\r\nX-Forwarded-Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "30.163.68.48",
+    "timestamp": "2026-03-13T21:47:04.403767"
+  },
+  {
+    "id": "proto_0042",
+    "type": "protocol_pollution",
+    "payload": "Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "177.160.96.71",
+    "timestamp": "2026-03-13T21:47:04.403772"
+  },
+  {
+    "id": "proto_0043",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "85.197.69.88",
+    "timestamp": "2026-03-13T21:47:04.403776"
+  },
+  {
+    "id": "proto_0044",
+    "type": "protocol_pollution",
+    "payload": "test\r\nSet-Cookie: session=attacker",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "126.109.145.51",
+    "timestamp": "2026-03-13T21:47:04.403781"
+  },
+  {
+    "id": "proto_0045",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "193.88.96.76",
+    "timestamp": "2026-03-13T21:47:04.403785"
+  },
+  {
+    "id": "proto_0046",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0aSet-Cookie: hacked=true",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "110.41.86.199",
+    "timestamp": "2026-03-13T21:47:04.403790"
+  },
+  {
+    "id": "proto_0047",
+    "type": "protocol_pollution",
+    "payload": "Host: target.com\r\nX-Forwarded-Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "85.152.160.242",
+    "timestamp": "2026-03-13T21:47:04.403794"
+  },
+  {
+    "id": "proto_0048",
+    "type": "protocol_pollution",
+    "payload": "Host: target.com\r\nX-Forwarded-Host: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "189.209.99.158",
+    "timestamp": "2026-03-13T21:47:04.403799"
+  },
+  {
+    "id": "proto_0049",
+    "type": "protocol_pollution",
+    "payload": "test%0d%0a%0d%0a<html>hacked</html>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "36.77.27.83",
+    "timestamp": "2026-03-13T21:47:04.403803"
+  }
+]

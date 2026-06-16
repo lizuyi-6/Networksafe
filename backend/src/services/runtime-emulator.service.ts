@@ -112,6 +112,11 @@ class RuntimeEmulatorService {
     }
   ];
   private readonly devices: SyntheticDeviceRuntime[] = [
+    // NOTE: The following synthetic demo devices model the legacy ESP32 hardware family (ESP32-S3 / C6).
+    // ESP32 serial-deployer / control-board hardware was retired 2026-06-13 and archived out of repo;
+    // active hardware is the Gateway Appliance (STM32H5/U5). These fixtures are retained as demo/synthetic
+    // telemetry sources for the runtime emulator only and do not represent current production hardware.
+    // Device IDs (esp32-*) are referenced by tickDevice() below; do not rename without coordinated updates.
     {
       deviceId: 'esp32-core-01',
       version: '2.4.1',

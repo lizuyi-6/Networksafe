@@ -1,13 +1,18 @@
-﻿﻿﻿﻿/**
- * AetherGuard - ESP32 设备 WebSocket 网关
+﻿/**
+ * AetherGuard - Device WebSocket Gateway (Gateway Appliance / devices)
  *
- * 处理实验性 ESP32 云设备/模拟设备网关的 WebSocket 连接
+ * Handles WebSocket connections for the AetherGuard Root-Resistant Gateway
+ * Appliance and registered devices — device registration, heartbeat monitoring,
+ * data reception, and command dispatch over /ws/device (alias /ws/status).
  * - 设备注册
  * - 心跳监控
  * - 数据接收
  * - 命令下发
  *
- * NOTE: This gateway is not the current v1 USB-TTL serial deployer firmware.
+ * This is the active appliance/device control channel. The legacy ESP32
+ * serial-deployer hardware has been retired (2026-06-13) and archived out of
+ * this repo; see docs/root-resistant-gateway-prd.md for the current Gateway
+ * Appliance (STM32H5/U5) baseline.
  *
  * SECURITY FIX CVE-2026-032/033: Added CORS restrictions and API key validation
  * SECURITY FIX CVE-2026-DEV001: Added rate limiting
@@ -20,16 +25,19 @@ import { Server, Socket } from 'socket.io';
 import crypto from 'crypto';
 import logger from '../utils/logger';
 import auditLogger from '../security/audit-logger.service';
+import { commandDispatcherService } from '../services/command-dispatcher.service';
 import type { TenantContext } from '../core/tenant/tenant-context';
 import {
     PLATFORM_TENANT_ID,
     resolveDeviceTenantContext,
 } from '../core/tenant/tenant-context';
 import { deviceControlService } from '../services/device-control.service';
+import { hardwareAuthorizationService } from '../services/hardware-authorization.service';
 import { socketRateLimitService } from '../services/socket-rate-limit.service';
 import {
     registerDevice,
     updateDeviceStatus,
+    updateDeviceFinalDefenseState,
     setDeviceOffline,
     getCodebook,
     addDeviceEvent,
@@ -42,11 +50,17 @@ import {
     validateDeviceHeartbeatPayload,
     validateDeviceRegisterPayload,
 } from './socket-payload-validator';
+import { allowGatewayDestructiveCommands } from '../config/enterprise-runtime';
+import { requiresPhysicalConfirmation } from '../security/command-risk-policy';
+import { normalizeInterlockState } from '../security/final-defense-policy';
 
 interface DeviceSocket extends Socket {
     deviceId?: string;
     tenantContext?: TenantContext;
+    hardwareGateId?: string;
 }
+
+type HardwareAckResult = Awaited<ReturnType<typeof hardwareAuthorizationService.handlePhysicalConfirmationAck>>;
 
 interface SignedDeviceCommand {
     command: {
@@ -159,6 +173,11 @@ export class DeviceGateway {
                 methods: ['GET', 'POST'],
                 credentials: true
             },
+            // SECURITY FIX: Limit max HTTP buffer size to 1MB to prevent large payload DoS.
+            maxHttpBufferSize: 1e6,
+            // SECURITY FIX: Disable per-message deflate to prevent zip-bomb attacks via
+            // crafted compressed WebSocket frames.
+            perMessageDeflate: false
         });
     }
 
@@ -280,6 +299,15 @@ export class DeviceGateway {
             free_heap,
             sdk_version,
             api_key,
+            public_key_pem,
+            secure_element_present,
+            device_role,
+            transport,
+            policy_digest,
+            breaker_target,
+            interlock_state,
+            external_power_present,
+            feedback_ok,
         } = payload;
 
         if (!(await checkSocketRateLimit(socket, tenantContext.tenantId))) {
@@ -326,6 +354,25 @@ export class DeviceGateway {
         socket.tenantContext = tenantContext;
         this.deviceSockets.set(device_id, socket);
 
+        if (public_key_pem) {
+            socket.hardwareGateId = device_id;
+            hardwareAuthorizationService.enrollGate({
+                tenantId: tenantContext.tenantId,
+                gateId: device_id,
+                displayName: device_id,
+                publicKeyPem: public_key_pem,
+                algorithm: 'ECDSA_P256_SHA256',
+                metadata: {
+                    chipModel: chip_model || 'unknown',
+                    sdkVersion: sdk_version || 'unknown',
+                    secureElementPresent: secure_element_present ?? false,
+                    deviceRole: device_role || 'hardware_gate',
+                    transport: transport || 'unknown'
+                },
+                status: 'online'
+            });
+        }
+
         registerDevice({
             deviceId: device_id,
             version: version || 'unknown',
@@ -334,6 +381,15 @@ export class DeviceGateway {
             freeHeap: free_heap || 0,
             sdkVersion: sdk_version || 'unknown',
             mode: 'online',
+            physicalAuth: public_key_pem ? { publicKeyPem: public_key_pem } : undefined,
+            finalDefense: {
+                policyDigest: policy_digest,
+                breakerTarget: breaker_target,
+                interlockState: interlock_state ? normalizeInterlockState(interlock_state) : undefined,
+                externalPowerPresent: external_power_present,
+                secureElementPresent: secure_element_present,
+                feedbackOk: feedback_ok
+            },
         });
         addDeviceEvent(device_id, 'register', {
             version,
@@ -381,7 +437,18 @@ export class DeviceGateway {
             return;
         }
 
-        const { uptime, free_heap, wifi_rssi, cpu_usage } = payload;
+        const {
+            uptime,
+            free_heap,
+            wifi_rssi,
+            cpu_usage,
+            policy_digest,
+            breaker_target,
+            interlock_state,
+            external_power_present,
+            secure_element_present,
+            feedback_ok
+        } = payload;
 
         updateDeviceStatus(socket.deviceId, {
             cpuUsage: cpu_usage || 0,
@@ -394,6 +461,23 @@ export class DeviceGateway {
             freeHeap: free_heap,
             wifiRssi: wifi_rssi
         });
+        if (
+            policy_digest
+            || breaker_target
+            || interlock_state
+            || external_power_present !== undefined
+            || secure_element_present !== undefined
+            || feedback_ok !== undefined
+        ) {
+            updateDeviceFinalDefenseState(socket.deviceId, {
+                policyDigest: policy_digest,
+                breakerTarget: breaker_target,
+                interlockState: interlock_state ? normalizeInterlockState(interlock_state) : undefined,
+                externalPowerPresent: external_power_present,
+                secureElementPresent: secure_element_present,
+                feedbackOk: feedback_ok
+            });
+        }
 
         socket.emit('heartbeat_ack', { timestamp: Date.now() });
     }
@@ -436,6 +520,21 @@ export class DeviceGateway {
         });
 
         addDeviceEvent(socket.deviceId, 'data', { payload: decodedPayload ?? {} });
+        if (decodedPayload && typeof decodedPayload === 'object') {
+            const finalDefenseUpdate = {
+                policyDigest: decodedPayload.policyDigest || decodedPayload.policy_digest,
+                breakerTarget: decodedPayload.breakerTarget || decodedPayload.breaker_target,
+                interlockState: decodedPayload.interlockState || decodedPayload.interlock_state
+                    ? normalizeInterlockState(decodedPayload.interlockState || decodedPayload.interlock_state)
+                    : undefined,
+                externalPowerPresent: decodedPayload.externalPowerPresent ?? decodedPayload.external_power_present,
+                secureElementPresent: decodedPayload.secureElementPresent ?? decodedPayload.secure_element_present,
+                feedbackOk: decodedPayload.feedbackOk ?? decodedPayload.feedback_ok
+            };
+            if (Object.values(finalDefenseUpdate).some((value) => value !== undefined && value !== '')) {
+                updateDeviceFinalDefenseState(socket.deviceId, finalDefenseUpdate);
+            }
+        }
         this.emitToDashboard('device:data', {
             deviceId: socket.deviceId,
             data: decodedPayload ?? {},
@@ -529,15 +628,47 @@ export class DeviceGateway {
     private async handlePhysicalConfirmationAck(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
         const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
+        const gateId = socket.hardwareGateId || socket.deviceId;
         addDeviceEvent(socket.deviceId, 'command', {
             action: 'physical_confirmation_ack',
             ...data
         });
+        let hardwareResult: HardwareAckResult = {
+            handled: false,
+            confirmed: false,
+            reason: 'hardware_authorization_unavailable'
+        };
+        try {
+            hardwareResult = await hardwareAuthorizationService.handlePhysicalConfirmationAck(gateId, data || {});
+        } catch (error: any) {
+            logger.warn('[DeviceGateway] Hardware authorization service unavailable, falling back to legacy confirmation', {
+                deviceId: socket.deviceId,
+                gateId,
+                error: error?.message
+            });
+        }
+        if (hardwareResult.handled) {
+            if (hardwareResult.confirmed && hardwareResult.intent && hardwareResult.grant) {
+                await commandDispatcherService.dispatchHardwareConfirmedIntent(hardwareResult.intent, hardwareResult.grant);
+            }
+            this.emitToDashboard('device:physical_confirmation', {
+                deviceId: socket.deviceId,
+                ...data,
+                tenantId,
+                hardwareGateId: gateId,
+                confirmed: hardwareResult.confirmed,
+                reason: hardwareResult.reason || null,
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+
         await deviceControlService.handlePhysicalConfirmationAck(socket.deviceId, data || {});
         this.emitToDashboard('device:physical_confirmation', {
             deviceId: socket.deviceId,
             ...data,
             tenantId,
+            hardwareGateId: gateId,
             timestamp: new Date().toISOString()
         });
     }
@@ -552,6 +683,9 @@ export class DeviceGateway {
             const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
             this.deviceSockets.delete(socket.deviceId);
             setDeviceOffline(socket.deviceId);
+            if (socket.hardwareGateId) {
+                hardwareAuthorizationService.markGateOffline(socket.hardwareGateId);
+            }
 
             addDeviceEvent(socket.deviceId, 'disconnect', { reason });
             this.emitToDashboard('device:offline', {
@@ -579,6 +713,24 @@ export class DeviceGateway {
     }
 
     public async sendCommand(deviceId: string, command: string, params?: any): Promise<boolean> {
+        if (!allowGatewayDestructiveCommands() && requiresPhysicalConfirmation(command) && !params?.hardwareGrant) {
+            logger.warn('[DeviceGateway] Blocked destructive command on experimental gateway in enterprise runtime', {
+                deviceId,
+                command
+            });
+            await auditLogger.log({
+                eventType: 'device_command_rejected',
+                category: 'command',
+                severity: 'warning',
+                actor: { type: 'system', id: 'device-gateway' },
+                action: 'send_command',
+                target: { type: 'agent', id: deviceId },
+                details: { command, params, reason: 'enterprise_runtime_blocks_destructive_ws_commands' },
+                status: 'failure'
+            });
+            return false;
+        }
+
         const socket = this.deviceSockets.get(deviceId);
 
         if (!socket || !socket.connected) {
@@ -631,22 +783,56 @@ export class DeviceGateway {
         return true;
     }
 
+    /**
+     * SECURITY (V4.1): fail-closed signature gate. If signCommand() cannot
+     * produce a valid HMAC (no DEVICE_COMMAND_SECRET, secret too short, or
+     * no device-specific key), the gateway MUST NOT fall back to emitting
+     * an unsigned command. Unsigned packets would bypass the HMAC gate the
+     * firmware enforces, allowing destructive operations (reboot /
+     * factory_reset / wipe_data / recovery_flash) from any bus injector.
+     *
+     * Returns the count of devices that actually received a SIGNED frame.
+     * Refused devices are logged and recorded as a rejection audit event.
+     */
     public async broadcastCommand(command: string, params?: any): Promise<number> {
         let count = 0;
+        const rejectedDeviceIds: string[] = [];
 
         for (const [deviceId, socket] of this.deviceSockets.entries()) {
             if (socket.connected) {
                 const signedCommand = this.signCommand(deviceId, command, params);
-                
+
                 if (signedCommand) {
                     socket.emit('command', signedCommand);
+                    addDeviceEvent(deviceId, 'command', { command, params });
+                    count++;
                 } else {
-                    socket.emit('command', { cmd: command, params, timestamp: Date.now() });
+                    // FAIL-CLOSED: do not emit any frame. Record the refusal
+                    // loudly so operators detect the misconfiguration.
+                    logger.error(
+                        '[DeviceGateway] Refusing to broadcast unsigned command (signCommand failed)',
+                        { deviceId, command, params, reason: 'sign_failed' }
+                    );
+                    rejectedDeviceIds.push(deviceId);
                 }
-                
-                addDeviceEvent(deviceId, 'command', { command, params });
-                count++;
             }
+        }
+
+        if (rejectedDeviceIds.length > 0) {
+            await auditLogger.log({
+                eventType: 'device_broadcast_rejected',
+                category: 'command',
+                severity: 'critical',
+                actor: { type: 'system', id: 'device-gateway' },
+                action: 'broadcast_command',
+                details: {
+                    command,
+                    reason: 'sign_failed',
+                    rejectedCount: rejectedDeviceIds.length,
+                    rejectedDeviceIds
+                },
+                status: 'failure'
+            });
         }
 
         await auditLogger.log({
@@ -655,13 +841,18 @@ export class DeviceGateway {
             severity: 'info',
             actor: { type: 'system', id: 'device-gateway' },
             action: 'broadcast_command',
-            details: { command, deviceCount: count },
+            details: {
+                command,
+                deviceCount: count,
+                rejectedCount: rejectedDeviceIds.length
+            },
             status: 'success'
         });
 
         logger.info('[DeviceGateway] Broadcast command', {
             command,
             deviceCount: count,
+            rejectedCount: rejectedDeviceIds.length
         });
 
         return count;

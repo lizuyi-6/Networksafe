@@ -57,7 +57,7 @@ describe('WebScanner', () => {
         else cb(null, { stdout: '', stderr: '' });
       });
 
-      const result = await scanner.checkNginx();
+      const result = await (scanner as any).checkNginx();
 
       expect(result).toBeNull();
     });
@@ -70,7 +70,7 @@ describe('WebScanner', () => {
         else cb(null, { stdout: '', stderr: '' });
       });
 
-      const result = await scanner.checkNginx();
+      const result = await (scanner as any).checkNginx();
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);

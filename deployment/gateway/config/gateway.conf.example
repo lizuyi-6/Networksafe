@@ -1,0 +1,12 @@
+{
+  "gatewayId": "gw-CHANGEME",
+  "backendUrl": "https://control-plane.example.com",
+  "tenantId": "tenant-CHANGEME",
+  "sePublicKeyPath": "/etc/aetherguard/se-public-key.pem",
+  "breakerTarget": "server-lan-bridge",
+  "serialPort": "/dev/ttyACM0",
+  "serialBaud": 115200,
+  "heartbeatStaleMs": 45000,
+  "releaseTtlMs": 30000,
+  "statusReportIntervalMs": 10000
+}

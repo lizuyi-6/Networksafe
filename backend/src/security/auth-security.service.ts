@@ -377,8 +377,8 @@ export class AuthSecurityService {
   public async validateSession(userId: string, sessionId: string): Promise<boolean> {
     try {
       if (!redisService.isAvailable()) {
-        const storedSessionId = this.sessionsFallback.get(userId);
-        return storedSessionId === sessionId;
+        const storedUserId = this.sessionsFallback.get(sessionId);
+        return storedUserId === userId;
       }
 
       const key = `auth:session:${userId}`;
@@ -393,7 +393,13 @@ export class AuthSecurityService {
   public async invalidateSession(userId: string): Promise<void> {
     try {
       if (!redisService.isAvailable()) {
-        this.sessionsFallback.delete(userId);
+        // Find and remove by userId (any session for this user)
+        for (const [sid, uid] of this.sessionsFallback.entries()) {
+          if (uid === userId) this.sessionsFallback.delete(sid);
+        }
+        if (this.concurrentSessionsFallback.has(userId)) {
+          this.concurrentSessionsFallback.delete(userId);
+        }
         logger.info('Session invalidated (fallback)', { userId });
         return;
       }

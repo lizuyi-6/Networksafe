@@ -3,7 +3,7 @@
  * L1: Collaboration Layer Foundation
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     AgentConfig,
     AgentIdentity,
@@ -144,7 +144,10 @@ export abstract class BaseAgent {
                 timeout: timeoutMs,
                 sanitizationLevel: 'basic',
                 routeModeOverride,
-                analysisPurpose
+                analysisPurpose,
+                // Thinking-depth-derived sampling budget for this agent's layer.
+                temperature: this.config.modelConfig.temperature,
+                maxTokens: this.config.modelConfig.maxTokens
             });
 
             return response;

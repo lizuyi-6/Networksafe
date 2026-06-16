@@ -1,0 +1,1502 @@
+[
+  {
+    "id": "brute_0000",
+    "type": "brute_force",
+    "username": "administrator",
+    "password": "temp",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "176.82.100.82",
+    "timestamp": "2026-03-13T21:09:16.765366"
+  },
+  {
+    "id": "brute_0001",
+    "type": "brute_force",
+    "username": "test",
+    "password": "P@ssw0rd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "34.110.137.50",
+    "timestamp": "2026-03-13T21:12:41.765373"
+  },
+  {
+    "id": "brute_0002",
+    "type": "brute_force",
+    "username": "apache",
+    "password": "temp",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.42.6.234",
+    "timestamp": "2026-03-13T20:28:29.765380"
+  },
+  {
+    "id": "brute_0003",
+    "type": "brute_force",
+    "username": "test",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "99.132.238.44",
+    "timestamp": "2026-03-13T21:24:01.765386"
+  },
+  {
+    "id": "brute_0004",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "141.103.53.235",
+    "timestamp": "2026-03-13T20:31:09.765394"
+  },
+  {
+    "id": "brute_0005",
+    "type": "brute_force",
+    "username": "user",
+    "password": "temp",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "76.208.231.4",
+    "timestamp": "2026-03-13T20:34:32.765403"
+  },
+  {
+    "id": "brute_0006",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "139.46.37.79",
+    "timestamp": "2026-03-13T20:36:35.765410"
+  },
+  {
+    "id": "brute_0007",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "66.15.229.54",
+    "timestamp": "2026-03-13T20:52:02.765420"
+  },
+  {
+    "id": "brute_0008",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "211.197.7.247",
+    "timestamp": "2026-03-13T21:21:05.765427"
+  },
+  {
+    "id": "brute_0009",
+    "type": "brute_force",
+    "username": "user",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "171.131.109.202",
+    "timestamp": "2026-03-13T21:21:59.765433"
+  },
+  {
+    "id": "brute_0010",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "24.13.4.73",
+    "timestamp": "2026-03-13T20:32:29.765440"
+  },
+  {
+    "id": "brute_0011",
+    "type": "brute_force",
+    "username": "git",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "98.249.18.100",
+    "timestamp": "2026-03-13T20:31:52.765446"
+  },
+  {
+    "id": "brute_0012",
+    "type": "brute_force",
+    "username": "git",
+    "password": "111111",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "191.153.198.181",
+    "timestamp": "2026-03-13T20:26:08.765452"
+  },
+  {
+    "id": "brute_0013",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "93.249.52.29",
+    "timestamp": "2026-03-13T20:47:40.765459"
+  },
+  {
+    "id": "brute_0014",
+    "type": "brute_force",
+    "username": "ubuntu",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.81.153.209",
+    "timestamp": "2026-03-13T20:40:34.765465"
+  },
+  {
+    "id": "brute_0015",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "P@ssw0rd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.92.239.145",
+    "timestamp": "2026-03-13T21:01:07.765471"
+  },
+  {
+    "id": "brute_0016",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "123456",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.95.245.148",
+    "timestamp": "2026-03-13T20:46:01.765477"
+  },
+  {
+    "id": "brute_0017",
+    "type": "brute_force",
+    "username": "user",
+    "password": "test123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.40.117.94",
+    "timestamp": "2026-03-13T20:47:09.765483"
+  },
+  {
+    "id": "brute_0018",
+    "type": "brute_force",
+    "username": "ftp",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "160.48.94.167",
+    "timestamp": "2026-03-13T20:54:09.765490"
+  },
+  {
+    "id": "brute_0019",
+    "type": "brute_force",
+    "username": "git",
+    "password": "passw0rd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "187.114.225.21",
+    "timestamp": "2026-03-13T21:10:42.765496"
+  },
+  {
+    "id": "brute_0020",
+    "type": "brute_force",
+    "username": "root",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "185.114.154.36",
+    "timestamp": "2026-03-13T21:17:15.765502"
+  },
+  {
+    "id": "brute_0021",
+    "type": "brute_force",
+    "username": "ftp",
+    "password": "123456",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "76.71.194.18",
+    "timestamp": "2026-03-13T20:33:25.765510"
+  },
+  {
+    "id": "brute_0022",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "118.154.57.151",
+    "timestamp": "2026-03-13T20:56:12.765517"
+  },
+  {
+    "id": "brute_0023",
+    "type": "brute_force",
+    "username": "ftp",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "223.27.11.17",
+    "timestamp": "2026-03-13T21:01:01.765523"
+  },
+  {
+    "id": "brute_0024",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "56.11.74.118",
+    "timestamp": "2026-03-13T21:03:20.765529"
+  },
+  {
+    "id": "brute_0025",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "P@ssw0rd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "175.225.195.212",
+    "timestamp": "2026-03-13T20:48:19.765535"
+  },
+  {
+    "id": "brute_0026",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "12345678",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.44.26.23",
+    "timestamp": "2026-03-13T21:14:49.765541"
+  },
+  {
+    "id": "brute_0027",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "159.17.236.48",
+    "timestamp": "2026-03-13T20:44:28.765550"
+  },
+  {
+    "id": "brute_0028",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "14.131.125.6",
+    "timestamp": "2026-03-13T20:25:23.765556"
+  },
+  {
+    "id": "brute_0029",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "23.217.149.233",
+    "timestamp": "2026-03-13T20:54:46.765562"
+  },
+  {
+    "id": "brute_0030",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "166.165.102.111",
+    "timestamp": "2026-03-13T20:31:54.765568"
+  },
+  {
+    "id": "brute_0031",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "111111",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "110.100.226.163",
+    "timestamp": "2026-03-13T20:58:51.765574"
+  },
+  {
+    "id": "brute_0032",
+    "type": "brute_force",
+    "username": "apache",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.159.254.226",
+    "timestamp": "2026-03-13T21:13:21.765580"
+  },
+  {
+    "id": "brute_0033",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "109.69.252.105",
+    "timestamp": "2026-03-13T20:49:40.765586"
+  },
+  {
+    "id": "brute_0034",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "password",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.97.155.158",
+    "timestamp": "2026-03-13T21:12:34.765592"
+  },
+  {
+    "id": "brute_0035",
+    "type": "brute_force",
+    "username": "test",
+    "password": "111111",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "24.157.211.163",
+    "timestamp": "2026-03-13T20:56:26.765598"
+  },
+  {
+    "id": "brute_0036",
+    "type": "brute_force",
+    "username": "ftp",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "22.227.43.242",
+    "timestamp": "2026-03-13T20:27:40.765605"
+  },
+  {
+    "id": "brute_0037",
+    "type": "brute_force",
+    "username": "nginx",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "90.70.234.175",
+    "timestamp": "2026-03-13T20:38:45.765610"
+  },
+  {
+    "id": "brute_0038",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "69.58.124.24",
+    "timestamp": "2026-03-13T20:44:12.765617"
+  },
+  {
+    "id": "brute_0039",
+    "type": "brute_force",
+    "username": "user",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "34.202.169.149",
+    "timestamp": "2026-03-13T21:08:55.765623"
+  },
+  {
+    "id": "brute_0040",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "temp",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "193.14.253.26",
+    "timestamp": "2026-03-13T21:19:28.765629"
+  },
+  {
+    "id": "brute_0041",
+    "type": "brute_force",
+    "username": "user",
+    "password": "password",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "5.10.202.105",
+    "timestamp": "2026-03-13T21:09:15.765635"
+  },
+  {
+    "id": "brute_0042",
+    "type": "brute_force",
+    "username": "ftp",
+    "password": "test123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "203.116.178.194",
+    "timestamp": "2026-03-13T20:32:27.765651"
+  },
+  {
+    "id": "brute_0043",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "12345678",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "204.215.41.167",
+    "timestamp": "2026-03-13T20:29:48.765658"
+  },
+  {
+    "id": "brute_0044",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "password",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.62.173.56",
+    "timestamp": "2026-03-13T20:41:32.765665"
+  },
+  {
+    "id": "brute_0045",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "test123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "116.233.98.97",
+    "timestamp": "2026-03-13T21:13:17.765671"
+  },
+  {
+    "id": "brute_0046",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "123456789",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "131.251.189.6",
+    "timestamp": "2026-03-13T20:29:12.765680"
+  },
+  {
+    "id": "brute_0047",
+    "type": "brute_force",
+    "username": "test",
+    "password": "123456789",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "194.16.87.88",
+    "timestamp": "2026-03-13T21:05:19.765686"
+  },
+  {
+    "id": "brute_0048",
+    "type": "brute_force",
+    "username": "nginx",
+    "password": "P@ssw0rd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.239.251.155",
+    "timestamp": "2026-03-13T21:19:17.765692"
+  },
+  {
+    "id": "brute_0049",
+    "type": "brute_force",
+    "username": "administrator",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "134.109.32.25",
+    "timestamp": "2026-03-13T21:06:09.765698"
+  },
+  {
+    "id": "brute_0050",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "12345678",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "81.6.143.184",
+    "timestamp": "2026-03-13T20:49:33.765705"
+  },
+  {
+    "id": "brute_0051",
+    "type": "brute_force",
+    "username": "git",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "12.31.163.231",
+    "timestamp": "2026-03-13T20:54:24.765711"
+  },
+  {
+    "id": "brute_0052",
+    "type": "brute_force",
+    "username": "git",
+    "password": "111111",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "68.166.32.153",
+    "timestamp": "2026-03-13T20:50:31.765717"
+  },
+  {
+    "id": "brute_0053",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "test123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.178.158.122",
+    "timestamp": "2026-03-13T20:42:13.765723"
+  },
+  {
+    "id": "brute_0054",
+    "type": "brute_force",
+    "username": "administrator",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "175.229.107.13",
+    "timestamp": "2026-03-13T21:22:13.765729"
+  },
+  {
+    "id": "brute_0055",
+    "type": "brute_force",
+    "username": "user",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "39.123.224.187",
+    "timestamp": "2026-03-13T21:17:43.765737"
+  },
+  {
+    "id": "brute_0056",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "P@ssw0rd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "3.13.199.44",
+    "timestamp": "2026-03-13T20:57:11.765744"
+  },
+  {
+    "id": "brute_0057",
+    "type": "brute_force",
+    "username": "nginx",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "24.30.254.219",
+    "timestamp": "2026-03-13T21:15:03.765750"
+  },
+  {
+    "id": "brute_0058",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "password",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "222.80.94.173",
+    "timestamp": "2026-03-13T20:52:26.765756"
+  },
+  {
+    "id": "brute_0059",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "password",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.219.102.111",
+    "timestamp": "2026-03-13T20:57:03.765762"
+  },
+  {
+    "id": "brute_0060",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "143.143.48.17",
+    "timestamp": "2026-03-13T20:25:17.765768"
+  },
+  {
+    "id": "brute_0061",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "143.19.78.156",
+    "timestamp": "2026-03-13T21:09:14.765774"
+  },
+  {
+    "id": "brute_0062",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "146.133.255.72",
+    "timestamp": "2026-03-13T20:42:26.765780"
+  },
+  {
+    "id": "brute_0063",
+    "type": "brute_force",
+    "username": "test",
+    "password": "temp",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "190.84.173.70",
+    "timestamp": "2026-03-13T20:27:26.765789"
+  },
+  {
+    "id": "brute_0064",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "123456789",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "156.47.84.2",
+    "timestamp": "2026-03-13T20:26:41.765795"
+  },
+  {
+    "id": "brute_0065",
+    "type": "brute_force",
+    "username": "ubuntu",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "118.123.68.74",
+    "timestamp": "2026-03-13T20:28:17.765802"
+  },
+  {
+    "id": "brute_0066",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "123456",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "181.171.64.116",
+    "timestamp": "2026-03-13T20:38:32.765810"
+  },
+  {
+    "id": "brute_0067",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "root",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "86.193.85.34",
+    "timestamp": "2026-03-13T20:42:27.765816"
+  },
+  {
+    "id": "brute_0068",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "95.98.7.231",
+    "timestamp": "2026-03-13T20:47:32.765823"
+  },
+  {
+    "id": "brute_0069",
+    "type": "brute_force",
+    "username": "user",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "131.165.132.199",
+    "timestamp": "2026-03-13T20:29:41.765829"
+  },
+  {
+    "id": "brute_0070",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "123456789",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.119.220.55",
+    "timestamp": "2026-03-13T20:51:58.765835"
+  },
+  {
+    "id": "brute_0071",
+    "type": "brute_force",
+    "username": "administrator",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "130.232.252.174",
+    "timestamp": "2026-03-13T21:07:46.765841"
+  },
+  {
+    "id": "brute_0072",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "12345678",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "113.94.5.118",
+    "timestamp": "2026-03-13T20:47:14.765847"
+  },
+  {
+    "id": "brute_0073",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "5.65.194.89",
+    "timestamp": "2026-03-13T21:03:41.765854"
+  },
+  {
+    "id": "brute_0074",
+    "type": "brute_force",
+    "username": "test",
+    "password": "1234567",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "147.113.91.33",
+    "timestamp": "2026-03-13T20:41:33.765860"
+  },
+  {
+    "id": "brute_0075",
+    "type": "brute_force",
+    "username": "apache",
+    "password": "temp",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "173.252.214.213",
+    "timestamp": "2026-03-13T21:16:41.765866"
+  },
+  {
+    "id": "brute_0076",
+    "type": "brute_force",
+    "username": "ubuntu",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "174.78.160.170",
+    "timestamp": "2026-03-13T20:50:21.765872"
+  },
+  {
+    "id": "brute_0077",
+    "type": "brute_force",
+    "username": "git",
+    "password": "test123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "151.178.24.206",
+    "timestamp": "2026-03-13T20:32:15.765878"
+  },
+  {
+    "id": "brute_0078",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "176.168.59.71",
+    "timestamp": "2026-03-13T20:27:24.765885"
+  },
+  {
+    "id": "brute_0079",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "175.24.114.141",
+    "timestamp": "2026-03-13T20:34:49.765891"
+  },
+  {
+    "id": "brute_0080",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "123456789",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "170.58.60.142",
+    "timestamp": "2026-03-13T21:18:42.765897"
+  },
+  {
+    "id": "brute_0081",
+    "type": "brute_force",
+    "username": "git",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "42.72.172.245",
+    "timestamp": "2026-03-13T20:36:52.765903"
+  },
+  {
+    "id": "brute_0082",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "47.12.0.178",
+    "timestamp": "2026-03-13T21:02:50.765909"
+  },
+  {
+    "id": "brute_0083",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "129.240.81.178",
+    "timestamp": "2026-03-13T20:31:07.765915"
+  },
+  {
+    "id": "brute_0084",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "144.92.78.32",
+    "timestamp": "2026-03-13T20:45:24.765923"
+  },
+  {
+    "id": "brute_0085",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "123456",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "36.19.188.64",
+    "timestamp": "2026-03-13T20:54:43.765932"
+  },
+  {
+    "id": "brute_0086",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "123456",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "45.151.140.253",
+    "timestamp": "2026-03-13T20:51:56.765938"
+  },
+  {
+    "id": "brute_0087",
+    "type": "brute_force",
+    "username": "ubuntu",
+    "password": "password",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "4.145.147.127",
+    "timestamp": "2026-03-13T21:23:42.765945"
+  },
+  {
+    "id": "brute_0088",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "12345678",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "218.93.127.156",
+    "timestamp": "2026-03-13T21:18:42.765951"
+  },
+  {
+    "id": "brute_0089",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.84.208.43",
+    "timestamp": "2026-03-13T21:03:11.765957"
+  },
+  {
+    "id": "brute_0090",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "12345678",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "59.131.137.163",
+    "timestamp": "2026-03-13T21:16:48.765963"
+  },
+  {
+    "id": "brute_0091",
+    "type": "brute_force",
+    "username": "nginx",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "121.224.147.135",
+    "timestamp": "2026-03-13T21:03:06.765969"
+  },
+  {
+    "id": "brute_0092",
+    "type": "brute_force",
+    "username": "user",
+    "password": "1234567",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "81.67.119.247",
+    "timestamp": "2026-03-13T20:36:41.765975"
+  },
+  {
+    "id": "brute_0093",
+    "type": "brute_force",
+    "username": "ftp",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "5.246.67.180",
+    "timestamp": "2026-03-13T20:32:12.765981"
+  },
+  {
+    "id": "brute_0094",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "1234567",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "110.228.249.230",
+    "timestamp": "2026-03-13T20:54:33.765988"
+  },
+  {
+    "id": "brute_0095",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "108.126.239.197",
+    "timestamp": "2026-03-13T21:07:13.765994"
+  },
+  {
+    "id": "brute_0096",
+    "type": "brute_force",
+    "username": "git",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "145.139.12.248",
+    "timestamp": "2026-03-13T21:03:46.766000"
+  },
+  {
+    "id": "brute_0097",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "153.236.83.95",
+    "timestamp": "2026-03-13T20:40:15.766006"
+  },
+  {
+    "id": "brute_0098",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "145.183.98.140",
+    "timestamp": "2026-03-13T21:02:56.766012"
+  },
+  {
+    "id": "brute_0099",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "103.28.22.151",
+    "timestamp": "2026-03-13T20:38:45.766018"
+  },
+  {
+    "id": "brute_0100",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.75.198.62",
+    "timestamp": "2026-03-13T20:37:38.766024"
+  },
+  {
+    "id": "brute_0101",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "161.73.31.198",
+    "timestamp": "2026-03-13T20:53:01.766030"
+  },
+  {
+    "id": "brute_0102",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "213.165.177.122",
+    "timestamp": "2026-03-13T21:19:58.766037"
+  },
+  {
+    "id": "brute_0103",
+    "type": "brute_force",
+    "username": "administrator",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "198.155.74.182",
+    "timestamp": "2026-03-13T21:13:02.766042"
+  },
+  {
+    "id": "brute_0104",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.13.148.91",
+    "timestamp": "2026-03-13T20:31:07.766048"
+  },
+  {
+    "id": "brute_0105",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "215.131.51.13",
+    "timestamp": "2026-03-13T20:41:09.766057"
+  },
+  {
+    "id": "brute_0106",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.107.254.91",
+    "timestamp": "2026-03-13T21:22:44.766071"
+  },
+  {
+    "id": "brute_0107",
+    "type": "brute_force",
+    "username": "user",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "25.19.146.4",
+    "timestamp": "2026-03-13T20:42:43.766077"
+  },
+  {
+    "id": "brute_0108",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "111111",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "53.117.176.124",
+    "timestamp": "2026-03-13T21:10:19.766083"
+  },
+  {
+    "id": "brute_0109",
+    "type": "brute_force",
+    "username": "administrator",
+    "password": "123456",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "207.244.187.56",
+    "timestamp": "2026-03-13T20:28:47.766090"
+  },
+  {
+    "id": "brute_0110",
+    "type": "brute_force",
+    "username": "administrator",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "30.99.81.169",
+    "timestamp": "2026-03-13T20:31:26.766096"
+  },
+  {
+    "id": "brute_0111",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "17.97.198.228",
+    "timestamp": "2026-03-13T21:11:52.766102"
+  },
+  {
+    "id": "brute_0112",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "41.253.197.33",
+    "timestamp": "2026-03-13T21:19:05.766108"
+  },
+  {
+    "id": "brute_0113",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "70.29.3.15",
+    "timestamp": "2026-03-13T20:24:46.766114"
+  },
+  {
+    "id": "brute_0114",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "94.111.68.44",
+    "timestamp": "2026-03-13T20:27:48.766120"
+  },
+  {
+    "id": "brute_0115",
+    "type": "brute_force",
+    "username": "root",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.36.174.5",
+    "timestamp": "2026-03-13T20:52:44.766126"
+  },
+  {
+    "id": "brute_0116",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "1234567",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "197.59.46.55",
+    "timestamp": "2026-03-13T21:03:48.766132"
+  },
+  {
+    "id": "brute_0117",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "32.52.236.221",
+    "timestamp": "2026-03-13T20:47:37.766139"
+  },
+  {
+    "id": "brute_0118",
+    "type": "brute_force",
+    "username": "centos",
+    "password": "111111",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "216.173.219.231",
+    "timestamp": "2026-03-13T20:48:46.766145"
+  },
+  {
+    "id": "brute_0119",
+    "type": "brute_force",
+    "username": "nginx",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.207.17.146",
+    "timestamp": "2026-03-13T20:45:13.766151"
+  },
+  {
+    "id": "brute_0120",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "111111",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "72.145.9.246",
+    "timestamp": "2026-03-13T20:50:50.766157"
+  },
+  {
+    "id": "brute_0121",
+    "type": "brute_force",
+    "username": "root",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "113.86.152.206",
+    "timestamp": "2026-03-13T20:52:02.766163"
+  },
+  {
+    "id": "brute_0122",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "197.180.1.89",
+    "timestamp": "2026-03-13T20:58:37.766169"
+  },
+  {
+    "id": "brute_0123",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "44.25.201.252",
+    "timestamp": "2026-03-13T20:58:58.766175"
+  },
+  {
+    "id": "brute_0124",
+    "type": "brute_force",
+    "username": "user",
+    "password": "123456789",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "15.112.86.220",
+    "timestamp": "2026-03-13T21:14:55.766184"
+  },
+  {
+    "id": "brute_0125",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "123456789",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "66.130.29.20",
+    "timestamp": "2026-03-13T20:42:22.766190"
+  },
+  {
+    "id": "brute_0126",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "123456",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "54.157.212.167",
+    "timestamp": "2026-03-13T20:57:11.766196"
+  },
+  {
+    "id": "brute_0127",
+    "type": "brute_force",
+    "username": "postgres",
+    "password": "Admin123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.35.157.89",
+    "timestamp": "2026-03-13T21:08:45.766204"
+  },
+  {
+    "id": "brute_0128",
+    "type": "brute_force",
+    "username": "test",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "222.115.249.43",
+    "timestamp": "2026-03-13T21:22:12.766211"
+  },
+  {
+    "id": "brute_0129",
+    "type": "brute_force",
+    "username": "ftp",
+    "password": "passw0rd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "125.186.129.139",
+    "timestamp": "2026-03-13T21:21:32.766217"
+  },
+  {
+    "id": "brute_0130",
+    "type": "brute_force",
+    "username": "ubuntu",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.71.145.31",
+    "timestamp": "2026-03-13T20:27:29.766223"
+  },
+  {
+    "id": "brute_0131",
+    "type": "brute_force",
+    "username": "administrator",
+    "password": "123456",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "148.91.196.172",
+    "timestamp": "2026-03-13T20:59:42.766229"
+  },
+  {
+    "id": "brute_0132",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "111111",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "140.194.68.112",
+    "timestamp": "2026-03-13T20:27:42.766235"
+  },
+  {
+    "id": "brute_0133",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "default",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "76.247.205.124",
+    "timestamp": "2026-03-13T20:54:10.766241"
+  },
+  {
+    "id": "brute_0134",
+    "type": "brute_force",
+    "username": "oracle",
+    "password": "1234567",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.128.5.64",
+    "timestamp": "2026-03-13T21:10:48.766247"
+  },
+  {
+    "id": "brute_0135",
+    "type": "brute_force",
+    "username": "tomcat",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.80.7.64",
+    "timestamp": "2026-03-13T20:47:47.766253"
+  },
+  {
+    "id": "brute_0136",
+    "type": "brute_force",
+    "username": "test",
+    "password": "1234567",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "148.47.43.231",
+    "timestamp": "2026-03-13T20:47:53.766260"
+  },
+  {
+    "id": "brute_0137",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "P@ssw0rd",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "92.227.166.91",
+    "timestamp": "2026-03-13T20:41:13.766266"
+  },
+  {
+    "id": "brute_0138",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "12345",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "138.198.86.149",
+    "timestamp": "2026-03-13T20:46:54.766272"
+  },
+  {
+    "id": "brute_0139",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "119.12.78.25",
+    "timestamp": "2026-03-13T20:26:59.766278"
+  },
+  {
+    "id": "brute_0140",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "changeme",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "217.174.52.4",
+    "timestamp": "2026-03-13T21:19:20.766284"
+  },
+  {
+    "id": "brute_0141",
+    "type": "brute_force",
+    "username": "user",
+    "password": "test123",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "138.26.186.158",
+    "timestamp": "2026-03-13T20:46:05.766289"
+  },
+  {
+    "id": "brute_0142",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.25.196.219",
+    "timestamp": "2026-03-13T21:12:50.766296"
+  },
+  {
+    "id": "brute_0143",
+    "type": "brute_force",
+    "username": "admin",
+    "password": "temp",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "203.100.0.253",
+    "timestamp": "2026-03-13T20:33:30.766302"
+  },
+  {
+    "id": "brute_0144",
+    "type": "brute_force",
+    "username": "user",
+    "password": "qwerty",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "97.229.156.65",
+    "timestamp": "2026-03-13T21:16:59.766311"
+  },
+  {
+    "id": "brute_0145",
+    "type": "brute_force",
+    "username": "mysql",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "201.251.112.230",
+    "timestamp": "2026-03-13T21:06:24.766317"
+  },
+  {
+    "id": "brute_0146",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "222.193.43.82",
+    "timestamp": "2026-03-13T21:20:56.766323"
+  },
+  {
+    "id": "brute_0147",
+    "type": "brute_force",
+    "username": "guest",
+    "password": "admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.163.76.220",
+    "timestamp": "2026-03-13T21:15:55.766329"
+  },
+  {
+    "id": "brute_0148",
+    "type": "brute_force",
+    "username": "jenkins",
+    "password": "1234567",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "46.8.139.73",
+    "timestamp": "2026-03-13T21:02:43.766337"
+  },
+  {
+    "id": "brute_0149",
+    "type": "brute_force",
+    "username": "ftp",
+    "password": "Welcome1",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.79.142.27",
+    "timestamp": "2026-03-13T21:23:02.766344"
+  }
+]

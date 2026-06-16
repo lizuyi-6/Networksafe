@@ -12,6 +12,7 @@ import devicesRouter, {
   getDeviceList,
   getCodebook
 } from '../../api/routes/devices.routes';
+import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { authenticate, requireRole } from '../../middleware/auth.middleware';
 
 // Mock dependencies
@@ -43,6 +44,16 @@ describe('Devices Routes', () => {
   const app = express();
   app.use(express.json());
   app.use('/api/devices', devicesRouter);
+
+  beforeAll(() => {
+    jest.spyOn(commandDispatcherService, 'dispatchDeviceCommand').mockResolvedValue({
+      success: true,
+      status: 'completed',
+      actionId: 'test-action',
+      message: 'ok',
+      record: { ok: true }
+    } as any);
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -133,7 +144,13 @@ describe('Devices Routes', () => {
     });
 
     it('should return 400 if device is offline', async () => {
-      setDeviceOffline('device-001');
+      (commandDispatcherService.dispatchDeviceCommand as jest.Mock).mockResolvedValueOnce({
+        success: false,
+        status: 'failed',
+        actionId: 'test-action-offline',
+        message: 'Device is offline.',
+        reason: 'device_offline'
+      });
 
       const response = await request(app)
         .post('/api/devices/device-001/cmd')
@@ -141,7 +158,7 @@ describe('Devices Routes', () => {
         .send({ command: 'reboot' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('backend.device_is_offline');
+      expect(response.body.error.code).toBe('DEVICE_IS_OFFLINE');
     });
   });
 

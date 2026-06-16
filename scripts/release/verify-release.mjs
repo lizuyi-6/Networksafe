@@ -21,6 +21,11 @@ const defaultEnv = {
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@aetherguard.com',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'AetherGuardAdminPass2026!',
   DEVICE_COMMAND_SECRET: process.env.DEVICE_COMMAND_SECRET || 'AetherGuardReleaseCommandSecret2026!',
+  SERIAL_HELPER_SHARED_SECRET: process.env.SERIAL_HELPER_SHARED_SECRET || process.env.DEVICE_COMMAND_SECRET || 'AetherGuardReleaseCommandSecret2026!',
+  DEPLOYMENT_BUNDLE_SIGNING_SECRET: process.env.DEPLOYMENT_BUNDLE_SIGNING_SECRET || 'AetherGuardReleaseBundleSigningSecret2026!',
+  AETHERGUARD_RUNTIME_MODE: process.env.AETHERGUARD_RUNTIME_MODE || 'prod-enterprise',
+  DISABLE_SQLITE_FALLBACK: process.env.DISABLE_SQLITE_FALLBACK || 'true',
+  ARTIFACT_STORE: process.env.ARTIFACT_STORE || 's3',
   ENABLE_DEV_LOGIN_PRESETS: process.env.ENABLE_DEV_LOGIN_PRESETS || 'false',
   DB_MODE: process.env.DB_MODE || 'postgres',
   PLAYWRIGHT_BASE_URL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8080',
@@ -227,6 +232,14 @@ async function main() {
     await runStep('backend install', npmExecutable, ['ci'], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend lint', npmExecutable, ['run', 'lint'], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend typecheck', npmExecutable, ['run', 'typecheck'], { cwd: path.join(workspaceRoot, 'backend') });
+    await runStep('backend enterprise m1 tests', 'npx', [
+      'jest',
+      'src/__tests__/security/enterprise-permissions.test.ts',
+      'src/__tests__/security/deployment-bundle-signing.test.ts',
+      'src/__tests__/middleware/helper-auth.middleware.test.ts',
+      'src/__tests__/services/deployment-run.service.test.ts',
+      '--runInBand',
+    ], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend tests', npmExecutable, ['run', 'test:coverage', '--', '--runInBand'], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend route db guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-route-db-access.mjs')]);
 
@@ -259,6 +272,25 @@ async function main() {
     await checkHttp('http://127.0.0.1:8080/', 'frontend home');
     await runStep('fastpath self-check', 'docker', ['compose', 'exec', '-T', 'fastpath', 'aetherguard-fastpath', 'self-check']);
     await collectDockerArtifacts();
+    const readinessReport = {
+      status: 'engineering-complete',
+      runtimeMode: defaultEnv.AETHERGUARD_RUNTIME_MODE,
+      productionAuthority: 'ESP32 USB-TTL serial deployer + Linux serial helper',
+      websocketAuthority: 'status/OTA/experimental only',
+      requiredEvidence: [
+        'approval chain',
+        'hardware grant',
+        'helper execution log',
+        'serial event log',
+        'bundle checksum',
+        'healthcheck result',
+        'rollback notes'
+      ],
+      hilStatus: 'not-validated-in-ci',
+      hilRequirement: '1 ESP32 gate, 1 USB-TTL serial path, 1 Linux target host running ENV -> BACKUP -> INSTALL -> REMOVE/ROLLBACK',
+      generatedAt: new Date().toISOString()
+    };
+    fs.writeFileSync(path.join(artifactRoot, 'enterprise-readiness-report.json'), JSON.stringify(readinessReport, null, 2), 'utf8');
     fs.writeFileSync(
       path.join(artifactRoot, 'summary.json'),
       JSON.stringify(
@@ -266,6 +298,7 @@ async function main() {
           status: 'passed',
           completedAt: new Date().toISOString(),
           artifactRoot,
+          readinessReport: path.join(artifactRoot, 'enterprise-readiness-report.json'),
           steps: stepResults,
         },
         null,

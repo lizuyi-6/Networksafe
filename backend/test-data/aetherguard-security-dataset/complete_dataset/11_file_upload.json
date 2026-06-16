@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "upload_0000",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "82.122.164.152",
+    "timestamp": "2026-03-13T21:39:20.653693"
+  },
+  {
+    "id": "upload_0001",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.93.189.26",
+    "timestamp": "2026-03-13T21:39:20.653699"
+  },
+  {
+    "id": "upload_0002",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.79.86.59",
+    "timestamp": "2026-03-13T21:39:20.653704"
+  },
+  {
+    "id": "upload_0003",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "36.17.152.140",
+    "timestamp": "2026-03-13T21:39:20.653709"
+  },
+  {
+    "id": "upload_0004",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.73.170.120",
+    "timestamp": "2026-03-13T21:39:20.653715"
+  },
+  {
+    "id": "upload_0005",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "155.186.56.160",
+    "timestamp": "2026-03-13T21:39:20.653720"
+  },
+  {
+    "id": "upload_0006",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "9.236.129.200",
+    "timestamp": "2026-03-13T21:39:20.653725"
+  },
+  {
+    "id": "upload_0007",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.232.177.205",
+    "timestamp": "2026-03-13T21:39:20.653731"
+  },
+  {
+    "id": "upload_0008",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.231.141.229",
+    "timestamp": "2026-03-13T21:39:20.653737"
+  },
+  {
+    "id": "upload_0009",
+    "type": "file_upload",
+    "filename": "shell.jsp",
+    "content": "<% Runtime.getRuntime().exec(request.getParameter(\"c\")); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "94.216.81.142",
+    "timestamp": "2026-03-13T21:39:20.653744"
+  },
+  {
+    "id": "upload_0010",
+    "type": "file_upload",
+    "filename": "shell.jsp",
+    "content": "<% Runtime.getRuntime().exec(request.getParameter(\"c\")); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "173.121.43.68",
+    "timestamp": "2026-03-13T21:39:20.653749"
+  },
+  {
+    "id": "upload_0011",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.113.149.102",
+    "timestamp": "2026-03-13T21:39:20.653754"
+  },
+  {
+    "id": "upload_0012",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "5.238.206.202",
+    "timestamp": "2026-03-13T21:39:20.653759"
+  },
+  {
+    "id": "upload_0013",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.255.246.243",
+    "timestamp": "2026-03-13T21:39:20.653764"
+  },
+  {
+    "id": "upload_0014",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.24.114.128",
+    "timestamp": "2026-03-13T21:39:20.653769"
+  },
+  {
+    "id": "upload_0015",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "91.95.122.45",
+    "timestamp": "2026-03-13T21:39:20.653774"
+  },
+  {
+    "id": "upload_0016",
+    "type": "file_upload",
+    "filename": "shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.191.213.147",
+    "timestamp": "2026-03-13T21:39:20.653778"
+  },
+  {
+    "id": "upload_0017",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "87.157.27.76",
+    "timestamp": "2026-03-13T21:39:20.653783"
+  },
+  {
+    "id": "upload_0018",
+    "type": "file_upload",
+    "filename": "shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "19.179.138.248",
+    "timestamp": "2026-03-13T21:39:20.653788"
+  },
+  {
+    "id": "upload_0019",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "221.174.65.18",
+    "timestamp": "2026-03-13T21:39:20.653792"
+  },
+  {
+    "id": "upload_0020",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "91.92.67.168",
+    "timestamp": "2026-03-13T21:39:20.653797"
+  },
+  {
+    "id": "upload_0021",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "162.94.223.14",
+    "timestamp": "2026-03-13T21:39:20.653805"
+  },
+  {
+    "id": "upload_0022",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "25.181.3.118",
+    "timestamp": "2026-03-13T21:39:20.653809"
+  },
+  {
+    "id": "upload_0023",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "131.79.49.238",
+    "timestamp": "2026-03-13T21:39:20.653814"
+  },
+  {
+    "id": "upload_0024",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "203.67.203.139",
+    "timestamp": "2026-03-13T21:39:20.653820"
+  },
+  {
+    "id": "upload_0025",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "49.10.208.31",
+    "timestamp": "2026-03-13T21:39:20.653824"
+  },
+  {
+    "id": "upload_0026",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "21.115.37.18",
+    "timestamp": "2026-03-13T21:39:20.653829"
+  },
+  {
+    "id": "upload_0027",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "158.163.156.192",
+    "timestamp": "2026-03-13T21:39:20.653834"
+  },
+  {
+    "id": "upload_0028",
+    "type": "file_upload",
+    "filename": "shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "213.195.247.74",
+    "timestamp": "2026-03-13T21:39:20.653841"
+  },
+  {
+    "id": "upload_0029",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "198.143.171.56",
+    "timestamp": "2026-03-13T21:39:20.653846"
+  },
+  {
+    "id": "upload_0030",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "217.204.143.122",
+    "timestamp": "2026-03-13T21:39:20.653851"
+  },
+  {
+    "id": "upload_0031",
+    "type": "file_upload",
+    "filename": "shell.php%00.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "163.210.3.109",
+    "timestamp": "2026-03-13T21:39:20.653855"
+  },
+  {
+    "id": "upload_0032",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "20.73.148.225",
+    "timestamp": "2026-03-13T21:39:20.653860"
+  },
+  {
+    "id": "upload_0033",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.179.56.144",
+    "timestamp": "2026-03-13T21:39:20.653865"
+  },
+  {
+    "id": "upload_0034",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "21.43.255.67",
+    "timestamp": "2026-03-13T21:39:20.653870"
+  },
+  {
+    "id": "upload_0035",
+    "type": "file_upload",
+    "filename": "shell.jsp",
+    "content": "<% Runtime.getRuntime().exec(request.getParameter(\"c\")); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "135.101.75.244",
+    "timestamp": "2026-03-13T21:39:20.653875"
+  },
+  {
+    "id": "upload_0036",
+    "type": "file_upload",
+    "filename": "shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "52.167.231.168",
+    "timestamp": "2026-03-13T21:39:20.653879"
+  },
+  {
+    "id": "upload_0037",
+    "type": "file_upload",
+    "filename": "shell.php%00.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "57.77.189.166",
+    "timestamp": "2026-03-13T21:39:20.653884"
+  },
+  {
+    "id": "upload_0038",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.77.206.25",
+    "timestamp": "2026-03-13T21:39:20.653889"
+  },
+  {
+    "id": "upload_0039",
+    "type": "file_upload",
+    "filename": "shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "193.213.225.55",
+    "timestamp": "2026-03-13T21:39:20.653894"
+  },
+  {
+    "id": "upload_0040",
+    "type": "file_upload",
+    "filename": "shell.jsp",
+    "content": "<% Runtime.getRuntime().exec(request.getParameter(\"c\")); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "178.67.244.115",
+    "timestamp": "2026-03-13T21:39:20.653898"
+  },
+  {
+    "id": "upload_0041",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "77.87.99.160",
+    "timestamp": "2026-03-13T21:39:20.653904"
+  },
+  {
+    "id": "upload_0042",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "101.155.84.74",
+    "timestamp": "2026-03-13T21:39:20.653908"
+  },
+  {
+    "id": "upload_0043",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.1.49.87",
+    "timestamp": "2026-03-13T21:39:20.653913"
+  },
+  {
+    "id": "upload_0044",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "166.126.232.133",
+    "timestamp": "2026-03-13T21:39:20.653918"
+  },
+  {
+    "id": "upload_0045",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "159.156.219.90",
+    "timestamp": "2026-03-13T21:39:20.653923"
+  },
+  {
+    "id": "upload_0046",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "115.41.151.216",
+    "timestamp": "2026-03-13T21:39:20.653928"
+  },
+  {
+    "id": "upload_0047",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "60.199.91.203",
+    "timestamp": "2026-03-13T21:39:20.653933"
+  },
+  {
+    "id": "upload_0048",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.46.231.129",
+    "timestamp": "2026-03-13T21:39:20.653938"
+  },
+  {
+    "id": "upload_0049",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.32.131.14",
+    "timestamp": "2026-03-13T21:39:20.653942"
+  },
+  {
+    "id": "upload_0050",
+    "type": "file_upload",
+    "filename": "shell.php%00.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.202.67.6",
+    "timestamp": "2026-03-13T21:39:20.653947"
+  },
+  {
+    "id": "upload_0051",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "203.110.84.148",
+    "timestamp": "2026-03-13T21:39:20.653952"
+  },
+  {
+    "id": "upload_0052",
+    "type": "file_upload",
+    "filename": "shell.php%00.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.69.250.56",
+    "timestamp": "2026-03-13T21:39:20.653957"
+  },
+  {
+    "id": "upload_0053",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "33.83.136.126",
+    "timestamp": "2026-03-13T21:39:20.653962"
+  },
+  {
+    "id": "upload_0054",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "53.164.40.116",
+    "timestamp": "2026-03-13T21:39:20.653966"
+  },
+  {
+    "id": "upload_0055",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "33.66.30.169",
+    "timestamp": "2026-03-13T21:39:20.653971"
+  },
+  {
+    "id": "upload_0056",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "42.43.35.162",
+    "timestamp": "2026-03-13T21:39:20.653975"
+  },
+  {
+    "id": "upload_0057",
+    "type": "file_upload",
+    "filename": "shell.jsp",
+    "content": "<% Runtime.getRuntime().exec(request.getParameter(\"c\")); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "148.136.28.25",
+    "timestamp": "2026-03-13T21:39:20.653980"
+  },
+  {
+    "id": "upload_0058",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.138.84.197",
+    "timestamp": "2026-03-13T21:39:20.653985"
+  },
+  {
+    "id": "upload_0059",
+    "type": "file_upload",
+    "filename": "shell.jsp",
+    "content": "<% Runtime.getRuntime().exec(request.getParameter(\"c\")); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "180.122.53.25",
+    "timestamp": "2026-03-13T21:39:20.653990"
+  },
+  {
+    "id": "upload_0060",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "120.148.20.101",
+    "timestamp": "2026-03-13T21:39:20.653994"
+  },
+  {
+    "id": "upload_0061",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "211.246.210.87",
+    "timestamp": "2026-03-13T21:39:20.653999"
+  },
+  {
+    "id": "upload_0062",
+    "type": "file_upload",
+    "filename": "shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.181.222.175",
+    "timestamp": "2026-03-13T21:39:20.654004"
+  },
+  {
+    "id": "upload_0063",
+    "type": "file_upload",
+    "filename": "shell.php%00.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "147.75.107.254",
+    "timestamp": "2026-03-13T21:39:20.654011"
+  },
+  {
+    "id": "upload_0064",
+    "type": "file_upload",
+    "filename": "shell.php%00.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "122.196.98.17",
+    "timestamp": "2026-03-13T21:39:20.654015"
+  },
+  {
+    "id": "upload_0065",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "221.178.135.125",
+    "timestamp": "2026-03-13T21:39:20.654020"
+  },
+  {
+    "id": "upload_0066",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "194.186.62.249",
+    "timestamp": "2026-03-13T21:39:20.654025"
+  },
+  {
+    "id": "upload_0067",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.44.241.231",
+    "timestamp": "2026-03-13T21:39:20.654032"
+  },
+  {
+    "id": "upload_0068",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.146.221.4",
+    "timestamp": "2026-03-13T21:39:20.654037"
+  },
+  {
+    "id": "upload_0069",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.250.22.113",
+    "timestamp": "2026-03-13T21:39:20.654041"
+  },
+  {
+    "id": "upload_0070",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "114.93.77.139",
+    "timestamp": "2026-03-13T21:39:20.654046"
+  },
+  {
+    "id": "upload_0071",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "155.139.94.74",
+    "timestamp": "2026-03-13T21:39:20.654051"
+  },
+  {
+    "id": "upload_0072",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "50.112.151.228",
+    "timestamp": "2026-03-13T21:39:20.654055"
+  },
+  {
+    "id": "upload_0073",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "209.106.119.210",
+    "timestamp": "2026-03-13T21:39:20.654060"
+  },
+  {
+    "id": "upload_0074",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.58.114.7",
+    "timestamp": "2026-03-13T21:39:20.654065"
+  },
+  {
+    "id": "upload_0075",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "9.211.113.155",
+    "timestamp": "2026-03-13T21:39:20.654070"
+  },
+  {
+    "id": "upload_0076",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "103.114.8.166",
+    "timestamp": "2026-03-13T21:39:20.654075"
+  },
+  {
+    "id": "upload_0077",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.241.221.233",
+    "timestamp": "2026-03-13T21:39:20.654080"
+  },
+  {
+    "id": "upload_0078",
+    "type": "file_upload",
+    "filename": "shell.php.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "187.64.23.124",
+    "timestamp": "2026-03-13T21:39:20.654085"
+  },
+  {
+    "id": "upload_0079",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "48.127.252.230",
+    "timestamp": "2026-03-13T21:39:20.654090"
+  },
+  {
+    "id": "upload_0080",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.248.159.75",
+    "timestamp": "2026-03-13T21:39:20.654095"
+  },
+  {
+    "id": "upload_0081",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.193.199.33",
+    "timestamp": "2026-03-13T21:39:20.654099"
+  },
+  {
+    "id": "upload_0082",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.21.66.226",
+    "timestamp": "2026-03-13T21:39:20.654104"
+  },
+  {
+    "id": "upload_0083",
+    "type": "file_upload",
+    "filename": "shell.jsp",
+    "content": "<% Runtime.getRuntime().exec(request.getParameter(\"c\")); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.127.200.63",
+    "timestamp": "2026-03-13T21:39:20.654109"
+  },
+  {
+    "id": "upload_0084",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.37.145.96",
+    "timestamp": "2026-03-13T21:39:20.654115"
+  },
+  {
+    "id": "upload_0085",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "156.121.176.247",
+    "timestamp": "2026-03-13T21:39:20.654120"
+  },
+  {
+    "id": "upload_0086",
+    "type": "file_upload",
+    "filename": "shell.php%00.jpg",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "54.145.168.155",
+    "timestamp": "2026-03-13T21:39:20.654125"
+  },
+  {
+    "id": "upload_0087",
+    "type": "file_upload",
+    "filename": "shell.phtml",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.112.194.92",
+    "timestamp": "2026-03-13T21:39:20.654132"
+  },
+  {
+    "id": "upload_0088",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.200.74.28",
+    "timestamp": "2026-03-13T21:39:20.654136"
+  },
+  {
+    "id": "upload_0089",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "39.15.125.139",
+    "timestamp": "2026-03-13T21:39:20.654141"
+  },
+  {
+    "id": "upload_0090",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "69.221.43.196",
+    "timestamp": "2026-03-13T21:39:20.654146"
+  },
+  {
+    "id": "upload_0091",
+    "type": "file_upload",
+    "filename": "shell.jsp",
+    "content": "<% Runtime.getRuntime().exec(request.getParameter(\"c\")); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "104.218.59.145",
+    "timestamp": "2026-03-13T21:39:20.654150"
+  },
+  {
+    "id": "upload_0092",
+    "type": "file_upload",
+    "filename": "../../../var/www/html/shell.php",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "177.89.161.34",
+    "timestamp": "2026-03-13T21:39:20.654155"
+  },
+  {
+    "id": "upload_0093",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "177.51.45.219",
+    "timestamp": "2026-03-13T21:39:20.654160"
+  },
+  {
+    "id": "upload_0094",
+    "type": "file_upload",
+    "filename": "shell.php5",
+    "content": "<?php system($_GET['c']); ?>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.232.130.253",
+    "timestamp": "2026-03-13T21:39:20.654165"
+  },
+  {
+    "id": "upload_0095",
+    "type": "file_upload",
+    "filename": "shell.asp",
+    "content": "<%eval request(\"c\")%>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "155.244.21.2",
+    "timestamp": "2026-03-13T21:39:20.654170"
+  },
+  {
+    "id": "upload_0096",
+    "type": "file_upload",
+    "filename": "shell.aspx",
+    "content": "<%@ Page Language=\"C#\" %><% Response.Write(System.Diagnostics.Process.Start(Request[\"c\"])); %>",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.116.243.124",
+    "timestamp": "2026-03-13T21:39:20.654174"
+  },
+  {
+    "id": "upload_0097",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.153.169.222",
+    "timestamp": "2026-03-13T21:39:20.654179"
+  },
+  {
+    "id": "upload_0098",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "100.109.47.102",
+    "timestamp": "2026-03-13T21:39:20.654184"
+  },
+  {
+    "id": "upload_0099",
+    "type": "file_upload",
+    "filename": "web.config",
+    "content": "<?xml version=\"1.0\"?>...",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "69.29.44.61",
+    "timestamp": "2026-03-13T21:39:20.654189"
+  }
+]

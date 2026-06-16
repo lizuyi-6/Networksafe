@@ -23,6 +23,7 @@ export const CONSOLE_ROUTES = [
     { path: '/history', label: 'History' },
     { path: '/rules', label: 'Rules' },
     { path: '/alerts', label: 'Alerts' },
+    { path: '/cognition', label: 'Cognition' },
 ];
 
 export const CONSOLE_API_ENDPOINTS: EndpointContract[] = [
@@ -38,6 +39,7 @@ export const CONSOLE_API_ENDPOINTS: EndpointContract[] = [
     { path: '/api/agents/threats/recent', label: 'agent threats' },
     { path: '/api/ai-system/agents/stats', label: 'ai agent stats', allowRaw: true },
     { path: '/api/ai-system/agents/health', label: 'ai agent health', allowRaw: true },
+    { path: '/api/ai-system/agents/topology', label: 'ai agent topology', allowRaw: true },
     { path: '/api/traffic/stats', label: 'traffic stats', allowRaw: true },
     { path: '/api/traffic/flows', label: 'traffic flows', allowRaw: true },
     { path: '/api/traffic/protocols', label: 'traffic protocols', allowRaw: true },
@@ -258,6 +260,13 @@ export const cleanupE2EArtifacts = async (request: APIRequestContext) => {
     for (const endpoint of unwrapRows(endpoints?.payload)) {
         if (String(endpoint.name || '').startsWith('e2e-') && endpoint.id) {
             await request.delete(`/api/ai-endpoints/${encodeURIComponent(endpoint.id)}`);
+        }
+    }
+
+    const announcements = await readJson(request, '/api/admin/announcements').catch(() => null);
+    for (const announcement of unwrapRows(announcements?.payload)) {
+        if (String(announcement.title || '').startsWith('e2e-') && announcement.id) {
+            await request.delete(`/api/admin/announcements/${encodeURIComponent(announcement.id)}`);
         }
     }
 };

@@ -21,13 +21,29 @@ jest.mock('../../services/security-operations.service', () => ({
   },
 }));
 
+jest.mock('../../services/hardware-authorization.service', () => ({
+  hardwareAuthorizationService: {
+    requestPhysicalConfirmation: jest.fn().mockResolvedValue({
+      success: true,
+      intent: { actionId: 'action-1' },
+      session: { sessionId: 'session-1', gateId: 'gate-1' },
+      message: 'waiting',
+    }),
+    completeIntent: jest.fn(),
+    setGatewayEmitter: jest.fn(),
+    prepare: jest.fn(),
+  },
+}));
+
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import auditLogger from '../../security/audit-logger.service';
 import { securityOperationsService } from '../../services/security-operations.service';
+import { hardwareAuthorizationService } from '../../services/hardware-authorization.service';
 
 const mockAuditLog = auditLogger.log as jest.Mock;
 const mockRecordActionRun = securityOperationsService.recordActionRun as jest.Mock;
 const mockUpdateActionRun = securityOperationsService.updateActionRun as jest.Mock;
+const mockRequestPhysicalConfirmation = hardwareAuthorizationService.requestPhysicalConfirmation as jest.Mock;
 
 function createMockAgentGateway(online = true, acceptsCommand = true) {
   return {
@@ -36,7 +52,10 @@ function createMockAgentGateway(online = true, acceptsCommand = true) {
   };
 }
 
-function createMockDeviceAdapter(online = true, commandResult = { success: true, message: 'OK' }) {
+function createMockDeviceAdapter(
+  online = true,
+  commandResult: { success: boolean; message: string; reason?: string } = { success: true, message: 'OK' }
+) {
   return {
     getDevice: jest.fn().mockReturnValue({ id: 'device-001', isOnline: online }),
     executeCommand: jest.fn().mockReturnValue(commandResult),
@@ -50,14 +69,20 @@ describe('CommandDispatcherService', () => {
     jest.clearAllMocks();
     commandDispatcherService.setAgentGateway(null);
     commandDispatcherService.setDeviceAdapter(null);
+    mockRequestPhysicalConfirmation.mockResolvedValue({
+      success: true,
+      intent: { actionId: 'action-1' },
+      session: { sessionId: 'session-1', gateId: 'gate-1' },
+      message: 'waiting',
+    });
   });
 
   describe('dispatchAgentCommand', () => {
-    it('returns approval_required for non-auto commands without approval', async () => {
+    it('returns approval_required for admin-approval commands without approval', async () => {
       commandDispatcherService.setAgentGateway(createMockAgentGateway());
       const result = await commandDispatcherService.dispatchAgentCommand({
         agentId: 'agent-001',
-        commandType: 'restart',
+        commandType: 'update_rules',
         actor,
       });
       expect(result.status).toBe('approval_required');
@@ -122,11 +147,11 @@ describe('CommandDispatcherService', () => {
       expect(result.reason).toBe('dispatch_rejected');
     });
 
-    it('dispatches approved non-auto command', async () => {
+    it('dispatches approved admin-approval command', async () => {
       commandDispatcherService.setAgentGateway(createMockAgentGateway());
       const result = await commandDispatcherService.dispatchAgentCommand({
         agentId: 'agent-001',
-        commandType: 'restart',
+        commandType: 'update_rules',
         actor,
         approved: true,
       });
@@ -168,6 +193,7 @@ describe('CommandDispatcherService', () => {
         actor,
       });
       expect(result.status).toBe('approval_required');
+      expect(result.confirmationSessionId).toBe('session-1');
     });
 
     it('dispatches auto-allowed collect command', async () => {
@@ -194,7 +220,7 @@ describe('CommandDispatcherService', () => {
       expect(result.success).toBe(false);
     });
 
-    it('dispatches approved reboot command', async () => {
+    it('keeps reboot pending hardware confirmation even when approved is set', async () => {
       const adapter = createMockDeviceAdapter();
       (adapter as any).getDevice.mockReturnValue({ id: 'device-001', isOnline: true });
       commandDispatcherService.setDeviceAdapter(adapter);
@@ -205,11 +231,11 @@ describe('CommandDispatcherService', () => {
         actor,
         approved: true,
       });
-      expect(result.status).toBe('completed');
+      expect(result.status).toBe('approval_required');
       expect(result.success).toBe(true);
     });
 
-    it('returns failed for non-permitted command without approval', async () => {
+    it('requires hardware confirmation for factory-reset', async () => {
       const adapter = createMockDeviceAdapter();
       (adapter as any).getDevice.mockReturnValue({ id: 'device-001', isOnline: true });
       commandDispatcherService.setDeviceAdapter(adapter);
@@ -219,8 +245,8 @@ describe('CommandDispatcherService', () => {
         commandType: 'factory-reset',
         actor,
       });
-      expect(result.status).toBe('failed');
-      expect(result.reason).toBe('command_not_permitted');
+      expect(result.status).toBe('approval_required');
+      expect(result.reason).toBe('hardware_confirmation_required');
     });
   });
 

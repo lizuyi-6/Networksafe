@@ -3,7 +3,7 @@
  * Generates case files and enables self-evolution
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     CaseFile,
     CaseAction,

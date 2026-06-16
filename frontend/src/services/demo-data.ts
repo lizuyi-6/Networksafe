@@ -424,7 +424,7 @@ const demoAlertsBase: AlertItem[] = [
     {
         id: 'ALT-DEMO-003',
         title: 'Gateway Memory Pressure',
-        message: 'ESP32 gateway heap dropped below warning threshold during packet replay.',
+        message: 'Gateway Appliance memory pressure detected during packet replay.',
         severity: 'Medium',
         type: 'performance',
         source: 'esp32-gw-03',
@@ -519,19 +519,24 @@ const demoAgentsBase: DemoAgent[] = [
 ];
 
 const demoDevicesBase: DemoDevice[] = [
+    // NOTE: These demo devices model the AetherGuard Gateway Appliance (STM32H5/U5 + Zephyr RTOS,
+    // the active hardware since 2026-06-13). The deviceId prefix `esp32-gw-*` and tag values `esp32-s3`/`esp32-c6`
+    // are retained for backward-compat because the IDs are used as keys in demoDeviceEventsBase /
+    // demoDeviceCommandsStore below; they are legacy demo-fixture names, NOT indicators of active ESP32 hardware.
+    // ESP32 serial-deployer / control-board hardware is retired and archived.
     {
         deviceId: 'esp32-gw-01',
         version: '1.8.4',
-        chipModel: 'ESP32-S3',
+        chipModel: 'STM32H563',
         flashSize: 16 * 1024 * 1024,
         freeHeap: 312_000,
-        sdkVersion: 'ESP-IDF v5.2',
+        sdkVersion: 'Zephyr RTOS v3.5',
         mode: 'online',
         isOnline: true,
         lastHeartbeat: timestampMinutesAgo(1),
         connectedAgents: ['agent-socrates-01', 'agent-plato-02'],
         status: { cpuUsage: 28, memoryUsage: 41, uptime: 172_800, wifiRssi: -48 },
-        systemInfo: { hostname: 'edge-gateway-01', os: 'freertos', kernel: 'idf-5.2', arch: 'xtensa' },
+        systemInfo: { hostname: 'edge-gateway-01', os: 'zephyr', kernel: 'zephyr-3.5', arch: 'arm-cortex-m33' },
         config: {
             displayName: '北区边缘网关',
             group: 'core-edge',
@@ -540,7 +545,7 @@ const demoDevicesBase: DemoDevice[] = [
             scanProfile: 'balanced',
             notes: 'Primary ingestion gateway for the north plant.',
             commandPermissions: ['collect', 'reboot', 'sync-config'],
-            tags: ['esp32-s3', 'north', 'production'],
+            tags: ['stm32h5', 'gateway-appliance', 'north', 'production'],
             updatedAt: timestampMinutesAgo(14)
         },
         latestCommand: null
@@ -548,16 +553,16 @@ const demoDevicesBase: DemoDevice[] = [
     {
         deviceId: 'esp32-gw-02',
         version: '1.8.4',
-        chipModel: 'ESP32-C6',
+        chipModel: 'STM32U575',
         flashSize: 8 * 1024 * 1024,
         freeHeap: 214_000,
-        sdkVersion: 'ESP-IDF v5.2',
+        sdkVersion: 'Zephyr RTOS v3.5',
         mode: 'offline',
         isOnline: true,
         lastHeartbeat: timestampMinutesAgo(4),
         connectedAgents: [],
         status: { cpuUsage: 17, memoryUsage: 33, uptime: 93_600, wifiRssi: -65 },
-        systemInfo: { hostname: 'field-sensor-02', os: 'freertos', kernel: 'idf-5.2', arch: 'riscv32' },
+        systemInfo: { hostname: 'field-sensor-02', os: 'zephyr', kernel: 'zephyr-3.5', arch: 'arm-cortex-m33' },
         config: {
             displayName: '园区巡检节点 02',
             group: 'field-edge',
@@ -566,7 +571,7 @@ const demoDevicesBase: DemoDevice[] = [
             scanProfile: 'conservative',
             notes: 'Intermittent uplink, buffers telemetry locally.',
             commandPermissions: ['collect', 'sync-config'],
-            tags: ['esp32-c6', 'field', 'standalone'],
+            tags: ['stm32u5', 'gateway-appliance', 'field', 'standalone'],
             updatedAt: timestampMinutesAgo(21)
         },
         latestCommand: null
@@ -574,16 +579,16 @@ const demoDevicesBase: DemoDevice[] = [
     {
         deviceId: 'esp32-gw-03',
         version: '1.7.9',
-        chipModel: 'ESP32-S3',
+        chipModel: 'STM32H563',
         flashSize: 16 * 1024 * 1024,
         freeHeap: 0,
-        sdkVersion: 'ESP-IDF v5.1',
+        sdkVersion: 'Zephyr RTOS v3.5',
         mode: 'offline',
         isOnline: false,
         lastHeartbeat: timestampMinutesAgo(47),
         connectedAgents: ['agent-aristotle-03'],
         status: { cpuUsage: 0, memoryUsage: 0, uptime: 0, wifiRssi: -92 },
-        systemInfo: { hostname: 'warehouse-gateway-03', os: 'freertos', kernel: 'idf-5.1', arch: 'xtensa' },
+        systemInfo: { hostname: 'warehouse-gateway-03', os: 'zephyr', kernel: 'zephyr-3.5', arch: 'arm-cortex-m33' },
         config: {
             displayName: '仓储边缘网关 03',
             group: 'warehouse-edge',
@@ -592,7 +597,7 @@ const demoDevicesBase: DemoDevice[] = [
             scanProfile: 'offline-recovery',
             notes: 'Awaiting power recovery and heap diagnostics.',
             commandPermissions: ['sync-config'],
-            tags: ['esp32-s3', 'warehouse', 'recovery'],
+            tags: ['stm32h5', 'gateway-appliance', 'warehouse', 'recovery'],
             updatedAt: timestampMinutesAgo(53)
         },
         latestCommand: null
@@ -1472,16 +1477,35 @@ export const sendDemoDeviceCommand = (deviceId: string, command: string) => {
         throw new Error('FG-DEMO-DEVICE-OFFLINE');
     }
 
+    const physicalCommands = new Set([
+        'reboot',
+        'host_remove',
+        'host_install',
+        'recovery_flash',
+        'factory_reset',
+        'ota_update',
+        'deploy_bundle',
+        'wipe_data',
+        'diagnostic_unlock',
+        'critical_config_change'
+    ]);
     const now = new Date().toISOString();
+    const isPhysical = physicalCommands.has(command);
     const record: DemoDeviceCommand = {
         id: makeId('cmd-demo'),
         deviceId,
         command,
-        status: 'completed',
-        message: command === 'reboot' ? 'Device rebooted and reported healthy.' : 'Telemetry collection completed.',
+        status: isPhysical
+            ? 'queued'
+            : 'completed',
+        message: isPhysical
+            ? 'Waiting for hardware confirmation.'
+            : command === 'reboot'
+                ? 'Device rebooted and reported healthy.'
+                : 'Telemetry collection completed.',
         executedBy: 'demo-user',
         createdAt: now,
-        completedAt: now
+        completedAt: isPhysical ? undefined : now
     };
 
     demoDeviceCommandsStore[deviceId] = [record, ...(demoDeviceCommandsStore[deviceId] || [])].slice(0, 20);
@@ -1507,7 +1531,14 @@ export const sendDemoDeviceCommand = (deviceId: string, command: string) => {
         }
     });
 
-    return clone({ success: true, message: record.message, command: record, latestCommand: record });
+    return clone({
+        success: true,
+        message: record.message,
+        status: isPhysical ? 'approval_required' : 'completed',
+        confirmationSessionId: isPhysical ? makeId('sess-demo') : null,
+        command: record,
+        latestCommand: record
+    });
 };
 
 export const runDemoAttackSimulation = (attackIds?: string[]): AttackSimulationReport => {

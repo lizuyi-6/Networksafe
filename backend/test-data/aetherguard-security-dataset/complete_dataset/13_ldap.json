@@ -1,0 +1,452 @@
+[
+  {
+    "id": "ldap_0000",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "8.125.130.18",
+    "timestamp": "2026-03-13T21:39:20.654719"
+  },
+  {
+    "id": "ldap_0001",
+    "type": "ldap_injection",
+    "payload": "*)(objectClass=*)",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "36.35.212.93",
+    "timestamp": "2026-03-13T21:39:20.654724"
+  },
+  {
+    "id": "ldap_0002",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "71.124.132.28",
+    "timestamp": "2026-03-13T21:39:20.654729"
+  },
+  {
+    "id": "ldap_0003",
+    "type": "ldap_injection",
+    "payload": "*)(uid=*))(|(uid=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "181.42.228.166",
+    "timestamp": "2026-03-13T21:39:20.654734"
+  },
+  {
+    "id": "ldap_0004",
+    "type": "ldap_injection",
+    "payload": "*)(objectClass=*)",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.123.180.234",
+    "timestamp": "2026-03-13T21:39:20.654744"
+  },
+  {
+    "id": "ldap_0005",
+    "type": "ldap_injection",
+    "payload": "*)(objectClass=*)",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "64.78.131.84",
+    "timestamp": "2026-03-13T21:39:20.654749"
+  },
+  {
+    "id": "ldap_0006",
+    "type": "ldap_injection",
+    "payload": "*)(uid=admin))(|(uid=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "211.89.57.118",
+    "timestamp": "2026-03-13T21:39:20.654754"
+  },
+  {
+    "id": "ldap_0007",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "141.158.251.249",
+    "timestamp": "2026-03-13T21:39:20.654761"
+  },
+  {
+    "id": "ldap_0008",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "129.172.85.49",
+    "timestamp": "2026-03-13T21:39:20.654766"
+  },
+  {
+    "id": "ldap_0009",
+    "type": "ldap_injection",
+    "payload": "*)(objectClass=*)",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "126.125.78.22",
+    "timestamp": "2026-03-13T21:39:20.654770"
+  },
+  {
+    "id": "ldap_0010",
+    "type": "ldap_injection",
+    "payload": "*)(uid=*))(|(uid=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "104.71.202.122",
+    "timestamp": "2026-03-13T21:39:20.654775"
+  },
+  {
+    "id": "ldap_0011",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "185.238.127.2",
+    "timestamp": "2026-03-13T21:39:20.654780"
+  },
+  {
+    "id": "ldap_0012",
+    "type": "ldap_injection",
+    "payload": "admin)(|(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "91.203.127.33",
+    "timestamp": "2026-03-13T21:39:20.654784"
+  },
+  {
+    "id": "ldap_0013",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "186.198.71.1",
+    "timestamp": "2026-03-13T21:39:20.654789"
+  },
+  {
+    "id": "ldap_0014",
+    "type": "ldap_injection",
+    "payload": "*)(objectClass=*)",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "85.19.85.234",
+    "timestamp": "2026-03-13T21:39:20.654793"
+  },
+  {
+    "id": "ldap_0015",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.109.77.20",
+    "timestamp": "2026-03-13T21:39:20.654809"
+  },
+  {
+    "id": "ldap_0016",
+    "type": "ldap_injection",
+    "payload": "admin)(|(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "10.242.55.200",
+    "timestamp": "2026-03-13T21:39:20.654815"
+  },
+  {
+    "id": "ldap_0017",
+    "type": "ldap_injection",
+    "payload": "admin)(|(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "159.102.202.3",
+    "timestamp": "2026-03-13T21:39:20.654820"
+  },
+  {
+    "id": "ldap_0018",
+    "type": "ldap_injection",
+    "payload": "*)(uid=*))(|(uid=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.234.98.126",
+    "timestamp": "2026-03-13T21:39:20.654824"
+  },
+  {
+    "id": "ldap_0019",
+    "type": "ldap_injection",
+    "payload": "*)(objectClass=*)",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "84.150.57.184",
+    "timestamp": "2026-03-13T21:39:20.654829"
+  },
+  {
+    "id": "ldap_0020",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "66.85.227.213",
+    "timestamp": "2026-03-13T21:39:20.654834"
+  },
+  {
+    "id": "ldap_0021",
+    "type": "ldap_injection",
+    "payload": "admin)(|(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "21.184.200.147",
+    "timestamp": "2026-03-13T21:39:20.654838"
+  },
+  {
+    "id": "ldap_0022",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "102.252.17.145",
+    "timestamp": "2026-03-13T21:39:20.654843"
+  },
+  {
+    "id": "ldap_0023",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "186.50.42.177",
+    "timestamp": "2026-03-13T21:39:20.654849"
+  },
+  {
+    "id": "ldap_0024",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "66.204.120.141",
+    "timestamp": "2026-03-13T21:39:20.654854"
+  },
+  {
+    "id": "ldap_0025",
+    "type": "ldap_injection",
+    "payload": "admin)(|(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "111.129.38.69",
+    "timestamp": "2026-03-13T21:39:20.654858"
+  },
+  {
+    "id": "ldap_0026",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "219.17.86.123",
+    "timestamp": "2026-03-13T21:39:20.654863"
+  },
+  {
+    "id": "ldap_0027",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "79.25.8.3",
+    "timestamp": "2026-03-13T21:39:20.654868"
+  },
+  {
+    "id": "ldap_0028",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "47.186.2.177",
+    "timestamp": "2026-03-13T21:39:20.654873"
+  },
+  {
+    "id": "ldap_0029",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "72.211.117.78",
+    "timestamp": "2026-03-13T21:39:20.654877"
+  },
+  {
+    "id": "ldap_0030",
+    "type": "ldap_injection",
+    "payload": "admin)(|(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "107.171.254.50",
+    "timestamp": "2026-03-13T21:39:20.654881"
+  },
+  {
+    "id": "ldap_0031",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "131.35.50.209",
+    "timestamp": "2026-03-13T21:39:20.654886"
+  },
+  {
+    "id": "ldap_0032",
+    "type": "ldap_injection",
+    "payload": "*)(objectClass=*)",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "149.19.253.160",
+    "timestamp": "2026-03-13T21:39:20.654890"
+  },
+  {
+    "id": "ldap_0033",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "143.197.104.161",
+    "timestamp": "2026-03-13T21:39:20.654895"
+  },
+  {
+    "id": "ldap_0034",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "160.77.10.104",
+    "timestamp": "2026-03-13T21:39:20.654900"
+  },
+  {
+    "id": "ldap_0035",
+    "type": "ldap_injection",
+    "payload": "admin)(|(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.33.52.127",
+    "timestamp": "2026-03-13T21:39:20.654904"
+  },
+  {
+    "id": "ldap_0036",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "63.253.134.137",
+    "timestamp": "2026-03-13T21:39:20.654911"
+  },
+  {
+    "id": "ldap_0037",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "208.80.43.31",
+    "timestamp": "2026-03-13T21:39:20.654915"
+  },
+  {
+    "id": "ldap_0038",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "175.193.149.191",
+    "timestamp": "2026-03-13T21:39:20.654920"
+  },
+  {
+    "id": "ldap_0039",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "46.129.19.152",
+    "timestamp": "2026-03-13T21:39:20.654924"
+  },
+  {
+    "id": "ldap_0040",
+    "type": "ldap_injection",
+    "payload": "admin)(cn=*))(|(cn=*",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "109.27.217.162",
+    "timestamp": "2026-03-13T21:39:20.654929"
+  },
+  {
+    "id": "ldap_0041",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "50.0.210.140",
+    "timestamp": "2026-03-13T21:39:20.654933"
+  },
+  {
+    "id": "ldap_0042",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "20.180.55.128",
+    "timestamp": "2026-03-13T21:39:20.654938"
+  },
+  {
+    "id": "ldap_0043",
+    "type": "ldap_injection",
+    "payload": "admin)(|(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.13.89.16",
+    "timestamp": "2026-03-13T21:39:20.654945"
+  },
+  {
+    "id": "ldap_0044",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "196.152.16.133",
+    "timestamp": "2026-03-13T21:39:20.654949"
+  },
+  {
+    "id": "ldap_0045",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.216.32.66",
+    "timestamp": "2026-03-13T21:39:20.654954"
+  },
+  {
+    "id": "ldap_0046",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "127.84.157.200",
+    "timestamp": "2026-03-13T21:39:20.654958"
+  },
+  {
+    "id": "ldap_0047",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*)(cn=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "172.141.195.198",
+    "timestamp": "2026-03-13T21:39:20.654963"
+  },
+  {
+    "id": "ldap_0048",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "151.231.51.129",
+    "timestamp": "2026-03-13T21:39:20.654968"
+  },
+  {
+    "id": "ldap_0049",
+    "type": "ldap_injection",
+    "payload": "admin)(|(password=*))",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "105.222.220.73",
+    "timestamp": "2026-03-13T21:39:20.654972"
+  }
+]

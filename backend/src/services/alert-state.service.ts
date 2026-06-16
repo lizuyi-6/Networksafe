@@ -22,7 +22,7 @@ export type AlertPayload = {
     assetRef?: string;
 };
 
-function severityToInternal(severity: string): 'critical' | 'high' | 'medium' | 'low' {
+export function severityToInternal(severity: string): 'critical' | 'high' | 'medium' | 'low' {
     const normalized = severity.toLowerCase();
     if (normalized === 'critical' || normalized === 'high' || normalized === 'medium' || normalized === 'low') {
         return normalized;

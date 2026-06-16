@@ -3,11 +3,12 @@
  * SECURE FIX: Tamper-evident logging for all security events
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../utils/uuid';
 import logger from '../utils/logger';
 import { getDatabase } from '../config/database';
 import { postgresShadowStoreService } from '../services/postgres-shadow-store.service';
 import { auditSegmentService } from '../services/audit-segment.service';
+import { recursiveSanitize } from '../utils/log-sanitizer';
 
 export interface AuditEvent {
   id: string;
@@ -177,54 +178,18 @@ export class AuditLogger {
     // Create tamper-evident signature
     auditEvent.signature = this.createSignature(auditEvent);
 
+    // SECURITY FIX D31: strip CRLF/tab/null control chars from
+    // user-controlled `details` (and any other free-form string
+    // fields) to prevent log injection in dashboards and exports.
+    auditEvent.details = recursiveSanitize(auditEvent.details);
+
     try {
       const db = getDatabase();
 
-      if (postgresShadowStoreService.canServeReads()) {
-        await postgresShadowStoreService.execute(`
-          INSERT INTO audit_log (
-            id, timestamp, tenant_id, event_type, category, severity,
-            actor_type, actor_id, actor_email, actor_ip, action, target_type, target_id,
-            details_json, status, signature
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-          ON CONFLICT (id)
-          DO UPDATE SET
-            timestamp = EXCLUDED.timestamp,
-            tenant_id = EXCLUDED.tenant_id,
-            event_type = EXCLUDED.event_type,
-            category = EXCLUDED.category,
-            severity = EXCLUDED.severity,
-            actor_type = EXCLUDED.actor_type,
-            actor_id = EXCLUDED.actor_id,
-            actor_email = EXCLUDED.actor_email,
-            actor_ip = EXCLUDED.actor_ip,
-            action = EXCLUDED.action,
-            target_type = EXCLUDED.target_type,
-            target_id = EXCLUDED.target_id,
-            details_json = EXCLUDED.details_json,
-            status = EXCLUDED.status,
-            signature = EXCLUDED.signature
-        `, [
-          auditEvent.id,
-          auditEvent.timestamp,
-          auditEvent.tenantId || null,
-          auditEvent.eventType,
-          auditEvent.category,
-          auditEvent.severity,
-          auditEvent.actor.type,
-          auditEvent.actor.id,
-          auditEvent.actor.email || null,
-          auditEvent.actor.ip || null,
-          auditEvent.action,
-          auditEvent.target?.type || null,
-          auditEvent.target?.id || null,
-          JSON.stringify(auditEvent.details),
-          auditEvent.status,
-          auditEvent.signature
-        ]);
-      }
-
-      // Store in database
+      // SECURITY FIX R12 V12.2: commit local SQLite FIRST. The shadow
+      // store is a best-effort mirror and must never prevent the
+      // local commit (the audit log is the source of truth for
+      // compliance/forensics).
       db.prepare(`
         INSERT INTO audit_log (
           id, timestamp, tenant_id, event_type, category, severity,
@@ -249,34 +214,139 @@ export class AuditLogger {
         auditEvent.status,
         auditEvent.signature
       );
-      void postgresShadowStoreService.upsert('audit_log', {
-        id: auditEvent.id,
-        timestamp: auditEvent.timestamp,
-        tenant_id: auditEvent.tenantId || null,
-        event_type: auditEvent.eventType,
-        category: auditEvent.category,
-        severity: auditEvent.severity,
-        actor_type: auditEvent.actor.type,
-        actor_id: auditEvent.actor.id,
-        actor_email: auditEvent.actor.email || null,
-        actor_ip: auditEvent.actor.ip || null,
-        action: auditEvent.action,
-        target_type: auditEvent.target?.type || null,
-        target_id: auditEvent.target?.id || null,
-        details_json: JSON.stringify(auditEvent.details),
-        status: auditEvent.status,
-        signature: auditEvent.signature
-      });
+
+      // Now mirror to the postgres shadow store. Both paths are
+      // best-effort: their failures are tracked in the shadow-write
+      // metrics but do not block the caller — UNLESS
+      // AUDIT_LOG_FAIL_CLOSED=true, in which case the FIRST shadow
+      // failure aborts the second attempt (defense in depth) and is
+      // re-thrown AFTER the local commit.
+      const failClosed = process.env.AUDIT_LOG_FAIL_CLOSED === 'true';
+      let shadowError: Error | null = null;
+      let executeSucceeded = !postgresShadowStoreService.canServeReads();
+
+      if (postgresShadowStoreService.canServeReads()) {
+        try {
+          await postgresShadowStoreService.execute(`
+            INSERT INTO audit_log (
+              id, timestamp, tenant_id, event_type, category, severity,
+              actor_type, actor_id, actor_email, actor_ip, action, target_type, target_id,
+              details_json, status, signature
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            ON CONFLICT (id)
+            DO UPDATE SET
+              timestamp = EXCLUDED.timestamp,
+              tenant_id = EXCLUDED.tenant_id,
+              event_type = EXCLUDED.event_type,
+              category = EXCLUDED.category,
+              severity = EXCLUDED.severity,
+              actor_type = EXCLUDED.actor_type,
+              actor_id = EXCLUDED.actor_id,
+              actor_email = EXCLUDED.actor_email,
+              actor_ip = EXCLUDED.actor_ip,
+              action = EXCLUDED.action,
+              target_type = EXCLUDED.target_type,
+              target_id = EXCLUDED.target_id,
+              details_json = EXCLUDED.details_json,
+              status = EXCLUDED.status,
+              signature = EXCLUDED.signature
+          `, [
+            auditEvent.id,
+            auditEvent.timestamp,
+            auditEvent.tenantId || null,
+            auditEvent.eventType,
+            auditEvent.category,
+            auditEvent.severity,
+            auditEvent.actor.type,
+            auditEvent.actor.id,
+            auditEvent.actor.email || null,
+            auditEvent.actor.ip || null,
+            auditEvent.action,
+            auditEvent.target?.type || null,
+            auditEvent.target?.id || null,
+            JSON.stringify(auditEvent.details),
+            auditEvent.status,
+            auditEvent.signature
+          ]);
+          recordAuditShadowWrite(true);
+          executeSucceeded = true;
+        } catch (e) {
+          recordAuditShadowWrite(false, e);
+          shadowError = e instanceof Error ? e : new Error(String(e));
+          if (failClosed) {
+            // short-circuit: do not attempt upsert in fail-closed mode
+            this.logToStandardLogger(auditEvent);
+            throw shadowError;
+          }
+        }
+      }
+
+      // Only attempt upsert if execute didn't already fail (or wasn't required)
+      // AND the shadow store is enabled at all.
+      if ((executeSucceeded || !failClosed) && postgresShadowStoreService.isEnabled()) {
+        try {
+          const upsertResult = await postgresShadowStoreService.upsert('audit_log', {
+            id: auditEvent.id,
+            timestamp: auditEvent.timestamp,
+            tenant_id: auditEvent.tenantId || null,
+            event_type: auditEvent.eventType,
+            category: auditEvent.category,
+            severity: auditEvent.severity,
+            actor_type: auditEvent.actor.type,
+            actor_id: auditEvent.actor.id,
+            actor_email: auditEvent.actor.email || null,
+            actor_ip: auditEvent.actor.ip || null,
+            action: auditEvent.action,
+            target_type: auditEvent.target?.type || null,
+            target_id: auditEvent.target?.id || null,
+            details_json: JSON.stringify(auditEvent.details),
+            status: auditEvent.status,
+            signature: auditEvent.signature
+          });
+          // surface lastError from shadow state machine (e.g. queue full)
+          const desc = typeof postgresShadowStoreService.describe === 'function'
+            ? postgresShadowStoreService.describe()
+            : null;
+          if (desc && desc.lastError) {
+            recordAuditShadowWrite(false, desc.lastError);
+            shadowError = shadowError || new Error(String(desc.lastError));
+          } else {
+            recordAuditShadowWrite(true);
+          }
+          // unused but kept for side-effect clarity
+          void upsertResult;
+        } catch (e) {
+          recordAuditShadowWrite(false, e);
+          shadowError = shadowError || (e instanceof Error ? e : new Error(String(e)));
+        }
+      }
 
       // Also log to standard logger
       this.logToStandardLogger(auditEvent);
+
+      // AUDIT_LOG_FAIL_CLOSED: if any shadow path failed AND the
+      // operator opted in, re-throw AFTER the local commit so the
+      // caller can treat it as a compliance event without losing
+      // the local row.
+      if (shadowError && process.env.AUDIT_LOG_FAIL_CLOSED === 'true') {
+        throw shadowError;
+      }
 
       return auditEvent.id;
     } catch (error: any) {
       logger.error('Failed to write audit log', { error });
       // Still log to standard logger as fallback
       this.logToStandardLogger(auditEvent);
-      return auditEvent.id;
+      // SECURITY FIX D22: always re-throw local SQLite insert failures
+      // so callers can retry — never silently return a success id
+      // when the write actually failed. Tag the error so callers can
+      // branch on it without parsing message strings.
+      const wrapped = new Error(
+        `audit_log_local_insert_failed: ${error?.message || String(error)}`
+      );
+      (wrapped as any).cause = error;
+      (wrapped as any).code = 'audit_log_local_insert_failed';
+      throw wrapped;
     }
   }
 
@@ -975,6 +1045,45 @@ export class AuditLogger {
       segmentArchiveIntervalMinutes: archiveIntervalMinutes
     });
   }
+}
+
+// =====================================================================
+// Shadow-write metrics — exported as module-level counters so redteam
+// tests (and ops dashboards) can observe postgres-shadow health.
+// =====================================================================
+let auditShadowWriteSuccesses = 0;
+let auditShadowWriteFailures = 0;
+let auditShadowWriteLastError: string | null = null;
+
+export function recordAuditShadowWrite(success: boolean, error?: unknown): void {
+  if (success) {
+    auditShadowWriteSuccesses += 1;
+  } else {
+    auditShadowWriteFailures += 1;
+    if (error !== undefined) {
+      auditShadowWriteLastError = error instanceof Error ? error.message : String(error);
+    }
+  }
+}
+
+export interface AuditShadowWriteMetrics {
+  successes: number;
+  failures: number;
+  lastError: string | null;
+}
+
+export function getAuditShadowWriteMetrics(): AuditShadowWriteMetrics {
+  return {
+    successes: auditShadowWriteSuccesses,
+    failures: auditShadowWriteFailures,
+    lastError: auditShadowWriteLastError
+  };
+}
+
+export function resetAuditShadowWriteMetrics(): void {
+  auditShadowWriteSuccesses = 0;
+  auditShadowWriteFailures = 0;
+  auditShadowWriteLastError = null;
 }
 
 export default new AuditLogger();

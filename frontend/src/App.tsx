@@ -20,7 +20,10 @@ import {
     Zap,
     CheckCircle,
     XCircle,
-    UserCog
+    UserCog,
+    HardDriveDownload,
+    ScrollText,
+    Layers
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -33,6 +36,7 @@ import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusCon
 import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
 import Logo from './components/Logo';
 import { COMPANY_NAME_CN } from './config/branding';
+import { getSessionUserIdentity } from './services/session-cache';
 import {
     fetchApiReadiness,
     fetchCurrentUserSession,
@@ -47,6 +51,7 @@ import DeploymentWizard from './pages/DeploymentWizard';
 import Scanner from './pages/Scanner';
 import FixHistory from './pages/FixHistory';
 import SettingsPage from './pages/Settings';
+import MultiAgentTopology from './pages/MultiAgentTopology';
 import SuperAdmin from './pages/SuperAdmin';
 import AdminUsers from './pages/AdminUsers';
 import UserDetail from './pages/UserDetail';
@@ -72,6 +77,26 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Promo from './pages/Promo';
 import PromoFilm from './pages/PromoFilm';
+import HardwareGates from './pages/HardwareGates';
+import DeploymentRuns from './pages/DeploymentRuns';
+import DeploymentEvidence from './pages/DeploymentEvidence';
+import XiongcaiFinalDeck from './pages/XiongcaiFinalDeck';
+
+const SHOW_PITCH_ROUTES = import.meta.env.VITE_ENABLE_PITCH_ROUTES === 'true';
+const STANDALONE_ROUTES = new Set([
+    '/',
+    '/login',
+    '/privacy',
+    '/terms',
+    '/promo',
+    '/promo-film',
+    ...(SHOW_PITCH_ROUTES ? ['/aetherguard-deck', '/xiongcai-final'] : [])
+]);
+
+const ADMIN_ROLES = new Set(['admin', 'platform_admin']);
+const GOVERNANCE_ROLES = new Set(['admin', 'platform_admin', 'tenant_admin', 'auditor']);
+const isAdminRole = (role?: string | null) => ADMIN_ROLES.has(String(role || ''));
+const canSeeEnterpriseControls = (role?: string | null) => GOVERNANCE_ROLES.has(String(role || ''));
 
 /**
  * SECURITY FIX CVE-2026-012: Authentication guard for protected routes
@@ -82,22 +107,28 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
     const [backendReady, setBackendReady] = useState(false);
 
     useEffect(() => {
-        // Check backend readiness first (lightweight health check)
         const checkBackend = async () => {
             try {
                 const readiness = await fetchApiReadiness(AbortSignal.timeout(3000));
                 if (readiness.ok) {
                     setBackendReady(true);
                     const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
-                    setIsAuthenticated(Boolean(user));
+                    if (user) {
+                        setIsAuthenticated(true);
+                    } else {
+                        // Fallback: check sessionStorage (cookie may not persist in dev)
+                        const cached = getSessionUserIdentity();
+                        setIsAuthenticated(Boolean(cached?.userId));
+                    }
                 } else {
                     setBackendReady(true);
-                    setIsAuthenticated(false);
+                    const cached = getSessionUserIdentity();
+                    setIsAuthenticated(Boolean(cached?.userId));
                 }
             } catch {
-                // Backend not ready - don't block UI, show login
-                setBackendReady(true); // Allow access to check auth
-                setIsAuthenticated(false);
+                setBackendReady(true);
+                const cached = getSessionUserIdentity();
+                setIsAuthenticated(Boolean(cached?.userId));
             }
         };
         checkBackend();
@@ -149,7 +180,7 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
         );
     }
 
-    if (userRole !== 'admin') {
+    if (!isAdminRole(userRole)) {
         return <Navigate to="/dashboard" replace />;
     }
 
@@ -163,29 +194,36 @@ const Sidebar = () => {
     const { attackSimEnabled } = useDemo();
     const { liveModeEnabled } = useLiveMode();
     const [badges, setBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
-    const [profile, setProfile] = useState<{ name: string; role: string; initials: string; plan: string }>({
+    const [profile, setProfile] = useState<{ name: string; role: string; rawRole: string | null; initials: string; plan: string }>({
         name: 'Unknown User',
         role: 'N/A',
+        rawRole: null,
         initials: '??',
         plan: 'starter'
     });
 
     // Don't show sidebar on standalone public pages
-    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film') return null;
+    if (STANDALONE_ROUTES.has(location.pathname)) return null;
 
     const platformItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
         { icon: Users, label: t('nav.agents'), path: '/agents', badge: badges.agents > 0 ? badges.agents : undefined },
+    { icon: Layers, label: 'Cognition', path: '/cognition' },
         { icon: Brain, label: t('nav.agent_monitor'), path: '/agent-monitor', badge: badges.agentMonitor > 0 ? badges.agentMonitor : undefined },
         { icon: Network, label: t('nav.traffic_interceptor'), path: '/traffic', badge: badges.traffic > 0 ? badges.traffic : undefined },
         ...(attackSimEnabled ? [{ icon: Shield, label: t('nav.attack_simulator'), path: '/attack-sim' }] : []),
         { icon: Radio, label: t('nav.devices'), path: '/devices', badge: badges.devices > 0 ? badges.devices : undefined },
+        ...(canSeeEnterpriseControls(profile.rawRole) ? [
+            { icon: Shield, label: 'Gate Management', path: '/hardware-gates' },
+            { icon: HardDriveDownload, label: 'Deployment Runs', path: '/deployment-runs' },
+            { icon: ScrollText, label: 'Evidence', path: '/deployment-evidence' },
+        ] : []),
         { icon: Server, label: t('nav.sites'), path: '/sites' },
         { icon: Rocket, label: t('nav.deployment'), path: '/deploy' },
         { icon: Activity, label: t('nav.monitoring'), path: '/scanner', badge: badges.scanner > 0 ? badges.scanner : undefined },
         { icon: Settings, label: t('nav.settings'), path: '/settings' },
         { icon: Key, label: t('nav.keys'), path: '/admin' },
-        ...(profile.role === 'admin' ? [{ icon: UserCog, label: t('nav.super_admin'), path: '/super-admin' }] : []),
+        ...(isAdminRole(profile.rawRole) ? [{ icon: UserCog, label: t('nav.super_admin'), path: '/super-admin' }] : []),
     ];
 
     const navGroups = [
@@ -197,7 +235,7 @@ const Sidebar = () => {
             title: t('nav.governance'),
             items: [
                 { icon: FileText, label: t('nav.audit'), path: '/history' },
-                ...(profile.role === 'admin' ? [{ icon: Shield, label: 'Rules', path: '/rules' }] : []),
+                ...(isAdminRole(profile.rawRole) ? [{ icon: Shield, label: 'Rules', path: '/rules' }] : []),
                 { icon: Bell, label: t('nav.alerts'), path: '/alerts', badge: badges.alerts > 0 ? badges.alerts : undefined },
             ]
         }
@@ -266,17 +304,22 @@ const Sidebar = () => {
                 if (!user) {
                     throw new Error('FG-AUTH-ME-401');
                 }
-                const name = user.username || user.email || '未命名用户';
+                const name = user.username || user.email || t('app.unnamed_user');
                 const initials = String(name).split(/\s+/).map((x: string) => x[0] || '').join('').slice(0, 2).toUpperCase() || '??';
-                // Translate role to display name
                 const roleMap: Record<string, string> = {
                     'admin': t('admin_users.role_admin'),
                     'tenant': t('admin_users.role_tenant'),
-                    'viewer': t('admin_users.role_viewer')
+                    'viewer': t('admin_users.role_viewer'),
+                    'platform_admin': 'Platform Admin',
+                    'tenant_admin': 'Tenant Admin',
+                    'tenant_operator': 'Tenant Operator',
+                    'tenant_viewer': 'Tenant Viewer',
+                    'auditor': 'Auditor'
                 };
                 setProfile({
                     name,
                     role: roleMap[user.role] || user.role || t('app.role_not_set'),
+                    rawRole: user.role || null,
                     initials,
                     plan: user.plan || 'starter'
                 });
@@ -285,7 +328,7 @@ const Sidebar = () => {
                 if (isRequestAbortError(error, controller.signal)) {
                     return;
                 }
-                setProfile({ name: t('app.unnamed_user'), role: t('app.role_not_set'), initials: '??', plan: 'starter' });
+                setProfile({ name: t('app.unnamed_user'), role: t('app.role_not_set'), rawRole: null, initials: '??', plan: 'starter' });
             });
 
         return () => controller.abort();
@@ -430,6 +473,9 @@ const Header = () => {
         '/traffic': 'nav.traffic_interceptor',
         '/attack-sim': 'nav.attack_simulator',
         '/devices': 'nav.devices',
+        '/hardware-gates': 'Gate Management',
+        '/deployment-runs': 'Deployment Runs',
+        '/deployment-evidence': 'Evidence',
         '/sites': 'nav.sites',
         '/deploy': 'nav.deployment',
         '/scanner': 'nav.monitoring',
@@ -445,7 +491,8 @@ const Header = () => {
         const path = location.pathname;
         // Check for exact match first
         if (pathToNavKey[path]) {
-            return t(pathToNavKey[path]);
+            const title = pathToNavKey[path];
+            return title.startsWith('nav.') ? t(title) : title;
         }
         // Check for dynamic routes
         if (path.startsWith('/agents/')) return t('nav.agents');
@@ -461,7 +508,7 @@ const Header = () => {
     };
 
     // Don't show header on standalone public pages
-    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/promo' || location.pathname === '/promo-film') return null;
+    if (STANDALONE_ROUTES.has(location.pathname)) return null;
 
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-border/50 bg-background px-3 md:px-6">
@@ -575,6 +622,8 @@ const AnimatedRoutes = () => {
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
                 <Route path="/promo" element={<Promo />} />
                 <Route path="/promo-film" element={<PromoFilm />} />
+                <Route path="/aetherguard-deck" element={SHOW_PITCH_ROUTES ? <XiongcaiFinalDeck /> : <Navigate to="/dashboard" replace />} />
+                <Route path="/xiongcai-final" element={<Navigate to={SHOW_PITCH_ROUTES ? '/aetherguard-deck' : '/dashboard'} replace />} />
                 <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
                 <Route path="/privacy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
                 <Route path="/terms" element={<PageWrapper><TermsOfService /></PageWrapper>} />
@@ -582,6 +631,7 @@ const AnimatedRoutes = () => {
                 {/* SECURITY FIX CVE-2026-012: Protected routes require authentication */}
                 <Route path="/dashboard" element={<PrivateRoute><PageWrapper><Dashboard /></PageWrapper></PrivateRoute>} />
                 <Route path="/agents" element={<PrivateRoute><PageWrapper><Agents /></PageWrapper></PrivateRoute>} />
+                <Route path="/cognition" element={<PrivateRoute><PageWrapper><MultiAgentTopology /></PageWrapper></PrivateRoute>} />
                 <Route path="/agent-monitor" element={<PrivateRoute><PageWrapper><AgentMonitor /></PageWrapper></PrivateRoute>} />
                 <Route path="/traffic" element={<PrivateRoute><PageWrapper><TrafficInterceptor /></PageWrapper></PrivateRoute>} />
                 <Route
@@ -595,6 +645,9 @@ const AnimatedRoutes = () => {
                     }
                 />
                 <Route path="/devices" element={<PrivateRoute><PageWrapper><Devices /></PageWrapper></PrivateRoute>} />
+                <Route path="/hardware-gates" element={<PrivateRoute><PageWrapper><HardwareGates /></PageWrapper></PrivateRoute>} />
+                <Route path="/deployment-runs" element={<PrivateRoute><PageWrapper><DeploymentRuns /></PageWrapper></PrivateRoute>} />
+                <Route path="/deployment-evidence" element={<PrivateRoute><PageWrapper><DeploymentEvidence /></PageWrapper></PrivateRoute>} />
                 <Route path="/sites" element={<PrivateRoute><PageWrapper><Sites /></PageWrapper></PrivateRoute>} />
                 <Route path="/deploy" element={<PrivateRoute><PageWrapper><DeploymentWizard /></PageWrapper></PrivateRoute>} />
                 <Route path="/scanner" element={<PrivateRoute><PageWrapper><Scanner /></PageWrapper></PrivateRoute>} />
@@ -624,13 +677,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
 
     // Standalone pages that manage their own layout/theme
-    const isStandalone =
-        location.pathname === '/' ||
-        location.pathname === '/login' ||
-        location.pathname === '/privacy' ||
-        location.pathname === '/terms' ||
-        location.pathname === '/promo' ||
-        location.pathname === '/promo-film';
+    const isStandalone = STANDALONE_ROUTES.has(location.pathname);
 
     if (isStandalone) {
         return <>{children}</>;

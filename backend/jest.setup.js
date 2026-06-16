@@ -6,6 +6,9 @@
 
 // 设置测试环境变量
 process.env.NODE_ENV = 'test';
+// V4.3 multi-factor gate: test-runtime backdoors (auth bypass, relaxed
+// password checks) require an explicit opt-in. Every Jest run sets it.
+process.env.ALLOW_TEST_RUNTIME = 'true';
 process.env.JWT_SECRET = 'test-jwt-secret-minimum-32-characters-long';
 process.env.AUDIT_LOG_SECRET = 'test-audit-log-secret-minimum-32-characters';
 process.env.ADMIN_EMAIL = 'admin@test.com';

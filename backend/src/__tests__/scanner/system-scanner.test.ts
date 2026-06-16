@@ -77,7 +77,7 @@ describe('SystemScanner', () => {
         cb(null, { stdout: '', stderr: '' });
       });
 
-      const result = await scanner.checkSystemUpdates();
+      const result = await (scanner as any).checkSystemUpdates();
 
       expect(Array.isArray(result)).toBe(true);
     });
@@ -91,7 +91,7 @@ describe('SystemScanner', () => {
         cb(null, { stdout: '', stderr: '' });
       });
 
-      const result = await scanner.checkSystemLimits();
+      const result = await (scanner as any).checkSystemLimits();
 
       expect(Array.isArray(result)).toBe(true);
     });
@@ -107,7 +107,7 @@ describe('SystemScanner', () => {
         cb(null, { stdout: '', stderr: '' });
       });
 
-      const result = await scanner.checkDiskSpace();
+      const result = await (scanner as any).checkDiskSpace();
 
       expect(Array.isArray(result)).toBe(true);
     });

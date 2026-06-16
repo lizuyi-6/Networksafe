@@ -12,6 +12,13 @@ import logger from '../utils/logger';
 import redisService from '../security/redis.service';
 import EnvValidator from '../security/env-validator.service';
 import { resolveRequestTenantContext, TenantContext } from '../core/tenant/tenant-context';
+import {
+    getRolePermissions,
+    hasPermission,
+    isPlatformAdminRole,
+    normalizeRole,
+    type Permission
+} from '../security/permissions';
 
 // Validate environment variables at module load
 try {
@@ -25,6 +32,10 @@ try {
 }
 
 const JWT_SECRET: string = process.env.JWT_SECRET!;
+const JWT_SECRET_PREVIOUS: string | undefined =
+  process.env.JWT_SECRET_PREVIOUS && process.env.JWT_SECRET_PREVIOUS.length >= 32
+    ? process.env.JWT_SECRET_PREVIOUS
+    : undefined;
 const JWT_EXPIRES_IN = EnvValidator.optional('JWT_EXPIRES_IN', '24h');
 const JWT_REFRESH_EXPIRES_IN = EnvValidator.optional('JWT_REFRESH_EXPIRES_IN', '7d');
 
@@ -35,9 +46,11 @@ export interface AuthenticatedUser {
     userId: string;
     email: string;
     username: string;
-    role: 'admin' | 'tenant' | 'viewer';
+    role: 'admin' | 'tenant' | 'viewer' | 'platform_admin' | 'tenant_admin' | 'tenant_operator' | 'tenant_viewer' | 'auditor';
     plan?: 'starter' | 'pro' | 'ultra';
     tenantId?: string;
+    permissions?: Permission[];
+    authProvider?: 'local' | 'oidc';
 }
 
 /**
@@ -62,7 +75,12 @@ export interface TokenPair {
  * SECURITY FIX: Explicitly specify algorithm for token generation
  */
 export function generateTokens(user: AuthenticatedUser): TokenPair {
-    const accessToken = jwt.sign(user, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' } as jwt.SignOptions);
+    const normalizedUser: AuthenticatedUser = {
+        ...user,
+        role: normalizeRole(user.role),
+        permissions: user.permissions || getRolePermissions(user.role)
+    };
+    const accessToken = jwt.sign(normalizedUser, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' } as jwt.SignOptions);
     const refreshToken = jwt.sign(
         { userId: user.userId, type: 'refresh' },
         JWT_SECRET,
@@ -77,17 +95,36 @@ export function generateTokens(user: AuthenticatedUser): TokenPair {
 }
 
 /**
- * Verify and decode JWT token
- * SECURITY FIX CVE-2026-001: Now checks Redis blacklist for logged-out tokens
- * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
+ * Verify a JWT using an EXPLICIT secret. Exposed for tests and for the
+ * rotation fallback chain. Does NOT touch Redis or normalize the role —
+ * returns the raw decoded payload.
  */
-export function verifyToken(token: string): AuthenticatedUser | null {
+export function verifyTokenWithSecret(token: string, secret: string): AuthenticatedUser | null {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as AuthenticatedUser;
-        return decoded;
+        return jwt.verify(token, secret, { algorithms: ['HS256'] }) as AuthenticatedUser;
     } catch (error) {
         return null;
     }
+}
+
+/**
+ * Verify and decode JWT token
+ * SECURITY FIX CVE-2026-001: Now checks Redis blacklist for logged-out tokens
+ * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
+ * SECURITY FIX D30: if JWT_SECRET_PREVIOUS is set, accept tokens signed
+ * with it during the rotation window.
+ */
+export function verifyToken(token: string): AuthenticatedUser | null {
+    // Try current secret first
+    let decoded = verifyTokenWithSecret(token, JWT_SECRET);
+    // Rotation fallback: if current failed and previous is configured, try it
+    if (!decoded && JWT_SECRET_PREVIOUS) {
+        decoded = verifyTokenWithSecret(token, JWT_SECRET_PREVIOUS);
+    }
+    if (!decoded) return null;
+    decoded.role = normalizeRole(decoded.role);
+    decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
+    return decoded;
 }
 
 /**
@@ -103,6 +140,8 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
     let decoded: AuthenticatedUser;
     try {
         decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as AuthenticatedUser;
+        decoded.role = normalizeRole(decoded.role);
+        decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
     } catch (error) {
         return null;
     }
@@ -150,15 +189,24 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
  * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
  */
 export function verifyRefreshToken(token: string): { userId: string } | null {
+    let decoded: { userId: string; type: string } | null = null;
     try {
-        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as { userId: string; type: string };
-        if (decoded.type !== 'refresh') {
-            return null;
+        decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as { userId: string; type: string };
+    } catch (_) {
+        decoded = null;
+    }
+    // SECURITY FIX D30: rotation fallback
+    if (!decoded && JWT_SECRET_PREVIOUS) {
+        try {
+            decoded = jwt.verify(token, JWT_SECRET_PREVIOUS, { algorithms: ['HS256'] }) as { userId: string; type: string };
+        } catch (_) {
+            decoded = null;
         }
-        return { userId: decoded.userId };
-    } catch (error) {
+    }
+    if (!decoded || decoded.type !== 'refresh') {
         return null;
     }
+    return { userId: decoded.userId };
 }
 
 /**
@@ -176,8 +224,8 @@ const isHttpsRequest = (req: Request): boolean => {
 
 export const buildCookieOptions = (req: Request) => ({
     httpOnly: true,
-    secure: isHttpsRequest(req),
-    sameSite: 'strict' as const,
+    secure: process.env.NODE_ENV === 'production' ? isHttpsRequest(req) : false,
+    sameSite: 'lax' as const,
     path: '/',
     maxAge: COOKIE_MAX_AGE // 24 hours
 });
@@ -257,7 +305,7 @@ export async function optionalAuth(req: AuthenticatedRequest, res: Response, nex
 /**
  * Role-based access control middleware
  */
-export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'>) {
+export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer' | 'platform_admin' | 'tenant_admin' | 'tenant_operator' | 'tenant_viewer' | 'auditor'>) {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
         if (!req.user) {
             res.status(401).json({
@@ -267,7 +315,8 @@ export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'
             return;
         }
 
-        if (!allowedRoles.includes(req.user.role)) {
+        const currentRole = normalizeRole(req.user.role);
+        if (!allowedRoles.map((role) => normalizeRole(role)).includes(currentRole)) {
             logger.warn(`Access denied for user ${req.user.email} (role: ${req.user.role}), required: ${allowedRoles.join('/')}`);
             res.status(403).json({
                 error: 'backend.insufficient_permissions',
@@ -281,42 +330,31 @@ export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'
     };
 }
 
-/**
- * Tenant isolation middleware - ensures users can only access their tenant's resources
- * SECURITY FIX CVE-2026-010: Reject requests without tenantId for non-admin users
- */
-export function requireTenantAccess(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
-    if (!req.user) {
-        res.status(401).json({ error: 'backend.authentication_required' });
-        return;
-    }
+export { requireTenantAccess } from './tenant-access.middleware';
 
-    const context = resolveRequestTenantContext(req, {
-        allowAdminPlatformFallback: req.user.role === 'admin'
-    });
+export function requirePermission(...requiredPermissions: Permission[]) {
+    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+        if (!req.user) {
+            res.status(401).json({
+                error: 'backend.authentication_required',
+                code: 'AUTH_REQUIRED'
+            });
+            return;
+        }
 
-    if (!context) {
-        res.status(403).json({
-            error: 'backend.tenant_resolution_required',
-            code: 'TENANT_REQUIRED'
-        });
-        return;
-    }
+        const missing = requiredPermissions.filter((permission) => !hasPermission(req.user?.role, permission));
+        if (missing.length > 0) {
+            res.status(403).json({
+                error: 'backend.insufficient_permissions',
+                code: 'AUTH_PERMISSION_FORBIDDEN',
+                missingPermissions: missing
+            });
+            return;
+        }
 
-    if (req.user.role !== 'admin' && context.tenantId !== req.user.tenantId) {
-        res.status(403).json({
-            error: 'backend.cannot_access_resources_from_another_tenant',
-            code: 'TENANT_MISMATCH'
-        });
-        return;
-    }
-
-    if (!req.body) req.body = {};
-    if (!req.body.tenantId) {
-        req.body.tenantId = context.tenantId;
-    }
-
-    next();
+        req.user.permissions = req.user.permissions || getRolePermissions(req.user.role);
+        next();
+    };
 }
 
 /**

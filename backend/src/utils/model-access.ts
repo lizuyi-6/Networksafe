@@ -196,12 +196,13 @@ export function getDefaultModel(plan: PlanTier): PlatformModel {
 // Stage-aware model selection — different detection stages use different models
 // ---------------------------------------------------------------------------
 
-export type DetectionStage = 'primary' | 'deep_analysis' | 'learning_verification';
+export type DetectionStage = 'primary' | 'deep_analysis' | 'learning_verification' | 'blocking_review';
 
 export const STAGE_MODEL_MAP: Record<DetectionStage, string> = {
   primary: 'hunyuan-turbos',           // Fast evaluation, low latency
   deep_analysis: 'glm-5',              // Balanced reasoning for agent debate
-  learning_verification: 'hunyuan-t1'  // High accuracy for learning verification
+  learning_verification: 'hunyuan-t1', // High accuracy for learning verification
+  blocking_review: 'glm-5'             // Full discussion path; keep on the local side when routed locally
 };
 
 export function getModelIdForStage(stage: DetectionStage): string {

@@ -159,6 +159,58 @@ class FastpathClientService {
     };
   }
 
+  /**
+   * List the protocol plugins the fastpath has registered (HTTP, MQTT, ROS2,
+   * CAN-bus, ...). GET /v1/protocols/manifests. Returns null when fastpath is
+   * disabled or unreachable so callers can degrade gracefully.
+   */
+  async listProtocolManifests(tenantId = 'global'): Promise<Array<Record<string, any>> | null> {
+    const result = await this.getRaw(tenantId, '/v1/protocols/manifests');
+    if (!result || result.status >= 400) {
+      return null;
+    }
+    const protocols = result.data?.protocols;
+    return Array.isArray(protocols) ? protocols : null;
+  }
+
+  /**
+   * Evaluate a non-HTTP protocol frame (MQTT / ROS2 / CAN-bus / ...) against the
+   * fastpath plugin registry. POST /v1/protocols/evaluate. Mirrors
+   * evaluateHttpTraffic's error handling: returns null on disabled/unreachable.
+   *
+   * Per-protocol policy is carried in `input.metadata` and forwarded verbatim to
+   * the Rust plugin. For CAN-bus the operator-controllable fields are:
+   *   - metadata.enabled (bool, default true): set false to skip all inspection.
+   *   - metadata.blockDiagnosticFrames (bool, default true): set false to allow
+   *     legitimate UDS diagnostic frames (0x7DF / 0x7E0-0x7E7); oversize/malformed
+   *     checks still fire. Defaults are fail-closed (inspection + blocking ON).
+   */
+  async evaluateProtocol(input: Record<string, any>): Promise<Record<string, any> | null> {
+    const tenantId = String(input.tenantId || 'global');
+    const result = await this.postRaw(tenantId, '/v1/protocols/evaluate', input);
+    if (!result || result.status >= 400) {
+      return null;
+    }
+    return result.data ?? null;
+  }
+
+  private async getRaw(tenantId: string, path: string): Promise<{ status: number; data: any } | null> {
+    const runtime = await this.getRuntimeSettings(tenantId);
+    if (!runtime.enabled) {
+      return null;
+    }
+    try {
+      const response = await this.getClient(runtime).get(path);
+      return { status: response.status, data: response.data };
+    } catch (error: any) {
+      if (!runtime.fallbackEnabled) {
+        throw error;
+      }
+      logger.warn('Fastpath GET unavailable', { tenantId, path, error: error?.message });
+      return null;
+    }
+  }
+
   async postRaw(
     tenantId: string,
     path: string,

@@ -3,7 +3,7 @@
  * Core innovation: Multi-agent debate with arbitrator resolution
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     DebateSession,
     DebateRound,
@@ -13,7 +13,9 @@ import {
     AnalysisResult,
     TrafficRequest,
     Evidence,
-    DebateTriggerMetrics
+    DebateTriggerMetrics,
+    ThinkingDepth,
+    THINKING_DEPTH_PARAMS
 } from '../core/types';
 import { MessageBus } from '../core/message-bus';
 import {
@@ -30,13 +32,16 @@ export interface DebateConfig {
     roundTimeout: number;
     consensusThreshold: number;
     arbitratorModel: string;
+    /** Thinking depth for debate reasoning; drives model temperature / token budget. */
+    thinkingDepth?: ThinkingDepth;
 }
 
 const DEFAULT_DEBATE_CONFIG: DebateConfig = {
     maxRounds: 3,
     roundTimeout: 30000,
     consensusThreshold: 0.7,
-    arbitratorModel: 'cloud'
+    arbitratorModel: 'cloud',
+    thinkingDepth: 'deep'
 };
 
 export class DebateProtocol {
@@ -165,60 +170,98 @@ export class DebateProtocol {
         const speakerResult = results.find(r => r.role === speaker);
         const otherResults = results.filter(r => r.role !== speaker);
 
-        let argumentPrompt = this.buildArgumentPrompt(speaker, position, speakerResult, otherResults, request);
-
-        if (previousRounds.length > 0) {
-            argumentPrompt += '\n\n--- PREVIOUS ARGUMENTS ---\n';
-            for (const round of previousRounds) {
-                argumentPrompt += `${round.speaker} (${round.position}): ${round.argument}\n`;
-            }
-        }
+        const basePrompt = this.buildArgumentPrompt(speaker, position, speakerResult, otherResults, request);
+        const fullPrompt = previousRounds.length > 0
+            ? `${basePrompt}\n\n--- PREVIOUS ARGUMENTS IN THIS DEBATE ---\n` +
+              previousRounds.map((round) => `${round.speaker} (${round.position}): ${round.argument}`).join('\n') +
+              `\n\nRespond to the other agents: defend your position with new evidence, or concede if their argument is stronger. Keep it to 2-4 sentences.`
+            : `${basePrompt}\n\nProvide your concise opening argument (2-4 sentences).`;
 
         const evidence: Evidence[] = [];
+        this.collectSpeakerEvidence(speaker, speakerResult, evidence);
+
+        // REAL DEBATE: each round actually calls the model with the prior rounds in
+        // context, so agents genuinely reason about and respond to each other — not
+        // canned template lines. Falls back to the deterministic role generator only
+        // when no model is wired (keeps the debate fail-closed and unit-testable).
+        // Thinking depth (L5 = deep) drives the model's temperature and token budget,
+        // so this layer reasons with materially more budget than a shallow triage call.
+        const requestedDepth = this.config.thinkingDepth || 'deep';
+        const depthParams = THINKING_DEPTH_PARAMS[requestedDepth] ?? THINKING_DEPTH_PARAMS.deep;
+        if (!THINKING_DEPTH_PARAMS[requestedDepth] && this.config.thinkingDepth) {
+            logger.warn(`Unknown debate thinkingDepth '${this.config.thinkingDepth}'; falling back to 'deep'`);
+        }
         let content = '';
-
-        switch (speaker) {
-            case 'socrates':
-                content = this.generateSocratesArgument(speakerResult, otherResults, previousRounds);
-                if (speakerResult?.mutations && speakerResult.mutations.length > 0) {
-                    evidence.push({
-                        type: 'semantic',
-                        description: `${speakerResult.mutations.length} potential bypass mutation(s) identified`,
-                        severity: 'high',
-                        data: { mutations: speakerResult.mutations.slice(0, 3) },
-                        source: 'Socrates'
-                    });
-                }
-                break;
-
-            case 'plato':
-                content = this.generatePlatoArgument(speakerResult, otherResults, previousRounds);
-                if (speakerResult?.schemaValidation && !speakerResult.schemaValidation.isValid) {
-                    evidence.push({
-                        type: 'pattern',
-                        description: `${speakerResult.schemaValidation.violations.length} schema violation(s) found`,
-                        severity: 'medium',
-                        data: { violations: speakerResult.schemaValidation.violations.slice(0, 3) },
-                        source: 'Plato'
-                    });
-                }
-                break;
-
-            case 'aristotle':
-                content = this.generateAristotleArgument(speakerResult, otherResults, previousRounds);
-                if (speakerResult?.anomalyScore && speakerResult.anomalyScore > 0.5) {
-                    evidence.push({
-                        type: 'statistical',
-                        description: `Anomaly score: ${(speakerResult.anomalyScore * 100).toFixed(0)}%`,
-                        severity: speakerResult.anomalyScore > 0.7 ? 'high' : 'medium',
-                        data: { anomalyScore: speakerResult.anomalyScore },
-                        source: 'Aristotle'
-                    });
-                }
-                break;
+        try {
+            const response = await this.messageBus.requestModel({
+                id: uuidv4(),
+                prompt: fullPrompt,
+                context: { role: speaker, agentId: speakerResult?.agentId || speaker, debate: true, position },
+                tier: 'cloud',
+                priority: 'high',
+                timeout: Math.min(this.config.roundTimeout, 20000),
+                sanitizationLevel: 'basic',
+                analysisPurpose: 'deep_analysis',
+                temperature: depthParams.temperature,
+                maxTokens: depthParams.maxTokens
+            });
+            content = (response?.content || '').trim();
+        } catch (error: any) {
+            logger.debug(`Debate model call failed for ${speaker}; using deterministic fallback`, { error: error?.message });
+        }
+        if (!content) {
+            content = this.fallbackArgument(speaker, speakerResult, otherResults, previousRounds);
         }
 
         return { content, evidence };
+    }
+
+    private collectSpeakerEvidence(
+        speaker: AgentRole,
+        speakerResult: AnalysisResult | undefined,
+        evidence: Evidence[]
+    ): void {
+        if (speaker === 'socrates' && speakerResult?.mutations && speakerResult.mutations.length > 0) {
+            evidence.push({
+                type: 'semantic',
+                description: `${speakerResult.mutations.length} potential bypass mutation(s) identified`,
+                severity: 'high',
+                data: { mutations: speakerResult.mutations.slice(0, 3) },
+                source: 'Socrates'
+            });
+        }
+        if (speaker === 'plato' && speakerResult?.schemaValidation && !speakerResult.schemaValidation.isValid) {
+            evidence.push({
+                type: 'pattern',
+                description: `${speakerResult.schemaValidation.violations.length} schema violation(s) found`,
+                severity: 'medium',
+                data: { violations: speakerResult.schemaValidation.violations.slice(0, 3) },
+                source: 'Plato'
+            });
+        }
+        if (speaker === 'aristotle' && speakerResult?.anomalyScore && speakerResult.anomalyScore > 0.5) {
+            evidence.push({
+                type: 'statistical',
+                description: `Anomaly score: ${(speakerResult.anomalyScore * 100).toFixed(0)}%`,
+                severity: speakerResult.anomalyScore > 0.7 ? 'high' : 'medium',
+                data: { anomalyScore: speakerResult.anomalyScore },
+                source: 'Aristotle'
+            });
+        }
+    }
+
+    private fallbackArgument(
+        speaker: AgentRole,
+        speakerResult: AnalysisResult | undefined,
+        otherResults: AnalysisResult[],
+        previousRounds: DebateRound[]
+    ): string {
+        switch (speaker) {
+            case 'socrates': return this.generateSocratesArgument(speakerResult, otherResults, previousRounds);
+            case 'plato': return this.generatePlatoArgument(speakerResult, otherResults, previousRounds);
+            case 'aristotle': return this.generateAristotleArgument(speakerResult, otherResults, previousRounds);
+            default: return 'Insufficient basis to take a position.';
+        }
     }
 
     private buildArgumentPrompt(

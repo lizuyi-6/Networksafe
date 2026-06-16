@@ -1,0 +1,902 @@
+[
+  {
+    "id": "smuggle_0000",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.100.10.202",
+    "timestamp": "2026-03-13T21:47:04.400495"
+  },
+  {
+    "id": "smuggle_0001",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "143.50.60.99",
+    "timestamp": "2026-03-13T21:47:04.400518"
+  },
+  {
+    "id": "smuggle_0002",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "36.80.157.84",
+    "timestamp": "2026-03-13T21:47:04.400526"
+  },
+  {
+    "id": "smuggle_0003",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "104.129.8.18",
+    "timestamp": "2026-03-13T21:47:04.400532"
+  },
+  {
+    "id": "smuggle_0004",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "167.242.63.238",
+    "timestamp": "2026-03-13T21:47:04.400537"
+  },
+  {
+    "id": "smuggle_0005",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "60.217.217.116",
+    "timestamp": "2026-03-13T21:47:04.400542"
+  },
+  {
+    "id": "smuggle_0006",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "80.27.211.119",
+    "timestamp": "2026-03-13T21:47:04.400547"
+  },
+  {
+    "id": "smuggle_0007",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "42.115.17.59",
+    "timestamp": "2026-03-13T21:47:04.400555"
+  },
+  {
+    "id": "smuggle_0008",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "15.119.65.103",
+    "timestamp": "2026-03-13T21:47:04.400564"
+  },
+  {
+    "id": "smuggle_0009",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "200.42.26.157",
+    "timestamp": "2026-03-13T21:47:04.400569"
+  },
+  {
+    "id": "smuggle_0010",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.101.216.230",
+    "timestamp": "2026-03-13T21:47:04.400574"
+  },
+  {
+    "id": "smuggle_0011",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "145.212.254.39",
+    "timestamp": "2026-03-13T21:47:04.400578"
+  },
+  {
+    "id": "smuggle_0012",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "48.213.48.14",
+    "timestamp": "2026-03-13T21:47:04.400583"
+  },
+  {
+    "id": "smuggle_0013",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "73.237.59.190",
+    "timestamp": "2026-03-13T21:47:04.400588"
+  },
+  {
+    "id": "smuggle_0014",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "129.207.102.225",
+    "timestamp": "2026-03-13T21:47:04.400592"
+  },
+  {
+    "id": "smuggle_0015",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "56.84.206.127",
+    "timestamp": "2026-03-13T21:47:04.400597"
+  },
+  {
+    "id": "smuggle_0016",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "152.149.119.40",
+    "timestamp": "2026-03-13T21:47:04.400602"
+  },
+  {
+    "id": "smuggle_0017",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "24.132.24.100",
+    "timestamp": "2026-03-13T21:47:04.400606"
+  },
+  {
+    "id": "smuggle_0018",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "73.150.119.111",
+    "timestamp": "2026-03-13T21:47:04.400610"
+  },
+  {
+    "id": "smuggle_0019",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "193.163.196.136",
+    "timestamp": "2026-03-13T21:47:04.400615"
+  },
+  {
+    "id": "smuggle_0020",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "197.249.120.156",
+    "timestamp": "2026-03-13T21:47:04.400620"
+  },
+  {
+    "id": "smuggle_0021",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "15.115.7.91",
+    "timestamp": "2026-03-13T21:47:04.400624"
+  },
+  {
+    "id": "smuggle_0022",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "103.120.148.142",
+    "timestamp": "2026-03-13T21:47:04.400629"
+  },
+  {
+    "id": "smuggle_0023",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "30.52.2.136",
+    "timestamp": "2026-03-13T21:47:04.400634"
+  },
+  {
+    "id": "smuggle_0024",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "115.46.111.80",
+    "timestamp": "2026-03-13T21:47:04.400638"
+  },
+  {
+    "id": "smuggle_0025",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "107.172.177.4",
+    "timestamp": "2026-03-13T21:47:04.400666"
+  },
+  {
+    "id": "smuggle_0026",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "204.76.116.215",
+    "timestamp": "2026-03-13T21:47:04.400674"
+  },
+  {
+    "id": "smuggle_0027",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "59.121.156.144",
+    "timestamp": "2026-03-13T21:47:04.400685"
+  },
+  {
+    "id": "smuggle_0028",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.32.155.175",
+    "timestamp": "2026-03-13T21:47:04.400693"
+  },
+  {
+    "id": "smuggle_0029",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "64.130.133.243",
+    "timestamp": "2026-03-13T21:47:04.400701"
+  },
+  {
+    "id": "smuggle_0030",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "146.27.69.184",
+    "timestamp": "2026-03-13T21:47:04.400709"
+  },
+  {
+    "id": "smuggle_0031",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "211.243.49.237",
+    "timestamp": "2026-03-13T21:47:04.400716"
+  },
+  {
+    "id": "smuggle_0032",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "91.127.28.30",
+    "timestamp": "2026-03-13T21:47:04.400723"
+  },
+  {
+    "id": "smuggle_0033",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "64.212.178.200",
+    "timestamp": "2026-03-13T21:47:04.400729"
+  },
+  {
+    "id": "smuggle_0034",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "52.176.120.142",
+    "timestamp": "2026-03-13T21:47:04.400734"
+  },
+  {
+    "id": "smuggle_0035",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "43.128.148.59",
+    "timestamp": "2026-03-13T21:47:04.400739"
+  },
+  {
+    "id": "smuggle_0036",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "61.216.255.73",
+    "timestamp": "2026-03-13T21:47:04.400744"
+  },
+  {
+    "id": "smuggle_0037",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "217.215.176.191",
+    "timestamp": "2026-03-13T21:47:04.400749"
+  },
+  {
+    "id": "smuggle_0038",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.176.208.8",
+    "timestamp": "2026-03-13T21:47:04.400753"
+  },
+  {
+    "id": "smuggle_0039",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "90.120.168.116",
+    "timestamp": "2026-03-13T21:47:04.400758"
+  },
+  {
+    "id": "smuggle_0040",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "161.0.30.56",
+    "timestamp": "2026-03-13T21:47:04.400762"
+  },
+  {
+    "id": "smuggle_0041",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "111.56.37.33",
+    "timestamp": "2026-03-13T21:47:04.400767"
+  },
+  {
+    "id": "smuggle_0042",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "159.160.230.111",
+    "timestamp": "2026-03-13T21:47:04.400772"
+  },
+  {
+    "id": "smuggle_0043",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "34.189.129.118",
+    "timestamp": "2026-03-13T21:47:04.400779"
+  },
+  {
+    "id": "smuggle_0044",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "113.55.185.58",
+    "timestamp": "2026-03-13T21:47:04.400784"
+  },
+  {
+    "id": "smuggle_0045",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "107.131.40.233",
+    "timestamp": "2026-03-13T21:47:04.400789"
+  },
+  {
+    "id": "smuggle_0046",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "196.89.141.140",
+    "timestamp": "2026-03-13T21:47:04.400793"
+  },
+  {
+    "id": "smuggle_0047",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "97.162.243.46",
+    "timestamp": "2026-03-13T21:47:04.400800"
+  },
+  {
+    "id": "smuggle_0048",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "93.136.247.193",
+    "timestamp": "2026-03-13T21:47:04.400805"
+  },
+  {
+    "id": "smuggle_0049",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "216.12.8.111",
+    "timestamp": "2026-03-13T21:47:04.400810"
+  },
+  {
+    "id": "smuggle_0050",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "113.251.129.34",
+    "timestamp": "2026-03-13T21:47:04.400815"
+  },
+  {
+    "id": "smuggle_0051",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.56.112.22",
+    "timestamp": "2026-03-13T21:47:04.400819"
+  },
+  {
+    "id": "smuggle_0052",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "16.9.145.153",
+    "timestamp": "2026-03-13T21:47:04.400824"
+  },
+  {
+    "id": "smuggle_0053",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "151.123.99.235",
+    "timestamp": "2026-03-13T21:47:04.400831"
+  },
+  {
+    "id": "smuggle_0054",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "138.101.20.182",
+    "timestamp": "2026-03-13T21:47:04.400835"
+  },
+  {
+    "id": "smuggle_0055",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "164.206.214.254",
+    "timestamp": "2026-03-13T21:47:04.400840"
+  },
+  {
+    "id": "smuggle_0056",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.88.68.100",
+    "timestamp": "2026-03-13T21:47:04.400844"
+  },
+  {
+    "id": "smuggle_0057",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "40.238.34.17",
+    "timestamp": "2026-03-13T21:47:04.400849"
+  },
+  {
+    "id": "smuggle_0058",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.179.233.80",
+    "timestamp": "2026-03-13T21:47:04.400854"
+  },
+  {
+    "id": "smuggle_0059",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "54.124.150.104",
+    "timestamp": "2026-03-13T21:47:04.400858"
+  },
+  {
+    "id": "smuggle_0060",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "119.2.126.4",
+    "timestamp": "2026-03-13T21:47:04.400863"
+  },
+  {
+    "id": "smuggle_0061",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "50.219.73.33",
+    "timestamp": "2026-03-13T21:47:04.400867"
+  },
+  {
+    "id": "smuggle_0062",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "174.88.30.58",
+    "timestamp": "2026-03-13T21:47:04.400872"
+  },
+  {
+    "id": "smuggle_0063",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "101.123.231.241",
+    "timestamp": "2026-03-13T21:47:04.400877"
+  },
+  {
+    "id": "smuggle_0064",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "109.10.101.21",
+    "timestamp": "2026-03-13T21:47:04.400884"
+  },
+  {
+    "id": "smuggle_0065",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "140.170.142.70",
+    "timestamp": "2026-03-13T21:47:04.400889"
+  },
+  {
+    "id": "smuggle_0066",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "53.6.200.29",
+    "timestamp": "2026-03-13T21:47:04.400895"
+  },
+  {
+    "id": "smuggle_0067",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "188.99.89.185",
+    "timestamp": "2026-03-13T21:47:04.400900"
+  },
+  {
+    "id": "smuggle_0068",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "134.217.85.249",
+    "timestamp": "2026-03-13T21:47:04.400905"
+  },
+  {
+    "id": "smuggle_0069",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "80.167.162.254",
+    "timestamp": "2026-03-13T21:47:04.400909"
+  },
+  {
+    "id": "smuggle_0070",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "152.108.66.205",
+    "timestamp": "2026-03-13T21:47:04.400914"
+  },
+  {
+    "id": "smuggle_0071",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "13.56.212.4",
+    "timestamp": "2026-03-13T21:47:04.400919"
+  },
+  {
+    "id": "smuggle_0072",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "43.124.30.156",
+    "timestamp": "2026-03-13T21:47:04.400923"
+  },
+  {
+    "id": "smuggle_0073",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "61.220.209.183",
+    "timestamp": "2026-03-13T21:47:04.400928"
+  },
+  {
+    "id": "smuggle_0074",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "95.198.133.124",
+    "timestamp": "2026-03-13T21:47:04.400933"
+  },
+  {
+    "id": "smuggle_0075",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "60.135.213.217",
+    "timestamp": "2026-03-13T21:47:04.400937"
+  },
+  {
+    "id": "smuggle_0076",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "185.92.254.5",
+    "timestamp": "2026-03-13T21:47:04.400942"
+  },
+  {
+    "id": "smuggle_0077",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "57.168.116.4",
+    "timestamp": "2026-03-13T21:47:04.400947"
+  },
+  {
+    "id": "smuggle_0078",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "136.65.207.103",
+    "timestamp": "2026-03-13T21:47:04.400952"
+  },
+  {
+    "id": "smuggle_0079",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.13.23.48",
+    "timestamp": "2026-03-13T21:47:04.400956"
+  },
+  {
+    "id": "smuggle_0080",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "62.252.90.25",
+    "timestamp": "2026-03-13T21:47:04.400961"
+  },
+  {
+    "id": "smuggle_0081",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "187.168.164.142",
+    "timestamp": "2026-03-13T21:47:04.400965"
+  },
+  {
+    "id": "smuggle_0082",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "191.177.171.49",
+    "timestamp": "2026-03-13T21:47:04.400970"
+  },
+  {
+    "id": "smuggle_0083",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "102.218.228.99",
+    "timestamp": "2026-03-13T21:47:04.400974"
+  },
+  {
+    "id": "smuggle_0084",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "116.221.51.41",
+    "timestamp": "2026-03-13T21:47:04.400979"
+  },
+  {
+    "id": "smuggle_0085",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "73.245.243.135",
+    "timestamp": "2026-03-13T21:47:04.400984"
+  },
+  {
+    "id": "smuggle_0086",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "183.52.246.18",
+    "timestamp": "2026-03-13T21:47:04.400993"
+  },
+  {
+    "id": "smuggle_0087",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "184.176.26.1",
+    "timestamp": "2026-03-13T21:47:04.400998"
+  },
+  {
+    "id": "smuggle_0088",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "84.174.103.96",
+    "timestamp": "2026-03-13T21:47:04.401002"
+  },
+  {
+    "id": "smuggle_0089",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "83.81.194.85",
+    "timestamp": "2026-03-13T21:47:04.401007"
+  },
+  {
+    "id": "smuggle_0090",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "161.128.253.98",
+    "timestamp": "2026-03-13T21:47:04.401012"
+  },
+  {
+    "id": "smuggle_0091",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "176.216.98.184",
+    "timestamp": "2026-03-13T21:47:04.401017"
+  },
+  {
+    "id": "smuggle_0092",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "107.163.234.40",
+    "timestamp": "2026-03-13T21:47:04.401021"
+  },
+  {
+    "id": "smuggle_0093",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "21.87.47.92",
+    "timestamp": "2026-03-13T21:47:04.401026"
+  },
+  {
+    "id": "smuggle_0094",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "217.168.64.90",
+    "timestamp": "2026-03-13T21:47:04.401030"
+  },
+  {
+    "id": "smuggle_0095",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "218.124.28.186",
+    "timestamp": "2026-03-13T21:47:04.401035"
+  },
+  {
+    "id": "smuggle_0096",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "112.79.172.245",
+    "timestamp": "2026-03-13T21:47:04.401039"
+  },
+  {
+    "id": "smuggle_0097",
+    "type": "http_smuggling",
+    "payload": "GET / HTTP/1.1\r\nHost: example.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: example.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "132.163.178.156",
+    "timestamp": "2026-03-13T21:47:04.401044"
+  },
+  {
+    "id": "smuggle_0098",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "30.74.186.41",
+    "timestamp": "2026-03-13T21:47:04.401049"
+  },
+  {
+    "id": "smuggle_0099",
+    "type": "http_smuggling",
+    "payload": "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 60\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /static/script.js HTTP/1.1\r\nHost: example.com\r\nX-Forwarded-Host: evil.com\r\n\r\n",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "47.249.242.223",
+    "timestamp": "2026-03-13T21:47:04.401053"
+  }
+]

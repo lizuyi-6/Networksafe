@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-03-13T21:24:13.782089",
+  "total_samples": 1300,
+  "attack_samples": 1100,
+  "normal_samples": 200,
+  "datasets": {
+    "01_sql_injection.json": 200,
+    "02_xss.json": 200,
+    "03_command_injection.json": 200,
+    "04_path_traversal.json": 150,
+    "05_brute_force.json": 150,
+    "06_ddos.json": 100,
+    "07_port_scan.json": 100,
+    "08_normal_traffic.json": 200
+  },
+  "usage": {
+    "detection_rate_formula": "检测率 = 检测到的攻击数 / 总攻击数 × 100%",
+    "false_positive_rate_formula": "误报率 = 误判的正常流量数 / 总正常流量数 × 100%",
+    "accuracy_formula": "准确率 = (TP + TN) / 总样本数 × 100%"
+  }
+}

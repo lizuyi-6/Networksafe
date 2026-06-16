@@ -368,9 +368,46 @@ export class EnhancedRateLimiter {
   }
 
   async resetRateLimit(identifier: string): Promise<void> {
-    const pattern = `ratelimit:*:${identifier}*`;
+    // Memory fallback path: clear matching buckets.
+    if (this.memoryFallback) {
+      for (const key of Array.from(this.memoryFallback.keys())) {
+        if (key.includes(`:${identifier}:`) || key.endsWith(`:${identifier}`)) {
+          this.memoryFallback.delete(key);
+        }
+      }
+    }
+
+    // Redis path: when Redis is the live store, the buckets blocking the user
+    // live there (ratelimit:user:<id>, ratelimit:ip:<scopedIp>,
+    // ratelimit:combined:<id>:<scopedIp>, ratelimit:endpoint:<ep>:<id>). Clearing
+    // only the memory map left those keys counting, so a reset "succeeded" but
+    // the user stayed blocked until the window expired. SCAN + DEL the matching
+    // keys so the reset actually takes effect on the live store.
+    if (redisService.isAvailable()) {
+      try {
+        const client = redisService.getClient();
+        let cursor = '0';
+        let deleted = 0;
+        do {
+          // scan returns [cursor, keys[]]; cursor is a string in ioredis.
+          const [nextCursor, keys] = await (client as any).scan(cursor, 'MATCH', 'ratelimit:*', 'COUNT', '200');
+          cursor = String(nextCursor);
+          const matching = (keys as string[]).filter((k) =>
+            k.includes(`:${identifier}:`) || k.endsWith(`:${identifier}`)
+          );
+          if (matching.length > 0) {
+            deleted += await client.del(...matching);
+          }
+        } while (cursor !== '0');
+        logger.info('Rate limit reset completed', { identifier, redisKeysDeleted: deleted });
+      } catch (error) {
+        logger.error('Rate limit reset failed on Redis', { error, identifier });
+      }
+      return;
+    }
+
     try {
-      logger.info('Rate limit reset requested', { identifier, pattern });
+      logger.info('Rate limit reset requested', { identifier });
     } catch (error) {
       logger.error('Failed to reset rate limit', { error, identifier });
     }

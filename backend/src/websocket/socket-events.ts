@@ -33,6 +33,15 @@ export interface DeviceRegisterPayload {
   free_heap?: number;
   sdk_version?: string;
   api_key?: string;
+  public_key_pem?: string;
+  secure_element_present?: boolean;
+  device_role?: string;
+  transport?: string;
+  policy_digest?: string;
+  breaker_target?: string;
+  interlock_state?: string;
+  external_power_present?: boolean;
+  feedback_ok?: boolean;
 }
 
 export interface DeviceHeartbeatPayload {
@@ -40,6 +49,12 @@ export interface DeviceHeartbeatPayload {
   free_heap?: number;
   wifi_rssi?: number;
   cpu_usage?: number;
+  policy_digest?: string;
+  breaker_target?: string;
+  interlock_state?: string;
+  external_power_present?: boolean;
+  secure_element_present?: boolean;
+  feedback_ok?: boolean;
 }
 
 export interface AgentClientToServerEvents {

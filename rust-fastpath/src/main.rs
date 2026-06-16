@@ -36,6 +36,87 @@ use tracing::info;
 #[cfg(not(unix))]
 use tracing::warn;
 
+// ---------------------------------------------------------------------------
+// Protocol plugin data model + metadata helpers.
+//
+// The protocols/ module is a pluggable multi-protocol evaluation framework
+// (HTTP, MQTT, ROS2 CyberRT, CAN-bus, ...). These types and helpers live at the
+// crate root so every plugin can `use crate::{...}` them. They are the contract
+// between the Axum HTTP layer and the protocol plugins.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolEvaluateRequest {
+    #[serde(default)]
+    pub tenant_id: String,
+    #[serde(default)]
+    pub request_id: String,
+    pub protocol: String,
+    pub direction: Option<String>,
+    pub source_ref: Option<String>,
+    pub dest_ref: Option<String>,
+    pub channel: Option<String>,
+    pub headers: Option<HashMap<String, String>>,
+    pub metadata: Option<HashMap<String, Value>>,
+    pub payload_base64: Option<String>,
+    pub truncated: Option<bool>,
+    pub timestamp: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolFinding {
+    pub code: String,
+    pub severity: String,
+    pub message: String,
+    pub metadata: Option<Value>,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolCostMetrics {
+    pub saved_bytes: u64,
+    pub suppressed_messages: u64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolEvaluateResponse {
+    pub protocol: String,
+    pub verdict: String,
+    pub action: String,
+    pub matched_rule: Option<String>,
+    pub findings: Vec<ProtocolFinding>,
+    pub decision_source: String,
+    #[serde(default)]
+    pub processing_time_micros: u64,
+    #[serde(default)]
+    pub cost_metrics: ProtocolCostMetrics,
+}
+
+pub fn metadata_string(metadata: Option<&HashMap<String, Value>>, key: &str) -> Option<String> {
+    metadata.and_then(|map| map.get(key)).and_then(|v| v.as_str()).map(|s| s.to_string())
+}
+
+pub fn metadata_bool(metadata: Option<&HashMap<String, Value>>, key: &str) -> bool {
+    metadata.and_then(|map| map.get(key)).and_then(|v| v.as_bool()).unwrap_or(false)
+}
+
+pub fn metadata_u64(metadata: Option<&HashMap<String, Value>>, key: &str) -> Option<u64> {
+    metadata.and_then(|map| map.get(key)).and_then(|v| v.as_u64())
+}
+
+pub fn metadata_string_list(metadata: Option<&HashMap<String, Value>>, key: &str) -> Vec<String> {
+    metadata
+        .and_then(|map| map.get(key))
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|item| item.as_str().map(|s| s.to_string())).collect())
+        .unwrap_or_default()
+}
+
+mod protocols;
+
 const SHARD_COUNT: usize = 64;
 const CLEANUP_INTERVAL_SECS: u64 = 60;
 
@@ -499,6 +580,9 @@ async fn main() {
         .route("/v1/rate/check", post(check_rate))
         .route("/v1/socket/check", post(check_socket))
         .route("/v1/traffic/http/evaluate", post(evaluate_http_traffic))
+        .route("/v1/protocols/manifests", get(protocol_manifests))
+        .route("/v1/protocols/policies", get(protocol_policies))
+        .route("/v1/protocols/evaluate", post(evaluate_protocol))
         .route("/v1/batch/flush", post(flush))
         .with_state(state);
 
@@ -566,6 +650,26 @@ async fn serve_unix(app: Router, socket_path: String) {
     }
 }
 
+async fn protocol_manifests() -> impl IntoResponse {
+    let manifests = protocols::registry::manifests();
+    (StatusCode::OK, Json(json!({ "protocols": manifests })))
+}
+
+async fn evaluate_protocol(Json(input): Json<ProtocolEvaluateRequest>) -> impl IntoResponse {
+    match protocols::registry::evaluate_protocol_request(&input) {
+        Ok(response) => (StatusCode::OK, Json(json!(response))),
+        Err(message) => (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "protocol_evaluation_failed", "message": message })),
+        ),
+    }
+}
+
+async fn protocol_policies() -> impl IntoResponse {
+    let policies = protocols::registry::default_policy_map();
+    let stats = protocols::registry::empty_stats_map();
+    (StatusCode::OK, Json(json!({ "policies": policies, "stats": stats })))
+}
 async fn healthz(State(state): State<AppState>) -> impl IntoResponse {
     state.metrics.record_health();
     let active_entries = state.active_entries();

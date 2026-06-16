@@ -92,7 +92,7 @@ export const ConsolePanel = ({
                                 </motion.div>
                             )}
                             <div className="min-w-0">
-                                <h2 className="text-base font-semibold text-foreground truncate">{title}</h2>
+                                <h2 className="text-sm font-semibold text-foreground truncate">{title}</h2>
                                 {subtitle && <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
                             </div>
                         </div>

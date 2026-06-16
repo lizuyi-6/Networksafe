@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     MultiAgentDecisionSystem,
     createMultiAgentSystem,
@@ -15,7 +15,12 @@ import agentAuthService from '../../security/agent-auth.service';
 import { securityOperationsService } from '../../services/security-operations.service';
 import { owaspWebEvaluationService } from '../../services/owasp-web-evaluation.service';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
+import {
+    getAgentGateway as getSharedAgentGateway,
+    getAgentSystem as getSharedAgentSystem
+} from '../../services/agent-system.service';
 import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
+import { sendSuccess, sendError } from '../../core/http/api-response';
 
 const router = Router();
 
@@ -25,7 +30,7 @@ const router = Router();
 
 router.get('/agents/health', authenticate, (req: Request, res: Response) => {
     try {
-        const system = getAgentSystem();
+        const system = getSharedAgentSystem() || getAgentSystem();
         if (!system || !system.isInitialized()) {
             return res.json({ status: 'unknown', details: { reason: 'System not initialized' } });
         }
@@ -38,11 +43,14 @@ router.get('/agents/health', authenticate, (req: Request, res: Response) => {
 
 router.get('/agents/stats', authenticate, async (req: Request, res: Response) => {
     try {
-        const system = getAgentSystem();
+        const system = getSharedAgentSystem() || getAgentSystem();
+        const gateway = getSharedAgentGateway() || agentGateway;
         if (!system || !system.isInitialized()) {
             const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
             const opsSummary = await securityOperationsService.getDashboardSummaryView(tenantId);
-            const runtimeAgents = agentGateway?.getAgentList?.() || [];
+            const asyncReview = await detectionPipelineService.getAsyncReviewStats(tenantId);
+            const detectionSummary = await detectionPipelineService.getSummary(tenantId);
+            const runtimeAgents = gateway?.getAgentList?.() || [];
             return res.json({
                 orchestrator: {
                     activeTasks: opsSummary.runningScans + opsSummary.pendingActions + opsSummary.activeAlerts,
@@ -65,6 +73,15 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
                     pendingActions: opsSummary.pendingActions,
                     failedValidations: opsSummary.failedValidations,
                     assetsAtRisk: opsSummary.assetsAtRisk
+                },
+                detectionPipeline: {
+                    asyncReview,
+                    blockingDiscussion: {
+                        count: detectionSummary.blockingDiscussionCount,
+                        failClosed: detectionSummary.blockingDiscussionFailClosed,
+                        avgLatencyMs: detectionSummary.avgBlockingDiscussionLatencyMs
+                    },
+                    classificationLevel: detectionSummary.classificationLevel
                 },
                 health: {
                     status: 'degraded',
@@ -93,8 +110,10 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
         const health = system.getHealthStatus();
         const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
         const opsSummary = await securityOperationsService.getDashboardSummaryView(tenantId);
+        const asyncReview = await detectionPipelineService.getAsyncReviewStats(tenantId);
+        const detectionSummary = await detectionPipelineService.getSummary(tenantId);
         const threatPatterns = await securityOperationsService.summarizeThreatsView(tenantId);
-        const runtimeAgents = agentGateway?.getAgentList?.() || [];
+        const runtimeAgents = gateway?.getAgentList?.() || [];
         const registeredAgentsCount = agentAuthService
             .listAgents()
             .filter((agent) => agent.status === 'approved' || agent.status === 'pending')
@@ -170,6 +189,15 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
                 failedValidations: opsSummary.failedValidations,
                 assetsAtRisk: opsSummary.assetsAtRisk
             },
+            detectionPipeline: {
+                asyncReview,
+                blockingDiscussion: {
+                    count: detectionSummary.blockingDiscussionCount,
+                    failClosed: detectionSummary.blockingDiscussionFailClosed,
+                    avgLatencyMs: detectionSummary.avgBlockingDiscussionLatencyMs
+                },
+                classificationLevel: detectionSummary.classificationLevel
+            },
             health: health,
             agents: combinedAgents
         };
@@ -178,6 +206,96 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
     } catch (error: any) {
         logger.error('Failed to get agent system stats:', { error: error.message });
         res.status(500).json({ error: 'internal_error', message: error.message });
+    }
+});
+
+// Multi-Agent 7-Layer Topology — drives the interactive Athens Academy
+// visualization. Returns each layer's real config (thinking depth, activation
+// gating, model tier) plus the live telemetry each layer owns, so the frontend
+// can render a clickable layered map with an audit panel per node.
+router.get('/agents/topology', authenticate, async (req: Request, res: Response) => {
+    try {
+        const system = getSharedAgentSystem() || getAgentSystem();
+        const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
+        const cfg = system?.getConfig();
+        const L = cfg?.layers;
+        const layers = L ? [
+            { num: 1, key: 'l1_collaboration', name: 'Collaboration', ...L.l1_collaboration },
+            { num: 2, key: 'l2_rolePlaying', name: 'Role Playing', ...L.l2_rolePlaying },
+            { num: 3, key: 'l3_sceneTraversal', name: 'Scene Traversal', ...L.l3_sceneTraversal },
+            { num: 4, key: 'l4_capability', name: 'Capability', ...L.l4_capability },
+            { num: 5, key: 'l5_debate', name: 'Debate', ...L.l5_debate },
+            { num: 6, key: 'l6_heterogeneous', name: 'Heterogeneous Model', ...L.l6_heterogeneous },
+            { num: 7, key: 'l7_synthesis', name: 'Synthesis', ...L.l7_synthesis }
+        ] : [];
+
+        const roles = [
+            { role: 'socrates', team: 'red', color: '#ef4444', name: 'Socrates', position: 'attack', capabilities: ['mutation', 'bypass_detection', 'attack_simulation'], layer: 2 },
+            { role: 'plato', team: 'blue', color: '#3b82f6', name: 'Plato', position: 'defend', capabilities: ['schema_validation', 'compliance_check', 'pattern_matching'], layer: 2 },
+            { role: 'aristotle', team: 'analyst', color: '#a855f7', name: 'Aristotle', position: 'analyze', capabilities: ['anomaly_detection', 'behavior_analysis', 'statistical_analysis'], layer: 2 },
+            { role: 'arbitrator', team: 'arbitrator', color: '#f59e0b', name: 'Arbitrator', position: 'resolve', capabilities: ['debate_resolution', 'final_decision', 'policy_enforcement'], layer: 5 }
+        ];
+
+        const rawStats = system?.getStats();
+
+        // Detection telemetry is best-effort: if the detection pipeline is not
+        // prepared yet (fresh boot before prepare() completes), degrade to nulls
+        // instead of failing the whole topology view with a 500. getSummary()
+        // already returns the async-review stats, so read them from it rather than
+        // calling getAsyncReviewStats() a second time.
+        let asyncReview: any = null;
+        let blockingDiscussion = { count: 0, failClosed: 0, avgLatencyMs: 0 };
+        let aiLayer: any = null;
+        try {
+            const detectionSummary = await detectionPipelineService.getSummary(tenantId);
+            asyncReview = {
+                queueDepth: detectionSummary.asyncReviewQueueDepth,
+                running: detectionSummary.asyncReviewRunning,
+                completed: detectionSummary.asyncReviewCompleted,
+                failed: detectionSummary.asyncReviewFailed,
+                debateCompletionRate: detectionSummary.debateCompletionRate,
+                avgLatencyMs: detectionSummary.avgAsyncReviewLatencyMs
+            };
+            blockingDiscussion = {
+                count: detectionSummary.blockingDiscussionCount,
+                failClosed: detectionSummary.blockingDiscussionFailClosed,
+                avgLatencyMs: detectionSummary.avgBlockingDiscussionLatencyMs
+            };
+            aiLayer = detectionPipelineService.getAiLayerHealth();
+        } catch (error: any) {
+            logger.warn('Detection pipeline unavailable for agent topology; returning degraded telemetry', { error: error.message });
+        }
+
+        // Wrap in the repo's API envelope while preserving the raw shape at the
+        // top level via `legacy` — the existing frontend parses response.json()
+        // directly (reads layers/roles/telemetry at top level), so the legacy
+        // spread keeps it working AND adds success/data/error for future unified
+        // client + the check-frontend-api-contract guard.
+        const topology = {
+            initialized: system?.isInitialized() ?? false,
+            experimentMode: cfg?.experimentMode,
+            primarySingleAgentRole: cfg?.primarySingleAgentRole,
+            thresholds: cfg?.thresholds,
+            models: cfg ? { local: cfg.models.local.model, cloud: cfg.models.cloud.model } : undefined,
+            layers,
+            roles,
+            recentCascadeTraces: (typeof system?.getRecentCascadeTraces === 'function' ? system.getRecentCascadeTraces() : []) ?? [],
+            telemetry: {
+                orchestrator: rawStats?.orchestrator ?? null,
+                messageBus: rawStats?.messageBus ?? null,
+                modelRouter: rawStats?.modelRouter ?? null,
+                traceManager: rawStats?.traceManager ?? null,
+                synthesis: rawStats?.synthesis ?? null,
+                asyncReview,
+                blockingDiscussion,
+                health: system?.getHealthStatus() ?? null,
+                aiLayer
+            }
+        };
+        sendSuccess(res, topology, { legacy: topology });
+    } catch (error: any) {
+        logger.error('Failed to get agent topology:', { error: error.message });
+        sendError(res, 500, { code: 'internal_error', message: 'Failed to get agent topology' });
     }
 });
 
@@ -191,7 +309,7 @@ router.post('/evaluation/owasp', authenticate, async (req: Request, res: Respons
         res.json(report);
     } catch (error: any) {
         logger.error('Failed to run OWASP web evaluation:', { error: error.message });
-        res.status(500).json({ error: 'evaluation_failed', message: error.message });
+        sendError(res, 500, { code: 'evaluation_failed', message: 'Failed to run OWASP web evaluation' });
     }
 });
 
@@ -309,6 +427,7 @@ export const initializeAgentSystem = async (): Promise<void> => {
                 tenantId: request.tenantId,
                 routeModeOverride: options?.routeModeOverride,
                 analysisPurpose: options?.analysisPurpose || 'primary',
+                forceDebate: options?.forceDebate,
                 traceContext: undefined
             });
 
@@ -334,7 +453,12 @@ export const initializeAgentSystem = async (): Promise<void> => {
                     attackFamily: decision.attackFamily,
                     routeMode: decision.routeMode,
                     caseFileId: decision.caseFileId,
-                    analysisPurpose: options?.analysisPurpose || 'primary'
+                    layersActivated: decision.layersActivated || [],
+                    stageLatencies: decision.stageLatencies,
+                    debateTriggered: Boolean(decision.debateSession),
+                    experimentMode: decision.experimentMode,
+                    analysisPurpose: options?.analysisPurpose || 'primary',
+                    forceDebate: options?.forceDebate || false
                 }
             };
         }

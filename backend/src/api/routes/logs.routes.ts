@@ -1,13 +1,31 @@
 import { Router } from 'express';
 import logger from '../../utils/logger';
+import { authenticate } from '../../middleware/auth.middleware';
+import { sendSuccess, sendError } from '../../core/http/api-response';
 import { getTrafficStats } from '../../services/traffic-stats.service';
 import { getAgentSystem } from '../../services/agent-system.service';
 import { addLog, getRecentLogs } from '../../services/log-state.service';
 
 const router = Router();
 
-// GET /logs - public endpoint for dashboard (no auth required)
-router.get('/', (req, res) => {
+// GET /logs/summary - requires authentication, returns only aggregate counts (no raw log entries)
+router.get('/summary', authenticate, (req, res) => {
+    try {
+        const logs = getRecentLogs();
+        const totalLogs = logs.length;
+        const blockedCount = logs.filter((l) => l.status === 403 || l.status === 429).length;
+        const warnCount = logs.filter((l) => l.level === 'WARN').length;
+        const criticalCount = logs.filter((l) => l.level === 'CRITICAL').length;
+
+        sendSuccess(res, { totalLogs, blockedCount, warnCount, criticalCount });
+    } catch (error: any) {
+        logger.error('Failed to get logs summary', { error: error.message });
+        sendError(res, 500, { code: 'LOGS_SUMMARY_ERROR', message: error.message });
+    }
+});
+
+// GET /logs - requires authentication
+router.get('/', authenticate, (req, res) => {
     try {
         const trafficStats = getTrafficStats();
         const agentSystem = getAgentSystem();

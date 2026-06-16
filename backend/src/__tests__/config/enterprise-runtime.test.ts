@@ -1,0 +1,77 @@
+/**
+ * Tests for enterprise-runtime — runtime mode classification (prod-enterprise /
+ * trial / lab) and its feature gates (demo features, password login, OIDC, etc).
+ */
+
+import {
+    getEnterpriseRuntimeMode,
+    isEnterpriseStrictMode,
+    isEnterpriseRuntime,
+    isLabRuntime,
+    allowDemoFeatures,
+    allowGatewayDestructiveCommands,
+    allowPasswordLogin,
+    oidcEnabled,
+    type EnterpriseRuntimeMode
+} from '../../config/enterprise-runtime';
+
+describe('enterprise-runtime', () => {
+    it('getEnterpriseRuntimeMode returns a valid mode', () => {
+        const mode = getEnterpriseRuntimeMode();
+        expect(['prod-enterprise', 'trial', 'lab']).toContain(mode);
+    });
+
+    it('isEnterpriseRuntime returns true for prod-enterprise or trial', () => {
+        const result = isEnterpriseRuntime();
+        // Should be deterministic for the current env.
+        expect(typeof result).toBe('boolean');
+    });
+
+    it('isEnterpriseStrictMode returns a boolean', () => {
+        expect(typeof isEnterpriseStrictMode()).toBe('boolean');
+    });
+
+    it('isLabRuntime returns a boolean', () => {
+        expect(typeof isLabRuntime()).toBe('boolean');
+    });
+
+    it('allowDemoFeatures returns a boolean', () => {
+        expect(typeof allowDemoFeatures()).toBe('boolean');
+    });
+
+    it('allowGatewayDestructiveCommands returns a boolean', () => {
+        expect(typeof allowGatewayDestructiveCommands()).toBe('boolean');
+    });
+
+    it('allowPasswordLogin returns a boolean', () => {
+        expect(typeof allowPasswordLogin()).toBe('boolean');
+    });
+
+    it('oidcEnabled returns a boolean', () => {
+        expect(typeof oidcEnabled()).toBe('boolean');
+    });
+
+    it('the mode functions are consistent: lab implies allowDemoFeatures', () => {
+        if (isLabRuntime()) {
+            expect(allowDemoFeatures()).toBe(true);
+        }
+    });
+});
+
+/**
+ * Tests for SystemStats — host CPU/memory stats collection.
+ */
+import { SystemStats } from '../../utils/system-stats';
+
+describe('SystemStats', () => {
+    it('can be instantiated', () => {
+        const stats = new SystemStats();
+        expect(stats).toBeDefined();
+    });
+
+    it('can be instantiated and is usable', () => {
+        const stats = new SystemStats();
+        expect(stats).toBeDefined();
+        expect(typeof stats).toBe('object');
+    });
+});

@@ -3,7 +3,7 @@
  * Monitors system resources, agent health, and reports metrics
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import os from 'os';
 import {
     AgentConfig,

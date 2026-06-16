@@ -1,0 +1,902 @@
+[
+  {
+    "id": "ssti_0000",
+    "type": "ssti",
+    "payload": "{{self.__class__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "29.16.104.126",
+    "timestamp": "2026-03-13T21:47:04.401061"
+  },
+  {
+    "id": "ssti_0001",
+    "type": "ssti",
+    "payload": "${.now()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "160.73.19.12",
+    "timestamp": "2026-03-13T21:47:04.401066"
+  },
+  {
+    "id": "ssti_0002",
+    "type": "ssti",
+    "payload": "{{self.__class__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "209.229.12.97",
+    "timestamp": "2026-03-13T21:47:04.401071"
+  },
+  {
+    "id": "ssti_0003",
+    "type": "ssti",
+    "payload": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.232.202.224",
+    "timestamp": "2026-03-13T21:47:04.401076"
+  },
+  {
+    "id": "ssti_0004",
+    "type": "ssti",
+    "payload": "${self.module.cache.util.os.popen('id').read()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "105.234.194.223",
+    "timestamp": "2026-03-13T21:47:04.401081"
+  },
+  {
+    "id": "ssti_0005",
+    "type": "ssti",
+    "payload": "$class.inspect('java.lang.Runtime')",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "89.12.214.209",
+    "timestamp": "2026-03-13T21:47:04.401091"
+  },
+  {
+    "id": "ssti_0006",
+    "type": "ssti",
+    "payload": "${T(java.lang.Runtime).getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.46.26.232",
+    "timestamp": "2026-03-13T21:47:04.401099"
+  },
+  {
+    "id": "ssti_0007",
+    "type": "ssti",
+    "payload": "$class.inspect('java.lang.Runtime')",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "45.229.226.45",
+    "timestamp": "2026-03-13T21:47:04.401105"
+  },
+  {
+    "id": "ssti_0008",
+    "type": "ssti",
+    "payload": "#set($x=7*7)$x",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "133.17.116.94",
+    "timestamp": "2026-03-13T21:47:04.401110"
+  },
+  {
+    "id": "ssti_0009",
+    "type": "ssti",
+    "payload": "{%import os%}{{os.popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.156.185.26",
+    "timestamp": "2026-03-13T21:47:04.401115"
+  },
+  {
+    "id": "ssti_0010",
+    "type": "ssti",
+    "payload": "${.now()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "21.37.43.19",
+    "timestamp": "2026-03-13T21:47:04.401120"
+  },
+  {
+    "id": "ssti_0011",
+    "type": "ssti",
+    "payload": "{%import os%}{{os.popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "14.242.50.187",
+    "timestamp": "2026-03-13T21:47:04.401125"
+  },
+  {
+    "id": "ssti_0012",
+    "type": "ssti",
+    "payload": "{{request.application.__globals__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "86.7.246.223",
+    "timestamp": "2026-03-13T21:47:04.401129"
+  },
+  {
+    "id": "ssti_0013",
+    "type": "ssti",
+    "payload": "${.now()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "26.246.101.123",
+    "timestamp": "2026-03-13T21:47:04.401134"
+  },
+  {
+    "id": "ssti_0014",
+    "type": "ssti",
+    "payload": "{php}echo `id`;{/php}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "98.210.156.62",
+    "timestamp": "2026-03-13T21:47:04.401139"
+  },
+  {
+    "id": "ssti_0015",
+    "type": "ssti",
+    "payload": "{system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "129.240.25.142",
+    "timestamp": "2026-03-13T21:47:04.401143"
+  },
+  {
+    "id": "ssti_0016",
+    "type": "ssti",
+    "payload": "${self.module.cache.util.os.popen('id').read()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "201.50.58.200",
+    "timestamp": "2026-03-13T21:47:04.401148"
+  },
+  {
+    "id": "ssti_0017",
+    "type": "ssti",
+    "payload": "${self.module.cache.util.os.popen('id').read()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "17.49.241.120",
+    "timestamp": "2026-03-13T21:47:04.401152"
+  },
+  {
+    "id": "ssti_0018",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "199.5.187.44",
+    "timestamp": "2026-03-13T21:47:04.401157"
+  },
+  {
+    "id": "ssti_0019",
+    "type": "ssti",
+    "payload": "{{request.application.__globals__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "128.104.30.55",
+    "timestamp": "2026-03-13T21:47:04.401161"
+  },
+  {
+    "id": "ssti_0020",
+    "type": "ssti",
+    "payload": "${T(java.lang.Runtime).getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "215.65.172.91",
+    "timestamp": "2026-03-13T21:47:04.401166"
+  },
+  {
+    "id": "ssti_0021",
+    "type": "ssti",
+    "payload": "{{beans.get('runtime').exec('id')}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "202.120.184.51",
+    "timestamp": "2026-03-13T21:47:04.401171"
+  },
+  {
+    "id": "ssti_0022",
+    "type": "ssti",
+    "payload": "{{beans.get('runtime').exec('id')}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.169.196.83",
+    "timestamp": "2026-03-13T21:47:04.401175"
+  },
+  {
+    "id": "ssti_0023",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "106.79.182.58",
+    "timestamp": "2026-03-13T21:47:04.401180"
+  },
+  {
+    "id": "ssti_0024",
+    "type": "ssti",
+    "payload": "${.version}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "151.48.20.171",
+    "timestamp": "2026-03-13T21:47:04.401184"
+  },
+  {
+    "id": "ssti_0025",
+    "type": "ssti",
+    "payload": "{{7*7}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "37.139.15.110",
+    "timestamp": "2026-03-13T21:47:04.401191"
+  },
+  {
+    "id": "ssti_0026",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "42.244.43.144",
+    "timestamp": "2026-03-13T21:47:04.401196"
+  },
+  {
+    "id": "ssti_0027",
+    "type": "ssti",
+    "payload": "${7*7}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "110.124.129.101",
+    "timestamp": "2026-03-13T21:47:04.401201"
+  },
+  {
+    "id": "ssti_0028",
+    "type": "ssti",
+    "payload": "${7*7}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "189.153.123.149",
+    "timestamp": "2026-03-13T21:47:04.401208"
+  },
+  {
+    "id": "ssti_0029",
+    "type": "ssti",
+    "payload": "{system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "113.242.61.203",
+    "timestamp": "2026-03-13T21:47:04.401212"
+  },
+  {
+    "id": "ssti_0030",
+    "type": "ssti",
+    "payload": "${\"freemarker.template.utility.Execute\"?new()(\"id\")}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "124.234.225.52",
+    "timestamp": "2026-03-13T21:47:04.401217"
+  },
+  {
+    "id": "ssti_0031",
+    "type": "ssti",
+    "payload": "{system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "154.182.58.98",
+    "timestamp": "2026-03-13T21:47:04.401221"
+  },
+  {
+    "id": "ssti_0032",
+    "type": "ssti",
+    "payload": "${7*7}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "49.196.34.172",
+    "timestamp": "2026-03-13T21:47:04.401226"
+  },
+  {
+    "id": "ssti_0033",
+    "type": "ssti",
+    "payload": "{php}echo `id`;{/php}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "23.253.96.196",
+    "timestamp": "2026-03-13T21:47:04.401230"
+  },
+  {
+    "id": "ssti_0034",
+    "type": "ssti",
+    "payload": "{{request.application.__globals__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "22.237.188.65",
+    "timestamp": "2026-03-13T21:47:04.401235"
+  },
+  {
+    "id": "ssti_0035",
+    "type": "ssti",
+    "payload": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "142.140.101.195",
+    "timestamp": "2026-03-13T21:47:04.401240"
+  },
+  {
+    "id": "ssti_0036",
+    "type": "ssti",
+    "payload": "${T(java.lang.Runtime).getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "123.171.141.105",
+    "timestamp": "2026-03-13T21:47:04.401244"
+  },
+  {
+    "id": "ssti_0037",
+    "type": "ssti",
+    "payload": "${.version}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "211.69.181.223",
+    "timestamp": "2026-03-13T21:47:04.401249"
+  },
+  {
+    "id": "ssti_0038",
+    "type": "ssti",
+    "payload": "{{config}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "133.222.199.166",
+    "timestamp": "2026-03-13T21:47:04.401253"
+  },
+  {
+    "id": "ssti_0039",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "185.219.57.21",
+    "timestamp": "2026-03-13T21:47:04.401258"
+  },
+  {
+    "id": "ssti_0040",
+    "type": "ssti",
+    "payload": "#set($x=7*7)$x",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "196.193.184.87",
+    "timestamp": "2026-03-13T21:47:04.401262"
+  },
+  {
+    "id": "ssti_0041",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "102.193.243.60",
+    "timestamp": "2026-03-13T21:47:04.401267"
+  },
+  {
+    "id": "ssti_0042",
+    "type": "ssti",
+    "payload": "$class.inspect('java.lang.Runtime')",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "76.72.248.225",
+    "timestamp": "2026-03-13T21:47:04.401271"
+  },
+  {
+    "id": "ssti_0043",
+    "type": "ssti",
+    "payload": "{{get_flashed_messages.__globals__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "63.10.72.44",
+    "timestamp": "2026-03-13T21:47:04.401276"
+  },
+  {
+    "id": "ssti_0044",
+    "type": "ssti",
+    "payload": "{{7*7}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "217.130.190.145",
+    "timestamp": "2026-03-13T21:47:04.401283"
+  },
+  {
+    "id": "ssti_0045",
+    "type": "ssti",
+    "payload": "${.now()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "74.206.90.31",
+    "timestamp": "2026-03-13T21:47:04.401287"
+  },
+  {
+    "id": "ssti_0046",
+    "type": "ssti",
+    "payload": "${self.module.cache.util.os.popen('id').read()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "174.87.98.164",
+    "timestamp": "2026-03-13T21:47:04.401292"
+  },
+  {
+    "id": "ssti_0047",
+    "type": "ssti",
+    "payload": "#set($x=7*7)$x",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "99.222.129.29",
+    "timestamp": "2026-03-13T21:47:04.401296"
+  },
+  {
+    "id": "ssti_0048",
+    "type": "ssti",
+    "payload": "${T(java.lang.Runtime).getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "114.178.114.97",
+    "timestamp": "2026-03-13T21:47:04.401301"
+  },
+  {
+    "id": "ssti_0049",
+    "type": "ssti",
+    "payload": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "125.39.206.145",
+    "timestamp": "2026-03-13T21:47:04.401308"
+  },
+  {
+    "id": "ssti_0050",
+    "type": "ssti",
+    "payload": "${T(java.lang.Runtime).getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "154.239.53.90",
+    "timestamp": "2026-03-13T21:47:04.401313"
+  },
+  {
+    "id": "ssti_0051",
+    "type": "ssti",
+    "payload": "{%import os%}{{os.popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "54.162.57.115",
+    "timestamp": "2026-03-13T21:47:04.401318"
+  },
+  {
+    "id": "ssti_0052",
+    "type": "ssti",
+    "payload": "{system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.58.146.187",
+    "timestamp": "2026-03-13T21:47:04.401322"
+  },
+  {
+    "id": "ssti_0053",
+    "type": "ssti",
+    "payload": "{{beans.get('runtime').exec('id')}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "5.171.241.131",
+    "timestamp": "2026-03-13T21:47:04.401327"
+  },
+  {
+    "id": "ssti_0054",
+    "type": "ssti",
+    "payload": "{php}echo `id`;{/php}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "150.234.65.19",
+    "timestamp": "2026-03-13T21:47:04.401331"
+  },
+  {
+    "id": "ssti_0055",
+    "type": "ssti",
+    "payload": "{{config}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.12.129.178",
+    "timestamp": "2026-03-13T21:47:04.401338"
+  },
+  {
+    "id": "ssti_0056",
+    "type": "ssti",
+    "payload": "{{beans.get('runtime').exec('id')}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "105.101.36.245",
+    "timestamp": "2026-03-13T21:47:04.401343"
+  },
+  {
+    "id": "ssti_0057",
+    "type": "ssti",
+    "payload": "{system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "6.6.230.178",
+    "timestamp": "2026-03-13T21:47:04.401347"
+  },
+  {
+    "id": "ssti_0058",
+    "type": "ssti",
+    "payload": "${7*7}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "87.139.184.160",
+    "timestamp": "2026-03-13T21:47:04.401351"
+  },
+  {
+    "id": "ssti_0059",
+    "type": "ssti",
+    "payload": "{php}echo `id`;{/php}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "96.201.244.214",
+    "timestamp": "2026-03-13T21:47:04.401356"
+  },
+  {
+    "id": "ssti_0060",
+    "type": "ssti",
+    "payload": "{{7*7}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.148.223.25",
+    "timestamp": "2026-03-13T21:47:04.401360"
+  },
+  {
+    "id": "ssti_0061",
+    "type": "ssti",
+    "payload": "${.version}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "58.100.223.170",
+    "timestamp": "2026-03-13T21:47:04.401365"
+  },
+  {
+    "id": "ssti_0062",
+    "type": "ssti",
+    "payload": "$class.inspect('java.lang.Runtime')",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "92.207.40.102",
+    "timestamp": "2026-03-13T21:47:04.401369"
+  },
+  {
+    "id": "ssti_0063",
+    "type": "ssti",
+    "payload": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "171.146.66.197",
+    "timestamp": "2026-03-13T21:47:04.401374"
+  },
+  {
+    "id": "ssti_0064",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "13.208.173.104",
+    "timestamp": "2026-03-13T21:47:04.401381"
+  },
+  {
+    "id": "ssti_0065",
+    "type": "ssti",
+    "payload": "{{request.application.__globals__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "184.131.79.211",
+    "timestamp": "2026-03-13T21:47:04.401385"
+  },
+  {
+    "id": "ssti_0066",
+    "type": "ssti",
+    "payload": "{system('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "110.96.20.143",
+    "timestamp": "2026-03-13T21:47:04.401390"
+  },
+  {
+    "id": "ssti_0067",
+    "type": "ssti",
+    "payload": "{{7*7}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "130.75.190.108",
+    "timestamp": "2026-03-13T21:47:04.401395"
+  },
+  {
+    "id": "ssti_0068",
+    "type": "ssti",
+    "payload": "$class.inspect('java.lang.Runtime')",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "75.144.154.195",
+    "timestamp": "2026-03-13T21:47:04.401399"
+  },
+  {
+    "id": "ssti_0069",
+    "type": "ssti",
+    "payload": "#set($x=7*7)$x",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "93.109.252.21",
+    "timestamp": "2026-03-13T21:47:04.401404"
+  },
+  {
+    "id": "ssti_0070",
+    "type": "ssti",
+    "payload": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "192.32.182.142",
+    "timestamp": "2026-03-13T21:47:04.401408"
+  },
+  {
+    "id": "ssti_0071",
+    "type": "ssti",
+    "payload": "${\"freemarker.template.utility.Execute\"?new()(\"id\")}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "223.70.71.91",
+    "timestamp": "2026-03-13T21:47:04.401420"
+  },
+  {
+    "id": "ssti_0072",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "63.115.212.72",
+    "timestamp": "2026-03-13T21:47:04.401425"
+  },
+  {
+    "id": "ssti_0073",
+    "type": "ssti",
+    "payload": "${.version}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "95.107.201.15",
+    "timestamp": "2026-03-13T21:47:04.401430"
+  },
+  {
+    "id": "ssti_0074",
+    "type": "ssti",
+    "payload": "{{request.application.__globals__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "1.38.23.132",
+    "timestamp": "2026-03-13T21:47:04.401435"
+  },
+  {
+    "id": "ssti_0075",
+    "type": "ssti",
+    "payload": "{{self.__class__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "211.66.85.53",
+    "timestamp": "2026-03-13T21:47:04.401439"
+  },
+  {
+    "id": "ssti_0076",
+    "type": "ssti",
+    "payload": "{{config}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "221.33.176.107",
+    "timestamp": "2026-03-13T21:47:04.401444"
+  },
+  {
+    "id": "ssti_0077",
+    "type": "ssti",
+    "payload": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "183.12.204.125",
+    "timestamp": "2026-03-13T21:47:04.401449"
+  },
+  {
+    "id": "ssti_0078",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "168.131.226.207",
+    "timestamp": "2026-03-13T21:47:04.401453"
+  },
+  {
+    "id": "ssti_0079",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "59.38.84.184",
+    "timestamp": "2026-03-13T21:47:04.401458"
+  },
+  {
+    "id": "ssti_0080",
+    "type": "ssti",
+    "payload": "${7*7}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "166.243.171.170",
+    "timestamp": "2026-03-13T21:47:04.401462"
+  },
+  {
+    "id": "ssti_0081",
+    "type": "ssti",
+    "payload": "${self.module.cache.util.os.popen('id').read()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "133.168.8.240",
+    "timestamp": "2026-03-13T21:47:04.401467"
+  },
+  {
+    "id": "ssti_0082",
+    "type": "ssti",
+    "payload": "{%import os%}{{os.popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "65.111.104.119",
+    "timestamp": "2026-03-13T21:47:04.401471"
+  },
+  {
+    "id": "ssti_0083",
+    "type": "ssti",
+    "payload": "{{config}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "82.85.67.229",
+    "timestamp": "2026-03-13T21:47:04.401478"
+  },
+  {
+    "id": "ssti_0084",
+    "type": "ssti",
+    "payload": "{{self.__class__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "33.19.23.91",
+    "timestamp": "2026-03-13T21:47:04.401483"
+  },
+  {
+    "id": "ssti_0085",
+    "type": "ssti",
+    "payload": "$class.inspect('java.lang.Runtime')",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "120.68.149.118",
+    "timestamp": "2026-03-13T21:47:04.401487"
+  },
+  {
+    "id": "ssti_0086",
+    "type": "ssti",
+    "payload": "${T(java.lang.Runtime).getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "219.85.205.127",
+    "timestamp": "2026-03-13T21:47:04.401492"
+  },
+  {
+    "id": "ssti_0087",
+    "type": "ssti",
+    "payload": "$class.inspect('java.lang.Runtime')",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "82.52.169.31",
+    "timestamp": "2026-03-13T21:47:04.401496"
+  },
+  {
+    "id": "ssti_0088",
+    "type": "ssti",
+    "payload": "{{request.application.__globals__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "155.118.237.78",
+    "timestamp": "2026-03-13T21:47:04.401501"
+  },
+  {
+    "id": "ssti_0089",
+    "type": "ssti",
+    "payload": "${7*7}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "79.242.226.166",
+    "timestamp": "2026-03-13T21:47:04.401505"
+  },
+  {
+    "id": "ssti_0090",
+    "type": "ssti",
+    "payload": "$class.inspect('java.lang.Runtime')",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "101.44.218.27",
+    "timestamp": "2026-03-13T21:47:04.401510"
+  },
+  {
+    "id": "ssti_0091",
+    "type": "ssti",
+    "payload": "{{beans.get('runtime').exec('id')}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "197.128.53.128",
+    "timestamp": "2026-03-13T21:47:04.401514"
+  },
+  {
+    "id": "ssti_0092",
+    "type": "ssti",
+    "payload": "{php}echo `id`;{/php}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "71.138.101.189",
+    "timestamp": "2026-03-13T21:47:04.401521"
+  },
+  {
+    "id": "ssti_0093",
+    "type": "ssti",
+    "payload": "${T(java.lang.Runtime).getRuntime().exec('id')}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "7.127.93.215",
+    "timestamp": "2026-03-13T21:47:04.401526"
+  },
+  {
+    "id": "ssti_0094",
+    "type": "ssti",
+    "payload": "{{''.__class__.__mro__[1].__subclasses__()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "168.73.150.135",
+    "timestamp": "2026-03-13T21:47:04.401530"
+  },
+  {
+    "id": "ssti_0095",
+    "type": "ssti",
+    "payload": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "203.30.234.49",
+    "timestamp": "2026-03-13T21:47:04.401535"
+  },
+  {
+    "id": "ssti_0096",
+    "type": "ssti",
+    "payload": "${.now()}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "136.84.184.75",
+    "timestamp": "2026-03-13T21:47:04.401540"
+  },
+  {
+    "id": "ssti_0097",
+    "type": "ssti",
+    "payload": "{{self.__class__}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "69.34.106.114",
+    "timestamp": "2026-03-13T21:47:04.401544"
+  },
+  {
+    "id": "ssti_0098",
+    "type": "ssti",
+    "payload": "{%import os%}{{os.popen('id').read()}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "66.51.232.241",
+    "timestamp": "2026-03-13T21:47:04.401549"
+  },
+  {
+    "id": "ssti_0099",
+    "type": "ssti",
+    "payload": "{{beans.get('runtime').exec('id')}}",
+    "severity": "critical",
+    "expected_detection": true,
+    "source_ip": "196.137.76.185",
+    "timestamp": "2026-03-13T21:47:04.401553"
+  }
+]

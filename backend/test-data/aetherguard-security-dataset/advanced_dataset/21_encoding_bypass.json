@@ -1,0 +1,902 @@
+[
+  {
+    "id": "encode_0000",
+    "type": "encoding_bypass",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "107.110.10.195",
+    "timestamp": "2026-03-13T21:47:04.403074"
+  },
+  {
+    "id": "encode_0001",
+    "type": "encoding_bypass",
+    "payload": "%2e%2e%5c%2e%2e%5c%2e%2e%5c",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "219.133.198.23",
+    "timestamp": "2026-03-13T21:47:04.403079"
+  },
+  {
+    "id": "encode_0002",
+    "type": "encoding_bypass",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "104.194.220.191",
+    "timestamp": "2026-03-13T21:47:04.403084"
+  },
+  {
+    "id": "encode_0003",
+    "type": "encoding_bypass",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "84.73.188.98",
+    "timestamp": "2026-03-13T21:47:04.403089"
+  },
+  {
+    "id": "encode_0004",
+    "type": "encoding_bypass",
+    "payload": "?file=a.txt&file=../../../etc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "31.165.154.39",
+    "timestamp": "2026-03-13T21:47:04.403094"
+  },
+  {
+    "id": "encode_0005",
+    "type": "encoding_bypass",
+    "payload": "%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "189.66.100.144",
+    "timestamp": "2026-03-13T21:47:04.403099"
+  },
+  {
+    "id": "encode_0006",
+    "type": "encoding_bypass",
+    "payload": "%2e%2e%5c%2e%2e%5c%2e%2e%5c",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "207.16.55.74",
+    "timestamp": "2026-03-13T21:47:04.403104"
+  },
+  {
+    "id": "encode_0007",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "8.118.254.105",
+    "timestamp": "2026-03-13T21:47:04.403109"
+  },
+  {
+    "id": "encode_0008",
+    "type": "encoding_bypass",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "143.192.171.56",
+    "timestamp": "2026-03-13T21:47:04.403114"
+  },
+  {
+    "id": "encode_0009",
+    "type": "encoding_bypass",
+    "payload": "%e0%80%ae%e0%80%ae%e0%80%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "205.168.21.125",
+    "timestamp": "2026-03-13T21:47:04.403119"
+  },
+  {
+    "id": "encode_0010",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "115.248.227.65",
+    "timestamp": "2026-03-13T21:47:04.403123"
+  },
+  {
+    "id": "encode_0011",
+    "type": "encoding_bypass",
+    "payload": "%e0%80%ae%e0%80%ae%e0%80%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "177.17.46.145",
+    "timestamp": "2026-03-13T21:47:04.403131"
+  },
+  {
+    "id": "encode_0012",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "40.98.104.145",
+    "timestamp": "2026-03-13T21:47:04.403135"
+  },
+  {
+    "id": "encode_0013",
+    "type": "encoding_bypass",
+    "payload": "file.php\u0000.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "29.61.252.168",
+    "timestamp": "2026-03-13T21:47:04.403143"
+  },
+  {
+    "id": "encode_0014",
+    "type": "encoding_bypass",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "137.170.49.93",
+    "timestamp": "2026-03-13T21:47:04.403148"
+  },
+  {
+    "id": "encode_0015",
+    "type": "encoding_bypass",
+    "payload": "?file=a.txt&file=../../../etc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "106.206.97.229",
+    "timestamp": "2026-03-13T21:47:04.403154"
+  },
+  {
+    "id": "encode_0016",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "175.104.109.217",
+    "timestamp": "2026-03-13T21:47:04.403159"
+  },
+  {
+    "id": "encode_0017",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "187.43.179.146",
+    "timestamp": "2026-03-13T21:47:04.403163"
+  },
+  {
+    "id": "encode_0018",
+    "type": "encoding_bypass",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "106.78.145.12",
+    "timestamp": "2026-03-13T21:47:04.403168"
+  },
+  {
+    "id": "encode_0019",
+    "type": "encoding_bypass",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "124.143.97.155",
+    "timestamp": "2026-03-13T21:47:04.403172"
+  },
+  {
+    "id": "encode_0020",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "158.134.155.228",
+    "timestamp": "2026-03-13T21:47:04.403177"
+  },
+  {
+    "id": "encode_0021",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "86.255.155.101",
+    "timestamp": "2026-03-13T21:47:04.403181"
+  },
+  {
+    "id": "encode_0022",
+    "type": "encoding_bypass",
+    "payload": "%c0%ae%c0%ae%c0%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "191.34.10.185",
+    "timestamp": "2026-03-13T21:47:04.403186"
+  },
+  {
+    "id": "encode_0023",
+    "type": "encoding_bypass",
+    "payload": "%e0%80%ae%e0%80%ae%e0%80%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "111.3.158.151",
+    "timestamp": "2026-03-13T21:47:04.403190"
+  },
+  {
+    "id": "encode_0024",
+    "type": "encoding_bypass",
+    "payload": "%c0%ae%c0%ae%c0%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "9.248.229.152",
+    "timestamp": "2026-03-13T21:47:04.403195"
+  },
+  {
+    "id": "encode_0025",
+    "type": "encoding_bypass",
+    "payload": "ａｄｍｉｎ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "49.233.239.190",
+    "timestamp": "2026-03-13T21:47:04.403199"
+  },
+  {
+    "id": "encode_0026",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "196.37.135.102",
+    "timestamp": "2026-03-13T21:47:04.403204"
+  },
+  {
+    "id": "encode_0027",
+    "type": "encoding_bypass",
+    "payload": "ａｄｍｉｎ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "220.210.51.63",
+    "timestamp": "2026-03-13T21:47:04.403208"
+  },
+  {
+    "id": "encode_0028",
+    "type": "encoding_bypass",
+    "payload": "%2e%2e%5c%2e%2e%5c%2e%2e%5c",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "99.141.79.230",
+    "timestamp": "2026-03-13T21:47:04.403213"
+  },
+  {
+    "id": "encode_0029",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "83.211.241.51",
+    "timestamp": "2026-03-13T21:47:04.403217"
+  },
+  {
+    "id": "encode_0030",
+    "type": "encoding_bypass",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "104.244.170.193",
+    "timestamp": "2026-03-13T21:47:04.403222"
+  },
+  {
+    "id": "encode_0031",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "135.187.126.144",
+    "timestamp": "2026-03-13T21:47:04.403226"
+  },
+  {
+    "id": "encode_0032",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "131.109.229.64",
+    "timestamp": "2026-03-13T21:47:04.403233"
+  },
+  {
+    "id": "encode_0033",
+    "type": "encoding_bypass",
+    "payload": "?id=1&id=2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "154.69.26.107",
+    "timestamp": "2026-03-13T21:47:04.403237"
+  },
+  {
+    "id": "encode_0034",
+    "type": "encoding_bypass",
+    "payload": "%c0%ae%c0%ae%c0%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "216.57.36.175",
+    "timestamp": "2026-03-13T21:47:04.403244"
+  },
+  {
+    "id": "encode_0035",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "151.11.230.196",
+    "timestamp": "2026-03-13T21:47:04.403249"
+  },
+  {
+    "id": "encode_0036",
+    "type": "encoding_bypass",
+    "payload": "file.php\u0000.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "15.154.131.243",
+    "timestamp": "2026-03-13T21:47:04.403253"
+  },
+  {
+    "id": "encode_0037",
+    "type": "encoding_bypass",
+    "payload": "%2e%2e%5c%2e%2e%5c%2e%2e%5c",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "127.104.148.213",
+    "timestamp": "2026-03-13T21:47:04.403258"
+  },
+  {
+    "id": "encode_0038",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "45.49.63.157",
+    "timestamp": "2026-03-13T21:47:04.403262"
+  },
+  {
+    "id": "encode_0039",
+    "type": "encoding_bypass",
+    "payload": "ａｄｍｉｎ",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "18.237.239.59",
+    "timestamp": "2026-03-13T21:47:04.403267"
+  },
+  {
+    "id": "encode_0040",
+    "type": "encoding_bypass",
+    "payload": "ﬂag",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "173.125.66.160",
+    "timestamp": "2026-03-13T21:47:04.403271"
+  },
+  {
+    "id": "encode_0041",
+    "type": "encoding_bypass",
+    "payload": "?file=a.txt&file=../../../etc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "185.178.117.185",
+    "timestamp": "2026-03-13T21:47:04.403276"
+  },
+  {
+    "id": "encode_0042",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "190.191.0.116",
+    "timestamp": "2026-03-13T21:47:04.403281"
+  },
+  {
+    "id": "encode_0043",
+    "type": "encoding_bypass",
+    "payload": "?file=a.txt&file=../../../etc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "86.211.197.240",
+    "timestamp": "2026-03-13T21:47:04.403285"
+  },
+  {
+    "id": "encode_0044",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "142.10.34.191",
+    "timestamp": "2026-03-13T21:47:04.403290"
+  },
+  {
+    "id": "encode_0045",
+    "type": "encoding_bypass",
+    "payload": "?id=1&id=2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "6.226.32.227",
+    "timestamp": "2026-03-13T21:47:04.403295"
+  },
+  {
+    "id": "encode_0046",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "72.25.154.240",
+    "timestamp": "2026-03-13T21:47:04.403299"
+  },
+  {
+    "id": "encode_0047",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "169.70.213.157",
+    "timestamp": "2026-03-13T21:47:04.403303"
+  },
+  {
+    "id": "encode_0048",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "108.106.20.107",
+    "timestamp": "2026-03-13T21:47:04.403308"
+  },
+  {
+    "id": "encode_0049",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "201.200.43.40",
+    "timestamp": "2026-03-13T21:47:04.403313"
+  },
+  {
+    "id": "encode_0050",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "2.149.217.249",
+    "timestamp": "2026-03-13T21:47:04.403317"
+  },
+  {
+    "id": "encode_0051",
+    "type": "encoding_bypass",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "55.254.128.234",
+    "timestamp": "2026-03-13T21:47:04.403322"
+  },
+  {
+    "id": "encode_0052",
+    "type": "encoding_bypass",
+    "payload": "file.php\u0000.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "214.126.14.230",
+    "timestamp": "2026-03-13T21:47:04.403326"
+  },
+  {
+    "id": "encode_0053",
+    "type": "encoding_bypass",
+    "payload": "%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "8.78.235.140",
+    "timestamp": "2026-03-13T21:47:04.403333"
+  },
+  {
+    "id": "encode_0054",
+    "type": "encoding_bypass",
+    "payload": "%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "198.32.9.162",
+    "timestamp": "2026-03-13T21:47:04.403339"
+  },
+  {
+    "id": "encode_0055",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "15.243.7.131",
+    "timestamp": "2026-03-13T21:47:04.403344"
+  },
+  {
+    "id": "encode_0056",
+    "type": "encoding_bypass",
+    "payload": "ﬂag",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "104.139.220.229",
+    "timestamp": "2026-03-13T21:47:04.403349"
+  },
+  {
+    "id": "encode_0057",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "155.212.45.196",
+    "timestamp": "2026-03-13T21:47:04.403353"
+  },
+  {
+    "id": "encode_0058",
+    "type": "encoding_bypass",
+    "payload": "?file=a.txt&file=../../../etc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "58.40.115.229",
+    "timestamp": "2026-03-13T21:47:04.403357"
+  },
+  {
+    "id": "encode_0059",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "11.248.184.86",
+    "timestamp": "2026-03-13T21:47:04.403362"
+  },
+  {
+    "id": "encode_0060",
+    "type": "encoding_bypass",
+    "payload": "ﬁle",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "164.233.168.254",
+    "timestamp": "2026-03-13T21:47:04.403366"
+  },
+  {
+    "id": "encode_0061",
+    "type": "encoding_bypass",
+    "payload": "%c0%ae%c0%ae%c0%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "88.251.130.37",
+    "timestamp": "2026-03-13T21:47:04.403371"
+  },
+  {
+    "id": "encode_0062",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "31.196.183.52",
+    "timestamp": "2026-03-13T21:47:04.403375"
+  },
+  {
+    "id": "encode_0063",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "67.38.64.154",
+    "timestamp": "2026-03-13T21:47:04.403383"
+  },
+  {
+    "id": "encode_0064",
+    "type": "encoding_bypass",
+    "payload": "ﬁle",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "50.100.55.53",
+    "timestamp": "2026-03-13T21:47:04.403387"
+  },
+  {
+    "id": "encode_0065",
+    "type": "encoding_bypass",
+    "payload": "file.php\u0000.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "70.251.151.31",
+    "timestamp": "2026-03-13T21:47:04.403392"
+  },
+  {
+    "id": "encode_0066",
+    "type": "encoding_bypass",
+    "payload": "file.php\u0000.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "35.88.182.199",
+    "timestamp": "2026-03-13T21:47:04.403396"
+  },
+  {
+    "id": "encode_0067",
+    "type": "encoding_bypass",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "96.238.53.166",
+    "timestamp": "2026-03-13T21:47:04.403401"
+  },
+  {
+    "id": "encode_0068",
+    "type": "encoding_bypass",
+    "payload": "%c0%ae%c0%ae%c0%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "89.91.122.229",
+    "timestamp": "2026-03-13T21:47:04.403405"
+  },
+  {
+    "id": "encode_0069",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "129.115.52.163",
+    "timestamp": "2026-03-13T21:47:04.403410"
+  },
+  {
+    "id": "encode_0070",
+    "type": "encoding_bypass",
+    "payload": "ﬂag",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "97.230.5.105",
+    "timestamp": "2026-03-13T21:47:04.403414"
+  },
+  {
+    "id": "encode_0071",
+    "type": "encoding_bypass",
+    "payload": "?id=1&id=2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "44.56.243.145",
+    "timestamp": "2026-03-13T21:47:04.403419"
+  },
+  {
+    "id": "encode_0072",
+    "type": "encoding_bypass",
+    "payload": "ﬁle",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "164.225.209.147",
+    "timestamp": "2026-03-13T21:47:04.403423"
+  },
+  {
+    "id": "encode_0073",
+    "type": "encoding_bypass",
+    "payload": "%e0%80%ae%e0%80%ae%e0%80%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "164.50.171.78",
+    "timestamp": "2026-03-13T21:47:04.403430"
+  },
+  {
+    "id": "encode_0074",
+    "type": "encoding_bypass",
+    "payload": "%2e%2e%5c%2e%2e%5c%2e%2e%5c",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "62.41.150.253",
+    "timestamp": "2026-03-13T21:47:04.403437"
+  },
+  {
+    "id": "encode_0075",
+    "type": "encoding_bypass",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "48.158.91.103",
+    "timestamp": "2026-03-13T21:47:04.403441"
+  },
+  {
+    "id": "encode_0076",
+    "type": "encoding_bypass",
+    "payload": "%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "180.60.28.202",
+    "timestamp": "2026-03-13T21:47:04.403446"
+  },
+  {
+    "id": "encode_0077",
+    "type": "encoding_bypass",
+    "payload": "%2e%2e%5c%2e%2e%5c%2e%2e%5c",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "210.211.166.54",
+    "timestamp": "2026-03-13T21:47:04.403451"
+  },
+  {
+    "id": "encode_0078",
+    "type": "encoding_bypass",
+    "payload": "%e0%80%ae%e0%80%ae%e0%80%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "196.153.150.239",
+    "timestamp": "2026-03-13T21:47:04.403455"
+  },
+  {
+    "id": "encode_0079",
+    "type": "encoding_bypass",
+    "payload": "file.php\u0000.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "112.85.159.72",
+    "timestamp": "2026-03-13T21:47:04.403460"
+  },
+  {
+    "id": "encode_0080",
+    "type": "encoding_bypass",
+    "payload": "аdmin",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "40.27.53.198",
+    "timestamp": "2026-03-13T21:47:04.403464"
+  },
+  {
+    "id": "encode_0081",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "143.223.80.129",
+    "timestamp": "2026-03-13T21:47:04.403469"
+  },
+  {
+    "id": "encode_0082",
+    "type": "encoding_bypass",
+    "payload": "%c0%ae%c0%ae%c0%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "215.88.150.148",
+    "timestamp": "2026-03-13T21:47:04.403473"
+  },
+  {
+    "id": "encode_0083",
+    "type": "encoding_bypass",
+    "payload": "?file=a.txt&file=../../../etc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "215.194.137.166",
+    "timestamp": "2026-03-13T21:47:04.403478"
+  },
+  {
+    "id": "encode_0084",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "80.84.252.116",
+    "timestamp": "2026-03-13T21:47:04.403482"
+  },
+  {
+    "id": "encode_0085",
+    "type": "encoding_bypass",
+    "payload": "..%c0%af..%c0%af..%c0%afetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "217.52.163.125",
+    "timestamp": "2026-03-13T21:47:04.403487"
+  },
+  {
+    "id": "encode_0086",
+    "type": "encoding_bypass",
+    "payload": "ﬂag",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "221.175.188.31",
+    "timestamp": "2026-03-13T21:47:04.403491"
+  },
+  {
+    "id": "encode_0087",
+    "type": "encoding_bypass",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "170.1.184.247",
+    "timestamp": "2026-03-13T21:47:04.403496"
+  },
+  {
+    "id": "encode_0088",
+    "type": "encoding_bypass",
+    "payload": "%c0%ae%c0%ae%c0%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "26.60.47.16",
+    "timestamp": "2026-03-13T21:47:04.403500"
+  },
+  {
+    "id": "encode_0089",
+    "type": "encoding_bypass",
+    "payload": "file.php%00.jpg",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "142.182.196.12",
+    "timestamp": "2026-03-13T21:47:04.403504"
+  },
+  {
+    "id": "encode_0090",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "50.8.30.217",
+    "timestamp": "2026-03-13T21:47:04.403509"
+  },
+  {
+    "id": "encode_0091",
+    "type": "encoding_bypass",
+    "payload": "%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "156.45.153.168",
+    "timestamp": "2026-03-13T21:47:04.403513"
+  },
+  {
+    "id": "encode_0092",
+    "type": "encoding_bypass",
+    "payload": "?id=1&id=2",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "162.60.237.194",
+    "timestamp": "2026-03-13T21:47:04.403518"
+  },
+  {
+    "id": "encode_0093",
+    "type": "encoding_bypass",
+    "payload": "%e0%80%ae%e0%80%ae%e0%80%af",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "162.79.235.147",
+    "timestamp": "2026-03-13T21:47:04.403525"
+  },
+  {
+    "id": "encode_0094",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "74.110.73.27",
+    "timestamp": "2026-03-13T21:47:04.403529"
+  },
+  {
+    "id": "encode_0095",
+    "type": "encoding_bypass",
+    "payload": "ﬂag",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "73.167.133.59",
+    "timestamp": "2026-03-13T21:47:04.403534"
+  },
+  {
+    "id": "encode_0096",
+    "type": "encoding_bypass",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "187.139.14.185",
+    "timestamp": "2026-03-13T21:47:04.403541"
+  },
+  {
+    "id": "encode_0097",
+    "type": "encoding_bypass",
+    "payload": "pаssword",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "121.160.146.231",
+    "timestamp": "2026-03-13T21:47:04.403545"
+  },
+  {
+    "id": "encode_0098",
+    "type": "encoding_bypass",
+    "payload": "%2525252e%2525252e%2525252f",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "90.220.47.245",
+    "timestamp": "2026-03-13T21:47:04.403550"
+  },
+  {
+    "id": "encode_0099",
+    "type": "encoding_bypass",
+    "payload": "ﬂag",
+    "severity": "medium",
+    "expected_detection": true,
+    "source_ip": "139.95.181.49",
+    "timestamp": "2026-03-13T21:47:04.403554"
+  }
+]

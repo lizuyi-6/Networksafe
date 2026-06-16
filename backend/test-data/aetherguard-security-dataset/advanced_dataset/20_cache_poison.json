@@ -1,0 +1,452 @@
+[
+  {
+    "id": "cache_0000",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "192.43.97.71",
+    "timestamp": "2026-03-13T21:47:04.402822"
+  },
+  {
+    "id": "cache_0001",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "21.93.0.225",
+    "timestamp": "2026-03-13T21:47:04.402827"
+  },
+  {
+    "id": "cache_0002",
+    "type": "cache_poison",
+    "payload": "X-Host: evil.com\r\nX-Forwarded-Server: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "182.39.200.179",
+    "timestamp": "2026-03-13T21:47:04.402832"
+  },
+  {
+    "id": "cache_0003",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Host: evil.com\r\nX-Forwarded-Scheme: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "149.196.55.212",
+    "timestamp": "2026-03-13T21:47:04.402837"
+  },
+  {
+    "id": "cache_0004",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Proto: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "154.1.38.57",
+    "timestamp": "2026-03-13T21:47:04.402842"
+  },
+  {
+    "id": "cache_0005",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Proto: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.100.245.193",
+    "timestamp": "2026-03-13T21:47:04.402847"
+  },
+  {
+    "id": "cache_0006",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "152.207.12.206",
+    "timestamp": "2026-03-13T21:47:04.402854"
+  },
+  {
+    "id": "cache_0007",
+    "type": "cache_poison",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "22.107.64.196",
+    "timestamp": "2026-03-13T21:47:04.402860"
+  },
+  {
+    "id": "cache_0008",
+    "type": "cache_poison",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "55.41.167.178",
+    "timestamp": "2026-03-13T21:47:04.402865"
+  },
+  {
+    "id": "cache_0009",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Proto: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.133.7.26",
+    "timestamp": "2026-03-13T21:47:04.402869"
+  },
+  {
+    "id": "cache_0010",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "46.54.81.82",
+    "timestamp": "2026-03-13T21:47:04.402876"
+  },
+  {
+    "id": "cache_0011",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "147.81.41.196",
+    "timestamp": "2026-03-13T21:47:04.402881"
+  },
+  {
+    "id": "cache_0012",
+    "type": "cache_poison",
+    "payload": "/private/data.js",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "216.130.127.81",
+    "timestamp": "2026-03-13T21:47:04.402885"
+  },
+  {
+    "id": "cache_0013",
+    "type": "cache_poison",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "75.43.93.48",
+    "timestamp": "2026-03-13T21:47:04.402890"
+  },
+  {
+    "id": "cache_0014",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "4.85.108.210",
+    "timestamp": "2026-03-13T21:47:04.402895"
+  },
+  {
+    "id": "cache_0015",
+    "type": "cache_poison",
+    "payload": "X-Host: evil.com\r\nX-Forwarded-Server: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "146.217.7.108",
+    "timestamp": "2026-03-13T21:47:04.402899"
+  },
+  {
+    "id": "cache_0016",
+    "type": "cache_poison",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "164.177.242.106",
+    "timestamp": "2026-03-13T21:47:04.402904"
+  },
+  {
+    "id": "cache_0017",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Host: evil.com\r\nX-Forwarded-Scheme: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "70.237.23.101",
+    "timestamp": "2026-03-13T21:47:04.402908"
+  },
+  {
+    "id": "cache_0018",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "24.150.37.56",
+    "timestamp": "2026-03-13T21:47:04.402915"
+  },
+  {
+    "id": "cache_0019",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "40.155.174.159",
+    "timestamp": "2026-03-13T21:47:04.402920"
+  },
+  {
+    "id": "cache_0020",
+    "type": "cache_poison",
+    "payload": "/private/data.js",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "72.255.63.2",
+    "timestamp": "2026-03-13T21:47:04.402925"
+  },
+  {
+    "id": "cache_0021",
+    "type": "cache_poison",
+    "payload": "/private/data.js",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "115.18.38.112",
+    "timestamp": "2026-03-13T21:47:04.402929"
+  },
+  {
+    "id": "cache_0022",
+    "type": "cache_poison",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "21.236.229.106",
+    "timestamp": "2026-03-13T21:47:04.402934"
+  },
+  {
+    "id": "cache_0023",
+    "type": "cache_poison",
+    "payload": "/api/users.json",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "53.125.223.143",
+    "timestamp": "2026-03-13T21:47:04.402938"
+  },
+  {
+    "id": "cache_0024",
+    "type": "cache_poison",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "94.114.30.72",
+    "timestamp": "2026-03-13T21:47:04.402942"
+  },
+  {
+    "id": "cache_0025",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Host: evil.com\r\nX-Forwarded-Scheme: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "164.146.115.93",
+    "timestamp": "2026-03-13T21:47:04.402947"
+  },
+  {
+    "id": "cache_0026",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "153.150.172.31",
+    "timestamp": "2026-03-13T21:47:04.402957"
+  },
+  {
+    "id": "cache_0027",
+    "type": "cache_poison",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "223.214.209.132",
+    "timestamp": "2026-03-13T21:47:04.402961"
+  },
+  {
+    "id": "cache_0028",
+    "type": "cache_poison",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "204.162.85.59",
+    "timestamp": "2026-03-13T21:47:04.402966"
+  },
+  {
+    "id": "cache_0029",
+    "type": "cache_poison",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.255.125.253",
+    "timestamp": "2026-03-13T21:47:04.402971"
+  },
+  {
+    "id": "cache_0030",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Proto: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "48.124.242.94",
+    "timestamp": "2026-03-13T21:47:04.402976"
+  },
+  {
+    "id": "cache_0031",
+    "type": "cache_poison",
+    "payload": "X-Host: evil.com\r\nX-Forwarded-Server: evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "136.65.251.138",
+    "timestamp": "2026-03-13T21:47:04.402981"
+  },
+  {
+    "id": "cache_0032",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "61.60.119.16",
+    "timestamp": "2026-03-13T21:47:04.402985"
+  },
+  {
+    "id": "cache_0033",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "123.57.52.177",
+    "timestamp": "2026-03-13T21:47:04.402990"
+  },
+  {
+    "id": "cache_0034",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "189.42.80.218",
+    "timestamp": "2026-03-13T21:47:04.402995"
+  },
+  {
+    "id": "cache_0035",
+    "type": "cache_poison",
+    "payload": "/admin/settings.css",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "160.231.237.88",
+    "timestamp": "2026-03-13T21:47:04.402999"
+  },
+  {
+    "id": "cache_0036",
+    "type": "cache_poison",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "121.5.203.226",
+    "timestamp": "2026-03-13T21:47:04.403004"
+  },
+  {
+    "id": "cache_0037",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Proto: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "57.237.171.142",
+    "timestamp": "2026-03-13T21:47:04.403008"
+  },
+  {
+    "id": "cache_0038",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Proto: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "128.129.93.204",
+    "timestamp": "2026-03-13T21:47:04.403013"
+  },
+  {
+    "id": "cache_0039",
+    "type": "cache_poison",
+    "payload": "X-Rewrite-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "6.227.45.228",
+    "timestamp": "2026-03-13T21:47:04.403020"
+  },
+  {
+    "id": "cache_0040",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.183.230.61",
+    "timestamp": "2026-03-13T21:47:04.403024"
+  },
+  {
+    "id": "cache_0041",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "156.153.18.16",
+    "timestamp": "2026-03-13T21:47:04.403029"
+  },
+  {
+    "id": "cache_0042",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Proto: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "7.58.71.13",
+    "timestamp": "2026-03-13T21:47:04.403034"
+  },
+  {
+    "id": "cache_0043",
+    "type": "cache_poison",
+    "payload": "X-Forwarded-Proto: http",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "215.60.147.217",
+    "timestamp": "2026-03-13T21:47:04.403038"
+  },
+  {
+    "id": "cache_0044",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "184.144.251.208",
+    "timestamp": "2026-03-13T21:47:04.403042"
+  },
+  {
+    "id": "cache_0045",
+    "type": "cache_poison",
+    "payload": "/api/users.json",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "200.161.122.212",
+    "timestamp": "2026-03-13T21:47:04.403049"
+  },
+  {
+    "id": "cache_0046",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "83.132.137.59",
+    "timestamp": "2026-03-13T21:47:04.403054"
+  },
+  {
+    "id": "cache_0047",
+    "type": "cache_poison",
+    "payload": "Origin: http://evil.com",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "185.243.202.145",
+    "timestamp": "2026-03-13T21:47:04.403059"
+  },
+  {
+    "id": "cache_0048",
+    "type": "cache_poison",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "180.56.40.185",
+    "timestamp": "2026-03-13T21:47:04.403063"
+  },
+  {
+    "id": "cache_0049",
+    "type": "cache_poison",
+    "payload": "X-Original-URL: /admin",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "201.251.56.213",
+    "timestamp": "2026-03-13T21:47:04.403068"
+  }
+]

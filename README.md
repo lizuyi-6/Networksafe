@@ -1,171 +1,183 @@
-﻿# AetherGuard - 智能服务器安全防御平台
+# AetherGuard
 
-## Validated Status (2026-03-08)
+AetherGuard is a server security platform with a control plane, distributed host agents, a Rust fastpath sidecar, and hardware-backed safety gates for dangerous operations.
 
-This repository now includes a stronger capability baseline, but the validated status is mixed rather than "all strong claims passed".
+Product claim: **AetherGuard 完全最后防线**. Engineering definition: Final Defense Mode is a detectable, auditable, fail-closed mode where the control plane can request and audit dangerous actions, but the final grant is enforced by hardware. The root-resistant variant moves that final network release decision outside the protected server into the self-developed **AetherGuard Root-Resistant Gateway Appliance** — an industrial multi-port gateway appliance integrating an independent security authorization controller, Secure Element / TPM, and hardware-level fail-closed interlock.
 
-- Verified in the current workspace: Docker runtime, object-lock audit archive, notification outbox with retry tracking, persistent AI endpoint/config routing, `caddy` / `docker_compose` / `binary_agent` / `k8s_daemonset` bundle generation, Rust fastpath sidecar wiring, and backend `/ws/device` plus `/ws/status` simulation compatibility with OTA plus physical-confirmation smoke flow for `esp32-smoke`.
-- Current benchmark evidence in this workspace does not justify the historical strongest claims. Latest smoke benchmark recorded about `1329.79 QPS`, `p95 21ms`, `agent CPU 6.22%`, `agent memory 99.64MB`, and no local Ollama latency because `127.0.0.1:11434` was unavailable.
-- Physical ESP32 board flashing, external Linux binary install/rollback, and `100,000+ QPS` / `<10ms local AI` / `<2% CPU` / `<50MB` remain unvalidated here.
-
-See [`docs/reports/validated-capability-status-2026-03-08.md`](docs/reports/validated-capability-status-2026-03-08.md) for the current evidence-backed status.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status: Production](https://img.shields.io/badge/Status-Production-green.svg)]()
-[![Docker: Supported](https://img.shields.io/badge/Docker-Supported-blue.svg)]()
-
-🚀 **下一代基于 Agent 的分布式服务器安全防御系统**
-
-AetherGuard 彻底重构了传统防火墙架构，采用创新的 **"中心化控制 + 分布式执行 + 硬件级部署"** 三位一体防御体系。它不仅是一个软件，更是一套结合了 AI 威胁分析与 ESP32 硬件运维的完整服务器安全解决方案。
-
----
-
-## 📸 功能概览
-
-### 1. 全局态势感知 (Dashboard)
-系统的核心指挥中心。实时可视化展示全球攻击源分布、当前流量压力、以及各服务器节点的健康状态。
-- **流量分析**: 区分正常用户访问与恶意扫描流量。
-- **实时日志**: 毫秒级展示被拦截的入侵请求详情。
-![Dashboard](docs/assets/dashboard.png)
-
-### 2. 分布式 Agent 集群 (Agents)
-集中管理成百上千个分布式 Agent 节点。
-- **主机层防御**: 每一个 Agent 直接驻留于业务服务器，提供操作系统级别的防护。
-- **状态监控**: 实时监控服务器 CPU/内存资源占用与运行健康度。
-![Agents](docs/assets/agents.png)
-
-### 3. 受保护站点列表 (Sites)
-管理所有接入防护的域名与业务服务。
-- **策略下发**: 针对不同业务线配置独立的防护策略与 AI 敏感度。
-- **一键开关**: 紧急情况下可快速开启/关闭特定服务器的防护模块。
-![Sites](docs/assets/sites.png)
-
-### 4. 自动化部署向导 (Deployment)
-傻瓜式生成安装脚本，支持多种 Linux 发行版环境。
-- **多系统支持**: 自动生成适用于 Ubuntu, CentOS, Debian 的 Agent 安装指令。
-- **一键复制**: 运维人员只需复制一行命令即可完成服务器接入。
-![Deployment](docs/assets/deploy.png)
-
-### 5. ESP32 串口部署器 (Devices)
-管理 **ESP32 Serial Deployer Prototype** 的本地部署流程与操作记录。
-- **面包板跳线原型**: 采用 ESP32 开发板、面包板、杜邦线和外接模块快速搭建本地部署器。
-- **本地串口部署**: 运维人员将外部 CP2102 切到部署模式后接入目标服务器，离线完成环境检测、备份与安装确认。
-- **物理安全确认**: 通过 OLED、三键、RGB 和蜂鸣器完成高风险操作的本地确认，避免误触发卸载。
-![Devices](docs/assets/devices.png)
-
-### 6. 主动漏洞扫描 (Monitoring)
-内置轻量级漏洞扫描引擎 (基于 Nuclei)。
-- **被动监测**: 持续分析过往流量中的异常模式，发现潜在后门。
-- **主动探测**: 定期扫描目标服务器的常见 CVE 漏洞与配置缺陷。
-![Scanner](docs/assets/scanner.png)
-
-### 7. 审计与历史记录 (History)
-详细记录每一次安全事件与 AI 自动修复操作。
-- **取证溯源**: 保留完整的攻击链路数据供后续审计合规。
-- **自动化报告**: 记录 AI 自动封禁 IP 或修补系统漏洞的操作流水。
-![History](docs/assets/history.png)
-
-### 8. 实时告警中心 (Alerts)
-聚合来自所有节点的安全告警。
-- **分级告警**: 区分 INFO, WARN, CRTICIAL 不同级别的系统威胁。
-- **多渠道推送**: 支持邮件、Slack、Webhook 推送至运维群。
-![Alerts](docs/assets/alerts.png)
-
-### 9. AI 智能配置 (Settings)
-灵活配置 AI 大脑的思考模式。
-- **多模型切换**: 支持拖拽排序，自由组合 Ollama 本地模型与云端 GPT-4/DeepSeek 模型。
-- **隐私优先**: 可设置仅在本地服务器处理敏感数据，保障数据主权。
-![Settings](docs/assets/settings.png)
-
-### 10. 超级管理员控制台 (Admin)
-系统级配置与多租户管理。
-- **密钥管理**: 为不同运维团队颁发独立的访问密钥。
-- **性能配额**: 这里可以限制每个租户的系统资源调用频率。
-![Admin](docs/assets/admin.png)
-
----
-
-## 🏗️ 核心架构
-
-AetherGuard 采用 **TypeScript (Node.js) + React** 全栈架构，结合 ESP32 硬件层，追求开发效率与安全性的平衡。
-
-```mermaid
-graph TD
-    User[外部流量] --> ELB[负载均衡]
-    
-    subgraph "业务集群"
-        App1[Linux Server A] -- 驻留 --> Agent1[Agent Core Node.js]
-        App2[Linux Server B] -- 驻留 --> Agent2[Agent Core Node.js]
-    end
-    
-    subgraph "硬件运维层"
-        ESP32[ESP32 Serial Deployer Prototype] -- "USB-TTL Short Cable" --> App1
-        ESP32_2[ESP32 Serial Deployer Prototype] -- "USB-TTL Short Cable" --> App2
-    end
-    
-    subgraph "控制平面 Control Plane"
-        Hub[Platform Core] --> DB[(SQLite/PostgreSQL)]
-        Hub --> Redis[(Redis Cache)]
-        Hub --> AI[AI Analysis Engine]
-    end
-    
-    Agent1 -- WebSocket --> Hub
-    Agent2 -- WebSocket --> Hub
-```
-
----
-
-## 🛠️ ESP32 部署工具 (Deployment Dongle)
-
-AetherGuard 当前的硬件基线是 **面包板跳线版 ESP32 串口部署器原型**，而不是量产外壳或双桥单板。
-
-### 硬件清单 (BOM)
-- **主控**: ESP32 开发板
-- **显示**: 0.96寸 OLED (SSD1306, 4-pin I2C)
-- **交互**: 3x 按键 (OK/Next/Back), 1x 共阴 RGB 模块, 1x 低电平触发有源蜂鸣器模块
-- **连接**: 1x 外部 CP2102, 杜邦线, 面包板
-- **按键引脚**: `GPIO18 / GPIO19 / GPIO23` (避开启动配置脚)
-- **发布构建**: `esp32/platformio.ini` 默认环境为 `serial_deployer_release`
-
-### 使用流程
-1. **搭线**: OLED 接 `GPIO21/22`，按键接 `GPIO18/19/23` 到 `GND`，RGB 接 `GPIO25/26/27`，蜂鸣器模块接 `GPIO14`。
-2. **烧录/调试**: 优先使用 ESP32 开发板自带 USB；若板载 USB 不可用，再把外部 CP2102 临时接到 `GPIO3/1/GND`。
-3. **切到部署模式**: 断电后把外部 CP2102 改接到 `GPIO16/17/GND`，只接 `TXD/RXD/GND`，不要把 `VCC/5V/3V3` 反灌给 ESP32。
-4. **运行**: ESP32 发送 `AG:REQ:*` allow-list 请求，预装在 Linux 主机上的 serial helper 返回 `AG:BEGIN/*`、`AG:STEP/*`、`AG:OK/*`、`AG:ERR/*` 并执行部署。
-
-> 当前硬件基线是 **单颗外部 CP2102 的 USB-TTL 串口部署器原型**。同一时刻只能处于“烧录/调试”或“部署”其中一种模式，切换前必须断电或拔 USB。
->
-> 仓库中的 `/ws/device`、OTA、physical-confirmation smoke 仅用于后端模拟链路与后续联网设备实验，不代表当前 ESP32 固件已支持远程网关模式。
-
----
-
-## 🚀 快速启动 (Docker)
+## Quick Start
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/your-repo/aetherguard.git
+# Docker, all services
+docker-compose up -d --build
 
-# 2. 启动服务
-docker compose up -d --build
-
-# 3. 访问控制台
-# 前端: http://localhost:8080
-# 后端: http://localhost:3005
-
-### 🔐 默认账号
-- **用户名**: admin (或 admin@aetherguard.com)
-- **密码**: admin123
-- **说明**: 首次启动时会自动创建该管理员账号。请登录后立即修改密码。
+# Frontend: http://localhost:8080
+# Backend:  http://localhost:3005
+# Development credentials: admin / admin123
 ```
 
----
+Local development:
 
-## 📄 许可证
+```bash
+cd backend
+npm install
+npm run dev
 
-本项目采用 [MIT 许可证](LICENSE) 开源。
+cd frontend
+npm install
+npm run dev
+```
 
-> 杭州视界奇点科技有限公司 · Aether Studio 出品
+Release-relevant checks:
 
+```bash
+cd backend && npm run typecheck
+cd frontend && npm run typecheck
+node scripts/guards/check-route-db-access.mjs
+node scripts/guards/check-no-direct-api-fetch.mjs
+```
 
+Focused Final Defense checks:
 
-CI/CD 配置时间: 2026-03-15 10:36:41
+```bash
+cd backend
+npx jest src/__tests__/services/final-defense.service.test.ts
+npx jest src/__tests__/services/hardware-authorization.service.test.ts
+npx jest src/__tests__/services/deployment-run.service.test.ts
+npx jest src/__tests__/services/device-control.service.test.ts
+npx jest src/__tests__/companion/serial-device-companion.test.ts
+```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    User["Operator / API Client"] --> Frontend["React Console"]
+    Frontend --> Backend["Node.js Control Plane"]
+    Backend --> DB["SQLite / PostgreSQL"]
+    Backend --> Redis["Redis"]
+    Backend --> Agent["Host Agent"]
+    Agent --> Fastpath["Rust Fastpath"]
+    Agent --> Companion["Local Companion"]
+    Companion --> Board["Gateway Appliance Controller"]
+    Board --> Interlock["Hardware Fail-closed Interlock"]
+    Agent --> ServerNIC["Server Network Ports"]
+    ServerNIC --> NIGW["Gateway Appliance (L2 Bridge)"]
+    NIGW --> Network["LAN / WAN"]
+    NIGW --> Mgmt["Independent MGMT / Cellular"]
+```
+
+Primary components:
+
+| Path | Purpose |
+| --- | --- |
+| `backend/` | Express API, Socket.IO gateways, services, repositories, companion logic, tests |
+| `frontend/` | React console, typed API client, pages, demo data |
+| `rust-fastpath/` | High-throughput traffic processing sidecar |
+| `e2e/` | Playwright release and UI verification |
+| `deployment/` | Production helper scripts and deploy bundles |
+| `hardware/aetherguard-network-isolation-gateway-v1/` | AetherGuard Root-Resistant Gateway Appliance hardware baseline (active primary hardware) |
+| `hardware/factory/aetherguard-serial-deployer-ev1/` | Archived — legacy serial deployer factory package |
+| `hardware/kicad/esp32-serial-deployer-pcb/` | Archived — KiCad source for the legacy serial deployer PCB |
+| `docs/` | Architecture, product, readiness, and archive index documents |
+
+## Final Defense Mode
+
+Final Defense Mode treats the backend, database, and API request as potentially untrusted for high-risk actions.
+
+High-risk actions such as `host_remove`, `wipe_data`, `factory_reset`, `recovery_flash`, and `critical_config_change` must satisfy all of the following:
+
+- The local companion reads a signed local policy from `/etc/aetherguard/final-defense-policy.json`.
+- The requested action, target, script path, release window, and interlock target are in the local policy allow-list.
+- The hardware grant signature verifies against the provisioned hardware public key.
+- The grant message includes and matches `policyDigest`, `challenge`, `breakerTarget`, `interlockAction`, payload hash, expiry, and monotonic counter.
+- Interlock feedback is healthy and matches the expected state.
+
+Interlock states are normalized as:
+
+```ts
+type InterlockState = 'isolated' | 'armed' | 'released' | 'fault' | 'disabled' | 'unknown';
+```
+
+Legacy `asserted` is mapped to `isolated`.
+
+Failure behavior is closed by default: signature failure, counter rollback, policy digest mismatch, expired grant, missing external DC, feedback mismatch, board disconnect, or heartbeat loss keeps or returns the management link to `isolated`.
+
+The external product statement is conditional. “完全最后防线” is only valid when the management link is actually wired through the interlock, Final Defense Mode is enabled, the local policy is signed, the secure element is provisioned, and companion plus board health are confirmed. v1 controls the low-voltage network or management link only; it does not switch mains power or directly cut production host power.
+
+## Root-Resistant Final Defense
+
+Root-resistant mode assumes the protected server OS, local agent, local companion, scripts, and host logs may be fully controlled by an attacker with root. In that threat model, the trusted boundary is no longer the host companion. It is the **AetherGuard Root-Resistant Gateway Appliance**:
+
+- Dual 1GbE RJ45 transparent L2 bridge with `SERVER`, `LAN/WAN`, and independent `MGMT` ports; cellular is an optional management path.
+- The `SERVER` to `LAN/WAN` bridge is fail-closed. `isolated` blocks protected server forwarding while preserving the gateway's own management channel.
+- The appliance holds signed policy state, hardware identity, firmware measurement, and secure-element backed release grants outside the protected server.
+- Strong “root-resistant active” status requires the appliance present, policy digest match, firmware digest plus attestation, secure element, both data ports linked, independent management path, and a healthy `armed` or `isolated` bridge state.
+- The claim only covers network links physically cabled through the appliance. Out-of-band BMC, Wi-Fi, spare NICs, local console, direct storage damage, and host disk encryption by root are outside v1 protection unless separately controlled.
+
+## Hardware Shapes
+
+| Hardware | Status | Role |
+| --- | --- | --- |
+| AetherGuard Root-Resistant Gateway Appliance | **Active — primary hardware** | Self-developed industrial multi-port gateway appliance: dual 1GbE transparent L2 bridge (SERVER, LAN/WAN) + independent MGMT port, STM32H5/U5 security authorization controller, Secure Element / TPM (OPTIGA Trust M / SE050 / ATECC608B), hardware-level fail-closed interlock with feedback verification. Controls protected server network release outside the host. |
+| Legacy ESP32 serial deployment dongle | Archived (superseded) | Former physical confirmation device for local deployment/removal over USB-TTL serial. Replaced by Gateway Appliance. |
+| Legacy Control Board v1 | Archived (superseded) | Former ESP32-S3 + ATECC608C control board for hardware grants. Replaced by Gateway Appliance Controller. |
+
+Gateway Appliance controller protocol is newline-delimited JSON:
+
+- Companion to controller: `hello`, `command physical_confirmation_required`, `command interlock_assert`, `command interlock_release`
+- Controller to companion: `state`, `heartbeat`, `alert`, `physical_confirmation_ack`, `interlock_result`
+
+The legacy ESP32 deployment dongle protocol (`AG:REQ:*` allow-list) is archived and no longer active.
+
+## API Surface
+
+Final Defense API routes:
+
+- `GET /api/final-defense/status`
+- `POST /api/final-defense/policies`
+- `POST /api/final-defense/actions`
+- `POST /api/final-defense/gateways/status/report`
+- `POST /api/final-defense/gateways/actions`
+
+Route handlers must use `sendSuccess()` and `sendError()` from `backend/src/core/http/api-response.ts`. Route files under `backend/src/api/routes/` must not access the database directly; use services or repositories.
+
+Frontend API calls must go through `frontend/src/services/api.ts`.
+
+## Validation Status
+
+Validated in the current production baseline:
+
+- Backend and frontend typechecks for the Final Defense implementation.
+- Route DB access guard.
+- Frontend direct API fetch guard.
+- Focused Jest coverage for hardware grant signing, Final Defense service policy checks, companion denial of untrusted scripts, deployment run, and device control paths.
+- UI status model for root-resistant “Final Defense Active” only when an external AetherGuard Root-Resistant Gateway Appliance reports secure element, matching policy digest, firmware attestation, linked data ports, independent management path, and healthy bridge state.
+
+Not yet validated in this workspace:
+
+- Real Gateway Appliance hardware-in-the-loop release and feedback test.
+- Secure element provisioning ceremony on physical OPTIGA Trust M / ATECC608B.
+- Real Gateway Appliance hardware-in-the-loop bridge isolation and release test.
+- Secure boot / measured boot chain for physical gateway firmware.
+
+## Production Rules
+
+- Do not call `ensureSchema()` in request handlers or WebSocket processors. Prepare service-owned tables in `backend/src/bootstrap/persistence.ts`.
+- `DB_MODE=postgres` is required for production.
+- `DISABLE_REDIS` must not be enabled in production.
+- Do not commit generated outputs, KiCad scratch trees, router exchange files, probe reports, or generated PPTX decks.
+- Demo and pitch-only frontend routes such as `/aetherguard-deck` are disabled by default. Set `VITE_ENABLE_PITCH_ROUTES=true` only for local demo builds.
+
+## Artifact Archive
+
+Large generated artifacts and hardware experiment intermediates were moved out of the repository to:
+
+```text
+X:\repos\Networksafe-archive\20260513-pre-cleanup
+```
+
+See `docs/artifact-archive-index.md` for the archive categories and file-level manifest location.
+
+## License
+
+MIT. See `LICENSE`.

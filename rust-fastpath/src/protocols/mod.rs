@@ -1,3 +1,4 @@
+pub mod generated;
 pub mod http;
 pub mod mqtt;
 pub mod registry;

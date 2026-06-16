@@ -3,7 +3,7 @@
  * Distributed tracing context and attack narrative construction
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../../utils/uuid';
 import {
     TraceContext,
     AttackNarrative,

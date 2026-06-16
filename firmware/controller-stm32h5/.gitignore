@@ -1,0 +1,23 @@
+# STM32 build outputs
+build/
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+
+# STM32CubeMX generated files (regenerated from .ioc)
+# NOTE: Keep Core/Inc and Core/Src application files (hand-written).
+# CubeMX-generated HAL files go in Drivers/ and are regenerated.
+Drivers/STM32H5xx_HAL_Driver/
+Drivers/CMSIS/
+Middlewares/
+USB_DEVICE/
+
+# IDE files
+.ioc.bak
+*.uvguix.*
+*.uvoptx
+DebugConfig/
+ReleaseConfig/
+.settings/

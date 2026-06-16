@@ -9,6 +9,7 @@ use crate::{
 };
 
 use super::{
+    generated::canbus::CanbusModuleProtocolPlugin,
     http::HttpProtocolPlugin,
     mqtt::MqttProtocolPlugin,
     ros2_cyberrt::Ros2CyberRtProtocolPlugin,
@@ -20,6 +21,7 @@ static PLUGINS: Lazy<Vec<Box<dyn ProtocolPlugin>>> = Lazy::new(|| {
         Box::new(HttpProtocolPlugin),
         Box::new(MqttProtocolPlugin),
         Box::new(Ros2CyberRtProtocolPlugin),
+        Box::new(CanbusModuleProtocolPlugin),
     ]
 });
 
@@ -58,6 +60,7 @@ pub fn evaluate_protocol_request(input: &ProtocolEvaluateRequest) -> Result<Prot
     Ok(response)
 }
 
+#[allow(dead_code)]
 pub fn evaluate_http_compat_request(input: &HttpTrafficEvaluateRequest) -> Result<HttpTrafficEvaluateResponse, String> {
     let metadata = HashMap::from([
         ("method".to_string(), json!(input.method)),

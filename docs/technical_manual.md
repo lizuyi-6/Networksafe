@@ -57,12 +57,14 @@ graph TD
 ![Agents](assets/agents.png)
 
 ### 2.3 硬件化部署与运维 (Devices)
-**功能**: 纳管 ESP32 部署工具 (Deployment Dongle)。
+**功能**: 纳管 Gateway Appliance 安全网关设备（STM32H5/U5 + Secure Element + fail-closed interlock）。
 **实现原理**:
-- 当前 v1 硬件为 **面包板跳线版 USB-TTL 串口部署器原型**，ESP32 通过本地串口与目标主机交互。
-- 原型使用 1 个外部 CP2102，在“烧录/调试”与“部署”两种模式之间切换，不做双桥并存设计。
-- 固件在本地屏幕和按键上完成环境检测、备份、安装确认和高风险卸载确认。
+- 当前生产硬件为 **AetherGuard Root-Resistant Gateway Appliance**，基于 STM32H5/U5 MCU，通过本地串口与目标主机交互，集成 Secure Element 实现硬件级信任根。
+- 设备在本地屏幕和按键上完成环境检测、备份、安装确认和高风险卸载确认。
 - 后端 `/ws/device`、OTA 与 physical confirmation 仍保留为实验性云设备网关与模拟链路，不属于当前串口部署器固件能力。
+
+> **归档说明**：v1 阶段的 ESP32 面包板跳线版 USB-TTL 串口部署器原型已归档为 legacy 硬件，仅供历史参考。原 ESP32 原型使用 1 个外部 CP2102，在烧录/调试与部署两种模式之间切换，不做双桥并存设计。
+
 - **Screenshot Ref**: `devices.png`
 
 ![Devices](assets/devices.png)
@@ -107,16 +109,15 @@ graph TD
 
 ---
 
-## 3. 硬件接口协议 (ESP32)
+## 3. 硬件接口协议 (Gateway Appliance)
 
 ### 通信协议
 - **物理层**: USB-TTL (Serial 115200 8N1)
 - **部署模式**: 本地串口部署器，Linux 主机通过预装 serial helper 执行安装/卸载，Windows 仅做环境识别。
-- **原型切换规则**:
-  - 烧录/调试优先使用开发板板载 USB
-  - 若板载 USB 不可用，外部 CP2102 可临时接 `GPIO3/1/GND` 进行烧录
-  - 进入部署模式前必须断电，再把外部 CP2102 改接到 `GPIO16/17/GND`
-  - 部署模式下 CP2102 不连接 `VCC/5V/3V3`
+- **Gateway Appliance 规则**:
+  - 生产硬件基于 STM32H5/U5 MCU + Secure Element，采用 fail-closed interlock 设计
+  - 设备固件在本地屏幕和按键上完成环境检测、备份、安装确认和高风险卸载确认
+  - 进入部署模式前设备自动完成安全握手与信任链验证
 - **协议层**: allow-list 请求 + 显式串口标记协议
   - 请求阶段: `AG:REQ:ENV`, `AG:REQ:BACKUP`, `AG:REQ:INSTALL`, `AG:REQ:REMOVE`
   - 运行阶段: `AG:BEGIN:<action>`, `AG:STEP:<action>:RUN`
@@ -125,7 +126,10 @@ graph TD
   - 安装结果: `AG:OK:INSTALL`, `AG:ERR:INSTALL:<code>`
   - 卸载结果: `AG:OK:REMOVE`, `AG:ERR:REMOVE:<code>`
 
-### 引脚基线
+> **归档：ESP32 原型引脚基线（Legacy）**
+> 以下为 v1 ESP32 原型的引脚配置，仅供参考。生产环境请使用 Gateway Appliance。
+
+### 引脚基线（ESP32 原型归档）
 - **按键**: `BTN_OK=GPIO18`, `BTN_NEXT=GPIO19`, `BTN_BACK=GPIO23`
 - **I2C OLED**: `SDA=GPIO21`, `SCL=GPIO22`
 - **目标串口**: `RX=GPIO16`, `TX=GPIO17`
@@ -134,7 +138,7 @@ graph TD
 ### 安全机制
 - **Boot-safe GPIO**: 三颗按键已避开启动配置脚，防止按键按住上电时误入异常启动模式。
 - **Single-Bridge Rule**: 外部 CP2102 同一时刻只能承担一种角色，任何重新接线必须在断电状态下完成。
-- **Hard Confirmation**: 涉及 `rm -rf` 等指令时，ESP32 固件逻辑强制拦截，等待本地 `BTN_OK (GPIO18)` 按下确认后才放行。
+- **Hard Confirmation**: 涉及 `rm -rf` 等指令时，Gateway Appliance 固件逻辑强制拦截，等待本地物理按键确认后才放行。
 
 ---
 **Technical Department @ AetherGuard**

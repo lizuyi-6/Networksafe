@@ -1,0 +1,162 @@
+rules:
+  - id: aetherguard-no-sha1
+    message: >-
+      SHA-1 is forbidden in AetherGuard. SHA-1 is cryptographically broken and
+      was previously removed from this codebase (see commit history). Use
+      `createHash('sha256')` (or stronger) from the `crypto` module instead.
+    severity: ERROR
+    languages: [typescript, javascript]
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"
+      confidence: HIGH
+    pattern-either:
+      - pattern: createHash('sha1')
+      - pattern: createHash("sha1")
+      - pattern: createHmac('sha1', ...)
+      - pattern: createHmac("sha1", ...)
+
+  - id: aetherguard-no-math-random-in-id-path
+    message: >-
+      `Math.random()` must not be used to generate IDs, tokens, nonces, or any
+      security-sensitive identifier. It is not cryptographically secure. Use
+      `crypto.randomUUID()`, `crypto.randomBytes(...)`, or the `nanoid` package
+      instead.
+    severity: ERROR
+    languages: [typescript, javascript]
+    metadata:
+      category: security
+      cwe: "CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)"
+      confidence: MEDIUM
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $ID = Math.random()
+          - pattern: |
+              $ID = `$PREFIX-${Math.random()}$REST`
+          - pattern: |
+              $ID = `$PREFIX${Math.random()}$REST`
+      - metavariable-regex:
+          metavariable: $ID
+          regex: '(?i)(id|token|nonce|secret|session|api[-_]?key|request[-_]?id|correlation)'
+
+  - id: aetherguard-no-bare-console-log
+    message: >-
+      `console.log`/`console.warn`/`console.error` bypass the structured
+      logger and audit pipeline. Use the shared logger (e.g. `logger.info`,
+      `logger.warn`, `logger.error` from `core/logger`) so that logs flow into
+      the audit archive and are correlatable by request id.
+    severity: WARNING
+    languages: [typescript, javascript]
+    metadata:
+      category: best-practice
+      confidence: HIGH
+    pattern-either:
+      - pattern: console.log(...)
+      - pattern: console.warn(...)
+      - pattern: console.error(...)
+      - pattern: console.info(...)
+      - pattern: console.debug(...)
+
+  - id: aetherguard-json-parse-without-try-catch
+    message: >-
+      `JSON.parse` can throw on malformed input and has been a source of
+      500s in the AetherGuard API. Wrap in try/catch (or use a safe helper
+      such as `safeJsonParse`) and translate failures into a typed error
+      via `sendError`.
+    severity: WARNING
+    languages: [typescript, javascript]
+    metadata:
+      category: reliability
+      cwe: "CWE-754: Improper Check for Unusual or Exceptional Conditions"
+      confidence: MEDIUM
+    pattern: |
+      $RET = JSON.parse(...)
+
+  - id: aetherguard-no-eval-or-new-function
+    message: >-
+      `eval(...)` and `new Function(...)` execute arbitrary code and have
+      no place in the control plane. They enable injection and RCE. Use
+      static dispatch (e.g. a command map) or `vm2`/`isolated-vm` with a
+      reviewed policy if dynamic evaluation is truly required.
+    severity: ERROR
+    languages: [typescript, javascript]
+    metadata:
+      category: security
+      cwe: "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code"
+      confidence: HIGH
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+
+  - id: aetherguard-process-env-without-env-validator
+    message: >-
+      `process.env.<NAME>` is being read directly. Per the runtime env
+      bootstrap (`bootstrap/runtime-env.ts`), all environment variables
+      must flow through the `EnvValidator` so that missing/invalid
+      secrets fail fast at startup and audit logs record the resolution.
+      Add the variable to `EnvValidator` and read it from the validated
+      config object instead.
+    severity: WARNING
+    languages: [typescript, javascript]
+    metadata:
+      category: best-practice
+      confidence: MEDIUM
+    paths:
+      exclude:
+        - "backend/src/config/**"
+        - "backend/src/bootstrap/**"
+        - "backend/src/__tests__/**"
+        - "backend/jest.setup.js"
+    pattern-either:
+      - pattern: process.env.JWT_SECRET
+      - pattern: process.env.AUDIT_LOG_SECRET
+      - pattern: process.env.DEVICE_COMMAND_SECRET
+      - pattern: process.env.ENCRYPTION_KEY
+      - pattern: process.env.ENCRYPTION_SALT
+      - pattern: process.env.REDIS_PASSWORD
+      - pattern: process.env.REDIS_URL
+      - pattern: process.env.DATABASE_URL
+      - pattern: process.env.AGENT_SERVER
+      - pattern: process.env.AGENT_ID
+      - pattern: process.env.AGENT_API_KEY
+      - pattern: process.env.AGENT_SECRET_KEY
+
+  - id: aetherguard-route-no-sql-literal
+    message: >-
+      SQL string literals appear in `api/routes/**`. Per ADR
+      `2026-03-12-module-boundaries-...`, route handlers MUST NOT touch
+      the database directly. Move the query into a repository under
+      `backend/src/modules/<module>/` and call it from the service layer.
+    severity: ERROR
+    languages: [typescript]
+    metadata:
+      category: architecture
+      cwe: "CWE-89: Improper Neutralization of Special Elements used in an SQL Command"
+      confidence: MEDIUM
+    paths:
+      include:
+        - "backend/src/api/routes/**"
+    pattern-either:
+      - pattern: |
+          $DB.prepare(` ... $SQL ... `)
+      - pattern: |
+          $DB.prepare(" ... $SQL ... ")
+      - pattern: |
+          $DB.prepare(' ... $SQL ... ')
+      - pattern: |
+          "SELECT ... $FROM ..."
+      - pattern: |
+          'SELECT ... $FROM ...'
+      - pattern: |
+          "INSERT INTO ... "
+      - pattern: |
+          'INSERT INTO ... '
+      - pattern: |
+          "UPDATE $TBL SET ..."
+      - pattern: |
+          'UPDATE $TBL SET ...'
+      - pattern: |
+          "DELETE FROM ..."
+      - pattern: |
+          'DELETE FROM ...'

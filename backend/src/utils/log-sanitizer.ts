@@ -45,6 +45,11 @@ const SENSITIVE_PATTERNS = [
 
 /**
  * Fields to completely remove (redact with asterisks)
+ *
+ * NOTE: `jwt` is intentionally NOT in this list. JWTs are redacted via
+ * the SENSITIVE_PATTERNS regex (`eyJ...`), which preserves a first4…last4
+ * partial reveal for operator diagnostics. Putting `jwt` here would fully
+ * REDACT it and break that partial-reveal contract.
  */
 const REDACT_FIELDS = [
   'password',
@@ -69,15 +74,22 @@ const REDACT_FIELDS = [
 
 /**
  * Sanitize an object by removing sensitive fields
+ *
+ * SECURITY (R7 V7.5 Issue 1 regression): primitive leaf values that are
+ * strings are run through `sanitizeString` so JWTs / API keys / IPs that
+ * appear inside non-redacted fields (or as raw error messages) are
+ * pattern-redacted. Previously only structural field-name redaction ran,
+ * which meant a `jwt` field whose key wasn't in REDACT_FIELDS, or any
+ * string containing a token, leaked verbatim into operator logs.
  */
 export function sanitizeObject(obj: any, maxDepth: number = 10): any {
   if (obj === null || obj === undefined) {
     return obj;
   }
 
-  // Primitive types
+  // Primitive leaf — sanitize strings so embedded secrets are redacted.
   if (typeof obj !== 'object') {
-    return obj;
+    return typeof obj === 'string' ? sanitizeString(obj) : obj;
   }
 
   // Arrays
@@ -104,7 +116,7 @@ export function sanitizeObject(obj: any, maxDepth: number = 10): any {
     } else if (maxDepth > 0 && typeof value === 'object') {
       sanitized[key] = sanitizeObject(value, maxDepth - 1);
     } else {
-      sanitized[key] = value;
+      sanitized[key] = typeof value === 'string' ? sanitizeString(value) : value;
     }
   }
 
@@ -284,10 +296,69 @@ function partiallyRedactSecret(value: unknown): string {
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
 }
 
+// =====================================================================
+// D31: strip log-injection control characters (\n \r \t \0) from any
+// string value, recursing into objects and arrays. Used by the
+// audit logger to sanitize user-supplied `details` before persistence.
+// =====================================================================
+
+const CONTROL_CHAR_PATTERN = /[\n\r\t\0]/g;
+
+/**
+ * Strip control characters from a single string. Returns the original
+ * value untouched if it is not a string.
+ */
+export function stripControlChars(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  return value.replace(CONTROL_CHAR_PATTERN, ' ');
+}
+
+/**
+ * Recursively walk an object/array and strip control characters from
+ * every string value. Combines control-char stripping with
+ * sensitive-pattern redaction (the audit-log details redteam test
+ * expects `password: 'secret\ntoken'` to become `***REDACTED***`).
+ */
+export function recursiveSanitize(value: any, depth: number = 10): any {
+  if (value === null || value === undefined) return value;
+  if (depth <= 0) return value;
+  if (Array.isArray(value)) {
+    const out: any[] = new Array(value.length);
+    for (let i = 0; i < value.length; i++) {
+      out[i] = recursiveSanitize(value[i], depth - 1);
+    }
+    return out;
+  }
+  if (typeof value === 'object') {
+    const out: Record<string, any> = {};
+    for (const key of Object.keys(value)) {
+      const lowerKey = key.toLowerCase();
+      // Sensitive field → redact (full redaction for non-API keys,
+      // partial for api_key/apiKey so support staff can still tell
+      // which key was leaked).
+      const isApiKey = lowerKey.includes('apikey') || lowerKey.includes('api_key');
+      const isSensitive = REDACT_FIELDS.some(s => lowerKey.includes(s.toLowerCase()));
+      if (isSensitive) {
+        out[key] = isApiKey
+          ? partiallyRedactSecret(value[key])
+          : '***REDACTED***';
+      } else {
+        out[key] = recursiveSanitize(value[key], depth - 1);
+      }
+    }
+    return out;
+  }
+  if (typeof value === 'string') return stripControlChars(value);
+  // numbers, booleans, bigints, symbols — pass through
+  return value;
+}
+
 export default {
   sanitize,
   sanitizeObject,
   sanitizeString,
   sanitizeError,
+  recursiveSanitize,
+  stripControlChars,
   ...Sanitizers,
 };

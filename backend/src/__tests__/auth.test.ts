@@ -24,6 +24,10 @@ describe('Authentication API', () => {
         // Initialize test database
         fs.rmSync(testDataDir, { recursive: true, force: true });
         process.env.DATA_DIR = testDataDir;
+        // The login route refuses password login unless the runtime is
+        // in lab mode OR ALLOW_BREAK_GLASS_PASSWORD_LOGIN is set. Tests
+        // exercise the password path directly, so opt in here.
+        process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = 'true';
         await initDatabase();
     });
 

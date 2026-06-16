@@ -3,7 +3,7 @@
  * Adds tables for agent registration and audit logging
  */
 
-import { getDatabase } from '../database';
+import { getDatabase } from '../../config/database';
 
 export function up(): void {
   const db = getDatabase();

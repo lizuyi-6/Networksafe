@@ -60,7 +60,7 @@
   "hardware": {
     "chipset": "Chipset Architecture v4.2",
     "title": "Hardware Root of Trust",
-    "description": "At the core of AetherGuard lies the ESP32-S3 secure element. This dedicated microcontroller handles cryptographic operations and key storage, completely isolated from the main application processor.",
+    "description": "At the core of AetherGuard lies the Gateway Appliance security controller and its Secure Element. This dedicated security controller handles cryptographic operations and key storage, completely isolated from the main application server.",
     "aes": "Hardware Acceleration",
     "rsa": "Secure Boot Validation",
     "trng": "True Random Number Generator",
@@ -228,7 +228,15 @@
     "severity_level": "Severity {level}",
     "waiting_chart": "Waiting for chart container...",
     "unavailable": "Dashboard unavailable",
-    "never_used_short": "never"
+    "never_used_short": "never",
+    "time_7d": "7d",
+    "threat_intel": "Threat Intelligence",
+    "security_ops": "Security Operations",
+    "system_resources": "System Resources",
+    "tab_origins": "Attack Origins",
+    "tab_vectors": "Attack Vectors",
+    "tab_rules": "Active Rules",
+    "tab_actions": "Recent Actions"
   },
   "pricing": {
     "title": "Select Your Variant",
@@ -335,7 +343,8 @@
     "learning": "Learning Results & Patterns",
     "no_patterns": "No Composite Patterns",
     "no_patterns_desc": "Patterns appear after case files accumulate.",
-    "no_degradation": "No degraded subsystems detected."
+    "no_degradation": "No degraded subsystems detected.",
+    "loadError": "Failed to load agent data. Please try again."
   },
   "trafficInterceptor": {
     "title": "Traffic Interceptor",
@@ -382,7 +391,8 @@
     "passed": "Passed Detection",
     "deep_inspected": "Deep Inspection Done",
     "throughput": "Total Throughput",
-    "no_active": "No active connections to display"
+    "no_active": "No active connections to display",
+    "loadError": "Failed to load traffic data. Please try again."
   },
   "attackSimulator": {
     "title": "Attack Simulator",
@@ -930,11 +940,11 @@
     "invalid_profile": "Invalid profile configuration",
     "failed_to_generate_bundle": "Failed to generate deployment bundle",
     "device_gateway_unavailable": "Device gateway unavailable",
-    "no_esp32_connected": "No ESP32 device connected",
-    "esp32_status_failed": "Failed to query ESP32 status",
-    "esp32_not_found": "ESP32 device not found",
+    "no_esp32_connected": "No hardware device connected",
+    "esp32_status_failed": "Failed to query hardware device status",
+    "esp32_not_found": "Hardware device not found",
     "deploy_command_sent": "Deploy command sent",
-    "esp32_execute_failed": "Failed to execute ESP32 deploy",
+    "esp32_execute_failed": "Failed to execute hardware deploy",
     "cannot_modify_self_role": "You cannot change your own role",
     "cannot_suspend_self": "You cannot suspend your own account",
     "cannot_remove_last_admin": "Cannot remove the last admin role",
@@ -1090,7 +1100,7 @@
     "back": "Back",
     "next": "Next",
     "download": "Download",
-    "subtitle": "Deploy ESP32 gateway"
+    "subtitle": "Deploy hardware gateway"
   },
   "admin": {
     "clients_summary": "Clients Summary",
@@ -1121,7 +1131,11 @@
     "title": "System Settings",
     "subtitle": "Manage models, AI endpoints, and system configuration.",
     "other": "Other Settings",
-    "otherSubtitle": "Reserved system-level configuration notes."
+    "otherSubtitle": "Session & system preferences",
+    "liveRefreshDesc": "When enabled, dashboards and monitors auto-poll for the latest data",
+    "logout": "Log Out",
+    "logoutDesc": "Clear current session and return to login page",
+    "loggingOut": "Logging out..."
   },
   "sites": {
     "title": "Title",
@@ -1217,6 +1231,8 @@
     "resolve": "Resolve",
     "suppress": "Suppress",
     "actionFailed": "Action failed",
+    "select": "Select this alert",
+    "deselect": "Deselect this alert",
     "title": "System Alerts"
   },
   "traffic": {
@@ -1360,24 +1376,24 @@
     "history_subtitle": "View historical deployment records",
     "no_saved_configs": "No saved configurations",
     "step4_write": "Write to Device",
-    "step4_title": "Write Deployment Bundle to ESP32",
-    "step4_desc": "Connect an ESP32 dongle via USB serial to write the deployment bundle for offline deployment to air-gapped servers.",
-    "serial_connected": "ESP32 Connected",
-    "serial_disconnected": "ESP32 Not Connected",
+    "step4_title": "Write Deployment Bundle to Hardware Device",
+    "step4_desc": "Connect a hardware deployer via USB serial to write the deployment bundle for offline deployment to air-gapped servers.",
+    "serial_connected": "Hardware Device Connected",
+    "serial_disconnected": "Hardware Device Not Connected",
     "serial_not_supported": "Web Serial API not supported in this browser (use Chrome or Edge)",
-    "connect_serial": "Connect ESP32 via USB",
+    "connect_serial": "Connect hardware device via USB",
     "disconnect_serial": "Disconnect",
-    "write_to_device": "Write Bundle to ESP32",
+    "write_to_device": "Write Bundle to Hardware Device",
     "writing_bundle": "Writing...",
-    "serial_connect_failed": "Failed to connect to ESP32",
-    "write_failed": "Failed to write bundle to ESP32",
+    "serial_connect_failed": "Failed to connect to hardware device",
+    "write_failed": "Failed to write bundle to hardware device",
     "phase_generating": "Generating deployment bundle...",
     "phase_initiating": "Initiating transfer...",
-    "phase_transferring": "Transferring data to ESP32...",
+    "phase_transferring": "Transferring data to hardware device...",
     "phase_finalizing": "Finalizing transfer...",
     "phase_complete": "Transfer complete",
     "phase_error": "Transfer failed",
-    "write_success": "Bundle written to ESP32 successfully. Unplug the dongle and connect it to the target server to deploy.",
+    "write_success": "Bundle written to hardware device successfully. Unplug the device and connect it to the target server to deploy.",
     "alternative_download": "Alternative: Download Bundle",
     "alternative_download_desc": "Download the self-extracting bundle file and manually transfer it to the target server.",
     "save_first_hint": "Save the configuration first to enable download.",

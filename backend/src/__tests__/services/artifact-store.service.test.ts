@@ -6,6 +6,8 @@
  * Use a shared object to bridge factory capture → test access.
  */
 
+export {};
+
 // Shared object — set by factories, read by tests
 const mocks = {
   send: null as jest.Mock | null,
