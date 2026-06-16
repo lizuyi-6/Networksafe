@@ -9,6 +9,7 @@
 #include "main.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static char g_tx_buffer[SERIAL_JSON_MAX_LINE];
 

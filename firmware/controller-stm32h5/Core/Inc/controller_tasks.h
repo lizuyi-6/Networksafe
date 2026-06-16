@@ -111,4 +111,10 @@ void controller_set_state(interlock_state_t state);
 /* Alert */
 void controller_send_alert(void);
 
+/* Update current time (called from RTC/1Hz tick) */
+void controller_update_time(uint32_t time_s);
+
+/* Assert isolated (force fail-closed) */
+void controller_assert_isolated(void);
+
 #endif /* CONTROLLER_TASKS_H */
