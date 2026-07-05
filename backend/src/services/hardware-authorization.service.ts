@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
+import { postgresShadowStoreService } from './postgres-shadow-store.service';
 import auditLogger from '../security/audit-logger.service';
 import { classifyCommandRisk, RiskClass } from '../security/command-risk-policy';
 import {
@@ -575,6 +576,25 @@ class HardwareAuthorizationService {
 
     this.updateSession(sessionId, 'confirmed', { ack: payload, grantId, verified: true });
     this.updateIntent(session.intent.actionId, 'hardware_confirmed', { grantId }, grantId);
+
+    // Force a synchronous flush of the anti-replay high-water mark. Under the
+    // sql.js backend the database lives in process memory and is persisted on
+    // a 30s interval; without this flush a crash inside that window rolls
+    // last_monotonic_counter back and re-opens the replay window for any
+    // captured grant that is still inside its expiry.
+    getDatabase().save();
+
+    // Mirror the advanced high-water mark into the Postgres shadow store
+    // immediately (instead of waiting for the periodic resync) so losing the
+    // SQLite base store cannot roll the anti-replay counter back either.
+    // Best-effort by design: upsert() no-ops when Postgres is not configured
+    // and swallows write errors without affecting the grant decision.
+    const gateRow = getDatabase().prepare(
+      'SELECT * FROM hardware_gates WHERE gate_id = ?'
+    ).get(gateId) as Record<string, unknown> | undefined;
+    if (gateRow) {
+      void postgresShadowStoreService.upsert('hardware_gates', gateRow);
+    }
 
     const record = this.getGrant(grantId) as HardwareGrantRecord;
     return {

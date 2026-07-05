@@ -35,7 +35,11 @@ type ShadowTable =
   | 'sec_alerts'
   | 'sec_actions'
   | 'sec_validations'
-  | 'sec_traffic_sessions';
+  | 'sec_traffic_sessions'
+  | 'hardware_gates'
+  | 'command_intents'
+  | 'hardware_confirmation_sessions'
+  | 'hardware_grants';
 
 interface TableConfig {
   conflict: string[];
@@ -740,6 +744,95 @@ const TABLES: Record<ShadowTable, TableConfig> = {
         metadata_json TEXT
       );
       CREATE INDEX IF NOT EXISTS idx_shadow_sec_traffic_sessions_tenant ON sec_traffic_sessions(tenant_id, last_activity DESC);
+    `,
+    backfill: 'upsert'
+  },
+  // Hardware authorization chain (Final Defense). hardware_gates carries the
+  // anti-replay high-water mark (last_monotonic_counter); in DB_MODE=postgres
+  // production these tables must survive loss of the SQLite base store, so
+  // they are part of the shadow snapshot like the audit log.
+  hardware_gates: {
+    conflict: ['gate_id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS hardware_gates (
+        gate_id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        public_key_pem TEXT NOT NULL,
+        algorithm TEXT NOT NULL,
+        status TEXT NOT NULL,
+        last_monotonic_counter BIGINT NOT NULL DEFAULT 0,
+        metadata_json TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        last_seen_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_shadow_hardware_gates_tenant ON hardware_gates(tenant_id, status, updated_at DESC);
+    `,
+    backfill: 'upsert'
+  },
+  command_intents: {
+    conflict: ['action_id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS command_intents (
+        action_id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        scope TEXT NOT NULL,
+        target_id TEXT NOT NULL,
+        command_type TEXT NOT NULL,
+        risk_class TEXT NOT NULL,
+        payload_hash TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        status TEXT NOT NULL,
+        requested_by TEXT NOT NULL,
+        confirmation_session_id TEXT,
+        grant_id TEXT,
+        result_json TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_shadow_command_intents_target ON command_intents(tenant_id, scope, target_id, created_at DESC);
+    `,
+    backfill: 'upsert'
+  },
+  hardware_confirmation_sessions: {
+    conflict: ['session_id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS hardware_confirmation_sessions (
+        session_id TEXT PRIMARY KEY,
+        action_id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        gate_id TEXT NOT NULL,
+        status TEXT NOT NULL,
+        prompt TEXT NOT NULL,
+        summary_json TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        result_json TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_shadow_hardware_sessions_gate ON hardware_confirmation_sessions(gate_id, created_at DESC);
+    `,
+    backfill: 'upsert'
+  },
+  hardware_grants: {
+    conflict: ['grant_id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS hardware_grants (
+        grant_id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        action_id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        gate_id TEXT NOT NULL,
+        payload_hash TEXT NOT NULL,
+        issued_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        monotonic_counter BIGINT NOT NULL,
+        signature TEXT NOT NULL,
+        grant_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_shadow_hardware_grants_gate_counter ON hardware_grants(gate_id, monotonic_counter);
     `,
     backfill: 'upsert'
   }
