@@ -26,6 +26,7 @@ import { notificationDispatcherService } from './services/notification-dispatche
 import { deviceControlService } from './services/device-control.service';
 import { hardwareAuthorizationService } from './services/hardware-authorization.service';
 import { detectionPipelineService } from './services/detection-pipeline.service';
+import { startTrafficSamplingLoop, stopTrafficSamplingLoop } from './services/traffic-history.service';
 import { artifactStoreService } from './services/artifact-store.service';
 import { jobQueueService } from './services/job-queue.service';
 import { dashboardBroadcastService } from './services/dashboard-broadcast.service';
@@ -105,6 +106,7 @@ async function start(): Promise<void> {
 
     notificationDispatcherService.startWorker();
     detectionPipelineService.startAsyncReviewWorker();
+    startTrafficSamplingLoop();
 
     if (runtime.schedulerEnabled) {
       postgresShadowStoreService.startResyncLoop();
@@ -144,6 +146,7 @@ async function shutdown(): Promise<void> {
     scannerTaskService.stopWorker();
     notificationDispatcherService.stopWorker();
     detectionPipelineService.stopAsyncReviewWorker();
+    stopTrafficSamplingLoop();
 
     if (agentGateway) {
       agentGateway.close();

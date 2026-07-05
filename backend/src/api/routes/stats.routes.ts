@@ -11,6 +11,7 @@ import { getDeviceList } from '../../services/device-registry.service';
 import { SystemStats } from '../../utils/system-stats';
 import { securityOperationsService } from '../../services/security-operations.service';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
+import { getTrafficHistory, normalizeRange } from '../../services/traffic-history.service';
 
 const router = Router();
 
@@ -183,6 +184,16 @@ router.get('/', async (req: any, res: any) => {
         const sys = SystemStats.getInstance();
         const detectionPipeline = await detectionPipelineService.getSummary('global').catch(() => null);
 
+        // Real fixed-interval history for the requested window (persisted samples,
+        // bucketed uniformly). Falls back to the in-process ring only while no
+        // persisted samples exist yet (fresh DB / first minutes after boot), so an
+        // existing dashboard never renders empty during warm-up.
+        const range = normalizeRange(req.query.range);
+        const persistedHistory = getTrafficHistory(range);
+        const history = persistedHistory.some((b) => b.requests > 0 || b.blocked > 0)
+            ? persistedHistory
+            : historyBuffer;
+
         sendSuccess(res, {
             totalRequests: total,
             blockedRequests: blocked,
@@ -190,7 +201,8 @@ router.get('/', async (req: any, res: any) => {
             successRate,
             avgProcessingTime,
             currentRPS: 0,
-            history: historyBuffer,
+            range,
+            history,
             attackOrigins: cachedAttackOrigins,
             threats: threatEntries,
             requestsTrend,

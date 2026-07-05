@@ -478,6 +478,19 @@ export class DatabaseManager {
         )
       `);
 
+      // Traffic samples table (fixed-interval time-series for dashboard 1h/24h/7d
+      // traffic charts). Each row is the per-interval request/blocked delta stamped
+      // with an absolute epoch-ms timestamp; the traffic-history service buckets
+      // these into uniform windows and prunes rows past the 7d+margin retention.
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS traffic_samples (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          ts_epoch_ms INTEGER NOT NULL,
+          requests INTEGER NOT NULL DEFAULT 0,
+          blocked INTEGER NOT NULL DEFAULT 0
+        )
+      `);
+
       // Login history table (for tracking user logins)
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS login_history (
@@ -505,6 +518,7 @@ export class DatabaseManager {
       this.db.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_status ON announcements(status)`);
       this.db.exec(`CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history(user_id)`);
       this.db.exec(`CREATE INDEX IF NOT EXISTS idx_login_history_created ON login_history(created_at)`);
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_traffic_samples_ts ON traffic_samples(ts_epoch_ms)`);
 
       logger.info('Database schema initialized');
     } catch (error: any) {

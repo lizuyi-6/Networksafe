@@ -189,11 +189,10 @@ export default function Dashboard() {
             .some((value) => String(value).toLowerCase().includes(query));
     }), [filterQuery, logs]);
 
-    // The backend history buffer is an in-process ring of ~20 samples taken on
-    // /stats hits — it is NOT a fixed-interval 1h/24h/7d series. Rather than
-    // silently show the same ~80s window under three different range labels, we
-    // treat the selector honestly: '1h' shows the live sampling window; the wider
-    // ranges surface a notice that fixed-interval history is not yet available.
+    // The backend now serves a real fixed-interval window for the requested range
+    // (persisted samples bucketed uniformly), keyed off the ?range= param we send
+    // with each fetch. history therefore already spans the selected window — no
+    // client-side slicing needed.
     const filteredHistory = useMemo(() => stats?.history || [], [stats?.history]);
 
     const securitySummary = stats?.securityOperations || defaultSecuritySummary;
@@ -207,7 +206,7 @@ export default function Dashboard() {
             controller?.abort();
             controller = new AbortController();
             try {
-                const statsData = await fetchStats(controller.signal);
+                const statsData = await fetchStats(controller.signal, timeRange);
                 if (!disposed && statsData) {
                     setStats(statsData);
                     setError(null);
@@ -419,11 +418,6 @@ export default function Dashboard() {
                         icon={Activity}
                         iconTone="primary"
                     >
-                        {timeRange !== '1h' && (
-                            <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-                                {t('dashboard.range_notice')}
-                            </div>
-                        )}
                         <TrafficChart
                             data={filteredHistory}
                             loadingText={t('dashboard.waiting_chart')}

@@ -814,13 +814,17 @@ export const switchSystemMode = async (appMode: SystemMode, options?: {
 
 // --- API Functions ---
 
-export const fetchStats = async (signal?: AbortSignal): Promise<DashboardStats | null> => {
+export const fetchStats = async (
+    signal?: AbortSignal,
+    range?: '1h' | '24h' | '7d'
+): Promise<DashboardStats | null> => {
     try {
         if (shouldUseDemoData()) {
             return getDemoStats();
         }
 
-        const response = await fetchWithCredentials(`${API_BASE_URL}/stats`, { signal });
+        const query = range ? `?range=${range}` : '';
+        const response = await fetchWithCredentials(`${API_BASE_URL}/stats${query}`, { signal });
         if (!response.ok) throw new Error(i18n.t('api.fetch_failed'));
         const data = await response.json();
         return data;
