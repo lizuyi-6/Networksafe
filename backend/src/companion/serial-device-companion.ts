@@ -55,6 +55,24 @@ export function findAllowedPolicyAction(policy: LocalPolicy, commandType: string
 }
 
 /**
+ * Strict boolean coercion for board-reported safety flags (feedbackOk,
+ * secureElementPresent, externalPowerPresent). Safe default is false: a value
+ * is true ONLY if it is the boolean true, the number 1, or the string "true"
+ * (case-insensitive). Unlike Boolean(), this treats "false" / "0" / "no" as
+ * false — Boolean("false") is true, a fail-open on a fail-closed path.
+ */
+export function coerceBoardBool(value: unknown): boolean {
+  if (value === true || value === 1) {
+    return true;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === 'true' || normalized === '1';
+  }
+  return false;
+}
+
+/**
  * Board-heartbeat watchdog state. A missing timestamp is 'missing'; an
  * unparseable or too-old timestamp is 'lost' — both must fail closed. An
  * un-guarded `now - NaN > 45s` is false, which would silently keep the bridge
@@ -240,9 +258,9 @@ export class SerialDeviceCompanion {
       this.state = {
         ...this.state,
         interlockState: normalizeInterlockState(frame.interlockState || frame.interlock_state || frame.state),
-        externalPowerPresent: Boolean(frame.externalPowerPresent ?? frame.external_power_present ?? this.state.externalPowerPresent),
-        secureElementPresent: Boolean(frame.secureElementPresent ?? frame.secure_element_present ?? this.state.secureElementPresent),
-        feedbackOk: Boolean(frame.feedbackOk ?? frame.feedback_ok ?? this.state.feedbackOk),
+        externalPowerPresent: coerceBoardBool(frame.externalPowerPresent ?? frame.external_power_present ?? this.state.externalPowerPresent),
+        secureElementPresent: coerceBoardBool(frame.secureElementPresent ?? frame.secure_element_present ?? this.state.secureElementPresent),
+        feedbackOk: coerceBoardBool(frame.feedbackOk ?? frame.feedback_ok ?? this.state.feedbackOk),
         lastHeartbeatAt: new Date().toISOString(),
         lastError: frame.error ? String(frame.error) : undefined
       };

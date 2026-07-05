@@ -1,7 +1,7 @@
 import { createSign, generateKeyPairSync } from 'crypto';
 import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 import { computeFinalDefensePolicyDigest } from '../../security/final-defense-policy';
-import { validateLocalPolicyGrant, boardHeartbeatState, type LocalPolicy } from '../../companion/serial-device-companion';
+import { validateLocalPolicyGrant, boardHeartbeatState, coerceBoardBool, type LocalPolicy } from '../../companion/serial-device-companion';
 
 describe('serial-device-companion local policy enforcement', () => {
   function buildPolicy(): LocalPolicy {
@@ -193,5 +193,23 @@ describe('serial-device-companion local policy enforcement', () => {
     expect(boardHeartbeatState(new Date(now - 60_000).toISOString(), now)).toBe('lost');
     // Unparseable -> lost (must NOT be treated as fresh via now - NaN)
     expect(boardHeartbeatState('not-a-timestamp', now)).toBe('lost');
+  });
+
+  it('coerceBoardBool treats string "false"/"0" as false (no Boolean truthy trap)', () => {
+    // Real booleans (what the firmware emits) round-trip correctly.
+    expect(coerceBoardBool(true)).toBe(true);
+    expect(coerceBoardBool(false)).toBe(false);
+    // The truthy trap: Boolean("false") is true; coerceBoardBool must be false.
+    expect(coerceBoardBool('false')).toBe(false);
+    expect(coerceBoardBool('0')).toBe(false);
+    expect(coerceBoardBool('no')).toBe(false);
+    expect(coerceBoardBool('')).toBe(false);
+    expect(coerceBoardBool(0)).toBe(false);
+    expect(coerceBoardBool(undefined)).toBe(false);
+    expect(coerceBoardBool(null)).toBe(false);
+    // True-ish accepted forms.
+    expect(coerceBoardBool('true')).toBe(true);
+    expect(coerceBoardBool('TRUE')).toBe(true);
+    expect(coerceBoardBool(1)).toBe(true);
   });
 });
