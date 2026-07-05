@@ -1,131 +1,102 @@
 #!/bin/bash
+# =============================================================================
+# AetherGuard One-Click Docker Installation (Linux)
+#
+# Installs Docker (if missing), generates .env with random secrets, then
+# builds and starts the full stack from this repository's docker-compose.yml.
+#
+# Usage:   sudo bash scripts/install.sh
+# Windows/macOS: install Docker Desktop, then run
+#   node scripts/setup.mjs && docker compose up -d --build
+# =============================================================================
 
-# NewSecurity One-Click Installation Script
+set -euo pipefail
 
-set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-echo "🚀 NewSecurity Installation Script"
-echo "=================================="
+echo "==========================================="
+echo "   AetherGuard One-Click Docker Install"
+echo "   repo: ${PROJECT_ROOT}"
+echo "==========================================="
 
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then
-    echo "❌ Please run as root (use sudo)"
+if [[ ! -f "${PROJECT_ROOT}/docker-compose.yml" ]]; then
+    echo "[ERROR] docker-compose.yml not found at ${PROJECT_ROOT} — run this script from a full checkout." >&2
     exit 1
 fi
 
-# Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    echo "📦 Installing Docker..."
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-    systemctl start docker
-    systemctl enable docker
+# ─── 1. Docker Engine ─────────────────────────────────────────────────────────
+if ! command -v docker &>/dev/null; then
+    if [[ "${EUID}" -ne 0 ]]; then
+        echo "[ERROR] Docker is not installed and this script is not running as root." >&2
+        echo "        Re-run with sudo, or install Docker manually: https://docs.docker.com/engine/install/" >&2
+        exit 1
+    fi
+    echo "--> Installing Docker Engine (get.docker.com)..."
+    curl -fsSL https://get.docker.com | sh
+    systemctl enable --now docker
 else
-    echo "✅ Docker already installed"
+    echo "[OK] Docker already installed: $(docker --version)"
 fi
 
-# Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    echo "📦 Installing Docker Compose..."
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
+# Compose v2 plugin is required: docker-compose.yml uses the env_file long
+# syntax (`required: false`), which the legacy docker-compose v1 binary and
+# Compose < v2.24 cannot parse.
+if ! docker compose version &>/dev/null; then
+    echo "[ERROR] 'docker compose' (v2 plugin) is not available." >&2
+    echo "        Install the compose plugin: https://docs.docker.com/compose/install/linux/" >&2
+    echo "        (the legacy 'docker-compose' v1 binary is NOT sufficient for this stack)" >&2
+    exit 1
+fi
+echo "[OK] $(docker compose version | head -1)"
+
+# ─── 2. Environment file with random secrets ────────────────────────────────
+cd "${PROJECT_ROOT}"
+if [[ -f .env ]]; then
+    echo "[OK] .env already exists — keeping it (delete it or run setup-env.sh to regenerate)."
 else
-    echo "✅ Docker Compose already installed"
+    echo "--> Generating .env with random secrets..."
+    bash deployment/production/setup-env.sh
 fi
 
-# Create project directory
-PROJECT_DIR="/opt/newsecurity"
-echo "📁 Creating project directory at $PROJECT_DIR"
-mkdir -p "$PROJECT_DIR"
-cd "$PROJECT_DIR"
+# ─── 3. Build and start ──────────────────────────────────────────────────────
+echo "--> Building and starting all services (this builds backend, frontend and the Rust fastpath)..."
+docker compose up -d --build
 
-# Create necessary directories
-mkdir -p data certs logs redis-data
+# ─── 4. Wait for backend health ──────────────────────────────────────────────
+BACKEND_PORT="$(grep -E '^BACKEND_PORT=' .env | cut -d= -f2 || true)"
+BACKEND_PORT="${BACKEND_PORT:-3005}"
+FRONTEND_PORT="$(grep -E '^FRONTEND_PORT=' .env | cut -d= -f2 || true)"
+FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 
-# Get email for SSL
-read -p "📧 Enter your email for Let's Encrypt SSL certificates: " SSL_EMAIL
-export SSL_EMAIL
-
-# Prompt for HTTP/HTTPS ports
-read -p "🌐 HTTP port (default: 80): " HTTP_PORT
-HTTP_PORT=${HTTP_PORT:-80}
-
-read -p "🔒 HTTPS port (default: 443): " HTTPS_PORT
-HTTPS_PORT=${HTTPS_PORT:-443}
-
-# Create docker-compose.yml
-cat > docker-compose.yml <<EOF
-version: '3.8'
-
-services:
-  newsecurity:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    container_name: newsecurity
-    restart: unless-stopped
-    ports:
-      - "${HTTP_PORT}:80"
-      - "${HTTPS_PORT}:443"
-    volumes:
-      - ./data:/app/data
-      - ./certs:/app/certs
-      - ./logs:/app/logs
-    environment:
-      - NODE_ENV=production
-      - HTTP_PORT=80
-      - HTTPS_PORT=443
-      - REDIS_URL=redis://redis:6379
-      - SSL_EMAIL=${SSL_EMAIL}
-    depends_on:
-      - redis
-    networks:
-      - newsecurity-network
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-
-  redis:
-    image: redis:7-alpine
-    container_name: newsecurity-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    volumes:
-      - ./redis-data:/data
-    networks:
-      - newsecurity-network
-
-networks:
-  newsecurity-network:
-    driver: bridge
-EOF
-
-echo "🐳 Building Docker image..."
-docker-compose build
-
-echo "🚀 Starting NewSecurity..."
-docker-compose up -d
+echo "--> Waiting for backend health at http://localhost:${BACKEND_PORT}/health ..."
+HEALTH_OK=0
+for _ in $(seq 1 60); do
+    if curl -fsS "http://localhost:${BACKEND_PORT}/health" >/dev/null 2>&1; then
+        HEALTH_OK=1
+        break
+    fi
+    sleep 2
+done
 
 echo ""
-echo "✅ Installation Complete!"
-echo "======================="
+if [[ "${HEALTH_OK}" -eq 1 ]]; then
+    echo "==========================================="
+    echo "   Installation Complete — backend healthy"
+    echo "==========================================="
+else
+    echo "==========================================="
+    echo "   Containers started, but the backend did NOT report healthy within 120s."
+    echo "   Inspect logs before using the system:  docker compose logs -f backend"
+    echo "==========================================="
+fi
 echo ""
-echo "🎉 NewSecurity is now running!"
+echo "  Frontend:  http://localhost:${FRONTEND_PORT}"
+echo "  Backend:   http://localhost:${BACKEND_PORT}"
+echo "  Login:     ADMIN_EMAIL / ADMIN_PASSWORD from ${PROJECT_ROOT}/.env"
+echo "             (setup-env.sh printed the generated admin password above)"
 echo ""
-echo "📍 Access points:"
-echo "   - HTTP:  http://localhost:${HTTP_PORT}"
-echo "   - HTTPS: https://localhost:${HTTPS_PORT}"
-echo "   - API:   http://localhost:${HTTP_PORT}/api"
-echo ""
-echo "📊 View logs:"
-echo "   docker-compose logs -f"
-echo ""
-echo "🛑 Stop NewSecurity:"
-echo "   docker-compose down"
-echo ""
-echo "🔄 Restart NewSecurity:"
-echo "   docker-compose restart"
-echo ""
-echo "📖 Documentation: https://github.com/your-org/NewSecurity"
+echo "  Logs:      docker compose logs -f"
+echo "  Stop:      docker compose down"
+echo "  Restart:   docker compose restart"
 echo ""

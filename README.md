@@ -6,18 +6,44 @@ Product claim: **AetherGuard 完全最后防线**. Engineering definition: Final
 
 ## Quick Start
 
+One-shot setup — generates `.env` (Docker) and `backend/.env` (local dev) from the `.env.example` templates with cryptographically random secrets. Existing files are never overwritten:
+
 ```bash
-# Docker, all services
-docker-compose up -d --build
+node scripts/setup.mjs              # add --install to also npm-install backend/ + frontend/
+                                    # bash-only alternative: bash deployment/production/setup-env.sh
+```
+
+Docker, all services (requires Docker Compose v2.24+; the legacy `docker-compose` v1 binary cannot parse this compose file):
+
+```bash
+node scripts/setup.mjs
+docker compose up -d --build
 
 # Frontend: http://localhost:8080
 # Backend:  http://localhost:3005
-# Development credentials: admin / admin123
+# Login: ADMIN_EMAIL / ADMIN_PASSWORD from .env — setup prints the generated password once
 ```
 
-Local development:
+Fresh Linux host, one command (installs Docker if missing, generates `.env`, builds and starts, waits for backend health):
 
 ```bash
+sudo bash scripts/install.sh
+```
+
+Air-gapped customer host (no internet, optionally no preinstalled Docker): build a self-contained bundle on a connected machine, transfer it, install fully offline — details in `deployment/offline/README.md`:
+
+```bash
+node scripts/release/build-offline-bundle.mjs --include-docker    # online build machine
+# transfer dist/offline/aetherguard-offline-<ver>-<arch>.tar.gz to the customer host, then:
+tar -xzf aetherguard-offline-*.tar.gz -C /opt/aetherguard
+cd /opt/aetherguard && sudo bash install.sh
+```
+
+Local development — the backend refuses to start without `JWT_SECRET` and `AUDIT_LOG_SECRET`, so create `backend/.env` first (the setup script writes it with dev-safe defaults, including `DISABLE_REDIS=true`, which is dev-only and rejected in production):
+
+```bash
+node scripts/setup.mjs
+
 cd backend
 npm install
 npm run dev
@@ -26,6 +52,8 @@ cd frontend
 npm install
 npm run dev
 ```
+
+Optional components: `simulator/` and `e2e/` are separate npm packages (`node scripts/setup.mjs --all` installs them too); `rust-fastpath/` needs Rust 1.85 (`cargo build --release`); firmware host-side tests need gcc (`make -f test/Makefile test` from `firmware/controller-stm32h5/`).
 
 Release-relevant checks:
 
