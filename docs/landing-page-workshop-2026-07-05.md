@@ -1,6 +1,10 @@
 # 落地页工作坊 · 2026-07-05
 
-> 目标:为 AetherGuard 官网重构落地页。产出 **4 个完整风格候选 + 1 个对比枢纽页**,全部挂在 `/landing-workshop` 命名空间下;**现行首页 `/`(`frontend/src/pages/Landing.tsx`)零改动**,晋级/回滚均为一行路由替换。
+> 目标:为 AetherGuard 官网重构落地页。产出 **5 个完整风格候选 + 1 个对比枢纽页**,全部挂在 `/landing-workshop` 命名空间下;**现行首页 `/`(`frontend/src/pages/Landing.tsx`)零改动**,晋级/回滚均为一行路由替换。
+>
+> 配图纪律:页面配图全部来自仓库真实产物——控制台走查截图(`docs/screenshots/`)与机箱 OpenSCAD 渲染(`hardware/enclosure/`),复制于 `frontend/src/assets/landing-workshop/`;不使用与产品无关的素材图。
+>
+> 素材发现:现行首页的 hero 图(`frontend/src/assets/hero-visualization.png`)印有 **"ESP32-S5 SECURE"** 字样——该硬件线已于 2026-06-13 全线退役,官网继续使用属事实性过期;改造版(变体 E)已用真实控制台截图与机箱渲染替换。
 
 ## 1. 项目梳理(所有文案的事实底座)
 
@@ -33,11 +37,12 @@
 
 | 变体 | 路由 | 文件 | 风格/受众/赌注 |
 | --- | --- | --- | --- |
-| A 工业信任 | `/landing-workshop/industrial` | `pages/landing-workshop/LandingIndustrial.tsx` | 暗色工程证据流;安全工程师;"把 fail-closed 讲得越具体,信任越深" |
-| B 企业官网 | `/landing-workshop/enterprise` | `pages/landing-workshop/LandingEnterprise.tsx` | 亮色经典企业站(锚点导航/能力矩阵/硬件规格表/三视角话术/FAQ/深色页脚);采购与合规;"像成熟公司是采购最大加分项" |
-| C 终端审计 | `/landing-workshop/terminal` | `pages/landing-workshop/LandingTerminal.tsx` | 等宽终端,开机日志+fail-closed 事件流即内容(reason code 与代码同源:`counter_replay_or_rollback`/`policy_digest_mismatch`/`release_window_expired`/estop latch);SRE/红队;"一段诚实的日志胜过十页文案" |
-| D 品牌叙事 | `/landing-workshop/story` | `pages/landing-workshop/LandingStory.tsx` | 大字滚动章节,灯塔声线(洪流→守望→防线→克制→承诺);路演/媒体;"先记住为什么,功能自然有人问" |
-| 枢纽 | `/landing-workshop` | `pages/landing-workshop/LandingWorkshopHub.tsx` | 四卡对比 + 晋级/回滚说明 |
+| **E 基于现行改造(推荐起点)** | `/landing-workshop/remodel` | `pages/landing-workshop/LandingRemodel.tsx` + `landingRemodelContent.ts` | 完整保留现行页骨架/LandingPrimitives/动效,叙事升级到网关主线,hero 与三处 rail 换真实截图,设备卡配机箱渲染;"过期的是故事,不是骨架" |
+| A 工业信任 | `/landing-workshop/industrial` | `pages/landing-workshop/LandingIndustrial.tsx` | 暗色工程证据流,双栏 hero(大屏截图+机箱渲染)+板卡状态实景;安全工程师;"把 fail-closed 讲得越具体,信任越深" |
+| B 企业官网 | `/landing-workshop/enterprise` | `pages/landing-workshop/LandingEnterprise.tsx` | 亮色经典企业站(锚点导航/浏览器框大屏截图/能力矩阵+截图带/硬件规格表+机箱渲染/三视角话术/FAQ/深色页脚);采购与合规;"像成熟公司是采购最大加分项" |
+| C 终端审计 | `/landing-workshop/terminal` | `pages/landing-workshop/LandingTerminal.tsx` | 等宽终端,开机日志+fail-closed 事件流+CRT 扫描线截图(reason code 与代码同源);SRE/红队;"一段诚实的日志胜过十页文案" |
+| D 品牌叙事 | `/landing-workshop/story` | `pages/landing-workshop/LandingStory.tsx` | 大字滚动章节,灯塔声线(洪流→守望→防线→克制→承诺),控制台辉光实景+"城墙外的那台机器";路演/媒体;"先记住为什么,功能自然有人问" |
+| 枢纽 | `/landing-workshop` | `pages/landing-workshop/LandingWorkshopHub.tsx` | 五卡对比(真实截图缩略)+ 晋级/回滚说明 |
 
 共同约束:双语(zh/en,跟随浏览器语言,可切换);不调用任何后端 API(纯静态,不受 `check-no-direct-api-fetch`/`check-frontend-api-contract` 约束面影响);诚实边界章节每版必有;CTA 统一指向 `/login`。
 

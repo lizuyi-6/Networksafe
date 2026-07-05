@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import Logo from '../../components/Logo';
 import { COMPANY_NAME_CN, COMPANY_NAME_EN } from '../../config/branding';
+import consoleDashboard from '../../assets/landing-workshop/console-dashboard.png';
+import consoleBoardStatus from '../../assets/landing-workshop/console-board-status.png';
+import applianceAssembly from '../../assets/landing-workshop/appliance-assembly.png';
 
 /**
  * Landing workshop · Variant A "Industrial Evidence" (工业信任 · 暗色).
@@ -337,38 +340,57 @@ const LandingIndustrial = () => {
 
             {/* Hero */}
             <motion.section variants={fadeUp} initial="hidden" animate="visible" className="mx-auto w-full max-w-6xl px-6 pb-10 pt-20">
-                <div className="flex items-center gap-2 text-primary">
-                    <ShieldCheck className="h-5 w-5" />
-                    <span className="text-xs font-semibold uppercase tracking-[0.25em]">{c.hero.badge}</span>
+                <div className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
+                    <div>
+                        <div className="flex items-center gap-2 text-primary">
+                            <ShieldCheck className="h-5 w-5" />
+                            <span className="text-xs font-semibold uppercase tracking-[0.25em]">{c.hero.badge}</span>
+                        </div>
+                        <h1 className="mt-6 max-w-4xl text-4xl font-bold leading-tight md:text-5xl">{c.hero.title}</h1>
+                        <p className="mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground">{c.hero.subtitle}</p>
+                        <div className="mt-8 flex flex-wrap items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/login')}
+                                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                            >
+                                {c.hero.primaryCta}
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
+                            <a
+                                href="#chain"
+                                className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary/60"
+                            >
+                                {c.hero.secondaryCta}
+                            </a>
+                        </div>
+                        <div className="mt-8 flex flex-wrap gap-2">
+                            {c.hero.chips.map((chip) => (
+                                <span key={chip} className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
+                                    {chip}
+                                </span>
+                            ))}
+                        </div>
+                        <p className="mt-8 max-w-3xl border-l-2 border-primary/50 pl-4 text-sm leading-relaxed text-muted-foreground">
+                            {c.hero.qualifier}
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <figure className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+                            <img src={consoleDashboard} alt="AetherGuard operations console" className="w-full object-cover object-top" />
+                            <figcaption className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+                                console · {`{`}detect, audit{`}`} — the release decision stays in hardware
+                            </figcaption>
+                        </figure>
+                        <figure className="overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
+                            <img src={applianceAssembly} alt="Gateway appliance enclosure render" className="mx-auto h-[190px] object-contain p-3" />
+                            <figcaption className="border-t border-border/60 bg-card px-4 py-2.5 text-xs text-muted-foreground">
+                                gateway appliance · stack light + E-STOP / CONFIRM + SERVER / LAN-WAN / MGMT (prototype render)
+                            </figcaption>
+                        </figure>
+                    </div>
                 </div>
-                <h1 className="mt-6 max-w-4xl text-4xl font-bold leading-tight md:text-6xl">{c.hero.title}</h1>
-                <p className="mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground">{c.hero.subtitle}</p>
-                <div className="mt-8 flex flex-wrap items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/login')}
-                        className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-                    >
-                        {c.hero.primaryCta}
-                        <ArrowRight className="h-4 w-4" />
-                    </button>
-                    <a
-                        href="#chain"
-                        className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary/60"
-                    >
-                        {c.hero.secondaryCta}
-                    </a>
-                </div>
-                <div className="mt-8 flex flex-wrap gap-2">
-                    {c.hero.chips.map((chip) => (
-                        <span key={chip} className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-                            {chip}
-                        </span>
-                    ))}
-                </div>
-                <p className="mt-8 max-w-3xl border-l-2 border-primary/50 pl-4 text-sm leading-relaxed text-muted-foreground">
-                    {c.hero.qualifier}
-                </p>
             </motion.section>
 
             {/* Threat model */}
@@ -413,6 +435,12 @@ const LandingIndustrial = () => {
                             </div>
                         ))}
                     </div>
+                    <figure className="mt-8 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+                        <img src={consoleBoardStatus} alt="Board status console view" className="w-full object-cover object-top" />
+                        <figcaption className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+                            board status · interlock / counter / grant trail — every decision leaves evidence
+                        </figcaption>
+                    </figure>
                 </Section>
             </div>
 

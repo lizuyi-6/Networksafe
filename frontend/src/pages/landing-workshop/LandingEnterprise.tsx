@@ -18,6 +18,11 @@ import {
     Siren,
     Workflow,
 } from 'lucide-react';
+import consoleDashboard from '../../assets/landing-workshop/console-dashboard.png';
+import consoleTraffic from '../../assets/landing-workshop/console-traffic.png';
+import consoleDevices from '../../assets/landing-workshop/console-devices.png';
+import consoleScanner from '../../assets/landing-workshop/console-scanner.png';
+import applianceAssembly from '../../assets/landing-workshop/appliance-assembly.png';
 
 /**
  * Landing workshop · Variant B "Enterprise Official" (企业官网 · 亮色).
@@ -383,6 +388,26 @@ const LandingEnterprise = () => {
                         ))}
                     </div>
                     <p className="mx-auto mt-4 max-w-2xl text-xs text-slate-400">{c.hero.factNote}</p>
+
+                    {/* Product shot — real console screenshot in a browser frame */}
+                    <div className="relative mx-auto mt-14 max-w-5xl">
+                        <div
+                            aria-hidden
+                            className="pointer-events-none absolute -inset-8 rounded-[40px] opacity-40 blur-3xl"
+                            style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,0.35), transparent)' }}
+                        />
+                        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-2xl">
+                            <div className="flex items-center gap-1.5 border-b border-slate-700/60 bg-slate-800 px-4 py-2.5">
+                                <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                                <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                                <span className="ml-3 rounded-md bg-slate-700/70 px-2 py-0.5 text-[10px] text-slate-300">
+                                    aetherguard · {lang === 'zh' ? '安全控制台' : 'security console'}
+                                </span>
+                            </div>
+                            <img src={consoleDashboard} alt="AetherGuard operations dashboard" className="w-full" />
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -404,6 +429,22 @@ const LandingEnterprise = () => {
                         );
                     })}
                 </div>
+
+                {/* Screenshot strip — the surfaces behind the capability claims */}
+                <div className="mt-12 grid gap-5 md:grid-cols-3">
+                    {[
+                        { src: consoleTraffic, zh: '流量拦截 · 逐会话结论轨迹', en: 'Traffic interceptor · per-session verdicts' },
+                        { src: consoleDevices, zh: '设备管理 · 网关一体机与健康态', en: 'Devices · appliance fleet & health' },
+                        { src: consoleScanner, zh: '漏洞扫描 · 基线体检与修复建议', en: 'Scanner · baseline checks & fixes' },
+                    ].map((shot) => (
+                        <figure key={shot.en} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <img src={shot.src} alt={shot.en} className="h-44 w-full object-cover object-top" />
+                            <figcaption className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">
+                                {lang === 'zh' ? shot.zh : shot.en}
+                            </figcaption>
+                        </figure>
+                    ))}
+                </div>
             </section>
 
             {/* Architecture */}
@@ -412,18 +453,28 @@ const LandingEnterprise = () => {
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">{c.architecture.eyebrow}</p>
                     <h2 className="mt-3 max-w-2xl text-3xl font-bold tracking-tight md:text-4xl">{c.architecture.title}</h2>
                     <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600">{c.architecture.body}</p>
-                    <div className="mt-10 grid gap-5 md:grid-cols-2">
-                        {c.architecture.modules.map((m) => (
-                            <div key={m.tag} className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-6">
-                                <span className="flex h-10 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
-                                    {m.tag}
-                                </span>
-                                <div>
-                                    <h3 className="text-base font-semibold">{m.name}</h3>
-                                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{m.role}</p>
+                    <div className="mt-10 grid items-start gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+                        <div className="grid gap-5 md:grid-cols-2">
+                            {c.architecture.modules.map((m) => (
+                                <div key={m.tag} className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-6">
+                                    <span className="flex h-10 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+                                        {m.tag}
+                                    </span>
+                                    <div>
+                                        <h3 className="text-base font-semibold">{m.name}</h3>
+                                        <p className="mt-1 text-sm leading-relaxed text-slate-600">{m.role}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                        <figure className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <img src={applianceAssembly} alt="Gateway appliance enclosure render" className="w-full object-contain p-6" />
+                            <figcaption className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500">
+                                {lang === 'zh'
+                                    ? 'Gateway Appliance 机箱渲染:顶置三色堆叠灯,面板集成 E-STOP / CONFIRM 与 SERVER / LAN-WAN / MGMT 端口(原型)'
+                                    : 'Gateway Appliance enclosure render: stack light, panel E-STOP / CONFIRM, SERVER / LAN-WAN / MGMT ports (prototype)'}
+                            </figcaption>
+                        </figure>
                     </div>
                     <h3 className="mt-14 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{c.architecture.specTitle}</h3>
                     <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">

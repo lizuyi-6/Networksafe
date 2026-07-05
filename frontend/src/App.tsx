@@ -65,6 +65,7 @@ import AgentDetail from './pages/AgentDetail';
 import AttackRunDetail from './pages/AttackRunDetail';
 import Landing from './pages/Landing';
 import LandingWorkshopHub from './pages/landing-workshop/LandingWorkshopHub';
+import LandingRemodel from './pages/landing-workshop/LandingRemodel';
 import LandingIndustrial from './pages/landing-workshop/LandingIndustrial';
 import LandingEnterprise from './pages/landing-workshop/LandingEnterprise';
 import LandingTerminal from './pages/landing-workshop/LandingTerminal';
@@ -627,6 +628,7 @@ const AnimatedRoutes = () => {
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
                 {/* Landing workshop — official-site landing candidates; production "/" stays on Landing */}
                 <Route path="/landing-workshop" element={<PageWrapper><LandingWorkshopHub /></PageWrapper>} />
+                <Route path="/landing-workshop/remodel" element={<PageWrapper><LandingRemodel /></PageWrapper>} />
                 <Route path="/landing-workshop/industrial" element={<PageWrapper><LandingIndustrial /></PageWrapper>} />
                 <Route path="/landing-workshop/enterprise" element={<PageWrapper><LandingEnterprise /></PageWrapper>} />
                 <Route path="/landing-workshop/terminal" element={<PageWrapper><LandingTerminal /></PageWrapper>} />

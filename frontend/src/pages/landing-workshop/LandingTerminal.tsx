@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import consoleBoardStatus from '../../assets/landing-workshop/console-board-status.png';
 
 /**
  * Landing workshop · Variant C "Terminal Ops" (终端审计风 · 极暗).
@@ -210,6 +211,22 @@ const LandingTerminal = () => {
                         {bootShown >= BOOT_LINES.length && eventsShown < EVENT_LINES.length && (
                             <span className="inline-block h-4 w-2 animate-pulse bg-emerald-400" />
                         )}
+                    </div>
+                </section>
+
+                {/* Board status screenshot, CRT-framed */}
+                <section className="mt-10">
+                    <p className="text-emerald-500">$ agctl ui board-status --screenshot</p>
+                    <div className="relative mt-2 overflow-hidden rounded-md border border-emerald-800/80 bg-black/70 p-2">
+                        <img src={consoleBoardStatus} alt="Board status console view" className="w-full rounded-sm opacity-90" />
+                        <div
+                            aria-hidden
+                            className="pointer-events-none absolute inset-0"
+                            style={{ background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 3px)' }}
+                        />
+                        <p className="px-2 pb-1 pt-2 text-[11px] text-emerald-600">
+                            # real console view — interlock state, counters, and the grant audit trail
+                        </p>
                     </div>
                 </section>
 

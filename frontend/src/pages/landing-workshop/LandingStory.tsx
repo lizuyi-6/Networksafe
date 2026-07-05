@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import consoleDashboard from '../../assets/landing-workshop/console-dashboard.png';
+import applianceAssembly from '../../assets/landing-workshop/appliance-assembly.png';
 
 /**
  * Landing workshop · Variant D "Lighthouse Story" (品牌叙事 · 灯塔).
@@ -213,7 +215,7 @@ const LandingStory = () => {
             </section>
 
             {/* Chapters */}
-            {c.chapters.map((chapter) => (
+            {c.chapters.map((chapter, chapterIndex) => (
                 <motion.section
                     key={chapter.no}
                     variants={fade}
@@ -233,6 +235,37 @@ const LandingStory = () => {
                             </p>
                         ))}
                     </div>
+
+                    {/* 守望 chapter: the console, glowing in the dark */}
+                    {chapterIndex === 1 && (
+                        <figure className="relative mt-12">
+                            <div
+                                aria-hidden
+                                className="pointer-events-none absolute -inset-6 rounded-[32px] opacity-30 blur-2xl"
+                                style={{ background: 'radial-gradient(closest-side, rgba(56,189,248,0.5), transparent)' }}
+                            />
+                            <img
+                                src={consoleDashboard}
+                                alt="AetherGuard operations console"
+                                className="relative w-full rounded-2xl border border-slate-700/70 shadow-2xl"
+                            />
+                            <figcaption className="relative mt-3 text-center text-xs text-slate-500">
+                                {lang === 'zh' ? '守望者的视野——运营控制台实景。' : 'What the watchers see — the operations console, as shipped.'}
+                            </figcaption>
+                        </figure>
+                    )}
+
+                    {/* 防线 chapter: the machine itself */}
+                    {chapterIndex === 2 && (
+                        <figure className="mt-12 overflow-hidden rounded-2xl bg-white shadow-2xl">
+                            <img src={applianceAssembly} alt="Gateway appliance enclosure" className="mx-auto h-[260px] object-contain py-4" />
+                            <figcaption className="border-t border-slate-200 px-4 py-3 text-center text-xs text-slate-500">
+                                {lang === 'zh'
+                                    ? '站在城墙之外的那台机器——网关一体机机箱(原型渲染):三色堆叠灯、E-STOP、CONFIRM。'
+                                    : 'The machine outside the walls — appliance enclosure (prototype render): stack light, E-STOP, CONFIRM.'}
+                            </figcaption>
+                        </figure>
+                    )}
                 </motion.section>
             ))}
 
