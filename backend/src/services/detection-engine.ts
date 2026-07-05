@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import logger from '../utils/logger';
 
 export type DetectionChannel = 'http_api' | 'packet' | 'agent';
 export type DetectionSeverity = 'low' | 'medium' | 'high' | 'critical';
@@ -156,8 +157,40 @@ export function severityToBlockDurationSeconds(severity: DetectionSeverity): num
   }
 }
 
-function compilePattern(pattern: string): RegExp {
-  return new RegExp(pattern, 'i');
+// Compiled-pattern cache. Rule patterns are recompiled on every request
+// otherwise; a Map keyed by the raw pattern amortizes that. A malformed
+// pattern caches `null` so it is not retried and cannot be recompiled hot.
+const compiledPatternCache = new Map<string, RegExp | null>();
+const loggedBadPatterns = new Set<string>();
+
+/**
+ * Compile a rule pattern, returning null (never-match) for a malformed regex
+ * instead of throwing. This isolates the blast radius: a single misconfigured
+ * rule pattern becomes inert (and is logged once) rather than throwing out of
+ * the `.filter()` in evaluateDetectionRules and taking every OTHER rule —
+ * including legitimate block rules — down with it (a fail-open the caller
+ * would otherwise have to absorb). An inert bad rule cannot raise the false
+ * positive rate, so this is safe under the 0%-FPR constraint.
+ */
+function compilePattern(pattern: string): RegExp | null {
+  if (compiledPatternCache.has(pattern)) {
+    return compiledPatternCache.get(pattern) ?? null;
+  }
+  let compiled: RegExp | null;
+  try {
+    compiled = new RegExp(pattern, 'i');
+  } catch (error: any) {
+    compiled = null;
+    if (!loggedBadPatterns.has(pattern)) {
+      loggedBadPatterns.add(pattern);
+      logger.warn('Detection rule pattern is not a valid regex; treating as non-matching', {
+        pattern,
+        error: error?.message
+      });
+    }
+  }
+  compiledPatternCache.set(pattern, compiled);
+  return compiled;
 }
 
 function anyPatternMatches(patterns: string[] | undefined, value: string): boolean {
@@ -167,7 +200,47 @@ function anyPatternMatches(patterns: string[] | undefined, value: string): boole
   if (!value) {
     return false;
   }
-  return patterns.some((pattern) => compilePattern(pattern).test(value));
+  return patterns.some((pattern) => patternMatches(pattern, value));
+}
+
+/** Safe single-pattern test: a malformed pattern (null compile) never matches. */
+function patternMatches(pattern: string, value: string): boolean {
+  const regex = compilePattern(pattern);
+  return regex !== null && regex.test(value);
+}
+
+/**
+ * Return the list of matcher patterns that are NOT valid regexes. Empty array
+ * means every pattern compiles. Used as an input-validation second line of
+ * defense (the runtime already treats a bad pattern as inert) so a rule with a
+ * malformed pattern can be rejected at approve/create time with a clear error
+ * instead of being silently promoted to an enabled-but-inert block rule.
+ */
+export function collectInvalidMatcherPatterns(matcher: DetectionRuleMatcher): string[] {
+  const invalid: string[] = [];
+  const check = (patterns: string[] | undefined) => {
+    for (const pattern of patterns || []) {
+      try {
+        // eslint-disable-next-line no-new
+        new RegExp(pattern, 'i');
+      } catch {
+        invalid.push(pattern);
+      }
+    }
+  };
+  check(matcher.pathPatterns);
+  check(matcher.bodyPatterns);
+  check(matcher.userAgentPatterns);
+  check(matcher.evidencePatterns);
+  check(matcher.sourceIpPatterns);
+  check(matcher.methodPatterns);
+  check(matcher.keywordPatterns);
+  if (matcher.headerPatterns) {
+    for (const patterns of Object.values(matcher.headerPatterns)) {
+      check(patterns);
+    }
+  }
+  return invalid;
 }
 
 function matchesHeaderPatterns(
@@ -1080,16 +1153,16 @@ function buildMatcherFromFragments(request: DetectionRequest, fragments: string[
   ]).join('\n');
   const userAgent = String(request.userAgent || request.headers?.['user-agent'] || '');
 
-  if (path && normalizedFragments.some((fragment) => compilePattern(fragment).test(path))) {
+  if (path && normalizedFragments.some((fragment) => patternMatches(fragment, path))) {
     matcher.pathPatterns = normalizedFragments;
   }
-  if (body && normalizedFragments.some((fragment) => compilePattern(fragment).test(body))) {
+  if (body && normalizedFragments.some((fragment) => patternMatches(fragment, body))) {
     matcher.bodyPatterns = normalizedFragments;
   }
-  if (evidence && normalizedFragments.some((fragment) => compilePattern(fragment).test(evidence))) {
+  if (evidence && normalizedFragments.some((fragment) => patternMatches(fragment, evidence))) {
     matcher.evidencePatterns = normalizedFragments;
   }
-  if (userAgent && normalizedFragments.some((fragment) => compilePattern(fragment).test(userAgent))) {
+  if (userAgent && normalizedFragments.some((fragment) => patternMatches(fragment, userAgent))) {
     matcher.userAgentPatterns = normalizedFragments;
   }
 

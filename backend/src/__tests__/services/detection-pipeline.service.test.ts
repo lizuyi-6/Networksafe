@@ -385,5 +385,29 @@ describe('DetectionPipelineService', () => {
       });
       expect(Array.isArray(events)).toBe(true);
     });
+
+    it('surfaces aiHeuristicDegraded from the persisted AI decision (degradation transparency)', async () => {
+      mockAnalyzer.analyze = jest.fn().mockResolvedValue(
+        makeAiResult({
+          verdict: 'suspicious',
+          confidence: 0.7,
+          reasoning: 'heuristic fallback verdict',
+          rawDecision: {
+            verdict: 'monitor',
+            heuristicDegraded: true,
+            heuristicFallbackCount: 3
+          }
+        })
+      );
+
+      const request = buildRequest({ path: '/api/search', query: 'q=1' });
+      const decision = await detectionPipelineService.evaluateRequest(request);
+      expect(decision.escalatedToAI).toBe(true);
+
+      const events = await detectionPipelineService.listDetectionEvents('tenant-test-pipeline', { limit: 50 });
+      const event = events.find((item) => item.requestId === request.requestId);
+      expect(event).toBeDefined();
+      expect(event!.aiHeuristicDegraded).toBe(true);
+    });
   });
 });

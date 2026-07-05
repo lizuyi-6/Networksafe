@@ -1533,6 +1533,7 @@
     "no_events_desc": "Events are recorded when rules match, AI review is triggered, or candidates are generated.",
     "risk_score": "risk {value}",
     "ai_escalated": "AI escalated",
+    "heuristic_degraded": "heuristic fallback (no model)",
     "rules_only": "Rules only",
     "source": "Source",
     "approval_note_prompt": "Approval note (optional)",

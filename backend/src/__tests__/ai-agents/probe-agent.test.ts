@@ -76,6 +76,20 @@ beforeAll(() => {
         isDemoMode: mockIsDemoMode,
     }));
 
+    // getHealthStatus() reads real host metrics via os.totalmem()/os.freemem()/
+    // os.loadavg(); under parallel Jest shards host memory can exceed the 90%
+    // threshold and flip systemHealth to 'degraded', making the 'healthy'
+    // assertions flaky. Pin the metrics to a deterministic healthy state.
+    jest.doMock('os', () => {
+        const actual = jest.requireActual('os');
+        return {
+            ...actual,
+            totalmem: () => 16 * 1024 * 1024 * 1024,
+            freemem: () => 8 * 1024 * 1024 * 1024,
+            loadavg: () => [0.5, 0.5, 0.5],
+        };
+    });
+
     jest.doMock('../../utils/logger', () => ({
         __esModule: true,
         default: mockLoggerInstance,

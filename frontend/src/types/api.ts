@@ -401,6 +401,8 @@ export interface DetectionEventRecord {
     aiConfidence?: number | null;
     aiRouteMode?: string | null;
     aiModel?: string | null;
+    /** True when the AI verdict came entirely from heuristic fallbacks (no model call). */
+    aiHeuristicDegraded?: boolean;
     attackFamily: DetectionAttackFamily;
     candidateId?: string | null;
     decisionSource: string;

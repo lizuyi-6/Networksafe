@@ -1508,6 +1508,7 @@
     "no_events_desc": "当规则匹配、AI 审核触发或候选生成时，事件将被记录。",
     "risk_score": "风险分 {value}",
     "ai_escalated": "AI 已上报",
+    "heuristic_degraded": "启发式降级（未经模型）",
     "rules_only": "仅规则",
     "source": "来源",
     "approval_note_prompt": "批准备注（可选）",

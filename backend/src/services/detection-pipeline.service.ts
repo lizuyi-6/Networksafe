@@ -27,7 +27,8 @@ import {
   DetectionVerdict,
   evaluateDetectionRules,
   inferAttackFamily,
-  severityToBlockDurationSeconds
+  severityToBlockDurationSeconds,
+  collectInvalidMatcherPatterns
 } from './detection-engine';
 
 type CandidateStatus = 'pending' | 'approved' | 'rejected';
@@ -179,6 +180,8 @@ export interface DetectionEventRecord {
   aiConfidence?: number | null;
   aiRouteMode?: string | null;
   aiModel?: string | null;
+  /** True when the AI verdict came entirely from heuristic fallbacks (no model call). */
+  aiHeuristicDegraded?: boolean;
   attackFamily: DetectionAttackFamily;
   candidateId?: string | null;
   decisionSource: string;
@@ -776,6 +779,18 @@ class DetectionPipelineService {
     const candidate = await this.getRuleCandidateById(tenantId, candidateId);
     if (!candidate) {
       return null;
+    }
+
+    // Second line of defense (the runtime already treats a bad pattern as
+    // inert): refuse to promote a candidate whose matcher contains a malformed
+    // regex into an enabled block rule, so the operator gets a clear error
+    // instead of a silently non-functional rule.
+    const invalidPatterns = collectInvalidMatcherPatterns(candidate.matcher);
+    if (invalidPatterns.length > 0) {
+      const error = new Error('backend.rule_candidate_invalid_regex') as Error & { code?: string; invalidPatterns?: string[] };
+      error.code = 'backend.rule_candidate_invalid_regex';
+      error.invalidPatterns = invalidPatterns;
+      throw error;
     }
 
     const now = new Date().toISOString();
@@ -2271,6 +2286,7 @@ class DetectionPipelineService {
       aiConfidence: row.ai_confidence === null || row.ai_confidence === undefined ? null : Number(row.ai_confidence),
       aiRouteMode: row.ai_route_mode ? String(row.ai_route_mode) : null,
       aiModel: row.ai_model ? String(row.ai_model) : null,
+      aiHeuristicDegraded: responseSnapshot.finalAi?.heuristicDegraded === true,
       attackFamily: normalizeAttackFamily(row.attack_family),
       candidateId: row.candidate_id ? String(row.candidate_id) : null,
       decisionSource: String(row.decision_source || ''),

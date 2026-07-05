@@ -255,6 +255,14 @@ router.post('/candidates/:id/approve', async (req: AuthenticatedRequest, res) =>
       }
     });
   } catch (error: any) {
+    if (error?.code === 'backend.rule_candidate_invalid_regex') {
+      return sendError(res, 422, {
+        code: 'backend.rule_candidate_invalid_regex',
+        message: 'backend.rule_candidate_invalid_regex'
+      }, {
+        meta: { invalidPatterns: error.invalidPatterns || [] }
+      });
+    }
     sendError(res, 500, {
       code: 'backend.failed_to_approve_rule_candidate',
       message: error?.message || 'backend.failed_to_approve_rule_candidate'

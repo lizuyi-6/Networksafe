@@ -389,7 +389,8 @@ Provide your analysis in JSON format:
                         ? { safe: 0.22, suspicious: 0.56, malicious: 0.22 }
                         : { safe: 0.74, suspicious: 0.18, malicious: 0.08 },
             attackFamily: signals.attackFamily,
-            modelTier: 'cloud',
+            heuristicFallback: true,
+            modelTier: undefined,
             routeMode: 'unknown',
             analysisLatencyMs: Date.now() - startedAt
         });

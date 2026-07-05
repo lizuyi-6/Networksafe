@@ -143,6 +143,12 @@ export interface AnalysisResult {
     routeMode?: AIRoutingMode | 'unknown';
     modelLatencyMs?: number;
     analysisLatencyMs?: number;
+    /**
+     * True when this result came from the agent's heuristic fallback path
+     * (model unreachable / heuristicOnly), NOT from a model call. Downstream
+     * consumers must not present a fallback verdict as AI analysis.
+     */
+    heuristicFallback?: boolean;
 }
 
 export interface Evidence {
@@ -479,6 +485,13 @@ export interface SecurityDecision {
     routeMode?: AIRoutingMode | 'unknown';
     stageLatencies?: StageLatencyBreakdown;
     debateSession?: DebateSession;
+    /**
+     * Degradation transparency: how many contributing agent results came from
+     * heuristic fallbacks instead of model calls. When every contributing
+     * result is a fallback, the decision must not be presented as AI-verified.
+     */
+    heuristicFallbackCount?: number;
+    heuristicDegraded?: boolean;
 }
 
 export interface LayerTrace {

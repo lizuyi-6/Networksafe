@@ -120,7 +120,11 @@ export async function initializeAgentSystem(): Promise<void> {
                     debateTriggered: Boolean(decision.debateSession),
                     experimentMode: decision.experimentMode,
                     analysisPurpose: options?.analysisPurpose || 'primary',
-                    forceDebate: options?.forceDebate || false
+                    forceDebate: options?.forceDebate || false,
+                    // Degradation transparency: a verdict reached purely by
+                    // heuristic fallbacks must not be presented as AI-verified.
+                    heuristicDegraded: decision.heuristicDegraded === true,
+                    heuristicFallbackCount: decision.heuristicFallbackCount || 0
                 }
             };
         }

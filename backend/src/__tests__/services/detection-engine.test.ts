@@ -1,7 +1,9 @@
 import {
   buildSeedDetectionRules,
   evaluateDetectionRules,
-  type DetectionRequest
+  collectInvalidMatcherPatterns,
+  type DetectionRequest,
+  type DetectionRuleRecord
 } from '../../services/detection-engine';
 
 function buildRequest(overrides: Partial<DetectionRequest>): DetectionRequest {
@@ -52,6 +54,56 @@ describe('detection-engine', () => {
 
     expect(result.ruleVerdict).toBe('block');
     expect(result.matchedRuleIds).toContain('seed-sqli-auth-bypass');
+  });
+
+  it('a malformed regex in one rule does not disable the other rules (blast-radius isolation)', () => {
+    // Regression: compilePattern used to `new RegExp(pattern)` unguarded, so a
+    // single misconfigured rule threw out of evaluateDetectionRules' .filter()
+    // and took every OTHER rule — including legitimate block rules — with it.
+    const brokenRule: DetectionRuleRecord = {
+      ruleId: 'broken-regex-rule',
+      tenantId: 'tenant-a',
+      name: 'Broken pattern',
+      scope: 'all',
+      action: 'block',
+      priority: 999,
+      severity: 'critical',
+      matcher: { pathPatterns: ['('] }, // unbalanced group -> invalid regex
+      source: 'dynamic',
+      enabled: true,
+      version: 1
+    };
+
+    const request = buildRequest({
+      path: '/api/rules?q=union%20select%201',
+      decodedPath: '/api/rules?q=union select 1',
+      query: 'q=union%20select%201',
+      decodedQuery: 'q=union select 1',
+      parsedQuery: 'q=union select 1\nunion select 1',
+      rawPayload: '/api/rules?q=union%20select%201\nq=union select 1\nunion select 1'
+    });
+
+    // The broken rule is first in the list; evaluation must not throw and the
+    // real SQLi seed rule must still fire.
+    const rules = [brokenRule, ...buildSeedDetectionRules()];
+    expect(() => evaluateDetectionRules(request, rules)).not.toThrow();
+
+    const result = evaluateDetectionRules(request, rules);
+    expect(result.ruleVerdict).toBe('block');
+    expect(result.matchedRuleIds).toContain('seed-sqli-union');
+    // The broken rule itself is inert (never matches), not a false positive.
+    expect(result.matchedRuleIds).not.toContain('broken-regex-rule');
+  });
+
+  it('collectInvalidMatcherPatterns flags malformed regexes across matcher fields', () => {
+    expect(collectInvalidMatcherPatterns({ pathPatterns: ['union\\s+select', 'ok'] })).toEqual([]);
+    expect(collectInvalidMatcherPatterns({ pathPatterns: ['('] })).toEqual(['(']);
+    expect(collectInvalidMatcherPatterns({
+      bodyPatterns: ['valid'],
+      userAgentPatterns: ['['],
+      headerPatterns: { 'x-test': ['a[b'] }
+    }).sort()).toEqual(['[', 'a[b'].sort());
+    expect(collectInvalidMatcherPatterns({})).toEqual([]);
   });
 
   it('keeps review-only automation traffic out of block verdicts', () => {
