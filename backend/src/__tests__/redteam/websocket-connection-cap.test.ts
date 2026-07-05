@@ -207,6 +207,21 @@ describe('AgentGateway per-IP connection cap (redteam)', () => {
     });
   }
 
+  /**
+   * The client-side 'disconnect' event fires before the SERVER processes the
+   * disconnect, so a fixed sleep races under parallel-shard load. Poll until
+   * the condition holds (or fail after the deadline) instead.
+   */
+  async function waitUntil(condition: () => boolean, deadlineMs = 2000): Promise<void> {
+    const start = Date.now();
+    while (!condition()) {
+      if (Date.now() - start > deadlineMs) {
+        return; // let the caller's expect() report the actual value
+      }
+      await new Promise((r) => setTimeout(r, 25));
+    }
+  }
+
   it('accumulates dashboardClients on connect and removes them on disconnect', async () => {
     const before = gateway.getDashboardConnectionCount();
 
@@ -220,7 +235,7 @@ describe('AgentGateway per-IP connection cap (redteam)', () => {
       new Promise<void>((resolve) => { s2.once('disconnect', () => resolve()); s2.disconnect(); })
     ]);
 
-    await new Promise((r) => setTimeout(r, 50));
+    await waitUntil(() => gateway.getDashboardConnectionCount() === before);
     expect(gateway.getDashboardConnectionCount()).toBe(before);
   });
 
@@ -228,8 +243,9 @@ describe('AgentGateway per-IP connection cap (redteam)', () => {
     const s1 = await connectDashboard();
     expect(s1.connected).toBe(true);
 
+    const countBeforeDisconnect = gateway.getDashboardConnectionCount();
     await new Promise<void>((resolve) => { s1.once('disconnect', () => resolve()); s1.disconnect(); });
-    await new Promise((r) => setTimeout(r, 50));
+    await waitUntil(() => gateway.getDashboardConnectionCount() < countBeforeDisconnect);
 
     const s2 = await connectDashboard();
     expect(s2.connected).toBe(true);

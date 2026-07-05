@@ -15,8 +15,9 @@ coverage/
 .env.local
 .env.*.local
 
-# IDE
-.vscode/
+# IDE (launch.json is committed on purpose - AI/teammate debug entry points)
+.vscode/*
+!.vscode/launch.json
 .idea/
 *.swp
 *.swo

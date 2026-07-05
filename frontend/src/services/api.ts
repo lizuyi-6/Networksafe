@@ -215,6 +215,16 @@ const unwrapApiEnvelope = <T>(payload: unknown): T => {
 
 const readJson = async <T>(response: Response): Promise<T> => {
     const payload = await response.json().catch(() => null);
+    // Defensive: an envelope with success:false and no data (e.g. a 2xx body
+    // that still signals failure) would otherwise unwrap to `null` and blow up
+    // later as "cannot read property of null". Surface the API error instead.
+    if (
+        isApiEnvelope<T>(payload)
+        && (payload as ApiEnvelope<T>).success === false
+        && (payload as ApiEnvelope<T>).data == null
+    ) {
+        throw new Error(extractErrorMessage(payload, `FG-API-${response.status}`));
+    }
     return unwrapApiEnvelope<T>(payload);
 };
 
