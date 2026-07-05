@@ -1,7 +1,7 @@
 import { createSign, generateKeyPairSync } from 'crypto';
 import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 import { computeFinalDefensePolicyDigest } from '../../security/final-defense-policy';
-import { validateLocalPolicyGrant, type LocalPolicy } from '../../companion/serial-device-companion';
+import { validateLocalPolicyGrant, boardHeartbeatState, type LocalPolicy } from '../../companion/serial-device-companion';
 
 describe('serial-device-companion local policy enforcement', () => {
   function buildPolicy(): LocalPolicy {
@@ -180,5 +180,18 @@ describe('serial-device-companion local policy enforcement', () => {
     });
 
     expect(result).toEqual({ ok: false, reason: 'hardware_grant_expired' });
+  });
+
+  it('board watchdog treats a missing or unparseable heartbeat as fail-closed', () => {
+    const now = new Date('2026-05-13T00:01:00.000Z').getTime();
+    // Fresh heartbeat -> ok
+    expect(boardHeartbeatState(new Date(now - 5_000).toISOString(), now)).toBe('ok');
+    // Missing -> missing
+    expect(boardHeartbeatState(undefined, now)).toBe('missing');
+    expect(boardHeartbeatState('', now)).toBe('missing');
+    // Too old -> lost
+    expect(boardHeartbeatState(new Date(now - 60_000).toISOString(), now)).toBe('lost');
+    // Unparseable -> lost (must NOT be treated as fresh via now - NaN)
+    expect(boardHeartbeatState('not-a-timestamp', now)).toBe('lost');
   });
 });

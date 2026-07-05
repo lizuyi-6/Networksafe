@@ -54,6 +54,27 @@ export function findAllowedPolicyAction(policy: LocalPolicy, commandType: string
   return policy.allowedActions.find((action) => action.commandType === commandType) || null;
 }
 
+/**
+ * Board-heartbeat watchdog state. A missing timestamp is 'missing'; an
+ * unparseable or too-old timestamp is 'lost' — both must fail closed. An
+ * un-guarded `now - NaN > 45s` is false, which would silently keep the bridge
+ * released while the board is unreachable, so a non-finite timestamp is 'lost'.
+ */
+export function boardHeartbeatState(
+  lastHeartbeatAt: string | undefined,
+  nowMs: number,
+  staleMs = 45_000
+): 'ok' | 'missing' | 'lost' {
+  if (!lastHeartbeatAt) {
+    return 'missing';
+  }
+  const lastMs = new Date(lastHeartbeatAt).getTime();
+  if (!Number.isFinite(lastMs) || nowMs - lastMs > staleMs) {
+    return 'lost';
+  }
+  return 'ok';
+}
+
 export function validateLocalPolicyGrant(input: {
   policy: LocalPolicy;
   commandType: string;
@@ -194,11 +215,10 @@ export class SerialDeviceCompanion {
     }, 15_000);
     this.reportTimer.unref?.();
     this.boardWatchdogTimer = setInterval(() => {
-      if (!this.state.lastHeartbeatAt) {
+      const heartbeatState = boardHeartbeatState(this.state.lastHeartbeatAt, Date.now());
+      if (heartbeatState === 'missing') {
         this.failClosed('board_heartbeat_missing');
-        return;
-      }
-      if (Date.now() - new Date(this.state.lastHeartbeatAt).getTime() > 45_000) {
+      } else if (heartbeatState === 'lost') {
         this.failClosed('board_heartbeat_lost');
       }
     }, 10_000);

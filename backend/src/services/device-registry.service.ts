@@ -188,7 +188,8 @@ function ensureDeviceAsset(device: DeviceInfo) {
 
 function syncDeviceSignals(device: DeviceInfo, assetId?: string): void {
     const target = device.systemInfo?.hostname || device.deviceId;
-    const heartbeatAgeMs = Date.now() - device.lastHeartbeat.getTime();
+    const heartbeatMs = device.lastHeartbeat.getTime();
+    const heartbeatAgeMs = Number.isFinite(heartbeatMs) ? Date.now() - heartbeatMs : Infinity;
     const staleHeartbeat = device.isOnline && heartbeatAgeMs > 15 * 60 * 1000;
 
     securityOperationsService.syncSignalFinding({
