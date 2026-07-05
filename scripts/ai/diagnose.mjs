@@ -37,26 +37,45 @@ function toolAvailable(cmd) {
   return probe.status === 0;
 }
 
-function runCheck({ name, cmd, cwd, skipReason }) {
+function runCheck({ name, cmd, cwd, skipReason, runBinary }) {
   if (skipReason) {
     return { name, cmd, cwd, status: 'skipped', exitCode: null, durationMs: 0, tail: skipReason };
   }
   const started = Date.now();
+  const checkDir = path.join(ROOT, cwd || '.');
   const result = spawnSync(cmd, {
     shell: true,
-    cwd: path.join(ROOT, cwd || '.'),
+    cwd: checkDir,
     encoding: 'utf8',
     env: { ...process.env, FORCE_COLOR: '0' },
     maxBuffer: 64 * 1024 * 1024
   });
+  let output = `${result.stdout || ''}\n${result.stderr || ''}`;
+  let exitStatus = result.status;
+
+  // Optional second phase: execute a produced binary directly (no shell). This
+  // avoids cmd.exe-vs-sh differences in how a cwd-relative program is invoked
+  // (`./x` vs `x` vs `.\x.exe`) — spawnSync with an absolute path and no shell
+  // runs the binary identically on every platform.
+  if (runBinary && exitStatus === 0) {
+    const binPath = path.join(checkDir, process.platform === 'win32' ? `${runBinary}.exe` : runBinary);
+    const binResult = spawnSync(binPath, [], {
+      cwd: checkDir,
+      encoding: 'utf8',
+      env: { ...process.env, FORCE_COLOR: '0' },
+      maxBuffer: 64 * 1024 * 1024
+    });
+    output += `\n${binResult.stdout || ''}\n${binResult.stderr || ''}`;
+    exitStatus = binResult.status;
+  }
+
   const durationMs = Date.now() - started;
-  const output = `${result.stdout || ''}\n${result.stderr || ''}`;
   return {
     name,
     cmd,
     cwd: cwd || '.',
-    status: result.status === 0 ? 'pass' : 'fail',
-    exitCode: result.status,
+    status: exitStatus === 0 ? 'pass' : 'fail',
+    exitCode: exitStatus,
     durationMs,
     tail: tail(output)
   };
@@ -82,7 +101,8 @@ const TEST_CHECKS = [
   { name: 'rust:clippy', cmd: 'cargo clippy -- -D warnings', cwd: 'rust-fastpath', skipReason: cargoMissing },
   {
     name: 'firmware:host-tests',
-    cmd: 'gcc -Wall -Wextra -std=c11 -g -Itest -ICore/Inc -ICore/Src -o test_controller test/mock_hal.c test/test_stubs.c test/test_controller.c Core/Src/controller_tasks.c Core/Src/serial_json.c Core/Src/interlock_driver.c && ./test_controller',
+    cmd: 'gcc -Wall -Wextra -std=c11 -g -Itest -ICore/Inc -ICore/Src -o test_controller test/mock_hal.c test/test_stubs.c test/test_controller.c Core/Src/controller_tasks.c Core/Src/serial_json.c Core/Src/interlock_driver.c',
+    runBinary: 'test_controller',
     cwd: 'firmware/controller-stm32h5',
     skipReason: gccMissing
   },
