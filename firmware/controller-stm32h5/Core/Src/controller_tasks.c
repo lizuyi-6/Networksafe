@@ -34,6 +34,14 @@ void controller_set_policy_digest(const char *digest) {
 
 /* Task 1: Handle release request */
 grant_result_t controller_handle_release_request(const hardware_grant_t *grant) {
+    /* Task 12 latch: a pressed/unacknowledged e-stop blocks release outright.
+     * The physical NC e-stop already breaks the relay circuit; this software
+     * latch additionally enforces ISO 13850 semantics — releasing the button
+     * must not re-enable anything until the fault is explicitly cleared. */
+    if (g_state.estop_pressed || g_state.state == INTERLOCK_STATE_FAULT) {
+        serial_json_send_alert();
+        return GRANT_RESULT_DENIED;
+    }
     /* Task 2: validate challenge */
     if (!controller_validate_challenge(grant->challenge)) {
         serial_json_send_alert();
@@ -69,6 +77,11 @@ grant_result_t controller_handle_release_request(const hardware_grant_t *grant) 
         return GRANT_RESULT_DENIED;
     }
     g_state.state = INTERLOCK_STATE_RELEASED;
+    /* Advance the high-water mark on successful release so the same counter
+     * cannot be replayed (c > high_water must hold for the next grant). This
+     * closes the replay window that existed when this branch did not advance
+     * the counter; this is a safety tightening, not a relaxation. */
+    g_state.high_water_counter = grant->monotonic_counter;
     interlock_set_light(0, 0, 1, 0);
     serial_json_send_interlock_result(INTERLOCK_STATE_RELEASED, true);
     return GRANT_RESULT_RELEASED;
@@ -136,9 +149,24 @@ void controller_handle_estop(void) {
     serial_json_send_alert();
 }
 
+/* Task 12 reset: clear a latched e-stop. Returns to ISOLATED with the relay
+ * open; a fresh grant is still required to release. */
+void controller_clear_estop(void) {
+    g_state.estop_pressed = false;
+    g_state.state = INTERLOCK_STATE_ISOLATED;
+    interlock_drive_relay(false);
+    interlock_set_light(1, 0, 0, 0);
+    serial_json_send_state(g_state.state, g_state.feedback_ok, g_state.se_present);
+}
+
+bool controller_estop_latched(void) {
+    return g_state.estop_pressed;
+}
+
 /* State accessors */
 interlock_state_t controller_get_state(void) { return g_state.state; }
 void controller_set_state(interlock_state_t state) { g_state.state = state; }
+uint32_t controller_get_high_water_counter(void) { return g_state.high_water_counter; }
 
 void controller_send_alert(void) {
     serial_json_send_alert();
@@ -154,5 +182,4 @@ void controller_assert_isolated(void) {
     interlock_set_light(1, 0, 0, 0);
     serial_json_send_interlock_result(INTERLOCK_STATE_ISOLATED, g_state.feedback_ok);
 }
-
 

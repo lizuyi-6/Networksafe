@@ -62,11 +62,20 @@ export class MockController extends EventEmitter {
   }
 
   handleReleaseRequest(grant: HardwareGrantEnvelope): 'released' | 'denied' {
-    // Task 2: challenge must not be reused
+    // Task 12 latch (mirrors firmware controller_tasks.c): a latched e-stop /
+    // fault blocks release outright until explicitly cleared.
+    if (this.state === 'fault' || this.interlock.isEstopPressed()) {
+      console.log('🟡 [M2 Controller] ❌ E-stop latched / fault state, release denied');
+      this.emitFrame({ type: 'alert', ts: Date.now() });
+      return 'denied';
+    }
+    // Task 2: challenge must not be reused (recorded at validation time, like
+    // the firmware — a denied grant still consumes its challenge)
     if (!grant.challenge || this.usedChallenges.has(grant.challenge)) {
       console.log('🟡 [M2 Controller] ❌ Challenge missing or reused');
       return 'denied';
     }
+    this.usedChallenges.add(grant.challenge);
     // Task 3: policyDigest must match
     if (!grant.policyDigest || grant.policyDigest !== this.policyDigest) {
       console.log('🟡 [M2 Controller] ❌ Policy digest missing or mismatch');
@@ -88,13 +97,19 @@ export class MockController extends EventEmitter {
     // (In real hardware: send I2C command to SE, SE returns signature status)
     // Here we simulate: the grant was already signed by the same SE in the flow
 
-    this.usedChallenges.add(grant.challenge);
-    this.highWaterCounter = grant.monotonicCounter;
     // Task 8: drive interlock
     this.interlock.driveRelay('release');
-    this.state = 'released';
-    // Task 9: read feedback
+    // Task 9: read feedback — mirrors firmware: a feedback mismatch DENIES the
+    // release, re-asserts isolation, and does NOT advance the high-water mark.
     const feedbackOk = this.interlock.readFeedback();
+    if (!feedbackOk) {
+      console.log('🟡 [M2 Controller] ❌ Feedback mismatch, re-asserting isolation');
+      this.interlock.driveRelay('assert');
+      this.emitFrame({ type: 'alert', ts: Date.now() });
+      return 'denied';
+    }
+    this.highWaterCounter = grant.monotonicCounter;
+    this.state = 'released';
     this.interlock.setLight('green', false);
     this.emitFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk, ts: Date.now() });
     console.log('🟡 [M2 Controller] ✅ Grant accepted, interlock released');
@@ -113,6 +128,17 @@ export class MockController extends EventEmitter {
     this.interlock.pressEstop();
     this.state = 'fault';
     this.emitFrame({ type: 'alert', ts: Date.now() });
+  }
+
+  // Mirrors firmware controller_clear_estop(): explicit reset returns to
+  // ISOLATED with the relay open — never directly back to released.
+  clearEstop(): void {
+    console.log('🟡 [M2 Controller] E-stop cleared, returning to isolated');
+    this.interlock.releaseEstop();
+    this.state = 'isolated';
+    this.interlock.driveRelay('assert');
+    this.interlock.setLight('red', false);
+    this.emitFrame({ type: 'interlock_result', interlockState: 'isolated', feedbackOk: this.interlock.readFeedback(), ts: Date.now() });
   }
 
   private emitFrame(frame: ControllerFrame): void {
