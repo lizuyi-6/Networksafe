@@ -26,3 +26,31 @@ scan-results
 *.md
 frontend/node_modules
 frontend/dist
+
+# Heavy directories never copied by any root-context Dockerfile
+# (backend.Dockerfile copies only backend/*, rust-fastpath/Dockerfile copies
+#  only rust-fastpath/ — keep this list in sync if COPY surfaces change)
+rust-fastpath/target
+output
+outputs
+artifacts
+papers
+tmp
+docs
+e2e
+hardware
+firmware
+redteam
+attack-simulation
+security-tests
+examples
+vendor-templates
+patches
+installer
+simulator
+certs
+backend/test-data
+__pycache__
+*.zip
+.claude
+.github
