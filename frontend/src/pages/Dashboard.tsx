@@ -160,8 +160,8 @@ const TrafficChart = ({
     }
     return (
         <div className="grid gap-4 md:grid-cols-2">
-            <TrafficMiniChart data={data} dataKey="requests" color="#3b82f6" gradientId="colorRequests" seriesLabel={requestsLabel} loadingText={loadingText} />
-            <TrafficMiniChart data={data} dataKey="blocked" color="#ef4444" gradientId="colorBlocked" seriesLabel={blockedLabel} loadingText={loadingText} />
+            <TrafficMiniChart data={data} dataKey="requests" color="hsl(var(--chart-requests))" gradientId="colorRequests" seriesLabel={requestsLabel} loadingText={loadingText} />
+            <TrafficMiniChart data={data} dataKey="blocked" color="hsl(var(--chart-blocked))" gradientId="colorBlocked" seriesLabel={blockedLabel} loadingText={loadingText} />
         </div>
     );
 };
