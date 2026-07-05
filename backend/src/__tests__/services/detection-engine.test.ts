@@ -2,6 +2,7 @@ import {
   buildSeedDetectionRules,
   evaluateDetectionRules,
   collectInvalidMatcherPatterns,
+  matcherDeclaresCriteria,
   type DetectionRequest,
   type DetectionRuleRecord
 } from '../../services/detection-engine';
@@ -139,6 +140,14 @@ describe('detection-engine', () => {
     };
     const withReal = evaluateDetectionRules(benign, [realBlock]);
     expect(withReal.matchedRuleIds).toContain('method-matcher-block');
+  });
+
+  it('matcherDeclaresCriteria distinguishes empty from non-empty matchers', () => {
+    expect(matcherDeclaresCriteria({})).toBe(false);
+    expect(matcherDeclaresCriteria({ pathPatterns: [] })).toBe(false);
+    expect(matcherDeclaresCriteria({ headerPatterns: { 'x-foo': [] } })).toBe(false);
+    expect(matcherDeclaresCriteria({ methodPatterns: ['^GET$'] })).toBe(true);
+    expect(matcherDeclaresCriteria({ headerPatterns: { 'x-foo': ['bar'] } })).toBe(true);
   });
 
   it('keeps review-only automation traffic out of block verdicts', () => {

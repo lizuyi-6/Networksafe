@@ -243,6 +243,16 @@ export function collectInvalidMatcherPatterns(matcher: DetectionRuleMatcher): st
   return invalid;
 }
 
+/**
+ * Public predicate: does this matcher declare at least one criterion? An empty
+ * matcher is inert at evaluation time (matcherMatchesRequest returns false);
+ * callers that persist rules use this to reject an empty matcher up front
+ * rather than store an inert block rule.
+ */
+export function matcherDeclaresCriteria(matcher: DetectionRuleMatcher): boolean {
+  return matcherHasAnyCriteria(matcher);
+}
+
 function matchesHeaderPatterns(
   headerPatterns: Record<string, string[]> | undefined,
   headers: Record<string, string>
@@ -308,11 +318,6 @@ function buildSearchCorpus(request: DetectionRequest): Record<string, string> {
   };
 }
 
-/**
- * True when the matcher declares at least one non-empty criterion. A matcher
- * with no criteria at all must NOT be treated as match-everything (see
- * matcherMatchesRequest): an empty matcher is an inert rule, not a match-all.
- */
 function matcherHasAnyCriteria(matcher: DetectionRuleMatcher): boolean {
   const lists = [
     matcher.methodPatterns,

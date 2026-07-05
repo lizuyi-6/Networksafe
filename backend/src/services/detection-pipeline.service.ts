@@ -28,7 +28,8 @@ import {
   evaluateDetectionRules,
   inferAttackFamily,
   severityToBlockDurationSeconds,
-  collectInvalidMatcherPatterns
+  collectInvalidMatcherPatterns,
+  matcherDeclaresCriteria
 } from './detection-engine';
 
 type CandidateStatus = 'pending' | 'approved' | 'rejected';
@@ -790,6 +791,15 @@ class DetectionPipelineService {
       const error = new Error('backend.rule_candidate_invalid_regex') as Error & { code?: string; invalidPatterns?: string[] };
       error.code = 'backend.rule_candidate_invalid_regex';
       error.invalidPatterns = invalidPatterns;
+      throw error;
+    }
+
+    // A matcher with no criteria is inert at runtime (matches nothing); refuse
+    // to promote it into an enabled block rule so the operator is not misled
+    // into thinking an empty rule protects anything.
+    if (!matcherDeclaresCriteria(candidate.matcher)) {
+      const error = new Error('backend.rule_candidate_empty_matcher') as Error & { code?: string };
+      error.code = 'backend.rule_candidate_empty_matcher';
       throw error;
     }
 

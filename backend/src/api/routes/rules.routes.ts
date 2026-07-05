@@ -263,6 +263,12 @@ router.post('/candidates/:id/approve', async (req: AuthenticatedRequest, res) =>
         meta: { invalidPatterns: error.invalidPatterns || [] }
       });
     }
+    if (error?.code === 'backend.rule_candidate_empty_matcher') {
+      return sendError(res, 422, {
+        code: 'backend.rule_candidate_empty_matcher',
+        message: 'backend.rule_candidate_empty_matcher'
+      });
+    }
     sendError(res, 500, {
       code: 'backend.failed_to_approve_rule_candidate',
       message: error?.message || 'backend.failed_to_approve_rule_candidate'
