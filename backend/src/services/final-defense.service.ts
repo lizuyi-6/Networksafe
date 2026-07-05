@@ -104,7 +104,15 @@ function stale(lastHeartbeatAt?: string): boolean {
   if (!lastHeartbeatAt) {
     return true;
   }
-  return Date.now() - new Date(lastHeartbeatAt).getTime() > HEARTBEAT_STALE_MS;
+  const lastMs = new Date(lastHeartbeatAt).getTime();
+  // Fail closed on an unparseable timestamp: Date.now() - NaN is NaN and
+  // NaN > STALE is false, which would report an unknown heartbeat as
+  // fresh/online. An unparseable heartbeat is treated as stale, consistent
+  // with a missing one.
+  if (!Number.isFinite(lastMs)) {
+    return true;
+  }
+  return Date.now() - lastMs > HEARTBEAT_STALE_MS;
 }
 
 const ROOT_RESISTANT_REQUIRED_COMMANDS = new Set([

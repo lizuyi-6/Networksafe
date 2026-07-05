@@ -637,7 +637,10 @@ class HardwareAuthorizationService {
         return `${field}_mismatch`;
       }
     }
-    if (Date.now() > new Date(input.session.expiresAt).getTime()) {
+    const sessionExpiresAtMs = new Date(input.session.expiresAt).getTime();
+    // Fail closed on an unparseable expiry: Date.now() > NaN is false, which
+    // would otherwise treat a malformed session.expiresAt as not-expired.
+    if (!Number.isFinite(sessionExpiresAtMs) || Date.now() > sessionExpiresAtMs) {
       return 'session_expired';
     }
     return null;

@@ -122,4 +122,63 @@ describe('serial-device-companion local policy enforcement', () => {
 
     expect(rollback).toEqual({ ok: false, reason: 'counter_replay_or_rollback' });
   });
+
+  it('fails closed when the grant expiry is unparseable (now > NaN is false)', () => {
+    const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+    const policy = buildPolicy();
+    const payload = { path: '/opt/aetherguard' };
+    const issuedAt = '2026-05-13T00:00:00.000Z';
+    const expiresAt = 'not-a-real-date'; // getTime() -> NaN
+    const publicKeyPem = keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+    const signature = createSign('SHA256')
+      .update(buildHardwareGrantMessage({
+        gateId: policy.gateId,
+        sessionId: 'session-test',
+        actionId: 'action-test',
+        tenantId: policy.tenantId,
+        scope: 'device',
+        targetId: policy.companionId,
+        commandType: 'host_remove',
+        payloadHash: hashPayload(payload),
+        policyDigest: policy.policyDigest,
+        challenge: 'challenge-test',
+        breakerTarget: policy.breakerTarget,
+        interlockAction: 'interlock_release',
+        issuedAt,
+        expiresAt,
+        monotonicCounter: 7
+      }))
+      .end()
+      .sign(keyPair.privateKey, 'base64');
+
+    // Every other check passes; only the malformed expiry must reject.
+    const result = validateLocalPolicyGrant({
+      policy,
+      commandType: 'host_remove',
+      payload,
+      publicKeyPem,
+      lastCounter: 0,
+      now: new Date(issuedAt).getTime(),
+      grant: {
+        gateId: policy.gateId,
+        sessionId: 'session-test',
+        actionId: 'action-test',
+        tenantId: policy.tenantId,
+        scope: 'device',
+        targetId: policy.companionId,
+        commandType: 'host_remove',
+        payloadHash: hashPayload(payload),
+        policyDigest: policy.policyDigest,
+        challenge: 'challenge-test',
+        breakerTarget: policy.breakerTarget,
+        interlockAction: 'interlock_release',
+        issuedAt,
+        expiresAt,
+        monotonicCounter: 7,
+        signature
+      }
+    });
+
+    expect(result).toEqual({ ok: false, reason: 'hardware_grant_expired' });
+  });
 });

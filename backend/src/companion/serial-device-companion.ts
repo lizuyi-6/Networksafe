@@ -98,7 +98,12 @@ export function validateLocalPolicyGrant(input: {
   if (!Number.isFinite(input.grant.monotonicCounter) || input.grant.monotonicCounter <= input.lastCounter) {
     return { ok: false, reason: 'counter_replay_or_rollback' };
   }
-  if ((input.now || Date.now()) > new Date(input.grant.expiresAt).getTime()) {
+  const expiresAtMs = new Date(input.grant.expiresAt).getTime();
+  // Fail closed on an unparseable/missing expiry: `now > NaN` is false, so an
+  // un-guarded comparison would treat a malformed expiresAt as "not expired"
+  // and release the interlock. Aligns with gateway-daemon's Number.isFinite
+  // guard.
+  if (!Number.isFinite(expiresAtMs) || (input.now || Date.now()) > expiresAtMs) {
     return { ok: false, reason: 'hardware_grant_expired' };
   }
   if (input.grant.payloadHash !== hashPayload(input.payload || {})) {

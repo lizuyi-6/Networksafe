@@ -258,6 +258,35 @@ describe('finalDefenseService', () => {
     expect(staleStatus?.active).toBe(false);
   });
 
+  it('treats an unparseable heartbeat timestamp as stale, not fresh (fail-closed)', () => {
+    const tenantId = `tenant-root-badhb-${Date.now()}`;
+    finalDefenseService.reportRootResistantGatewayStatus({
+      tenantId,
+      gatewayId: 'gateway-badhb',
+      policyDigest: 'digest-badhb',
+      reportedPolicyDigest: 'digest-badhb',
+      firmwareDigest: 'firmware-badhb',
+      lastAttestationAt: new Date().toISOString(),
+      bridgeState: 'isolated',
+      serverPortLink: true,
+      lanPortLink: true,
+      mgmtPath: 'dedicated_mgmt',
+      secureElementPresent: true
+    });
+
+    // Corrupt the stored heartbeat to a non-parseable value. new Date(x).getTime()
+    // is NaN and Date.now() > NaN is false, so an un-guarded check would report
+    // this gateway as fresh/online.
+    const { getDatabase } = require('../../config/database');
+    getDatabase().prepare(`UPDATE root_resistant_gateways SET last_heartbeat_at = ? WHERE gateway_id = ?`)
+      .run('not-a-timestamp', 'gateway-badhb');
+
+    const status = finalDefenseService.listRootResistantGateways(tenantId).find(g => g.gatewayId === 'gateway-badhb');
+    expect(status?.gatewayOnline).toBe(false);
+    expect(status?.degradedReasons).toEqual(expect.arrayContaining(['gateway_stale']));
+    expect(status?.active).toBe(false);
+  });
+
   it('blocks root-resistant high-risk actions until an external gateway is active', async () => {
     const tenantId = `tenant-root-action-${Date.now()}`;
     const companionId = `companion-root-action-${Date.now()}`;
