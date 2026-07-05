@@ -64,6 +64,11 @@ import AlertDetail from './pages/AlertDetail';
 import AgentDetail from './pages/AgentDetail';
 import AttackRunDetail from './pages/AttackRunDetail';
 import Landing from './pages/Landing';
+import LandingWorkshopHub from './pages/landing-workshop/LandingWorkshopHub';
+import LandingIndustrial from './pages/landing-workshop/LandingIndustrial';
+import LandingEnterprise from './pages/landing-workshop/LandingEnterprise';
+import LandingTerminal from './pages/landing-workshop/LandingTerminal';
+import LandingStory from './pages/landing-workshop/LandingStory';
 import Login from './pages/Login';
 import BoardStatus from './pages/BoardStatus';
 import AgentMonitor from './pages/AgentMonitor';
@@ -620,6 +625,12 @@ const AnimatedRoutes = () => {
             <Routes location={location} key={location.pathname}>
                 {/* Public routes */}
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
+                {/* Landing workshop — official-site landing candidates; production "/" stays on Landing */}
+                <Route path="/landing-workshop" element={<PageWrapper><LandingWorkshopHub /></PageWrapper>} />
+                <Route path="/landing-workshop/industrial" element={<PageWrapper><LandingIndustrial /></PageWrapper>} />
+                <Route path="/landing-workshop/enterprise" element={<PageWrapper><LandingEnterprise /></PageWrapper>} />
+                <Route path="/landing-workshop/terminal" element={<PageWrapper><LandingTerminal /></PageWrapper>} />
+                <Route path="/landing-workshop/story" element={<PageWrapper><LandingStory /></PageWrapper>} />
                 <Route path="/promo" element={<Promo />} />
                 <Route path="/promo-film" element={<PromoFilm />} />
                 <Route path="/aetherguard-deck" element={SHOW_PITCH_ROUTES ? <XiongcaiFinalDeck /> : <Navigate to="/dashboard" replace />} />
