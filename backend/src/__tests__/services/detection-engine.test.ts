@@ -106,6 +106,41 @@ describe('detection-engine', () => {
     expect(collectInvalidMatcherPatterns({})).toEqual([]);
   });
 
+  it('an empty matcher (e.g. corrupt matcher_json) matches nothing, not everything', () => {
+    // Regression: matcherMatchesRequest ANDed all-true anyPatternMatches for a
+    // criteria-less matcher and matched EVERY request. A corrupt/missing
+    // matcher_json parses to {}, so such a block rule would have blocked all
+    // traffic (100% false positive / total outage).
+    const matchAllBlock: DetectionRuleRecord = {
+      ruleId: 'empty-matcher-block',
+      tenantId: 'tenant-a',
+      name: 'Empty matcher',
+      scope: 'all',
+      action: 'block',
+      priority: 1000,
+      severity: 'critical',
+      matcher: {}, // no criteria
+      source: 'dynamic',
+      enabled: true,
+      version: 1
+    };
+
+    const benign = buildRequest({ path: '/api/health', method: 'GET' });
+    const result = evaluateDetectionRules(benign, [matchAllBlock]);
+
+    expect(result.matchedRuleIds).not.toContain('empty-matcher-block');
+    expect(result.ruleVerdict).not.toBe('block');
+
+    // A matcher with a single real criterion still works.
+    const realBlock: DetectionRuleRecord = {
+      ...matchAllBlock,
+      ruleId: 'method-matcher-block',
+      matcher: { methodPatterns: ['^GET$'] }
+    };
+    const withReal = evaluateDetectionRules(benign, [realBlock]);
+    expect(withReal.matchedRuleIds).toContain('method-matcher-block');
+  });
+
   it('keeps review-only automation traffic out of block verdicts', () => {
     const request = buildRequest({
       headers: {

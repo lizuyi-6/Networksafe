@@ -308,7 +308,37 @@ function buildSearchCorpus(request: DetectionRequest): Record<string, string> {
   };
 }
 
+/**
+ * True when the matcher declares at least one non-empty criterion. A matcher
+ * with no criteria at all must NOT be treated as match-everything (see
+ * matcherMatchesRequest): an empty matcher is an inert rule, not a match-all.
+ */
+function matcherHasAnyCriteria(matcher: DetectionRuleMatcher): boolean {
+  const lists = [
+    matcher.methodPatterns,
+    matcher.pathPatterns,
+    matcher.bodyPatterns,
+    matcher.userAgentPatterns,
+    matcher.evidencePatterns,
+    matcher.sourceIpPatterns,
+    matcher.keywordPatterns
+  ];
+  if (lists.some((list) => Array.isArray(list) && list.length > 0)) {
+    return true;
+  }
+  const headerLists = Object.values(matcher.headerPatterns || {});
+  return headerLists.some((list) => Array.isArray(list) && list.length > 0);
+}
+
 function matcherMatchesRequest(matcher: DetectionRuleMatcher, request: DetectionRequest): boolean {
+  // A matcher with zero criteria (e.g. a corrupt/missing matcher_json that
+  // parsed to {}) would otherwise AND a list of all-true anyPatternMatches
+  // and match EVERY request — a match-all block rule = total false-positive
+  // outage. An empty matcher matches nothing.
+  if (!matcherHasAnyCriteria(matcher)) {
+    return false;
+  }
+
   const corpus = buildSearchCorpus(request);
   const headers = Object.entries(request.headers || {}).reduce<Record<string, string>>((acc, [key, value]) => {
     acc[key.toLowerCase()] = value;
