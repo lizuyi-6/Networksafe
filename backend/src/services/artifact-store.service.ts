@@ -87,6 +87,15 @@ class LocalArtifactStore implements ArtifactStore {
 
   constructor(private readonly baseDir: string) {}
 
+  private assertWithinBaseDir(resolvedTarget: string, resolvedBase: string): void {
+    const resolvedBaseDir = path.resolve(resolvedBase);
+    const base = `${resolvedBaseDir}${path.sep}`;
+    const target = path.resolve(resolvedTarget);
+    if (target !== resolvedBaseDir && !target.startsWith(base)) {
+      throw new Error('backend.artifact_path_escape_detected');
+    }
+  }
+
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
     return this.writeText(scope, `${key}.json`, JSON.stringify(payload, null, 2), 'application/json');
   }
@@ -96,11 +105,14 @@ class LocalArtifactStore implements ArtifactStore {
     const safeKey = sanitizeKey(key);
     const targetDir = path.join(this.baseDir, safeScope);
     const targetPath = path.join(targetDir, safeKey);
-    await fs.mkdir(targetDir, { recursive: true });
-    await fs.writeFile(targetPath, payload, 'utf8');
+    const resolvedTargetDir = path.resolve(targetDir);
+    const resolvedTargetPath = path.resolve(targetPath);
+    this.assertWithinBaseDir(resolvedTargetPath, resolvedTargetDir);
+    await fs.mkdir(resolvedTargetDir, { recursive: true });
+    await fs.writeFile(resolvedTargetPath, payload, 'utf8');
     return {
       artifactRef: `artifact://local/${safeScope}/${safeKey}`,
-      location: targetPath
+      location: resolvedTargetPath
     };
   }
 
@@ -109,21 +121,29 @@ class LocalArtifactStore implements ArtifactStore {
     const safeKey = sanitizeKey(key);
     const targetDir = path.join(this.baseDir, safeScope);
     const targetPath = path.join(targetDir, safeKey);
-    await fs.mkdir(targetDir, { recursive: true });
-    await fs.writeFile(targetPath, payload);
+    const resolvedTargetDir = path.resolve(targetDir);
+    const resolvedTargetPath = path.resolve(targetPath);
+    this.assertWithinBaseDir(resolvedTargetPath, resolvedTargetDir);
+    await fs.mkdir(resolvedTargetDir, { recursive: true });
+    await fs.writeFile(resolvedTargetPath, payload);
     return {
       artifactRef: `artifact://local/${safeScope}/${safeKey}`,
-      location: targetPath
+      location: resolvedTargetPath
     };
   }
 
   async readText(artifactRef: string, fallbackLocation?: string): Promise<string> {
     const relativePath = parseLocalArtifactRef(artifactRef);
     if (relativePath) {
-      return fs.readFile(path.join(this.baseDir, relativePath), 'utf8');
+      const targetPath = path.join(this.baseDir, relativePath);
+      const resolvedTargetPath = path.resolve(targetPath);
+      this.assertWithinBaseDir(resolvedTargetPath, this.baseDir);
+      return fs.readFile(resolvedTargetPath, 'utf8');
     }
     if (fallbackLocation) {
-      return fs.readFile(fallbackLocation, 'utf8');
+      const targetPath = path.resolve(this.baseDir, fallbackLocation);
+      this.assertWithinBaseDir(targetPath, this.baseDir);
+      return fs.readFile(targetPath, 'utf8');
     }
     throw new Error('backend.unsupported_local_artifact_ref');
   }

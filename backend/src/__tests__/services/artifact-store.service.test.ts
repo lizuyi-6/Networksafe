@@ -58,6 +58,7 @@ beforeAll(() => {
   }));
 
   jest.doMock('path', () => ({
+    ...jest.requireActual('path'),
     join: mocks.pathJoin
   }));
 
@@ -93,6 +94,14 @@ describe('artifactStoreService', () => {
       expect(result.location).toBeDefined();
       expect(mocks.mkdir).toHaveBeenCalled();
       expect(mocks.writeFile).toHaveBeenCalled();
+    });
+
+    it('rejects traversal in text artifact keys before writing', async () => {
+      await expect(
+        artifactStoreService.writeText('scans', '../../../../tmp/pwned', 'payload')
+      ).rejects.toThrow('backend.artifact_path_escape_detected');
+
+      expect(mocks.writeFile).not.toHaveBeenCalled();
     });
 
     it('stores text artifact with subdirectory', async () => {
@@ -131,6 +140,22 @@ describe('artifactStoreService', () => {
       expect(result).toBe('test content from artifact');
     });
 
+    it('rejects traversal in local artifact refs before reading', async () => {
+      await expect(
+        artifactStoreService.readText('artifact://local/../../../../etc/passwd')
+      ).rejects.toThrow('backend.artifact_path_escape_detected');
+
+      expect(mocks.readFile).not.toHaveBeenCalled();
+    });
+
+    it('rejects fallback locations outside the artifact base directory', async () => {
+      await expect(
+        artifactStoreService.readText('artifact://unsupported/ref', '../../../../etc/passwd')
+      ).rejects.toThrow('backend.artifact_path_escape_detected');
+
+      expect(mocks.readFile).not.toHaveBeenCalled();
+    });
+
     it('throws for non-local artifact refs without fallback', async () => {
       await expect(
         artifactStoreService.readText('artifact://s3/bucket/file.txt')
@@ -145,6 +170,16 @@ describe('artifactStoreService', () => {
 
       expect(result.artifactRef).toContain('binaries');
       expect(mocks.writeFile).toHaveBeenCalledWith(expect.any(String), buffer);
+    });
+
+    it('rejects traversal in binary artifact keys before writing', async () => {
+      const buffer = Buffer.from([0x00, 0x01, 0x02]);
+
+      await expect(
+        artifactStoreService.writeBinary('binaries', '../../../../tmp/pwned', buffer)
+      ).rejects.toThrow('backend.artifact_path_escape_detected');
+
+      expect(mocks.writeFile).not.toHaveBeenCalled();
     });
   });
 
