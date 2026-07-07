@@ -96,6 +96,53 @@ class LocalArtifactStore implements ArtifactStore {
     }
   }
 
+  /**
+   * Resolve the REAL path of an existing file/dir (follows symlinks) and verify
+   * it is within the real baseDir. Use on the READ path where the target exists.
+   * If the target does not exist (e.g. a typo'd artifactRef), re-throw the
+   * original ENOENT verbatim so callers see "not found" rather than a misleading
+   * escape error.
+   *
+   * Defense-in-depth layer ON TOP of the string-based assertWithinBaseDir: the
+   * string check cannot see symlinks, so a symlink inside baseDir pointing
+   * outside would pass it and leak via fs.readFile. This closes that gap.
+   *
+   * Residual risk: there is an inherent check-vs-use window between realpath
+   * and readFile where a symlink could be swapped (TOCTOU). Closing that
+   * requires O_NOFOLLOW-style open-by-path which Node's fs.readFile does not
+   * expose portably; for this threat model (attacker needs FS write access to
+   * baseDir to swap the symlink, itself gated by the write-path checks), the
+   * realpath check is proportionate.
+   */
+  private async assertRealPathWithinBaseDir(targetPath: string): Promise<void> {
+    const realBase = await fs.realpath(this.baseDir);
+    let realTarget: string;
+    try {
+      realTarget = await fs.realpath(targetPath);
+    } catch (error: any) {
+      throw error;
+    }
+    const base = `${realBase}${path.sep}`;
+    if (realTarget !== realBase && !realTarget.startsWith(base)) {
+      throw new Error('backend.artifact_path_escape_detected');
+    }
+  }
+
+  /**
+   * Resolve the REAL path of an existing directory (the write target's parent,
+   * already ensured by fs.mkdir) and verify it is within the real baseDir.
+   * Catches symlinked parent directories that would redirect a legitimate write
+   * outside baseDir.
+   */
+  private async assertRealDirWithinBaseDir(dirPath: string): Promise<void> {
+    const realBase = await fs.realpath(this.baseDir);
+    const realDir = await fs.realpath(dirPath);
+    const base = `${realBase}${path.sep}`;
+    if (realDir !== realBase && !realDir.startsWith(base)) {
+      throw new Error('backend.artifact_path_escape_detected');
+    }
+  }
+
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
     return this.writeText(scope, `${key}.json`, JSON.stringify(payload, null, 2), 'application/json');
   }
@@ -109,6 +156,7 @@ class LocalArtifactStore implements ArtifactStore {
     const resolvedTargetPath = path.resolve(targetPath);
     this.assertWithinBaseDir(resolvedTargetPath, resolvedTargetDir);
     await fs.mkdir(resolvedTargetDir, { recursive: true });
+    await this.assertRealDirWithinBaseDir(resolvedTargetDir);
     await fs.writeFile(resolvedTargetPath, payload, 'utf8');
     return {
       artifactRef: `artifact://local/${safeScope}/${safeKey}`,
@@ -125,6 +173,7 @@ class LocalArtifactStore implements ArtifactStore {
     const resolvedTargetPath = path.resolve(targetPath);
     this.assertWithinBaseDir(resolvedTargetPath, resolvedTargetDir);
     await fs.mkdir(resolvedTargetDir, { recursive: true });
+    await this.assertRealDirWithinBaseDir(resolvedTargetDir);
     await fs.writeFile(resolvedTargetPath, payload);
     return {
       artifactRef: `artifact://local/${safeScope}/${safeKey}`,
@@ -138,11 +187,13 @@ class LocalArtifactStore implements ArtifactStore {
       const targetPath = path.join(this.baseDir, relativePath);
       const resolvedTargetPath = path.resolve(targetPath);
       this.assertWithinBaseDir(resolvedTargetPath, this.baseDir);
+      await this.assertRealPathWithinBaseDir(resolvedTargetPath);
       return fs.readFile(resolvedTargetPath, 'utf8');
     }
     if (fallbackLocation) {
       const targetPath = path.resolve(this.baseDir, fallbackLocation);
       this.assertWithinBaseDir(targetPath, this.baseDir);
+      await this.assertRealPathWithinBaseDir(targetPath);
       return fs.readFile(targetPath, 'utf8');
     }
     throw new Error('backend.unsupported_local_artifact_ref');
