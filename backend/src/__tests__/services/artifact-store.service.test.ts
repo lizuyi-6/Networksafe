@@ -64,7 +64,19 @@ beforeAll(() => {
 
   jest.doMock('fs/promises', () => ({
     __esModule: true,
-    default: { mkdir: mocks.mkdir, writeFile: mocks.writeFile, readFile: mocks.readFile }
+    default: {
+      mkdir: mocks.mkdir,
+      writeFile: mocks.writeFile,
+      readFile: mocks.readFile,
+      // realpath is exercised by the symlink-aware containment layer.
+      // For the string-traversal tests in THIS file (which use virtual
+      // paths that do not exist on disk), resolve to an absolute path so
+      // the containment comparison behaves like the real realpath would
+      // (real realpath always returns absolute). The genuine
+      // symlink-following behavior is covered separately in
+      // artifact-store.symlink.test.ts against the real fs.
+      realpath: jest.fn(async (p: string) => jest.requireActual('path').resolve(p))
+    }
   }));
 
   jest.doMock('fs', () => ({
