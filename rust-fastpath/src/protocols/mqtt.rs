@@ -64,12 +64,31 @@ impl ProtocolPlugin for MqttProtocolPlugin {
         };
         let suppress_high_frequency = metadata_bool(input.metadata.as_ref(), "suppressHighFrequency");
         let is_heartbeat = heartbeat_topics.iter().any(|pattern| topic_lower.contains(&pattern.to_lowercase()));
-        let payload_bytes = input
-            .payload_base64
-            .as_deref()
-            .and_then(|body| BASE64_STANDARD.decode(body.as_bytes()).ok())
-            .map(|body| body.len() as u64)
-            .unwrap_or(0);
+        let raw_payload = input.payload_base64.as_deref().unwrap_or("");
+        let payload_bytes = if raw_payload.trim().is_empty() {
+            0
+        } else {
+            match BASE64_STANDARD.decode(raw_payload.as_bytes()) {
+                Ok(body) => body.len() as u64,
+                Err(_) => {
+                    return Ok(ProtocolEvaluateResponse {
+                        protocol: "mqtt".to_string(),
+                        verdict: "block".to_string(),
+                        action: "block".to_string(),
+                        matched_rule: Some("fast_path:mqtt_invalid_base64_payload".to_string()),
+                        findings: vec![ProtocolFinding {
+                            code: "mqtt_invalid_base64_payload".to_string(),
+                            severity: "medium".to_string(),
+                            message: "MQTT payload is not valid base64.".to_string(),
+                            metadata: Some(json!({ "payloadBase64Present": true })),
+                        }],
+                        decision_source: "rust-fastpath-protocol-mqtt".to_string(),
+                        processing_time_micros: 0,
+                        cost_metrics: ProtocolCostMetrics::default(),
+                    });
+                }
+            }
+        };
 
         if metadata_bool(input.metadata.as_ref(), "block") {
             return Ok(ProtocolEvaluateResponse {

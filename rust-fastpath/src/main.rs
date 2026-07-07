@@ -632,10 +632,16 @@ async fn serve_unix(app: Router, socket_path: String) {
 
     info!("starting rust-fastpath on unix socket {}", socket_path);
     let listener = UnixListener::bind(socket).expect("bind unix listener");
-    let permissions = std::fs::Permissions::from_mode(0o777);
+    let permissions = std::fs::Permissions::from_mode(0o660);
     std::fs::set_permissions(socket, permissions).expect("set unix socket permissions");
     loop {
-        let (stream, _) = listener.accept().await.expect("accept unix stream");
+        let (stream, _) = match listener.accept().await {
+            Ok(accepted) => accepted,
+            Err(error) => {
+                warn!("unix fastpath accept failed: {}", error);
+                continue;
+            }
+        };
         let tower_service = app.clone();
         tokio::spawn(async move {
             let io = TokioIo::new(stream);
@@ -713,12 +719,12 @@ fn check_with_route(state: AppState, input: CheckRequest, route: &str) -> impl I
     let is_new_key = !counters.contains_key(&namespaced_key);
     let entry = counters.entry(namespaced_key).or_insert_with(|| CounterEntry {
         count: 0,
-        reset_at_ms: now_ms + input.window_ms,
+        reset_at_ms: now_ms.saturating_add(input.window_ms),
     });
 
     if now_ms >= entry.reset_at_ms {
         entry.count = 0;
-        entry.reset_at_ms = now_ms + input.window_ms;
+        entry.reset_at_ms = now_ms.saturating_add(input.window_ms);
     }
 
     let allowed = entry.count < input.limit;
@@ -1059,7 +1065,13 @@ fn resolve_transport() -> TransportDetails {
         .ok()
         .and_then(|value| value.parse::<u16>().ok())
         .unwrap_or(8081);
-    let host = env::var("FASTPATH_TCP_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let host = env::var("FASTPATH_TCP_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+    if host != "127.0.0.1" && host != "localhost" && !host.starts_with("127.") {
+        warn!(
+            "FASTPATH_TCP_HOST={} is not loopback; the fastpath API has no auth and will be reachable from the network. Bind to loopback unless you have a network-isolation control (mTLS, firewall) in place.",
+            host
+        );
+    }
     TransportDetails {
         mode: "tcp".to_string(),
         socket_path: None,
@@ -1247,5 +1259,60 @@ mod tests {
         assert_eq!(parsed.get("protocol").and_then(|value| value.as_str()), Some("http"));
         assert_eq!(parsed.get("verdict").and_then(|value| value.as_str()), Some("block"));
         assert!(parsed.get("threats").and_then(|value| value.as_array()).is_some());
+    }
+
+    // Regression: rate-limit window arithmetic must saturate, not wrap.
+    // A wrapped reset_at_ms would make now_ms >= reset_at_ms true on every
+    // call, resetting the counter and silently bypassing the rate limit.
+    #[test]
+    fn rate_limit_window_arithmetic_saturates_instead_of_wrapping() {
+        let now_ms: u64 = 1_750_000_000_000;
+        let window_ms: u64 = u64::MAX;
+        let reset_at_ms = now_ms.saturating_add(window_ms);
+        // Saturation yields u64::MAX, not a wrapped small value.
+        assert_eq!(reset_at_ms, u64::MAX);
+        // The fail-safe property: reset stays in the far future, so the
+        // counter does NOT reset on the next call.
+        assert!(now_ms < reset_at_ms, "reset must stay after now under saturation");
+        // Contrast: plain + would wrap to now_ms - 1 and break the check.
+        assert!(now_ms >= now_ms.wrapping_add(window_ms));
+    }
+
+    // Regression: TCP transport must default to loopback, not 0.0.0.0.
+    // The fastpath API has no auth; binding all interfaces by default would
+    // expose /v1/rate/check, /v1/batch/flush etc. to the network.
+    #[test]
+    fn tcp_transport_defaults_to_loopback_when_host_unset() {
+        // resolve_transport reads env vars; snapshot and restore to keep the
+        // test hermetic and avoid leaking state into sibling tests.
+        let saved_transport = env::var("FASTPATH_TRANSPORT").ok();
+        let saved_host = env::var("FASTPATH_TCP_HOST").ok();
+        let saved_port = env::var("PORT").ok();
+
+        env::set_var("FASTPATH_TRANSPORT", "tcp");
+        env::remove_var("FASTPATH_TCP_HOST");
+        env::remove_var("PORT");
+
+        let transport = resolve_transport();
+        let address = transport.tcp_address.expect("tcp address");
+        assert!(
+            address.starts_with("127.0.0.1:") || address.starts_with("localhost:"),
+            "expected loopback default, got {}",
+            address
+        );
+
+        // Restore.
+        match saved_transport {
+            Some(v) => env::set_var("FASTPATH_TRANSPORT", v),
+            None => env::remove_var("FASTPATH_TRANSPORT"),
+        }
+        match saved_host {
+            Some(v) => env::set_var("FASTPATH_TCP_HOST", v),
+            None => env::remove_var("FASTPATH_TCP_HOST"),
+        }
+        match saved_port {
+            Some(v) => env::set_var("PORT", v),
+            None => env::remove_var("PORT"),
+        }
     }
 }

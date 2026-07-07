@@ -35,6 +35,36 @@ fn fixture_based_mqtt_request_suppresses_heartbeat() {
 }
 
 #[test]
+fn mqtt_blocks_invalid_base64_payload_before_suppression() {
+    let request = ProtocolEvaluateRequest {
+        tenant_id: "global".to_string(),
+        request_id: "mqtt-invalid-base64-1".to_string(),
+        protocol: "mqtt".to_string(),
+        direction: None,
+        source_ref: None,
+        dest_ref: None,
+        channel: Some("vehicle/heartbeat".to_string()),
+        headers: None,
+        metadata: Some(HashMap::from([
+            ("suppressHighFrequency".to_string(), json!(true)),
+            ("observedIntervalMs".to_string(), json!(100u64)),
+            ("heartbeatMinIntervalMs".to_string(), json!(1000u64)),
+        ])),
+        payload_base64: Some("!!!not-base64!!!".to_string()),
+        truncated: None,
+        timestamp: None,
+    };
+    let response = evaluate_protocol_request(&request).expect("evaluation");
+    assert_eq!(response.protocol, "mqtt");
+    assert_eq!(response.verdict, "block");
+    assert_eq!(response.action, "block");
+    assert!(response
+        .findings
+        .iter()
+        .any(|finding| finding.code == "mqtt_invalid_base64_payload"));
+}
+
+#[test]
 fn template_plugin_compiles_and_validates() {
     let plugin = TemplateProtocolPlugin;
     let request = ProtocolEvaluateRequest {
