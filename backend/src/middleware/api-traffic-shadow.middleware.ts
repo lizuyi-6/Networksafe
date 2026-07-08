@@ -56,6 +56,36 @@ function resolveTenantId(req: Request): string {
   ).trim() || PLATFORM_TENANT_ID;
 }
 
+function normalizedRouteCandidates(req: Request): string[] {
+  const candidates = new Set<string>();
+  for (const raw of [req.path, req.url, req.originalUrl]) {
+    const value = String(raw || '').split('?')[0].trim();
+    if (!value) {
+      continue;
+    }
+    candidates.add(value);
+    if (value.startsWith('/api/')) {
+      candidates.add(value.slice('/api'.length));
+    }
+  }
+  return Array.from(candidates);
+}
+
+function isAuthPipelineBypass(req: Request): boolean {
+  const authPaths = [
+    '/auth/login',
+    '/auth/oidc/login',
+    '/auth/oidc/callback',
+    '/auth/me',
+    '/auth/refresh',
+    '/auth/logout',
+    '/auth/register'
+  ];
+  return normalizedRouteCandidates(req).some((candidate) => (
+    authPaths.some((authPath) => candidate === authPath || candidate.startsWith(`${authPath}/`))
+  ));
+}
+
 function resolveRequestBody(req: Request): string {
   if (Buffer.isBuffer((req as any).rawBody)) {
     return Buffer.from((req as any).rawBody).toString('utf8');
@@ -184,13 +214,12 @@ function resolveNormalizedBody(req: Request, headers: Record<string, string>, ra
 }
 
 export async function apiTrafficShadowMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
-  fastpathTrafficShadowService.submitFromRequest(req);
-
-  const authPaths = ['/auth/login', '/auth/me', '/auth/refresh', '/auth/logout', '/auth/register'];
-  if (req.method === 'OPTIONS' || req.path === '/health' || req.path === '/api/health' || authPaths.some(p => req.path.startsWith(p))) {
+  if (req.method === 'OPTIONS' || req.path === '/health' || req.path === '/api/health' || isAuthPipelineBypass(req)) {
     next();
     return;
   }
+
+  fastpathTrafficShadowService.submitFromRequest(req);
 
   try {
     const headers = normalizeHeaders(req.headers as Record<string, unknown>);
@@ -267,11 +296,18 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
 
     next();
   } catch (error: any) {
-    logger.warn('HTTP detection pipeline failed, continuing request', {
+    logger.error('HTTP detection pipeline failed, blocking request fail-closed', {
       path: req.originalUrl || req.url,
       error: error?.message
     });
-    next();
+    res.status(503).json({
+      success: false,
+      error: {
+        code: 'backend.detection_pipeline_unavailable',
+        message: 'Request blocked because the detection pipeline is unavailable',
+        failClosed: true
+      }
+    });
   }
 }
 

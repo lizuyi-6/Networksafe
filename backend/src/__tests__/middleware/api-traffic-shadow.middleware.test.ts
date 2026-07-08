@@ -97,12 +97,57 @@ describe('apiTrafficShadowMiddleware', () => {
     return app;
   }
 
+  function buildMountedApiApp(): express.Express {
+    const app = express();
+    const apiRouter = express.Router();
+    app.use(express.json({ verify: captureRawBody }));
+    apiRouter.use(apiTrafficShadowMiddleware);
+    apiRouter.post('/auth/login', (_req, res) => res.status(200).json({ reachedAuthRoute: true }));
+    apiRouter.get('/auth/oidc/login', (_req, res) => res.status(200).json({ reachedOidcRoute: true }));
+    apiRouter.post('/search', (_req, res) => res.status(200).json({ reachedSearchRoute: true }));
+    app.use('/api', apiRouter);
+    return app;
+  }
+
   it('does not run shadow logic for health route', async () => {
     const app = buildApp();
     await request(app).get('/health').expect(200);
 
     await fastpathTrafficShadowService.awaitIdleForTests();
     expect(fastpathClientService.evaluateHttpTraffic).not.toHaveBeenCalled();
+    expect(detectionPipelineService.evaluateRequest).not.toHaveBeenCalled();
+  });
+
+  it('bypasses auth login routes before fastpath and detection hooks when mounted under /api', async () => {
+    (detectionPipelineService.evaluateRequest as jest.Mock).mockRejectedValue(new Error('pipeline unavailable'));
+
+    const app = buildMountedApiApp();
+    await request(app)
+      .post('/api/auth/login')
+      .set('x-request-id', 'auth-login-mounted')
+      .send({ email: 'alice@example.com', password: 'secret-value' })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.reachedAuthRoute).toBe(true);
+      });
+
+    await fastpathTrafficShadowService.awaitIdleForTests();
+    expect(fastpathClientService.evaluateHttpTraffic).not.toHaveBeenCalled();
+    expect(detectionPipelineService.evaluateRequest).not.toHaveBeenCalled();
+  });
+
+  it('bypasses OIDC login routes before detection fail-closed handling', async () => {
+    (detectionPipelineService.evaluateRequest as jest.Mock).mockRejectedValue(new Error('pipeline unavailable'));
+
+    const app = buildMountedApiApp();
+    await request(app)
+      .get('/api/auth/oidc/login')
+      .set('x-request-id', 'oidc-login-mounted')
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.reachedOidcRoute).toBe(true);
+      });
+
     expect(detectionPipelineService.evaluateRequest).not.toHaveBeenCalled();
   });
 
@@ -275,6 +320,21 @@ describe('apiTrafficShadowMiddleware', () => {
       .expect((response) => {
         expect(response.body?.error?.code).toBe('backend.request_blocked_by_detection_pipeline');
         expect(response.body?.error?.matchedRuleIds).toEqual(['seed-sqli-union']);
+      });
+  });
+
+  it('blocks fail-closed when the detection pipeline throws', async () => {
+    (detectionPipelineService.evaluateRequest as jest.Mock).mockRejectedValue(new Error('storage unavailable'));
+
+    const app = buildApp();
+    await request(app)
+      .post('/search')
+      .set('x-request-id', 'pipeline-down-1')
+      .send({ q: 'normal query' })
+      .expect(503)
+      .expect((response) => {
+        expect(response.body?.error?.code).toBe('backend.detection_pipeline_unavailable');
+        expect(response.body?.error?.failClosed).toBe(true);
       });
   });
 });

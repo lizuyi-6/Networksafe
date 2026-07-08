@@ -37,6 +37,20 @@ describe('finalDefenseService', () => {
     expect(normalizeInterlockState('asserted')).toBe('isolated');
   });
 
+  it('defaults non-finite release TTL before applying the safety clamp', () => {
+    const policy = finalDefenseService.upsertPolicy({
+      tenantId: 'tenant-release-ttl-nan',
+      companionId: 'companion-release-ttl-nan',
+      gateId: 'gate-release-ttl-nan',
+      breakerTarget: 'mgmt-uplink',
+      releaseTtlMs: 'abc' as any,
+      allowedActions: [{ commandType: 'interlock_release', requiresInterlockRelease: true }]
+    });
+
+    expect(Number.isFinite(policy.releaseTtlMs)).toBe(true);
+    expect(policy.releaseTtlMs).toBe(120_000);
+  });
+
   it('reports active only when the companion and hardware conditions match', () => {
     const policy = finalDefenseService.upsertPolicy({
       tenantId: 'tenant-final-defense',
@@ -214,6 +228,7 @@ describe('finalDefenseService', () => {
           })).end().sign(kp.privateKey, 'base64')
       };
       expect(daemon!.requestRelease(grant)).toBe(true);
+      daemon!.handleControllerFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk: true });
       expect(daemon!.isReleased()).toBe(true);
     } finally {
       daemon!.shutdown();
@@ -291,6 +306,7 @@ describe('finalDefenseService', () => {
     const tenantId = `tenant-root-action-${Date.now()}`;
     const companionId = `companion-root-action-${Date.now()}`;
     const gateId = `gate-root-action-${Date.now()}`;
+    const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
 
     finalDefenseService.upsertPolicy({
       tenantId,
@@ -303,7 +319,8 @@ describe('finalDefenseService', () => {
     hardwareAuthorizationService.enrollGate({
       tenantId,
       gateId,
-      publicKeyPem: '-----BEGIN PUBLIC KEY-----\nfixture\n-----END PUBLIC KEY-----',
+      publicKeyPem: keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      algorithm: 'ECDSA_P256_SHA256',
       status: 'online'
     });
 

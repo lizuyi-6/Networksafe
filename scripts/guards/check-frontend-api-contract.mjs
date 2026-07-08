@@ -26,6 +26,9 @@ function normalizePath(p) {
     // builder (e.g. /rules${search.toString()}); the source may be truncated at
     // the backtick, so drop from "toString" onward regardless of closing brace.
     p = p.replace(/toString.*$/, '');
+    // A trailing ${query} / ${queryString} / ${searchParams} interpolation is a
+    // query-string builder, not a path segment (e.g. /stats${query}).
+    p = p.replace(/\$\{(?:query|queryString|search|searchParams)\}$/g, '');
     p = p.replace(/\$\{[^}]*$/, ''); // dangling unclosed ${ from backtick truncation
     // strip query string
     p = p.split('?')[0];

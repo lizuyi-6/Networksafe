@@ -2,6 +2,7 @@ import { createHash, createSign, generateKeyPairSync } from 'crypto';
 import { initDatabase } from '../../config/database';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
 import { deploymentRunService, renderRollbackScript, renderHealthcheckScript } from '../../services/deployment-run.service';
+import { finalDefenseService } from '../../services/final-defense.service';
 import { hardwareAuthorizationService } from '../../services/hardware-authorization.service';
 import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 
@@ -10,6 +11,7 @@ describe('deploymentRunService', () => {
     process.env.DEPLOYMENT_BUNDLE_SIGNING_SECRET = 'test-deployment-signing-secret-32';
     await initDatabase();
     hardwareAuthorizationService.prepare();
+    finalDefenseService.prepare();
     deploymentRunService.prepare();
   });
 
@@ -63,6 +65,15 @@ describe('deploymentRunService', () => {
       status: 'online'
     });
 
+    const policy = finalDefenseService.upsertPolicy({
+      tenantId,
+      companionId: helperId,
+      gateId,
+      allowedActions: [{ commandType: 'host_install', requiresInterlockRelease: true }],
+      breakerTarget: 'server-lan-transparent-bridge',
+      status: 'active'
+    });
+
     await deploymentRunService.registerHelper({
       tenantId,
       helperId,
@@ -114,15 +125,33 @@ describe('deploymentRunService', () => {
       gateId,
       bundleChecksum: approvedRun.bundleChecksum,
       checksumShortCode: approvedRun.checksumShortCode,
-      requestType: approvedRun.requestType
+      requestType: approvedRun.requestType,
+      policyDigest: policy.policyDigest,
+      challenge: expect.any(String),
+      breakerTarget: policy.breakerTarget,
+      interlockAction: 'interlock_release'
     };
-    expect(hashPayload(grantPayload)).toBe(approval.intent.payloadHash);
-    expect(createHash('sha256').update(JSON.stringify(grantPayload)).digest('hex')).not.toBe(approval.intent.payloadHash);
+    expect(approval.intent.payload).toMatchObject(grantPayload);
+    expect(hashPayload(approval.intent.payload)).toBe(approval.intent.payloadHash);
+    const differentlyOrderedPayload = {
+      interlockAction: 'interlock_release',
+      breakerTarget: policy.breakerTarget,
+      challenge: approval.intent.payload.challenge,
+      policyDigest: policy.policyDigest,
+      requestType: approvedRun.requestType,
+      checksumShortCode: approvedRun.checksumShortCode,
+      bundleChecksum: approvedRun.bundleChecksum,
+      gateId,
+      helperId,
+      runId: approvedRun.id
+    };
+    expect(hashPayload(differentlyOrderedPayload)).toBe(approval.intent.payloadHash);
+    expect(createHash('sha256').update(JSON.stringify(differentlyOrderedPayload)).digest('hex')).not.toBe(approval.intent.payloadHash);
 
     const issuedAt = new Date().toISOString();
-    const expiresAt = approval.sessionId
-      ? hardwareAuthorizationService.getConfirmationSession(approval.sessionId)!.expiresAt
-      : new Date(Date.now() + 120_000).toISOString();
+    const session = hardwareAuthorizationService.getConfirmationSession(approval.sessionId!);
+    const expiresAt = session!.expiresAt;
+    const sessionSummary = session!.summary;
     const monotonicCounter = 1;
     const signature = createSign('SHA256')
       .update(buildHardwareGrantMessage({
@@ -134,6 +163,10 @@ describe('deploymentRunService', () => {
         targetId: run.id,
         commandType: 'host_install',
         payloadHash: approval.intent.payloadHash,
+        policyDigest: sessionSummary.policyDigest,
+        challenge: sessionSummary.challenge,
+        breakerTarget: sessionSummary.breakerTarget,
+        interlockAction: sessionSummary.interlockAction,
         issuedAt,
         expiresAt,
         monotonicCounter
@@ -147,6 +180,10 @@ describe('deploymentRunService', () => {
       issuedAt,
       expiresAt,
       monotonicCounter,
+      policyDigest: sessionSummary.policyDigest,
+      challenge: sessionSummary.challenge,
+      breakerTarget: sessionSummary.breakerTarget,
+      interlockAction: sessionSummary.interlockAction,
       signature
     });
 

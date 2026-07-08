@@ -21,6 +21,21 @@ function shouldWriteSqliteFallback(): boolean {
   return getDatabaseMode() === 'sqlite' || isSqliteFallbackEnabled();
 }
 
+function isPostgresAuthoritativeOnly(): boolean {
+  return getDatabaseMode() === 'postgres' && !shouldWriteSqliteFallback();
+}
+
+async function executePostgresAuthWrite(
+  sql: string,
+  params: unknown[],
+  operation: string
+): Promise<void> {
+  const affectedRows = await postgresShadowStoreService.execute(sql, params);
+  if (isPostgresAuthoritativeOnly() && affectedRows <= 0) {
+    throw new Error(`Postgres auth write failed: ${operation} affected 0 rows`);
+  }
+}
+
 export async function findAuthUserByEmail(email: string): Promise<AuthUserRow | null> {
   if (postgresShadowStoreService.canServeReads()) {
     return await postgresShadowStoreService.queryOne<AuthUserRow>(`
@@ -59,7 +74,7 @@ export async function findAuthUserById(userId: string): Promise<AuthUserRow | nu
 
 export async function createAuthUser(row: AuthUserRow): Promise<void> {
   if (getDatabaseMode() === 'postgres') {
-    await postgresShadowStoreService.execute(`
+    await executePostgresAuthWrite(`
       INSERT INTO users (id, email, username, password_hash, role, plan, tenant_id, status, last_login, created_at, updated_at)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       ON CONFLICT (id)
@@ -86,7 +101,7 @@ export async function createAuthUser(row: AuthUserRow): Promise<void> {
       row.last_login || null,
       row.created_at || new Date().toISOString(),
       row.updated_at || new Date().toISOString()
-    ]);
+    ], 'createAuthUser');
   }
 
   if (shouldWriteSqliteFallback()) {
@@ -111,11 +126,11 @@ export async function createAuthUser(row: AuthUserRow): Promise<void> {
 
 export async function touchAuthUserLastLogin(userId: string, lastLogin = new Date().toISOString()): Promise<void> {
   if (getDatabaseMode() === 'postgres') {
-    await postgresShadowStoreService.execute(`
+    await executePostgresAuthWrite(`
       UPDATE users
       SET last_login = $1, updated_at = $2
       WHERE id = $3
-    `, [lastLogin, lastLogin, userId]);
+    `, [lastLogin, lastLogin, userId], 'touchAuthUserLastLogin');
   }
 
   if (shouldWriteSqliteFallback()) {
@@ -127,11 +142,11 @@ export async function updateAuthUserPassword(userId: string, passwordHash: strin
   const updatedAt = new Date().toISOString();
 
   if (getDatabaseMode() === 'postgres') {
-    await postgresShadowStoreService.execute(`
+    await executePostgresAuthWrite(`
       UPDATE users
       SET password_hash = $1, updated_at = $2
       WHERE id = $3
-    `, [passwordHash, updatedAt, userId]);
+    `, [passwordHash, updatedAt, userId], 'updateAuthUserPassword');
   }
 
   if (shouldWriteSqliteFallback()) {
@@ -142,17 +157,18 @@ export async function updateAuthUserPassword(userId: string, passwordHash: strin
 export async function recordLoginHistory(params: {
   id: string; userId: string; ipAddress: string; userAgent: string; status: string;
 }): Promise<void> {
+  const createdAt = new Date().toISOString();
   if (getDatabaseMode() === 'postgres') {
-    await postgresShadowStoreService.execute(`
+    await executePostgresAuthWrite(`
       INSERT INTO login_history (id, user_id, ip_address, user_agent, status, created_at)
-      VALUES ($1, $2, $3, $4, $5, datetime('now'))
-    `, [params.id, params.userId, params.ipAddress, params.userAgent, params.status]);
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, [params.id, params.userId, params.ipAddress, params.userAgent, params.status, createdAt], 'recordLoginHistory');
   }
 
   if (shouldWriteSqliteFallback()) {
     getDatabase().prepare(`
       INSERT INTO login_history (id, user_id, ip_address, user_agent, status, created_at)
-      VALUES (?, ?, ?, ?, ?, datetime('now'))
-    `).run(params.id, params.userId, params.ipAddress, params.userAgent, params.status);
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(params.id, params.userId, params.ipAddress, params.userAgent, params.status, createdAt);
   }
 }

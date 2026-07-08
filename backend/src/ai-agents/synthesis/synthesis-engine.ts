@@ -327,7 +327,7 @@ export class SynthesisEngine {
         const cutoff = new Date(Date.now() - maxAge);
 
         for (const [id, caseFile] of this.caseFiles) {
-            if (caseFile.timestamp < cutoff) {
+            if (caseFile.timestamp <= cutoff) {
                 this.caseFiles.delete(id);
             }
         }

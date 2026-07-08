@@ -51,6 +51,7 @@ export interface GatewayDaemonOptions {
   /** Provisioned Secure Element public key (PEM). Grant signatures verify against it. */
   secureElementPublicKeyPem: string;
   breakerTarget: string;
+  policyDigest?: string;
   /** PRD §4.4 trigger #7: heartbeat stale threshold (ms). Defaults to 45_000. */
   heartbeatStaleMs?: number;
   /** Release-window TTL after which the bridge auto-reasserts isolated. */
@@ -63,11 +64,21 @@ export interface GatewayDaemonOptions {
 
 const DEFAULT_HEARTBEAT_STALE_MS = 45_000;
 const DEFAULT_RELEASE_TTL_MS = 30_000;
+const MIN_RELEASE_TTL_MS = 5_000;
+const MAX_RELEASE_TTL_MS = 15 * 60_000;
+
+function normalizeReleaseTtlMs(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) {
+    return DEFAULT_RELEASE_TTL_MS;
+  }
+  return Math.min(Math.max(value, MIN_RELEASE_TTL_MS), MAX_RELEASE_TTL_MS);
+}
 
 export class GatewayDaemon extends EventEmitter {
   readonly gatewayId: string;
   private readonly secureElementPublicKeyPem: string;
   private readonly breakerTarget: string;
+  private readonly policyDigest: string;
   private readonly heartbeatStaleMs: number;
   private readonly releaseTtlMs: number;
   private readonly now: () => number;
@@ -80,8 +91,10 @@ export class GatewayDaemon extends EventEmitter {
   private secureElementPresent = true;
   private monotonicHighWater = 0;
   private releaseTimer: ReturnType<typeof setTimeout> | null = null;
+  private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
   private released = false;
+  private releasePending = false;
 
   constructor(opts: GatewayDaemonOptions) {
     super();
@@ -91,8 +104,9 @@ export class GatewayDaemon extends EventEmitter {
     this.gatewayId = opts.gatewayId;
     this.secureElementPublicKeyPem = opts.secureElementPublicKeyPem;
     this.breakerTarget = opts.breakerTarget;
+    this.policyDigest = String(opts.policyDigest || '');
     this.heartbeatStaleMs = opts.heartbeatStaleMs ?? DEFAULT_HEARTBEAT_STALE_MS;
-    this.releaseTtlMs = opts.releaseTtlMs ?? DEFAULT_RELEASE_TTL_MS;
+    this.releaseTtlMs = normalizeReleaseTtlMs(opts.releaseTtlMs);
     this.now = opts.now ?? Date.now;
     this.emitFrame = opts.onFrame ?? ((f) => this.emit('frame', f));
     // Boot is fail-closed: assert isolated before anything else.
@@ -125,6 +139,22 @@ export class GatewayDaemon extends EventEmitter {
       return false;
     }
     // Expiry (PRD §4.4 #4).
+    if (grant.gateId !== this.gatewayId) {
+      this.failClosed('gateway_context_mismatch');
+      return false;
+    }
+    if (grant.breakerTarget !== this.breakerTarget) {
+      this.failClosed('breaker_target_mismatch');
+      return false;
+    }
+    if (grant.commandType !== 'interlock_release' || grant.interlockAction !== 'release') {
+      this.failClosed('interlock_action_mismatch');
+      return false;
+    }
+    if (!this.policyDigest || grant.policyDigest !== this.policyDigest) {
+      this.failClosed('policy_digest_mismatch');
+      return false;
+    }
     const nowSec = Math.floor(this.now() / 1000);
     const expiresAt = Number(grant.expiresAt);
     if (!Number.isFinite(expiresAt) || nowSec >= expiresAt) {
@@ -140,18 +170,21 @@ export class GatewayDaemon extends EventEmitter {
 
     // Arm: signature verified, await controller + feedback confirmation.
     this.bridgeState = 'armed';
-    // Release is only committed once feedback confirms released; here we apply
-    // the released ruleset tentatively and rely on the controller frame /
-    // feedback readback to keep or revoke it.
-    this.applyRuleset('released_ruleset', 'grant_verified');
-    this.released = true;
-    this.bridgeState = 'released';
+    this.releasePending = true;
+    this.emitFrame({
+      type: 'command',
+      command: 'interlock_release',
+      breakerTarget: this.breakerTarget,
+      reason: 'grant_verified_awaiting_feedback',
+      ts: this.now()
+    });
+    if (this.feedbackTimer) clearTimeout(this.feedbackTimer);
+    const feedbackTimeoutMs = Math.min(this.releaseTtlMs, this.heartbeatStaleMs);
+    this.feedbackTimer = setTimeout(() => this.reassertIsolated('controller_release_feedback_timeout'), feedbackTimeoutMs);
+    this.feedbackTimer.unref?.();
+    // Commit happens in handleControllerFrame() after released + feedbackOk.
 
     // Auto-reassert after the release window (PRD §4.4 window expiry).
-    if (this.releaseTimer) clearTimeout(this.releaseTimer);
-    this.releaseTimer = setTimeout(() => this.assertIsolated('release_window_expired'), this.releaseTtlMs);
-    this.releaseTimer.unref?.();
-
     return true;
   }
 
@@ -169,6 +202,21 @@ export class GatewayDaemon extends EventEmitter {
     if (frame.type === 'state' || frame.type === 'interlock_result') {
       const incoming = normalizeInterlockState(frame.interlockState);
       this.controllerState = incoming;
+      // Trigger #5: SE dropped away. This must run before committing a release.
+      if (frame.secureElementPresent === false) {
+        this.failClosed('secure_element_unavailable');
+        return;
+      }
+      if (this.releasePending) {
+        if (incoming === 'released' && frame.feedbackOk === true) {
+          this.commitReleased();
+          return;
+        }
+        if (incoming !== 'released' || frame.feedbackOk === false) {
+          this.failClosed('release_feedback_mismatch');
+          return;
+        }
+      }
       // Trigger #9: daemon believes released while controller believes otherwise.
       if (this.released && incoming !== 'released') {
         this.failClosed('daemon_controller_state_conflict');
@@ -178,10 +226,6 @@ export class GatewayDaemon extends EventEmitter {
       if (this.released && frame.feedbackOk === false) {
         this.failClosed('feedback_not_verified');
         return;
-      }
-      // Trigger #5: SE dropped away.
-      if (frame.secureElementPresent === false) {
-        this.failClosed('secure_element_unavailable');
       }
     }
     if (frame.type === 'alert') {
@@ -209,19 +253,42 @@ export class GatewayDaemon extends EventEmitter {
     this.emitFrame({ type: 'apply_ruleset', ruleset, reason, ts: this.now() });
   }
 
+  private commitReleased(): void {
+    if (this.feedbackTimer) {
+      clearTimeout(this.feedbackTimer);
+      this.feedbackTimer = null;
+    }
+    this.releasePending = false;
+    this.applyRuleset('released_ruleset', 'controller_feedback_released');
+    this.released = true;
+    this.bridgeState = 'released';
+    if (this.releaseTimer) clearTimeout(this.releaseTimer);
+    this.releaseTimer = setTimeout(() => this.reassertIsolated('release_window_expired'), this.releaseTtlMs);
+    this.releaseTimer.unref?.();
+  }
+
   private assertIsolated(reason: string): void {
     this.released = false;
+    this.releasePending = false;
     this.bridgeState = 'isolated';
     this.controllerState = null;
     if (this.releaseTimer) {
       clearTimeout(this.releaseTimer);
       this.releaseTimer = null;
     }
+    if (this.feedbackTimer) {
+      clearTimeout(this.feedbackTimer);
+      this.feedbackTimer = null;
+    }
     this.applyRuleset('isolated_ruleset', reason);
   }
 
   private failClosed(reason: string): void {
     logger.warn('GatewayDaemon fail-closed', { gatewayId: this.gatewayId, reason });
+    this.reassertIsolated(reason);
+  }
+
+  private reassertIsolated(reason: string): void {
     this.assertIsolated(reason);
     this.emitFrame({ type: 'command', command: 'interlock_assert', breakerTarget: this.breakerTarget, reason, ts: this.now() });
   }
@@ -230,8 +297,10 @@ export class GatewayDaemon extends EventEmitter {
   shutdown(): void {
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
     if (this.releaseTimer) clearTimeout(this.releaseTimer);
+    if (this.feedbackTimer) clearTimeout(this.feedbackTimer);
     this.watchdogTimer = null;
     this.releaseTimer = null;
+    this.feedbackTimer = null;
     this.assertIsolated('shutdown');
   }
 }

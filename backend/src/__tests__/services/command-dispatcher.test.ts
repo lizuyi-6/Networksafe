@@ -63,6 +63,12 @@ function createMockDeviceAdapter(
 }
 
 const actor = { tenantId: 'tenant-1', userId: 'user-1', email: 'admin@test.com', ip: '127.0.0.1' };
+const finalDefenseHardwareContext = {
+  policyDigest: 'policy-digest-command-dispatcher-test',
+  breakerTarget: 'server-lan-bridge',
+  challenge: 'challenge-command-dispatcher-test',
+  interlockAction: 'interlock_release',
+};
 
 describe('CommandDispatcherService', () => {
   beforeEach(() => {
@@ -190,6 +196,7 @@ describe('CommandDispatcherService', () => {
       const result = await commandDispatcherService.dispatchDeviceCommand({
         deviceId: 'device-001',
         commandType: 'reboot',
+        payload: { hardwareContext: finalDefenseHardwareContext },
         actor,
       });
       expect(result.status).toBe('approval_required');
@@ -228,6 +235,7 @@ describe('CommandDispatcherService', () => {
       const result = await commandDispatcherService.dispatchDeviceCommand({
         deviceId: 'device-001',
         commandType: 'reboot',
+        payload: { hardwareContext: finalDefenseHardwareContext },
         actor,
         approved: true,
       });
@@ -243,6 +251,7 @@ describe('CommandDispatcherService', () => {
       const result = await commandDispatcherService.dispatchDeviceCommand({
         deviceId: 'device-001',
         commandType: 'factory-reset',
+        payload: { hardwareContext: finalDefenseHardwareContext },
         actor,
       });
       expect(result.status).toBe('approval_required');

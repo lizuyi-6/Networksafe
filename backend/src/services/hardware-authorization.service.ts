@@ -6,7 +6,9 @@ import { classifyCommandRisk, RiskClass } from '../security/command-risk-policy'
 import {
   HardwareGrantEnvelope,
   hashPayload,
+  isSupportedHardwareGrantAlgorithm,
   stableStringify,
+  validateHardwareGrantPublicKey,
   verifyHardwareGrantSignature
 } from '../security/hardware-grant';
 import logger from '../utils/logger';
@@ -220,6 +222,12 @@ class HardwareAuthorizationService {
     const status = input.status || existing?.status || 'enrolled';
     const displayName = input.displayName || existing?.displayName || input.gateId;
     const algorithm = input.algorithm || existing?.algorithm || 'ECDSA_P256_SHA256';
+    if (!isSupportedHardwareGrantAlgorithm(algorithm)) {
+      throw new Error('backend.hardware_gate_algorithm_unsupported');
+    }
+    if (!validateHardwareGrantPublicKey(input.publicKeyPem)) {
+      throw new Error('backend.hardware_gate_public_key_invalid');
+    }
     const metadata = {
       ...(existing?.metadata || {}),
       ...(input.metadata || {})
@@ -488,7 +496,7 @@ class HardwareAuthorizationService {
 
     const gate = this.getGate(gateId);
     if (!gate || gate.gateId !== session.gateId) {
-      this.rejectSession(sessionId, session.intent.actionId, 'gate_mismatch', payload);
+      await this.rejectSession(sessionId, session.intent.actionId, 'gate_mismatch', payload);
       return { handled: true, confirmed: false, reason: 'gate_mismatch', session };
     }
 
@@ -504,7 +512,7 @@ class HardwareAuthorizationService {
         || !Number.isInteger(monotonicCounter)
         || monotonicCounter > Number.MAX_SAFE_INTEGER
         || monotonicCounter < 0) {
-      this.rejectSession(sessionId, session.intent.actionId, 'invalid_monotonic_counter', payload);
+      await this.rejectSession(sessionId, session.intent.actionId, 'invalid_monotonic_counter', payload);
       return { handled: true, confirmed: false, reason: 'invalid_monotonic_counter', session };
     }
     const signature = String(payload?.signature || '').trim();
@@ -532,16 +540,16 @@ class HardwareAuthorizationService {
       session,
       gate,
       grant,
-      confirmed: Boolean(payload?.confirmed)
+      confirmed: payload?.confirmed === true
     });
     if (rejection) {
-      this.rejectSession(sessionId, session.intent.actionId, rejection, payload);
+      await this.rejectSession(sessionId, session.intent.actionId, rejection, payload);
       return { handled: true, confirmed: false, reason: rejection, session };
     }
 
-    const verified = verifyHardwareGrantSignature(gate.publicKeyPem, grant);
+    const verified = verifyHardwareGrantSignature(gate.publicKeyPem, grant, gate.algorithm);
     if (!verified) {
-      this.rejectSession(sessionId, session.intent.actionId, 'invalid_signature', payload);
+      await this.rejectSession(sessionId, session.intent.actionId, 'invalid_signature', payload);
       return { handled: true, confirmed: false, reason: 'invalid_signature', session };
     }
 
@@ -631,9 +639,12 @@ class HardwareAuthorizationService {
       return 'expires_at_mismatch';
     }
     for (const field of ['policyDigest', 'challenge', 'breakerTarget', 'interlockAction'] as const) {
-      const expected = String(input.session.summary?.[field] || '');
-      const actual = String(input.grant[field] || '');
-      if (expected && actual !== expected) {
+      const expected = String(input.session.summary?.[field] ?? '');
+      const actual = String(input.grant[field] ?? '');
+      if (!expected) {
+        return `${field}_missing`;
+      }
+      if (actual !== expected) {
         return `${field}_mismatch`;
       }
     }
@@ -689,34 +700,49 @@ class HardwareAuthorizationService {
     this.updateIntent(actionId, success ? 'completed' : 'failed', result);
   }
 
-  private rejectSession(sessionId: string, actionId: string, reason: string, payload: Record<string, any>): void {
+  private async rejectSession(sessionId: string, actionId: string, reason: string, payload: Record<string, any>): Promise<void> {
+    // PRD Section 7: every authorization decision (including rejections / fail-closed
+    // triggers) must leave a tamper-evident audit event, not just a DB column.
+    await this.auditRejection(sessionId, actionId, reason, payload);
     this.updateSession(sessionId, reason === 'session_expired' ? 'expired' : 'rejected', { reason, ack: payload });
     this.updateIntent(actionId, reason === 'session_expired' ? 'expired' : 'rejected', { reason, ack: payload });
-    // PRD §7: every authorization decision (including rejections / fail-closed
-    // triggers) must leave a tamper-evident audit event, not just a DB column.
-    this.auditRejection(sessionId, actionId, reason, payload);
   }
 
-  private auditRejection(sessionId: string, actionId: string, reason: string, payload: Record<string, any>): void {
+  private async auditRejection(sessionId: string, actionId: string, reason: string, payload: Record<string, any>): Promise<void> {
     const intent = this.getIntent(actionId);
     const session = this.getConfirmationSession(sessionId);
+    const criticalReasons = new Set([
+      'invalid_signature',
+      'monotonic_counter_rollback',
+      'non_increasing_monotonic_counter',
+      'policy_digest_mismatch',
+      'policyDigest_mismatch',
+      'challenge_mismatch',
+      'breakerTarget_mismatch',
+      'interlockAction_mismatch',
+      'policyDigest_missing',
+      'challenge_missing',
+      'breakerTarget_missing',
+      'interlockAction_missing'
+    ]);
     const severity: 'warning' | 'critical' =
-      reason === 'invalid_signature' || reason === 'monotonic_counter_rollback' || reason === 'policy_digest_mismatch'
-        ? 'critical'
-        : 'warning';
-    auditLogger.log({
-      tenantId: intent?.tenantId || session?.tenantId || PLATFORM_TENANT_ID,
-      eventType: 'hardware_confirmation_rejected',
-      category: 'command',
-      severity,
-      actor: { type: 'user', id: intent?.requestedBy || 'unknown' },
-      target: { type: 'action', id: actionId },
-      action: intent?.commandType || 'hardware_grant',
-      details: { actionId, sessionId, gateId: session?.gateId, reason, ackSummary: this.summarizeAck(payload) },
-      status: 'failure'
-    }).catch((error: any) => {
+      criticalReasons.has(reason) ? 'critical' : 'warning';
+    try {
+      await auditLogger.log({
+        tenantId: intent?.tenantId || session?.tenantId || PLATFORM_TENANT_ID,
+        eventType: 'hardware_confirmation_rejected',
+        category: 'command',
+        severity,
+        actor: { type: 'user', id: intent?.requestedBy || 'unknown' },
+        target: { type: 'action', id: actionId },
+        action: intent?.commandType || 'hardware_grant',
+        details: { actionId, sessionId, gateId: session?.gateId, reason, ackSummary: this.summarizeAck(payload) },
+        status: 'failure'
+      });
+    } catch (error: any) {
       logger.warn('Hardware confirmation rejection audit log unavailable', { actionId, reason, error: error?.message });
-    });
+      throw new Error('backend.hardware_rejection_audit_failed');
+    }
   }
 
   private summarizeAck(payload: Record<string, any>): Record<string, any> {

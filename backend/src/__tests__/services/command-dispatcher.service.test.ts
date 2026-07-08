@@ -31,10 +31,7 @@ describe('commandDispatcherService smoke tests', () => {
     });
 
     expect(result.success).toBe(false);
-    // 'restart' is a high-risk command: dispatcher first goes through hardware-confirmation
-    // review, so the failure reason surfaces as 'hardware_gate_unavailable' (no gate enrolled)
-    // when no agent gateway is set up in the test environment.
-    expect(result.reason).toBe('hardware_gate_unavailable');
+    expect(result.reason).toBe('hardware_context_policy_digest_required');
     expect(result.status).toBe('failed');
   });
 
@@ -122,6 +119,24 @@ describe('commandDispatcherService smoke tests', () => {
 
     // Should not throw - just a smoke test that the handler runs
     expect(true).toBe(true);
+  });
+
+  it('rejects physical-confirmation commands without hardwareContext policyDigest and breakerTarget', async () => {
+    commandDispatcherService.setDeviceAdapter({
+      getDevice: () => ({ isOnline: true }),
+      executeCommand: async () => ({ success: true, message: 'should not dispatch' })
+    });
+
+    const result = await commandDispatcherService.dispatchDeviceCommand({
+      deviceId: `device-hardware-context-${Date.now()}`,
+      commandType: 'host_remove',
+      payload: { path: '/opt/AetherGuard' },
+      actor: { tenantId: 'tenant-smoke', userId: 'tester', email: 'test@test.com' }
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.status).toBe('failed');
+    expect(result.reason).toBe('hardware_context_policy_digest_required');
   });
 });
 

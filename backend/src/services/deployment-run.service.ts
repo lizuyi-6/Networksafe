@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import { artifactStoreService } from './artifact-store.service';
 import { hardwareAuthorizationService, type CommandIntentRecord, type HardwareGrantRecord } from './hardware-authorization.service';
+import { finalDefenseService, type FinalDefensePolicyRecord } from './final-defense.service';
 import { signDeploymentBundlePayload, verifyDeploymentBundlePayload } from '../security/deployment-bundle-signing';
 import type { DeploymentTarget } from './platform-config.service';
 import logger from '../utils/logger';
@@ -555,18 +556,34 @@ class DeploymentRunService {
       throw new Error('backend.deployment_run_backup_required_before_approval');
     }
 
+    const commandType = run.requestType === 'remove' ? 'host_remove' : 'host_install';
+    const policy = this.resolveFinalDefensePolicyForRun(run, commandType);
+    const challenge = randomUUID();
+    const interlockAction = 'interlock_release';
+
     const approval = await hardwareAuthorizationService.requestPhysicalConfirmation({
       tenantId: actor.tenantId,
       scope: 'deployment',
       targetId: run.id,
-      commandType: run.requestType === 'remove' ? 'host_remove' : 'host_install',
+      commandType,
+      gateId: run.gateId,
       payload: {
         runId: run.id,
         helperId: run.helperId,
         gateId: run.gateId,
         bundleChecksum: run.bundleChecksum,
         checksumShortCode: run.checksumShortCode,
-        requestType: run.requestType
+        requestType: run.requestType,
+        policyDigest: policy.policyDigest,
+        challenge,
+        breakerTarget: policy.breakerTarget,
+        interlockAction
+      },
+      hardwareContext: {
+        policyDigest: policy.policyDigest,
+        challenge,
+        breakerTarget: policy.breakerTarget,
+        interlockAction
       },
       actorId: actor.userId,
       actorEmail: actor.email,
@@ -595,6 +612,24 @@ class DeploymentRunService {
       intent: approval.intent,
       sessionId: approval.session?.sessionId
     };
+  }
+
+  private resolveFinalDefensePolicyForRun(run: DeploymentRunRecord, commandType: string): FinalDefensePolicyRecord {
+    const policy = finalDefenseService.getActivePolicyForCompanion(run.helperId);
+    if (!policy || policy.tenantId !== run.tenantId) {
+      throw new Error('backend.deployment_run_final_defense_policy_required');
+    }
+    if (policy.gateId !== run.gateId) {
+      throw new Error('backend.deployment_run_final_defense_gate_mismatch');
+    }
+    if (!policy.policyDigest || !policy.breakerTarget) {
+      throw new Error('backend.deployment_run_final_defense_context_required');
+    }
+    const allowed = policy.allowedActions.some((action) => action.commandType === commandType);
+    if (!allowed) {
+      throw new Error('backend.deployment_run_final_defense_action_not_allowed');
+    }
+    return policy;
   }
 
   confirmApprovedRun(intent: CommandIntentRecord, grant: HardwareGrantRecord): DeploymentRunRecord | null {

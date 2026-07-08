@@ -101,6 +101,7 @@ const STANDALONE_ROUTES = new Set([
 
 const ADMIN_ROLES = new Set(['admin', 'platform_admin']);
 const GOVERNANCE_ROLES = new Set(['admin', 'platform_admin', 'tenant_admin', 'auditor']);
+const SESSION_EXPIRED_EVENT = 'aetherguard:session-expired';
 const isAdminRole = (role?: string | null) => ADMIN_ROLES.has(String(role || ''));
 const canSeeEnterpriseControls = (role?: string | null) => GOVERNANCE_ROLES.has(String(role || ''));
 
@@ -113,6 +114,13 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
     const [backendReady, setBackendReady] = useState(false);
 
     useEffect(() => {
+        const handleSessionExpired = () => {
+            setBackendReady(true);
+            setIsAuthenticated(false);
+        };
+
+        window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+
         const checkBackend = async () => {
             try {
                 const readiness = await fetchApiReadiness(AbortSignal.timeout(3000));
@@ -138,6 +146,10 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
             }
         };
         checkBackend();
+
+        return () => {
+            window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+        };
     }, []);
 
     // Show loading while checking backend and auth
@@ -166,6 +178,13 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const handleSessionExpired = () => {
+            setUserRole(null);
+            setIsLoading(false);
+        };
+
+        window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+
         const checkRole = async () => {
             try {
                 const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
@@ -176,6 +195,10 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
             setIsLoading(false);
         };
         checkRole();
+
+        return () => {
+            window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+        };
     }, []);
 
     if (isLoading) {

@@ -1,6 +1,7 @@
 import i18n from '../i18n';
 import { isDemoModeActive } from '../config/demo-mode';
 import {
+    getSessionUserIdentity,
     setSessionUserIdentity,
 } from './session-cache';
 import {
@@ -114,10 +115,31 @@ const applyDemoJitter = () => {
 
 // In-memory token storage for development (cookie fallback)
 let _accessToken: string | null = null;
+let sessionExpiredNotified = false;
 
 export const setAccessToken = (token: string | null) => {
     _accessToken = token;
+    if (token) {
+        sessionExpiredNotified = false;
+    }
 };
+
+const notifySessionExpired = () => {
+    setSessionUserIdentity(null);
+    setAccessToken(null);
+    if (sessionExpiredNotified) {
+        return;
+    }
+    sessionExpiredNotified = true;
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('aetherguard:session-expired'));
+    }
+};
+
+const isRetryableAuthInfrastructureFailure = (response: Response, payload?: any): boolean => (
+    response.status === 503 &&
+    (payload?.code === 'AUTH_BLACKLIST_UNAVAILABLE' || payload?.retryable === true)
+);
 
 const getAuthHeaders = () => {
     const headers: Record<string, string> = {
@@ -168,8 +190,7 @@ const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Pro
         refreshSubscribers.forEach(cb => cb(success));
         refreshSubscribers = [];
         if (!success) {
-            setSessionUserIdentity(null);
-            setAccessToken(null);
+            notifySessionExpired();
             return response;
         }
         // Retry the original request after successful refresh
@@ -182,6 +203,7 @@ const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Pro
             if (success) {
                 resolve(_fetchBase(url, options));
             } else {
+                notifySessionExpired();
                 resolve(response);
             }
         });
@@ -255,12 +277,19 @@ export interface ApiReadiness {
 
 export const fetchCurrentUserSession = async (signal?: AbortSignal): Promise<CurrentUserSession | null> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`, { signal });
+    const payload = await response.json().catch(() => null) as any;
     if (!response.ok) {
+        if (isRetryableAuthInfrastructureFailure(response, payload)) {
+            const cached = getSessionUserIdentity() as Partial<CurrentUserSession> | null;
+            if (cached?.userId && cached.email && cached.username && cached.role) {
+                return cached as CurrentUserSession;
+            }
+            return null;
+        }
         setSessionUserIdentity(null);
         return null;
     }
 
-    const payload = await response.json().catch(() => null) as any;
     const data = unwrapApiEnvelope<{ user?: CurrentUserSession }>(payload);
     const user = data?.user || payload?.user || null;
     setSessionUserIdentity(user);

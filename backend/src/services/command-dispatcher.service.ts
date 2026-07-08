@@ -345,6 +345,25 @@ class CommandDispatcherService {
     actor: CommandActor;
     actionId: string;
   }): Promise<DispatchResult> {
+    const hardwareContext = input.payload?.hardwareContext;
+    const policyDigest = typeof hardwareContext?.policyDigest === 'string'
+      ? hardwareContext.policyDigest.trim()
+      : '';
+    const breakerTarget = typeof hardwareContext?.breakerTarget === 'string'
+      ? hardwareContext.breakerTarget.trim()
+      : '';
+    if (!policyDigest || !breakerTarget) {
+      return {
+        success: false,
+        status: 'failed',
+        actionId: input.actionId,
+        message: `Command ${input.commandType} requires hardwareContext.policyDigest and hardwareContext.breakerTarget before hardware confirmation.`,
+        reason: !policyDigest
+          ? 'hardware_context_policy_digest_required'
+          : 'hardware_context_breaker_target_required'
+      };
+    }
+
     const title = this.commandTitle(input.scope, input.commandType, input.targetId, input.payload);
     const operator = input.actor.email || input.actor.userId;
     this.safeRecordActionRun({
@@ -374,7 +393,13 @@ class CommandDispatcherService {
       actorId: input.actor.userId,
       actorEmail: input.actor.email,
       actorIp: input.actor.ip,
-      actionId: input.actionId
+      actionId: input.actionId,
+      hardwareContext: {
+        policyDigest,
+        challenge: typeof hardwareContext?.challenge === 'string' ? hardwareContext.challenge : undefined,
+        breakerTarget,
+        interlockAction: typeof hardwareContext?.interlockAction === 'string' ? hardwareContext.interlockAction : undefined
+      }
     });
 
     if (!request.success) {

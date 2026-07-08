@@ -23,6 +23,7 @@ export class AuthSecurityService {
   private readonly MAX_LOGIN_ATTEMPTS = 5;
   private readonly LOCKOUT_DURATION = 900;
   private readonly ATTEMPT_WINDOW = 300;
+  private readonly SESSION_TTL_SECONDS = 86_400;
 
   private loginAttemptsFallback: Map<string, LoginAttempt[]> = new Map();
   private lockedAccountsFallback: Map<string, { reason: string; lockedAt: string }> = new Map();
@@ -381,9 +382,18 @@ export class AuthSecurityService {
         return storedUserId === userId;
       }
 
-      const key = `auth:session:${userId}`;
-      const storedSessionId = await redisService.get(key);
-      return storedSessionId === sessionId;
+      const key = `auth:session:${sessionId}`;
+      const storedSession = await redisService.get(key);
+      if (!storedSession) {
+        return false;
+      }
+
+      try {
+        const parsed = JSON.parse(storedSession);
+        return parsed?.userId === userId;
+      } catch {
+        return storedSession === userId;
+      }
     } catch (error) {
       logger.error('Error validating session', { error, userId });
       return false;
@@ -404,6 +414,12 @@ export class AuthSecurityService {
         return;
       }
 
+      const concurrentKey = `auth:concurrent:${userId}`;
+      const sessionIds = await redisService.getClient().smembers(concurrentKey);
+      if (sessionIds.length > 0) {
+        await Promise.all(sessionIds.map((sessionId) => redisService.del(`auth:session:${sessionId}`)));
+      }
+      await redisService.del(concurrentKey);
       await redisService.del(`auth:session:${userId}`);
       logger.info('Session invalidated', { userId });
     } catch (error) {
@@ -419,6 +435,7 @@ export class AuthSecurityService {
       }
 
       const key = `auth:concurrent:${userId}`;
+      await this.pruneConcurrentSessions(userId);
       const sessionCount = await redisService.getClient().scard(key);
       return sessionCount < maxSessions;
     } catch (error) {
@@ -439,19 +456,20 @@ export class AuthSecurityService {
       }
 
       const key = `auth:concurrent:${userId}`;
-      await redisService.getClient().sadd(key, sessionId);
-      await redisService.getClient().expire(key, 86400);
-
       const sessionKey = `auth:session:${sessionId}`;
-      await redisService.set(
+      const client = redisService.getClient();
+      await client.setex(
         sessionKey,
+        this.SESSION_TTL_SECONDS,
         JSON.stringify({
           userId,
           deviceInfo,
           createdAt: Date.now(),
-        }),
-        86400
+        })
       );
+      await client.sadd(key, sessionId);
+      await client.expire(key, this.SESSION_TTL_SECONDS);
+      await this.pruneConcurrentSessions(userId);
     } catch (error) {
       logger.error('Error adding session', { error, userId });
     }
@@ -474,6 +492,31 @@ export class AuthSecurityService {
       await redisService.del(sessionKey);
     } catch (error) {
       logger.error('Error removing session', { error, userId });
+    }
+  }
+
+  private async pruneConcurrentSessions(userId: string): Promise<void> {
+    if (!redisService.isAvailable()) {
+      return;
+    }
+
+    const key = `auth:concurrent:${userId}`;
+    const client = redisService.getClient();
+    const sessionIds = await client.smembers(key);
+    if (sessionIds.length === 0) {
+      return;
+    }
+
+    const staleSessionIds: string[] = [];
+    await Promise.all(sessionIds.map(async (sessionId) => {
+      const exists = await client.exists(`auth:session:${sessionId}`);
+      if (exists !== 1) {
+        staleSessionIds.push(sessionId);
+      }
+    }));
+
+    if (staleSessionIds.length > 0) {
+      await client.srem(key, ...staleSessionIds);
     }
   }
 }

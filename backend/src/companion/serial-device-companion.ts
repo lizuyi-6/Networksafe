@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 import readline from 'readline';
 import { spawn } from 'child_process';
+import { timingSafeEqual } from 'crypto';
 import { io, Socket } from 'socket.io-client';
 import {
   computeFinalDefensePolicyDigest,
@@ -40,8 +41,12 @@ export function loadLocalPolicy(policyPath: string, signatureSecret?: string): L
   const raw = fs.readFileSync(policyPath, 'utf8');
   const policy = JSON.parse(raw) as LocalPolicy;
   const digest = computeFinalDefensePolicyDigest(policy);
-  if (policy.policyDigest && policy.policyDigest !== digest) {
-    throw new Error('final defense policy digest mismatch');
+  if (policy.policyDigest) {
+    const suppliedDigest = Buffer.from(policy.policyDigest, 'utf8');
+    const computedDigest = Buffer.from(digest, 'utf8');
+    if (suppliedDigest.length !== computedDigest.length || !timingSafeEqual(suppliedDigest, computedDigest)) {
+      throw new Error('final defense policy digest mismatch');
+    }
   }
   policy.policyDigest = digest;
   if (signatureSecret && !verifyFinalDefensePolicySignature(policy, policy.signature, signatureSecret)) {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * JWT Authentication Middleware
  *
  * Provides secure authentication for AetherGuard API endpoints
@@ -59,6 +59,17 @@ export interface AuthenticatedUser {
 export interface AuthenticatedRequest extends Request {
     user?: AuthenticatedUser;
     tenantContext?: TenantContext;
+}
+
+export type TokenVerificationFailureReason =
+    | 'invalid_token'
+    | 'blacklisted_token'
+    | 'redis_unavailable'
+    | 'blacklist_check_failed';
+
+export interface TokenVerificationResult {
+    user: AuthenticatedUser | null;
+    failureReason?: TokenVerificationFailureReason;
 }
 
 /**
@@ -133,7 +144,7 @@ export function verifyToken(token: string): AuthenticatedUser | null {
  * SECURITY FIX: Fail secure when Redis is unavailable - reject tokens if we can't verify blacklist
  * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
  */
-export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser | null> {
+export async function verifyTokenAsyncDetailed(token: string): Promise<TokenVerificationResult> {
     let isRedisAvailable = false;
 
     // First verify JWT is valid
@@ -143,7 +154,7 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
         decoded.role = normalizeRole(decoded.role);
         decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
     } catch (error) {
-        return null;
+        return { user: null, failureReason: 'invalid_token' };
     }
 
     // Try to check blacklist - fail secure if Redis unavailable
@@ -158,12 +169,12 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
             const isBlacklisted = await redisService.exists(`token:blacklist:${token}`);
             if (isBlacklisted) {
                 logger.warn('Attempted use of blacklisted token');
-                return null;
+                return { user: null, failureReason: 'blacklisted_token' };
             }
         } catch (error) {
             // Redis error during blacklist check - fail secure
             logger.error('Token blacklist check failed due to Redis error, rejecting token for security');
-            return null;
+            return { user: null, failureReason: 'blacklist_check_failed' };
         }
     } else {
         // When Redis is unavailable and bypass is enabled, skip blacklist check and accept the token.
@@ -175,13 +186,18 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
 
         if (!allowInsecureBypass) {
             logger.warn('Redis unavailable, rejecting token for security (fail-secure)');
-            return null;
+            return { user: null, failureReason: 'redis_unavailable' };
         }
 
         logger.warn('Redis unavailable, allowing token (blacklist check skipped) due to ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN=true');
     }
 
-    return decoded;
+    return { user: decoded };
+}
+
+export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser | null> {
+    const result = await verifyTokenAsyncDetailed(token);
+    return result.user;
 }
 
 /**
@@ -225,7 +241,7 @@ const isHttpsRequest = (req: Request): boolean => {
 export const buildCookieOptions = (req: Request) => ({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production' ? isHttpsRequest(req) : false,
-    sameSite: 'lax' as const,
+    sameSite: 'strict' as const,
     path: '/',
     maxAge: COOKIE_MAX_AGE // 24 hours
 });
@@ -261,9 +277,22 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
     }
 
     // SECURITY FIX CVE-2026-001: Use async version with blacklist check
-    const user = await verifyTokenAsync(token);
+    const verification = await verifyTokenAsyncDetailed(token);
+    const user = verification.user;
 
     if (!user) {
+        if (
+            verification.failureReason === 'redis_unavailable' ||
+            verification.failureReason === 'blacklist_check_failed'
+        ) {
+            res.status(503).json({
+                error: 'backend.auth_blacklist_check_unavailable',
+                code: 'AUTH_BLACKLIST_UNAVAILABLE',
+                retryable: true
+            });
+            return;
+        }
+
         res.status(401).json({
             error: 'backend.invalid_or_expired_token',
             code: 'AUTH_TOKEN_INVALID'

@@ -8,17 +8,7 @@
 
 import express from 'express';
 import cors from 'cors';
-
-// Import the buildAllowedOrigins logic directly to test CORS origin validation
-function buildAllowedOrigins(): string[] {
-  return process.env.ALLOWED_ORIGINS?.split(',') || [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://localhost:5173',
-    'http://localhost:8080',
-    'http://127.0.0.1:8080'
-  ];
-}
+import { buildAllowedOrigins } from '../../bootstrap/control-plane-app';
 
 function createTestCorsApp(extraOrigins: string[] = []): express.Express {
   const app = express();
@@ -26,14 +16,14 @@ function createTestCorsApp(extraOrigins: string[] = []): express.Express {
 
   app.use(cors({
     origin: (origin, callback) => {
-      // Current CORS logic (Audit 2 fix applied)
-      if (origin === 'null') {
-        return callback(null, false);
-      }
       if (!origin) {
         return callback(null, true);
       }
-      if (allowedOrigins.includes(origin)) {
+      if (origin === 'null') {
+        return callback(null, false);
+      }
+      const normalizedOrigin = origin.trim().replace(/\/+$/, '');
+      if (allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
       return callback(null, false);
@@ -49,6 +39,24 @@ function createTestCorsApp(extraOrigins: string[] = []): express.Express {
 }
 
 describe('CORS Security (Audit 2)', () => {
+  const originalAllowedOrigins = process.env.ALLOWED_ORIGINS;
+
+  afterEach(() => {
+    if (originalAllowedOrigins === undefined) {
+      delete process.env.ALLOWED_ORIGINS;
+    } else {
+      process.env.ALLOWED_ORIGINS = originalAllowedOrigins;
+    }
+  });
+
+  it('normalizes comma-separated ALLOWED_ORIGINS without allowing null origin', () => {
+    process.env.ALLOWED_ORIGINS = ' http://localhost:5173, http://127.0.0.1:5173/ , null, ';
+    expect(buildAllowedOrigins()).toEqual([
+      'http://localhost:5173',
+      'http://127.0.0.1:5173'
+    ]);
+  });
+
   it('REDTEAM: origin=https://evil.com must be rejected', async () => {
     const app = createTestCorsApp();
     const response = await makeRequest(app, '/test', {

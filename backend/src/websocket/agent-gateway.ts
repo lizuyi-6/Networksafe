@@ -15,7 +15,7 @@ import { Server as HttpServer } from 'http';
 import { isIPv4, isIPv6 } from 'net';
 import logger from '../utils/logger';
 import { AgentStatus, ThreatAlert } from '../agent';
-import { verifyTokenAsync, AuthenticatedRequest } from '../middleware/auth.middleware';
+import { verifyTokenAsyncDetailed, AuthenticatedRequest } from '../middleware/auth.middleware';
 import agentAuthService from '../security/agent-auth.service';
 import commandSigningService from '../security/command-signing.service';
 import auditLogger from '../security/audit-logger.service';
@@ -52,6 +52,17 @@ const RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 100;
 const USER_RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_USER_REQUESTS_PER_WINDOW = 150; // Slightly higher than per-socket limit
+const DEFAULT_DASHBOARD_SESSION_REVALIDATE_MS = 60_000;
+
+function resolveDashboardSessionRevalidateMs(): number {
+  const parsed = Number(process.env.WS_DASHBOARD_SESSION_REVALIDATE_MS);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return process.env.NODE_ENV === 'test'
+      ? Math.max(1, Math.floor(parsed))
+      : Math.max(5_000, Math.floor(parsed));
+  }
+  return DEFAULT_DASHBOARD_SESSION_REVALIDATE_MS;
+}
 
 /**
  * SECURITY (Sprint 5 Wave 2 · F5): per-agent-event rate limits. Each
@@ -446,7 +457,8 @@ export class AgentGateway {
         }
 
         // Verify JWT
-        const user = await verifyTokenAsync(token);
+        const verification = await verifyTokenAsyncDetailed(token);
+        const user = verification.user;
 
         if (!user) {
           await auditLogger.log({
@@ -458,7 +470,12 @@ export class AgentGateway {
             details: { reason: 'Invalid token' },
             status: 'failure'
           });
-          return next(new Error('backend.invalid_or_expired_token'));
+          return next(new Error(
+            verification.failureReason === 'redis_unavailable' ||
+            verification.failureReason === 'blacklist_check_failed'
+              ? 'backend.auth_blacklist_check_unavailable'
+              : 'backend.invalid_or_expired_token'
+          ));
         }
 
         // Attach to socket
@@ -481,6 +498,7 @@ export class AgentGateway {
         socket.data.user = user;
         socket.data.clientType = 'dashboard';
         socket.data.tenantContext = tenantContext;
+        socket.data.authToken = token;
 
         await auditLogger.log({
           eventType: 'dashboard_connection',
@@ -891,6 +909,8 @@ export class AgentGateway {
       tenantId: tenantContext.tenantId
     });
 
+    this.startDashboardSessionRevalidation(socket, user, tenantContext);
+
     // Send current agent list
     this.emitAgentListToDashboard(socket.id, tenantContext.tenantId);
 
@@ -1064,6 +1084,87 @@ export class AgentGateway {
         tenantId: tenantContext.tenantId
       });
     });
+  }
+
+  private startDashboardSessionRevalidation(
+    socket: Socket,
+    user: AuthenticatedRequest['user'],
+    tenantContext: TenantContext
+  ): void {
+    const token = socket.data.authToken;
+    if (!token || !user) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      void this.revalidateDashboardSession(socket, token, user, tenantContext);
+    }, resolveDashboardSessionRevalidateMs());
+    timer.unref?.();
+
+    socket.once('disconnect', () => {
+      clearInterval(timer);
+    });
+  }
+
+  private async revalidateDashboardSession(
+    socket: Socket,
+    token: string,
+    originalUser: NonNullable<AuthenticatedRequest['user']>,
+    originalTenantContext: TenantContext
+  ): Promise<void> {
+    if (!socket.connected) {
+      return;
+    }
+
+    try {
+      const verification = await verifyTokenAsyncDetailed(token);
+      const refreshedUser = verification.user;
+      const refreshedTenantContext = refreshedUser
+        ? resolveUserTenantContext(refreshedUser, {
+          allowAdminPlatformFallback: refreshedUser.role === 'admin'
+        })
+        : null;
+
+      if (
+        !refreshedUser ||
+        refreshedUser.userId !== originalUser.userId ||
+        !refreshedTenantContext ||
+        refreshedTenantContext.tenantId !== originalTenantContext.tenantId
+      ) {
+        await auditLogger.log({
+          eventType: 'dashboard_session_revalidation',
+          category: 'auth',
+          severity: 'warning',
+          actor: { type: 'user', id: originalUser.userId, ip: socket.handshake.address },
+          action: 'revalidate_websocket_session',
+          details: {
+            reason: verification.failureReason || 'identity_or_tenant_changed',
+            socketId: socket.id
+          },
+          status: 'failure'
+        });
+        socket.emit('error', {
+          message: verification.failureReason === 'redis_unavailable' ||
+            verification.failureReason === 'blacklist_check_failed'
+            ? 'backend.auth_blacklist_check_unavailable'
+            : 'backend.websocket_session_invalidated',
+          reason: verification.failureReason || 'session_invalidated'
+        });
+        socket.disconnect(true);
+        return;
+      }
+
+      socket.data.user = refreshedUser;
+      socket.data.tenantContext = refreshedTenantContext;
+    } catch (error: any) {
+      logger.error('Dashboard WebSocket session revalidation failed', {
+        socketId: socket.id,
+        userId: originalUser.userId,
+        error: error?.message
+      });
+      socket.emit('error', { message: 'backend.websocket_session_revalidation_failed', reason: 'revalidation_failed' });
+      socket.disconnect(true);
+    }
   }
 
   /**

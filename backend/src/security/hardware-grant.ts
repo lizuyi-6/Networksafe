@@ -1,4 +1,7 @@
-import { createHash, createVerify } from 'crypto';
+import { createHash, createPublicKey, createVerify } from 'crypto';
+
+export const SUPPORTED_HARDWARE_GRANT_ALGORITHM = 'ECDSA_P256_SHA256';
+export type HardwareGrantAlgorithm = typeof SUPPORTED_HARDWARE_GRANT_ALGORITHM;
 
 export interface HardwareGrantMessageInput {
   gateId: string;
@@ -21,6 +24,23 @@ export interface HardwareGrantMessageInput {
 export interface HardwareGrantEnvelope extends HardwareGrantMessageInput {
   signature: string;
   algorithm?: string;
+}
+
+export function isSupportedHardwareGrantAlgorithm(algorithm: string): algorithm is HardwareGrantAlgorithm {
+  return algorithm === SUPPORTED_HARDWARE_GRANT_ALGORITHM;
+}
+
+export function validateHardwareGrantPublicKey(publicKeyPem: string): boolean {
+  if (!publicKeyPem) {
+    return false;
+  }
+  try {
+    const key = createPublicKey(publicKeyPem);
+    const curve = key.asymmetricKeyDetails?.namedCurve;
+    return key.asymmetricKeyType === 'ec' && (curve === 'prime256v1' || curve === 'secp256r1');
+  } catch {
+    return false;
+  }
 }
 
 function sortValue(value: any): any {
@@ -87,9 +107,19 @@ function buildLegacyHardwareGrantMessage(input: HardwareGrantMessageInput): stri
 
 export function verifyHardwareGrantSignature(
   publicKeyPem: string,
-  grant: HardwareGrantEnvelope
+  grant: HardwareGrantEnvelope,
+  expectedAlgorithm: string = SUPPORTED_HARDWARE_GRANT_ALGORITHM
 ): boolean {
   if (!publicKeyPem || !grant.signature) {
+    return false;
+  }
+
+  const grantAlgorithm = grant.algorithm || SUPPORTED_HARDWARE_GRANT_ALGORITHM;
+  if (
+    !isSupportedHardwareGrantAlgorithm(expectedAlgorithm)
+    || grantAlgorithm !== expectedAlgorithm
+    || !validateHardwareGrantPublicKey(publicKeyPem)
+  ) {
     return false;
   }
 

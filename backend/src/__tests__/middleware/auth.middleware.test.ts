@@ -12,6 +12,7 @@ import {
     verifyToken,
     verifyTokenWithSecret,
     verifyRefreshToken,
+    buildCookieOptions,
     requireRole,
     requirePermission,
     type AuthenticatedUser,
@@ -98,6 +99,14 @@ describe('auth.middleware — JWT primitives', () => {
         it('returns null for garbage', () => {
             expect(verifyRefreshToken('nope')).toBeNull();
         });
+    });
+});
+
+describe('auth.middleware — cookie options', () => {
+    it('sets SameSite=strict for auth cookies', () => {
+        const options = buildCookieOptions({ secure: false, headers: {} } as any);
+
+        expect(options.sameSite).toBe('strict');
     });
 });
 

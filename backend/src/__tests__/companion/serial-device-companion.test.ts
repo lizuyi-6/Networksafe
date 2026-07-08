@@ -1,7 +1,10 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { createSign, generateKeyPairSync } from 'crypto';
 import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 import { computeFinalDefensePolicyDigest } from '../../security/final-defense-policy';
-import { validateLocalPolicyGrant, boardHeartbeatState, coerceBoardBool, type LocalPolicy } from '../../companion/serial-device-companion';
+import { validateLocalPolicyGrant, boardHeartbeatState, coerceBoardBool, loadLocalPolicy, type LocalPolicy } from '../../companion/serial-device-companion';
 
 describe('serial-device-companion local policy enforcement', () => {
   function buildPolicy(): LocalPolicy {
@@ -35,6 +38,17 @@ describe('serial-device-companion local policy enforcement', () => {
     });
 
     expect(result).toEqual({ ok: false, reason: 'policy_action_not_allowed' });
+  });
+
+  it('rejects a local policy digest mismatch before constant-time comparison length requirements', () => {
+    const policy = {
+      ...buildPolicy(),
+      policyDigest: 'short'
+    };
+    const policyPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'aetherguard-policy-')), 'policy.json');
+    fs.writeFileSync(policyPath, JSON.stringify(policy));
+
+    expect(() => loadLocalPolicy(policyPath)).toThrow('final defense policy digest mismatch');
   });
 
   it('fails closed on policy digest mismatch and counter rollback', () => {
