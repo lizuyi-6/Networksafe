@@ -13,6 +13,9 @@ fs.mkdirSync(dockerDir, { recursive: true });
 
 const stepResults = [];
 
+const releasePostgresPassword =
+  process.env.POSTGRES_PASSWORD || 'AetherGuardReleasePostgresPassword2026!';
+
 const defaultEnv = {
   ...process.env,
   JWT_SECRET: process.env.JWT_SECRET || 'release-verify-jwt-secret-minimum-32-chars',
@@ -22,6 +25,12 @@ const defaultEnv = {
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'AetherGuardAdminPass2026!',
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || 'AetherGuardReleaseEncryptionKey2026!A1',
   ENCRYPTION_SALT: process.env.ENCRYPTION_SALT || 'AetherGuardReleaseSalt2026!',
+  POSTGRES_PASSWORD: releasePostgresPassword,
+  SHADOW_DATABASE_URL:
+    process.env.SHADOW_DATABASE_URL ||
+    `postgres://aetherguard:${releasePostgresPassword}@postgres:5432/aetherguard`,
+  S3_SECRET_KEY: process.env.S3_SECRET_KEY || 'AetherGuardReleaseS3SecretKey2026!',
+  DEVICE_API_KEYS: process.env.DEVICE_API_KEYS || 'device_key_release_verify_2026_secure',
   DEVICE_COMMAND_SECRET: process.env.DEVICE_COMMAND_SECRET || 'AetherGuardReleaseDeviceCommandSecret2026!',
   SERIAL_HELPER_SHARED_SECRET: process.env.SERIAL_HELPER_SHARED_SECRET || 'AetherGuardReleaseSerialHelperSecret2026!',
   DEPLOYMENT_BUNDLE_SIGNING_SECRET: process.env.DEPLOYMENT_BUNDLE_SIGNING_SECRET || 'AetherGuardReleaseBundleSigningSecret2026!',
