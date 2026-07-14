@@ -24,6 +24,7 @@ describe('validateRuntimeEnvironment (Sprint 5 R5 / V2.1)', () => {
     REDIS_PASSWORD: process.env.REDIS_PASSWORD,
     POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
     S3_SECRET_KEY: process.env.S3_SECRET_KEY,
+    ARTIFACT_STORE: process.env.ARTIFACT_STORE,
     DEVICE_API_KEYS: process.env.DEVICE_API_KEYS,
     DEVICE_COMMAND_SECRET: process.env.DEVICE_COMMAND_SECRET,
     SERIAL_HELPER_SHARED_SECRET: process.env.SERIAL_HELPER_SHARED_SECRET,
@@ -56,6 +57,7 @@ describe('validateRuntimeEnvironment (Sprint 5 R5 / V2.1)', () => {
     process.env.REDIS_PASSWORD = 'strong-redis-password-32-characters';
     process.env.POSTGRES_PASSWORD = 'strong-postgres-password-32-characters';
     process.env.S3_SECRET_KEY = 'strong-s3-secret-key-32-characters';
+    process.env.ARTIFACT_STORE = 'local';
     process.env.DEVICE_API_KEYS = 'device_key_0123456789abcdef01234567';
     process.env.DEVICE_COMMAND_SECRET = 'a-strong-device-command-secret-32-chars-or-more';
     process.env.SERIAL_HELPER_SHARED_SECRET = 'a-distinct-helper-secret-32-characters-minimum';
