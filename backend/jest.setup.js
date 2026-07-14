@@ -24,6 +24,7 @@ process.env.ALLOWED_ORIGINS = 'http://localhost:5173,http://127.0.0.1:5173';
 // Postgres/fallback contract suites override these values inside their cases.
 process.env.DB_MODE = 'sqlite';
 process.env.SQLITE_FALLBACK_ENABLED = 'true';
+delete process.env.SHADOW_DATABASE_URL;
 
 // 禁用 Redis 连接错误日志（测试时 Redis 可能未运行）
 process.env.DISABLE_REDIS = 'true';
