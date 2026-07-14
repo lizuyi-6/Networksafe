@@ -238,9 +238,16 @@ describe('AgentGateway agent session revalidation', () => {
       socket!.once('connect_error', reject);
     });
 
-    (auditLogger.logAgent as jest.Mock).mockRejectedValueOnce(new Error('audit disk full'));
+    let signalAuditAttempt: () => void = () => undefined;
+    const auditAttempted = new Promise<void>((resolve) => {
+      signalAuditAttempt = resolve;
+    });
+    (auditLogger.logAgent as jest.Mock).mockImplementationOnce(async () => {
+      signalAuditAttempt();
+      throw new Error('audit disk full');
+    });
     socket.disconnect();
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await auditAttempted;
 
     expect(socket.connected).toBe(false);
     expect(auditLogger.logAgent).toHaveBeenCalledWith(expect.objectContaining({

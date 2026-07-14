@@ -21,14 +21,14 @@ beforeAll(() => {
   }
 }, 120_000);
 
-function runCli(args: string[]): { stdout: string; code: number } {
+function runCli(args: string[], extraEnv: NodeJS.ProcessEnv = {}): { stdout: string; code: number } {
   try {
     const stdout = execFileSync('node', [cliPath, ...args], {
       encoding: 'utf8',
       // This suite runs inside a parallel shard. Keep the child bounded, but
       // allow for CPU starvation while other Jest workers compile TS files.
       timeout: 120000,
-      env: { ...process.env, FORCE_COLOR: '0', CI: '1' }
+      env: { ...process.env, FORCE_COLOR: '0', CI: '1', ...extraEnv }
     });
     return { stdout, code: 0 };
   } catch (err: any) {
@@ -102,7 +102,7 @@ describe('aetherguard CLI (AI-native contract)', () => {
   });
 
   it('emits the 7-layer topology as pure JSON', () => {
-    const { stdout, code } = runCli(['topology']);
+    const { stdout, code } = runCli(['topology'], { LOG_LEVEL: 'debug' });
     const parsed = JSON.parse(stdout);
     expect(parsed.layers).toHaveLength(7);
     expect(parsed.layers[0]).toMatchObject({ num: 1, thinkingDepth: 'shallow', modelTier: 'local' });
