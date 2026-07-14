@@ -63,6 +63,11 @@ jest.mock('../../config/database', () => ({
   }))
 }));
 
+jest.mock('../../config/platform-runtime', () => ({
+  getDatabaseMode: jest.fn(() => 'sqlite'),
+  isSqliteFallbackEnabled: jest.fn(() => true)
+}));
+
 jest.mock('dns', () => ({
   lookup: jest.fn((hostname: string, callback: any) => {
     if (hostname === 'example.com') {

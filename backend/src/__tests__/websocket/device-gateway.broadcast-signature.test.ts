@@ -150,6 +150,7 @@ import auditLogger from '../../security/audit-logger.service';
 import logger from '../../utils/logger';
 
 describe('DeviceGateway.broadcastCommand - fail-closed signature gate (V4.1)', () => {
+  const inheritedDeviceCommandSecret = process.env.DEVICE_COMMAND_SECRET;
   let mockHttpServer: Partial<HttpServer> = {};
 
   function getHandler(eventName: string): Function {
@@ -167,6 +168,7 @@ describe('DeviceGateway.broadcastCommand - fail-closed signature gate (V4.1)', (
   }
 
   beforeEach(() => {
+    delete process.env.DEVICE_COMMAND_SECRET;
     jest.clearAllMocks();
 
     mockSocket.on.mockReset();
@@ -189,6 +191,14 @@ describe('DeviceGateway.broadcastCommand - fail-closed signature gate (V4.1)', (
     delete process.env.DEVICE_COMMAND_SECRET;
     delete process.env.DEVICE_API_KEYS;
     delete process.env.ALLOWED_ORIGINS;
+  });
+
+  afterAll(() => {
+    if (inheritedDeviceCommandSecret === undefined) {
+      delete process.env.DEVICE_COMMAND_SECRET;
+    } else {
+      process.env.DEVICE_COMMAND_SECRET = inheritedDeviceCommandSecret;
+    }
   });
 
   // ---------------------------------------------------------------------
