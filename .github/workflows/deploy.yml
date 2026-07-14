@@ -128,10 +128,12 @@ jobs:
           tar -czf "$BUNDLE_PATH" -C "$STAGING_DIR" .
           (cd "$RUNNER_TEMP" && sha256sum "$BUNDLE_BASENAME" > "$BUNDLE_BASENAME.sha256")
 
-          printf 'BUNDLE_BASENAME=%s\n' "$BUNDLE_BASENAME" >> "$GITHUB_ENV"
-          printf 'BUNDLE_PATH=%s\n' "$BUNDLE_PATH" >> "$GITHUB_ENV"
-          printf 'CHECKSUM_PATH=%s\n' "$CHECKSUM_PATH" >> "$GITHUB_ENV"
-          printf 'REMOTE_DIR=/tmp/aetherguard-deploy-%s\n' "$EXPECTED_SHA" >> "$GITHUB_ENV"
+          {
+            printf 'BUNDLE_BASENAME=%s\n' "$BUNDLE_BASENAME"
+            printf 'BUNDLE_PATH=%s\n' "$BUNDLE_PATH"
+            printf 'CHECKSUM_PATH=%s\n' "$CHECKSUM_PATH"
+            printf 'REMOTE_DIR=/tmp/aetherguard-deploy-%s\n' "$EXPECTED_SHA"
+          } >> "$GITHUB_ENV"
 
       - name: Configure Verified SSH Host
         run: |
@@ -161,6 +163,8 @@ jobs:
           SSH_OPTIONS=(-i "$HOME/.ssh/id_deploy" -p "$SERVER_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes)
           SCP_OPTIONS=(-i "$HOME/.ssh/id_deploy" -P "$SERVER_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes)
 
+          # These values are validated above and intentionally expand on the client.
+          # shellcheck disable=SC2029
           ssh "${SSH_OPTIONS[@]}" "$SERVER_USER@$SERVER_HOST" "mkdir -p '$REMOTE_DIR' && chmod 700 '$REMOTE_DIR'"
           scp "${SCP_OPTIONS[@]}" \
             "$BUNDLE_PATH" \
@@ -173,6 +177,8 @@ jobs:
           set -euo pipefail
           SSH_OPTIONS=(-i "$HOME/.ssh/id_deploy" -p "$SERVER_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes)
           printf -v QUOTED_HEALTHCHECK '%q' "$DEPLOY_HEALTHCHECK_URL"
+          # These values are validated above and intentionally expand on the client.
+          # shellcheck disable=SC2029
           ssh "${SSH_OPTIONS[@]}" "$SERVER_USER@$SERVER_HOST" \
             "DEPLOY_ROOT='$DEPLOY_ROOT' FRONTEND_PATH='$FRONTEND_PATH' PUBLIC_HEALTHCHECK_URL=$QUOTED_HEALTHCHECK bash '$REMOTE_DIR/deploy-pm2-release.sh' '$EXPECTED_SHA' '$REMOTE_DIR/$BUNDLE_BASENAME' '$REMOTE_DIR/$BUNDLE_BASENAME.sha256'"
 
@@ -180,6 +186,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in $(seq 1 15); do
+            printf 'Readiness attempt %s/15\n' "$attempt"
             if curl --fail --silent --show-error --max-time 10 "$DEPLOY_HEALTHCHECK_URL" --output "$RUNNER_TEMP/readiness.json" && \
               node - "$RUNNER_TEMP/readiness.json" <<'NODE'
           const fs = require('node:fs');
@@ -199,6 +206,8 @@ jobs:
         continue-on-error: true
         run: |
           SSH_OPTIONS=(-i "$HOME/.ssh/id_deploy" -p "$SERVER_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes)
+          # REMOTE_DIR is generated from the verified source SHA; client expansion is intentional.
+          # shellcheck disable=SC2029
           ssh "${SSH_OPTIONS[@]}" "$SERVER_USER@$SERVER_HOST" "rm -rf '$REMOTE_DIR'"
 
   notify-success:

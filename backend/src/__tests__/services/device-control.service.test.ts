@@ -11,6 +11,7 @@ describe('deviceControlService physical confirmation', () => {
 
   beforeAll(async () => {
     await initDatabase();
+    deviceControlService.prepare();
   });
 
   beforeEach(() => {
