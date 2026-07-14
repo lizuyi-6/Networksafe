@@ -38,6 +38,10 @@ export function resolveSqliteEngineOrder(env: NodeJS.ProcessEnv = process.env): 
   return ['better-sqlite3', 'sqljs'];
 }
 
+export function shouldStartPeriodicPersistence(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.NODE_ENV !== 'test' && !env.JEST_WORKER_ID;
+}
+
 export interface WrappedStatement {
   run: (...params: any[]) => void;
   all: (...params: any[]) => any[];
@@ -211,12 +215,15 @@ export class DatabaseManager {
 
     logger.info(`Database opened with sql.js: ${this.dbPath}`);
 
-    // Save to disk every 30 seconds for persistence
-    this.saveInterval = setInterval(() => {
-      this.save();
-    }, 30000);
-    if (typeof this.saveInterval.unref === 'function') {
-      this.saveInterval.unref();
+    // Test workers use isolated in-memory snapshots and persist synchronously
+    // on close. Runtime processes retain the periodic durability checkpoint.
+    if (shouldStartPeriodicPersistence()) {
+      this.saveInterval = setInterval(() => {
+        this.save();
+      }, 30000);
+      if (typeof this.saveInterval.unref === 'function') {
+        this.saveInterval.unref();
+      }
     }
   }
 

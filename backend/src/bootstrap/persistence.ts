@@ -48,6 +48,8 @@ export async function bootstrapPersistence(): Promise<void> {
     await seedDatabase({ clearExisting: false, verbose: true });
   }
 
+  auditLogger.startBackgroundJobs();
+
   // Backfill the Postgres shadow store WITHOUT blocking startup: a full
   // backfill over thousands of audit rows (serial INSERT-per-row) can take
   // minutes and freezes the event loop on each SQLite `.all()`, which also

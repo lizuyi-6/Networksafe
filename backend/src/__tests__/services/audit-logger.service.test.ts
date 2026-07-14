@@ -68,4 +68,21 @@ describe('auditLogger', () => {
   it('returns false from verifyIntegrity for an unknown log id', () => {
     expect(auditLogger.verifyIntegrity('00000000-0000-0000-0000-000000000000')).toBe(false);
   });
+
+  it('owns periodic jobs explicitly and stops every timer', async () => {
+    jest.useFakeTimers();
+    try {
+      auditLogger.startBackgroundJobs();
+      expect(jest.getTimerCount()).toBe(3);
+
+      auditLogger.startBackgroundJobs();
+      expect(jest.getTimerCount()).toBe(3);
+
+      await auditLogger.stopBackgroundJobs();
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      await auditLogger.stopBackgroundJobs();
+      jest.useRealTimers();
+    }
+  });
 });

@@ -45,6 +45,10 @@ export class AuditLogger {
   private readonly backupRetentionDays: number;
   private readonly maxDatabaseSize: number;
   private schemaReady = false;
+  private backupCheckTimer: NodeJS.Timeout | null = null;
+  private initialArchiverTimer: NodeJS.Timeout | null = null;
+  private archiverTimer: NodeJS.Timeout | null = null;
+  private readonly backgroundRuns = new Set<Promise<void>>();
 
   constructor() {
     // SECURITY FIX CVE-2026-103: Require AUDIT_LOG_SECRET at startup
@@ -70,9 +74,6 @@ export class AuditLogger {
     this.maxDatabaseSize = parseInt(process.env.AUDIT_LOG_MAX_SIZE_MB || '100', 10) * 1024 * 1024;
 
     logger.info('Audit Logger initialized with secure secret and backup protection');
-
-    // Start periodic backup check
-    this.startPeriodicBackupCheck();
   }
 
   prepare(): void {
@@ -1057,13 +1058,17 @@ export class AuditLogger {
    * SECURITY FIX CVE-2026-104: Start periodic backup check
    * Runs daily to check if rotation is needed
    */
-  private startPeriodicBackupCheck(): void {
+  public startBackgroundJobs(): void {
+    if (this.backupCheckTimer || this.initialArchiverTimer || this.archiverTimer) {
+      return;
+    }
+
     // Check every 24 hours
     const checkInterval = 24 * 60 * 60 * 1000;
     const archiveIntervalMinutes = Math.max(15, parseInt(process.env.AUDIT_SEGMENT_ARCHIVE_INTERVAL_MINUTES || '60', 10) || 60);
     const archiveInterval = archiveIntervalMinutes * 60 * 1000;
 
-    const runSegmentArchiver = async () => {
+    const runSegmentArchiver = async (): Promise<void> => {
       try {
         const result = await auditSegmentService.archivePending({
           maxSegments: parseInt(process.env.AUDIT_SEGMENT_MAX_BATCHES || '5', 10) || 5,
@@ -1080,39 +1085,67 @@ export class AuditLogger {
       }
     };
 
-    const backupCheckTimer = setInterval(async () => {
-      try {
-        const needsRotation = await this.checkDatabaseSize();
+    this.backupCheckTimer = setInterval(() => {
+      this.trackBackgroundRun((async () => {
+        try {
+          const needsRotation = await this.checkDatabaseSize();
 
-        if (needsRotation) {
-          logger.info('Database size limit reached, starting rotation');
-          await this.rotateLogs();
+          if (needsRotation) {
+            logger.info('Database size limit reached, starting rotation');
+            await this.rotateLogs();
+          }
+        } catch (error) {
+          logger.error('Periodic backup check failed', { error });
         }
-      } catch (error) {
-        logger.error('Periodic backup check failed', { error });
-      }
+      })());
     }, checkInterval);
-    if (typeof backupCheckTimer.unref === 'function') {
-      backupCheckTimer.unref();
+    if (typeof this.backupCheckTimer.unref === 'function') {
+      this.backupCheckTimer.unref();
     }
 
-    const initialArchiverTimer = setTimeout(() => {
-      void runSegmentArchiver();
+    this.initialArchiverTimer = setTimeout(() => {
+      this.initialArchiverTimer = null;
+      this.trackBackgroundRun(runSegmentArchiver());
     }, 15 * 1000);
-    if (typeof initialArchiverTimer.unref === 'function') {
-      initialArchiverTimer.unref();
+    if (typeof this.initialArchiverTimer.unref === 'function') {
+      this.initialArchiverTimer.unref();
     }
 
-    const archiverTimer = setInterval(() => {
-      void runSegmentArchiver();
+    this.archiverTimer = setInterval(() => {
+      this.trackBackgroundRun(runSegmentArchiver());
     }, archiveInterval);
-    if (typeof archiverTimer.unref === 'function') {
-      archiverTimer.unref();
+    if (typeof this.archiverTimer.unref === 'function') {
+      this.archiverTimer.unref();
     }
 
     logger.info('Periodic audit log backup check started', {
       segmentArchiveIntervalMinutes: archiveIntervalMinutes
     });
+  }
+
+  public async stopBackgroundJobs(): Promise<void> {
+    if (this.backupCheckTimer) {
+      clearInterval(this.backupCheckTimer);
+      this.backupCheckTimer = null;
+    }
+    if (this.initialArchiverTimer) {
+      clearTimeout(this.initialArchiverTimer);
+      this.initialArchiverTimer = null;
+    }
+    if (this.archiverTimer) {
+      clearInterval(this.archiverTimer);
+      this.archiverTimer = null;
+    }
+
+    await Promise.all(Array.from(this.backgroundRuns));
+  }
+
+  private trackBackgroundRun(run: Promise<void>): void {
+    this.backgroundRuns.add(run);
+    void run.then(
+      () => this.backgroundRuns.delete(run),
+      () => this.backgroundRuns.delete(run)
+    );
   }
 }
 

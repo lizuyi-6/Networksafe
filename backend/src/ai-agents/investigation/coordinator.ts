@@ -42,6 +42,7 @@ export class InvestigationCoordinator extends EventEmitter {
   private investigationStates: Map<string, InvestigationState>;
   private taskQueue: AgentTask[];
   private completedTasks: Map<string, AgentTask>;
+  private investigationRuns: Map<string, Promise<void>>;
   private messageBus: MessageBus;
 
   constructor(messageBus?: MessageBus) {
@@ -51,6 +52,7 @@ export class InvestigationCoordinator extends EventEmitter {
     this.investigationStates = new Map();
     this.taskQueue = [];
     this.completedTasks = new Map();
+    this.investigationRuns = new Map();
     this.messageBus = messageBus || new MessageBus();
     this.initializeAgents();
   }
@@ -105,11 +107,23 @@ export class InvestigationCoordinator extends EventEmitter {
     console.log(`[InvestigationCoordinator] Starting investigation ${investigationId} for bug ${bugReport.id}`);
     this.emit('investigation:started', { investigationId, bugReport });
 
-    setImmediate(() => {
-      void this.runInvestigation(investigationId, context);
+    const run = new Promise<void>((resolve) => {
+      setImmediate(() => {
+        void this.runInvestigation(investigationId, context).then(resolve, resolve);
+      });
+    });
+    this.investigationRuns.set(investigationId, run);
+    void run.then(() => {
+      if (this.investigationRuns.get(investigationId) === run) {
+        this.investigationRuns.delete(investigationId);
+      }
     });
 
     return investigationId;
+  }
+
+  public async waitForIdle(): Promise<void> {
+    await Promise.all(Array.from(this.investigationRuns.values()));
   }
 
   private async runInvestigation(investigationId: string, context: InvestigationContext): Promise<void> {

@@ -5,7 +5,7 @@
  * isolation); real runtimes prefer better-sqlite3 (WAL, synchronous commits);
  * DB_ENGINE overrides both.
  */
-import { resolveSqliteEngineOrder } from '../../config/database';
+import { resolveSqliteEngineOrder, shouldStartPeriodicPersistence } from '../../config/database';
 
 describe('resolveSqliteEngineOrder', () => {
     it('prefers sql.js inside a test runtime (NODE_ENV=test)', () => {
@@ -29,5 +29,14 @@ describe('resolveSqliteEngineOrder', () => {
     it('DB_ENGINE=better-sqlite3 overrides the test default', () => {
         expect(resolveSqliteEngineOrder({ DB_ENGINE: 'better-sqlite3', NODE_ENV: 'test', JEST_WORKER_ID: '1' }))
             .toEqual(['better-sqlite3', 'sqljs']);
+    });
+});
+
+describe('shouldStartPeriodicPersistence', () => {
+    it('keeps runtime persistence enabled and excludes Jest workers', () => {
+        expect(shouldStartPeriodicPersistence({ NODE_ENV: 'production' })).toBe(true);
+        expect(shouldStartPeriodicPersistence({})).toBe(true);
+        expect(shouldStartPeriodicPersistence({ NODE_ENV: 'test' })).toBe(false);
+        expect(shouldStartPeriodicPersistence({ JEST_WORKER_ID: '3' })).toBe(false);
     });
 });

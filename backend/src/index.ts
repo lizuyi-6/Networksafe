@@ -31,6 +31,7 @@ import { artifactStoreService } from './services/artifact-store.service';
 import { jobQueueService } from './services/job-queue.service';
 import { dashboardBroadcastService } from './services/dashboard-broadcast.service';
 import nonceManager from './security/nonce-manager.service';
+import auditLogger from './security/audit-logger.service';
 
 const runtime = getRuntimeDescriptor();
 let agentGateway: AgentGateway | null = null;
@@ -160,6 +161,7 @@ async function shutdown(): Promise<void> {
     dashboardBroadcastService.setBroadcaster(null);
 
     runtimeEmulatorService.stop();
+    await auditLogger.stopBackgroundJobs();
 
     if (httpServer.listening) {
       await new Promise<void>((resolve, reject) => {
