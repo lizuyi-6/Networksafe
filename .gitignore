@@ -106,6 +106,11 @@ yarn-error.log*
 /hardware/kicad/**/scratch/
 /hardware/kicad/**/reports/probe-*
 /hardware/kicad/**/reports/probe*.json
+/hardware/kicad/**/reports/
+/hardware/kicad/**/.kicad-cli/
+/hardware/kicad/**/candidate-*
+/hardware/kicad/**/*.kicad_prl
+/hardware/kicad/**/*.pre-*
 /hardware/kicad/**/*.dsn
 /hardware/kicad/**/*.ses
 /hardware/kicad/**/*.lck
@@ -120,6 +125,7 @@ tmp/
 temp/
 *.tmp
 *.temp
+**/.~lock.*#
 
 # Project specific
 .nul
@@ -154,6 +160,7 @@ hardware/kicad/**/release/
 hardware/kicad/**/*.drc
 hardware/kicad/**/*.rpt
 hardware/kicad/**/*.erc
+/esp32-serial-deployer-pcb-erc.rpt
 hardware/kicad/**/erc.log
 hardware/kicad/**/drc.log
 hardware/kicad/**/fp-info-cache
