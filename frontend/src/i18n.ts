@@ -18,7 +18,9 @@ i18n
         },
         fallbackLng: 'en',
         interpolation: {
-            escapeValue: false // react already safes from xss
+            escapeValue: false, // React escapes interpolated text during rendering.
+            prefix: '{',
+            suffix: '}'
         }
     });
 

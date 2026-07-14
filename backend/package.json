@@ -57,7 +57,7 @@
     "jsonwebtoken": "^9.0.2",
     "le-challenge-fs": "^2.0.9",
     "le-store-certbot": "^2.0.9",
-    "nodemailer": "^8.0.1",
+    "nodemailer": "^9.0.3",
     "pg": "^8.20.0",
     "socket.io": "^4.7.4",
     "socket.io-client": "^4.7.4",

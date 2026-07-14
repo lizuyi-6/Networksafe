@@ -329,11 +329,14 @@ class CommandDispatcherService {
     }
   }
 
-  private safeUpdateActionRun(input: Parameters<typeof securityOperationsService.updateActionRun>[0]): void {
+  private safeUpdateActionRun(
+    input: Parameters<typeof securityOperationsService.updateActionRun>[0]
+  ): ReturnType<typeof securityOperationsService.updateActionRun> {
     try {
-      securityOperationsService.updateActionRun(input);
+      return securityOperationsService.updateActionRun(input);
     } catch (error: any) {
       logger.warn('Failed to update action run', { error: error?.message, actionId: input.actionId });
+      return null;
     }
   }
 
@@ -1123,14 +1126,24 @@ class CommandDispatcherService {
     };
   }
 
-  handleAgentCommandAck(agentId: string, data: Record<string, any>): void {
-    const tenantId = String(data?.tenantId || 'global');
+  handleAgentCommandAck(agentId: string, tenantId: string, data: Record<string, any>): boolean {
     const actionId = String(data?.actionId || '').trim();
-    if (!actionId) {
-      return;
+    if (!actionId || !tenantId) {
+      return false;
     }
 
-    this.safeUpdateActionRun({
+    const action = securityOperationsService.getActionById(tenantId, actionId);
+    const targetMatches = action?.runLog.some((entry) => String(entry?.targetId || '') === agentId) === true;
+    if (!action || !targetMatches) {
+      logger.warn('Rejected agent command ack with mismatched tenant, action, or target', {
+        agentId,
+        tenantId,
+        actionId
+      });
+      return false;
+    }
+
+    return Boolean(this.safeUpdateActionRun({
       tenantId,
       actionId,
       status: 'completed',
@@ -1140,14 +1153,14 @@ class CommandDispatcherService {
           actor: 'agent',
           message: data?.message || `Agent ${agentId} acknowledged command.`,
           agentId,
-          data
+          data: { ...data, tenantId }
         }
       ],
       // SECURITY FIX redteam R3: only accept this ack if the action is still
       // in 'running' state. If two acks arrive simultaneously, the second one
       // sees 'completed' (set by the first) and is silently dropped.
       allowedPriorStatus: ['running']
-    });
+    }));
   }
 
   /**
@@ -1156,14 +1169,24 @@ class CommandDispatcherService {
    * handleAgentCommandAck to prevent concurrent failure reports for the same
    * actionId from both being recorded.
    */
-  handleAgentCommandFailure(agentId: string, data: Record<string, any>): void {
-    const tenantId = String(data?.tenantId || 'global');
+  handleAgentCommandFailure(agentId: string, tenantId: string, data: Record<string, any>): boolean {
     const actionId = String(data?.actionId || '').trim();
-    if (!actionId) {
-      return;
+    if (!actionId || !tenantId) {
+      return false;
     }
 
-    this.safeUpdateActionRun({
+    const action = securityOperationsService.getActionById(tenantId, actionId);
+    const targetMatches = action?.runLog.some((entry) => String(entry?.targetId || '') === agentId) === true;
+    if (!action || !targetMatches) {
+      logger.warn('Rejected agent command failure with mismatched tenant, action, or target', {
+        agentId,
+        tenantId,
+        actionId
+      });
+      return false;
+    }
+
+    return Boolean(this.safeUpdateActionRun({
       tenantId,
       actionId,
       status: 'failed',
@@ -1173,12 +1196,12 @@ class CommandDispatcherService {
           actor: 'agent',
           message: data?.message || `Agent ${agentId} reported command failure.`,
           agentId,
-          data
+          data: { ...data, tenantId }
         }
       ],
       // SECURITY FIX redteam R3: same replay guard as handleAgentCommandAck.
       allowedPriorStatus: ['running']
-    });
+    }));
   }
 }
 

@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto';
 import { NextFunction, Request, Response } from 'express';
-import { verifyToken } from './auth.middleware';
+import type { AuthenticatedRequest } from './auth.middleware';
 import { detectionPipelineService } from '../services/detection-pipeline.service';
 import { fastpathTrafficShadowService } from '../services/fastpath-traffic-shadow.service';
-import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
+import {
+  ANONYMOUS_TENANT_ID,
+  normalizeTenantId,
+  resolveRequestTenantContext
+} from '../core/tenant/tenant-context';
 import logger from '../utils/logger';
 import { recordApiRequest } from '../services/api-request-tracker.service';
 
@@ -24,36 +28,11 @@ function normalizeHeaders(headers: Record<string, unknown>): Record<string, stri
   }, {});
 }
 
-function tokenFromRequest(req: Request): string | null {
-  const cookieToken = (req as any).cookies?.accessToken;
-  if (typeof cookieToken === 'string' && cookieToken.trim()) {
-    return cookieToken.trim();
-  }
-
-  const authHeader = req.headers.authorization;
-  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-    const bearer = authHeader.slice('Bearer '.length).trim();
-    return bearer || null;
-  }
-
-  return null;
-}
-
 function resolveTenantId(req: Request): string {
-  const token = tokenFromRequest(req);
-  if (token) {
-    const user = verifyToken(token);
-    if (user?.tenantId?.trim()) {
-      return user.tenantId.trim();
-    }
-  }
-
-  return String(
-    (req as any).tenantContext?.tenantId ||
-    (req as any).user?.tenantId ||
-    req.headers['x-tenant-id'] ||
-    PLATFORM_TENANT_ID
-  ).trim() || PLATFORM_TENANT_ID;
+  const context = resolveRequestTenantContext(req as AuthenticatedRequest, {
+    allowAdminPlatformFallback: true
+  });
+  return normalizeTenantId(context?.tenantId) || ANONYMOUS_TENANT_ID;
 }
 
 function normalizedRouteCandidates(req: Request): string[] {
@@ -227,6 +206,7 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
     const rawBody = resolveRequestBody(req);
     const urlShape = resolveUrlShape(rawUrl);
     const bodyShape = resolveNormalizedBody(req, headers, rawBody);
+    const tenantId = resolveTenantId(req);
     const rawPayload = [
       rawUrl,
       urlShape.decodedPath,
@@ -238,7 +218,7 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
       bodyShape.parsedBody
     ].filter(Boolean).join('\n');
     const decision = await detectionPipelineService.evaluateRequest({
-      tenantId: resolveTenantId(req),
+      tenantId,
       channel: 'http_api',
       requestId: String(req.headers['x-request-id'] || randomUUID()),
       timestamp: new Date().toISOString(),
@@ -266,7 +246,7 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
     (req as any).detectionDecision = decision;
 
     if (decision.verdict === 'block') {
-      const settings = await detectionPipelineService.getSettings(resolveTenantId(req));
+      const settings = await detectionPipelineService.getSettings(tenantId);
       if (!settings.ruleFirstEnabled) {
         logger.debug('Detection pipeline would block, but rule-first blocking is disabled; allowing request', {
           path: req.originalUrl || req.url,

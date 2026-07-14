@@ -89,7 +89,7 @@ POSTGRES_PASSWORD_VAL="$(openssl rand -hex 16)"
 S3_SECRET_KEY_VAL="$(openssl rand -hex 16)"
 DEVICE_API_KEYS_VAL="device_key_$(openssl rand -hex 8)"
 # Readable-but-strong admin password (24+ chars, URL/shell-safe)
-ADMIN_PASSWORD_VAL="Ag-$(openssl rand -base64 18 | tr '+/' '-_' | tr -d '=')"
+ADMIN_PASSWORD_VAL="Ag!9-$(openssl rand -base64 18 | tr '+/' '-_' | tr -d '=')"
 
 if [[ "${SERIAL_HELPER_SHARED_SECRET_VAL}" == "${DEVICE_COMMAND_SECRET_VAL}" ]]; then
   echo -e "${RED}[ERROR]${RESET} Secret collision (SERIAL_HELPER == DEVICE_COMMAND); re-run the script." >&2

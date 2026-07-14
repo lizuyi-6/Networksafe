@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
-import { requestTimingMiddleware } from '../middleware/auth.middleware';
+import { authenticate, optionalAuth, requestTimingMiddleware } from '../middleware/auth.middleware';
 import { apiRateLimit } from '../middleware/rate-limit.middleware';
 import { apiTrafficShadowMiddleware } from '../middleware/api-traffic-shadow.middleware';
 import { metricsMiddleware } from '../middleware/metrics.middleware';
@@ -19,7 +19,6 @@ import statsRoutes from '../api/routes/stats.routes';
 import configRoutes from '../api/routes/config.routes';
 import logsRoutes from '../api/routes/logs.routes';
 import { addLog } from '../services/log-state.service';
-import { recordApiRequest } from '../services/api-request-tracker.service';
 import sitesRoutes from '../api/routes/sites.routes';
 import adminRoutes from '../api/routes/admin.routes';
 import scannerRouter from '../api/routes/scanner.routes';
@@ -46,27 +45,13 @@ import rulesRoutes from '../api/routes/rules.routes';
 import enterpriseHelperRoutes from '../api/routes/enterprise-helper.routes';
 import announcementsAdminRoutes from '../modules/announcements/announcements.routes';
 import { listPublishedAnnouncements } from '../modules/announcements/announcements.repository';
+import { buildAllowedOrigins } from './allowed-origins';
+
+export { buildAllowedOrigins } from './allowed-origins';
 
 interface CreateControlPlaneAppOptions {
   runtime: Record<string, any> & { profile: 'prod' | 'dev' | 'demo'; dbMode: string; sqliteFallbackEnabled: boolean; };
   getAgentCount: () => number;
-}
-
-export function buildAllowedOrigins(): string[] {
-  const configured = process.env.ALLOWED_ORIGINS
-    ?.split(',')
-    .map((origin) => origin.trim().replace(/\/+$/, ''))
-    .filter((origin) => origin && origin.toLowerCase() !== 'null');
-
-  const origins = configured && configured.length > 0 ? configured : [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://localhost:5173',
-    'http://localhost:8080',
-    'http://127.0.0.1:8080'
-  ];
-
-  return Array.from(new Set(origins));
 }
 
 async function respondWithHealthSnapshot(
@@ -184,24 +169,30 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
   });
 
   app.get('/health', (_req, res) => {
-    const payload = {
-      status: 'ok',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString()
-    };
-    sendSuccess(res, payload, { legacy: payload });
+    res.status(200).json({ status: 'ok' });
+  });
+
+  app.get('/health/live', (_req, res) => {
+    res.status(200).json({ status: 'alive' });
+  });
+
+  app.get('/health/ready', async (_req, res) => {
+    try {
+      const snapshot = await buildRuntimeHealthSnapshot({
+        runtime: options.runtime,
+        agentCount: options.getAgentCount()
+      });
+      const statusCode = snapshot.readiness.status === 'ready' ? 200 : 503;
+      res.status(statusCode).json({ status: snapshot.readiness.status });
+    } catch {
+      res.status(503).json({ status: 'not_ready' });
+    }
   });
 
   const apiRouter = express.Router();
   apiRouter.use(apiRateLimit);
 
-  // Count every API request for dashboard stats
-  apiRouter.use((_req, _res, next) => {
-    recordApiRequest(false);
-    next();
-  });
-
-  apiRouter.get('/health', async (_req, res) => {
+  apiRouter.get('/health', authenticate, async (_req, res) => {
     try {
       await respondWithHealthSnapshot(res, options);
     } catch (error: any) {
@@ -212,7 +203,7 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
     }
   });
 
-  apiRouter.get('/health/live', (_req, res) => {
+  apiRouter.get('/health/live', authenticate, (_req, res) => {
     const payload = {
       status: 'alive',
       timestamp: new Date().toISOString()
@@ -220,7 +211,7 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
     sendSuccess(res, payload, { legacy: payload });
   });
 
-  apiRouter.get('/health/ready', async (_req, res) => {
+  apiRouter.get('/health/ready', authenticate, async (_req, res) => {
     try {
       const snapshot = await buildRuntimeHealthSnapshot({
         runtime: options.runtime,
@@ -245,7 +236,7 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
     }
   });
 
-  apiRouter.get('/health/dependencies', async (_req, res) => {
+  apiRouter.get('/health/dependencies', authenticate, async (_req, res) => {
     try {
       const snapshot = await buildRuntimeHealthSnapshot({
         runtime: options.runtime,
@@ -261,6 +252,13 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
   });
 
   if (options.runtime.apiEnabled) {
+    // Establish a tenant only from a fully revalidated JWT before shadow
+    // persistence. Invalid or API-key-only requests remain in the anonymous
+    // isolation domain until their route-specific authenticator runs.
+    apiRouter.use(optionalAuth);
+    // Authentication must run before traffic shadowing so anonymous stats
+    // requests cannot be converted into dependency-driven 5xx responses.
+    apiRouter.use('/stats', authenticate);
     apiRouter.use(apiTrafficShadowMiddleware);
     apiRouter.use('/stats', statsRoutes);
     apiRouter.use('/config', configRoutes);

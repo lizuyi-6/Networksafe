@@ -13,29 +13,90 @@
 
 static char g_tx_buffer[SERIAL_JSON_MAX_LINE];
 
-/* Simple JSON field extraction (finds "key":"value" or "key":number) */
+/*
+ * JSON field extraction.
+ *
+ * The original implementation matched the literal substring "key":" with
+ * strstr, which (a) rejected RFC 8259 whitespace around the colon
+ * ("key" : "val"), (b) truncated values at the first escaped quote (\"), and
+ * (c) could match a key name embedded inside another field's string value.
+ *
+ * find_value() locates a key in object-member position (the preceding
+ * non-whitespace char must be '{' or ',') and returns a pointer just past
+ * the colon and any surrounding whitespace. json_find_string then reads the
+ * value with proper escape handling; json_find_uint reads leading digits.
+ *
+ * Defense-in-depth: the grant payload is signature-verified upstream, so the
+ * producer is trusted. The goal is RFC correctness and robustness against a
+ * non-compact emitter, not parsing adversarial JSON.
+ */
+static bool is_ws(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
+
+static const char *find_value(const char *json, const char *key) {
+    char needle[32];
+    int n = snprintf(needle, sizeof(needle), "\"%s\"", key);
+    if (n <= 0 || (size_t)n >= sizeof(needle)) return NULL;
+
+    const char *search = json;
+    while ((search = strstr(search, needle)) != NULL) {
+        /* Require object-member position: the previous non-whitespace char
+         * must be '{' or ',' so a key name appearing inside a string value
+         * is not mistaken for a real field. */
+        const char *prev = search;
+        while (prev > json && is_ws(prev[-1])) prev--;
+        const char *p = search + n; /* just after the key's closing quote */
+        if (prev > json && (prev[-1] == '{' || prev[-1] == ',')) {
+            while (is_ws(*p)) p++;
+            if (*p == ':') {
+                p++;
+                while (is_ws(*p)) p++;
+                return p;
+            }
+        }
+        search += n; /* not a member: keep scanning */
+    }
+    return NULL;
+}
+
 static bool json_find_string(const char *json, const char *key,
                               char *out, uint16_t out_len) {
-    char pattern[32];
-    snprintf(pattern, sizeof(pattern), "\"%s\":\"", key);
-    const char *p = strstr(json, pattern);
-    if (!p) return false;
-    p += strlen(pattern);
-    const char *end = strchr(p, '"');
-    if (!end) return false;
-    uint16_t len = end - p;
-    if (len >= out_len) len = out_len - 1;
-    memcpy(out, p, len);
+    const char *p = find_value(json, key);
+    if (!p || *p != '"') return false;
+    p++; /* past opening quote */
+    uint16_t len = 0;
+    while (*p != '\0' && *p != '"') {
+        if (*p == '\\' && p[1] != '\0') {
+            /* JSON escape sequences. \uXXXX and unknown escapes collapse to
+             * '?' — controller fields are ASCII, so this never triggers on a
+             * well-formed grant. */
+            char c = p[1];
+            char emit = '?';
+            switch (c) {
+                case '"':  emit = '"';  break;
+                case '\\': emit = '\\'; break;
+                case '/':  emit = '/';  break;
+                case 'b':  emit = '\b'; break;
+                case 'f':  emit = '\f'; break;
+                case 'n':  emit = '\n'; break;
+                case 'r':  emit = '\r'; break;
+                case 't':  emit = '\t'; break;
+                default: break;
+            }
+            if (len + 1 < out_len) out[len++] = emit;
+            p += 2;
+            continue;
+        }
+        if (len + 1 < out_len) out[len++] = *p;
+        p++;
+    }
+    if (*p != '"') return false; /* unterminated string */
     out[len] = '\0';
     return true;
 }
 
 static bool json_find_uint(const char *json, const char *key, uint32_t *out) {
-    char pattern[32];
-    snprintf(pattern, sizeof(pattern), "\"%s\":", key);
-    const char *p = strstr(json, pattern);
+    const char *p = find_value(json, key);
     if (!p) return false;
-    p += strlen(pattern);
     *out = (uint32_t)strtoul(p, NULL, 10);
     return true;
 }

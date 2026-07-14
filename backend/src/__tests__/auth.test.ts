@@ -6,16 +6,34 @@
 
 import request from 'supertest';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import jwt from 'jsonwebtoken';
 import { initDatabase, closeDatabase, getDatabase } from '../config/database';
 import authRouter from '../api/routes/auth.routes';
+import authSecurityService from '../security/auth-security.service';
 
 // Create test app
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use('/api/auth', authRouter);
+
+function responseCookie(response: request.Response, name: string): string {
+    const cookies = (response.headers['set-cookie'] as unknown as string[]) || [];
+    const cookie = cookies.find((entry) => entry.startsWith(`${name}=`));
+    if (!cookie) {
+        throw new Error(`Missing ${name} cookie`);
+    }
+    return cookie.split(';')[0];
+}
+
+function responseCookieValue(response: request.Response, name: string): string {
+    const cookie = responseCookie(response, name);
+    return decodeURIComponent(cookie.slice(`${name}=`.length));
+}
 
 const testDataDir = path.join(os.tmpdir(), 'aetherguard-auth-test-data');
 
@@ -56,8 +74,12 @@ describe('Authentication API', () => {
             expect(response.body.message).toBe('backend.user_registered_successfully');
             expect(response.body.user).toBeDefined();
             expect(response.body.user.email).toBe('test@example.com');
-            expect(response.body.accessToken).toBeDefined();
-            expect(response.body.refreshToken).toBeDefined();
+            expect(response.body.accessToken).toBeUndefined();
+            expect(response.body.refreshToken).toBeUndefined();
+            expect(response.body.data?.accessToken).toBeUndefined();
+            expect(response.body.data?.refreshToken).toBeUndefined();
+            expect(responseCookie(response, 'accessToken')).toMatch(/^accessToken=.+/);
+            expect(responseCookie(response, 'refreshToken')).toMatch(/^refreshToken=.+/);
         });
 
         it('should reject registration with missing email', async () => {
@@ -157,8 +179,12 @@ describe('Authentication API', () => {
             expect(response.status).toBe(200);
             expect(response.body.message).toBe('backend.login_successful');
             expect(response.body.user).toBeDefined();
-            expect(response.body.accessToken).toBeDefined();
-            expect(response.body.refreshToken).toBeDefined();
+            expect(response.body.accessToken).toBeUndefined();
+            expect(response.body.refreshToken).toBeUndefined();
+            expect(response.body.data?.accessToken).toBeUndefined();
+            expect(response.body.data?.refreshToken).toBeUndefined();
+            expect(responseCookie(response, 'accessToken')).toMatch(/^accessToken=.+/);
+            expect(responseCookie(response, 'refreshToken')).toMatch(/^refreshToken=.+/);
         });
 
         it('should reject login with wrong password', async () => {
@@ -193,6 +219,36 @@ describe('Authentication API', () => {
             expect(response.status).toBe(400);
             expect(response.body.code).toBe('VALIDATION_ERROR');
         });
+
+        it.each(['pending', 'suspended'])('should reject a %s user with valid credentials', async (status) => {
+            getDatabase().prepare('UPDATE users SET status = ? WHERE email = ?')
+                .run(status, 'login-test@example.com');
+
+            const response = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: 'login-test@example.com',
+                    password: 'correctpassword'
+                });
+
+            expect(response.status).toBe(403);
+            expect(response.body.code).toBe('ACCOUNT_NOT_ACTIVE');
+        });
+
+        it('should not disclose inactive account state to a caller with the wrong password', async () => {
+            getDatabase().prepare('UPDATE users SET status = ? WHERE email = ?')
+                .run('suspended', 'login-test@example.com');
+
+            const response = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: 'login-test@example.com',
+                    password: 'wrongpassword'
+                });
+
+            expect(response.status).toBe(401);
+            expect(response.body.code).toBe('INVALID_CREDENTIALS');
+        });
     });
 
     describe('GET /api/auth/me', () => {
@@ -208,7 +264,7 @@ describe('Authentication API', () => {
                     username: 'Me Test User'
                 });
 
-            accessToken = registerResponse.body.accessToken;
+            accessToken = responseCookieValue(registerResponse, 'accessToken');
         });
 
         it('should return current user info with valid token', async () => {
@@ -239,10 +295,47 @@ describe('Authentication API', () => {
             expect(response.status).toBe(401);
             expect(response.body.code).toBe('AUTH_TOKEN_INVALID');
         });
+
+        it('should reject an existing token after the user is suspended', async () => {
+            getDatabase().prepare('UPDATE users SET status = ? WHERE email = ?')
+                .run('suspended', 'me-test@example.com');
+
+            const response = await request(app)
+                .get('/api/auth/me')
+                .set('Authorization', `Bearer ${accessToken}`);
+
+            expect(response.status).toBe(401);
+            expect(response.body.code).toBe('AUTH_TOKEN_INVALID');
+        });
+
+        it('should reject an existing token after the user role changes', async () => {
+            getDatabase().prepare('UPDATE users SET role = ? WHERE email = ?')
+                .run('viewer', 'me-test@example.com');
+
+            const response = await request(app)
+                .get('/api/auth/me')
+                .set('Authorization', `Bearer ${accessToken}`);
+
+            expect(response.status).toBe(401);
+            expect(response.body.code).toBe('AUTH_TOKEN_INVALID');
+        });
+
+        it('should reject an existing token after the user tenant changes', async () => {
+            getDatabase().prepare('UPDATE users SET tenant_id = ? WHERE email = ?')
+                .run('tenant-after-transfer', 'me-test@example.com');
+
+            const response = await request(app)
+                .get('/api/auth/me')
+                .set('Authorization', `Bearer ${accessToken}`);
+
+            expect(response.status).toBe(401);
+            expect(response.body.code).toBe('AUTH_TOKEN_INVALID');
+        });
     });
 
     describe('POST /api/auth/refresh', () => {
         let refreshToken: string;
+        let refreshCookie: string;
 
         beforeEach(async () => {
             const registerResponse = await request(app)
@@ -253,24 +346,41 @@ describe('Authentication API', () => {
                     username: 'Refresh Test User'
                 });
 
-            refreshToken = registerResponse.body.refreshToken;
+            refreshToken = responseCookieValue(registerResponse, 'refreshToken');
+            refreshCookie = responseCookie(registerResponse, 'refreshToken');
         });
 
         it('should refresh tokens with valid refresh token', async () => {
             const response = await request(app)
                 .post('/api/auth/refresh')
-                .send({ refreshToken });
+                .set('Cookie', [refreshCookie]);
 
             expect(response.status).toBe(200);
             expect(response.body.message).toBe('backend.token_refreshed');
-            expect(response.body.accessToken).toBeDefined();
-            expect(response.body.refreshToken).toBeDefined();
+            expect(response.body.accessToken).toBeUndefined();
+            expect(response.body.refreshToken).toBeUndefined();
+            expect(responseCookie(response, 'accessToken')).toMatch(/^accessToken=.+/);
+            expect(responseCookie(response, 'refreshToken')).not.toBe(refreshCookie);
+        });
+
+        it('allows exactly one of two concurrent uses of the same refresh token', async () => {
+            const [first, second] = await Promise.all([
+                request(app).post('/api/auth/refresh').set('Cookie', [refreshCookie]),
+                request(app).post('/api/auth/refresh').set('Cookie', [refreshCookie])
+            ]);
+            const responses = [first, second];
+
+            expect(responses.map((response) => response.status).sort()).toEqual([200, 401]);
+            expect(responses.find((response) => response.status === 401)?.body.code).toBe('TOKEN_INVALIDATED');
+            const successful = responses.find((response) => response.status === 200)!;
+            expect(successful.body.refreshToken).toBeUndefined();
+            expect(responseCookie(successful, 'refreshToken')).not.toBe(refreshCookie);
         });
 
         it('should reject refresh with invalid token', async () => {
             const response = await request(app)
                 .post('/api/auth/refresh')
-                .send({ refreshToken: 'invalid-refresh-token' });
+                .set('Cookie', ['refreshToken=invalid-refresh-token']);
 
             expect(response.status).toBe(401);
             expect(response.body.code).toBe('TOKEN_INVALID');
@@ -284,10 +394,46 @@ describe('Authentication API', () => {
             expect(response.status).toBe(400);
             expect(response.body.code).toBe('TOKEN_MISSING');
         });
+
+        it('should reject a refresh token supplied only in the request body', async () => {
+            const response = await request(app)
+                .post('/api/auth/refresh')
+                .send({ refreshToken });
+
+            expect(response.status).toBe(400);
+            expect(response.body.code).toBe('TOKEN_MISSING');
+        });
+
+        it('should reject refresh when its tracked session has been removed', async () => {
+            const decoded = jwt.decode(refreshToken) as jwt.JwtPayload;
+            expect(typeof decoded.userId).toBe('string');
+            expect(typeof decoded.sessionId).toBe('string');
+            await expect(authSecurityService.removeSession(decoded.userId, decoded.sessionId)).resolves.toBe(true);
+
+            const response = await request(app)
+                .post('/api/auth/refresh')
+                .set('Cookie', [refreshCookie]);
+
+            expect(response.status).toBe(401);
+            expect(response.body.code).toBe('SESSION_INVALID');
+        });
+
+        it.each(['pending', 'suspended'])('should reject refresh for a %s user', async (status) => {
+            getDatabase().prepare('UPDATE users SET status = ? WHERE email = ?')
+                .run(status, 'refresh-test@example.com');
+
+            const response = await request(app)
+                .post('/api/auth/refresh')
+                .set('Cookie', [refreshCookie]);
+
+            expect(response.status).toBe(401);
+            expect(response.body.code).toBe('USER_INVALID');
+        });
     });
 
     describe('POST /api/auth/logout', () => {
         let accessToken: string;
+        let refreshToken: string;
 
         beforeEach(async () => {
             const registerResponse = await request(app)
@@ -298,7 +444,8 @@ describe('Authentication API', () => {
                     username: 'Logout Test User'
                 });
 
-            accessToken = registerResponse.body.accessToken;
+            accessToken = responseCookieValue(registerResponse, 'accessToken');
+            refreshToken = responseCookieValue(registerResponse, 'refreshToken');
         });
 
         it('should logout successfully with valid token', async () => {
@@ -308,6 +455,37 @@ describe('Authentication API', () => {
 
             expect(response.status).toBe(200);
             expect(response.body.message).toBe('backend.logout_successful');
+
+            const accessAfterLogout = await request(app)
+                .get('/api/auth/me')
+                .set('Authorization', `Bearer ${accessToken}`);
+            expect(accessAfterLogout.status).toBe(401);
+            expect(accessAfterLogout.body.code).toBe('AUTH_TOKEN_INVALID');
+
+            const refreshAfterLogout = await request(app)
+                .post('/api/auth/refresh')
+                .set('Cookie', [`refreshToken=${refreshToken}`]);
+            expect(refreshAfterLogout.status).toBe(401);
+            expect(refreshAfterLogout.body.code).toBe('SESSION_INVALID');
+        });
+
+        it('should revoke only the current session and preserve another active login', async () => {
+            const secondLogin = await request(app)
+                .post('/api/auth/login')
+                .send({ email: 'logout-test@example.com', password: 'password123' });
+            expect(secondLogin.status).toBe(200);
+            const secondAccessToken = responseCookieValue(secondLogin, 'accessToken');
+
+            const logoutResponse = await request(app)
+                .post('/api/auth/logout')
+                .set('Authorization', `Bearer ${accessToken}`);
+            expect(logoutResponse.status).toBe(200);
+
+            const secondSessionResponse = await request(app)
+                .get('/api/auth/me')
+                .set('Authorization', `Bearer ${secondAccessToken}`);
+            expect(secondSessionResponse.status).toBe(200);
+            expect(secondSessionResponse.body.user.email).toBe('logout-test@example.com');
         });
 
         it('should reject logout without token', async () => {
@@ -330,7 +508,7 @@ describe('Authentication API', () => {
                     username: 'Password Test User'
                 });
 
-            accessToken = registerResponse.body.accessToken;
+            accessToken = responseCookieValue(registerResponse, 'accessToken');
         });
 
         it('should change password with correct current password', async () => {
@@ -344,6 +522,12 @@ describe('Authentication API', () => {
 
             expect(response.status).toBe(200);
             expect(response.body.message).toBe('backend.password_changed_successfully');
+
+            const oldSessionResponse = await request(app)
+                .get('/api/auth/me')
+                .set('Authorization', `Bearer ${accessToken}`);
+            expect(oldSessionResponse.status).toBe(401);
+            expect(oldSessionResponse.body.code).toBe('AUTH_TOKEN_INVALID');
 
             // Verify new password works
             const loginResponse = await request(app)

@@ -19,7 +19,12 @@ const Settings = () => {
     const handleLogout = async () => {
         setLoggingOut(true);
         try {
-            await logout();
+            const result = await logout();
+            setSessionUserIdentity(null);
+            if (result?.endSessionUrl) {
+                window.location.assign(result.endSessionUrl);
+                return;
+            }
         } catch {
             // proceed with local cleanup even if server call fails
         }
@@ -46,7 +51,7 @@ const Settings = () => {
                             aria-label={t('header.live')}
                             aria-pressed={liveModeEnabled}
                             onClick={toggleLiveMode}
-                            className="flex items-center gap-2 group cursor-pointer"
+                            className="group inline-flex min-h-6 min-w-11 cursor-pointer items-center justify-center"
                         >
                             <div className={`w-9 h-5 rounded-full border relative transition-colors ${liveModeEnabled ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
                                 <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-sm transition-all ${liveModeEnabled ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
@@ -60,6 +65,7 @@ const Settings = () => {
                             <div className="text-xs text-muted-foreground">{t('settings.logoutDesc')}</div>
                         </div>
                         <button
+                            data-testid="settings-logout"
                             onClick={handleLogout}
                             disabled={loggingOut}
                             className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 disabled:opacity-50 transition-colors"

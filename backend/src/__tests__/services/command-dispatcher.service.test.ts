@@ -93,32 +93,65 @@ describe('commandDispatcherService smoke tests', () => {
       sendCommandToAgent: () => true
     });
 
+    const tenantId = `tenant-ack-${Date.now()}`;
     const result = await commandDispatcherService.dispatchAgentCommand({
       agentId: 'agent-1',
       commandType: 'scan',
-      actor: { tenantId: `tenant-ack-${Date.now()}`, userId: 'tester', email: 'test@test.com' }
+      actor: { tenantId, userId: 'tester', email: 'test@test.com' }
     });
 
     // Should succeed or need approval depending on detection pipeline
     expect(result.actionId).toBeTruthy();
 
     // Simulate agent ack
-    commandDispatcherService.handleAgentCommandAck('agent-1', {
+    const accepted = commandDispatcherService.handleAgentCommandAck('agent-1', tenantId, {
       actionId: result.actionId,
-      tenantId: `tenant-ack-${Date.now()}`,
       message: 'Scan complete'
     });
+    expect(accepted).toBe(true);
+
+    const { securityOperationsService } = await import('../../services/security-operations.service');
+    expect(securityOperationsService.getActionById(tenantId, result.actionId)?.status).toBe('completed');
   });
 
-  it('records failed action via handleAgentCommandFailure', () => {
-    commandDispatcherService.handleAgentCommandFailure('agent-fail-1', {
-      actionId: 'action-fail-123',
+  it('records failed action via handleAgentCommandFailure', async () => {
+    const { securityOperationsService } = await import('../../services/security-operations.service');
+    const action = securityOperationsService.recordActionRun({
+      actionId: `action-fail-${Date.now()}`,
       tenantId: 'tenant-fail',
+      title: 'Failure acknowledgement test',
+      status: 'running',
+      operator: 'test@test.com',
+      runLog: [{ targetId: 'agent-fail-1' }]
+    });
+
+    const accepted = commandDispatcherService.handleAgentCommandFailure('agent-fail-1', 'tenant-fail', {
+      actionId: action.actionId,
       message: 'Agent unreachable'
     });
 
-    // Should not throw - just a smoke test that the handler runs
-    expect(true).toBe(true);
+    expect(accepted).toBe(true);
+    expect(securityOperationsService.getActionById('tenant-fail', action.actionId)?.status).toBe('failed');
+  });
+
+  it('keeps another tenant action running when an ACK claims its actionId', async () => {
+    const { securityOperationsService } = await import('../../services/security-operations.service');
+    const action = securityOperationsService.recordActionRun({
+      actionId: `tenant-b-action-${Date.now()}`,
+      tenantId: 'tenant-B',
+      title: 'Cross-tenant ACK target',
+      status: 'running',
+      operator: 'tenant-b@test.com',
+      runLog: [{ targetId: 'agent-B' }]
+    });
+
+    const accepted = commandDispatcherService.handleAgentCommandAck('agent-B', 'tenant-A', {
+      actionId: action.actionId,
+      tenantId: 'tenant-B'
+    });
+
+    expect(accepted).toBe(false);
+    expect(securityOperationsService.getActionById('tenant-B', action.actionId)?.status).toBe('running');
   });
 
   it('rejects physical-confirmation commands without hardwareContext policyDigest and breakerTarget', async () => {
@@ -141,15 +174,11 @@ describe('commandDispatcherService smoke tests', () => {
 });
 
 /**
- * SECURITY FIX redteam R3-parallel-ack (V12.8):
- * Two simultaneous agent acks for the same actionId must not both be recorded.
- * The second ack is silently dropped (updateActionRun returns null) because the
- * status guard rejects updates when the action is no longer in 'running' state.
- *
- * This test fires two handleAgentCommandAck calls in parallel for the same
- * actionId and verifies that only one 'completed' record is persisted.
+ * SECURITY FIX redteam R3 ACK replay guard (V12.8): once an action leaves
+ * `running`, a duplicate ACK must not append another completion record.
+ * Cross-process concurrency still needs a multi-process database test.
  */
-describe('commandDispatcherService redteam R3-parallel-ack', () => {
+describe('commandDispatcherService redteam R3 ACK replay guard', () => {
   beforeAll(async () => {
     await initDatabase();
     hardwareAuthorizationService.prepare();
@@ -160,10 +189,11 @@ describe('commandDispatcherService redteam R3-parallel-ack', () => {
     commandDispatcherService.setDeviceAdapter(null);
   });
 
-  it('redteam R3: the second concurrent ack for the same actionId is silently dropped', async () => {
+  it('redteam R3: a replayed ack for the same actionId is rejected', async () => {
     const { securityOperationsService } = await import('../../services/security-operations.service');
 
     const tenantId = `tenant-parallel-ack-${Date.now()}`;
+    const agentId = `agent-parallel-${Date.now()}`;
 
     // Create an action run directly in 'running' state to simulate a
     // command that has been dispatched and accepted by the agent gateway.
@@ -171,38 +201,24 @@ describe('commandDispatcherService redteam R3-parallel-ack', () => {
       tenantId,
       title: 'Parallel ack test action',
       status: 'running',
-      operator: 'redteam@test.com'
+      operator: 'redteam@test.com',
+      runLog: [{ targetId: agentId }]
     });
 
     const actionId = action.actionId;
-    const agentId = `agent-parallel-${Date.now()}`;
+    const firstResult = commandDispatcherService.handleAgentCommandAck(agentId, tenantId, {
+      actionId,
+      message: 'First ack'
+    });
+    const secondResult = commandDispatcherService.handleAgentCommandAck(agentId, tenantId, {
+      actionId,
+      message: 'Second ack (should be dropped)'
+    });
 
-    // Fire two acks simultaneously using Promise.all.
-    // Both start from status='running', so only the first to commit wins;
-    // the second sees 'completed' and its UPDATE becomes a no-op.
-    const [firstResult, secondResult] = await Promise.all([
-      // eslint-disable-next-line no-async-promise-executor
-      new Promise<void>(async (resolve) => {
-        commandDispatcherService.handleAgentCommandAck(agentId, {
-          actionId,
-          tenantId,
-          message: 'First ack'
-        });
-        resolve();
-      }),
-      // eslint-disable-next-line no-async-promise-executor
-      new Promise<void>(async (resolve) => {
-        commandDispatcherService.handleAgentCommandAck(agentId, {
-          actionId,
-          tenantId,
-          message: 'Second ack (should be dropped)'
-        });
-        resolve();
-      })
-    ]);
+    expect(firstResult).toBe(true);
+    expect(secondResult).toBe(false);
 
-    // The database should show exactly one 'completed' record — the second
-    // ack's UPDATE was rejected by the status guard.
+    // The action row remains singular and only one agent ACK log entry exists.
     const { getDatabase } = await import('../../config/database');
     const db = getDatabase();
     const rows = db.prepare(`
@@ -216,5 +232,6 @@ describe('commandDispatcherService redteam R3-parallel-ack', () => {
     // Verify the final status is 'completed' (not 'running', not 'failed').
     const final = securityOperationsService.getActionById(tenantId, actionId);
     expect(final?.status).toBe('completed');
+    expect(final?.runLog.filter((entry) => entry.actor === 'agent')).toHaveLength(1);
   });
 });

@@ -1,0 +1,15 @@
+[Unit]
+Description=AetherGuard Serial Host Helper
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+EnvironmentFile=-/etc/AetherGuard/serial-helper.env
+ExecStart=/usr/local/lib/aetherguard/aetherguard-serial-helper.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

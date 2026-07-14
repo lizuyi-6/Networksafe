@@ -10,6 +10,7 @@
  */
 
 import {
+  flushPendingAuditShadowWrites,
   getAuditShadowWriteMetrics,
   resetAuditShadowWriteMetrics
 } from '../../security/audit-logger.service';
@@ -64,7 +65,8 @@ const ORIGINAL_SHADOW_REQUIRED = process.env.AUDIT_SHADOW_REQUIRED;
 describe('AuditLogger dual-write atomicity (R12 V12.1)', () => {
   let db: FakeDb;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await flushPendingAuditShadowWrites();
     jest.clearAllMocks();
     resetAuditShadowWriteMetrics();
     delete process.env.AUDIT_LOG_FAIL_CLOSED;
@@ -107,6 +109,7 @@ describe('AuditLogger dual-write atomicity (R12 V12.1)', () => {
       actor: { id: 'user-dw-1', ip: '10.0.0.1' },
       success: true
     });
+    await flushPendingAuditShadowWrites();
 
     expect(logId).toBeTruthy();
     // The local SQLite INSERT was issued.
@@ -131,6 +134,7 @@ describe('AuditLogger dual-write atomicity (R12 V12.1)', () => {
       actor: { id: 'user-dw-2' },
       success: false
     });
+    await flushPendingAuditShadowWrites();
 
     // Second write: success
     mockDescribe.mockReturnValueOnce({ lastError: null });
@@ -139,6 +143,7 @@ describe('AuditLogger dual-write atomicity (R12 V12.1)', () => {
       actor: { id: 'user-dw-3' },
       success: true
     });
+    await flushPendingAuditShadowWrites();
 
     const metrics = getAuditShadowWriteMetrics();
     expect(metrics.failures).toBe(1);
@@ -175,6 +180,7 @@ describe('AuditLogger dual-write atomicity (R12 V12.1)', () => {
       success: true,
       details: { path: '/opt/aetherguard' }
     });
+    await flushPendingAuditShadowWrites();
 
     expect(logId).toBeTruthy();
     expect(mockUpsert).toHaveBeenCalledWith(
@@ -209,5 +215,25 @@ describe('AuditLogger dual-write atomicity (R12 V12.1)', () => {
     const metrics = getAuditShadowWriteMetrics();
     expect(metrics.successes).toBe(0);
     expect(metrics.failures).toBe(0);
+  });
+
+  it('rejects after the local commit when AUDIT_SHADOW_REQUIRED=true but the shadow is disabled', async () => {
+    process.env.AUDIT_SHADOW_REQUIRED = 'true';
+    mockIsEnabled.mockReturnValue(false);
+    mockCanServeReads.mockReturnValue(false);
+
+    await expect(
+      auditLogger.logAuth({
+        action: 'logout',
+        actor: { id: 'user-dw-shadow-required' },
+        success: true
+      })
+    ).rejects.toMatchObject({ code: 'audit_shadow_required_unavailable' });
+
+    expect(db.prepare).toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+    const metrics = getAuditShadowWriteMetrics();
+    expect(metrics.failures).toBe(1);
+    expect(metrics.successes).toBe(0);
   });
 });

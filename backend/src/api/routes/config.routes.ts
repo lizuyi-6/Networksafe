@@ -4,6 +4,7 @@ import { sendError, sendSuccess } from '../../core/http/api-response';
 import auditLogger from '../../security/audit-logger.service';
 import { notificationDispatcherService } from '../../services/notification-dispatcher.service';
 import { platformConfigService } from '../../services/platform-config.service';
+import { canUseModel, normalizePlan } from '../../utils/model-access';
 
 const router = Router();
 
@@ -31,6 +32,20 @@ router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
 router.post('/', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
   try {
     const tenantId = tenantOf(req);
+    const preferredModelId = req.body?.aiRouting?.preferredModelId;
+    if (
+      preferredModelId !== undefined
+      && preferredModelId !== null
+      && (
+        typeof preferredModelId !== 'string'
+        || !canUseModel(normalizePlan(req.user?.plan), preferredModelId.trim())
+      )
+    ) {
+      return sendError(res, 403, {
+        code: 'backend.model_access_denied',
+        message: 'backend.model_access_denied'
+      });
+    }
     const config = await platformConfigService.saveConfig(
       tenantId,
       req.body || {},
@@ -50,6 +65,7 @@ router.post('/', authenticate, requireRole('admin'), async (req: AuthenticatedRe
           rateLimitRequestsPerMinute: config.rateLimit.requestsPerMinute,
           notificationChannels: config.notifications.channels.length,
           aiRoutingMode: config.aiRouting.mode,
+          preferredModelId: config.aiRouting.preferredModelId,
           detectionRuleFirstEnabled: config.detectionPipeline.ruleFirstEnabled,
           detectionEscalationThreshold: config.detectionPipeline.aiEscalationThreshold,
           privacyMode: config.privacyMode,

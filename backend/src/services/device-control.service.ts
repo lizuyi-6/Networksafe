@@ -54,6 +54,11 @@ export interface DeviceConfirmationSessionRecord {
   };
 }
 
+export interface DeviceConfirmationAckResult {
+  confirmed: boolean;
+  reason: string | null;
+}
+
 type GatewayEmitter = (deviceId: string, command: string, params?: Record<string, any>) => Promise<boolean> | boolean;
 
 function parseJson<T>(value: any, fallback: T): T {
@@ -444,11 +449,14 @@ class DeviceControlService {
     `).run(nextStatus, JSON.stringify(nextResult), updatedAt, otaJobId, deviceId);
   }
 
-  async handlePhysicalConfirmationAck(deviceId: string, payload: Record<string, any>): Promise<void> {
+  async handlePhysicalConfirmationAck(
+    deviceId: string,
+    payload: Record<string, any>
+  ): Promise<DeviceConfirmationAckResult> {
     this.assertPrepared();
     const confirmationSessionId = String(payload?.confirmationSessionId || '').trim();
     if (!confirmationSessionId) {
-      return;
+      return { confirmed: false, reason: 'confirmation_session_id_missing' };
     }
 
     const replayedAt = new Date().toISOString();
@@ -487,7 +495,12 @@ class DeviceControlService {
           WHERE id = ? AND device_id = ? AND status != 'pending_physical_confirmation'
         `).run(JSON.stringify(replayResult), replayedAt, confirmationSessionId, deviceId);
       }
-      return;
+      return {
+        confirmed: false,
+        reason: replayExisting
+          ? 'confirmation_session_replay_or_not_pending'
+          : 'confirmation_session_not_found'
+      };
     }
 
     const device = getDeviceById(deviceId) as any;
@@ -526,7 +539,7 @@ class DeviceControlService {
         confirmationSessionId,
         deviceId
       );
-      return;
+      return { confirmed: false, reason: 'session_expires_at_unparseable' };
     }
 
     let verified = false;
@@ -566,6 +579,31 @@ class DeviceControlService {
         || String(payload?.interlockAction || '') === storedInterlock;
     }
 
+    // SECURITY FIX: Monotonic counter defense-in-depth. The session-bound
+    // ECDSA signature already prevents cross-session replay, but a per-device
+    // high-water counter provides an additional layer: even if an attacker
+    // somehow forges or transplants a valid signature, the counter must
+    // strictly advance. This mirrors the hardware-authorization service's
+    // three-independent-high-water pattern (CLAUDE.md §安全控制流不变量).
+    const ackMonotonicCounter = Number(payload?.monotonicCounter || 0);
+    let monotonicCounterValid = true;
+    if (Number.isFinite(ackMonotonicCounter) && ackMonotonicCounter > 0) {
+      const lastConfirmed = getDatabase().prepare(`
+        SELECT last_monotonic_counter
+        FROM device_confirmation_sessions
+        WHERE device_id = ? AND status = 'confirmed' AND last_monotonic_counter IS NOT NULL
+        ORDER BY last_monotonic_counter DESC
+        LIMIT 1
+      `).get(deviceId) as any;
+      const highWater = Number(lastConfirmed?.last_monotonic_counter || 0);
+      if (ackMonotonicCounter <= highWater) {
+        monotonicCounterValid = false;
+      }
+    } else if (payload?.monotonicCounter !== undefined && payload?.monotonicCounter !== null) {
+      // A non-numeric or zero counter when one was explicitly provided is suspicious
+      monotonicCounterValid = false;
+    }
+
     // SECURITY FIX R3 / V2.4: strict === true for the confirmed flag.
     // Boolean('false') is truthy in JS — we MUST reject the literal
     // string "false" / "true" (and "0", "1", etc.) and accept only the
@@ -577,7 +615,8 @@ class DeviceControlService {
       && verified
       && allHardwareContextMatch
       && expiryMatchesSession
-      && expiryStillValid;
+      && expiryStillValid
+      && monotonicCounterValid;
 
     // Determine the rejection reason for forensics
     let rejectionReason: string | null = null;
@@ -588,6 +627,7 @@ class DeviceControlService {
     else if (!breakerTargetMatch) rejectionReason = 'breaker_target_mismatch';
     else if (!challengeMatch) rejectionReason = 'challenge_mismatch';
     else if (!interlockMatch) rejectionReason = 'interlock_action_mismatch';
+    else if (!monotonicCounterValid) rejectionReason = 'monotonic_counter_replay';
     else if (!expiryMatchesSession) rejectionReason = 'session_expires_at_mismatch';
     else if (!expiryStillValid) rejectionReason = 'session_expired';
 
@@ -606,6 +646,18 @@ class DeviceControlService {
           actionId: confirmationSessionId
         })
       : null;
+
+    // SECURITY FIX: Advance the per-device monotonic counter high-water mark
+    // AFTER successful confirmation. This closes the replay window: a captured
+    // grant with the same counter cannot pass the `> last_monotonic_counter`
+    // check on subsequent sessions for this device.
+    if (confirmed && ackMonotonicCounter > 0) {
+      getDatabase().prepare(`
+        UPDATE device_confirmation_sessions
+        SET last_monotonic_counter = ?
+        WHERE device_id = ? AND id = ?
+      `).run(ackMonotonicCounter, deviceId, confirmationSessionId);
+    }
 
     const result: Record<string, any> = {
       ack: payload,
@@ -640,6 +692,7 @@ class DeviceControlService {
       confirmationSessionId,
       deviceId
     );
+    return { confirmed, reason: rejectionReason };
   }
 
   getFirmware(id: string): DeviceFirmwareRecord | null {

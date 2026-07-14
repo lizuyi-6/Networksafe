@@ -30,6 +30,7 @@ import { startTrafficSamplingLoop, stopTrafficSamplingLoop } from './services/tr
 import { artifactStoreService } from './services/artifact-store.service';
 import { jobQueueService } from './services/job-queue.service';
 import { dashboardBroadcastService } from './services/dashboard-broadcast.service';
+import nonceManager from './security/nonce-manager.service';
 
 const runtime = getRuntimeDescriptor();
 let agentGateway: AgentGateway | null = null;
@@ -149,7 +150,7 @@ async function shutdown(): Promise<void> {
     stopTrafficSamplingLoop();
 
     if (agentGateway) {
-      agentGateway.close();
+      await agentGateway.close();
       agentGateway = null;
     }
     if (deviceGateway) {
@@ -160,17 +161,20 @@ async function shutdown(): Promise<void> {
 
     runtimeEmulatorService.stop();
 
-    await new Promise<void>((resolve, reject) => {
-      httpServer.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
+    if (httpServer.listening) {
+      await new Promise<void>((resolve, reject) => {
+        httpServer.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        });
       });
-    }).catch(() => undefined);
+    }
 
     await postgresShadowStoreService.close();
+    nonceManager.close();
     closeDatabase();
 
     logger.info('Shutdown complete');

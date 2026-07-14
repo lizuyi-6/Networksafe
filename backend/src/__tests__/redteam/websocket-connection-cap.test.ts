@@ -181,10 +181,9 @@ describe('AgentGateway per-IP connection cap (redteam)', () => {
     httpServer.listen(PORT, done);
   });
 
-  afterAll((done) => {
+  afterAll(async () => {
     sockets.forEach((s) => { if (s.connected) s.disconnect(); });
-    gateway.close();
-    httpServer.close(done);
+    await gateway.close();
   });
 
   afterEach(() => {
@@ -201,9 +200,23 @@ describe('AgentGateway per-IP connection cap (redteam)', () => {
         timeout: 3000
       });
       sockets.push(socket);
-      socket.once('connect', () => resolve(socket));
-      socket.once('connect_error', (err) => reject(err));
-      setTimeout(() => reject(new Error('connect timeout')), 3000);
+      const timeout = setTimeout(() => {
+        socket.disconnect();
+        reject(new Error('connect timeout'));
+      }, 3000);
+      const onConnect = (): void => {
+        clearTimeout(timeout);
+        socket.off('connect_error', onConnectError);
+        resolve(socket);
+      };
+      const onConnectError = (error: Error): void => {
+        clearTimeout(timeout);
+        socket.off('connect', onConnect);
+        socket.disconnect();
+        reject(error);
+      };
+      socket.once('connect', onConnect);
+      socket.once('connect_error', onConnectError);
     });
   }
 

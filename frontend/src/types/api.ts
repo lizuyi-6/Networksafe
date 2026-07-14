@@ -11,6 +11,7 @@ export interface ThreatItem {
 }
 
 export interface DashboardStats {
+    telemetryAvailable?: boolean;
     totalRequests: number;
     currentRPS: number;
     blockedRequests: number;

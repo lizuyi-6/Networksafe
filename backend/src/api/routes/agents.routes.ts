@@ -11,6 +11,7 @@ import { securityOperationsService } from '../../services/security-operations.se
 import { scannerTaskService } from '../../services/scanner-task.service';
 import auditLogger from '../../security/audit-logger.service';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
+import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
 
 const router = Router();
 
@@ -45,7 +46,21 @@ export function setAgentGateway(gateway: any): void {
 }
 
 function tenantOf(req: AuthenticatedRequest): string {
-    return req.user?.tenantId || 'global';
+    return req.user?.tenantId || PLATFORM_TENANT_ID;
+}
+
+function canAccessAgent(tenantId: string, agent: any): boolean {
+    return Boolean(agent) && (tenantId === PLATFORM_TENANT_ID || agent.tenantId === tenantId);
+}
+
+function getAgentsForTenant(req: AuthenticatedRequest): any[] {
+    const tenantId = tenantOf(req);
+    return agentGateway.getAgentList().filter((agent: any) => canAccessAgent(tenantId, agent));
+}
+
+function getAgentForTenant(req: AuthenticatedRequest, agentId: string): any | null {
+    const agent = agentGateway.getAgent(agentId);
+    return canAccessAgent(tenantOf(req), agent) ? agent : null;
 }
 
 function safeAuditLog(payload: any): void {
@@ -248,7 +263,7 @@ router.get('/', (req: AuthenticatedRequest, res: Response) => {
         }
 
         const tenantId = tenantOf(req);
-        const agents = agentGateway.getAgentList().map((agent: any) => {
+        const agents = getAgentsForTenant(req).map((agent: any) => {
             const context = hydrateAgentContext(tenantId, agent);
             return {
                 ...agent,
@@ -273,7 +288,7 @@ router.get('/threats/recent', async (req: Request, res: Response) => {
         const limitRaw = Number(req.query.limit || 50);
         const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(200, limitRaw)) : 50;
 
-        const alerts = (await getAlerts())
+        const alerts = (await getAlerts(tenantOf(req as AuthenticatedRequest)))
             .filter((a: any) => a.type === 'security')
             .slice(0, limit)
             .map((a: any) => ({
@@ -305,7 +320,7 @@ router.post('/:id/scan', requireRole('admin'), async (req: AuthenticatedRequest,
             return res.status(503).json({ error: 'backend.agent_gateway_not_available' });
         }
 
-        const agent = agentGateway.getAgent(req.params.id);
+        const agent = getAgentForTenant(req, req.params.id);
         if (!agent) {
             return res.status(404).json({ error: 'backend.agent_not_found_or_offline' });
         }
@@ -363,6 +378,10 @@ router.post('/:id/block', requireRole('admin'), async (req: AuthenticatedRequest
             return res.status(503).json({ error: 'backend.agent_gateway_not_available' });
         }
 
+        if (!getAgentForTenant(req, req.params.id)) {
+            return res.status(404).json({ error: 'backend.agent_not_found_or_offline' });
+        }
+
         const { ip, duration } = req.body;
         if (!ip) {
             return res.status(400).json({ error: 'backend.ip_address_required' });
@@ -407,6 +426,10 @@ router.post('/:id/unblock', requireRole('admin'), async (req: AuthenticatedReque
             return res.status(503).json({ error: 'backend.agent_gateway_not_available' });
         }
 
+        if (!getAgentForTenant(req, req.params.id)) {
+            return res.status(404).json({ error: 'backend.agent_not_found_or_offline' });
+        }
+
         const { ip } = req.body;
         if (!ip) {
             return res.status(400).json({ error: 'backend.ip_address_required' });
@@ -446,7 +469,7 @@ router.get('/stats', (req: Request, res: Response) => {
             return res.status(503).json({ error: 'backend.agent_gateway_not_available' });
         }
 
-        const agents = agentGateway.getAgentList();
+        const agents = getAgentsForTenant(req as AuthenticatedRequest);
         const onlineAgents = agents.filter((a: any) => a.isOnline);
 
         let totalCpuUsage = 0;
@@ -495,7 +518,7 @@ router.get('/health', (req: Request, res: Response) => {
             return res.status(503).json({ error: 'backend.agent_gateway_not_available' });
         }
 
-        const agents = agentGateway.getAgentList();
+        const agents = getAgentsForTenant(req as AuthenticatedRequest);
         const details: Record<string, any> = {};
 
         for (const agent of agents) {
@@ -523,7 +546,7 @@ router.get('/stats/summary', (req: Request, res: Response) => {
             return res.status(503).json({ error: 'backend.agent_gateway_not_available' });
         }
 
-        const agents = agentGateway.getAgentList();
+        const agents = getAgentsForTenant(req as AuthenticatedRequest);
         res.json({
             success: true,
             summary: {
@@ -545,7 +568,7 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
             return res.status(503).json({ error: 'backend.agent_gateway_not_available' });
         }
 
-        const agent = agentGateway.getAgent(req.params.id);
+        const agent = getAgentForTenant(req, req.params.id);
         if (!agent) {
             return res.status(404).json({ error: 'backend.agent_not_found' });
         }

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
+import { isPublicStandaloneRoute } from '../config/public-routes';
 import { fetchCurrentUserSession, isRequestAbortError } from '../services/api';
 
 interface WebSocketContextType {
@@ -73,13 +74,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     }, [addTerminalLog]);
 
     useEffect(() => {
-        const isPublicRoute =
-            location.pathname === '/' ||
-            location.pathname === '/login' ||
-            location.pathname === '/privacy' ||
-            location.pathname === '/terms';
-
-        if (isPublicRoute) {
+        if (isPublicStandaloneRoute(location.pathname)) {
             if (socketRef.current) {
                 socketRef.current.disconnect();
                 socketRef.current = null;

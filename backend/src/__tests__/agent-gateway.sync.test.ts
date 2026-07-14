@@ -55,14 +55,13 @@ describe('AgentGateway rule sync', () => {
     httpServer.listen(port, done);
   });
 
-  afterAll((done) => {
+  afterAll(async () => {
     sockets.splice(0).forEach((socket) => {
       if (socket.connected) {
         socket.disconnect();
       }
     });
-    gateway.close();
-    httpServer.close(done);
+    await gateway.close();
   });
 
   afterEach(() => {

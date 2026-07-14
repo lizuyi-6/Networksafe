@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import logger from '../utils/logger';
-import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
+import { ANONYMOUS_TENANT_ID, PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
 import { jobQueueService } from './job-queue.service';
 import {
   platformConfigService,
@@ -1383,6 +1383,9 @@ class DetectionPipelineService {
   async evaluateRequest(request: DetectionRequest, options: EvaluateOptions = {}): Promise<DetectionDecision> {
     this.assertPrepared();
     const startedAt = Date.now();
+    const anonymousRuleOnly = request.tenantId === ANONYMOUS_TENANT_ID;
+    const forceAiReview = options.forceAiReview === true && !anonymousRuleOnly;
+    const skipPersistence = options.skipPersistence === true || anonymousRuleOnly;
     const settings = await this.getSettings(request.tenantId);
     const rules = await this.listRules(request.tenantId);
     const ruleEvaluation = evaluateDetectionRules(request, rules);
@@ -1420,8 +1423,17 @@ class DetectionPipelineService {
       request.channel === 'agent';
 
     const ruleMatched = ruleEvaluation.matchedRules.length > 0;
-    const hotPathRuleOnly = !maximumClassification && ruleMatched && !options.forceAiReview && verdict !== 'block';
-    const shouldRunHotPathLocalModel = maximumClassification || (!ruleMatched && verdict !== 'block' && hotPathChannelEnabled);
+    const hotPathRuleOnly = anonymousRuleOnly || (!maximumClassification && ruleMatched && !forceAiReview && verdict !== 'block');
+    const shouldRunHotPathLocalModel = !anonymousRuleOnly
+      && (
+        maximumClassification
+        || (
+          !ruleMatched
+          && verdict !== 'block'
+          && hotPathChannelEnabled
+          && baseRiskScore >= settings.aiEscalationThreshold
+        )
+      );
 
     if (maximumClassification && !this.aiAnalyzer) {
       const blockingFailure: DetectionDecision = {
@@ -1448,7 +1460,7 @@ class DetectionPipelineService {
         aiResult: undefined,
         learningVerificationAiResult: undefined
       };
-      if (!options.skipPersistence) {
+      if (!skipPersistence) {
         this.recordDetectionEvent(request, blockingFailure);
       }
       return blockingFailure;
@@ -1479,7 +1491,7 @@ class DetectionPipelineService {
         aiResult: undefined,
         learningVerificationAiResult: undefined
       };
-      if (!options.skipPersistence) {
+      if (!skipPersistence) {
         this.recordDetectionEvent(request, blockingFailure);
       }
       return blockingFailure;
@@ -1490,10 +1502,10 @@ class DetectionPipelineService {
     } else if (shouldRunHotPathLocalModel && this.aiAnalyzer) {
       escalatedToAI = true;
       const primaryAiRawResult = await this.aiAnalyzer.analyze(request, {
-        analysisPurpose: options.forceAiReview ? 'learning_verification' : 'primary',
+        analysisPurpose: forceAiReview ? 'learning_verification' : 'primary',
         routeModeOverride: maximumClassification
           ? 'local_only'
-          : options.forceAiReview
+          : forceAiReview
             ? settings.learningCloudVerificationMode
             : 'local_only',
         ...(maximumClassification ? { forceDebate: true } : {})
@@ -1586,7 +1598,7 @@ class DetectionPipelineService {
           );
           candidateId = blockingCandidate?.candidateId || candidateId;
         }
-      } else if (!options.forceAiReview && this.shouldRunBlockingDiscussion({
+      } else if (!forceAiReview && this.shouldRunBlockingDiscussion({
         request,
         settings,
         baseRiskScore,
@@ -1645,7 +1657,7 @@ class DetectionPipelineService {
           );
           candidateId = blockingCandidate?.candidateId || candidateId;
         }
-      } else if (!options.forceAiReview && this.shouldQueueAsyncReview({
+      } else if (!forceAiReview && this.shouldQueueAsyncReview({
         request,
         settings,
         ruleEscalation: false,
@@ -1665,9 +1677,9 @@ class DetectionPipelineService {
           decisionSource = `${decisionSource}+async_review_queued`;
         }
       }
-    } else if (verdict !== 'block' && !ruleMatched && !options.forceAiReview) {
+    } else if (verdict !== 'block' && !ruleMatched && !forceAiReview) {
       decisionSource = `${decisionSource}+local_ai_unavailable`;
-    } else if (options.forceAiReview && this.aiAnalyzer && verdict !== 'block') {
+    } else if (forceAiReview && this.aiAnalyzer && verdict !== 'block') {
       escalatedToAI = true;
       const primaryAiRawResult = await this.aiAnalyzer.analyze(request, {
         analysisPurpose: 'learning_verification',
@@ -1725,7 +1737,7 @@ class DetectionPipelineService {
           decisionSource = `${decisionSource}+async_review_queued`;
         }
       }
-    } else if (verdict !== 'block' && !options.forceAiReview) {
+    } else if (verdict !== 'block' && !forceAiReview) {
       // Rule-only or heuristic-only path. No blocking AI work here.
     }
 
@@ -1776,7 +1788,7 @@ class DetectionPipelineService {
       learningVerificationAiResult
     };
 
-    if (!options.skipPersistence) {
+    if (!skipPersistence) {
       this.recordDetectionEvent(request, decision);
     }
 

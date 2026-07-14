@@ -25,7 +25,7 @@
  */
 
 import { randomBytes } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -52,7 +52,7 @@ const fail = (msg) => {
 
 const hex = (bytes) => randomBytes(bytes).toString('hex');
 // Readable-but-strong admin password: 24+ chars, no shell-hostile characters.
-const generateAdminPassword = () => `Ag-${randomBytes(18).toString('base64url')}`;
+const generateAdminPassword = () => `Ag!9-${randomBytes(18).toString('base64url')}`;
 
 /** Replace `KEY=<anything>` lines in template text. Throws if a key is absent so
  *  template drift is caught instead of silently leaving a placeholder behind. */
@@ -68,15 +68,47 @@ function fillTemplate(templateText, values, templateName) {
   return out;
 }
 
-/** @returns {'written' | 'skipped' | 'error'} */
+/** @returns {'written' | 'skipped' | 'backfilled' | 'error'} */
 function generateEnvFile({ templatePath, targetPath, values, label }) {
   if (!existsSync(templatePath)) {
     fail(`${label}: template missing: ${templatePath}`);
     return 'error';
   }
   if (existsSync(targetPath) && !FORCE) {
-    ok(`${label}: ${targetPath} already exists — left untouched (use --force to regenerate)`);
-    return 'skipped';
+    // Backfill: if the file predates a newly-required key (e.g.
+    // SERIAL_HELPER_SHARED_SECRET was added after the initial .env was
+    // generated), append ONLY the missing keys — never touch existing ones.
+    // This is non-destructive: --force is still needed to regenerate all keys.
+    const existing = readFileSync(targetPath, 'utf8');
+    const missing = [];
+    for (const [key, value] of Object.entries(values)) {
+      const re = new RegExp(`^${key}=`, 'm');
+      if (!re.test(existing)) {
+        missing.push({ key, value });
+      }
+    }
+    if (missing.length === 0) {
+      ok(`${label}: ${targetPath} already exists and has all required keys — left untouched`);
+      return 'skipped';
+    }
+    // Ensure SERIAL_HELPER_SHARED_SECRET != DEVICE_COMMAND_SECRET when backfilling.
+    const existingDeviceSecret = existing.match(/^DEVICE_COMMAND_SECRET=(.+)$/m)?.[1]?.trim();
+    // SHADOW_DATABASE_URL embeds POSTGRES_PASSWORD: if the password already
+    // exists in the file, re-derive the URL from it so they stay consistent.
+    const existingPgPassword = existing.match(/^POSTGRES_PASSWORD=(.+)$/m)?.[1]?.trim();
+    for (const entry of missing) {
+      if (entry.key === 'SERIAL_HELPER_SHARED_SECRET' && existingDeviceSecret && entry.value === existingDeviceSecret) {
+        entry.value = hex(32);
+      }
+      if (entry.key === 'SHADOW_DATABASE_URL' && existingPgPassword) {
+        entry.value = `postgres://aetherguard:${existingPgPassword}@postgres:5432/aetherguard`;
+      }
+    }
+    const appendBlock = '\n# --- backfilled by setup.mjs (keys were missing from the original file) ---\n'
+      + missing.map(({ key, value }) => `${key}=${value}`).join('\n') + '\n';
+    appendFileSync(targetPath, appendBlock, { mode: 0o600 });
+    ok(`${label}: backfilled ${missing.length} missing key(s) into ${targetPath}: ${missing.map(m => m.key).join(', ')}`);
+    return 'backfilled';
   }
   const filled = fillTemplate(readFileSync(templatePath, 'utf8'), values, templatePath);
   writeFileSync(targetPath, filled, { mode: 0o600 });
@@ -139,6 +171,8 @@ const GENERATED_KEYS = {
   REDIS_PASSWORD: hex(16),
   JWT_SECRET: hex(32),
   AUDIT_LOG_SECRET: hex(32),
+  AUDIT_LOG_FAIL_CLOSED: 'true',
+  AUDIT_SHADOW_REQUIRED: 'true',
   ENCRYPTION_KEY: hex(32),
   ENCRYPTION_SALT: hex(16),
   ADMIN_PASSWORD,
@@ -148,6 +182,9 @@ const GENERATED_KEYS = {
   SHADOW_DATABASE_URL: `postgres://aetherguard:${POSTGRES_PASSWORD}@postgres:5432/aetherguard`,
   S3_SECRET_KEY: hex(16),
   DEVICE_API_KEYS: `device_key_${hex(8)}`,
+  ENTERPRISE_RUNTIME_MODE: 'prod-enterprise',
+  ALLOW_BREAK_GLASS_PASSWORD_LOGIN: 'false',
+  ALLOW_PUBLIC_REGISTRATION: 'false',
 };
 
 const rootEnvPath = path.join(ROOT, '.env');
@@ -165,6 +202,10 @@ const backendResult = generateEnvFile({
   values: {
     JWT_SECRET: hex(32),
     AUDIT_LOG_SECRET: hex(32),
+    AUDIT_LOG_FAIL_CLOSED: 'false',
+    AUDIT_SHADOW_REQUIRED: 'false',
+    ENTERPRISE_RUNTIME_MODE: 'lab',
+    ALLOW_PUBLIC_REGISTRATION: 'true',
     REDIS_PASSWORD: hex(16),
     ADMIN_PASSWORD,
   },
@@ -221,7 +262,8 @@ if (rootResult === 'written' || backendResult === 'written') {
   if (backendResult === 'written') console.log('    backend-dev admin email: admin@yourdomain.com    (ADMIN_EMAIL in backend/.env)');
 }
 console.log('  Docker (all services):   docker compose up -d --build');
-console.log('                           frontend http://localhost:8080 · backend http://localhost:3005');
+console.log('                           console + API proxy http://127.0.0.1:8080');
+console.log('                           backend/data services are not published to the host');
 console.log('  Local dev:               cd backend  && npm install && npm run dev');
 console.log('                           cd frontend && npm install && npm run dev');
 console.log('  Full test suite:         cd backend && npm run test:all   (never plain `npm test` — OOM)');

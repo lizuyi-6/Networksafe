@@ -8,7 +8,7 @@
 
 import express from 'express';
 import cors from 'cors';
-import { buildAllowedOrigins } from '../../bootstrap/control-plane-app';
+import { buildAllowedOrigins } from '../../bootstrap/allowed-origins';
 
 function createTestCorsApp(extraOrigins: string[] = []): express.Express {
   const app = express();
@@ -104,6 +104,14 @@ async function makeRequest(
     const server = app.listen(0, () => {
       const address = server.address() as { port: number };
       const http = require('http');
+      let settled = false;
+      const finish = (result: { status: number; headers: Record<string, string | string | undefined> }): void => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        server.close(() => resolve(result));
+      };
 
       const headers: Record<string, string> = {};
       if (options.origin) {
@@ -121,18 +129,17 @@ async function makeRequest(
             status: res.statusCode,
             headers: res.headers as Record<string, string | string | undefined>,
           };
-          server.close();
-          resolve(result);
+          res.once('end', () => finish(result));
+          res.once('error', () => finish({ status: 0, headers: {} }));
+          res.resume();
         }
       );
       req.on('error', () => {
-        server.close();
-        resolve({ status: 0, headers: {} });
+        finish({ status: 0, headers: {} });
       });
       req.setTimeout(1000, () => {
         req.destroy();
-        server.close();
-        resolve({ status: 0, headers: {} });
+        finish({ status: 0, headers: {} });
       });
     });
   });

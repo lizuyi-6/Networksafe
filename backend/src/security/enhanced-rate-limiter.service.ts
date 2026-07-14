@@ -426,6 +426,7 @@ export class EnhancedRateLimiter {
 const enhancedRateLimiterInstance = new EnhancedRateLimiter();
 export default enhancedRateLimiterInstance;
 
-setInterval(() => {
+const cleanupTimer = setInterval(() => {
   enhancedRateLimiterInstance.cleanup();
 }, 5 * 60 * 1000);
+cleanupTimer.unref?.();

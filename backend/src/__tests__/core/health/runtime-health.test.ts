@@ -200,6 +200,26 @@ describe('dependency health: redis', () => {
     expect(snapshot.dependencies.redis.status).toBe('degraded');
     expect(snapshot.dependencies.redis.message).toBe('Connection refused');
     expect(snapshot.dependencies.redis.details!.disabled).toBe(false);
+    expect(snapshot.dependencies.redis.details!.requiredForAuthentication).toBe(false);
+    expect(snapshot.dependencies.redis.details!.reason).toBe('redis_unavailable');
+    expect(snapshot.readiness.status).toBe('ready');
+    expect(snapshot.readiness.blockers).not.toContain('redis');
+  });
+
+  it('blocks production readiness when Redis cannot provide the authentication session store', async () => {
+    mocks.redisHealthCheck!.mockResolvedValue({ healthy: false, error: 'Connection refused' });
+    mocks.redisIsDisabled!.mockReturnValue(false);
+    const input = defaultInput();
+    input.runtime.profile = 'prod';
+
+    const snapshot = await buildRuntimeHealthSnapshot(input);
+
+    expect(snapshot.dependencies.redis.status).toBe('unhealthy');
+    expect(snapshot.dependencies.redis.details!.requiredForAuthentication).toBe(true);
+    expect(snapshot.dependencies.redis.details!.reason).toBe('authentication_session_store_unavailable');
+    expect(snapshot.readiness.status).toBe('not_ready');
+    expect(snapshot.readiness.blockers).toContain('redis');
+    expect(snapshot.status).toBe('unhealthy');
   });
 
   it('redis is disabled when DISABLED_REDIS and healthCheck reports not healthy', async () => {
@@ -370,6 +390,7 @@ describe('overall status computation', () => {
     const snapshot = await buildRuntimeHealthSnapshot(defaultInput());
     // dbMode is sqlite so postgres blocker does not apply
     expect(snapshot.readiness.status).toBe('ready');
+    expect(snapshot.readiness.blockers).not.toContain('redis');
     expect(snapshot.status).toBe('degraded');
   });
 

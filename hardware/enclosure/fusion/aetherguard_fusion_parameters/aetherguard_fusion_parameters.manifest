@@ -1,0 +1,12 @@
+{
+  "autodeskProduct": "Fusion360",
+  "type": "addin",
+  "id": "aetherguard_fusion_parameters",
+  "author": "AetherGuard",
+  "description": {
+    "": "Create AetherGuard enclosure user parameters."
+  },
+  "supportedOS": "windows|mac",
+  "editEnabled": true,
+  "runOnStartup": false
+}

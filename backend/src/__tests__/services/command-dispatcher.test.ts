@@ -17,7 +17,8 @@ jest.mock('../../security/audit-logger.service', () => ({
 jest.mock('../../services/security-operations.service', () => ({
   securityOperationsService: {
     recordActionRun: jest.fn(),
-    updateActionRun: jest.fn(),
+    updateActionRun: jest.fn().mockReturnValue({ status: 'completed' }),
+    getActionById: jest.fn(),
   },
 }));
 
@@ -43,6 +44,7 @@ import { hardwareAuthorizationService } from '../../services/hardware-authorizat
 const mockAuditLog = auditLogger.log as jest.Mock;
 const mockRecordActionRun = securityOperationsService.recordActionRun as jest.Mock;
 const mockUpdateActionRun = securityOperationsService.updateActionRun as jest.Mock;
+const mockGetActionById = securityOperationsService.getActionById as jest.Mock;
 const mockRequestPhysicalConfirmation = hardwareAuthorizationService.requestPhysicalConfirmation as jest.Mock;
 
 function createMockAgentGateway(online = true, acceptsCommand = true) {
@@ -261,35 +263,61 @@ describe('CommandDispatcherService', () => {
 
   describe('handleAgentCommandAck', () => {
     it('updates action run to completed', () => {
-      commandDispatcherService.handleAgentCommandAck('agent-001', {
+      mockGetActionById.mockReturnValue({ runLog: [{ targetId: 'agent-001' }] });
+      const accepted = commandDispatcherService.handleAgentCommandAck('agent-001', 'tenant-1', {
         actionId: 'action-1',
-        tenantId: 'tenant-1',
         message: 'Done',
       });
+      expect(accepted).toBe(true);
       expect(mockUpdateActionRun).toHaveBeenCalledWith(
-        expect.objectContaining({ actionId: 'action-1', status: 'completed' })
+        expect.objectContaining({ tenantId: 'tenant-1', actionId: 'action-1', status: 'completed' })
       );
     });
 
     it('ignores when actionId is empty', () => {
-      commandDispatcherService.handleAgentCommandAck('agent-001', {});
+      const accepted = commandDispatcherService.handleAgentCommandAck('agent-001', 'tenant-1', {});
+      expect(accepted).toBe(false);
+      expect(mockUpdateActionRun).not.toHaveBeenCalled();
+    });
+
+    it('rejects an authenticated tenant from acknowledging another tenant action', () => {
+      mockGetActionById.mockReturnValue(null);
+      const accepted = commandDispatcherService.handleAgentCommandAck('agent-001', 'tenant-A', {
+        actionId: 'tenant-B-action',
+        tenantId: 'tenant-B',
+      });
+
+      expect(accepted).toBe(false);
+      expect(mockGetActionById).toHaveBeenCalledWith('tenant-A', 'tenant-B-action');
+      expect(mockUpdateActionRun).not.toHaveBeenCalled();
+    });
+
+    it('rejects an ack for an action assigned to another agent', () => {
+      mockGetActionById.mockReturnValue({ runLog: [{ targetId: 'agent-002' }] });
+      const accepted = commandDispatcherService.handleAgentCommandAck('agent-001', 'tenant-1', {
+        actionId: 'action-1',
+      });
+
+      expect(accepted).toBe(false);
       expect(mockUpdateActionRun).not.toHaveBeenCalled();
     });
   });
 
   describe('handleAgentCommandFailure', () => {
     it('updates action run to failed', () => {
-      commandDispatcherService.handleAgentCommandFailure('agent-001', {
+      mockGetActionById.mockReturnValue({ runLog: [{ targetId: 'agent-001' }] });
+      const accepted = commandDispatcherService.handleAgentCommandFailure('agent-001', 'tenant-1', {
         actionId: 'action-2',
-        tenantId: 'tenant-1',
       });
+      expect(accepted).toBe(true);
       expect(mockUpdateActionRun).toHaveBeenCalledWith(
-        expect.objectContaining({ actionId: 'action-2', status: 'failed' })
+        expect.objectContaining({ tenantId: 'tenant-1', actionId: 'action-2', status: 'failed' })
       );
     });
 
     it('ignores when actionId is empty', () => {
-      commandDispatcherService.handleAgentCommandFailure('agent-001', {});
+      const accepted = commandDispatcherService.handleAgentCommandFailure('agent-001', 'tenant-1', {});
+      expect(accepted).toBe(false);
       expect(mockUpdateActionRun).not.toHaveBeenCalled();
     });
   });

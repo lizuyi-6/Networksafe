@@ -42,6 +42,18 @@ jest.mock('../../security/redis.service', () => ({
             }
             return Promise.resolve('OK');
         }),
+        existsStrict: jest.fn((key: string) => Promise.resolve(usedRefreshTokens.has(key))),
+        setStrict: jest.fn((key: string) => {
+            usedRefreshTokens.add(key);
+            return Promise.resolve();
+        }),
+        setIfAbsentStrict: jest.fn((key: string) => {
+            if (usedRefreshTokens.has(key)) {
+                return Promise.resolve(false);
+            }
+            usedRefreshTokens.add(key);
+            return Promise.resolve(true);
+        }),
         del: jest.fn().mockResolvedValue(undefined),
     }
 }));
@@ -53,7 +65,8 @@ jest.mock('../../security/auth-security.service', () => ({
         addSession: jest.fn().mockResolvedValue(undefined),
         checkConcurrentSessions: jest.fn().mockResolvedValue(true),
         validateSession: jest.fn().mockResolvedValue(true),
-        removeSession: jest.fn().mockResolvedValue(undefined),
+        validateSessionStrict: jest.fn().mockResolvedValue(true),
+        removeSession: jest.fn().mockResolvedValue(true),
         isAccountLocked: jest.fn().mockResolvedValue(false),
         detectSuspiciousLogin: jest.fn().mockResolvedValue([]),
         recordLoginAttempt: jest.fn().mockResolvedValue(undefined),

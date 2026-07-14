@@ -1,13 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { extractAuthCookieHeader, resolveProjectEnv } = require('./http-cookie-session');
 
 const rootDir = path.resolve(__dirname, '..', '..');
 const outputDir = path.join(rootDir, 'artifacts', 'ops', 'external-linux-binary-agent-validation');
 const outputPath = path.join(rootDir, 'artifacts', 'ops', 'external-linux-binary-agent-validation.json');
 const baseUrl = process.env.AETHERGUARD_BASE_URL || 'http://localhost:3005';
-const email = process.env.AETHERGUARD_ADMIN_EMAIL || 'dev-admin@aetherguard.local';
-const password = process.env.AETHERGUARD_ADMIN_PASSWORD || 'DevAdmin!2026';
+const email = resolveProjectEnv(rootDir, 'ADMIN_EMAIL', 'AETHERGUARD_ADMIN_EMAIL', 'dev-admin@aetherguard.local');
+const password = resolveProjectEnv(rootDir, 'ADMIN_PASSWORD', 'AETHERGUARD_ADMIN_PASSWORD', 'DevAdmin!2026');
 const image = process.env.AETHERGUARD_SYSTEMD_IMAGE || 'jrei/systemd-ubuntu:22.04';
 const containerName = `aetherguard-binary-agent-${Date.now()}`;
 
@@ -47,7 +48,8 @@ async function requestJson(url, options = {}) {
   return {
     ok: response.ok,
     status: response.status,
-    data
+    data,
+    cookieHeader: extractAuthCookieHeader(response.headers)
   };
 }
 
@@ -77,12 +79,12 @@ async function main() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    if (!login.ok || !login.data?.accessToken) {
+    if (!login.ok || !login.cookieHeader.includes('accessToken=') || !login.cookieHeader.includes('refreshToken=')) {
       throw new Error(`Login failed: ${JSON.stringify(login.data)}`);
     }
 
     const headers = {
-      authorization: `Bearer ${login.data.accessToken}`,
+      cookie: login.cookieHeader,
       'content-type': 'application/json'
     };
 
@@ -109,7 +111,7 @@ async function main() {
     report.bundle.deploymentId = deploymentId;
 
     const manifest = await requestJson(`${baseUrl}/api/deployments/${deploymentId}/download?format=manifest`, {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { cookie: login.cookieHeader }
     });
     const manifestPayload = manifest.data?.data || manifest.data;
     if (!manifest.ok || !Array.isArray(manifestPayload?.files)) {
@@ -118,7 +120,7 @@ async function main() {
     report.bundle.manifest = manifestPayload;
 
     const bundle = await fetch(`${baseUrl}/api/deployments/${deploymentId}/download`, {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { cookie: login.cookieHeader }
     });
     const bundleText = await bundle.text();
     if (!bundle.ok) {

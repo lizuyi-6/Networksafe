@@ -53,13 +53,9 @@ async function canCreateSymlink(): Promise<boolean> {
   }
 }
 
-const itIfSymlink = (cond: () => boolean) => (cond() ? it : it.skip);
-
 describe('artifactStoreService symlink-escape prevention', () => {
-  let symlinkCapable: boolean;
-
   beforeAll(async () => {
-    symlinkCapable = await canCreateSymlink();
+    expect(await canCreateSymlink()).toBe(true);
   });
 
   // We need a LocalArtifactStore instance bound to a temp baseDir. The module
@@ -82,7 +78,7 @@ describe('artifactStoreService symlink-escape prevention', () => {
     return mod.artifactStoreService;
   }
 
-  itIfSymlink(() => symlinkCapable)(
+  it(
     'readText rejects a symlink that escapes the artifact base directory',
     async () => {
       const base = await makeTempBase();
@@ -108,7 +104,7 @@ describe('artifactStoreService symlink-escape prevention', () => {
     }
   );
 
-  itIfSymlink(() => symlinkCapable)(
+  it(
     'readText fallbackLocation rejects a symlink escaping the base directory',
     async () => {
       const base = await makeTempBase();
@@ -132,7 +128,7 @@ describe('artifactStoreService symlink-escape prevention', () => {
     }
   );
 
-  itIfSymlink(() => symlinkCapable)(
+  it(
     'writeText rejects when the target dir is a symlink escaping the base directory',
     async () => {
       const base = await makeTempBase();
@@ -159,7 +155,7 @@ describe('artifactStoreService symlink-escape prevention', () => {
     }
   );
 
-  itIfSymlink(() => symlinkCapable)(
+  it(
     'readText allows a benign internal symlink (points inside baseDir)',
     async () => {
       const base = await makeTempBase();

@@ -204,6 +204,10 @@ describe('Agent', () => {
     });
   });
 
+  afterEach(async () => {
+    await agent.stop();
+  });
+
   describe('start', () => {
     it('initiates socket connection', async () => {
       await agent.start();
@@ -477,6 +481,7 @@ describe('Agent', () => {
         agentId: 'failing-agent',
         commandType: 'block_ip'
       }));
+      await failingAgent.stop();
     });
   });
 
@@ -639,9 +644,11 @@ describe('Agent', () => {
       await agent.start();
       const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
 
-      agent.stop();
+      await agent.stop();
 
       expect(clearIntervalSpy).toHaveBeenCalled();
+      expect((agent as any).heartbeatTimer).toBeNull();
+      expect((agent as any).trafficStatsTimer).toBeNull();
     });
 
     it('stops traffic monitor', async () => {
@@ -735,6 +742,10 @@ describe('Agent command flow integration', () => {
       secretKey: 'test-secret',
       serverUrl: 'http://localhost:3005',
     });
+  });
+
+  afterEach(async () => {
+    await agent.stop();
   });
 
   it('processes command through full flow: receive -> verify -> execute -> ack', async () => {

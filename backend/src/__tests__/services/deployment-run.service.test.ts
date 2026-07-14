@@ -208,10 +208,12 @@ describe('deployment-run render scripts (real, not placeholders)', () => {
     expect(dockerRollback).toContain('.prev');
   });
 
-  it('healthcheck fails (exit 1) when /api/health is unreachable, not always-success', () => {
+  it('healthcheck fails (exit 1) when /health/ready is unreachable, not always-success', () => {
     const hc = renderHealthcheckScript({ port: 8080 });
     expect(hc).not.toMatch(/\|\|\s*true/);
     expect(hc).toContain('exit 1');
     expect(hc).toContain('8080');
+    expect(hc).toContain('/health/ready');
+    expect(hc).not.toContain('/api/health');
   });
 });

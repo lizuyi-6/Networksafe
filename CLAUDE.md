@@ -2,108 +2,37 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+> 默认中文交流；代码、路径、日志、标识符保持原文。本文档其余部分用中文说明。
+> 执行门禁（声称完成带证据 / 不得甩锅手动验证 / 安全变更置顶 / 按文件给证据）由 `UserPromptSubmit` 钩子每轮注入，文本见 `.claude/gates-reminder.txt`；本文件只记项目知识，不重复行为规则。
 
-AetherGuard is an intelligent server security platform: a Node.js control plane, distributed host agents, a React dashboard, a Rust fastpath sidecar, and hardware-backed safety gates for dangerous operations.
+## 项目定位
 
-Product claim: **“AetherGuard 完全最后防线”**. Engineering definition: **Final Defense Mode** is a detectable, auditable, fail-closed mode where the control plane can request and audit dangerous actions, but the final grant is enforced by hardware. The **root-resistant** variant moves the final network release decision outside the protected server into the self-developed **AetherGuard Root-Resistant Gateway Appliance** — an industrial multi-port gateway appliance with independent STM32H5/U5 security controller, Secure Element / TPM, and hardware-level fail-closed interlock.
+AetherGuard —— 智能服务器安全防御平台。Node.js 控制面 + 分布式 host agent + React dashboard + Rust fastpath sidecar + 硬件安全闸门。控制面负责检测/审计/下发，但**危险操作的最终授权由硬件强制**，这是产品声称"完全最后防线"的工程含义。
 
-## Common Commands
+- **Final Defense Mode**：可检测、可审计、**fail-closed** 的模式——控制面能请求并审计危险动作，但最终 grant 由硬件强制。高风险动作（`host_remove`/`wipe_data`/`factory_reset`/`recovery_flash`/`critical_config_change` 等）必须通过本地策略 + 硬件 grant 签名 + interlock 反馈全链校验。
+- **Root-Resistant 变体**：把最终网络释放决策移出受保护服务器，落到自研 **AetherGuard Root-Resistant Gateway Appliance**（双 1GbE L2 桥 + 独立 MGMT，STM32H5/U5 安全控制器 + Secure Element/TPM + 硬件 fail-closed interlock）。受管服务器 OS/root 被攻陷时，攻击者无法不经 appliance 全链授权恢复 SERVER↔LAN/WAN 连通。
 
-### All services with Docker Compose
+ESP32 旧硬件线（串口部署 dongle、control board v1/v2、`aetherguard-gate`）已于 2026-06-13 全线退役并移至 `X:\repos\Networksafe-archive\20260513-pre-cleanup`；本仓库 `hardware/` 仅保留 Gateway Appliance 线。旧文档引用的路径若已不存在，先查 `docs/artifact-archive-index.md` 再判断是否删除。架构决策见 `docs/adr/`——改动涉及 API envelope、模块边界/bootstrap、Postgres 主写路径、启动入口统一时先读对应 ADR。
 
-```bash
-# From repo root. Requires JWT_SECRET, REDIS_PASSWORD, DEVICE_COMMAND_SECRET, AUDIT_LOG_SECRET.
-docker-compose up -d --build
+## 构建与测试命令
 
-# Docker access points:
-# Frontend: http://localhost:8080
-# Backend API: http://localhost:3005
-# Default dev credentials: admin / admin123
-
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose down
-```
-
-### Backend (`backend/`)
+`npm test` 单进程跑全量 Jest 会 OOM，**验证证据一律用 `npm run test:all`**（4 shard，各 `--maxWorkers=50%` + 4GB heap），或 `npm run test:shard1..4`。
 
 ```bash
 cd backend
-npm install
-npm run dev                         # Local API on :8080 unless PORT is set
-npm run agent                       # Standalone distributed-agent CLI
-npm run build
-npm run typecheck                   # tsc --noEmit -p tsconfig.build.json
+npm run test:all                                        # 全量（首选，替代 npm test）
+npx jest src/__tests__/services/final-defense.service.test.ts          # 焦点：Final Defense
+npx jest src/__tests__/services/hardware-authorization.service.test.ts # 焦点：硬件授权
+npx jest src/__tests__/services/device-control.service.test.ts         # 焦点：设备下发
+npx jest src/__tests__/companion/serial-device-companion.test.ts       # 焦点：companion
+npm run typecheck   # tsc --noEmit -p tsconfig.build.json
 npm run lint
-npm audit --audit-level=high
-
-npm test                            # All Jest tests except AI-agent tests excluded by config
 npm run test:coverage
-npm run test:agents                 # AI-agent tests
-npm run test:core                   # Modular Jest config with TEST_MODULE=core
-npm run test:security
-npm run test:scanner
-npm run test:websocket
-npm run test:services
-npm run test:agent
-npm run test:utils
-npm run test:routes
-npm run test:controllers
-npm run test:module                 # Uses jest.config.modular.js; set TEST_MODULE as needed
-
-npm run test:all                    # Full suite via 4 shards — preferred over `npm test`, which OOMs in one process
-npm run test:shard1                 # ...shard2 / shard3 / shard4 — each shard uses --maxWorkers=50% and 4GB heap
-
-npx jest src/__tests__/agent-gateway.test.ts
-npm test -- --testPathPattern="controller"
-npx jest --verbose --testNamePattern="should detect attacks"
-npx jest --watch
-
-npm run seed
-npm run seed:clear
-npm run cleanup:demo:dry-run
-npm run cleanup:demo
-npm run eval:owasp
 ```
 
-Focused checks for Final Defense / hardware-gated paths:
+Final Defense / 硬件闸门路径的测试名多含 `_fail_closed` / `_reject` / `_rollback` / `_mismatch` / `_expired`——改任一校验分支前先看这些测试名，它们就是不变量的可证伪断言。
 
-```bash
-cd backend
-npx jest src/__tests__/services/final-defense.service.test.ts
-npx jest src/__tests__/services/hardware-authorization.service.test.ts
-npx jest src/__tests__/services/deployment-run.service.test.ts
-npx jest src/__tests__/services/device-control.service.test.ts
-npx jest src/__tests__/companion/serial-device-companion.test.ts
-```
-
-### Frontend (`frontend/`)
-
-```bash
-cd frontend
-npm install
-npm run dev                         # Vite on :5173
-npm run build                       # tsc && vite build
-npm run typecheck
-npm run lint
-npm run preview
-npm audit --audit-level=high
-```
-
-### E2E (`e2e/`)
-
-```bash
-cd e2e
-npm install
-npx playwright install --with-deps chromium
-npm test
-npm run test:release
-npm run test:ui
-npm run test:debug
-```
-
-### Rust fastpath (`rust-fastpath/`)
+Rust fastpath：
 
 ```bash
 cd rust-fastpath
@@ -112,161 +41,118 @@ cargo clippy -- -D warnings
 cargo build --release
 ```
 
-### Release guard scripts
+Firmware（STM32H563，需 ARM GCC toolchain；host-side 测试只需 gcc）：
 
 ```bash
-# From repo root
-node scripts/guards/check-route-db-access.mjs           # route handlers must go through services/repositories
-node scripts/guards/check-no-direct-api-fetch.mjs       # frontend must route every backend call through services/api.ts
-node scripts/guards/check-frontend-api-contract.mjs     # every frontend API call resolves to a registered backend route
-node scripts/guards/check-repository-hygiene.mjs        # blocks committing runtime DBs, generated legal/video/PCB artifacts, QA screenshots, Playwright-MCP state
+cd firmware/controller-stm32h5
+make -j$(nproc)                    # 产物 build/controller-stm32h5.elf/.bin/.hex（需 CubeMX 生成 HAL/Drivers，README.md 记录当前 .ioc 尚未初始化）
+make -f test/Makefile test         # host-side C 单测：mock_hal + controller_tasks/serial_json/interlock_driver，18 用例（含急停锁存、counter UINT32_MAX 饱和闭锁、challenge 16 槽环形窗口、serial_json RFC8259 空格/转义/键名防伪），gcc 编译无 STM32 依赖（test/Makefile 路径为父目录相对，须在 firmware/controller-stm32h5/ 根跑；cd test 会找不到 test/mock_hal.c。Windows 无 make 时可直接 gcc：`gcc -Wall -Wextra -std=c11 -Itest -ICore/Inc -ICore/Src -o test_controller.exe test/mock_hal.c test/test_stubs.c test/test_controller.c Core/Src/controller_tasks.c Core/Src/serial_json.c Core/Src/interlock_driver.c`）
 ```
 
-CI lives in `.github/workflows/ci.yml` (lint + build + tests on Node 18) and `.github/workflows/deploy.yml`. Treat those as the source of truth for what must pass on a PR — when in doubt about whether a check is required, read the workflow rather than guessing.
+Simulator（无额外依赖，复用 backend 的 ts-node）：
 
-## Runtime and Environment Notes
-
-- Node.js v18+ is expected; CI uses Node 18.
-- Rust 1.85.0 is used for the fastpath component.
-- Copy `.env.example` to `.env` for local configuration.
-- Docker requires `JWT_SECRET`, `REDIS_PASSWORD`, `DEVICE_COMMAND_SECRET`, and `AUDIT_LOG_SECRET`.
-- Production requires `AUDIT_LOG_SECRET`; agent CLI onboarding uses `AetherGuard_SERVER`, `AetherGuard_ONBOARDING_CODE`, then `AetherGuard_AGENT_ID`, `AetherGuard_AGENT_API_KEY`, and `AetherGuard_AGENT_SECRET_KEY`.
-
-## High-Level Architecture
-
-```mermaid
-flowchart LR
-    Operator[Operator / API Client] --> Frontend[React Dashboard]
-    Frontend --> Backend[Node.js Control Plane]
-    Backend --> DB[SQLite / PostgreSQL]
-    Backend --> Redis[Redis]
-    Backend --> Agent[Distributed Host Agent]
-    Agent --> Fastpath[Rust Fastpath]
-    Agent --> Companion[Local Companion]
-    Companion --> Board[Gateway Appliance Controller]
-    Board --> Interlock[Hardware Fail-closed Interlock]
-    Agent --> ServerNIC[Server Network Ports]
-    ServerNIC --> Gateway[Gateway Appliance - L2 Bridge]
-    Gateway --> Network[LAN / WAN]
-    Gateway --> Mgmt[Independent MGMT Path]
+```bash
+cd simulator
+npm install
+npm run sim                                    # 独立跑全 M1–M4 控制环 + 9 种 fail-closed 注入（sim.ts；实跑 exit 0，README 列全 9 种触发）
+# test-scenarios.ts 提供 4 个单触发 fail-closed 场景（真 M1 daemon + mock M2/M3/M4，断言桥隔离 + 预期 reason，exit 0=成立）：
+npm run test:invalid-sig / test:counter-rollback / test:heartbeat-stale / test:estop
+# estop 场景同时断言"锁存期间合法 grant 被拒 + clearEstop 显式复位后才可重新释放"（与固件 controller_clear_estop 对齐）。sim-integrated.ts 从未入库，sim:integrated 脚本已移除。
 ```
 
-Primary components:
 
-| Path | Purpose |
+Rescue（异构救援控制面，std-only + 7 crate，离线可构建）：
+
+```bash
+cd rescue
+cargo test                       # 49 用例：链篡改/截断、auth 重放、allowlist、mock appliance
+cargo clippy --all-targets -- -D warnings
+cargo build --release            # 产物 target/release/ag-rescue
+node ../scripts/rescue/run-drills.mjs   # 从仓库根也可：故障演练 11 断言（需先 build --release）
+```
+
+AI 助手一键诊断（从仓库根；`--tests` 加全量测试集，`--json` 机器可读；断点地图与错误签名表见 `docs/ai-debugging.md`，VS Code 调试配置已入库 `.vscode/launch.json`）：
+
+```bash
+node scripts/ai/diagnose.mjs [--tests] [--json]
+```
+
+Release guard 脚本（从仓库根）：
+
+```bash
+node scripts/guards/check-route-db-access.mjs        # route handler 必须经 services/repositories，不得直连 DB
+node scripts/guards/check-no-direct-api-fetch.mjs    # 前端每个后端调用必须经 services/api.ts
+node scripts/guards/check-frontend-api-contract.mjs  # 前端每个 API 调用必须解析到已注册的后端路由
+node scripts/guards/check-repository-hygiene.mjs     # 阻止提交运行时 DB / 生成物 / QA 截图 / Playwright 状态
+node scripts/guards/check-rescue-no-release.mjs        # rescue 控制面源码级禁止 release 帧（ADR 2026-07-08-rescue-release-policy）
+```
+
+环境初始化与 Docker（跨平台可复现）：先 `node scripts/setup.mjs`（从 `.env.example` 生成根 `.env` 与 `backend/.env`，随机密钥、幂等不覆盖、`--install` 附带 npm install；bash 等价 `deployment/production/setup-env.sh`，两者生成键列表须保持同步），再 `docker compose up -d --build`（compose 文件用 include/env_file long syntax，需 Compose v2.24+，legacy `docker-compose` v1 二进制解析不了）。`deployment/production/docker-compose.prod.yml` 是 canonical 根 Compose 的兼容入口，不维护第二套拓扑。生产 Compose 仅发布 `127.0.0.1:8080` 的前端/API 反代入口，backend/Redis/Postgres/MinIO 仅在 Compose 网络可达；本地开发后端仍可直接监听 3005。登录凭据 = `.env` 的 `ADMIN_EMAIL`/`ADMIN_PASSWORD`（setup 生成并打印一次）。compose `:?` 硬保护 12 项：`REDIS_PASSWORD`/`JWT_SECRET`/`AUDIT_LOG_SECRET`/`ADMIN_PASSWORD`/`ENCRYPTION_KEY`/`ENCRYPTION_SALT`/`DEVICE_COMMAND_SECRET`/`SERIAL_HELPER_SHARED_SECRET`/`POSTGRES_PASSWORD`/`SHADOW_DATABASE_URL`/`S3_SECRET_KEY`/`DEVICE_API_KEYS`；`SERIAL_HELPER_SHARED_SECRET` 还必须 ≥32 字符且 ≠ `DEVICE_COMMAND_SECRET`（`runtime-env.ts:111` 硬拒）。生产 Compose 的 `ENABLE_ATTACK_SIM` 缺省为 false。占位值 `change_me*` 在生产被 `runtime-env.ts` WEAK_VALUE_PATTERNS 硬拒——直接 `cp .env.example .env` 起不来，必须走生成脚本；本地 dev 同样必需 `JWT_SECRET`+`AUDIT_LOG_SECRET`（缺任一 `npm run dev` 直接 fatal）。根 `deploy.sh` 已废弃（其产物被生产校验硬拒，脚本现直接报错退出），Linux 一键 Docker 安装用 `sudo bash scripts/install.sh`。离线客户机（air-gapped，甚至无 Docker）分发：在线构建机 `node scripts/release/build-offline-bundle.mjs [--include-docker]` 产自包含 tar.gz（docker save 全镜像 + SHA256SUMS + 可选 Docker 静态引擎），客户机解包后 `sudo bash install.sh` 零网络安装（load 镜像 + 现场生成密钥 + `docker-compose.offline.yml` 固定标签 `up -d --no-build`），三处密钥生成器（setup.mjs / setup-env.sh / 离线 install.sh）键列表须同步，详见 `deployment/offline/README.md`。
+
+## 架构
+
+> 请求生命周期逐层锚点与各层禁令见 `docs/architecture-layers.md`（新代码先对号入座，层级规则以 guard 脚本为准）。
+
+| 路径 | 角色 |
 | --- | --- |
-| `backend/` | Express API, Socket.IO gateways, services, repositories, companion logic, Jest tests |
-| `frontend/` | React/Vite dashboard, typed API client, pages, context providers, demo data |
-| `rust-fastpath/` | High-throughput traffic processing sidecar |
-| `e2e/` | Playwright smoke, release, visual, and walkthrough tests |
-| `hardware/aetherguard-network-isolation-gateway-v1/` | AetherGuard Root-Resistant Gateway Appliance hardware baseline (active primary hardware) |
-| `hardware/kicad/aetherguard-network-isolation-gateway-v1/` | Gateway Appliance v1 KiCad design |
-| `deployment/` | Production helper scripts and deploy bundles |
-| `docs/` | Architecture, ADRs, product, readiness, and archive-index documents |
+| `backend/` | Express API + Socket.IO gateway + services + repositories + companion 逻辑 + Jest 测试 |
+| `frontend/` | React/Vite dashboard + typed API client + pages + context providers + demo data |
+| `rust-fastpath/` | 高吞吐流量处理 sidecar（Rust 1.85） |
+| `e2e/` | Playwright smoke / release / visual / walkthrough |
+| `firmware/controller-stm32h5/` | STM32H563 安全授权控制器固件（M2，12 core tasks）+ host-side C 测试 |
+| `simulator/` | Gateway Appliance M1–M4 端到端软件模拟（真 M1 daemon + mock M2/M3/M4 I/O） |
+| `rescue/` | 异构救援控制面 `ag-rescue`（Rust 单二进制，仅安全侧动作；ADR/runbook 见 `docs/adr/2026-07-08-*` 与 `docs/rescue/`） |
+| `hardware/enclosure/` | Gateway Appliance 3D 打 OpenSCAD 机箱（Phase 0.5 原型，非注塑量产件） |
+| `deployment/gateway/` | M1 Gateway Daemon 嵌入式部署包（systemd + nftables ruleset + install.sh） |
+| `deployment/` `docs/` | 生产脚本 / 架构·ADR·产品·就绪文档 |
 
-> Legacy ESP32 hardware (serial-deployer dongle, ESP32-S3 control board v1/v2, `aetherguard-gate` physical-confirmation board) and its firmware/bundle/specs were fully retired on 2026-06-13 and moved out of this repo to the external archive (see below). Only the Gateway Appliance hardware line remains in `hardware/`.
+> Gateway Appliance 四模块分层（PRD §4，硬实现在 firmware/hardware/deployment，逻辑在 simulator 验证）：**M1 Gateway Daemon**（`backend/src/companion/gateway-daemon.ts`，部署态 `deployment/gateway/bin/aetherguard-gateway-daemon.ts` 包它）↔ **M2 STM32 控制器**（`firmware/controller-stm32h5/`）↔ **M3 Secure Element**（OPTIGA Trust M，I2C）↔ **M4 interlock 继电器+反馈**。串口协议 newline-delimited JSON，默认 USART3/115200。`simulator/` 用**真 M1 daemon + mock M2/M3/M4** 跑通同一控制环，9 种 fail-closed 触发可注入。
 
-## Backend Architecture
+### 后端入口与约束
 
-Important entry points:
+- `backend/src/index.ts` 启动 server + DB + WebSocket；`backend/src/app.ts` 配 Express app + 中间件。
+- **`createControlPlaneApp()`（`backend/src/bootstrap/control-plane-app.ts:91`）是规范 app 构造器**——测试和任何 embedding 上下文必须调它，不得直接 new Express（见 startup-entrypoint-unification ADR）。路由在 `apiRouter` 上挂 `/api`；健康端点 `/health`、`/health/live`、`/health/ready` 直接注册，不经 `apiEnabled` 门控。
+- **route handler（`backend/src/api/routes/`）不得直连 DB**，走 services/repositories（`check-route-db-access.mjs` 强制）。
+- **不要在 request handler / WebSocket processor 里调 `ensureSchema()`**；service-owned 表在 `backend/src/bootstrap/persistence.ts` 启动时 prepare。
+- route handler 用 `sendSuccess()`/`sendError()`（`backend/src/core/http/api-response.ts`）。envelope：成功 `{success:true,data,error:null,meta?}`，失败 `{success:false,data:null,error,code,message,meta?}`。
 
-- `backend/src/index.ts` starts the server, database connection, and WebSocket integration.
-- `backend/src/app.ts` configures the Express app and middleware.
-- `backend/src/bootstrap/control-plane-app.ts` builds the control-plane app and registers API routes. **`createControlPlaneApp()` is the canonical app builder — tests and any embedding context must call it rather than constructing the Express app directly** (see the startup-entrypoint-unification ADR in `docs/adr/`).
-- `backend/src/bootstrap/persistence.ts` prepares service-owned schema at startup.
-- `backend/src/agent-cli.ts` runs the standalone distributed-agent CLI.
+### 数据库（双模式）
 
-Key backend areas:
+`backend/src/config/database.ts` 暴露统一 `prepare()/run()/all()/get()`（statement 包装见 `wrapStatement`，`step()` 每次推进游标、耗尽返回 false），两种 SQLite 引擎由 `resolveSqliteEngineOrder()` 选序：
 
-| Directory | Role |
-| --- | --- |
-| `agent/` | Host-agent attack detection, firewall control, log collection, traffic monitoring |
-| `ai-agents/` | Multi-agent AI threat-analysis and investigation system |
-| `api/routes/` | REST route handlers mounted under `/api` |
-| `bootstrap/` | App construction and startup-time persistence preparation |
-| `config/` | App mode, database abstraction, runtime capability config |
-| `core/` | API envelope helpers, tenant context, runtime health abstractions |
-| `modules/` | Feature modules with repositories/schema helpers for newer boundaries |
-| `scanner/` | Nuclei-based vulnerability scanning |
-| `security/` | Input validation, auth helpers, command signing, audit logging |
-| `services/` | Integration-heavy business logic still being migrated behind module boundaries |
-| `websocket/` | `AgentGateway` and `DeviceGateway` Socket.IO gateways |
+1. **better-sqlite3**（非测试运行时优先）：直接开文件，WAL + `foreign_keys=ON`，写即持久。
+2. **sql.js**（Jest 测试优先——每 worker 独立内存快照保证隔离）：DB 加载进内存，每 30s 落盘 + 关闭时落盘。**运行中直接改 SQLite 文件会被下一次内存落盘覆盖**——改库前先停 backend，或走运行中的 API/service。安全关键写入（如 `hardware-authorization` 的 monotonic counter 推进）后有显式 `save()` 同步落盘。
 
-Route modules are registered in `createControlPlaneApp()` on `apiRouter` under `/api`. Health endpoints (`/health`, `/health/live`, `/health/ready`) are registered directly and are not gated by `apiEnabled`.
+`DB_ENGINE=sqljs|better-sqlite3` 可显式覆盖选序。`DB_MODE=postgres` 文档标注为生产必需，但当前 `database.ts` 写路径仍 SQLite 取向；Postgres 仅覆盖 `postgres-shadow-store.service.ts` 中列出的 ShadowTable（**不含 hardware_* 表**），假设 Postgres 对等前先查 ADR 与实现。
 
-## Frontend Architecture
+### 前端
 
-- `frontend/src/services/api.ts` is the single API-client layer. All backend calls must go through it.
-- `fetchWithCredentials()` sends `credentials: 'include'`; auth tokens are stored in httpOnly cookies, not client-side headers.
-- `unwrapApiEnvelope<T>()` extracts `.data` from the standard backend envelope.
-- `extractErrorMessage()` centralizes error parsing; error-prefix convention includes values such as `FG-AUTH-LOGIN-401`.
-- API functions accept an optional `AbortSignal` where practical.
-- Demo-mode branches use `shouldUseDemoData()` and demo-data generators.
-- Context providers are composed in `App.tsx`: WebSocket, Theme, Language, Demo, LiveMode, and AttackStatus.
+`frontend/src/services/api.ts` 是唯一 API 客户端层，所有后端调用必经它（`check-no-direct-api-fetch.mjs` 强制）。`fetchWithCredentials()` 发 `credentials:'include'`，auth token 存 httpOnly cookie 不存客户端 header。`unwrapApiEnvelope<T>()` 取 `.data`，`extractErrorMessage()` 集中错误解析。Context 在 `App.tsx` 组合：WebSocket/Theme/Language/Demo/LiveMode/AttackStatus。
 
-## Database and Persistence
+### WebSocket 与 Agent
 
-`backend/src/config/database.ts` exposes a unified `prepare()` / `run()` / `all()` / `get()` API over:
+`backend/src/websocket/agent-gateway.ts`：双向 Socket.IO，JWT/API-key 鉴权、Redis 限流（内存 fallback）、HMAC 命令签名，事件 `agent:register`/`traffic:analyze`/`agent:command`/`threat:alert`。`device-gateway.ts`：Gateway Appliance/设备注册·管理·广播。Agent API key 模式 `AetherGuard_test_key_*`、`agent_*`；设备 key 模式 `device_key_*`、`AetherGuard-device-*`。
 
-1. **sql.js**: loads the DB into memory, saves to disk every 30 seconds, and saves on close.
-2. **better-sqlite3** fallback: opens the file directly with WAL and `foreign_keys = ON`.
+### AI Agent 检测管线
 
-Because sql.js is in-memory, direct file edits made while the backend is running can be overwritten by the next save. Stop the backend before editing the SQLite file directly, or mutate state through the running API/service layer.
+`backend/src/ai-agents/` 七层多 agent 决策（L1 协同→L2 角色→L3 场景遍历→L4 能力→L5 辩论→L6 异构模型→L7 综合）。`services/detection-pipeline.service.ts` + `detection-engine.ts` 实现规则检测/攻击族分类/AI 升级/候选规则。检测启发式以**正常流量 0% 误报**为硬约束调参。数据集 harness `__tests__/dataset/dataset-evaluation.test.ts` 评估 `backend/test-data/aetherguard-security-dataset/` 克隆，缺失则自跳过。
 
-`DB_MODE=postgres` is documented as production-required, but the current `database.ts` write path is still SQLite-oriented; check ADRs and implementation before assuming Postgres parity.
+## 安全控制流不变量（改 `final-defense*` / `hardware-authorization*` / `companion/` / `device-control*` 前必读）
 
-## Required Codebase Constraints
+这是本项目最易踩坑、且需跨多个服务才能看懂的核心设计——工业现场异常下"不确定就 fail-closed 主动断桥"。所有路径为 `backend/src/` 下相对。
 
-- Route handlers under `backend/src/api/routes/` must not access the database directly; use services or repositories.
-- Do not call `ensureSchema()` in request handlers or WebSocket processors. Prepare service-owned tables in `backend/src/bootstrap/persistence.ts`.
-- Route handlers must use `sendSuccess()` and `sendError()` from `backend/src/core/http/api-response.ts`.
-- Backend API envelope:
-  - Success: `{ success: true, data, error: null, meta? }`
-  - Failure: `{ success: false, data: null, error, code, message, meta? }`
-- Frontend code must not call `fetch('/api...')` directly; add or reuse functions in `frontend/src/services/api.ts`.
-- `DISABLE_REDIS` must not be enabled in production.
-- Demo/pitch-only frontend routes, such as `/aetherguard-deck`, are disabled by default. Use `VITE_ENABLE_PITCH_ROUTES=true` only for local demo builds.
-- Do not commit generated outputs, KiCad scratch trees, router exchange files, probe reports, generated PPTX decks, or archived hardware experiment intermediates.
+- **policyDigest 是端到端绑定锚，跨 4 个服务且逐字 ===**。同一 digest：control-plane 在 `services/final-defense.service.ts` 算 → 同时写 `payload.policyDigest` 与 `hardwareContext.policyDigest`（两份）→ 进 `hardware_confirmation_sessions.summary` → `validateGrantPayload` 与 session summary 比对（`services/hardware-authorization.service.ts:607`）→ companion `validateLocalPolicyGrant` 与 `policy.policyDigest` 比对（`companion/serial-device-companion.ts:83`）→ `services/device-control.service.ts:527` 与 stored `hardwareContext.policyDigest` 比对。任一处 !== 即 fail-closed。digest 输入经 `policyDigestInput`（`security/final-defense-policy.ts:71`）规范化（trim/Number/Boolean coerce），"看起来一样的 JSON"算出的 digest 可能不同——**必须用 `computeFinalDefensePolicyDigest`，不能手算**。
+- **monotonic counter 有三套独立高水位，互不共享，各自严格 `>`**：control-plane DB 列 `hardware_gates.last_monotonic_counter`（`hardware-authorization.service.ts:131`，持久）、appliance daemon 内存 `monotonicHighWater`（`companion/gateway-daemon.ts:81`，进程级）、companion `SerialDeviceCompanion.lastCounter`（`serial-device-companion.ts:115`，进程级）。counter 虽存 INTEGER 列，落库前 `Number.isInteger` 校验（`hardware-authorization.service.ts:503`）防 `Number(1.5)` 被列四舍五入后蒙混。回滚即 `non_increasing_monotonic_counter` / `monotonic_counter_rollback`（`gateway-daemon.ts:135`）/ `counter_replay_or_rollback`（`serial-device-companion.ts:98`），三处各自 fail-closed。
+- **interlock 状态归一化**：`normalizeInterlockState`（`security/final-defense-policy.ts:43`）trim+lowercase；**legacy `asserted` → `isolated`**（`:45`，不是 armed！模型极易误读）；未知值 → `'unknown'`，而 `unknown` 在 `rootResistantGatewayDegradedReasons`（`final-defense.service.ts:725`）被当降级理由 `interlock_unknown` 使 `active=false`。bridge 状态共用同一归一化（`normalizeBridgeState`）。
+- **fail-closed 不是"拒绝请求"，是"主动断桥 + 发 interlock_assert"**。`failClosed`（`gateway-daemon.ts:223`）= `assertIsolated`（`released=false`/`bridgeState='isolated'`/`applyRuleset('isolated_ruleset')`）+ 发 `{command:'interlock_assert'}` 帧驱动物理继电器。一次校验失败的副作用是**物理拓扑改变**（SERVER↔LAN/WAN 桥断开），不是仅一个 HTTP 错误。control-plane 侧 `rejectSession`（`hardware-authorization.service.ts:669`）另写 tamper-evident 审计，`invalid_signature`/`monotonic_counter_rollback`/`policy_digest_mismatch` 升 `severity:'critical'`。
+- **release 是暂态，必自动回 isolated**。`releaseTtlMs` 在 final-defense 被 clamp 到 `[5_000, 15*60_000]`（`:254`），appliance 默认 30s（`gateway-daemon.ts:65`），到期 `assertIsolated('release_window_expired')`（`:152`）；companion 侧 `releaseInterlock` 同样 `setTimeout(assertInterlock, releaseTtlMs)`（`:273`）。没有显式 re-assert 的 release 必然回 isolated——"释放是异常，隔离是常态"。
+- **isolated 保留 appliance 自身 MGMT 通道**。`dedicated_mgmt`/`cellular` 不计入降级（`final-defense.service.ts:764`），fail-closed 后仍可远程恢复 appliance；阻断的仅 server↔lan 业务桥。把 isolated 误解为"断所有链路"会写出无法恢复的恢复逻辑。
+- **device-control 下发路径本身没有 clamp/estop/限幅**（`grep 'clamp|estop|emergency|throttle'` 0 命中）。安全全外移到硬件授权确认：`createPhysicalConfirmation` 强制 `hardwareContext.policyDigest`+`breakerTarget` 非空（`device-control.service.ts:351`，缺即抛 `backend.hardware_context_*_required`），`handlePhysicalConfirmationAck` 逐字段 === + 严格布尔 `payload.confirmed===true`（`:541`，防 `Boolean('false')` 真值陷阱）+ 签名验证，全过才 `dispatchConfirmedDeviceCommand`。**不要在 device-control 找限幅——它只 dispatch。**
+- **grant 签名有 legacy fallback 但仅在无 extended fields 时触发**（`security/hardware-grant.ts:104`）。带 `policyDigest`/`challenge`/`breakerTarget`/`interlockAction` 任一字段的 grant，签名验不过直接 false，不退 legacy 11 字段消息。**升级不可逆**——一旦 grant 携带 Final Defense 上下文，就再不能用旧签名格式通过。签名算法默认 `ECDSA_P256_SHA256`（`hardware-authorization.service.ts:221`），验签 `verifyHardwareGrantSignature`（`hardware-grant.ts:88`）用各 gate 注册时存的 `public_key_pem`。
+- **companion 本地 fail-closed 独立于上报通道**（`serial-device-companion.ts:362` reportStatus 注释）：上报失败不会放开 interlock。本地策略从 `FINAL_DEFENSE_POLICY_FILE`（默认 `/etc/aetherguard/final-defense-policy.json`）读，`loadLocalPolicy`（`:39`）重算 digest 比对 + 可选 HMAC 签名验（`timingSafeEqual` 防时序）。
+- **M2 STM32 固件侧镜像同一套校验**（`firmware/controller-stm32h5/Core/Src/controller_tasks.c:36` `controller_handle_release_request`）：challenge 去重（`controller_validate_challenge` `:83`，16 槽环形 buffer，`strcmp` 重用即拒 `:86`）、policyDigest `strcmp` 严格相等（`controller_validate_policy_digest` `:95`，空串拒）、counter `counter > high_water_counter`（`controller_validate_counter` `:101`）、expiry `expires_at > g_current_time_s`（`:107`）、SE present + feedback OK 才 `INTERLOCK_STATE_RELEASED`，任一失败 `serial_json_send_alert()` + `DENIED`；`controller_assert_isolated`（`:157`）= 状态置 isolated + relay off。**release 成功分支推进高水位**（`:76` `g_state.high_water_counter = grant->monotonic_counter;`，工作树未提交）——与后端三套高水位"严格 `>`"语义对齐；host 测试 `test_counter_advances_on_release`（`test/test_controller.c:73`）断言释放后 `controller_get_high_water_counter()` 推进、重放同 counter 被拒（gcc 直编 test/Makefile 同源命令实跑 18 passed/0 failed）。此前"成功释放不推进 high_water、同一 counter 可重复释放"的缺口已闭合。**e-stop 现为锁存语义**：release 请求入口先查 `estop_pressed || state==FAULT` 即拒，`controller_clear_estop()` 显式复位仅回到 ISOLATED（ISO 13850——松开按钮不得自行恢复），host 测试 `test_estop_latch_blocks_release` 断言锁存期间合法 grant 被拒；simulator `mock-controller.ts` 已对齐同一门控与 feedback-mismatch 拒绝语义。改 `controller_tasks.c` 校验分支属安全路径，须按门禁置顶给证据，**不能当"参数微调"**；行号随未提交编辑会漂移，以函数名+分支条件为准。该固件当前 .ioc/CubeMX 代码未生成，`make` 在无 HAL 源时不可构建；仅 `test/` 下的 host-side gcc 测试可跑。
 
-## WebSockets and Agents
-
-`backend/src/websocket/agent-gateway.ts` handles bidirectional Socket.IO communication with distributed agents, including JWT/API-key authentication, Redis-backed rate limiting with memory fallback, HMAC command signing, and events such as `agent:register`, `traffic:analyze`, `agent:command`, and `threat:alert`.
-
-`backend/src/websocket/device-gateway.ts` handles Gateway Appliance/device registration, management, and broadcast/status paths.
-
-Agent API key patterns include `AetherGuard_test_key_*` and `agent_*`. Device API key patterns include `device_key_*` and `AetherGuard-device-*`.
-
-## AI Agents and Detection Pipeline
-
-The `backend/src/ai-agents/` module implements a seven-layer multi-agent decision system:
-
-| Layer | Name | Purpose |
-| --- | --- | --- |
-| L1 | Collaboration | Traffic routing to specialized agents |
-| L2 | Role Playing | Socrates (Red Team), Plato (Blue Team), Aristotle (Analyst) |
-| L3 | Scene Traversal | Distributed tracing and attack narrative |
-| L4 | Capability | Safe tool execution |
-| L5 | Debate | Multi-agent debate with arbitrator |
-| L6 | Heterogeneous Model | Local Ollama plus cloud GLM/Zhipu model collaboration |
-| L7 | Synthesis | Case files and self-evolution |
-
-`backend/src/services/detection-pipeline.service.ts` and `backend/src/services/detection-engine.ts` implement rule-based threat detection, attack-family classification, AI escalation, and candidate rule suggestions.
-
-The dataset harness in `backend/src/__tests__/dataset/dataset-evaluation.test.ts` evaluates the `aetherguard-security-dataset` clone under `backend/test-data/aetherguard-security-dataset/`. If the clone is missing, the test self-skips. Recent detection heuristics are tuned with a hard constraint of 0% false-positive rate on normal traffic.
-
-## Final Defense Mode
-
-High-risk actions (`host_remove`, `wipe_data`, `factory_reset`, `recovery_flash`, `critical_config_change`) must satisfy all of:
-
-- Local companion reads a signed local policy from `/etc/aetherguard/final-defense-policy.json`.
-- Action, target, script path, release window, and interlock target are allowed by local policy.
-- Hardware grant signature verifies against the provisioned hardware public key.
-- Grant message includes and matches `policyDigest`, `challenge`, `breakerTarget`, `interlockAction`, payload hash, expiry, and monotonic counter.
-- Interlock feedback is healthy and matches the expected state.
-
-Interlock states normalize to `'isolated' | 'armed' | 'released' | 'fault' | 'disabled' | 'unknown'`; legacy `asserted` maps to `isolated`. Failure is fail-closed: signature failure, counter rollback, policy digest mismatch, expired grant, missing external DC, feedback mismatch, controller disconnect, or heartbeat loss returns the management link to `isolated`.
-
-Final Defense API routes:
+### Final Defense API 路由
 
 - `GET /api/final-defense/status`
 - `POST /api/final-defense/policies`
@@ -274,30 +160,11 @@ Final Defense API routes:
 - `POST /api/final-defense/gateways/status/report`
 - `POST /api/final-defense/gateways/actions`
 
-## Root-Resistant Final Defense and Hardware
+## 注意事项
 
-Root-resistant mode assumes the protected server OS, local agent, local companion, scripts, and host logs may be controlled by an attacker with root. The trusted boundary is the external **AetherGuard Root-Resistant Gateway Appliance**: a dual 1GbE RJ45 transparent L2 bridge with `SERVER`, `LAN/WAN`, and independent `MGMT` ports. The `SERVER` ↔ `LAN/WAN` bridge is fail-closed; `isolated` blocks protected-server forwarding while preserving the appliance's own management channel.
-
-UI may show “root-resistant active” only when all are true: the appliance present, policy digest match, firmware digest plus attestation, secure element provisioned, both data ports linked, independent management path, and healthy `armed` or `isolated` bridge state. The claim only covers links physically cabled through the appliance; out-of-band BMC, Wi-Fi, spare NICs, local console, direct storage damage, and host disk encryption by root are outside v1 protection.
-
-Hardware roles:
-
-| Hardware | Status | Role |
-| --- | --- | --- |
-| AetherGuard Root-Resistant Gateway Appliance | **Active — primary hardware** | Self-developed industrial multi-port gateway appliance: dual 1GbE L2 bridge (SERVER, LAN/WAN) + MGMT, STM32H5/U5 security controller, Secure Element / TPM, hardware fail-closed interlock with feedback |
-| Legacy ESP32 serial deployment dongle | Archived | Former physical confirmation for local deployment/removal over USB-TTL serial using `AG:REQ:*` protocol. Replaced by Gateway Appliance. |
-| Legacy Control Board v1 | Archived | Former ESP32-S3 plus ATECC608C control board for hardware grants. Replaced by Gateway Appliance Controller. |
-
-Gateway Appliance controller protocol is newline-delimited JSON: companion sends `hello`, `command physical_confirmation_required`, `command interlock_assert`, and `command interlock_release`; controller sends `state`, `heartbeat`, `alert`, `physical_confirmation_ack`, and `interlock_result`. The legacy ESP32 deployment dongle protocol (`AG:REQ:*`) is archived.
-
-## ADRs and Artifact Archive
-
-Architecture decision records live in `docs/adr/`, including API envelope compatibility, module boundaries/bootstrap, Postgres primary write path, startup entrypoint unification, and legacy serial deployer wiring baseline (archived).
-
-The full legacy ESP32 hardware line — the top-level `esp32/` firmware tree, `deployment/esp32-serial-deployer-bundle/`, `hardware/aetherguard-control-board-v1/` and `hardware/aetherguard-gate/` docs, the `hardware/kicad/aetherguard-control-board-v1|v2/`, `hardware/kicad/aetherguard-serial-deployer-v2/`, and `hardware/kicad/esp32-serial-deployer-pcb/` KiCad projects (incl. the freerouting autorouter scratch trees), the `hardware/factory/aetherguard-serial-deployer-ev1*/` factory packages, the retired host-helper scripts, `scripts/esp32_*`, and the `.kiro`/`.trae` ESP32 specs — was retired on 2026-06-13 and moved to `X:\repos\Networksafe-archive\20260513-pre-cleanup`; see `docs/artifact-archive-index.md` for the manifest. If a path referenced in old docs is no longer present here, check the archive before assuming it was deleted.
-
-## Companion Docs
-
-- `AGENTS.md` — OpenCode-facing twin of this file. Hardware/product framing must stay in sync between the two.
-- `README.md` — externally visible product framing; the engineering qualifications on the "完全最后防线" claim live in `Final Defense Mode` / `Root-Resistant Final Defense` here, not in the README.
-- `docs/adr/` — binding architectural decisions (API envelope compatibility, module boundaries/bootstrap, Postgres primary write path, startup-entrypoint unification, legacy serial deployer wiring baseline [archived]).
+- **`DISABLE_REDIS` 生产不得开启**（限流降级到内存 fallback 仅限非生产）。
+- **Demo/pitch 路由**（如 `/aetherguard-deck`）默认禁用，仅 `VITE_ENABLE_PITCH_ROUTES=true` 本地 demo 构建启用。
+- **sql.js 运行中改 SQLite 文件会被覆盖**（见数据库节）——停 backend 再改，或走 API/service。
+- **不要提交生成物**：运行时 DB、KiCad scratch/router 交换文件、probe 报告、生成 PPTX、归档硬件中间产物、QA 截图、Playwright-MCP 状态（`check-repository-hygiene.mjs` 强制）。`hardware/enclosure/` 下的 `.stl`/`.png` 是已纳入版本库的渲染产物——改 `.scad` 后重渲染的产物可覆盖同名文件，但不要新增散落渲染文件；`hardware/enclosure/.gitignore` 已排除中间产物。
+- 涉及"完全最后防线"对外口径时，工程限定词以本文档 `项目定位` / `安全控制流不变量` 为准，README 的产品 framing 不替代这里的工程限定。
+- `AGENTS.md` 是 OpenCode 的 twin；项目知识与硬件/product framing 须与本文档保持同步。

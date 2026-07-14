@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { createAuthCookieSession, resolveProjectEnv } = require('./http-cookie-session');
 
 const BASE_URL = process.env.AETHERGUARD_BASE_URL || 'http://localhost:3005';
-const EMAIL = process.env.AETHERGUARD_ADMIN_EMAIL || 'dev-admin@aetherguard.local';
-const PASSWORD = process.env.AETHERGUARD_ADMIN_PASSWORD || 'DevAdmin!2026';
+const rootDir = path.resolve(__dirname, '..', '..');
+const EMAIL = resolveProjectEnv(rootDir, 'ADMIN_EMAIL', 'AETHERGUARD_ADMIN_EMAIL', 'dev-admin@aetherguard.local');
+const PASSWORD = resolveProjectEnv(rootDir, 'ADMIN_PASSWORD', 'AETHERGUARD_ADMIN_PASSWORD', 'DevAdmin!2026');
 const VALIDATION_ROOT = path.resolve(__dirname, '../../artifacts/ops/deployment-bundle-validation');
 const DOC_REPORT_PATH = path.resolve(__dirname, '../../docs/reports/deployment-bundle-validation-2026-03-08.md');
 const JSON_REPORT_PATH = path.join(VALIDATION_ROOT, 'deployment-bundle-validation.json');
@@ -406,14 +408,10 @@ async function main() {
     'ghcr.io/yannh/kubeconform:latest'
   ].forEach(ensureDockerImage);
 
-  const login = await requestJson(`${BASE_URL}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: EMAIL, password: PASSWORD })
-  });
+  const login = await createAuthCookieSession(BASE_URL, EMAIL, PASSWORD);
 
   const headers = {
-    Authorization: `Bearer ${login.accessToken}`,
+    Cookie: login.cookieHeader,
     'Content-Type': 'application/json'
   };
 
@@ -464,13 +462,13 @@ async function main() {
 
       const manifest = await requestJson(`${BASE_URL}/api/deployments/${result.deploymentId}/download?format=manifest`, {
         headers: {
-          Authorization: `Bearer ${login.accessToken}`
+          Cookie: login.cookieHeader
         }
       });
 
       const bundleText = await requestText(`${BASE_URL}/api/deployments/${result.deploymentId}/download`, {
         headers: {
-          Authorization: `Bearer ${login.accessToken}`
+          Cookie: login.cookieHeader
         }
       });
 

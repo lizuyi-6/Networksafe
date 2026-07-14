@@ -72,9 +72,9 @@ rand_hex() { # rand_hex <bytes>
 }
 rand_password() {
   if command -v base64 &>/dev/null; then
-    echo "Ag-$(head -c 18 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=\n')"
+    echo "Ag!9-$(head -c 18 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=\n')"
   else
-    echo "Ag-$(rand_hex 12)"
+    echo "Ag!9-$(rand_hex 12)"
   fi
 }
 
@@ -84,7 +84,58 @@ BUNDLE_VERSION="${BUNDLE_VERSION:-offline}"
 ADMIN_PASSWORD_VAL=""
 generate_env_file() {
   if [[ -f .env ]]; then
-    ok ".env already exists — keeping it (delete it to regenerate)"
+    # Backfill: append ONLY keys that are missing from the existing .env.
+    # Non-destructive — existing values are never touched. This catches the
+    # case where a bundle adds a new required key (e.g. SERIAL_HELPER_SHARED_SECRET)
+    # that the operator's pre-existing .env doesn't have.
+    local existing_pg existing_dev missing_any=0
+    existing_pg="$(sed -n 's/^POSTGRES_PASSWORD=//p' .env | head -1)"
+    existing_dev="$(sed -n 's/^DEVICE_COMMAND_SECRET=//p' .env | head -1)"
+
+    backfill_key() {
+      local key="$1" value="$2"
+      if grep -q "^${key}=" .env; then
+        return 0
+      fi
+      if [[ "${missing_any}" -eq 0 ]]; then
+        echo "" >> .env
+        echo "# --- backfilled by install.sh (keys were missing from the original .env) ---" >> .env
+        missing_any=1
+      fi
+      echo "${key}=${value}" >> .env
+      warn "backfilled missing key: ${key}"
+    }
+
+    # SERIAL_HELPER_SHARED_SECRET: avoid collision with existing DEVICE_COMMAND_SECRET
+    local serial_val
+    serial_val="$(rand_hex 32)"
+    [[ -n "${existing_dev}" && "${serial_val}" = "${existing_dev}" ]] && serial_val="$(rand_hex 32)"
+
+    # Generate one Postgres credential and bind both configuration keys to it.
+    local pg_val shadow_val
+    pg_val="${existing_pg:-$(rand_hex 16)}"
+    shadow_val="postgres://aetherguard:${pg_val}@postgres:5432/aetherguard"
+
+    backfill_key "JWT_SECRET"                  "$(rand_hex 32)"
+    backfill_key "AUDIT_LOG_SECRET"            "$(rand_hex 32)"
+    backfill_key "AUDIT_LOG_FAIL_CLOSED"       "true"
+    backfill_key "AUDIT_SHADOW_REQUIRED"       "true"
+    backfill_key "ENCRYPTION_KEY"              "$(rand_hex 32)"
+    backfill_key "ENCRYPTION_SALT"             "$(rand_hex 16)"
+    backfill_key "REDIS_PASSWORD"              "$(rand_hex 16)"
+    backfill_key "DEVICE_COMMAND_SECRET"       "$(rand_hex 32)"
+    backfill_key "SERIAL_HELPER_SHARED_SECRET" "${serial_val}"
+    backfill_key "POSTGRES_PASSWORD"           "${pg_val}"
+    backfill_key "SHADOW_DATABASE_URL"         "${shadow_val}"
+    backfill_key "S3_SECRET_KEY"               "$(rand_hex 16)"
+    backfill_key "DEVICE_API_KEYS"             "device_key_$(rand_hex 8)"
+    backfill_key "ADMIN_PASSWORD"              "$(rand_password)"
+
+    if [[ "${missing_any}" -eq 0 ]]; then
+      ok ".env already exists and has all required keys — left untouched"
+    else
+      ok ".env backfilled with missing key(s)"
+    fi
     return 0
   fi
   say "--> Generating .env with random secrets (version tag: ${BUNDLE_VERSION})..."
@@ -237,7 +288,6 @@ if [[ -n "${BACKEND_ID}" ]]; then
   done
 fi
 
-BACKEND_PORT="$(grep -E '^BACKEND_PORT=' .env | cut -d= -f2 || true)"; BACKEND_PORT="${BACKEND_PORT:-3005}"
 FRONTEND_PORT="$(grep -E '^FRONTEND_PORT=' .env | cut -d= -f2 || true)"; FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 
 echo ""
@@ -253,15 +303,15 @@ else
 fi
 echo ""
 say "  Frontend:  http://<this-host>:${FRONTEND_PORT}"
-say "  Backend:   http://<this-host>:${BACKEND_PORT}"
+say "  API:       proxied through the frontend origin; backend is not host-published"
 if [[ -n "${ADMIN_PASSWORD_VAL}" ]]; then
   say "  Login:     ADMIN_EMAIL from .env / ${BOLD}${ADMIN_PASSWORD_VAL}${RESET}  (change after first login)"
 else
   say "  Login:     ADMIN_EMAIL / ADMIN_PASSWORD from the existing .env"
 fi
 echo ""
-say "  Accessing the console from another machine? Add its origin and re-apply:"
-say "    edit ALLOWED_ORIGINS in .env, then: docker compose ${COMPOSE_FILES[*]} up -d"
+say "  Accessing the console from another machine requires an explicit exposure decision:"
+say "    set FRONTEND_BIND_ADDRESS and ALLOWED_ORIGINS in .env, then re-apply Compose"
 echo ""
 say "  Logs:  docker compose ${COMPOSE_FILES[*]} logs -f"
 say "  Stop:  docker compose ${COMPOSE_FILES[*]} down"

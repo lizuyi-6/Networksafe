@@ -465,7 +465,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                             aria-label={`Move ${endpoint.name} up`}
                                             onClick={() => handlePriorityChange(endpoint.id, 'up')}
                                             disabled={index === 0}
-                                            className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                                            className="inline-flex h-6 w-6 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                                         >
                                             <ChevronUp size={14} />
                                         </button>
@@ -475,7 +475,7 @@ const AIEndpointSettings = ({ onChanged }: { onChanged?: () => void }) => {
                                             aria-label={`Move ${endpoint.name} down`}
                                             onClick={() => handlePriorityChange(endpoint.id, 'down')}
                                             disabled={index === sortedEndpoints.length - 1}
-                                            className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                                            className="inline-flex h-6 w-6 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                                         >
                                             <ChevronDown size={14} />
                                         </button>

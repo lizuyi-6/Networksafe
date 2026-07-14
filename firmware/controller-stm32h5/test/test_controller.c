@@ -11,6 +11,7 @@
 #include "stm32h5xx_hal.h"
 #include "controller_tasks.h"
 #include "interlock_driver.h"
+#include "serial_json.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -280,10 +281,75 @@ static void test_challenge_ring_eviction_window(void) {
     TEST_END;
 }
 
+/* serial_json_parse robustness: RFC 8259 whitespace tolerance, escape
+ * handling, and key-in-value spoofing resistance. These previously had zero
+ * coverage — serial_json.c was compiled but never asserted. */
+static void test_serial_json_parsing(void) {
+    parsed_message_t msg;
+
+    TEST("serial_json: compact grant parses (baseline regression)");
+    serial_json_parse(
+        "{\"type\":\"command\",\"command\":\"interlock_release\","
+        "\"challenge\":\"c-compact\",\"policyDigest\":\"d-compact\","
+        "\"monotonicCounter\":42,\"expiresAt\":9001}", &msg);
+    CHECK(msg.type == MSG_TYPE_COMMAND);
+    CHECK(strcmp(msg.command, "interlock_release") == 0);
+    CHECK(strcmp(msg.grant.challenge, "c-compact") == 0);
+    CHECK(strcmp(msg.grant.policy_digest, "d-compact") == 0);
+    CHECK(msg.grant.monotonic_counter == 42);
+    CHECK(msg.grant.expires_at == 9001);
+    TEST_END;
+
+    TEST("serial_json: RFC 8259 whitespace around colon tolerated");
+    serial_json_parse(
+        "{ \"type\" : \"command\" , \"command\" : \"interlock_release\" , "
+        "\"challenge\" : \"c-ws\" , \"policyDigest\" : \"d-ws\" , "
+        "\"monotonicCounter\" : 7 , \"expiresAt\" : 2000 }", &msg);
+    CHECK(msg.type == MSG_TYPE_COMMAND);
+    CHECK(strcmp(msg.command, "interlock_release") == 0);
+    CHECK(strcmp(msg.grant.challenge, "c-ws") == 0);
+    CHECK(strcmp(msg.grant.policy_digest, "d-ws") == 0);
+    CHECK(msg.grant.monotonic_counter == 7);
+    CHECK(msg.grant.expires_at == 2000);
+    TEST_END;
+
+    TEST("serial_json: escaped quote in value is unescaped, not truncating");
+    /* Old strstr+strchr parser would truncate challenge at the backslash,
+     * yielding "a" instead of "a\"b". */
+    serial_json_parse(
+        "{\"type\":\"command\",\"command\":\"interlock_release\","
+        "\"challenge\":\"a\\\"b\"}", &msg);
+    CHECK(msg.type == MSG_TYPE_COMMAND);
+    CHECK(strcmp(msg.grant.challenge, "a\"b") == 0);
+    TEST_END;
+
+    TEST("serial_json: key name inside a value does not spoof the field");
+    /* An escaped \"policyDigest\":\"evil\" inside challenge must NOT be read
+     * as the real policyDigest field. The real field wins; absent real field,
+     * the spoofed one is not extracted (it is inside a string value, not in
+     * object-member position). */
+    serial_json_parse(
+        "{\"type\":\"command\",\"command\":\"interlock_release\","
+        "\"challenge\":\"x\\\"policyDigest\\\":\\\"evil\\\"\","
+        "\"policyDigest\":\"d-real\"}", &msg);
+    CHECK(strcmp(msg.grant.policy_digest, "d-real") == 0);
+    TEST_END;
+
+    TEST("serial_json: hello frame and unknown type");
+    serial_json_parse("{\"type\":\"hello\"}", &msg);
+    CHECK(msg.type == MSG_TYPE_HELLO);
+    serial_json_parse("{\"type\":\"garbage\"}", &msg);
+    CHECK(msg.type == MSG_TYPE_UNKNOWN);
+    serial_json_parse("not json at all", &msg);
+    CHECK(msg.type == MSG_TYPE_UNKNOWN);
+    TEST_END;
+}
+
 int main(void) {
     printf("\n=== M2 Controller Tasks Host Tests ===\n\n");
     test_boot_isolated();
     test_challenge_dedup();
+    test_serial_json_parsing();
     test_policy_digest();
     test_monotonic_counter();
     test_counter_advances_on_release();

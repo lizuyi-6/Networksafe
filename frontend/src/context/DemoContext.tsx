@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getCurrentDemoUserKey, getStoredDemoMode, setRuntimeDemoMode, setStoredDemoMode } from '../config/demo-mode';
+import { isPublicStandaloneRoute } from '../config/public-routes';
 import { fetchSystemMode, switchSystemMode } from '../services/api';
 
 /**
@@ -68,13 +69,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         syncLocalDemoState();
         setIsSwitchingDemoMode(false);
-        const isPublicRoute =
-            location.pathname === '/' ||
-            location.pathname === '/login' ||
-            location.pathname === '/privacy' ||
-            location.pathname === '/terms';
-
-        if (isPublicRoute) {
+        if (isPublicStandaloneRoute(location.pathname)) {
             setAttackSimEnabled(false);
             setModeResolved(true);
             return;

@@ -82,22 +82,41 @@ describe('AgentGateway dashboard session revalidation', () => {
   let gateway: AgentGateway;
   let socket: ClientSocket | null = null;
 
-  beforeAll((done) => {
+  beforeAll(async () => {
     process.env.WS_DASHBOARD_SESSION_REVALIDATE_MS = '20';
     httpServer = createServer();
     gateway = new AgentGateway(httpServer);
-    httpServer.listen(PORT, done);
+    await new Promise<void>((resolve, reject) => {
+      const onError = (error: Error): void => reject(error);
+      httpServer.once('error', onError);
+      httpServer.listen(PORT, () => {
+        httpServer.off('error', onError);
+        resolve();
+      });
+    });
   });
 
-  afterAll((done) => {
+  afterAll(async () => {
     if (originalInterval === undefined) {
       delete process.env.WS_DASHBOARD_SESSION_REVALIDATE_MS;
     } else {
       process.env.WS_DASHBOARD_SESSION_REVALIDATE_MS = originalInterval;
     }
     socket?.disconnect();
-    gateway.close();
-    httpServer.close(done);
+    socket?.io.close();
+    socket?.removeAllListeners();
+    await gateway.close();
+    httpServer.closeAllConnections?.();
+    await new Promise<void>((resolve, reject) => {
+      httpServer.close((error: NodeJS.ErrnoException | undefined) => {
+        if (error && error.code !== 'ERR_SERVER_NOT_RUNNING') {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
+    expect(httpServer.listening).toBe(false);
   });
 
   afterEach(() => {
@@ -122,6 +141,7 @@ describe('AgentGateway dashboard session revalidation', () => {
       auth: { type: 'dashboard', token: 'token-that-will-be-revoked' },
       forceNew: true,
       reconnection: false,
+      transports: ['websocket'],
       timeout: 2000
     });
 
@@ -130,11 +150,27 @@ describe('AgentGateway dashboard session revalidation', () => {
       socket!.once('connect_error', reject);
     });
 
+    const nativeWebSocket = (socket.io.engine.transport as any).ws;
+    expect(nativeWebSocket).toBeDefined();
+    const transportClosed = new Promise<void>((resolve) => {
+      socket!.io.engine.once('close', () => resolve());
+    });
+    const nativeWebSocketClosed = new Promise<void>((resolve) => {
+      if (nativeWebSocket.readyState === 3) {
+        resolve();
+        return;
+      }
+      nativeWebSocket.once('close', () => resolve());
+    });
     const disconnectReason = await new Promise<string>((resolve) => {
       socket!.once('disconnect', (reason) => resolve(reason));
     });
+    await transportClosed;
+    await nativeWebSocketClosed;
 
     expect(disconnectReason).toBe('io server disconnect');
+    expect(socket.io.engine.readyState).toBe('closed');
+    expect(nativeWebSocket.readyState).toBe(3);
     expect(mockVerifyTokenAsyncDetailed).toHaveBeenCalledTimes(2);
   });
 });

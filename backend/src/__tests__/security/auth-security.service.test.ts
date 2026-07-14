@@ -5,13 +5,15 @@ const mockRedisClient = {
   scard: jest.fn(),
   setex: jest.fn(),
   sadd: jest.fn(),
-  expire: jest.fn()
+  expire: jest.fn(),
+  del: jest.fn()
 };
 
 const mockRedisService = {
   isAvailable: jest.fn(() => false),
   getClient: jest.fn(() => mockRedisClient),
   get: jest.fn(),
+  getStrict: jest.fn(),
   del: jest.fn()
 };
 
@@ -28,6 +30,7 @@ describe('AuthSecurityService sessions', () => {
     mockRedisService.isAvailable.mockReturnValue(false);
     mockRedisService.getClient.mockReturnValue(mockRedisClient);
     mockRedisService.get.mockResolvedValue(null);
+    mockRedisService.getStrict.mockResolvedValue(null);
     mockRedisService.del.mockResolvedValue(undefined);
     mockRedisClient.smembers.mockResolvedValue([]);
     mockRedisClient.exists.mockResolvedValue(0);
@@ -36,6 +39,7 @@ describe('AuthSecurityService sessions', () => {
     mockRedisClient.setex.mockResolvedValue('OK');
     mockRedisClient.sadd.mockResolvedValue(1);
     mockRedisClient.expire.mockResolvedValue(1);
+    mockRedisClient.del.mockResolvedValue(1);
   });
 
   it('invalidates all fallback sessions for a user', async () => {
@@ -47,7 +51,7 @@ describe('AuthSecurityService sessions', () => {
     await expect(service.validateSession('user-1', 'session-1')).resolves.toBe(true);
     await expect(service.validateSession('user-1', 'session-2')).resolves.toBe(true);
 
-    await service.invalidateSession('user-1');
+    await expect(service.invalidateSession('user-1')).resolves.toBe(true);
 
     await expect(service.validateSession('user-1', 'session-1')).resolves.toBe(false);
     await expect(service.validateSession('user-1', 'session-2')).resolves.toBe(false);
@@ -70,13 +74,23 @@ describe('AuthSecurityService sessions', () => {
 
   it('validates Redis sessions by sessionId key and stored userId', async () => {
     mockRedisService.isAvailable.mockReturnValue(true);
-    mockRedisService.get.mockResolvedValue(JSON.stringify({ userId: 'user-redis' }));
+    mockRedisService.getStrict.mockResolvedValue(JSON.stringify({ userId: 'user-redis' }));
 
     const service = new AuthSecurityService();
     const valid = await service.validateSession('user-redis', 'session-redis');
 
-    expect(mockRedisService.get).toHaveBeenCalledWith('auth:session:session-redis');
+    expect(mockRedisService.getStrict).toHaveBeenCalledWith('auth:session:session-redis');
     expect(valid).toBe(true);
+  });
+
+  it('surfaces Redis command failures on the strict session path', async () => {
+    mockRedisService.isAvailable.mockReturnValue(true);
+    mockRedisService.getStrict.mockRejectedValueOnce(new Error('redis command timeout'));
+
+    const service = new AuthSecurityService();
+
+    await expect(service.validateSessionStrict('user-redis', 'session-redis'))
+      .rejects.toThrow('redis command timeout');
   });
 
   it('invalidates Redis session keys listed in the concurrent-session Set', async () => {
@@ -84,10 +98,29 @@ describe('AuthSecurityService sessions', () => {
     mockRedisClient.smembers.mockResolvedValue(['session-a', 'session-b']);
 
     const service = new AuthSecurityService();
-    await service.invalidateSession('user-redis');
+    await expect(service.invalidateSession('user-redis')).resolves.toBe(true);
 
-    expect(mockRedisService.del).toHaveBeenCalledWith('auth:session:session-a');
-    expect(mockRedisService.del).toHaveBeenCalledWith('auth:session:session-b');
-    expect(mockRedisService.del).toHaveBeenCalledWith('auth:concurrent:user-redis');
+    expect(mockRedisClient.del).toHaveBeenCalledWith('auth:session:session-a');
+    expect(mockRedisClient.del).toHaveBeenCalledWith('auth:session:session-b');
+    expect(mockRedisClient.del).toHaveBeenCalledWith('auth:concurrent:user-redis');
+  });
+
+  it('removes only the selected fallback session', async () => {
+    const service = new AuthSecurityService();
+    await service.addSession('user-1', 'session-1', { source: 'desktop' });
+    await service.addSession('user-1', 'session-2', { source: 'mobile' });
+
+    await expect(service.removeSession('user-1', 'session-1')).resolves.toBe(true);
+
+    await expect(service.validateSession('user-1', 'session-1')).resolves.toBe(false);
+    await expect(service.validateSession('user-1', 'session-2')).resolves.toBe(true);
+  });
+
+  it('reports Redis session removal failure to the caller', async () => {
+    mockRedisService.isAvailable.mockReturnValue(true);
+    mockRedisClient.srem.mockRejectedValueOnce(new Error('redis write failed'));
+
+    const service = new AuthSecurityService();
+    await expect(service.removeSession('user-redis', 'session-redis')).resolves.toBe(false);
   });
 });

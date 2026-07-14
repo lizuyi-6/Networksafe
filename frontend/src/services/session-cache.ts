@@ -2,6 +2,7 @@ export type SessionUserIdentity = {
     userId?: string;
     email?: string;
     username?: string;
+    authProvider?: 'local' | 'oidc';
 };
 
 const SESSION_USER_KEY = 'aetherguard:session-user';

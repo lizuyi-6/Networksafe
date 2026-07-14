@@ -25,7 +25,9 @@ function runCli(args: string[]): { stdout: string; code: number } {
   try {
     const stdout = execFileSync('node', [cliPath, ...args], {
       encoding: 'utf8',
-      timeout: 30000,
+      // This suite runs inside a parallel shard. Keep the child bounded, but
+      // allow for CPU starvation while other Jest workers compile TS files.
+      timeout: 120000,
       env: { ...process.env, FORCE_COLOR: '0', CI: '1' }
     });
     return { stdout, code: 0 };
@@ -38,7 +40,7 @@ function runCliWithStdin(args: string[], input: string): { stdout: string; code:
   try {
     const stdout = execFileSync('node', [cliPath, ...args], {
       encoding: 'utf8',
-      timeout: 30000,
+      timeout: 120000,
       input,
       env: { ...process.env, FORCE_COLOR: '0', CI: '1' }
     });

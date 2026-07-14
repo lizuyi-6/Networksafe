@@ -19,8 +19,8 @@ Docker, all services (requires Docker Compose v2.24+; the legacy `docker-compose
 node scripts/setup.mjs
 docker compose up -d --build
 
-# Frontend: http://localhost:8080
-# Backend:  http://localhost:3005
+# Console + API proxy: http://127.0.0.1:8080
+# Backend/Redis/Postgres/MinIO are internal-only in production Compose.
 # Login: ADMIN_EMAIL / ADMIN_PASSWORD from .env — setup prints the generated password once
 ```
 

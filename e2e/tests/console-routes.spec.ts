@@ -48,12 +48,13 @@ test.describe('console route coverage', () => {
             { api: '/api/scanner/tasks/history?limit=1', label: 'Scanner Run Detail', route: (row: any) => `/scanner/runs/${encodeURIComponent(row.id || row.taskId)}` },
             { api: '/api/alerts', label: 'Alert Detail', route: (row: any) => `/alerts/${encodeURIComponent(row.id)}` },
             { api: '/api/fix-history?limit=1', label: 'Fix History Detail', route: (row: any) => `/history/${encodeURIComponent(row.id)}` },
+            { api: '/api/attack/history', label: 'Attack Run Detail', route: (row: any) => `/attack-sim/runs/${encodeURIComponent(row.id || row.runId || row.startTime)}` },
             { api: '/api/admin/users', label: 'Admin User Detail', route: (row: any) => `/super-admin/users/${encodeURIComponent(row.id)}` },
         ];
 
         for (const source of detailSources) {
             const { payload } = await readJson(page.request, source.api);
-            const row = unwrapRows(payload).find((item) => item && (item.id || item.agentId || item.deviceId || item.taskId));
+            const row = unwrapRows(payload).find((item) => item && (item.id || item.agentId || item.deviceId || item.taskId || item.runId || item.startTime));
             if (!row) continue;
 
             const snapshot = monitor.snapshot();

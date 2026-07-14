@@ -1,0 +1,5 @@
+⚠️ 本仓库执行门禁（每轮强制送达，违反=未完成）：
+1. 声称"完成/搞定/能跑/就绪/可用"前，同句附证据：file:行+判定原文 / 测试名+通过统计 / 命令+退出码。验证用 `npm run test:all`（禁用会OOM的 `npm test`）、`npx jest <path>`、`cargo test`、`node scripts/guards/*.mjs`。无证据→主语"未交付/缺证据"前置。
+2. 不得甩锅手动验证。本仓库可跑清单：`npm run test:all`、`npx jest <path>`、`npm run typecheck`、`npm run lint`、`cargo test`、`cargo clippy -- -D warnings`、`scripts/guards/*`。落圈内必须先跑贴结果，禁止"需手动/需真机/大概率没问题"。
+3. 改 final-defense / interlock / requires_* / clamp / gateway-daemon / controller_tasks 等安全路径→回复前20行内、⚠️开头、单独成行列 file:line+失败语义，不得埋diff后、不得用"参数微调/优雅降级"包装。
+4. 改≥2文件逐文件给证据（套件绿不替代）；检查类任务必含"未覆盖范围"节（或"经检索无其他相关路径+grep表达式"）。

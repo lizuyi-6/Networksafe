@@ -41,7 +41,7 @@ jest.mock('../../services/socket-rate-limit.service', () => ({
 jest.mock('../../services/device-control.service', () => ({
   deviceControlService: {
     handleOtaStatus: jest.fn().mockResolvedValue({}),
-    handlePhysicalConfirmationAck: jest.fn().mockResolvedValue({}),
+    handlePhysicalConfirmationAck: jest.fn().mockResolvedValue({ confirmed: false, reason: 'mock_rejected' }),
   },
 }));
 
@@ -139,6 +139,7 @@ import * as socketRateLimit from '../../services/socket-rate-limit.service';
 import type { SocketRateLimitResult } from '../../services/socket-rate-limit.service';
 import * as auditLoggerMod from '../../security/audit-logger.service';
 import * as deviceControlServiceMod from '../../services/device-control.service';
+import { hardwareAuthorizationService } from '../../services/hardware-authorization.service';
 import logger from '../../utils/logger';
 
 describe('DeviceGateway', () => {
@@ -662,6 +663,11 @@ describe('DeviceGateway', () => {
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'data', expect.objectContaining({
         payload: 'just a plain string',
       }));
+      const parseWarning = (logger.warn as jest.Mock).mock.calls.find(
+        ([message]) => message === '[DeviceGateway] Device payload JSON parse failed'
+      );
+      expect(parseWarning).toBeDefined();
+      expect(parseWarning[1]).not.toHaveProperty('payloadPreview');
     });
 
     it('handles data without nested payload field', async () => {
@@ -829,20 +835,31 @@ describe('DeviceGateway', () => {
   // handlePhysicalConfirmationAck
   // =====================================================================
   describe('handlePhysicalConfirmationAck', () => {
-    it('processes physical confirmation ack', async () => {
-      new DeviceGateway(mockHttpServer as HttpServer);
+    it('reports the verified legacy result instead of trusting device confirmed=true', async () => {
+      const gateway = new DeviceGateway(mockHttpServer as HttpServer);
+      const broadcaster = jest.fn();
+      gateway.setDashboardBroadcaster(broadcaster);
+      jest.spyOn(hardwareAuthorizationService, 'handlePhysicalConfirmationAck')
+        .mockRejectedValueOnce(new Error('hardware authorization unavailable'));
+      (deviceControlServiceMod.deviceControlService.handlePhysicalConfirmationAck as jest.Mock)
+        .mockResolvedValueOnce({ confirmed: false, reason: 'invalid_signature' });
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('physical_confirmation_ack');
 
-      const ackData = { confirmed: true, actionId: 'act-123' };
+      const ackData = { confirmed: true, actionId: 'act-123', confirmationSessionId: 'session-123' };
       await callHandlerAndWait(handler, ackData);
 
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'command', expect.objectContaining({
-        action: 'physical_confirmation_ack',
-        confirmed: true,
-        actionId: 'act-123',
+        action: 'physical_confirmation_ack_received',
+        reportedConfirmed: true,
+        confirmationSessionId: 'session-123',
       }));
       expect(deviceControlServiceMod.deviceControlService.handlePhysicalConfirmationAck).toHaveBeenCalledWith('esp32-001', ackData);
+      expect(broadcaster).toHaveBeenCalledWith('device:physical_confirmation', expect.objectContaining({
+        confirmed: false,
+        reason: 'invalid_signature',
+        confirmationSource: 'device_control_verified',
+      }));
     });
 
     it('ignores physical_confirmation_ack when deviceId is not set', async () => {

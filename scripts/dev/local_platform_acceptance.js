@@ -1,12 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { extractAuthCookieHeader, resolveProjectEnv } = require('./http-cookie-session');
 
 const rootDir = path.resolve(__dirname, '..', '..');
 const outputDir = path.join(rootDir, 'artifacts', 'ops');
 const outputPath = path.join(outputDir, 'local-platform-acceptance.json');
 const baseUrl = process.env.AETHERGUARD_BASE_URL || 'http://localhost:3005';
 const frontendUrl = process.env.AETHERGUARD_FRONTEND_URL || 'http://localhost:8080';
+const email = resolveProjectEnv(rootDir, 'ADMIN_EMAIL', 'AETHERGUARD_ADMIN_EMAIL', 'dev-admin@aetherguard.local');
+const password = resolveProjectEnv(rootDir, 'ADMIN_PASSWORD', 'AETHERGUARD_ADMIN_PASSWORD', 'DevAdmin!2026');
 
 function ensureOutputDir() {
   fs.mkdirSync(outputDir, { recursive: true });
@@ -36,7 +39,8 @@ async function requestJson(url, options = {}) {
   return {
     ok: response.ok,
     status: response.status,
-    data
+    data,
+    cookieHeader: extractAuthCookieHeader(response.headers)
   };
 }
 
@@ -65,25 +69,26 @@ async function main() {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      email: 'dev-admin@aetherguard.local',
-      password: 'DevAdmin!2026'
+      email,
+      password
     })
   });
-  if (!login.ok || !login.data?.accessToken) {
+  if (!login.ok || !login.cookieHeader.includes('accessToken=') || !login.cookieHeader.includes('refreshToken=')) {
     throw new Error(`Login failed: ${JSON.stringify(login.data)}`);
   }
+  const loginPayload = login.data?.data || login.data;
   report.checks.login = {
     status: login.status,
-    user: login.data.user
+    user: loginPayload?.user
   };
 
   const authHeaders = {
     'content-type': 'application/json',
-    authorization: `Bearer ${login.data.accessToken}`
+    cookie: login.cookieHeader
   };
 
   const readChecks = {
-    health: '/api/health',
+    health: '/health/ready',
     me: '/api/auth/me',
     alerts: '/api/alerts?limit=5',
     adminUsers: '/api/admin/users?limit=5',

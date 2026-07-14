@@ -37,6 +37,7 @@ import { detectionPipelineService } from '../../services/detection-pipeline.serv
 import { fastpathTrafficShadowService } from '../../services/fastpath-traffic-shadow.service';
 import { fastpathClientService } from '../../services/fastpath-client.service';
 import { platformConfigService } from '../../services/platform-config.service';
+import { ANONYMOUS_TENANT_ID } from '../../core/tenant/tenant-context';
 
 const captureRawBody = (req: express.Request, _res: express.Response, buffer: Buffer): void => {
   if (buffer.length > 0) {
@@ -177,6 +178,55 @@ describe('apiTrafficShadowMiddleware', () => {
         query: 'from=test',
         decodedQuery: 'from=test',
         parsedQuery: 'from=test\ntest'
+      })
+    );
+  });
+
+  it('does not derive an anonymous request tenant from spoofed tenant or API-key headers', async () => {
+    const app = buildApp();
+    await request(app)
+      .get('/protected')
+      .set('x-request-id', 'tenant-spoof-anonymous')
+      .set('x-tenant-id', 'victim-tenant')
+      .set('x-api-key', 'key_victim-tenant_unverified')
+      .set('authorization', 'Bearer invalid-unverified-token')
+      .expect(200);
+
+    expect(detectionPipelineService.evaluateRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: 'tenant-spoof-anonymous',
+        tenantId: ANONYMOUS_TENANT_ID
+      })
+    );
+    expect((detectionPipelineService.evaluateRequest as jest.Mock).mock.calls[0][0].tenantId)
+      .not.toBe('victim-tenant');
+  });
+
+  it('uses an upstream authenticated user tenant instead of request headers', async () => {
+    const app = express();
+    app.use((req, _res, next) => {
+      (req as any).user = {
+        userId: 'user-1',
+        email: 'user@example.com',
+        username: 'user',
+        role: 'tenant',
+        tenantId: 'verified-tenant'
+      };
+      next();
+    });
+    app.use(apiTrafficShadowMiddleware);
+    app.get('/protected', (_req, res) => res.status(200).json({ ok: true }));
+
+    await request(app)
+      .get('/protected')
+      .set('x-request-id', 'tenant-verified-user')
+      .set('x-tenant-id', 'victim-tenant')
+      .expect(200);
+
+    expect(detectionPipelineService.evaluateRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: 'tenant-verified-user',
+        tenantId: 'verified-tenant'
       })
     );
   });

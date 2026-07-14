@@ -88,9 +88,8 @@ describe('AgentGateway IP cap desync (redteam)', () => {
     httpServer.listen(PORT, done);
   });
 
-  afterAll((done) => {
-    gateway.close();
-    httpServer.close(done);
+  afterAll(async () => {
+    await gateway.close();
   });
 
   // -------------------------------------------------------------------------

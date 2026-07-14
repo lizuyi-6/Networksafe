@@ -1,0 +1,11 @@
+{
+  "data_dir": "/var/lib/aetherguard-rescue",
+  "listen_addr": "127.0.0.1:7801",
+  "allow_non_loopback": false,
+  "appliance_endpoint": null,
+  "primary_health_url": "http://127.0.0.1:3005/health",
+  "primary_services": [
+    { "name": "backend", "restart_argv": ["systemctl", "restart", "aetherguard-backend"] }
+  ],
+  "resync_endpoint": null
+}

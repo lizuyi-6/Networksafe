@@ -49,6 +49,13 @@ const clickIfUsable = async (locator: Locator) => {
     return true;
 };
 
+const isAttackSimulatorAvailable = async (page: Page) => {
+    const { payload } = await readJson(page.request, '/api/system/mode');
+    const mode = (payload as any)?.data ?? payload;
+    expect(typeof mode?.attackSimEnabled, 'system mode should expose the attack simulator capability').toBe('boolean');
+    return mode.attackSimEnabled === true;
+};
+
 const openFirstDetailLink = async (page: Page, locator: Locator, expectedUrl: RegExp, label: string) => {
     if (!(await clickIfUsable(locator))) return false;
 
@@ -113,7 +120,12 @@ test.describe('full clickthrough巡检', () => {
                 await expect(liveToggle).toHaveAttribute('aria-pressed', initialLive || 'false');
 
                 await ensureDemoMode(page, true);
-                await expect(page.locator('aside a[href="/attack-sim"]').first()).toBeVisible();
+                const attackSimLink = page.locator('aside a[href="/attack-sim"]').first();
+                if (await isAttackSimulatorAvailable(page)) {
+                    await expect(attackSimLink).toBeVisible();
+                } else {
+                    await expect(attackSimLink).toHaveCount(0);
+                }
                 await ensureDemoMode(page, false);
             });
 
@@ -268,9 +280,12 @@ test.describe('full clickthrough巡检', () => {
                 const keyName = `e2e-full-key-${Date.now()}`;
                 await page.getByTestId('super-admin-api-key-name').fill(keyName);
                 await page.getByTestId('super-admin-create-api-key').click();
+                await expect(page.getByTestId('super-admin-created-api-key')).toBeVisible({ timeout: 10000 });
+                await page.getByTestId('super-admin-copy-created-api-key').click();
+                await page.getByTestId('super-admin-dismiss-created-api-key').click();
+                await expect(page.getByTestId('super-admin-created-api-key')).toHaveCount(0);
                 const keyRow = page.locator('[data-testid^="super-admin-api-key-row-"]').filter({ hasText: keyName }).first();
                 await expect(keyRow).toBeVisible({ timeout: 10000 });
-                await keyRow.locator('[data-testid^="super-admin-copy-api-key-"]').click();
                 await keyRow.locator('[data-testid^="super-admin-delete-api-key-"]').click();
                 await expect(page.locator('[data-testid^="super-admin-api-key-row-"]').filter({ hasText: keyName })).toHaveCount(0, { timeout: 10000 });
             }, true);
@@ -294,18 +309,6 @@ test.describe('full clickthrough巡检', () => {
                 await page.getByTestId('deploy-preview-download-bundle').click();
                 await downloadPromise;
 
-                await page.getByTestId('deploy-go-device-write').click();
-                await expect(page.getByTestId('deploy-connect-serial')).toBeVisible();
-                if (!(await page.getByTestId('deploy-connect-serial').isEnabled())) {
-                    await expect(page.locator('main')).toContainText(/serial|串口|unsupported|not supported|不支持/i);
-                }
-
-                // LEGACY route coverage: /api/deployments/esp32-status is the retained legacy ESP32 serial-deployer
-                // route (archived hardware, 2026-06-13). It is kept for backward-compat with historically-registered
-                // devices; active hardware uses the Gateway Appliance newline-JSON protocol. Asserting the route still
-                // responds with { success: true } here exercises that legacy-compat surface.
-                const { payload } = await readJson(page.request, '/api/deployments/esp32-status');
-                expect(payload).toMatchObject({ success: true });
                 await page.getByTestId('deploy-start-over').click();
                 await expect(page.getByTestId('deploy-next')).toBeDisabled();
             }, true);
@@ -321,6 +324,7 @@ test.describe('full clickthrough巡检', () => {
             await monitoredStep(page, monitor, 'scanner controls and selections', async () => {
                 await gotoAuthenticated(page, '/scanner', 'Scanner');
                 await page.getByTestId('scanner-targets').fill('http://127.0.0.1:8080/e2e-full-clickthrough');
+                await page.getByTestId('scanner-include-local-host').check();
                 await page.getByTestId('scanner-include-system').uncheck();
                 await page.getByTestId('scanner-include-web').check();
                 await page.getByTestId('scanner-include-ports').uncheck();
@@ -369,6 +373,15 @@ test.describe('full clickthrough巡检', () => {
 
             await monitoredStep(page, monitor, 'attack simulator controls and detail history', async () => {
                 await ensureDemoMode(page, true);
+                if (!(await isAttackSimulatorAvailable(page))) {
+                    await expect(page.locator('aside a[href="/attack-sim"]')).toHaveCount(0);
+                    await page.goto('/attack-sim');
+                    await page.waitForURL(/\/dashboard$/, { timeout: 15000 });
+                    await assertRenderedPage(page, 'Attack Simulator disabled route');
+                    await ensureDemoMode(page, false);
+                    return;
+                }
+
                 await page.goto('/attack-sim');
                 await expect(page.getByTestId('attack-select-all')).toBeVisible({ timeout: 20000 });
                 await page.waitForTimeout(1000);

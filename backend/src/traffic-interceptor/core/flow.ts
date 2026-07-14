@@ -30,6 +30,7 @@ export class FlowManager {
         this.cleanupInterval = setInterval(() => {
             this.cleanupExpiredFlows();
         }, 60000);
+        this.cleanupInterval.unref?.();
     }
 
     getOrCreateFlow(packet: ParsedPacket): FlowState | null {

@@ -1,0 +1,52 @@
+name,expression,comment
+enclosure_w,300 mm,Overall appliance width
+enclosure_d,210 mm,Overall appliance depth
+enclosure_h,118 mm,Overall appliance height
+corner_r,8 mm,External corner radius
+wall,3 mm,Prototype wall thickness
+floor_t,3 mm,Floor thickness
+roof_t,4 mm,Top-cover thickness
+deck_t,3 mm,Internal electronics deck thickness
+deck_split_z,52 mm,Lower/upper bay split height
+panel_t,3 mm,Front-panel thickness
+rj45_w,17 mm,RJ45 cutout width
+rj45_h,14 mm,RJ45 cutout height
+rj45_z,35 mm,RJ45 cutout center height
+server_port_x,32 mm,SERVER port center X
+lanwan_port_x,74 mm,LAN/WAN port center X
+mgmt_port_x,122 mm,MGMT port center X
+usb_c_w,11 mm,USB-C service cutout width
+usb_c_h,6 mm,USB-C service cutout height
+service_usb_x,156 mm,USB-C service cutout center X
+service_usb_z,34 mm,USB-C service cutout center Z
+button_d,22.5 mm,Panel button cutout diameter
+estop_x,208 mm,E-stop center X
+estop_z,36 mm,E-stop center Z
+confirm_x,255 mm,Confirm center X
+confirm_z,36 mm,Confirm center Z
+button_guard_od,32 mm,Button guard outside diameter
+status_window_w,88 mm,Status window width
+status_window_h,13 mm,Status window height
+status_window_x,197 mm,Status window center X
+status_window_z,77 mm,Status window center Z
+stack_light_d,40 mm,Top stack-light mount diameter
+stack_light_x,250 mm,Stack-light center X
+stack_light_y,158 mm,Stack-light center Y
+m1_w,145 mm,M1 gateway fit width
+m1_d,128 mm,M1 gateway fit depth
+m1_h,40 mm,M1 gateway fit height
+m1_x,13 mm,M1 gateway fit origin X
+m1_y,54 mm,M1 gateway fit origin Y
+nucleo_w,122 mm,M2 NUCLEO fit width
+nucleo_d,108 mm,M2 NUCLEO fit depth
+nucleo_x,166 mm,M2 NUCLEO origin X
+nucleo_y,66 mm,M2 NUCLEO origin Y
+se_w,24 mm,M3 secure element fit width
+se_d,24 mm,M3 secure element fit depth
+se_h,8 mm,M3 secure element fit height
+se_x,264 mm,M3 secure element origin X
+se_y,64 mm,M3 secure element origin Y
+internal_din_x,13 mm,Internal DIN rail origin X
+internal_din_y,26 mm,Internal DIN rail origin Y
+internal_din_len,274 mm,Internal DIN rail length
+din_rail_w,35 mm,DIN rail width

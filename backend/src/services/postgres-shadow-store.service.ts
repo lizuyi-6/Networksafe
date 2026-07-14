@@ -6,6 +6,7 @@ import logger from '../utils/logger';
 type ShadowTable =
   | 'audit_log'
   | 'users'
+  | 'login_history'
   | 'sites'
   | 'devices'
   | 'agents'
@@ -90,6 +91,24 @@ const TABLES: Record<ShadowTable, TableConfig> = {
         updated_at TEXT
       );
       CREATE INDEX IF NOT EXISTS idx_shadow_users_tenant ON users(tenant_id, created_at DESC);
+    `,
+    backfill: 'replace'
+  },
+  login_history: {
+    conflict: ['id'],
+    ddl: `
+      CREATE TABLE IF NOT EXISTS login_history (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        ip_address TEXT,
+        user_agent TEXT,
+        status TEXT DEFAULT 'success' CHECK(status IN ('success', 'failed')),
+        logout_at TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_shadow_login_history_user_time
+        ON login_history(user_id, created_at DESC);
     `,
     backfill: 'replace'
   },
@@ -888,6 +907,8 @@ class PostgresShadowStoreService {
   private lastError?: string;
   private lastBackfillAt?: string;
   private lastBackfillError?: string;
+  private snapshotReady = false;
+  private backfillInProgress = false;
   private syncedTables: Record<string, number> = {};
   private resyncTimer: NodeJS.Timeout | null = null;
 
@@ -896,7 +917,13 @@ class PostgresShadowStoreService {
   }
 
   canServeReads(): boolean {
-    return getDatabaseMode() === 'postgres' && this.isEnabled() && this.connected && Boolean(this.pool);
+    return getDatabaseMode() === 'postgres'
+      && this.isEnabled()
+      && this.connected
+      && this.schemaReady
+      && this.snapshotReady
+      && !this.backfillInProgress
+      && Boolean(this.pool);
   }
 
   async init(): Promise<void> {
@@ -924,6 +951,8 @@ class PostgresShadowStoreService {
     this.pool = null;
     this.connected = false;
     this.schemaReady = false;
+    this.snapshotReady = false;
+    this.backfillInProgress = false;
     if (pool) {
       await pool.end().catch(() => undefined);
     }
@@ -938,19 +967,27 @@ class PostgresShadowStoreService {
       lastError: this.lastError || null,
       lastBackfillAt: this.lastBackfillAt || null,
       lastBackfillError: this.lastBackfillError || null,
+      snapshotReady: this.snapshotReady,
+      backfillInProgress: this.backfillInProgress,
       syncedTables: this.syncedTables
     };
   }
 
   async backfillSnapshot(): Promise<void> {
-    if (!(await this.ensureReady())) {
+    if (this.backfillInProgress) {
       return;
     }
 
-    const db = getDatabase();
-    const supportedTables = Object.entries(TABLES).filter(([, config]) => config.backfill) as Array<[ShadowTable, TableConfig]>;
+    this.backfillInProgress = true;
+    this.snapshotReady = false;
 
     try {
+      if (!(await this.ensureReady())) {
+        return;
+      }
+
+      const db = getDatabase();
+      const supportedTables = Object.entries(TABLES).filter(([, config]) => config.backfill) as Array<[ShadowTable, TableConfig]>;
       for (const [table, config] of supportedTables) {
         if (!this.sqliteTableExists(db, table)) {
           continue;
@@ -958,10 +995,13 @@ class PostgresShadowStoreService {
 
         const rows = db.prepare(`SELECT * FROM ${table}`).all() as Record<string, unknown>[];
         if (config.backfill === 'replace') {
-          await this.pool!.query(`DELETE FROM "${table}"`);
+          await this.queryWithTimeout(`DELETE FROM "${table}"`, []);
         }
         for (const row of rows) {
           await this.upsert(table, row);
+          if (this.lastError) {
+            throw new Error(`shadow backfill failed for ${table}: ${this.lastError}`);
+          }
         }
         this.syncedTables[table] = rows.length;
       }
@@ -969,10 +1009,14 @@ class PostgresShadowStoreService {
       this.lastBackfillAt = new Date().toISOString();
       this.lastBackfillError = undefined;
       this.connected = true;
+      this.snapshotReady = true;
     } catch (error: any) {
       this.lastBackfillError = error?.message || 'backfill failed';
       this.connected = false;
+      this.snapshotReady = false;
       logger.warn('Postgres shadow backfill failed', { error: this.lastBackfillError });
+    } finally {
+      this.backfillInProgress = false;
     }
   }
 
@@ -1014,7 +1058,7 @@ class PostgresShadowStoreService {
     `;
 
     try {
-      await this.pool!.query(sql, values);
+      await this.queryWithTimeout(sql, values);
       this.connected = true;
       this.lastError = undefined;
     } catch (error: any) {
@@ -1030,7 +1074,7 @@ class PostgresShadowStoreService {
     }
 
     try {
-      const result = await this.pool!.query(sql, params.map((value) => toQueryValue(value)));
+      const result = await this.queryWithTimeout(sql, params);
       this.connected = true;
       this.lastError = undefined;
       return result.rows as T[];
@@ -1053,7 +1097,7 @@ class PostgresShadowStoreService {
     }
 
     try {
-      const result = await this.pool!.query(sql, params.map((value) => toQueryValue(value)));
+      const result = await this.queryWithTimeout(sql, params);
       this.connected = true;
       this.lastError = undefined;
       return Number(result.rowCount || 0);
@@ -1073,12 +1117,49 @@ class PostgresShadowStoreService {
     return Boolean(this.pool);
   }
 
+  /**
+   * Wrapper around pool.query that guarantees rejection within QUERY_TIMEOUT_MS,
+   * even if the pool is exhausted and a checked-out connection never returns
+   * (pg's own query_timeout/connectionTimeoutMillis do NOT cover the
+   * "waiting for an idle connection" state). The caller (queryAll/execute) is
+   * expected to catch and fall back to SQLite.
+   */
+  private static readonly QUERY_TIMEOUT_MS = 8000;
+
+  private async queryWithTimeout(sql: string, params: unknown[]): Promise<{ rows: unknown[]; rowCount: number }> {
+    const pool = this.pool!;
+    const mapped = params.map((value) => toQueryValue(value));
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`shadow query timed out after ${PostgresShadowStoreService.QUERY_TIMEOUT_MS}ms`)),
+        PostgresShadowStoreService.QUERY_TIMEOUT_MS
+      );
+      timer.unref?.();
+    });
+    try {
+      const result = await Promise.race([
+        pool.query(sql, mapped),
+        timeout
+      ]) as { rows: unknown[]; rowCount: number };
+      return result;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
   private async initialize(): Promise<void> {
     try {
       if (!this.pool) {
         this.pool = new Pool({
           connectionString: this.connectionString,
-          max: this.poolSize
+          max: this.poolSize,
+          // Fail fast on dead/unreachable Postgres instead of hanging every
+          // shadow read forever (default has no timeout). query_timeout caps
+          // individual statements; connectionTimeoutMillis caps the handshake.
+          connectionTimeoutMillis: 5000,
+          query_timeout: 8000,
+          idleTimeoutMillis: 30000
         });
       }
 

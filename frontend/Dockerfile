@@ -7,9 +7,8 @@ FROM node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb
 WORKDIR /app
 
 # Copy manifests first for layer caching
-COPY package*.json ./
-RUN npm config set registry https://registry.npmmirror.com/ && \
-    if [ -f package-lock.json ]; then npm ci; else npm install; fi
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY . .
 RUN npm run build

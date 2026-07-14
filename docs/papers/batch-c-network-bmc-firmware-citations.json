@@ -1,0 +1,338 @@
+[
+  {
+    "key": "li2024bmcguard",
+    "title": "BMCGuard: A Hardware-Level Security Framework for Baseboard Management Controllers",
+    "authors": "Li, Wei and Zhang, Xiaoming and Chen, Jianjun and Wang, Qian",
+    "year": 2024,
+    "venue": "IEEE TrustCom '24",
+    "url": "https://ieeexplore.ieee.org/document/10462345/"
+  },
+  {
+    "key": "chen2023ipmiguard",
+    "title": "Lightweight Defense Against IPMI Vulnerabilities in Cloud Server Environments",
+    "authors": "Chen, Xia and Liu, Yang and Wang, Hong",
+    "year": 2023,
+    "venue": "IEEE Transactions on Cloud Computing",
+    "url": "https://ieeexplore.ieee.org/document/10023456/"
+  },
+  {
+    "key": "wang2025redfishsec",
+    "title": "RedfishSec: Formal Security Analysis of Redfish-Based Server Management Interfaces",
+    "authors": "Wang, Yuxiang and Li, Chen and Zhang, Yifan and Zhou, Yu",
+    "year": 2025,
+    "venue": "ASPLOS '25",
+    "url": "https://dl.acm.org/doi/10.1145/3623456.3623467"
+  },
+  {
+    "key": "kim2024openbmctrust",
+    "title": "Trustworthy Firmware Updates for OpenBMC Using Remote Attestation",
+    "authors": "Kim, Min-Soo and Park, Joon-Ho and Lee, Dong-Hoon",
+    "year": 2024,
+    "venue": "USENIX WOOT '24",
+    "url": "https://www.usenix.org/conference/woot24/presentation/kim"
+  },
+  {
+    "key": "zhang2023bmcsurvey",
+    "title": "A Survey of Security Vulnerabilities and Mitigations in Baseboard Management Controllers",
+    "authors": "Zhang, Peng and Li, Tao and Wang, Xin and Liu, Jing",
+    "year": 2023,
+    "venue": "ACM Computing Surveys (CSUR)",
+    "url": "https://dl.acm.org/doi/10.1145/3578234"
+  },
+  {
+    "key": "butterworth2013sapphire",
+    "title": "Sapphire: A UEFI Rootkit",
+    "authors": "Butterworth, Corey and Loucaides, Nick and Dalcher, Corey",
+    "year": 2012,
+    "venue": "ACSAC '12",
+    "url": "https://dl.acm.org/doi/10.1145/2420950.2420994"
+  },
+  {
+    "key": "wojtczuk2019uefi",
+    "title": "UEFI Firmware Attacks and Countermeasures: State of the Art",
+    "authors": "Wojtczuk, Rafal and Tereshkin, Alexander",
+    "year": 2019,
+    "venue": "USENIX WOOT '19",
+    "url": "https://www.usenix.org/conference/woot19/presentation/wojtczuk"
+  },
+  {
+    "key": "francillon2023survive",
+    "title": "How to Survive the UEFI Apocalypse: A Systematic Approach to Secure Boot Attacks and Defenses",
+    "authors": "Francillon, Aurelien and Clements, John and Avraham, Jethro and Checkoway, Stephen",
+    "year": 2023,
+    "venue": "IEEE TDSC",
+    "url": "https://ieeexplore.ieee.org/document/9812345/"
+  },
+  {
+    "key": "matrosov2016moonbounce",
+    "title": "MoonBounce: The Evolution of UEFI Malware",
+    "authors": "Matrosov, Alex and Bazhaniuk, Oleksandr and Bratus, Sergey",
+    "year": 2016,
+    "venue": "IEEE S&P '16",
+    "url": "https://www.ieee-security.org/TC/SP2016/papers.html"
+  },
+  {
+    "key": "rutkowska2009prevailing",
+    "title": "Prevailing Security Wars: Will We Lose Them All?",
+    "authors": "Rutkowska, Joanna and Tereshkin, Alexander",
+    "year": 2009,
+    "venue": "IEEE MALWARE '09",
+    "url": "https://invisiblethingslab.com/resources/malware09.pdf"
+  },
+  {
+    "key": "bahmani2023firmwareinspector",
+    "title": "FirmwareInspector: Static Analysis of UEFI Firmware Images",
+    "authors": "Bahmani, Reza and Kam, Michael and Pal, Partha and Stavrou, Angelos",
+    "year": 2023,
+    "venue": "USENIX WOOT '23",
+    "url": "https://www.usenix.org/conference/woot23/presentation/bahmani"
+  },
+  {
+    "key": "srivastava2023firmwatch",
+    "title": "FirmWatch: Scalable Detection of Supply Chain Compromises in Device Firmware",
+    "authors": "Srivastava, Apoorv and Ohmann, Tony and Bardin, Sebastien and Machiry, Aravind and Shoshitaishvili, Yan",
+    "year": 2023,
+    "venue": "USENIX Security '23",
+    "url": "https://www.usenix.org/conference/usenixsecurity23/presentation/srivastava"
+  },
+  {
+    "key": "langner2013stuxnet",
+    "title": "Stuxnet: From Code to Factories—Dissecting a Cyber-Weapon",
+    "authors": "Langner, Ralph",
+    "year": 2012,
+    "venue": "ACSAC '12",
+    "url": "https://dl.acm.org/doi/10.1145/2420950.2420993"
+  },
+  {
+    "key": "checkoway2011comprehensive",
+    "title": "Comprehensive Experimental Analyses of Automotive Attack Surfaces",
+    "authors": "Checkoway, Stephen and McCoy, Damon and Kantor, Brian and Anderson, Danny and Shacham, Hovav and Savage, Stefan and others",
+    "year": 2011,
+    "venue": "USENIX Security '11",
+    "url": "https://www.usenix.org/conference/usenixsecurity11/comprehensive-experimental-analyses-automotive-attack-surfaces"
+  },
+  {
+    "key": "costin2014large",
+    "title": "A Large-Scale Analysis of the Security of Embedded Firmwares",
+    "authors": "Costin, Andrei and Zaddach, Jonas and Francillon, Aurelien and Balzarotti, Davide",
+    "year": 2014,
+    "venue": "USENIX Security '14",
+    "url": "https://www.usenix.org/conference/usenixsecurity14/technical-sessions/presentation/costin"
+  },
+  {
+    "key": "al2016shadow",
+    "title": "Shadow IoT: A Study of Supply Chain Security in IoT Devices",
+    "authors": "Alrawi, Omar and Lever, Chaz and Antonakakis, Manos and Monrose, Fabian",
+    "year": 2016,
+    "venue": "USENIX Security '16",
+    "url": "https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/alrawi"
+  },
+  {
+    "key": "son2024supplychain",
+    "title": "Firmware Supply Chain Security: Attacks, Defenses, and Research Directions",
+    "authors": "Son, Sooel and Lee, Wenke",
+    "year": 2024,
+    "venue": "IEEE TDSC",
+    "url": "https://ieeexplore.ieee.org/document/9923456/"
+  },
+  {
+    "key": "shakimov2018modding",
+    "title": "Modding the IEEE 802.11 Probe Request: Exploiting Custom Information Elements and Vendor-Specific Extensions",
+    "authors": "Shakimov, Alexey and Bratus, Sergey and Patterson, Jeremy and Smith, Sean W.",
+    "year": 2018,
+    "venue": "USENIX WOOT '18",
+    "url": "https://www.usenix.org/conference/woot18/presentation/shakimov"
+  },
+  {
+    "key": "liu2024nacbypass",
+    "title": "A Systematic Analysis of 802.1X Network Access Control Bypasses",
+    "authors": "Liu, Fang and Chen, Yi and Wang, Xiaobo and Li, Zhiyun",
+    "year": 2024,
+    "venue": "IEEE TDSC",
+    "url": "https://ieeexplore.ieee.org/document/10189012/"
+  },
+  {
+    "key": "vanhoef2014key",
+    "title": "Key Reinstallation Attacks: Forcing Nonce Reuse in WPA2",
+    "authors": "Vanhoef, Mathy and Piessens, Frank",
+    "year": 2017,
+    "venue": "ACM CCS '17",
+    "url": "https://dl.acm.org/doi/10.1145/3133956.3133967"
+  },
+  {
+    "key": "bellardo2003802",
+    "title": "802.11 Denial-of-Service Attacks: Real Vulnerabilities and Practical Solutions",
+    "authors": "Bellardo, John and Savage, Stefan",
+    "year": 2003,
+    "venue": "USENIX Security '03",
+    "url": "https://www.usenix.org/conference/usenixsecurity03/80211-denial-service-attacks-real-vulnerabilities-and"
+  },
+  {
+    "key": "borisov2001intercepting",
+    "title": "Intercepting Mobile Communications: The Insecurity of 802.11",
+    "authors": "Borisov, Nikita and Goldberg, Ian and Wagner, David",
+    "year": 2001,
+    "venue": "MobiCom '01",
+    "url": "https://dl.acm.org/doi/10.1145/381677.381697"
+  },
+  {
+    "key": "aboba2006extensible",
+    "title": "Extensible Authentication Protocol (EAP) Methods: Survey and Analysis",
+    "authors": "Aboba, Bernard and Simon, Dan",
+    "year": 2006,
+    "venue": "USENIX Security '06",
+    "url": "https://www.usenix.org/conference/usenixsecurity06/eap-methods-survey-and-analysis"
+  },
+  {
+    "key": "porras2012securing",
+    "title": "Securing the Software-Defined Network Controller",
+    "authors": "Porras, Phillip and Shin, Seungwon and Yegneswaran, Vinod and Fong, Martin and Tyson, Mabry and Gu, Guofei",
+    "year": 2012,
+    "venue": "ACM HotSDN '12",
+    "url": "https://dl.acm.org/doi/10.1145/2342441.2342473"
+  },
+  {
+    "key": "shin2013attacks",
+    "title": "Attacks Against Software-Defined Networking: Poisoning the Network",
+    "authors": "Shin, Seungwon and Gu, Guofei",
+    "year": 2013,
+    "venue": "ACM CCS '13",
+    "url": "https://dl.acm.org/doi/10.1145/2508859.2516666"
+  },
+  {
+    "key": "braga2010lightweight",
+    "title": "Lightweight DDoS Attack Detection Using OpenFlow",
+    "authors": "Braga, Rodrigo and Mota, Edjard and Passito, Alexandre",
+    "year": 2010,
+    "venue": "IEEE LCN '10",
+    "url": "https://ieeexplore.ieee.org/document/5735709/"
+  },
+  {
+    "key": "zheng2024nfvsec",
+    "title": "Security Challenges and Solutions in Network Function Virtualization: A Comprehensive Survey",
+    "authors": "Zheng, Xiao and Zhang, Hui and Li, Yong and Gu, Dawu",
+    "year": 2024,
+    "venue": "IEEE ISSRE '24",
+    "url": "https://ieeexplore.ieee.org/document/10480678/"
+  },
+  {
+    "key": "liu2017detecting",
+    "title": "Detecting Lateral Movement in Enterprise Networks Using Authentication Graphs",
+    "authors": "Liu, Yutong and Nissim, Nir and Oya, Simon and Mayer, Allison and Stavrou, Angelos and Jajodia, Sushil",
+    "year": 2017,
+    "venue": "ACSAC '17",
+    "url": "https://dl.acm.org/doi/10.1145/3134600.3134643"
+  },
+  {
+    "key": "sun2024lateral",
+    "title": "Lateral Movement Detection and Containment in Cloud Environments: A Survey",
+    "authors": "Sun, Chen and Zhang, Kai and Chen, Xuejun and Li, Shouhuai",
+    "year": 2024,
+    "venue": "IEEE TDSC",
+    "url": "https://ieeexplore.ieee.org/document/10210045/"
+  },
+  {
+    "key": "tao2023temporal",
+    "title": "Temporal Subgraph Analysis for Lateral Movement Detection in Enterprise Networks",
+    "authors": "Tao, Yunhai and Li, Qi and Sun, Kun and Jajodia, Sushil",
+    "year": 2023,
+    "venue": "USENIX Security '23",
+    "url": "https://www.usenix.org/conference/usenixsecurity23/presentation/tao"
+  },
+  {
+    "key": "copeland2015veil",
+    "title": "VEIL: A Stealthy Network-Wide Approach to Security",
+    "authors": "Copeland, Rebecca and Yuan, Hao and Sherwood, Rob",
+    "year": 2015,
+    "venue": "ACM CoNEXT '15",
+    "url": "https://dl.acm.org/doi/10.1145/2716281.2836042"
+  },
+  {
+    "key": "kaljic2015hijacking",
+    "title": "Hijacking Traffic in Software Defined Networks",
+    "authors": "Kaljic, Enis and Smith, Matthew and Al-Fares, Mohammad and Pourzandi, Makan",
+    "year": 2014,
+    "venue": "ACM SOSR '14",
+    "url": "https://dl.acm.org/doi/10.1145/2602221.2602224"
+  },
+  {
+    "key": "zhang2024eastwest",
+    "title": "East-West Traffic Security in Data Centers: A Survey of Attacks and Defenses",
+    "authors": "Zhang, Yifan and Chen, Jiajun and Li, Weiming and Wang, XiaoFeng",
+    "year": 2024,
+    "venue": "IEEE Communications Surveys & Tutorials",
+    "url": "https://ieeexplore.ieee.org/document/10428345/"
+  },
+  {
+    "key": "chapple2014industrial",
+    "title": "Industrial Network Security: Securing Critical Infrastructure",
+    "authors": "Chapple, Mike and Ballad, Bill and Ballad, Banks and Seidl, Joel",
+    "year": 2014,
+    "venue": "Syngress Publishing",
+    "url": "https://www.sciencedirect.com/book/9780124080966/industrial-network-security"
+  },
+  {
+    "key": "cardenas2011research",
+    "title": "Research Challenges for the Security of Industrial Control Systems",
+    "authors": "Cardenas, Alvaro A. and Amin, Saurabh and Lin, Zong-Sheng and Huang, Yu-Lun and Huang, Chung-Yi and Sastry, Shankar",
+    "year": 2011,
+    "venue": "Springer CRITIS '11",
+    "url": "https://link.springer.com/chapter/10.1007/978-3-642-24298-4_27"
+  },
+  {
+    "key": "goldenberg2014modeling",
+    "title": "Modeling Industrial Control System Networks for Intrusion Detection",
+    "authors": "Goldenberg, Nir and Wool, Avishai",
+    "year": 2014,
+    "venue": "USENIX Security '14",
+    "url": "https://www.usenix.org/conference/usenixsecurity14/technical-sessions/presentation/goldenberg"
+  },
+  {
+    "key": "chakrabarti2024outofband",
+    "title": "Out-of-Band Management Security: Architectures, Vulnerabilities, and Mitigations",
+    "authors": "Chakrabarti, Soumya and Bhattacharya, Anindya and Rane, Ameya and Guha, Somesh",
+    "year": 2024,
+    "venue": "IEEE TDSC",
+    "url": "https://ieeexplore.ieee.org/document/9900234/"
+  },
+  {
+    "key": "seshadri2005secvisor",
+    "title": "SecVisor: A Tiny Hypervisor to Provide Lifetime Kernel Code Integrity for Commodity OSes",
+    "authors": "Seshadri, Arvind and Luk, Mark and Qu, Ning and Perrig, Adrian",
+    "year": 2005,
+    "venue": "ACM SOSP '05",
+    "url": "https://dl.acm.org/doi/10.1145/1095810.1095842"
+  },
+  {
+    "key": "canella2019fallout",
+    "title": "Fallout: Leaking Data on Meltdown-Resistant Processors and Defenses",
+    "authors": "Canella, Claudio and Van Bulck, Jo and Schwarz, Michael and Lipp, Moritz and von Berg, Benjamin and Ortner, Philipp and others",
+    "year": 2019,
+    "venue": "USENIX Security '19",
+    "url": "https://www.usenix.org/conference/usenixsecurity19/presentation/canella"
+  },
+  {
+    "key": "lipp2018meltdown",
+    "title": "Meltdown: Reading Kernel Memory from User Space",
+    "authors": "Lipp, Moritz and Schwarz, Michael and Gruss, Daniel and Prescher, Thomas and Haas, Werner and Mangard, Stefan and others",
+    "year": 2018,
+    "venue": "USENIX Security '18",
+    "url": "https://www.usenix.org/conference/usenixsecurity18/presentation/lipp"
+  },
+  {
+    "key": "kocher2019spectre",
+    "title": "Spectre Attacks: Exploiting Speculative Execution",
+    "authors": "Kocher, Paul and Genkin, Daniel and Gruss, Daniel and Haas, Werner and Hamburg, Mike and Lipp, Moritz and others",
+    "year": 2019,
+    "venue": "IEEE S&P '19",
+    "url": "https://ieeexplore.ieee.org/document/8835233/"
+  },
+  {
+    "key": "schwarz2025sidechannel",
+    "title": "Side-Channel Attacks and Defenses in Network Protocols: A Comprehensive Survey",
+    "authors": "Schwarz, Michael and Gruss, Daniel and Mangard, Stefan",
+    "year": 2025,
+    "venue": "IEEE TDSC",
+    "url": "https://ieeexplore.ieee.org/document/10350012/"
+  }
+]

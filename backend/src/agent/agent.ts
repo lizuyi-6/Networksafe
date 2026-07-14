@@ -64,6 +64,7 @@ export class Agent {
     private apiKey: string;
     private secretKey: string;
     private heartbeatTimer: NodeJS.Timeout | null = null;
+    private connectionTimeoutTimer: NodeJS.Timeout | null = null;
     private trafficMonitor: TrafficMonitor;
     private attackDetector: AttackDetector;
     private firewallController: FirewallController;
@@ -214,6 +215,10 @@ export class Agent {
             });
 
             this.socket.on('connect', () => {
+                if (this.connectionTimeoutTimer) {
+                    clearTimeout(this.connectionTimeoutTimer);
+                    this.connectionTimeoutTimer = null;
+                }
                 logger.info('Connected to control platform');
                 // No more self-registration - server validates us
                 resolve();
@@ -237,12 +242,14 @@ export class Agent {
             });
 
             // 设置连接超时
-            setTimeout(() => {
+            this.connectionTimeoutTimer = setTimeout(() => {
+                this.connectionTimeoutTimer = null;
                 if (!this.socket?.connected) {
                     logger.warn('Connection timeout, will retry in background');
                     resolve(); // 不阻塞启动
                 }
             }, 10000);
+            this.connectionTimeoutTimer.unref?.();
         });
     }
 
@@ -370,7 +377,8 @@ export class Agent {
 
         // Mark nonce as used
         this.usedNonces.add(command.nonce);
-        setTimeout(() => this.usedNonces.delete(command.nonce), 10 * 60 * 1000);
+        const nonceExpiryTimer = setTimeout(() => this.usedNonces.delete(command.nonce), 10 * 60 * 1000);
+        nonceExpiryTimer.unref?.();
 
         const riskClass = classifyCommandRisk(command.type);
         if (riskClass === 'physical_confirmation_required') {
@@ -601,10 +609,17 @@ export class Agent {
 
         if (this.heartbeatTimer) {
             clearInterval(this.heartbeatTimer);
+            this.heartbeatTimer = null;
         }
 
         if (this.trafficStatsTimer) {
             clearInterval(this.trafficStatsTimer);
+            this.trafficStatsTimer = null;
+        }
+
+        if (this.connectionTimeoutTimer) {
+            clearTimeout(this.connectionTimeoutTimer);
+            this.connectionTimeoutTimer = null;
         }
 
         await this.trafficMonitor.stop();

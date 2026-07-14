@@ -24,6 +24,7 @@ export interface HistogramBucketState {
 export interface HistogramState {
   count: number;
   sum: number;
+  max: number;
   buckets: Map<number, HistogramBucketState>;
 }
 
@@ -39,6 +40,19 @@ interface HistogramEntry {
   help: string;
   labels: MetricLabels;
   state: HistogramState;
+}
+
+export interface CounterSample {
+  labels: MetricLabels;
+  value: number;
+}
+
+export interface HistogramSample {
+  labels: MetricLabels;
+  count: number;
+  sum: number;
+  max: number;
+  buckets: ReadonlyMap<number, number>;
 }
 
 const DEFAULT_HISTOGRAM_BUCKETS_MS: readonly number[] = [
@@ -137,6 +151,7 @@ export class Metrics {
       const state: HistogramState = {
         count: 0,
         sum: 0,
+        max: 0,
         buckets: new Map(this.histogramBuckets.map((le) => [le, { count: 0, cumulative: 0 }]))
       };
       this.histograms.set(key, {
@@ -157,6 +172,7 @@ export class Metrics {
   private recordObservation(state: HistogramState, value: number): void {
     state.count += 1;
     state.sum += value;
+    state.max = Math.max(state.max, value);
     for (const le of this.histogramBuckets) {
       const bucket = state.buckets.get(le);
       if (!bucket) {
@@ -175,6 +191,26 @@ export class Metrics {
   reset(): void {
     this.counters.clear();
     this.histograms.clear();
+  }
+
+  getCounterSamples(name: string): CounterSample[] {
+    return Array.from(this.counters.values())
+      .filter((entry) => entry.name === name)
+      .map((entry) => ({ labels: { ...entry.labels }, value: entry.value }));
+  }
+
+  getHistogramSamples(name: string): HistogramSample[] {
+    return Array.from(this.histograms.values())
+      .filter((entry) => entry.name === name)
+      .map((entry) => ({
+        labels: { ...entry.labels },
+        count: entry.state.count,
+        sum: entry.state.sum,
+        max: entry.state.max,
+        buckets: new Map(
+          Array.from(entry.state.buckets.entries()).map(([le, bucket]) => [le, bucket.cumulative])
+        )
+      }));
   }
 
   /**

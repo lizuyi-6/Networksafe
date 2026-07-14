@@ -9,6 +9,7 @@ import {
 } from '../config/platform-runtime';
 import {
   allowDemoFeatures,
+  allowPasswordLogin,
   getEnterpriseRuntimeMode,
   isEnterpriseStrictMode,
   oidcEnabled
@@ -19,25 +20,13 @@ const WEAK_VALUE_PATTERNS: RegExp[] = [
   /^dev-device-key-2026$/i,
   /^AetherGuardDeviceCommandSecret2026$/i,
   /^AetherGuardArtifactSecret2026$/i,
-  /^AetherGuardPgShadow2026$/i
+  /^AetherGuardPgShadow2026$/i,
+  /^local/i,
+  /^adminlocal/i
 ];
 
 function hasWeakValue(value: string): boolean {
   return WEAK_VALUE_PATTERNS.some((pattern) => pattern.test(value.trim()));
-}
-
-function assertWeakSecretWarning(
-  key: string,
-  warnings: string[]
-): void {
-  const value = String(process.env[key] || '').trim();
-  if (!value) return;
-  if (hasWeakValue(value)) {
-    warnings.push(
-      `[SECURITY WARNING] ${key} is using a known default or placeholder value. ` +
-        'Replace it with a strong secret before exposing this service to production traffic.'
-    );
-  }
 }
 
 function assertStrongSecret(
@@ -61,6 +50,12 @@ function assertStrongSecret(
 
   if (hasWeakValue(value)) {
     errors.push(`${key} cannot use a bundled default or placeholder value.`);
+  }
+}
+
+function assertProductionTrue(key: string, errors: string[]): void {
+  if (process.env[key] !== 'true') {
+    errors.push(`${key} must be set to true in production.`);
   }
 }
 
@@ -99,6 +94,22 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
     assertStrongSecret('ADMIN_PASSWORD', 12, errors);
     assertStrongSecret('ENCRYPTION_KEY', 32, errors);
     assertStrongSecret('ENCRYPTION_SALT', 16, errors);
+    assertStrongSecret('REDIS_PASSWORD', 16, errors);
+    assertStrongSecret('POSTGRES_PASSWORD', 24, errors);
+    assertStrongSecret('S3_SECRET_KEY', 24, errors);
+    assertStrongSecret('DEVICE_API_KEYS', 24, errors);
+
+    // Audit writes guard irreversible command dispatch and other security
+    // actions. Production must never silently downgrade either the caller
+    // failure signal or the required Postgres shadow copy.
+    assertProductionTrue('AUDIT_LOG_FAIL_CLOSED', errors);
+    assertProductionTrue('AUDIT_SHADOW_REQUIRED', errors);
+    if (!String(process.env.SHADOW_DATABASE_URL || '').trim()) {
+      errors.push('SHADOW_DATABASE_URL must be set when audit shadow writes are required in production.');
+    }
+    if (enterpriseRuntimeMode !== 'prod-enterprise') {
+      errors.push('ENTERPRISE_RUNTIME_MODE must be set to prod-enterprise in production.');
+    }
 
     if (hasGatewayRole() || appRole === 'all') {
       assertStrongSecret('DEVICE_COMMAND_SECRET', 24, errors);
@@ -117,19 +128,16 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
       }
     }
 
-    // WARNING-level checks: these fields use known default values but are not
-    // hard-blocked so that operators can still start the service and rotate
-    // secrets without a full outage.
-    assertWeakSecretWarning('POSTGRES_PASSWORD', warnings);
-    assertWeakSecretWarning('S3_SECRET_KEY', warnings);
-    assertWeakSecretWarning('DEVICE_API_KEYS', warnings);
-
     if (String(process.env.APP_MODE || '').trim().toLowerCase() === 'demo') {
       errors.push('APP_MODE=demo is not allowed in production.');
     }
 
     if (enterpriseRuntimeMode === 'prod-enterprise' && !oidcEnabled()) {
-      warnings.push('OIDC is not configured; only break-glass local login will be available in prod-enterprise mode.');
+      warnings.push(
+        allowPasswordLogin()
+          ? 'OIDC is not configured; explicitly enabled local password login is the only interactive login path.'
+          : 'OIDC is not configured and local password login is disabled; no interactive login path is available.'
+      );
     }
 
     if (String(process.env.ENABLE_DEV_LOGIN_PRESETS || '').trim().toLowerCase() === 'true') {
@@ -168,7 +176,7 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
   }
 
   if (isEnterpriseStrictMode() && String(process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN || '').trim().toLowerCase() !== 'true') {
-    warnings.push('prod-enterprise mode is active; local password login is restricted to break-glass accounts only.');
+    warnings.push('prod-enterprise mode is active; local password login is disabled for every role.');
   }
 
   if (errors.length > 0) {

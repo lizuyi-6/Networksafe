@@ -1,0 +1,206 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "2ec4b955-5188-40d4-9c7a-7d71d6160001")
+	(paper "A3")
+	(title_block
+		(title "AetherGuard Control Board v1")
+		(date "2026-03-21")
+		(rev "v1-schematic-baseline")
+		(comment 1 "Starter hierarchy and placement baseline")
+	)
+	(lib_symbols)
+	(sheet
+		(at 25.4 25.4)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6161001")
+		(property "Sheetname" "power-input"
+			(id 0)
+			(at 25.4 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/power-input.kicad_sch"
+			(id 1)
+			(at 25.4 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 25.4 68.58)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6161002")
+		(property "Sheetname" "mcu-usb-secure"
+			(id 0)
+			(at 25.4 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/mcu-usb-secure.kicad_sch"
+			(id 1)
+			(at 25.4 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 139.7 25.4)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6161003")
+		(property "Sheetname" "ui-panel"
+			(id 0)
+			(at 139.7 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/ui-panel.kicad_sch"
+			(id 1)
+			(at 139.7 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 139.7 68.58)
+		(size 101.6 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6161004")
+		(property "Sheetname" "isolated-io"
+			(id 0)
+			(at 139.7 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/isolated-io.kicad_sch"
+			(id 1)
+			(at 139.7 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "aetherguard-control-board-v1"
+				(path "/2ec4b955-5188-40d4-9c7a-7d71d6160001"
+					(page "5")
+				)
+			)
+		)
+	)
+	(text "Hierarchy root only. Cross-sheet connectivity is carried by global labels; child-sheet metadata is normalized and ERC-clean under KiCad 9.0.7."
+		(at 25.4 114.3 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "2ec4b955-5188-40d4-9c7a-7d71d6162001")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

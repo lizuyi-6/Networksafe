@@ -211,11 +211,11 @@ export function renderHealthcheckScript(profile: Record<string, any>): string {
   const port = resolvePort(profile);
   return `#!/usr/bin/env bash
 set -euo pipefail
-if ! curl -fsS "http://127.0.0.1:${port}/api/health" >/dev/null 2>&1; then
-  echo "healthcheck FAILED: /api/health not reachable on port ${port}"
+if ! curl -fsS "http://127.0.0.1:${port}/health/ready" >/dev/null 2>&1; then
+  echo "healthcheck FAILED: /health/ready not reachable on port ${port}"
   exit 1
 fi
-echo "healthcheck passed: /api/health reachable"
+echo "healthcheck passed: /health/ready reachable"
 `;
 }
 

@@ -22,7 +22,6 @@ jest.mock('../../utils/logger', () => ({
   }
 }));
 
-const METRIC_LABELS = ['method', 'route', 'status'];
 const COUNTER_NAME = 'http_requests_total';
 const HISTOGRAM_NAME = 'http_request_duration_ms';
 
@@ -106,11 +105,25 @@ describe('Metrics registry', () => {
 
     const output = metrics.render();
     // Look for the probe-mw route observations in the (shared) singleton.
-    const counterLine = findLine(output, `${COUNTER_NAME}{method="GET",route="/probe-mw",status="200"}`);
+    const counterLine = findLine(output, `${COUNTER_NAME}{method="GET",route="/probe-mw",scope="business",status="200"}`);
     expect(counterLine).not.toBeNull();
-    expect(counterLine).toMatch(/^http_requests_total\{method="GET",route="\/probe-mw",status="200"\} \d+$/);
-    const countLine = findLine(output, `${HISTOGRAM_NAME}_count{method="GET",route="/probe-mw",status="200"}`);
+    expect(counterLine).toMatch(/^http_requests_total\{method="GET",route="\/probe-mw",scope="business",status="200"\} \d+$/);
+    const countLine = findLine(output, `${HISTOGRAM_NAME}_count{method="GET",route="/probe-mw",scope="business",status="200"}`);
     expect(countLine).not.toBeNull();
+  });
+
+  it('exposes counter and histogram samples for read-only aggregation', () => {
+    m.incCounter(COUNTER_NAME, { status: '500', scope: 'business' }, 2);
+    m.observeHistogram(HISTOGRAM_NAME, 80, { status: '500', scope: 'business' });
+
+    const counters = m.getCounterSamples(COUNTER_NAME);
+    const histograms = m.getHistogramSamples(HISTOGRAM_NAME);
+
+    expect(counters).toEqual([{ labels: { status: '500', scope: 'business' }, value: 2 }]);
+    expect(histograms[0].count).toBe(1);
+    expect(histograms[0].sum).toBe(80);
+    expect(histograms[0].max).toBe(80);
+    expect(histograms[0].buckets.get(100)).toBe(1);
   });
 
   it('default export is a singleton Metrics instance', () => {

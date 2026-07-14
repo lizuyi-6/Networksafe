@@ -288,9 +288,9 @@ async function verifyLocalStack(manifest) {
     throw new Error(`Frontend is not reachable: ${manifest.frontendUrl} -> ${frontendResponse.status}`);
   }
 
-  const backendResponse = await fetch(`${manifest.backendUrl}/api/health`);
+  const backendResponse = await fetch(`${manifest.backendUrl}/health/ready`);
   if (!backendResponse.ok) {
-    throw new Error(`Backend healthcheck failed: ${manifest.backendUrl}/api/health -> ${backendResponse.status}`);
+    throw new Error(`Backend healthcheck failed: ${manifest.backendUrl}/health/ready -> ${backendResponse.status}`);
   }
 
   const payload = await backendResponse.json();

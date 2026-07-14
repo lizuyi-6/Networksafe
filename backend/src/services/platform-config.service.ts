@@ -47,6 +47,7 @@ export interface NotificationSettings {
 
 export interface AIRoutingSettings {
   mode: AIRoutingMode;
+  preferredModelId: string | null;
   localEndpointId: string | null;
   localHotPathEndpointId: string | null;
   cloudEndpointId: string | null;
@@ -225,6 +226,7 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   },
   aiRouting: {
     mode: 'local_only',
+    preferredModelId: null,
     localEndpointId: 'default-laptop',
     localHotPathEndpointId: null,
     cloudEndpointId: null,
@@ -432,10 +434,11 @@ export function normalizeRoutingMode(value: any, fallback: AIRoutingMode = 'clou
   return fallback;
 }
 
-export function normalizeAiRouting(raw: any): AIRoutingSettings {
-  const defaults = cloneDefaultConfig().aiRouting;
+export function normalizeAiRouting(raw: any, current?: AIRoutingSettings): AIRoutingSettings {
+  const defaults = current || cloneDefaultConfig().aiRouting;
   return {
     mode: normalizeRoutingMode(raw?.mode, defaults.mode),
+    preferredModelId: normalizeString(raw?.preferredModelId, defaults.preferredModelId || '') || null,
     localEndpointId: normalizeString(raw?.localEndpointId, defaults.localEndpointId || '') || null,
     localHotPathEndpointId: normalizeString(raw?.localHotPathEndpointId, defaults.localHotPathEndpointId || '') || null,
     cloudEndpointId: normalizeString(raw?.cloudEndpointId, defaults.cloudEndpointId || '') || null,
@@ -649,7 +652,7 @@ export function normalizePlatformConfig(raw: any, current?: PlatformConfig): Pla
       windowSeconds: normalizeNumber(raw?.rateLimit?.windowSeconds, base.rateLimit.windowSeconds, 1, 3600)
     },
     notifications: normalizeNotifications(raw?.notifications ?? base.notifications),
-    aiRouting: normalizeAiRouting(raw?.aiRouting ?? base.aiRouting),
+    aiRouting: normalizeAiRouting(raw?.aiRouting, base.aiRouting),
     privacyMode: normalizePrivacyMode(raw?.privacyMode, base.privacyMode),
     auditArchive: normalizeAuditArchive(raw?.auditArchive ?? base.auditArchive),
     fastpath: normalizeFastpath(raw?.fastpath ?? base.fastpath),

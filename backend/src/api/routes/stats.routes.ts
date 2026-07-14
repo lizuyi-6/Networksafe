@@ -1,32 +1,36 @@
 /**
  * Stats Routes - Dashboard statistics
- * Public endpoints (no auth required for read-only dashboard data)
+ * Authenticated, tenant-scoped dashboard statistics.
  */
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { sendSuccess, sendError } from '../../core/http/api-response';
+import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';
 import { getTrafficStats } from '../../services/traffic-stats.service';
-import { getAgentGateway, getAgentSystem } from '../../services/agent-system.service';
+import { getAgentGateway } from '../../services/agent-system.service';
 import { getAlerts } from '../../services/alert-state.service';
 import { getDeviceList } from '../../services/device-registry.service';
 import { SystemStats } from '../../utils/system-stats';
 import { securityOperationsService } from '../../services/security-operations.service';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
 import { getTrafficHistory, normalizeRange } from '../../services/traffic-history.service';
+import metrics, { HistogramSample } from '../../observability/metrics';
+import { getApiBlockedCount, getCachedAttackOrigins } from '../../services/api-request-tracker.service';
 
 const router = Router();
+router.use((req: AuthenticatedRequest, res, next) => {
+    if (req.user) {
+        next();
+        return;
+    }
+    void authenticate(req, res, next);
+});
 
 // Rolling history: keep last 20 data points (sampled on each request)
 interface HistoryPoint {
     time: string;
     requests: number;
     blocked: number;
-}
-
-interface AttackOrigin {
-    country: string;
-    countryCode: string;
-    count: number;
-    percentage: number;
 }
 
 const historyBuffer: HistoryPoint[] = [];
@@ -54,8 +58,7 @@ function sampleHistory(total: number, blocked: number): void {
     lastSampleTime = now;
 }
 
-// Cache ops summary to avoid slow AI calls on every request
-let cachedOpsSummary: any = {
+const emptyOpsSummary = {
     openCriticalFindings: 0,
     highRiskFindings: 0,
     activeAlerts: 0,
@@ -70,82 +73,121 @@ let cachedOpsSummary: any = {
     recentValidations: []
 };
 
-// Cache alerts to avoid slow DB/AI calls on every stats request
-// Initialize with empty array - will be populated by background refresh
-let cachedAlerts: any[] = [];
-
-// Attack origins populated from real traffic
-let cachedAttackOrigins: AttackOrigin[] = [];
-
-// Background refresh (non-blocking, errors ignored)
-const refreshCache = async () => {
-    try {
-        cachedOpsSummary = await securityOperationsService.getDashboardSummaryView('global');
-    } catch {}
-    try {
-        cachedAlerts = await getAlerts('global');
-    } catch {}
-};
-
-// Start background refresh after 5 seconds (allow server to start first)
-setTimeout(() => {
-    refreshCache();
-    setInterval(refreshCache, 30_000);
-}, 5_000);
-
-// Track incoming API requests for traffic stats
-let apiRequestCount = 0;
-let apiBlockedCount = 0;
-
-export function recordApiRequest(blocked: boolean = false, sourceIP?: string): void {
-    apiRequestCount++;
-    if (blocked) apiBlockedCount++;
-    const ts = getTrafficStats();
-    ts.packetsProcessed = apiRequestCount;
-    ts.packetsBlocked = apiBlockedCount;
-    ts.packetsAllowed = apiRequestCount - apiBlockedCount;
-
-    // Track blocked request origins by source IP
-    if (blocked && sourceIP) {
-        const existing = cachedAttackOrigins.find(o => o.country === sourceIP);
-        if (existing) {
-            existing.count++;
-        } else {
-            cachedAttackOrigins.push({ country: sourceIP, countryCode: 'Unknown', count: 1, percentage: 0 });
-        }
-        // Recalculate percentages
-        const total = cachedAttackOrigins.reduce((s, o) => s + o.count, 0);
-        for (const o of cachedAttackOrigins) {
-            o.percentage = total > 0 ? (o.count / total) * 100 : 0;
-        }
-    }
+interface TenantStatsCache {
+    opsSummary: any;
+    alerts: any[];
+    updatedAt: number;
 }
 
-// GET /stats - public dashboard endpoint
-router.get('/', async (req: any, res: any) => {
+const tenantStatsCache = new Map<string, TenantStatsCache>();
+const TENANT_CACHE_TTL_MS = 30_000;
+
+async function loadTenantCache(tenantId: string): Promise<TenantStatsCache> {
+    const cached = tenantStatsCache.get(tenantId);
+    if (cached && Date.now() - cached.updatedAt < TENANT_CACHE_TTL_MS) {
+        return cached;
+    }
+
+    const [opsSummary, alerts] = await Promise.all([
+        Promise.resolve(securityOperationsService.getDashboardSummaryView(tenantId))
+            .catch(() => cached?.opsSummary || emptyOpsSummary),
+        Promise.resolve(getAlerts(tenantId))
+            .catch(() => cached?.alerts || [])
+    ]);
+    const next = { opsSummary, alerts, updatedAt: Date.now() };
+    tenantStatsCache.set(tenantId, next);
+    return next;
+}
+
+function tenantOf(req: AuthenticatedRequest): string | null {
+    return resolveRequestTenantContext(req, { allowAdminPlatformFallback: true })?.tenantId || null;
+}
+
+interface HttpMetricsSummary {
+    total: number;
+    serverErrors: number;
+    avgLatencyMs: number;
+    p99LatencyMs: number;
+}
+
+function businessSamples<T extends { labels: Record<string, string> }>(samples: T[]): T[] {
+    return samples.filter((sample) => !sample.labels.scope || sample.labels.scope === 'business');
+}
+
+function approximateP99(samples: HistogramSample[]): number {
+    const count = samples.reduce((sum, sample) => sum + sample.count, 0);
+    if (count === 0) return 0;
+
+    const target = Math.ceil(count * 0.99);
+    const boundaries = Array.from(new Set(
+        samples.flatMap((sample) => Array.from(sample.buckets.keys()))
+    )).sort((a, b) => a - b);
+
+    for (const boundary of boundaries) {
+        const cumulative = samples.reduce(
+            (sum, sample) => sum + (sample.buckets.get(boundary) || 0),
+            0
+        );
+        if (cumulative >= target) return boundary;
+    }
+
+    return Math.ceil(Math.max(...samples.map((sample) => sample.max), 0));
+}
+
+function getHttpMetricsSummary(): HttpMetricsSummary {
+    const counters = businessSamples(metrics.getCounterSamples('http_requests_total'));
+    const histograms = businessSamples(metrics.getHistogramSamples('http_request_duration_ms'));
+    const total = counters.reduce((sum, sample) => sum + sample.value, 0);
+    const serverErrors = counters.reduce((sum, sample) => {
+        const status = Number(sample.labels.status);
+        return sum + (status >= 500 ? sample.value : 0);
+    }, 0);
+    const durationCount = histograms.reduce((sum, sample) => sum + sample.count, 0);
+    const durationSum = histograms.reduce((sum, sample) => sum + sample.sum, 0);
+
+    return {
+        total,
+        serverErrors,
+        avgLatencyMs: durationCount > 0 ? Math.round(durationSum / durationCount) : 0,
+        p99LatencyMs: approximateP99(histograms)
+    };
+}
+
+router.get('/', async (req: AuthenticatedRequest, res) => {
     try {
-        // Count this request
-        recordApiRequest(false);
+        const tenantId = tenantOf(req);
+        if (!tenantId) {
+            return sendError(res, 403, {
+                code: 'TENANT_CONTEXT_REQUIRED',
+                message: 'backend.tenant_context_required'
+            });
+        }
+        const tenantCache = await loadTenantCache(tenantId);
+        const isPlatformTenant = tenantId === PLATFORM_TENANT_ID;
 
         const ts = getTrafficStats();
+        const httpMetrics = getHttpMetricsSummary();
 
-        const total = ts.packetsProcessed;
-        const blocked = ts.packetsBlocked;
-        const allowed = ts.packetsAllowed;
+        const total = isPlatformTenant ? httpMetrics.total : 0;
+        const blocked = isPlatformTenant ? Math.min(getApiBlockedCount(), total) : 0;
 
-        // Update rolling history
-        sampleHistory(total, blocked);
+        if (isPlatformTenant) {
+            sampleHistory(total, blocked);
+        }
 
         // Dynamic Global Health Score calculation
         // Health reflects system's ability to handle traffic properly
         // Blocked attacks count as "successfully handled" (security working)
         // Penalized only by: unresolved alerts, offline devices, errors
-        const handledRequests = allowed + blocked; // All requests that got a response
-        let successRate = total > 0 ? Math.round((handledRequests / total) * 100) : 100;
+        let successRate = isPlatformTenant
+            ? (total > 0 ? Math.round(((total - httpMetrics.serverErrors) / total) * 100) : 0)
+            : 0;
 
         // Use cached alerts (no AI/DB call on every request)
-        const alerts = cachedAlerts.filter((a: any) => a.status !== 'resolved' && a.status !== 'suppressed');
-        const devices = getDeviceList();
+        const alerts = tenantCache.alerts.filter((a: any) => a.status !== 'resolved' && a.status !== 'suppressed');
+        // The in-memory device registry is platform-scoped and has no tenant key.
+        // Do not expose it to tenant sessions until the registry itself is tenant-aware.
+        const devices = isPlatformTenant ? getDeviceList() : [];
 
         const offlineDevices = devices.filter((d: any) => !d.isOnline).length;
         const totalDevices = devices.length;
@@ -158,16 +200,13 @@ router.get('/', async (req: any, res: any) => {
             successRate = Math.max(0, Math.round(successRate - deviceHealthImpact));
         }
 
-        // Average processing time estimate (ms)
-        const avgProcessingTime = total > 0
-            ? Math.max(1, Math.floor(ts.bytesProcessed / total / 100))
-            : 0;
+        const avgProcessingTime = isPlatformTenant ? httpMetrics.avgLatencyMs : 0;
 
-        const threatEntries = Array.from(ts.threats.values());
+        const threatEntries = isPlatformTenant ? Array.from(ts.threats.values()) : [];
 
         let requestsTrend = 0;
         let blockedTrend = 0;
-        if (historyBuffer.length >= 2) {
+        if (isPlatformTenant && historyBuffer.length >= 2) {
             const older = historyBuffer.slice(0, Math.floor(historyBuffer.length / 2));
             const newer = historyBuffer.slice(Math.floor(historyBuffer.length / 2));
             const oldReq = older.reduce((a, b) => a + b.requests, 0) || 1;
@@ -178,41 +217,43 @@ router.get('/', async (req: any, res: any) => {
             blockedTrend = parseFloat((((newBlk - oldBlk) / oldBlk) * 100).toFixed(1));
         }
 
-        const cpuOverhead = ts.activeFlows.length > 0 ? (ts.activeFlows.length * 0.5) : 0;
-        const p99Latency = Math.round(Math.max(avgProcessingTime * 1.5, avgProcessingTime + cpuOverhead + Math.random() * 5));
+        const p99Latency = isPlatformTenant ? httpMetrics.p99LatencyMs : 0;
 
         const sys = SystemStats.getInstance();
-        const detectionPipeline = await detectionPipelineService.getSummary('global').catch(() => null);
+        const detectionPipeline = await detectionPipelineService.getSummary(tenantId).catch(() => null);
 
         // Real fixed-interval history for the requested window (persisted samples,
         // bucketed uniformly). Falls back to the in-process ring only while no
         // persisted samples exist yet (fresh DB / first minutes after boot), so an
         // existing dashboard never renders empty during warm-up.
         const range = normalizeRange(req.query.range);
-        const persistedHistory = getTrafficHistory(range);
-        const history = persistedHistory.some((b) => b.requests > 0 || b.blocked > 0)
-            ? persistedHistory
-            : historyBuffer;
+        const persistedHistory = isPlatformTenant ? getTrafficHistory(range) : [];
+        const history = isPlatformTenant
+            ? (persistedHistory.some((b) => b.requests > 0 || b.blocked > 0) ? persistedHistory : historyBuffer)
+            : [];
 
         sendSuccess(res, {
+            telemetryAvailable: isPlatformTenant,
             totalRequests: total,
             blockedRequests: blocked,
-            activeConnections: ts.activeFlows.filter((f: any) => f.state === 'ESTABLISHED').length,
+            activeConnections: isPlatformTenant
+                ? ts.activeFlows.filter((f: any) => f.state === 'ESTABLISHED').length
+                : 0,
             successRate,
             avgProcessingTime,
             currentRPS: 0,
             range,
             history,
-            attackOrigins: cachedAttackOrigins,
+            attackOrigins: isPlatformTenant ? getCachedAttackOrigins() : [],
             threats: threatEntries,
             requestsTrend,
             blockedTrend,
             p99Latency,
-            cpuUsage: sys.cpuUsage,
-            memoryUsage: sys.memoryUsage,
-            diskUsage: sys.diskUsage,
-            networkUsage: sys.networkUsageMb,
-            securityOperations: cachedOpsSummary,
+            cpuUsage: isPlatformTenant ? sys.cpuUsage : 0,
+            memoryUsage: isPlatformTenant ? sys.memoryUsage : 0,
+            diskUsage: isPlatformTenant ? sys.diskUsage : 0,
+            networkUsage: isPlatformTenant ? sys.networkUsageMb : 0,
+            securityOperations: tenantCache.opsSummary,
             detectionPipeline
         });
     } catch (err: any) {
@@ -220,19 +261,29 @@ router.get('/', async (req: any, res: any) => {
     }
 });
 
-// GET /stats/badges - public dashboard badges
-router.get('/badges', async (req: any, res: any) => {
+router.get('/badges', async (req: AuthenticatedRequest, res) => {
     try {
-        const activeAlertsCount = cachedAlerts.filter((a: any) => a.status !== 'resolved' && a.status !== 'suppressed').length;
+        const tenantId = tenantOf(req);
+        if (!tenantId) {
+            return sendError(res, 403, {
+                code: 'TENANT_CONTEXT_REQUIRED',
+                message: 'backend.tenant_context_required'
+            });
+        }
+        const tenantCache = await loadTenantCache(tenantId);
+        const isPlatformTenant = tenantId === PLATFORM_TENANT_ID;
+        const activeAlertsCount = tenantCache.alerts.filter((a: any) => a.status !== 'resolved' && a.status !== 'suppressed').length;
 
-        const devices = getDeviceList();
+        const devices = isPlatformTenant ? getDeviceList() : [];
         const onlineDevicesCount = devices.filter((d: any) => d.isOnline).length;
 
         // Get agents from gateway only (no AI calls)
         const runtimeAgents = getAgentGateway()?.getAgentList?.() || [];
-        const agentsCount = runtimeAgents.filter((agent: any) => agent.isOnline).length;
+        const agentsCount = runtimeAgents.filter((agent: any) =>
+            agent.isOnline && (isPlatformTenant || agent.tenantId === tenantId)
+        ).length;
 
-        const summary = cachedOpsSummary;
+        const summary = tenantCache.opsSummary;
 
         sendSuccess(res, {
             alerts: activeAlertsCount,

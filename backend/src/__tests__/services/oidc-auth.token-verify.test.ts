@@ -302,6 +302,7 @@ describe('OidcAuthService id_token verification (V9.11/V9.13)', () => {
       iss: ISSUER,
       aud: CLIENT_ID,
       exp: now + 300,
+      iat: now,
       // Token claims a different nonce than the one we stored
       nonce: 'attacker-supplied-nonce'
     };
@@ -315,12 +316,14 @@ describe('OidcAuthService id_token verification (V9.11/V9.13)', () => {
 
   it('rejects expired id_token (exp in the past beyond the 5s clock skew)', async () => {
     const { state, nonce } = oidcAuthService.buildStateAndNonce();
-    const pastExp = Math.floor(Date.now() / 1000) - 3600;
+    const now = Math.floor(Date.now() / 1000);
+    const pastExp = now - 3600;
     const claims = {
       sub: 'user-1',
       iss: ISSUER,
       aud: CLIENT_ID,
       exp: pastExp,
+      iat: now - 7200,
       nonce
     };
     const token = makeJwt({ claims, privateKey: key.privateKey });
@@ -328,6 +331,44 @@ describe('OidcAuthService id_token verification (V9.11/V9.13)', () => {
     const result = await oidcAuthService.verifyIdToken(token, state);
     expect(result.valid).toBe(false);
     expect(result.reason).toBe('expired');
+  });
+
+  it('rejects id_token whose nbf is in the future beyond the 5s clock skew', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const { token, state } = makeSignedToken({ nbf: now + 3600 });
+
+    const result = await oidcAuthService.verifyIdToken(token, state);
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe('not_yet_valid');
+  });
+
+  it('rejects id_token that omits the required exp claim', async () => {
+    const { token, state } = makeSignedToken({ exp: undefined });
+
+    const result = await oidcAuthService.verifyIdToken(token, state);
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe('invalid_exp');
+  });
+
+  it('rejects id_token that omits the required iat claim', async () => {
+    const { token, state } = makeSignedToken({ iat: undefined });
+
+    const result = await oidcAuthService.verifyIdToken(token, state);
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe('invalid_iat');
+  });
+
+  it.each([
+    ['exp encoded as a string', { exp: String(Math.floor(Date.now() / 1000) + 300) }, 'invalid_exp'],
+    ['exp encoded as a fractional number', { exp: Math.floor(Date.now() / 1000) + 300.5 }, 'invalid_exp'],
+    ['iat encoded as a string', { iat: String(Math.floor(Date.now() / 1000)) }, 'invalid_iat'],
+    ['iat encoded as a fractional number', { iat: Math.floor(Date.now() / 1000) + 0.5 }, 'invalid_iat']
+  ])('rejects id_token with %s', async (_label, overrides, expectedReason) => {
+    const { token, state } = makeSignedToken(overrides);
+
+    const result = await oidcAuthService.verifyIdToken(token, state);
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe(expectedReason);
   });
 
   it('rejects id_token when the state has no nonce entry (replay of /callback with stale state)', async () => {

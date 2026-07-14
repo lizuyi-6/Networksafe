@@ -687,6 +687,7 @@ class RuntimeEmulatorService {
       }
       this.agentGateway.broadcastToDashboards('agent:command:ack', {
         agentId: agent.agentId,
+        tenantId: this.tenantId,
         command: command.type,
         payload: command.payload,
         operator: command.userId || 'system',
@@ -695,6 +696,7 @@ class RuntimeEmulatorService {
       });
       this.agentGateway.broadcastToDashboards('agent:log', {
         agentId: agent.agentId,
+        tenantId: this.tenantId,
         level: 'info',
         message: `Synthetic runtime accepted ${command.type} command.`,
         synthetic: true,

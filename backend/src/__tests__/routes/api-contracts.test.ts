@@ -5,6 +5,7 @@ import dashboardRouter from '../../api/routes/dashboard.routes';
 import agentsRouter, { setAgentGateway } from '../../api/routes/agents.routes';
 import devicesRouter, { registerDevice } from '../../api/routes/devices.routes';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
+import { securityOperationsService } from '../../services/security-operations.service';
 
 jest.mock('../../middleware/auth.middleware', () => ({
   authenticate: jest.fn((req: any, _res: any, next: any) => {
@@ -160,7 +161,24 @@ describe('console API contract shape', () => {
     expect(response.body.data).toHaveProperty('totalRequests');
     expect(response.body.data).toHaveProperty('history');
     expect(response.body.data).not.toHaveProperty('success');
+    expect(response.body.data.totalRequests).toBe(0);
+    expect(response.body.data.activeConnections).toBe(0);
+    expect(response.body.data.successRate).toBe(0);
+    expect(response.body.data.telemetryAvailable).toBe(false);
+    expect(response.body.data.cpuUsage).toBe(0);
+    expect(response.body.data.attackOrigins).toEqual([]);
+    expect(securityOperationsService.getDashboardSummaryView).toHaveBeenCalledWith('tenant-contract');
+    expect(detectionPipelineService.getSummary).toHaveBeenCalledWith('tenant-contract');
     assertNoSensitiveFields(response.body);
+  });
+
+  it('does not expose platform device or agent counts in tenant badges', async () => {
+    const response = await request(statsApp).get('/api/stats/badges');
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.devices).toBe(0);
+    expect(response.body.data.agents).toBe(0);
   });
 
   it('keeps dashboard rules summary in the API envelope', async () => {

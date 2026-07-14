@@ -88,9 +88,10 @@ const Scanner = () => {
     const [error, setError] = useState<string | null>(null);
     const [logs, setLogs] = useState<string[]>([]);
     const [urls, setUrls] = useState('');
-    const [includeSystem, setIncludeSystem] = useState(true);
-    const [includeWeb, setIncludeWeb] = useState(true);
-    const [includePorts, setIncludePorts] = useState(true);
+    const [includeLocalHost, setIncludeLocalHost] = useState(false);
+    const [includeSystem, setIncludeSystem] = useState(false);
+    const [includeWeb, setIncludeWeb] = useState(false);
+    const [includePorts, setIncludePorts] = useState(false);
     const [history, setHistory] = useState<ScanHistoryItem[]>([]);
     const [findings, setFindings] = useState<SecurityFinding[]>([]);
     const [assetGroups, setAssetGroups] = useState<ScanAssetGroup[]>([]);
@@ -126,8 +127,9 @@ const Scanner = () => {
         try {
             const rows = await fetchScanHistory(20);
             setHistory(rows || []);
-        } catch {
+        } catch (historyError: any) {
             setHistory([]);
+            setError(historyError?.message || 'FG-SCANNER-HISTORY');
         }
     };
 
@@ -285,9 +287,9 @@ const Scanner = () => {
                     urls: urlList,
                     host: {
                         mode: 'local',
-                        includeSystem,
-                        includeWeb,
-                        includePorts
+                        includeSystem: includeLocalHost && includeSystem,
+                        includeWeb: includeLocalHost && includeWeb,
+                        includePorts: includeLocalHost && includePorts
                     }
                 }
             });
@@ -379,15 +381,32 @@ const Scanner = () => {
                             <div className="space-y-2">
                                 <div className="text-xs text-muted-foreground">{t('scanner.local_scope')}</div>
                                 <label className="flex items-center gap-2 text-sm text-foreground">
-                                    <input data-testid="scanner-include-system" type="checkbox" checked={includeSystem} onChange={(event) => setIncludeSystem(event.target.checked)} />
+                                    <input
+                                        data-testid="scanner-include-local-host"
+                                        type="checkbox"
+                                        checked={includeLocalHost}
+                                        onChange={(event) => {
+                                            const enabled = event.target.checked;
+                                            setIncludeLocalHost(enabled);
+                                            if (!enabled) {
+                                                setIncludeSystem(false);
+                                                setIncludeWeb(false);
+                                                setIncludePorts(false);
+                                            }
+                                        }}
+                                    />
+                                    {t('scanner.include_local_host')}
+                                </label>
+                                <label className="flex items-center gap-2 pl-6 text-sm text-foreground">
+                                    <input data-testid="scanner-include-system" type="checkbox" checked={includeSystem} disabled={!includeLocalHost} onChange={(event) => setIncludeSystem(event.target.checked)} />
                                     {t('scanner.baseline')}
                                 </label>
-                                <label className="flex items-center gap-2 text-sm text-foreground">
-                                    <input data-testid="scanner-include-web" type="checkbox" checked={includeWeb} onChange={(event) => setIncludeWeb(event.target.checked)} />
+                                <label className="flex items-center gap-2 pl-6 text-sm text-foreground">
+                                    <input data-testid="scanner-include-web" type="checkbox" checked={includeWeb} disabled={!includeLocalHost} onChange={(event) => setIncludeWeb(event.target.checked)} />
                                     {t('scanner.web_fingerprint')}
                                 </label>
-                                <label className="flex items-center gap-2 text-sm text-foreground">
-                                    <input data-testid="scanner-include-ports" type="checkbox" checked={includePorts} onChange={(event) => setIncludePorts(event.target.checked)} />
+                                <label className="flex items-center gap-2 pl-6 text-sm text-foreground">
+                                    <input data-testid="scanner-include-ports" type="checkbox" checked={includePorts} disabled={!includeLocalHost} onChange={(event) => setIncludePorts(event.target.checked)} />
                                     {t('scanner.port_scan')}
                                 </label>
                             </div>

@@ -401,6 +401,12 @@ describe('OidcAuthService isConfigured', () => {
     process.env.OIDC_ISSUER = 'http://insecure-idp.example.test';
     expect(oidcAuthService.isConfigured()).toBe(true);
   });
+
+  it('rejects non-http OIDC endpoint schemes', () => {
+    setOidcEnv();
+    process.env.OIDC_AUTHORIZATION_ENDPOINT = 'javascript:alert(1)';
+    expect(oidcAuthService.isConfigured()).toBe(false);
+  });
 });
 
 describe('OidcAuthService buildAuthorizationUrl', () => {
@@ -437,6 +443,58 @@ describe('OidcAuthService buildAuthorizationUrl', () => {
     const parsed = new URL(url);
 
     expect(parsed.searchParams.get('scope')).toBe('openid profile email phone');
+  });
+});
+
+describe('OidcAuthService logout helpers', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    resetServiceState();
+    setOidcEnv();
+    process.env.OIDC_END_SESSION_ENDPOINT = `${ISSUER}/logout`;
+    process.env.OIDC_POST_LOGOUT_REDIRECT_URI = 'https://app.example.test/login';
+    process.env.OIDC_TOKEN_REVOCATION_ENDPOINT = `${ISSUER}/revoke`;
+  });
+
+  afterEach(() => {
+    global.fetch = ORIGINAL_FETCH;
+    delete process.env.OIDC_END_SESSION_ENDPOINT;
+    delete process.env.OIDC_POST_LOGOUT_REDIRECT_URI;
+    delete process.env.OIDC_TOKEN_REVOCATION_ENDPOINT;
+  });
+
+  it('builds an IdP end-session URL from trusted configuration only', () => {
+    const url = oidcAuthService.buildEndSessionUrl();
+    expect(url).not.toBeNull();
+
+    const parsed = new URL(url!);
+    expect(parsed.origin).toBe(ISSUER);
+    expect(parsed.pathname).toBe('/logout');
+    expect(parsed.searchParams.get('client_id')).toBe(CLIENT_ID);
+    expect(parsed.searchParams.get('post_logout_redirect_uri'))
+      .toBe('https://app.example.test/login');
+  });
+
+  it('returns null when the configured end-session endpoint is unsafe', () => {
+    process.env.OIDC_END_SESSION_ENDPOINT = 'javascript:alert(1)';
+    expect(oidcAuthService.buildEndSessionUrl()).toBeNull();
+  });
+
+  it('revokes the short-lived access token after userinfo use', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 }) as any;
+
+    await oidcAuthService.revokeToken('oidc-access-token');
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${ISSUER}/revoke`,
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.any(URLSearchParams)
+      })
+    );
+    const options = (global.fetch as jest.Mock).mock.calls[0][1];
+    expect(options.body.get('token')).toBe('oidc-access-token');
+    expect(options.body.get('token_type_hint')).toBe('access_token');
   });
 });
 

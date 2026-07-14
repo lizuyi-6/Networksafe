@@ -28,9 +28,10 @@ export function metricsMiddleware(req: Request, res: Response, next: NextFunctio
       const method = req.method || 'UNKNOWN';
       const status = String(res.statusCode || 0);
       const route = resolveRouteLabel(req);
+      const scope = resolveRequestScope(req, res.statusCode || 0);
 
-      metrics.incCounter(METRIC_REQUESTS, { method, route, status });
-      metrics.observeHistogram(METRIC_DURATION, durationMs, { method, route, status });
+      metrics.incCounter(METRIC_REQUESTS, { method, route, scope, status });
+      metrics.observeHistogram(METRIC_DURATION, durationMs, { method, route, scope, status });
     } catch {
       // Metrics are best-effort; never throw from the finish hook.
     }
@@ -40,6 +41,21 @@ export function metricsMiddleware(req: Request, res: Response, next: NextFunctio
   // (it is reserved for future synchronous instrumentation).
   void start;
   next();
+}
+
+function resolveRequestScope(
+  req: Request,
+  statusCode: number
+): 'business' | 'dashboard_poll' | 'operational_probe' {
+  const requestPath = String(req.originalUrl || req.url || '').split('?')[0];
+  const isSuccessfulStatsPoll = /^\/api\/stats(?:\/|$)/.test(requestPath)
+    && statusCode >= 200
+    && statusCode < 400;
+  if (isSuccessfulStatsPoll) return 'dashboard_poll';
+
+  const isOperationalProbe = /^\/(?:api\/)?health(?:\/|$)/.test(requestPath)
+    || requestPath === '/metrics';
+  return isOperationalProbe ? 'operational_probe' : 'business';
 }
 
 function resolveRouteLabel(req: Request): string {

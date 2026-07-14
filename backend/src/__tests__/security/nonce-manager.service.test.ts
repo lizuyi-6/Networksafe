@@ -15,6 +15,20 @@ describe('NonceManager (memory fallback)', () => {
 
     afterEach(async () => {
         await manager.clearAll();
+        manager.close();
+    });
+
+    it('does not keep the process alive with its cleanup timer', () => {
+        expect((manager as any).cleanupTimer.hasRef()).toBe(false);
+    });
+
+    it('releases its cleanup timer when closed', () => {
+        const timer = (manager as any).cleanupTimer;
+
+        manager.close();
+
+        expect(timer).toBeDefined();
+        expect((manager as any).cleanupTimer).toBeNull();
     });
 
     it('accepts a fresh nonce and rejects the same nonce as a replay', async () => {

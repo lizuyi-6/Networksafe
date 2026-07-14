@@ -7,6 +7,8 @@
         "dev": "vite",
         "build": "tsc && vite build",
         "typecheck": "tsc --noEmit",
+        "test:credential-hygiene": "node scripts/test-no-bundled-credentials.mjs",
+        "test:i18n": "node scripts/test-i18n-contract.mjs",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview"
     },

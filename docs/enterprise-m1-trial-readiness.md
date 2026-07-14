@@ -29,7 +29,7 @@ Enterprise production uses:
 - `SERIAL_HELPER_SHARED_SECRET` or `DEVICE_COMMAND_SECRET`
 - OIDC configured for normal login
 
-Local password login is reserved for break-glass roles.
+Local password login is denied for every role by default. Operators must explicitly set `ALLOW_BREAK_GLASS_PASSWORD_LOGIN=true` before the runtime reports or accepts local password login; otherwise an enterprise OIDC path is required.
 
 ## Evidence Pack Contents
 

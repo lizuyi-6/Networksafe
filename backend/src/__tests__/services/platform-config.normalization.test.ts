@@ -383,20 +383,44 @@ describe('normalizeAiRouting', () => {
   it('returns defaults when input is empty', () => {
     const result = normalizeAiRouting({});
     expect(result.mode).toBe('local_only');
+    expect(result.preferredModelId).toBeNull();
     expect(result.fallbackAllowed).toBe(false);
   });
 
   it('normalizes all fields', () => {
     const result = normalizeAiRouting({
       mode: 'cloud_only',
+      preferredModelId: 'glm-5',
       localEndpointId: 'local-1',
       cloudEndpointId: 'cloud-1',
       fallbackAllowed: false,
     });
     expect(result.mode).toBe('cloud_only');
+    expect(result.preferredModelId).toBe('glm-5');
     expect(result.localEndpointId).toBe('local-1');
     expect(result.cloudEndpointId).toBe('cloud-1');
     expect(result.fallbackAllowed).toBe(false);
+  });
+
+  it('preserves existing routing fields when only the preferred model changes', () => {
+    const current = normalizeAiRouting({
+      mode: 'hybrid_verify',
+      localEndpointId: 'local-existing',
+      localHotPathEndpointId: 'hot-existing',
+      cloudEndpointId: 'cloud-existing',
+      fallbackAllowed: true,
+      redactionEnabled: false,
+    });
+
+    const result = normalizeAiRouting({ preferredModelId: 'glm-5' }, current);
+
+    expect(result.preferredModelId).toBe('glm-5');
+    expect(result.mode).toBe('hybrid_verify');
+    expect(result.localEndpointId).toBe('local-existing');
+    expect(result.localHotPathEndpointId).toBe('hot-existing');
+    expect(result.cloudEndpointId).toBe('cloud-existing');
+    expect(result.fallbackAllowed).toBe(true);
+    expect(result.redactionEnabled).toBe(false);
   });
 });
 

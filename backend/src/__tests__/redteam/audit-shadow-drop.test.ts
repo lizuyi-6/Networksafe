@@ -28,6 +28,7 @@
  */
 
 import {
+  flushPendingAuditShadowWrites,
   getAuditShadowWriteMetrics,
   resetAuditShadowWriteMetrics
 } from '../../security/audit-logger.service';
@@ -79,7 +80,8 @@ const REAL_ENV_AUDIT_FAIL_CLOSED = process.env.AUDIT_LOG_FAIL_CLOSED;
 describe('REDTEAM audit shadow-write silent drop', () => {
   let db: FakeDb;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await flushPendingAuditShadowWrites();
     // Must use resetAllMocks to clear mock implementations/returnValues,
     // not just call history. clearAllMocks leaves mockReturnValue intact.
     jest.resetAllMocks();
@@ -124,6 +126,7 @@ describe('REDTEAM audit shadow-write silent drop', () => {
       details: { target: 'server-1' },
       status: 'success'
     });
+    await flushPendingAuditShadowWrites();
 
     // Function returned the id (did not throw)
     expect(eventId).toBeTruthy();
@@ -191,6 +194,7 @@ describe('REDTEAM audit shadow-write silent drop', () => {
       details: { target: 'server-3' },
       status: 'success'
     });
+    await flushPendingAuditShadowWrites();
 
     expect(eventId).toBeTruthy();
     expect(db.prepare).toHaveBeenCalled();
@@ -249,6 +253,7 @@ describe('REDTEAM audit shadow-write silent drop', () => {
       details: { ip: '203.0.113.99' },
       status: 'success'
     });
+    await flushPendingAuditShadowWrites();
 
     expect(eventId).toBeTruthy();
     expect(db.prepare).toHaveBeenCalled();
@@ -265,10 +270,8 @@ describe('REDTEAM audit shadow-write silent drop', () => {
   it('commits local SQLite row when upsert() sets lastError (AUDIT_LOG_FAIL_CLOSED=true) and re-throws', async () => {
     process.env.AUDIT_LOG_FAIL_CLOSED = 'true';
     mockCanServeReads.mockReturnValue(false);
-    // Make upsert itself throw — this avoids reliance on describe().lastError
-    // and directly exercises the inner catch re-throw path.
-    mockUpsert.mockRejectedValue(new Error('shadow network error'));
-    mockDescribe.mockReturnValue({ lastError: null });
+    mockUpsert.mockResolvedValue(undefined);
+    mockDescribe.mockReturnValue({ lastError: 'replication lag exceeded' });
 
     await expect(
       auditLogger.log({
@@ -280,7 +283,7 @@ describe('REDTEAM audit shadow-write silent drop', () => {
         details: { ip: '203.0.113.100' },
         status: 'success'
       })
-    ).rejects.toThrow('shadow network error');
+    ).rejects.toThrow('replication lag exceeded');
 
     expect(db.prepare).toHaveBeenCalled();
     const sqliteCall = db.prepare.mock.calls.find(
@@ -288,9 +291,8 @@ describe('REDTEAM audit shadow-write silent drop', () => {
     );
     expect(sqliteCall).toBeDefined();
 
-    // upsert threw in the inner try block. Inner catch incremented failures once
-    // (caught the throw), then threw ShadowFailure. No outer try/catch so
-    // ShadowFailure propagated. Only 1 failure increment.
+    // The shadow service reports write failures through describe().lastError.
+    // Fail-closed mode must surface that state after the local row is committed.
     const metrics = getAuditShadowWriteMetrics();
     expect(metrics.failures).toBe(1);
     expect(metrics.successes).toBe(0);
@@ -314,6 +316,7 @@ describe('REDTEAM audit shadow-write silent drop', () => {
       details: {},
       status: 'success'
     });
+    await flushPendingAuditShadowWrites();
 
     expect(eventId).toBeTruthy();
     const metrics = getAuditShadowWriteMetrics();

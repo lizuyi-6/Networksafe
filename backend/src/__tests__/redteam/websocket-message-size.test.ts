@@ -104,8 +104,7 @@ describe('AgentGateway maxHttpBufferSize enforcement', () => {
 
     afterAll(async () => {
         clientSocket?.disconnect();
-        agentGateway.close();
-        await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+        await agentGateway.close();
     });
 
     it('should reject a 1 MB payload on agent:register', (done) => {

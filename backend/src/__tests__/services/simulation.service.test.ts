@@ -109,6 +109,7 @@ describe('SimulationService', () => {
   describe('start/stop', () => {
     it('should start the service without error', () => {
       expect(() => SimulationService.start()).not.toThrow();
+      expect((SimulationService as any).interval.hasRef()).toBe(false);
     });
 
     it('should stop the service without error', () => {

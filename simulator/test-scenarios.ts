@@ -29,7 +29,7 @@ function buildSignedGrant(
   overrides: Partial<HardwareGrantEnvelope> = {}
 ): HardwareGrantEnvelope {
   const grant: Omit<HardwareGrantEnvelope, 'signature'> = {
-    gateId: 'gate-scn',
+    gateId: 'gw-scn-001',
     sessionId: 'sess-' + Date.now() + '-' + counter,
     actionId: 'act-' + Date.now() + '-' + counter,
     tenantId: 'tenant-scn',
@@ -68,6 +68,7 @@ function buildHarness(opts: { heartbeatStaleMs?: number; controllerHeartbeatMs?:
     gatewayId: 'gw-scn-001',
     secureElementPublicKeyPem: se.getPublicKeyPem(),
     breakerTarget: 'server-lan-bridge',
+    policyDigest: 'policy-digest-baseline-v1',
     heartbeatStaleMs: opts.heartbeatStaleMs ?? 45_000,
     releaseTtlMs: 30_000,
     onFrame: (frame: DaemonFrame) => {
@@ -119,8 +120,8 @@ async function scenarioCounterRollback(): Promise<boolean> {
   const h = buildHarness();
   const counter = h.se.incrementMonotonicCounter();
   const first = buildSignedGrant(h.se, counter);
-  const firstResult = h.controller.handleReleaseRequest(first);
-  const firstDaemon = firstResult === 'released' ? h.daemon.requestRelease(first) : false;
+  const firstDaemon = h.daemon.requestRelease(first);
+  const firstResult = firstDaemon ? h.controller.handleReleaseRequest(first) : 'denied';
 
   // Same counter again (replay / rollback), fresh challenge + valid signature.
   const rollback = buildSignedGrant(h.se, counter);
@@ -156,9 +157,12 @@ async function scenarioEstop(): Promise<boolean> {
   const h = buildHarness();
   const counter = h.se.incrementMonotonicCounter();
   const grant = buildSignedGrant(h.se, counter);
-  const released = h.controller.handleReleaseRequest(grant) === 'released' && h.daemon.requestRelease(grant);
+  const daemonAccepted = h.daemon.requestRelease(grant);
+  const controllerReleased = daemonAccepted && h.controller.handleReleaseRequest(grant) === 'released';
+  const released = controllerReleased && h.daemon.isReleased();
 
   h.controller.handleEstop();
+  const isolatedAfterEstop = h.daemon.getBridgeState() === 'isolated' && !h.daemon.isReleased();
 
   // A fully valid fresh grant must be denied while the e-stop latch holds.
   const duringLatch = buildSignedGrant(h.se, h.se.incrementMonotonicCounter());
@@ -167,14 +171,18 @@ async function scenarioEstop(): Promise<boolean> {
   // Explicit reset returns to isolated; only a fresh grant may release again.
   h.controller.clearEstop();
   const afterClear = buildSignedGrant(h.se, h.se.incrementMonotonicCounter());
-  const afterClearVerdict = h.controller.handleReleaseRequest(afterClear);
+  const afterClearDaemon = h.daemon.requestRelease(afterClear);
+  const afterClearVerdict = afterClearDaemon ? h.controller.handleReleaseRequest(afterClear) : 'denied';
 
   const checks: Array<[string, boolean]> = [
     ['baseline release succeeds', released === true],
     ['daemon fail-closed on controller alert', h.reasons.includes('controller_alert')],
-    ['bridge isolated after e-stop', h.daemon.getBridgeState() === 'isolated' && !h.daemon.isReleased()],
+    ['bridge isolated after e-stop', isolatedAfterEstop],
     ['valid grant DENIED while e-stop latched', latchVerdict === 'denied'],
-    ['fresh grant releases after explicit e-stop clear', afterClearVerdict === 'released']
+    [
+      'fresh grant releases end-to-end after explicit e-stop clear',
+      afterClearVerdict === 'released' && h.daemon.isReleased()
+    ]
   ];
   h.shutdown();
   return report('estop', checks);

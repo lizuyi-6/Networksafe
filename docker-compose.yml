@@ -5,8 +5,6 @@ services:
   # ─────────────────────────────────────────────
   redis:
     image: redis:7-alpine
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     command: >
       redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required} --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
@@ -24,10 +22,7 @@ services:
     command: server /data --console-address ":9001"
     environment:
       - MINIO_ROOT_USER=${S3_ACCESS_KEY:-aetherguard}
-      - MINIO_ROOT_PASSWORD=${S3_SECRET_KEY:-AetherGuardArtifactSecret2026}
-    ports:
-      - "${MINIO_PORT:-19000}:9000"
-      - "${MINIO_CONSOLE_PORT:-19001}:9001"
+      - MINIO_ROOT_PASSWORD=${S3_SECRET_KEY:?S3_SECRET_KEY is required}
     volumes:
       - minio_data:/data
     restart: unless-stopped
@@ -39,7 +34,7 @@ services:
         condition: service_started
     entrypoint: >
       /bin/sh -c "
-      until mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-aetherguard} ${S3_SECRET_KEY:-AetherGuardArtifactSecret2026}; do sleep 2; done &&
+      until mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-aetherguard} ${S3_SECRET_KEY:?S3_SECRET_KEY is required}; do sleep 2; done &&
       mc mb --ignore-existing local/${S3_BUCKET:-aetherguard-artifacts} &&
       mc mb --ignore-existing --with-lock local/${AUDIT_ARCHIVE_BUCKET:-aetherguard-audit-lock} &&
       mc retention set --default COMPLIANCE 30d local/${AUDIT_ARCHIVE_BUCKET:-aetherguard-audit-lock} &&
@@ -51,9 +46,7 @@ services:
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-aetherguard}
       - POSTGRES_USER=${POSTGRES_USER:-aetherguard}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-AetherGuardPgShadow2026}
-    ports:
-      - "${POSTGRES_PORT:-15432}:5432"
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -89,8 +82,6 @@ services:
     build:
       context: .
       dockerfile: backend.Dockerfile
-    ports:
-      - "${BACKEND_PORT:-3005}:3005"
     env_file:
       - path: .env
         required: false
@@ -105,31 +96,37 @@ services:
       - DATA_DIR=/app/data
       - ARTIFACTS_DIR=/app/artifacts
       - APP_MODE=production
+      - ENTERPRISE_RUNTIME_MODE=${ENTERPRISE_RUNTIME_MODE:-prod-enterprise}
+      - ALLOW_BREAK_GLASS_PASSWORD_LOGIN=${ALLOW_BREAK_GLASS_PASSWORD_LOGIN:-false}
+      - ALLOW_PUBLIC_REGISTRATION=${ALLOW_PUBLIC_REGISTRATION:-false}
       - DEMO_AUTO_SEED=false
-      - ENABLE_ATTACK_SIM=true
+      - ENABLE_ATTACK_SIM=${ENABLE_ATTACK_SIM:-false}
       - ENABLE_DEV_LOGIN_PRESETS=${ENABLE_DEV_LOGIN_PRESETS:-false}
       - ENABLE_RUNTIME_EMULATOR=${ENABLE_RUNTIME_EMULATOR:-false}
       - SQLITE_FALLBACK_ENABLED=${SQLITE_FALLBACK_ENABLED:-false}
       - DATABASE_URL=${DATABASE_URL:-}
-      - SHADOW_DATABASE_URL=${SHADOW_DATABASE_URL:-postgres://aetherguard:AetherGuardPgShadow2026@postgres:5432/aetherguard}
+      - SHADOW_DATABASE_URL=${SHADOW_DATABASE_URL:?SHADOW_DATABASE_URL is required}
       - S3_ENDPOINT=${S3_ENDPOINT:-http://minio:9000}
       - S3_BUCKET=${S3_BUCKET:-aetherguard-artifacts}
       - AUDIT_ARCHIVE_BUCKET=${AUDIT_ARCHIVE_BUCKET:-aetherguard-audit-lock}
       - S3_REGION=${S3_REGION:-us-east-1}
       - S3_ACCESS_KEY=${S3_ACCESS_KEY:-aetherguard}
-      - S3_SECRET_KEY=${S3_SECRET_KEY:-AetherGuardArtifactSecret2026}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:?S3_SECRET_KEY is required}
       - FASTPATH_URL=${FASTPATH_URL:-http://fastpath:8081}
       - FASTPATH_TRANSPORT=${FASTPATH_TRANSPORT:-unix}
       - FASTPATH_SOCKET_PATH=${FASTPATH_SOCKET_PATH:-/var/run/aetherguard-fastpath/aetherguard-fastpath.sock}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost,http://127.0.0.1}
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - AUDIT_LOG_SECRET=${AUDIT_LOG_SECRET:?AUDIT_LOG_SECRET is required}
+      - AUDIT_LOG_FAIL_CLOSED=${AUDIT_LOG_FAIL_CLOSED:-true}
+      - AUDIT_SHADOW_REQUIRED=${AUDIT_SHADOW_REQUIRED:-true}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required (min 12 chars)}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY is required (min 32 chars)}
       - ENCRYPTION_SALT=${ENCRYPTION_SALT:?ENCRYPTION_SALT is required (min 16 chars)}
       - VALID_API_KEYS=${VALID_API_KEYS:-}
-      - DEVICE_API_KEYS=${DEVICE_API_KEYS:-dev-device-key-2026}
+      - DEVICE_API_KEYS=${DEVICE_API_KEYS:?DEVICE_API_KEYS is required}
       - DEVICE_COMMAND_SECRET=${DEVICE_COMMAND_SECRET:?DEVICE_COMMAND_SECRET is required}
+      - SERIAL_HELPER_SHARED_SECRET=${SERIAL_HELPER_SHARED_SECRET:?SERIAL_HELPER_SHARED_SECRET is required and must differ from DEVICE_COMMAND_SECRET}
       - PLATFORM_API_PROTOCOL=${PLATFORM_API_PROTOCOL:-openai-compatible}
       - PLATFORM_API_BASE_URL=${PLATFORM_API_BASE_URL:-https://coding.dashscope.aliyuncs.com/v1}
       - PLATFORM_API_TIMEOUT=${PLATFORM_API_TIMEOUT:-120000}
@@ -151,7 +148,7 @@ services:
       fastpath:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/api/health" ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/health/ready" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -166,7 +163,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "${FRONTEND_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-8080}:80"
     depends_on:
       backend:
         condition: service_healthy

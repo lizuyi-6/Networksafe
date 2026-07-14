@@ -68,6 +68,7 @@ jest.mock('../services/detection-pipeline.service', () => {
 // Import the mocked module for test-specific behavior
 import { detectionPipelineService } from '../services/detection-pipeline.service';
 import type { DetectionDecision } from '../services/detection-pipeline.service';
+import auditLogger from '../security/audit-logger.service';
 
 jest.mock('../security/command-signing.service', () => ({
     commandSigningService: {
@@ -99,21 +100,32 @@ describe('AgentGateway', () => {
         });
     });
 
-    afterAll((done) => {
+    afterAll(async () => {
         // Close all connections
+        agentSocket?.removeAllListeners();
+        dashboardSocket?.removeAllListeners();
         if (agentSocket?.connected) agentSocket.disconnect();
         if (dashboardSocket?.connected) dashboardSocket.disconnect();
 
-        gateway.close();
-        httpServer.close(() => {
-            done();
-        });
+        await gateway.close();
+        httpServer.closeIdleConnections?.();
+        httpServer.closeAllConnections?.();
+        if (httpServer.listening) {
+            await new Promise<void>((resolve, reject) => {
+                httpServer.close((error) => error ? reject(error) : resolve());
+            });
+        }
+        await new Promise<void>((resolve) => setImmediate(resolve));
     });
 
     afterEach(() => {
-        // Disconnect sockets after each test
-        if (agentSocket?.connected) agentSocket.disconnect();
-        if (dashboardSocket?.connected) dashboardSocket.disconnect();
+        // Disconnect even when a client is still in the connecting/retrying
+        // state; checking only `.connected` leaks its Engine.IO ping timer.
+        agentSocket?.removeAllListeners();
+        dashboardSocket?.removeAllListeners();
+        agentSocket?.disconnect();
+        dashboardSocket?.disconnect();
+        delete process.env.AUDIT_LOG_FAIL_CLOSED;
     });
 
     describe('Dashboard Connection', () => {
@@ -231,6 +243,30 @@ describe('AgentGateway', () => {
                 setTimeout(checkHeartbeat, 25);
             });
         });
+
+        it('disconnects an agent whose server-observed heartbeat is older than five minutes', (done) => {
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'test-agent-stale-heartbeat' }
+            });
+
+            let staleError: any;
+            agentSocket.on('error', (error) => {
+                staleError = error;
+            });
+            agentSocket.on('disconnect', () => {
+                expect(staleError).toMatchObject({ reason: 'heartbeat_timeout' });
+                expect(gateway.getAgent('test-agent-stale-heartbeat')).toBeUndefined();
+                done();
+            });
+            agentSocket.on('connect', () => {
+                const connected = gateway.getAgent('test-agent-stale-heartbeat');
+                expect(connected).toBeDefined();
+                connected!.lastHeartbeat = new Date(Date.now() - (5 * 60_000 + 1));
+
+                // This is the same method invoked by the production interval.
+                (gateway as any).sweepStaleAgents(Date.now());
+            });
+        });
     });
 
     describe('Threat Alerts', () => {
@@ -310,6 +346,98 @@ describe('AgentGateway', () => {
         it('should return false when sending command to non-existent agent', () => {
             const result = gateway.sendCommandToAgent('non-existent-agent', { type: 'scan' });
             expect(result).toBe(false);
+        });
+
+        it('reports command_not_delivered and audits success=false for an offline agent', (done) => {
+            jest.mocked(auditLogger.logCommand).mockClear();
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'offline-command-agent' }
+            });
+
+            agentSocket.on('connect', () => {
+                const connected = gateway.getAgent('offline-command-agent');
+                expect(connected).toBeDefined();
+                connected!.status = { isOnline: false } as any;
+
+                dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'dashboard' }
+                });
+                dashboardSocket.on('error', (error: any) => {
+                    if (error.reason !== 'agent_offline_or_rejected') {
+                        return;
+                    }
+                    expect(error.message).toBe('backend.command_not_delivered');
+                    expect(auditLogger.logCommand).toHaveBeenCalledWith(expect.objectContaining({
+                        agentId: 'offline-command-agent',
+                        commandType: 'scan',
+                        success: false
+                    }));
+                    done();
+                });
+                dashboardSocket.on('connect', () => {
+                    dashboardSocket.emit('request:scan', { agentId: 'offline-command-agent' });
+                });
+            });
+        });
+
+        it('does not emit a command when fail-closed pre-dispatch audit fails', (done) => {
+            process.env.AUDIT_LOG_FAIL_CLOSED = 'true';
+            jest.mocked(auditLogger.log).mockRejectedValueOnce(new Error('shadow unavailable'));
+            jest.mocked(auditLogger.logCommand).mockClear();
+            let scanReceived = false;
+
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'audit-preflight-agent' }
+            });
+            agentSocket.on('command', (command) => {
+                if (command.type === 'scan') scanReceived = true;
+            });
+            agentSocket.on('connect', () => {
+                dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'dashboard' }
+                });
+                dashboardSocket.on('error', (error: any) => {
+                    if (error.reason !== 'audit_unavailable') return;
+                    setImmediate(() => {
+                        expect(scanReceived).toBe(false);
+                        expect(auditLogger.logCommand).not.toHaveBeenCalled();
+                        done();
+                    });
+                });
+                dashboardSocket.on('connect', () => {
+                    dashboardSocket.emit('request:scan', { agentId: 'audit-preflight-agent' });
+                });
+            });
+        });
+
+        it('reports command_may_have_been_delivered when outcome audit fails after emit', (done) => {
+            process.env.AUDIT_LOG_FAIL_CLOSED = 'true';
+            jest.mocked(auditLogger.log).mockResolvedValueOnce('preflight-audit-id');
+            jest.mocked(auditLogger.logCommand).mockRejectedValueOnce(new Error('outcome shadow unavailable'));
+            let scanReceived = false;
+
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'audit-outcome-agent' }
+            });
+            agentSocket.on('command', (command) => {
+                if (command.type === 'scan') scanReceived = true;
+            });
+            agentSocket.on('connect', () => {
+                dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'dashboard' }
+                });
+                dashboardSocket.on('error', (error: any) => {
+                    if (error.reason !== 'command_may_have_been_delivered') return;
+                    setTimeout(() => {
+                        expect(error.message).toBe('backend.command_delivery_audit_failed');
+                        expect(scanReceived).toBe(true);
+                        done();
+                    }, 25);
+                });
+                dashboardSocket.on('connect', () => {
+                    dashboardSocket.emit('request:scan', { agentId: 'audit-outcome-agent' });
+                });
+            });
         });
     });
 

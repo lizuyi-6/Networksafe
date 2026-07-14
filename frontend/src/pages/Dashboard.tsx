@@ -235,7 +235,7 @@ export default function Dashboard() {
             controller?.abort();
             clearInterval(interval);
         };
-    }, [liveModeEnabled, paused]);
+    }, [liveModeEnabled, paused, timeRange]);
 
     useEffect(() => {
         let disposed = false;
@@ -278,7 +278,7 @@ export default function Dashboard() {
 
                 const [rules, keys] = await Promise.all([
                     fetchDashboardRulesSummary(controller.signal),
-                    role === 'admin' ? fetchAdminApiKeys(controller.signal).catch(() => []) : Promise.resolve([]),
+                    role === 'admin' ? fetchAdminApiKeys(controller.signal) : Promise.resolve([]),
                 ]);
 
                 if (disposed) return;
@@ -360,14 +360,15 @@ export default function Dashboard() {
     const emptyLogsText = securitySummary.pendingActions || securitySummary.failedValidations
         ? t('dashboard.empty_logs_pending', { pending: securitySummary.pendingActions, failed: securitySummary.failedValidations })
         : t('dashboard.empty_logs_fallback');
+    const telemetryAvailable = stats.telemetryAvailable !== false;
 
     // --- Metric bar items ---
     const metricItems: MetricItem[] = [
-        { icon: Server, label: t('dashboard.total_requests'), value: (stats.totalRequests ?? 0).toLocaleString(), trend: stats.requestsTrend, tone: 'primary', goodDirection: 'up' },
-        { icon: Shield, label: t('dashboard.threats_blocked'), value: (stats.blockedRequests ?? 0).toLocaleString(), trend: stats.blockedTrend, tone: 'danger', goodDirection: 'down' },
-        { icon: Globe, label: t('dashboard.success_rate'), value: `${stats.successRate ?? 0}%`, tone: 'success', goodDirection: 'up' },
-        { icon: Zap, label: t('dashboard.avg_latency'), value: `${stats.avgProcessingTime || 0}ms`, tone: 'warning', goodDirection: 'down' },
-        { icon: Activity, label: t('dashboard.active_connections'), value: (stats.activeConnections ?? 0).toLocaleString(), tone: 'primary', goodDirection: 'up' },
+        { icon: Server, label: t('dashboard.total_requests'), value: telemetryAvailable ? (stats.totalRequests ?? 0).toLocaleString() : '--', trend: telemetryAvailable ? stats.requestsTrend : undefined, tone: 'primary', goodDirection: 'up' },
+        { icon: Shield, label: t('dashboard.threats_blocked'), value: telemetryAvailable ? (stats.blockedRequests ?? 0).toLocaleString() : '--', trend: telemetryAvailable ? stats.blockedTrend : undefined, tone: 'danger', goodDirection: 'down' },
+        { icon: Globe, label: t('dashboard.success_rate'), value: telemetryAvailable ? `${stats.successRate ?? 0}%` : '--', tone: telemetryAvailable ? 'success' : 'neutral', goodDirection: 'up' },
+        { icon: Zap, label: t('dashboard.avg_latency'), value: telemetryAvailable ? `${stats.avgProcessingTime || 0}ms` : '--', tone: telemetryAvailable ? 'warning' : 'neutral', goodDirection: 'down' },
+        { icon: Activity, label: t('dashboard.active_connections'), value: telemetryAvailable ? (stats.activeConnections ?? 0).toLocaleString() : '--', tone: telemetryAvailable ? 'primary' : 'neutral', goodDirection: 'up' },
         { icon: AlertTriangle, label: t('dashboard.high_risk'), value: securitySummary.openCriticalFindings, tone: 'danger', goodDirection: 'down' },
     ];
 
@@ -406,6 +407,16 @@ export default function Dashboard() {
                 </motion.div>
             )}
 
+            {!telemetryAvailable && (
+                <div
+                    role="alert"
+                    data-testid="tenant-telemetry-unavailable"
+                    className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
+                >
+                    {t('dashboard.tenant_telemetry_unavailable')}
+                </div>
+            )}
+
             {/* Metric Bar — 6 core KPIs in one row */}
             <MetricBar items={metricItems} />
 
@@ -419,12 +430,12 @@ export default function Dashboard() {
                         iconTone="primary"
                     >
                         <TrafficChart
-                            data={filteredHistory}
+                            data={telemetryAvailable ? filteredHistory : []}
                             loadingText={t('dashboard.waiting_chart')}
                             requestsLabel={t('dashboard.requests')}
                             blockedLabel={t('dashboard.blocked')}
-                            emptyTitle={t('dashboard.traffic_empty_title')}
-                            emptyDesc={t('dashboard.traffic_empty_desc')}
+                            emptyTitle={telemetryAvailable ? t('dashboard.traffic_empty_title') : t('dashboard.telemetry_unavailable_title')}
+                            emptyDesc={telemetryAvailable ? t('dashboard.traffic_empty_desc') : t('dashboard.tenant_telemetry_unavailable')}
                         />
                     </ConsolePanel>
                 </motion.div>
@@ -436,7 +447,14 @@ export default function Dashboard() {
                         icon={Cpu}
                         iconTone="neutral"
                     >
-                        <SystemGauges gauges={gaugeItems} />
+                        {telemetryAvailable ? (
+                            <SystemGauges gauges={gaugeItems} />
+                        ) : (
+                            <ConsoleEmptyState
+                                title={t('dashboard.telemetry_unavailable_title')}
+                                description={t('dashboard.tenant_telemetry_unavailable')}
+                            />
+                        )}
                     </ConsolePanel>
                 </motion.div>
             </div>

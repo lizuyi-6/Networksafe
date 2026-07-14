@@ -1,32 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Server, Download, Check, FileCode, ChevronRight, Save, Usb, Wifi, AlertTriangle } from 'lucide-react';
+import { Server, Download, Check, FileCode, ChevronRight, Save, AlertTriangle, RotateCcw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../context/LanguageContext';
-import { DeploymentTarget, fetchDeploymentHistory, generateDeploymentBundle, generateDeploymentConfig, getDeploymentDownloadUrl, saveDeploymentConfig } from '../services/api';
+import { DeploymentTarget, fetchDeploymentHistory, generateDeploymentConfig, getDeploymentDownloadUrl, saveDeploymentConfig } from '../services/api';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
-
-// Web Serial API type declarations
-interface SerialPort {
-    readable: ReadableStream | null;
-    writable: WritableStream | null;
-    open(options: { baudRate: number }): Promise<void>;
-    close(): Promise<void>;
-    getInfo(): { usbVendorId?: number; usbProductId?: number };
-}
-
-interface Serial {
-    requestPort(): Promise<SerialPort>;
-    getPorts(): Promise<SerialPort[]>;
-}
-
-declare global {
-    interface Navigator {
-        serial?: Serial;
-    }
-}
-
-const getSerial = (): Serial | undefined => navigator.serial;
 
 interface GeneratedConfig {
     configText: string;
@@ -34,9 +12,6 @@ interface GeneratedConfig {
     checksum: string;
     warnings: string[];
 }
-
-const CHUNK_SIZE = 768; // base64 chunk size to stay under serial line buffer
-const CHUNK_DELAY_MS = 50;
 
 const deploymentTargets: DeploymentTarget[] = ['nginx', 'apache', 'caddy', 'docker_compose', 'binary_agent', 'k8s_daemonset'];
 
@@ -56,20 +31,6 @@ const DeploymentWizard = () => {
         rateLimit: '100',
         upstream: 'http://backend:3005',
     });
-
-    // Step 4: Device write state
-    const [serialSupported, setSerialSupported] = useState(false);
-    const [serialPort, setSerialPort] = useState<SerialPort | null>(null);
-    const [serialConnected, setSerialConnected] = useState(false);
-    const [writingBundle, setWritingBundle] = useState(false);
-    const [writeProgress, setWriteProgress] = useState(0);
-    const [writePhase, setWritePhase] = useState<string>('');
-    const writerRef = useRef<WritableStreamDefaultWriter | null>(null);
-    const readerRef = useRef<ReadableStreamDefaultReader | null>(null);
-
-    useEffect(() => {
-        setSerialSupported(!!getSerial());
-    }, []);
 
     const handleNext = async () => {
         if (step === 1) {
@@ -139,148 +100,20 @@ const DeploymentWizard = () => {
         try {
             const rows = await fetchDeploymentHistory(undefined, 10);
             setHistory(rows);
-        } catch {
+        } catch (historyError: any) {
             setHistory([]);
+            setError(historyError?.message || 'FG-DEPLOYMENT-HISTORY');
         }
     };
-
-    // --- Web Serial API for direct browser-to-hardware transfer ---
-    const connectSerial = useCallback(async () => {
-        if (!serialSupported) return;
-        setError(null);
-        try {
-            const serial = getSerial();
-            if (!serial) return;
-            const port = await serial.requestPort();
-            await port.open({ baudRate: 115200 });
-            setSerialPort(port);
-            setSerialConnected(true);
-
-            // Start reading responses
-            const reader = port.readable!.getReader();
-            readerRef.current = reader;
-            readSerialLoop(reader);
-        } catch (e: any) {
-            setError(e.message || t('deploymentWizard.serial_connect_failed'));
-            setSerialConnected(false);
-        }
-    }, [serialSupported]);
-
-    const disconnectSerial = useCallback(async () => {
-        try {
-            readerRef.current?.cancel();
-            writerRef.current?.releaseLock();
-            await serialPort?.close();
-        } catch { /* ignore */ }
-        setSerialPort(null);
-        setSerialConnected(false);
-        readerRef.current = null;
-        writerRef.current = null;
-    }, [serialPort]);
-
-    const readSerialLoop = async (reader: ReadableStreamDefaultReader) => {
-        const decoder = new TextDecoder();
-        try {
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-                // Read and discard device responses (value is Uint8Array from serial)
-                decoder.decode(value as Uint8Array);
-            }
-        } catch { /* port closed */ }
-    };
-
-    const sendSerialLine = async (text: string) => {
-        if (!serialPort?.writable) return;
-        const writer = serialPort.writable.getWriter();
-        writerRef.current = writer;
-        const encoder = new TextEncoder();
-        await writer.write(encoder.encode(text + '\n'));
-        writer.releaseLock();
-        writerRef.current = null;
-    };
-
-    // LEGACY SERIAL WRITE PATH (deprecated): This callback drives the retired ESP32 serial-deployer
-    // dongle flow (AG:REQ:WRITE_BUNDLE USB-TTL protocol, archived 2026-06-13). The active hardware is the
-    // AetherGuard Root-Resistant Gateway Appliance (STM32H5/U5, newline-JSON protocol). The function name
-    // `doWriteToEsp32` and testid `deploy-write-esp32` are retained for backward-compat with any legacy-registered
-    // device still using the serial path; do not extend. New deployments should target the Gateway Appliance flow.
-    const doWriteToEsp32 = useCallback(async () => {
-        if (!serverType || !serialConnected) return;
-
-        setWritingBundle(true);
-        setWriteProgress(0);
-        setWritePhase('generating');
-        setError(null);
-
-        try {
-            // Step 1: Generate bundle via backend API
-            const bundleResponse = await generateDeploymentBundle({
-                serverType,
-                profile: {
-                    port: Number(config.port),
-                    serverName: config.serverName,
-                    rateLimit: Number(config.rateLimit),
-                    upstream: config.upstream,
-                },
-                deploymentId: savedId || undefined,
-            });
-
-            if (!bundleResponse.success || !bundleResponse.data?.bundleBase64) {
-                throw new Error(bundleResponse.error || t('deploymentWizard.generate_failed'));
-            }
-
-            const bundle = bundleResponse.data;
-
-            // Decode base64 to raw bytes
-            const bundleBytes = atob(bundle.bundleBase64);
-            const totalSize = bundleBytes.length;
-
-            // Step 2: Send WRITE_BUNDLE command to hardware device
-            setWritePhase('initiating');
-            const filename = `deploy-${serverType}.sh`;
-            await sendSerialLine(`AG:REQ:WRITE_BUNDLE:${totalSize}:${filename}`);
-
-            // Wait for AG:ACK:WRITE_BUNDLE:READY
-            await sleep(500);
-
-            // Step 3: Send data in base64 chunks
-            setWritePhase('transferring');
-            const totalChunks = Math.ceil(bundle.bundleBase64.length / CHUNK_SIZE);
-            for (let i = 0; i < totalChunks; i++) {
-                const chunk = bundle.bundleBase64.substring(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-                await sendSerialLine(`AG:CHUNK:${chunk}`);
-                setWriteProgress(Math.round(((i + 1) / totalChunks) * 90));
-                if (i < totalChunks - 1) {
-                    await sleep(CHUNK_DELAY_MS);
-                }
-            }
-
-            // Step 4: Signal end of bundle
-            setWritePhase('finalizing');
-            await sendSerialLine('AG:END_BUNDLE');
-            setWriteProgress(100);
-            setWritePhase('complete');
-        } catch (e: any) {
-            setError(e.message || t('deploymentWizard.write_failed'));
-            setWritePhase('error');
-        } finally {
-            setWritingBundle(false);
-        }
-    }, [serverType, serialConnected, config, savedId]);
 
     useEffect(() => {
-        loadHistory();
-        return () => {
-            disconnectSerial();
-        };
+        void loadHistory();
     }, []);
 
     const steps = [
         { n: 1, label: t('deploy.step1') },
         { n: 2, label: t('deploy.step2') },
         { n: 3, label: t('deploy.step3') },
-        { n: 4, label: t('deploymentWizard.step4_write') },
     ];
 
     return (
@@ -408,129 +241,6 @@ const DeploymentWizard = () => {
                         </motion.div>
                     )}
 
-                    {/* Step 4: Write to device / download */}
-                    {step === 4 && generated && (
-                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                            <div className="mb-4 text-center">
-                                <div className="mb-4 inline-flex rounded-full border border-blue-500/20 bg-blue-500/10 p-4 text-blue-600 dark:text-blue-400">
-                                    <Usb size={48} />
-                                </div>
-                                <h2 className="text-xl font-bold text-foreground">{t('deploymentWizard.step4_title')}</h2>
-                                <p className="mt-2 text-sm text-muted-foreground">{t('deploymentWizard.step4_desc')}</p>
-                            </div>
-
-                            {/* Serial connection status */}
-                            <div className="rounded-xl border border-border p-4 space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className={clsx('h-3 w-3 rounded-full', serialConnected ? 'bg-emerald-500' : 'bg-muted-foreground/30')} />
-                                        <span className="text-sm font-medium text-foreground">
-                                            {serialConnected ? t('deploymentWizard.serial_connected') : t('deploymentWizard.serial_disconnected')}
-                                        </span>
-                                    </div>
-                                    {!serialSupported && (
-                                        <span className="text-xs text-amber-600 dark:text-amber-400">{t('deploymentWizard.serial_not_supported')}</span>
-                                    )}
-                                </div>
-
-                                {!serialConnected ? (
-                                    <button
-                                        data-testid="deploy-connect-serial"
-                                        onClick={connectSerial}
-                                        disabled={!serialSupported}
-                                        className={clsx(
-                                            'flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors',
-                                            serialSupported
-                                                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                                : 'cursor-not-allowed bg-muted text-muted-foreground'
-                                        )}
-                                    >
-                                        <Wifi size={16} /> {t('deploymentWizard.connect_serial')}
-                                    </button>
-                                ) : (
-                                    <div className="space-y-3">
-                                        <button
-                                            data-testid="deploy-disconnect-serial"
-                                            onClick={disconnectSerial}
-                                            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-muted/20 px-4 py-2 text-sm text-muted-foreground hover:bg-muted/30"
-                                        >
-                                            {t('deploymentWizard.disconnect_serial')}
-                                        </button>
-
-                                        {/* Write to hardware device */}
-                                        <button
-                                            data-testid="deploy-write-esp32"
-                                            onClick={doWriteToEsp32}
-                                            disabled={writingBundle}
-                                            className={clsx(
-                                                'flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors',
-                                                writingBundle
-                                                    ? 'cursor-not-allowed bg-primary/50 text-primary-foreground'
-                                                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                            )}
-                                        >
-                                            <Usb size={16} />
-                                            {writingBundle
-                                                ? t('deploymentWizard.writing_bundle')
-                                                : t('deploymentWizard.write_to_device')
-                                            }
-                                        </button>
-
-                                        {/* Progress bar */}
-                                        {(writingBundle || writeProgress > 0) && (
-                                            <div className="space-y-2">
-                                                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                    <span>{writePhase === 'generating' && t('deploymentWizard.phase_generating')}
-                                                        {writePhase === 'initiating' && t('deploymentWizard.phase_initiating')}
-                                                        {writePhase === 'transferring' && t('deploymentWizard.phase_transferring')}
-                                                        {writePhase === 'finalizing' && t('deploymentWizard.phase_finalizing')}
-                                                        {writePhase === 'complete' && t('deploymentWizard.phase_complete')}
-                                                        {writePhase === 'error' && t('deploymentWizard.phase_error')}
-                                                    </span>
-                                                    <span>{writeProgress}%</span>
-                                                </div>
-                                                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                                                    <div
-                                                        className={clsx('h-full rounded-full transition-all duration-300',
-                                                            writePhase === 'error' ? 'bg-rose-500' :
-                                                            writePhase === 'complete' ? 'bg-emerald-500' : 'bg-primary'
-                                                        )}
-                                                        style={{ width: `${writeProgress}%` }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {writePhase === 'complete' && (
-                                            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-600 dark:text-emerald-300">
-                                                {t('deploymentWizard.write_success')}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Alternative: download bundle file */}
-                            <div className="rounded-xl border border-border p-4">
-                                <h3 className="mb-2 text-sm font-medium text-foreground">{t('deploymentWizard.alternative_download')}</h3>
-                                <p className="mb-3 text-xs text-muted-foreground">{t('deploymentWizard.alternative_download_desc')}</p>
-                                <a
-                                    data-testid="deploy-download-bundle"
-                                    href={savedId ? getDeploymentDownloadUrl(savedId, 'bundle') : '#'}
-                                    className={clsx(
-                                        'flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500',
-                                        !savedId && 'pointer-events-none opacity-50'
-                                    )}
-                                >
-                                    <Download size={16} /> {t('wizard.download')}
-                                </a>
-                                {!savedId && (
-                                    <p className="mt-2 text-xs text-muted-foreground">{t('deploymentWizard.save_first_hint')}</p>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-
                     {/* Navigation buttons */}
                     <div className="mt-8 flex justify-between border-t border-border pt-6">
                         <button
@@ -554,7 +264,7 @@ const DeploymentWizard = () => {
                             >
                                 {loading ? t('wizard.generating') : t('deploy.next')} <ChevronRight size={16} />
                             </button>
-                        ) : step === 3 ? (
+                        ) : (
                             <div className="flex gap-2">
                                 <button
                                     data-testid="deploy-save-version"
@@ -564,13 +274,6 @@ const DeploymentWizard = () => {
                                 >
                                     <Save size={16} /> {saving ? t('wizard.saving') : t('wizard.save_version')}
                                 </button>
-                                <button
-                                    data-testid="deploy-go-device-write"
-                                    onClick={() => setStep(4)}
-                                    className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                                >
-                                    <Usb size={16} /> {t('deploymentWizard.go_to_device_write')}
-                                </button>
                                 <a
                                     data-testid="deploy-preview-download-bundle"
                                     href={savedId ? getDeploymentDownloadUrl(savedId, 'bundle') : '#'}
@@ -578,16 +281,14 @@ const DeploymentWizard = () => {
                                 >
                                     <Download size={16} /> {t('wizard.download')}
                                 </a>
+                                <button
+                                    data-testid="deploy-start-over"
+                                    onClick={() => { setStep(1); setServerType(null); setGenerated(null); setSavedId(null); }}
+                                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"
+                                >
+                                    <RotateCcw size={16} /> {t('deploymentWizard.start_over')}
+                                </button>
                             </div>
-                        ) : (
-                            /* Step 4: back to step 3 or restart */
-                            <button
-                                data-testid="deploy-start-over"
-                                onClick={() => { setStep(1); setServerType(null); setGenerated(null); setSavedId(null); setWriteProgress(0); setWritePhase(''); }}
-                                className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                            >
-                                {t('deploymentWizard.start_over')}
-                            </button>
                         )}
                     </div>
                 </ConsolePanel>
@@ -618,9 +319,5 @@ const DeploymentWizard = () => {
         </ConsolePage>
     );
 };
-
-function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 export default DeploymentWizard;

@@ -1,82 +1,93 @@
-# AetherGuard Gateway Appliance — Enclosure
+# AetherGuard Gateway Appliance Enclosure
 
-3D-printable DIN-rail enclosure for the AetherGuard Root-Resistant Gateway Appliance (COTS four-module integration).
+Parametric OpenSCAD enclosure for the AetherGuard Root-Resistant Gateway Appliance.
 
-> Status: Phase 0 prototype bench enclosure (not production product housing)
-> Tool: OpenSCAD (parametric, editable in GUI or CLI)
-> Material: PLA/PETG 3D print (prototype); consider ABS/PC for production
+> Status: Phase 0.5 industrial prototype enclosure, not a production injection-molded housing.
+> Tool: OpenSCAD 2021.01+
+> Default material: PETG/ABS for FDM prototype; PC/ABS or sheet-metal hybrid is preferred for production.
 
-## Design Decisions (assumptions — adjust if needed)
+## Design Intent
 
-- **Form**: DIN-rail mounted control box housing M2/M3/M4; M1 Protectli sits on its own adjacent DIN-rail clip (it has its own enclosure).
-- **Mounting**: 35mm top-hat DIN-rail (standard industrial).
-- **Access**: Front panel has E-stop + confirm buttons + status LED window; rear panel has USB-C passthrough + cable glands; top has optional stack-light mount.
-- **Service**: Removable top cover (4 screws) for access to NUCLEO + wiring.
-- ** ventilation**: Side vents for passive cooling (NUCLEO + relay dissipate heat).
+This design turns the gateway into a single field-deployable appliance instead of a loose bench build.
 
-## Modules Housed
+- **Two-level internal layout**: lower interlock bay for 24V PSU, relay, and optocouplers; upper electronics deck for M1 gateway, M2 NUCLEO-H563ZI, and M3 Secure Element.
+- **Root-resistant front interface**: three RJ45 ports are physically labeled `SERVER`, `LAN/WAN`, and `MGMT`; the MGMT port is visually separated from the data plane.
+- **Human safety controls**: red E-stop and green confirm buttons are front-mounted with raised guard rings.
+- **Auditable state visibility**: front status window and top stack-light mount expose isolated / armed / released / fault state without opening the case.
+- **Serviceable, fail-closed build**: removable top cover, rear cable glands, internal 35mm DIN rail, side/top ventilation, and tamper-seal holes.
 
-| Module | Hardware | Approx Size (mm) | Location |
-|---|---|---|---|
-| M2 Controller | NUCLEO-H563ZI | 122 × 108 × 15 | Upper deck (standoffs) |
-| M3 Secure Element | OPTIGA Trust M breakout | 20 × 20 × 5 | On/next to NUCLEO |
-| M4 Relay | DIN-rail SPDT relay | 80 × 60 × 25 | Lower DIN-rail section |
-| M4 Optocoupler | 4-ch opto module | 75 × 55 × 25 | Lower DIN-rail section |
-| M4 PSU | 24V DC DIN-rail | 100 × 60 × 40 | Lower DIN-rail section |
-| E-Stop | 22mm mushroom NC | panel-mount | Front panel |
-| Confirm | 22mm momentary NO | panel-mount | Front panel |
-| Stack light | 3-color + buzzer | Φ40 base | Top (external) |
+## Default Envelope
 
-M1 (Protectli VP2430, ~141×124×37mm) sits on its own DIN-rail clip adjacent to this box; only a USB-C cable enters this enclosure to reach the NUCLEO.
+External dimensions: **300 × 210 × 118 mm** (W × D × H)
+
+Internal concept:
+
+| Zone | Hardware | Fit envelope |
+|---|---|---|
+| Upper left | M1 multi-port gateway, Protectli VP2430 class | 145 × 128 × 40 mm |
+| Upper right | M2 NUCLEO-H563ZI controller | 122 × 108 × 15 mm |
+| Upper right corner | M3 Secure Element breakout | 24 × 24 × 8 mm |
+| Lower bay | 24V PSU + relay + optocoupler modules on DIN rail | 274 mm rail length |
+| Front panel | SERVER / LAN-WAN / MGMT, USB-C, status, E-stop, confirm | panel-mounted |
+
+Adjust `parameters.scad` when real hardware dimensions differ.
 
 ## Files
 
-- `parameters.scad` — shared dimensions (edit these to resize)
-- `chassis.scad` — main box body + DIN-rail clip + internal standoff mounts
-- `front-panel.scad` — button holes + LED window + vents
-- `top-cover.scad` — removable lid with stack-light mount
+- `parameters.scad` - all shared dimensions and fit envelopes
+- `chassis.scad` - main shell, two-level deck, DIN rail, bosses, vents, rear entries
+- `front-panel.scad` - removable front I/O/control panel
+- `top-cover.scad` - removable lid with stack-light mount and ventilation
+- `assembly.scad` - visual fit check with color-coded dummy components
+- `printable/` - split 220x220 mm FDM-printable version and STL export script
+- `fusion/` - Autodesk Fusion parameter script and handoff notes
 
-## Render / Export STL
+Generated `*.stl` and `*.png` files are intentionally ignored by git.
+
+## 220x220 mm Printer Version
+
+Use the split printable set when the full 300 mm chassis does not fit your printer bed:
+
+```powershell
+cd X:\repos\Networksafe\hardware\enclosure\printable
+.\export-printable.ps1
+```
+
+This exports left/right chassis halves, left/right front-panel halves, left/right top-cover halves, and a screw-on rear DIN-rail clip.
+
+## Render / Export
 
 ```bash
-# Render to STL (CLI)
+cd hardware/enclosure
+
+# STL for printing
 openscad -o chassis.stl chassis.scad
 openscad -o front-panel.stl front-panel.scad
 openscad -o top-cover.stl top-cover.scad
 
-# Or open in GUI to preview
-openscad chassis.scad
+# Fit-check renders
+openscad --imgsize 1400,1000 --camera 170,125,105,70,18,46,840 --projection o -o assembly.png assembly.scad
+openscad --imgsize 1200,900 --camera 150,-120,86,60,0,42,680 --projection o -o front-panel.png front-panel.scad
 ```
 
-## Print Settings (recommended)
+## Prototype Print Guidance
 
-- Layer height: 0.2mm
-- Infill: 25% (gyroid)
-- Walls: 3 perimeters
-- Material: PETG (better heat resistance than PLA for relay area)
-- Supports: needed for DIN-rail clip overhang + button holes
+- Layer height: 0.2 mm
+- Wall count: 4 perimeters
+- Infill: 25-35% gyroid
+- Material: PETG minimum; ABS/ASA preferred for heat and field use
+- Brass inserts: M3 for front panel and M4 for lid where repeated service is expected
+- Supports: likely required for the rear DIN clip and button guard rings
 
-## Assembly
+## First Fit Checks
 
-1. Print chassis, front-panel, top-cover
-2. Press DIN-rail clip onto 35mm rail
-3. Mount NUCLEO on standoffs (M3 screws) in upper deck
-4. Wire OPTIGA Trust M to NUCLEO I2C (PB8/PB9)
-5. Slide relay + optocoupler + PSU onto lower DIN-rail section
-6. Wire relay/optocoupler to NUCLEO GPIO (PA5/PA6) via cable glands
-7. Install E-stop + confirm buttons in front panel (22mm holes)
-8. Route USB-C from front/rear to NUCLEO USB-C
-9. Attach front panel (4 screws)
-10. Attach top cover (4 screws)
-11. Mount stack light on top (optional)
+1. Confirm M1 gateway actual dimensions and front-port alignment before printing the full chassis.
+2. Print a 20 mm front-panel slice first to validate RJ45, USB-C, and 22 mm button tolerances.
+3. Verify lower DIN bay height: relay/PSU/opto modules must clear the upper deck by at least 3 mm.
+4. Confirm E-stop wiring remains normally closed and reachable without opening the case.
+5. Verify side/top vents do not expose touchable 24V terminals; add an internal insulating shield if needed.
+6. After assembly, run the wiring checklist in `docs/hardware-wiring-diagram.md`.
 
 ## Wiring Reference
 
-See `docs/hardware-wiring-diagram.md` for full GPIO pinout and cable list.
-
-## Dimensions (default parameters)
-
-External: 200 × 130 × 110 mm (W × D × H)
-Internal usable: 194 × 124 × 104 mm (3mm walls)
-
-Adjust in `parameters.scad` if module sizes differ.
+See `docs/hardware-wiring-diagram.md` for GPIO, relay, feedback, stack-light, and three-plane wiring details.

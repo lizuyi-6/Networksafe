@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
-package-lock.json
+# npm lockfiles are source-controlled so CI and release verification use the
+# exact dependency graph reviewed in this repository.
 yarn.lock
 
 # Build output
@@ -45,6 +46,9 @@ venv/
 *.db
 *.sqlite
 /backend/data/*.db
+/backend/data/*.db-shm
+/backend/data/*.db-wal
+/backend/data/*.db-journal
 !/backend/data/.gitkeep
 
 # Archives and local artifact store
