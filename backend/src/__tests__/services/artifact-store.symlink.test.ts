@@ -8,9 +8,9 @@
  * This file verifies the real-path containment layer added on top.
  *
  * Symlink creation requires privilege on some platforms (Windows without
- * Developer Mode, or restricted Linux accounts). Each test attempts to create
- * a symlink and self-skips (it.skip semantics) if creation fails with EPERM/
- * ENOTSUP/EEXIST, so the suite stays green on CI without symlink privilege.
+ * Developer Mode, or restricted Linux accounts). The suite fails in beforeAll
+ * when that capability is unavailable so these security tests cannot silently
+ * disappear from the executed test count.
  */
 
 import path from 'path';
