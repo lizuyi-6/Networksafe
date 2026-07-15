@@ -212,13 +212,17 @@ export class AuditLogger {
       ...event
     };
 
-    // Create tamper-evident signature
-    auditEvent.signature = this.createSignature(auditEvent);
-
     // SECURITY FIX D31: strip CRLF/tab/null control chars from
     // user-controlled `details` (and any other free-form string
     // fields) to prevent log injection in dashboards and exports.
+    //
+    // AG-003: sanitize BEFORE signing so the signature covers the exact
+    // `details_json` that gets persisted. Signing the pre-sanitized value
+    // would leave the stored details unverifiable.
     auditEvent.details = recursiveSanitize(auditEvent.details);
+
+    // Create tamper-evident signature (covers all persisted forensic fields).
+    auditEvent.signature = this.createSignature(auditEvent);
 
     let localCommitted = false;
 
@@ -519,9 +523,94 @@ export class AuditLogger {
    */
   private createSignature(event: AuditEvent): string {
     const crypto = require('crypto');
+    return crypto.createHmac('sha256', this.auditSecret).update(this.signingPayloadFromEvent(event)).digest('hex');
+  }
 
-    const data = `${event.id}|${event.timestamp}|${event.eventType}|${event.action}|${event.status}`;
-    return crypto.createHmac('sha256', this.auditSecret).update(data).digest('hex');
+  /**
+   * Canonical serialization of every persisted forensic field.
+   *
+   * AG-003: the previous signature covered only id|timestamp|eventType|action|status,
+   * leaving details_json, actor_*, target_*, severity, category and tenant_id
+   * tamperable without invalidating the signature. Anyone with DB write access
+   * could rewrite "which IP was blocked / what command ran / who was affected"
+   * and verifyIntegrity would still report VALID. The signature now binds all of
+   * them. `details_json` is serialized identically to the stored column
+   * (JSON.stringify of the sanitized details) so the signed bytes match the row.
+   */
+  private signingPayload(event: {
+    id: string;
+    timestamp: string;
+    tenantId?: string | null;
+    eventType: string;
+    category: string;
+    severity: string;
+    actorType: string;
+    actorId: string;
+    actorEmail?: string | null;
+    actorIp?: string | null;
+    action: string;
+    targetType?: string | null;
+    targetId?: string | null;
+    detailsJson: string;
+    status: string;
+  }): string {
+    return [
+      event.id,
+      event.timestamp,
+      event.tenantId ?? '',
+      event.eventType,
+      event.category,
+      event.severity,
+      event.actorType,
+      event.actorId,
+      event.actorEmail ?? '',
+      event.actorIp ?? '',
+      event.action,
+      event.targetType ?? '',
+      event.targetId ?? '',
+      event.detailsJson,
+      event.status
+    ].join('|');
+  }
+
+  private signingPayloadFromEvent(event: AuditEvent): string {
+    return this.signingPayload({
+      id: event.id,
+      timestamp: event.timestamp,
+      tenantId: event.tenantId ?? null,
+      eventType: event.eventType,
+      category: event.category,
+      severity: event.severity,
+      actorType: event.actor.type,
+      actorId: event.actor.id,
+      actorEmail: event.actor.email ?? null,
+      actorIp: event.actor.ip ?? null,
+      action: event.action,
+      targetType: event.target?.type ?? null,
+      targetId: event.target?.id ?? null,
+      detailsJson: JSON.stringify(event.details),
+      status: event.status
+    });
+  }
+
+  private signingPayloadFromRow(row: any): string {
+    return this.signingPayload({
+      id: row.id,
+      timestamp: row.timestamp,
+      tenantId: row.tenant_id ?? null,
+      eventType: row.event_type,
+      category: row.category,
+      severity: row.severity,
+      actorType: row.actor_type,
+      actorId: row.actor_id,
+      actorEmail: row.actor_email ?? null,
+      actorIp: row.actor_ip ?? null,
+      action: row.action,
+      targetType: row.target_type ?? null,
+      targetId: row.target_id ?? null,
+      detailsJson: row.details_json,
+      status: row.status
+    });
   }
 
   /**
@@ -559,9 +648,13 @@ export class AuditLogger {
     }
 
     // SECURITY FIX: Use class property instead of environment variable
+    // AG-003: verify against every persisted forensic field, not just the
+    // 5-field header. A row whose details_json/actor/target/severity was
+    // rewritten must now fail verification.
     const crypto = require('crypto');
-    const data = `${log.id}|${log.timestamp}|${log.event_type}|${log.action}|${log.status}`;
-    const expected = crypto.createHmac('sha256', this.auditSecret).update(data).digest('hex');
+    const expected = crypto.createHmac('sha256', this.auditSecret)
+      .update(this.signingPayloadFromRow(log))
+      .digest('hex');
 
     return log.signature === expected;
   }
@@ -581,8 +674,9 @@ export class AuditLogger {
     }
 
     const crypto = require('crypto');
-    const data = `${log.id}|${log.timestamp}|${log.event_type}|${log.action}|${log.status}`;
-    const expected = crypto.createHmac('sha256', this.auditSecret).update(data).digest('hex');
+    const expected = crypto.createHmac('sha256', this.auditSecret)
+      .update(this.signingPayloadFromRow(log))
+      .digest('hex');
     return log.signature === expected;
   }
 

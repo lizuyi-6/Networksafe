@@ -786,7 +786,28 @@ class DeploymentRunService {
       return null;
     }
 
-    if (input.payload && input.signature && !verifyDeploymentBundlePayload(input.payload, input.signature)) {
+    // AG-001 fail-closed: a helper result MUST carry a server-issued payload
+    // and a valid signature. The previous check was fail-open — omitting the
+    // `signature` field skipped verification entirely, so any holder of the
+    // shared secret could POST a forged terminal result (e.g. mark an approved
+    // run `completed`). Now a missing/invalid signature, OR a valid signature
+    // whose signed instruction does not describe THIS run/helper/tenant/
+    // requestType (replay of a signature issued for another run), is rejected.
+    const signatureValid = Boolean(
+      input.payload
+      && input.signature
+      && verifyDeploymentBundlePayload(input.payload, input.signature)
+    );
+    const signedInstructionMatchesResult = Boolean(
+      signatureValid
+      && input.payload
+      && String(input.payload.runId ?? '') === input.runId
+      && String(input.payload.helperId ?? '') === input.helperId
+      && String(input.payload.tenantId ?? '') === input.tenantId
+      && String(input.payload.requestType ?? '').toUpperCase() === input.requestType
+    );
+
+    if (!signatureValid || !signedInstructionMatchesResult) {
       this.updateRunState(run.id, run.tenantId, {
         status: 'failed',
         lastError: 'invalid_helper_signature',
@@ -794,7 +815,7 @@ class DeploymentRunService {
           {
             at: isoNow(),
             actor: `helper:${input.helperId}`,
-            message: 'Helper result rejected because signature verification failed.'
+            message: 'Helper result rejected because signature verification failed (fail-closed).'
           }
         ]
       });

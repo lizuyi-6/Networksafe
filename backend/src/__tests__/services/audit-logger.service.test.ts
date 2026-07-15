@@ -69,6 +69,55 @@ describe('auditLogger', () => {
     expect(auditLogger.verifyIntegrity('00000000-0000-0000-0000-000000000000')).toBe(false);
   });
 
+  // AG-003: the signature previously covered only id|timestamp|eventType|action|status,
+  // so an attacker with DB write access could rewrite the forensically critical
+  // fields (which IP was blocked, what the command did, who was affected, severity)
+  // and verifyIntegrity would still report VALID. These cases prove the signature
+  // now binds details_json, actor_*, target_*, severity and tenant_id.
+  it('detects tampering of details_json (the blocked IP / command payload)', async () => {
+    const logId = await auditLogger.logFirewall({
+      action: 'block_ip',
+      agentId: 'agent-ag003',
+      ip: '203.0.113.7',
+      userId: 'user-ag003',
+      success: true,
+      details: { reason: 'brute_force' }
+    });
+
+    expect(auditLogger.verifyIntegrity(logId)).toBe(true);
+
+    const db = getDatabase();
+    db.prepare('UPDATE audit_log SET details_json = ? WHERE id = ?')
+      .run(JSON.stringify({ ip: '10.0.0.0', reason: 'nothing_to_see_here' }), logId);
+
+    expect(auditLogger.verifyIntegrity(logId)).toBe(false);
+  });
+
+  it('detects tampering of actor_ip / actor_id / severity', async () => {
+    const logId = await auditLogger.logCommand({
+      commandType: 'host_remove',
+      agentId: 'agent-ag003b',
+      userId: 'user-ag003b',
+      success: true,
+      details: { path: '/opt/aetherguard' }
+    });
+    expect(auditLogger.verifyIntegrity(logId)).toBe(true);
+
+    const db = getDatabase();
+    db.prepare('UPDATE audit_log SET actor_id = ? WHERE id = ?').run('someone-else', logId);
+    expect(auditLogger.verifyIntegrity(logId)).toBe(false);
+
+    // Restore actor_id to the original value: the row is byte-identical to what
+    // was signed, so integrity is restored (proves the check is exact, not a
+    // one-way tripwire).
+    db.prepare('UPDATE audit_log SET actor_id = ? WHERE id = ?').run('user-ag003b', logId);
+    expect(auditLogger.verifyIntegrity(logId)).toBe(true);
+
+    // Now tamper severity alone: still detected.
+    db.prepare('UPDATE audit_log SET severity = ? WHERE id = ?').run('info', logId);
+    expect(auditLogger.verifyIntegrity(logId)).toBe(false);
+  });
+
   it('owns periodic jobs explicitly and stops every timer', async () => {
     jest.useFakeTimers();
     try {

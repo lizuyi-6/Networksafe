@@ -403,7 +403,13 @@ describe('Auth Routes', () => {
       expect(touchAuthUserLastLogin).not.toHaveBeenCalled();
     });
 
-    it('does not reveal local-login policy before password verification', async () => {
+    // AG-006: when local password login is disabled the response must be the
+    // SAME whether the supplied password is correct or not — otherwise a 403
+    // (correct) vs 401 (incorrect) split lets an attacker confirm a leaked
+    // password without ever logging in. Both cases below must return an
+    // identical 403 LOCAL_LOGIN_DISABLED, and neither may run bcrypt/user lookup.
+    it('AG-006: disabled login returns 403 for a CORRECT password without an oracle', async () => {
+      (allowPasswordLogin as jest.Mock).mockReturnValue(false);
       (findAuthUserByEmail as jest.Mock).mockResolvedValue({
         id: 'oidc-only-user',
         email: 'oidc-only@example.com',
@@ -414,16 +420,31 @@ describe('Auth Routes', () => {
         tenant_id: 'tenant-1',
         status: 'active'
       });
-      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
-      (allowPasswordLogin as jest.Mock).mockReturnValueOnce(false);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const response = await request(app)
+        .post('/login')
+        .send({ email: 'oidc-only@example.com', password: 'correct-password' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.error.code).toBe('LOCAL_LOGIN_DISABLED');
+      // Rejected before touching the account store or bcrypt — no oracle.
+      expect(findAuthUserByEmail).not.toHaveBeenCalled();
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      (allowPasswordLogin as jest.Mock).mockReturnValue(true);
+    });
+
+    it('AG-006: disabled login returns the SAME 403 for a WRONG password', async () => {
+      (allowPasswordLogin as jest.Mock).mockReturnValue(false);
 
       const response = await request(app)
         .post('/login')
         .send({ email: 'oidc-only@example.com', password: 'wrong-password' });
 
-      expect(response.status).toBe(401);
-      expect(response.body.error.code).toBe('INVALID_CREDENTIALS');
-      expect(allowPasswordLogin).not.toHaveBeenCalled();
+      expect(response.status).toBe(403);
+      expect(response.body.error.code).toBe('LOCAL_LOGIN_DISABLED');
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      (allowPasswordLogin as jest.Mock).mockReturnValue(true);
     });
 
     it('rejects a break-glass admin when password login is disabled', async () => {

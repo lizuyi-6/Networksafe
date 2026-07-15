@@ -196,6 +196,104 @@ describe('deploymentRunService', () => {
   });
 });
 
+describe('AG-001 helper result signature is fail-closed', () => {
+  beforeAll(async () => {
+    process.env.DEPLOYMENT_BUNDLE_SIGNING_SECRET = 'test-deployment-signing-secret-32';
+    await initDatabase();
+    hardwareAuthorizationService.prepare();
+    finalDefenseService.prepare();
+    deploymentRunService.prepare();
+  });
+
+  async function seedAttestedRun() {
+    const tenantId = `tenant-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const helperId = `helper-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const gateId = `gate-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    await deploymentRunService.registerHelper({
+      tenantId,
+      helperId,
+      fingerprint: 'fp-ag001',
+      version: '1.0.0-test',
+      hostname: 'host-ag001',
+      systemdStatus: 'active',
+      writablePaths: ['/tmp'],
+      targetHost: 'host-ag001'
+    });
+
+    const run = await deploymentRunService.createRun({
+      tenantId,
+      helperId,
+      gateId,
+      requestType: 'install',
+      serverType: 'docker_compose',
+      profile: { port: 8090 },
+      requestedBy: 'operator@test.local'
+    });
+
+    // Moves the run to helper_attested and returns the server-signed payload.
+    const backup = await deploymentRunService.resolveSerialRequest(helperId, 'BACKUP');
+    expect(backup.ok).toBe(true);
+    return { tenantId, helperId, run, backup };
+  }
+
+  it('rejects a BACKUP result that omits the signature (no silent fail-open)', async () => {
+    const { tenantId, helperId, run } = await seedAttestedRun();
+
+    const result = await deploymentRunService.reportSerialRequestResult({
+      helperId,
+      runId: run.id,
+      tenantId,
+      requestType: 'BACKUP',
+      success: true,
+      output: '/tmp/attacker-backup'
+      // no payload, no signature
+    });
+
+    expect(result?.status).toBe('failed');
+    expect(result?.status).not.toBe('backup_completed');
+    expect(result?.lastError).toBe('invalid_helper_signature');
+  });
+
+  it('rejects a result whose valid signature was issued for a different run (replay)', async () => {
+    const a = await seedAttestedRun();
+    const b = await seedAttestedRun();
+
+    // Signature is valid, but it describes run A — reuse it against run B.
+    const result = await deploymentRunService.reportSerialRequestResult({
+      helperId: b.helperId,
+      runId: b.run.id,
+      tenantId: b.tenantId,
+      requestType: 'BACKUP',
+      success: true,
+      output: '/tmp/replayed',
+      payload: a.backup.payload,
+      signature: a.backup.signature
+    });
+
+    expect(result?.status).toBe('failed');
+    expect(result?.status).not.toBe('backup_completed');
+    expect(result?.lastError).toBe('invalid_helper_signature');
+  });
+
+  it('accepts a result carrying the matching server-issued signature', async () => {
+    const { tenantId, helperId, run, backup } = await seedAttestedRun();
+
+    const result = await deploymentRunService.reportSerialRequestResult({
+      helperId,
+      runId: run.id,
+      tenantId,
+      requestType: 'BACKUP',
+      success: true,
+      output: '/tmp/backup-ref',
+      payload: backup.payload,
+      signature: backup.signature
+    });
+
+    expect(result?.status).toBe('backup_completed');
+  });
+});
+
 describe('deployment-run render scripts (real, not placeholders)', () => {
   it('rollback restores the prior backup instead of echoing a placeholder', () => {
     const rollback = renderRollbackScript('binary_agent');

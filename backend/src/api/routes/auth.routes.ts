@@ -295,6 +295,22 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             });
         }
 
+        // AG-006: close the password-validity oracle. Local password login is a
+        // GLOBAL policy (already public via GET /api/system/mode), so when it is
+        // disabled we must reject BEFORE looking up the account or running
+        // bcrypt. The previous ordering verified the password first and only
+        // then returned LOCAL_LOGIN_DISABLED, letting anyone with a candidate
+        // password distinguish correct (403) from incorrect (401) without ever
+        // logging in. Rejecting uniformly here reveals nothing per-account and
+        // removes the oracle. The later allowPasswordLogin() gate before session
+        // creation is retained as defense-in-depth.
+        if (!allowPasswordLogin()) {
+            return sendError(res, 403, {
+                code: 'LOCAL_LOGIN_DISABLED',
+                message: 'backend.local_password_login_disabled'
+            });
+        }
+
         // SECURITY FIX CVE-2026-007: Check if account is locked
         const isLocked = await authSecurityService.isAccountLocked(email);
         if (isLocked) {
@@ -404,6 +420,10 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
             });
         }
 
+        // AG-006 defense-in-depth: policy may flip between the early gate and
+        // here (e.g. runtime reconfiguration mid-request). Re-check before
+        // minting a session. This branch no longer creates a per-account oracle
+        // because the early gate already rejected the disabled case uniformly.
         if (!allowPasswordLogin()) {
             return sendError(res, 403, {
                 code: 'LOCAL_LOGIN_DISABLED',
