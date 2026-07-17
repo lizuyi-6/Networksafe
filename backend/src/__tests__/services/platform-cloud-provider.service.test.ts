@@ -182,7 +182,8 @@ describe('Platform Cloud Provider Service', () => {
         { role: 'user', content: 'Hi' }
       ]);
 
-      expect(result.latency).toBeGreaterThanOrEqual(50);
+      // setTimeout(50) + Date.now() truncation can measure as 49ms; allow jitter.
+      expect(result.latency).toBeGreaterThanOrEqual(45);
     });
   });
 
