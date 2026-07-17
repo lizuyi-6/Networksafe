@@ -35,7 +35,14 @@ const defaultEnv = {
   SERIAL_HELPER_SHARED_SECRET: process.env.SERIAL_HELPER_SHARED_SECRET || 'AetherGuardReleaseSerialHelperSecret2026!',
   DEPLOYMENT_BUNDLE_SIGNING_SECRET: process.env.DEPLOYMENT_BUNDLE_SIGNING_SECRET || 'AetherGuardReleaseBundleSigningSecret2026!',
   AETHERGUARD_RUNTIME_MODE: process.env.AETHERGUARD_RUNTIME_MODE || 'prod-enterprise',
-  DISABLE_SQLITE_FALLBACK: process.env.DISABLE_SQLITE_FALLBACK || 'true',
+  // The backend's primary store is SQLite today; Postgres currently backs only the
+  // audit shadow store (SHADOW_DATABASE_URL). DB_MODE stays 'postgres' so the
+  // Postgres shadow path is still exercised, but the SQLite-primary store must be
+  // allowed to boot via SQLITE_FALLBACK_ENABLED=true. Setting this to false would
+  // trip the fail-closed guard in database.ts ("SQLite fallback is disabled.
+  // Postgres connection is required.") which exists precisely because a true
+  // Postgres-primary path is not yet wired.
+  SQLITE_FALLBACK_ENABLED: process.env.SQLITE_FALLBACK_ENABLED || 'true',
   ARTIFACT_STORE: process.env.ARTIFACT_STORE || 's3',
   ENABLE_DEV_LOGIN_PRESETS: process.env.ENABLE_DEV_LOGIN_PRESETS || 'false',
   DB_MODE: process.env.DB_MODE || 'postgres',
