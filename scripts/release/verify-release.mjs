@@ -342,8 +342,13 @@ async function main() {
       env: defaultEnv,
     });
 
-    await checkHttp('http://127.0.0.1:3005/health/live', 'backend liveness');
-    await checkReadiness('http://127.0.0.1:3005/health/ready', 'backend readiness');
+    // The release Compose stack exposes only the frontend edge (127.0.0.1:8080);
+    // the backend is internal-only (no host port mapping), matching the
+    // production topology. nginx reverse-proxies /health/ to backend:3005,
+    // so these liveness/readiness probes reach the backend through the same
+    // edge real traffic uses rather than a CI-only direct port.
+    await checkHttp('http://127.0.0.1:8080/health/live', 'backend liveness');
+    await checkReadiness('http://127.0.0.1:8080/health/ready', 'backend readiness');
     await checkHttp('http://127.0.0.1:8080/', 'frontend home');
     await runStep('fastpath self-check', 'docker', ['compose', 'exec', '-T', 'fastpath', 'aetherguard-fastpath', 'self-check']);
     await collectDockerArtifacts();
