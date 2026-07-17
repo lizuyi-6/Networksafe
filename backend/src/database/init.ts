@@ -67,10 +67,10 @@ async function ensureUser(db: any, user: SeedUser): Promise<void> {
         return;
     }
 
-    db.prepare(`
-        INSERT INTO users (id, email, username, password_hash, role, plan, tenant_id, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'), datetime('now'))
-    `).run(uuidv4(), user.email, user.username, passwordHash, user.role, user.plan, uuidv4());
+   db.prepare(`
+       INSERT INTO users (id, email, username, password_hash, role, plan, tenant_id, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'), datetime('now'))
+    `).run(uuidv4(), user.email, user.username, passwordHash, user.role, user.plan, user.role === 'admin' ? PLATFORM_TENANT_ID : uuidv4());
 }
 
 async function bootstrapDatabase() {
