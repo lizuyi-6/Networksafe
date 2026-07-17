@@ -19,6 +19,7 @@ concurrency:
 jobs:
   workflow-lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -34,8 +35,25 @@ jobs:
           tar -xzf "$RUNNER_TEMP/$ACTIONLINT_ARCHIVE" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint"
 
+  project-contracts:
+    runs-on: ubuntu-latest
+    needs: workflow-lint
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Validate Project and IDE Contracts
+        run: npm run check:project-structure
+
   frontend-build:
     runs-on: ubuntu-latest
+    needs: project-contracts
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: ./frontend
@@ -46,6 +64,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -61,6 +81,9 @@ jobs:
 
       - name: Test i18n Contracts
         run: npm run test:i18n
+
+      - name: Test Credential Hygiene
+        run: npm run test:credential-hygiene
 
       - name: Build
         run: npm run build
@@ -87,8 +110,36 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  installer-build:
+    runs-on: ubuntu-latest
+    needs: project-contracts
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./installer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: installer/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit Production Dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build Installer
+        run: npm run build
+
   backend-test:
     runs-on: ubuntu-latest
+    needs: project-contracts
+    timeout-minutes: 35
     defaults:
       run:
         working-directory: ./backend
@@ -99,6 +150,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -114,6 +167,8 @@ jobs:
 
   rust-fastpath-check:
     runs-on: ubuntu-latest
+    needs: project-contracts
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: ./rust-fastpath
@@ -140,6 +195,8 @@ jobs:
 
   rescue-check:
     runs-on: ubuntu-latest
+    needs: project-contracts
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: ./rescue
@@ -171,6 +228,8 @@ jobs:
 
   gateway-safety-check:
     runs-on: ubuntu-latest
+    needs: project-contracts
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -178,10 +237,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: simulator/package-lock.json
 
       - name: Install Simulator Dependencies
         working-directory: ./simulator
         run: npm ci
+
+      - name: Typecheck Gateway Simulator
+        working-directory: ./simulator
+        run: npm run typecheck
 
       - name: Run Gateway Simulator
         working-directory: ./simulator
@@ -202,6 +267,7 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-build, rust-fastpath-check]
+    timeout-minutes: 35
 
     steps:
       - name: Checkout Repository
@@ -243,6 +309,7 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     needs: backend-test
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: ./backend
@@ -255,6 +322,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -276,7 +345,8 @@ jobs:
 
   release-verify:
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-build, rust-fastpath-check, rescue-check, gateway-safety-check, docker-build, security-scan]
+    needs: [backend-test, frontend-build, installer-build, rust-fastpath-check, rescue-check, gateway-safety-check, docker-build, security-scan]
+    timeout-minutes: 60
 
     steps:
       - name: Checkout Repository
@@ -286,6 +356,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
 
       - name: Install E2E Dependencies
         run: npm --prefix e2e ci

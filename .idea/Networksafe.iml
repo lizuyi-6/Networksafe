@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$PROJECT_DIR$">
+      <sourceFolder url="file://$PROJECT_DIR$/backend/src" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/backend/src/__tests__" isTestSource="true" />
+      <sourceFolder url="file://$PROJECT_DIR$/e2e/tests" isTestSource="true" />
+      <sourceFolder url="file://$PROJECT_DIR$/firmware/controller-stm32h5/Core/Inc" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/firmware/controller-stm32h5/Core/Src" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/firmware/controller-stm32h5/test" isTestSource="true" />
+      <sourceFolder url="file://$PROJECT_DIR$/frontend/src" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/installer/src" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/rescue/src" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/rust-fastpath/src" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/rust-fastpath/tests" isTestSource="true" />
+      <sourceFolder url="file://$PROJECT_DIR$/simulator" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$" />
+      <excludeFolder url="file://$PROJECT_DIR$/.arts" />
+      <excludeFolder url="file://$PROJECT_DIR$/.claude/worktrees" />
+      <excludeFolder url="file://$PROJECT_DIR$/.git" />
+      <excludeFolder url="file://$PROJECT_DIR$/.playwright-mcp" />
+      <excludeFolder url="file://$PROJECT_DIR$/artifacts" />
+      <excludeFolder url="file://$PROJECT_DIR$/backend/coverage" />
+      <excludeFolder url="file://$PROJECT_DIR$/backend/data" />
+      <excludeFolder url="file://$PROJECT_DIR$/backend/dist" />
+      <excludeFolder url="file://$PROJECT_DIR$/backend/node_modules" />
+      <excludeFolder url="file://$PROJECT_DIR$/backend/test-data/artifacts" />
+      <excludeFolder url="file://$PROJECT_DIR$/dist" />
+      <excludeFolder url="file://$PROJECT_DIR$/docs/generated" />
+      <excludeFolder url="file://$PROJECT_DIR$/e2e/node_modules" />
+      <excludeFolder url="file://$PROJECT_DIR$/e2e/playwright-report" />
+      <excludeFolder url="file://$PROJECT_DIR$/e2e/test-results" />
+      <excludeFolder url="file://$PROJECT_DIR$/frontend/dist" />
+      <excludeFolder url="file://$PROJECT_DIR$/frontend/node_modules" />
+      <excludeFolder url="file://$PROJECT_DIR$/installer/dist" />
+      <excludeFolder url="file://$PROJECT_DIR$/installer/node_modules" />
+      <excludeFolder url="file://$PROJECT_DIR$/node_modules" />
+      <excludeFolder url="file://$PROJECT_DIR$/output" />
+      <excludeFolder url="file://$PROJECT_DIR$/outputs" />
+      <excludeFolder url="file://$PROJECT_DIR$/rescue/target" />
+      <excludeFolder url="file://$PROJECT_DIR$/rust-fastpath/target" />
+      <excludeFolder url="file://$PROJECT_DIR$/simulator/node_modules" />
+      <excludeFolder url="file://$PROJECT_DIR$/tmp" />
+      <excludePattern pattern="*.db" />
+      <excludePattern pattern="*.log" />
+      <excludePattern pattern="*.sqlite" />
+      <excludePattern pattern="*.zip" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

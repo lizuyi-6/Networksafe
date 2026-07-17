@@ -16,10 +16,18 @@ coverage/
 .env.local
 .env.*.local
 
-# IDE (launch.json is committed on purpose - AI/teammate debug entry points)
+# IDE (shared project settings and debug entry points are committed on purpose)
 .vscode/*
 !.vscode/launch.json
-.idea/
+.idea/*
+!.idea/Networksafe.iml
+!.idea/codeStyles/
+!.idea/codeStyles/**
+!.idea/inspectionProfiles/
+!.idea/inspectionProfiles/**
+!.idea/modules.xml
+!.idea/runConfigurations/
+!.idea/runConfigurations/**
 *.swp
 *.swo
 *~
@@ -200,3 +208,7 @@ docs/video/**/*.wav
 docs/video/**/*.mp4
 docs/video/**/*.png
 docs/video/**/*.jpg
+
+# IntelliJ headless inspector output (scripts/dev/run-idea-inspect.ps1)
+.idea-inspect-results/
+
