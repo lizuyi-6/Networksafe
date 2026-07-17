@@ -39,7 +39,11 @@ export function isLabRuntime(mode = getEnterpriseRuntimeMode()): boolean {
 }
 
 export function allowDemoFeatures(mode = getEnterpriseRuntimeMode()): boolean {
-  return mode === 'lab';
+  // Lab runtime always allows demo. prod-enterprise and trial allow demo only
+  // when an operator explicitly sets ALLOW_DEMO_FEATURES=true (e.g. a release
+  // verification stack that must exercise the demo-mode UI paths). This mirrors
+  // the ALLOW_BREAK_GLASS_PASSWORD_LOGIN escape hatch on allowPasswordLogin().
+  return mode === 'lab' || process.env.ALLOW_DEMO_FEATURES === 'true';
 }
 
 export function allowGatewayDestructiveCommands(mode = getEnterpriseRuntimeMode()): boolean {

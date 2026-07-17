@@ -72,6 +72,21 @@ describe('enterprise-runtime', () => {
         expect(allowPasswordLogin()).toBe(true);
     });
 
+    it.each([undefined, 'false'])('disables demo features in prod-enterprise when ALLOW_DEMO_FEATURES is %s', (flag) => {
+        process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        if (flag === undefined) delete process.env.ALLOW_DEMO_FEATURES;
+        else process.env.ALLOW_DEMO_FEATURES = flag;
+
+        expect(allowDemoFeatures()).toBe(false);
+    });
+
+    it('enables demo features in prod-enterprise only when ALLOW_DEMO_FEATURES=true', () => {
+        process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        process.env.ALLOW_DEMO_FEATURES = 'true';
+
+        expect(allowDemoFeatures()).toBe(true);
+    });
+
     it('oidcEnabled returns a boolean', () => {
         expect(typeof oidcEnabled()).toBe('boolean');
     });

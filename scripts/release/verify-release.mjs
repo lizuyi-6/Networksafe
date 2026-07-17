@@ -51,6 +51,9 @@ const defaultEnv = {
   // path must be enabled for the e2e browser to reach /dashboard. This only
   // affects the CI verify stack; production operators control this independently.
   ALLOW_BREAK_GLASS_PASSWORD_LOGIN: process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN || 'true',
+  // The site-walkthrough e2e toggles demo mode to exercise the demo UI paths.
+  // prod-enterprise disables demo features by default; allow them explicitly here.
+  ALLOW_DEMO_FEATURES: process.env.ALLOW_DEMO_FEATURES || 'true',
   PLAYWRIGHT_BASE_URL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8080',
 };
 
