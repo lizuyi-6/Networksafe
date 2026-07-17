@@ -123,6 +123,7 @@ services:
       - AUDIT_LOG_FAIL_CLOSED=${AUDIT_LOG_FAIL_CLOSED:-true}
       - AUDIT_SHADOW_REQUIRED=${AUDIT_SHADOW_REQUIRED:-true}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required (min 12 chars)}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@AetherGuard.com}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY is required (min 32 chars)}
       - ENCRYPTION_SALT=${ENCRYPTION_SALT:?ENCRYPTION_SALT is required (min 16 chars)}
       - VALID_API_KEYS=${VALID_API_KEYS:-}

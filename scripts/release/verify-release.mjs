@@ -46,6 +46,11 @@ const defaultEnv = {
   ARTIFACT_STORE: process.env.ARTIFACT_STORE || 's3',
   ENABLE_DEV_LOGIN_PRESETS: process.env.ENABLE_DEV_LOGIN_PRESETS || 'false',
   DB_MODE: process.env.DB_MODE || 'postgres',
+  // The release e2e suite authenticates via the password login form. In
+  // prod-enterprise mode password login is disabled by default, so the break-glass
+  // path must be enabled for the e2e browser to reach /dashboard. This only
+  // affects the CI verify stack; production operators control this independently.
+  ALLOW_BREAK_GLASS_PASSWORD_LOGIN: process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN || 'true',
   PLAYWRIGHT_BASE_URL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8080',
 };
 
