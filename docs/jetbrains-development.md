@@ -1,7 +1,7 @@
 # JetBrains Development Setup
 
 The repository commits only team-owned JetBrains settings. User state such as
-`.idea/workspace.xml`, local data sources, shelves, and HTTP request history remains ignored.
+`.idea/workspace.xml`, data-source passwords, shelves, and HTTP request history remains ignored.
 
 ## Project Model
 
@@ -39,6 +39,8 @@ scopes analysis one level too high (sweeping in sibling repositories under the p
 | `AetherGuard - Backend Dev` | `backend npm run dev` | Local backend process |
 | `AetherGuard - Frontend Dev` | `frontend npm run dev` | Local Vite process |
 | `AetherGuard - Backend Tests` | `backend npm run test:all` | Four-shard Jest suite |
+| `AetherGuard - Database Up` | `npm run db:up` | Starts PostgreSQL with a development-only loopback binding on `127.0.0.1:15432` |
+| `AetherGuard - Database Check` | `npm run db:check` | Verifies database name, user, PostgreSQL 16+, and reports the public table count |
 | `AetherGuard - Quality Quick` | `npm run check:quick` | Structure, release guards, backend/frontend typecheck and lint, installer audit/build |
 | `AetherGuard - Quality Full Local` | `npm run check:all` | Sequential local test/build suite; does not include Docker or Playwright release verification |
 | `AetherGuard - Gateway Safety` | `npm run check:gateway-safety` | Simulator scenarios plus host-side firmware tests; not hardware HIL |
@@ -48,6 +50,30 @@ scopes analysis one level too high (sweeping in sibling repositories under the p
 The authoritative GitHub workflow remains `.github/workflows/ci.yml`. It additionally runs clean
 dependency installs, production dependency audits, Docker image builds, Playwright release
 verification, and artifact upload in isolated Linux jobs.
+
+## PostgreSQL Data Source
+
+The shared `AetherGuard PostgreSQL (Local)` data source points to
+`jdbc:postgresql://127.0.0.1:15432/aetherguard` with user `aetherguard`. Start it from the
+`AetherGuard - Database Up` run configuration, then use the password from the ignored root `.env`
+(`POSTGRES_PASSWORD`) when JetBrains prompts. JetBrains stores that password in its local password
+safe; it is never committed in `.idea/dataSources.xml`.
+
+The loopback port is provided only by
+`deployment/development/docker-compose.jetbrains.yml`. The canonical production Compose file keeps
+PostgreSQL internal to the Compose network. Override the local port with
+`JETBRAINS_POSTGRES_PORT` when `15432` is occupied, and update the local data-source URL to match.
+
+`DB_MODE=postgres` does not mean every repository has been migrated away from SQLite. PostgreSQL is
+authoritative for the repositories that explicitly branch on `getDatabaseMode()`, while remaining
+legacy paths may still use the SQLite fallback. Use `/health/ready` and the backend shadow-store
+status when validating the running control plane; a successful IDE connection proves database
+connectivity, not complete write-path migration.
+
+The Docker backend reads the root `.env` and connects to `postgres:5432` inside the Compose network.
+The standalone `AetherGuard - Backend Dev` process reads `backend/.env` and remains SQLite-oriented
+unless a developer explicitly supplies a host-reachable shadow URL; the two launch modes are kept
+separate so the container hostname `postgres` is never mistaken for a host DNS name.
 
 ## Toolchain
 

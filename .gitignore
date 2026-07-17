@@ -26,6 +26,7 @@ coverage/
 !.idea/inspectionProfiles/
 !.idea/inspectionProfiles/**
 !.idea/modules.xml
+!.idea/dataSources.xml
 !.idea/runConfigurations/
 !.idea/runConfigurations/**
 *.swp

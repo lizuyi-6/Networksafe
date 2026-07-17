@@ -2,6 +2,10 @@
   "scripts": {
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
+    "db:up": "docker compose -f docker-compose.yml -f deployment/development/docker-compose.jetbrains.yml up -d postgres",
+    "db:check": "node scripts/dev/check-postgres.mjs",
+    "db:status": "docker compose -f docker-compose.yml -f deployment/development/docker-compose.jetbrains.yml ps postgres",
+    "db:down": "docker compose -f docker-compose.yml -f deployment/development/docker-compose.jetbrains.yml stop postgres",
     "check:project-structure": "node scripts/guards/check-project-structure.mjs",
     "check:release-guards": "node scripts/guards/check-route-db-access.mjs && node scripts/guards/check-no-direct-api-fetch.mjs && node scripts/guards/check-frontend-api-contract.mjs && node scripts/guards/check-repository-hygiene.mjs && node scripts/guards/check-rescue-no-release.mjs",
     "check:backend": "npm --prefix backend run typecheck && npm --prefix backend run lint && npm --prefix backend run test:all",

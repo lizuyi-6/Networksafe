@@ -10,11 +10,14 @@ const requiredFiles = [
   '.idea/Networksafe.iml',
   '.idea/codeStyles/Project.xml',
   '.idea/codeStyles/codeStyleConfig.xml',
+  '.idea/dataSources.xml',
   '.idea/inspectionProfiles/Project_Default.xml',
   '.idea/inspectionProfiles/profiles_settings.xml',
   '.idea/runConfigurations/AetherGuard_AI_Diagnose.xml',
   '.idea/runConfigurations/AetherGuard_Backend_Dev.xml',
   '.idea/runConfigurations/AetherGuard_Backend_Tests.xml',
+  '.idea/runConfigurations/AetherGuard_Database_Check.xml',
+  '.idea/runConfigurations/AetherGuard_Database_Up.xml',
   '.idea/runConfigurations/AetherGuard_Frontend_Dev.xml',
   '.idea/runConfigurations/AetherGuard_Gateway_Safety.xml',
   '.idea/runConfigurations/AetherGuard_Quality_Full_Local.xml',
@@ -23,6 +26,7 @@ const requiredFiles = [
   'AGENTS.md',
   'CLAUDE.md',
   'backend/package.json',
+  'deployment/development/docker-compose.jetbrains.yml',
   'e2e/package.json',
   'firmware/controller-stm32h5/test/Makefile',
   'frontend/package.json',
@@ -30,6 +34,7 @@ const requiredFiles = [
   'rescue/Cargo.toml',
   'rust-fastpath/Cargo.toml',
   'scripts/dev/run-firmware-host-tests.mjs',
+  'scripts/dev/check-postgres.mjs',
   'simulator/package.json',
   'simulator/tsconfig.typecheck.json',
 ];
@@ -68,6 +73,10 @@ for (const relativePath of packageManifestPaths) {
 
 const rootScripts = packageManifests.get('package.json')?.scripts ?? {};
 for (const scriptName of [
+  'db:check',
+  'db:down',
+  'db:status',
+  'db:up',
   'check:all',
   'check:backend',
   'check:firmware-host',
@@ -136,6 +145,7 @@ try {
   for (const fragment of [
     '.idea/*',
     '!.idea/Networksafe.iml',
+    '!.idea/dataSources.xml',
     '!.idea/codeStyles/**',
     '!.idea/inspectionProfiles/**',
     '!.idea/runConfigurations/**',
