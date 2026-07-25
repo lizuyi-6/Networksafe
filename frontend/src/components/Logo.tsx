@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/brand/aetherguard-logo.svg';
 import { useTheme } from '../context/ThemeContext';
 
 export type PlanTier = 'starter' | 'professional' | 'enterprise' | null;
