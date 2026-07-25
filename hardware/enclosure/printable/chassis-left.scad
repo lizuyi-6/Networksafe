@@ -10,9 +10,15 @@ module printable_chassis_left() {
         split_part_x(0, SPLIT_X + 1)
             printable_chassis_core();
 
-        // Low internal alignment lips for glue/screw assisted assembly.
-        seam_lip_left(ENCLOSURE_D - 2 * WALL - 12, 5, WALL + 8, FLOOR_T);
-        seam_lip_left(ENCLOSURE_D - 2 * WALL - 44, 4, WALL + 24, DECK_SPLIT_Z + DECK_T + 1);
+        // Low and high anti-shear lips align the shell without recreating the
+        // inaccessible mid-deck used by the previous enclosure architecture.
+        seam_lip_left(ENCLOSURE_D - 2 * WALL - 20, 4, WALL + 10, FLOOR_T);
+        seam_lip_left(
+            ENCLOSURE_D - 2 * WALL - 36,
+            5,
+            WALL + 18,
+            ENCLOSURE_H - ROOF_T - 11
+        );
     }
 }
 

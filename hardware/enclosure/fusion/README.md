@@ -31,16 +31,18 @@ For editable mechanical CAD, do not treat the STL as the master model. Use it as
 - `M2 NUCLEO Placeholder`
 - `M3 Secure Element Placeholder`
 - `M4 DIN Modules Placeholder`
+- `Logic-Interlock Partition`
 
 ## Rebuild Order
 
 1. Base chassis box: sketch `enclosure_w x enclosure_d`, extrude `enclosure_h`, shell by `wall`.
 2. Front and top openings: cut the service openings using `panel_t` and `roof_t`.
-3. Internal deck: extrude a shelf at `deck_split_z`.
-4. Lower DIN rail: create a 35 mm rail along `internal_din_len`.
-5. Front panel: create RJ45, USB-C, status, E-stop, and confirm cutouts from parameters.
-6. Top cover: add stack-light hole, vent slots, countersunk screw holes, and tamper-seal holes.
-7. Add fillets/chamfers last.
+3. Single service plane: create the M1 cradle and M2/M3 mounting points directly on the floor.
+4. Interlock boundary: add the partition at `power_partition_y`, then create only the two grommeted harness passages.
+5. Rear DIN rail: create a transverse 35 mm rail along `internal_din_len`.
+6. Front panel: create RJ45, USB-C, four-state window, E-stop, and confirm cutouts from parameters.
+7. Top cover: add separate M1/M2 vents, rear exhaust slots, the 22 mm stack-light pattern, countersunk screw holes, and tamper-seal holes.
+8. Add registration lips, anti-shear split features, fillets, and chamfers last.
 
 ## Mesh Import Notes
 

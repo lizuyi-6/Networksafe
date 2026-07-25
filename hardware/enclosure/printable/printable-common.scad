@@ -22,8 +22,11 @@ module chassis_no_integrated_clip() {
 }
 
 module rear_clip_mount_holes() {
-    for (x = [110, 190]) {
-        for (z = [43, 75]) {
+    for (x = DIN_RAIL_CLIP_CENTERS_X) {
+        for (z = [
+            DIN_RAIL_CLIP_MOUNT_Z - 20,
+            DIN_RAIL_CLIP_MOUNT_Z + 20
+        ]) {
             translate([x, ENCLOSURE_D + 2, z])
                 rotate([90, 0, 0])
                     cylinder(h = WALL + 6, d = 4.2);

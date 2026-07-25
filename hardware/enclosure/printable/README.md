@@ -1,19 +1,19 @@
 # Printable FDM Version
 
-This directory contains the printable split enclosure for a roughly 220 x 220 mm bed.
+This directory contains the printable split Phase 0.6 enclosure for a roughly 220 x 220 mm bed.
 
-The full appliance envelope is still 300 x 210 x 118 mm, but large panels are split into printable pieces.
+The full appliance envelope is 320 x 210 x 88 mm, but large panels are split into printable pieces.
 Do not print the Fusion proxy assembly directly. Use the STL files in this directory for slicing.
 
 | Part | Approx print footprint |
 |---|---:|
-| `chassis-left.stl` | 151 x 210 mm |
-| `chassis-right.stl` | 151 x 210 mm |
-| `front-panel-left.stl` | 148 x 115 mm |
-| `front-panel-right.stl` | 148 x 115 mm |
-| `top-cover-left.stl` | 148 x 204 mm |
-| `top-cover-right.stl` | 148 x 204 mm |
-| `rear-din-clip.stl` | 120 x 76 mm |
+| `chassis-left.stl` | 161 x 210 mm |
+| `chassis-right.stl` | 161 x 210 mm |
+| `front-panel-left.stl` | 157 x 82 mm |
+| `front-panel-right.stl` | 157 x 82 mm |
+| `top-cover-left.stl` | 157 x 204 mm |
+| `top-cover-right.stl` | 157 x 204 mm |
+| `rear-din-clip.stl` | 205 x 64 mm |
 
 The front-panel STL files are already oriented flat: back face on the bed, raised details facing up.
 
@@ -43,11 +43,12 @@ openscad -o chassis-left.stl chassis-left.scad
 
 ## Assembly Notes
 
-1. Glue or plastic-weld the two chassis halves along the center seam.
-2. The left chassis half has two alignment lips; the right half has clearance pockets.
+1. Plastic-weld or bolt the two chassis halves along the center seam. Adhesive alone is not preferred for a rail-mounted field unit.
+2. The left chassis half has low and high anti-shear lips; the right half has matching clearance pockets.
 3. Attach the split front-panel halves to the chassis with M3 screws or heat-set inserts.
 4. Join the two top-cover halves using the underside lap strip, then screw the cover down.
-5. Attach `rear-din-clip.stl` to the rear wall with four M4 screws. The printable chassis has matching pilot holes.
-6. Keep 24V relay terminals covered; add an insulating inner shield if the printed vent openings expose touchable conductors.
+5. Attach `rear-din-clip.stl` to the rear wall with four M4 screws. The dual-hook carrier and printable chassis have matching holes.
+6. Install grommets in both logic/interlock partition passages.
+7. Keep 24V relay terminals covered; add an insulating inner shield if any vent exposes touchable conductors.
 
 Run the wiring checks in `docs/hardware-wiring-diagram.md` before powering the appliance.

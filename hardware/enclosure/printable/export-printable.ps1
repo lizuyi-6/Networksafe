@@ -14,4 +14,7 @@ foreach ($part in $parts) {
   openscad -o "$part.stl" "$part.scad"
 }
 
-openscad --imgsize 1400,900 --camera 180,235,720,0,0,0,1050 --projection o -o print-plate.png print-plate.scad
+$stlPaths = $parts | ForEach-Object { "$_.stl" }
+py -3 "..\validate-mesh.py" @stlPaths
+
+openscad --imgsize 1400,900 --camera 170,290,850,0,0,0,1500 --projection o -o print-plate.png print-plate.scad
