@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
     assertNoDemoAuxiliaryCopy,
     assertFooterLegalLinks,
@@ -10,35 +10,76 @@ import {
     visitPublicPage,
     visitSidebarPage,
 } from './helpers/site-health';
+import { DEFAULT_PUBLIC_ROUTE_CONTRACT } from '../../frontend/src/config/public-route-contract';
+import { PITCH_PUBLIC_ROUTE_CONTRACT } from '../../frontend/src/config/public-route-contract';
 
 test.describe('Site walkthrough', () => {
+    test('pitch-disabled build keeps every feature-flagged route out of production', async ({ page }) => {
+        test.skip(process.env.E2E_EXPECT_PITCH_ROUTES_DISABLED !== 'true', 'Requires the default frontend build');
+        await page.route('**/api/auth/me', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: true,
+                    data: {
+                        user: {
+                            userId: 'pitch-disabled-admin',
+                            email: 'pitch-disabled@example.test',
+                            username: 'pitch-disabled-admin',
+                            role: 'admin',
+                            plan: 'ultra',
+                            authProvider: 'local',
+                        },
+                    },
+                    error: null,
+                }),
+            });
+        });
+
+        for (const routeContract of PITCH_PUBLIC_ROUTE_CONTRACT) {
+            await page.goto(routeContract.path);
+            await expect(page).toHaveURL(/\/dashboard$/);
+            await expect(page.getByTestId('system-health-indicator')).toBeVisible();
+            await expect(page.getByTestId(routeContract.landmarkTestId)).toHaveCount(0);
+        }
+    });
+
+    test('pitch-enabled build walks every feature-flagged public route landmark', async ({ page }) => {
+        test.skip(process.env.E2E_EXPECT_PITCH_ROUTES !== 'true', 'Requires a pitch-enabled frontend build');
+
+        for (const routeContract of PITCH_PUBLIC_ROUTE_CONTRACT) {
+            await page.goto(routeContract.path);
+            if (routeContract.redirectsTo) {
+                await expect(page).toHaveURL(new RegExp(`${routeContract.redirectsTo}$`));
+            } else {
+                await expect(page).toHaveURL(new RegExp(`${routeContract.path}$`));
+            }
+            await expect(page.getByTestId(routeContract.landmarkTestId)).toBeVisible();
+
+            const horizontalOverflow = await page.evaluate(() => Math.ceil(
+                document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            ));
+            expect(horizontalOverflow, `${routeContract.path} should not overflow horizontally`).toBeLessThanOrEqual(2);
+        }
+    });
+
     test('browses public pages, protected pages, and demo pages without display issues', async ({ page, baseURL }) => {
         test.setTimeout(240000);
         const resolvedBaseUrl = baseURL || 'http://127.0.0.1:8080';
         const monitor = createIssueMonitor(page, resolvedBaseUrl);
 
-        const publicPages = [
-            { route: '/', selector: 'body' },
-            { route: '/login', selector: 'form' },
-            { route: '/privacy', selector: 'body' },
-            { route: '/terms', selector: 'main' },
-            { route: '/promo', selector: 'body' },
-            { route: '/promo-film', selector: 'body' },
-            { route: '/landing-workshop', selector: 'body' },
-            { route: '/landing-workshop/remodel', selector: 'body' },
-            { route: '/landing-workshop/industrial', selector: 'body' },
-            { route: '/landing-workshop/enterprise', selector: 'body' },
-            { route: '/landing-workshop/terminal', selector: 'body' },
-            { route: '/landing-workshop/story', selector: 'body' },
-        ];
-
-        for (const publicPage of publicPages) {
+        for (const publicPage of DEFAULT_PUBLIC_ROUTE_CONTRACT) {
             const snapshot = monitor.snapshot();
-            await visitPublicPage(page, publicPage.route, publicPage.selector);
-            if (publicPage.route === '/') {
+            await visitPublicPage(
+                page,
+                publicPage.path,
+                `[data-testid="${publicPage.landmarkTestId}"]`,
+            );
+            if (publicPage.path === '/') {
                 await assertFooterLegalLinks(page);
             }
-            await monitor.assertNoNewIssues(snapshot, publicPage.route);
+            await monitor.assertNoNewIssues(snapshot, publicPage.path);
         }
 
         {

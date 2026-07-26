@@ -150,7 +150,7 @@ const LandingTerminal = () => {
     }, [bootShown, eventsShown]);
 
     return (
-        <div className="min-h-screen bg-[#070a08] font-mono text-[13px] leading-relaxed text-emerald-100/90">
+        <div data-testid="landing-workshop-terminal" className="min-h-screen bg-[#070a08] font-mono text-[13px] leading-relaxed text-emerald-100/90">
             {/* Top bar */}
             <header className="sticky top-0 z-40 border-b border-emerald-900/50 bg-[#070a08]/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-3">

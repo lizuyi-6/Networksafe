@@ -15,7 +15,7 @@ const TermsOfService = () => {
     const { t } = useLanguage();
 
     return (
-        <div className="min-h-screen overflow-y-auto overflow-x-hidden bg-background text-foreground">
+        <div data-testid="terms-page" className="min-h-screen overflow-y-auto overflow-x-hidden bg-background text-foreground">
             <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur">
                 <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
                     <button

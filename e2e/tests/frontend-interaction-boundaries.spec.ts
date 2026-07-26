@@ -1,5 +1,6 @@
 import { expect, Locator, Page, test } from '@playwright/test';
 import { assertRenderedPage, loginAsAdmin } from './helpers/site-health';
+import { DEFAULT_PUBLIC_ROUTE_CONTRACT } from '../../frontend/src/config/public-route-contract';
 
 const expectMinimumTarget = async (locator: Locator, label: string) => {
     await expect(locator, `${label} should be visible`).toBeVisible();
@@ -22,6 +23,22 @@ test.describe('Frontend interaction boundaries', () => {
     test('public routes avoid session probes and public controls keep 24px targets', async ({ page }) => {
         test.setTimeout(120000);
         const sessionInitializationRequests: string[] = [];
+        await page.route('**/api/system/mode', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: true,
+                    data: {
+                        oidcEnabled: false,
+                        passwordLoginEnabled: true,
+                        adminPasswordLoginEnabled: true,
+                        passwordRecoveryMode: 'local',
+                    },
+                    error: null,
+                }),
+            });
+        });
         page.on('request', (request) => {
             const url = new URL(request.url());
             if (/\/api\/(?:auth\/(?:me|refresh)|system\/mode)$/.test(url.pathname)) {
@@ -29,25 +46,11 @@ test.describe('Frontend interaction boundaries', () => {
             }
         });
 
-        const publicRoutes = [
-            '/',
-            '/login',
-            '/privacy',
-            '/terms',
-            '/promo',
-            '/promo-film',
-            '/landing-workshop',
-            '/landing-workshop/remodel',
-            '/landing-workshop/industrial',
-            '/landing-workshop/enterprise',
-            '/landing-workshop/terminal',
-            '/landing-workshop/story',
-        ];
-
-        for (const route of publicRoutes) {
+        for (const routeContract of DEFAULT_PUBLIC_ROUTE_CONTRACT) {
+            const route = routeContract.path;
             const requestOffset = sessionInitializationRequests.length;
             await page.goto(route);
-            await assertRenderedPage(page, route, 'body');
+            await assertRenderedPage(page, route, `[data-testid="${routeContract.landmarkTestId}"]`);
             await page.waitForTimeout(300);
             const routeRequests = sessionInitializationRequests.slice(requestOffset);
             const unexpectedRequests = route === '/login'
@@ -77,11 +80,60 @@ test.describe('Frontend interaction boundaries', () => {
     });
 
     test('desktop header controls keep 24px targets', async ({ page }) => {
+        const adminSession = {
+            userId: 'e2e-theme-admin',
+            email: 'theme-admin@example.test',
+            username: 'e2e-theme-admin',
+            role: 'admin',
+            plan: 'ultra',
+            authProvider: 'local',
+        };
+        await page.route('**/api/system/mode', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: true,
+                    data: {
+                        oidcEnabled: false,
+                        passwordLoginEnabled: true,
+                        adminPasswordLoginEnabled: true,
+                        passwordRecoveryMode: 'local',
+                        attackSimEnabled: false,
+                    },
+                    error: null,
+                }),
+            });
+        });
+        await page.route('**/api/auth/login', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ success: true, data: { user: adminSession }, error: null }),
+            });
+        });
+        await page.route('**/api/auth/me', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ success: true, data: { user: adminSession }, error: null }),
+            });
+        });
         await loginAsAdmin(page);
 
-        await expectMinimumTarget(page.getByTitle('Light Mode'), 'light theme');
-        await expectMinimumTarget(page.getByTitle('System'), 'system theme');
-        await expectMinimumTarget(page.getByTitle('Dark Mode'), 'dark theme');
+        await expectMinimumTarget(page.getByTestId('theme-light'), 'light theme');
+        await expectMinimumTarget(page.getByTestId('theme-system'), 'system theme');
+        await expectMinimumTarget(page.getByTestId('theme-dark'), 'dark theme');
+
+        await page.getByTestId('theme-dark').click();
+        await expect(page.getByTestId('theme-dark')).toHaveAttribute('aria-pressed', 'true');
+        await expect(page.locator('html')).toHaveClass(/dark/);
+        expect(await page.evaluate(() => localStorage.getItem('aetherguard-theme-v2'))).toBe('dark');
+
+        await page.getByTestId('theme-light').click();
+        await expect(page.getByTestId('theme-light')).toHaveAttribute('aria-pressed', 'true');
+        await expect(page.locator('html')).toHaveClass(/light/);
+        expect(await page.evaluate(() => localStorage.getItem('aetherguard-theme-v2'))).toBe('light');
         await expectMinimumTarget(page.getByTestId('demo-mode-toggle'), 'demo mode');
         await expectMinimumTarget(page.getByTestId('live-mode-toggle'), 'live mode');
         await expectNoHorizontalOverflow(page, 'desktop console');

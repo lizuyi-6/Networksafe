@@ -108,9 +108,9 @@ test.describe('full clickthrough巡检', () => {
             const monitor = createIssueMonitor(page, baseURL!);
 
             await monitoredStep(page, monitor, 'shell toggles', async () => {
-                await page.getByTitle('Light Mode').click();
-                await page.getByTitle('System').click();
-                await page.getByTitle('Dark Mode').click();
+                await page.getByTestId('theme-light').click();
+                await page.getByTestId('theme-system').click();
+                await page.getByTestId('theme-dark').click();
 
                 const liveToggle = page.getByTestId('live-mode-toggle');
                 const initialLive = await liveToggle.getAttribute('aria-pressed');

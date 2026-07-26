@@ -182,9 +182,9 @@ test.describe('AetherGuard full acceptance flows', () => {
             await cleanupE2EArtifacts(page.request);
             await gotoProtected(page, '/dashboard', 'Dashboard');
             if (!isMobileViewport(page)) {
-                await page.getByTitle('Light Mode').click();
-                await page.getByTitle('System').click();
-                await page.getByTitle('Dark Mode').click();
+                await page.getByTestId('theme-light').click();
+                await page.getByTestId('theme-system').click();
+                await page.getByTestId('theme-dark').click();
                 const liveToggle = page.getByTestId('live-mode-toggle');
                 if ((await liveToggle.getAttribute('aria-pressed')) === 'true') {
                     await liveToggle.click();

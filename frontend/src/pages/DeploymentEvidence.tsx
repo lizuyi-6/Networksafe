@@ -65,6 +65,7 @@ const DeploymentEvidence = () => {
 
     return (
         <ConsolePage
+            testId="deployment-evidence-page"
             title="Evidence"
             subtitle="Immutable deployment evidence packs generated after helper execution."
             actions={

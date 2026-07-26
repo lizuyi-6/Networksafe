@@ -113,6 +113,7 @@ const DeploymentRuns = () => {
 
     return (
         <ConsolePage
+            testId="deployment-runs-page"
             title="Deployment Runs"
             subtitle="Signed bundle execution through helper attestation and serial hardware confirmation."
             actions={

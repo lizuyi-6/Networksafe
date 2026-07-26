@@ -110,6 +110,69 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Install Frontend Browser Test Dependencies
+        working-directory: ./e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Test Default Frontend Route and Session Contracts
+        working-directory: .
+        env:
+          E2E_EXPECT_PITCH_ROUTES_DISABLED: 'true'
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173
+        run: |
+          set -euo pipefail
+          frontend/node_modules/.bin/vite preview --host 127.0.0.1 --port 4173 > "$RUNNER_TEMP/default-preview.log" 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill "$PREVIEW_PID" 2>/dev/null || true; wait "$PREVIEW_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              cat "$RUNNER_TEMP/default-preview.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          npm --prefix e2e run test -- tests/site-walkthrough.spec.ts --project=chromium --grep pitch-disabled
+          npm --prefix e2e run test -- tests/security-hardening-acceptance.spec.ts --project=chromium --grep "header health|mounted admin|hanging session|hanging refresh|enterprise read-permission matrix"
+          npm --prefix e2e run test -- tests/frontend-interaction-boundaries.spec.ts --project=chromium
+          kill "$PREVIEW_PID" 2>/dev/null || true
+          wait "$PREVIEW_PID" 2>/dev/null || true
+          trap - EXIT
+
+      - name: Build Pitch-Enabled Route Variant
+        env:
+          VITE_ENABLE_PITCH_ROUTES: 'true'
+        run: npm run build
+
+      - name: Test Pitch-Enabled Public Routes
+        working-directory: .
+        env:
+          E2E_EXPECT_PITCH_ROUTES: 'true'
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173
+        run: |
+          set -euo pipefail
+          frontend/node_modules/.bin/vite preview --host 127.0.0.1 --port 4173 > "$RUNNER_TEMP/pitch-preview.log" 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill "$PREVIEW_PID" 2>/dev/null || true; wait "$PREVIEW_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/aetherguard-deck > /dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              cat "$RUNNER_TEMP/pitch-preview.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          npm --prefix e2e run test -- tests/site-walkthrough.spec.ts --project=chromium --grep pitch-enabled
+          kill "$PREVIEW_PID" 2>/dev/null || true
+          wait "$PREVIEW_PID" 2>/dev/null || true
+          trap - EXIT
+
   installer-build:
     runs-on: ubuntu-latest
     needs: project-contracts

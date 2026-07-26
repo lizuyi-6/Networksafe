@@ -82,7 +82,7 @@ const expectErrorEnvelope = async (responsePromise: Promise<any>, expectedStatus
 
 const mockSession = async (
     page: Page,
-    role: 'admin' | 'viewer' = 'admin',
+    role: 'admin' | 'viewer' | 'tenant_operator' | 'auditor' = 'admin',
     authProvider: 'local' | 'oidc' = 'local',
 ) => {
     await page.route('**/api/auth/me', async (route) => {
@@ -123,6 +123,30 @@ const mockSession = async (
             status: 200,
             contentType: 'application/json',
             body: JSON.stringify({ success: true, data: { totalRules: 0, activeRules: 0, topRules: [] }, error: null }),
+        });
+    });
+    await page.route('**/api/admin/users', async (route) => {
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ users: [] }) });
+    });
+    await page.route('**/api/deployment-runs', async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: true, data: { runs: [] }, error: null }),
+        });
+    });
+    await page.route('**/api/helpers', async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: true, data: { helpers: [] }, error: null }),
+        });
+    });
+    await page.route('**/api/hardware-gates', async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: true, data: { gates: [] }, error: null }),
         });
     });
 };
@@ -254,6 +278,12 @@ test.describe('Security hardening acceptance flows', () => {
 
     test('header health indicator fails closed on not-ready and unreachable readiness checks', async ({ page }) => {
         await mockSession(page);
+        const authMeRequests: string[] = [];
+        page.on('request', (request) => {
+            if (new URL(request.url()).pathname === '/api/auth/me') {
+                authMeRequests.push(request.url());
+            }
+        });
 
         await page.route('**/health/ready', async (route) => {
             await route.fulfill({
@@ -264,6 +294,9 @@ test.describe('Security hardening acceptance flows', () => {
         });
         await page.goto('/dashboard');
         const indicator = page.getByTestId('system-health-indicator');
+        await expect(page).toHaveURL(/\/dashboard$/);
+        await expect(page.locator('main')).toBeVisible();
+        expect(authMeRequests.length, 'readiness 503 must not suppress authoritative session validation').toBeGreaterThan(0);
         await expect(indicator).toHaveAttribute('data-status', 'not_ready');
         await expect(indicator).not.toHaveClass(/border-emerald-500/);
 
@@ -272,6 +305,68 @@ test.describe('Security hardening acceptance flows', () => {
         await page.reload();
         await expect(indicator).toHaveAttribute('data-status', 'not_ready');
         await expect(indicator).not.toHaveClass(/border-emerald-500/);
+    });
+
+    test('mounted admin and permission routes revoke immediately on session expiration', async ({ page }) => {
+        await mockSession(page);
+
+        const privilegedRoutes = [
+            { path: '/super-admin', landmark: 'admin-users-page' },
+            { path: '/deployment-evidence', landmark: 'deployment-evidence-page' },
+        ];
+
+        for (const route of privilegedRoutes) {
+            await page.goto(route.path);
+            await expect(page.getByTestId(route.landmark)).toBeVisible();
+            await expect(page.getByTestId('route-loading')).toHaveCount(0);
+            await expect(page).toHaveURL(new RegExp(`${route.path}$`));
+
+            await page.evaluate(() => {
+                window.dispatchEvent(new CustomEvent('aetherguard:session-expired'));
+            });
+
+            await expect(page).toHaveURL(/\/login$/, { timeout: 5_000 });
+            await expect(page.getByTestId(route.landmark)).toHaveCount(0);
+        }
+    });
+
+    test('hanging session verification fails closed with an explicit retry state', async ({ page }) => {
+        await page.route('**/api/auth/me', async () => {
+            await new Promise(() => undefined);
+        });
+
+        const startedAt = Date.now();
+        await page.goto('/dashboard');
+        await expect(page.getByTestId('session-unavailable')).toBeVisible({ timeout: 10_000 });
+        expect(Date.now() - startedAt, 'session guard must leave loading within its timeout budget').toBeLessThan(9_500);
+        await expect(page.getByTestId('route-loading')).toHaveCount(0);
+        await expect(page.getByTestId('route-session-retry')).toBeVisible();
+        await expect(page.getByTestId('dashboard-range-24h')).toHaveCount(0);
+    });
+
+    test('hanging refresh infrastructure fails closed without expiring the session', async ({ page }) => {
+        await page.route('**/api/auth/me', async (route) => {
+            await route.fulfill({
+                status: 401,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: false,
+                    data: null,
+                    error: { code: 'AUTH_TOKEN_INVALID' },
+                }),
+            });
+        });
+        await page.route('**/api/auth/refresh', async () => {
+            await new Promise(() => undefined);
+        });
+
+        const startedAt = Date.now();
+        await page.goto('/dashboard');
+        await expect(page.getByTestId('session-unavailable')).toBeVisible({ timeout: 9_000 });
+        expect(Date.now() - startedAt, 'refresh must settle before the route guard budget expires').toBeLessThan(8_500);
+        await expect(page).toHaveURL(/\/dashboard$/);
+        await expect(page.getByTestId('route-loading')).toHaveCount(0);
+        await expect(page.getByTestId('route-session-retry')).toBeVisible();
     });
 
     test('tenant dashboard marks platform-scoped telemetry unavailable instead of healthy', async ({ page }) => {
@@ -337,7 +432,7 @@ test.describe('Security hardening acceptance flows', () => {
         await expect(page.locator('main')).not.toContainText(/Root-Resistant Final Defense Active/i);
     });
 
-    test('non-governance sessions cannot open enterprise hardware and deployment routes', async ({ page }) => {
+    test('legacy viewer sessions follow the backend enterprise read-permission matrix', async ({ page }) => {
         await mockSession(page, 'viewer');
         await page.route('**/health/ready', async (route) => {
             await route.fulfill({
@@ -347,13 +442,23 @@ test.describe('Security hardening acceptance flows', () => {
             });
         });
 
-        for (const route of ['/hardware-gates', '/deployment-runs', '/deployment-evidence']) {
-            await page.goto(route);
-            await expect(page).toHaveURL(/\/dashboard$/);
+        await page.goto('/hardware-gates');
+        await expect(page).toHaveURL(/\/dashboard$/);
+
+        const allowedRoutes = [
+            { path: '/deployment-runs', landmark: 'deployment-runs-page' },
+            { path: '/deployment-evidence', landmark: 'deployment-evidence-page' },
+        ];
+        for (const route of allowedRoutes) {
+            await page.goto(route.path);
+            await expect(page.getByTestId(route.landmark)).toBeVisible();
+            await expect(page.getByTestId('route-loading')).toHaveCount(0);
+            await expect(page).toHaveURL(new RegExp(`${route.path}$`));
         }
+
         await expect(page.locator('aside a[href="/hardware-gates"]')).toHaveCount(0);
-        await expect(page.locator('aside a[href="/deployment-runs"]')).toHaveCount(0);
-        await expect(page.locator('aside a[href="/deployment-evidence"]')).toHaveCount(0);
+        await expect(page.locator('aside a[href="/deployment-runs"]')).toBeVisible();
+        await expect(page.locator('aside a[href="/deployment-evidence"]')).toBeVisible();
     });
 
     test('logout invalidates browser session and protected pages redirect back to login', async ({ page, baseURL }) => {

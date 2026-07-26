@@ -22,9 +22,9 @@ test.describe('console control coverage', () => {
         const monitor = createIssueMonitor(page, baseURL!);
 
         let snapshot = monitor.snapshot();
-        await page.getByTitle('Light Mode').click();
-        await page.getByTitle('System').click();
-        await page.getByTitle('Dark Mode').click();
+        await page.getByTestId('theme-light').click();
+        await page.getByTestId('theme-system').click();
+        await page.getByTestId('theme-dark').click();
         if ((await page.getByTestId('live-mode-toggle').getAttribute('aria-pressed')) === 'true') {
             await page.getByTestId('live-mode-toggle').click();
         }
