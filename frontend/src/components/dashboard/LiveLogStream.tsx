@@ -12,13 +12,17 @@ interface LiveLogStreamProps {
 }
 
 const levelColor = (level?: string, status?: number) => {
-    if (level === 'ERROR' || (status && status >= 400)) return 'bg-rose-500';
-    if (level === 'WARN') return 'bg-amber-500';
-    return 'bg-emerald-500';
+    const normalizedLevel = String(level || '').toUpperCase();
+    if (normalizedLevel === 'ERROR' || (typeof status === 'number' && status >= 400)) return 'bg-rose-500';
+    if (normalizedLevel === 'WARN' || normalizedLevel === 'WARNING') return 'bg-amber-500';
+    if (normalizedLevel === 'INFO' || normalizedLevel === 'DEBUG' || (typeof status === 'number' && status >= 200 && status < 400)) return 'bg-emerald-500';
+    return 'bg-muted-foreground';
 };
 
 const levelRowClass = (level?: string, status?: number) => {
-    if (level === 'ERROR' || (status && status >= 400)) return 'border-rose-500/10 bg-rose-500/5';
+    const normalizedLevel = String(level || '').toUpperCase();
+    if (normalizedLevel === 'ERROR' || (typeof status === 'number' && status >= 400)) return 'border-rose-500/10 bg-rose-500/5';
+    if (normalizedLevel === 'WARN' || normalizedLevel === 'WARNING') return 'border-amber-500/10 bg-amber-500/5';
     return 'border-transparent bg-transparent';
 };
 
@@ -46,7 +50,7 @@ export const LiveLogStream = ({ logs, filterQuery, onFilterChange, emptyText }: 
             </div>
 
             {/* Log list */}
-            <div className="h-[400px] overflow-y-auto rounded-xl border border-border bg-muted/10 p-3 font-mono text-xs">
+            <div className="h-[400px] overflow-y-auto rounded-md border border-border bg-muted/10 p-3 font-mono text-xs">
                 <AnimatePresence initial={false}>
                     {logs.map((log) => (
                         <motion.div
@@ -62,7 +66,7 @@ export const LiveLogStream = ({ logs, filterQuery, onFilterChange, emptyText }: 
                                 {new Date(log.time).toLocaleTimeString()}
                             </span>
                             <span className="w-10 shrink-0 font-bold text-foreground">
-                                {log.status || 200}
+                                {typeof log.status === 'number' ? log.status : '--'}
                             </span>
                             <span className="w-10 shrink-0 font-semibold text-primary">
                                 {log.type}

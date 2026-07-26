@@ -553,6 +553,7 @@
     "cpu": "处理器",
     "memory": "内存",
     "signal": "信号",
+    "uptime": "运行时间",
     "connected_agents": "已连接的节点",
     "total_gateways": "总网关数",
     "online": "在线",

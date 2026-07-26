@@ -1,7 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import logoImg from '../assets/logo.png';
-import { useTheme } from '../context/ThemeContext';
 
 export type PlanTier = 'starter' | 'professional' | 'enterprise' | null;
 
@@ -25,35 +23,27 @@ const getBadgeConfig = (tier: PlanTier) => {
 };
 
 const Logo: React.FC<LogoProps> = ({ tier, className = '', showText = true }) => {
-    const { resolvedTheme } = useTheme();
     const badge = getBadgeConfig(tier || null);
-    const textColor = resolvedTheme === 'dark' ? 'text-white' : 'text-gray-900';
-    const hoverColor = resolvedTheme === 'dark' ? 'group-hover:text-slate-200' : 'group-hover:text-slate-700';
 
     return (
-        <div className={`flex select-none items-center gap-3 ${className}`}>
-            <div className="group flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card transition-transform duration-200 hover:scale-[1.03]">
-                <img src={logoImg} alt="AetherGuard Logo" className="h-8 w-8 object-contain" />
+        <div className={`flex select-none items-center gap-2.5 ${className}`}>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-white p-1 shadow-sm">
+                <img src={logoImg} alt="" className="h-full w-full object-contain" />
             </div>
 
             {(showText || badge) && (
-                <div className="flex flex-col justify-center">
-                    <div className="flex items-center gap-2">
+                <div className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-2">
                         {showText && (
-                            <span className={`text-xl font-bold tracking-tight transition-colors ${textColor} ${hoverColor}`}>
+                            <span className="truncate text-base font-semibold text-foreground">
                                 AetherGuard
                             </span>
                         )}
 
                         {badge && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.92, y: 2 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                key={tier}
-                                className={`rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide ${badge.className}`}
-                            >
+                            <span className={`rounded border px-1.5 py-0.5 text-[9px] font-semibold ${badge.className}`}>
                                 {badge.text}
-                            </motion.div>
+                            </span>
                         )}
                     </div>
                 </div>

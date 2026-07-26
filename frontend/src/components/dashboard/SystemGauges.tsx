@@ -19,7 +19,7 @@ const fadeUpVariants: Variants = {
 export interface GaugeItem {
     icon: LucideIcon;
     label: string;
-    value: number;
+    value: number | null;
     tone: Tone;
     /**
      * 'percent' (default) renders a 0–100 ring.
@@ -69,23 +69,27 @@ const GaugeRing = ({ value, tone }: { value: number; tone: Tone }) => {
 };
 
 export const SystemGauges = ({ gauges }: { gauges: GaugeItem[] }) => (
-    <motion.div variants={fadeUpVariants} className="grid grid-cols-2 gap-3">
+    <motion.div variants={fadeUpVariants} className="grid grid-cols-2 gap-x-6 gap-y-5">
         {gauges.map((g, i) => (
             <div
                 key={i}
-                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-sm"
+                className="flex min-h-[112px] flex-col items-center justify-center gap-2"
             >
                 {g.kind === 'value' ? (
                     <div className="flex h-14 flex-col items-center justify-center">
-                        <span className={`text-2xl font-bold tabular-nums ${toneText[g.tone]}`}>
-                            {g.value.toFixed(2)}
+                        <span className={`text-2xl font-semibold tabular-nums ${toneText[g.tone]}`}>
+                            {g.value === null ? '--' : g.value.toFixed(2)}
                         </span>
-                        {g.unit && <span className="text-[11px] font-medium text-muted-foreground">{g.unit}</span>}
+                        {g.unit && g.value !== null && <span className="text-[11px] font-medium text-muted-foreground">{g.unit}</span>}
+                    </div>
+                ) : g.value === null ? (
+                    <div className="flex h-[82px] flex-col items-center justify-center gap-2 text-muted-foreground">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-border text-lg font-semibold">--</div>
                     </div>
                 ) : (
                     <>
                         <GaugeRing value={g.value} tone={g.tone} />
-                        <span className="text-lg font-bold text-foreground">{g.value.toFixed(1)}%</span>
+                        <span className="text-lg font-semibold tabular-nums text-foreground">{g.value.toFixed(1)}%</span>
                     </>
                 )}
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

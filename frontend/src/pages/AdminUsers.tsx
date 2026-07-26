@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import {
@@ -23,6 +23,9 @@ export default function AdminUsers() {
     const [showBatchConfirm, setShowBatchConfirm] = useState(false);
     const [batchLoading, setBatchLoading] = useState(false);
     const [actionError, setActionError] = useState<string | null>(null);
+    const batchCancelRef = useRef<HTMLButtonElement>(null);
+
+    const isProtectedAdmin = (role?: string) => role === 'admin' || role === 'platform_admin';
 
     const loadUsers = async () => {
         try {
@@ -40,6 +43,16 @@ export default function AdminUsers() {
     useEffect(() => {
         loadUsers();
     }, []);
+
+    useEffect(() => {
+        if (!showBatchConfirm) return;
+        batchCancelRef.current?.focus();
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && !batchLoading) setShowBatchConfirm(false);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [batchLoading, showBatchConfirm]);
 
     const handlePlanChange = async (userId: string, newPlan: string) => {
         try {
@@ -81,7 +94,7 @@ export default function AdminUsers() {
 
     const toggleSelectAll = () => {
         // Only select non-admin users
-        const selectableUsers = users.filter(u => u.role !== 'admin');
+        const selectableUsers = users.filter(u => !isProtectedAdmin(u.role));
         if (selectedIds.size === selectableUsers.length) {
             setSelectedIds(new Set());
         } else {
@@ -112,7 +125,7 @@ export default function AdminUsers() {
         }
     };
 
-    const selectableUsers = users.filter(u => u.role !== 'admin');
+    const selectableUsers = users.filter(u => !isProtectedAdmin(u.role));
 
     if (error) {
         return <ErrorDisplay title={t('adminUsers.error_title')} message={error} onRetry={loadUsers} />;
@@ -123,11 +136,11 @@ export default function AdminUsers() {
     }
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="mx-auto max-w-[1680px] space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+            <div className="flex flex-col items-start justify-between gap-4 border-b border-border pb-5 md:flex-row md:items-end">
                 <div>
-                    <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <UserCog className="text-primary" /> {t('admin_users.title')}
+                    <h1 className="flex items-center gap-2 text-xl font-semibold text-foreground sm:text-2xl">
+                        <UserCog className="text-primary" size={22} /> {t('admin_users.title')}
                     </h1>
                     <p className="text-muted-foreground text-sm mt-1">{t('admin_users.desc')}</p>
                 </div>
@@ -200,17 +213,18 @@ export default function AdminUsers() {
 
             {/* Batch Confirm Modal */}
             {showBatchConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onMouseDown={() => !batchLoading && setShowBatchConfirm(false)}>
+                    <div role="dialog" aria-modal="true" aria-labelledby="batch-confirm-title" aria-describedby="batch-confirm-description" className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4" onMouseDown={(event) => event.stopPropagation()}>
                         <div className="flex items-center gap-3 mb-4">
                             <AlertTriangle className="text-amber-500" size={24} />
-                            <h3 className="text-lg font-bold text-foreground">{t('adminUsers.batch_confirm_title')}</h3>
+                            <h3 id="batch-confirm-title" className="text-lg font-bold text-foreground">{t('adminUsers.batch_confirm_title')}</h3>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-4">
+                        <p id="batch-confirm-description" className="text-sm text-muted-foreground mb-4">
                             {t('adminUsers.batch_confirm_desc', { count: selectedIds.size, action: batchAction })}
                         </p>
                         <div className="flex justify-end gap-3">
                             <button
+                                ref={batchCancelRef}
                                 onClick={() => setShowBatchConfirm(false)}
                                 className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
                             >
@@ -228,13 +242,15 @@ export default function AdminUsers() {
                 </div>
             )}
 
-            <div className="bg-surface border border-border rounded-lg overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-panel">
                 <table className="w-full text-sm text-left">
                     <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                         <tr>
                             <th className="px-4 py-4 font-medium w-10">
                                 <button
                                     onClick={toggleSelectAll}
+                                    aria-label={t('adminUsers.select_all')}
+                                    aria-pressed={selectedIds.size === selectableUsers.length && selectableUsers.length > 0}
                                     className="p-1 hover:bg-muted rounded"
                                     title={t('adminUsers.select_all')}
                                 >
@@ -255,7 +271,7 @@ export default function AdminUsers() {
                     </thead>
                     <tbody className="divide-y divide-border">
                         {users.map((u) => {
-                            const isAdmin = u.role === 'admin';
+                            const isAdmin = isProtectedAdmin(u.role);
                             const isSelected = selectedIds.has(u.id);
                             return (
                                 <tr key={u.id} className={clsx('hover:bg-muted/30 transition-colors', isSelected && 'bg-primary/5')}>
@@ -263,6 +279,8 @@ export default function AdminUsers() {
                                         {!isAdmin && (
                                             <button
                                                 onClick={() => toggleSelect(u.id)}
+                                                aria-label={`${isSelected ? 'Deselect' : 'Select'} ${u.email}`}
+                                                aria-pressed={isSelected}
                                                 className="p-1 hover:bg-muted rounded"
                                             >
                                                 {isSelected ? (
@@ -304,7 +322,8 @@ export default function AdminUsers() {
                                     <td className="px-6 py-4">
                                         <select
                                             className={`text-xs rounded border focus:ring-primary focus:border-primary block w-full p-2 ${u.status === 'active' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                                                : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
+                                                : u.status === 'suspended' ? 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
+                                                    : 'bg-muted border-border text-muted-foreground'
                                                 }`}
                                             value={u.status}
                                             onChange={(e) => handleStatusChange(u.id, e.target.value)}

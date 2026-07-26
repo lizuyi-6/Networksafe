@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useLiveMode } from '../context/LiveModeContext';
 import {
-    Cpu, HardDrive, Wifi, WifiOff, Radio, RefreshCw, Terminal, Power, Settings, X,
-    Server, Activity, Shield, Globe, Zap, ChevronRight, Save, RotateCcw, History, CheckCircle2
+    Clock3, Cpu, HardDrive, Wifi, WifiOff, Radio, RefreshCw, Terminal, Power, Settings, X,
+    Server, Activity, Shield, Globe, Zap, ChevronRight, Save, History, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import {
     fetchDeviceConfig,
@@ -78,6 +78,14 @@ interface Device {
     };
 }
 
+type ActionNotice = {
+    tone: 'success' | 'pending';
+    message: string;
+};
+
+const COMPLETED_COMMAND_STATUSES = new Set(['success', 'completed']);
+const PENDING_COMMAND_STATUSES = new Set(['approval_required', 'pending', 'queued', 'running']);
+
 const defaultConfig = (device: Device): DeviceConfig => ({
     displayName: device.config?.displayName || device.deviceId,
     group: device.config?.group || 'default',
@@ -104,6 +112,14 @@ const defaultConfig = (device: Device): DeviceConfig => ({
 
 const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : '--');
 
+const formatUptime = (seconds?: number) => {
+    if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds < 0) return '--';
+    const days = Math.floor(seconds / 86_400);
+    const hours = Math.floor((seconds % 86_400) / 3_600);
+    const minutes = Math.floor((seconds % 3_600) / 60);
+    return days > 0 ? `${days}d ${hours}h` : `${hours}h ${minutes}m`;
+};
+
 const DeviceCard = ({
     device,
     onCommand,
@@ -123,9 +139,8 @@ const DeviceCard = ({
     const latestCommand = device.latestCommand || device.securitySummary?.latestCommand || null;
 
     return (
-        <div
-            onClick={onSelect}
-            className={`bg-card border rounded-xl p-5 shadow-sm transition-all cursor-pointer hover:shadow-md ${
+        <article
+            className={`relative bg-card border rounded-lg p-5 shadow-sm transition-all hover:shadow-md ${
                 isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
             }`}
         >
@@ -139,7 +154,14 @@ const DeviceCard = ({
                         <Radio size={20} />
                     </div>
                     <div>
-                        <div className="font-semibold text-foreground">{device.config?.displayName || device.deviceId}</div>
+                        <button
+                            type="button"
+                            aria-pressed={isSelected}
+                            onClick={onSelect}
+                            className="relative z-10 text-left font-semibold text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        >
+                            {device.config?.displayName || device.deviceId}
+                        </button>
                         <div className="text-xs text-muted-foreground">{device.chipModel} v{device.version}</div>
                     </div>
                 </div>
@@ -170,9 +192,9 @@ const DeviceCard = ({
                         <div className="text-xxs text-muted-foreground">{t('devices.memory')}</div>
                     </div>
                     <div className="bg-muted/30 rounded-lg p-2 text-center">
-                        <Activity size={14} className="mx-auto mb-1 text-muted-foreground" />
-                        <div className="text-sm font-medium text-foreground">{device.status.wifiRssi}dBm</div>
-                        <div className="text-xxs text-muted-foreground">{t('devices.signal')}</div>
+                        <Clock3 size={14} className="mx-auto mb-1 text-muted-foreground" />
+                        <div className="text-sm font-medium text-foreground">{formatUptime(device.status.uptime)}</div>
+                        <div className="text-xxs text-muted-foreground">{t('devices.uptime')}</div>
                     </div>
                 </div>
             )}
@@ -203,12 +225,16 @@ const DeviceCard = ({
                     onClick={(e) => { e.stopPropagation(); onCommand('reboot'); }}
                     disabled={!device.isOnline || commandBusy === 'reboot'}
                     className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    aria-label={`${t('devices.reboot')} ${device.config?.displayName || device.deviceId}`}
+                    title={t('devices.reboot')}
                 >
                     <Power size={12} />
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); onOpenSettings(); }}
                     className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-all"
+                    aria-label={`${t('devices.device_settings')} ${device.config?.displayName || device.deviceId}`}
+                    title={t('devices.device_settings')}
                 >
                     <Settings size={12} />
                 </button>
@@ -218,7 +244,7 @@ const DeviceCard = ({
                     </Link>
                 </div>
             </div>
-        </div>
+        </article>
     );
 };
 
@@ -229,7 +255,7 @@ const Devices = () => {
     const [loading, setLoading] = useState(true);
     const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [actionMessage, setActionMessage] = useState<string | null>(null);
+    const [actionNotice, setActionNotice] = useState<ActionNotice | null>(null);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [settingsDeviceId, setSettingsDeviceId] = useState<string | null>(null);
     const [configDraft, setConfigDraft] = useState<DeviceConfig | null>(null);
@@ -239,7 +265,7 @@ const Devices = () => {
     const [commandBusyByDevice, setCommandBusyByDevice] = useState<Record<string, string | null>>({});
     const [platformBadges, setPlatformBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
     const [finalDefense, setFinalDefense] = useState<FinalDefenseStatusResponse | null>(null);
-    const [, setShowResetConfirm] = useState(false);
+    const [finalDefenseStatusUnavailable, setFinalDefenseStatusUnavailable] = useState(false);
 
     const fetchDevices = async (signal?: AbortSignal) => {
         setLoading(true);
@@ -249,7 +275,15 @@ const Devices = () => {
                 fetchDevicesList(signal),
                 fetchSystemBadges(signal),
             ]);
-            const finalDefenseStatus = await fetchFinalDefenseStatus(signal).catch(() => null);
+            let finalDefenseStatus: FinalDefenseStatusResponse | null = null;
+            try {
+                finalDefenseStatus = await fetchFinalDefenseStatus(signal);
+                setFinalDefenseStatusUnavailable(false);
+            } catch (statusError) {
+                if (!isRequestAbortError(statusError, signal)) {
+                    setFinalDefenseStatusUnavailable(true);
+                }
+            }
             if (signal?.aborted) {
                 return;
             }
@@ -335,15 +369,21 @@ const Devices = () => {
 
     const sendCommand = async (deviceId: string, command: string) => {
         setError(null);
-        setActionMessage(null);
+        setActionNotice(null);
         setCommandBusyByDevice((current) => ({ ...current, [deviceId]: command }));
         try {
             const response = await sendDeviceCommand(deviceId, command);
-            setActionMessage(
-                response.status === 'approval_required'
-                    ? `${response.message || `Command ${command} is waiting for hardware confirmation.`}${response.confirmationSessionId ? ` (${response.confirmationSessionId})` : ''}`
-                    : response.message || `Command ${command} completed`
-            );
+            const status = String(response.status || '').toLowerCase();
+            if (response.success !== true || (!COMPLETED_COMMAND_STATUSES.has(status) && !PENDING_COMMAND_STATUSES.has(status))) {
+                throw new Error(response.message || `Command ${command} returned an unverified state (${status || 'unknown'}).`);
+            }
+            const isCompleted = COMPLETED_COMMAND_STATUSES.has(status);
+            setActionNotice({
+                tone: isCompleted ? 'success' : 'pending',
+                message: isCompleted
+                    ? response.message || `Command ${command} completed.`
+                    : `${response.message || `Command ${command} has not executed and is waiting for confirmation or processing.`}${response.confirmationSessionId ? ` (${response.confirmationSessionId})` : ''}`
+            });
             await fetchDevices();
             if (settingsOpen && settingsDeviceId === deviceId) {
                 await loadDeviceConfig(deviceId);
@@ -366,7 +406,7 @@ const Devices = () => {
             const response = await saveDeviceConfig(settingsDeviceId, configDraft);
             setConfigDraft(response?.config || configDraft);
             setCommandHistory(response?.commandHistory || []);
-            setActionMessage(t('devices.config_saved'));
+            setActionNotice({ tone: 'success', message: t('devices.config_saved') });
             await fetchDevices();
         } catch (e: any) {
             setError(e.message || 'FG-DEVICE-SAVE-ERR');
@@ -387,7 +427,6 @@ const Devices = () => {
     );
     const primaryRootGateway = finalDefense?.rootResistantGateways?.[0] || null;
     const primaryFinalDefense = finalDefense?.statuses?.[0] || null;
-    const rootResistantActive = Boolean(finalDefense?.rootResistantActive && primaryRootGateway?.active);
     const rootGatewayConditionRows = primaryRootGateway ? [
         ['External gateway online', primaryRootGateway.gatewayOnline],
         ['Policy digest matched', Boolean(primaryRootGateway.policyDigest && primaryRootGateway.policyDigest === primaryRootGateway.reportedPolicyDigest)],
@@ -398,6 +437,15 @@ const Devices = () => {
         ['Secure element', primaryRootGateway.secureElementPresent],
         ['Bridge fail-closed ready', primaryRootGateway.bridgeState === 'armed' || primaryRootGateway.bridgeState === 'isolated']
     ] as Array<[string, boolean]> : [];
+    const rootResistantActive = Boolean(
+        finalDefense?.rootResistantActive === true
+        && primaryRootGateway?.active === true
+        && primaryRootGateway.degradedReasons.length === 0
+        && rootGatewayConditionRows.length > 0
+        && rootGatewayConditionRows.every(([, conditionMet]) => conditionMet)
+        && !primaryRootGateway.isolationReason
+        && !primaryRootGateway.lastError
+    );
     const hostCompanionConditionRows = primaryFinalDefense ? [
         ['Companion secure element', primaryFinalDefense.secureElementPresent],
         ['Companion policy matched', Boolean(primaryFinalDefense.policyDigest && primaryFinalDefense.policyDigest === primaryFinalDefense.reportedPolicyDigest)],
@@ -408,14 +456,20 @@ const Devices = () => {
     ] as Array<[string, boolean]> : [];
     const rootFinalDefenseTitle = rootResistantActive
         ? 'Root-Resistant Final Defense Active'
-        : 'Root-Resistant Final Defense Degraded';
-    const rootFinalDefenseSubtitle = 'External Root-Resistant Gateway Appliance keeps the protected network link under hardware control even if the server OS is root-compromised.';
+        : finalDefenseStatusUnavailable
+            ? 'Root-Resistant Final Defense Unknown'
+            : 'Root-Resistant Final Defense Degraded';
+    const rootFinalDefenseSubtitle = rootResistantActive
+        ? 'The external Gateway Appliance reported every required condition for hardware control of the protected network link.'
+        : finalDefenseStatusUnavailable
+            ? 'Final Defense status could not be verified. This state does not prove that hardware protection is active.'
+            : 'One or more required hardware conditions are not satisfied. Treat the protected link as unverified until the authorization chain reports healthy.';
 
     return (
-        <div className="relative p-6 space-y-6 max-w-[1600px] mx-auto">
-            <div className="flex justify-between items-center gap-4">
+        <div className="relative mx-auto max-w-[1680px] space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+            <div className="flex items-end justify-between gap-4 border-b border-border pb-5">
                 <div>
-                    <h2 className="text-2xl font-bold text-foreground tracking-tight">{t('devices.title')}</h2>
+                    <h2 className="text-xl font-semibold text-foreground sm:text-2xl">{t('devices.title')}</h2>
                     <p className="text-sm text-muted-foreground mt-1">{t('devices.page_subtitle')}</p>
                 </div>
                 <div className="flex gap-3">
@@ -425,24 +479,30 @@ const Devices = () => {
                 </div>
             </div>
 
-            {actionMessage && (
-                <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-300">
-                    <CheckCircle2 size={16} />
-                    <span>{actionMessage}</span>
+            {actionNotice && (
+                <div className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
+                    actionNotice.tone === 'success'
+                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+                        : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                }`} role="status">
+                    {actionNotice.tone === 'success' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                    <span>{actionNotice.message}</span>
                 </div>
             )}
 
             {error && <div className="p-3 rounded border border-red-500/30 text-red-300 bg-red-500/10 text-sm">{error}</div>}
 
-            <div className={`border rounded-xl p-5 shadow-sm ${
+            <div className={`rounded-lg border p-5 shadow-panel ${
                 rootResistantActive
-                    ? 'border-emerald-500/30 bg-emerald-500/10'
-                    : 'border-amber-500/30 bg-amber-500/10'
+                    ? 'border-success/30 bg-success/10'
+                    : finalDefenseStatusUnavailable
+                        ? 'border-danger/30 bg-danger/10'
+                        : 'border-warning/30 bg-warning/10'
             }`}>
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                            <Shield size={18} className={rootResistantActive ? 'text-emerald-500' : 'text-amber-500'} />
+                            <Shield size={18} className={rootResistantActive ? 'text-success' : finalDefenseStatusUnavailable ? 'text-danger' : 'text-warning'} />
                             {rootFinalDefenseTitle}
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
@@ -451,11 +511,15 @@ const Devices = () => {
                     </div>
                     <div className="grid min-w-0 grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:min-w-[560px]">
                         {rootGatewayConditionRows.length > 0 ? rootGatewayConditionRows.map(([label, ok]) => (
-                            <div key={label} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card/70 px-3 py-2">
+                            <div key={label} className="flex items-center justify-between gap-2 border-b border-border/70 px-1 py-2 last:border-b-0">
                                 <span className="truncate text-muted-foreground">{label}</span>
-                                <span className={`font-medium ${ok ? 'text-emerald-500' : 'text-amber-500'}`}>{ok ? 'OK' : 'Check'}</span>
+                                <span className={`font-medium ${ok ? 'text-emerald-500' : 'text-rose-500'}`}>{ok ? 'OK' : 'Failed'}</span>
                             </div>
-                        )) : (
+                        )) : finalDefenseStatusUnavailable ? (
+                            <div role="alert" className="col-span-2 border-l-2 border-danger pl-3 text-danger sm:col-span-3">
+                                Hardware protection state is unknown. No active protection claim can be made from this response.
+                            </div>
+                        ) : (
                             <div className="col-span-2 rounded-lg border border-border bg-card/70 px-3 py-2 text-muted-foreground sm:col-span-3">
                                 No external Root-Resistant Gateway Appliance has reported root-resistant status.
                             </div>
@@ -475,13 +539,13 @@ const Devices = () => {
                         {primaryRootGateway.degradedReasons.join(', ')}
                     </div>
                 ) : null}
-                <div className="mt-4 rounded-lg border border-border bg-card/70 p-3">
+                <div className="mt-4 border-t border-border pt-4">
                     <div className="text-xs font-semibold text-foreground">Security Controller compatibility status</div>
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
                         {hostCompanionConditionRows.length > 0 ? hostCompanionConditionRows.map(([label, ok]) => (
                             <div key={label} className="flex items-center justify-between gap-2 rounded-md bg-muted/30 px-2 py-1.5">
                                 <span className="truncate text-muted-foreground">{label}</span>
-                                <span className={`font-medium ${ok ? 'text-emerald-500' : 'text-amber-500'}`}>{ok ? 'OK' : 'Check'}</span>
+                                <span className={`font-medium ${ok ? 'text-emerald-500' : 'text-rose-500'}`}>{ok ? 'OK' : 'Failed'}</span>
                             </div>
                         )) : (
                             <div className="col-span-2 text-muted-foreground sm:col-span-3">
@@ -493,19 +557,19 @@ const Devices = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
+                <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
                     <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-primary/10 text-primary rounded-lg"><Radio size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.total_gateways')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{devices.length}</div>
                 </div>
-                <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
+                <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
                     <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg"><Wifi size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.online')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{onlineCount}</div>
                 </div>
-                <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
+                <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
                     <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg"><Globe size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.cloud_mode')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{cloudCount}</div>
                 </div>
-                <div className="bg-gradient-to-br from-card to-muted/20 border border-border rounded-xl p-5 shadow-sm">
+                <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
                     <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-orange-500/10 text-orange-500 rounded-lg"><Shield size={18} /></div><span className="text-sm font-medium text-muted-foreground">{t('devices.open_findings_actions')}</span></div>
                     <div className="text-3xl font-bold text-foreground">{findingsOpen} / {recentActions}</div>
                 </div>
@@ -513,8 +577,8 @@ const Devices = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-                        <div className="flex justify-between items-center mb-5"><h3 className="font-semibold text-foreground flex items-center gap-2"><Radio size={16} className="text-primary" /> {t('devices.edge_gateways')}</h3></div>
+                    <section aria-labelledby="gateway-list-title">
+                        <div className="flex justify-between items-center mb-5"><h3 id="gateway-list-title" className="font-semibold text-foreground flex items-center gap-2"><Radio size={16} className="text-primary" /> {t('devices.edge_gateways')}</h3></div>
                         {loading ? (
                             <div className="text-center py-12 text-muted-foreground">{t('devices.loading_gateways')}</div>
                         ) : devices.length === 0 ? (
@@ -526,15 +590,15 @@ const Devices = () => {
                                     </p>
                                 </div>
                                 <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-                                    <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
+                                    <div className="border-l-2 border-primary px-3 py-2 text-sm">
                                         <div className="text-xs text-muted-foreground">{t('devices.online_agents')}</div>
                                         <div className="mt-1 text-2xl font-semibold text-foreground">{platformBadges.agentMonitor || platformBadges.agents}</div>
                                     </div>
-                                    <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
+                                    <div className="border-l-2 border-danger px-3 py-2 text-sm">
                                         <div className="text-xs text-muted-foreground">{t('devices.active_alerts')}</div>
                                         <div className="mt-1 text-2xl font-semibold text-foreground">{platformBadges.alerts}</div>
                                     </div>
-                                    <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
+                                    <div className="border-l-2 border-warning px-3 py-2 text-sm">
                                         <div className="text-xs text-muted-foreground">{t('devices.running_scans')}</div>
                                         <div className="mt-1 text-2xl font-semibold text-foreground">{platformBadges.scanner}</div>
                                     </div>
@@ -571,13 +635,13 @@ const Devices = () => {
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </section>
                 </div>
 
                 <div className="space-y-6">
                     {selectedDeviceData ? (
                         <>
-                            <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+                            <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="font-semibold text-foreground flex items-center gap-2"><Terminal size={16} className="text-primary" /> {t('devices.device_details')}</h3>
                                     <button onClick={() => void openSettings(selectedDeviceData)} className="rounded-lg border border-border bg-muted/20 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/40">
@@ -596,7 +660,7 @@ const Devices = () => {
                                     <div className="flex justify-between"><dt className="text-muted-foreground">{t('devices.last_heartbeat')}</dt><dd className="font-medium text-foreground">{new Date(selectedDeviceData.lastHeartbeat).toLocaleTimeString()}</dd></div>
                                 </dl>
                             </div>
-                            <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+                            <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
                                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><History size={16} className="text-primary" /> {t('devices.latest_command')}</h3>
                                 {(selectedDeviceData.latestCommand || selectedDeviceData.securitySummary?.latestCommand) ? (
                                     <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
@@ -608,7 +672,7 @@ const Devices = () => {
                                     <p className="text-sm text-muted-foreground text-center py-4">{t('devices.no_commands_yet')}</p>
                                 )}
                             </div>
-                            <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+                            <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
                                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Server size={16} className="text-primary" /> {t('devices.connected_agents')}</h3>
                                 {selectedDeviceData.connectedAgents.length > 0 ? (
                                     <ul className="space-y-2">
@@ -618,7 +682,7 @@ const Devices = () => {
                                     </ul>
                                 ) : <p className="text-sm text-muted-foreground text-center py-4">{t('devices.no_agents')}</p>}
                             </div>
-                            <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+                            <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
                                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Shield size={16} className="text-primary" /> {t('devices.security_context')}</h3>
                                 {selectedDeviceData.securitySummary?.asset ? (
                                     <div className="space-y-3 text-sm">
@@ -653,7 +717,7 @@ const Devices = () => {
                             </div>
                         </>
                     ) : (
-                        <div className="bg-card border border-border rounded-xl p-5 shadow-sm text-center py-12"><Shield size={32} className="mx-auto mb-3 text-muted-foreground" /><p className="text-muted-foreground">{t('devices.select_device')}</p></div>
+                        <div className="rounded-lg border border-border bg-card p-5 py-12 text-center shadow-panel"><Shield size={32} className="mx-auto mb-3 text-muted-foreground" /><p className="text-muted-foreground">{t('devices.select_device')}</p></div>
                     )}
                 </div>
             </div>
@@ -667,7 +731,7 @@ const Devices = () => {
                                     <div className="text-lg font-semibold text-foreground">{t('devices.device_settings')}</div>
                                     <div className="text-sm text-muted-foreground">{activeConfigDevice.deviceId}</div>
                                 </div>
-                                <button onClick={closeSettings} className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-muted/20 hover:text-foreground">
+                                <button onClick={closeSettings} className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-muted/20 hover:text-foreground" aria-label={t('devices.cancel')} title={t('devices.cancel')}>
                                     <X size={16} />
                                 </button>
                             </div>
@@ -689,7 +753,7 @@ const Devices = () => {
                                         <label className="space-y-2 text-sm block"><span className="text-muted-foreground">{t('devices.tags')}</span><input value={configDraft.tags.join(', ')} onChange={(e) => setConfigDraft({ ...configDraft, tags: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
                                         <label className="space-y-2 text-sm block"><span className="text-muted-foreground">{t('devices.notes')}</span><textarea value={configDraft.notes} onChange={(e) => setConfigDraft({ ...configDraft, notes: e.target.value })} rows={4} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground" /></label>
 
-                                        <div className="rounded-xl border border-border bg-muted/20 p-4">
+                                        <div className="rounded-lg border border-border bg-muted/20 p-4">
                                             <div className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground"><History size={14} className="text-primary" /> {t('devices.recent_command_history')}</div>
                                             <div className="space-y-2">
                                                 {commandHistory.length === 0 ? (
@@ -713,10 +777,7 @@ const Devices = () => {
 
                             <div className="border-t border-border px-6 py-4">
                                 <div className="flex items-center justify-between gap-3">
-                                    <button onClick={() => setShowResetConfirm(true)} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">
-                                        <RotateCcw size={14} /> {t('devices.reset')}
-                                    </button>
-                                    <div className="flex gap-3">
+                                    <div className="ml-auto flex gap-3">
                                         <button onClick={closeSettings} className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">{t('devices.cancel')}</button>
                                         <button onClick={saveSettings} disabled={configSaving || !configDraft} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
                                             <Save size={14} /> {configSaving ? t('devices.saving') : t('devices.save')}

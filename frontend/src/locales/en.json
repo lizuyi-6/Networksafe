@@ -553,6 +553,7 @@
     "cpu": "CPU",
     "memory": "Memory",
     "signal": "Signal",
+    "uptime": "Uptime",
     "connected_agents": "Connected Agents",
     "total_gateways": "Total Gateways",
     "online": "Online",

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Code, Shield, Zap } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Code, HelpCircle, Shield, XCircle, Zap } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { ConsolePanel, ConsoleEmptyState } from '../ConsolePrimitives';
 import { TabButton } from './TabButton';
@@ -15,6 +15,19 @@ interface SecurityOpsPanelProps {
 export const SecurityOpsPanel = ({ rules, actions, validations, emptyRulesDescription }: SecurityOpsPanelProps) => {
     const { t } = useLanguage();
     const [tab, setTab] = useState<'rules' | 'actions'>('rules');
+    const validationTone = (verdict: string) => {
+        const normalized = String(verdict || '').toLowerCase();
+        if (['blocked', 'passed', 'pass', 'safe', 'success'].includes(normalized)) {
+            return { Icon: CheckCircle2, className: 'text-emerald-500' };
+        }
+        if (['failed', 'fail', 'missed', 'allowed', 'unsafe', 'error'].includes(normalized)) {
+            return { Icon: XCircle, className: 'text-rose-500' };
+        }
+        if (['warning', 'partial', 'inconclusive'].includes(normalized)) {
+            return { Icon: AlertTriangle, className: 'text-amber-500' };
+        }
+        return { Icon: HelpCircle, className: 'text-muted-foreground' };
+    };
 
     return (
         <ConsolePanel
@@ -34,12 +47,12 @@ export const SecurityOpsPanel = ({ rules, actions, validations, emptyRulesDescri
             </div>
 
             {tab === 'rules' ? (
-                <div className="space-y-3">
+                <div className="divide-y divide-border">
                     {(rules.topRules || []).length > 0 ? (
                         (rules.topRules || []).slice(0, 5).map((rule: any) => (
                             <div
                                 key={rule.id}
-                                className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-3 transition-colors hover:bg-muted/25"
+                                className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 text-primary">
@@ -64,11 +77,11 @@ export const SecurityOpsPanel = ({ rules, actions, validations, emptyRulesDescri
                     )}
                 </div>
             ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-border">
                     {(actions || []).length > 0 || (validations || []).length > 0 ? (
                         <>
                             {(actions || []).slice(0, 3).map((action) => (
-                                <div key={action.actionId} className="rounded-xl border border-border bg-muted/15 p-3">
+                                <div key={action.actionId} className="py-3 first:pt-0 last:pb-0">
                                     <div className="flex items-center gap-2">
                                         <Zap size={14} className="text-amber-500" />
                                         <span className="text-sm font-semibold text-foreground">{action.title}</span>
@@ -79,10 +92,12 @@ export const SecurityOpsPanel = ({ rules, actions, validations, emptyRulesDescri
                                     </div>
                                 </div>
                             ))}
-                            {(validations || []).slice(0, 2).map((validation) => (
-                                <div key={validation.validationRunId} className="rounded-xl border border-border bg-muted/15 p-3">
+                            {(validations || []).slice(0, 2).map((validation) => {
+                                const { Icon, className } = validationTone(validation.verdict);
+                                return (
+                                <div key={validation.validationRunId} className="py-3 first:pt-0 last:pb-0">
                                     <div className="flex items-center gap-2">
-                                        <Shield size={14} className="text-emerald-500" />
+                                        <Icon size={14} className={className} />
                                         <span className="text-sm font-semibold text-foreground">{validation.attackName}</span>
                                     </div>
                                     <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
@@ -90,7 +105,8 @@ export const SecurityOpsPanel = ({ rules, actions, validations, emptyRulesDescri
                                         <span>{new Date(validation.completedAt).toLocaleString()}</span>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </>
                     ) : (
                         <ConsoleEmptyState title={t('dashboard.no_recent_actions')} description={t('dashboard.no_recent_actions_desc')} />

@@ -27,7 +27,7 @@ export default function ConfirmDialog({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="mx-4 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl">
+            <div className="mx-4 w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl">
                 <div className="mb-4 flex items-center gap-3">
                     <AlertTriangle className={variant === 'danger' ? 'text-rose-500' : 'text-amber-500'} size={22} />
                     <h3 className="text-base font-semibold text-foreground">{title}</h3>

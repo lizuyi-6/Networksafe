@@ -71,14 +71,14 @@ export const ThreatIntelPanel = ({ origins, threats, emptyDescription }: ThreatI
                     )}
                 </div>
             ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-border">
                     {threats.length > 0 ? (
                         [...threats]
                             .sort((a, b) => b.value - a.value)
                             .map((threat, index) => (
                                 <div
                                     key={`${threat.name}-${index}`}
-                                    className="flex items-center justify-between rounded-lg border border-border bg-muted/15 p-3"
+                                    className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className="h-3 w-3 rounded-full bg-primary" />

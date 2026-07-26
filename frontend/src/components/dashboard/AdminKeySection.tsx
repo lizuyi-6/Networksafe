@@ -23,8 +23,8 @@ export const AdminKeySection = ({ apiKeys, visible }: AdminKeySectionProps) => {
                 <p className="text-sm leading-6 text-muted-foreground">
                     {t('dashboard.api_key_desc_full')}
                 </p>
-                <div className="flex items-center justify-between rounded-xl border border-border bg-muted p-3">
-                    <code className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-center justify-between rounded-md border border-border bg-muted p-3">
+                    <code className="font-mono text-sm font-semibold text-success">
                         {apiKeys[0]?.prefix ? `${apiKeys[0].prefix}********` : t('dashboard.not_found')}
                     </code>
                     <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">

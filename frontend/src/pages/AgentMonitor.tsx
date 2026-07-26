@@ -155,7 +155,7 @@ export default function AgentMonitor() {
                 <ConsoleStatCard
                     icon={Users}
                     label={t('agentMonitor.activeAgents')}
-                    value={stats?.orchestrator.registeredAgents || 0}
+                    value={stats?.orchestrator?.registeredAgents ?? '--'}
                     hint={t('agentMonitor.orchestrator_hint')}
                     tone="primary"
                 />
@@ -250,19 +250,19 @@ export default function AgentMonitor() {
                     <ConsolePanel title={t('agentMonitor.messageBusStats')} subtitle={t('agentMonitor.dispatch_subtitle')} icon={Clock} iconTone="neutral">
                         <div className="grid grid-cols-2 gap-3">
                             <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
-                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.queueSize || 0}</p>
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus?.queueSize ?? '--'}</p>
                                 <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.queueSize')}</p>
                             </div>
                             <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
-                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.subscriptionCount || 0}</p>
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus?.subscriptionCount ?? '--'}</p>
                                 <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.subscriptions')}</p>
                             </div>
                             <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
-                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.pendingRequests || 0}</p>
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus?.pendingRequests ?? '--'}</p>
                                 <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.pendingRequests')}</p>
                             </div>
                             <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
-                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.orchestrator.activeTasks || 0}</p>
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.orchestrator?.activeTasks ?? '--'}</p>
                                 <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.activeTasks')}</p>
                             </div>
                             <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
@@ -341,15 +341,15 @@ export default function AgentMonitor() {
                     <div className="space-y-3">
                         <div className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-4">
                             <span className="text-sm text-muted-foreground">{t('agentMonitor.totalCaseFiles')}</span>
-                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis.totalCaseFiles || 0}</span>
+                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis?.totalCaseFiles ?? '--'}</span>
                         </div>
                         <div className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-4">
                             <span className="text-sm text-muted-foreground">{t('agentMonitor.lessonsLearned')}</span>
-                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis.totalLessons || 0}</span>
+                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis?.totalLessons ?? '--'}</span>
                         </div>
                         <div className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-4">
                             <span className="text-sm text-muted-foreground">{t('agentMonitor.policyUpdates')}</span>
-                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis.totalPolicyUpdates || 0}</span>
+                            <span className="text-xl font-bold font-mono text-foreground">{stats?.synthesis?.totalPolicyUpdates ?? '--'}</span>
                         </div>
 
                         {stats?.synthesis.topPatterns?.length ? (

@@ -324,7 +324,7 @@ const Rules = () => {
                         icon={Bot}
                         iconTone="warning"
                         headerAction={(
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex w-full flex-wrap gap-2 lg:w-auto">
                                 {(['all', 'pending', 'approved', 'rejected'] as const).map((value) => (
                                     <button
                                         key={value}

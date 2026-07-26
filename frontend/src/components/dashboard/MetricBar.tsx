@@ -34,7 +34,7 @@ export const MetricBar = ({ items }: { items: MetricItem[] }) => (
         {items.map((item, i) => (
             <div
                 key={i}
-                className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-sm hover:border-primary/20"
+                className="flex min-h-[92px] items-center gap-3 rounded-lg border border-border bg-card p-4 shadow-panel transition-colors hover:border-primary/25"
             >
                 <div
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${toneClasses[item.tone]}`}
@@ -44,7 +44,7 @@ export const MetricBar = ({ items }: { items: MetricItem[] }) => (
                 <div className="min-w-0">
                     <p className="truncate text-xs text-muted-foreground">{item.label}</p>
                     <div className="flex items-baseline gap-1.5">
-                        <span className="text-lg font-bold tracking-tight text-foreground">
+                        <span className="text-lg font-semibold tabular-nums text-foreground">
                             {item.value}
                         </span>
                         {item.trend !== undefined && item.trend !== 0 && (() => {

@@ -91,7 +91,7 @@ const TrafficTooltip = ({
     if (!active || !payload?.length) return null;
     const entry = payload[0];
     return (
-        <div className="rounded-xl border border-border bg-card px-3 py-2 text-xs shadow-md">
+        <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-md">
             <div className="mb-1 font-medium text-muted-foreground">{label}</div>
             <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -195,6 +195,7 @@ export default function Dashboard() {
     // client-side slicing needed.
     const filteredHistory = useMemo(() => stats?.history || [], [stats?.history]);
 
+    const securitySummaryAvailable = Boolean(stats?.securityOperations);
     const securitySummary = stats?.securityOperations || defaultSecuritySummary;
 
     // --- Data fetching (unchanged) ---
@@ -363,20 +364,20 @@ export default function Dashboard() {
 
     // --- Metric bar items ---
     const metricItems: MetricItem[] = [
-        { icon: Server, label: t('dashboard.total_requests'), value: (stats.totalRequests ?? 0).toLocaleString(), trend: stats.requestsTrend, tone: 'primary', goodDirection: 'up' },
-        { icon: Shield, label: t('dashboard.threats_blocked'), value: (stats.blockedRequests ?? 0).toLocaleString(), trend: stats.blockedTrend, tone: 'danger', goodDirection: 'down' },
-        { icon: Globe, label: t('dashboard.success_rate'), value: `${stats.successRate ?? 0}%`, tone: 'success', goodDirection: 'up' },
-        { icon: Zap, label: t('dashboard.avg_latency'), value: `${stats.avgProcessingTime || 0}ms`, tone: 'warning', goodDirection: 'down' },
-        { icon: Activity, label: t('dashboard.active_connections'), value: (stats.activeConnections ?? 0).toLocaleString(), tone: 'primary', goodDirection: 'up' },
-        { icon: AlertTriangle, label: t('dashboard.high_risk'), value: securitySummary.openCriticalFindings, tone: 'danger', goodDirection: 'down' },
+        { icon: Server, label: t('dashboard.total_requests'), value: Number.isFinite(stats.totalRequests) ? stats.totalRequests.toLocaleString() : '--', trend: stats.requestsTrend, tone: 'primary', goodDirection: 'up' },
+        { icon: Shield, label: t('dashboard.threats_blocked'), value: Number.isFinite(stats.blockedRequests) ? stats.blockedRequests.toLocaleString() : '--', trend: stats.blockedTrend, tone: 'danger', goodDirection: 'down' },
+        { icon: Globe, label: t('dashboard.success_rate'), value: Number.isFinite(stats.successRate) ? `${stats.successRate}%` : '--', tone: 'success', goodDirection: 'up' },
+        { icon: Zap, label: t('dashboard.avg_latency'), value: typeof stats.avgProcessingTime === 'number' ? `${stats.avgProcessingTime}ms` : '--', tone: 'warning', goodDirection: 'down' },
+        { icon: Activity, label: t('dashboard.active_connections'), value: Number.isFinite(stats.activeConnections) ? stats.activeConnections.toLocaleString() : '--', tone: 'primary', goodDirection: 'up' },
+        { icon: AlertTriangle, label: t('dashboard.high_risk'), value: securitySummaryAvailable ? securitySummary.openCriticalFindings : '--', tone: 'danger', goodDirection: 'down' },
     ];
 
     // --- System gauges ---
     const gaugeItems: GaugeItem[] = [
-        { icon: Cpu, label: t('dashboard.cpu_usage'), value: stats.cpuUsage || 0, tone: 'primary' },
-        { icon: HardDrive, label: t('dashboard.memory_usage'), value: stats.memoryUsage || 0, tone: 'warning' },
-        { icon: Database, label: t('dashboard.disk_usage'), value: stats.diskUsage || 0, tone: 'neutral' },
-        { icon: Activity, label: t('dashboard.network_throughput'), value: stats.networkUsage || 0, tone: 'success', kind: 'value', unit: 'MB/s' },
+        { icon: Cpu, label: t('dashboard.cpu_usage'), value: typeof stats.cpuUsage === 'number' ? stats.cpuUsage : null, tone: 'primary' },
+        { icon: HardDrive, label: t('dashboard.memory_usage'), value: typeof stats.memoryUsage === 'number' ? stats.memoryUsage : null, tone: 'warning' },
+        { icon: Database, label: t('dashboard.disk_usage'), value: typeof stats.diskUsage === 'number' ? stats.diskUsage : null, tone: 'neutral' },
+        { icon: Activity, label: t('dashboard.network_throughput'), value: typeof stats.networkUsage === 'number' ? stats.networkUsage : null, tone: 'success', kind: 'value', unit: 'MB/s' },
     ];
 
     return (
@@ -384,7 +385,7 @@ export default function Dashboard() {
             variants={staggerContainerVariants}
             initial="hidden"
             animate="visible"
-            className="mx-auto min-h-screen max-w-[1600px] space-y-4 p-6 pb-12"
+            className="mx-auto min-h-full max-w-[1680px] space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-7"
         >
             {/* Header: title + time range + actions */}
             <DashboardHeader

@@ -317,7 +317,7 @@ test.describe('AetherGuard full acceptance flows', () => {
             });
         }, { checkControls: !isMobileViewport(page), screenshot: true });
 
-        await step(page, monitor, 'deployment wizard normal and serial fallback flow', async () => {
+        await step(page, monitor, 'deployment wizard config generation and bundle flow', async () => {
             await gotoProtected(page, '/deploy', 'Deploy');
             await expect(page.getByTestId('deploy-next')).toBeDisabled();
             await page.getByTestId('deploy-target-nginx').click();
@@ -331,11 +331,8 @@ test.describe('AetherGuard full acceptance flows', () => {
             await expect(page.getByTestId('deploy-save-version')).toBeVisible({ timeout: 15000 });
             await page.getByTestId('deploy-save-version').click();
             await expect(page.getByTestId('deploy-preview-download-bundle')).not.toHaveAttribute('href', '#', { timeout: 15000 });
-            await page.getByTestId('deploy-go-device-write').click();
-            await expect(page.getByTestId('deploy-connect-serial')).toBeVisible();
-            if (!(await page.getByTestId('deploy-connect-serial').isEnabled())) {
-                await expect(page.locator('main')).toContainText(/serial|unsupported|not supported|串口|不支持/i);
-            }
+            await expect(page.getByTestId('deploy-go-device-write')).toHaveCount(0);
+            await expect(page.getByTestId('deploy-connect-serial')).toHaveCount(0);
             await page.getByTestId('deploy-start-over').click();
             await expect(page.getByTestId('deploy-next')).toBeDisabled();
         }, { checkControls: !isMobileViewport(page), screenshot: true });

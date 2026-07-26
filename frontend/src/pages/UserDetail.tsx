@@ -133,19 +133,21 @@ export default function UserDetailPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto">
+        <div className="mx-auto max-w-[1680px] space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col items-start justify-between gap-4 border-b border-border pb-5 md:flex-row md:items-center">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate('/super-admin')}
+                        aria-label={t('adminUsers.back') || 'Back to users'}
+                        title={t('adminUsers.back') || 'Back to users'}
                         className="p-2 hover:bg-muted rounded-lg transition-colors"
                     >
                         <ArrowLeft size={20} className="text-muted-foreground" />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                            <User className="text-primary" /> {user.email}
+                        <h1 className="flex items-center gap-2 text-xl font-semibold text-foreground sm:text-2xl">
+                            <User className="text-primary" size={22} /> {user.email}
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">{t('adminUsers.user_detail_desc')}</p>
                     </div>
@@ -153,7 +155,7 @@ export default function UserDetailPage() {
             </div>
 
             {/* Main Info Card */}
-            <div className="bg-card border border-border rounded-lg p-6">
+            <div className="rounded-lg border border-border bg-card p-5 shadow-panel sm:p-6">
                 <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                     <User size={18} /> {t('adminUsers.basic_info')}
                 </h2>
@@ -194,7 +196,7 @@ export default function UserDetailPage() {
                         <select
                             className={clsx(
                                 'mt-1 text-sm rounded border px-3 py-2 w-full',
-                                statusColors[user.status as keyof typeof statusColors] || statusColors.active
+                                statusColors[user.status as keyof typeof statusColors] || 'bg-muted text-muted-foreground border-border'
                             )}
                             value={user.status}
                             onChange={(e) => handleStatusChange(e.target.value)}
@@ -223,7 +225,7 @@ export default function UserDetailPage() {
             </div>
 
             {/* Actions Card */}
-            <div className="bg-card border border-border rounded-lg p-6">
+            <div className="rounded-lg border border-border bg-card p-5 shadow-panel sm:p-6">
                 <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Key size={18} /> {t('adminUsers.actions')}
                 </h2>
@@ -254,7 +256,7 @@ export default function UserDetailPage() {
             </div>
 
             {/* Login History Card */}
-            <div className="bg-card border border-border rounded-lg p-6">
+            <div className="rounded-lg border border-border bg-card p-5 shadow-panel sm:p-6">
                 <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                     <History size={18} /> {t('adminUsers.login_history')}
                 </h2>

@@ -2,11 +2,13 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Play, RefreshCw, Server, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
+import { sessionHasFrontendPermission } from '../components/RouteGuards';
 import {
     approveDeploymentRun,
     createDeploymentRun,
     fetchDeploymentHelpers,
     fetchDeploymentRuns,
+    fetchCurrentUserSession,
     fetchHardwareGates,
     type DeploymentHelperRecord,
     type DeploymentRunRecord,
@@ -33,6 +35,7 @@ const DeploymentRuns = () => {
     const [runs, setRuns] = useState<DeploymentRunRecord[]>([]);
     const [helpers, setHelpers] = useState<DeploymentHelperRecord[]>([]);
     const [gates, setGates] = useState<HardwareGateRecord[]>([]);
+    const [access, setAccess] = useState<{ canRead: boolean; canCreate: boolean; canApprove: boolean } | null>(null);
     const [loading, setLoading] = useState(true);
     const [busyRunId, setBusyRunId] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
@@ -45,23 +48,30 @@ const DeploymentRuns = () => {
         profileJson: JSON.stringify(defaultProfile, null, 2)
     });
 
-    const load = async (signal?: AbortSignal) => {
+    const load = async (
+        signal?: AbortSignal,
+        permissions = access,
+    ) => {
+        if (!permissions?.canRead) return;
         setLoading(true);
         setError(null);
         try {
-            const [nextRuns, nextHelpers, nextGates] = await Promise.all([
-                fetchDeploymentRuns(signal),
-                fetchDeploymentHelpers(signal),
-                fetchHardwareGates(signal)
-            ]);
+            const nextRuns = await fetchDeploymentRuns(signal);
             setRuns(nextRuns);
-            setHelpers(nextHelpers);
-            setGates(nextGates);
-            setForm((current) => ({
-                ...current,
-                helperId: current.helperId || nextHelpers[0]?.helperId || '',
-                gateId: current.gateId || nextGates[0]?.gateId || ''
-            }));
+
+            if (permissions.canCreate) {
+                const [nextHelpers, nextGates] = await Promise.all([
+                    fetchDeploymentHelpers(signal),
+                    fetchHardwareGates(signal),
+                ]);
+                setHelpers(nextHelpers);
+                setGates(nextGates);
+                setForm((current) => ({
+                    ...current,
+                    helperId: current.helperId || nextHelpers[0]?.helperId || '',
+                    gateId: current.gateId || nextGates[0]?.gateId || '',
+                }));
+            }
         } catch (err: any) {
             if (!signal?.aborted) setError(err?.message || 'FG-DEPLOYMENT-RUNS-ERR');
         } finally {
@@ -71,12 +81,29 @@ const DeploymentRuns = () => {
 
     useEffect(() => {
         const controller = new AbortController();
-        void load(controller.signal);
+        void fetchCurrentUserSession(controller.signal, { allowCachedFallback: false })
+            .then((user) => {
+                const nextAccess = {
+                    canRead: sessionHasFrontendPermission(user, 'deployment.run.read'),
+                    canCreate: sessionHasFrontendPermission(user, 'deployment.run.create'),
+                    canApprove: sessionHasFrontendPermission(user, 'deployment.run.approve'),
+                };
+                setAccess(nextAccess);
+                if (nextAccess.canRead) return load(controller.signal, nextAccess);
+                setLoading(false);
+            })
+            .catch(() => {
+                if (!controller.signal.aborted) {
+                    setAccess({ canRead: false, canCreate: false, canApprove: false });
+                    setLoading(false);
+                }
+            });
         return () => controller.abort();
     }, []);
 
     const createRun = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!access?.canCreate) return;
         setCreating(true);
         setError(null);
         try {
@@ -97,6 +124,7 @@ const DeploymentRuns = () => {
     };
 
     const approve = async (runId: string) => {
+        if (!access?.canApprove) return;
         setBusyRunId(runId);
         setError(null);
         try {
@@ -116,7 +144,7 @@ const DeploymentRuns = () => {
             title="Deployment Runs"
             subtitle="Signed bundle execution through helper attestation and serial hardware confirmation."
             actions={
-                <button onClick={() => void load()} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/40">
+                <button onClick={() => void load()} disabled={!access?.canRead || loading} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50">
                     <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                     Refresh
                 </button>
@@ -124,14 +152,18 @@ const DeploymentRuns = () => {
         >
             {error && <div className="rounded-lg border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <ConsoleStatCard icon={Play} label="Runs" value={runs.length} hint="Tenant-scoped deployment records" />
-                <ConsoleStatCard icon={Server} label="Helpers" value={helpers.length} hint="Registered Linux serial helpers" tone="neutral" />
-                <ConsoleStatCard icon={ShieldCheck} label="Gates" value={gates.length} hint="Enrolled physical gates" tone="success" />
-                <ConsoleStatCard icon={CheckCircle2} label="Awaiting Approval" value={readyForApproval} hint="Backup completed before approval" tone="warning" />
-            </div>
+            {!loading && access?.canRead === false && (
+                <ConsoleEmptyState title="Access denied" description="Deployment records require deployment.run.read permission." />
+            )}
 
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_420px]">
+            {access?.canRead && <div className={`grid grid-cols-1 gap-4 ${access.canCreate ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>
+                <ConsoleStatCard icon={Play} label="Runs" value={runs.length} hint="Tenant-scoped deployment records" />
+                {access.canCreate && <ConsoleStatCard icon={Server} label="Helpers" value={helpers.length} hint="Registered Linux serial helpers" tone="neutral" />}
+                {access.canCreate && <ConsoleStatCard icon={ShieldCheck} label="Gates" value={gates.length} hint="Enrolled physical gates" tone="success" />}
+                <ConsoleStatCard icon={CheckCircle2} label="Awaiting Approval" value={readyForApproval} hint="Backup completed before approval" tone="warning" />
+            </div>}
+
+            {access?.canRead && <div className={`grid grid-cols-1 gap-6 ${access.canCreate ? 'xl:grid-cols-[1fr_420px]' : ''}`}>
                 <ConsolePanel title="Run Timeline" subtitle="Only approved runs are available to serial helpers for install/remove execution." icon={Play}>
                     {runs.length === 0 && !loading ? (
                         <ConsoleEmptyState title="No deployment runs" description="Create a run after at least one helper and one gate are registered." />
@@ -158,13 +190,13 @@ const DeploymentRuns = () => {
                                             <Link to={`/deployment-evidence?runId=${encodeURIComponent(run.id)}`} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/40">
                                                 Evidence
                                             </Link>
-                                            <button
+                                            {access.canApprove && <button
                                                 onClick={() => void approve(run.id)}
                                                 disabled={busyRunId === run.id || run.status !== 'backup_completed'}
                                                 className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 {busyRunId === run.id ? 'Approving...' : 'Approve'}
-                                            </button>
+                                            </button>}
                                         </div>
                                     </div>
                                 </div>
@@ -173,7 +205,7 @@ const DeploymentRuns = () => {
                     )}
                 </ConsolePanel>
 
-                <ConsolePanel title="Create Run" subtitle="The helper must complete BACKUP before hardware approval is allowed." icon={Server}>
+                {access.canCreate && <ConsolePanel title="Create Run" subtitle="The helper must complete BACKUP before hardware approval is allowed." icon={Server}>
                     <form onSubmit={createRun} className="space-y-4">
                         <label className="block space-y-2 text-sm">
                             <span className="text-muted-foreground">Helper</span>
@@ -217,8 +249,8 @@ const DeploymentRuns = () => {
                             {creating ? 'Creating...' : 'Create Run'}
                         </button>
                     </form>
-                </ConsolePanel>
-            </div>
+                </ConsolePanel>}
+            </div>}
         </ConsolePage>
     );
 };

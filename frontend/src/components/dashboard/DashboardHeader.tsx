@@ -29,10 +29,10 @@ export const DashboardHeader = ({
     return (
         <motion.div
             variants={fadeUpVariants}
-            className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
+            className="flex flex-col gap-4 border-b border-border pb-5 lg:flex-row lg:items-end lg:justify-between"
         >
             <div className="space-y-1">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
                     {t('dashboard.title')}
                 </h1>
                 <p className="text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
@@ -61,6 +61,7 @@ export const DashboardHeader = ({
                 <button
                     data-testid="dashboard-log-pause"
                     aria-label={paused ? t('dashboard.resume_logs') || 'Resume' : t('dashboard.pause_logs') || 'Pause'}
+                    title={paused ? t('dashboard.resume_logs') || 'Resume' : t('dashboard.pause_logs') || 'Pause'}
                     onClick={onTogglePause}
                     className={`rounded-lg border border-border bg-card p-2 transition-colors hover:bg-muted/30 ${
                         paused ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground hover:text-foreground'
@@ -73,6 +74,7 @@ export const DashboardHeader = ({
                 <button
                     data-testid="dashboard-export-json"
                     aria-label={t('dashboard.export_json') || 'Export JSON'}
+                    title={t('dashboard.export_json') || 'Export JSON'}
                     onClick={() => onExport('json')}
                     className="rounded-lg border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
                 >
@@ -82,6 +84,7 @@ export const DashboardHeader = ({
                 {/* Export CSV */}
                 <button
                     data-testid="dashboard-export-csv"
+                    title="Export CSV"
                     onClick={() => onExport('csv')}
                     className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
                 >

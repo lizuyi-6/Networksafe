@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Cpu, Plus, RefreshCw, ShieldCheck } from 'lucide-react';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel, ConsoleStatCard } from '../components/ConsolePrimitives';
-import { enrollHardwareGate, fetchHardwareGates, type HardwareGateRecord } from '../services/api';
+import { sessionHasFrontendPermission } from '../components/RouteGuards';
+import { enrollHardwareGate, fetchCurrentUserSession, fetchHardwareGates, type HardwareGateRecord } from '../services/api';
 
 const statusClass = (status: string) => {
     if (status === 'online') return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
@@ -11,6 +12,7 @@ const statusClass = (status: string) => {
 
 const HardwareGates = () => {
     const [gates, setGates] = useState<HardwareGateRecord[]>([]);
+    const [access, setAccess] = useState<{ canRead: boolean; canEnroll: boolean } | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -21,7 +23,8 @@ const HardwareGates = () => {
         algorithm: 'ECDSA_P256_SHA256'
     });
 
-    const load = async (signal?: AbortSignal) => {
+    const load = async (signal?: AbortSignal, canRead = access?.canRead === true) => {
+        if (!canRead) return;
         setLoading(true);
         setError(null);
         try {
@@ -35,12 +38,28 @@ const HardwareGates = () => {
 
     useEffect(() => {
         const controller = new AbortController();
-        void load(controller.signal);
+        void fetchCurrentUserSession(controller.signal, { allowCachedFallback: false })
+            .then((user) => {
+                const nextAccess = {
+                    canRead: sessionHasFrontendPermission(user, 'gate.read'),
+                    canEnroll: sessionHasFrontendPermission(user, 'gate.enroll'),
+                };
+                setAccess(nextAccess);
+                if (nextAccess.canRead) return load(controller.signal, true);
+                setLoading(false);
+            })
+            .catch(() => {
+                if (!controller.signal.aborted) {
+                    setAccess({ canRead: false, canEnroll: false });
+                    setLoading(false);
+                }
+            });
         return () => controller.abort();
     }, []);
 
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!access?.canEnroll) return;
         setSaving(true);
         setError(null);
         try {
@@ -67,7 +86,7 @@ const HardwareGates = () => {
             title="Gate Management"
             subtitle="Production hardware gates for serial deployment confirmation."
             actions={
-                <button onClick={() => void load()} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/40">
+                <button onClick={() => void load()} disabled={!access?.canRead || loading} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50">
                     <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                     Refresh
                 </button>
@@ -75,13 +94,17 @@ const HardwareGates = () => {
         >
             {error && <div className="rounded-lg border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {!loading && access?.canRead === false && (
+                <ConsoleEmptyState title="Access denied" description="Gate records require gate.read permission." />
+            )}
+
+            {access?.canRead && <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <ConsoleStatCard icon={ShieldCheck} label="Enrolled Gates" value={gates.length} hint="Tenant-scoped physical gates" />
                 <ConsoleStatCard icon={Cpu} label="Online" value={onlineCount} hint="Ready to receive confirmation sessions" tone="success" />
                 <ConsoleStatCard icon={Plus} label="Protocol" value="v1" hint="USB-TTL serial deployer authority" tone="neutral" />
-            </div>
+            </div>}
 
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_420px]">
+            {access?.canRead && <div className={`grid grid-cols-1 gap-6 ${access.canEnroll ? 'xl:grid-cols-[1fr_420px]' : ''}`}>
                 <ConsolePanel title="Hardware Gates" subtitle="Experimental websocket devices stay separate from production gates." icon={ShieldCheck}>
                     {gates.length === 0 && !loading ? (
                         <ConsoleEmptyState title="No gates enrolled" description="Enroll a Gateway Appliance security gate before approving deployment runs." />
@@ -116,7 +139,7 @@ const HardwareGates = () => {
                     )}
                 </ConsolePanel>
 
-                <ConsolePanel title="Enroll Gate" subtitle="Paste the Gateway Appliance public key exported during gate provisioning." icon={Plus}>
+                {access.canEnroll && <ConsolePanel title="Enroll Gate" subtitle="Paste the Gateway Appliance public key exported during gate provisioning." icon={Plus}>
                     <form onSubmit={submit} className="space-y-4">
                         <label className="block space-y-2 text-sm">
                             <span className="text-muted-foreground">Gate ID</span>
@@ -139,8 +162,8 @@ const HardwareGates = () => {
                             {saving ? 'Enrolling...' : 'Enroll Gate'}
                         </button>
                     </form>
-                </ConsolePanel>
-            </div>
+                </ConsolePanel>}
+            </div>}
         </ConsolePage>
     );
 };

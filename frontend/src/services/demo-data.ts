@@ -427,7 +427,7 @@ const demoAlertsBase: AlertItem[] = [
         message: 'Gateway Appliance memory pressure detected during packet replay.',
         severity: 'Medium',
         type: 'performance',
-        source: 'esp32-gw-03',
+        source: 'appliance-gw-03',
         time: timeLabel(26),
         status: 'acknowledged',
         timestamp: timestampMinutesAgo(26)
@@ -461,7 +461,7 @@ const demoLogsBase: LogItem[] = [
     { id: 2, time: timestampMinutesAgo(3), type: 'AI', level: 'INFO', message: 'Aristotle promoted remediation pack #FG-2217', ip: '127.0.0.1', status: 200, method: 'SYSTEM', path: '/internal/remediation' },
     { id: 3, time: timestampMinutesAgo(5), type: 'BOT', level: 'WARN', message: 'Credential stuffing heuristic triggered on tenant alpha', ip: '92.118.39.77', status: 429, method: 'POST', path: '/api/auth/login' },
     { id: 4, time: timestampMinutesAgo(8), type: 'DNS', level: 'WARN', message: 'Blocked metadata SSRF lookup through resolver chain', ip: '10.24.8.14', status: 403, method: 'GET', path: '/api/proxy/fetch' },
-    { id: 5, time: timestampMinutesAgo(13), type: 'EDGE', level: 'INFO', message: 'Gateway esp32-gw-01 uploaded telemetry batch', ip: '10.0.2.31', status: 200, method: 'POST', path: '/api/devices/telemetry' },
+    { id: 5, time: timestampMinutesAgo(13), type: 'EDGE', level: 'INFO', message: 'Gateway Appliance appliance-gw-01 uploaded telemetry batch', ip: '10.0.2.31', status: 200, method: 'POST', path: '/api/devices/telemetry' },
     { id: 6, time: timestampMinutesAgo(19), type: 'WAF', level: 'ERROR', message: 'Command injection signature matched; request terminated', ip: '203.0.113.44', status: 403, method: 'POST', path: '/api/tools/ping' }
 ];
 
@@ -519,13 +519,9 @@ const demoAgentsBase: DemoAgent[] = [
 ];
 
 const demoDevicesBase: DemoDevice[] = [
-    // NOTE: These demo devices model the AetherGuard Gateway Appliance (STM32H5/U5 + Zephyr RTOS,
-    // the active hardware since 2026-06-13). The deviceId prefix `esp32-gw-*` and tag values `esp32-s3`/`esp32-c6`
-    // are retained for backward-compat because the IDs are used as keys in demoDeviceEventsBase /
-    // demoDeviceCommandsStore below; they are legacy demo-fixture names, NOT indicators of active ESP32 hardware.
-    // ESP32 serial-deployer / control-board hardware is retired and archived.
+    // These fixtures model the current AetherGuard Gateway Appliance line.
     {
-        deviceId: 'esp32-gw-01',
+        deviceId: 'appliance-gw-01',
         version: '1.8.4',
         chipModel: 'STM32H563',
         flashSize: 16 * 1024 * 1024,
@@ -551,7 +547,7 @@ const demoDevicesBase: DemoDevice[] = [
         latestCommand: null
     },
     {
-        deviceId: 'esp32-gw-02',
+        deviceId: 'appliance-gw-02',
         version: '1.8.4',
         chipModel: 'STM32U575',
         flashSize: 8 * 1024 * 1024,
@@ -577,7 +573,7 @@ const demoDevicesBase: DemoDevice[] = [
         latestCommand: null
     },
     {
-        deviceId: 'esp32-gw-03',
+        deviceId: 'appliance-gw-03',
         version: '1.7.9',
         chipModel: 'STM32H563',
         flashSize: 16 * 1024 * 1024,
@@ -605,18 +601,18 @@ const demoDevicesBase: DemoDevice[] = [
 ];
 
 const demoDeviceEventsBase: Record<string, DemoDeviceEvent[]> = {
-    'esp32-gw-01': [
-        { id: 'evt-101', deviceId: 'esp32-gw-01', type: 'telemetry', payload: { cpu: 28, mem: 41, queueDepth: 3 }, timestamp: timestampMinutesAgo(1) },
-        { id: 'evt-102', deviceId: 'esp32-gw-01', type: 'alert', payload: { code: 'A002', summary: 'Reflected XSS blocked on captive portal' }, timestamp: timestampMinutesAgo(6) },
-        { id: 'evt-103', deviceId: 'esp32-gw-01', type: 'command', payload: { action: 'collect', queuedBy: 'demo-mode' }, timestamp: timestampMinutesAgo(9) }
+    'appliance-gw-01': [
+        { id: 'evt-101', deviceId: 'appliance-gw-01', type: 'telemetry', payload: { cpu: 28, mem: 41, queueDepth: 3 }, timestamp: timestampMinutesAgo(1) },
+        { id: 'evt-102', deviceId: 'appliance-gw-01', type: 'alert', payload: { code: 'A002', summary: 'Reflected XSS blocked on captive portal' }, timestamp: timestampMinutesAgo(6) },
+        { id: 'evt-103', deviceId: 'appliance-gw-01', type: 'command', payload: { action: 'collect', queuedBy: 'demo-mode' }, timestamp: timestampMinutesAgo(9) }
     ],
-    'esp32-gw-02': [
-        { id: 'evt-201', deviceId: 'esp32-gw-02', type: 'heartbeat', payload: { rssi: -65, uptime: 93_600 }, timestamp: timestampMinutesAgo(4) },
-        { id: 'evt-202', deviceId: 'esp32-gw-02', type: 'data', payload: { sampleWindow: '5m', blocked: 17 }, timestamp: timestampMinutesAgo(10) }
+    'appliance-gw-02': [
+        { id: 'evt-201', deviceId: 'appliance-gw-02', type: 'heartbeat', payload: { uptime: 93_600 }, timestamp: timestampMinutesAgo(4) },
+        { id: 'evt-202', deviceId: 'appliance-gw-02', type: 'data', payload: { sampleWindow: '5m', blocked: 17 }, timestamp: timestampMinutesAgo(10) }
     ],
-    'esp32-gw-03': [
-        { id: 'evt-301', deviceId: 'esp32-gw-03', type: 'disconnect', payload: { reason: 'power_cycle', code: 'E005' }, timestamp: timestampMinutesAgo(47) },
-        { id: 'evt-302', deviceId: 'esp32-gw-03', type: 'unknown_error', payload: { reason: 'heap starvation', code: 'E003' }, timestamp: timestampMinutesAgo(52) }
+    'appliance-gw-03': [
+        { id: 'evt-301', deviceId: 'appliance-gw-03', type: 'disconnect', payload: { reason: 'power_cycle', code: 'E005' }, timestamp: timestampMinutesAgo(47) },
+        { id: 'evt-302', deviceId: 'appliance-gw-03', type: 'unknown_error', payload: { reason: 'heap starvation', code: 'E003' }, timestamp: timestampMinutesAgo(52) }
     ]
 };
 
@@ -680,10 +676,10 @@ let demoAlertsStore = clone(demoAlertsBase);
 let demoDevicesStore = clone(demoDevicesBase);
 let demoDeviceEventsStore = clone(demoDeviceEventsBase);
 let demoDeviceCommandsStore: Record<string, DemoDeviceCommand[]> = {
-    'esp32-gw-01': [
+    'appliance-gw-01': [
         {
             id: 'cmd-demo-001',
-            deviceId: 'esp32-gw-01',
+            deviceId: 'appliance-gw-01',
             command: 'collect',
             status: 'completed',
             message: 'Security telemetry collection completed.',

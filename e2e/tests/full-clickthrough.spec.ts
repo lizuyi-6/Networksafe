@@ -275,7 +275,7 @@ test.describe('full clickthrough巡检', () => {
                 await expect(page.locator('[data-testid^="super-admin-api-key-row-"]').filter({ hasText: keyName })).toHaveCount(0, { timeout: 10000 });
             }, true);
 
-            await monitoredStep(page, monitor, 'deployment wizard and hardware gate fallback', async () => {
+            await monitoredStep(page, monitor, 'deployment wizard config generation and bundle download', async () => {
                 await gotoAuthenticated(page, '/deploy', 'Deploy');
                 await expect(page.getByTestId('deploy-next')).toBeDisabled();
                 await page.getByTestId('deploy-target-nginx').click();
@@ -294,18 +294,8 @@ test.describe('full clickthrough巡检', () => {
                 await page.getByTestId('deploy-preview-download-bundle').click();
                 await downloadPromise;
 
-                await page.getByTestId('deploy-go-device-write').click();
-                await expect(page.getByTestId('deploy-connect-serial')).toBeVisible();
-                if (!(await page.getByTestId('deploy-connect-serial').isEnabled())) {
-                    await expect(page.locator('main')).toContainText(/serial|串口|unsupported|not supported|不支持/i);
-                }
-
-                // LEGACY route coverage: /api/deployments/esp32-status is the retained legacy ESP32 serial-deployer
-                // route (archived hardware, 2026-06-13). It is kept for backward-compat with historically-registered
-                // devices; active hardware uses the Gateway Appliance newline-JSON protocol. Asserting the route still
-                // responds with { success: true } here exercises that legacy-compat surface.
-                const { payload } = await readJson(page.request, '/api/deployments/esp32-status');
-                expect(payload).toMatchObject({ success: true });
+                await expect(page.getByTestId('deploy-go-device-write')).toHaveCount(0);
+                await expect(page.getByTestId('deploy-connect-serial')).toHaveCount(0);
                 await page.getByTestId('deploy-start-over').click();
                 await expect(page.getByTestId('deploy-next')).toBeDisabled();
             }, true);

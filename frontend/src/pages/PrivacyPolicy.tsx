@@ -1,35 +1,36 @@
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Scale } from 'lucide-react';
 
 const PrivacyPolicy = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="h-screen overflow-y-auto overflow-x-hidden bg-background font-sans text-foreground selection:bg-blue-100 selection:text-blue-900">
+        <div className="h-screen overflow-y-auto overflow-x-hidden bg-background font-sans text-foreground">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
-                <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur">
+                <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
                     <button
                         onClick={() => navigate('/')}
-                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-muted hover:bg-accent px-4 py-2 rounded border border-border"
+                        className="flex min-h-9 items-center gap-2 rounded-md border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
-                        <span className="material-symbols-outlined text-base">arrow_back</span>
-                        返回 AetherGuard 控制台
+                        <ArrowLeft size={16} aria-hidden="true" />
+                        返回 AetherGuard
                     </button>
                     <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-foreground text-xl block">gavel</span>
-                        <span className="font-semibold text-lg text-foreground">Aether 法律与合规中心</span>
+                        <Scale size={18} className="text-primary" aria-hidden="true" />
+                        <span className="text-sm font-semibold text-foreground sm:text-base">Aether 法律与合规中心</span>
                     </div>
                 </div>
             </header>
 
             {/* Content */}
-            <main className="max-w-6xl mx-auto px-6 py-12 pb-32">
+            <main className="mx-auto max-w-6xl px-4 py-10 pb-28 sm:px-6 lg:py-14">
                 {/* Title Area */}
                 <div className="mb-12 pb-8 border-b border-border">
-                    <h1 className="text-3xl md:text-4xl font-bold mb-4 text-foreground leading-tight">
+                    <h1 className="mb-4 max-w-4xl text-2xl font-semibold leading-tight text-foreground md:text-4xl">
                         AetherGuard 企业总隐私声明与数据处理增编 (DPA)
                     </h1>
-                    <div className="flex flex-wrap gap-4 text-xs text-muted-foreground bg-muted p-4 rounded border border-border mb-8 font-mono">
+                    <div className="mb-8 flex flex-wrap gap-4 rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
                         <div className="flex items-center gap-1"><strong>生效日期：</strong> 2026-02-21</div>
                         <div className="flex items-center gap-1"><strong>文档版本：</strong> 2026.1.A-Enterprise</div>
                         <div className="flex items-center gap-1"><strong>适用法域：</strong> PRC, GDPR (EU), CCPA/CPRA (US)</div>
@@ -45,9 +46,8 @@ const PrivacyPolicy = () => {
                 </div>
 
                 {/* Table of Contents */}
-                <div className="bg-muted border border-border rounded p-6 mb-12">
+                <div className="mb-12 rounded-lg border border-border bg-muted p-5 sm:p-6">
                     <h2 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-muted-foreground">format_list_bulleted</span>
                         协议条款导航
                     </h2>
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3 text-sm text-blue-600 font-medium [&_a:hover]:text-blue-800 [&_a:hover]:underline">
@@ -204,7 +204,7 @@ const PrivacyPolicy = () => {
                                 <h4 className="font-semibold text-foreground border-b border-border pb-1 mb-2">7.3 物理防护措施 (Physical Security)</h4>
                                 <ul className="list-disc list-inside text-muted-foreground text-xs space-y-1">
                                     <li>使用 Tier-3 / Tier-4 数据中心。防尾随门禁、7x24 生物识别监控录像、以及对已淘汰硬盘的国标碎磁销毁处理（提供销毁证书）。</li>
-                                    <li>ESP32 等硬件私有化探针固化 Secure Boot eFuse，对主板进行滴胶封测，防止侧信道与探测针拔取。</li>
+                                    <li>Gateway Appliance 安全控制器启用 Secure Boot，并由 Secure Element 保护设备身份与授权密钥，降低固件篡改和密钥提取风险。</li>
                                 </ul>
                             </div>
                             <div>
@@ -283,8 +283,8 @@ const PrivacyPolicy = () => {
 // Helper Components
 const Section = ({ id, title, children }: { id: string; title: string; children: React.ReactNode }) => (
     <section id={id} className="scroll-mt-24">
-        <h2 className="text-xl font-bold text-foreground mb-6 pb-2 border-b border-border">{title}</h2>
-        <div className="text-muted-foreground leading-relaxed text-base">{children}</div>
+        <h2 className="mb-5 border-b border-border pb-3 text-lg font-semibold text-foreground sm:text-xl">{title}</h2>
+        <div className="text-sm leading-7 text-muted-foreground sm:text-base">{children}</div>
     </section>
 );
 

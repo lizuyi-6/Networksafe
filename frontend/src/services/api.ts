@@ -275,11 +275,14 @@ export interface ApiReadiness {
     blockers: string[];
 }
 
-export const fetchCurrentUserSession = async (signal?: AbortSignal): Promise<CurrentUserSession | null> => {
+export const fetchCurrentUserSession = async (
+    signal?: AbortSignal,
+    options: { allowCachedFallback?: boolean } = {},
+): Promise<CurrentUserSession | null> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`, { signal });
     const payload = await response.json().catch(() => null) as any;
     if (!response.ok) {
-        if (isRetryableAuthInfrastructureFailure(response, payload)) {
+        if (options.allowCachedFallback !== false && isRetryableAuthInfrastructureFailure(response, payload)) {
             const cached = getSessionUserIdentity() as Partial<CurrentUserSession> | null;
             if (cached?.userId && cached.email && cached.username && cached.role) {
                 return cached as CurrentUserSession;
@@ -891,7 +894,12 @@ export const fetchSites = async () => {
         const response = await fetchWithCredentials(`${API_BASE_URL}/sites`);
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_sites'));
         const json = await response.json();
-        return json?.data || [];
+        const data = unwrapApiEnvelope<unknown>(json);
+        if (Array.isArray(data)) return data;
+        if (data && typeof data === 'object' && Array.isArray((data as { sites?: unknown }).sites)) {
+            return (data as { sites: unknown[] }).sites;
+        }
+        return [];
     } catch (e) {
         console.error('Failed to fetch sites:', e);
         return [];
@@ -988,8 +996,9 @@ export const fetchDeploymentHistory = async (siteId?: string, limit: number = 20
     if (!response.ok) {
         return [];
     }
-    const data = await response.json();
-    return data?.data || [];
+    const payload = await response.json();
+    const data = unwrapApiEnvelope<unknown>(payload);
+    return Array.isArray(data) ? data : [];
 };
 
 export const generateDeploymentBundle = async (payload: {
@@ -1003,14 +1012,6 @@ export const generateDeploymentBundle = async (payload: {
     });
     if (!response.ok) {
         throw new Error(i18n.t('api.failed_to_generate_deployment_bundle'));
-    }
-    return response.json();
-};
-
-export const fetchEsp32Status = async () => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/esp32-status`);
-    if (!response.ok) {
-        return { success: false, connected: false };
     }
     return response.json();
 };
@@ -1783,19 +1784,30 @@ export const fetchAgentSystemStats = async (): Promise<MultiAgentSystemStats | n
 
         const response = await fetchWithCredentials(`${API_BASE_URL}/ai-system/agents/stats`);
         if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_agent_stats'));
-        const data = await response.json();
+        const payload = await response.json();
+        const data = unwrapApiEnvelope<unknown>(payload);
 
-        if (isDemoModeActive() && data) {
-            applyDemoJitter();
-            data.queueSize = (data.queueSize || 0) + demoState.agentOffset.queueSize;
-            data.totalCaseFiles = (data.totalCaseFiles || 0) + demoState.agentOffset.totalCaseFiles;
-            data.lessonsLearned = (data.lessonsLearned || 0) + demoState.agentOffset.lessonsLearned;
-            data.policyUpdates = (data.policyUpdates || 0) + demoState.agentOffset.policyUpdates;
-            data.totalMessages = (data.totalMessages || 0) + demoState.agentOffset.totalMessages;
-            data.activeTasks = Math.floor(Math.random() * 15) + 3;
-            data.avgLatency = Math.floor(Math.random() * 80) + 40;
+        if (
+            !data
+            || typeof data !== 'object'
+            || typeof (data as Partial<MultiAgentSystemStats>).orchestrator !== 'object'
+            || typeof (data as Partial<MultiAgentSystemStats>).messageBus !== 'object'
+            || typeof (data as Partial<MultiAgentSystemStats>).synthesis !== 'object'
+            || !Array.isArray((data as Partial<MultiAgentSystemStats>).agents)
+        ) {
+            return null;
         }
-        return data;
+        const stats = data as MultiAgentSystemStats;
+
+        if (isDemoModeActive()) {
+            applyDemoJitter();
+            stats.messageBus.queueSize = (stats.messageBus.queueSize || 0) + demoState.agentOffset.queueSize;
+            stats.synthesis.totalCaseFiles = (stats.synthesis.totalCaseFiles || 0) + demoState.agentOffset.totalCaseFiles;
+            stats.synthesis.totalLessons = (stats.synthesis.totalLessons || 0) + demoState.agentOffset.lessonsLearned;
+            stats.synthesis.totalPolicyUpdates = (stats.synthesis.totalPolicyUpdates || 0) + demoState.agentOffset.policyUpdates;
+            stats.orchestrator.activeTasks = Math.floor(Math.random() * 15) + 3;
+        }
+        return stats;
     } catch (e) {
         console.error('Failed to fetch agent system stats:', e);
         return null;
@@ -3103,7 +3115,7 @@ export const sendDeviceCommand = async (deviceId: string, command: string): Prom
     if (!response.ok) {
         throw new Error(`FG-DEVICE-CMD-${response.status}`);
     }
-    return response.json();
+    return readJson<ActionResponse>(response);
 };
 
 export const fetchHardwareConfirmation = async (sessionId: string) => {
@@ -3136,7 +3148,7 @@ export const fetchFinalDefenseStatus = async (signal?: AbortSignal): Promise<Fin
                 gatewayProtectionMode: 'host_companion_gate',
                 tenantId: 'demo-tenant',
                 companionId: 'final-defense-companion-01',
-                gateId: 'control-board-v1-01',
+                gateId: 'security-controller-v1-01',
                 policyId: 'demo-final-defense-policy',
                 policyDigest: 'b7d8f1e0a9c44d21demo',
                 reportedPolicyDigest: 'b7d8f1e0a9c44d21demo',
