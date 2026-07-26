@@ -114,6 +114,36 @@ describe('rules.routes', () => {
     expect(response.body?.data?.sync).toEqual({ attempted: 3, succeeded: 3 });
   });
 
+  it('returns 422 when approving a candidate whose matcher has an invalid regex', async () => {
+    const err = new Error('backend.rule_candidate_invalid_regex') as Error & { code?: string; invalidPatterns?: string[] };
+    err.code = 'backend.rule_candidate_invalid_regex';
+    err.invalidPatterns = ['('];
+    (detectionPipelineService.approveRuleCandidate as jest.Mock).mockRejectedValue(err);
+
+    const app = buildApp();
+    const response = await request(app)
+      .post('/api/rules/candidates/candidate-bad/approve')
+      .send({ reason: 'try to approve broken rule' })
+      .expect(422);
+
+    expect(response.body?.code).toBe('backend.rule_candidate_invalid_regex');
+    expect(response.body?.meta?.invalidPatterns).toEqual(['(']);
+  });
+
+  it('returns 422 when approving a candidate with an empty matcher', async () => {
+    const err = new Error('backend.rule_candidate_empty_matcher') as Error & { code?: string };
+    err.code = 'backend.rule_candidate_empty_matcher';
+    (detectionPipelineService.approveRuleCandidate as jest.Mock).mockRejectedValue(err);
+
+    const app = buildApp();
+    const response = await request(app)
+      .post('/api/rules/candidates/candidate-empty/approve')
+      .send({ reason: 'approve empty matcher' })
+      .expect(422);
+
+    expect(response.body?.code).toBe('backend.rule_candidate_empty_matcher');
+  });
+
   it('lists detection events with filters', async () => {
     (detectionPipelineService.listDetectionEvents as jest.Mock).mockResolvedValue([
       {

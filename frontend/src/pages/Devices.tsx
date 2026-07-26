@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useLiveMode } from '../context/LiveModeContext';
 import {
     Cpu, HardDrive, Wifi, WifiOff, Radio, RefreshCw, Terminal, Power, Settings, X,
-    Server, Activity, Shield, Globe, Zap, ChevronRight, Save, RotateCcw, History, CheckCircle2
+    Server, Activity, Shield, Globe, Zap, ChevronRight, Save, History, CheckCircle2
 } from 'lucide-react';
 import {
     fetchDeviceConfig,
@@ -239,7 +239,7 @@ const Devices = () => {
     const [commandBusyByDevice, setCommandBusyByDevice] = useState<Record<string, string | null>>({});
     const [platformBadges, setPlatformBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
     const [finalDefense, setFinalDefense] = useState<FinalDefenseStatusResponse | null>(null);
-    const [, setShowResetConfirm] = useState(false);
+    const [finalDefenseError, setFinalDefenseError] = useState<string | null>(null);
 
     const fetchDevices = async (signal?: AbortSignal) => {
         setLoading(true);
@@ -249,7 +249,15 @@ const Devices = () => {
                 fetchDevicesList(signal),
                 fetchSystemBadges(signal),
             ]);
-            const finalDefenseStatus = await fetchFinalDefenseStatus(signal).catch(() => null);
+            let finalDefenseStatus: FinalDefenseStatusResponse | null = null;
+            try {
+                finalDefenseStatus = await fetchFinalDefenseStatus(signal);
+                setFinalDefenseError(null);
+            } catch (statusError: any) {
+                if (!isRequestAbortError(statusError, signal)) {
+                    setFinalDefenseError(statusError?.message || 'FG-FINAL-DEFENSE-STATUS-UNAVAILABLE');
+                }
+            }
             if (signal?.aborted) {
                 return;
             }
@@ -409,7 +417,9 @@ const Devices = () => {
     const rootFinalDefenseTitle = rootResistantActive
         ? 'Root-Resistant Final Defense Active'
         : 'Root-Resistant Final Defense Degraded';
-    const rootFinalDefenseSubtitle = 'External Root-Resistant Gateway Appliance keeps the protected network link under hardware control even if the server OS is root-compromised.';
+    const rootFinalDefenseSubtitle = finalDefenseError
+        ? `Final Defense status unavailable: ${finalDefenseError}`
+        : 'External Root-Resistant Gateway Appliance keeps the protected network link under hardware control even if the server OS is root-compromised.';
 
     return (
         <div className="relative p-6 space-y-6 max-w-[1600px] mx-auto">
@@ -455,7 +465,11 @@ const Devices = () => {
                                 <span className="truncate text-muted-foreground">{label}</span>
                                 <span className={`font-medium ${ok ? 'text-emerald-500' : 'text-amber-500'}`}>{ok ? 'OK' : 'Check'}</span>
                             </div>
-                        )) : (
+                        )) : finalDefenseError ? (
+                            <div role="alert" className="col-span-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-rose-700 dark:text-rose-300 sm:col-span-3">
+                                Final Defense status could not be verified. Hardware protection state is unknown.
+                            </div>
+                        ) : (
                             <div className="col-span-2 rounded-lg border border-border bg-card/70 px-3 py-2 text-muted-foreground sm:col-span-3">
                                 No external Root-Resistant Gateway Appliance has reported root-resistant status.
                             </div>
@@ -712,10 +726,7 @@ const Devices = () => {
                             </div>
 
                             <div className="border-t border-border px-6 py-4">
-                                <div className="flex items-center justify-between gap-3">
-                                    <button onClick={() => setShowResetConfirm(true)} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">
-                                        <RotateCcw size={14} /> {t('devices.reset')}
-                                    </button>
+                                <div className="flex items-center justify-end gap-3">
                                     <div className="flex gap-3">
                                         <button onClick={closeSettings} className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/20">{t('devices.cancel')}</button>
                                         <button onClick={saveSettings} disabled={configSaving || !configDraft} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">

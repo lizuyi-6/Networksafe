@@ -104,9 +104,17 @@ void controller_send_state_report(void);
 /* Task 12: Emergency stop */
 void controller_handle_estop(void);
 
+/* Task 12 reset: acknowledge a latched e-stop. Clears the latch and returns
+ * to ISOLATED (relay stays open) — per ISO 13850 semantics, releasing the
+ * physical button must never restart anything by itself; a fresh grant is
+ * still required to release the interlock afterwards. */
+void controller_clear_estop(void);
+bool controller_estop_latched(void);
+
 /* State accessors */
 interlock_state_t controller_get_state(void);
 void controller_set_state(interlock_state_t state);
+uint32_t controller_get_high_water_counter(void);
 
 /* Alert */
 void controller_send_alert(void);

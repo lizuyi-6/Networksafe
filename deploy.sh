@@ -1,117 +1,34 @@
-﻿#!/bin/bash
-set -e
+#!/bin/bash
+# =============================================================================
+# DEPRECATED — do not use.
+#
+# This legacy native-deployment script can no longer produce a bootable
+# system. The backend's production startup validation
+# (backend/src/bootstrap/runtime-env.ts) hard-rejects the configuration this
+# script generates:
+#
+#   1. It wrote DISABLE_REDIS=true with NODE_ENV=production
+#      → "DISABLE_REDIS cannot be enabled in production." (hard error)
+#   2. It provisioned no Postgres and left DB_MODE unset
+#      → "DB_MODE must be set to postgres in production." (hard error)
+#   3. It never generated ENCRYPTION_KEY / ENCRYPTION_SALT /
+#      SERIAL_HELPER_SHARED_SECRET → assertStrongSecret hard errors.
+#   4. It expected artifacts/releases/backend-dist.tar.gz +
+#      frontend-dist.tar.gz, which no current script produces.
+#
+# Supported installation paths:
+#   Docker (recommended):   sudo bash scripts/install.sh
+#     or manually:          node scripts/setup.mjs && docker compose up -d --build
+#   Env generation only:    bash deployment/production/setup-env.sh
+# =============================================================================
 
-echo "==========================================="
-echo "   AetherGuard Native Deployment Script"
-echo "==========================================="
-
-# Install dependencies (Node.js 20.x, Nginx)
-echo "--> Installing OS dependencies..."
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt-get install -y nodejs nginx
-
-echo "--> Installing PM2 globally..."
-npm install -g pm2
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BACKEND_ARCHIVE="$SCRIPT_DIR/artifacts/releases/backend-dist.tar.gz"
-FRONTEND_ARCHIVE="$SCRIPT_DIR/artifacts/releases/frontend-dist.tar.gz"
-
-if [ ! -f "$BACKEND_ARCHIVE" ]; then
-    echo "Missing backend archive: $BACKEND_ARCHIVE"
-    exit 1
-fi
-
-if [ ! -f "$FRONTEND_ARCHIVE" ]; then
-    echo "Missing frontend archive: $FRONTEND_ARCHIVE"
-    exit 1
-fi
-
-# Setup directories
-APP_DIR="/opt/aetherguard"
-mkdir -p $APP_DIR/backend
-mkdir -p $APP_DIR/frontend
-mkdir -p /var/www/aetherguard
-
-# Extract artifacts
-echo "--> Extracting backend..."
-tar -xzf "$BACKEND_ARCHIVE" -C $APP_DIR/backend/
-echo "--> Extracting frontend..."
-tar -xzf "$FRONTEND_ARCHIVE" -C $APP_DIR/frontend/
-
-# Setup Backend
-echo "--> Setting up backend..."
-cd $APP_DIR/backend
-npm install --production
-
-# Create .env if not exists
-if [ ! -f .env ]; then
-    cp .env.example .env
-    # Generate random secrets for production
-    sed -i "s/your-super-secret-jwt-key-change-in-production/$(openssl rand -hex 32)/g" .env
-    echo "AUDIT_LOG_SECRET=$(openssl rand -hex 32)" >> .env
-    # Modify environment
-    sed -i "s/NODE_ENV=development/NODE_ENV=production/g" .env
-    sed -i "s/DISABLE_REDIS=false/DISABLE_REDIS=true/g" .env
-    echo "DISABLE_REDIS=true" >> .env
-fi
-
-# Start backend via PM2
-echo "--> Starting backend with PM2..."
-pm2 restart AetherGuard-backend || pm2 start dist/index.js --name "AetherGuard-backend"
-pm2 save
-pm2 startup | grep "sudo env" | sh || true
-
-# Setup Frontend
-echo "--> Setting up frontend..."
-cp -r $APP_DIR/frontend/dist/* /var/www/aetherguard/
-chown -R www-data:www-data /var/www/aetherguard
-
-# Configure Nginx
-echo "--> Configuring Nginx..."
-cat > /etc/nginx/conf.d/aetherguard.conf << 'EOF'
-server {
-    listen 80;
-    server_name _;
-
-    root /var/www/aetherguard;
-    index index.html index.htm;
-
-    gzip on;
-    gzip_min_length 1000;
-    gzip_types text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:3005;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location /socket.io/ {
-        proxy_pass http://127.0.0.1:3005;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-    }
-}
-EOF
-
-# Restart Nginx
-echo "--> Restarting Nginx..."
-systemctl restart nginx
-systemctl enable nginx
-
-echo "==========================================="
-echo "   Deployment Completed Successfully!"
-echo "   Access via http://YOUR_SERVER_IP/"
-echo "==========================================="
+echo "ERROR: deploy.sh is deprecated and disabled." >&2
+echo "" >&2
+echo "It generated a configuration the backend now hard-rejects at startup" >&2
+echo "(DISABLE_REDIS=true and DB_MODE != postgres are fatal in production," >&2
+echo "see backend/src/bootstrap/runtime-env.ts)." >&2
+echo "" >&2
+echo "Use instead:" >&2
+echo "  sudo bash scripts/install.sh                      # one-click Docker install" >&2
+echo "  node scripts/setup.mjs && docker compose up -d --build" >&2
+exit 1

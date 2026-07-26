@@ -1,0 +1,6 @@
+# Generated render outputs (regenerate with openscad CLI, see README.md)
+*.stl
+*.png
+*.off
+*.amf
+*.3mf

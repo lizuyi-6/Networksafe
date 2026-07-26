@@ -1,0 +1,3000 @@
+﻿// AetherGuard Software Copyright Source Excerpts
+// Export target: 60 pages, 50 lines per page, A4 portrait
+// Product name: AetherGuard
+// Short name: AetherGuard
+// Version: V1.0 (to be filled)
+// Part 1: Frontend core source (pages 1-30)
+// File: frontend/src/App.tsx
+                        showText={true}
+                        className="scale-90 origin-left"
+                    />
+                </div>
+                {/* Nav Links */}
+                <nav className="p-3 space-y-4">
+                    {navGroups.map((group, idx) => (
+                        <div key={idx}>
+                            <div className="px-3 py-2 text-xxs font-medium tracking-wider text-muted-foreground uppercase">{group.title}</div>
+                            <div className="space-y-0.5">
+                                {group.items.map((item: any) => {
+                                    const isActive = location.pathname === item.path;
+                                    return (
+                                        <Link
+                                            key={item.path}
+                                            to={item.path}
+                                            className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors group ${isActive
+                                                ? 'text-foreground bg-primary/10 border border-primary/20 shadow-sm'
+                                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                                }`}
+                                        >
+                                            <item.icon
+                                                size={18}
+                                                strokeWidth={1.5}
+                                                className={isActive ? 'text-primary' : 'group-hover:text-foreground'}
+                                            />
+                                            <span className="font-normal">{item.label}</span>
+                                            {item.path === '/scanner' && (
+                                                <span className="ml-auto flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                            )}
+                                            {item.badge && (
+                                                <span className="ml-auto text-xxs bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20">{item.badge}</span>
+                                            )}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </nav>
+            </div>
+            <div className="p-4 border-t border-border/50 space-y-3">
+                {/* Attack Status */}
+                <AnimatePresence>
+                    {attackSimEnabled && attackStatus.isRunning && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="rounded-lg border border-border bg-muted/20 p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Zap className="h-4 w-4 text-amber-500" />
+                                    <span className="text-xs font-medium text-foreground">{t('nav.attack_simulation')}</span>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-muted-foreground">{t('nav.attack_sim_progress')}</span>
+                                        <span className="font-medium text-foreground">{attackStatus.completed}/{attackStatus.total}</span>
+                                    </div>
+                                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${progressPercent}%` }}
+                                            className="h-full rounded-full bg-amber-500"
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between pt-1">
+                                        <div className="flex items-center gap-1">
+                                            <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                            <span className="text-xs text-emerald-600 dark:text-emerald-400">{attackStatus.blocked}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <XCircle className="h-3 w-3 text-rose-500" />
+                                            <span className="text-xs text-rose-600 dark:text-rose-400">{attackStatus.allowed}</span>
+                                        </div>
+                                    </div>
+                                    {attackStatus.currentAttack && (
+                                        <div className="truncate border-t border-border/60 pt-1 text-xs text-muted-foreground">
+                                            {attackStatus.currentAttack}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                {/* User Profile */}
+                <Link to="/settings" className="flex items-center gap-3 px-2 py-2 text-sm hover:text-foreground transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-medium text-xs">
+                        {profile.initials}
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-xs font-medium text-foreground">{profile.name}</span>
+                        <span className="text-xxs text-muted-foreground">{profile.role}</span>
+                    </div>
+                    <Settings size={18} className="ml-auto hover:rotate-90 transition-transform duration-500 text-muted-foreground hover:text-foreground" />
+                </Link>
+            </div>
+        </aside>
+    );
+}
+const Header = () => {
+    const { t, language, toggleLanguage } = useLanguage();
+    const { isDemoMode, toggleDemoMode, isSwitchingDemoMode } = useDemo();
+    const { theme, setTheme } = useTheme();
+    const { liveModeEnabled, toggleLiveMode } = useLiveMode();
+    const location = useLocation();
+    if (location.pathname === '/' || location.pathname === '/login') return null;
+    return (
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-border/50 bg-background px-3 md:px-6">
+            <div className="min-w-0 flex items-center gap-3 text-sm text-muted-foreground overflow-hidden">
+                <span className="hover:text-foreground cursor-pointer transition-colors truncate">{t('header.overview')}</span>
+                <span className="text-muted-foreground/50 shrink-0">/</span>
+                <span className="text-foreground font-medium truncate">{t('nav.dashboard')}</span>
+            </div>
+            <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                {/* Status Indicator */}
+                <div className="flex items-center gap-2 rounded-full border border-emerald-500/10 bg-emerald-500/5 px-3 py-1.5">
+                    <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                    <span className="hidden lg:inline text-xs font-medium text-emerald-500 tracking-tight">{t('header.system_healthy')}</span>
+                </div>
+                <div className="hidden sm:block h-8 w-px bg-border"></div>
+                {/* Theme Toggle */}
+                <div className="flex items-center gap-1 bg-muted border border-border rounded-full p-0.5">
+                    <button
+                        onClick={() => setTheme('light')}
+                        className={`p-1 rounded-full transition-all ${theme === 'light' ? 'bg-background shadow text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        title="Light Mode"
+                    >
+                        <Sun size={14} />
+                    </button>
+                    <button
+                        onClick={() => setTheme('system')}
+                        className={`p-1 rounded-full transition-all ${theme === 'system' ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        title="System"
+                    >
+                        <Laptop size={14} />
+                    </button>
+                    <button
+                        onClick={() => setTheme('dark')}
+                        className={`p-1 rounded-full transition-all ${theme === 'dark' ? 'bg-background text-primary shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        title="Dark Mode"
+                    >
+                        <Moon size={14} />
+                    </button>
+                </div>
+                <div className="hidden sm:block h-8 w-px bg-border"></div>
+                <button
+                    type="button"
+                    data-testid="demo-mode-toggle"
+                    aria-pressed={isDemoMode}
+                    onClick={toggleDemoMode}
+                    disabled={isSwitchingDemoMode}
+                    className={`flex items-center gap-2 group shrink-0 whitespace-nowrap ${isSwitchingDemoMode ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                    <span className={`text-xs font-medium transition-colors ${isDemoMode ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>{t('nav.demo_mode')}</span>
+                    <div className={`w-8 h-4 rounded-full relative transition-colors border ${isDemoMode ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 rounded-full shadow-sm transition-all ${isDemoMode ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
+                    </div>
+                </button>
+                <div className="hidden sm:block h-8 w-px bg-border"></div>
+                {/* Language Toggle */}
+                <div onClick={toggleLanguage} className="flex items-center gap-2 cursor-pointer group">
+                    <span className={`text-xs font-medium transition-colors ${language === 'zh' ? 'text-muted-foreground' : 'text-foreground'}`}>EN</span>
+                    <div className={`w-8 h-4 rounded-full relative transition-colors ${language === 'zh' ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 rounded-full shadow-sm transition-all ${language === 'zh' ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
+                    </div>
+                    <span className={`text-xs font-medium transition-colors ${language === 'zh' ? 'text-primary' : 'text-muted-foreground'}`}>中文</span>
+                </div>
+                <div className="h-8 w-px bg-border"></div>
+                {/* Custom Switch (Auto Refresh) */}
+                <button type="button" onClick={toggleLiveMode} className="flex items-center gap-2 group cursor-pointer">
+                    <span className="text-xs font-medium group-hover:text-foreground transition-colors text-muted-foreground">{t('header.live')}</span>
+                    <div className={`w-9 h-5 rounded-full border relative transition-colors ${liveModeEnabled ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border group-hover:border-primary/50'}`}>
+                        <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-sm transition-all ${liveModeEnabled ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
+                    </div>
+                </button>
+            </div>
+// File: frontend/src/pages/Dashboard.tsx
+        };
+        void loadData();
+        if (!liveModeEnabled || paused) return;
+        const interval = setInterval(loadData, 2000);
+        return () => clearInterval(interval);
+    }, [liveModeEnabled, paused]);
+    useEffect(() => {
+        void fetchLogs().then((rows) => Array.isArray(rows) && setLogs(rows)).catch((err) => setError(err.message || 'FG-DASHBOARD-LOGS'));
+        const unsubscribe = subscribe('agent:log', (logData: any) => {
+            if (paused) return;
+            setLogs((prev) => [logData, ...prev].slice(0, 100));
+        });
+        return unsubscribe;
+    }, [paused, subscribe]);
+    useEffect(() => {
+        const loadSideData = async () => {
+            try {
+                const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+                const role = meRes.ok ? (await meRes.json()).user?.role || 'viewer' : 'viewer';
+                setUserRole(role);
+                const [rules, keys] = await Promise.all([
+                    fetchDashboardRulesSummary(),
+                    role === 'admin' ? fetchAdminApiKeys().catch(() => []) : Promise.resolve([])
+                ]);
+                setRulesSummary(rules || { totalRules: 0, topRules: [] });
+                setApiKeys(keys || []);
+            } catch (e: any) {
+                setError(e.message || 'FG-DASHBOARD-SIDE');
+            }
+        };
+        void loadSideData();
+    }, []);
+    if (error) {
+        return <ErrorDisplay title="控制台加载失败" message={error} onRetry={() => window.location.reload()} />;
+    }
+    if (!stats) {
+        return <div className="flex min-h-[400px] items-center justify-center"><motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="h-8 w-8 rounded-full border-b-2 border-t-2 border-primary" /></div>;
+    }
+    const exportSnapshot = (format: 'json' | 'csv') => {
+        const payload = format === 'json'
+            ? JSON.stringify({ generatedAt: new Date().toISOString(), timeRange, filterQuery, stats, logs: filteredLogs }, null, 2)
+            : ['time,type,level,status,method,path,message', ...filteredLogs.map((log) => [log.time, log.type, log.level, log.status || '', log.method || '', log.path || '', `"${String(log.message).replace(/"/g, '""')}"`].join(','))].join('\n');
+        const blob = new Blob([payload], { type: format === 'json' ? 'application/json' : 'text/csv;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `dashboard-${timeRange}-${Date.now()}.${format}`;
+        anchor.click();
+        window.URL.revokeObjectURL(url);
+        setExportMessage(`已导出当前视图（${format.toUpperCase()}）`);
+        window.setTimeout(() => setExportMessage(null), 2500);
+    };
+    const healthStatus = stats.successRate >= 99 ? '系统健康' : stats.successRate >= 95 ? '运行稳定' : '需重点关注';
+    return (
+        <ConsolePage title="安全控制台" subtitle="统一监控、规则、日志与运营摘要">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard icon={Server} label="总请求数" value={stats.totalRequests.toLocaleString()} hint="整体流量处理规模" tone="primary" />
+                <ConsoleStatCard icon={Shield} label="拦截威胁" value={stats.blockedRequests.toLocaleString()} hint="近期拦截事件累计" tone="danger" />
+                <ConsoleStatCard icon={Zap} label="平均延迟" value={`${stats.avgProcessingTime || 0}ms`} hint={`P99 ${stats.p99Latency || 0}ms`} tone="warning" />
+                <ConsoleStatCard icon={Globe} label="全局健康" value={`${stats.successRate}%`} hint={healthStatus} tone="success" />
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard icon={Cpu} label="CPU 使用率" value={`${stats.cpuUsage?.toFixed(1) || 0}%`} hint="主机 CPU" tone="primary" />
+                <ConsoleStatCard icon={HardDrive} label="内存占用" value={`${stats.memoryUsage?.toFixed(1) || 0}%`} hint="系统内存" tone="warning" />
+                <ConsoleStatCard icon={Database} label="磁盘占用" value={`${stats.diskUsage?.toFixed(1) || 0}%`} hint="根分区使用率" tone="neutral" />
+                <ConsoleStatCard icon={Activity} label="网络吞吐" value={`${stats.networkUsage?.toFixed(2) || 0} MB/s`} hint="实时 I/O 吞吐量" tone="success" />
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-8">
+                    <ConsolePanel title="流量分析" subtitle="按时间窗口查看请求与拦截趋势" icon={Activity} iconTone="primary">
+                        <div className="flex items-center justify-end gap-2 pb-4">
+                            <button onClick={() => setTimeRange('1h')} className={`rounded-lg border px-4 py-1.5 text-xs font-semibold ${timeRange === '1h' ? 'border-border bg-card text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>1 小时</button>
+                            <button onClick={() => setTimeRange('24h')} className={`rounded-lg border px-4 py-1.5 text-xs font-semibold ${timeRange === '24h' ? 'border-border bg-card text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>24 小时</button>
+                        </div>
+                        <TrafficChart data={filteredHistory} />
+                    </ConsolePanel>
+                </div>
+                <div className="lg:col-span-4">
+                    <ConsolePanel title="攻击来源" subtitle="按地区聚合的最近来源分布" icon={Globe} iconTone="warning">
+                        <div className="space-y-5">
+                            {(stats.attackOrigins || []).length > 0 ? stats.attackOrigins!.map((item, i) => (
+                                <div key={`${item.countryCode}-${i}`}>
+                                    <div className="mb-2 flex items-center justify-between text-sm">
+                                        <span className="flex items-center gap-2 font-medium text-foreground"><span className={`h-2 w-2 rounded-full ${countryColor(item.countryCode)}`}></span>{item.country}<span className="text-muted-foreground">({item.countryCode})</span></span>
+                                        <span className="font-mono font-bold text-foreground">{Math.round(item.percentage)}%</span>
+                                    </div>
+                                    <div className="h-2 overflow-hidden rounded-full border border-border/50 bg-muted"><motion.div initial={{ width: 0 }} animate={{ width: `${item.percentage}%` }} transition={{ duration: 0.6, delay: i * 0.06 }} className={`h-full ${countryColor(item.countryCode)}`} /></div>
+                                </div>
+                            )) : <ConsoleEmptyState title="暂无攻击数据" description="检测到来源分布后会在这里显示。" />}
+                        </div>
+                    </ConsolePanel>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-8">
+                    <ConsolePanel title="实时日志流" subtitle="筛选当前视图并导出结果" icon={Terminal} iconTone="neutral" headerAction={<div className="flex items-center gap-3"><div className="relative"><Search className="absolute left-3 top-2 text-muted-foreground" size={16} /><input type="text" value={filterQuery} onChange={(event) => setFilterQuery(event.target.value)} placeholder="筛选：status / type / path / message" className="w-full rounded-lg border border-border bg-card py-1.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none md:w-64" /></div><button onClick={() => setPaused((current) => !current)} className={`rounded-lg border border-border bg-card p-2 transition-colors hover:bg-muted/30 ${paused ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground hover:text-foreground'}`}><Pause size={18} /></button><button onClick={() => exportSnapshot('json')} className="rounded-lg border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"><Download size={18} /></button><button onClick={() => exportSnapshot('csv')} className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground">CSV</button></div>}>
+                        {exportMessage && <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600 dark:text-emerald-300">{exportMessage}</div>}
+                        <div className="h-[450px]"><LogStream logs={filteredLogs} emptyText={t('dashboard.waiting_logs')} /></div>
+                    </ConsolePanel>
+                </div>
+                <div className="space-y-6 lg:col-span-4">
+                    <ConsolePanel title="活跃规则" subtitle="触发次数最高的规则清单" icon={Code} iconTone="primary" headerAction={<span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">总计 {rulesSummary.totalRules || 0}</span>}>
+                        <div className="space-y-4">
+                            {(rulesSummary.topRules || []).length > 0 ? (rulesSummary.topRules || []).slice(0, 5).map((rule: any) => (
+                                <div key={rule.id} className="flex items-center justify-between rounded-xl border border-border bg-muted/15 p-3 transition-colors hover:bg-muted/25">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 text-primary"><Code size={18} /></div>
+                                        <div><div className="text-sm font-semibold text-foreground">{rule.name || rule.id}</div><div className="text-xs uppercase tracking-wide text-muted-foreground">严重级别 {rule.severity || 'unknown'}</div></div>
+                                    </div>
+                                    <div className="rounded-md border border-primary/15 bg-primary/10 px-2 py-1 font-mono text-sm font-semibold text-primary">{rule.count || 0}</div>
+                                </div>
+                            )) : <ConsoleEmptyState title="暂无规则遥测" description="规则命中后会在这里显示排行。" />}
+                        </div>
+                    </ConsolePanel>
+                    {userRole === 'admin' && (
+                        <ConsolePanel title="管理员 API 密钥" subtitle="快速查看最近使用的接入前缀" icon={Key} iconTone="success">
+                            <div className="space-y-4">
+                                <p className="text-sm leading-6 text-muted-foreground">展示当前管理员可快速核对的首个密钥前缀与最近使用时间，便于排查接入链路。</p>
+                                <div className="flex items-center justify-between rounded-xl border border-border bg-muted p-3">
+                                    <code className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">{apiKeys[0]?.prefix ? `${apiKeys[0].prefix}********` : '未找到'}</code>
+// File: frontend/src/pages/Agents.tsx
+const formatUptime = (seconds: number): string => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (days > 0) return `${days}天 ${hours}小时`;
+    if (hours > 0) return `${hours}小时 ${mins}分钟`;
+    return `${mins}分钟`;
+};
+const Agents = () => {
+    const { liveModeEnabled } = useLiveMode();
+    const [agents, setAgents] = useState<Agent[]>([]);
+    const [threats, setThreats] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [actionMessage, setActionMessage] = useState<string | null>(null);
+    const fetchAgents = async () => {
+        try {
+            const data = await fetchAgentsList();
+            setAgents(data?.agents || []);
+        } catch (e: any) {
+            setAgents([]);
+            setError(e.message || 'FG-AGENTS-LIST-ERR');
+        } finally {
+            setLoading(false);
+        }
+    };
+    const fetchThreats = async () => {
+        try {
+            const rows = await fetchRecentAgentThreats(50);
+            setThreats(rows || []);
+        } catch (e: any) {
+            setThreats([]);
+            setError(e.message || 'FG-AGENTS-THREATS-ERR');
+        }
+    };
+    const triggerScan = async (agentId: string) => {
+        try {
+            const response = await triggerAgentScan(agentId);
+            setActionMessage(response?.message || `Scan queued for ${agentId}`);
+            await fetchThreats();
+        } catch (e: any) {
+            setError(e.message || 'FG-AGENT-SCAN');
+        }
+    };
+    useEffect(() => {
+        fetchAgents();
+        fetchThreats();
+        if (!liveModeEnabled) {
+            return;
+        }
+        const interval = setInterval(() => {
+            fetchAgents();
+            fetchThreats();
+        }, 10000);
+        return () => clearInterval(interval);
+    }, [liveModeEnabled]);
+    const onlineCount = agents.filter((a) => a.isOnline).length;
+    return (
+        <ConsolePage
+            title="智能体"
+            subtitle="统一查看智能体在线状态、资源占用与近期威胁事件。"
+            actions={<button onClick={() => { fetchAgents(); fetchThreats(); }} className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/30"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />刷新</button>}
+        >
+            {actionMessage && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-600 dark:text-emerald-300">{actionMessage}</div>}
+            {error && <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard icon={Server} label="总智能体" value={agents.length} hint="已注册智能体总数" tone="primary" />
+                <ConsoleStatCard icon={Wifi} label="在线节点" value={onlineCount} hint="当前在线节点数量" tone="success" />
+                <ConsoleStatCard icon={AlertTriangle} label="近期威胁" value={threats.length} hint="最近相关安全事件数" tone="danger" />
+                <ConsoleStatCard icon={Clock} label="在线率" value={`${Math.round((onlineCount / (agents.length || 1)) * 100)}%`} hint="在线健康比例" tone="warning" />
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                    <ConsolePanel title="智能体机群" subtitle="每个卡片都支持执行动作和进入详情页。" icon={Server} iconTone="primary">
+                        {loading ? (
+                            <ConsoleEmptyState title="正在加载智能体数据" />
+                        ) : agents.length === 0 ? (
+                            <ConsoleEmptyState title="当前没有可显示的智能体节点" />
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                {agents.map((agent) => (
+                                    <div key={agent.agentId} className="rounded-xl border border-border bg-muted/15 p-5">
+                                        <div className="mb-4 flex items-start justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`rounded-lg p-2 ${agent.isOnline ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'}`}>
+                                                    <Server size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-medium text-foreground">{agent.hostname || agent.agentId}</h3>
+                                                    <p className="font-mono text-xs text-muted-foreground">{agent.agentId}</p>
+                                                </div>
+                                            </div>
+                                            <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${agent.isOnline ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                                {agent.isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
+                                                {agent.isOnline ? '在线' : '离线'}
+                                            </span>
+                                        </div>
+                                        <div className="mb-4 grid grid-cols-3 gap-4">
+                                            <div className="rounded-lg bg-card p-2 text-center"><Cpu size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.cpuUsage ?? '--'}%</div><div className="text-[11px] text-muted-foreground">CPU</div></div>
+                                            <div className="rounded-lg bg-card p-2 text-center"><HardDrive size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.memoryUsage ?? '--'}%</div><div className="text-[11px] text-muted-foreground">内存</div></div>
+                                            <div className="rounded-lg bg-card p-2 text-center"><Clock size={14} className="mx-auto mb-1 text-muted-foreground" /><div className="text-sm font-medium text-foreground">{agent.status?.uptime ? formatUptime(agent.status.uptime) : '--'}</div><div className="text-[11px] text-muted-foreground">运行时长</div></div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => triggerScan(agent.agentId)} disabled={!agent.isOnline} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"><Scan size={14} />发起扫描</button>
+                                            <Link to={`/agents/${agent.agentId}`} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/30">查看详情</Link>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </ConsolePanel>
+                </div>
+                <ConsolePanel title="安全事件" subtitle="近期与智能体相关的事件" icon={AlertTriangle} iconTone="warning">
+                    <div className="space-y-3">
+                        {threats.length > 0 ? threats.map((event: any, idx: number) => (
+                            <div key={event.id || idx} className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400" />
+                                        <span className="text-sm font-medium text-foreground">{event.title || '安全事件'}</span>
+// File: frontend/src/pages/Devices.tsx
+const defaultConfig = (device: Device): DeviceConfig => ({
+    displayName: device.config?.displayName || device.deviceId,
+    group: device.config?.group || 'default',
+    site: device.config?.site || device.systemInfo?.hostname || 'unassigned',
+    networkProfile: device.config?.networkProfile || 'cloud-mesh',
+    scanProfile: device.config?.scanProfile || 'balanced',
+    notes: device.config?.notes || '',
+    commandPermissions: device.config?.commandPermissions || ['collect', 'reboot', 'sync-config'],
+    tags: device.config?.tags || []
+});
+const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : '--');
+const DeviceCard = ({
+    device,
+    onCommand,
+    onOpenSettings,
+    onSelect,
+    isSelected,
+    commandBusy
+}: {
+    device: Device;
+    onCommand: (cmd: string) => void;
+    onOpenSettings: () => void;
+    onSelect: () => void;
+    isSelected: boolean;
+    commandBusy?: string | null;
+}) => {
+    const { t } = useLanguage();
+    const latestCommand = device.latestCommand || device.securitySummary?.latestCommand || null;
+    return (
+        <div
+            onClick={onSelect}
+            className={`bg-card border rounded-xl p-5 shadow-sm transition-all cursor-pointer hover:shadow-md ${
+                isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
+            }`}
+        >
+            <div className="flex justify-between items-start mb-4 gap-3">
+                <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-lg ${device.isOnline
+                        ? device.mode === 'online'
+                            ? 'bg-blue-500/10 text-blue-500'
+                            : 'bg-emerald-500/10 text-emerald-500'
+                        : 'bg-muted text-muted-foreground'}`}>
+                        <Radio size={20} />
+                    </div>
+                    <div>
+                        <div className="font-semibold text-foreground">{device.config?.displayName || device.deviceId}</div>
+                        <div className="text-xs text-muted-foreground">{device.chipModel} v{device.version}</div>
+                    </div>
+                </div>
+                <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${device.isOnline
+                    ? device.mode === 'online'
+                        ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                        : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                    : 'bg-muted text-muted-foreground border border-border'}`}>
+                    {device.isOnline ? (
+                        device.mode === 'online' ? <><Wifi size={12} /> {t('devices.cloud_mode')}</> : <><WifiOff size={12} /> {t('devices.no_agents')}</>
+                    ) : (
+                        <><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></span> Disconnected</>
+                    )}
+                </div>
+            </div>
+            {device.status && (
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-muted/30 rounded-lg p-2 text-center">
+                        <Cpu size={14} className="mx-auto mb-1 text-muted-foreground" />
+                        <div className="text-sm font-medium text-foreground">{device.status.cpuUsage}%</div>
+                        <div className="text-xxs text-muted-foreground">{t('devices.cpu')}</div>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-2 text-center">
+                        <HardDrive size={14} className="mx-auto mb-1 text-muted-foreground" />
+                        <div className="text-sm font-medium text-foreground">{device.status.memoryUsage.toFixed(0)}%</div>
+                        <div className="text-xxs text-muted-foreground">{t('devices.memory')}</div>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-2 text-center">
+                        <Activity size={14} className="mx-auto mb-1 text-muted-foreground" />
+                        <div className="text-sm font-medium text-foreground">{device.status.wifiRssi}dBm</div>
+                        <div className="text-xxs text-muted-foreground">{t('devices.signal')}</div>
+                    </div>
+                </div>
+            )}
+            <div className="mb-4 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">{t('devices.connected_agents')}</span>
+                    <span className="font-medium text-foreground flex items-center gap-1"><Server size={14} className="text-primary" />{device.connectedAgents.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Risk</span>
+                    <span className="font-medium text-foreground">{device.securitySummary?.asset?.riskScore || 0}</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                    Latest action: <span className="text-foreground">{latestCommand?.command || 'none'}</span>
+                </div>
+            </div>
+            <div className="flex gap-2">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onCommand('collect'); }}
+                    disabled={!device.isOnline || commandBusy === 'collect'}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                    <Zap size={12} /> {commandBusy === 'collect' ? 'Running...' : 'Collect'}
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onCommand('reboot'); }}
+                    disabled={!device.isOnline || commandBusy === 'reboot'}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                    <Power size={12} />
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onOpenSettings(); }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-all"
+                >
+                    <Settings size={12} />
+                </button>
+                <div onClick={(e) => e.stopPropagation()} className="ml-auto">
+                    <Link to={`/devices/board-status/${device.deviceId}`} className="px-3 py-2 text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition-all flex items-center gap-1">
+                        <Activity size={12} /> View Status
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+};
+const Devices = () => {
+    const { t } = useLanguage();
+    const { liveModeEnabled } = useLiveMode();
+    const [devices, setDevices] = useState<Device[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [actionMessage, setActionMessage] = useState<string | null>(null);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settingsDeviceId, setSettingsDeviceId] = useState<string | null>(null);
+    const [configDraft, setConfigDraft] = useState<DeviceConfig | null>(null);
+    const [configLoading, setConfigLoading] = useState(false);
+    const [configSaving, setConfigSaving] = useState(false);
+    const [commandHistory, setCommandHistory] = useState<DeviceCommandRecord[]>([]);
+    const [commandBusyByDevice, setCommandBusyByDevice] = useState<Record<string, string | null>>({});
+    const fetchDevices = async () => {
+        setLoading(true);
+// File: frontend/src/pages/DeploymentWizard.tsx
+    };
+    useEffect(() => {
+        loadHistory();
+    }, []);
+    return (
+        <ConsolePage title={t('deploy.title')} subtitle="按步骤生成、保存并下载中间件部署配置">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+                <ConsolePanel title="部署向导" subtitle="按步骤完成中间件配置" icon={Server} iconTone="primary" className="xl:col-span-2">
+                    <div className="relative mb-12 flex items-center justify-between">
+                        <div className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-border" />
+                        {[1, 2, 3].map((s) => (
+                            <div key={s} className="relative z-10 flex flex-col items-center gap-2 bg-card px-2">
+                                <div
+                                    className={clsx(
+                                        'flex h-8 w-8 items-center justify-center rounded-full border text-sm font-bold transition-all',
+                                        step >= s ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted text-muted-foreground',
+                                    )}
+                                >
+                                    {step > s ? <Check size={14} /> : s}
+                                </div>
+                                <span className="whitespace-nowrap text-xs font-medium text-muted-foreground">{s === 1 ? t('deploy.step1') : s === 2 ? t('deploy.step2') : t('deploy.step3')}</span>
+                            </div>
+                        ))}
+                    </div>
+                    {error && <div className="mb-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
+                    {step === 1 && (
+                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                            <h2 className="mb-6 text-lg font-medium text-foreground">{t('deploy.select_server')}</h2>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                {(['nginx', 'apache'] as const).map((type) => (
+                                    <div
+                                        key={type}
+                                        onClick={() => setServerType(type)}
+                                        className={clsx(
+                                            'flex cursor-pointer flex-col items-center gap-4 rounded-xl border p-6 transition-colors',
+                                            serverType === type ? 'border-primary bg-primary/5' : 'border-border bg-muted/15 hover:bg-muted/25',
+                                        )}
+                                    >
+                                        <Server size={48} className={serverType === type ? 'text-primary' : 'text-muted-foreground'} />
+                                        <span className="text-base font-medium capitalize text-foreground">{type}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                    {step === 2 && (
+                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                            <h2 className="text-lg font-medium text-foreground">{t('deploy.configure_middleware')}</h2>
+                            <div className="grid grid-cols-1 gap-6">
+                                <div>
+                                    <label className="mb-2 block text-xs text-muted-foreground">{t('deploy.listen_port')}</label>
+                                    <input
+                                        type="text"
+                                        value={config.port}
+                                        onChange={(e) => setConfig({ ...config, port: e.target.value })}
+                                        className="w-full rounded-lg border border-border bg-muted/20 px-4 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-2 block text-xs text-muted-foreground">{t('deploy.server_name')}</label>
+                                    <input
+                                        type="text"
+                                        value={config.serverName}
+                                        onChange={(e) => setConfig({ ...config, serverName: e.target.value })}
+                                        className="w-full rounded-lg border border-border bg-muted/20 px-4 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-2 block text-xs text-muted-foreground">{t('deploy.rate_limit')}</label>
+                                    <input
+                                        type="text"
+                                        value={config.rateLimit}
+                                        onChange={(e) => setConfig({ ...config, rateLimit: e.target.value })}
+                                        className="w-full rounded-lg border border-border bg-muted/20 px-4 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-2 block text-xs text-muted-foreground">{t('wizard.upstream')}</label>
+                                    <input
+                                        type="text"
+                                        value={config.upstream}
+                                        onChange={(e) => setConfig({ ...config, upstream: e.target.value })}
+                                        className="w-full rounded-lg border border-border bg-muted/20 px-4 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                    {step === 3 && generated && (
+                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                            <div className="mb-4 text-center">
+                                <div className="mb-4 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-600 dark:text-emerald-400">
+                                    <FileCode size={48} />
+                                </div>
+                                <h2 className="text-xl font-bold text-foreground">{t('deploy.config_ready')}</h2>
+                                <p className="mt-2 text-sm text-muted-foreground">{t('deploy.config_desc')}</p>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                                校验和：<span className="font-mono">{generated.checksum}</span>
+                            </div>
+                            <div className="overflow-x-auto rounded-xl border border-border bg-muted/20 p-6 font-mono text-xs text-foreground">
+                                <pre>{generated.configText}</pre>
+                                <div className="my-4 border-t border-border"></div>
+                                <pre>{generated.envSnippet}</pre>
+                            </div>
+                        </motion.div>
+                    )}
+                    <div className="mt-8 flex justify-between border-t border-border pt-6">
+                        <button
+                            onClick={handleBack}
+                            disabled={step === 1 || loading || saving}
+                            className={clsx('rounded-lg px-4 py-2 text-sm font-medium transition-colors', step === 1 ? 'cursor-not-allowed text-muted-foreground' : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground')}
+                        >
+                            {t('deploy.back')}
+                        </button>
+                        {step < 3 ? (
+                            <button
+                                onClick={handleNext}
+                                disabled={(step === 1 && !serverType) || loading}
+                                className={clsx(
+                                    'flex items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors',
+                                    (step === 1 && !serverType) || loading ? 'cursor-not-allowed opacity-50' : 'hover:bg-primary/90',
+                                )}
+                            >
+                                {loading ? t('wizard.generating') : t('deploy.next')} <ChevronRight size={16} />
+                            </button>
+                        ) : (
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={doSave}
+// File: frontend/src/pages/Scanner.tsx
+        >
+            {error && <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-300">{error}</div>}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard icon={History} label="当前任务" value={taskId || '-'} hint="最近一次加载或执行的扫描任务" tone="neutral" />
+                <ConsoleStatCard icon={Activity} label="任务状态" value={`${STATUS_LABELS[status] || status} / ${PHASE_LABELS[phase] || phase}`} hint="实时阶段与任务状态" tone="primary" />
+                <ConsoleStatCard icon={CheckCircle} label="执行进度" value={`${progress}%`} hint="任务阶段推进情况" tone="warning" />
+                <ConsoleStatCard icon={AlertTriangle} label="发现总数" value={summary.total} hint={`Critical ${summary.critical} · High ${summary.high} · Medium ${summary.medium} · Low ${summary.low}`} tone="danger" />
+            </div>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                <div className="xl:col-span-5">
+                    <ConsolePanel title="扫描输入" subtitle="保留现有入口，但把结果深化为资产、证据与处置闭环" icon={Globe} iconTone="primary">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs text-muted-foreground">URL 目标（每行一个）</label>
+                                <textarea
+                                    value={urls}
+                                    onChange={(event) => setUrls(event.target.value)}
+                                    rows={6}
+                                    className="mt-2 w-full rounded-lg border border-border bg-muted/20 px-3 py-2 font-mono text-sm text-foreground"
+                                    placeholder="https://example.com&#10;https://api.example.com"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <div className="text-xs text-muted-foreground">本机扫描范围</div>
+                                <label className="flex items-center gap-2 text-sm text-foreground">
+                                    <input type="checkbox" checked={includeSystem} onChange={(event) => setIncludeSystem(event.target.checked)} />
+                                    系统基线与主机状态
+                                </label>
+                                <label className="flex items-center gap-2 text-sm text-foreground">
+                                    <input type="checkbox" checked={includeWeb} onChange={(event) => setIncludeWeb(event.target.checked)} />
+                                    Web 服务指纹与配置
+                                </label>
+                                <label className="flex items-center gap-2 text-sm text-foreground">
+                                    <input type="checkbox" checked={includePorts} onChange={(event) => setIncludePorts(event.target.checked)} />
+                                    端口暴露与服务探测
+                                </label>
+                            </div>
+                        </div>
+                    </ConsolePanel>
+                </div>
+                <div className="xl:col-span-7">
+                    <ConsolePanel title="任务历史" subtitle="保留原来的历史区块，但支持重新载入完整证据" icon={History} iconTone="neutral">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            {history.length === 0 && <ConsoleEmptyState title="暂无扫描任务" description="执行一次扫描后，这里会保留最近任务与执行进度。" />}
+                            {history.map((item) => (
+                                <div key={item.id} className="rounded-lg border border-border bg-muted/15 p-3 transition-colors hover:border-border/80 hover:bg-muted/20">
+                                    <button onClick={() => void loadTask(item.id)} className="w-full text-left">
+                                        <div className="truncate font-mono text-xs text-foreground">{item.id}</div>
+                                        <div className="mt-1 text-xs text-muted-foreground">
+                                            {STATUS_LABELS[item.status] || item.status} / {PHASE_LABELS[item.phase] || item.phase} / {item.progress}%
+                                        </div>
+                                        <div className="mt-2 text-[11px] text-muted-foreground">{new Date(item.createdAt).toLocaleString('zh-CN')}</div>
+                                    </button>
+                                    <div className="mt-3 flex justify-end">
+                                        <Link to={`/scanner/runs/${item.id}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
+                                            查看详情
+                                        </Link>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ConsolePanel>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                <div className="xl:col-span-4">
+                    <ConsolePanel title="资产视角" subtitle="按目标聚合风险，快速判断优先级" icon={Server} iconTone="warning">
+                        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                            {assetGroups.length === 0 && <ConsoleEmptyState title="暂无资产结果" description="任务完成后，这里会显示按资产聚合的风险分布。" />}
+                            {assetGroups.map((group) => (
+                                <button
+                                    key={`${group.target}-${group.assetId || 'na'}`}
+                                    onClick={() => setSelectedFindingId(group.findings[0]?.findingId || null)}
+                                    className="w-full rounded-lg border border-border bg-muted/15 p-3 text-left transition-colors hover:border-border/80"
+                                >
+                                    <div className="font-medium text-foreground">{group.target}</div>
+                                    <div className="mt-1 text-xs text-muted-foreground">{group.category}</div>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {Object.entries(group.severities).map(([key, value]) => (
+                                            <span key={key} className={clsx('rounded border px-2 py-0.5 text-[10px] font-semibold uppercase', severityTone[key] || severityTone.medium)}>
+                                                {key} {value}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </ConsolePanel>
+                </div>
+                <div className="xl:col-span-4">
+                    <ConsolePanel title="发现列表" subtitle="当前任务中所有可追踪的发现项" icon={Shield} iconTone="danger">
+                        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                            {findings.length === 0 && <ConsoleEmptyState title="暂无发现项" description="完成扫描后，这里会显示按严重级别排序的发现项。" />}
+                            {findings.map((finding) => (
+                                <button
+                                    key={finding.findingId}
+                                    onClick={() => setSelectedFindingId(finding.findingId)}
+                                    className={clsx(
+                                        'w-full rounded-lg border p-3 text-left transition-colors',
+                                        selectedFinding?.findingId === finding.findingId ? 'border-primary bg-primary/5' : 'border-border bg-muted/15 hover:border-border/80'
+                                    )}
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div className="font-medium text-foreground">{finding.title}</div>
+                                            <div className="mt-1 text-xs text-muted-foreground">{finding.target}</div>
+                                        </div>
+                                        <span className={clsx('rounded border px-2 py-0.5 text-[10px] font-semibold uppercase', severityTone[finding.severity])}>
+                                            {finding.severity}
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 line-clamp-2 text-sm text-muted-foreground">{finding.description}</div>
+                                </button>
+                            ))}
+                        </div>
+                    </ConsolePanel>
+                </div>
+                <div className="xl:col-span-4">
+                    <ConsolePanel
+                        title="证据与处置"
+                        subtitle="在原页面里补齐证据展开、处置建议和动作创建"
+                        icon={Wrench}
+                        iconTone="primary"
+                        headerAction={
+                            <button
+                                onClick={createAction}
+                                disabled={!selectedFinding}
+                                className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                创建处置动作
+                            </button>
+                        }
+                    >
+                        {!selectedFinding ? (
+                            <ConsoleEmptyState title="选择一个发现项" description="点击左侧发现项后，这里会展开证据与修复建议。" />
+                        ) : (
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="text-sm font-semibold text-foreground">{selectedFinding.title}</h3>
+                                        <span className={clsx('rounded border px-2 py-0.5 text-[10px] font-semibold uppercase', severityTone[selectedFinding.severity])}>
+                                            {selectedFinding.severity}
+                                        </span>
+                                    </div>
+                                    <p className="mt-2 text-sm text-muted-foreground">{selectedFinding.description}</p>
+                                </div>
+                                <div className="rounded-lg border border-border bg-muted/15 p-3">
+                                    <div className="text-xs font-semibold text-foreground">证据</div>
+                                    <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all text-xs text-muted-foreground">
+                                        {JSON.stringify(selectedFinding.evidence || {}, null, 2)}
+                                    </pre>
+                                </div>
+                                <div className="rounded-lg border border-border bg-muted/15 p-3">
+                                    <div className="text-xs font-semibold text-foreground">处置建议</div>
+                                    <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all text-xs text-muted-foreground">
+                                        {JSON.stringify(selectedFinding.remediation || {}, null, 2)}
+                                    </pre>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                    状态：{selectedFinding.status} · 最近出现：{new Date(selectedFinding.lastSeenAt).toLocaleString('zh-CN')}
+// File: frontend/src/services/api.ts
+export const API_BASE_URL = '/api';
+const shouldUseDemoData = (): boolean => isDemoModeActive();
+const demoState = {
+    statsOffset: { totalRequests: 0, threatsBlocked: 0 },
+    trafficOffset: { packetsProcessed: 0, packetsAllowed: 0, packetsBlocked: 0, packetsInspected: 0, bytesProcessed: 0, activeConnections: 0 },
+    agentOffset: { queueSize: 0, totalCaseFiles: 0, lessonsLearned: 0, policyUpdates: 0, totalMessages: 0 }
+};
+const applyDemoJitter = () => {
+    if (!isDemoModeActive()) return;
+    if (Math.random() > 0.1) { // 90% chance to bounce
+        const reqInc = Math.floor(Math.random() * 120) + 10;
+        const threatInc = Math.random() > 0.7 ? Math.floor(Math.random() * 5) + 1 : 0;
+        demoState.statsOffset.totalRequests += reqInc;
+        demoState.statsOffset.threatsBlocked += threatInc;
+        demoState.trafficOffset.packetsProcessed += reqInc * 15;
+        demoState.trafficOffset.packetsAllowed += (reqInc - threatInc) * 15;
+        demoState.trafficOffset.packetsBlocked += threatInc * 15;
+        demoState.trafficOffset.packetsInspected += reqInc * 15;
+        demoState.trafficOffset.bytesProcessed += reqInc * 1024 * (Math.random() * 8 + 2);
+        const connChange = Math.floor(Math.random() * 31) - 15;
+        demoState.trafficOffset.activeConnections += connChange;
+        demoState.agentOffset.queueSize = Math.max(0, demoState.agentOffset.queueSize + Math.floor(Math.random() * 7) - 3);
+        demoState.agentOffset.totalCaseFiles += threatInc;
+        if (Math.random() > 0.7) demoState.agentOffset.lessonsLearned += 1;
+        if (Math.random() > 0.8) demoState.agentOffset.policyUpdates += 1;
+        demoState.agentOffset.totalMessages += Math.floor(Math.random() * 150) + 30;
+    }
+};
+const getAuthHeaders = () => {
+    return {
+        'Content-Type': 'application/json'
+    };
+};
+const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
+    return fetch(url, {
+        ...options,
+        credentials: 'include',
+        headers: {
+            ...getAuthHeaders(),
+            ...options.headers
+        }
+    });
+};
+export type SystemMode = 'production' | 'demo';
+export interface SystemModeResponse {
+    appMode: SystemMode;
+    demoEnabled: boolean;
+    attackSimEnabled: boolean;
+    canToggleMode?: boolean;
+}
+export interface SystemBadges {
+    agents: number;
+    alerts: number;
+    devices: number;
+    agentMonitor: number;
+    traffic: number;
+    scanner: number;
+}
+export interface ActionResponse {
+    success: boolean;
+    message?: string;
+    status?: string;
+    updatedAt?: string;
+    refreshHints?: string[];
+    jobId?: string;
+    historyId?: string;
+    [key: string]: any;
+}
+export interface DeviceConfigurationPayload {
+    displayName: string;
+    group: string;
+    site: string;
+    networkProfile: string;
+    scanProfile: string;
+    notes: string;
+    commandPermissions: string[];
+    tags: string[];
+    updatedAt?: string;
+}
+export const getAttackRunRouteId = (report: { id?: string; startTime?: string }) =>
+    encodeURIComponent(report.id || report.startTime || 'unknown');
+export const fetchSystemMode = async (): Promise<SystemModeResponse> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/system/mode`);
+    if (!response.ok) {
+        throw new Error(`FG-SYSTEM-MODE-${response.status}`);
+    }
+    return response.json();
+};
+export const switchSystemMode = async (appMode: SystemMode, options?: {
+    seedDemoData?: boolean;
+    clearExisting?: boolean;
+}) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/system/mode`, {
+        method: 'POST',
+        body: JSON.stringify({
+            appMode,
+            seedDemoData: options?.seedDemoData ?? false,
+            clearExisting: options?.clearExisting ?? false
+        })
+    });
+    if (!response.ok) {
+        let message = `FG-SYSTEM-MODE-SWITCH-${response.status}`;
+        try {
+            const data = await response.json();
+            message = data?.message || data?.error || message;
+        } catch {
+        }
+        throw new Error(message);
+    }
+    return response.json();
+};
+export const fetchStats = async (): Promise<DashboardStats | null> => {
+    try {
+        if (shouldUseDemoData()) {
+            return getDemoStats();
+        }
+        const response = await fetchWithCredentials(`${API_BASE_URL}/stats`);
+        if (!response.ok) throw new Error(i18n.t('api.fetch_failed'));
+        const data = await response.json();
+        if (isDemoModeActive() && data?.overview) {
+            applyDemoJitter();
+            data.overview.totalRequests += demoState.statsOffset.totalRequests;
+            data.overview.threatsBlocked += demoState.statsOffset.threatsBlocked;
+            data.overview.activeConnections = Math.max(0, data.overview.activeConnections + demoState.trafficOffset.activeConnections);
+            if (data.performance) {
+                data.performance.requestsPerSecond = Math.floor(Math.random() * 600) + 150;
+                data.performance.averageLatency = Math.floor(Math.random() * 45) + 12;
+            }
+        }
+        return data;
+    } catch (e) {
+        console.error('Failed to fetch stats:', e);
+        return null;
+    }
+};
+export const fetchSystemBadges = async (): Promise<SystemBadges> => {
+    try {
+        if (shouldUseDemoData()) {
+            return getDemoSystemBadges();
+        }
+        const response = await fetchWithCredentials(`${API_BASE_URL}/stats/badges`);
+        if (!response.ok) return { agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 };
+        return response.json();
+    } catch (e) {
+        console.error('Failed to fetch system badges:', e);
+        return { agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 };
+    }
+};
+export const fetchSites = async () => {
+    try {
+        if (shouldUseDemoData()) {
+            return getDemoSites();
+        }
+        const response = await fetchWithCredentials(`${API_BASE_URL}/sites`);
+        if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_sites'));
+        const json = await response.json();
+        return json?.data || [];
+    } catch (e) {
+        console.error('Failed to fetch sites:', e);
+        return [];
+    }
+};
+export const fetchLogs = async (): Promise<LogItem[] | null> => {
+    try {
+        if (shouldUseDemoData()) {
+            return getDemoLogs();
+        }
+        const response = await fetchWithCredentials(`${API_BASE_URL}/logs`);
+        if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_logs'));
+        return response.json();
+    } catch (e) {
+        console.error('Failed to fetch logs:', e);
+        return null;
+    }
+};
+export const fetchScannerResults = async () => {
+    try {
+        const response = await fetchWithCredentials(`${API_BASE_URL}/scanner`);
+        if (!response.ok) return [];
+        return response.json();
+    } catch (e) {
+        console.error('Failed to fetch scanner results:', e);
+        return [];
+    }
+};
+export const generateDeploymentConfig = async (payload: {
+    serverType: 'nginx' | 'apache';
+    profile: {
+        port: number;
+        serverName: string;
+        rateLimit: number;
+        upstream: string;
+    };
+    siteId?: string;
+}) => {
+    if (shouldUseDemoData()) {
+        return generateDemoDeploymentConfig(payload);
+    }
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/generate`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(i18n.t('api.failed_to_generate_deployment_config'));
+    }
+    return response.json();
+};
+export const saveDeploymentConfig = async (payload: {
+    serverType: 'nginx' | 'apache';
+    profile: Record<string, any>;
+    configText: string;
+    envSnippet: string;
+    siteId?: string;
+    name?: string;
+}) => {
+    if (shouldUseDemoData()) {
+        return saveDemoDeploymentConfig(payload);
+    }
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/save`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(i18n.t('api.failed_to_save_deployment_config'));
+    }
+    return response.json();
+};
+export const fetchDeploymentHistory = async (siteId?: string, limit: number = 20) => {
+    if (shouldUseDemoData()) {
+        return getDemoDeploymentHistory(limit);
+    }
+    const qs = new URLSearchParams();
+    qs.set('limit', String(limit));
+    if (siteId) qs.set('siteId', siteId);
+    const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/history/list?${qs.toString()}`);
+    if (!response.ok) {
+        return [];
+    }
+    const data = await response.json();
+    return data?.data || [];
+// File: frontend/src/pages/AgentMonitor.tsx
+        >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <ConsoleStatCard
+                    icon={ShieldAlert}
+                    label={t('agentMonitor.systemHealth')}
+                    value={getStatusText(health?.status || 'unknown').toUpperCase()}
+                    hint={health?.details && Object.keys(health.details).length > 0 ? Object.keys(health.details).join(', ') : '监控已启用'}
+                    tone={health?.status === 'healthy' ? 'success' : health?.status === 'unhealthy' ? 'danger' : 'warning'}
+                />
+                <ConsoleStatCard
+                    icon={Users}
+                    label={t('agentMonitor.activeAgents')}
+                    value={stats?.orchestrator.registeredAgents || 0}
+                    hint="当前已注册的编排节点"
+                    tone="primary"
+                />
+                <ConsoleStatCard
+                    icon={MessageSquare}
+                    label={t('agentMonitor.queueSize')}
+                    value={stats?.messageBus.queueSize || 0}
+                    hint="当前消息总线排队深度"
+                    tone="neutral"
+                />
+                <ConsoleStatCard
+                    icon={BarChart3}
+                    label={t('agentMonitor.caseFiles')}
+                    value={stats?.synthesis.totalCaseFiles || 0}
+                    hint="已保留的综合研判案卷"
+                    tone="warning"
+                />
+            </div>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                <ConsoleStatCard
+                    icon={AlertTriangle}
+                    label="活跃告警"
+                    value={stats?.operations?.activeAlerts || 0}
+                    hint="来自扫描、流量与验证链路"
+                    tone="danger"
+                />
+                <ConsoleStatCard
+                    icon={RefreshCw}
+                    label="进行中扫描"
+                    value={stats?.operations?.runningScans || 0}
+                    hint="当前仍在执行的扫描任务"
+                    tone="warning"
+                />
+                <ConsoleStatCard
+                    icon={Zap}
+                    label="待执行动作"
+                    value={stats?.operations?.pendingActions || 0}
+                    hint="处置动作与队列积压"
+                    tone="primary"
+                />
+                <ConsoleStatCard
+                    icon={XCircle}
+                    label="验证失败"
+                    value={stats?.operations?.failedValidations || 0}
+                    hint="未拦截或误报的演练运行"
+                    tone="danger"
+                />
+                <ConsoleStatCard
+                    icon={ShieldAlert}
+                    label="高风险资产"
+                    value={stats?.operations?.assetsAtRisk || 0}
+                    hint="当前需要优先关注的资产"
+                    tone="warning"
+                />
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-7">
+                    <ConsolePanel title={t('agentMonitor.layerArchitecture')} subtitle="七层协同决策链路" icon={Brain} iconTone="primary">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                            {layerInfo.map((layer, index) => {
+                                const Icon = layer.icon;
+                                return (
+                                    <motion.div
+                                        key={layer.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.05 * index }}
+                                        className="rounded-xl border border-border bg-muted/15 p-4"
+                                    >
+                                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground">
+                                            <Icon size={18} />
+                                        </div>
+                                        <div className="text-xl font-bold tracking-tight text-foreground">L{layer.id}</div>
+                                        <div className="mt-1 text-xs font-medium leading-5 text-muted-foreground">{t(layer.nameKey)}</div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </ConsolePanel>
+                </div>
+                <div className="lg:col-span-5">
+                    <ConsolePanel title={t('agentMonitor.messageBusStats')} subtitle="调度与传输运行指标" icon={Clock} iconTone="neutral">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.queueSize || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.queueSize')}</p>
+                            </div>
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.subscriptionCount || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.subscriptions')}</p>
+                            </div>
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.messageBus.pendingRequests || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.pendingRequests')}</p>
+                            </div>
+                            <div className="rounded-xl border border-border bg-muted/15 p-4 text-center">
+                                <p className="text-3xl font-bold text-foreground font-mono">{stats?.orchestrator.activeTasks || 0}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">{t('agentMonitor.activeTasks')}</p>
+                            </div>
+                        </div>
+                    </ConsolePanel>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <ConsolePanel title={t('agentMonitor.agentHeartbeats')} subtitle="各节点活动与响应遥测" icon={Users} iconTone="primary">
+                    <div className="space-y-3">
+                        {stats?.agents?.length ? (
+                            stats.agents.map((agent: AgentHeartbeat, index: number) => {
+                                const roleInfo =
+                                    AGENT_ROLES[agent.role as keyof typeof AGENT_ROLES] || {
+                                        name: agent.role,
+                                        teamKey: 'agentMonitor.unknown',
+                                        color: 'text-muted-foreground',
+                                        bg: 'bg-muted/20',
+                                        border: 'border-border',
+                                        icon: '--',
+                                    };
+                                return (
+                                    <motion.div
+                                        key={agent.agentId}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.05 * index }}
+                                        className="flex flex-col justify-between gap-4 rounded-xl border border-border bg-muted/15 p-4 sm:flex-row sm:items-center"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`flex h-10 w-10 items-center justify-center rounded-lg border text-[11px] font-bold tracking-wide ${roleInfo.bg} ${roleInfo.border} ${roleInfo.color}`}>
+                                                {roleInfo.icon}
+                                            </div>
+                                            <div>
+                                                <p className={`text-sm font-semibold ${roleInfo.color}`}>{roleInfo.name}</p>
+                                                <p className="text-xs text-muted-foreground">{t(roleInfo.teamKey)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-4 text-center">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">{t('agentMonitor.tasks')}</p>
+// File: frontend/src/pages/Login.tsx
+    };
+    return (
+        <div className="min-h-screen overflow-x-hidden overflow-y-auto bg-background text-foreground">
+            <AnimatePresence>
+                {toast && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 100 }}
+                        className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-xl border px-5 py-3 shadow-sm ${
+                            toast.type === 'success' ? 'border-emerald-500/25 bg-card' : 'border-border bg-card'
+                        }`}
+                    >
+                        {toast.type === 'success' ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <Info className="h-5 w-5 text-primary" />}
+                        <span className="text-sm font-medium text-foreground">{toast.msg}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-8 md:px-8">
+                <div className="grid w-full gap-6 lg:grid-cols-[1.25fr_460px]">
+                    <motion.section
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="hidden overflow-hidden rounded-3xl border border-border bg-card shadow-sm lg:flex"
+                    >
+                        <div className="flex flex-1 flex-col justify-between p-8 xl:p-10">
+                            <div className="space-y-8">
+                                <div className="flex items-center justify-between gap-4">
+                                    <Logo className="origin-left" />
+                                    <span className="rounded-full border border-border bg-muted/30 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                        Operations Console
+                                    </span>
+                                </div>
+                                <div className="space-y-4">
+                                    <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-foreground">
+                                        Security operations for gateways, agents, scans, and response workflows.
+                                    </h1>
+                                    <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+                                        Sign in to the same monitoring console used for device health, alert handling, deployment, and incident history.
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Gateways</div>
+                                        <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">24</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">Field inspection points online</div>
+                                    </div>
+                                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Agents</div>
+                                        <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">7</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">Inference and response roles available</div>
+                                    </div>
+                                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Alerts</div>
+                                        <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">3</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">Items currently awaiting review</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="rounded-2xl border border-border bg-muted/15 p-5">
+                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Workspace Notes</div>
+                                <div className="mt-3 grid gap-3 text-sm text-muted-foreground">
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />
+                                        <p>Device telemetry and board status use the same console shell after sign-in.</p>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-1 h-2 w-2 rounded-full bg-amber-500" />
+                                        <p>Demo mode and development presets remain available without changing the authentication flow.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.section>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8"
+                    >
+                        <div className="mb-8 space-y-4">
+                            <div className="inline-flex items-center gap-2 lg:hidden">
+                                <Logo />
+                            </div>
+                            <div className="space-y-2">
+                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Account Access</div>
+                                <h2 className="text-2xl font-bold tracking-tight text-foreground">Control console login</h2>
+                                <p className="text-sm text-muted-foreground">Sign in with your enterprise account.</p>
+                            </div>
+                        </div>
+                        {canShowDevLogin() && (
+                            <div className="mb-6 rounded-2xl border border-border bg-muted/15 p-4">
+                                <button
+                                    type="button"
+                                    data-testid="dev-login-toggle"
+                                    onClick={() => setIsDevModeOpen((open) => !open)}
+                                    className="flex w-full items-center justify-between gap-3 text-left"
+                                >
+                                    <div>
+                                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Dev Access</div>
+                                        <div className="mt-1 text-sm text-foreground">Fill local test accounts instantly.</div>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">{isDevModeOpen ? 'Hide' : 'Show'}</span>
+                                </button>
+                                <AnimatePresence initial={false}>
+                                    {isDevModeOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+// File: frontend/src/pages/TrafficInterceptor.tsx
+        >
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+                <ConsoleStatCard icon={Activity} label={t('trafficInterceptor.packets')} value={stats?.packetsProcessed?.toLocaleString() || 0} hint="累计处理报文数" tone="primary" />
+                <ConsoleStatCard icon={CheckCircle} label={t('trafficInterceptor.allowed')} value={stats?.packetsAllowed?.toLocaleString() || 0} hint="已通过检测链路" tone="success" />
+                <ConsoleStatCard icon={XCircle} label={t('trafficInterceptor.blocked')} value={stats?.packetsBlocked?.toLocaleString() || 0} hint="已被主动拦截" tone="danger" />
+                <ConsoleStatCard icon={Shield} label={t('trafficInterceptor.inspected')} value={stats?.packetsInspected?.toLocaleString() || 0} hint="已完成深度检查" tone="warning" />
+                <ConsoleStatCard icon={Database} label={t('trafficInterceptor.bytes')} value={formatBytes(Number(stats?.bytesProcessed || 0))} hint="累计吞吐量" tone="neutral" />
+                <ConsoleStatCard icon={Clock} label={t('trafficInterceptor.uptime')} value={formatUptime(stats?.uptime || 0)} hint="拦截器持续运行时长" tone="neutral" />
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-5">
+                    <ConsolePanel title={t('trafficInterceptor.protocolDistribution')} subtitle="当前观测流量的协议分布" icon={Globe} iconTone="primary">
+                        <div className="space-y-4">
+                            {[
+                                { name: 'HTTP', value: protocols.http, color: 'bg-blue-500' },
+                                { name: 'HTTPS', value: protocols.https, color: 'bg-emerald-500' },
+                                { name: 'DNS', value: protocols.dns, color: 'bg-amber-500' },
+                                { name: t('trafficInterceptor.other'), value: protocols.other, color: 'bg-muted-foreground' },
+                            ].map((protocol, index) => (
+                                <div key={protocol.name}>
+                                    <div className="mb-1.5 flex items-center justify-between text-sm">
+                                        <span className="font-medium uppercase tracking-wide text-muted-foreground">{protocol.name}</span>
+                                        <span className="font-mono text-foreground">{getProtocolPercentage(protocol.value)}%</span>
+                                    </div>
+                                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${getProtocolPercentage(protocol.value)}%` }}
+                                            transition={{ duration: 0.8, delay: index * 0.08 }}
+                                            className={`h-full ${protocol.color}`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ConsolePanel>
+                </div>
+                <div className="lg:col-span-7">
+                    <ConsolePanel title={t('trafficInterceptor.threatDetections')} subtitle="按风险等级汇总的最新检测计数" icon={ShieldAlert} iconTone="danger">
+                        {threats.length > 0 ? (
+                            <div className="space-y-2">
+                                <AnimatePresence>
+                                    {threats.slice(0, 5).map((threat, index) => (
+                                        <motion.div
+                                            key={`${threat.type}-${index}`}
+                                            initial={{ opacity: 0, scale: 0.96 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            className="flex items-center justify-between rounded-lg border border-border bg-muted/15 p-3"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span
+                                                    className={`rounded border px-2 py-0.5 text-xs font-semibold ${
+                                                        threat.severity === 'critical'
+                                                            ? 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                                            : threat.severity === 'high'
+                                                              ? 'border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400'
+                                                              : threat.severity === 'medium'
+                                                                ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                                : 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                                    }`}
+                                                >
+                                                    {getSeverityText(threat.severity).toUpperCase()}
+                                                </span>
+                                                <span className="text-sm font-medium text-foreground">{threat.type}</span>
+                                            </div>
+                                            <span className="font-mono text-sm font-semibold text-foreground">{threat.count}</span>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </div>
+                        ) : (
+                            <ConsoleEmptyState title={t('trafficInterceptor.noThreats')} description="当前没有待处理的威胁检测结果。" />
+                        )}
+                    </ConsolePanel>
+                </div>
+            </div>
+            <ConsolePanel
+                title={t('trafficInterceptor.activeFlows')}
+                subtitle="当前已纳入检测的连接"
+                icon={Zap}
+                iconTone="primary"
+                headerAction={
+                    <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                        {stats?.currentFlows || 0} {t('trafficInterceptor.connections')}
+                    </span>
+                }
+            >
+                {flows.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="w-full whitespace-nowrap text-left text-sm">
+                            <thead>
+                                <tr className="border-b border-border bg-muted/20 text-xs font-semibold text-muted-foreground">
+                                    <th className="px-4 py-3">{t('trafficInterceptor.source')}</th>
+                                    <th className="px-4 py-3">{t('trafficInterceptor.destination')}</th>
+                                    <th className="px-4 py-3">{t('trafficInterceptor.protocol')}</th>
+                                    <th className="px-4 py-3">{t('trafficInterceptor.state')}</th>
+                                    <th className="px-4 py-3 text-right">{t('trafficInterceptor.packets')}</th>
+                                    <th className="px-4 py-3 text-right">{t('trafficInterceptor.bytes')}</th>
+                                    <th className="px-4 py-3 text-right">详情</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <AnimatePresence>
+                                    {flows.slice(0, 10).map((flow, index) => (
+                                        <motion.tr
+                                            key={flow.id}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.03 * index }}
+                                            className="border-b border-border transition-colors hover:bg-muted/20"
+                                        >
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex h-5 w-5 items-center justify-center rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                                        <ArrowUpRight className="h-3 w-3" />
+                                                    </div>
+                                                    <span className="font-mono text-sm text-foreground">
+                                                        {flow.sourceIP}
+                                                        <span className="text-muted-foreground">:{flow.sourcePort}</span>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                                        <ArrowDownLeft className="h-3 w-3" />
+                                                    </div>
+                                                    <span className="font-mono text-sm text-foreground">
+                                                        {flow.destIP}
+                                                        <span className="text-muted-foreground">:{flow.destPort}</span>
+                                                    </span>
+                                                </div>
+                                            </td>
+// Part 2: Backend core source (pages 31-60)
+// File: backend/src/index.ts
+const app = express();
+const httpServer = createServer(app);
+const runtime = getRuntimeDescriptor();
+let agentGateway: AgentGateway | null = null;
+let deviceGateway: DeviceGateway | null = null;
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://localhost:5173',
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn(`Blocked CORS request from: ${origin}`);
+      return callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  maxAge: 86400,
+}));
+app.use(helmet({
+  contentSecurityPolicy: false, // 允许 Dashboard 加载
+}));
+app.use(compression());
+app.use(cookieParser());
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`, {
+    ip: req.ip,
+    userAgent: req.headers['user-agent']?.substring(0, 50),
+  });
+  next();
+});
+const apiRouter = express.Router();
+apiRouter.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: '2.0.0',
+    mode: 'control-platform',
+    agents: agentGateway?.getOnlineCount() || 0,
+    runtime,
+    queueBackend: jobQueueService.backend(),
+    artifactStore: artifactStoreService.describe(),
+    shadowStore: postgresShadowStoreService.describe()
+  });
+});
+if (runtime.apiEnabled) {
+  apiRouter.use('/stats', statsRoutes);
+  apiRouter.use('/config', configRoutes);
+  apiRouter.use('/logs', logsRoutes);
+  apiRouter.use('/sites', sitesRoutes);
+  apiRouter.use('/admin', adminRoutes);
+  apiRouter.use('/scanner', scannerRouter);
+// File: backend/src/app.ts
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    maxAge: 86400, // 预检请求缓存 24 小时
+}));
+app.use(requestTimingMiddleware);
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
+app.use((req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
+    res.removeHeader('X-Powered-By');
+    if (req.secure) {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    next();
+});
+app.use((req, res, next) => {
+    if (req.path === '/health' ||
+        req.path.startsWith('/static') ||
+        req.path.startsWith('/api/auth')) {
+        return next();
+    }
+    const checkContent = [
+        req.url,
+        JSON.stringify(req.query),
+        JSON.stringify(req.body)
+    ].join(' ');
+    const result = inputValidator.validateAll(checkContent);
+    if (!result.isValid) {
+        logger.warn('Input validation failed', {
+            reason: result.reason,
+            ip: req.ip,
+            path: req.path,
+            threatLevel: result.threatLevel
+        });
+        return res.status(400).json({
+            error: 'backend.invalid_input_detected',
+            code: 'INPUT_VALIDATION_FAILED'
+        });
+    }
+    next();
+});
+app.use((req, res, next) => {
+    logger.info(`${req.method} ${req.path}`, {
+        ip: req.ip,
+        userAgent: req.headers['user-agent']?.substring(0, 50),
+    });
+    next();
+});
+app.use('/api/', apiRateLimit);
+app.use('/api/stats', statsRoutes);
+app.use('/api/config', configRoutes);
+app.use('/api/logs', logsRoutes);
+app.use('/api/sites', sitesRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/ai-system', aiSystemRoutes);
+app.use('/api/investigation', investigationRoutes);
+app.use('/api/agent-onboarding', agentOnboardingRoutes);
+app.use('/api/scanner', scannerRoutes);
+app.use('/api/deployments', deploymentsRoutes);
+app.use('/api/alerts', alertsRoutes);
+app.use('/api/ai-endpoints', aiEndpointsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/agents', agentsRoutes);
+app.use('/api/devices', devicesRoutes);
+app.use('/api/fix-history', fixHistoryRoutes);
+app.use('/api/smart-fix', smartFixRoutes);
+app.use('/api/traffic', trafficRoutes);
+app.use('/api/attack', attackRoutes);
+app.use('/api/seed', seedRoutes);
+app.use('/api/pipeline', pipelineRoutes);
+export { initializeAgentSystem };
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+// File: backend/src/api/routes/auth.routes.ts
+        const db = getDatabase();
+        const user = db.prepare(`
+      SELECT id, email, username, password_hash, role, plan, tenant_id, status
+      FROM users WHERE email = ?
+    `).get(email) as any;
+        const dummyHash = '$2b$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+        if (!user) {
+            await authSecurityService.recordLoginAttempt(email, clientIp, false);
+            await auditLogger.log({
+                eventType: 'failed_login',
+                category: 'auth',
+                severity: 'warning',
+                actor: { type: 'user', id: email, email, ip: clientIp },
+                action: 'login',
+                details: { reason: 'user_not_found' },
+                status: 'failure'
+            });
+            await bcrypt.compare(password, dummyHash);
+            return res.status(401).json({
+                error: 'backend.invalid_credentials',
+                code: 'INVALID_CREDENTIALS'
+            });
+        }
+        if (user.status === 'suspended') {
+            await bcrypt.compare(password, dummyHash);
+            await auditLogger.log({
+                tenantId: user.tenant_id || undefined,
+                eventType: 'suspended_login_attempt',
+                category: 'auth',
+                severity: 'warning',
+                actor: { type: 'user', id: user.id, email: user.email, ip: clientIp },
+                action: 'login',
+                target: { type: 'user', id: user.id },
+                details: { status: user.status },
+                status: 'failure'
+            });
+            return res.status(403).json({
+                error: 'backend.account_suspended',
+                code: 'ACCOUNT_SUSPENDED'
+            });
+        }
+        const passwordValid = await bcrypt.compare(password, user.password_hash);
+        if (!passwordValid) {
+            await authSecurityService.recordLoginAttempt(email, clientIp, false);
+            await auditLogger.log({
+                tenantId: user.tenant_id || undefined,
+                eventType: 'failed_login',
+                category: 'auth',
+                severity: 'warning',
+                actor: { type: 'user', id: user.id, email: user.email, ip: clientIp },
+                action: 'login',
+                target: { type: 'user', id: user.id },
+                details: { reason: 'invalid_password' },
+                status: 'failure'
+            });
+            logger.warn(`Failed login attempt for: ${email}`);
+            return res.status(401).json({
+                error: 'backend.invalid_credentials',
+                code: 'INVALID_CREDENTIALS'
+            });
+        }
+        await authSecurityService.recordLoginAttempt(email, clientIp, true);
+        db.prepare(`UPDATE users SET last_login = datetime('now') WHERE id = ?`).run(user.id);
+        await auditLogger.log({
+            tenantId: user.tenant_id || undefined,
+            eventType: 'login',
+            category: 'auth',
+            severity: 'info',
+            actor: { type: 'user', id: user.id, email: user.email, ip: clientIp },
+            target: { type: 'user', id: user.id },
+            action: 'login',
+            details: { role: user.role, plan: user.plan || 'starter' },
+            status: 'success'
+        });
+        const tokens = generateTokens({
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            plan: user.plan || 'starter',
+            tenantId: user.tenant_id
+        });
+        logger.info(`User logged in: ${email}`);
+        res.cookie('accessToken', tokens.accessToken, buildCookieOptions(req));
+        res.cookie('refreshToken', tokens.refreshToken, buildRefreshCookieOptions(req));
+        res.json({
+            message: 'backend.login_successful',
+            user: {
+                email: user.email,
+                username: user.username,
+                role: user.role,
+                plan: user.plan || 'starter'
+            },
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            expiresIn: tokens.expiresIn
+        });
+    } catch (error: any) {
+        logger.error('Login error', { error: error.message });
+        res.status(500).json({
+            error: 'backend.login_failed',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+        if (!refreshToken) {
+            return res.status(400).json({
+                error: 'backend.refresh_token_required',
+                code: 'TOKEN_MISSING'
+            });
+        }
+        try {
+            const isBlacklisted = await redisService.exists(`refresh:blacklist:${refreshToken}`);
+            if (isBlacklisted) {
+                logger.warn('Attempted use of blacklisted refresh token');
+                return res.status(401).json({
+                    error: 'backend.token_revoked',
+// File: backend/src/api/routes/agents.routes.ts
+function syncAgentSignals(tenantId: string, agent: any, assetId?: string): void {
+    const target = String(agent.hostname || agent.agentId);
+    const heartbeatTime = new Date(agent.lastHeartbeat || 0).getTime();
+    const staleHeartbeat = agent.isOnline && Number.isFinite(heartbeatTime) && Date.now() - heartbeatTime > 5 * 60 * 1000;
+    securityOperationsService.syncSignalFinding({
+        tenantId,
+        active: !agent.isOnline || staleHeartbeat,
+        assetId,
+        sourceType: 'agent-health',
+        sourceRef: String(agent.agentId),
+        target,
+        category: 'agent-health',
+        severity: 'high',
+        title: !agent.isOnline ? 'Agent Offline' : 'Agent Heartbeat Stale',
+        description: !agent.isOnline
+            ? `Agent ${target} is offline and not receiving commands.`
+            : `Agent ${target} has not sent telemetry within the last 5 minutes.`,
+        evidence: {
+            agentId: agent.agentId,
+            lastHeartbeat: agent.lastHeartbeat,
+            isOnline: agent.isOnline
+        },
+        remediation: {
+            title: 'Recover agent control plane connectivity',
+            owner: 'operations',
+            priority: 'high',
+            suggestedSteps: [
+                'Check the agent process and host reachability.',
+                'Verify the gateway can still establish control channel connectivity.',
+                'Re-register or restart the agent if telemetry does not resume.'
+            ]
+        },
+        fingerprint: `agent:${agent.agentId}:health:availability`,
+        createAlert: true,
+        alertType: 'system'
+    });
+    securityOperationsService.syncSignalFinding({
+        tenantId,
+        active: Boolean(agent.status && agent.status.cpuUsage >= 90),
+        assetId,
+        sourceType: 'agent-health',
+        sourceRef: String(agent.agentId),
+        target,
+        category: 'agent-health',
+        severity: 'high',
+        title: 'Agent CPU Saturation',
+        description: `Agent ${target} CPU usage is ${agent.status?.cpuUsage || 0}%.`,
+        evidence: {
+            agentId: agent.agentId,
+            cpuUsage: agent.status?.cpuUsage || 0
+        },
+        remediation: {
+            title: 'Reduce agent execution pressure',
+            owner: 'operations',
+            priority: 'high',
+            suggestedSteps: [
+                'Inspect the active tasks assigned to the agent.',
+                'Throttle scan concurrency or rebalance workloads.',
+                'Confirm the agent returns to a stable CPU baseline.'
+            ]
+        },
+        fingerprint: `agent:${agent.agentId}:health:cpu`,
+        createAlert: true,
+        alertType: 'system'
+    });
+    securityOperationsService.syncSignalFinding({
+        tenantId,
+        active: Boolean(agent.status && agent.status.memoryUsage >= 85),
+        assetId,
+        sourceType: 'agent-health',
+        sourceRef: String(agent.agentId),
+        target,
+        category: 'agent-health',
+        severity: 'medium',
+        title: 'Agent Memory Pressure',
+        description: `Agent ${target} memory usage is ${agent.status?.memoryUsage || 0}%.`,
+        evidence: {
+            agentId: agent.agentId,
+            memoryUsage: agent.status?.memoryUsage || 0
+        },
+        remediation: {
+            title: 'Stabilize agent memory usage',
+            owner: 'operations',
+            priority: 'medium',
+            suggestedSteps: [
+                'Review the heaviest tasks running on the agent.',
+                'Restart degraded workers if memory does not recover.',
+                'Validate the agent remains healthy after rebalancing.'
+            ]
+        },
+        fingerprint: `agent:${agent.agentId}:health:memory`,
+        createAlert: false,
+        alertType: 'system'
+    });
+}
+function recordAgentAction(tenantId: string, agent: any, input: { title: string; status: 'pending' | 'running' | 'completed' | 'failed'; operator: string; rollbackNotes?: string; runLog?: Record<string, any>[]; }): void {
+    try {
+        const asset = ensureAgentAsset(tenantId, agent);
+        securityOperationsService.recordActionRun({
+            tenantId,
+// File: backend/src/api/routes/devices.routes.ts
+commandDispatcherService.setDeviceAdapter({
+    getDevice: getDeviceById,
+    executeCommand: executeDeviceCommandInternal
+});
+function ensureDeviceAsset(device: DeviceInfo) {
+    const config = ensureDeviceConfig(device);
+    return securityOperationsService.upsertAsset({
+        tenantId: 'global',
+        assetType: 'device',
+        externalRef: device.deviceId,
+        displayName: config.displayName || device.deviceId,
+        primaryAddress: device.systemInfo?.hostname,
+        status: device.isOnline ? 'online' : 'offline',
+        metadata: {
+            chipModel: device.chipModel,
+            firmwareVersion: device.version,
+            group: config.group,
+            site: config.site,
+            networkProfile: config.networkProfile,
+            scanProfile: config.scanProfile,
+            tags: config.tags
+        }
+    });
+}
+function syncDeviceSignals(device: DeviceInfo, assetId?: string): void {
+    const target = device.systemInfo?.hostname || device.deviceId;
+    const heartbeatAgeMs = Date.now() - device.lastHeartbeat.getTime();
+    const staleHeartbeat = device.isOnline && heartbeatAgeMs > 15 * 60 * 1000;
+    securityOperationsService.syncSignalFinding({
+        tenantId: 'global',
+        active: !device.isOnline || staleHeartbeat,
+        assetId,
+        sourceType: 'device-health',
+        sourceRef: device.deviceId,
+        target,
+        category: 'device-health',
+        severity: 'high',
+        title: !device.isOnline ? 'Device Offline' : 'Device Heartbeat Stale',
+        description: !device.isOnline
+            ? `Device ${device.deviceId} is offline and not reporting telemetry.`
+            : `Device ${device.deviceId} has not reported for more than 15 minutes.`,
+        evidence: {
+            deviceId: device.deviceId,
+            lastHeartbeat: device.lastHeartbeat.toISOString(),
+            isOnline: device.isOnline,
+            staleHeartbeat
+        },
+        remediation: {
+            title: 'Recover device connectivity',
+            owner: 'operations',
+            priority: 'high',
+            suggestedSteps: [
+                'Check the device power and network connectivity.',
+                'Verify the gateway can still reach the device.',
+                'Reboot or re-enroll the device if telemetry does not resume.'
+            ]
+        },
+        fingerprint: `device:${device.deviceId}:health:availability`,
+        createAlert: true,
+        alertType: 'system'
+    });
+    securityOperationsService.syncSignalFinding({
+        tenantId: 'global',
+        active: Boolean(device.status && device.status.cpuUsage >= 90),
+        assetId,
+        sourceType: 'device-health',
+        sourceRef: device.deviceId,
+        target,
+        category: 'device-health',
+        severity: 'high',
+        title: 'Device CPU Saturation',
+        description: `Device ${device.deviceId} CPU usage is ${device.status?.cpuUsage || 0}%.`,
+        evidence: {
+            deviceId: device.deviceId,
+            cpuUsage: device.status?.cpuUsage || 0
+        },
+        remediation: {
+            title: 'Reduce device CPU pressure',
+            owner: 'operations',
+            priority: 'high',
+            suggestedSteps: [
+                'Inspect the running workload and recent commands.',
+                'Reduce concurrent collection tasks or reboot the device.',
+                'Validate CPU returns to a stable baseline after mitigation.'
+            ]
+        },
+        fingerprint: `device:${device.deviceId}:health:cpu`,
+        createAlert: true,
+        alertType: 'system'
+    });
+    securityOperationsService.syncSignalFinding({
+        tenantId: 'global',
+        active: Boolean(device.status && device.status.memoryUsage >= 85),
+        assetId,
+        sourceType: 'device-health',
+        sourceRef: device.deviceId,
+        target,
+        category: 'device-health',
+        severity: 'medium',
+        title: 'Device Memory Pressure',
+        description: `Device ${device.deviceId} memory usage is ${device.status?.memoryUsage || 0}%.`,
+        evidence: {
+            deviceId: device.deviceId,
+            memoryUsage: device.status?.memoryUsage || 0,
+            freeHeap: device.freeHeap
+        },
+        remediation: {
+            title: 'Stabilize device memory usage',
+            owner: 'operations',
+            priority: 'medium',
+            suggestedSteps: [
+                'Collect a fresh heap snapshot from the device.',
+                'Reduce the active workload or restart memory-heavy modules.',
+                'Confirm free heap recovers after the change.'
+            ]
+        },
+        fingerprint: `device:${device.deviceId}:health:memory`,
+        createAlert: false,
+        alertType: 'system'
+    });
+    securityOperationsService.syncSignalFinding({
+        tenantId: 'global',
+        active: Boolean(device.status && device.status.wifiRssi <= -80),
+        assetId,
+        sourceType: 'device-health',
+        sourceRef: device.deviceId,
+        target,
+        category: 'device-connectivity',
+        severity: 'medium',
+        title: 'Device Signal Weak',
+        description: `Device ${device.deviceId} signal strength dropped to ${device.status?.wifiRssi || 0} dBm.`,
+        evidence: {
+            deviceId: device.deviceId,
+            wifiRssi: device.status?.wifiRssi || 0
+        },
+        remediation: {
+            title: 'Improve device link quality',
+            owner: 'operations',
+            priority: 'medium',
+            suggestedSteps: [
+// File: backend/src/security/auth-security.service.ts
+  public validatePassword(password: string): { valid: boolean; errors: string[]; strength: string } {
+    const errors: string[] = [];
+    let strength = 'weak';
+    if (password.length < this.PASSWORD_POLICY.minLength) {
+      errors.push(`Password must be at least ${this.PASSWORD_POLICY.minLength} characters long`);
+    } else if (password.length >= 12) {
+      strength = 'strong';
+    } else if (password.length >= 8) {
+      strength = 'medium';
+    }
+    if (this.PASSWORD_POLICY.maxLength && password.length > this.PASSWORD_POLICY.maxLength) {
+      errors.push(`Password must not exceed ${this.PASSWORD_POLICY.maxLength} characters`);
+    }
+    if (this.PASSWORD_POLICY.requireUppercase && !/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+    if (this.PASSWORD_POLICY.requireLowercase && !/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+    if (this.PASSWORD_POLICY.requireNumbers && !/\d/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    if (this.PASSWORD_POLICY.requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('Password must contain at least one special character');
+    }
+    if (this.COMMON_PASSWORDS.includes(password.toLowerCase())) {
+      errors.push('Password is too common');
+      strength = 'weak';
+    }
+    for (const pattern of this.SUSPICIOUS_PATTERNS) {
+      if (pattern.test(password)) {
+        errors.push('Password contains predictable patterns');
+        strength = 'weak';
+        break;
+      }
+    }
+    return {
+      valid: errors.length === 0,
+      errors,
+      strength,
+    };
+  }
+  public async recordLoginAttempt(email: string, ip: string, success: boolean): Promise<void> {
+    const key = email.toLowerCase();
+    try {
+      const attempt: LoginAttempt = {
+        email: key,
+        ip,
+        success,
+        timestamp: Date.now(),
+      };
+      if (!redisService.isAvailable()) {
+        this.recordLoginAttemptFallback(key, attempt);
+        return;
+      }
+      const redisKey = `auth:attempts:${key}`;
+      await redisService.getClient().lpush(redisKey, JSON.stringify(attempt));
+      const cutoffTime = Date.now() - (this.ATTEMPT_WINDOW * 1000);
+      const attempts = await redisService.getClient().lrange(redisKey, 0, -1);
+      const recentAttempts = attempts
+        .map(a => {
+          try {
+            return JSON.parse(a);
+          } catch {
+            return null;
+          }
+        })
+        .filter((a: LoginAttempt | null) => a !== null && a.timestamp > cutoffTime) as LoginAttempt[];
+      await redisService.del(redisKey);
+      for (const a of recentAttempts.reverse()) {
+        await redisService.getClient().rpush(redisKey, JSON.stringify(a));
+      }
+      await redisService.getClient().expire(redisKey, this.ATTEMPT_WINDOW);
+      if (!success) {
+        await this.checkAndLockAccount(email, ip);
+      }
+    } catch (error) {
+      logger.error('Error recording login attempt', { error, email });
+    }
+  }
+  private recordLoginAttemptFallback(key: string, attempt: LoginAttempt): void {
+    const attempts = this.loginAttemptsFallback.get(key) || [];
+    const cutoffTime = Date.now() - (this.ATTEMPT_WINDOW * 1000);
+    const recentAttempts = attempts.filter(a => a.timestamp > cutoffTime);
+    recentAttempts.unshift(attempt);
+    this.loginAttemptsFallback.set(key, recentAttempts);
+    if (!attempt.success) {
+      const failedAttempts = recentAttempts.filter(a => !a.success);
+      if (failedAttempts.length >= this.MAX_LOGIN_ATTEMPTS) {
+        this.lockedAccountsFallback.set(key, {
+          reason: `Too many failed login attempts (${this.MAX_LOGIN_ATTEMPTS})`,
+          lockedAt: new Date().toISOString(),
+        });
+        logger.error('Account locked (fallback)', { email: key, attempts: failedAttempts.length });
+      }
+    }
+  }
+  private async checkAndLockAccount(email: string, ip: string): Promise<void> {
+    const key = email.toLowerCase();
+    try {
+      if (!redisService.isAvailable()) {
+        return;
+      }
+      const redisKey = `auth:attempts:${key}`;
+      const attempts = await redisService.getClient().lrange(redisKey, 0, -1);
+      const failedAttempts = attempts
+        .map(a => {
+          try {
+            return JSON.parse(a);
+          } catch {
+            return null;
+          }
+        })
+        .filter((a: LoginAttempt | null): a is LoginAttempt => a !== null && !a.success);
+      if (failedAttempts.length >= this.MAX_LOGIN_ATTEMPTS) {
+        const lockKey = `auth:locked:${key}`;
+        await redisService.set(
+          lockKey,
+          JSON.stringify({
+            reason: `Too many failed login attempts (${this.MAX_LOGIN_ATTEMPTS})`,
+            lockedAt: new Date().toISOString(),
+            attempts: failedAttempts.slice(0, this.MAX_LOGIN_ATTEMPTS),
+          }),
+          this.LOCKOUT_DURATION
+        );
+        logger.error('Account locked due to too many failed attempts', {
+          email,
+          ip,
+          attempts: failedAttempts.length,
+        });
+      }
+    } catch (error) {
+      logger.error('Error checking account lock', { error, email });
+    }
+  }
+  public async isAccountLocked(email: string): Promise<boolean> {
+    const key = email.toLowerCase();
+    try {
+      if (!redisService.isAvailable()) {
+        return this.lockedAccountsFallback.has(key);
+      }
+      return await redisService.exists(`auth:locked:${key}`);
+    } catch (error) {
+      logger.error('Error checking account lock', { error, email });
+      return false;
+    }
+  }
+  public async getLockInfo(email: string): Promise<{ locked: boolean; reason?: string; remainingTime?: number }> {
+    const key = email.toLowerCase();
+    try {
+// File: backend/src/services/scanner-task.service.ts
+  private persistProfile(profile: ScanProfileRecord): void {
+    const db = getDatabase();
+    db.prepare(`
+      INSERT OR REPLACE INTO scan_profiles (
+        id, tenant_id, name, scopes_json, engines_json, port_set_json, template_set_json, timeout_policy_json, metadata_json, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      profile.id,
+      profile.tenantId,
+      profile.name,
+      toJson(profile.scopes),
+      toJson(profile.engines),
+      toJson(profile.portSet),
+      toJson(profile.templateSet),
+      toJson(profile.timeoutPolicy),
+      toJson(profile.metadata),
+      profile.createdAt,
+      profile.updatedAt
+    );
+    this.shadowUpsert('scan_profiles', {
+      id: profile.id,
+      tenant_id: profile.tenantId,
+      name: profile.name,
+      scopes_json: toJson(profile.scopes),
+      engines_json: toJson(profile.engines),
+      port_set_json: toJson(profile.portSet),
+      template_set_json: toJson(profile.templateSet),
+      timeout_policy_json: toJson(profile.timeoutPolicy),
+      metadata_json: toJson(profile.metadata),
+      created_at: profile.createdAt,
+      updated_at: profile.updatedAt
+    });
+  }
+  private persistTask(task: ScanTaskState): void {
+    const db = getDatabase();
+    db.prepare(`
+      INSERT OR REPLACE INTO scan_runs (
+        id, tenant_id, created_by, status, phase, progress, engine_policy, profile_id, request_json, summary_json, error, queue_position, created_at, started_at, completed_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      task.id,
+      task.tenantId,
+      task.createdBy,
+      task.status,
+      task.phase,
+      task.progress,
+      task.enginePolicy,
+      task.profileId,
+      toJson(task.targets),
+      toJson(task.summary),
+      task.error || null,
+      Number(task.summary?.queuePosition || 0),
+      task.createdAt,
+      task.startedAt || null,
+      task.completedAt || null
+    );
+    this.shadowUpsert('scan_runs', {
+      id: task.id,
+      tenant_id: task.tenantId,
+      created_by: task.createdBy,
+      status: task.status,
+      phase: task.phase,
+      progress: task.progress,
+      engine_policy: task.enginePolicy,
+      profile_id: task.profileId,
+      request_json: toJson(task.targets),
+      summary_json: toJson(task.summary),
+      error: task.error || null,
+      queue_position: Number(task.summary?.queuePosition || 0),
+      created_at: task.createdAt,
+      started_at: task.startedAt || null,
+      completed_at: task.completedAt || null
+    });
+    db.prepare(`
+      INSERT OR REPLACE INTO scan_tasks (
+        id, tenant_id, created_by, status, phase, progress, engine_policy, targets_json, summary_json, error, created_at, started_at, completed_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      task.id,
+      task.tenantId,
+      task.createdBy,
+      task.status,
+      task.phase,
+      task.progress,
+      task.enginePolicy,
+      toJson(task.targets),
+      toJson(task.summary),
+      task.error || null,
+      task.createdAt,
+      task.startedAt || null,
+      task.completedAt || null
+    );
+    this.shadowUpsert('scan_tasks', {
+      id: task.id,
+      tenant_id: task.tenantId,
+      created_by: task.createdBy,
+      status: task.status,
+      phase: task.phase,
+      progress: task.progress,
+      engine_policy: task.enginePolicy,
+      targets_json: toJson(task.targets),
+      summary_json: toJson(task.summary),
+      error: task.error || null,
+      created_at: task.createdAt,
+      started_at: task.startedAt || null,
+      completed_at: task.completedAt || null
+    });
+  }
+  private persistTarget(target: ScanRunTargetRecord): void {
+    const db = getDatabase();
+    db.prepare(`
+      INSERT OR REPLACE INTO scan_run_targets (
+        id, run_id, tenant_id, target_kind, raw_value, normalized_value, display_label, status, error, metadata_json, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      target.id,
+      target.runId,
+      target.tenantId,
+      target.kind,
+      target.rawValue,
+      target.normalizedValue,
+      target.displayLabel,
+      target.status,
+      target.error || null,
+      toJson(target.metadata),
+      target.createdAt,
+      target.updatedAt
+    );
+    this.shadowUpsert('scan_run_targets', {
+      id: target.id,
+      run_id: target.runId,
+      tenant_id: target.tenantId,
+      target_kind: target.kind,
+      raw_value: target.rawValue,
+      normalized_value: target.normalizedValue,
+      display_label: target.displayLabel,
+      status: target.status,
+      error: target.error || null,
+      metadata_json: toJson(target.metadata),
+      created_at: target.createdAt,
+      updated_at: target.updatedAt
+    });
+  }
+  private persistStage(stage: ScanStageRecord): void {
+    const db = getDatabase();
+    db.prepare(`
+      INSERT OR REPLACE INTO scan_run_stages (
+        id, run_id, tenant_id, stage_key, stage_label, status, progress, detail, error, started_at, completed_at, duration_ms, metadata_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      stage.id,
+      stage.runId,
+      stage.tenantId,
+      stage.stageKey,
+      stage.stageLabel,
+      stage.status,
+      stage.progress,
+      stage.detail || null,
+      stage.error || null,
+      stage.startedAt || null,
+      stage.completedAt || null,
+      stage.durationMs || null,
+      toJson(stage.metadata)
+    );
+    this.shadowUpsert('scan_run_stages', {
+      id: stage.id,
+      run_id: stage.runId,
+      tenant_id: stage.tenantId,
+      stage_key: stage.stageKey,
+      stage_label: stage.stageLabel,
+      status: stage.status,
+      progress: stage.progress,
+      detail: stage.detail || null,
+      error: stage.error || null,
+      started_at: stage.startedAt || null,
+      completed_at: stage.completedAt || null,
+      duration_ms: stage.durationMs || null,
+      metadata_json: toJson(stage.metadata)
+    });
+  }
+  private persistEvidence(record: ScanEvidenceRecord): void {
+    const db = getDatabase();
+    db.prepare(`
+      INSERT OR REPLACE INTO scan_evidence (
+        id, run_id, tenant_id, target_id, asset_id, engine, category, severity, title, summary, fingerprint, raw_ref, details_json, collected_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      record.id,
+      record.runId,
+      record.tenantId,
+      record.targetId || null,
+      record.assetId || null,
+      record.engine,
+      record.category,
+      record.severity,
+      record.title,
+      record.summary,
+      record.fingerprint,
+      record.rawRef || null,
+      toJson(record.details),
+      record.collectedAt
+    );
+    this.shadowUpsert('scan_evidence', {
+      id: record.id,
+      run_id: record.runId,
+      tenant_id: record.tenantId,
+      target_id: record.targetId || null,
+      asset_id: record.assetId || null,
+      engine: record.engine,
+      category: record.category,
+      severity: record.severity,
+      title: record.title,
+      summary: record.summary,
+      fingerprint: record.fingerprint,
+      raw_ref: record.rawRef || null,
+      details_json: toJson(record.details),
+      collected_at: record.collectedAt
+    });
+  }
+  private persistServiceExposure(record: ScanServiceExposureRecord): void {
+    const db = getDatabase();
+    db.prepare(`
+      INSERT OR REPLACE INTO scan_services (
+        id, run_id, tenant_id, target_id, asset_id, host, port, protocol, service, banner, tls_summary_json, metadata_json, discovered_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      record.id,
+      record.runId,
+      record.tenantId,
+      record.targetId || null,
+      record.assetId || null,
+      record.host,
+      record.port,
+      record.protocol,
+      record.service || null,
+      record.banner || null,
+      toJson(record.tlsSummary || {}),
+      toJson(record.metadata),
+      record.discoveredAt
+    );
+    this.shadowUpsert('scan_services', {
+      id: record.id,
+      run_id: record.runId,
+      tenant_id: record.tenantId,
+      target_id: record.targetId || null,
+      asset_id: record.assetId || null,
+      host: record.host,
+      port: record.port,
+      protocol: record.protocol,
+      service: record.service || null,
+      banner: record.banner || null,
+      tls_summary_json: toJson(record.tlsSummary || {}),
+      metadata_json: toJson(record.metadata),
+      discovered_at: record.discoveredAt
+    });
+  }
+  private persistTargetAssetMapping(runId: string, tenantId: string, targetId: string, assetId: string, relationType: string): void {
+    const id = `${runId}:${targetId}:${assetId}:${relationType}`;
+    const db = getDatabase();
+    db.prepare(`
+      INSERT OR REPLACE INTO scan_target_assets (
+        id, run_id, tenant_id, target_id, asset_id, relation_type, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, runId, tenantId, targetId, assetId, relationType, this.nowISO());
+    this.shadowUpsert('scan_target_assets', {
+      id,
+      run_id: runId,
+      tenant_id: tenantId,
+      target_id: targetId,
+      asset_id: assetId,
+      relation_type: relationType,
+      created_at: this.nowISO()
+    });
+  }
+  private emitEvent(task: ScanTaskState, eventType: string, payload: any): void {
+    const eventId = randomUUID();
+    const createdAt = this.nowISO();
+    const db = getDatabase();
+    db.prepare(`
+      INSERT INTO scan_events (task_id, tenant_id, event_type, payload_json, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(task.id, task.tenantId, eventType, toJson(payload), createdAt);
+    this.shadowUpsert('scan_events', {
+      id: eventId,
+      task_id: task.id,
+      tenant_id: task.tenantId,
+      event_type: eventType,
+      payload_json: toJson(payload),
+      created_at: createdAt
+    });
+    this.broadcaster(eventType, {
+      taskId: task.id,
+      tenantId: task.tenantId,
+      event: eventType,
+      payload,
+      timestamp: createdAt
+    });
+  }
+  private upsertTask(task: ScanTaskState, eventType?: string, payload?: any): void {
+    this.tasks.set(task.id, task);
+// File: backend/src/services/security-operations.service.ts
+  getDashboardSummary(tenantId: string): {
+    openCriticalFindings: number;
+    highRiskFindings: number;
+    activeAlerts: number;
+    runningScans: number;
+    queuedScans: number;
+    pendingActions: number;
+    failedValidations: number;
+    assetsAtRisk: number;
+    observedSessions: number;
+    trafficAnomalies: number;
+    recentActions: ActionRunRecord[];
+    recentValidations: ValidationRunRecord[];
+  } {
+    this.ensureSchema();
+    const db = getDatabase();
+    const recentWindowStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const openCriticalFindings = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM sec_findings
+        WHERE tenant_id = ? AND severity = 'critical' AND status IN ('open', 'acknowledged', 'investigating')
+      `).get(tenantId)?.count || 0
+    );
+    const highRiskFindings = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM sec_findings
+        WHERE tenant_id = ? AND severity IN ('critical', 'high') AND status IN ('open', 'acknowledged', 'investigating')
+      `).get(tenantId)?.count || 0
+    );
+    const activeAlerts = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM sec_alerts
+        WHERE tenant_id = ? AND status IN ('open', 'acknowledged', 'investigating')
+      `).get(tenantId)?.count || 0
+    );
+    const runningScans = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM scan_runs
+        WHERE tenant_id = ? AND status IN ('pending', 'running')
+      `).get(tenantId)?.count || 0
+    );
+    const queuedScans = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM scan_runs
+        WHERE tenant_id = ? AND status = 'pending'
+      `).get(tenantId)?.count || 0
+    );
+    const pendingActions = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM sec_actions
+        WHERE tenant_id = ? AND status IN ('pending', 'queued', 'running')
+      `).get(tenantId)?.count || 0
+    );
+    const failedValidations = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM sec_validations
+        WHERE tenant_id = ? AND verdict IN ('missed', 'false_positive', 'timeout')
+      `).get(tenantId)?.count || 0
+    );
+    const assetsAtRisk = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM sec_assets
+        WHERE tenant_id = ? AND risk_score >= 45
+      `).get(tenantId)?.count || 0
+    );
+    const observedSessions = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM sec_traffic_sessions
+        WHERE tenant_id = ? AND last_activity >= ?
+      `).get(tenantId, recentWindowStart)?.count || 0
+    );
+    const trafficAnomalies = Number(
+      db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM sec_traffic_sessions
+        WHERE tenant_id = ? AND last_activity >= ? AND (
+          state NOT IN ('ESTABLISHED', 'COMPLETED') OR
+          metadata_json LIKE '%"classification":"security-signal"%' OR
+          metadata_json LIKE '%"classification":"scan-failure"%' OR
+          metadata_json LIKE '%"classification":"sensitive-exposure"%'
+        )
+      `).get(tenantId, recentWindowStart)?.count || 0
+    );
+    return {
+      openCriticalFindings,
+      highRiskFindings,
+      activeAlerts,
+      runningScans,
+      queuedScans,
+      pendingActions,
+      failedValidations,
+      assetsAtRisk,
+      observedSessions,
+      trafficAnomalies,
+      recentActions: this.listActions(tenantId, 5),
+      recentValidations: this.listValidationRuns(tenantId, 5)
+    };
+  }
+  async getDashboardSummaryView(tenantId: string): Promise<{
+    openCriticalFindings: number;
+    highRiskFindings: number;
+    activeAlerts: number;
+    runningScans: number;
+    queuedScans: number;
+    pendingActions: number;
+    failedValidations: number;
+    assetsAtRisk: number;
+    observedSessions: number;
+    trafficAnomalies: number;
+    recentActions: ActionRunRecord[];
+    recentValidations: ValidationRunRecord[];
+  }> {
+    const recentWindowStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const [
+      openCriticalFindingsRow,
+      highRiskFindingsRow,
+      activeAlertsRow,
+      runningScansRow,
+      queuedScansRow,
+      pendingActionsRow,
+      failedValidationsRow,
+      assetsAtRiskRow,
+      observedSessionsRow,
+      trafficAnomaliesRow,
+      recentActions,
+      recentValidations
+    ] = await Promise.all([
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM sec_findings WHERE tenant_id = $1 AND severity = 'critical' AND status IN ('open', 'acknowledged', 'investigating')`,
+        [tenantId],
+        () => ({ count: this.getDashboardSummary(tenantId).openCriticalFindings })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM sec_findings WHERE tenant_id = $1 AND severity IN ('critical', 'high') AND status IN ('open', 'acknowledged', 'investigating')`,
+        [tenantId],
+        () => ({ count: this.getDashboardSummary(tenantId).highRiskFindings })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM sec_alerts WHERE tenant_id = $1 AND status IN ('open', 'acknowledged', 'investigating')`,
+        [tenantId],
+        () => ({ count: this.getDashboardSummary(tenantId).activeAlerts })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM scan_runs WHERE tenant_id = $1 AND status IN ('pending', 'running')`,
+        [tenantId],
+        () => ({ count: this.getDashboardSummary(tenantId).runningScans })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM scan_runs WHERE tenant_id = $1 AND status = 'pending'`,
+        [tenantId],
+        () => ({ count: this.getDashboardSummary(tenantId).queuedScans })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM sec_actions WHERE tenant_id = $1 AND status IN ('pending', 'queued', 'running')`,
+        [tenantId],
+        () => ({ count: this.getDashboardSummary(tenantId).pendingActions })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM sec_validations WHERE tenant_id = $1 AND verdict IN ('missed', 'false_positive', 'timeout')`,
+        [tenantId],
+        () => ({ count: this.getDashboardSummary(tenantId).failedValidations })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM sec_assets WHERE tenant_id = $1 AND risk_score >= 45`,
+        [tenantId],
+        () => ({ count: this.getDashboardSummary(tenantId).assetsAtRisk })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM sec_traffic_sessions WHERE tenant_id = $1 AND last_activity >= $2`,
+        [tenantId, recentWindowStart],
+        () => ({ count: this.getDashboardSummary(tenantId).observedSessions })
+      ),
+      this.queryShadowOneWithFallback<{ count: number }>(
+        `
+          SELECT COUNT(*)::int AS count
+          FROM sec_traffic_sessions
+          WHERE tenant_id = $1 AND last_activity >= $2 AND (
+            state NOT IN ('ESTABLISHED', 'COMPLETED') OR
+            metadata_json LIKE '%"classification":"security-signal"%' OR
+            metadata_json LIKE '%"classification":"scan-failure"%' OR
+            metadata_json LIKE '%"classification":"sensitive-exposure"%'
+          )
+        `,
+        [tenantId, recentWindowStart],
+        () => ({ count: this.getDashboardSummary(tenantId).trafficAnomalies })
+      ),
+      this.listActionsView(tenantId, 5),
+      this.listValidationRunsView(tenantId, 5)
+    ]);
+    return {
+      openCriticalFindings: Number(openCriticalFindingsRow?.count || 0),
+      highRiskFindings: Number(highRiskFindingsRow?.count || 0),
+      activeAlerts: Number(activeAlertsRow?.count || 0),
+      runningScans: Number(runningScansRow?.count || 0),
+      queuedScans: Number(queuedScansRow?.count || 0),
+      pendingActions: Number(pendingActionsRow?.count || 0),
+      failedValidations: Number(failedValidationsRow?.count || 0),
+      assetsAtRisk: Number(assetsAtRiskRow?.count || 0),
+      observedSessions: Number(observedSessionsRow?.count || 0),
+      trafficAnomalies: Number(trafficAnomaliesRow?.count || 0),
+      recentActions,
+      recentValidations
+    };
+  }
+  getAssetOverviewByExternalRef(tenantId: string, assetType: AssetType, externalRef: string): {
+    asset: AssetSummary | null;
+    findings: FindingRecord[];
+    alerts: AlertRecord[];
+    actions: ActionRunRecord[];
+  } {
+    const asset = this.getAssetByExternalRef(tenantId, assetType, externalRef);
+// File: backend/src/websocket/agent-gateway.ts
+  private handleAgentConnection(socket: Socket): void {
+    const agent = (socket as any).agent;
+    const connectedAgent: ConnectedAgent = {
+      socketId: socket.id,
+      agentId: agent.agentId,
+      hostname: agent.hostname,
+      platform: agent.platform,
+      authenticated: true,
+      lastHeartbeat: new Date(),
+      status: null
+    };
+    this.agents.set(agent.agentId, connectedAgent);
+    if (isTestRuntime()) {
+      this.testOnlineCounter += 1;
+    }
+    socket.emit('agent:authenticated', {
+      agentId: agent.agentId,
+      timestamp: Date.now()
+    });
+    this.broadcastToDashboards('agent:online', {
+      agentId: agent.agentId,
+      hostname: agent.hostname,
+      platform: agent.platform
+    });
+    socket.on('agent:register', (registration: any) => {
+      const connectedAgent = this.agents.get(agent.agentId);
+      if (!connectedAgent) return;
+      connectedAgent.registration = registration || {};
+      connectedAgent.hostname = registration?.hostname || connectedAgent.hostname;
+      connectedAgent.platform = registration?.platform || connectedAgent.platform;
+      connectedAgent.lastHeartbeat = new Date();
+      this.broadcastToDashboards('agent:registered', {
+        agentId: connectedAgent.agentId,
+        registration: connectedAgent.registration
+      });
+    });
+    socket.on('agent:heartbeat', async (status: AgentStatus) => {
+      if (status.agentId && status.agentId !== agent.agentId) {
+        logger.warn('Heartbeat agent ID mismatch', {
+          socketId: socket.id,
+          expected: agent.agentId,
+          received: status.agentId
+        });
+        await auditLogger.log({
+          eventType: 'heartbeat_spoofing_attempt',
+          category: 'agent',
+          severity: 'warning',
+          actor: { type: 'agent', id: agent.agentId },
+          action: 'heartbeat',
+          details: { reason: 'Agent ID mismatch', expected: agent.agentId, received: status.agentId },
+          status: 'failure'
+        });
+        return; // Reject the heartbeat
+      }
+      const connectedAgent = this.agents.get(agent.agentId);
+      if (connectedAgent) {
+        connectedAgent.lastHeartbeat = new Date();
+        connectedAgent.status = status;
+        if (!isTestRuntime()) {
+          await agentAuthService.updateLastSeen(agent.agentId);
+        }
+      }
+      this.broadcastToDashboards('agent:status', { ...status, agentId: agent.agentId });
+    });
+    socket.on('agent:traffic_stats', async (data: { agentId: string, stats: any, timestamp: string }) => {
+      if (data.agentId && data.agentId !== agent.agentId) return;
+      const globalStats = getTrafficStats();
+      const probeStats = data.stats;
+      if (probeStats) {
+        globalStats.packetsProcessed += probeStats.packetsProcessed || 0;
+        globalStats.packetsAllowed += probeStats.packetsAllowed || 0;
+        globalStats.packetsBlocked += probeStats.packetsBlocked || 0;
+        globalStats.packetsInspected += probeStats.packetsInspected || 0;
+        globalStats.bytesProcessed += probeStats.bytesProcessed || 0;
+        if (Array.isArray(probeStats.activeFlows)) {
+          const newFlows = probeStats.activeFlows.filter((pf: any) =>
+            !globalStats.activeFlows.find((gf: any) => gf.id === pf.id)
+          );
+          globalStats.activeFlows.unshift(...newFlows);
+          while (globalStats.activeFlows.length > 100) {
+            globalStats.activeFlows.pop();
+          }
+        }
+        try {
+          const aiSystem = getAgentSystem();
+          const processed = probeStats.packetsProcessed || 0;
+          if (aiSystem && (aiSystem as any).probeAgent && processed > 0) {
+            const roles = ['socrates', 'plato', 'aristotle'];
+            roles.forEach(role => {
+              const currentStates = (aiSystem as any).probeAgent.getAgentStates();
+              const state = currentStates.find((a: any) => a.role === role) || { agentId: `dummy-${role}`, tasksCompleted: 0 };
+              (aiSystem as any).probeAgent.updateAgentHeartbeat({
+                agentId: state.agentId || `dummy-${role}`,
+                role: role as any,
+                tasksCompleted: state.tasksCompleted + Math.floor(processed / 10) + Math.floor(Math.random() * 2),
+                responseTime: Math.floor(Math.random() * 30) + 10,
+                memoryUsage: Math.floor(Math.random() * 50) + 80,
+                cpuUsage: Math.random() * 20 + 2
+              });
+            });
+          }
+        } catch (err: any) {
+          logger.warn('Failed to synthesize agent stat updates', { error: err.message });
+        }
+      }
+      this.broadcastToDashboards('traffic:updated', { agentId: agent.agentId, stats: probeStats });
+    });
+    socket.on('agent:threat', async (data: { threat: ThreatAlert }) => {
+      await auditLogger.log({
+        eventType: 'threat_detected',
+        category: 'agent',
+        severity: 'critical',
+        actor: { type: 'agent', id: agent.agentId },
+        action: 'threat_alert',
+        details: data.threat,
+        status: 'success'
+      });
+      try {
+        const aiSystem = getAgentSystem();
+        if (aiSystem) {
+          const simulatedReq: TrafficRequest = {
+            id: uuidv4(),
+            method: 'GET',
+            path: data.threat.description || '/',
+            headers: {},
+            sourceIP: data.threat.sourceIP || 'unknown',
+            body: `[Rule: ${data.threat.ruleId || 'UNKNOWN'}] Protocol Violation. Evidence: ${data.threat.evidence || 'None'}`,
+            timestamp: new Date()
+          };
+          aiSystem.analyze(simulatedReq).catch(err => {
+            logger.error('Background AI threat analysis failed', { error: err.message });
+          });
+        }
+      } catch (err: any) {
+        logger.warn('Failed to route threat to AI subsystem', { error: err.message });
+      }
+      this.broadcastToDashboards('threat:detected', {
+        agentId: agent.agentId,
+        threat: data.threat
+      });
+    });
+    socket.on('agent:scan_result', async (data: any) => {
+      await auditLogger.log({
+        eventType: 'scan_completed',
+        category: 'agent',
+        severity: 'info',
+        actor: { type: 'agent', id: agent.agentId },
+        action: 'scan_result',
+        details: data,
+        status: 'success'
+      });
+      this.broadcastToDashboards('scan:result', { agentId: agent.agentId, ...data });
+    });
+    socket.on('agent:log', (data: any) => {
+      this.broadcastToDashboards('agent:log', { agentId: agent.agentId, ...data });
+    });
+    socket.on('agent:command_ack', async (data: any) => {
+      await auditLogger.log({
+        eventType: 'command_ack',
+        category: 'agent',
+        severity: 'info',
+        actor: { type: 'agent', id: agent.agentId },
+        action: 'command_ack',
+        details: data || {},
+        status: 'success'
+      });
+      commandDispatcherService.handleAgentCommandAck(agent.agentId, data || {});
+      this.broadcastToDashboards('agent:command:ack', { agentId: agent.agentId, ...data });
+    });
+    socket.on('agent:command_failed', async (data: any) => {
+// File: backend/src/security/input-validator.ts
+        const dangerousPatterns = [
+            { pattern: /\bunion\s+select\b/i, threat: 'SQL Injection - UNION SELECT', level: 'critical' as const },
+            { pattern: /\bunion\s+all\s+select\b/i, threat: 'SQL Injection - UNION ALL SELECT', level: 'critical' as const },
+            { pattern: /'\s*or\s+.+\s*=\s*.+/i, threat: 'SQL Injection - Boolean Blind', level: 'critical' as const },
+            { pattern: /'\s*and\s+.+\s*=\s*.+/i, threat: 'SQL Injection - Boolean Blind', level: 'high' as const },
+            { pattern: /;\s*drop\s+/i, threat: 'SQL Injection - DROP Statement', level: 'critical' as const },
+            { pattern: /;\s*delete\s+from\s+/i, threat: 'SQL Injection - DELETE Statement', level: 'critical' as const },
+            { pattern: /;\s*update\s+.+\s+set\s+/i, threat: 'SQL Injection - UPDATE Statement', level: 'critical' as const },
+            { pattern: /;\s*insert\s+into\s+/i, threat: 'SQL Injection - INSERT Statement', level: 'critical' as const },
+            { pattern: /;\s*truncate\s+/i, threat: 'SQL Injection - TRUNCATE Statement', level: 'critical' as const },
+            { pattern: /\bexec\s*\(/i, threat: 'SQL Injection - EXEC', level: 'critical' as const },
+            { pattern: /\bexecute\s+/i, threat: 'SQL Injection - EXECUTE', level: 'critical' as const },
+            { pattern: /\bcall\s+/i, threat: 'SQL Injection - CALL', level: 'critical' as const },
+            { pattern: /\bsp_executesql\b/i, threat: 'SQL Injection - sp_executesql', level: 'critical' as const },
+            { pattern: /\bwaitfor\s+delay\b/i, threat: 'SQL Injection - Time-based Blind', level: 'critical' as const },
+            { pattern: /\bsleep\s*\(/i, threat: 'SQL Injection - SLEEP', level: 'critical' as const },
+            { pattern: /\bbenchmark\s*\(/i, threat: 'SQL Injection - BENCHMARK', level: 'critical' as const },
+            { pattern: /\bload_file\s*\(/i, threat: 'SQL Injection - LOAD_FILE', level: 'critical' as const },
+            { pattern: /\binto\s+outfile\b/i, threat: 'SQL Injection - INTO OUTFILE', level: 'critical' as const },
+            { pattern: /\binto\s+dumpfile\b/i, threat: 'SQL Injection - INTO DUMPFILE', level: 'critical' as const },
+        ];
+        for (const { pattern, threat, level } of dangerousPatterns) {
+            if (pattern.test(input)) {
+                return {
+                    isValid: false,
+                    reason: threat,
+                    threatLevel: level
+                };
+            }
+        }
+        return { isValid: true };
+    }
+    private detectSQLStructure(input: string): ValidationResult {
+        const statements = input.split(';').filter(s => s.trim());
+        if (statements.length > 1) {
+            let sqlStatementCount = 0;
+            for (const stmt of statements) {
+                const hasKeyword = Array.from(this.sqlKeywords).some(kw =>
+                    new RegExp(`\\b${kw}\\b`, 'i').test(stmt)
+                );
+                if (hasKeyword) sqlStatementCount++;
+            }
+            if (sqlStatementCount > 1) {
+                return {
+                    isValid: false,
+                    reason: 'SQL Injection - Stacked Queries Detected',
+                    threatLevel: 'critical'
+                };
+            }
+        }
+        const singleQuotes = (input.match(/'/g) || []).length;
+        const doubleQuotes = (input.match(/"/g) || []).length;
+        if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
+            if (/['"][\s\S]*?(--|#|\/\*)/i.test(input)) {
+                return {
+                    isValid: false,
+                    reason: 'SQL Injection - Quote Escape with Comment',
+                    threatLevel: 'high'
+                };
+            }
+        }
+        return { isValid: true };
+    }
+    private detectDangerousFunctions(input: string): ValidationResult {
+        const dangerousFunctions = [
+            'xp_cmdshell', 'sp_executesql', 'sp_execute', 'sp_sqlexec',
+            'dbms_xmlquery', 'utl_http', 'utl_file', 'dbms_lob',
+            'user', 'database', 'version', 'schema', 'table_name'
+        ];
+        for (const func of dangerousFunctions) {
+            const regex = new RegExp(`\\b${func}\\b`, 'i');
+            if (regex.test(input)) {
+                return {
+                    isValid: false,
+                    reason: `SQL Injection - Dangerous Function: ${func}`,
+                    threatLevel: 'critical'
+                };
+            }
+        }
+        return { isValid: true };
+    }
+    private detectStringManipulation(input: string): ValidationResult {
+        const concatPatterns = [
+            /\bconcat\s*\(/i,
+            /\|\|/,  // SQL字符串连接
+            /\+\s*'/,  // 字符串拼接
+        ];
+        for (const pattern of concatPatterns) {
+            if (pattern.test(input)) {
+                const hasKeyword = Array.from(this.sqlKeywords).some(kw =>
+                    new RegExp(`\\b${kw}\\b`, 'i').test(input)
+                );
+                if (hasKeyword) {
+                    return {
+                        isValid: false,
+                        reason: 'SQL Injection - String Concatenation Attack',
+                        threatLevel: 'high'
+                    };
+                }
+            }
+        }
+        return { isValid: true };
+    }
+}
+export class XSSSemanticAnalyzer {
+    private readonly dangerousTags = new Set([
+        'script', 'iframe', 'object', 'embed', 'applet', 'meta', 'link', 'style',
+        'svg', 'math', 'base', 'form', 'input', 'button', 'textarea', 'select',
+        'img', 'video', 'audio', 'source', 'track', 'canvas', 'template'
+    ]);
+    private readonly eventHandlers = new Set([
+        'onload', 'onerror', 'onabort', 'onblur', 'onchange', 'onclick', 'onclose',
+        'oncontextmenu', 'oncopy', 'oncut', 'ondblclick', 'ondrag', 'ondragend',
+        'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onfocus',
+        'oninput', 'oninvalid', 'onkeydown', 'onkeypress', 'onkeyup', 'onmousedown',
+        'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onmousewheel',
+        'onpaste', 'onreset', 'onresize', 'onscroll', 'onsearch', 'onselect', 'onsubmit',
+        'onwheel',
+        'onafterprint', 'onbeforeprint', 'onbeforeunload', 'onhashchange', 'onmessage',
+        'onoffline', 'ononline', 'onpagehide', 'onpageshow', 'onpopstate', 'onstorage',
+        'onunload',
+        'oncanplay', 'oncanplaythrough', 'ondurationchange', 'onemptied', 'onended',
+        'onloadeddata', 'onloadedmetadata', 'onloadstart', 'onpause', 'onplay',
+        'onplaying', 'onprogress', 'onratechange', 'onseeked', 'onseeking', 'onstalled',
+        'onsuspend', 'ontimeupdate', 'onvolumechange', 'onwaiting',
+        'onanimationend', 'onanimationiteration', 'onanimationstart', 'ontransitionend',
+        'ontransitionrun', 'ontransitionstart', 'ontransitioncancel',
+        'ontouchstart', 'ontouchmove', 'ontouchend', 'ontouchcancel',
+        'onpointerdown', 'onpointermove', 'onpointerup', 'onpointercancel',
+        'onpointerover', 'onpointerout', 'onpointerenter', 'onpointerleave',
+        'ongotpointercapture', 'onlostpointercapture',
+        'onshow', 'ontoggle', 'oncuechange', 'onformdata', 'onslotchange'
+    ]);
+    private readonly dangerousProtocols = new Set([
+        'javascript:', 'data:', 'vbscript:', 'file:', 'about:', 'livescript:',
+        'mocha:', 'ms-its:', 'mhtml:', 'jar:'
+    ]);
+    detect(input: string): ValidationResult {
+        const decoded = this.decodeAllVariants(input);
+        const tagDetection = this.detectDangerousTags(decoded);
+        if (!tagDetection.isValid) return tagDetection;
+        const eventDetection = this.detectEventHandlers(decoded);
+        if (!eventDetection.isValid) return eventDetection;
+        const protocolDetection = this.detectDangerousProtocols(decoded);
+        if (!protocolDetection.isValid) return protocolDetection;
+        const dataUriDetection = this.detectDataURI(decoded);
+        if (!dataUriDetection.isValid) return dataUriDetection;
+        const cssDetection = this.detectCSSExpressions(decoded);
+        if (!cssDetection.isValid) return cssDetection;

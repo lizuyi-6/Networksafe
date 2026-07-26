@@ -109,6 +109,17 @@ describe('authSecurityService session management', () => {
     expect(lockInfo.reason).toContain('Too many failed');
   });
 
+  it('uses one lock identity for clean and surrounding-whitespace emails', async () => {
+    const email = `canonical-lock-${Date.now()}@test.local`;
+
+    for (let i = 0; i < 5; i++) {
+      await authSecurityService.recordLoginAttempt(`  ${email}  `, '192.168.1.1', false);
+    }
+
+    expect(await authSecurityService.isAccountLocked(email)).toBe(true);
+    expect(await authSecurityService.getLockInfo(` ${email} `)).toMatchObject({ locked: true });
+  });
+
   it('unlocks an account and allows login again', async () => {
     const email = `unlock-${Date.now()}@test.local`;
 

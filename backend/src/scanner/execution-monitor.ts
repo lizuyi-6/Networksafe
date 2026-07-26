@@ -111,6 +111,14 @@ export class ExecutionMonitor extends EventEmitter {
     } = options;
 
     return new Promise((resolve, reject) => {
+      let executionTimeout: NodeJS.Timeout | null = null;
+      const clearExecutionTimeout = (): void => {
+        if (executionTimeout) {
+          clearTimeout(executionTimeout);
+          executionTimeout = null;
+        }
+      };
+
       this.startTime = Date.now();
       this.stdoutBuffer = [];
       this.stderrBuffer = [];
@@ -172,6 +180,7 @@ export class ExecutionMonitor extends EventEmitter {
 
       // Handle process exit
       this.currentProcess.on('close', async (code) => {
+        clearExecutionTimeout();
         this.stopAIMonitoring();
 
         const duration = Date.now() - this.startTime;
@@ -207,6 +216,7 @@ export class ExecutionMonitor extends EventEmitter {
 
       // Handle error
       this.currentProcess.on('error', (error) => {
+        clearExecutionTimeout();
         this.stopAIMonitoring();
         this.emitEvent('error', { error: error.message });
         reject({
@@ -222,13 +232,15 @@ export class ExecutionMonitor extends EventEmitter {
 
       // Handle timeout
       if (timeout) {
-        setTimeout(() => {
+        executionTimeout = setTimeout(() => {
+          executionTimeout = null;
           if (this.currentProcess && !this.currentProcess.killed) {
             this.currentProcess.kill('SIGTERM');
             this.emitEvent('timeout', { timeout });
             this.stopAIMonitoring();
           }
         }, timeout);
+        executionTimeout.unref?.();
       }
     });
   }

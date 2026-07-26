@@ -18,6 +18,14 @@ process.env.REDIS_HOST = 'localhost';
 process.env.REDIS_PORT = '6379';
 process.env.ALLOWED_ORIGINS = 'http://localhost:5173,http://127.0.0.1:5173';
 
+// Jest workers use per-process sql.js snapshots. Pin the repository runtime
+// mode too, so an outer release environment cannot route unit tests into the
+// Postgres source-of-truth path while the test harness provides a SQLite DB.
+// Postgres/fallback contract suites override these values inside their cases.
+process.env.DB_MODE = 'sqlite';
+process.env.SQLITE_FALLBACK_ENABLED = 'true';
+delete process.env.SHADOW_DATABASE_URL;
+
 // 禁用 Redis 连接错误日志（测试时 Redis 可能未运行）
 process.env.DISABLE_REDIS = 'true';
 

@@ -16,6 +16,7 @@ import { ZhipuClient } from '../../scanner/zhipu-client';
 import logger from '../../utils/logger';
 import {
     PLATFORM_API_CONFIG,
+    PLATFORM_MODELS,
     PlatformProvider,
     getDefaultModel,
     getPlatformCloudBaseUrl,
@@ -142,6 +143,10 @@ export class ModelRouter {
         const tenantId = this.getTenantId(request);
         const hotPathLocalOnly = request.analysisPurpose === 'primary' || request.analysisPurpose === 'blocking_review';
         const effectiveRouteMode = hotPathLocalOnly ? 'local_only' : (request.routeModeOverride || runtimeConfig.aiRouting.mode);
+        const cloudModelId = this.resolveStageModel(
+            request,
+            runtimeConfig.aiRouting.preferredModelId || undefined
+        );
 
         this.requestStats.total++;
 
@@ -165,21 +170,21 @@ export class ModelRouter {
                             throw localError;
                         }
 
-                        response = await this.executeCloud(effectiveRequest);
+                        response = await this.executeCloud(effectiveRequest, cloudModelId);
                         this.requestStats.cloud++;
                     }
                     break;
                 case 'hybrid': {
                     const localResponse = await this.executeLocal(request);
                     this.requestStats.local++;
-                    const cloudResponse = await this.executeCloud(effectiveRequest);
+                    const cloudResponse = await this.executeCloud(effectiveRequest, cloudModelId);
                     this.requestStats.cloud++;
                     response = this.mergeResponses(localResponse, cloudResponse);
                     break;
                 }
                 case 'cloud':
                 default:
-                    response = await this.executeCloud(effectiveRequest);
+                    response = await this.executeCloud(effectiveRequest, cloudModelId);
                     this.requestStats.cloud++;
                     break;
             }
@@ -219,6 +224,7 @@ export class ModelRouter {
 
     makeRoutingDecision(request: ModelRequest, runtimeConfig?: PlatformConfig): ModelRoutingDecision {
         const aiRouting: AIRoutingSettings | undefined = runtimeConfig?.aiRouting;
+        const preferredCloudModel = aiRouting?.preferredModelId || undefined;
         const privacyMode = runtimeConfig?.privacyMode || 'off';
         const hotPathLocalOnly = request.analysisPurpose === 'primary' || request.analysisPurpose === 'blocking_review';
         // Per-agent tier (heterogeneous routing): when the calling agent declares
@@ -268,9 +274,10 @@ export class ModelRouter {
         }
 
         if (mode === 'hybrid_verify') {
+            const cloudModel = this.resolveStageModel(request, preferredCloudModel);
             return {
                 tier: 'hybrid',
-                model: `${this.config.localModel.model}+${this.config.cloudModel.model}`,
+                model: `${this.config.localModel.model}+${cloudModel}`,
                 reason: reasonPrefix || 'AI routing mode is hybrid_verify',
                 estimatedLatency: 4500,
                 estimatedCost: 0.02
@@ -278,9 +285,10 @@ export class ModelRouter {
         }
 
         if (mode === 'local_preferred') {
+            const cloudModel = this.resolveStageModel(request, preferredCloudModel);
             return {
                 tier: this.localEngine ? 'local' : 'cloud',
-                model: this.localEngine ? this.config.localModel.model : this.config.cloudModel.model,
+                model: this.localEngine ? this.config.localModel.model : cloudModel,
                 reason: reasonPrefix || (this.localEngine
                     ? 'AI routing mode is local_preferred'
                     : 'Local model unavailable, falling back to cloud'),
@@ -289,7 +297,7 @@ export class ModelRouter {
             };
         }
 
-            const stageModel = this.resolveStageModelFromPurpose('primary');
+        const stageModel = this.resolveStageModel(request, preferredCloudModel);
         return {
             tier: 'cloud',
             model: stageModel,
@@ -385,24 +393,27 @@ export class ModelRouter {
         }
     }
 
-    private resolveStageModelFromPurpose(purpose: string | undefined): string {
+    private resolveStageModelFromPurpose(purpose: string | undefined, preferredModelId?: string): string {
         const stage = (purpose || 'primary') as DetectionStage;
-        return this.config.stageModelOverrides?.[stage] || this.config.cloudModel.model;
+        const normalizedPreferredModelId = preferredModelId?.trim();
+        const catalogPreferredModelId = normalizedPreferredModelId
+            && PLATFORM_MODELS.some((model) => model.id === normalizedPreferredModelId)
+            ? normalizedPreferredModelId
+            : undefined;
+        return this.config.stageModelOverrides?.[stage] || catalogPreferredModelId || this.config.cloudModel.model;
     }
 
-    private resolveStageModel(request: ModelRequest): string {
-        const stage = (request.analysisPurpose || 'primary') as DetectionStage;
-        const override = this.config.stageModelOverrides?.[stage];
-        return override || this.config.cloudModel.model;
+    private resolveStageModel(request: ModelRequest, preferredModelId?: string): string {
+        return this.resolveStageModelFromPurpose(request.analysisPurpose, preferredModelId);
     }
 
-    private async executeCloud(request: ModelRequest): Promise<ModelResponse> {
+    private async executeCloud(request: ModelRequest, resolvedModelId?: string): Promise<ModelResponse> {
         if (!this.cloudClient) {
             throw new Error('Cloud model not available');
         }
 
         const startTime = Date.now();
-        const modelId = this.resolveStageModel(request);
+        const modelId = resolvedModelId || this.resolveStageModel(request);
         const samplingOptions = (request.temperature !== undefined || request.maxTokens !== undefined)
             ? { temperature: request.temperature, maxTokens: request.maxTokens }
             : undefined;

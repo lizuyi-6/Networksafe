@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import logger from '../utils/logger';
-import { PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
+import { ANONYMOUS_TENANT_ID, PLATFORM_TENANT_ID } from '../core/tenant/tenant-context';
 import { jobQueueService } from './job-queue.service';
 import {
   platformConfigService,
@@ -27,7 +27,9 @@ import {
   DetectionVerdict,
   evaluateDetectionRules,
   inferAttackFamily,
-  severityToBlockDurationSeconds
+  severityToBlockDurationSeconds,
+  collectInvalidMatcherPatterns,
+  matcherDeclaresCriteria
 } from './detection-engine';
 
 type CandidateStatus = 'pending' | 'approved' | 'rejected';
@@ -179,6 +181,8 @@ export interface DetectionEventRecord {
   aiConfidence?: number | null;
   aiRouteMode?: string | null;
   aiModel?: string | null;
+  /** True when the AI verdict came entirely from heuristic fallbacks (no model call). */
+  aiHeuristicDegraded?: boolean;
   attackFamily: DetectionAttackFamily;
   candidateId?: string | null;
   decisionSource: string;
@@ -778,6 +782,27 @@ class DetectionPipelineService {
       return null;
     }
 
+    // Second line of defense (the runtime already treats a bad pattern as
+    // inert): refuse to promote a candidate whose matcher contains a malformed
+    // regex into an enabled block rule, so the operator gets a clear error
+    // instead of a silently non-functional rule.
+    const invalidPatterns = collectInvalidMatcherPatterns(candidate.matcher);
+    if (invalidPatterns.length > 0) {
+      const error = new Error('backend.rule_candidate_invalid_regex') as Error & { code?: string; invalidPatterns?: string[] };
+      error.code = 'backend.rule_candidate_invalid_regex';
+      error.invalidPatterns = invalidPatterns;
+      throw error;
+    }
+
+    // A matcher with no criteria is inert at runtime (matches nothing); refuse
+    // to promote it into an enabled block rule so the operator is not misled
+    // into thinking an empty rule protects anything.
+    if (!matcherDeclaresCriteria(candidate.matcher)) {
+      const error = new Error('backend.rule_candidate_empty_matcher') as Error & { code?: string };
+      error.code = 'backend.rule_candidate_empty_matcher';
+      throw error;
+    }
+
     const now = new Date().toISOString();
     const ruleId = candidate.approvedRuleId || randomUUID();
     const ruleKey = `${tenantId}:${candidate.channel}:${candidate.attackFamily}:${candidate.matcherFingerprint}:block`;
@@ -1358,6 +1383,9 @@ class DetectionPipelineService {
   async evaluateRequest(request: DetectionRequest, options: EvaluateOptions = {}): Promise<DetectionDecision> {
     this.assertPrepared();
     const startedAt = Date.now();
+    const anonymousRuleOnly = request.tenantId === ANONYMOUS_TENANT_ID;
+    const forceAiReview = options.forceAiReview === true && !anonymousRuleOnly;
+    const skipPersistence = options.skipPersistence === true || anonymousRuleOnly;
     const settings = await this.getSettings(request.tenantId);
     const rules = await this.listRules(request.tenantId);
     const ruleEvaluation = evaluateDetectionRules(request, rules);
@@ -1395,8 +1423,17 @@ class DetectionPipelineService {
       request.channel === 'agent';
 
     const ruleMatched = ruleEvaluation.matchedRules.length > 0;
-    const hotPathRuleOnly = !maximumClassification && ruleMatched && !options.forceAiReview && verdict !== 'block';
-    const shouldRunHotPathLocalModel = maximumClassification || (!ruleMatched && verdict !== 'block' && hotPathChannelEnabled);
+    const hotPathRuleOnly = anonymousRuleOnly || (!maximumClassification && ruleMatched && !forceAiReview && verdict !== 'block');
+    const shouldRunHotPathLocalModel = !anonymousRuleOnly
+      && (
+        maximumClassification
+        || (
+          !ruleMatched
+          && verdict !== 'block'
+          && hotPathChannelEnabled
+          && baseRiskScore >= settings.aiEscalationThreshold
+        )
+      );
 
     if (maximumClassification && !this.aiAnalyzer) {
       const blockingFailure: DetectionDecision = {
@@ -1423,7 +1460,7 @@ class DetectionPipelineService {
         aiResult: undefined,
         learningVerificationAiResult: undefined
       };
-      if (!options.skipPersistence) {
+      if (!skipPersistence) {
         this.recordDetectionEvent(request, blockingFailure);
       }
       return blockingFailure;
@@ -1454,7 +1491,7 @@ class DetectionPipelineService {
         aiResult: undefined,
         learningVerificationAiResult: undefined
       };
-      if (!options.skipPersistence) {
+      if (!skipPersistence) {
         this.recordDetectionEvent(request, blockingFailure);
       }
       return blockingFailure;
@@ -1465,10 +1502,10 @@ class DetectionPipelineService {
     } else if (shouldRunHotPathLocalModel && this.aiAnalyzer) {
       escalatedToAI = true;
       const primaryAiRawResult = await this.aiAnalyzer.analyze(request, {
-        analysisPurpose: options.forceAiReview ? 'learning_verification' : 'primary',
+        analysisPurpose: forceAiReview ? 'learning_verification' : 'primary',
         routeModeOverride: maximumClassification
           ? 'local_only'
-          : options.forceAiReview
+          : forceAiReview
             ? settings.learningCloudVerificationMode
             : 'local_only',
         ...(maximumClassification ? { forceDebate: true } : {})
@@ -1561,7 +1598,7 @@ class DetectionPipelineService {
           );
           candidateId = blockingCandidate?.candidateId || candidateId;
         }
-      } else if (!options.forceAiReview && this.shouldRunBlockingDiscussion({
+      } else if (!forceAiReview && this.shouldRunBlockingDiscussion({
         request,
         settings,
         baseRiskScore,
@@ -1620,7 +1657,7 @@ class DetectionPipelineService {
           );
           candidateId = blockingCandidate?.candidateId || candidateId;
         }
-      } else if (!options.forceAiReview && this.shouldQueueAsyncReview({
+      } else if (!forceAiReview && this.shouldQueueAsyncReview({
         request,
         settings,
         ruleEscalation: false,
@@ -1640,9 +1677,9 @@ class DetectionPipelineService {
           decisionSource = `${decisionSource}+async_review_queued`;
         }
       }
-    } else if (verdict !== 'block' && !ruleMatched && !options.forceAiReview) {
+    } else if (verdict !== 'block' && !ruleMatched && !forceAiReview) {
       decisionSource = `${decisionSource}+local_ai_unavailable`;
-    } else if (options.forceAiReview && this.aiAnalyzer && verdict !== 'block') {
+    } else if (forceAiReview && this.aiAnalyzer && verdict !== 'block') {
       escalatedToAI = true;
       const primaryAiRawResult = await this.aiAnalyzer.analyze(request, {
         analysisPurpose: 'learning_verification',
@@ -1700,7 +1737,7 @@ class DetectionPipelineService {
           decisionSource = `${decisionSource}+async_review_queued`;
         }
       }
-    } else if (verdict !== 'block' && !options.forceAiReview) {
+    } else if (verdict !== 'block' && !forceAiReview) {
       // Rule-only or heuristic-only path. No blocking AI work here.
     }
 
@@ -1751,7 +1788,7 @@ class DetectionPipelineService {
       learningVerificationAiResult
     };
 
-    if (!options.skipPersistence) {
+    if (!skipPersistence) {
       this.recordDetectionEvent(request, decision);
     }
 
@@ -2271,6 +2308,7 @@ class DetectionPipelineService {
       aiConfidence: row.ai_confidence === null || row.ai_confidence === undefined ? null : Number(row.ai_confidence),
       aiRouteMode: row.ai_route_mode ? String(row.ai_route_mode) : null,
       aiModel: row.ai_model ? String(row.ai_model) : null,
+      aiHeuristicDegraded: responseSnapshot.finalAi?.heuristicDegraded === true,
       attackFamily: normalizeAttackFamily(row.attack_family),
       candidateId: row.candidate_id ? String(row.candidate_id) : null,
       decisionSource: String(row.decision_source || ''),

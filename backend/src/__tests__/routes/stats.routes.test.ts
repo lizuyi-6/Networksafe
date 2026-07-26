@@ -5,10 +5,12 @@
 import express from 'express';
 import request from 'supertest';
 import statsRouter from '../../api/routes/stats.routes';
+import metrics from '../../observability/metrics';
+import { metricsMiddleware } from '../../middleware/metrics.middleware';
 
 jest.mock('../../middleware/auth.middleware', () => ({
   authenticate: jest.fn((req: any, _res: any, next: any) => {
-    req.user = { userId: 'u1', email: 'a@b.com', role: 'admin', tenantId: 't1' };
+    req.user = { userId: 'u1', email: 'a@b.com', role: 'platform_admin' };
     next();
   }),
   requireRole: jest.fn(() => (req: any, _res: any, next: any) => next()),
@@ -63,11 +65,22 @@ jest.mock('../../utils/system-stats', () => ({
 }));
 
 const app = express();
-app.use(statsRouter);
+app.use(metricsMiddleware);
+app.use('/api/stats', statsRouter);
+app.get('/injected-failure', (_req, res) => {
+  res.status(500).json({ error: 'injected' });
+});
+app.get('/health/ready', (_req, res) => {
+  res.status(200).json({ status: 'ready' });
+});
+
+beforeEach(() => {
+  metrics.reset();
+});
 
 describe('GET /', () => {
   it('returns 200 with required fields', async () => {
-    const res = await request(app).get('/');
+    const res = await request(app).get('/api/stats');
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveProperty('totalRequests');
@@ -76,17 +89,17 @@ describe('GET /', () => {
   });
 
   it('returns history array', async () => {
-    const res = await request(app).get('/');
+    const res = await request(app).get('/api/stats');
     expect(Array.isArray(res.body.data.history)).toBe(true);
   });
 
   it('returns attackOrigins array', async () => {
-    const res = await request(app).get('/');
+    const res = await request(app).get('/api/stats');
     expect(Array.isArray(res.body.data.attackOrigins)).toBe(true);
   });
 
   it('returns cpuUsage, memoryUsage, diskUsage, networkUsage fields', async () => {
-    const res = await request(app).get('/');
+    const res = await request(app).get('/api/stats');
     expect(res.body.data).toHaveProperty('cpuUsage');
     expect(res.body.data).toHaveProperty('memoryUsage');
     expect(res.body.data).toHaveProperty('diskUsage');
@@ -94,24 +107,60 @@ describe('GET /', () => {
   });
 
   it('returns threats array', async () => {
-    const res = await request(app).get('/');
+    const res = await request(app).get('/api/stats');
     expect(Array.isArray(res.body.data.threats)).toBe(true);
   });
 
-  it('returns p99Latency field', async () => {
-    const res = await request(app).get('/');
-    expect(res.body.data).toHaveProperty('p99Latency');
+  it('derives deterministic p99 latency from recorded histogram buckets', async () => {
+    const labels = { method: 'GET', route: '/work', scope: 'business', status: '200' };
+    metrics.incCounter('http_requests_total', labels, 3);
+    metrics.observeHistogram('http_request_duration_ms', 12, labels);
+    metrics.observeHistogram('http_request_duration_ms', 80, labels);
+    metrics.observeHistogram('http_request_duration_ms', 600, labels);
+
+    const res = await request(app).get('/api/stats');
+
+    expect(res.body.data.avgProcessingTime).toBe(231);
+    expect(res.body.data.p99Latency).toBe(1000);
+  });
+
+  it('uses the observed maximum when p99 exceeds the largest finite bucket', async () => {
+    const labels = { method: 'GET', route: '/slow-work', scope: 'business', status: '200' };
+    metrics.incCounter('http_requests_total', labels);
+    metrics.observeHistogram('http_request_duration_ms', 12_345, labels);
+
+    const res = await request(app).get('/api/stats');
+
+    expect(res.body.data.p99Latency).toBe(12_345);
   });
 
   it('returns securityOperations from opsSummary', async () => {
-    const res = await request(app).get('/');
+    const res = await request(app).get('/api/stats');
     expect(res.body.data).toHaveProperty('securityOperations');
+  });
+
+  it('does not count dashboard or health polling as business traffic', async () => {
+    const first = await request(app).get('/api/stats');
+    await request(app).get('/health/ready').expect(200);
+    const second = await request(app).get('/api/stats');
+
+    expect(first.body.data.totalRequests).toBe(0);
+    expect(second.body.data.totalRequests).toBe(0);
+  });
+
+  it('uses the final 500 status to reduce the success rate', async () => {
+    await request(app).get('/injected-failure').expect(500);
+
+    const res = await request(app).get('/api/stats');
+
+    expect(res.body.data.totalRequests).toBe(1);
+    expect(res.body.data.successRate).toBe(0);
   });
 });
 
 describe('GET /badges', () => {
   it('returns 200 with badge counts', async () => {
-    const res = await request(app).get('/badges');
+    const res = await request(app).get('/api/stats/badges');
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveProperty('alerts');
@@ -126,7 +175,7 @@ describe('GET /badges', () => {
     const deviceRegistry = require('../../services/device-registry.service');
     jest.spyOn(deviceRegistry, 'getDeviceList').mockImplementationOnce(() => { throw new Error('device error'); });
 
-    const res = await request(app).get('/badges');
+    const res = await request(app).get('/api/stats/badges');
 
     expect(res.status).toBe(500);
     expect(res.body.success).toBe(false);

@@ -27,9 +27,10 @@ type FirewallBackend = 'iptables' | 'firewalld' | 'ufw' | 'netsh' | 'none';
 export class FirewallController {
     private blockedIPs: Map<string, BlockedIP> = new Map();
     private backend: FirewallBackend = 'none';
+    private readonly backendReady: Promise<void>;
 
     constructor() {
-        this.detectBackend();
+        this.backendReady = this.detectBackend();
     }
 
     /**
@@ -77,6 +78,8 @@ export class FirewallController {
      * @param reason 封禁原因
      */
     async blockIP(ip: string, duration: number = 3600, reason: string = 'Threat detected'): Promise<boolean> {
+        await this.backendReady;
+
         // 验证 IP 格式
         if (!this.isValidIP(ip)) {
             logger.error(`Invalid IP address: ${ip}`);
@@ -147,6 +150,8 @@ export class FirewallController {
      * 解封 IP
      */
     async unblockIP(ip: string): Promise<boolean> {
+        await this.backendReady;
+
         const blocked = this.blockedIPs.get(ip);
         if (!blocked) {
             logger.info(`IP not in block list: ${ip}`);
@@ -422,6 +427,8 @@ export class FirewallController {
      * 清除所有封禁
      */
     async clearAll(): Promise<void> {
+        await this.backendReady;
+
         for (const ip of this.blockedIPs.keys()) {
             await this.unblockIP(ip);
         }

@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 import readline from 'readline';
 import { spawn } from 'child_process';
+import { timingSafeEqual } from 'crypto';
 import { io, Socket } from 'socket.io-client';
 import {
   computeFinalDefensePolicyDigest,
@@ -40,8 +41,12 @@ export function loadLocalPolicy(policyPath: string, signatureSecret?: string): L
   const raw = fs.readFileSync(policyPath, 'utf8');
   const policy = JSON.parse(raw) as LocalPolicy;
   const digest = computeFinalDefensePolicyDigest(policy);
-  if (policy.policyDigest && policy.policyDigest !== digest) {
-    throw new Error('final defense policy digest mismatch');
+  if (policy.policyDigest) {
+    const suppliedDigest = Buffer.from(policy.policyDigest, 'utf8');
+    const computedDigest = Buffer.from(digest, 'utf8');
+    if (suppliedDigest.length !== computedDigest.length || !timingSafeEqual(suppliedDigest, computedDigest)) {
+      throw new Error('final defense policy digest mismatch');
+    }
   }
   policy.policyDigest = digest;
   if (signatureSecret && !verifyFinalDefensePolicySignature(policy, policy.signature, signatureSecret)) {
@@ -52,6 +57,45 @@ export function loadLocalPolicy(policyPath: string, signatureSecret?: string): L
 
 export function findAllowedPolicyAction(policy: LocalPolicy, commandType: string): CompanionPolicyAction | null {
   return policy.allowedActions.find((action) => action.commandType === commandType) || null;
+}
+
+/**
+ * Strict boolean coercion for board-reported safety flags (feedbackOk,
+ * secureElementPresent, externalPowerPresent). Safe default is false: a value
+ * is true ONLY if it is the boolean true, the number 1, or the string "true"
+ * (case-insensitive). Unlike Boolean(), this treats "false" / "0" / "no" as
+ * false — Boolean("false") is true, a fail-open on a fail-closed path.
+ */
+export function coerceBoardBool(value: unknown): boolean {
+  if (value === true || value === 1) {
+    return true;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === 'true' || normalized === '1';
+  }
+  return false;
+}
+
+/**
+ * Board-heartbeat watchdog state. A missing timestamp is 'missing'; an
+ * unparseable or too-old timestamp is 'lost' — both must fail closed. An
+ * un-guarded `now - NaN > 45s` is false, which would silently keep the bridge
+ * released while the board is unreachable, so a non-finite timestamp is 'lost'.
+ */
+export function boardHeartbeatState(
+  lastHeartbeatAt: string | undefined,
+  nowMs: number,
+  staleMs = 45_000
+): 'ok' | 'missing' | 'lost' {
+  if (!lastHeartbeatAt) {
+    return 'missing';
+  }
+  const lastMs = new Date(lastHeartbeatAt).getTime();
+  if (!Number.isFinite(lastMs) || nowMs - lastMs > staleMs) {
+    return 'lost';
+  }
+  return 'ok';
 }
 
 export function validateLocalPolicyGrant(input: {
@@ -98,7 +142,12 @@ export function validateLocalPolicyGrant(input: {
   if (!Number.isFinite(input.grant.monotonicCounter) || input.grant.monotonicCounter <= input.lastCounter) {
     return { ok: false, reason: 'counter_replay_or_rollback' };
   }
-  if ((input.now || Date.now()) > new Date(input.grant.expiresAt).getTime()) {
+  const expiresAtMs = new Date(input.grant.expiresAt).getTime();
+  // Fail closed on an unparseable/missing expiry: `now > NaN` is false, so an
+  // un-guarded comparison would treat a malformed expiresAt as "not expired"
+  // and release the interlock. Aligns with gateway-daemon's Number.isFinite
+  // guard.
+  if (!Number.isFinite(expiresAtMs) || (input.now || Date.now()) > expiresAtMs) {
     return { ok: false, reason: 'hardware_grant_expired' };
   }
   if (input.grant.payloadHash !== hashPayload(input.payload || {})) {
@@ -189,11 +238,10 @@ export class SerialDeviceCompanion {
     }, 15_000);
     this.reportTimer.unref?.();
     this.boardWatchdogTimer = setInterval(() => {
-      if (!this.state.lastHeartbeatAt) {
+      const heartbeatState = boardHeartbeatState(this.state.lastHeartbeatAt, Date.now());
+      if (heartbeatState === 'missing') {
         this.failClosed('board_heartbeat_missing');
-        return;
-      }
-      if (Date.now() - new Date(this.state.lastHeartbeatAt).getTime() > 45_000) {
+      } else if (heartbeatState === 'lost') {
         this.failClosed('board_heartbeat_lost');
       }
     }, 10_000);
@@ -215,9 +263,9 @@ export class SerialDeviceCompanion {
       this.state = {
         ...this.state,
         interlockState: normalizeInterlockState(frame.interlockState || frame.interlock_state || frame.state),
-        externalPowerPresent: Boolean(frame.externalPowerPresent ?? frame.external_power_present ?? this.state.externalPowerPresent),
-        secureElementPresent: Boolean(frame.secureElementPresent ?? frame.secure_element_present ?? this.state.secureElementPresent),
-        feedbackOk: Boolean(frame.feedbackOk ?? frame.feedback_ok ?? this.state.feedbackOk),
+        externalPowerPresent: coerceBoardBool(frame.externalPowerPresent ?? frame.external_power_present ?? this.state.externalPowerPresent),
+        secureElementPresent: coerceBoardBool(frame.secureElementPresent ?? frame.secure_element_present ?? this.state.secureElementPresent),
+        feedbackOk: coerceBoardBool(frame.feedbackOk ?? frame.feedback_ok ?? this.state.feedbackOk),
         lastHeartbeatAt: new Date().toISOString(),
         lastError: frame.error ? String(frame.error) : undefined
       };

@@ -15,8 +15,17 @@ describe('validateRuntimeEnvironment (Sprint 5 R5 / V2.1)', () => {
   const previous = {
     NODE_ENV: process.env.NODE_ENV,
     APP_ROLE: process.env.APP_ROLE,
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
     JWT_SECRET: process.env.JWT_SECRET,
     AUDIT_LOG_SECRET: process.env.AUDIT_LOG_SECRET,
+    AUDIT_LOG_FAIL_CLOSED: process.env.AUDIT_LOG_FAIL_CLOSED,
+    AUDIT_SHADOW_REQUIRED: process.env.AUDIT_SHADOW_REQUIRED,
+    SHADOW_DATABASE_URL: process.env.SHADOW_DATABASE_URL,
+    REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+    POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
+    S3_SECRET_KEY: process.env.S3_SECRET_KEY,
+    ARTIFACT_STORE: process.env.ARTIFACT_STORE,
+    DEVICE_API_KEYS: process.env.DEVICE_API_KEYS,
     DEVICE_COMMAND_SECRET: process.env.DEVICE_COMMAND_SECRET,
     SERIAL_HELPER_SHARED_SECRET: process.env.SERIAL_HELPER_SHARED_SECRET,
     PLATFORM_API_KEY: process.env.PLATFORM_API_KEY,
@@ -40,17 +49,22 @@ describe('validateRuntimeEnvironment (Sprint 5 R5 / V2.1)', () => {
     process.env.NODE_ENV = 'production';
     process.env.APP_ROLE = 'all';
     process.env.JWT_SECRET = 'test-jwt-secret-minimum-32-characters-long';
+    process.env.ADMIN_PASSWORD = 'StrongAdmin!9-Production-Test-Password';
     process.env.AUDIT_LOG_SECRET = 'test-audit-log-secret-minimum-32-characters';
+    process.env.AUDIT_LOG_FAIL_CLOSED = 'true';
+    process.env.AUDIT_SHADOW_REQUIRED = 'true';
+    process.env.SHADOW_DATABASE_URL = 'postgres://aetherguard:test@postgres:5432/aetherguard';
+    process.env.REDIS_PASSWORD = 'strong-redis-password-32-characters';
+    process.env.POSTGRES_PASSWORD = 'strong-postgres-password-32-characters';
+    process.env.S3_SECRET_KEY = 'strong-s3-secret-key-32-characters';
+    process.env.ARTIFACT_STORE = 'local';
+    process.env.DEVICE_API_KEYS = 'device_key_0123456789abcdef01234567';
     process.env.DEVICE_COMMAND_SECRET = 'a-strong-device-command-secret-32-chars-or-more';
     process.env.SERIAL_HELPER_SHARED_SECRET = 'a-distinct-helper-secret-32-characters-minimum';
     process.env.DB_MODE = 'postgres';
     process.env.DISABLE_REDIS = 'false';
     process.env.APP_MODE = 'production';
-    // Bypass OIDC / MFA requirements for prod-enterprise mode: this test
-    // exercises the SERIAL_HELPER_SHARED_SECRET trust-anchor check, not
-    // OIDC wiring. The `lab` mode keeps the rest of the production
-    // validator active while disabling OIDC.
-    process.env.ENTERPRISE_RUNTIME_MODE = 'lab';
+    process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
   }
 
   afterEach(() => {
@@ -74,5 +88,47 @@ describe('validateRuntimeEnvironment (Sprint 5 R5 / V2.1)', () => {
     process.env.DEVICE_COMMAND_SECRET = shared;
     process.env.SERIAL_HELPER_SHARED_SECRET = shared;
     expect(() => validateRuntimeEnvironment()).toThrow(/distinct secret/);
+  });
+
+  it.each([
+    'AUDIT_LOG_FAIL_CLOSED',
+    'AUDIT_SHADOW_REQUIRED'
+  ])('rejects production when %s is missing', (key) => {
+    baseProductionEnv();
+    delete process.env[key];
+    expect(() => validateRuntimeEnvironment()).toThrow(new RegExp(`${key} must be set to true`));
+  });
+
+  it.each([
+    'AUDIT_LOG_FAIL_CLOSED',
+    'AUDIT_SHADOW_REQUIRED'
+  ])('rejects production when %s is false', (key) => {
+    baseProductionEnv();
+    process.env[key] = 'false';
+    expect(() => validateRuntimeEnvironment()).toThrow(new RegExp(`${key} must be set to true`));
+  });
+
+  it('rejects production when the required audit shadow has no connection string', () => {
+    baseProductionEnv();
+    delete process.env.SHADOW_DATABASE_URL;
+    expect(() => validateRuntimeEnvironment()).toThrow(/SHADOW_DATABASE_URL must be set/);
+  });
+
+  it('rejects the lab enterprise mode under a production runtime profile', () => {
+    baseProductionEnv();
+    process.env.ENTERPRISE_RUNTIME_MODE = 'lab';
+    expect(() => validateRuntimeEnvironment()).toThrow(/ENTERPRISE_RUNTIME_MODE must be set to prod-enterprise/);
+  });
+
+  it.each([
+    ['ADMIN_PASSWORD', 'AdminLocal!2026'],
+    ['REDIS_PASSWORD', 'LocalRedisPassword_2026'],
+    ['POSTGRES_PASSWORD', 'LocalPostgresPassword_2026'],
+    ['S3_SECRET_KEY', 'LocalS3SecretKey_2026_123456'],
+    ['DEVICE_API_KEYS', 'local-device-key-2026']
+  ])('rejects the known local production credential in %s', (key, value) => {
+    baseProductionEnv();
+    process.env[key] = value;
+    expect(() => validateRuntimeEnvironment()).toThrow(new RegExp(`${key} (?:cannot use|must be at least)`));
   });
 });

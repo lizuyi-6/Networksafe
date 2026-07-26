@@ -54,6 +54,11 @@ export interface DeviceConfirmationSessionRecord {
   };
 }
 
+export interface DeviceConfirmationAckResult {
+  confirmed: boolean;
+  reason: string | null;
+}
+
 type GatewayEmitter = (deviceId: string, command: string, params?: Record<string, any>) => Promise<boolean> | boolean;
 
 function parseJson<T>(value: any, fallback: T): T {
@@ -355,10 +360,11 @@ class DeviceControlService {
     }
 
     const id = randomUUID();
-    const createdAt = new Date().toISOString();
+    const createdAtMs = Date.now();
+    const createdAt = new Date(createdAtMs).toISOString();
     const payload = input.payload || {};
     const releaseTtlMs = Math.max(1000, Number(input.releaseTtlMs || 120_000));
-    const expiresAt = new Date(Date.now() + releaseTtlMs).toISOString();
+    const expiresAt = new Date(createdAtMs + releaseTtlMs).toISOString();
     const accepted = await this.gatewayEmitter(input.deviceId, 'physical_confirmation_required', {
       confirmationSessionId: id,
       commandType: input.commandType,
@@ -382,6 +388,7 @@ class DeviceControlService {
           breakerTarget,
           interlockAction: String(hardwareContext.interlockAction || '')
         },
+        expiresAt,
         releaseTtlMs
       }),
       created_at: createdAt,
@@ -442,22 +449,58 @@ class DeviceControlService {
     `).run(nextStatus, JSON.stringify(nextResult), updatedAt, otaJobId, deviceId);
   }
 
-  async handlePhysicalConfirmationAck(deviceId: string, payload: Record<string, any>): Promise<void> {
+  async handlePhysicalConfirmationAck(
+    deviceId: string,
+    payload: Record<string, any>
+  ): Promise<DeviceConfirmationAckResult> {
     this.assertPrepared();
     const confirmationSessionId = String(payload?.confirmationSessionId || '').trim();
     if (!confirmationSessionId) {
-      return;
+      return { confirmed: false, reason: 'confirmation_session_id_missing' };
     }
+
+    const replayedAt = new Date().toISOString();
+    getDatabase().prepare(`
+      UPDATE device_confirmation_sessions
+      SET status = 'claiming_physical_confirmation', updated_at = ?
+      WHERE id = ? AND device_id = ? AND status = 'pending_physical_confirmation'
+    `).run(replayedAt, confirmationSessionId, deviceId);
 
     const existing = getDatabase().prepare(`
       SELECT *
       FROM device_confirmation_sessions
-      WHERE id = ? AND device_id = ?
+      WHERE id = ? AND device_id = ? AND status = 'claiming_physical_confirmation'
       LIMIT 1
     `).get(confirmationSessionId, deviceId) as any;
 
     if (!existing) {
-      return;
+      const replayExisting = getDatabase().prepare(`
+        SELECT result_json
+        FROM device_confirmation_sessions
+        WHERE id = ? AND device_id = ?
+        LIMIT 1
+      `).get(confirmationSessionId, deviceId) as any;
+      if (replayExisting) {
+        const replayResult = {
+          ...parseJson(replayExisting.result_json, {}),
+          replayRejected: {
+            reason: 'confirmation_session_replay_or_not_pending',
+            ack: payload,
+            at: replayedAt
+          }
+        };
+        getDatabase().prepare(`
+          UPDATE device_confirmation_sessions
+          SET status = 'rejected', result_json = ?, updated_at = ?
+          WHERE id = ? AND device_id = ? AND status != 'pending_physical_confirmation'
+        `).run(JSON.stringify(replayResult), replayedAt, confirmationSessionId, deviceId);
+      }
+      return {
+        confirmed: false,
+        reason: replayExisting
+          ? 'confirmation_session_replay_or_not_pending'
+          : 'confirmation_session_not_found'
+      };
     }
 
     const device = getDeviceById(deviceId) as any;
@@ -478,23 +521,25 @@ class DeviceControlService {
     // SECURITY FIX R3 / V2.4: NaN-poisoning defense for expiresAt.
     // An attacker can submit "expiresAt": "not-a-date" — we MUST refuse
     // before any comparison that would coerce to NaN.
-    let expiresAtMs = NaN;
-    if (payload?.expiresAt) {
-      const parsed = Date.parse(String(payload.expiresAt));
-      expiresAtMs = Number.isFinite(parsed) ? parsed : NaN;
-    }
-    if (payload?.expiresAt && Number.isNaN(expiresAtMs)) {
+    const sessionExpiresAt = String(storedResult?.expiresAt || this.mapConfirmationRow(existing).expiresAt || '');
+    const ackExpiresAt = String(payload?.expiresAt || '').trim();
+    const expiresAtMs = ackExpiresAt ? Date.parse(ackExpiresAt) : NaN;
+    const sessionExpiresAtMs = sessionExpiresAt ? Date.parse(sessionExpiresAt) : NaN;
+    const expiryParseValid = Number.isFinite(expiresAtMs) && Number.isFinite(sessionExpiresAtMs);
+    const expiryMatchesSession = ackExpiresAt === sessionExpiresAt;
+    const expiryStillValid = expiryParseValid && Date.now() <= expiresAtMs;
+    if (!expiryParseValid) {
       getDatabase().prepare(`
         UPDATE device_confirmation_sessions
         SET status = 'rejected', result_json = ?, updated_at = ?
-        WHERE id = ? AND device_id = ?
+        WHERE id = ? AND device_id = ? AND status = 'claiming_physical_confirmation'
       `).run(
         JSON.stringify({ reason: 'session_expires_at_unparseable', ack: payload }),
         new Date().toISOString(),
         confirmationSessionId,
         deviceId
       );
-      return;
+      return { confirmed: false, reason: 'session_expires_at_unparseable' };
     }
 
     let verified = false;
@@ -534,13 +579,44 @@ class DeviceControlService {
         || String(payload?.interlockAction || '') === storedInterlock;
     }
 
+    // SECURITY FIX: Monotonic counter defense-in-depth. The session-bound
+    // ECDSA signature already prevents cross-session replay, but a per-device
+    // high-water counter provides an additional layer: even if an attacker
+    // somehow forges or transplants a valid signature, the counter must
+    // strictly advance. This mirrors the hardware-authorization service's
+    // three-independent-high-water pattern (CLAUDE.md §安全控制流不变量).
+    const ackMonotonicCounter = Number(payload?.monotonicCounter || 0);
+    let monotonicCounterValid = true;
+    if (Number.isFinite(ackMonotonicCounter) && ackMonotonicCounter > 0) {
+      const lastConfirmed = getDatabase().prepare(`
+        SELECT last_monotonic_counter
+        FROM device_confirmation_sessions
+        WHERE device_id = ? AND status = 'confirmed' AND last_monotonic_counter IS NOT NULL
+        ORDER BY last_monotonic_counter DESC
+        LIMIT 1
+      `).get(deviceId) as any;
+      const highWater = Number(lastConfirmed?.last_monotonic_counter || 0);
+      if (ackMonotonicCounter <= highWater) {
+        monotonicCounterValid = false;
+      }
+    } else if (payload?.monotonicCounter !== undefined && payload?.monotonicCounter !== null) {
+      // A non-numeric or zero counter when one was explicitly provided is suspicious
+      monotonicCounterValid = false;
+    }
+
     // SECURITY FIX R3 / V2.4: strict === true for the confirmed flag.
     // Boolean('false') is truthy in JS — we MUST reject the literal
     // string "false" / "true" (and "0", "1", etc.) and accept only the
     // boolean primitive.
     const isConfirmed = payload?.confirmed === true;
     const allHardwareContextMatch = policyDigestMatch && breakerTargetMatch && challengeMatch && interlockMatch;
-    const confirmed = isConfirmed && Boolean(payload.signature) && verified && allHardwareContextMatch;
+    const confirmed = isConfirmed
+      && Boolean(payload.signature)
+      && verified
+      && allHardwareContextMatch
+      && expiryMatchesSession
+      && expiryStillValid
+      && monotonicCounterValid;
 
     // Determine the rejection reason for forensics
     let rejectionReason: string | null = null;
@@ -551,6 +627,9 @@ class DeviceControlService {
     else if (!breakerTargetMatch) rejectionReason = 'breaker_target_mismatch';
     else if (!challengeMatch) rejectionReason = 'challenge_mismatch';
     else if (!interlockMatch) rejectionReason = 'interlock_action_mismatch';
+    else if (!monotonicCounterValid) rejectionReason = 'monotonic_counter_replay';
+    else if (!expiryMatchesSession) rejectionReason = 'session_expires_at_mismatch';
+    else if (!expiryStillValid) rejectionReason = 'session_expired';
 
     const confirmedAt = confirmed ? new Date().toISOString() : null;
     const dispatchResult = confirmed
@@ -568,6 +647,18 @@ class DeviceControlService {
         })
       : null;
 
+    // SECURITY FIX: Advance the per-device monotonic counter high-water mark
+    // AFTER successful confirmation. This closes the replay window: a captured
+    // grant with the same counter cannot pass the `> last_monotonic_counter`
+    // check on subsequent sessions for this device.
+    if (confirmed && ackMonotonicCounter > 0) {
+      getDatabase().prepare(`
+        UPDATE device_confirmation_sessions
+        SET last_monotonic_counter = ?
+        WHERE device_id = ? AND id = ?
+      `).run(ackMonotonicCounter, deviceId, confirmationSessionId);
+    }
+
     const result: Record<string, any> = {
       ack: payload,
       dispatchResult,
@@ -582,11 +673,17 @@ class DeviceControlService {
       challenge: challengeMatch,
       interlockAction: interlockMatch
     };
+    result.expiryCheck = {
+      ackExpiresAt,
+      sessionExpiresAt,
+      matchesSession: expiryMatchesSession,
+      stillValid: expiryStillValid
+    };
 
     getDatabase().prepare(`
       UPDATE device_confirmation_sessions
       SET status = ?, result_json = ?, updated_at = ?, confirmed_at = ?
-      WHERE id = ? AND device_id = ?
+      WHERE id = ? AND device_id = ? AND status = 'claiming_physical_confirmation'
     `).run(
       confirmed ? 'confirmed' : 'rejected',
       JSON.stringify(result),
@@ -595,6 +692,7 @@ class DeviceControlService {
       confirmationSessionId,
       deviceId
     );
+    return { confirmed, reason: rejectionReason };
   }
 
   getFirmware(id: string): DeviceFirmwareRecord | null {
@@ -644,7 +742,8 @@ class DeviceControlService {
     // need a schema migration. Default TTL is 120s.
     const ttlMs = Number(result?.releaseTtlMs || 120_000);
     const createdMs = row.created_at ? new Date(row.created_at).getTime() : Date.now();
-    const expiresAt = new Date(createdMs + ttlMs).toISOString();
+    const storedExpiresAt = typeof result?.expiresAt === 'string' ? result.expiresAt : '';
+    const expiresAt = storedExpiresAt || new Date(createdMs + ttlMs).toISOString();
     return {
       id: row.id,
       tenantId: row.tenant_id,

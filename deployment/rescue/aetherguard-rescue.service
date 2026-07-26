@@ -1,0 +1,21 @@
+[Unit]
+Description=AetherGuard Rescue Control Plane (safe-side only)
+# Deliberately NO dependency on the primary stack (docker, node, redis, postgres).
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ag-rescue serve --config /etc/aetherguard-rescue/rescue.json
+Restart=always
+RestartSec=3
+User=agrescue
+Group=agrescue
+# Hardening: rescue only needs its own data dir and loopback/MGMT sockets.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/aetherguard-rescue
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

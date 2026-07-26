@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">AetherGuard logo</title>
+  <desc id="desc">A shield-shaped A monogram with a hardware authorization gate and network bridge.</desc>
+  <defs>
+    <linearGradient id="shield" x1="180" y1="120" x2="820" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#67E8F9"/>
+      <stop offset="0.48" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="256" y1="260" x2="760" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#CFFAFE"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- shield perimeter: the trusted boundary -->
+  <path d="M512 84C628 150 744 180 848 196V492C848 704 727 848 512 940C297 848 176 704 176 492V196C280 180 396 150 512 84Z"
+        fill="none" stroke="url(#shield)" stroke-width="58" stroke-linejoin="round"/>
+
+  <!-- bridge rails entering the protected boundary -->
+  <path d="M230 520H374M650 520H794" stroke="#22D3EE" stroke-width="30" stroke-linecap="round"/>
+  <circle cx="258" cy="520" r="18" fill="#07111F" stroke="#67E8F9" stroke-width="14"/>
+  <circle cx="766" cy="520" r="18" fill="#07111F" stroke="#67E8F9" stroke-width="14"/>
+
+  <!-- AetherGuard A: two hardened paths, keyed for both light and dark surfaces -->
+  <path d="M332 718L512 286L692 718" fill="none" stroke="#07111F" stroke-width="106" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M332 718L512 286L692 718" fill="none" stroke="url(#edge)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- crossbar / transparent L2 bridge -->
+  <path d="M390 560H634" stroke="#07111F" stroke-width="88" stroke-linecap="round"/>
+  <path d="M390 560H634" stroke="#F8FAFC" stroke-width="58" stroke-linecap="round"/>
+
+  <!-- hardware authorization gate -->
+  <rect x="468" y="516" width="88" height="88" rx="20" fill="#07111F" stroke="#F59E0B" stroke-width="20" filter="url(#soft)"/>
+  <path d="M512 604V744" stroke="#F59E0B" stroke-width="24" stroke-linecap="round"/>
+  <path d="M476 770H548" stroke="#F59E0B" stroke-width="24" stroke-linecap="round"/>
+
+  <!-- fail-closed state marker -->
+  <path d="M512 810L548 846L512 882L476 846Z" fill="#F59E0B"/>
+</svg>

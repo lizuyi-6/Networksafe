@@ -503,7 +503,11 @@ export class DeviceGateway {
                     delete parsed.codes;
                     decodedPayload = parsed;
                 }
-            } catch {
+            } catch (parseError: any) {
+                logger.warn('[DeviceGateway] Device payload JSON parse failed', {
+                    deviceId: socket.deviceId,
+                    error: parseError?.message
+                });
             }
         }
 
@@ -630,8 +634,9 @@ export class DeviceGateway {
         const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
         const gateId = socket.hardwareGateId || socket.deviceId;
         addDeviceEvent(socket.deviceId, 'command', {
-            action: 'physical_confirmation_ack',
-            ...data
+            action: 'physical_confirmation_ack_received',
+            confirmationSessionId: String(data?.confirmationSessionId || ''),
+            reportedConfirmed: data?.confirmed === true
         });
         let hardwareResult: HardwareAckResult = {
             handled: false,
@@ -658,17 +663,21 @@ export class DeviceGateway {
                 hardwareGateId: gateId,
                 confirmed: hardwareResult.confirmed,
                 reason: hardwareResult.reason || null,
+                confirmationSource: 'hardware_authorization',
                 timestamp: new Date().toISOString()
             });
             return;
         }
 
-        await deviceControlService.handlePhysicalConfirmationAck(socket.deviceId, data || {});
+        const legacyResult = await deviceControlService.handlePhysicalConfirmationAck(socket.deviceId, data || {});
         this.emitToDashboard('device:physical_confirmation', {
             deviceId: socket.deviceId,
             ...data,
             tenantId,
             hardwareGateId: gateId,
+            confirmed: legacyResult.confirmed,
+            reason: legacyResult.reason,
+            confirmationSource: 'device_control_verified',
             timestamp: new Date().toISOString()
         });
     }

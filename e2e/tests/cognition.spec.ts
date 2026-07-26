@@ -36,7 +36,7 @@ test.describe('cognition topology interactions', () => {
         // Click a layer -> audit rail shows layer config + telemetry.
         let snapshot = monitor.snapshot();
         await layer1.click();
-        await expect(page.getByText('Layer Config')).toBeVisible();
+        await expect(page.getByTestId('cognition-audit-rail').getByText('Layer Config').first()).toBeVisible();
         await monitor.assertNoNewIssues(snapshot, 'layer select');
 
         // Click a role node -> audit rail switches to the role view.
@@ -44,7 +44,7 @@ test.describe('cognition topology interactions', () => {
         const socrates = page.getByTestId('cognition-role-socrates');
         if (await socrates.count()) {
             await socrates.click();
-            await expect(page.getByText('Capabilities')).toBeVisible();
+            await expect(page.getByText('Capabilities', { exact: true }).first()).toBeVisible();
         }
         await monitor.assertNoNewIssues(snapshot, 'role select');
 

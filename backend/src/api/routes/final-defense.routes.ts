@@ -21,6 +21,14 @@ function nonEmptyString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function strictBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+function requireBooleanFields(body: Record<string, unknown> | undefined, fields: string[]): string[] {
+  return fields.filter((field) => typeof body?.[field] !== 'boolean');
+}
+
 function parseAllowedActions(value: unknown): FinalDefenseAllowedAction[] {
   if (!Array.isArray(value)) {
     return [];
@@ -87,6 +95,19 @@ router.post('/status/report', authenticateHelperRequest, async (req: Authenticat
     }
     const tenantId = provisioned.tenantId;
 
+    const invalidBooleanFields = requireBooleanFields(req.body, [
+      'externalPowerPresent',
+      'secureElementPresent',
+      'feedbackOk'
+    ]);
+    if (invalidBooleanFields.length > 0) {
+      return sendError(res, 400, {
+        code: 'FINAL_DEFENSE_STATUS_BOOLEAN_FIELDS_REQUIRED',
+        message: 'backend.final_defense_status_boolean_fields_required',
+        details: { fields: invalidBooleanFields }
+      });
+    }
+
     const status = finalDefenseService.reportStatus({
       tenantId,
       companionId,
@@ -95,9 +116,9 @@ router.post('/status/report', authenticateHelperRequest, async (req: Authenticat
       policyDigest: nonEmptyString(req.body?.policyDigest) || undefined,
       breakerTarget: nonEmptyString(req.body?.breakerTarget) || undefined,
       interlockState: nonEmptyString(req.body?.interlockState) || undefined,
-      externalPowerPresent: Boolean(req.body?.externalPowerPresent),
-      secureElementPresent: Boolean(req.body?.secureElementPresent),
-      feedbackOk: Boolean(req.body?.feedbackOk),
+      externalPowerPresent: strictBoolean(req.body?.externalPowerPresent)!,
+      secureElementPresent: strictBoolean(req.body?.secureElementPresent)!,
+      feedbackOk: strictBoolean(req.body?.feedbackOk)!,
       lastError: nonEmptyString(req.body?.lastError) || undefined
     });
 
@@ -132,6 +153,19 @@ router.post('/gateways/status/report', authenticateHelperRequest, async (req: Au
     }
     const tenantId = provisioned.tenantId;
 
+    const invalidBooleanFields = requireBooleanFields(req.body, [
+      'serverPortLink',
+      'lanPortLink',
+      'secureElementPresent'
+    ]);
+    if (invalidBooleanFields.length > 0) {
+      return sendError(res, 400, {
+        code: 'ROOT_GATEWAY_STATUS_BOOLEAN_FIELDS_REQUIRED',
+        message: 'backend.root_gateway_status_boolean_fields_required',
+        details: { fields: invalidBooleanFields }
+      });
+    }
+
     const gateway = finalDefenseService.reportRootResistantGatewayStatus({
       tenantId,
       gatewayId,
@@ -139,10 +173,10 @@ router.post('/gateways/status/report', authenticateHelperRequest, async (req: Au
       reportedPolicyDigest: nonEmptyString(req.body?.reportedPolicyDigest) || undefined,
       firmwareDigest: nonEmptyString(req.body?.firmwareDigest) || undefined,
       bridgeState: nonEmptyString(req.body?.bridgeState) || undefined,
-      serverPortLink: Boolean(req.body?.serverPortLink),
-      lanPortLink: Boolean(req.body?.lanPortLink),
+      serverPortLink: strictBoolean(req.body?.serverPortLink)!,
+      lanPortLink: strictBoolean(req.body?.lanPortLink)!,
       mgmtPath: nonEmptyString(req.body?.mgmtPath) || undefined,
-      secureElementPresent: Boolean(req.body?.secureElementPresent),
+      secureElementPresent: strictBoolean(req.body?.secureElementPresent)!,
       lastAttestationAt: nonEmptyString(req.body?.lastAttestationAt) || undefined,
       isolationReason: nonEmptyString(req.body?.isolationReason) || undefined,
       lastError: nonEmptyString(req.body?.lastError) || undefined

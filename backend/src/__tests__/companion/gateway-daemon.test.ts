@@ -2,6 +2,10 @@ import { createSign, generateKeyPairSync } from 'crypto';
 import { buildHardwareGrantMessage, type HardwareGrantEnvelope } from '../../security/hardware-grant';
 import { GatewayDaemon } from '../../companion/gateway-daemon';
 
+const TEST_GATEWAY_ID = 'gw-1';
+const TEST_BREAKER_TARGET = 'server-lan-bridge';
+const TEST_POLICY_DIGEST = 'digest-a';
+
 // Deterministic injected clock so watchdog/staleness tests don't depend on real time.
 function makeClock() {
   let t = 1_700_000_000_000;
@@ -18,17 +22,17 @@ function keyPair() {
 
 function signGrant(privateKeyPem: string, grant: Partial<HardwareGrantEnvelope> & { monotonicCounter: number }): HardwareGrantEnvelope {
   const base: HardwareGrantEnvelope = {
-    gateId: 'gate-1',
+    gateId: TEST_GATEWAY_ID,
     sessionId: 'sess-1',
     actionId: 'act-1',
     tenantId: 'tenant-1',
     scope: 'device',
-    targetId: 'gateway-1',
+    targetId: TEST_GATEWAY_ID,
     commandType: 'interlock_release',
     payloadHash: '0'.repeat(64),
-    policyDigest: 'digest-a',
+    policyDigest: TEST_POLICY_DIGEST,
     challenge: 'challenge-a',
-    breakerTarget: 'server-lan-bridge',
+    breakerTarget: TEST_BREAKER_TARGET,
     interlockAction: 'release',
     issuedAt: '1700000000',
     expiresAt: String(Math.floor(Date.now() / 1000) + 3600),
@@ -46,7 +50,8 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       now: clock.now,
       onFrame: (f) => frames.push(f)
     });
@@ -66,20 +71,23 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       now: clock.now,
       onFrame: (f) => frames.push(f)
     });
     try {
       const grant = signGrant(privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(), { monotonicCounter: 1 });
       expect(daemon.requestRelease(grant)).toBe(true);
-      expect(daemon.isReleased()).toBe(true);
-      expect(daemon.getBridgeState()).toBe('released');
-      expect(frames.some(f => f.ruleset === 'released_ruleset')).toBe(true);
+      expect(daemon.isReleased()).toBe(false);
+      expect(daemon.getBridgeState()).toBe('armed');
+      expect(frames.some(f => f.command === 'interlock_release' && f.reason === 'grant_verified_awaiting_feedback')).toBe(true);
 
-      // Controller confirms released with healthy feedback -> stays released.
+      // Controller confirms released with healthy feedback -> commit released.
       daemon.handleControllerFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk: true });
       expect(daemon.isReleased()).toBe(true);
+      expect(daemon.getBridgeState()).toBe('released');
+      expect(frames.some(f => f.ruleset === 'released_ruleset' && f.reason === 'controller_feedback_released')).toBe(true);
     } finally {
       daemon.shutdown();
     }
@@ -92,7 +100,8 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
     try {
@@ -111,12 +120,15 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
     try {
       const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
       expect(daemon.requestRelease(signGrant(priv, { monotonicCounter: 5 }))).toBe(true);
+      daemon.handleControllerFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk: true });
+      expect(daemon.isReleased()).toBe(true);
       // A replay/rollback at counter 3 must fail even though the signature is otherwise valid.
       expect(daemon.requestRelease(signGrant(priv, { monotonicCounter: 3 }))).toBe(false);
       expect(daemon.getBridgeState()).toBe('isolated');
@@ -131,13 +143,15 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       heartbeatStaleMs: 45_000,
       now: clock.now
     });
     try {
       const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
-      daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }));
+      expect(daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }))).toBe(true);
+      daemon.handleControllerFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk: true });
       expect(daemon.isReleased()).toBe(true);
       daemon.handleControllerFrame({ type: 'heartbeat' });
       // Advance just past 45s without another heartbeat.
@@ -157,12 +171,14 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
     try {
       const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
-      daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }));
+      expect(daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }))).toBe(true);
+      daemon.handleControllerFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk: true });
       expect(daemon.isReleased()).toBe(true);
       daemon.handleControllerFrame({ type: 'state', interlockState: 'isolated', feedbackOk: true });
       expect(daemon.isReleased()).toBe(false);
@@ -178,12 +194,13 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
     try {
       const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
-      daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }));
+      expect(daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }))).toBe(true);
       daemon.handleControllerFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk: false });
       expect(daemon.isReleased()).toBe(false);
       expect(daemon.getBridgeState()).toBe('isolated');
@@ -198,7 +215,8 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
     try {
@@ -214,33 +232,34 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     }
   });
 
-  it('auto-reasserts isolated when the release window expires (PRD §4.4 window expiry)', (done) => {
+  it('auto-reasserts isolated when the release window expires (PRD §4.4 window expiry)', () => {
+    jest.useFakeTimers();
     const clock = makeClock();
     const { publicKey, privateKey } = keyPair();
     const daemon = new GatewayDaemon({
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
-      breakerTarget: 'server-lan-bridge',
+      breakerTarget: TEST_BREAKER_TARGET,
+      policyDigest: TEST_POLICY_DIGEST,
       releaseTtlMs: 50,
       now: clock.now
     });
     try {
       const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
-      daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }));
+      expect(daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }))).toBe(true);
+      expect(daemon.isReleased()).toBe(false);
+      expect(daemon.getBridgeState()).toBe('armed');
+      daemon.handleControllerFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk: true });
       expect(daemon.isReleased()).toBe(true);
-      // After the (short, real-time) TTL elapses the daemon must re-assert isolated.
-      setTimeout(() => {
-        try {
-          expect(daemon.isReleased()).toBe(false);
-          expect(daemon.getBridgeState()).toBe('isolated');
-          done();
-        } catch (e) {
-          done(e);
-        }
-      }, 120);
+      // The requested 50ms TTL is clamped to the 5000ms minimum before reassert.
+      jest.advanceTimersByTime(4_999);
+      expect(daemon.isReleased()).toBe(true);
+      jest.advanceTimersByTime(1);
+      expect(daemon.isReleased()).toBe(false);
+      expect(daemon.getBridgeState()).toBe('isolated');
     } finally {
-      // shutdown() in finally would cancel the timer before it fires; defer it.
-      setTimeout(() => daemon.shutdown(), 200);
+      daemon.shutdown();
+      jest.useRealTimers();
     }
   });
 });

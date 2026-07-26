@@ -19,10 +19,13 @@ export interface LoginAttempt {
   timestamp: number;
 }
 
+const accountIdentityKey = (email: string): string => email.trim().toLowerCase();
+
 export class AuthSecurityService {
   private readonly MAX_LOGIN_ATTEMPTS = 5;
   private readonly LOCKOUT_DURATION = 900;
   private readonly ATTEMPT_WINDOW = 300;
+  private readonly SESSION_TTL_SECONDS = 86_400;
 
   private loginAttemptsFallback: Map<string, LoginAttempt[]> = new Map();
   private lockedAccountsFallback: Map<string, { reason: string; lockedAt: string }> = new Map();
@@ -106,7 +109,7 @@ export class AuthSecurityService {
   }
 
   public async recordLoginAttempt(email: string, ip: string, success: boolean): Promise<void> {
-    const key = email.toLowerCase();
+    const key = accountIdentityKey(email);
 
     try {
       const attempt: LoginAttempt = {
@@ -172,7 +175,7 @@ export class AuthSecurityService {
   }
 
   private async checkAndLockAccount(email: string, ip: string): Promise<void> {
-    const key = email.toLowerCase();
+    const key = accountIdentityKey(email);
 
     try {
       if (!redisService.isAvailable()) {
@@ -215,7 +218,7 @@ export class AuthSecurityService {
   }
 
   public async isAccountLocked(email: string): Promise<boolean> {
-    const key = email.toLowerCase();
+    const key = accountIdentityKey(email);
 
     try {
       if (!redisService.isAvailable()) {
@@ -230,7 +233,7 @@ export class AuthSecurityService {
   }
 
   public async getLockInfo(email: string): Promise<{ locked: boolean; reason?: string; remainingTime?: number }> {
-    const key = email.toLowerCase();
+    const key = accountIdentityKey(email);
 
     try {
       if (!redisService.isAvailable()) {
@@ -262,7 +265,7 @@ export class AuthSecurityService {
   }
 
   public async unlockAccount(email: string): Promise<void> {
-    const key = email.toLowerCase();
+    const key = accountIdentityKey(email);
 
     try {
       if (!redisService.isAvailable()) {
@@ -317,7 +320,7 @@ export class AuthSecurityService {
   }
 
   public async getFailedAttempts(email: string): Promise<LoginAttempt[]> {
-    const key = email.toLowerCase();
+    const key = accountIdentityKey(email);
 
     try {
       if (!redisService.isAvailable()) {
@@ -376,21 +379,39 @@ export class AuthSecurityService {
 
   public async validateSession(userId: string, sessionId: string): Promise<boolean> {
     try {
-      if (!redisService.isAvailable()) {
-        const storedUserId = this.sessionsFallback.get(sessionId);
-        return storedUserId === userId;
-      }
-
-      const key = `auth:session:${userId}`;
-      const storedSessionId = await redisService.get(key);
-      return storedSessionId === sessionId;
+      return await this.validateSessionStrict(userId, sessionId);
     } catch (error) {
       logger.error('Error validating session', { error, userId });
       return false;
     }
   }
 
-  public async invalidateSession(userId: string): Promise<void> {
+  public async validateSessionStrict(userId: string, sessionId: string): Promise<boolean> {
+    try {
+      if (!redisService.isAvailable()) {
+        const storedUserId = this.sessionsFallback.get(sessionId);
+        return storedUserId === userId;
+      }
+
+      const key = `auth:session:${sessionId}`;
+      const storedSession = await redisService.getStrict(key);
+      if (!storedSession) {
+        return false;
+      }
+
+      try {
+        const parsed = JSON.parse(storedSession);
+        return parsed?.userId === userId;
+      } catch {
+        return storedSession === userId;
+      }
+    } catch (error) {
+      logger.error('Strict session validation failed', { error, userId });
+      throw error;
+    }
+  }
+
+  public async invalidateSession(userId: string): Promise<boolean> {
     try {
       if (!redisService.isAvailable()) {
         // Find and remove by userId (any session for this user)
@@ -401,13 +422,22 @@ export class AuthSecurityService {
           this.concurrentSessionsFallback.delete(userId);
         }
         logger.info('Session invalidated (fallback)', { userId });
-        return;
+        return true;
       }
 
-      await redisService.del(`auth:session:${userId}`);
+      const concurrentKey = `auth:concurrent:${userId}`;
+      const client = redisService.getClient();
+      const sessionIds = await client.smembers(concurrentKey);
+      if (sessionIds.length > 0) {
+        await Promise.all(sessionIds.map((sessionId) => client.del(`auth:session:${sessionId}`)));
+      }
+      await client.del(concurrentKey);
+      await client.del(`auth:session:${userId}`);
       logger.info('Session invalidated', { userId });
+      return true;
     } catch (error) {
       logger.error('Error invalidating session', { error, userId });
+      return false;
     }
   }
 
@@ -419,6 +449,7 @@ export class AuthSecurityService {
       }
 
       const key = `auth:concurrent:${userId}`;
+      await this.pruneConcurrentSessions(userId);
       const sessionCount = await redisService.getClient().scard(key);
       return sessionCount < maxSessions;
     } catch (error) {
@@ -439,25 +470,26 @@ export class AuthSecurityService {
       }
 
       const key = `auth:concurrent:${userId}`;
-      await redisService.getClient().sadd(key, sessionId);
-      await redisService.getClient().expire(key, 86400);
-
       const sessionKey = `auth:session:${sessionId}`;
-      await redisService.set(
+      const client = redisService.getClient();
+      await client.setex(
         sessionKey,
+        this.SESSION_TTL_SECONDS,
         JSON.stringify({
           userId,
           deviceInfo,
           createdAt: Date.now(),
-        }),
-        86400
+        })
       );
+      await client.sadd(key, sessionId);
+      await client.expire(key, this.SESSION_TTL_SECONDS);
+      await this.pruneConcurrentSessions(userId);
     } catch (error) {
       logger.error('Error adding session', { error, userId });
     }
   }
 
-  public async removeSession(userId: string, sessionId: string): Promise<void> {
+  public async removeSession(userId: string, sessionId: string): Promise<boolean> {
     try {
       if (!redisService.isAvailable()) {
         const sessions = this.concurrentSessionsFallback.get(userId);
@@ -465,15 +497,43 @@ export class AuthSecurityService {
           sessions.delete(sessionId);
         }
         this.sessionsFallback.delete(sessionId);
-        return;
+        return true;
       }
 
       const key = `auth:concurrent:${userId}`;
       const sessionKey = `auth:session:${sessionId}`;
-      await redisService.getClient().srem(key, sessionId);
-      await redisService.del(sessionKey);
+      const client = redisService.getClient();
+      await client.srem(key, sessionId);
+      await client.del(sessionKey);
+      return true;
     } catch (error) {
       logger.error('Error removing session', { error, userId });
+      return false;
+    }
+  }
+
+  private async pruneConcurrentSessions(userId: string): Promise<void> {
+    if (!redisService.isAvailable()) {
+      return;
+    }
+
+    const key = `auth:concurrent:${userId}`;
+    const client = redisService.getClient();
+    const sessionIds = await client.smembers(key);
+    if (sessionIds.length === 0) {
+      return;
+    }
+
+    const staleSessionIds: string[] = [];
+    await Promise.all(sessionIds.map(async (sessionId) => {
+      const exists = await client.exists(`auth:session:${sessionId}`);
+      if (exists !== 1) {
+        staleSessionIds.push(sessionId);
+      }
+    }));
+
+    if (staleSessionIds.length > 0) {
+      await client.srem(key, ...staleSessionIds);
     }
   }
 }

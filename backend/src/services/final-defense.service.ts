@@ -104,7 +104,15 @@ function stale(lastHeartbeatAt?: string): boolean {
   if (!lastHeartbeatAt) {
     return true;
   }
-  return Date.now() - new Date(lastHeartbeatAt).getTime() > HEARTBEAT_STALE_MS;
+  const lastMs = new Date(lastHeartbeatAt).getTime();
+  // Fail closed on an unparseable timestamp: Date.now() - NaN is NaN and
+  // NaN > STALE is false, which would report an unknown heartbeat as
+  // fresh/online. An unparseable heartbeat is treated as stale, consistent
+  // with a missing one.
+  if (!Number.isFinite(lastMs)) {
+    return true;
+  }
+  return Date.now() - lastMs > HEARTBEAT_STALE_MS;
 }
 
 const ROOT_RESISTANT_REQUIRED_COMMANDS = new Set([
@@ -251,7 +259,9 @@ class FinalDefenseService {
     const policyId = input.policyId || randomUUID();
     const createdAt = input.createdAt || now;
     const status = input.status || 'active';
-    const releaseTtlMs = Math.max(5_000, Math.min(Number(input.releaseTtlMs || 120_000), 15 * 60_000));
+    const requestedReleaseTtlMs = Number(input.releaseTtlMs);
+    const releaseTtlMsInput = Number.isFinite(requestedReleaseTtlMs) ? requestedReleaseTtlMs : 120_000;
+    const releaseTtlMs = Math.max(5_000, Math.min(releaseTtlMsInput, 15 * 60_000));
 
     // SECURITY (V12.26): if this is an update AND the caller supplied an
     // expected digest, verify the stored row still matches. A mismatch
@@ -697,6 +707,7 @@ class FinalDefenseService {
       gatewayId,
       secureElementPublicKeyPem: gate.publicKeyPem,
       breakerTarget: 'server-lan-transparent-bridge',
+      policyDigest: status.policyDigest,
       ...extra
     });
   }

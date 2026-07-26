@@ -410,6 +410,8 @@ export class AgentOrchestrator {
             forceDebate: request.forceDebate === true || request.analysisPurpose === 'blocking_review'
         });
 
+        const heuristicFallbackCount = results.filter((r) => r && r.heuristicFallback === true).length;
+
         return {
             id: uuidv4(),
             requestId: request.id,
@@ -429,6 +431,11 @@ export class AgentOrchestrator {
             experimentMode: this.config.experimentMode || 'multi_agent_with_debate',
             attackFamily: threatType,
             routeMode: results.find((result) => result.routeMode && result.routeMode !== 'unknown')?.routeMode || 'unknown',
+            // Degradation transparency: a verdict reached purely by heuristic
+            // fallbacks (model unreachable) must never be presented as
+            // AI-verified downstream.
+            heuristicFallbackCount,
+            heuristicDegraded: results.length > 0 && heuristicFallbackCount === results.length,
             stageLatencies: {
                 proxyMs: 0,
                 roleAnalysisMs,
@@ -859,6 +866,9 @@ export class AgentOrchestrator {
             experimentMode: this.config.experimentMode || 'multi_agent_with_debate',
             attackFamily: threatType,
             routeMode: 'unknown',
+            // No agent produced a model-backed result on this path.
+            heuristicFallbackCount: 0,
+            heuristicDegraded: true,
             stageLatencies: {
                 proxyMs: 0,
                 roleAnalysisMs: 0,

@@ -41,6 +41,13 @@
 
         --accent: 240 4.8% 95.9%;
         --accent-foreground: 240 5.9% 10%;
+
+        /* Chart series tokens. --chart-requests is the neutral traffic series
+           (primary blue); --chart-blocked is the threat/blocked series. Steps are
+           tuned for the light card surface. Dark mode overrides these with its own
+           lighter steps rather than reusing the light values on a dark surface. */
+        --chart-requests: 217 91% 60%;
+        --chart-blocked: 0 72% 51%;
     }
 
     .dark {
@@ -69,6 +76,12 @@
 
         --accent: 240 4% 16%;
         --accent-foreground: 240 5% 96%;
+
+        /* Chart series tokens — lightened for the dark card surface (240 6% 6%)
+           so both series clear the 3:1 contrast floor against it while staying
+           inside the L 0.48–0.67 band (validated against surface #0e0e10). */
+        --chart-requests: 217 91% 65%;
+        --chart-blocked: 0 84% 62%;
     }
 
     body {

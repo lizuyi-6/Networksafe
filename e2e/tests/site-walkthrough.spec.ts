@@ -22,6 +22,14 @@ test.describe('Site walkthrough', () => {
             { route: '/login', selector: 'form' },
             { route: '/privacy', selector: 'body' },
             { route: '/terms', selector: 'main' },
+            { route: '/promo', selector: 'body' },
+            { route: '/promo-film', selector: 'body' },
+            { route: '/landing-workshop', selector: 'body' },
+            { route: '/landing-workshop/remodel', selector: 'body' },
+            { route: '/landing-workshop/industrial', selector: 'body' },
+            { route: '/landing-workshop/enterprise', selector: 'body' },
+            { route: '/landing-workshop/terminal', selector: 'body' },
+            { route: '/landing-workshop/story', selector: 'body' },
         ];
 
         for (const publicPage of publicPages) {

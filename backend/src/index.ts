@@ -26,9 +26,12 @@ import { notificationDispatcherService } from './services/notification-dispatche
 import { deviceControlService } from './services/device-control.service';
 import { hardwareAuthorizationService } from './services/hardware-authorization.service';
 import { detectionPipelineService } from './services/detection-pipeline.service';
+import { startTrafficSamplingLoop, stopTrafficSamplingLoop } from './services/traffic-history.service';
 import { artifactStoreService } from './services/artifact-store.service';
 import { jobQueueService } from './services/job-queue.service';
 import { dashboardBroadcastService } from './services/dashboard-broadcast.service';
+import nonceManager from './security/nonce-manager.service';
+import auditLogger from './security/audit-logger.service';
 
 const runtime = getRuntimeDescriptor();
 let agentGateway: AgentGateway | null = null;
@@ -105,6 +108,7 @@ async function start(): Promise<void> {
 
     notificationDispatcherService.startWorker();
     detectionPipelineService.startAsyncReviewWorker();
+    startTrafficSamplingLoop();
 
     if (runtime.schedulerEnabled) {
       postgresShadowStoreService.startResyncLoop();
@@ -144,9 +148,10 @@ async function shutdown(): Promise<void> {
     scannerTaskService.stopWorker();
     notificationDispatcherService.stopWorker();
     detectionPipelineService.stopAsyncReviewWorker();
+    stopTrafficSamplingLoop();
 
     if (agentGateway) {
-      agentGateway.close();
+      await agentGateway.close();
       agentGateway = null;
     }
     if (deviceGateway) {
@@ -156,18 +161,22 @@ async function shutdown(): Promise<void> {
     dashboardBroadcastService.setBroadcaster(null);
 
     runtimeEmulatorService.stop();
+    await auditLogger.stopBackgroundJobs();
 
-    await new Promise<void>((resolve, reject) => {
-      httpServer.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
+    if (httpServer.listening) {
+      await new Promise<void>((resolve, reject) => {
+        httpServer.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        });
       });
-    }).catch(() => undefined);
+    }
 
     await postgresShadowStoreService.close();
+    nonceManager.close();
     closeDatabase();
 
     logger.info('Shutdown complete');

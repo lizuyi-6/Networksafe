@@ -6,6 +6,10 @@ build/
 *.map
 *.list
 
+# Host-side test binary (test/Makefile TARGET)
+test_controller
+test_controller.exe
+
 # STM32CubeMX generated files (regenerated from .ioc)
 # NOTE: Keep Core/Inc and Core/Src application files (hand-written).
 # CubeMX-generated HAL files go in Drivers/ and are regenerated.

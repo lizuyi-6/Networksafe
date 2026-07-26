@@ -1,14 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const { extractAuthCookieHeader, resolveProjectEnv } = require('./http-cookie-session');
 
 const rootDir = path.resolve(__dirname, '..', '..');
 const outputDir = path.join(rootDir, 'artifacts', 'ops');
 const outputPath = path.join(outputDir, 'ui-release-smoke.json');
 const frontendUrl = process.env.AETHERGUARD_FRONTEND_URL || 'http://localhost:8080';
 const baseUrl = process.env.AETHERGUARD_BASE_URL || 'http://localhost:3005';
-const email = process.env.AETHERGUARD_ADMIN_EMAIL || 'dev-admin@aetherguard.local';
-const password = process.env.AETHERGUARD_ADMIN_PASSWORD || 'DevAdmin!2026';
+const email = resolveProjectEnv(rootDir, 'ADMIN_EMAIL', 'AETHERGUARD_ADMIN_EMAIL', 'dev-admin@aetherguard.local');
+const password = resolveProjectEnv(rootDir, 'ADMIN_PASSWORD', 'AETHERGUARD_ADMIN_PASSWORD', 'DevAdmin!2026');
 
 function ensureOutputDir() {
   fs.mkdirSync(outputDir, { recursive: true });
@@ -26,7 +27,8 @@ async function requestJson(url, options = {}) {
   return {
     ok: response.ok,
     status: response.status,
-    data
+    data,
+    cookieHeader: extractAuthCookieHeader(response.headers)
   };
 }
 
@@ -37,19 +39,19 @@ async function loginApi() {
     body: JSON.stringify({ email, password })
   });
 
-  if (!login.ok || !login.data?.accessToken) {
+  if (!login.ok || !login.cookieHeader.includes('accessToken=') || !login.cookieHeader.includes('refreshToken=')) {
     throw new Error(`API login failed: ${JSON.stringify(login.data)}`);
   }
 
-  return login.data.accessToken;
+  return login.cookieHeader;
 }
 
-async function switchMode(token, appMode) {
+async function switchMode(cookieHeader, appMode) {
   return requestJson(`${baseUrl}/api/system/mode`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      authorization: `Bearer ${token}`
+      cookie: cookieHeader
     },
     body: JSON.stringify({ appMode, seedDemoData: false, clearExisting: false })
   });
@@ -70,9 +72,9 @@ async function main() {
     }
   };
 
-  const token = await loginApi();
+  const cookieHeader = await loginApi();
   const modeResponse = await requestJson(`${baseUrl}/api/system/mode`, {
-    headers: { authorization: `Bearer ${token}` }
+    headers: { cookie: cookieHeader }
   });
   const previousMode = modeResponse.data?.appMode || 'production';
 
@@ -112,7 +114,7 @@ async function main() {
       historyVisible: await page.getByText(/Recent deployments|最近/i).first().isVisible().catch(() => false)
     };
 
-    const switchToDemo = await switchMode(token, 'demo');
+    const switchToDemo = await switchMode(cookieHeader, 'demo');
     report.checks.switchToDemo = switchToDemo;
     if (!switchToDemo.ok) {
       throw new Error(`Failed to switch to demo mode: ${JSON.stringify(switchToDemo.data)}`);
@@ -134,7 +136,7 @@ async function main() {
     );
   } finally {
     try {
-      await switchMode(token, previousMode);
+      await switchMode(cookieHeader, previousMode);
     } catch (error) {
       report.checks.restoreMode = {
         ok: false,

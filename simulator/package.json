@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Software simulation of AetherGuard Gateway Appliance (M1-M4) for control-loop verification",
   "scripts": {
+    "typecheck": "tsc --project tsconfig.typecheck.json",
     "sim": "ts-node sim.ts",
-    "sim:integrated": "ts-node sim-integrated.ts",
     "test:invalid-sig": "ts-node test-scenarios.ts --trigger=invalid-signature",
     "test:counter-rollback": "ts-node test-scenarios.ts --trigger=counter-rollback",
     "test:heartbeat-stale": "ts-node test-scenarios.ts --trigger=heartbeat-stale",

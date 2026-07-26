@@ -170,7 +170,7 @@ const PrivacyPolicy = () => {
                     {/* Section 6 */}
                     <Section id="sec-6" title="6. 子处理者 (Sub-processors) 聘用与通知">
                         <p className="mb-3">
-                            为提供云计算弹性与底层网络带宽，客户授权我们采用第三方基础支撑商。我们在附录中维护着一份经过预审的<a href="#" className="text-blue-600 hover:underline">现任子处理者公开清单</a>（包括 AWS, 阿里云, Cloudflare Infrastructure等）。
+                            为提供云计算弹性与底层网络带宽，客户授权我们采用第三方基础支撑商。当前经过预审的子处理者包括 AWS、阿里云与 Cloudflare Infrastructure；变更将按下述通知机制告知客户。
                         </p>
                         <ul className="list-decimal list-inside space-y-2 pl-2">
                             <li><strong>合规背靠背限制：</strong> 我们保证与每个子处理者均已签署书面的数据处理协议，并施加不低于本 DPA 中包含的数据保护义务。若子处理者未能履行其义务，Aether Studio 仍将向客户承担连带责任。</li>
@@ -204,7 +204,7 @@ const PrivacyPolicy = () => {
                                 <h4 className="font-semibold text-foreground border-b border-border pb-1 mb-2">7.3 物理防护措施 (Physical Security)</h4>
                                 <ul className="list-disc list-inside text-muted-foreground text-xs space-y-1">
                                     <li>使用 Tier-3 / Tier-4 数据中心。防尾随门禁、7x24 生物识别监控录像、以及对已淘汰硬盘的国标碎磁销毁处理（提供销毁证书）。</li>
-                                    <li>ESP32 等硬件私有化探针固化 Secure Boot eFuse，对主板进行滴胶封测，防止侧信道与探测针拔取。</li>
+                                    <li>Gateway Appliance 设计采用 STM32H5/U5 安全控制器、Secure Element/TPM 与硬件 interlock，使密钥和最终网络释放授权独立于受保护服务器。</li>
                                 </ul>
                             </div>
                             <div>

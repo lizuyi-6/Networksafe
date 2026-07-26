@@ -10,6 +10,14 @@ const router = Router();
 
 router.get('/mode', optionalAuth, (req: AuthenticatedRequest, res) => {
   const capabilities = getRuntimeCapabilities();
+  if (!req.user) {
+    const publicPayload = {
+      passwordLoginEnabled: capabilities.passwordLoginEnabled,
+      oidcEnabled: capabilities.oidcEnabled
+    };
+    return sendSuccess(res, publicPayload, { legacy: publicPayload });
+  }
+
   const payload = {
     appMode: getAppMode(),
     demoEnabled: isDemoMode(),
@@ -24,7 +32,7 @@ router.get('/mode', optionalAuth, (req: AuthenticatedRequest, res) => {
     profile: capabilities.profile,
     dbMode: capabilities.dbMode
   };
-  sendSuccess(res, payload, { legacy: payload });
+  return sendSuccess(res, payload, { legacy: payload });
 });
 
 router.post('/mode', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {

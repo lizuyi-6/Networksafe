@@ -350,7 +350,7 @@ async function runEnvironmentChecks() {
       expected: 'Docker full stack starts successfully.',
     });
     await waitForHttp(`${frontendUrl}/`);
-    await waitForHttp(`${backendUrl}/api/health/live`);
+    await waitForHttp(`${backendUrl}/health/live`);
   }, {
     priority: 'P0',
     area: 'environment',
@@ -366,18 +366,15 @@ async function runEnvironmentChecks() {
     reproduce: [`GET ${frontendUrl}/`],
   });
 
-  for (const route of ['/api/health', '/api/health/ready', '/api/health/dependencies']) {
+  for (const route of ['/health/live', '/health/ready']) {
     await runCheck(`Backend health ${route}`, async () => {
       const { response, payload } = await requestJson(route);
       if (![200, 503].includes(response.status)) {
         throw new Error(`${route} returned ${response.status}: ${sanitize(payload)}`);
       }
-      assertEnvelope(payload, route);
-      const data = payloadData(payload);
-      const serialized = JSON.stringify(data || payload || {});
-      const nonAiProblem = /(postgres|redis|fastpath|s3|minio|database)[^"]*"(?:degraded|unhealthy|not_ready|failed)/i.test(serialized);
-      if (response.status === 503 && nonAiProblem) {
-        throw new Error(`${route} reports non-AI dependency degradation: ${sanitize(payload)}`);
+      const keys = Object.keys(payload || {});
+      if (keys.length !== 1 || keys[0] !== 'status') {
+        throw new Error(`${route} exposed fields beyond the public status contract: ${sanitize(payload)}`);
       }
     }, {
       priority: 'P0',
@@ -436,6 +433,8 @@ async function runApiChecks() {
 
   const endpoints = [
     ['/api/auth/me', 'current user'],
+    ['/api/health/live', 'runtime liveness'],
+    ['/api/health/dependencies', 'dependency health'],
     ['/api/stats', 'dashboard stats', true],
     ['/api/stats/badges', 'system badges', true],
     ['/api/logs', 'logs', true],
@@ -462,6 +461,21 @@ async function runApiChecks() {
     await runCheck(`API contract ${label}`, async () => {
       const { payload } = await expectStatus(route, { headers: authHeaders }, [200], label, !allowRaw);
       if (!allowRaw) assertEnvelope(payload, label);
+      assertNoSensitiveLeak(payload, label);
+    }, {
+      priority: 'P1',
+      area: 'api-contract',
+      reproduce: [`GET ${backendUrl}${route}`],
+    });
+  }
+
+  for (const [route, label] of [
+    ['/api/health', 'runtime health'],
+    ['/api/health/ready', 'runtime readiness'],
+  ]) {
+    await runCheck(`API contract ${label}`, async () => {
+      const { payload } = await expectStatus(route, { headers: authHeaders }, [200, 503], label, true);
+      assertEnvelope(payload, label);
       assertNoSensitiveLeak(payload, label);
     }, {
       priority: 'P1',

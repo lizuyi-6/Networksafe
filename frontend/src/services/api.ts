@@ -1,8 +1,6 @@
 import i18n from '../i18n';
-import { isDemoModeActive } from '../config/demo-mode';
-import {
-    setSessionUserIdentity,
-} from './session-cache';
+import { getCurrentDemoUserKey, isDemoModeActive } from '../config/demo-mode';
+import { getSessionUserIdentity, setSessionUserIdentity } from './session-cache';
 import {
     DashboardStats,
     LogItem,
@@ -112,31 +110,33 @@ const applyDemoJitter = () => {
 };
 
 
-// In-memory token storage for development (cookie fallback)
-let _accessToken: string | null = null;
+let sessionExpiredNotified = false;
+let automaticSessionRefreshEnabled = true;
 
-export const setAccessToken = (token: string | null) => {
-    _accessToken = token;
-};
-
-const getAuthHeaders = () => {
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-    };
-    // In dev, also send Authorization header as cookie fallback
-    if (_accessToken) {
-        headers['Authorization'] = `Bearer ${_accessToken}`;
+const notifySessionExpired = () => {
+    automaticSessionRefreshEnabled = false;
+    setSessionUserIdentity(null);
+    if (sessionExpiredNotified) {
+        return;
     }
-    return headers;
+    sessionExpiredNotified = true;
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('aetherguard:session-expired'));
+    }
 };
 
-// SECURITY FIX: Fetch options with credentials for httpOnly cookies
+const isRetryableAuthInfrastructureFailure = (response: Response, payload?: any): boolean => (
+    response.status === 503 &&
+    (payload?.code === 'AUTH_BLACKLIST_UNAVAILABLE' || payload?.retryable === true)
+);
+
+// Browser authentication is cookie-only. Tokens never enter JavaScript memory.
 const _fetchBase = (url: string, options: RequestInit = {}) => {
     return fetch(url, {
         ...options,
         credentials: 'include',
         headers: {
-            ...getAuthHeaders(),
+            'Content-Type': 'application/json',
             ...options.headers
         }
     });
@@ -157,19 +157,25 @@ const doRefresh = async (): Promise<boolean> => {
 const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Promise<Response> => {
     const response = await _fetchBase(url, options);
 
-    if (response.status !== 401 || url.includes('/auth/refresh') || url.includes('/health/') || url.includes('/auth/login')) {
+    if (
+        !automaticSessionRefreshEnabled
+        || response.status !== 401
+        || url.includes('/auth/refresh')
+        || url.includes('/health/')
+        || url.includes('/auth/login')
+    ) {
         return response;
     }
 
     if (!isRefreshing) {
         isRefreshing = true;
-        const success = await doRefresh();
+        const refreshed = await doRefresh();
+        const success = automaticSessionRefreshEnabled && refreshed;
         isRefreshing = false;
         refreshSubscribers.forEach(cb => cb(success));
         refreshSubscribers = [];
         if (!success) {
-            setSessionUserIdentity(null);
-            setAccessToken(null);
+            notifySessionExpired();
             return response;
         }
         // Retry the original request after successful refresh
@@ -182,6 +188,7 @@ const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Pro
             if (success) {
                 resolve(_fetchBase(url, options));
             } else {
+                notifySessionExpired();
                 resolve(response);
             }
         });
@@ -215,6 +222,16 @@ const unwrapApiEnvelope = <T>(payload: unknown): T => {
 
 const readJson = async <T>(response: Response): Promise<T> => {
     const payload = await response.json().catch(() => null);
+    // Defensive: an envelope with success:false and no data (e.g. a 2xx body
+    // that still signals failure) would otherwise unwrap to `null` and blow up
+    // later as "cannot read property of null". Surface the API error instead.
+    if (
+        isApiEnvelope<T>(payload)
+        && (payload as ApiEnvelope<T>).success === false
+        && (payload as ApiEnvelope<T>).data == null
+    ) {
+        throw new Error(extractErrorMessage(payload, `FG-API-${response.status}`));
+    }
     return unwrapApiEnvelope<T>(payload);
 };
 
@@ -232,8 +249,6 @@ export interface CurrentUserSession {
 export interface LoginResponse {
     message?: string;
     user: CurrentUserSession;
-    accessToken?: string;
-    refreshToken?: string;
     expiresIn?: number;
 }
 
@@ -245,12 +260,18 @@ export interface ApiReadiness {
 
 export const fetchCurrentUserSession = async (signal?: AbortSignal): Promise<CurrentUserSession | null> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`, { signal });
+    const payload = await response.json().catch(() => null) as any;
     if (!response.ok) {
+        if (isRetryableAuthInfrastructureFailure(response, payload)) {
+            // Preserve the cached identity so PrivateRoute can render its
+            // explicit unverified state, but never return it as a positive
+            // /auth/me verification. Privileged consumers fail closed on null.
+            return null;
+        }
         setSessionUserIdentity(null);
         return null;
     }
 
-    const payload = await response.json().catch(() => null) as any;
     const data = unwrapApiEnvelope<{ user?: CurrentUserSession }>(payload);
     const user = data?.user || payload?.user || null;
     setSessionUserIdentity(user);
@@ -297,12 +318,11 @@ export const login = async (
     }
 
     setSessionUserIdentity(user);
-    setAccessToken(data?.accessToken || payload?.accessToken || null);
+    sessionExpiredNotified = false;
+    automaticSessionRefreshEnabled = true;
     return {
         message: data?.message || payload?.message,
         user,
-        accessToken: data?.accessToken || payload?.accessToken,
-        refreshToken: data?.refreshToken || payload?.refreshToken,
         expiresIn: data?.expiresIn || payload?.expiresIn
     };
 };
@@ -320,24 +340,28 @@ export const loginWithOidc = async (): Promise<{ authorizationUrl: string }> => 
 };
 
 export const logout = async (signal?: AbortSignal) => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/logout`, {
+    const authProvider = getSessionUserIdentity()?.authProvider;
+    const logoutUrl = authProvider === 'oidc'
+        ? `${API_BASE_URL}/auth/oidc/logout`
+        : `${API_BASE_URL}/auth/logout`;
+    automaticSessionRefreshEnabled = false;
+    const response = await _fetchBase(logoutUrl, {
         method: 'POST',
         signal
     });
 
     const payload = await response.json().catch(() => null) as any;
     setSessionUserIdentity(null);
-    setAccessToken(null);
 
     if (!response.ok) {
         throw new Error(extractErrorMessage(payload, `FG-AUTH-LOGOUT-${response.status}`));
     }
 
-    return unwrapApiEnvelope<{ message?: string }>(payload);
+    return unwrapApiEnvelope<{ message?: string; endSessionUrl?: string | null }>(payload);
 };
 
 export const fetchApiReadiness = async (signal?: AbortSignal): Promise<ApiReadiness> => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/health/ready`, { signal });
+    const response = await fetchWithCredentials('/health/ready', { signal });
     const payload = await response.json().catch(() => null) as any;
     const data = unwrapApiEnvelope<{ status?: 'ready' | 'not_ready'; blockers?: string[] }>(payload);
     // Treat 503 as "reachable but not ready" - still proceed with auth check
@@ -445,14 +469,17 @@ export const isRequestAbortError = (error: unknown, signal?: AbortSignal) => {
 
 export type SystemMode = 'production' | 'demo';
 
-export interface SystemModeResponse {
+export interface LoginCapabilitiesResponse {
+    passwordLoginEnabled: boolean;
+    oidcEnabled: boolean;
+}
+
+export interface SystemModeResponse extends LoginCapabilitiesResponse {
     appMode: SystemMode;
     demoEnabled: boolean;
     attackSimEnabled: boolean;
     canToggleMode?: boolean;
     devLoginEnabled?: boolean;
-    passwordLoginEnabled?: boolean;
-    oidcEnabled?: boolean;
     enterpriseRuntimeMode?: 'prod-enterprise' | 'trial' | 'lab';
     demoModeAllowed?: boolean;
     enterpriseStrictMode?: boolean;
@@ -666,6 +693,7 @@ export interface PlatformConfigResponse {
     };
     aiRouting: {
         mode: AIRoutingMode;
+        preferredModelId: string | null;
         localEndpointId: string | null;
         localHotPathEndpointId: string | null;
         cloudEndpointId: string | null;
@@ -730,6 +758,24 @@ export interface PlatformConfigResponse {
     };
 }
 
+const DEMO_PREFERRED_AI_MODEL_KEY_PREFIX = 'demo-preferred-ai-model:';
+
+const getStoredDemoPreferredAIModel = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    const userKey = getCurrentDemoUserKey();
+    return userKey
+        ? window.localStorage.getItem(`${DEMO_PREFERRED_AI_MODEL_KEY_PREFIX}${userKey}`)
+        : null;
+};
+
+const setStoredDemoPreferredAIModel = (modelId: string): void => {
+    if (typeof window === 'undefined') return;
+    const userKey = getCurrentDemoUserKey();
+    if (userKey) {
+        window.localStorage.setItem(`${DEMO_PREFERRED_AI_MODEL_KEY_PREFIX}${userKey}`, modelId);
+    }
+};
+
 export interface NotificationDelivery {
     id: string;
     alertId?: string;
@@ -773,8 +819,12 @@ export const fetchSystemMode = async (signal?: AbortSignal): Promise<SystemModeR
     return readJson<SystemModeResponse>(response);
 };
 
-export const fetchSystemCapabilities = async (signal?: AbortSignal): Promise<SystemModeResponse> => {
-    return fetchSystemMode(signal);
+export const fetchSystemCapabilities = async (signal?: AbortSignal): Promise<LoginCapabilitiesResponse> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/system/mode`, { signal });
+    if (!response.ok) {
+        throw new Error(`FG-SYSTEM-CAPABILITIES-${response.status}`);
+    }
+    return readJson<LoginCapabilitiesResponse>(response);
 };
 
 export const switchSystemMode = async (appMode: SystemMode, options?: {
@@ -804,16 +854,19 @@ export const switchSystemMode = async (appMode: SystemMode, options?: {
 
 // --- API Functions ---
 
-export const fetchStats = async (signal?: AbortSignal): Promise<DashboardStats | null> => {
+export const fetchStats = async (
+    signal?: AbortSignal,
+    range?: '1h' | '24h' | '7d'
+): Promise<DashboardStats | null> => {
     try {
         if (shouldUseDemoData()) {
             return getDemoStats();
         }
 
-        const response = await fetchWithCredentials(`${API_BASE_URL}/stats`, { signal });
+        const query = range ? `?range=${range}` : '';
+        const response = await fetchWithCredentials(`${API_BASE_URL}/stats${query}`, { signal });
         if (!response.ok) throw new Error(i18n.t('api.fetch_failed'));
-        const data = await response.json();
-        return data;
+        return readJson<DashboardStats>(response);
     } catch (e) {
         if (!isRequestAbortError(e, signal)) {
             console.error('Failed to fetch stats:', e);
@@ -830,7 +883,7 @@ export const fetchSystemBadges = async (signal?: AbortSignal): Promise<SystemBad
 
         const response = await fetchWithCredentials(`${API_BASE_URL}/stats/badges`, { signal });
         if (!response.ok) return { agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 };
-        return response.json();
+        return readJson<SystemBadges>(response);
     } catch (e) {
         if (!isRequestAbortError(e, signal)) {
             console.warn('Failed to fetch system badges:', e);
@@ -840,19 +893,14 @@ export const fetchSystemBadges = async (signal?: AbortSignal): Promise<SystemBad
 };
 
 export const fetchSites = async () => {
-    try {
-        if (shouldUseDemoData()) {
-            return getDemoSites();
-        }
-
-        const response = await fetchWithCredentials(`${API_BASE_URL}/sites`);
-        if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_sites'));
-        const json = await response.json();
-        return json?.data || [];
-    } catch (e) {
-        console.error('Failed to fetch sites:', e);
-        return [];
+    if (shouldUseDemoData()) {
+        return getDemoSites();
     }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/sites`);
+    if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_sites'));
+    const json = await response.json();
+    return json?.data || [];
 };
 
 export const fetchLogs = async (signal?: AbortSignal): Promise<LogItem[] | null> => {
@@ -943,33 +991,10 @@ export const fetchDeploymentHistory = async (siteId?: string, limit: number = 20
     if (siteId) qs.set('siteId', siteId);
     const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/history/list?${qs.toString()}`);
     if (!response.ok) {
-        return [];
+        throw new Error(`FG-DEPLOYMENT-HISTORY-${response.status}`);
     }
     const data = await response.json();
     return data?.data || [];
-};
-
-export const generateDeploymentBundle = async (payload: {
-    serverType: DeploymentTarget;
-    profile: Record<string, any>;
-    deploymentId?: string;
-}) => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/generate-bundle`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    });
-    if (!response.ok) {
-        throw new Error(i18n.t('api.failed_to_generate_deployment_bundle'));
-    }
-    return response.json();
-};
-
-export const fetchEsp32Status = async () => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/deployments/esp32-status`);
-    if (!response.ok) {
-        return { success: false, connected: false };
-    }
-    return response.json();
 };
 
 export const getDeploymentDownloadUrl = (deploymentId: string, format: 'conf' | 'env' | 'bundle' = 'bundle') => {
@@ -999,6 +1024,7 @@ const getDefaultPlatformConfig = (): PlatformConfigResponse => ({
     },
     aiRouting: {
         mode: 'local_only',
+        preferredModelId: getStoredDemoPreferredAIModel(),
         localEndpointId: 'default-laptop',
         localHotPathEndpointId: null,
         cloudEndpointId: null,
@@ -1341,6 +1367,24 @@ export const savePlatformConfig = async (payload: PlatformConfigResponse) => {
     return readJson<{ success: boolean; config?: PlatformConfigResponse; message?: string }>(response);
 };
 
+export const savePreferredAIModel = async (modelId: string) => {
+    if (shouldUseDemoData()) {
+        setStoredDemoPreferredAIModel(modelId);
+        const config = getDefaultPlatformConfig();
+        return { success: true, config };
+    }
+
+    const response = await fetchWithCredentials(`${API_BASE_URL}/config`, {
+        method: 'POST',
+        body: JSON.stringify({ aiRouting: { preferredModelId: modelId } })
+    });
+    if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.message || `FG-AI-MODEL-SELECTION-${response.status}`);
+    }
+    return readJson<{ success: boolean; config?: PlatformConfigResponse; message?: string }>(response);
+};
+
 export const fetchNotificationDeliveries = async (limit: number = 20): Promise<NotificationDelivery[]> => {
     if (shouldUseDemoData()) {
         return [];
@@ -1407,15 +1451,8 @@ export const createScanTask = async (payload: {
         body: JSON.stringify(payload)
     });
     if (!response.ok) {
-        let message = 'Failed to create scan task';
-        try {
-            const data = await response.json();
-            message = data?.error || message;
-        } catch {
-            const text = await response.text();
-            if (text) message = text;
-        }
-        throw new Error(message);
+        const data = await response.json().catch(() => null);
+        throw new Error(extractErrorMessage(data, `FG-SCANNER-CREATE-${response.status}`));
     }
     return response.json();
 };
@@ -1464,7 +1501,7 @@ export const fetchScanHistory = async (limit: number = 20) => {
     }
 
     const response = await fetchWithCredentials(`${API_BASE_URL}/scanner/tasks/history?limit=${limit}`);
-    if (!response.ok) return [];
+    if (!response.ok) throw new Error(`FG-SCANNER-HISTORY-${response.status}`);
     const data = await response.json();
     return data?.data || [];
 };
@@ -1486,7 +1523,7 @@ export const fetchAdminData = async (signal?: AbortSignal) => {
         if (!isRequestAbortError(e, signal)) {
             console.warn('Failed to fetch admin data:', e);
         }
-        return null;
+        throw e;
     }
 };
 
@@ -1503,7 +1540,7 @@ export const fetchAlerts = async (signal?: AbortSignal): Promise<AlertRecord[]> 
         if (!isRequestAbortError(e, signal)) {
             console.error('Failed to fetch alerts:', e);
         }
-        return [];
+        throw e;
     }
 };
 
@@ -1755,7 +1792,7 @@ export const fetchAgentSystemStats = async (): Promise<MultiAgentSystemStats | n
         return data;
     } catch (e) {
         console.error('Failed to fetch agent system stats:', e);
-        return null;
+        throw e;
     }
 };
 
@@ -1802,7 +1839,7 @@ export const fetchTrafficStats = async (): Promise<TrafficStats | null> => {
         return data;
     } catch (e) {
         console.error('Failed to fetch traffic stats:', e);
-        return null;
+        throw e;
     }
 };
 
@@ -1813,11 +1850,11 @@ export const fetchActiveFlows = async (): Promise<FlowInfo[]> => {
         }
 
         const response = await fetchWithCredentials(`${API_BASE_URL}/traffic/flows`);
-        if (!response.ok) return [];
+        if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_active_flows'));
         return response.json();
     } catch (e) {
         console.error('Failed to fetch active flows:', e);
-        return [];
+        throw e;
     }
 };
 
@@ -1862,7 +1899,7 @@ export const fetchProtocolDistribution = async () => {
         return response.json();
     } catch (e) {
         console.error('Failed to fetch protocol distribution:', e);
-        return { http: 0, https: 0, dns: 0, other: 0 };
+        throw e;
     }
 };
 
@@ -1873,11 +1910,11 @@ export const fetchThreatDetections = async () => {
         }
 
         const response = await fetchWithCredentials(`${API_BASE_URL}/traffic/threats`);
-        if (!response.ok) return [];
+        if (!response.ok) throw new Error(i18n.t('api.failed_to_fetch_threat_detections'));
         return response.json();
     } catch (e) {
         console.error('Failed to fetch threat detections:', e);
-        return [];
+        throw e;
     }
 };
 
@@ -2072,7 +2109,7 @@ export const fetchAgentOnboardingCodes = async (status?: 'active' | 'used' | 'ex
     if (status) qs.set('status', status);
     const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/codes?${qs.toString()}`, { signal });
     if (!response.ok) {
-        return [];
+        throw new Error(`FG-AGENT-ONBOARDING-CODES-${response.status}`);
     }
     const data = await response.json();
     return data?.data || [];
@@ -2085,7 +2122,7 @@ export const fetchRegisteredAgents = async (signal?: AbortSignal) => {
 
     const response = await fetchWithCredentials(`${API_BASE_URL}/agent-onboarding/agents`, { signal });
     if (!response.ok) {
-        return [];
+        throw new Error(`FG-AGENT-ONBOARDING-AGENTS-${response.status}`);
     }
     const data = await response.json();
     return data?.data || [];
@@ -2268,8 +2305,15 @@ export const fetchAdminApiKeys = async (signal?: AbortSignal) => {
     if (!response.ok) {
         throw new Error(`FG-ADMIN-APIKEYS-LIST-${response.status}`);
     }
-    const data = await response.json();
-    return data?.keys || [];
+    const payload = await response.json();
+    const data = unwrapApiEnvelope<any[] | { keys?: any[] }>(payload);
+    if (Array.isArray(data)) {
+        return data;
+    }
+    if (Array.isArray(payload)) {
+        return payload;
+    }
+    return data?.keys || payload?.keys || [];
 };
 
 export const createAdminApiKey = async (name: string) => {

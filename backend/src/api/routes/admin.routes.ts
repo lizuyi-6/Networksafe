@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';
 import auditLogger from '../../security/audit-logger.service';
+import authSecurityService from '../../security/auth-security.service';
 import { tenantOversightService } from '../../services/tenant-oversight.service';
 import { postgresShadowStoreService } from '../../services/postgres-shadow-store.service';
 import { auditSegmentService } from '../../services/audit-segment.service';
@@ -700,6 +701,7 @@ router.put('/users/:id/role', authenticate, requireRole('admin'), async (req: Au
         }
 
         await updateAdminUserField(id, 'role', role);
+        await authSecurityService.invalidateSession(id);
         await auditLogger.log({
             tenantId: user?.tenant_id || undefined,
             eventType: 'user_role_updated',
@@ -747,6 +749,9 @@ router.put('/users/:id/status', authenticate, requireRole('admin'), async (req: 
         }
 
         await updateAdminUserField(id, 'status', status);
+        if (status !== 'active') {
+            await authSecurityService.invalidateSession(id);
+        }
         await auditLogger.log({
             tenantId: user?.tenant_id || undefined,
             eventType: 'user_status_updated',
@@ -830,6 +835,9 @@ router.post('/users/batch', authenticate, requireRole('admin'), async (req: Auth
 
         for (const user of targetUsers) {
             await updateAdminUserField(user.id, updateField as 'plan' | 'role' | 'status', updateValue);
+            if (action === 'suspend' || action === 'setRole') {
+                await authSecurityService.invalidateSession(user.id);
+            }
         }
 
         await auditLogger.log({
@@ -899,6 +907,7 @@ router.post('/users/:id/reset-password', authenticate, requireRole('admin'), asy
 
         // Update password
         await updateAdminUserField(id, 'password_hash', passwordHash);
+        await authSecurityService.invalidateSession(id);
 
         await auditLogger.log({
             tenantId: user?.tenant_id || undefined,

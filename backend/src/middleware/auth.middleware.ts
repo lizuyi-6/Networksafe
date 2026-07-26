@@ -1,4 +1,4 @@
-﻿/**
+/**
  * JWT Authentication Middleware
  *
  * Provides secure authentication for AetherGuard API endpoints
@@ -7,6 +7,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 import crypto from 'crypto';
 import logger from '../utils/logger';
 import redisService from '../security/redis.service';
@@ -19,6 +20,9 @@ import {
     normalizeRole,
     type Permission
 } from '../security/permissions';
+import authSecurityService from '../security/auth-security.service';
+import { findAuthUserById } from '../modules/auth/auth-user.repository';
+import { sendError } from '../core/http/api-response';
 
 // Validate environment variables at module load
 try {
@@ -51,6 +55,7 @@ export interface AuthenticatedUser {
     tenantId?: string;
     permissions?: Permission[];
     authProvider?: 'local' | 'oidc';
+    sessionId?: string;
 }
 
 /**
@@ -59,6 +64,22 @@ export interface AuthenticatedUser {
 export interface AuthenticatedRequest extends Request {
     user?: AuthenticatedUser;
     tenantContext?: TenantContext;
+}
+
+export type TokenVerificationFailureReason =
+    | 'invalid_token'
+    | 'blacklisted_token'
+    | 'redis_unavailable'
+    | 'blacklist_check_failed'
+    | 'session_check_failed'
+    | 'invalid_session'
+    | 'identity_check_failed'
+    | 'identity_changed'
+    | 'user_inactive';
+
+export interface TokenVerificationResult {
+    user: AuthenticatedUser | null;
+    failureReason?: TokenVerificationFailureReason;
 }
 
 /**
@@ -82,7 +103,7 @@ export function generateTokens(user: AuthenticatedUser): TokenPair {
     };
     const accessToken = jwt.sign(normalizedUser, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' } as jwt.SignOptions);
     const refreshToken = jwt.sign(
-        { userId: user.userId, type: 'refresh' },
+        { userId: user.userId, sessionId: user.sessionId, type: 'refresh', jti: randomUUID() },
         JWT_SECRET,
         { expiresIn: JWT_REFRESH_EXPIRES_IN, algorithm: 'HS256' } as jwt.SignOptions
     );
@@ -133,18 +154,19 @@ export function verifyToken(token: string): AuthenticatedUser | null {
  * SECURITY FIX: Fail secure when Redis is unavailable - reject tokens if we can't verify blacklist
  * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
  */
-export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser | null> {
+export async function verifyTokenAsyncDetailed(token: string): Promise<TokenVerificationResult> {
     let isRedisAvailable = false;
 
     // First verify JWT is valid
-    let decoded: AuthenticatedUser;
-    try {
-        decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as AuthenticatedUser;
-        decoded.role = normalizeRole(decoded.role);
-        decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
-    } catch (error) {
-        return null;
+    let decoded = verifyTokenWithSecret(token, JWT_SECRET);
+    if (!decoded && JWT_SECRET_PREVIOUS) {
+        decoded = verifyTokenWithSecret(token, JWT_SECRET_PREVIOUS);
     }
+    if (!decoded) {
+        return { user: null, failureReason: 'invalid_token' };
+    }
+    decoded.role = normalizeRole(decoded.role);
+    decoded.permissions = decoded.permissions || getRolePermissions(decoded.role);
 
     // Try to check blacklist - fail secure if Redis unavailable
     try {
@@ -158,12 +180,12 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
             const isBlacklisted = await redisService.exists(`token:blacklist:${token}`);
             if (isBlacklisted) {
                 logger.warn('Attempted use of blacklisted token');
-                return null;
+                return { user: null, failureReason: 'blacklisted_token' };
             }
         } catch (error) {
             // Redis error during blacklist check - fail secure
             logger.error('Token blacklist check failed due to Redis error, rejecting token for security');
-            return null;
+            return { user: null, failureReason: 'blacklist_check_failed' };
         }
     } else {
         // When Redis is unavailable and bypass is enabled, skip blacklist check and accept the token.
@@ -175,30 +197,79 @@ export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser
 
         if (!allowInsecureBypass) {
             logger.warn('Redis unavailable, rejecting token for security (fail-secure)');
-            return null;
+            return { user: null, failureReason: 'redis_unavailable' };
         }
 
         logger.warn('Redis unavailable, allowing token (blacklist check skipped) due to ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN=true');
     }
 
-    return decoded;
+    if (!decoded.sessionId) {
+        return { user: null, failureReason: 'invalid_session' };
+    }
+
+    let sessionValid: boolean;
+    try {
+        sessionValid = await authSecurityService.validateSessionStrict(decoded.userId, decoded.sessionId);
+    } catch (error) {
+        logger.error('Token session check failed due to session store error', { error });
+        return { user: null, failureReason: 'session_check_failed' };
+    }
+    if (!sessionValid) {
+        return { user: null, failureReason: 'invalid_session' };
+    }
+
+    try {
+        const currentUser = await findAuthUserById(decoded.userId);
+        if (!currentUser || currentUser.status !== 'active') {
+            return { user: null, failureReason: 'user_inactive' };
+        }
+
+        const currentRole = normalizeRole(currentUser.role);
+        const currentTenantId = currentUser.tenant_id || undefined;
+        const tokenTenantId = decoded.tenantId || undefined;
+        if (currentRole !== decoded.role || currentTenantId !== tokenTenantId) {
+            return { user: null, failureReason: 'identity_changed' };
+        }
+
+        return {
+            user: {
+                userId: currentUser.id,
+                email: currentUser.email,
+                username: currentUser.username,
+                role: currentRole,
+                plan: currentUser.plan || undefined,
+                tenantId: currentTenantId,
+                permissions: getRolePermissions(currentRole),
+                authProvider: decoded.authProvider,
+                sessionId: decoded.sessionId,
+            }
+        };
+    } catch (error) {
+        logger.error('Token identity revalidation failed, rejecting token', { error });
+        return { user: null, failureReason: 'identity_check_failed' };
+    }
+}
+
+export async function verifyTokenAsync(token: string): Promise<AuthenticatedUser | null> {
+    const result = await verifyTokenAsyncDetailed(token);
+    return result.user;
 }
 
 /**
  * Verify refresh token
  * SECURITY FIX: Explicitly specify allowed algorithms to prevent algorithm confusion attacks
  */
-export function verifyRefreshToken(token: string): { userId: string } | null {
-    let decoded: { userId: string; type: string } | null = null;
+export function verifyRefreshToken(token: string): { userId: string; sessionId?: string } | null {
+    let decoded: { userId: string; sessionId?: string; type: string } | null = null;
     try {
-        decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as { userId: string; type: string };
+        decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as { userId: string; sessionId?: string; type: string };
     } catch (_) {
         decoded = null;
     }
     // SECURITY FIX D30: rotation fallback
     if (!decoded && JWT_SECRET_PREVIOUS) {
         try {
-            decoded = jwt.verify(token, JWT_SECRET_PREVIOUS, { algorithms: ['HS256'] }) as { userId: string; type: string };
+            decoded = jwt.verify(token, JWT_SECRET_PREVIOUS, { algorithms: ['HS256'] }) as { userId: string; sessionId?: string; type: string };
         } catch (_) {
             decoded = null;
         }
@@ -206,7 +277,7 @@ export function verifyRefreshToken(token: string): { userId: string } | null {
     if (!decoded || decoded.type !== 'refresh') {
         return null;
     }
-    return { userId: decoded.userId };
+    return { userId: decoded.userId, sessionId: decoded.sessionId };
 }
 
 /**
@@ -225,7 +296,7 @@ const isHttpsRequest = (req: Request): boolean => {
 export const buildCookieOptions = (req: Request) => ({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production' ? isHttpsRequest(req) : false,
-    sameSite: 'lax' as const,
+    sameSite: 'strict' as const,
     path: '/',
     maxAge: COOKIE_MAX_AGE // 24 hours
 });
@@ -253,20 +324,40 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
     }
 
     if (!token) {
-        res.status(401).json({
-            error: 'backend.authentication_required',
-            code: 'AUTH_TOKEN_MISSING'
+        sendError(res, 401, {
+            code: 'AUTH_TOKEN_MISSING',
+            message: 'backend.authentication_required'
         });
         return;
     }
 
     // SECURITY FIX CVE-2026-001: Use async version with blacklist check
-    const user = await verifyTokenAsync(token);
+    const verification = await verifyTokenAsyncDetailed(token);
+    const user = verification.user;
 
     if (!user) {
-        res.status(401).json({
-            error: 'backend.invalid_or_expired_token',
-            code: 'AUTH_TOKEN_INVALID'
+        if (
+            verification.failureReason === 'redis_unavailable' ||
+            verification.failureReason === 'blacklist_check_failed' ||
+            verification.failureReason === 'session_check_failed' ||
+            verification.failureReason === 'identity_check_failed'
+        ) {
+            const sessionStoreUnavailable = verification.failureReason === 'session_check_failed';
+            sendError(res, 503, {
+                code: sessionStoreUnavailable ? 'AUTH_SESSION_STORE_UNAVAILABLE' : 'AUTH_BLACKLIST_UNAVAILABLE',
+                message: sessionStoreUnavailable
+                    ? 'backend.auth_session_store_unavailable'
+                    : 'backend.auth_blacklist_check_unavailable',
+                details: { retryable: true }
+            }, {
+                legacy: { retryable: true }
+            });
+            return;
+        }
+
+        sendError(res, 401, {
+            code: 'AUTH_TOKEN_INVALID',
+            message: 'backend.invalid_or_expired_token'
         });
         return;
     }
@@ -308,9 +399,9 @@ export async function optionalAuth(req: AuthenticatedRequest, res: Response, nex
 export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer' | 'platform_admin' | 'tenant_admin' | 'tenant_operator' | 'tenant_viewer' | 'auditor'>) {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
         if (!req.user) {
-            res.status(401).json({
-                error: 'backend.authentication_required',
-                code: 'AUTH_REQUIRED'
+            sendError(res, 401, {
+                code: 'AUTH_REQUIRED',
+                message: 'backend.authentication_required'
             });
             return;
         }
@@ -318,10 +409,12 @@ export function requireRole(...allowedRoles: Array<'admin' | 'tenant' | 'viewer'
         const currentRole = normalizeRole(req.user.role);
         if (!allowedRoles.map((role) => normalizeRole(role)).includes(currentRole)) {
             logger.warn(`Access denied for user ${req.user.email} (role: ${req.user.role}), required: ${allowedRoles.join('/')}`);
-            res.status(403).json({
-                error: 'backend.insufficient_permissions',
+            sendError(res, 403, {
                 code: 'AUTH_FORBIDDEN',
-                requiredRoles: allowedRoles
+                message: 'backend.insufficient_permissions',
+                details: { requiredRoles: allowedRoles }
+            }, {
+                legacy: { requiredRoles: allowedRoles }
             });
             return;
         }
@@ -335,19 +428,21 @@ export { requireTenantAccess } from './tenant-access.middleware';
 export function requirePermission(...requiredPermissions: Permission[]) {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
         if (!req.user) {
-            res.status(401).json({
-                error: 'backend.authentication_required',
-                code: 'AUTH_REQUIRED'
+            sendError(res, 401, {
+                code: 'AUTH_REQUIRED',
+                message: 'backend.authentication_required'
             });
             return;
         }
 
         const missing = requiredPermissions.filter((permission) => !hasPermission(req.user?.role, permission));
         if (missing.length > 0) {
-            res.status(403).json({
-                error: 'backend.insufficient_permissions',
+            sendError(res, 403, {
                 code: 'AUTH_PERMISSION_FORBIDDEN',
-                missingPermissions: missing
+                message: 'backend.insufficient_permissions',
+                details: { missingPermissions: missing }
+            }, {
+                legacy: { missingPermissions: missing }
             });
             return;
         }
@@ -384,9 +479,9 @@ export function authenticateApiKey(req: AuthenticatedRequest, res: Response, nex
     const apiKey = req.headers['x-api-key'] as string;
 
     if (!apiKey) {
-        res.status(401).json({
-            error: 'backend.api_key_required',
-            code: 'API_KEY_MISSING'
+        sendError(res, 401, {
+            code: 'API_KEY_MISSING',
+            message: 'backend.api_key_required'
         });
         return;
     }
@@ -396,9 +491,9 @@ export function authenticateApiKey(req: AuthenticatedRequest, res: Response, nex
 
     if (!validApiKeys || validApiKeys.length === 0) {
         logger.error('No valid API keys configured in VALID_API_KEYS environment variable');
-        res.status(500).json({
-            error: 'backend.server_configuration_error',
-            code: 'API_KEYS_NOT_CONFIGURED'
+        sendError(res, 500, {
+            code: 'API_KEYS_NOT_CONFIGURED',
+            message: 'backend.server_configuration_error'
         });
         return;
     }
@@ -408,9 +503,9 @@ export function authenticateApiKey(req: AuthenticatedRequest, res: Response, nex
 
     if (!isValidKey) {
         logger.warn('Invalid API key attempt', { ip: req.ip });
-        res.status(401).json({
-            error: 'backend.invalid_api_key',
-            code: 'API_KEY_INVALID'
+        sendError(res, 401, {
+            code: 'API_KEY_INVALID',
+            message: 'backend.invalid_api_key'
         });
         return;
     }
@@ -472,9 +567,9 @@ export async function authenticateAny(req: AuthenticatedRequest, res: Response, 
         return authenticateApiKey(req, res, next);
     }
 
-    res.status(401).json({
-        error: 'backend.authentication_required_jwt_or_api_key',
-        code: 'AUTH_REQUIRED'
+    sendError(res, 401, {
+        code: 'AUTH_REQUIRED',
+        message: 'backend.authentication_required_jwt_or_api_key'
     });
 }
 

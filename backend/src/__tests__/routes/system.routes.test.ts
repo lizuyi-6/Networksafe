@@ -15,7 +15,9 @@ jest.mock('../../middleware/auth.middleware', () => ({
     next();
   }),
   optionalAuth: jest.fn((req: any, _res: any, next: any) => {
-    req.user = { userId: 'admin-001', role: 'platform_admin', tenantId: 'tenant-001' };
+    if (req.headers['x-test-authenticated'] === 'true') {
+      req.user = { userId: 'admin-001', role: 'platform_admin', tenantId: 'tenant-001' };
+    }
     next();
   }),
   requireRole: jest.fn(() => (req: any, _res: any, next: any) => next()),
@@ -43,6 +45,11 @@ jest.mock('../../config/enterprise-runtime', () => ({
 jest.mock('../../config/runtime-capabilities', () => ({
   getRuntimeCapabilities: jest.fn(() => ({
     devLoginEnabled: false,
+    passwordLoginEnabled: false,
+    oidcEnabled: true,
+    enterpriseRuntimeMode: 'prod-enterprise',
+    demoModeAllowed: false,
+    enterpriseStrictMode: true,
     profile: 'standard',
     dbMode: 'sqlite'
   }))
@@ -70,7 +77,9 @@ describe('System Routes', () => {
 
   describe('GET /mode', () => {
     it('returns current mode and capabilities', async () => {
-      const response = await request(app).get('/api/system/mode');
+      const response = await request(app)
+        .get('/api/system/mode')
+        .set('x-test-authenticated', 'true');
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -84,7 +93,13 @@ describe('System Routes', () => {
       const response = await request(app).get('/api/system/mode');
 
       expect(response.status).toBe(200);
-      expect(response.body.data).toBeDefined();
+      expect(response.body.data).toEqual({
+        passwordLoginEnabled: false,
+        oidcEnabled: true
+      });
+      expect(response.body.data.profile).toBeUndefined();
+      expect(response.body.data.dbMode).toBeUndefined();
+      expect(response.body.data.enterpriseRuntimeMode).toBeUndefined();
     });
   });
 

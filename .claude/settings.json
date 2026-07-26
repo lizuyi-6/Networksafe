@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [".claude/gates-reminder.mjs"],
+            "timeout": 10,
+            "statusMessage": "Loading execution gates..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [".claude/run-safety-checks.mjs"],
+            "timeout": 200,
+            "statusMessage": "Running safety-path verification..."
+          }
+        ]
+      }
+    ]
+  }
+}

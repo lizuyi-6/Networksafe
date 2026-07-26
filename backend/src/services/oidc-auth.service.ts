@@ -189,7 +189,8 @@ function assertHttpsOrWarn(endpointName: string, value: string): string {
     );
     return '';
   }
-  return value;
+  logger.error(`OIDC endpoint ${endpointName} must use http:// or https://`, { value });
+  return '';
 }
 
 class OidcAuthService {
@@ -246,6 +247,34 @@ class OidcAuthService {
     // PKCE: required for public clients (SPA/mobile), recommended for confidential
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('code_challenge_method', 'S256');
+    return url.toString();
+  }
+
+  buildEndSessionUrl(): string | null {
+    const endpoint = assertHttpsOrWarn(
+      'OIDC_END_SESSION_ENDPOINT',
+      env('OIDC_END_SESSION_ENDPOINT')
+    );
+    if (!endpoint) {
+      return null;
+    }
+
+    const configuredRedirect = env('OIDC_POST_LOGOUT_REDIRECT_URI');
+    const postLogoutRedirectUri = configuredRedirect
+      ? assertHttpsOrWarn('OIDC_POST_LOGOUT_REDIRECT_URI', configuredRedirect)
+      : '';
+    if (configuredRedirect && !postLogoutRedirectUri) {
+      return null;
+    }
+
+    const url = new URL(endpoint);
+    const clientId = env('OIDC_CLIENT_ID');
+    if (clientId) {
+      url.searchParams.set('client_id', clientId);
+    }
+    if (postLogoutRedirectUri) {
+      url.searchParams.set('post_logout_redirect_uri', postLogoutRedirectUri);
+    }
     return url.toString();
   }
 
@@ -487,7 +516,15 @@ class OidcAuthService {
     }
 
     const now = Math.floor(Date.now() / 1000);
-    if (typeof claims.exp === 'number' && claims.exp + CLOCK_SKEW_SECONDS < now) {
+    const expiresAt = claims.exp;
+    if (typeof expiresAt !== 'number' || !Number.isFinite(expiresAt) || !Number.isInteger(expiresAt)) {
+      return { valid: false, reason: 'invalid_exp' };
+    }
+    const issuedAt = claims.iat;
+    if (typeof issuedAt !== 'number' || !Number.isFinite(issuedAt) || !Number.isInteger(issuedAt)) {
+      return { valid: false, reason: 'invalid_iat' };
+    }
+    if (expiresAt + CLOCK_SKEW_SECONDS < now) {
       return { valid: false, reason: 'expired' };
     }
     if (typeof claims.nbf === 'number' && claims.nbf - CLOCK_SKEW_SECONDS > now) {
@@ -649,16 +686,23 @@ class OidcAuthService {
   }
 
   /**
-   * Revoke an OIDC access token at the authorization server.
-   * Called on logout so that the SSO session is also terminated, not just the local one.
-   * Silently succeeds if the provider does not support revocation or is not configured.
+   * Revoke the short-lived OIDC access token after userinfo has been read.
+   * Browser SSO termination is handled separately through buildEndSessionUrl().
    */
   async revokeToken(accessToken: string): Promise<void> {
     const revocationEndpoint = process.env.OIDC_TOKEN_REVOCATION_ENDPOINT;
     if (!revocationEndpoint) return;
 
     try {
-      await fetch(revocationEndpoint, {
+      const validatedEndpoint = assertHttpsOrWarn(
+        'OIDC_TOKEN_REVOCATION_ENDPOINT',
+        revocationEndpoint.trim()
+      );
+      if (!validatedEndpoint) {
+        return;
+      }
+
+      const response = await fetch(validatedEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -668,8 +712,10 @@ class OidcAuthService {
         },
         body: new URLSearchParams({ token: accessToken, token_type_hint: 'access_token' })
       });
+      if (!response.ok) {
+        logger.warn('OIDC token revocation was rejected', { status: response.status });
+      }
     } catch (err) {
-      // Silently ignore revocation failures — the local session is already terminated.
       logger.warn('OIDC token revocation failed', { error: (err as Error).message });
     }
   }

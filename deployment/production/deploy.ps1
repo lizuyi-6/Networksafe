@@ -54,7 +54,7 @@ function Start-Deployment {
     Write-Host "Deployment complete!" -ForegroundColor Green
     Write-Host "Dashboard: http://localhost:8888" -ForegroundColor Cyan
     Write-Host "API:       http://localhost:3010/api" -ForegroundColor Cyan
-    Write-Host "Health:    http://localhost:3010/api/health" -ForegroundColor Cyan
+    Write-Host "Health:    http://localhost:3010/health/ready" -ForegroundColor Cyan
 }
 
 function Stop-Deployment {
@@ -78,7 +78,7 @@ function Show-Status {
     Write-Host ""
     Write-Host "Service Health:" -ForegroundColor Yellow
 
-    $backendHealth = Invoke-WebRequest -Uri "http://localhost:3010/api/health" -UseBasicParsing -ErrorAction SilentlyContinue
+    $backendHealth = Invoke-WebRequest -Uri "http://localhost:3010/health/ready" -UseBasicParsing -ErrorAction SilentlyContinue
     if ($backendHealth -and $backendHealth.StatusCode -eq 200) {
         Write-Host "  Backend:  Healthy" -ForegroundColor Green
     } else {

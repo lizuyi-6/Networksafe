@@ -92,6 +92,7 @@ describe('Agents Routes', () => {
         agentId: 'agent-001',
         hostname: 'server-1',
         platform: 'linux',
+        tenantId: 'tenant-001',
         isOnline: true,
         lastHeartbeat: new Date().toISOString(),
         status: { cpuUsage: 25.5, memoryUsage: 60, uptime: 3600 }
@@ -100,9 +101,19 @@ describe('Agents Routes', () => {
         agentId: 'agent-002',
         hostname: 'server-2',
         platform: 'linux',
+        tenantId: 'tenant-001',
         isOnline: false,
         lastHeartbeat: new Date().toISOString(),
         status: null
+      },
+      {
+        agentId: 'agent-foreign',
+        hostname: 'foreign-server',
+        platform: 'linux',
+        tenantId: 'tenant-002',
+        isOnline: true,
+        lastHeartbeat: new Date().toISOString(),
+        status: { cpuUsage: 99, memoryUsage: 99, uptime: 9999 }
       }
     ]),
     getAgent: jest.fn((id: string) => {
@@ -111,9 +122,21 @@ describe('Agents Routes', () => {
           agentId: 'agent-001',
           hostname: 'server-1',
           platform: 'linux',
+          tenantId: 'tenant-001',
           isOnline: true,
           lastHeartbeat: new Date().toISOString(),
           status: { cpuUsage: 25.5, memoryUsage: 60, uptime: 3600 }
+        };
+      }
+      if (id === 'agent-foreign') {
+        return {
+          agentId: 'agent-foreign',
+          hostname: 'foreign-server',
+          platform: 'linux',
+          tenantId: 'tenant-002',
+          isOnline: true,
+          lastHeartbeat: new Date().toISOString(),
+          status: { cpuUsage: 99, memoryUsage: 99, uptime: 9999 }
         };
       }
       return null;
@@ -137,6 +160,8 @@ describe('Agents Routes', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.agents).toBeDefined();
       expect(Array.isArray(response.body.agents)).toBe(true);
+      expect(response.body.agents.map((agent: any) => agent.agentId)).toEqual(['agent-001', 'agent-002']);
+      expect(response.body.agents.every((agent: any) => agent.tenantId === 'tenant-001')).toBe(true);
     });
 
     it('should return 503 if gateway not available', async () => {
@@ -156,6 +181,7 @@ describe('Agents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(Array.isArray(response.body.threats)).toBe(true);
+      expect(getAlerts).toHaveBeenCalledWith('tenant-001');
     });
 
     it('should respect limit parameter', async () => {
@@ -180,6 +206,14 @@ describe('Agents Routes', () => {
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('backend.agent_not_found_or_offline');
+    });
+
+    it('should reject a scan targeting another tenant agent before dispatch', async () => {
+      const response = await request(app).post('/api/agents/agent-foreign/scan');
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe('backend.agent_not_found_or_offline');
+      expect(commandDispatcherService.dispatchAgentCommand).not.toHaveBeenCalled();
     });
 
     it('should return 503 if gateway not available', async () => {
@@ -211,18 +245,21 @@ describe('Agents Routes', () => {
     });
 
     it('should return 404 for non-existent agent', async () => {
-      (commandDispatcherService.dispatchAgentCommand as jest.Mock).mockResolvedValueOnce({
-        success: false,
-        actionId: 'action-missing',
-        status: 'failed',
-        message: 'backend.agent_not_found_or_offline'
-      });
-
       const response = await request(app)
         .post('/api/agents/non-existent/block')
         .send({ ip: '192.168.1.100' });
 
       expect(response.status).toBe(404);
+      expect(commandDispatcherService.dispatchAgentCommand).not.toHaveBeenCalled();
+    });
+
+    it('should reject a block command targeting another tenant agent', async () => {
+      const response = await request(app)
+        .post('/api/agents/agent-foreign/block')
+        .send({ ip: '192.168.1.100' });
+
+      expect(response.status).toBe(404);
+      expect(commandDispatcherService.dispatchAgentCommand).not.toHaveBeenCalled();
     });
   });
 
@@ -244,6 +281,15 @@ describe('Agents Routes', () => {
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('backend.ip_address_required');
     });
+
+    it('should reject an unblock command targeting another tenant agent', async () => {
+      const response = await request(app)
+        .post('/api/agents/agent-foreign/unblock')
+        .send({ ip: '192.168.1.100' });
+
+      expect(response.status).toBe(404);
+      expect(commandDispatcherService.dispatchAgentCommand).not.toHaveBeenCalled();
+    });
   });
 
   describe('GET /api/agents/stats', () => {
@@ -255,6 +301,8 @@ describe('Agents Routes', () => {
       expect(response.body.activeAgents).toBeDefined();
       expect(response.body.avgCpuUsage).toBeDefined();
       expect(response.body.avgMemoryUsage).toBeDefined();
+      expect(response.body.totalAgents).toBe(2);
+      expect(response.body.agents.map((agent: any) => agent.id)).toEqual(['agent-001', 'agent-002']);
     });
 
     it('should return 503 if gateway not available', async () => {
@@ -273,6 +321,7 @@ describe('Agents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.status).toBeDefined();
       expect(response.body.details).toBeDefined();
+      expect(response.body.details['agent-foreign']).toBeUndefined();
     });
   });
 
@@ -285,6 +334,7 @@ describe('Agents Routes', () => {
       expect(response.body.summary).toBeDefined();
       expect(response.body.summary.totalAgents).toBeDefined();
       expect(response.body.summary.onlineAgents).toBeDefined();
+      expect(response.body.summary.totalAgents).toBe(2);
     });
   });
 
@@ -300,6 +350,13 @@ describe('Agents Routes', () => {
 
     it('should return 404 for non-existent agent', async () => {
       const response = await request(app).get('/api/agents/non-existent');
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe('backend.agent_not_found');
+    });
+
+    it('should hide another tenant agent as not found', async () => {
+      const response = await request(app).get('/api/agents/agent-foreign');
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('backend.agent_not_found');

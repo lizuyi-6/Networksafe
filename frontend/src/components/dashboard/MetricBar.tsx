@@ -22,6 +22,8 @@ export interface MetricItem {
     value: string | number;
     trend?: number;
     tone: Tone;
+    /** Which trend direction is "good" (green). Defaults to 'up'. Set 'down' for metrics where rising is bad (threats, high-risk findings). */
+    goodDirection?: 'up' | 'down';
 }
 
 export const MetricBar = ({ items }: { items: MetricItem[] }) => (
@@ -45,16 +47,17 @@ export const MetricBar = ({ items }: { items: MetricItem[] }) => (
                         <span className="text-lg font-bold tracking-tight text-foreground">
                             {item.value}
                         </span>
-                        {item.trend !== undefined && item.trend !== 0 && (
-                            <span
-                                className={`text-xs font-medium ${
-                                    item.trend > 0 ? 'text-emerald-500' : 'text-rose-500'
-                                }`}
-                            >
-                                {item.trend > 0 ? '↑' : '↓'}
-                                {Math.abs(item.trend)}%
-                            </span>
-                        )}
+                        {item.trend !== undefined && item.trend !== 0 && (() => {
+                            const rising = item.trend > 0;
+                            const goodDir = item.goodDirection ?? 'up';
+                            const isGood = goodDir === 'up' ? rising : !rising;
+                            return (
+                                <span className={`text-xs font-medium ${isGood ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    {rising ? '↑' : '↓'}
+                                    {Math.abs(item.trend)}%
+                                </span>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>

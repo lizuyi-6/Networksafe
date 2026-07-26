@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
-package-lock.json
+# npm lockfiles are source-controlled so CI and release verification use the
+# exact dependency graph reviewed in this repository.
 yarn.lock
 
 # Build output
@@ -15,9 +16,19 @@ coverage/
 .env.local
 .env.*.local
 
-# IDE
-.vscode/
-.idea/
+# IDE (shared project settings and debug entry points are committed on purpose)
+.vscode/*
+!.vscode/launch.json
+.idea/*
+!.idea/Networksafe.iml
+!.idea/codeStyles/
+!.idea/codeStyles/**
+!.idea/inspectionProfiles/
+!.idea/inspectionProfiles/**
+!.idea/modules.xml
+!.idea/dataSources.xml
+!.idea/runConfigurations/
+!.idea/runConfigurations/**
 *.swp
 *.swo
 *~
@@ -44,6 +55,9 @@ venv/
 *.db
 *.sqlite
 /backend/data/*.db
+/backend/data/*.db-shm
+/backend/data/*.db-wal
+/backend/data/*.db-journal
 !/backend/data/.gitkeep
 
 # Archives and local artifact store
@@ -101,6 +115,11 @@ yarn-error.log*
 /hardware/kicad/**/scratch/
 /hardware/kicad/**/reports/probe-*
 /hardware/kicad/**/reports/probe*.json
+/hardware/kicad/**/reports/
+/hardware/kicad/**/.kicad-cli/
+/hardware/kicad/**/candidate-*
+/hardware/kicad/**/*.kicad_prl
+/hardware/kicad/**/*.pre-*
 /hardware/kicad/**/*.dsn
 /hardware/kicad/**/*.ses
 /hardware/kicad/**/*.lck
@@ -115,6 +134,7 @@ tmp/
 temp/
 *.tmp
 *.temp
+**/.~lock.*#
 
 # Project specific
 .nul
@@ -149,6 +169,7 @@ hardware/kicad/**/release/
 hardware/kicad/**/*.drc
 hardware/kicad/**/*.rpt
 hardware/kicad/**/*.erc
+/esp32-serial-deployer-pcb-erc.rpt
 hardware/kicad/**/erc.log
 hardware/kicad/**/drc.log
 hardware/kicad/**/fp-info-cache
@@ -188,3 +209,7 @@ docs/video/**/*.wav
 docs/video/**/*.mp4
 docs/video/**/*.png
 docs/video/**/*.jpg
+
+# IntelliJ headless inspector output (scripts/dev/run-idea-inspect.ps1)
+.idea-inspect-results/
+

@@ -61,4 +61,21 @@ describe('RedisService (DISABLE_REDIS mode)', () => {
             // Acceptable.
         }
     });
+
+    it('atomically consumes a strict replay key once in the test fallback', async () => {
+        const key = `refresh:used:test-${Date.now()}`;
+
+        await expect(redisService.existsStrict(key)).resolves.toBe(false);
+        await expect(redisService.setIfAbsentStrict(key, '1', 60)).resolves.toBe(true);
+        await expect(redisService.setIfAbsentStrict(key, '1', 60)).resolves.toBe(false);
+        await expect(redisService.existsStrict(key)).resolves.toBe(true);
+    });
+
+    it('reads strict test-fallback values without collapsing absence and errors', async () => {
+        const key = `strict:get:test-${Date.now()}`;
+
+        await expect(redisService.getStrict(key)).resolves.toBeNull();
+        await redisService.setStrict(key, 'session-user', 60);
+        await expect(redisService.getStrict(key)).resolves.toBe('session-user');
+    });
 });

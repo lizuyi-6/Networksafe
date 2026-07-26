@@ -25,7 +25,7 @@ import { DashboardSecuritySummary, DashboardStats, LogItem } from '../types/api'
 import ErrorDisplay from '../components/ErrorDisplay';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useLiveMode } from '../context/LiveModeContext';
-import { ConsolePanel } from '../components/ConsolePrimitives';
+import { ConsolePanel, ConsoleEmptyState } from '../components/ConsolePrimitives';
 import StableResponsiveChart from '../components/StableResponsiveChart';
 
 // New dashboard sub-components
@@ -66,34 +66,105 @@ const fadeUpVariants: Variants = {
 };
 
 // Traffic chart (kept inline as it's tightly coupled to the page data)
-const TrafficChart = ({ data, loadingText }: { data: { time: string; requests: number; blocked: number }[]; loadingText: string }) => (
-    <StableResponsiveChart minHeight={280} loadingText={loadingText}>
-        <AreaChart data={data}>
-            <defs>
-                <linearGradient id="colorRequests" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="colorBlocked" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-            <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} dy={10} />
-            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} dx={-10} />
-            <Tooltip
-                contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    borderColor: 'hsl(var(--border))',
-                    borderRadius: '12px',
-                }}
-            />
-            <Area type="monotone" dataKey="requests" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRequests)" />
-            <Area type="monotone" dataKey="blocked" stroke="#ef4444" strokeWidth={2.5} fillOpacity={1} fill="url(#colorBlocked)" />
-        </AreaChart>
-    </StableResponsiveChart>
+interface TrafficPoint {
+    time: string;
+    requests: number;
+    blocked: number;
+}
+
+const formatCount = (n: number) => (typeof n === 'number' ? n.toLocaleString() : n);
+
+// requests and blocked differ by ~2-3 orders of magnitude, so plotting them on one
+// shared axis pins the blocked line to the baseline. Small multiples give each series
+// its own self-scaled axis while keeping the shared time axis for comparison.
+const TrafficTooltip = ({
+    active,
+    payload,
+    label,
+    seriesLabel,
+}: {
+    active?: boolean;
+    payload?: Array<{ value: number; color: string }>;
+    label?: string;
+    seriesLabel: string;
+}) => {
+    if (!active || !payload?.length) return null;
+    const entry = payload[0];
+    return (
+        <div className="rounded-xl border border-border bg-card px-3 py-2 text-xs shadow-md">
+            <div className="mb-1 font-medium text-muted-foreground">{label}</div>
+            <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                <span className="text-foreground">{seriesLabel}</span>
+                <span className="ml-3 font-mono font-semibold text-foreground">{formatCount(entry.value)}</span>
+            </div>
+        </div>
+    );
+};
+
+const TrafficMiniChart = ({
+    data,
+    dataKey,
+    color,
+    gradientId,
+    seriesLabel,
+    loadingText,
+}: {
+    data: TrafficPoint[];
+    dataKey: 'requests' | 'blocked';
+    color: string;
+    gradientId: string;
+    seriesLabel: string;
+    loadingText: string;
+}) => (
+    <div>
+        <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+            {seriesLabel}
+        </div>
+        <StableResponsiveChart minHeight={150} loadingText={loadingText}>
+            <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
+                <defs>
+                    <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={color} stopOpacity={0.18} />
+                        <stop offset="95%" stopColor={color} stopOpacity={0} />
+                    </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} dy={6} minTickGap={24} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} width={44} tickFormatter={(v) => formatCount(v as number)} />
+                <Tooltip content={<TrafficTooltip seriesLabel={seriesLabel} />} />
+                <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} fillOpacity={1} fill={`url(#${gradientId})`} />
+            </AreaChart>
+        </StableResponsiveChart>
+    </div>
 );
+
+const TrafficChart = ({
+    data,
+    loadingText,
+    requestsLabel,
+    blockedLabel,
+    emptyTitle,
+    emptyDesc,
+}: {
+    data: TrafficPoint[];
+    loadingText: string;
+    requestsLabel: string;
+    blockedLabel: string;
+    emptyTitle: string;
+    emptyDesc: string;
+}) => {
+    if (!data.length) {
+        return <ConsoleEmptyState title={emptyTitle} description={emptyDesc} />;
+    }
+    return (
+        <div className="grid gap-4 md:grid-cols-2">
+            <TrafficMiniChart data={data} dataKey="requests" color="hsl(var(--chart-requests))" gradientId="colorRequests" seriesLabel={requestsLabel} loadingText={loadingText} />
+            <TrafficMiniChart data={data} dataKey="blocked" color="hsl(var(--chart-blocked))" gradientId="colorBlocked" seriesLabel={blockedLabel} loadingText={loadingText} />
+        </div>
+    );
+};
 
 export default function Dashboard() {
     const { subscribe } = useWebSocket();
@@ -118,13 +189,11 @@ export default function Dashboard() {
             .some((value) => String(value).toLowerCase().includes(query));
     }), [filterQuery, logs]);
 
-    const filteredHistory = useMemo(() => {
-        const history = stats?.history || [];
-        if (timeRange === '1h') return history.slice(-10);
-        if (timeRange === '24h') return history;
-        // 7d: return all available data
-        return history;
-    }, [stats?.history, timeRange]);
+    // The backend now serves a real fixed-interval window for the requested range
+    // (persisted samples bucketed uniformly), keyed off the ?range= param we send
+    // with each fetch. history therefore already spans the selected window — no
+    // client-side slicing needed.
+    const filteredHistory = useMemo(() => stats?.history || [], [stats?.history]);
 
     const securitySummary = stats?.securityOperations || defaultSecuritySummary;
 
@@ -137,7 +206,7 @@ export default function Dashboard() {
             controller?.abort();
             controller = new AbortController();
             try {
-                const statsData = await fetchStats(controller.signal);
+                const statsData = await fetchStats(controller.signal, timeRange);
                 if (!disposed && statsData) {
                     setStats(statsData);
                     setError(null);
@@ -166,7 +235,7 @@ export default function Dashboard() {
             controller?.abort();
             clearInterval(interval);
         };
-    }, [liveModeEnabled, paused]);
+    }, [liveModeEnabled, paused, timeRange]);
 
     useEffect(() => {
         let disposed = false;
@@ -209,7 +278,7 @@ export default function Dashboard() {
 
                 const [rules, keys] = await Promise.all([
                     fetchDashboardRulesSummary(controller.signal),
-                    role === 'admin' ? fetchAdminApiKeys(controller.signal).catch(() => []) : Promise.resolve([]),
+                    role === 'admin' ? fetchAdminApiKeys(controller.signal) : Promise.resolve([]),
                 ]);
 
                 if (disposed) return;
@@ -291,15 +360,16 @@ export default function Dashboard() {
     const emptyLogsText = securitySummary.pendingActions || securitySummary.failedValidations
         ? t('dashboard.empty_logs_pending', { pending: securitySummary.pendingActions, failed: securitySummary.failedValidations })
         : t('dashboard.empty_logs_fallback');
+    const telemetryAvailable = stats.telemetryAvailable !== false;
 
     // --- Metric bar items ---
     const metricItems: MetricItem[] = [
-        { icon: Server, label: t('dashboard.total_requests'), value: (stats.totalRequests ?? 0).toLocaleString(), trend: stats.requestsTrend, tone: 'primary' },
-        { icon: Shield, label: t('dashboard.threats_blocked'), value: (stats.blockedRequests ?? 0).toLocaleString(), trend: stats.blockedTrend, tone: 'danger' },
-        { icon: Globe, label: t('dashboard.success_rate'), value: `${stats.successRate ?? 0}%`, tone: 'success' },
-        { icon: Zap, label: t('dashboard.avg_latency'), value: `${stats.avgProcessingTime || 0}ms`, tone: 'warning' },
-        { icon: Activity, label: t('dashboard.active_connections'), value: (stats.activeConnections ?? 0).toLocaleString(), tone: 'primary' },
-        { icon: AlertTriangle, label: t('dashboard.high_risk'), value: securitySummary.openCriticalFindings, tone: 'danger' },
+        { icon: Server, label: t('dashboard.total_requests'), value: telemetryAvailable ? (stats.totalRequests ?? 0).toLocaleString() : '--', trend: telemetryAvailable ? stats.requestsTrend : undefined, tone: 'primary', goodDirection: 'up' },
+        { icon: Shield, label: t('dashboard.threats_blocked'), value: telemetryAvailable ? (stats.blockedRequests ?? 0).toLocaleString() : '--', trend: telemetryAvailable ? stats.blockedTrend : undefined, tone: 'danger', goodDirection: 'down' },
+        { icon: Globe, label: t('dashboard.success_rate'), value: telemetryAvailable ? `${stats.successRate ?? 0}%` : '--', tone: telemetryAvailable ? 'success' : 'neutral', goodDirection: 'up' },
+        { icon: Zap, label: t('dashboard.avg_latency'), value: telemetryAvailable ? `${stats.avgProcessingTime || 0}ms` : '--', tone: telemetryAvailable ? 'warning' : 'neutral', goodDirection: 'down' },
+        { icon: Activity, label: t('dashboard.active_connections'), value: telemetryAvailable ? (stats.activeConnections ?? 0).toLocaleString() : '--', tone: telemetryAvailable ? 'primary' : 'neutral', goodDirection: 'up' },
+        { icon: AlertTriangle, label: t('dashboard.high_risk'), value: securitySummary.openCriticalFindings, tone: 'danger', goodDirection: 'down' },
     ];
 
     // --- System gauges ---
@@ -307,7 +377,7 @@ export default function Dashboard() {
         { icon: Cpu, label: t('dashboard.cpu_usage'), value: stats.cpuUsage || 0, tone: 'primary' },
         { icon: HardDrive, label: t('dashboard.memory_usage'), value: stats.memoryUsage || 0, tone: 'warning' },
         { icon: Database, label: t('dashboard.disk_usage'), value: stats.diskUsage || 0, tone: 'neutral' },
-        { icon: Activity, label: t('dashboard.network_throughput'), value: stats.networkUsage || 0, tone: 'success' },
+        { icon: Activity, label: t('dashboard.network_throughput'), value: stats.networkUsage || 0, tone: 'success', kind: 'value', unit: 'MB/s' },
     ];
 
     return (
@@ -337,6 +407,16 @@ export default function Dashboard() {
                 </motion.div>
             )}
 
+            {!telemetryAvailable && (
+                <div
+                    role="alert"
+                    data-testid="tenant-telemetry-unavailable"
+                    className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
+                >
+                    {t('dashboard.tenant_telemetry_unavailable')}
+                </div>
+            )}
+
             {/* Metric Bar — 6 core KPIs in one row */}
             <MetricBar items={metricItems} />
 
@@ -349,7 +429,14 @@ export default function Dashboard() {
                         icon={Activity}
                         iconTone="primary"
                     >
-                        <TrafficChart data={filteredHistory} loadingText={t('dashboard.waiting_chart')} />
+                        <TrafficChart
+                            data={telemetryAvailable ? filteredHistory : []}
+                            loadingText={t('dashboard.waiting_chart')}
+                            requestsLabel={t('dashboard.requests')}
+                            blockedLabel={t('dashboard.blocked')}
+                            emptyTitle={telemetryAvailable ? t('dashboard.traffic_empty_title') : t('dashboard.telemetry_unavailable_title')}
+                            emptyDesc={telemetryAvailable ? t('dashboard.traffic_empty_desc') : t('dashboard.tenant_telemetry_unavailable')}
+                        />
                     </ConsolePanel>
                 </motion.div>
 
@@ -360,7 +447,14 @@ export default function Dashboard() {
                         icon={Cpu}
                         iconTone="neutral"
                     >
-                        <SystemGauges gauges={gaugeItems} />
+                        {telemetryAvailable ? (
+                            <SystemGauges gauges={gaugeItems} />
+                        ) : (
+                            <ConsoleEmptyState
+                                title={t('dashboard.telemetry_unavailable_title')}
+                                description={t('dashboard.tenant_telemetry_unavailable')}
+                            />
+                        )}
                     </ConsolePanel>
                 </motion.div>
             </div>

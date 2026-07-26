@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Globe, ArrowRight } from 'lucide-react';
+import { Globe, ArrowRight, RefreshCw } from 'lucide-react';
 import { fetchSites } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { ConsoleEmptyState, ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
@@ -8,15 +8,38 @@ import { ConsoleEmptyState, ConsolePage, ConsolePanel } from '../components/Cons
 const Sites = () => {
     const { t } = useLanguage();
     const [sites, setSites] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const loadSites = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            setSites(await fetchSites());
+        } catch (nextError: any) {
+            setError(nextError?.message || 'FG-SITES-LIST');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        fetchSites().then((data) => setSites(data)).catch(console.error);
+        void loadSites();
     }, []);
 
     return (
         <ConsolePage title={t('sites.title')} subtitle={t('sites.subtitle')}>
             <ConsolePanel title={t('sites.listTitle')} subtitle={t('sites.listSubtitle')} icon={Globe} iconTone="primary">
-                {sites.length === 0 ? (
+                {error ? (
+                    <div data-testid="sites-error" role="alert" className="flex items-center justify-between gap-4 border-l-4 border-rose-500 bg-rose-500/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
+                        <span>{error}</span>
+                        <button type="button" onClick={() => void loadSites()} className="shrink-0 rounded-md p-2 text-rose-700 hover:bg-rose-500/10 dark:text-rose-300" title={t('common.refresh')}>
+                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                        </button>
+                    </div>
+                ) : loading ? (
+                    <ConsoleEmptyState title={t('common.loading')} />
+                ) : sites.length === 0 ? (
                     <ConsoleEmptyState title={t('sites.noSites')} />
                 ) : (
                     <div className="space-y-3">

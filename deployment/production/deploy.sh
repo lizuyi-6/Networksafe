@@ -55,7 +55,7 @@ start_deployment() {
     echo -e "${GREEN}Deployment complete!${NC}"
     echo -e "${CYAN}Dashboard: http://localhost:8888${NC}"
     echo -e "${CYAN}API:       http://localhost:3010/api${NC}"
-    echo -e "${CYAN}Health:    http://localhost:3010/api/health${NC}"
+    echo -e "${CYAN}Health:    http://localhost:3010/health/ready${NC}"
 }
 
 stop_deployment() {
@@ -79,7 +79,7 @@ show_status() {
     echo ""
     echo -e "${YELLOW}Service Health:${NC}"
     
-    if curl -sf http://localhost:3010/api/health > /dev/null 2>&1; then
+    if curl -sf http://localhost:3010/health/ready > /dev/null 2>&1; then
         echo -e "  Backend:  ${GREEN}Healthy${NC}"
     else
         echo -e "  Backend:  ${RED}Unhealthy${NC}"

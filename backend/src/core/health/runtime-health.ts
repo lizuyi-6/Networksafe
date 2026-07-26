@@ -40,6 +40,8 @@ export interface RuntimeHealthSnapshot {
   emulator: Record<string, any>;
 }
 
+const REDIS_AUTH_UNAVAILABLE_REASON = 'authentication_session_store_unavailable';
+
 function getAiProviderHealth(profile: RuntimeProfile): DependencyHealth {
   const configuredKey = String(process.env.PLATFORM_API_KEY || '').trim();
   if (!configuredKey) {
@@ -106,18 +108,35 @@ export async function buildRuntimeHealthSnapshot(input: {
   const redis = await redisService.healthCheck();
   const fastpathHealthy = await fastpathClientService.health('global').catch(() => false);
   const blockers: string[] = [];
+  const redisRequiredForAuthentication = input.runtime.profile === 'prod';
+  const redisDisabled = redisService.isDisabled();
 
   const dependencies = {
     redis: redis.healthy
       ? {
           status: 'healthy' as const,
           message: 'Redis is connected.',
-          details: { latencyMs: redis.latency ?? null }
+          details: {
+            latencyMs: redis.latency ?? null,
+            requiredForAuthentication: redisRequiredForAuthentication
+          }
         }
       : {
-          status: redisService.isDisabled() ? 'disabled' as const : 'degraded' as const,
+          status: redisRequiredForAuthentication
+            ? 'unhealthy' as const
+            : redisDisabled
+              ? 'disabled' as const
+              : 'degraded' as const,
           message: redis.error || 'Redis is unavailable.',
-          details: { disabled: redisService.isDisabled() }
+          details: {
+            disabled: redisDisabled,
+            requiredForAuthentication: redisRequiredForAuthentication,
+            reason: redisRequiredForAuthentication
+              ? REDIS_AUTH_UNAVAILABLE_REASON
+              : redisDisabled
+                ? 'redis_disabled'
+                : 'redis_unavailable'
+          }
         },
     postgres: shadow.enabled
       ? shadow.connected
@@ -164,6 +183,10 @@ export async function buildRuntimeHealthSnapshot(input: {
 
   if (input.runtime.dbMode === 'postgres' && dependencies.postgres.status === 'unhealthy') {
     blockers.push('postgres');
+  }
+
+  if (redisRequiredForAuthentication && dependencies.redis.status !== 'healthy') {
+    blockers.push('redis');
   }
 
   const readiness = {

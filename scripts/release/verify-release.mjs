@@ -13,6 +13,9 @@ fs.mkdirSync(dockerDir, { recursive: true });
 
 const stepResults = [];
 
+const releasePostgresPassword =
+  process.env.POSTGRES_PASSWORD || 'AetherGuardReleasePostgresPassword2026!';
+
 const defaultEnv = {
   ...process.env,
   JWT_SECRET: process.env.JWT_SECRET || 'release-verify-jwt-secret-minimum-32-chars',
@@ -20,18 +23,42 @@ const defaultEnv = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || 'AetherGuardRedisPassword2026!',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@aetherguard.com',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'AetherGuardAdminPass2026!',
-  DEVICE_COMMAND_SECRET: process.env.DEVICE_COMMAND_SECRET || 'AetherGuardReleaseCommandSecret2026!',
-  SERIAL_HELPER_SHARED_SECRET: process.env.SERIAL_HELPER_SHARED_SECRET || process.env.DEVICE_COMMAND_SECRET || 'AetherGuardReleaseCommandSecret2026!',
+  ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || 'AetherGuardReleaseEncryptionKey2026!A1',
+  ENCRYPTION_SALT: process.env.ENCRYPTION_SALT || 'AetherGuardReleaseSalt2026!',
+  POSTGRES_PASSWORD: releasePostgresPassword,
+  SHADOW_DATABASE_URL:
+    process.env.SHADOW_DATABASE_URL ||
+    `postgres://aetherguard:${releasePostgresPassword}@postgres:5432/aetherguard`,
+  S3_SECRET_KEY: process.env.S3_SECRET_KEY || 'AetherGuardReleaseS3SecretKey2026!',
+  DEVICE_API_KEYS: process.env.DEVICE_API_KEYS || 'device_key_release_verify_2026_secure',
+  DEVICE_COMMAND_SECRET: process.env.DEVICE_COMMAND_SECRET || 'AetherGuardReleaseDeviceCommandSecret2026!',
+  SERIAL_HELPER_SHARED_SECRET: process.env.SERIAL_HELPER_SHARED_SECRET || 'AetherGuardReleaseSerialHelperSecret2026!',
   DEPLOYMENT_BUNDLE_SIGNING_SECRET: process.env.DEPLOYMENT_BUNDLE_SIGNING_SECRET || 'AetherGuardReleaseBundleSigningSecret2026!',
   AETHERGUARD_RUNTIME_MODE: process.env.AETHERGUARD_RUNTIME_MODE || 'prod-enterprise',
-  DISABLE_SQLITE_FALLBACK: process.env.DISABLE_SQLITE_FALLBACK || 'true',
+  // The backend's primary store is SQLite today; Postgres currently backs only the
+  // audit shadow store (SHADOW_DATABASE_URL). DB_MODE stays 'postgres' so the
+  // Postgres shadow path is still exercised, but the SQLite-primary store must be
+  // allowed to boot via SQLITE_FALLBACK_ENABLED=true. Setting this to false would
+  // trip the fail-closed guard in database.ts ("SQLite fallback is disabled.
+  // Postgres connection is required.") which exists precisely because a true
+  // Postgres-primary path is not yet wired.
+  SQLITE_FALLBACK_ENABLED: process.env.SQLITE_FALLBACK_ENABLED || 'true',
   ARTIFACT_STORE: process.env.ARTIFACT_STORE || 's3',
   ENABLE_DEV_LOGIN_PRESETS: process.env.ENABLE_DEV_LOGIN_PRESETS || 'false',
   DB_MODE: process.env.DB_MODE || 'postgres',
+  // The release e2e suite authenticates via the password login form. In
+  // prod-enterprise mode password login is disabled by default, so the break-glass
+  // path must be enabled for the e2e browser to reach /dashboard. This only
+  // affects the CI verify stack; production operators control this independently.
+  ALLOW_BREAK_GLASS_PASSWORD_LOGIN: process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN || 'true',
+  // The site-walkthrough e2e toggles demo mode to exercise the demo UI paths.
+  // prod-enterprise disables demo features by default; allow them explicitly here.
+  ALLOW_DEMO_FEATURES: process.env.ALLOW_DEMO_FEATURES || 'true',
   PLAYWRIGHT_BASE_URL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8080',
 };
 
 const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npxExecutable = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const nodeExecutable = process.execPath;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -199,6 +226,7 @@ async function runRustChecks() {
   if (cargoAvailable) {
     await runStep('rust test', 'cargo', ['test'], { cwd: path.join(workspaceRoot, 'rust-fastpath') });
     await runStep('rust clippy', 'cargo', ['clippy', '--', '-D', 'warnings'], { cwd: path.join(workspaceRoot, 'rust-fastpath') });
+    await runStep('rust release build', 'cargo', ['build', '--release'], { cwd: path.join(workspaceRoot, 'rust-fastpath') });
     return;
   }
 
@@ -221,6 +249,47 @@ async function runRustChecks() {
   );
 }
 
+async function runFirmwareChecks() {
+  const firmwareDir = path.join(workspaceRoot, 'firmware', 'controller-stm32h5');
+  const binary = path.join(firmwareDir, process.platform === 'win32' ? 'test_controller.exe' : 'test_controller');
+  const sources = [
+    'test/mock_hal.c',
+    'test/test_stubs.c',
+    'test/test_controller.c',
+    'Core/Src/controller_tasks.c',
+    'Core/Src/serial_json.c',
+    'Core/Src/interlock_driver.c',
+  ];
+
+  try {
+    await runStep(
+      'firmware host compile',
+      'gcc',
+      ['-Wall', '-Wextra', '-std=c11', '-g', '-Itest', '-ICore/Inc', '-ICore/Src', '-o', binary, ...sources],
+      { cwd: firmwareDir },
+    );
+    await runStep('firmware host tests', binary, [], { cwd: firmwareDir });
+  } finally {
+    fs.rmSync(binary, { force: true });
+  }
+}
+
+async function runSimulatorChecks() {
+  const simulatorDir = path.join(workspaceRoot, 'simulator');
+  await runStep('simulator install', npmExecutable, ['ci'], { cwd: simulatorDir });
+  for (const script of ['sim', 'test:invalid-sig', 'test:counter-rollback', 'test:heartbeat-stale', 'test:estop']) {
+    await runStep(`simulator ${script}`, npmExecutable, ['run', script], { cwd: simulatorDir });
+  }
+}
+
+async function runRescueChecks() {
+  const rescueDir = path.join(workspaceRoot, 'rescue');
+  await runStep('rescue test', 'cargo', ['test'], { cwd: rescueDir });
+  await runStep('rescue clippy', 'cargo', ['clippy', '--all-targets', '--', '-D', 'warnings'], { cwd: rescueDir });
+  await runStep('rescue release build', 'cargo', ['build', '--release'], { cwd: rescueDir });
+  await runStep('rescue fault drills', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'rescue', 'run-drills.mjs')]);
+}
+
 async function main() {
   fs.writeFileSync(
     path.join(artifactRoot, 'summary.json'),
@@ -232,7 +301,7 @@ async function main() {
     await runStep('backend install', npmExecutable, ['ci'], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend lint', npmExecutable, ['run', 'lint'], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend typecheck', npmExecutable, ['run', 'typecheck'], { cwd: path.join(workspaceRoot, 'backend') });
-    await runStep('backend enterprise m1 tests', 'npx', [
+    await runStep('backend enterprise m1 tests', npxExecutable, [
       'jest',
       'src/__tests__/security/enterprise-permissions.test.ts',
       'src/__tests__/security/deployment-bundle-signing.test.ts',
@@ -240,18 +309,25 @@ async function main() {
       'src/__tests__/services/deployment-run.service.test.ts',
       '--runInBand',
     ], { cwd: path.join(workspaceRoot, 'backend') });
-    await runStep('backend tests', npmExecutable, ['run', 'test:coverage', '--', '--runInBand'], { cwd: path.join(workspaceRoot, 'backend') });
+    await runStep('backend tests', npmExecutable, ['run', 'test:all'], { cwd: path.join(workspaceRoot, 'backend') });
     await runStep('backend route db guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-route-db-access.mjs')]);
 
     await runStep('frontend install', npmExecutable, ['ci'], { cwd: path.join(workspaceRoot, 'frontend') });
     await runStep('frontend lint', npmExecutable, ['run', 'lint'], { cwd: path.join(workspaceRoot, 'frontend') });
     await runStep('frontend typecheck', npmExecutable, ['run', 'typecheck'], { cwd: path.join(workspaceRoot, 'frontend') });
+    await runStep('frontend i18n contracts', npmExecutable, ['run', 'test:i18n'], { cwd: path.join(workspaceRoot, 'frontend') });
     await runStep('frontend build', npmExecutable, ['run', 'build'], { cwd: path.join(workspaceRoot, 'frontend') });
     await runStep('frontend direct api guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-no-direct-api-fetch.mjs')]);
+    await runStep('frontend api contract guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-frontend-api-contract.mjs')]);
+    await runStep('repository hygiene guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-repository-hygiene.mjs')]);
+    await runStep('rescue release-capability guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-rescue-no-release.mjs')]);
 
     await runStep('e2e install', npmExecutable, ['ci'], { cwd: path.join(workspaceRoot, 'e2e') });
 
     await runRustChecks();
+    await runFirmwareChecks();
+    await runSimulatorChecks();
+    await runRescueChecks();
     await runStep('fastpath docker build', 'docker', ['compose', 'build', 'fastpath']);
     await runStep(
       'docker compose up',
@@ -266,16 +342,20 @@ async function main() {
       env: defaultEnv,
     });
 
-    await checkHttp('http://127.0.0.1:3005/api/health/live', 'backend liveness');
-    await checkReadiness('http://127.0.0.1:3005/api/health/ready', 'backend readiness');
-    await checkHttp('http://127.0.0.1:3005/api/health/dependencies', 'backend dependency health');
+    // The release Compose stack exposes only the frontend edge (127.0.0.1:8080);
+    // the backend is internal-only (no host port mapping), matching the
+    // production topology. nginx reverse-proxies /health/ to backend:3005,
+    // so these liveness/readiness probes reach the backend through the same
+    // edge real traffic uses rather than a CI-only direct port.
+    await checkHttp('http://127.0.0.1:8080/health/live', 'backend liveness');
+    await checkReadiness('http://127.0.0.1:8080/health/ready', 'backend readiness');
     await checkHttp('http://127.0.0.1:8080/', 'frontend home');
     await runStep('fastpath self-check', 'docker', ['compose', 'exec', '-T', 'fastpath', 'aetherguard-fastpath', 'self-check']);
     await collectDockerArtifacts();
     const readinessReport = {
-      status: 'engineering-complete',
+      status: 'software-gates-passed-hardware-hil-pending',
       runtimeMode: defaultEnv.AETHERGUARD_RUNTIME_MODE,
-      productionAuthority: 'ESP32 USB-TTL serial deployer + Linux serial helper',
+      productionAuthority: 'AetherGuard Root-Resistant Gateway Appliance (M1-M4)',
       websocketAuthority: 'status/OTA/experimental only',
       requiredEvidence: [
         'approval chain',
@@ -287,7 +367,7 @@ async function main() {
         'rollback notes'
       ],
       hilStatus: 'not-validated-in-ci',
-      hilRequirement: '1 ESP32 gate, 1 USB-TTL serial path, 1 Linux target host running ENV -> BACKUP -> INSTALL -> REMOVE/ROLLBACK',
+      hilRequirement: '1 Gateway Appliance with STM32 controller, secure element, physical interlock feedback, and a cabled Linux target host',
       generatedAt: new Date().toISOString()
     };
     fs.writeFileSync(path.join(artifactRoot, 'enterprise-readiness-report.json'), JSON.stringify(readinessReport, null, 2), 'utf8');

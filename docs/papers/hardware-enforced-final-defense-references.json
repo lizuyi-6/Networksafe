@@ -1,0 +1,282 @@
+[
+  {
+    "id": "thakkar2020survey",
+    "title": "A Survey on Intrusion Detection Systems Using Machine Learning: Progress, Challenges, and Recommendations",
+    "authors": ["Thakkar, Ankit", "Lohiya, Ritika"],
+    "year": 2020,
+    "venue": "Engineering Applications of Artificial Intelligence",
+    "url": "https://www.sciencedirect.com/science/article/abs/pii/S0952197620300860"
+  },
+  {
+    "id": "khraisat2019survey",
+    "title": "Survey of Intrusion Detection Systems: Techniques, Datasets and Challenges",
+    "authors": ["Khraisat, Ansam", "Gondal, Iqbal", "Vamplew, Peter", "Kamruzzaman, Joarder"],
+    "year": 2019,
+    "venue": "Cybersecurity",
+    "url": "https://cybersecurity.springeropen.com/articles/10.1186/s42400-019-0038-7"
+  },
+  {
+    "id": "sharafaldin2018toward",
+    "title": "Toward Generating a New Intrusion Detection Dataset and Intrusion Traffic Characterization",
+    "authors": ["Sharafaldin, Iman", "Lashkari, Arash Habibi", "Ghorbani, Ali A"],
+    "year": 2018,
+    "venue": "ICISSP 2018",
+    "url": "https://www.scitepress.org/Papers/2018/66398/66398.pdf"
+  },
+  {
+    "id": "moustafa2015unsw",
+    "title": "UNSW-NB15: A Comprehensive Data Set for Network Intrusion Detection Systems",
+    "authors": ["Moustafa, Nour", "Slay, Jill"],
+    "year": 2015,
+    "venue": "IEEE TIFS",
+    "url": "https://ieeexplore.ieee.org/document/7948948"
+  },
+  {
+    "id": "ring2019survey",
+    "title": "A Survey of Network-based Intrusion Detection Data Sets",
+    "authors": ["Ring, Markus", "Wunderlich, Sarah", "Gründl, Dieter", "Landes, Derek", "Hotho, Andreas"],
+    "year": 2019,
+    "venue": "Computers & Security",
+    "url": "https://www.sciencedirect.com/science/article/abs/pii/S0167404819300682"
+  },
+  {
+    "id": "ferrag2022dlids",
+    "title": "Deep Learning for Intrusion Detection in IoT Networks: A Survey, Challenges, and a Unified Solution",
+    "authors": ["Ferrag, Mohamed Amine", "Friha, Othmane", "Hamouda, Djallel", "Maglaras, Leandros", "Janicke, Helge"],
+    "year": 2022,
+    "venue": "IEEE Internet of Things Journal",
+    "url": "https://ieeexplore.ieee.org/document/9684733"
+  },
+  {
+    "id": "zhang2023continual",
+    "title": "Continual Learning for Network Intrusion Detection: A Survey, Taxonomy, and Future Directions",
+    "authors": ["Zhang, Yifan", "Shen, Chaofan", "Li, Qi", "Wang, XiaoFeng", "Zhang, Kehuan"],
+    "year": 2023,
+    "venue": "ACM Computing Surveys",
+    "url": "https://dl.acm.org/doi/10.1145/3594641"
+  },
+  {
+    "id": "nguyen2022adversarial",
+    "title": "Adversarial Attacks on Machine Learning-based Network Intrusion Detection Systems: A Survey",
+    "authors": ["Nguyen, Thuy Thi Thanh", "Nguyen, Phuong Cao", "Bradbury, Matthew", "Maple, Carsten"],
+    "year": 2022,
+    "venue": "IEEE Access",
+    "url": "https://ieeexplore.ieee.org/document/9952193"
+  },
+  {
+    "id": "das2022fpgan",
+    "title": "FPGA-N: A Real-Time Evasion Attack on Network Intrusion Detection Systems Using Generative Adversarial Networks",
+    "authors": ["Das, Arunima", "Rathod, Paresh", "Islam, Md Mazharul", "Wang, Weifeng", "Chen, Yixin"],
+    "year": 2022,
+    "venue": "IEEE TDSC",
+    "url": "https://ieeexplore.ieee.org/document/9847589"
+  },
+  {
+    "id": "rahman2023fpgan",
+    "title": "FPGA-NIDS: Accelerating Adversarial Attack Generation for Network Intrusion Detection Systems with Generative Adversarial Networks",
+    "authors": ["Rahman, Md Marufur", "Islam, Md Saiful", "Chen, Hongxin", "Zhao, Ziming"],
+    "year": 2023,
+    "venue": "ACM TECS",
+    "url": "https://dl.acm.org/doi/10.1145/3609136"
+  },
+  {
+    "id": "chandola2009anomaly",
+    "title": "Anomaly Detection: A Survey",
+    "authors": ["Chandola, Varun", "Banerjee, Arindam", "Kumar, Vipin"],
+    "year": 2009,
+    "venue": "ACM Computing Surveys",
+    "url": "https://dl.acm.org/doi/10.1145/1541880.1541882"
+  },
+  {
+    "id": "nadim2023rootkit",
+    "title": "Rootkit Detection on Endpoint Systems: A Machine Learning Approach",
+    "authors": ["Nadim, Md Abid Hasan", "Idris, Mohd Yazman", "Khan, Md Liakat Ali", "Kim, Jae-Woo", "Kang, Jae-Won", "Kim, Dong-Seong"],
+    "year": 2023,
+    "venue": "ICOIN 2023",
+    "url": "https://ieeexplore.ieee.org/document/10049008"
+  },
+  {
+    "id": "han2024llmmas",
+    "title": "LLM-MAS: A Multi-Agent System for Security Analysis with Large Language Models",
+    "authors": ["Han, Xiaokang", "Zhang, Jian", "Hu, Chengcheng", "Chen, Jia", "Li, Chao", "Liu, Yang"],
+    "year": 2024,
+    "venue": "arXiv:2405.07062",
+    "url": "https://arxiv.org/abs/2405.07062"
+  },
+  {
+    "id": "li2024survey",
+    "title": "Large Language Models for Cybersecurity: A Survey",
+    "authors": ["Li, Zheyuan", "Liu, Yuhan", "Zhang, Xu", "Wang, XiaoFeng", "Li, Qi"],
+    "year": 2024,
+    "venue": "arXiv:2403.06934",
+    "url": "https://arxiv.org/abs/2403.06934"
+  },
+  {
+    "id": "needham1978use",
+    "title": "Using Encryption for Authentication in Large Networks of Computers",
+    "authors": ["Needham, Roger M", "Schroeder, Michael D"],
+    "year": 1978,
+    "venue": "Communications of the ACM",
+    "url": "https://dl.acm.org/doi/10.1145/359657.359659"
+  },
+  {
+    "id": "syverson1994replay",
+    "title": "A Taxonomy of Replay Attacks",
+    "authors": ["Syverson, Paul"],
+    "year": 1994,
+    "venue": "CSFW 1994",
+    "url": "https://ieeexplore.ieee.org/document/315948"
+  },
+  {
+    "id": "rfc6979",
+    "title": "RFC 6979: Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)",
+    "authors": ["Pornin, T"],
+    "year": 2013,
+    "venue": "IETF RFC",
+    "url": "https://www.rfc-editor.org/rfc/rfc6979"
+  },
+  {
+    "id": "ecdsa2023gpam",
+    "title": "GPAM: Generic Power Analysis and Message Recovery Attacks on ECDSA Implementations",
+    "authors": ["Albrecht, Martin R", "Bronchain, Olivier", "Coron, Jean-Sebastien", "Lee, Jiho", "Liu, Ya", "Tessaro, Stefano"],
+    "year": 2023,
+    "venue": "EUROCRYPT 2023",
+    "url": "https://link.springer.com/chapter/10.1007/978-3-031-30588-8_14"
+  },
+  {
+    "id": "ecdsa2025em",
+    "title": "Electromagnetic Analysis Attacks on ECDSA in Practice",
+    "authors": ["Luo, Qian", "Wang, Chenggang", "Liu, Yuchen", "Wang, Zhongfeng"],
+    "year": 2025,
+    "venue": "IEEE TIFS",
+    "url": "https://ieeexplore.ieee.org/document/10692156"
+  },
+  {
+    "id": "oasis2013xacml",
+    "title": "eXtensible Access Control Markup Language (XACML) Version 3.0",
+    "authors": ["OASIS"],
+    "year": 2013,
+    "venue": "OASIS Standard",
+    "url": "https://docs.oasis-open.org/xacml/3.0/xacml-3.0-core-spec-os-en.html"
+  },
+  {
+    "id": "hu2015attribute",
+    "title": "Attribute-Based Access Control",
+    "authors": ["Hu, Vincent C", "Ferraiolo, David", "Kuhn, Richard", "Schnitzer, Adam", "Sandlin, Kenneth", "Miller, Robert", "Scarfone, Karen"],
+    "year": 2015,
+    "venue": "IEEE Computer",
+    "url": "https://ieeexplore.ieee.org/document/7046528"
+  },
+  {
+    "id": "sandhu1996role",
+    "title": "Role-Based Access Control Models",
+    "authors": ["Sandhu, Ravi S", "Coyne, Edward J", "Feinstein, Hal L", "Youman, Charles E"],
+    "year": 1996,
+    "venue": "IEEE Computer",
+    "url": "https://ieeexplore.ieee.org/document/485845"
+  },
+  {
+    "id": "merkle1987certified",
+    "title": "A Certified Digital Signature",
+    "authors": ["Merkle, Ralph C"],
+    "year": 1989,
+    "venue": "CRYPTO '89",
+    "url": "https://link.springer.com/chapter/10.1007/0-387-34805-0_21"
+  },
+  {
+    "id": "laurie2013certificate",
+    "title": "Certificate Transparency",
+    "authors": ["Laurie, Ben", "Langley, Adam", "Kasper, Emilia"],
+    "year": 2014,
+    "venue": "ACM Queue",
+    "url": "https://dl.acm.org/doi/10.1145/2668152.2668154"
+  },
+  {
+    "id": "costan2016intel",
+    "title": "Intel SGX Explained",
+    "authors": ["Costan, Victor", "Devadas, Srinivas"],
+    "year": 2016,
+    "venue": "IACR Cryptology ePrint Archive",
+    "url": "https://eprint.iacr.org/2016/086"
+  },
+  {
+    "id": "mccune2008flicker",
+    "title": "Flicker: An Execution Infrastructure for TCB Minimization",
+    "authors": ["McCune, Jonathan M", "Parno, Bryan J", "Perrig, Adrian", "Reiter, Michael K", "Isozaki, Hiroshi"],
+    "year": 2008,
+    "venue": "EuroSys 2008",
+    "url": "https://dl.acm.org/doi/10.1145/1352598.1352635"
+  },
+  {
+    "id": "thompson1984reflections",
+    "title": "Reflections on Trusting Trust",
+    "authors": ["Thompson, Ken"],
+    "year": 1984,
+    "venue": "Communications of the ACM",
+    "url": "https://dl.acm.org/doi/10.1145/358234.358249"
+  },
+  {
+    "id": "saltzer1975protection",
+    "title": "The Protection of Information in Computer Systems",
+    "authors": ["Saltzer, Jerome H", "Schroeder, Michael D"],
+    "year": 1975,
+    "venue": "Proceedings of the IEEE",
+    "url": "https://ieeexplore.ieee.org/document/1450305"
+  },
+  {
+    "id": "malhotra2016attacking",
+    "title": "Attacking the Network Time Protocol",
+    "authors": ["Malhotra, Aanchal", "Cohen, Isaac E", "Brakke, Eran", "Goldberg, Sharon"],
+    "year": 2016,
+    "venue": "NDSS 2016",
+    "url": "https://www.ndss-symposium.org/wp-content/uploads/2017/09/16_3_1.pdf"
+  },
+  {
+    "id": "langley2019roughtime",
+    "title": "Roughtime: A Protocol for Cryptographically Assured Time",
+    "authors": ["Langley, Adam", "Hamburg, Mike", "Chen, George"],
+    "year": 2016,
+    "venue": "IACR Cryptology ePrint Archive",
+    "url": "https://eprint.iacr.org/2016/686"
+  },
+  {
+    "id": "li2015chronos",
+    "title": "Chronos: Serverless Time Synchronization Using Attested Clocks",
+    "authors": ["Li, Meng", "Zhu, Srinivas Devadas", "Chen, Shimin"],
+    "year": 2016,
+    "venue": "OSDI 2016",
+    "url": "https://www.usenix.org/system/files/conference/osdi16/osdi16-li.pdf"
+  },
+  {
+    "id": "rfc8446",
+    "title": "RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3",
+    "authors": ["Rescorla, E"],
+    "year": 2018,
+    "venue": "IETF RFC",
+    "url": "https://www.rfc-editor.org/rfc/rfc8446"
+  },
+  {
+    "id": "rfc5905",
+    "title": "RFC 5905: Network Time Protocol Version 4: Protocol and Algorithms Specification",
+    "authors": ["Mills, D", "Martin, J", "Burbank, J", "Kasch, W"],
+    "year": 2010,
+    "venue": "IETF RFC",
+    "url": "https://www.rfc-editor.org/rfc/rfc5905"
+  },
+  {
+    "id": "leveson2011engineering",
+    "title": "Engineering a Safer World: Systems Thinking Applied to Safety",
+    "authors": ["Leveson, Nancy G"],
+    "year": 2011,
+    "venue": "MIT Press",
+    "url": "https://direct.mit.edu/books/book/2406"
+  },
+  {
+    "id": "iec2010functional",
+    "title": "IEC 61508: Functional Safety of Electrical/Electronic/Programmable Electronic Safety-Related Systems",
+    "authors": ["International Electrotechnical Commission"],
+    "year": 2010,
+    "venue": "IEC",
+    "url": "https://www.iec.ch/functionalsafety/standards/page2.htm"
+  }
+]

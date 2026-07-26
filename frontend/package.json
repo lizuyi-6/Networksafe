@@ -7,6 +7,8 @@
         "dev": "vite",
         "build": "tsc && vite build",
         "typecheck": "tsc --noEmit",
+        "test:credential-hygiene": "node scripts/test-no-bundled-credentials.mjs",
+        "test:i18n": "node scripts/test-i18n-contract.mjs",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview"
     },
@@ -31,7 +33,7 @@
         "@types/react-dom": "^18.2.17",
         "@typescript-eslint/eslint-plugin": "^8.56.1",
         "@typescript-eslint/parser": "^8.56.1",
-        "@vitejs/plugin-react": "^4.2.1",
+        "@vitejs/plugin-react": "^6.0.3",
         "autoprefixer": "^10.4.16",
         "eslint": "^10.0.3",
         "playwright": "^1.58.2",

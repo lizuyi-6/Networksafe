@@ -253,8 +253,8 @@ if [ "\${AETHERGUARD_HEALTHCHECK_MODE:-}" = "files" ] || [ -n "\${AETHERGUARD_IN
 fi
 
 if command -v curl >/dev/null 2>&1; then
-  curl -fsS "http://127.0.0.1:${profile.port}/api/health" >/dev/null 2>&1 && exit 0
-  curl -fsS "${upstream}/api/health" >/dev/null 2>&1 && exit 0
+  curl -fsS "http://127.0.0.1:${profile.port}/health/ready" >/dev/null 2>&1 && exit 0
+  curl -fsS "${upstream}/health/ready" >/dev/null 2>&1 && exit 0
 fi
 
 echo "AetherGuard health check failed" >&2

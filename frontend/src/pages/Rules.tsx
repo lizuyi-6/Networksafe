@@ -546,6 +546,7 @@ const Rules = () => {
                                             {t('rules.source')}: <span className="font-medium text-foreground">{event.decisionSource}</span>
                                             {event.candidateId && <span> | {t('rules.candidate')} {event.candidateId}</span>}
                                             {event.aiVerdict && <span> | AI {event.aiVerdict} {(event.aiConfidence || 0) * 100 >= 0 ? `(${((event.aiConfidence || 0) * 100).toFixed(0)}%)` : ''}</span>}
+                                            {event.aiHeuristicDegraded && <span className="font-medium text-amber-600 dark:text-amber-400"> | {t('rules.heuristic_degraded')}</span>}
                                             {event.classificationLevel && <span> | {event.classificationLevel}</span>}
                                             {event.blockingDiscussion && <span> | {event.discussionLatencyMs || 0} ms</span>}
                                         </div>

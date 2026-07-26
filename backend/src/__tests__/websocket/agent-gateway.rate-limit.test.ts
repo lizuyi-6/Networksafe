@@ -102,12 +102,11 @@ describe('AgentGateway per-agent-event rate limit (Sprint 5 Wave 2 · F5)', () =
     httpServer.listen(PORT, done);
   });
 
-  afterAll((done) => {
+  afterAll(async () => {
     sockets.splice(0).forEach((socket) => {
       if (socket.connected) socket.disconnect();
     });
-    gateway.close();
-    httpServer.close(done);
+    await gateway.close();
   });
 
   afterEach(() => {

@@ -85,6 +85,7 @@ test.describe('console control coverage', () => {
         await page.goto('/scanner');
         await assertRenderedPage(page, 'Scanner');
         await page.getByTestId('scanner-targets').fill('http://127.0.0.1:8080/e2e-console-control');
+        await page.getByTestId('scanner-include-local-host').check();
         await page.getByTestId('scanner-include-system').uncheck();
         await page.getByTestId('scanner-include-web').check();
         await page.getByTestId('scanner-include-ports').uncheck();

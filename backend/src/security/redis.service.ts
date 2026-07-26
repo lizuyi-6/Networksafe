@@ -7,6 +7,7 @@ class RedisService {
   private client: Redis | null = null;
   private disabled: boolean = false;
   private connectionReady: boolean = false;
+  private strictTestFallback = new Map<string, { value: string; expiresAt: number | null }>();
 
   constructor() {
     if (process.env.DISABLE_REDIS === 'true' || process.env.NODE_ENV === 'test') {
@@ -131,6 +132,86 @@ class RedisService {
       logger.error('Redis EXISTS error', { error, key });
       return false;
     }
+  }
+
+  /**
+   * Security-sensitive Redis operations must distinguish "key absent" from
+   * "Redis unavailable". The legacy helpers intentionally degrade to
+   * null/false; authentication replay gates use these throwing variants.
+   */
+  async existsStrict(key: string): Promise<boolean> {
+    if (this.disabled) {
+      return this.getStrictTestFallback(key) !== null;
+    }
+    if (!this.connectionReady) {
+      throw new Error('Redis is unavailable');
+    }
+    return (await this.getClient().exists(key)) === 1;
+  }
+
+  async getStrict(key: string): Promise<string | null> {
+    if (this.disabled) {
+      return this.getStrictTestFallback(key);
+    }
+    if (!this.connectionReady) {
+      throw new Error('Redis is unavailable');
+    }
+    return this.getClient().get(key);
+  }
+
+  async setStrict(key: string, value: string, seconds?: number): Promise<void> {
+    if (this.disabled) {
+      this.setStrictTestFallback(key, value, seconds);
+      return;
+    }
+    if (!this.connectionReady) {
+      throw new Error('Redis is unavailable');
+    }
+    if (seconds) {
+      await this.getClient().setex(key, seconds, value);
+    } else {
+      await this.getClient().set(key, value);
+    }
+  }
+
+  async setIfAbsentStrict(key: string, value: string, seconds: number): Promise<boolean> {
+    if (this.disabled) {
+      if (this.getStrictTestFallback(key) !== null) {
+        return false;
+      }
+      this.setStrictTestFallback(key, value, seconds);
+      return true;
+    }
+    if (!this.connectionReady) {
+      throw new Error('Redis is unavailable');
+    }
+    const result = await this.getClient().set(key, value, 'EX', seconds, 'NX');
+    return result === 'OK';
+  }
+
+  private getStrictTestFallback(key: string): string | null {
+    if (process.env.NODE_ENV !== 'test') {
+      throw new Error('Redis is unavailable');
+    }
+    const entry = this.strictTestFallback.get(key);
+    if (!entry) {
+      return null;
+    }
+    if (entry.expiresAt !== null && entry.expiresAt <= Date.now()) {
+      this.strictTestFallback.delete(key);
+      return null;
+    }
+    return entry.value;
+  }
+
+  private setStrictTestFallback(key: string, value: string, seconds?: number): void {
+    if (process.env.NODE_ENV !== 'test') {
+      throw new Error('Redis is unavailable');
+    }
+    this.strictTestFallback.set(key, {
+      value,
+      expiresAt: seconds ? Date.now() + seconds * 1000 : null
+    });
   }
 
   async incr(key: string): Promise<number> {

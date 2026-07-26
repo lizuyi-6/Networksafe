@@ -34,8 +34,24 @@ function makeContext(bug?: BugReport): InvestigationContext {
 }
 
 describe('InvestigationCoordinator', () => {
+    const coordinators: InvestigationCoordinator[] = [];
+    const createCoordinator = (): InvestigationCoordinator => {
+        const coordinator = new InvestigationCoordinator();
+        coordinators.push(coordinator);
+        return coordinator;
+    };
+
+    afterEach(async () => {
+        for (const coordinator of coordinators.splice(0)) {
+            for (const investigation of coordinator.getActiveInvestigations()) {
+                coordinator.cancelInvestigation(investigation.investigationId);
+            }
+            await coordinator.waitForIdle();
+        }
+    });
+
     it('constructs and registers investigation agents', () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const caps = coord.getAgentCapabilities();
         expect(caps.length).toBeGreaterThan(0);
         caps.forEach((c) => {
@@ -45,7 +61,7 @@ describe('InvestigationCoordinator', () => {
     });
 
     it('startInvestigation returns an id and tracks it as active', async () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const id = await coord.startInvestigation(makeBug(), makeContext());
         expect(id).toBeTruthy();
         expect(typeof id).toBe('string');
@@ -55,7 +71,7 @@ describe('InvestigationCoordinator', () => {
     });
 
     it('emits investigation:started event', async () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const startedPromise = new Promise<void>((resolve) => {
             coord.on('investigation:started', () => resolve());
         });
@@ -64,20 +80,20 @@ describe('InvestigationCoordinator', () => {
     });
 
     it('getInvestigationStatus returns not_found for unknown id', () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const status = coord.getInvestigationStatus('nonexistent');
         expect(status.status).toBe('not_found');
     });
 
     it('getInvestigationStatus returns in_progress for a newly started investigation', async () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const id = await coord.startInvestigation(makeBug(), makeContext());
         const status = coord.getInvestigationStatus(id);
         expect(['in_progress', 'completed', 'failed']).toContain(status.status);
     });
 
     it('cancelInvestigation cancels an in-progress investigation', async () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const id = await coord.startInvestigation(makeBug(), makeContext());
         const result = coord.cancelInvestigation(id);
         expect(result.cancelled).toBe(true);
@@ -85,14 +101,14 @@ describe('InvestigationCoordinator', () => {
     });
 
     it('cancelInvestigation returns not_found for unknown id', () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const result = coord.cancelInvestigation('nonexistent');
         expect(result.cancelled).toBe(false);
         expect(result.status).toBe('not_found');
     });
 
     it('cancelInvestigation returns already_cancelled for a second cancel', async () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const id = await coord.startInvestigation(makeBug(), makeContext());
         coord.cancelInvestigation(id);
         const second = coord.cancelInvestigation(id);
@@ -101,7 +117,7 @@ describe('InvestigationCoordinator', () => {
     });
 
     it('getActiveInvestigations returns summaries with investigationId and summary', async () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const bug = makeBug({ description: 'Critical crash on startup' });
         await coord.startInvestigation(bug, makeContext(bug));
         const active = coord.getActiveInvestigations();
@@ -112,7 +128,7 @@ describe('InvestigationCoordinator', () => {
     });
 
     it('handles multiple concurrent investigations independently', async () => {
-        const coord = new InvestigationCoordinator();
+        const coord = createCoordinator();
         const id1 = await coord.startInvestigation(makeBug({ title: 'bug-A' }), makeContext());
         const id2 = await coord.startInvestigation(makeBug({ title: 'bug-B' }), makeContext());
         expect(id1).not.toBe(id2);

@@ -101,6 +101,14 @@ export function rateLimit(options: RateLimitMiddlewareOptions = {}) {
 
             const retryAfter = Math.ceil((engineResult.resetAtMs - Date.now()) / 1000);
             res.setHeader('Retry-After', Math.max(retryAfter, 1).toString());
+            logger.warn('Rate limit exceeded (engine)', {
+              identifier,
+              ip,
+              endpoint: req.path,
+              method: req.method,
+              namespace: limiterNamespace,
+              reason: engineResult.reason,
+            });
             return handler(req, res);
           }
 

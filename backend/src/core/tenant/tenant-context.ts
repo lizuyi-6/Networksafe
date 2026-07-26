@@ -2,6 +2,7 @@ import type { AuthenticatedRequest, AuthenticatedUser } from '../../middleware/a
 import { isPlatformAdminRole } from '../../security/permissions';
 
 export const PLATFORM_TENANT_ID = 'platform';
+export const ANONYMOUS_TENANT_ID = 'anonymous';
 
 export type TenantSource =
   | 'user'

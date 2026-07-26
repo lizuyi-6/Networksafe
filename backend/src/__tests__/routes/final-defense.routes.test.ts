@@ -271,6 +271,32 @@ describe('Final Defense Routes (smoke)', () => {
       expect(response.body.error.code).toBe('FINAL_DEFENSE_COMPANION_NOT_PROVISIONED');
       expect(finalDefenseService.reportStatus).not.toHaveBeenCalled();
     });
+
+    it('rejects string booleans instead of treating "false" as true', async () => {
+      (finalDefenseService.getStatus as jest.Mock).mockReturnValueOnce({
+        companionId: 'companion-001',
+        tenantId: 'tenant-from-provisioning',
+        interlockState: 'isolated',
+        active: true,
+        degradedReasons: []
+      });
+
+      const response = await request(app)
+        .post('/api/final-defense/status/report')
+        .send({
+          companionId: 'companion-001',
+          gateId: 'gate-001',
+          interlockState: 'isolated',
+          externalPowerPresent: 'false',
+          secureElementPresent: true,
+          feedbackOk: true
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('FINAL_DEFENSE_STATUS_BOOLEAN_FIELDS_REQUIRED');
+      expect(response.body.error.details.fields).toEqual(['externalPowerPresent']);
+      expect(finalDefenseService.reportStatus).not.toHaveBeenCalled();
+    });
   });
 
   // ---- POST /api/final-defense/gateways/status/report ---------------------
@@ -315,6 +341,32 @@ describe('Final Defense Routes (smoke)', () => {
       expect(finalDefenseService.reportRootResistantGatewayStatus).not.toHaveBeenCalledWith(
         expect.objectContaining({ tenantId: 'tenant-from-body-attacker' })
       );
+    });
+
+    it('rejects string booleans in gateway link status reports', async () => {
+      (finalDefenseService.getRootResistantGatewayStatus as jest.Mock).mockReturnValueOnce({
+        gatewayId: 'gateway-001',
+        tenantId: 'tenant-from-provisioning',
+        bridgeState: 'isolated',
+        active: true,
+        degradedReasons: []
+      });
+
+      const response = await request(app)
+        .post('/api/final-defense/gateways/status/report')
+        .send({
+          gatewayId: 'gateway-001',
+          bridgeState: 'armed',
+          serverPortLink: 'false',
+          lanPortLink: true,
+          mgmtPath: 'dedicated_mgmt',
+          secureElementPresent: true
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('ROOT_GATEWAY_STATUS_BOOLEAN_FIELDS_REQUIRED');
+      expect(response.body.error.details.fields).toEqual(['serverPortLink']);
+      expect(finalDefenseService.reportRootResistantGatewayStatus).not.toHaveBeenCalled();
     });
   });
 });

@@ -28,6 +28,10 @@ describe('ExecutionMonitor', () => {
     monitor = new ExecutionMonitor();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('creates instance with execution id', () => {
     expect(monitor.isRunning()).toBe(false);
     expect(monitor.getExecutionId()).toMatch(/^exec-\d+$/);
@@ -57,6 +61,7 @@ describe('ExecutionMonitor', () => {
   });
 
   it('executes safe commands and resolves on success', async () => {
+    jest.useFakeTimers();
     const { spawn } = require('child_process');
 
     let closeCallback: ((code: number) => void) | null = null;
@@ -85,6 +90,7 @@ describe('ExecutionMonitor', () => {
     const result = await executePromise;
     expect(result.success).toBe(true);
     expect(result.command).toBe('systemctl start nginx');
+    expect(jest.getTimerCount()).toBe(0);
   });
 
   it('can add event listeners', () => {

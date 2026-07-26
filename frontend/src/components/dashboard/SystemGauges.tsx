@@ -19,13 +19,30 @@ const fadeUpVariants: Variants = {
 export interface GaugeItem {
     icon: LucideIcon;
     label: string;
-    value: number; // 0-100
+    value: number;
     tone: Tone;
+    /**
+     * 'percent' (default) renders a 0–100 ring.
+     * 'value' renders a magnitude that has no fixed ceiling (e.g. MB/s throughput)
+     * as a numeric tile — a ring would misrepresent it as a percentage.
+     */
+    kind?: 'percent' | 'value';
+    /** Unit label for kind='value' (e.g. 'MB/s'). Ignored for percent gauges. */
+    unit?: string;
 }
+
+const toneText: Record<Tone, string> = {
+    primary: 'text-primary',
+    success: 'text-emerald-500',
+    warning: 'text-amber-500',
+    danger: 'text-rose-500',
+    neutral: 'text-muted-foreground',
+};
 
 const GaugeRing = ({ value, tone }: { value: number; tone: Tone }) => {
     const circumference = 2 * Math.PI * 15.9155;
-    const offset = circumference - (value / 100) * circumference;
+    const clamped = Math.max(0, Math.min(100, value));
+    const offset = circumference - (clamped / 100) * circumference;
 
     return (
         <svg viewBox="0 0 36 36" className="h-14 w-14">
@@ -58,8 +75,19 @@ export const SystemGauges = ({ gauges }: { gauges: GaugeItem[] }) => (
                 key={i}
                 className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-sm"
             >
-                <GaugeRing value={g.value} tone={g.tone} />
-                <span className="text-lg font-bold text-foreground">{g.value.toFixed(1)}%</span>
+                {g.kind === 'value' ? (
+                    <div className="flex h-14 flex-col items-center justify-center">
+                        <span className={`text-2xl font-bold tabular-nums ${toneText[g.tone]}`}>
+                            {g.value.toFixed(2)}
+                        </span>
+                        {g.unit && <span className="text-[11px] font-medium text-muted-foreground">{g.unit}</span>}
+                    </div>
+                ) : (
+                    <>
+                        <GaugeRing value={g.value} tone={g.tone} />
+                        <span className="text-lg font-bold text-foreground">{g.value.toFixed(1)}%</span>
+                    </>
+                )}
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <g.icon size={12} />
                     <span>{g.label}</span>

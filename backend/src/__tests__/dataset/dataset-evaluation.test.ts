@@ -246,6 +246,7 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
 
     const perType: Record<string, PerTypeStats> = {};
     const globalLatencies: number[] = [];
+    const latenciesByType: Record<string, number[]> = {};
     let TP = 0, FN = 0, TN = 0, FP = 0;
     const fpSamples: any[] = [];
     const fnSamples: any[] = [];
@@ -289,6 +290,7 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
       }
       const latencyMs = totalLatency / burstSize;
       globalLatencies.push(latencyMs);
+      (latenciesByType[type] = latenciesByType[type] || []).push(latencyMs);
 
       perType[type] = perType[type] || {
         total: 0, expected_attacks: 0, expected_normal: 0,
@@ -313,13 +315,10 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
     }
 
     // Compute per-type detection rate and FPR
-    for (const t of Object.values(perType)) {
+    for (const [type, t] of Object.entries(perType)) {
       t.detection_rate = t.expected_attacks > 0 ? t.detected / t.expected_attacks : 1;
       t.false_positive_rate = t.expected_normal > 0 ? t.false_positives / t.expected_normal : 0;
-      const lats = globalLatencies.filter((_, idx) => {
-        // Filter by type would require storing per-sample latency; for now use global
-        return true;
-      });
+      const lats = latenciesByType[type] || [];
       t.median_latency_ms = percentile(lats, 50);
       t.p95_latency_ms = percentile(lats, 95);
     }

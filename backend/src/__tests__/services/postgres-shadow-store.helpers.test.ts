@@ -69,6 +69,37 @@ describe('PostgresShadowStoreService', () => {
       mockGetDatabaseMode.mockReturnValue('sqlite');
       expect(postgresShadowStoreService.canServeReads()).toBe(false);
     });
+
+    it('keeps reads closed until a complete snapshot exists and while backfill is running', () => {
+      const service = postgresShadowStoreService as any;
+      const original = {
+        connectionString: service.connectionString,
+        pool: service.pool,
+        connected: service.connected,
+        schemaReady: service.schemaReady,
+        snapshotReady: service.snapshotReady,
+        backfillInProgress: service.backfillInProgress,
+      };
+
+      try {
+        mockGetDatabaseMode.mockReturnValue('postgres');
+        service.connectionString = 'postgres://user:secret@localhost/db';
+        service.pool = {};
+        service.connected = true;
+        service.schemaReady = true;
+        service.snapshotReady = false;
+        service.backfillInProgress = false;
+        expect(postgresShadowStoreService.canServeReads()).toBe(false);
+
+        service.snapshotReady = true;
+        expect(postgresShadowStoreService.canServeReads()).toBe(true);
+
+        service.backfillInProgress = true;
+        expect(postgresShadowStoreService.canServeReads()).toBe(false);
+      } finally {
+        Object.assign(service, original);
+      }
+    });
   });
 
   describe('describe', () => {
@@ -81,6 +112,8 @@ describe('PostgresShadowStoreService', () => {
       expect(desc).toHaveProperty('lastError');
       expect(desc).toHaveProperty('lastBackfillAt');
       expect(desc).toHaveProperty('lastBackfillError');
+      expect(desc).toHaveProperty('snapshotReady');
+      expect(desc).toHaveProperty('backfillInProgress');
       expect(desc).toHaveProperty('syncedTables');
     });
 

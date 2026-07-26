@@ -18,6 +18,7 @@
  *   aetherguard detect-rules
  */
 
+import './cli-process-env';
 import { parseArgs } from 'util';
 import { isatty } from 'tty';
 import { createInterface } from 'readline';
@@ -30,26 +31,6 @@ import {
     type DetectionChannel
 } from '../services/detection-engine';
 
-// CLI runs as a local dev/ops tool. Deep imports (audit logger, auth) require a few
-// secrets to be present; provide safe local defaults when unset so commands work
-// out-of-the-box without a .env. Never use these defaults in production.
-function ensureCliEnvDefaults(): void {
-    const defaults: Record<string, string> = {
-        AUDIT_LOG_SECRET: 'aetherguard-cli-local-audit-secret-min-32-characters',
-        JWT_SECRET: 'aetherguard-cli-local-jwt-secret-minimum-32-characters',
-        DEVICE_COMMAND_SECRET: 'aetherguard-cli-local-device-cmd-secret-32',
-        ALLOW_TEST_RUNTIME: 'true',
-        // Keep stdout clean for AI/JSON consumers; the CLI writes human text and JSON to stdout,
-        // so push logger output (which goes to stdout via console.info) down to error level.
-        LOG_LEVEL: 'error'
-    };
-    for (const [key, value] of Object.entries(defaults)) {
-        if (!process.env[key] && process.env.NODE_ENV !== 'production') {
-            process.env[key] = value;
-        }
-    }
-}
-ensureCliEnvDefaults();
 type OutputMode = 'json' | 'text';
 
 function wantJson(argv: { json?: boolean }): boolean {

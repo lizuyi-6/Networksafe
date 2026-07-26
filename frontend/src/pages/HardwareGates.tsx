@@ -65,7 +65,7 @@ const HardwareGates = () => {
     return (
         <ConsolePage
             title="Gate Management"
-            subtitle="Production hardware gates for serial deployment confirmation."
+            subtitle="Gateway Appliance authorization gates for hardware-enforced deployment confirmation."
             actions={
                 <button onClick={() => void load()} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/40">
                     <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -78,7 +78,7 @@ const HardwareGates = () => {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <ConsoleStatCard icon={ShieldCheck} label="Enrolled Gates" value={gates.length} hint="Tenant-scoped physical gates" />
                 <ConsoleStatCard icon={Cpu} label="Online" value={onlineCount} hint="Ready to receive confirmation sessions" tone="success" />
-                <ConsoleStatCard icon={Plus} label="Protocol" value="v1" hint="USB-TTL serial deployer authority" tone="neutral" />
+                <ConsoleStatCard icon={Plus} label="Grant Signature" value="P-256" hint="ECDSA hardware authorization authority" tone="neutral" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_420px]">

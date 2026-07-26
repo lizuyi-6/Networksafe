@@ -52,6 +52,5 @@ module.exports = {
             diagnostics: true
         }]
     },
-    forceExit: true,
     testTimeout: 30000
 };

@@ -33,6 +33,8 @@ export interface AuditEvent {
   signature?: string; // For tamper detection
 }
 
+const pendingAuditShadowWrites = new Set<Promise<void>>();
+
 /**
  * Audit Logger Service
  * SECURITY FIX CVE-2026-103: Enforce AUDIT_LOG_SECRET at initialization
@@ -43,6 +45,10 @@ export class AuditLogger {
   private readonly backupRetentionDays: number;
   private readonly maxDatabaseSize: number;
   private schemaReady = false;
+  private backupCheckTimer: NodeJS.Timeout | null = null;
+  private initialArchiverTimer: NodeJS.Timeout | null = null;
+  private archiverTimer: NodeJS.Timeout | null = null;
+  private readonly backgroundRuns = new Set<Promise<void>>();
 
   constructor() {
     // SECURITY FIX CVE-2026-103: Require AUDIT_LOG_SECRET at startup
@@ -68,9 +74,6 @@ export class AuditLogger {
     this.maxDatabaseSize = parseInt(process.env.AUDIT_LOG_MAX_SIZE_MB || '100', 10) * 1024 * 1024;
 
     logger.info('Audit Logger initialized with secure secret and backup protection');
-
-    // Start periodic backup check
-    this.startPeriodicBackupCheck();
   }
 
   prepare(): void {
@@ -138,6 +141,40 @@ export class AuditLogger {
     throw new Error('Audit logger schema not initialized. Call auditLogger.prepare() during bootstrap.');
   }
 
+  private scheduleShadowWrite(
+    label: 'execute' | 'upsert',
+    auditId: string,
+    operation: () => Promise<unknown>,
+    inspectShadowState = false
+  ): void {
+    const task = Promise.resolve()
+      .then(operation)
+      .then(() => {
+        const description = inspectShadowState && typeof postgresShadowStoreService.describe === 'function'
+          ? postgresShadowStoreService.describe()
+          : null;
+        if (description?.lastError) {
+          recordAuditShadowWrite(false, description.lastError);
+          logger.warn(`Audit shadow ${label} reported failure (fire-and-forget)`, {
+            error: String(description.lastError),
+            auditId
+          });
+          return;
+        }
+        recordAuditShadowWrite(true);
+      })
+      .catch((error: unknown) => {
+        recordAuditShadowWrite(false, error);
+        logger.warn(`Audit shadow ${label} failed (fire-and-forget)`, {
+          error: error instanceof Error ? error.message : String(error),
+          auditId
+        });
+      });
+
+    pendingAuditShadowWrites.add(task);
+    void task.finally(() => pendingAuditShadowWrites.delete(task));
+  }
+
   private mapAuditRow(row: any): AuditEvent {
     return {
       id: row.id,
@@ -175,13 +212,19 @@ export class AuditLogger {
       ...event
     };
 
-    // Create tamper-evident signature
-    auditEvent.signature = this.createSignature(auditEvent);
-
     // SECURITY FIX D31: strip CRLF/tab/null control chars from
     // user-controlled `details` (and any other free-form string
     // fields) to prevent log injection in dashboards and exports.
+    //
+    // AG-003: sanitize BEFORE signing so the signature covers the exact
+    // `details_json` that gets persisted. Signing the pre-sanitized value
+    // would leave the stored details unverifiable.
     auditEvent.details = recursiveSanitize(auditEvent.details);
+
+    // Create tamper-evident signature (covers all persisted forensic fields).
+    auditEvent.signature = this.createSignature(auditEvent);
+
+    let localCommitted = false;
 
     try {
       const db = getDatabase();
@@ -214,110 +257,137 @@ export class AuditLogger {
         auditEvent.status,
         auditEvent.signature
       );
+      localCommitted = true;
 
       // Now mirror to the postgres shadow store. Both paths are
       // best-effort: their failures are tracked in the shadow-write
       // metrics but do not block the caller — UNLESS
-      // AUDIT_LOG_FAIL_CLOSED=true, in which case the FIRST shadow
-      // failure aborts the second attempt (defense in depth) and is
-      // re-thrown AFTER the local commit.
+      // AUDIT_LOG_FAIL_CLOSED=true, or AUDIT_SHADOW_REQUIRED=true, in
+      // which case the FIRST shadow failure aborts the second attempt
+      // (defense in depth) and is re-thrown AFTER the local commit.
       const failClosed = process.env.AUDIT_LOG_FAIL_CLOSED === 'true';
+      const shadowRequired = process.env.AUDIT_SHADOW_REQUIRED === 'true';
+      const synchronousShadow = failClosed || shadowRequired;
       let shadowError: Error | null = null;
-      let executeSucceeded = !postgresShadowStoreService.canServeReads();
 
-      if (postgresShadowStoreService.canServeReads()) {
-        try {
-          await postgresShadowStoreService.execute(`
-            INSERT INTO audit_log (
-              id, timestamp, tenant_id, event_type, category, severity,
-              actor_type, actor_id, actor_email, actor_ip, action, target_type, target_id,
-              details_json, status, signature
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-            ON CONFLICT (id)
-            DO UPDATE SET
-              timestamp = EXCLUDED.timestamp,
-              tenant_id = EXCLUDED.tenant_id,
-              event_type = EXCLUDED.event_type,
-              category = EXCLUDED.category,
-              severity = EXCLUDED.severity,
-              actor_type = EXCLUDED.actor_type,
-              actor_id = EXCLUDED.actor_id,
-              actor_email = EXCLUDED.actor_email,
-              actor_ip = EXCLUDED.actor_ip,
-              action = EXCLUDED.action,
-              target_type = EXCLUDED.target_type,
-              target_id = EXCLUDED.target_id,
-              details_json = EXCLUDED.details_json,
-              status = EXCLUDED.status,
-              signature = EXCLUDED.signature
-          `, [
-            auditEvent.id,
-            auditEvent.timestamp,
-            auditEvent.tenantId || null,
-            auditEvent.eventType,
-            auditEvent.category,
-            auditEvent.severity,
-            auditEvent.actor.type,
-            auditEvent.actor.id,
-            auditEvent.actor.email || null,
-            auditEvent.actor.ip || null,
-            auditEvent.action,
-            auditEvent.target?.type || null,
-            auditEvent.target?.id || null,
-            JSON.stringify(auditEvent.details),
-            auditEvent.status,
-            auditEvent.signature
-          ]);
-          recordAuditShadowWrite(true);
-          executeSucceeded = true;
-        } catch (e) {
-          recordAuditShadowWrite(false, e);
-          shadowError = e instanceof Error ? e : new Error(String(e));
-          if (failClosed) {
-            // short-circuit: do not attempt upsert in fail-closed mode
+      // Shadow-store mirror parameters (shared by both write paths).
+      const shadowSql = `
+        INSERT INTO audit_log (
+          id, timestamp, tenant_id, event_type, category, severity,
+          actor_type, actor_id, actor_email, actor_ip, action, target_type, target_id,
+          details_json, status, signature
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        ON CONFLICT (id)
+        DO UPDATE SET
+          timestamp = EXCLUDED.timestamp,
+          tenant_id = EXCLUDED.tenant_id,
+          event_type = EXCLUDED.event_type,
+          category = EXCLUDED.category,
+          severity = EXCLUDED.severity,
+          actor_type = EXCLUDED.actor_type,
+          actor_id = EXCLUDED.actor_id,
+          actor_email = EXCLUDED.actor_email,
+          actor_ip = EXCLUDED.actor_ip,
+          action = EXCLUDED.action,
+          target_type = EXCLUDED.target_type,
+          target_id = EXCLUDED.target_id,
+          details_json = EXCLUDED.details_json,
+          status = EXCLUDED.status,
+          signature = EXCLUDED.signature
+      `;
+      const shadowParams = [
+        auditEvent.id,
+        auditEvent.timestamp,
+        auditEvent.tenantId || null,
+        auditEvent.eventType,
+        auditEvent.category,
+        auditEvent.severity,
+        auditEvent.actor.type,
+        auditEvent.actor.id,
+        auditEvent.actor.email || null,
+        auditEvent.actor.ip || null,
+        auditEvent.action,
+        auditEvent.target?.type || null,
+        auditEvent.target?.id || null,
+        JSON.stringify(auditEvent.details),
+        auditEvent.status,
+        auditEvent.signature
+      ];
+      const shadowRow = {
+        id: auditEvent.id,
+        timestamp: auditEvent.timestamp,
+        tenant_id: auditEvent.tenantId || null,
+        event_type: auditEvent.eventType,
+        category: auditEvent.category,
+        severity: auditEvent.severity,
+        actor_type: auditEvent.actor.type,
+        actor_id: auditEvent.actor.id,
+        actor_email: auditEvent.actor.email || null,
+        actor_ip: auditEvent.actor.ip || null,
+        action: auditEvent.action,
+        target_type: auditEvent.target?.type || null,
+        target_id: auditEvent.target?.id || null,
+        details_json: JSON.stringify(auditEvent.details),
+        status: auditEvent.status,
+        signature: auditEvent.signature
+      };
+
+      if (shadowRequired && !postgresShadowStoreService.isEnabled()) {
+        shadowError = new Error('audit_shadow_required_unavailable: Postgres audit shadow store is disabled');
+        (shadowError as any).code = 'audit_shadow_required_unavailable';
+        recordAuditShadowWrite(false, shadowError);
+      }
+
+      if (synchronousShadow) {
+        // Fail-closed mode: await shadow writes synchronously so a failure
+        // is surfaced to the caller as a compliance event (existing behavior).
+        if (postgresShadowStoreService.canServeReads()) {
+          try {
+            await postgresShadowStoreService.execute(shadowSql, shadowParams);
+            recordAuditShadowWrite(true);
+          } catch (e) {
+            recordAuditShadowWrite(false, e);
+            shadowError = e instanceof Error ? e : new Error(String(e));
             this.logToStandardLogger(auditEvent);
             throw shadowError;
           }
         }
-      }
-
-      // Only attempt upsert if execute didn't already fail (or wasn't required)
-      // AND the shadow store is enabled at all.
-      if ((executeSucceeded || !failClosed) && postgresShadowStoreService.isEnabled()) {
-        try {
-          const upsertResult = await postgresShadowStoreService.upsert('audit_log', {
-            id: auditEvent.id,
-            timestamp: auditEvent.timestamp,
-            tenant_id: auditEvent.tenantId || null,
-            event_type: auditEvent.eventType,
-            category: auditEvent.category,
-            severity: auditEvent.severity,
-            actor_type: auditEvent.actor.type,
-            actor_id: auditEvent.actor.id,
-            actor_email: auditEvent.actor.email || null,
-            actor_ip: auditEvent.actor.ip || null,
-            action: auditEvent.action,
-            target_type: auditEvent.target?.type || null,
-            target_id: auditEvent.target?.id || null,
-            details_json: JSON.stringify(auditEvent.details),
-            status: auditEvent.status,
-            signature: auditEvent.signature
-          });
-          // surface lastError from shadow state machine (e.g. queue full)
-          const desc = typeof postgresShadowStoreService.describe === 'function'
-            ? postgresShadowStoreService.describe()
-            : null;
-          if (desc && desc.lastError) {
-            recordAuditShadowWrite(false, desc.lastError);
-            shadowError = shadowError || new Error(String(desc.lastError));
-          } else {
-            recordAuditShadowWrite(true);
+        if (postgresShadowStoreService.isEnabled()) {
+          try {
+            await postgresShadowStoreService.upsert('audit_log', shadowRow);
+            const description = typeof postgresShadowStoreService.describe === 'function'
+              ? postgresShadowStoreService.describe()
+              : null;
+            if (description?.lastError) {
+              recordAuditShadowWrite(false, description.lastError);
+              shadowError = new Error(String(description.lastError));
+            } else {
+              recordAuditShadowWrite(true);
+            }
+          } catch (e) {
+            recordAuditShadowWrite(false, e);
+            shadowError = shadowError || (e instanceof Error ? e : new Error(String(e)));
           }
-          // unused but kept for side-effect clarity
-          void upsertResult;
-        } catch (e) {
-          recordAuditShadowWrite(false, e);
-          shadowError = shadowError || (e instanceof Error ? e : new Error(String(e)));
+        }
+      } else {
+        // Default mode: fire-and-forget. The local SQLite commit above is
+        // the compliance source of truth; the Postgres shadow mirror runs
+        // in the background. This prevents a Postgres hang from freezing
+        // WebSocket/HTTP handlers for up to 16s (2 × 8s queryWithTimeout).
+        if (postgresShadowStoreService.canServeReads()) {
+          this.scheduleShadowWrite(
+            'execute',
+            auditEvent.id,
+            () => postgresShadowStoreService.execute(shadowSql, shadowParams)
+          );
+        }
+        if (postgresShadowStoreService.isEnabled()) {
+          this.scheduleShadowWrite(
+            'upsert',
+            auditEvent.id,
+            () => postgresShadowStoreService.upsert('audit_log', shadowRow),
+            true
+          );
         }
       }
 
@@ -328,12 +398,16 @@ export class AuditLogger {
       // operator opted in, re-throw AFTER the local commit so the
       // caller can treat it as a compliance event without losing
       // the local row.
-      if (shadowError && process.env.AUDIT_LOG_FAIL_CLOSED === 'true') {
+      if (shadowError && synchronousShadow) {
         throw shadowError;
       }
 
       return auditEvent.id;
     } catch (error: any) {
+      if (localCommitted) {
+        logger.error('Audit shadow write failed after local commit', { error });
+        throw error;
+      }
       logger.error('Failed to write audit log', { error });
       // Still log to standard logger as fallback
       this.logToStandardLogger(auditEvent);
@@ -449,9 +523,94 @@ export class AuditLogger {
    */
   private createSignature(event: AuditEvent): string {
     const crypto = require('crypto');
+    return crypto.createHmac('sha256', this.auditSecret).update(this.signingPayloadFromEvent(event)).digest('hex');
+  }
 
-    const data = `${event.id}|${event.timestamp}|${event.eventType}|${event.action}|${event.status}`;
-    return crypto.createHmac('sha256', this.auditSecret).update(data).digest('hex');
+  /**
+   * Canonical serialization of every persisted forensic field.
+   *
+   * AG-003: the previous signature covered only id|timestamp|eventType|action|status,
+   * leaving details_json, actor_*, target_*, severity, category and tenant_id
+   * tamperable without invalidating the signature. Anyone with DB write access
+   * could rewrite "which IP was blocked / what command ran / who was affected"
+   * and verifyIntegrity would still report VALID. The signature now binds all of
+   * them. `details_json` is serialized identically to the stored column
+   * (JSON.stringify of the sanitized details) so the signed bytes match the row.
+   */
+  private signingPayload(event: {
+    id: string;
+    timestamp: string;
+    tenantId?: string | null;
+    eventType: string;
+    category: string;
+    severity: string;
+    actorType: string;
+    actorId: string;
+    actorEmail?: string | null;
+    actorIp?: string | null;
+    action: string;
+    targetType?: string | null;
+    targetId?: string | null;
+    detailsJson: string;
+    status: string;
+  }): string {
+    return [
+      event.id,
+      event.timestamp,
+      event.tenantId ?? '',
+      event.eventType,
+      event.category,
+      event.severity,
+      event.actorType,
+      event.actorId,
+      event.actorEmail ?? '',
+      event.actorIp ?? '',
+      event.action,
+      event.targetType ?? '',
+      event.targetId ?? '',
+      event.detailsJson,
+      event.status
+    ].join('|');
+  }
+
+  private signingPayloadFromEvent(event: AuditEvent): string {
+    return this.signingPayload({
+      id: event.id,
+      timestamp: event.timestamp,
+      tenantId: event.tenantId ?? null,
+      eventType: event.eventType,
+      category: event.category,
+      severity: event.severity,
+      actorType: event.actor.type,
+      actorId: event.actor.id,
+      actorEmail: event.actor.email ?? null,
+      actorIp: event.actor.ip ?? null,
+      action: event.action,
+      targetType: event.target?.type ?? null,
+      targetId: event.target?.id ?? null,
+      detailsJson: JSON.stringify(event.details),
+      status: event.status
+    });
+  }
+
+  private signingPayloadFromRow(row: any): string {
+    return this.signingPayload({
+      id: row.id,
+      timestamp: row.timestamp,
+      tenantId: row.tenant_id ?? null,
+      eventType: row.event_type,
+      category: row.category,
+      severity: row.severity,
+      actorType: row.actor_type,
+      actorId: row.actor_id,
+      actorEmail: row.actor_email ?? null,
+      actorIp: row.actor_ip ?? null,
+      action: row.action,
+      targetType: row.target_type ?? null,
+      targetId: row.target_id ?? null,
+      detailsJson: row.details_json,
+      status: row.status
+    });
   }
 
   /**
@@ -489,9 +648,13 @@ export class AuditLogger {
     }
 
     // SECURITY FIX: Use class property instead of environment variable
+    // AG-003: verify against every persisted forensic field, not just the
+    // 5-field header. A row whose details_json/actor/target/severity was
+    // rewritten must now fail verification.
     const crypto = require('crypto');
-    const data = `${log.id}|${log.timestamp}|${log.event_type}|${log.action}|${log.status}`;
-    const expected = crypto.createHmac('sha256', this.auditSecret).update(data).digest('hex');
+    const expected = crypto.createHmac('sha256', this.auditSecret)
+      .update(this.signingPayloadFromRow(log))
+      .digest('hex');
 
     return log.signature === expected;
   }
@@ -511,8 +674,9 @@ export class AuditLogger {
     }
 
     const crypto = require('crypto');
-    const data = `${log.id}|${log.timestamp}|${log.event_type}|${log.action}|${log.status}`;
-    const expected = crypto.createHmac('sha256', this.auditSecret).update(data).digest('hex');
+    const expected = crypto.createHmac('sha256', this.auditSecret)
+      .update(this.signingPayloadFromRow(log))
+      .digest('hex');
     return log.signature === expected;
   }
 
@@ -988,13 +1152,17 @@ export class AuditLogger {
    * SECURITY FIX CVE-2026-104: Start periodic backup check
    * Runs daily to check if rotation is needed
    */
-  private startPeriodicBackupCheck(): void {
+  public startBackgroundJobs(): void {
+    if (this.backupCheckTimer || this.initialArchiverTimer || this.archiverTimer) {
+      return;
+    }
+
     // Check every 24 hours
     const checkInterval = 24 * 60 * 60 * 1000;
     const archiveIntervalMinutes = Math.max(15, parseInt(process.env.AUDIT_SEGMENT_ARCHIVE_INTERVAL_MINUTES || '60', 10) || 60);
     const archiveInterval = archiveIntervalMinutes * 60 * 1000;
 
-    const runSegmentArchiver = async () => {
+    const runSegmentArchiver = async (): Promise<void> => {
       try {
         const result = await auditSegmentService.archivePending({
           maxSegments: parseInt(process.env.AUDIT_SEGMENT_MAX_BATCHES || '5', 10) || 5,
@@ -1011,39 +1179,67 @@ export class AuditLogger {
       }
     };
 
-    const backupCheckTimer = setInterval(async () => {
-      try {
-        const needsRotation = await this.checkDatabaseSize();
+    this.backupCheckTimer = setInterval(() => {
+      this.trackBackgroundRun((async () => {
+        try {
+          const needsRotation = await this.checkDatabaseSize();
 
-        if (needsRotation) {
-          logger.info('Database size limit reached, starting rotation');
-          await this.rotateLogs();
+          if (needsRotation) {
+            logger.info('Database size limit reached, starting rotation');
+            await this.rotateLogs();
+          }
+        } catch (error) {
+          logger.error('Periodic backup check failed', { error });
         }
-      } catch (error) {
-        logger.error('Periodic backup check failed', { error });
-      }
+      })());
     }, checkInterval);
-    if (typeof backupCheckTimer.unref === 'function') {
-      backupCheckTimer.unref();
+    if (typeof this.backupCheckTimer.unref === 'function') {
+      this.backupCheckTimer.unref();
     }
 
-    const initialArchiverTimer = setTimeout(() => {
-      void runSegmentArchiver();
+    this.initialArchiverTimer = setTimeout(() => {
+      this.initialArchiverTimer = null;
+      this.trackBackgroundRun(runSegmentArchiver());
     }, 15 * 1000);
-    if (typeof initialArchiverTimer.unref === 'function') {
-      initialArchiverTimer.unref();
+    if (typeof this.initialArchiverTimer.unref === 'function') {
+      this.initialArchiverTimer.unref();
     }
 
-    const archiverTimer = setInterval(() => {
-      void runSegmentArchiver();
+    this.archiverTimer = setInterval(() => {
+      this.trackBackgroundRun(runSegmentArchiver());
     }, archiveInterval);
-    if (typeof archiverTimer.unref === 'function') {
-      archiverTimer.unref();
+    if (typeof this.archiverTimer.unref === 'function') {
+      this.archiverTimer.unref();
     }
 
     logger.info('Periodic audit log backup check started', {
       segmentArchiveIntervalMinutes: archiveIntervalMinutes
     });
+  }
+
+  public async stopBackgroundJobs(): Promise<void> {
+    if (this.backupCheckTimer) {
+      clearInterval(this.backupCheckTimer);
+      this.backupCheckTimer = null;
+    }
+    if (this.initialArchiverTimer) {
+      clearTimeout(this.initialArchiverTimer);
+      this.initialArchiverTimer = null;
+    }
+    if (this.archiverTimer) {
+      clearInterval(this.archiverTimer);
+      this.archiverTimer = null;
+    }
+
+    await Promise.all(Array.from(this.backgroundRuns));
+  }
+
+  private trackBackgroundRun(run: Promise<void>): void {
+    this.backgroundRuns.add(run);
+    void run.then(
+      () => this.backgroundRuns.delete(run),
+      () => this.backgroundRuns.delete(run)
+    );
   }
 }
 
@@ -1078,6 +1274,12 @@ export function getAuditShadowWriteMetrics(): AuditShadowWriteMetrics {
     failures: auditShadowWriteFailures,
     lastError: auditShadowWriteLastError
   };
+}
+
+export async function flushPendingAuditShadowWrites(): Promise<void> {
+  while (pendingAuditShadowWrites.size > 0) {
+    await Promise.all(pendingAuditShadowWrites);
+  }
 }
 
 export function resetAuditShadowWriteMetrics(): void {

@@ -32,9 +32,7 @@ use std::{
 use tower::Service;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-use tracing::info;
-#[cfg(not(unix))]
-use tracing::warn;
+use tracing::{info, warn};
 
 // ---------------------------------------------------------------------------
 // Protocol plugin data model + metadata helpers.

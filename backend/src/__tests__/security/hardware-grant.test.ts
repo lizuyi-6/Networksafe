@@ -9,12 +9,17 @@ import {
     stableStringify,
     hashPayload,
     buildHardwareGrantMessage,
+    validateHardwareGrantPublicKey,
     verifyHardwareGrantSignature,
     type HardwareGrantMessageInput,
     type HardwareGrantEnvelope
 } from '../../security/hardware-grant';
 
 function keyPair() {
+    return generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+}
+
+function rsaKeyPair() {
     return generateKeyPairSync('rsa', { modulusLength: 2048 });
 }
 
@@ -84,7 +89,11 @@ describe('hardware-grant signature verification', () => {
         const privPem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
         const pubPem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
         const message = buildHardwareGrantMessage(baseInput);
-        const envelope: HardwareGrantEnvelope = { ...baseInput, signature: signGrant(privPem, message) };
+        const envelope: HardwareGrantEnvelope = {
+            ...baseInput,
+            signature: signGrant(privPem, message),
+            algorithm: 'ECDSA_P256_SHA256'
+        };
         expect(verifyHardwareGrantSignature(pubPem, envelope)).toBe(true);
     });
 
@@ -94,7 +103,11 @@ describe('hardware-grant signature verification', () => {
         const privPem = signer.privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
         const pubPem = verifier.publicKey.export({ type: 'spki', format: 'pem' }).toString();
         const message = buildHardwareGrantMessage(baseInput);
-        const envelope: HardwareGrantEnvelope = { ...baseInput, signature: signGrant(privPem, message) };
+        const envelope: HardwareGrantEnvelope = {
+            ...baseInput,
+            signature: signGrant(privPem, message),
+            algorithm: 'ECDSA_P256_SHA256'
+        };
         expect(verifyHardwareGrantSignature(pubPem, envelope)).toBe(false);
     });
 
@@ -106,9 +119,37 @@ describe('hardware-grant signature verification', () => {
         const envelope: HardwareGrantEnvelope = {
             ...baseInput,
             commandType: 'factory_reset', // tampered after signing
-            signature: signGrant(privPem, message)
+            signature: signGrant(privPem, message),
+            algorithm: 'ECDSA_P256_SHA256'
         };
         expect(verifyHardwareGrantSignature(pubPem, envelope)).toBe(false);
+    });
+
+    it('rejects a grant when the grant algorithm does not match the enrolled gate algorithm', () => {
+        const { privateKey, publicKey } = keyPair();
+        const privPem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+        const pubPem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
+        const message = buildHardwareGrantMessage(baseInput);
+        const envelope: HardwareGrantEnvelope = {
+            ...baseInput,
+            signature: signGrant(privPem, message),
+            algorithm: 'RSA_SHA256'
+        };
+        expect(verifyHardwareGrantSignature(pubPem, envelope, 'ECDSA_P256_SHA256')).toBe(false);
+    });
+
+    it('rejects RSA public keys even when the signature verifies cryptographically', () => {
+        const { privateKey, publicKey } = rsaKeyPair();
+        const privPem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+        const pubPem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
+        const message = buildHardwareGrantMessage(baseInput);
+        const envelope: HardwareGrantEnvelope = {
+            ...baseInput,
+            signature: signGrant(privPem, message),
+            algorithm: 'ECDSA_P256_SHA256'
+        };
+        expect(validateHardwareGrantPublicKey(pubPem)).toBe(false);
+        expect(verifyHardwareGrantSignature(pubPem, envelope, 'ECDSA_P256_SHA256')).toBe(false);
     });
 
     it('verifies a legacy (no extended fields) grant via the legacy message path', () => {
@@ -127,7 +168,11 @@ describe('hardware-grant signature verification', () => {
             legacy.targetId, legacy.commandType, legacy.payloadHash,
             legacy.issuedAt, legacy.expiresAt, String(legacy.monotonicCounter)
         ].join('\n');
-        const envelope: HardwareGrantEnvelope = { ...legacy, signature: signGrant(privPem, legacyMessage) };
+        const envelope: HardwareGrantEnvelope = {
+            ...legacy,
+            signature: signGrant(privPem, legacyMessage),
+            algorithm: 'ECDSA_P256_SHA256'
+        };
         expect(verifyHardwareGrantSignature(pubPem, envelope)).toBe(true);
     });
 

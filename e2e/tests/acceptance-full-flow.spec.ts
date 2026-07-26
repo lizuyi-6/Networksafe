@@ -243,6 +243,7 @@ test.describe('AetherGuard full acceptance flows', () => {
         await step(page, monitor, 'scanner normal and invalid target flow', async () => {
             await gotoProtected(page, '/scanner', 'Scanner');
             await page.getByTestId('scanner-targets').fill('http://example.com\nhttps://example.org/security');
+            await page.getByTestId('scanner-include-local-host').check();
             await page.getByTestId('scanner-include-system').uncheck();
             await page.getByTestId('scanner-include-web').check();
             await page.getByTestId('scanner-include-ports').uncheck();
@@ -317,7 +318,7 @@ test.describe('AetherGuard full acceptance flows', () => {
             });
         }, { checkControls: !isMobileViewport(page), screenshot: true });
 
-        await step(page, monitor, 'deployment wizard normal and serial fallback flow', async () => {
+        await step(page, monitor, 'deployment wizard generation and download flow', async () => {
             await gotoProtected(page, '/deploy', 'Deploy');
             await expect(page.getByTestId('deploy-next')).toBeDisabled();
             await page.getByTestId('deploy-target-nginx').click();
@@ -331,11 +332,6 @@ test.describe('AetherGuard full acceptance flows', () => {
             await expect(page.getByTestId('deploy-save-version')).toBeVisible({ timeout: 15000 });
             await page.getByTestId('deploy-save-version').click();
             await expect(page.getByTestId('deploy-preview-download-bundle')).not.toHaveAttribute('href', '#', { timeout: 15000 });
-            await page.getByTestId('deploy-go-device-write').click();
-            await expect(page.getByTestId('deploy-connect-serial')).toBeVisible();
-            if (!(await page.getByTestId('deploy-connect-serial').isEnabled())) {
-                await expect(page.locator('main')).toContainText(/serial|unsupported|not supported|串口|不支持/i);
-            }
             await page.getByTestId('deploy-start-over').click();
             await expect(page.getByTestId('deploy-next')).toBeDisabled();
         }, { checkControls: !isMobileViewport(page), screenshot: true });
@@ -399,9 +395,12 @@ test.describe('AetherGuard full acceptance flows', () => {
             const keyName = `e2e-acceptance-key-${Date.now()}`;
             await page.getByTestId('super-admin-api-key-name').fill(keyName);
             await page.getByTestId('super-admin-create-api-key').click();
+            await expect(page.getByTestId('super-admin-created-api-key')).toBeVisible({ timeout: 10000 });
+            await page.getByTestId('super-admin-copy-created-api-key').click();
+            await page.getByTestId('super-admin-dismiss-created-api-key').click();
+            await expect(page.getByTestId('super-admin-created-api-key')).toHaveCount(0);
             const keyRow = page.locator('[data-testid^="super-admin-api-key-row-"]').filter({ hasText: keyName }).first();
             await expect(keyRow).toBeVisible({ timeout: 10000 });
-            await keyRow.locator('[data-testid^="super-admin-copy-api-key-"]').click();
             await expect(keyRow).not.toContainText(/secret|token|hash|password/i);
             await keyRow.locator('[data-testid^="super-admin-delete-api-key-"]').click();
             await expect(page.locator('[data-testid^="super-admin-api-key-row-"]').filter({ hasText: keyName })).toHaveCount(0, { timeout: 10000 });

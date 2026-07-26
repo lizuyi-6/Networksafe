@@ -67,7 +67,7 @@ router.post('/simulate', async (req: Request, res: Response) => {
 
     const broadcastEvent = (event: string, data: any) => {
         if (agentGateway && typeof agentGateway.broadcastToDashboards === 'function') {
-            agentGateway.broadcastToDashboards(event, { simulationId, ...data });
+            agentGateway.broadcastToDashboards(event, { simulationId, tenantId, ...data });
         }
     };
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Copy, Cpu, Download, FileSearch, HardDrive, Key, Plus, RefreshCw, ShieldCheck, Trash2, Users, Zap, Megaphone, Edit2, Send, Archive } from 'lucide-react';
+import { AlertTriangle, Copy, Cpu, Download, FileSearch, HardDrive, Key, Plus, RefreshCw, ShieldCheck, Trash2, Users, Zap, Megaphone, Edit2, Send, Archive, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import {
     createAdminApiKey,
@@ -138,6 +138,7 @@ export default function SuperAdmin() {
     const [category, setCategory] = useState('all');
     const [range, setRange] = useState('7');
     const [keyName, setKeyName] = useState('Platform API Key');
+    const [createdApiKey, setCreatedApiKey] = useState<{ name: string; value: string; warning?: string } | null>(null);
     const [hostname, setHostname] = useState('protected-web-01');
     const [ttl, setTtl] = useState('10');
     const [maxUses, setMaxUses] = useState('1');
@@ -285,7 +286,20 @@ export default function SuperAdmin() {
     }, [tab]);
 
     const copy = async (value: string) => navigator.clipboard.writeText(value).catch(() => setError(t('superAdmin.error_copy')));
-    const createKey = async () => { await createAdminApiKey(keyName); setKeys(await fetchAdminApiKeys()); };
+    const createKey = async () => {
+        setError(null);
+        try {
+            const response = await createAdminApiKey(keyName);
+            const created = response?.data || response?.key || response;
+            if (!created?.apiKey) {
+                throw new Error('FG-ADMIN-APIKEYS-PLAINTEXT-MISSING');
+            }
+            setCreatedApiKey({ name: created.name || keyName, value: created.apiKey, warning: created.warning });
+            setKeys(await fetchAdminApiKeys());
+        } catch (createError: any) {
+            setError(createError?.message || 'FG-ADMIN-APIKEYS-CREATE');
+        }
+    };
     const removeKey = async (id: string) => { await deleteAdminApiKey(id); setKeys(await fetchAdminApiKeys()); };
     const createCode = async () => {
         const result = await createAgentOnboardingCode({ hostname, ttlMinutes: Number(ttl), maxUses: Number(maxUses) });
@@ -483,7 +497,24 @@ export default function SuperAdmin() {
 
                 <div className="space-y-6">
                     <ConsolePanel title={t('superAdmin.admin_api_keys')} subtitle={t('superAdmin.admin_api_keys_subtitle')} icon={Key} iconTone="warning" headerAction={<button data-testid="super-admin-create-api-key" onClick={createKey} className="flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"><Plus size={14} />{t('superAdmin.create_key')}</button>}>
-                        <div className="space-y-3"><input data-testid="super-admin-api-key-name" value={keyName} onChange={(event) => setKeyName(event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder={t('superAdmin.key_name')} />{keys.length === 0 ? <ConsoleEmptyState title={t('superAdmin.no_api_keys')} description={t('superAdmin.no_api_keys_desc')} /> : keys.map((key) => <div key={key.id} data-testid={`super-admin-api-key-row-${key.id}`} className="flex flex-col gap-3 rounded-xl border border-border bg-muted/10 p-4"><div className="flex items-start justify-between gap-3"><div><div className="text-sm font-medium text-foreground">{key.name}</div><div className="font-mono text-xs text-muted-foreground">{key.prefix}**************</div></div><div className="flex gap-1"><button data-testid={`super-admin-copy-api-key-${key.id}`} aria-label={`Copy ${key.name}`} onClick={() => copy(`${key.prefix}**************`)} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Copy size={14} /></button><button data-testid={`super-admin-delete-api-key-${key.id}`} aria-label={`Delete ${key.name}`} onClick={() => removeKey(key.id)} className="rounded-md p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300"><Trash2 size={14} /></button></div></div><div className="text-xs text-muted-foreground">{t('superAdmin.created')} {fmt(key.created, t)} / {t('superAdmin.last_used')} {key.lastUsed}</div></div>)}</div>
+                        <div className="space-y-3">
+                            <input data-testid="super-admin-api-key-name" value={keyName} onChange={(event) => setKeyName(event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder={t('superAdmin.key_name')} />
+                            {createdApiKey && (
+                                <div data-testid="super-admin-created-api-key" role="status" className="border-l-4 border-amber-500 bg-amber-500/10 px-4 py-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <div className="text-xs font-medium text-amber-700 dark:text-amber-300">{createdApiKey.warning || 'The plaintext key is shown only once.'}</div>
+                                            <div className="mt-2 break-all font-mono text-sm text-foreground">{createdApiKey.value}</div>
+                                        </div>
+                                        <div className="flex shrink-0 gap-1">
+                                            <button data-testid="super-admin-copy-created-api-key" aria-label={`Copy ${createdApiKey.name}`} onClick={() => copy(createdApiKey.value)} className="rounded-md p-1.5 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"><Copy size={14} /></button>
+                                            <button data-testid="super-admin-dismiss-created-api-key" aria-label="Dismiss plaintext API key" onClick={() => setCreatedApiKey(null)} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><X size={14} /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {keys.length === 0 ? <ConsoleEmptyState title={t('superAdmin.no_api_keys')} description={t('superAdmin.no_api_keys_desc')} /> : keys.map((key) => <div key={key.id} data-testid={`super-admin-api-key-row-${key.id}`} className="flex flex-col gap-3 rounded-xl border border-border bg-muted/10 p-4"><div className="flex items-start justify-between gap-3"><div><div className="text-sm font-medium text-foreground">{key.name}</div><div className="font-mono text-xs text-muted-foreground">{key.prefix}**************</div></div><button data-testid={`super-admin-delete-api-key-${key.id}`} aria-label={`Delete ${key.name}`} onClick={() => removeKey(key.id)} className="rounded-md p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300"><Trash2 size={14} /></button></div><div className="text-xs text-muted-foreground">{t('superAdmin.created')} {fmt(key.created, t)} / {t('superAdmin.last_used')} {key.lastUsed}</div></div>)}
+                        </div>
                     </ConsolePanel>
                     <ConsolePanel title={t('superAdmin.recent_errors')} subtitle={t('superAdmin.recent_errors_subtitle')} icon={AlertTriangle} iconTone="danger"><div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-muted/30 text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">{t('superAdmin.col_user')}</th><th className="px-3 py-2">{t('superAdmin.col_error_code')}</th><th className="px-3 py-2">{t('superAdmin.col_message')}</th><th className="px-3 py-2">{t('superAdmin.col_time')}</th></tr></thead><tbody className="divide-y divide-border/50">{errors.map((item: any, index: number) => <tr key={`${item.userId}-${index}`}><td className="px-3 py-2 font-mono text-foreground">{item.userId}</td><td className="px-3 py-2"><span className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">{item.errorCode}</span></td><td className="px-3 py-2 text-rose-300">{item.message}</td><td className="px-3 py-2 text-muted-foreground">{fmt(item.timestamp, t)}</td></tr>)}</tbody></table></div></ConsolePanel>
                     <ConsolePanel title={t('superAdmin.endpoint_performance')} subtitle={t('superAdmin.endpoint_performance_subtitle')} icon={Zap} iconTone="success"><div className="grid grid-cols-2 gap-4"><div className="rounded-xl border border-border bg-muted/10 p-4"><div className="text-xs text-muted-foreground">{t('superAdmin.avg_cpu_overhead')}</div><div className="mt-2 text-2xl font-semibold text-foreground">{perf.clients?.avg_cpu_overhead ?? 'N/A'}%</div></div><div className="rounded-xl border border-border bg-muted/10 p-4"><div className="text-xs text-muted-foreground">{t('superAdmin.avg_added_latency')}</div><div className="mt-2 text-2xl font-semibold text-foreground">{perf.clients?.avg_latency_added ?? 'N/A'}</div></div></div></ConsolePanel>

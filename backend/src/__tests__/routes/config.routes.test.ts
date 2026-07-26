@@ -2,6 +2,7 @@ import express from 'express';
 import request from 'supertest';
 import configRouter from '../../api/routes/config.routes';
 import { platformConfigService } from '../../services/platform-config.service';
+import auditLogger from '../../security/audit-logger.service';
 
 jest.mock('../../middleware/auth.middleware', () => ({
   authenticate: jest.fn((req: any, _res: any, next: any) => {
@@ -97,5 +98,44 @@ describe('Config Routes', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data.edgeAuto.protocolDefaults.modules.mqtt.relayEnabled).toBe(true);
     expect(response.body.data.edgeAuto.protocolDefaults.legacy).toBeUndefined();
+  });
+
+  it('rejects a preferred AI model outside the server catalog', async () => {
+    const response = await request(app)
+      .post('/api/config')
+      .send({ aiRouting: { preferredModelId: 'not-a-real-model' } });
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('backend.model_access_denied');
+    expect(platformConfigService.saveConfig).not.toHaveBeenCalled();
+  });
+
+  it('persists a catalog model through the existing partial config contract', async () => {
+    (platformConfigService.saveConfig as jest.Mock).mockImplementation(async (_tenantId, patch) => {
+      const current = await (platformConfigService.getConfig as jest.Mock)();
+      return {
+        ...current,
+        aiRouting: {
+          ...current.aiRouting,
+          ...patch.aiRouting
+        }
+      };
+    });
+
+    const response = await request(app)
+      .post('/api/config')
+      .send({ aiRouting: { preferredModelId: 'glm-5' } });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.config.aiRouting.preferredModelId).toBe('glm-5');
+    expect(platformConfigService.saveConfig).toHaveBeenCalledWith(
+      'tenant-001',
+      { aiRouting: { preferredModelId: 'glm-5' } },
+      'test-user'
+    );
+    expect(auditLogger.log).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: 'platform_config_updated',
+      details: expect.objectContaining({ preferredModelId: 'glm-5' })
+    }));
   });
 });

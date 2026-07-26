@@ -15,7 +15,7 @@ import { Server as HttpServer } from 'http';
 import { isIPv4, isIPv6 } from 'net';
 import logger from '../utils/logger';
 import { AgentStatus, ThreatAlert } from '../agent';
-import { verifyTokenAsync, AuthenticatedRequest } from '../middleware/auth.middleware';
+import { verifyTokenAsyncDetailed, AuthenticatedRequest } from '../middleware/auth.middleware';
 import agentAuthService from '../security/agent-auth.service';
 import commandSigningService from '../security/command-signing.service';
 import auditLogger from '../security/audit-logger.service';
@@ -52,6 +52,51 @@ const RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 100;
 const USER_RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_USER_REQUESTS_PER_WINDOW = 150; // Slightly higher than per-socket limit
+const DEFAULT_DASHBOARD_SESSION_REVALIDATE_MS = 60_000;
+
+function resolveDashboardSessionRevalidateMs(): number {
+  const parsed = Number(process.env.WS_DASHBOARD_SESSION_REVALIDATE_MS);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return process.env.NODE_ENV === 'test'
+      ? Math.max(1, Math.floor(parsed))
+      : Math.max(5_000, Math.floor(parsed));
+  }
+  return DEFAULT_DASHBOARD_SESSION_REVALIDATE_MS;
+}
+
+const DEFAULT_AGENT_SESSION_REVALIDATE_MS = 60_000;
+const DEFAULT_AGENT_HEARTBEAT_TIMEOUT_MS = 5 * 60_000;
+const DEFAULT_AGENT_HEARTBEAT_SWEEP_MS = 30_000;
+
+function resolveAgentSessionRevalidateMs(): number {
+  const parsed = Number(process.env.WS_AGENT_SESSION_REVALIDATE_MS);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return process.env.NODE_ENV === 'test'
+      ? Math.max(1, Math.floor(parsed))
+      : Math.max(5_000, Math.floor(parsed));
+  }
+  return DEFAULT_AGENT_SESSION_REVALIDATE_MS;
+}
+
+function resolveAgentHeartbeatTimeoutMs(): number {
+  const parsed = Number(process.env.WS_AGENT_HEARTBEAT_TIMEOUT_MS);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return process.env.NODE_ENV === 'test'
+      ? Math.max(1, Math.floor(parsed))
+      : Math.max(30_000, Math.floor(parsed));
+  }
+  return DEFAULT_AGENT_HEARTBEAT_TIMEOUT_MS;
+}
+
+function resolveAgentHeartbeatSweepMs(): number {
+  const parsed = Number(process.env.WS_AGENT_HEARTBEAT_SWEEP_MS);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return process.env.NODE_ENV === 'test'
+      ? Math.max(1, Math.floor(parsed))
+      : Math.max(1_000, Math.floor(parsed));
+  }
+  return DEFAULT_AGENT_HEARTBEAT_SWEEP_MS;
+}
 
 /**
  * SECURITY (Sprint 5 Wave 2 · F5): per-agent-event rate limits. Each
@@ -266,6 +311,8 @@ export class AgentGateway {
   private io: SocketIOServer<AgentClientToServerEvents, AgentServerToClientEvents>;
   private agents: Map<string, ConnectedAgent> = new Map();
   private dashboardClients: Map<string, DashboardClient> = new Map();
+  private heartbeatSweepTimer: ReturnType<typeof setInterval>;
+  private sessionRevalidationTimers = new Set<ReturnType<typeof setInterval>>();
   private testOnlineCounter = 0;
   // SECURITY FIX D22: per-IP connection cap using Set<socketId> rather
   // than a counter, so two concurrent connects cannot both read
@@ -301,6 +348,10 @@ export class AgentGateway {
 
     this.setupAuthentication();
     this.setupEventHandlers();
+    this.heartbeatSweepTimer = setInterval(() => {
+      this.sweepStaleAgents();
+    }, resolveAgentHeartbeatSweepMs());
+    this.heartbeatSweepTimer.unref?.();
 
     logger.info('Agent Gateway initialized with secure authentication');
   }
@@ -403,13 +454,23 @@ export class AgentGateway {
           socket.data.clientType = 'agent';
           socket.data.tenantContext = tenantContext;
 
-          await auditLogger.logAgent({
-            action: 'connect',
-            agentId: authenticatedAgent.agentId,
-            ip: clientIp,
-            success: true,
-            details: { hostname: authenticatedAgent.hostname }
-          });
+          try {
+            await auditLogger.logAgent({
+              action: 'connect',
+              agentId: authenticatedAgent.agentId,
+              ip: clientIp,
+              success: true,
+              details: { hostname: authenticatedAgent.hostname }
+            });
+          } catch (auditError: any) {
+            logger.error('Audit log failed on agent connect (non-blocking)', { error: auditError?.message, agentId: authenticatedAgent.agentId });
+          }
+
+          // SECURITY: start periodic revalidation so a revoked agent's API key
+          // disconnects its live socket (revokeAgent flips status='revoked' in
+          // the DB; this timer polls getAgentStatus directly, bypassing the
+          // Redis auth cache that revokeAgent clears). See revalidateAgentSession.
+          this.startAgentSessionRevalidation(socket, authenticatedAgent.agentId);
 
           return next();
         }
@@ -446,7 +507,8 @@ export class AgentGateway {
         }
 
         // Verify JWT
-        const user = await verifyTokenAsync(token);
+        const verification = await verifyTokenAsyncDetailed(token);
+        const user = verification.user;
 
         if (!user) {
           await auditLogger.log({
@@ -458,7 +520,12 @@ export class AgentGateway {
             details: { reason: 'Invalid token' },
             status: 'failure'
           });
-          return next(new Error('backend.invalid_or_expired_token'));
+          return next(new Error(
+            verification.failureReason === 'redis_unavailable' ||
+            verification.failureReason === 'blacklist_check_failed'
+              ? 'backend.auth_blacklist_check_unavailable'
+              : 'backend.invalid_or_expired_token'
+          ));
         }
 
         // Attach to socket
@@ -481,16 +548,21 @@ export class AgentGateway {
         socket.data.user = user;
         socket.data.clientType = 'dashboard';
         socket.data.tenantContext = tenantContext;
+        socket.data.authToken = token;
 
-        await auditLogger.log({
-          eventType: 'dashboard_connection',
-          category: 'auth',
-          severity: 'info',
-          actor: { type: 'user', id: user.userId, ip: clientIp },
-          action: 'connect',
-          details: { email: user.email },
-          status: 'success'
-        });
+        try {
+          await auditLogger.log({
+            eventType: 'dashboard_connection',
+            category: 'auth',
+            severity: 'info',
+            actor: { type: 'user', id: user.userId, ip: clientIp },
+            action: 'connect',
+            details: { email: user.email },
+            status: 'success'
+          });
+        } catch (auditError: any) {
+          logger.error('Audit log failed on dashboard connect (non-blocking)', { error: auditError?.message, userId: user.userId });
+        }
 
         next();
       } catch (error: any) {
@@ -705,15 +777,19 @@ export class AgentGateway {
         return;
       }
 
-      await auditLogger.log({
-        eventType: 'threat_detected',
-        category: 'agent',
-        severity: 'critical',
-        actor: { type: 'agent', id: agent.agentId },
-        action: 'threat_alert',
-        details: threat,
-        status: 'success'
-      });
+      try {
+        await auditLogger.log({
+          eventType: 'threat_detected',
+          category: 'agent',
+          severity: 'critical',
+          actor: { type: 'agent', id: agent.agentId },
+          action: 'threat_alert',
+          details: threat,
+          status: 'success'
+        });
+      } catch (auditError: any) {
+        logger.error('Audit log failed for threat event (non-blocking, broadcast continues)', { error: auditError?.message, agentId: agent.agentId });
+      }
 
       try {
         await detectionPipelineService.recordBlockedThreat({
@@ -845,7 +921,7 @@ export class AgentGateway {
         details: data || {},
         status: 'success'
       });
-      commandDispatcherService.handleAgentCommandAck(agent.agentId, data || {});
+      commandDispatcherService.handleAgentCommandAck(agent.agentId, tenantContext.tenantId, data || {});
       this.broadcastToDashboards('agent:command:ack', {
         agentId: agent.agentId,
         ...data,
@@ -864,7 +940,7 @@ export class AgentGateway {
         details: data || {},
         status: 'failure'
       });
-      commandDispatcherService.handleAgentCommandFailure(agent.agentId, data || {});
+      commandDispatcherService.handleAgentCommandFailure(agent.agentId, tenantContext.tenantId, data || {});
       this.broadcastToDashboards('agent:command:failed', {
         agentId: agent.agentId,
         ...data,
@@ -890,6 +966,8 @@ export class AgentGateway {
       socketId: socket.id,
       tenantId: tenantContext.tenantId
     });
+
+    this.startDashboardSessionRevalidation(socket, user, tenantContext);
 
     // Send current agent list
     this.emitAgentListToDashboard(socket.id, tenantContext.tenantId);
@@ -924,16 +1002,43 @@ export class AgentGateway {
         return;
       }
 
-      await auditLogger.logCommand({
-        commandType: 'scan',
-        agentId: payload.agentId,
-        userId: user.userId,
-        success: true
-      });
+      try {
+        await this.auditCommandDispatchAttempt('scan', payload.agentId, user.userId);
+      } catch (auditError: any) {
+        logger.error('Command pre-dispatch audit failed; command not sent', {
+          commandType: 'scan',
+          agentId: payload.agentId,
+          error: auditError?.message
+        });
+        socket.emit('error', { message: 'backend.command_not_delivered', reason: 'audit_unavailable' });
+        return;
+      }
 
-      this.sendSignedCommand(payload.agentId, 'scan', undefined, user.userId, {
+      const sent = this.sendSignedCommand(payload.agentId, 'scan', undefined, user.userId, {
         tenantId: tenantContext.tenantId
       });
+      try {
+        await auditLogger.logCommand({
+          commandType: 'scan',
+          agentId: payload.agentId,
+          userId: user.userId,
+          success: sent
+        });
+      } catch (auditError: any) {
+        logger.error('Command outcome audit failed after dispatch decision', {
+          commandType: 'scan',
+          agentId: payload.agentId,
+          sent,
+          error: auditError?.message
+        });
+        socket.emit('error', sent
+          ? { message: 'backend.command_delivery_audit_failed', reason: 'command_may_have_been_delivered' }
+          : { message: 'backend.command_not_delivered', reason: 'agent_offline_or_rejected', auditStatus: 'failed' });
+        return;
+      }
+      if (!sent) {
+        socket.emit('error', { message: 'backend.command_not_delivered', reason: 'agent_offline_or_rejected' });
+      }
     });
 
     // Block IP request - SECURITY FIX CVE-2026-301: Validate and audit with user-level rate limiting
@@ -995,17 +1100,44 @@ export class AgentGateway {
         return;
       }
 
-      await auditLogger.logFirewall({
-        action: 'block_ip',
-        agentId: payload.agentId,
-        ip: payload.ip,
-        userId: user.userId,
-        success: true
-      });
+      try {
+        await this.auditCommandDispatchAttempt('block_ip', payload.agentId, user.userId, { ip: payload.ip });
+      } catch (auditError: any) {
+        logger.error('Command pre-dispatch audit failed; command not sent', {
+          commandType: 'block_ip',
+          agentId: payload.agentId,
+          error: auditError?.message
+        });
+        socket.emit('error', { message: 'backend.command_not_delivered', reason: 'audit_unavailable' });
+        return;
+      }
 
-      this.sendSignedCommand(payload.agentId, 'block_ip', { ip: payload.ip }, user.userId, {
+      const sent = this.sendSignedCommand(payload.agentId, 'block_ip', { ip: payload.ip }, user.userId, {
         tenantId: tenantContext.tenantId
       });
+      try {
+        await auditLogger.logFirewall({
+          action: 'block_ip',
+          agentId: payload.agentId,
+          ip: payload.ip,
+          userId: user.userId,
+          success: sent
+        });
+      } catch (auditError: any) {
+        logger.error('Command outcome audit failed after dispatch decision', {
+          commandType: 'block_ip',
+          agentId: payload.agentId,
+          sent,
+          error: auditError?.message
+        });
+        socket.emit('error', sent
+          ? { message: 'backend.command_delivery_audit_failed', reason: 'command_may_have_been_delivered' }
+          : { message: 'backend.command_not_delivered', reason: 'agent_offline_or_rejected', auditStatus: 'failed' });
+        return;
+      }
+      if (!sent) {
+        socket.emit('error', { message: 'backend.command_not_delivered', reason: 'agent_offline_or_rejected' });
+      }
     });
 
     // Unblock IP request - SECURITY FIX CVE-2026-301: Validate and audit with user-level rate limiting
@@ -1052,18 +1184,219 @@ export class AgentGateway {
         return;
       }
 
-      await auditLogger.logFirewall({
-        action: 'unblock_ip',
-        agentId: payload.agentId,
-        ip: payload.ip,
-        userId: user.userId,
-        success: true
-      });
+      try {
+        await this.auditCommandDispatchAttempt('unblock_ip', payload.agentId, user.userId, { ip: payload.ip });
+      } catch (auditError: any) {
+        logger.error('Command pre-dispatch audit failed; command not sent', {
+          commandType: 'unblock_ip',
+          agentId: payload.agentId,
+          error: auditError?.message
+        });
+        socket.emit('error', { message: 'backend.command_not_delivered', reason: 'audit_unavailable' });
+        return;
+      }
 
-      this.sendSignedCommand(payload.agentId, 'unblock_ip', { ip: payload.ip }, user.userId, {
+      const sent = this.sendSignedCommand(payload.agentId, 'unblock_ip', { ip: payload.ip }, user.userId, {
         tenantId: tenantContext.tenantId
       });
+      try {
+        await auditLogger.logFirewall({
+          action: 'unblock_ip',
+          agentId: payload.agentId,
+          ip: payload.ip,
+          userId: user.userId,
+          success: sent
+        });
+      } catch (auditError: any) {
+        logger.error('Command outcome audit failed after dispatch decision', {
+          commandType: 'unblock_ip',
+          agentId: payload.agentId,
+          sent,
+          error: auditError?.message
+        });
+        socket.emit('error', sent
+          ? { message: 'backend.command_delivery_audit_failed', reason: 'command_may_have_been_delivered' }
+          : { message: 'backend.command_not_delivered', reason: 'agent_offline_or_rejected', auditStatus: 'failed' });
+        return;
+      }
+      if (!sent) {
+        socket.emit('error', { message: 'backend.command_not_delivered', reason: 'agent_offline_or_rejected' });
+      }
     });
+  }
+
+  private async auditCommandDispatchAttempt(
+    commandType: string,
+    agentId: string,
+    userId: string,
+    details: Record<string, unknown> = {}
+  ): Promise<void> {
+    if (process.env.AUDIT_LOG_FAIL_CLOSED !== 'true') {
+      return;
+    }
+
+    await auditLogger.log({
+      eventType: 'command_dispatch_attempt',
+      category: 'command',
+      severity: 'warning',
+      actor: { type: 'user', id: userId },
+      action: commandType,
+      target: { type: 'agent', id: agentId },
+      details: { phase: 'pre_dispatch', ...details },
+      status: 'attempt'
+    });
+  }
+
+  private startDashboardSessionRevalidation(
+    socket: Socket,
+    user: AuthenticatedRequest['user'],
+    tenantContext: TenantContext
+  ): void {
+    const token = socket.data.authToken;
+    if (!token || !user) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      void this.revalidateDashboardSession(socket, token, user, tenantContext);
+    }, resolveDashboardSessionRevalidateMs());
+    this.sessionRevalidationTimers.add(timer);
+    timer.unref?.();
+
+    socket.once('disconnect', () => {
+      clearInterval(timer);
+      this.sessionRevalidationTimers.delete(timer);
+    });
+  }
+
+  /**
+   * SECURITY: periodically re-check the agent's registration status and
+   * disconnect the live socket when revokeAgent (or any status change away
+   * from 'approved') takes effect. Mirrors startDashboardSessionRevalidation
+   * but for API-key-authenticated agents.
+   */
+  private startAgentSessionRevalidation(socket: Socket, agentId: string): void {
+    const timer = setInterval(() => {
+      void this.revalidateAgentSession(socket, agentId);
+    }, resolveAgentSessionRevalidateMs());
+    this.sessionRevalidationTimers.add(timer);
+    timer.unref?.();
+
+    socket.once('disconnect', () => {
+      clearInterval(timer);
+      this.sessionRevalidationTimers.delete(timer);
+    });
+  }
+
+  private async revalidateAgentSession(socket: Socket, agentId: string): Promise<void> {
+    if (!socket.connected) {
+      return;
+    }
+
+    let status: string | null = null;
+    let definitive = false;
+    try {
+      if (typeof agentAuthService.getAgentStatus !== 'function') {
+        // Incomplete test mock — skip rather than crash. Production always has it.
+        return;
+      }
+      status = agentAuthService.getAgentStatus(agentId);
+      definitive = true;
+    } catch (error: any) {
+      // Transient DB error: do NOT disconnect. A blip must not mass-kick agents.
+      logger.warn('Agent session revalidation status check failed (non-disconnecting)', {
+        agentId,
+        error: error?.message
+      });
+      return;
+    }
+
+    if (!definitive) {
+      return;
+    }
+
+    if (status !== 'approved') {
+      try {
+        await auditLogger.logAgent({
+          action: 'disconnect',
+          agentId,
+          ip: socket.handshake.address,
+          success: false,
+          details: { reason: 'agent_revoked_during_session', status: status ?? 'missing' }
+        });
+      } catch (auditError: any) {
+        logger.error('Audit log failed on agent revalidation disconnect (non-blocking)', {
+          error: auditError?.message,
+          agentId
+        });
+      }
+      socket.emit('error', {
+        message: 'backend.agent_session_revoked',
+        reason: status ? `status_${status}` : 'agent_removed'
+      });
+      socket.disconnect(true);
+    }
+  }
+
+  private async revalidateDashboardSession(
+    socket: Socket,
+    token: string,
+    originalUser: NonNullable<AuthenticatedRequest['user']>,
+    originalTenantContext: TenantContext
+  ): Promise<void> {
+    if (!socket.connected) {
+      return;
+    }
+
+    try {
+      const verification = await verifyTokenAsyncDetailed(token);
+      const refreshedUser = verification.user;
+      const refreshedTenantContext = refreshedUser
+        ? resolveUserTenantContext(refreshedUser, {
+          allowAdminPlatformFallback: refreshedUser.role === 'admin'
+        })
+        : null;
+
+      if (
+        !refreshedUser ||
+        refreshedUser.userId !== originalUser.userId ||
+        !refreshedTenantContext ||
+        refreshedTenantContext.tenantId !== originalTenantContext.tenantId
+      ) {
+        await auditLogger.log({
+          eventType: 'dashboard_session_revalidation',
+          category: 'auth',
+          severity: 'warning',
+          actor: { type: 'user', id: originalUser.userId, ip: socket.handshake.address },
+          action: 'revalidate_websocket_session',
+          details: {
+            reason: verification.failureReason || 'identity_or_tenant_changed',
+            socketId: socket.id
+          },
+          status: 'failure'
+        });
+        socket.emit('error', {
+          message: verification.failureReason === 'redis_unavailable' ||
+            verification.failureReason === 'blacklist_check_failed'
+            ? 'backend.auth_blacklist_check_unavailable'
+            : 'backend.websocket_session_invalidated',
+          reason: verification.failureReason || 'session_invalidated'
+        });
+        socket.disconnect(true);
+        return;
+      }
+
+      socket.data.user = refreshedUser;
+      socket.data.tenantContext = refreshedTenantContext;
+    } catch (error: any) {
+      logger.error('Dashboard WebSocket session revalidation failed', {
+        socketId: socket.id,
+        userId: originalUser.userId,
+        error: error?.message
+      });
+      socket.emit('error', { message: 'backend.websocket_session_revalidation_failed', reason: 'revalidation_failed' });
+      socket.disconnect(true);
+    }
   }
 
   /**
@@ -1106,9 +1439,8 @@ export class AgentGateway {
           tenantId: resolvedTenantId,
           message: `Synthetic agent accepted ${commandType}.`
         });
-        commandDispatcherService.handleAgentCommandAck(agentId, {
+        commandDispatcherService.handleAgentCommandAck(agentId, resolvedTenantId, {
           actionId: metadata?.actionId || payload?.actionId,
-          tenantId: resolvedTenantId,
           message: `Synthetic agent accepted ${commandType}.`
         });
         return true;
@@ -1163,11 +1495,18 @@ export class AgentGateway {
           tenantId: tenantContext.tenantId
         }, { tenantId: tenantContext.tenantId });
 
-        auditLogger.logAgent({
-          action: 'disconnect',
-          agentId: agent.agentId,
-          success: true
-        });
+        void Promise.resolve()
+          .then(() => auditLogger.logAgent({
+            action: 'disconnect',
+            agentId: agent.agentId,
+            success: true
+          }))
+          .catch((auditError: any) => {
+            logger.error('Audit log failed on agent disconnect (non-blocking)', {
+              error: auditError?.message,
+              agentId: agent.agentId
+            });
+          });
 
         logger.info(`Agent disconnected: ${agent.agentId}`);
       }
@@ -1177,13 +1516,68 @@ export class AgentGateway {
     }
   }
 
+  private sweepStaleAgents(nowMs: number = Date.now()): void {
+    const timeoutMs = resolveAgentHeartbeatTimeoutMs();
+    for (const agent of this.agents.values()) {
+      if (agent.isSynthetic) {
+        continue;
+      }
+
+      const heartbeatAgeMs = nowMs - agent.lastHeartbeat.getTime();
+      if (!Number.isFinite(heartbeatAgeMs) || heartbeatAgeMs <= timeoutMs) {
+        continue;
+      }
+
+      logger.warn('Agent heartbeat timed out; disconnecting stale session', {
+        agentId: agent.agentId,
+        heartbeatAgeMs,
+        timeoutMs
+      });
+      void Promise.resolve()
+        .then(() => auditLogger.logAgent({
+          action: 'disconnect',
+          agentId: agent.agentId,
+          success: false,
+          details: { reason: 'heartbeat_timeout', heartbeatAgeMs, timeoutMs }
+        }))
+        .catch((auditError: any) => {
+          logger.error('Audit log failed for stale-agent disconnect (non-blocking)', {
+            error: auditError?.message,
+            agentId: agent.agentId
+          });
+        });
+
+      const socket = this.io.sockets.sockets.get(agent.socketId);
+      if (socket) {
+        socket.emit('error', {
+          message: 'backend.agent_heartbeat_stale',
+          reason: 'heartbeat_timeout'
+        });
+        socket.disconnect(true);
+        continue;
+      }
+
+      this.agents.delete(agent.agentId);
+      this.broadcastToDashboards('agent:offline', {
+        agentId: agent.agentId,
+        tenantId: agent.tenantId,
+        reason: 'heartbeat_timeout'
+      }, { tenantId: agent.tenantId });
+      this.broadcastAgentListUpdates(agent.tenantId);
+    }
+  }
+
   /**
    * Broadcast to all dashboard clients
    */
   public broadcastToDashboards(event: string, data: any, options: { tenantId?: string } = {}): void {
     const targetTenantId = options.tenantId || data?.tenantId;
+    if (!targetTenantId) {
+      logger.warn('Dashboard broadcast dropped because tenant scope is missing', { event });
+      return;
+    }
     for (const [socketId, client] of this.dashboardClients) {
-      if (targetTenantId && !this.canAccessTenant(client.tenantId, targetTenantId)) {
+      if (!this.canAccessTenant(client.tenantId, targetTenantId)) {
         continue;
       }
       this.io.to(socketId).emit(event as keyof AgentServerToClientEvents, data);
@@ -1386,8 +1780,13 @@ export class AgentGateway {
   /**
    * Close gateway
    */
-  close(): void {
-    this.io.close();
+  async close(): Promise<void> {
+    clearInterval(this.heartbeatSweepTimer);
+    for (const timer of this.sessionRevalidationTimers) {
+      clearInterval(timer);
+    }
+    this.sessionRevalidationTimers.clear();
+    await this.io.close();
     logger.info('Agent Gateway closed');
   }
 }

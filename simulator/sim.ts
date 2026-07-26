@@ -21,11 +21,16 @@ console.log('══════════════════════�
 const se = new MockSecureElement({ deviceId: 'gw-sim-001' });
 const interlock = new MockInterlock();
 const controller = new MockController(se, interlock, 5000);
+const policyDigest = 'policy-digest-baseline-v1';
+let daemonAcceptedGrant = false;
+let controllerReleased = false;
+let bridgeReleasedObserved = false;
 
 const daemon = new GatewayDaemon({
   gatewayId: 'gw-sim-001',
   secureElementPublicKeyPem: se.getPublicKeyPem(),
   breakerTarget: 'server-lan-bridge',
+  policyDigest,
   heartbeatStaleMs: 45_000,
   releaseTtlMs: 30_000,
   onFrame: (frame) => {
@@ -55,7 +60,7 @@ setTimeout(() => {
 
   const counter = se.incrementMonotonicCounter();
   const grant: Omit<HardwareGrantEnvelope, 'signature'> = {
-    gateId: 'gate-1',
+    gateId: 'gw-sim-001',
     sessionId: 'sess-' + Date.now(),
     actionId: 'act-' + Date.now(),
     tenantId: 'tenant-1',
@@ -63,7 +68,7 @@ setTimeout(() => {
     targetId: 'gw-sim-001',
     commandType: 'interlock_release',
     payloadHash: '0'.repeat(64),
-    policyDigest: 'policy-digest-baseline-v1',
+    policyDigest,
     challenge: 'challenge-' + Date.now(),
     breakerTarget: 'server-lan-bridge',
     interlockAction: 'release',
@@ -76,25 +81,34 @@ setTimeout(() => {
   const signedGrant: HardwareGrantEnvelope = { ...grant, signature };
 
   console.log('[t+2.1s] M1 → M2: command interlock_release\n');
-  const result = controller.handleReleaseRequest(signedGrant);
-  if (result === 'released') {
-    daemon.requestRelease(signedGrant);
+  daemonAcceptedGrant = daemon.requestRelease(signedGrant);
+  if (daemonAcceptedGrant) {
+    controllerReleased = controller.handleReleaseRequest(signedGrant) === 'released';
+    bridgeReleasedObserved = daemon.isReleased() && daemon.getBridgeState() === 'released';
   }
 }, 2000);
 
 // Graceful shutdown
 setTimeout(() => {
+  const releaseExpiredIsolated = !daemon.isReleased() && daemon.getBridgeState() === 'isolated';
+  const checks: Array<[string, boolean]> = [
+    ['M1 accepted the context-bound signed grant', daemonAcceptedGrant],
+    ['M2 accepted the grant', controllerReleased],
+    ['M1 observed released feedback and applied release', bridgeReleasedObserved],
+    ['M1 re-asserted isolated after the release TTL', releaseExpiredIsolated]
+  ];
+  const ok = checks.every(([, passed]) => passed);
+
   console.log('\n[t+35.0s] Release window expired, daemon auto-reasserted isolated\n');
   console.log('═══════════════════════════════════════════════════════════');
-  console.log('  Simulation Complete');
-  console.log('  ✅ M1 Gateway Daemon: real code, verified control loop');
-  console.log('  ✅ M2 Controller: 12 core tasks simulated');
-  console.log('  ✅ M3 SE: ECDSA P-256 signing verified');
-  console.log('  ✅ M4 Interlock: relay + feedback confirmed');
+  console.log(`  Simulation ${ok ? 'PASS' : 'FAIL'}`);
+  for (const [label, passed] of checks) {
+    console.log(`  [${passed ? 'PASS' : 'FAIL'}] ${label}`);
+  }
   console.log('═══════════════════════════════════════════════════════════\n');
   daemon.shutdown();
   controller.shutdown();
-  process.exit(0);
+  process.exit(ok ? 0 : 1);
 }, 37000);
 
 console.log('🔴 [M1 Gateway] Boot: BRIDGE ISOLATED (default fail-closed)');

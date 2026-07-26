@@ -37,6 +37,20 @@ describe('finalDefenseService', () => {
     expect(normalizeInterlockState('asserted')).toBe('isolated');
   });
 
+  it('defaults non-finite release TTL before applying the safety clamp', () => {
+    const policy = finalDefenseService.upsertPolicy({
+      tenantId: 'tenant-release-ttl-nan',
+      companionId: 'companion-release-ttl-nan',
+      gateId: 'gate-release-ttl-nan',
+      breakerTarget: 'mgmt-uplink',
+      releaseTtlMs: 'abc' as any,
+      allowedActions: [{ commandType: 'interlock_release', requiresInterlockRelease: true }]
+    });
+
+    expect(Number.isFinite(policy.releaseTtlMs)).toBe(true);
+    expect(policy.releaseTtlMs).toBe(120_000);
+  });
+
   it('reports active only when the companion and hardware conditions match', () => {
     const policy = finalDefenseService.upsertPolicy({
       tenantId: 'tenant-final-defense',
@@ -214,6 +228,7 @@ describe('finalDefenseService', () => {
           })).end().sign(kp.privateKey, 'base64')
       };
       expect(daemon!.requestRelease(grant)).toBe(true);
+      daemon!.handleControllerFrame({ type: 'interlock_result', interlockState: 'released', feedbackOk: true });
       expect(daemon!.isReleased()).toBe(true);
     } finally {
       daemon!.shutdown();
@@ -258,10 +273,40 @@ describe('finalDefenseService', () => {
     expect(staleStatus?.active).toBe(false);
   });
 
+  it('treats an unparseable heartbeat timestamp as stale, not fresh (fail-closed)', () => {
+    const tenantId = `tenant-root-badhb-${Date.now()}`;
+    finalDefenseService.reportRootResistantGatewayStatus({
+      tenantId,
+      gatewayId: 'gateway-badhb',
+      policyDigest: 'digest-badhb',
+      reportedPolicyDigest: 'digest-badhb',
+      firmwareDigest: 'firmware-badhb',
+      lastAttestationAt: new Date().toISOString(),
+      bridgeState: 'isolated',
+      serverPortLink: true,
+      lanPortLink: true,
+      mgmtPath: 'dedicated_mgmt',
+      secureElementPresent: true
+    });
+
+    // Corrupt the stored heartbeat to a non-parseable value. new Date(x).getTime()
+    // is NaN and Date.now() > NaN is false, so an un-guarded check would report
+    // this gateway as fresh/online.
+    const { getDatabase } = require('../../config/database');
+    getDatabase().prepare(`UPDATE root_resistant_gateways SET last_heartbeat_at = ? WHERE gateway_id = ?`)
+      .run('not-a-timestamp', 'gateway-badhb');
+
+    const status = finalDefenseService.listRootResistantGateways(tenantId).find(g => g.gatewayId === 'gateway-badhb');
+    expect(status?.gatewayOnline).toBe(false);
+    expect(status?.degradedReasons).toEqual(expect.arrayContaining(['gateway_stale']));
+    expect(status?.active).toBe(false);
+  });
+
   it('blocks root-resistant high-risk actions until an external gateway is active', async () => {
     const tenantId = `tenant-root-action-${Date.now()}`;
     const companionId = `companion-root-action-${Date.now()}`;
     const gateId = `gate-root-action-${Date.now()}`;
+    const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
 
     finalDefenseService.upsertPolicy({
       tenantId,
@@ -274,7 +319,8 @@ describe('finalDefenseService', () => {
     hardwareAuthorizationService.enrollGate({
       tenantId,
       gateId,
-      publicKeyPem: '-----BEGIN PUBLIC KEY-----\nfixture\n-----END PUBLIC KEY-----',
+      publicKeyPem: keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      algorithm: 'ECDSA_P256_SHA256',
       status: 'online'
     });
 

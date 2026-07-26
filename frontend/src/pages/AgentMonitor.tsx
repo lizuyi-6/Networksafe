@@ -139,7 +139,7 @@ export default function AgentMonitor() {
             }
         >
             {error && (
-                <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-300">
+                <div data-testid="agent-monitor-error" role="alert" className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-300">
                     {error}
                 </div>
             )}

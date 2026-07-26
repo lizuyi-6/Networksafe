@@ -429,7 +429,7 @@ async function listCandidatesSnapshot(token, suffix, status) {
 }
 
 async function healthSnapshot(label) {
-  const response = await requestRaw(`${baseUrl}/api/health`);
+  const response = await requestRaw(`${baseUrl}/health/ready`);
   writeJson(path.join(outputDir, `health-${label}.json`), response.json || { status: response.status, raw: response.text });
   return unwrapApiPayload(response.json) || response.json || null;
 }
@@ -706,7 +706,7 @@ async function main() {
       }
 
       if (results.length % 20 === 0) {
-        const health = await requestRaw(`${baseUrl}/api/health`);
+        const health = await requestRaw(`${baseUrl}/health/ready`);
         const currentStatus = unwrapApiPayload(health.json)?.status || health.json?.status || 'unknown';
         if (currentStatus !== 'healthy') {
           unhealthySince = unhealthySince || Date.now();

@@ -16,6 +16,16 @@ import {
 } from '../../config/enterprise-runtime';
 
 describe('enterprise-runtime', () => {
+    const originalMode = process.env.ENTERPRISE_RUNTIME_MODE;
+    const originalBreakGlass = process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN;
+
+    afterEach(() => {
+        if (originalMode === undefined) delete process.env.ENTERPRISE_RUNTIME_MODE;
+        else process.env.ENTERPRISE_RUNTIME_MODE = originalMode;
+        if (originalBreakGlass === undefined) delete process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN;
+        else process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = originalBreakGlass;
+    });
+
     it('getEnterpriseRuntimeMode returns a valid mode', () => {
         const mode = getEnterpriseRuntimeMode();
         expect(['prod-enterprise', 'trial', 'lab']).toContain(mode);
@@ -45,6 +55,36 @@ describe('enterprise-runtime', () => {
 
     it('allowPasswordLogin returns a boolean', () => {
         expect(typeof allowPasswordLogin()).toBe('boolean');
+    });
+
+    it.each([undefined, 'false'])('disables production password login when the explicit flag is %s', (flag) => {
+        process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        if (flag === undefined) delete process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN;
+        else process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = flag;
+
+        expect(allowPasswordLogin()).toBe(false);
+    });
+
+    it('enables production password login only when the explicit flag is true', () => {
+        process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = 'true';
+
+        expect(allowPasswordLogin()).toBe(true);
+    });
+
+    it.each([undefined, 'false'])('disables demo features in prod-enterprise when ALLOW_DEMO_FEATURES is %s', (flag) => {
+        process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        if (flag === undefined) delete process.env.ALLOW_DEMO_FEATURES;
+        else process.env.ALLOW_DEMO_FEATURES = flag;
+
+        expect(allowDemoFeatures()).toBe(false);
+    });
+
+    it('enables demo features in prod-enterprise only when ALLOW_DEMO_FEATURES=true', () => {
+        process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        process.env.ALLOW_DEMO_FEATURES = 'true';
+
+        expect(allowDemoFeatures()).toBe(true);
     });
 
     it('oidcEnabled returns a boolean', () => {

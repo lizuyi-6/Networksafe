@@ -1,14 +1,14 @@
 # ============================================================
 # Stage 1: Builder
 # ============================================================
-FROM node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e AS builder
+# vite 8 requires Node 20.19+ — keep in sync with the toolchain in package.json
+FROM node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2 AS builder
 
 WORKDIR /app
 
 # Copy manifests first for layer caching
-COPY package*.json ./
-RUN npm config set registry https://registry.npmmirror.com/ && \
-    if [ -f package-lock.json ]; then npm ci; else npm install; fi
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY . .
 RUN npm run build

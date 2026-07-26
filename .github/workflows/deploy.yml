@@ -6,86 +6,236 @@ on:
     types: [completed]
     branches: [master]
   workflow_dispatch:
+    inputs:
+      ci_run_id:
+        description: Successful CI Pipeline run ID for the commit being deployed
+        required: true
+        type: string
+      commit_sha:
+        description: Full 40-character commit SHA tested by that CI run
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 30
+    environment: production
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     env:
+      EXPECTED_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.commit_sha }}
+      CI_RUN_ID: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || inputs.ci_run_id }}
       SERVER_HOST: ${{ secrets.SERVER_HOST }}
-      DEPLOY_PATH: /opt/networksafe
-    steps:
-      - uses: actions/checkout@v4
+      SERVER_USER: ${{ secrets.SERVER_USER }}
+      SERVER_PORT: ${{ secrets.SERVER_PORT || '22' }}
+      SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+      SERVER_SSH_HOST_KEY: ${{ secrets.SERVER_SSH_HOST_KEY }}
+      DEPLOY_HEALTHCHECK_URL: ${{ vars.DEPLOY_HEALTHCHECK_URL }}
+      DEPLOY_ROOT: /opt/networksafe
+      FRONTEND_PATH: /var/www/aetherguard
+    outputs:
+      deployed-sha: ${{ steps.deployment-context.outputs.sha }}
 
-      - name: Download Frontend Build
+    steps:
+      - name: Validate Deployment Context
+        id: deployment-context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$CI_RUN_ID" =~ ^[0-9]+$ ]]
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]; then
+            node <<'NODE'
+          const fs = require('node:fs');
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          const run = event.workflow_run;
+          const expectedRepository = process.env.GITHUB_REPOSITORY;
+          if (run.name !== 'CI Pipeline' || run.conclusion !== 'success') process.exit(1);
+          if (run.event !== 'push' || run.head_branch !== 'master') process.exit(1);
+          if (run.head_repository?.full_name !== expectedRepository) process.exit(1);
+          if (run.head_sha !== process.env.EXPECTED_SHA || String(run.id) !== process.env.CI_RUN_ID) process.exit(1);
+          NODE
+          else
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID" > "$RUNNER_TEMP/ci-run.json"
+            node - "$RUNNER_TEMP/ci-run.json" <<'NODE'
+          const fs = require('node:fs');
+          const run = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const expectedRepository = process.env.GITHUB_REPOSITORY;
+          if (run.name !== 'CI Pipeline' || run.conclusion !== 'success') process.exit(1);
+          if (run.event !== 'push' || run.head_branch !== 'master') process.exit(1);
+          if (run.head_repository?.full_name !== expectedRepository) process.exit(1);
+          if (run.head_sha !== process.env.EXPECTED_SHA || String(run.id) !== process.env.CI_RUN_ID) process.exit(1);
+          NODE
+          fi
+
+          printf 'sha=%s\n' "$EXPECTED_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Tested Commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Assert Checkout SHA
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+
+      - name: Download Frontend Build from CI Run
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: frontend-dist
+          path: frontend-artifact
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.CI_RUN_ID }}
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            echo "🚀 Deploying AetherGuard..."
-            DEPLOY_PATH=/opt/networksafe
-            FRONTEND_PATH=/var/www/aetherguard
-
-            # Clone or update the repository
-            if [ -d "$DEPLOY_PATH/.git" ]; then
-              cd $DEPLOY_PATH
-              git pull origin master
-            else
-              rm -rf $DEPLOY_PATH
-              git clone https://github.com/lizuyi-6/Networksafe.git $DEPLOY_PATH
-              cd $DEPLOY_PATH
-            fi
-
-            # Build backend
-            cd $DEPLOY_PATH/backend
-            npm ci --production || npm install --production
-            npm run build
-
-            # Restart PM2
-            pm2 delete api-security-backend 2>/dev/null || true
-            pm2 start ecosystem.config.js
-            pm2 save
-
-            # Deploy frontend
-            rm -rf $FRONTEND_PATH
-            mkdir -p $FRONTEND_PATH
-            cp -r frontend-dist/* $FRONTEND_PATH/
-
-            echo "✅ Deploy complete!"
-
-      - name: Health Check
+      - name: Verify Artifact Commit Binding
         run: |
-          sleep 15
-          curl -f http://${{ secrets.SERVER_HOST }}:8080/api/health
+          set -euo pipefail
+          test -f frontend-artifact/SOURCE_SHA
+          test -f frontend-artifact/dist/index.html
+          test "$(tr -d '\r\n' < frontend-artifact/SOURCE_SHA)" = "$EXPECTED_SHA"
+
+      - name: Package Exact Release
+        run: |
+          set -euo pipefail
+          STAGING_DIR="$RUNNER_TEMP/deploy-staging"
+          BUNDLE_BASENAME="aetherguard-$EXPECTED_SHA.tar.gz"
+          BUNDLE_PATH="$RUNNER_TEMP/$BUNDLE_BASENAME"
+          CHECKSUM_PATH="$BUNDLE_PATH.sha256"
+
+          rm -rf "$STAGING_DIR"
+          mkdir -p "$STAGING_DIR"
+          git archive --format=tar "$EXPECTED_SHA" | tar -xf - -C "$STAGING_DIR"
+          rm -rf "$STAGING_DIR/frontend/dist"
+          mkdir -p "$STAGING_DIR/frontend/dist"
+          cp -a frontend-artifact/dist/. "$STAGING_DIR/frontend/dist/"
+          printf '%s\n' "$EXPECTED_SHA" > "$STAGING_DIR/SOURCE_SHA"
+
+          test -f "$STAGING_DIR/backend/package-lock.json"
+          test -f "$STAGING_DIR/frontend/dist/index.html"
+          test -f "$STAGING_DIR/scripts/release/deploy-pm2-release.sh"
+          tar -czf "$BUNDLE_PATH" -C "$STAGING_DIR" .
+          (cd "$RUNNER_TEMP" && sha256sum "$BUNDLE_BASENAME" > "$BUNDLE_BASENAME.sha256")
+
+          {
+            printf 'BUNDLE_BASENAME=%s\n' "$BUNDLE_BASENAME"
+            printf 'BUNDLE_PATH=%s\n' "$BUNDLE_PATH"
+            printf 'CHECKSUM_PATH=%s\n' "$CHECKSUM_PATH"
+            printf 'REMOTE_DIR=/tmp/aetherguard-deploy-%s\n' "$EXPECTED_SHA"
+          } >> "$GITHUB_ENV"
+
+      - name: Configure Verified SSH Host
+        run: |
+          set -euo pipefail
+          test -n "$SERVER_HOST"
+          test -n "$SERVER_USER"
+          test -n "$SERVER_SSH_KEY"
+          test -n "$SERVER_SSH_HOST_KEY"
+          test -n "$DEPLOY_HEALTHCHECK_URL"
+          [[ "$SERVER_PORT" =~ ^[0-9]+$ ]]
+          [[ "$DEPLOY_HEALTHCHECK_URL" =~ ^https?://[^/]+/health/ready/?$ ]]
+
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SERVER_SSH_KEY" > "$HOME/.ssh/id_deploy"
+          printf '%s\n' "$SERVER_SSH_HOST_KEY" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_deploy" "$HOME/.ssh/known_hosts"
+          ssh-keygen -l -f "$HOME/.ssh/id_deploy" >/dev/null
+          KNOWN_HOST_LOOKUP="$SERVER_HOST"
+          if [[ "$SERVER_PORT" != "22" ]]; then
+            KNOWN_HOST_LOOKUP="[$SERVER_HOST]:$SERVER_PORT"
+          fi
+          ssh-keygen -F "$KNOWN_HOST_LOOKUP" -f "$HOME/.ssh/known_hosts" >/dev/null
+
+      - name: Transfer Release Bundle
+        run: |
+          set -euo pipefail
+          SSH_OPTIONS=(-i "$HOME/.ssh/id_deploy" -p "$SERVER_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes)
+          SCP_OPTIONS=(-i "$HOME/.ssh/id_deploy" -P "$SERVER_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes)
+
+          # These values are validated above and intentionally expand on the client.
+          # shellcheck disable=SC2029
+          ssh "${SSH_OPTIONS[@]}" "$SERVER_USER@$SERVER_HOST" "mkdir -p '$REMOTE_DIR' && chmod 700 '$REMOTE_DIR'"
+          scp "${SCP_OPTIONS[@]}" \
+            "$BUNDLE_PATH" \
+            "$CHECKSUM_PATH" \
+            scripts/release/deploy-pm2-release.sh \
+            "$SERVER_USER@$SERVER_HOST:$REMOTE_DIR/"
+
+      - name: Activate Tested Release
+        run: |
+          set -euo pipefail
+          SSH_OPTIONS=(-i "$HOME/.ssh/id_deploy" -p "$SERVER_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes)
+          printf -v QUOTED_HEALTHCHECK '%q' "$DEPLOY_HEALTHCHECK_URL"
+          # These values are validated above and intentionally expand on the client.
+          # shellcheck disable=SC2029
+          ssh "${SSH_OPTIONS[@]}" "$SERVER_USER@$SERVER_HOST" \
+            "DEPLOY_ROOT='$DEPLOY_ROOT' FRONTEND_PATH='$FRONTEND_PATH' PUBLIC_HEALTHCHECK_URL=$QUOTED_HEALTHCHECK bash '$REMOTE_DIR/deploy-pm2-release.sh' '$EXPECTED_SHA' '$REMOTE_DIR/$BUNDLE_BASENAME' '$REMOTE_DIR/$BUNDLE_BASENAME.sha256'"
+
+      - name: Verify Public Readiness Field
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 15); do
+            printf 'Readiness attempt %s/15\n' "$attempt"
+            if curl --fail --silent --show-error --max-time 10 "$DEPLOY_HEALTHCHECK_URL" --output "$RUNNER_TEMP/readiness.json" && \
+              node - "$RUNNER_TEMP/readiness.json" <<'NODE'
+          const fs = require('node:fs');
+          const payload = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const status = payload && payload.data ? payload.data.status : payload && payload.status;
+          if (status !== 'ready') process.exit(1);
+          NODE
+            then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Remove Remote Transfer Staging
+        if: always()
+        continue-on-error: true
+        run: |
+          SSH_OPTIONS=(-i "$HOME/.ssh/id_deploy" -p "$SERVER_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes)
+          # REMOTE_DIR is generated from the verified source SHA; client expansion is intentional.
+          # shellcheck disable=SC2029
+          ssh "${SSH_OPTIONS[@]}" "$SERVER_USER@$SERVER_HOST" "rm -rf '$REMOTE_DIR'"
 
   notify-success:
     runs-on: ubuntu-latest
     needs: deploy
     if: success()
+    env:
+      FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
     steps:
-      - name: 飞书通知 - 部署成功
-        uses: foxundermoon/feishu-action@v1
+      - name: Feishu Deployment Success Notification
+        if: env.FEISHU_WEBHOOK != ''
+        uses: foxundermoon/feishu-action@1fde169860a95033d11b97e13c32becad2c9dab4
         with:
-          url: ${{ secrets.FEISHU_WEBHOOK }}
-          title: "✅ AetherGuard 部署成功"
-          text: "**AetherGuard 部署成功**\n\n项目: ${{ github.repository }}\n分支: ${{ github.ref_name }}\n提交: ${{ github.sha }}"
+          url: ${{ env.FEISHU_WEBHOOK }}
+          title: "AetherGuard deployment succeeded"
+          text: "Repository: ${{ github.repository }}\nTested commit: ${{ needs.deploy.outputs.deployed-sha }}\nRun: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
   notify-failure:
     runs-on: ubuntu-latest
     needs: deploy
     if: failure()
+    env:
+      FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
     steps:
-      - name: 飞书通知 - 部署失败
-        uses: foxundermoon/feishu-action@v1
+      - name: Feishu Deployment Failure Notification
+        if: env.FEISHU_WEBHOOK != ''
+        uses: foxundermoon/feishu-action@1fde169860a95033d11b97e13c32becad2c9dab4
         with:
-          url: ${{ secrets.FEISHU_WEBHOOK }}
-          title: "❌ AetherGuard 部署失败"
-          text: "❌ AetherGuard 部署失败！\n\n项目: ${{ github.repository }}\n分支: ${{ github.ref_name }}\n提交: ${{ github.sha }}\n\n请检查: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          url: ${{ env.FEISHU_WEBHOOK }}
+          title: "AetherGuard deployment failed"
+          text: "Repository: ${{ github.repository }}\nTested commit: ${{ needs.deploy.outputs.deployed-sha }}\nRun: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -23,7 +23,10 @@ import {
     UserCog,
     HardDriveDownload,
     ScrollText,
-    Layers
+    Layers,
+    Menu,
+    X,
+    Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -36,6 +39,7 @@ import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusCon
 import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
 import Logo from './components/Logo';
 import { COMPANY_NAME_CN } from './config/branding';
+import { SHOW_PITCH_ROUTES, STANDALONE_ROUTES } from './config/public-routes';
 import { getSessionUserIdentity } from './services/session-cache';
 import {
     fetchApiReadiness,
@@ -64,6 +68,12 @@ import AlertDetail from './pages/AlertDetail';
 import AgentDetail from './pages/AgentDetail';
 import AttackRunDetail from './pages/AttackRunDetail';
 import Landing from './pages/Landing';
+import LandingWorkshopHub from './pages/landing-workshop/LandingWorkshopHub';
+import LandingRemodel from './pages/landing-workshop/LandingRemodel';
+import LandingIndustrial from './pages/landing-workshop/LandingIndustrial';
+import LandingEnterprise from './pages/landing-workshop/LandingEnterprise';
+import LandingTerminal from './pages/landing-workshop/LandingTerminal';
+import LandingStory from './pages/landing-workshop/LandingStory';
 import Login from './pages/Login';
 import BoardStatus from './pages/BoardStatus';
 import AgentMonitor from './pages/AgentMonitor';
@@ -82,19 +92,9 @@ import DeploymentRuns from './pages/DeploymentRuns';
 import DeploymentEvidence from './pages/DeploymentEvidence';
 import XiongcaiFinalDeck from './pages/XiongcaiFinalDeck';
 
-const SHOW_PITCH_ROUTES = import.meta.env.VITE_ENABLE_PITCH_ROUTES === 'true';
-const STANDALONE_ROUTES = new Set([
-    '/',
-    '/login',
-    '/privacy',
-    '/terms',
-    '/promo',
-    '/promo-film',
-    ...(SHOW_PITCH_ROUTES ? ['/aetherguard-deck', '/xiongcai-final'] : [])
-]);
-
 const ADMIN_ROLES = new Set(['admin', 'platform_admin']);
 const GOVERNANCE_ROLES = new Set(['admin', 'platform_admin', 'tenant_admin', 'auditor']);
+const SESSION_EXPIRED_EVENT = 'aetherguard:session-expired';
 const isAdminRole = (role?: string | null) => ADMIN_ROLES.has(String(role || ''));
 const canSeeEnterpriseControls = (role?: string | null) => GOVERNANCE_ROLES.has(String(role || ''));
 
@@ -105,8 +105,21 @@ const canSeeEnterpriseControls = (role?: string | null) => GOVERNANCE_ROLES.has(
 const PrivateRoute = ({ children }: { children: ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [backendReady, setBackendReady] = useState(false);
+    // True only when /auth/me positively confirmed the session this mount.
+    // Cache-based fallbacks keep the operator working through transient
+    // backend outages but MUST be visibly flagged (PRD §14.5: degradation
+    // may never render as "normal").
+    const [sessionVerified, setSessionVerified] = useState(false);
 
     useEffect(() => {
+        const handleSessionExpired = () => {
+            setBackendReady(true);
+            setSessionVerified(false);
+            setIsAuthenticated(false);
+        };
+
+        window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+
         const checkBackend = async () => {
             try {
                 const readiness = await fetchApiReadiness(AbortSignal.timeout(3000));
@@ -114,24 +127,34 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
                     setBackendReady(true);
                     const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
                     if (user) {
+                        setSessionVerified(true);
                         setIsAuthenticated(true);
                     } else {
-                        // Fallback: check sessionStorage (cookie may not persist in dev)
+                        // fetchCurrentUserSession clears the cached identity on a
+                        // definitive 401, so a surviving cache here means an auth
+                        // infrastructure failure: fall back, but as UNVERIFIED.
                         const cached = getSessionUserIdentity();
+                        setSessionVerified(false);
                         setIsAuthenticated(Boolean(cached?.userId));
                     }
                 } else {
                     setBackendReady(true);
                     const cached = getSessionUserIdentity();
+                    setSessionVerified(false);
                     setIsAuthenticated(Boolean(cached?.userId));
                 }
             } catch {
                 setBackendReady(true);
                 const cached = getSessionUserIdentity();
+                setSessionVerified(false);
                 setIsAuthenticated(Boolean(cached?.userId));
             }
         };
         checkBackend();
+
+        return () => {
+            window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+        };
     }, []);
 
     // Show loading while checking backend and auth
@@ -148,7 +171,20 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
         return <Navigate to="/login" replace />;
     }
 
-    return <>{children}</>;
+    return (
+        <>
+            {!sessionVerified && (
+                <div
+                    role="alert"
+                    data-testid="session-unverified-banner"
+                    className="w-full bg-amber-500/90 text-black text-sm text-center px-4 py-1.5 font-medium"
+                >
+                    会话未验证：后端暂不可达，当前显示基于本地缓存的身份 / Session unverified: backend unreachable, identity shown from local cache
+                </div>
+            )}
+            {children}
+        </>
+    );
 };
 
 /**
@@ -160,6 +196,13 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const handleSessionExpired = () => {
+            setUserRole(null);
+            setIsLoading(false);
+        };
+
+        window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+
         const checkRole = async () => {
             try {
                 const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
@@ -170,6 +213,10 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
             setIsLoading(false);
         };
         checkRole();
+
+        return () => {
+            window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+        };
     }, []);
 
     if (isLoading) {
@@ -187,12 +234,56 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
     return <>{children}</>;
 };
 
-const Sidebar = () => {
+const GovernanceRoute = ({ children }: { children: ReactNode }) => {
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        let disposed = false;
+        fetchCurrentUserSession(controller.signal)
+            .then((user) => {
+                if (!disposed) setUserRole(user?.role || null);
+            })
+            .catch(() => {
+                if (!disposed) setUserRole(null);
+            })
+            .finally(() => {
+                if (!disposed) setIsLoading(false);
+            });
+        return () => {
+            disposed = true;
+            controller.abort();
+        };
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-background">
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (!canSeeEnterpriseControls(userRole)) {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    return <>{children}</>;
+};
+
+type SidebarProps = {
+    mobile?: boolean;
+    onNavigate?: () => void;
+    onClose?: () => void;
+};
+
+const Sidebar = ({ mobile = false, onNavigate, onClose }: SidebarProps) => {
     const location = useLocation();
-    const { t } = useLanguage();
+    const { t, language, toggleLanguage } = useLanguage();
     const { status: attackStatus } = useAttackStatus();
-    const { attackSimEnabled } = useDemo();
-    const { liveModeEnabled } = useLiveMode();
+    const { attackSimEnabled, isDemoMode, toggleDemoMode, isSwitchingDemoMode } = useDemo();
+    const { liveModeEnabled, toggleLiveMode } = useLiveMode();
     const [badges, setBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
     const [profile, setProfile] = useState<{ name: string; role: string; rawRole: string | null; initials: string; plan: string }>({
         name: 'Unknown User',
@@ -222,8 +313,10 @@ const Sidebar = () => {
         { icon: Rocket, label: t('nav.deployment'), path: '/deploy' },
         { icon: Activity, label: t('nav.monitoring'), path: '/scanner', badge: badges.scanner > 0 ? badges.scanner : undefined },
         { icon: Settings, label: t('nav.settings'), path: '/settings' },
-        { icon: Key, label: t('nav.keys'), path: '/admin' },
-        ...(isAdminRole(profile.rawRole) ? [{ icon: UserCog, label: t('nav.super_admin'), path: '/super-admin' }] : []),
+        ...(isAdminRole(profile.rawRole) ? [
+            { icon: Key, label: t('nav.keys'), path: '/admin' },
+            { icon: UserCog, label: t('nav.super_admin'), path: '/super-admin' }
+        ] : []),
     ];
 
     const navGroups = [
@@ -335,10 +428,15 @@ const Sidebar = () => {
     }, []);
 
     return (
-        <aside className="z-20 hidden w-64 flex-col justify-between border-r border-border bg-card md:flex">
-            <div>
+        <aside
+            className={mobile
+                ? 'flex h-full w-[min(20rem,calc(100vw-3rem))] flex-col justify-between border-r border-border bg-card shadow-2xl'
+                : 'z-20 hidden w-64 flex-col justify-between border-r border-border bg-card md:flex'}
+            aria-label={language === 'zh' ? '控制台导航' : 'Console navigation'}
+        >
+            <div className="min-h-0 flex-1 overflow-y-auto">
                 {/* Logo */}
-                <div className="border-b border-border/50 px-6 py-3">
+                <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 py-3 sm:px-6">
                     <div className="space-y-1">
                         <Logo
                             tier={
@@ -351,6 +449,19 @@ const Sidebar = () => {
                         />
                         <div className="pl-1 text-[11px] text-muted-foreground">{COMPANY_NAME_CN}</div>
                     </div>
+                    {mobile && (
+                        <button
+                            type="button"
+                            autoFocus
+                            data-testid="mobile-nav-close"
+                            aria-label={language === 'zh' ? '关闭导航' : 'Close navigation'}
+                            title={language === 'zh' ? '关闭导航' : 'Close navigation'}
+                            onClick={onClose}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        >
+                            <X size={20} aria-hidden="true" />
+                        </button>
+                    )}
                 </div>
 
                 {/* Nav Links */}
@@ -365,6 +476,7 @@ const Sidebar = () => {
                                         <Link
                                             key={item.path}
                                             to={item.path}
+                                            onClick={onNavigate}
                                             className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors group ${isActive
                                                 ? 'text-foreground bg-primary/10 border border-primary/20 shadow-sm'
                                                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -376,9 +488,6 @@ const Sidebar = () => {
                                                 className={isActive ? 'text-primary' : 'group-hover:text-foreground'}
                                             />
                                             <span className="font-normal">{item.label}</span>
-                                            {item.path === '/scanner' && (
-                                                <span className="ml-auto flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                            )}
                                             {item.badge && (
                                                 <span className="ml-auto text-xxs bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20">{item.badge}</span>
                                             )}
@@ -392,6 +501,42 @@ const Sidebar = () => {
             </div>
 
             <div className="p-4 border-t border-border/50 space-y-3">
+                {mobile && (
+                    <div className="space-y-1 border-b border-border/50 pb-3">
+                        <button
+                            type="button"
+                            onClick={toggleLanguage}
+                            className="flex min-h-10 w-full items-center justify-between rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        >
+                            <span>{language === 'zh' ? '语言' : 'Language'}</span>
+                            <span className="text-xs font-medium text-foreground">{language === 'zh' ? '中文' : 'English'}</span>
+                        </button>
+                        <button
+                            type="button"
+                            aria-pressed={isDemoMode}
+                            onClick={toggleDemoMode}
+                            disabled={isSwitchingDemoMode}
+                            className="flex min-h-10 w-full items-center justify-between rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <span>{t('nav.demo_mode')}</span>
+                            <span className={`relative h-5 w-9 rounded-full border transition-colors ${isDemoMode ? 'border-primary/50 bg-primary/20' : 'border-border bg-muted'}`}>
+                                <span className={`absolute top-0.5 h-3.5 w-3.5 rounded-full shadow-sm transition-all ${isDemoMode ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`} />
+                            </span>
+                        </button>
+                        <button
+                            type="button"
+                            aria-pressed={liveModeEnabled}
+                            onClick={toggleLiveMode}
+                            className="flex min-h-10 w-full items-center justify-between rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        >
+                            <span>{t('header.live')}</span>
+                            <span className={`relative h-5 w-9 rounded-full border transition-colors ${liveModeEnabled ? 'border-primary/50 bg-primary/20' : 'border-border bg-muted'}`}>
+                                <span className={`absolute top-0.5 h-3.5 w-3.5 rounded-full shadow-sm transition-all ${liveModeEnabled ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`} />
+                            </span>
+                        </button>
+                    </div>
+                )}
+
                 {/* Attack Status */}
                 <AnimatePresence>
                     {attackSimEnabled && attackStatus.isRunning && (
@@ -443,7 +588,7 @@ const Sidebar = () => {
                 </AnimatePresence>
 
                 {/* User Profile */}
-                <Link to="/settings" className="flex items-center gap-3 px-2 py-2 text-sm hover:text-foreground transition-colors">
+                <Link to="/settings" onClick={onNavigate} className="flex items-center gap-3 px-2 py-2 text-sm hover:text-foreground transition-colors">
                     <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-medium text-xs">
                         {profile.initials}
                     </div>
@@ -458,17 +603,67 @@ const Sidebar = () => {
     );
 }
 
-const Header = () => {
+type HeaderProps = {
+    isMobileNavigationOpen: boolean;
+    onOpenMobileNavigation: () => void;
+};
+
+const Header = ({ isMobileNavigationOpen, onOpenMobileNavigation }: HeaderProps) => {
     const { t, language, toggleLanguage } = useLanguage();
     const { isDemoMode, toggleDemoMode, isSwitchingDemoMode } = useDemo();
     const { theme, setTheme } = useTheme();
     const { liveModeEnabled, toggleLiveMode } = useLiveMode();
     const location = useLocation();
+    const isStandaloneRoute = STANDALONE_ROUTES.has(location.pathname);
+    const [systemHealth, setSystemHealth] = useState<'checking' | 'ready' | 'not_ready'>('checking');
+
+    useEffect(() => {
+        if (isStandaloneRoute) {
+            setSystemHealth('checking');
+            return;
+        }
+
+        let disposed = false;
+        let activeController: AbortController | null = null;
+
+        const checkReadiness = async () => {
+            activeController?.abort();
+            const controller = new AbortController();
+            activeController = controller;
+            const timeout = window.setTimeout(() => controller.abort(), 5000);
+
+            try {
+                const readiness = await fetchApiReadiness(controller.signal);
+                if (!disposed && !controller.signal.aborted) {
+                    setSystemHealth(readiness.status === 'ready' ? 'ready' : 'not_ready');
+                }
+            } catch {
+                if (!disposed) {
+                    setSystemHealth('not_ready');
+                }
+            } finally {
+                window.clearTimeout(timeout);
+            }
+        };
+
+        setSystemHealth('checking');
+        void checkReadiness();
+        const interval = liveModeEnabled
+            ? window.setInterval(() => void checkReadiness(), 10000)
+            : undefined;
+
+        return () => {
+            disposed = true;
+            activeController?.abort();
+            if (interval !== undefined) window.clearInterval(interval);
+        };
+    }, [isStandaloneRoute, liveModeEnabled]);
 
     // Map paths to nav keys for breadcrumb
     const pathToNavKey: Record<string, string> = {
         '/dashboard': 'nav.dashboard',
         '/agents': 'nav.agents',
+        '/cognition': 'Cognition',
         '/agent-monitor': 'nav.agent_monitor',
         '/traffic': 'nav.traffic_interceptor',
         '/attack-sim': 'nav.attack_simulator',
@@ -504,15 +699,48 @@ const Header = () => {
         if (path.startsWith('/attack-sim/runs/')) return t('nav.attack_simulator');
         if (path.startsWith('/devices/board-status/')) return t('nav.devices');
         if (path.startsWith('/super-admin/users/')) return t('adminUsers.user_detail');
-        return t('nav.dashboard');
+        return language === 'zh' ? '页面未找到' : 'Page not found';
     };
 
     // Don't show header on standalone public pages
-    if (STANDALONE_ROUTES.has(location.pathname)) return null;
+    if (isStandaloneRoute) return null;
+
+    const healthPresentation = systemHealth === 'ready'
+        ? {
+            label: t('header.system_healthy'),
+            container: 'border-emerald-500/20 bg-emerald-500/10',
+            dot: 'bg-emerald-500',
+            text: 'text-emerald-600 dark:text-emerald-400'
+        }
+        : systemHealth === 'not_ready'
+            ? {
+                label: t('header.system_degraded'),
+                container: 'border-rose-500/20 bg-rose-500/10',
+                dot: 'bg-rose-500',
+                text: 'text-rose-600 dark:text-rose-400'
+            }
+            : {
+                label: t('header.system_checking'),
+                container: 'border-amber-500/20 bg-amber-500/10',
+                dot: 'bg-amber-500',
+                text: 'text-amber-600 dark:text-amber-400'
+            };
 
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-border/50 bg-background px-3 md:px-6">
             <div className="min-w-0 flex items-center gap-3 text-sm text-muted-foreground overflow-hidden">
+                <button
+                    type="button"
+                    data-testid="mobile-nav-trigger"
+                    aria-label={language === 'zh' ? '打开导航' : 'Open navigation'}
+                    title={language === 'zh' ? '打开导航' : 'Open navigation'}
+                    aria-controls="mobile-console-navigation"
+                    aria-expanded={isMobileNavigationOpen}
+                    onClick={onOpenMobileNavigation}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden"
+                >
+                    <Menu size={20} aria-hidden="true" />
+                </button>
                 <span className="hover:text-foreground cursor-pointer transition-colors truncate">{t('header.overview')}</span>
                 <span className="text-muted-foreground/50 shrink-0">/</span>
                 <span className="text-foreground font-medium truncate">{getCurrentPageTitle()}</span>
@@ -520,9 +748,14 @@ const Header = () => {
 
             <div className="flex items-center gap-2 md:gap-4 shrink-0">
                 {/* Status Indicator */}
-                <div className="flex items-center gap-2 rounded-full border border-emerald-500/10 bg-emerald-500/5 px-3 py-1.5">
-                    <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                    <span className="hidden lg:inline text-xs font-medium text-emerald-500 tracking-tight">{t('header.system_healthy')}</span>
+                <div
+                    data-testid="system-health-indicator"
+                    data-status={systemHealth}
+                    role="status"
+                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${healthPresentation.container}`}
+                >
+                    <span className={`inline-flex h-2 w-2 rounded-full ${healthPresentation.dot}`}></span>
+                    <span className={`hidden text-xs font-medium tracking-tight lg:inline ${healthPresentation.text}`}>{healthPresentation.label}</span>
                 </div>
 
                 <div className="hidden sm:block h-8 w-px bg-border"></div>
@@ -530,22 +763,25 @@ const Header = () => {
                 {/* Theme Toggle */}
                 <div className="flex items-center gap-1 bg-muted border border-border rounded-full p-0.5">
                     <button
+                        type="button"
                         onClick={() => setTheme('light')}
-                        className={`p-1 rounded-full transition-all ${theme === 'light' ? 'bg-background shadow text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all ${theme === 'light' ? 'bg-background shadow text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                         title="Light Mode"
                     >
                         <Sun size={14} />
                     </button>
                     <button
+                        type="button"
                         onClick={() => setTheme('system')}
-                        className={`p-1 rounded-full transition-all ${theme === 'system' ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all ${theme === 'system' ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
                         title="System"
                     >
                         <Laptop size={14} />
                     </button>
                     <button
+                        type="button"
                         onClick={() => setTheme('dark')}
-                        className={`p-1 rounded-full transition-all ${theme === 'dark' ? 'bg-background text-primary shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all ${theme === 'dark' ? 'bg-background text-primary shadow' : 'text-muted-foreground hover:text-foreground'}`}
                         title="Dark Mode"
                     >
                         <Moon size={14} />
@@ -560,7 +796,7 @@ const Header = () => {
                     aria-pressed={isDemoMode}
                     onClick={toggleDemoMode}
                     disabled={isSwitchingDemoMode}
-                    className={`flex items-center gap-2 group shrink-0 whitespace-nowrap ${isSwitchingDemoMode ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`hidden min-h-6 items-center gap-2 group shrink-0 whitespace-nowrap md:flex ${isSwitchingDemoMode ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                     <span className={`text-xs font-medium transition-colors ${isDemoMode ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>{t('nav.demo_mode')}</span>
                     <div className={`w-8 h-4 rounded-full relative transition-colors border ${isDemoMode ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
@@ -571,15 +807,21 @@ const Header = () => {
                 <div className="hidden sm:block h-8 w-px bg-border"></div>
 
                 {/* Language Toggle */}
-                <div onClick={toggleLanguage} className="flex items-center gap-2 cursor-pointer group">
+                <button
+                    type="button"
+                    aria-label={language === 'zh' ? 'Switch language to English' : '切换语言为中文'}
+                    aria-pressed={language === 'zh'}
+                    onClick={toggleLanguage}
+                    className="hidden min-h-6 items-center gap-2 cursor-pointer group md:flex"
+                >
                     <span className={`text-xs font-medium transition-colors ${language === 'zh' ? 'text-muted-foreground' : 'text-foreground'}`}>EN</span>
                     <div className={`w-8 h-4 rounded-full relative transition-colors ${language === 'zh' ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border'}`}>
                         <div className={`absolute top-0.5 w-3 h-3 rounded-full shadow-sm transition-all ${language === 'zh' ? 'right-0.5 bg-primary' : 'left-0.5 bg-muted-foreground'}`}></div>
                     </div>
                     <span className={`text-xs font-medium transition-colors ${language === 'zh' ? 'text-primary' : 'text-muted-foreground'}`}>{t('app.chinese')}</span>
-                </div>
+                </button>
 
-                <div className="h-8 w-px bg-border"></div>
+                <div className="hidden h-8 w-px bg-border md:block"></div>
 
                 {/* Custom Switch (Auto Refresh) */}
                 <button
@@ -587,7 +829,7 @@ const Header = () => {
                     data-testid="live-mode-toggle"
                     aria-pressed={liveModeEnabled}
                     onClick={toggleLiveMode}
-                    className="flex items-center gap-2 group cursor-pointer"
+                    className="hidden min-h-6 items-center gap-2 group cursor-pointer md:flex"
                 >
                     <span className="text-xs font-medium group-hover:text-foreground transition-colors text-muted-foreground">{t('header.live')}</span>
                     <div className={`w-9 h-5 rounded-full border relative transition-colors ${liveModeEnabled ? 'bg-primary/20 border-primary/50' : 'bg-muted border-border group-hover:border-primary/50'}`}>
@@ -611,6 +853,59 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => (
     </motion.div>
 );
 
+const NotFound = () => {
+    const location = useLocation();
+    const { language } = useLanguage();
+    const copy = language === 'zh'
+        ? {
+            title: '页面未找到',
+            description: '该控制台地址不存在，或已从当前版本移除。',
+            dashboard: '返回控制台',
+            home: '访问官网'
+        }
+        : {
+            title: 'Page not found',
+            description: 'This console address does not exist or was removed from this version.',
+            dashboard: 'Back to dashboard',
+            home: 'Visit public site'
+        };
+
+    return (
+        <section
+            data-testid="not-found-page"
+            className="flex min-h-full items-center justify-center px-4 py-12 sm:px-8"
+            aria-labelledby="not-found-title"
+        >
+            <div className="w-full max-w-xl border-l-4 border-primary bg-card px-5 py-7 shadow-sm sm:px-8 sm:py-9">
+                <div className="text-sm font-semibold text-primary">404</div>
+                <h1 id="not-found-title" className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">
+                    {copy.title}
+                </h1>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{copy.description}</p>
+                <code className="mt-4 block max-w-full overflow-hidden text-ellipsis whitespace-nowrap rounded border border-border bg-muted px-3 py-2 text-xs text-foreground">
+                    {location.pathname}
+                </code>
+                <div className="mt-6 flex flex-wrap gap-3">
+                    <Link
+                        to="/dashboard"
+                        className="inline-flex min-h-10 items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                        <LayoutDashboard size={17} aria-hidden="true" />
+                        {copy.dashboard}
+                    </Link>
+                    <Link
+                        to="/"
+                        className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                        <Home size={17} aria-hidden="true" />
+                        {copy.home}
+                    </Link>
+                </div>
+            </div>
+        </section>
+    );
+};
+
 const AnimatedRoutes = () => {
     const location = useLocation();
     const { attackSimEnabled, modeResolved } = useDemo();
@@ -620,6 +915,13 @@ const AnimatedRoutes = () => {
             <Routes location={location} key={location.pathname}>
                 {/* Public routes */}
                 <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
+                {/* Landing workshop — official-site landing candidates; production "/" stays on Landing */}
+                <Route path="/landing-workshop" element={<PageWrapper><LandingWorkshopHub /></PageWrapper>} />
+                <Route path="/landing-workshop/remodel" element={<PageWrapper><LandingRemodel /></PageWrapper>} />
+                <Route path="/landing-workshop/industrial" element={<PageWrapper><LandingIndustrial /></PageWrapper>} />
+                <Route path="/landing-workshop/enterprise" element={<PageWrapper><LandingEnterprise /></PageWrapper>} />
+                <Route path="/landing-workshop/terminal" element={<PageWrapper><LandingTerminal /></PageWrapper>} />
+                <Route path="/landing-workshop/story" element={<PageWrapper><LandingStory /></PageWrapper>} />
                 <Route path="/promo" element={<Promo />} />
                 <Route path="/promo-film" element={<PromoFilm />} />
                 <Route path="/aetherguard-deck" element={SHOW_PITCH_ROUTES ? <XiongcaiFinalDeck /> : <Navigate to="/dashboard" replace />} />
@@ -645,9 +947,9 @@ const AnimatedRoutes = () => {
                     }
                 />
                 <Route path="/devices" element={<PrivateRoute><PageWrapper><Devices /></PageWrapper></PrivateRoute>} />
-                <Route path="/hardware-gates" element={<PrivateRoute><PageWrapper><HardwareGates /></PageWrapper></PrivateRoute>} />
-                <Route path="/deployment-runs" element={<PrivateRoute><PageWrapper><DeploymentRuns /></PageWrapper></PrivateRoute>} />
-                <Route path="/deployment-evidence" element={<PrivateRoute><PageWrapper><DeploymentEvidence /></PageWrapper></PrivateRoute>} />
+                <Route path="/hardware-gates" element={<PrivateRoute><GovernanceRoute><PageWrapper><HardwareGates /></PageWrapper></GovernanceRoute></PrivateRoute>} />
+                <Route path="/deployment-runs" element={<PrivateRoute><GovernanceRoute><PageWrapper><DeploymentRuns /></PageWrapper></GovernanceRoute></PrivateRoute>} />
+                <Route path="/deployment-evidence" element={<PrivateRoute><GovernanceRoute><PageWrapper><DeploymentEvidence /></PageWrapper></GovernanceRoute></PrivateRoute>} />
                 <Route path="/sites" element={<PrivateRoute><PageWrapper><Sites /></PageWrapper></PrivateRoute>} />
                 <Route path="/deploy" element={<PrivateRoute><PageWrapper><DeploymentWizard /></PageWrapper></PrivateRoute>} />
                 <Route path="/scanner" element={<PrivateRoute><PageWrapper><Scanner /></PageWrapper></PrivateRoute>} />
@@ -668,6 +970,9 @@ const AnimatedRoutes = () => {
                 <Route path="/admin" element={<PrivateRoute><AdminRoute><PageWrapper><SuperAdmin /></PageWrapper></AdminRoute></PrivateRoute>} />
                 <Route path="/super-admin" element={<PrivateRoute><AdminRoute><PageWrapper><AdminUsers /></PageWrapper></AdminRoute></PrivateRoute>} />
                 <Route path="/super-admin/users/:id" element={<PrivateRoute><AdminRoute><PageWrapper><UserDetail /></PageWrapper></AdminRoute></PrivateRoute>} />
+
+                {/* Unknown routes are private by default: unauthenticated users return to login. */}
+                <Route path="*" element={<PrivateRoute><PageWrapper><NotFound /></PageWrapper></PrivateRoute>} />
             </Routes>
         </AnimatePresence>
     );
@@ -675,6 +980,36 @@ const AnimatedRoutes = () => {
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
+    const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
+    const [isDesktopViewport, setIsDesktopViewport] = useState(() => (
+        typeof window === 'undefined' || window.matchMedia('(min-width: 768px)').matches
+    ));
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(min-width: 768px)');
+        const handleViewportChange = (event: MediaQueryListEvent | MediaQueryList) => {
+            setIsDesktopViewport(event.matches);
+            if (event.matches) setIsMobileNavigationOpen(false);
+        };
+
+        handleViewportChange(mediaQuery);
+        mediaQuery.addEventListener('change', handleViewportChange);
+        return () => mediaQuery.removeEventListener('change', handleViewportChange);
+    }, []);
+
+    useEffect(() => {
+        setIsMobileNavigationOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (!isMobileNavigationOpen) return;
+
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setIsMobileNavigationOpen(false);
+        };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => window.removeEventListener('keydown', closeOnEscape);
+    }, [isMobileNavigationOpen]);
 
     // Standalone pages that manage their own layout/theme
     const isStandalone = STANDALONE_ROUTES.has(location.pathname);
@@ -685,10 +1020,49 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
-            <Sidebar />
+            {isDesktopViewport && <Sidebar />}
+            <AnimatePresence>
+                {isMobileNavigationOpen && (
+                    <motion.div
+                        id="mobile-console-navigation"
+                        data-testid="mobile-navigation"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Console navigation"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.16 }}
+                        className="fixed inset-0 z-50 md:hidden"
+                    >
+                        <button
+                            type="button"
+                            aria-label="Close navigation"
+                            onClick={() => setIsMobileNavigationOpen(false)}
+                            className="absolute inset-0 h-full w-full bg-black/55"
+                        />
+                        <motion.div
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                            className="relative h-full w-fit"
+                        >
+                            <Sidebar
+                                mobile
+                                onNavigate={() => setIsMobileNavigationOpen(false)}
+                                onClose={() => setIsMobileNavigationOpen(false)}
+                            />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
                 <AnnouncementBanner />
-                <Header />
+                <Header
+                    isMobileNavigationOpen={isMobileNavigationOpen}
+                    onOpenMobileNavigation={() => setIsMobileNavigationOpen(true)}
+                />
                 <div className="flex-1 overflow-y-auto scrollbar-hide">
                     {children}
                 </div>

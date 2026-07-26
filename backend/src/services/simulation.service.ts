@@ -95,6 +95,7 @@ class SimulationService extends EventEmitter {
         this.interval = setInterval(() => {
             this.updateStats();
         }, 2000);
+        this.interval.unref?.();
     }
 
     private updateStats() {

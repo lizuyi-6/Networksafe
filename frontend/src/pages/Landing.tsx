@@ -149,7 +149,7 @@ const Landing = () => {
                         <button
                             type="button"
                             onClick={() => navigate('/login')}
-                            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+                            className="hidden min-h-6 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
                         >
                             {content.login}
                         </button>
@@ -573,10 +573,10 @@ const Landing = () => {
                         <div className="text-xs text-muted-foreground">{content.footer.copyright}</div>
                     </div>
                     <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-                        <a href="/privacy" className="transition-colors hover:text-foreground">
+                        <a href="/privacy" className="inline-flex min-h-6 items-center transition-colors hover:text-foreground">
                             {content.footer.privacy}
                         </a>
-                        <a href="/terms" className="transition-colors hover:text-foreground">
+                        <a href="/terms" className="inline-flex min-h-6 items-center transition-colors hover:text-foreground">
                             {content.footer.terms}
                         </a>
                     </div>

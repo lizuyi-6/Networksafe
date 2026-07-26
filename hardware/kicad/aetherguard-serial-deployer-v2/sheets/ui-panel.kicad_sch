@@ -1,0 +1,537 @@
+(kicad_sch
+	(version 20241209)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "d1000000-0000-0000-0000-000000000001")
+	(paper "A4")
+	(title_block
+		(title "UI Panel - Display, LED, Buzzer, Buttons")
+		(date "2026-03-28")
+		(rev "2.0")
+		(company "AetherGuard")
+		(comment 1 "OLED I2C + WS2812B RGB + Piezo Buzzer + 5x Tactile Switches")
+	)
+	(lib_symbols
+		(symbol "aetherguard-serial-deployer-v2:AG_OLED_I2C_HDR"
+			(pin_names (offset 1.016))
+			(exclude_from_sim no) (in_bom yes) (on_board yes)
+			(property "Reference" "DS" (at 0 8.89 0) (effects (font (size 1.0 1.0))))
+			(property "Value" "AG_OLED_I2C_HDR" (at 0 -8.89 0) (effects (font (size 1.0 1.0))))
+			(property "Footprint" "aetherguard-serial-deployer-v2:OLED_096_I2C_Module_1x4" (at 0 -11.43 0) (effects (font (size 1.0 1.0)) (hide yes)))
+			(property "Datasheet" "" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+		)
+		(symbol "aetherguard-serial-deployer-v2:AG_WS2812B_Mini"
+			(pin_names (offset 1.016))
+			(exclude_from_sim no) (in_bom yes) (on_board yes)
+			(property "Reference" "LED" (at 0 6.35 0) (effects (font (size 1.0 1.0))))
+			(property "Value" "AG_WS2812B_Mini" (at 0 -6.35 0) (effects (font (size 1.0 1.0))))
+			(property "Footprint" "aetherguard-serial-deployer-v2:AetherGuard_WS2812B_Mini" (at 0 -8.89 0) (effects (font (size 1.0 1.0)) (hide yes)))
+			(property "Datasheet" "" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+		)
+		(symbol "aetherguard-serial-deployer-v2:AG_BUZZER"
+			(pin_names (offset 1.016))
+			(exclude_from_sim no) (in_bom yes) (on_board yes)
+			(property "Reference" "BZ" (at 0 3.81 0) (effects (font (size 1.0 1.0))))
+			(property "Value" "AG_BUZZER" (at 0 -3.81 0) (effects (font (size 1.0 1.0))))
+			(property "Footprint" "aetherguard-serial-deployer-v2:BUZZER_SMD_9x9" (at 0 -6.35 0) (effects (font (size 1.0 1.0)) (hide yes)))
+			(property "Datasheet" "" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+		)
+		(symbol "aetherguard-serial-deployer-v2:AG_NPN_SOT23"
+			(pin_names (offset 0))
+			(exclude_from_sim no) (in_bom yes) (on_board yes)
+			(property "Reference" "Q" (at 2.54 2.54 0) (effects (font (size 1.0 1.0))))
+			(property "Value" "AG_NPN_SOT23" (at 0 -3.81 0) (effects (font (size 1.0 1.0))))
+			(property "Footprint" "aetherguard-serial-deployer-v2:SOT-23" (at 0 -6.35 0) (effects (font (size 1.0 1.0)) (hide yes)))
+			(property "Datasheet" "" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+		)
+		(symbol "aetherguard-serial-deployer-v2:AG_SWITCH_SPST"
+			(pin_names (offset 0))
+			(exclude_from_sim no) (in_bom yes) (on_board yes)
+			(property "Reference" "SW" (at 0 3.81 0) (effects (font (size 1.0 1.0))))
+			(property "Value" "AG_SWITCH_SPST" (at 0 -3.81 0) (effects (font (size 1.0 1.0))))
+			(property "Footprint" "aetherguard-serial-deployer-v2:SW_SPST_4P_4.2x3.2mm" (at 0 -6.35 0) (effects (font (size 1.0 1.0)) (hide yes)))
+			(property "Datasheet" "" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+		)
+		(symbol "aetherguard-serial-deployer-v2:AG_RESISTOR"
+			(pin_numbers (hide yes)) (pin_names (offset 0))
+			(exclude_from_sim no) (in_bom yes) (on_board yes)
+			(property "Reference" "R" (at 2.54 0 90) (effects (font (size 1.0 1.0))))
+			(property "Value" "AG_RESISTOR" (at -2.54 0 90) (effects (font (size 1.0 1.0))))
+			(property "Footprint" "aetherguard-serial-deployer-v2:R_0805_2012Metric" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+			(property "Datasheet" "" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+		)
+		(symbol "aetherguard-serial-deployer-v2:AG_CAPACITOR"
+			(pin_numbers (hide yes)) (pin_names (offset 0))
+			(exclude_from_sim no) (in_bom yes) (on_board yes)
+			(property "Reference" "C" (at 2.54 0 90) (effects (font (size 1.0 1.0))))
+			(property "Value" "AG_CAPACITOR" (at -2.54 0 90) (effects (font (size 1.0 1.0))))
+			(property "Footprint" "aetherguard-serial-deployer-v2:C_0805_2012Metric" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+			(property "Datasheet" "" (at 0 0 0) (effects (font (size 1.0 1.0)) (hide yes)))
+		)
+	)
+
+	;; ===== DS1: OLED I2C Display =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_OLED_I2C_HDR")
+		(at 76.2 55.88 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000100-0000-0000-0000-000000000001")
+		(property "Reference" "DS1" (at 76.2 44.45 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "OLED_I2C" (at 76.2 46.99 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:OLED_096_I2C_Module_1x4" (at 76.2 67.31 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000101-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000101-0000-0000-0000-000000000002"))
+		(pin "3" (uuid "d1000101-0000-0000-0000-000000000003"))
+		(pin "4" (uuid "d1000101-0000-0000-0000-000000000004"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "DS1") (unit 1))
+			)
+		)
+	)
+
+	;; ===== LED1: WS2812B-Mini RGB =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_WS2812B_Mini")
+		(at 121.92 55.88 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000200-0000-0000-0000-000000000001")
+		(property "Reference" "LED1" (at 121.92 46.99 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "WS2812B-Mini" (at 121.92 49.53 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:AetherGuard_WS2812B_Mini" (at 121.92 62.23 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000201-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000201-0000-0000-0000-000000000002"))
+		(pin "3" (uuid "d1000201-0000-0000-0000-000000000003"))
+		(pin "4" (uuid "d1000201-0000-0000-0000-000000000004"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "LED1") (unit 1))
+			)
+		)
+	)
+
+	;; ===== BZ1: Piezo Buzzer =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_BUZZER")
+		(at 144.78 55.88 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000300-0000-0000-0000-000000000001")
+		(property "Reference" "BZ1" (at 144.78 46.99 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "Buzzer" (at 144.78 49.53 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:BUZZER_SMD_9x9" (at 144.78 49.53 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000301-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000301-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "BZ1") (unit 1))
+			)
+		)
+	)
+
+	;; ===== Q3: MMBT3904 Buzzer Driver =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_NPN_SOT23")
+		(at 144.78 76.2 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000400-0000-0000-0000-000000000001")
+		(property "Reference" "Q3" (at 147.32 78.74 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "MMBT3904" (at 144.78 81.28 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:SOT-23" (at 144.78 81.28 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000401-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000401-0000-0000-0000-000000000002"))
+		(pin "3" (uuid "d1000401-0000-0000-0000-000000000003"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "Q3") (unit 1))
+			)
+		)
+	)
+
+	;; ===== SW1: BOOT Button =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_SWITCH_SPST")
+		(at 73.66 88.9 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000500-0000-0000-0000-000000000001")
+		(property "Reference" "SW1" (at 73.66 83.82 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "BOOT" (at 73.66 86.36 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:SW_SPST_4P_4.2x3.2mm" (at 73.66 86.36 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000501-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000501-0000-0000-0000-000000000002"))
+		(pin "3" (uuid "d1000501-0000-0000-0000-000000000003"))
+		(pin "4" (uuid "d1000501-0000-0000-0000-000000000004"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "SW1") (unit 1))
+			)
+		)
+	)
+
+	;; ===== SW2: RESET Button =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_SWITCH_SPST")
+		(at 86.36 88.9 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000600-0000-0000-0000-000000000001")
+		(property "Reference" "SW2" (at 86.36 83.82 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "RESET" (at 86.36 86.36 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:SW_SPST_4P_4.2x3.2mm" (at 86.36 86.36 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000601-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000601-0000-0000-0000-000000000002"))
+		(pin "3" (uuid "d1000601-0000-0000-0000-000000000003"))
+		(pin "4" (uuid "d1000601-0000-0000-0000-000000000004"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "SW2") (unit 1))
+			)
+		)
+	)
+
+	;; ===== SW3: OK Button =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_SWITCH_SPST")
+		(at 99.06 88.9 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000700-0000-0000-0000-000000000001")
+		(property "Reference" "SW3" (at 99.06 83.82 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "OK" (at 99.06 86.36 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:SW_SPST_4P_4.2x3.2mm" (at 99.06 86.36 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000701-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000701-0000-0000-0000-000000000002"))
+		(pin "3" (uuid "d1000701-0000-0000-0000-000000000003"))
+		(pin "4" (uuid "d1000701-0000-0000-0000-000000000004"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "SW3") (unit 1))
+			)
+		)
+	)
+
+	;; ===== SW4: NEXT Button =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_SWITCH_SPST")
+		(at 111.76 88.9 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000800-0000-0000-0000-000000000001")
+		(property "Reference" "SW4" (at 111.76 83.82 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "NEXT" (at 111.76 86.36 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:SW_SPST_4P_4.2x3.2mm" (at 111.76 86.36 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000801-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000801-0000-0000-0000-000000000002"))
+		(pin "3" (uuid "d1000801-0000-0000-0000-000000000003"))
+		(pin "4" (uuid "d1000801-0000-0000-0000-000000000004"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "SW4") (unit 1))
+			)
+		)
+	)
+
+	;; ===== SW5: BACK Button =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_SWITCH_SPST")
+		(at 124.46 88.9 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000900-0000-0000-0000-000000000001")
+		(property "Reference" "SW5" (at 124.46 83.82 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "BACK" (at 124.46 86.36 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:SW_SPST_4P_4.2x3.2mm" (at 124.46 86.36 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000901-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000901-0000-0000-0000-000000000002"))
+		(pin "3" (uuid "d1000901-0000-0000-0000-000000000003"))
+		(pin "4" (uuid "d1000901-0000-0000-0000-000000000004"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "SW5") (unit 1))
+			)
+		)
+	)
+
+	;; ===== R6: 4.7K I2C SDA Pull-up =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_RESISTOR")
+		(at 96.52 60.96 90)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000a00-0000-0000-0000-000000000001")
+		(property "Reference" "R6" (at 96.52 58.42 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "4.7K" (at 96.52 63.5 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:R_0805_2012Metric" (at 96.52 60.96 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000a01-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000a01-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "R6") (unit 1))
+			)
+		)
+	)
+
+	;; ===== R7: 4.7K I2C SCL Pull-up =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_RESISTOR")
+		(at 101.6 60.96 90)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000b00-0000-0000-0000-000000000001")
+		(property "Reference" "R7" (at 101.6 58.42 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "4.7K" (at 101.6 63.5 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:R_0805_2012Metric" (at 101.6 60.96 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000b01-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000b01-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "R7") (unit 1))
+			)
+		)
+	)
+
+	;; ===== R8: 1K Buzzer Base Resistor =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_RESISTOR")
+		(at 132.08 76.2 90)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000c00-0000-0000-0000-000000000001")
+		(property "Reference" "R8" (at 132.08 73.66 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "1K" (at 132.08 78.74 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:R_0805_2012Metric" (at 132.08 76.2 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000c01-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000c01-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "R8") (unit 1))
+			)
+		)
+	)
+
+	;; ===== R9: 10K WS2812B Pull-down =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_RESISTOR")
+		(at 115.57 48.26 90)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000d00-0000-0000-0000-000000000001")
+		(property "Reference" "R9" (at 115.57 45.72 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "10K" (at 115.57 50.8 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:R_0805_2012Metric" (at 115.57 48.26 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000d01-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000d01-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "R9") (unit 1))
+			)
+		)
+	)
+
+	;; ===== R11: 10K GPIO13 Pull-up =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_RESISTOR")
+		(at 99.06 99.06 90)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000e00-0000-0000-0000-000000000001")
+		(property "Reference" "R11" (at 99.06 96.52 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "10K" (at 99.06 101.6 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:R_0805_2012Metric" (at 99.06 99.06 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000e01-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000e01-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "R11") (unit 1))
+			)
+		)
+	)
+
+	;; ===== R12: 10K GPIO14 Pull-up =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_RESISTOR")
+		(at 111.76 99.06 90)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1000f00-0000-0000-0000-000000000001")
+		(property "Reference" "R12" (at 111.76 96.52 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "10K" (at 111.76 101.6 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:R_0805_2012Metric" (at 111.76 99.06 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1000f01-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1000f01-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "R12") (unit 1))
+			)
+		)
+	)
+
+	;; ===== R13: 10K GPIO27 Pull-up =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_RESISTOR")
+		(at 124.46 99.06 90)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1001000-0000-0000-0000-000000000001")
+		(property "Reference" "R13" (at 124.46 96.52 0) (effects (font (size 1.27 1.27))))
+		(property "Value" "10K" (at 124.46 101.6 0) (effects (font (size 1.27 1.27))))
+		(property "Footprint" "aetherguard-serial-deployer-v2:R_0805_2012Metric" (at 124.46 99.06 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1001001-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1001001-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "R13") (unit 1))
+			)
+		)
+	)
+
+	;; ===== C12: 100nF WS2812B Decouple =====
+	(symbol
+		(lib_id "aetherguard-serial-deployer-v2:AG_CAPACITOR")
+		(at 129.54 55.88 0)
+		(unit 1)
+		(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)
+		(uuid "d1001100-0000-0000-0000-000000000001")
+		(property "Reference" "C12" (at 132.08 54.61 0) (effects (font (size 1.27 1.27)) (justify left)))
+		(property "Value" "100nF" (at 132.08 57.15 0) (effects (font (size 1.27 1.27)) (justify left)))
+		(property "Footprint" "aetherguard-serial-deployer-v2:C_0805_2012Metric" (at 129.54 55.88 0) (effects (font (size 1.27 1.27)) (hide yes)))
+		(pin "1" (uuid "d1001101-0000-0000-0000-000000000001"))
+		(pin "2" (uuid "d1001101-0000-0000-0000-000000000002"))
+		(instances
+			(project "aetherguard-serial-deployer-v2"
+				(path "/d0000000-0000-0000-0000-000000000001" (reference "C12") (unit 1))
+			)
+		)
+	)
+
+	;; ===== Hierarchical Labels =====
+	(hierarchical_label "3V3" power_in
+		(at 50.8 50.8 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000001")
+	)
+	(hierarchical_label "GND" power_in
+		(at 50.8 53.34 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000002")
+	)
+	(hierarchical_label "GPIO0" bidirectional
+		(at 50.8 55.88 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000003")
+	)
+	(hierarchical_label "EN" bidirectional
+		(at 50.8 58.42 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000004")
+	)
+	(hierarchical_label "GPIO4" bidirectional
+		(at 50.8 60.96 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000005")
+	)
+	(hierarchical_label "GPIO13" bidirectional
+		(at 50.8 63.5 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000006")
+	)
+	(hierarchical_label "GPIO14" bidirectional
+		(at 50.8 66.04 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000007")
+	)
+	(hierarchical_label "GPIO21_SDA" bidirectional
+		(at 50.8 68.58 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000008")
+	)
+	(hierarchical_label "GPIO22_SCL" bidirectional
+		(at 50.8 71.12 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000009")
+	)
+	(hierarchical_label "GPIO25" bidirectional
+		(at 50.8 73.66 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000010")
+	)
+	(hierarchical_label "GPIO27" bidirectional
+		(at 50.8 76.2 180)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "d1002000-0000-0000-0000-000000000011")
+	)
+
+	;; ===== Net Labels =====
+	;; Power
+	(label "3V3" (at 69.85 55.88 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000001"))
+	(label "GND" (at 69.85 60.96 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000002"))
+	(label "3V3" (at 69.85 50.8 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000003"))
+	(label "3V3" (at 128.27 58.42 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000004"))
+	(label "GND" (at 69.85 63.5 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000005"))
+
+	;; I2C
+	(label "I2C_SDA" (at 69.85 50.8 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000006"))
+	(label "I2C_SCL" (at 69.85 53.34 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000007"))
+	(label "I2C_SDA" (at 50.8 68.58 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000008"))
+	(label "I2C_SCL" (at 50.8 71.12 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000009"))
+
+	;; WS2812B
+	(label "WS2812B_DIN" (at 115.57 58.42 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000010"))
+	(label "WS2812B_DIN" (at 50.8 60.96 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000011"))
+	(label "GND" (at 115.57 44.45 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000012"))
+	(label "3V3" (at 128.27 53.34 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000013"))
+	(label "GND" (at 129.54 59.69 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000014"))
+
+	;; Buzzer
+	(label "USB_VBUS" (at 144.78 50.8 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000015"))
+	(label "BUZZER_DRV" (at 132.08 72.39 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000016"))
+	(label "BUZZER_DRV" (at 50.8 73.66 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000017"))
+	(label "GND" (at 146.05 80.01 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000018"))
+
+	;; Buttons
+	(label "GPIO0" (at 71.12 88.9 0) (effects (font (size 1.27 1.27)) (justify right bottom))) (uuid "d1003000-0000-0000-0000-000000000019"))
+	(label "GND" (at 76.2 88.9 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000020"))
+	(label "EN" (at 83.82 88.9 0) (effects (font (size 1.27 1.27)) (justify right bottom))) (uuid "d1003000-0000-0000-0000-000000000021"))
+	(label "GND" (at 88.9 88.9 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000022"))
+	(label "BTN_OK" (at 96.52 88.9 0) (effects (font (size 1.27 1.27)) (justify right bottom))) (uuid "d1003000-0000-0000-0000-000000000023"))
+	(label "GND" (at 101.6 88.9 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000024"))
+	(label "BTN_NEXT" (at 109.22 88.9 0) (effects (font (size 1.27 1.27)) (justify right bottom))) (uuid "d1003000-0000-0000-0000-000000000025"))
+	(label "GND" (at 114.3 88.9 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000026"))
+	(label "BTN_BACK" (at 121.92 88.9 0) (effects (font (size 1.27 1.27)) (justify right bottom))) (uuid "d1003000-0000-0000-0000-000000000027"))
+	(label "GND" (at 127 88.9 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000028"))
+
+	;; Button pull-ups
+	(label "3V3" (at 99.06 95.25 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000029"))
+	(label "3V3" (at 111.76 95.25 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000030"))
+	(label "3V3" (at 124.46 95.25 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000031"))
+	(label "BTN_OK" (at 99.06 102.87 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000032"))
+	(label "BTN_NEXT" (at 111.76 102.87 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000033"))
+	(label "BTN_BACK" (at 124.46 102.87 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000034"))
+
+	;; Hierarchical label connections
+	(label "BTN_OK" (at 50.8 63.5 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000035"))
+	(label "BTN_NEXT" (at 50.8 66.04 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000036"))
+	(label "BTN_BACK" (at 50.8 76.2 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000037"))
+
+	;; Pull-up resistors to I2C
+	(label "I2C_SDA" (at 96.52 57.15 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000038"))
+	(label "3V3" (at 96.52 64.77 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000039"))
+	(label "I2C_SCL" (at 101.6 57.15 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000040"))
+	(label "3V3" (at 101.6 64.77 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000041"))
+
+	;; WS2812B pull-down
+	(label "WS2812B_DIN" (at 115.57 52.07 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000042"))
+
+	;; USB_VBUS for buzzer
+	(label "USB_VBUS" (at 144.78 44.45 0) (effects (font (size 1.27 1.27)) (justify left bottom))) (uuid "d1003000-0000-0000-0000-000000000043"))
+
+	(sheet_instances
+		(path "/" (page "1"))
+		(path "/d0000000-0000-0000-0000-000000000001" (page "4"))
+	)
+	(embedded_fonts no)
+)

@@ -121,5 +121,6 @@ describe('FlowManager', () => {
         const fm = new FlowManager();
         fm.getOrCreateFlow(makePacket({ srcIP: '1.1.1.1', dstIP: '2.2.2.2', srcPort: 1, dstPort: 2, protocol: 'tcp' }));
         expect(() => fm.shutdown()).not.toThrow();
+        expect((fm as any).cleanupInterval).toBeNull();
     });
 });

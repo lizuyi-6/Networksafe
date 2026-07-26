@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import { artifactStoreService } from './artifact-store.service';
 import { hardwareAuthorizationService, type CommandIntentRecord, type HardwareGrantRecord } from './hardware-authorization.service';
+import { finalDefenseService, type FinalDefensePolicyRecord } from './final-defense.service';
 import { signDeploymentBundlePayload, verifyDeploymentBundlePayload } from '../security/deployment-bundle-signing';
 import type { DeploymentTarget } from './platform-config.service';
 import logger from '../utils/logger';
@@ -210,11 +211,11 @@ export function renderHealthcheckScript(profile: Record<string, any>): string {
   const port = resolvePort(profile);
   return `#!/usr/bin/env bash
 set -euo pipefail
-if ! curl -fsS "http://127.0.0.1:${port}/api/health" >/dev/null 2>&1; then
-  echo "healthcheck FAILED: /api/health not reachable on port ${port}"
+if ! curl -fsS "http://127.0.0.1:${port}/health/ready" >/dev/null 2>&1; then
+  echo "healthcheck FAILED: /health/ready not reachable on port ${port}"
   exit 1
 fi
-echo "healthcheck passed: /api/health reachable"
+echo "healthcheck passed: /health/ready reachable"
 `;
 }
 
@@ -555,18 +556,34 @@ class DeploymentRunService {
       throw new Error('backend.deployment_run_backup_required_before_approval');
     }
 
+    const commandType = run.requestType === 'remove' ? 'host_remove' : 'host_install';
+    const policy = this.resolveFinalDefensePolicyForRun(run, commandType);
+    const challenge = randomUUID();
+    const interlockAction = 'interlock_release';
+
     const approval = await hardwareAuthorizationService.requestPhysicalConfirmation({
       tenantId: actor.tenantId,
       scope: 'deployment',
       targetId: run.id,
-      commandType: run.requestType === 'remove' ? 'host_remove' : 'host_install',
+      commandType,
+      gateId: run.gateId,
       payload: {
         runId: run.id,
         helperId: run.helperId,
         gateId: run.gateId,
         bundleChecksum: run.bundleChecksum,
         checksumShortCode: run.checksumShortCode,
-        requestType: run.requestType
+        requestType: run.requestType,
+        policyDigest: policy.policyDigest,
+        challenge,
+        breakerTarget: policy.breakerTarget,
+        interlockAction
+      },
+      hardwareContext: {
+        policyDigest: policy.policyDigest,
+        challenge,
+        breakerTarget: policy.breakerTarget,
+        interlockAction
       },
       actorId: actor.userId,
       actorEmail: actor.email,
@@ -595,6 +612,24 @@ class DeploymentRunService {
       intent: approval.intent,
       sessionId: approval.session?.sessionId
     };
+  }
+
+  private resolveFinalDefensePolicyForRun(run: DeploymentRunRecord, commandType: string): FinalDefensePolicyRecord {
+    const policy = finalDefenseService.getActivePolicyForCompanion(run.helperId);
+    if (!policy || policy.tenantId !== run.tenantId) {
+      throw new Error('backend.deployment_run_final_defense_policy_required');
+    }
+    if (policy.gateId !== run.gateId) {
+      throw new Error('backend.deployment_run_final_defense_gate_mismatch');
+    }
+    if (!policy.policyDigest || !policy.breakerTarget) {
+      throw new Error('backend.deployment_run_final_defense_context_required');
+    }
+    const allowed = policy.allowedActions.some((action) => action.commandType === commandType);
+    if (!allowed) {
+      throw new Error('backend.deployment_run_final_defense_action_not_allowed');
+    }
+    return policy;
   }
 
   confirmApprovedRun(intent: CommandIntentRecord, grant: HardwareGrantRecord): DeploymentRunRecord | null {
@@ -751,7 +786,28 @@ class DeploymentRunService {
       return null;
     }
 
-    if (input.payload && input.signature && !verifyDeploymentBundlePayload(input.payload, input.signature)) {
+    // AG-001 fail-closed: a helper result MUST carry a server-issued payload
+    // and a valid signature. The previous check was fail-open — omitting the
+    // `signature` field skipped verification entirely, so any holder of the
+    // shared secret could POST a forged terminal result (e.g. mark an approved
+    // run `completed`). Now a missing/invalid signature, OR a valid signature
+    // whose signed instruction does not describe THIS run/helper/tenant/
+    // requestType (replay of a signature issued for another run), is rejected.
+    const signatureValid = Boolean(
+      input.payload
+      && input.signature
+      && verifyDeploymentBundlePayload(input.payload, input.signature)
+    );
+    const signedInstructionMatchesResult = Boolean(
+      signatureValid
+      && input.payload
+      && String(input.payload.runId ?? '') === input.runId
+      && String(input.payload.helperId ?? '') === input.helperId
+      && String(input.payload.tenantId ?? '') === input.tenantId
+      && String(input.payload.requestType ?? '').toUpperCase() === input.requestType
+    );
+
+    if (!signatureValid || !signedInstructionMatchesResult) {
       this.updateRunState(run.id, run.tenantId, {
         status: 'failed',
         lastError: 'invalid_helper_signature',
@@ -759,7 +815,7 @@ class DeploymentRunService {
           {
             at: isoNow(),
             actor: `helper:${input.helperId}`,
-            message: 'Helper result rejected because signature verification failed.'
+            message: 'Helper result rejected because signature verification failed (fail-closed).'
           }
         ]
       });

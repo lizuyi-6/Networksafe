@@ -1,0 +1,21 @@
+# Deterministic image tags for offline (air-gapped) distribution.
+#
+# The base docker-compose.yml declares fastpath/backend/frontend with `build:`
+# only — compose would derive project-dependent image names, which breaks the
+# docker save → docker load handoff. This override pins stable tags.
+#
+# Used on BOTH sides of the offline flow (keep in sync with
+# scripts/release/build-offline-bundle.mjs and deployment/offline/install-offline.sh):
+#   build machine (online):
+#     docker compose -f docker-compose.yml -f docker-compose.offline.yml build
+#   customer host (air-gapped, after docker load):
+#     docker compose -f docker-compose.yml -f docker-compose.offline.yml up -d --no-build
+#
+# AETHERGUARD_VERSION comes from the bundle's .env / manifest (default: offline).
+services:
+  fastpath:
+    image: aetherguard/fastpath:${AETHERGUARD_VERSION:-offline}
+  backend:
+    image: aetherguard/backend:${AETHERGUARD_VERSION:-offline}
+  frontend:
+    image: aetherguard/frontend:${AETHERGUARD_VERSION:-offline}

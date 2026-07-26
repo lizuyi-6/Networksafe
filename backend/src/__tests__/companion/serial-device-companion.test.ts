@@ -1,7 +1,10 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { createSign, generateKeyPairSync } from 'crypto';
 import { buildHardwareGrantMessage, hashPayload } from '../../security/hardware-grant';
 import { computeFinalDefensePolicyDigest } from '../../security/final-defense-policy';
-import { validateLocalPolicyGrant, type LocalPolicy } from '../../companion/serial-device-companion';
+import { validateLocalPolicyGrant, boardHeartbeatState, coerceBoardBool, loadLocalPolicy, type LocalPolicy } from '../../companion/serial-device-companion';
 
 describe('serial-device-companion local policy enforcement', () => {
   function buildPolicy(): LocalPolicy {
@@ -35,6 +38,17 @@ describe('serial-device-companion local policy enforcement', () => {
     });
 
     expect(result).toEqual({ ok: false, reason: 'policy_action_not_allowed' });
+  });
+
+  it('rejects a local policy digest mismatch before constant-time comparison length requirements', () => {
+    const policy = {
+      ...buildPolicy(),
+      policyDigest: 'short'
+    };
+    const policyPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'aetherguard-policy-')), 'policy.json');
+    fs.writeFileSync(policyPath, JSON.stringify(policy));
+
+    expect(() => loadLocalPolicy(policyPath)).toThrow('final defense policy digest mismatch');
   });
 
   it('fails closed on policy digest mismatch and counter rollback', () => {
@@ -121,5 +135,95 @@ describe('serial-device-companion local policy enforcement', () => {
     });
 
     expect(rollback).toEqual({ ok: false, reason: 'counter_replay_or_rollback' });
+  });
+
+  it('fails closed when the grant expiry is unparseable (now > NaN is false)', () => {
+    const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+    const policy = buildPolicy();
+    const payload = { path: '/opt/aetherguard' };
+    const issuedAt = '2026-05-13T00:00:00.000Z';
+    const expiresAt = 'not-a-real-date'; // getTime() -> NaN
+    const publicKeyPem = keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+    const signature = createSign('SHA256')
+      .update(buildHardwareGrantMessage({
+        gateId: policy.gateId,
+        sessionId: 'session-test',
+        actionId: 'action-test',
+        tenantId: policy.tenantId,
+        scope: 'device',
+        targetId: policy.companionId,
+        commandType: 'host_remove',
+        payloadHash: hashPayload(payload),
+        policyDigest: policy.policyDigest,
+        challenge: 'challenge-test',
+        breakerTarget: policy.breakerTarget,
+        interlockAction: 'interlock_release',
+        issuedAt,
+        expiresAt,
+        monotonicCounter: 7
+      }))
+      .end()
+      .sign(keyPair.privateKey, 'base64');
+
+    // Every other check passes; only the malformed expiry must reject.
+    const result = validateLocalPolicyGrant({
+      policy,
+      commandType: 'host_remove',
+      payload,
+      publicKeyPem,
+      lastCounter: 0,
+      now: new Date(issuedAt).getTime(),
+      grant: {
+        gateId: policy.gateId,
+        sessionId: 'session-test',
+        actionId: 'action-test',
+        tenantId: policy.tenantId,
+        scope: 'device',
+        targetId: policy.companionId,
+        commandType: 'host_remove',
+        payloadHash: hashPayload(payload),
+        policyDigest: policy.policyDigest,
+        challenge: 'challenge-test',
+        breakerTarget: policy.breakerTarget,
+        interlockAction: 'interlock_release',
+        issuedAt,
+        expiresAt,
+        monotonicCounter: 7,
+        signature
+      }
+    });
+
+    expect(result).toEqual({ ok: false, reason: 'hardware_grant_expired' });
+  });
+
+  it('board watchdog treats a missing or unparseable heartbeat as fail-closed', () => {
+    const now = new Date('2026-05-13T00:01:00.000Z').getTime();
+    // Fresh heartbeat -> ok
+    expect(boardHeartbeatState(new Date(now - 5_000).toISOString(), now)).toBe('ok');
+    // Missing -> missing
+    expect(boardHeartbeatState(undefined, now)).toBe('missing');
+    expect(boardHeartbeatState('', now)).toBe('missing');
+    // Too old -> lost
+    expect(boardHeartbeatState(new Date(now - 60_000).toISOString(), now)).toBe('lost');
+    // Unparseable -> lost (must NOT be treated as fresh via now - NaN)
+    expect(boardHeartbeatState('not-a-timestamp', now)).toBe('lost');
+  });
+
+  it('coerceBoardBool treats string "false"/"0" as false (no Boolean truthy trap)', () => {
+    // Real booleans (what the firmware emits) round-trip correctly.
+    expect(coerceBoardBool(true)).toBe(true);
+    expect(coerceBoardBool(false)).toBe(false);
+    // The truthy trap: Boolean("false") is true; coerceBoardBool must be false.
+    expect(coerceBoardBool('false')).toBe(false);
+    expect(coerceBoardBool('0')).toBe(false);
+    expect(coerceBoardBool('no')).toBe(false);
+    expect(coerceBoardBool('')).toBe(false);
+    expect(coerceBoardBool(0)).toBe(false);
+    expect(coerceBoardBool(undefined)).toBe(false);
+    expect(coerceBoardBool(null)).toBe(false);
+    // True-ish accepted forms.
+    expect(coerceBoardBool('true')).toBe(true);
+    expect(coerceBoardBool('TRUE')).toBe(true);
+    expect(coerceBoardBool(1)).toBe(true);
   });
 });

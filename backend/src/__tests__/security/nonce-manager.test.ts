@@ -40,6 +40,7 @@ describe('NonceManager', () => {
   });
 
   afterEach(() => {
+    manager.close();
     jest.useRealTimers();
   });
 
@@ -127,6 +128,18 @@ describe('NonceManager', () => {
 
       await manager.clearAll();
       expect(manager.getStats().memoryCount).toBe(0);
+    });
+  });
+
+  describe('close', () => {
+    it('clears the scheduled cleanup interval and is idempotent', () => {
+      expect(jest.getTimerCount()).toBe(1);
+
+      manager.close();
+      manager.close();
+
+      expect(jest.getTimerCount()).toBe(0);
+      expect((manager as any).cleanupTimer).toBeNull();
     });
   });
 

@@ -6,8 +6,12 @@ import { FirewallController } from '../agent/firewall-controller';
 
 describe('FirewallController', () => {
     let controller: FirewallController;
+    let detectBackendSpy: jest.SpyInstance;
 
     beforeEach(() => {
+        detectBackendSpy = jest
+            .spyOn(FirewallController.prototype as any, 'detectBackend')
+            .mockResolvedValue(undefined);
         controller = new FirewallController();
         // Keep unit tests deterministic and avoid touching host firewall.
         (controller as any).backend = 'none';
@@ -15,6 +19,7 @@ describe('FirewallController', () => {
 
     afterEach(async () => {
         await controller.clearAll();
+        detectBackendSpy.mockRestore();
     });
 
     describe('IP Validation', () => {
@@ -109,6 +114,31 @@ describe('FirewallController', () => {
     });
 
     describe('Backend Detection', () => {
+        it('waits for backend detection before applying a block', async () => {
+            let releaseDetection: () => void = () => undefined;
+            const detectionGate = new Promise<void>((resolve) => {
+                releaseDetection = resolve;
+            });
+            detectBackendSpy.mockImplementationOnce(async function (this: FirewallController) {
+                await detectionGate;
+                (this as any).backend = 'none';
+            });
+
+            const gatedController = new FirewallController();
+            let settled = false;
+            const blockResult = gatedController.blockIP('9.9.9.9', 0).then((result) => {
+                settled = true;
+                return result;
+            });
+
+            await new Promise<void>((resolve) => setImmediate(resolve));
+            expect(settled).toBe(false);
+
+            releaseDetection();
+            await expect(blockResult).resolves.toBe(true);
+            await gatedController.clearAll();
+        });
+
         it('should report backend type', () => {
             const backend = controller.getBackend();
 

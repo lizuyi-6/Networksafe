@@ -48,7 +48,17 @@ export async function bootstrapPersistence(): Promise<void> {
     await seedDatabase({ clearExisting: false, verbose: true });
   }
 
-  await postgresShadowStoreService.backfillSnapshot();
+  auditLogger.startBackgroundJobs();
+
+  // Backfill the Postgres shadow store WITHOUT blocking startup: a full
+  // backfill over thousands of audit rows (serial INSERT-per-row) can take
+  // minutes and freezes the event loop on each SQLite `.all()`, which also
+  // starves every async timer (including our shadow-query timeout). The
+  // resync loop (startResyncLoop, already scheduled in start()) will catch
+  // the store up shortly after listen(). Reads fall back to SQLite until then.
+  void postgresShadowStoreService.backfillSnapshot().catch((error) => {
+    logger.warn('Shadow store initial backfill failed; resync loop will retry', { error: error?.message });
+  });
 
   logger.info('Persistence bootstrap complete');
 }

@@ -6,7 +6,8 @@
  * getAsyncReviewStats, recordBlockedThreat, runBlockingReview.
  */
 
-import { initDatabase } from '../../config/database';
+import { getDatabase, initDatabase } from '../../config/database';
+import { ANONYMOUS_TENANT_ID } from '../../core/tenant/tenant-context';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
 import { platformConfigService } from '../../services/platform-config.service';
 import type { DetectionRequest } from '../../services/detection-engine';
@@ -102,13 +103,19 @@ describe('DetectionPipelineService', () => {
 
   describe('evaluateRequest — rule matching', () => {
     it('returns allow verdict for benign traffic with no rule match', async () => {
-      const request = buildRequest({ path: '/api/health', method: 'GET' });
+      const request = buildRequest({
+        path: '/api/ping',
+        method: 'GET',
+        userAgent: 'Mozilla/5.0'
+      });
 
       const decision = await detectionPipelineService.evaluateRequest(request);
 
       expect(decision.verdict).toBeDefined();
       expect(decision.attackFamily).toBeDefined();
       expect(decision.riskScore).toBeGreaterThanOrEqual(0);
+      expect(decision.escalatedToAI).toBe(false);
+      expect(mockAnalyzer.analyze).not.toHaveBeenCalled();
     });
 
     it('escalates to AI and returns suspicious verdict when AI analyzer is set', async () => {
@@ -116,11 +123,20 @@ describe('DetectionPipelineService', () => {
         makeAiResult({ verdict: 'suspicious', confidence: 0.4, reasoning: 'Ambiguous payload' })
       );
 
-      // Use a path that won't match seed rules so hot-path AI fires
+      // An upstream risk signal is above the default AI escalation threshold
+      // without matching a deterministic block rule.
       const request = buildRequest({
         path: '/api/ambiguous-request',
         method: 'GET',
-        query: 'data=something_neutral'
+        query: 'data=something_neutral',
+        userAgent: 'Mozilla/5.0',
+        existingSignals: [{
+          source: 'existing_signal',
+          key: 'upstream-risk',
+          score: 0.55,
+          severity: 'high',
+          description: 'Upstream anomaly requires AI review'
+        }]
       });
 
       const decision = await detectionPipelineService.evaluateRequest(request);
@@ -218,7 +234,15 @@ describe('DetectionPipelineService', () => {
 
       const request = buildRequest({
         path: '/api/search',
-        query: 'q=1'  // not matching seed patterns but AI fires
+        query: 'q=1',
+        userAgent: 'Mozilla/5.0',
+        existingSignals: [{
+          source: 'existing_signal',
+          key: 'upstream-risk',
+          score: 0.55,
+          severity: 'high',
+          description: 'Upstream anomaly requires AI review'
+        }]
       });
 
       const decision = await detectionPipelineService.evaluateRequest(request);
@@ -312,6 +336,25 @@ describe('DetectionPipelineService', () => {
 
       expect(decision.verdict).toBeDefined();
     });
+
+    it('keeps anonymous requests rule-only and out of persistence', async () => {
+      const request = buildRequest({
+        tenantId: ANONYMOUS_TENANT_ID,
+        requestId: `anonymous-rule-only-${Date.now()}`,
+        path: '/api/public-probe'
+      });
+
+      const decision = await detectionPipelineService.evaluateRequest(request);
+
+      expect(decision.escalatedToAI).toBe(false);
+      expect(mockAnalyzer.analyze).not.toHaveBeenCalled();
+      const persisted = getDatabase().prepare(`
+        SELECT request_id
+        FROM sec_detection_events
+        WHERE request_id = ?
+      `).get(request.requestId);
+      expect(persisted).toBeUndefined();
+    });
   });
 
   describe('runBlockingReview', () => {
@@ -350,7 +393,7 @@ describe('DetectionPipelineService', () => {
 
     it('fails closed when blocking review times out', async () => {
       mockAnalyzer.analyze = jest.fn().mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve(makeAiResult({ verdict: 'safe' })), 5000))
+        () => new Promise(() => undefined)
       );
 
       const request = buildRequest();
@@ -384,6 +427,41 @@ describe('DetectionPipelineService', () => {
         verdict: 'allow'
       });
       expect(Array.isArray(events)).toBe(true);
+    });
+
+    it('surfaces aiHeuristicDegraded from the persisted AI decision (degradation transparency)', async () => {
+      mockAnalyzer.analyze = jest.fn().mockResolvedValue(
+        makeAiResult({
+          verdict: 'suspicious',
+          confidence: 0.7,
+          reasoning: 'heuristic fallback verdict',
+          rawDecision: {
+            verdict: 'monitor',
+            heuristicDegraded: true,
+            heuristicFallbackCount: 3
+          }
+        })
+      );
+
+      const request = buildRequest({
+        path: '/api/search',
+        query: 'q=1',
+        userAgent: 'Mozilla/5.0',
+        existingSignals: [{
+          source: 'existing_signal',
+          key: 'upstream-risk',
+          score: 0.55,
+          severity: 'high',
+          description: 'Upstream anomaly requires AI review'
+        }]
+      });
+      const decision = await detectionPipelineService.evaluateRequest(request);
+      expect(decision.escalatedToAI).toBe(true);
+
+      const events = await detectionPipelineService.listDetectionEvents('tenant-test-pipeline', { limit: 50 });
+      const event = events.find((item) => item.requestId === request.requestId);
+      expect(event).toBeDefined();
+      expect(event!.aiHeuristicDegraded).toBe(true);
     });
   });
 });

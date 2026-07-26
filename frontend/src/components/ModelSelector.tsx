@@ -1,7 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Lock, Sparkles, Crown, Loader2, AlertTriangle } from 'lucide-react';
-import { fetchAvailableModels, AIModelInfo } from '../services/api';
+import {
+    fetchAvailableModels,
+    fetchPlatformConfig,
+    savePreferredAIModel,
+    AIModelInfo
+} from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 
 const getCategoryIcon = (model: AIModelInfo) => {
@@ -36,19 +41,28 @@ const ModelSelector = () => {
     const [plan, setPlan] = useState<string>('starter');
     const [canCustomize, setCanCustomize] = useState(false);
     const [selectedModelId, setSelectedModelId] = useState<string>('');
+    const [savingModelId, setSavingModelId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [saveError, setSaveError] = useState<string | null>(null);
     const { t } = useLanguage();
 
     const loadModels = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await fetchAvailableModels();
+            setSaveError(null);
+            const [data, config] = await Promise.all([
+                fetchAvailableModels(),
+                fetchPlatformConfig()
+            ]);
+            const preferredModel = data.models.find((model) => (
+                model.id === config.aiRouting.preferredModelId && model.available
+            ));
             setModels(data.models);
             setPlan(data.plan);
             setCanCustomize(data.canCustomize);
-            setSelectedModelId(data.defaultModelId);
+            setSelectedModelId(preferredModel?.id || data.defaultModelId);
         } catch (err: any) {
             setError(err.message || 'Failed to load model catalog');
         } finally {
@@ -59,6 +73,27 @@ const ModelSelector = () => {
     useEffect(() => {
         loadModels();
     }, [loadModels]);
+
+    const handleModelSelect = async (model: AIModelInfo) => {
+        if (!model.available || savingModelId || model.id === selectedModelId) {
+            return;
+        }
+
+        setSavingModelId(model.id);
+        setSaveError(null);
+        try {
+            const result = await savePreferredAIModel(model.id);
+            const persistedConfig = result.config;
+            if (!persistedConfig || persistedConfig.aiRouting.preferredModelId !== model.id) {
+                throw new Error('FG-AI-MODEL-SELECTION-MISMATCH');
+            }
+            setSelectedModelId(model.id);
+        } catch (err: any) {
+            setSaveError(err.message || 'FG-AI-MODEL-SELECTION-SAVE');
+        } finally {
+            setSavingModelId(null);
+        }
+    };
 
     if (loading) {
         return (
@@ -108,10 +143,18 @@ const ModelSelector = () => {
                 )}
             </div>
 
+            {saveError && (
+                <div role="alert" className="mx-6 mt-4 flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-rose-600 dark:text-rose-400">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span>{saveError}</span>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 gap-3 p-6 sm:grid-cols-2 lg:grid-cols-3">
                 {models.map((model, idx) => {
                     const isSelected = model.id === selectedModelId;
                     const isLocked = !model.available;
+                    const isSaving = savingModelId === model.id;
 
                     return (
                         <motion.button
@@ -120,8 +163,10 @@ const ModelSelector = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                             whileHover={isLocked ? {} : { y: -4, scale: 1.01, transition: { duration: 0.2 } }}
-                            onClick={() => !isLocked && setSelectedModelId(model.id)}
-                            disabled={isLocked}
+                            onClick={() => void handleModelSelect(model)}
+                            disabled={isLocked || savingModelId !== null}
+                            aria-pressed={isSelected}
+                            aria-busy={isSaving}
                             className={`relative rounded-xl border p-4 text-left transition-colors ${isLocked
                                     ? 'cursor-not-allowed border-border bg-muted/15 opacity-60'
                                     : isSelected
@@ -129,7 +174,9 @@ const ModelSelector = () => {
                                         : 'border-border bg-card hover:bg-muted/20 hover:shadow-lg hover:border-primary/30'
                                 }`}
                         >
-                            {isSelected && <div className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-primary" />}
+                            {isSaving
+                                ? <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-primary" />
+                                : isSelected && <div className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-primary" />}
 
                             {isLocked && (
                                 <div className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted">

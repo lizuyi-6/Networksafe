@@ -343,6 +343,26 @@ export class AgentAuthService {
   }
 
   /**
+   * Read an agent's registration status directly from the DB (no Redis cache),
+   * for WebSocket session revalidation. Returns the status string ('approved',
+   * 'revoked', ...) or null if the agent row no longer exists.
+   *
+   * Synchronous and cheap (indexed SELECT) so the revalidation timer can call
+   * it without awaiting Redis. Callers MUST treat a thrown error as transient
+   * (DB unavailable) and NOT disconnect — only a definitive non-'approved'
+   * status is grounds to drop the socket. This avoids a Redis/DB blip mass-
+   * kicking every connected agent (verifyAgent returns null on transient
+   * errors, so it cannot distinguish revocation from a blip).
+   */
+  getAgentStatus(agentId: string): string | null {
+    const db = getDatabase();
+    const row = db.prepare(
+      `SELECT status FROM agent_registrations WHERE agent_id = ?`
+    ).get(agentId) as { status?: string } | undefined;
+    return row?.status ?? null;
+  }
+
+  /**
    * Update last seen timestamp
    */
   async updateLastSeen(agentId: string): Promise<void> {

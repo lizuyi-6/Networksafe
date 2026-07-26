@@ -17,10 +17,12 @@ export class SystemStats {
     private previousRx: number = 0;
     private previousTx: number = 0;
     private lastNetworkTime: number = Date.now();
+    private readonly updateTimer: NodeJS.Timeout;
 
     private constructor() {
         this.updateStats();
-        setInterval(() => this.updateStats(), 2000);
+        this.updateTimer = setInterval(() => this.updateStats(), 2000);
+        this.updateTimer.unref?.();
     }
 
     public static getInstance(): SystemStats {

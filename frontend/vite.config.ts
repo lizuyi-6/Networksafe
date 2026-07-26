@@ -36,6 +36,11 @@ export default defineConfig(({ mode }) => {
             // 启用 HTTPS (如果证书可用)
             // https: httpsConfig,
             proxy: {
+                '/health': {
+                    target: env.VITE_API_TARGET || 'http://127.0.0.1:3005',
+                    changeOrigin: true,
+                    secure: false
+                },
                 '/api': {
                     target: env.VITE_API_TARGET || 'http://127.0.0.1:3005',
                     changeOrigin: true,

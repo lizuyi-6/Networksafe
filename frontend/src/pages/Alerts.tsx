@@ -129,7 +129,25 @@ const Alerts = () => {
         [alerts, severityFilter, statusFilter],
     );
 
-    const securitySummary = stats?.securityOperations || defaultSecuritySummary;
+    const securitySummary = useMemo(() => {
+        const base = stats?.securityOperations || defaultSecuritySummary;
+        const listedActiveAlerts = alerts.filter(
+            (alert) => alert.status !== 'resolved' && alert.status !== 'suppressed',
+        );
+        const listedHighRiskAlerts = listedActiveAlerts.filter((alert) => {
+            const severity = alert.severity.toLowerCase();
+            return severity === 'critical' || severity === 'high';
+        });
+
+        return {
+            ...base,
+            activeAlerts: Math.max(base.activeAlerts, listedActiveAlerts.length),
+            highRiskFindings: Math.max(
+                base.highRiskFindings ?? base.openCriticalFindings ?? 0,
+                listedHighRiskAlerts.length,
+            ),
+        };
+    }, [alerts, stats]);
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -277,7 +295,13 @@ const Alerts = () => {
             )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <ConsoleStatCard icon={Bell} label={t('alerts.activeAlerts')} value={securitySummary.activeAlerts} hint={t('alerts.activeHint')} tone="danger" />
+                <ConsoleStatCard
+                    icon={Bell}
+                    label={t('alerts.activeAlerts')}
+                    value={<span data-testid="alerts-active-count">{securitySummary.activeAlerts}</span>}
+                    hint={t('alerts.activeHint')}
+                    tone="danger"
+                />
                 <ConsoleStatCard icon={ShieldAlert} label={t('alerts.highRisk')} value={securitySummary.highRiskFindings || securitySummary.openCriticalFindings} hint={t('alerts.highRiskHint')} tone="warning" />
                 <ConsoleStatCard icon={Activity} label={t('alerts.pendingActions')} value={securitySummary.pendingActions} hint={t('alerts.pendingHint')} tone="primary" />
                 <ConsoleStatCard icon={XCircle} label={t('alerts.failedValidations')} value={securitySummary.failedValidations} hint={t('alerts.validationHint')} tone="danger" />
@@ -365,7 +389,12 @@ const Alerts = () => {
                                             <div>
                                                 <h3 className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">{alert.title}</h3>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                                                    <span className="rounded border border-border bg-muted/20 px-2 py-0.5">{t(`alerts.${statusKeyMap[alert.status]}`)}</span>
+                                                    <span
+                                                        data-alert-status={alert.status}
+                                                        className="rounded border border-border bg-muted/20 px-2 py-0.5"
+                                                    >
+                                                        {t(`alerts.${statusKeyMap[alert.status]}`)}
+                                                    </span>
                                                     <span>{alert.source}</span>
                                                     {alert.assetId && <span>Asset {alert.assetId.slice(0, 8)}</span>}
                                                     {alert.investigationId && <span>{t('alerts.investigate')} {alert.investigationId}</span>}

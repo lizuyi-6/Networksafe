@@ -1,0 +1,53 @@
+{
+    // AI-assistant-friendly debug entry points. Committed on purpose
+    // (.gitignore has an explicit exception) so any assistant or teammate
+    // gets working breakpoints without setup. See docs/ai-debugging.md.
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Backend: dev server (breakpoints in src/**)",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/backend",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": ["ts-node-dev", "--respawn", "--transpile-only", "--inspect", "src/index.ts"],
+            "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Backend: debug current Jest file",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/backend",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": ["jest", "--runInBand", "--testTimeout=600000", "${fileBasename}"],
+            "env": {
+                "NODE_ENV": "test",
+                "NODE_OPTIONS": "--max-old-space-size=4096",
+                "JWT_SECRET": "test-jwt-secret-minimum-32-characters-long",
+                "AUDIT_LOG_SECRET": "test-audit-log-secret-minimum-32-characters",
+                "DISABLE_REDIS": "true"
+            },
+            "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Simulator: full control loop (sim.ts)",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/simulator",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": ["ts-node", "sim.ts"],
+            "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Attach to running backend (port 9229)",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "restart": true,
+            "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+        }
+    ]
+}

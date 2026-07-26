@@ -23,10 +23,12 @@ export class NonceManager {
   private memoryStore: Map<string, NonceEntry> = new Map();
   private readonly MEMORY_TTL = 600000; // 10 minutes (same as Redis)
   private readonly CLEANUP_INTERVAL = 60000; // Cleanup every minute
+  private cleanupTimer: NodeJS.Timeout | null;
 
   constructor() {
     // Periodic cleanup of expired nonces in memory
-    setInterval(() => this.cleanup(), this.CLEANUP_INTERVAL);
+    this.cleanupTimer = setInterval(() => this.cleanup(), this.CLEANUP_INTERVAL);
+    this.cleanupTimer.unref?.();
   }
 
   /**
@@ -208,6 +210,14 @@ export class NonceManager {
     } catch (error) {
       logger.error('Failed to clear nonces from Redis', { error });
     }
+  }
+
+  close(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
+    this.memoryStore.clear();
   }
 
   /**
