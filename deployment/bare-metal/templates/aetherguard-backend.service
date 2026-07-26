@@ -1,0 +1,30 @@
+[Unit]
+Description=AetherGuard Control Plane Backend
+After=network-online.target postgresql.service redis-server.service aetherguard-fastpath.service
+Requires=postgresql.service redis-server.service aetherguard-fastpath.service
+
+[Service]
+Type=simple
+User=@@APP_USER@@
+Group=@@APP_GROUP@@
+WorkingDirectory=@@DEPLOY_ROOT@@/current/backend
+EnvironmentFile=@@SHARED_DIR@@/backend.env
+Environment=NODE_OPTIONS=--max-old-space-size=@@NODE_HEAP_MB@@
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=@@SHARED_DIR@@
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
