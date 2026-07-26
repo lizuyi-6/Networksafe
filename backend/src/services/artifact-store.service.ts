@@ -155,8 +155,14 @@ class LocalArtifactStore implements ArtifactStore {
     const resolvedTargetDir = path.resolve(targetDir);
     const resolvedTargetPath = path.resolve(targetPath);
     this.assertWithinBaseDir(resolvedTargetPath, resolvedTargetDir);
-    await fs.mkdir(resolvedTargetDir, { recursive: true });
-    await this.assertRealDirWithinBaseDir(resolvedTargetDir);
+    // A key may itself contain "/" (e.g. audit fallback writes
+    // "<tenant>/<segment>.json"). mkdir must cover the key's own parent
+    // directories, not just the scope dir, or writeFile throws ENOENT.
+    // Verifying the real parent also closes the symlinked-subdirectory gap
+    // that checking only the scope dir left open.
+    const resolvedParentDir = path.dirname(resolvedTargetPath);
+    await fs.mkdir(resolvedParentDir, { recursive: true });
+    await this.assertRealDirWithinBaseDir(resolvedParentDir);
     await fs.writeFile(resolvedTargetPath, payload, 'utf8');
     return {
       artifactRef: `artifact://local/${safeScope}/${safeKey}`,
@@ -172,8 +178,10 @@ class LocalArtifactStore implements ArtifactStore {
     const resolvedTargetDir = path.resolve(targetDir);
     const resolvedTargetPath = path.resolve(targetPath);
     this.assertWithinBaseDir(resolvedTargetPath, resolvedTargetDir);
-    await fs.mkdir(resolvedTargetDir, { recursive: true });
-    await this.assertRealDirWithinBaseDir(resolvedTargetDir);
+    // Same nested-key rule as writeText: mkdir the key's real parent.
+    const resolvedParentDir = path.dirname(resolvedTargetPath);
+    await fs.mkdir(resolvedParentDir, { recursive: true });
+    await this.assertRealDirWithinBaseDir(resolvedParentDir);
     await fs.writeFile(resolvedTargetPath, payload);
     return {
       artifactRef: `artifact://local/${safeScope}/${safeKey}`,
