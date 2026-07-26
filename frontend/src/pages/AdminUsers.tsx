@@ -123,7 +123,7 @@ export default function AdminUsers() {
     }
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <div data-testid="admin-users-page" className="space-y-6 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">

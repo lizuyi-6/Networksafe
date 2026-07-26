@@ -579,7 +579,7 @@ export default function PromoFilm() {
     const productName = runtime.manifest.brand.productName || 'AetherGuard';
 
     return (
-        <div className="relative h-screen w-screen overflow-hidden bg-[#F3F5F7] text-slate-950">
+        <div data-testid="promo-film-page" className="relative h-screen w-screen overflow-hidden bg-[#F3F5F7] text-slate-950">
             <div className="absolute inset-0 bg-[linear-gradient(180deg,#F8FAFC_0%,#F3F5F7_42%,#EEF2F7_100%)]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.9),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(226,232,240,0.74),transparent_38%)]" />
             <div

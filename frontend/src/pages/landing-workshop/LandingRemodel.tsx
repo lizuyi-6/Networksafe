@@ -75,7 +75,7 @@ const LandingRemodel = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
+        <div data-testid="landing-workshop-remodel" className="min-h-screen bg-background text-foreground">
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
                 <div className="absolute left-[-8%] top-[-8%] h-[480px] w-[480px] rounded-full bg-sky-500/12 blur-3xl" />
                 <div className="absolute right-[-10%] top-[12%] h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-3xl" />

@@ -107,7 +107,7 @@ export default function Promo() {
     const springTransition = { type: 'spring' as const, stiffness: 300, damping: 25 };
 
     return (
-        <div className="h-screen w-screen bg-[#F0F2F5] text-slate-900 flex items-center justify-center relative overflow-hidden font-sans">
+        <div data-testid="promo-page" className="h-screen w-screen bg-[#F0F2F5] text-slate-900 flex items-center justify-center relative overflow-hidden font-sans">
 
             {/* The Main Application Envelope */}
             <motion.div

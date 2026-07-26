@@ -4,7 +4,7 @@ const PrivacyPolicy = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="h-screen overflow-y-auto overflow-x-hidden bg-background font-sans text-foreground selection:bg-blue-100 selection:text-blue-900">
+        <div data-testid="privacy-page" className="h-screen overflow-y-auto overflow-x-hidden bg-background font-sans text-foreground selection:bg-blue-100 selection:text-blue-900">
             {/* Header */}
             <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
                 <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">

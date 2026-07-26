@@ -830,7 +830,7 @@ export default function XiongcaiFinalDeck() {
     }, [activeSlides.length, goTo, next, prev]);
 
     return (
-        <div className="h-screen w-screen overflow-hidden text-white" style={{ background: COLORS.deepCover }}>
+        <div data-testid="pitch-deck" className="h-screen w-screen overflow-hidden text-white" style={{ background: COLORS.deepCover }}>
             <div className="flex h-full">
                 <main className="flex min-w-0 flex-1 flex-col p-3 sm:p-5">
                     <div className="mb-3 flex items-center justify-between gap-3">

@@ -33,14 +33,17 @@ export const ConsolePage = ({
     actions,
     children,
     className = '',
+    testId,
 }: {
     title: string;
     subtitle?: string;
     actions?: ReactNode;
     children: ReactNode;
     className?: string;
+    testId?: string;
 }) => (
     <motion.div
+        data-testid={testId}
         variants={staggerContainerVariants}
         initial="hidden"
         animate="visible"

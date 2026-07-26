@@ -112,6 +112,8 @@ const applyDemoJitter = () => {
 
 let sessionExpiredNotified = false;
 let automaticSessionRefreshEnabled = true;
+export const SESSION_EXPIRED_EVENT = 'aetherguard:session-expired';
+const SESSION_REFRESH_TIMEOUT_MS = 5_000;
 
 const notifySessionExpired = () => {
     automaticSessionRefreshEnabled = false;
@@ -121,7 +123,7 @@ const notifySessionExpired = () => {
     }
     sessionExpiredNotified = true;
     if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('aetherguard:session-expired'));
+        window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
     }
 };
 
@@ -142,15 +144,39 @@ const _fetchBase = (url: string, options: RequestInit = {}) => {
     });
 };
 
-let isRefreshing = false;
-let refreshSubscribers: ((success: boolean) => void)[] = [];
+type SessionRefreshResult = 'refreshed' | 'unauthenticated' | 'unavailable';
 
-const doRefresh = async (): Promise<boolean> => {
+const createSessionRefreshUnavailableError = () => {
+    const error = new Error('FG-AUTH-REFRESH-UNAVAILABLE');
+    error.name = 'SessionRefreshUnavailableError';
+    return error;
+};
+
+const createRequestAbortError = () => new DOMException('The request was aborted', 'AbortError');
+
+const isDefinitiveRefreshRejection = (status: number): boolean => (
+    status >= 400
+    && status < 500
+    && status !== 408
+    && status !== 425
+    && status !== 429
+);
+
+let isRefreshing = false;
+let refreshSubscribers: ((result: SessionRefreshResult) => void)[] = [];
+
+const doRefresh = async (): Promise<SessionRefreshResult> => {
     try {
-        const response = await _fetchBase(`${API_BASE_URL}/auth/refresh`, { method: 'POST' });
-        return response.ok;
+        const response = await _fetchBase(`${API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            signal: AbortSignal.timeout(SESSION_REFRESH_TIMEOUT_MS),
+        });
+        if (response.ok) {
+            return 'refreshed';
+        }
+        return isDefinitiveRefreshRejection(response.status) ? 'unauthenticated' : 'unavailable';
     } catch {
-        return false;
+        return 'unavailable';
     }
 };
 
@@ -169,12 +195,17 @@ const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Pro
 
     if (!isRefreshing) {
         isRefreshing = true;
-        const refreshed = await doRefresh();
-        const success = automaticSessionRefreshEnabled && refreshed;
+        const refreshResult = await doRefresh();
+        const effectiveResult = automaticSessionRefreshEnabled
+            ? refreshResult
+            : 'unauthenticated';
         isRefreshing = false;
-        refreshSubscribers.forEach(cb => cb(success));
+        refreshSubscribers.forEach((subscriber) => subscriber(effectiveResult));
         refreshSubscribers = [];
-        if (!success) {
+        if (effectiveResult === 'unavailable') {
+            throw createSessionRefreshUnavailableError();
+        }
+        if (effectiveResult === 'unauthenticated') {
             notifySessionExpired();
             return response;
         }
@@ -183,15 +214,46 @@ const fetchWithAutoRefresh = async (url: string, options: RequestInit = {}): Pro
     }
 
     // Another refresh is in progress — wait for it
-    return new Promise((resolve) => {
-        refreshSubscribers.push((success: boolean) => {
-            if (success) {
-                resolve(_fetchBase(url, options));
-            } else {
-                notifySessionExpired();
-                resolve(response);
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        const settleWithResponse = (nextResponse: Response | Promise<Response>) => {
+            if (settled) {
+                return;
             }
-        });
+            settled = true;
+            options.signal?.removeEventListener('abort', handleAbort);
+            resolve(nextResponse);
+        };
+        const rejectRequest = (error: Error | DOMException) => {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            options.signal?.removeEventListener('abort', handleAbort);
+            reject(error);
+        };
+        const subscriber = (result: SessionRefreshResult) => {
+            if (result === 'refreshed') {
+                settleWithResponse(_fetchBase(url, options));
+            } else if (result === 'unauthenticated') {
+                notifySessionExpired();
+                settleWithResponse(response);
+            } else {
+                rejectRequest(createSessionRefreshUnavailableError());
+            }
+        };
+        const handleAbort = () => {
+            refreshSubscribers = refreshSubscribers.filter((candidate) => candidate !== subscriber);
+            rejectRequest(createRequestAbortError());
+        };
+
+        if (options.signal?.aborted) {
+            handleAbort();
+            return;
+        }
+
+        options.signal?.addEventListener('abort', handleAbort, { once: true });
+        refreshSubscribers.push(subscriber);
     });
 };
 
@@ -262,11 +324,11 @@ export const fetchCurrentUserSession = async (signal?: AbortSignal): Promise<Cur
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`, { signal });
     const payload = await response.json().catch(() => null) as any;
     if (!response.ok) {
-        if (isRetryableAuthInfrastructureFailure(response, payload)) {
-            // Preserve the cached identity so PrivateRoute can render its
-            // explicit unverified state, but never return it as a positive
-            // /auth/me verification. Privileged consumers fail closed on null.
-            return null;
+        if (isRetryableAuthInfrastructureFailure(response, payload) || response.status >= 500) {
+            // Preserve the cache for operator-facing diagnostics, but never use
+            // it to authorize a protected route. Callers must fail closed and
+            // expose an explicit retry state until the server can verify again.
+            throw new Error(`FG-AUTH-ME-UNAVAILABLE-${response.status}`);
         }
         setSessionUserIdentity(null);
         return null;

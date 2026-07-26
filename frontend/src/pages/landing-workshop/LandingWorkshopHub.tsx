@@ -198,7 +198,7 @@ const LandingWorkshopHub = () => {
     const c = useMemo(() => COPY[lang], [lang]);
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100">
+        <div data-testid="landing-workshop-hub" className="min-h-screen bg-slate-950 text-slate-100">
             <div className="mx-auto w-full max-w-6xl px-6 py-16">
                 {/* Header */}
                 <div className="flex flex-wrap items-center justify-between gap-4">

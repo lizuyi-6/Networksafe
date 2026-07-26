@@ -98,7 +98,7 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen overflow-x-hidden overflow-y-auto bg-background text-foreground">
+        <div data-testid="login-page" className="min-h-screen overflow-x-hidden overflow-y-auto bg-background text-foreground">
             <AnimatePresence>
                 {toast && (
                     <motion.div

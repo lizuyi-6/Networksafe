@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import {
     LayoutDashboard,
     Activity,
@@ -38,9 +38,15 @@ import { WebSocketProvider } from './context/WebSocketContext';
 import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusContext';
 import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
 import Logo from './components/Logo';
+import {
+    AdminRoute,
+    isAdminRole,
+    PermissionRoute,
+    PrivateRoute,
+    sessionHasFrontendPermission,
+} from './components/RouteGuards';
 import { COMPANY_NAME_CN } from './config/branding';
 import { SHOW_PITCH_ROUTES, STANDALONE_ROUTES } from './config/public-routes';
-import { getSessionUserIdentity } from './services/session-cache';
 import {
     fetchApiReadiness,
     fetchCurrentUserSession,
@@ -92,186 +98,6 @@ import DeploymentRuns from './pages/DeploymentRuns';
 import DeploymentEvidence from './pages/DeploymentEvidence';
 import XiongcaiFinalDeck from './pages/XiongcaiFinalDeck';
 
-const ADMIN_ROLES = new Set(['admin', 'platform_admin']);
-const GOVERNANCE_ROLES = new Set(['admin', 'platform_admin', 'tenant_admin', 'auditor']);
-const SESSION_EXPIRED_EVENT = 'aetherguard:session-expired';
-const isAdminRole = (role?: string | null) => ADMIN_ROLES.has(String(role || ''));
-const canSeeEnterpriseControls = (role?: string | null) => GOVERNANCE_ROLES.has(String(role || ''));
-
-/**
- * SECURITY FIX CVE-2026-012: Authentication guard for protected routes
- * Improved cold start handling
- */
-const PrivateRoute = ({ children }: { children: ReactNode }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-    const [backendReady, setBackendReady] = useState(false);
-    // True only when /auth/me positively confirmed the session this mount.
-    // Cache-based fallbacks keep the operator working through transient
-    // backend outages but MUST be visibly flagged (PRD §14.5: degradation
-    // may never render as "normal").
-    const [sessionVerified, setSessionVerified] = useState(false);
-
-    useEffect(() => {
-        const handleSessionExpired = () => {
-            setBackendReady(true);
-            setSessionVerified(false);
-            setIsAuthenticated(false);
-        };
-
-        window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
-
-        const checkBackend = async () => {
-            try {
-                const readiness = await fetchApiReadiness(AbortSignal.timeout(3000));
-                if (readiness.ok) {
-                    setBackendReady(true);
-                    const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
-                    if (user) {
-                        setSessionVerified(true);
-                        setIsAuthenticated(true);
-                    } else {
-                        // fetchCurrentUserSession clears the cached identity on a
-                        // definitive 401, so a surviving cache here means an auth
-                        // infrastructure failure: fall back, but as UNVERIFIED.
-                        const cached = getSessionUserIdentity();
-                        setSessionVerified(false);
-                        setIsAuthenticated(Boolean(cached?.userId));
-                    }
-                } else {
-                    setBackendReady(true);
-                    const cached = getSessionUserIdentity();
-                    setSessionVerified(false);
-                    setIsAuthenticated(Boolean(cached?.userId));
-                }
-            } catch {
-                setBackendReady(true);
-                const cached = getSessionUserIdentity();
-                setSessionVerified(false);
-                setIsAuthenticated(Boolean(cached?.userId));
-            }
-        };
-        checkBackend();
-
-        return () => {
-            window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
-        };
-    }, []);
-
-    // Show loading while checking backend and auth
-    if (!backendReady || isAuthenticated === null) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-background">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
-
-    // Redirect to login if not authenticated
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
-    }
-
-    return (
-        <>
-            {!sessionVerified && (
-                <div
-                    role="alert"
-                    data-testid="session-unverified-banner"
-                    className="w-full bg-amber-500/90 text-black text-sm text-center px-4 py-1.5 font-medium"
-                >
-                    会话未验证：后端暂不可达，当前显示基于本地缓存的身份 / Session unverified: backend unreachable, identity shown from local cache
-                </div>
-            )}
-            {children}
-        </>
-    );
-};
-
-/**
- * SECURITY FIX CVE-2026-012: Admin-only route guard
- * Improved cold start handling
- */
-const AdminRoute = ({ children }: { children: ReactNode }) => {
-    const [userRole, setUserRole] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const handleSessionExpired = () => {
-            setUserRole(null);
-            setIsLoading(false);
-        };
-
-        window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
-
-        const checkRole = async () => {
-            try {
-                const user = await fetchCurrentUserSession(AbortSignal.timeout(5000));
-                setUserRole(user?.role || null);
-            } catch {
-                setUserRole(null);
-            }
-            setIsLoading(false);
-        };
-        checkRole();
-
-        return () => {
-            window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
-        };
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-background">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
-
-    if (!isAdminRole(userRole)) {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    return <>{children}</>;
-};
-
-const GovernanceRoute = ({ children }: { children: ReactNode }) => {
-    const [userRole, setUserRole] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        let disposed = false;
-        fetchCurrentUserSession(controller.signal)
-            .then((user) => {
-                if (!disposed) setUserRole(user?.role || null);
-            })
-            .catch(() => {
-                if (!disposed) setUserRole(null);
-            })
-            .finally(() => {
-                if (!disposed) setIsLoading(false);
-            });
-        return () => {
-            disposed = true;
-            controller.abort();
-        };
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-background">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-            </div>
-        );
-    }
-
-    if (!canSeeEnterpriseControls(userRole)) {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    return <>{children}</>;
-};
-
 type SidebarProps = {
     mobile?: boolean;
     onNavigate?: () => void;
@@ -285,12 +111,20 @@ const Sidebar = ({ mobile = false, onNavigate, onClose }: SidebarProps) => {
     const { attackSimEnabled, isDemoMode, toggleDemoMode, isSwitchingDemoMode } = useDemo();
     const { liveModeEnabled, toggleLiveMode } = useLiveMode();
     const [badges, setBadges] = useState({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 });
-    const [profile, setProfile] = useState<{ name: string; role: string; rawRole: string | null; initials: string; plan: string }>({
+    const [profile, setProfile] = useState<{
+        name: string;
+        role: string;
+        rawRole: string | null;
+        initials: string;
+        plan: string;
+        permissions?: string[];
+    }>({
         name: 'Unknown User',
         role: 'N/A',
         rawRole: null,
         initials: '??',
-        plan: 'starter'
+        plan: 'starter',
+        permissions: undefined,
     });
 
     // Don't show sidebar on standalone public pages
@@ -304,11 +138,15 @@ const Sidebar = ({ mobile = false, onNavigate, onClose }: SidebarProps) => {
         { icon: Network, label: t('nav.traffic_interceptor'), path: '/traffic', badge: badges.traffic > 0 ? badges.traffic : undefined },
         ...(attackSimEnabled ? [{ icon: Shield, label: t('nav.attack_simulator'), path: '/attack-sim' }] : []),
         { icon: Radio, label: t('nav.devices'), path: '/devices', badge: badges.devices > 0 ? badges.devices : undefined },
-        ...(canSeeEnterpriseControls(profile.rawRole) ? [
-            { icon: Shield, label: 'Gate Management', path: '/hardware-gates' },
-            { icon: HardDriveDownload, label: 'Deployment Runs', path: '/deployment-runs' },
-            { icon: ScrollText, label: 'Evidence', path: '/deployment-evidence' },
-        ] : []),
+        ...(sessionHasFrontendPermission({ role: profile.rawRole, permissions: profile.permissions }, 'gate.read')
+            ? [{ icon: Shield, label: 'Gate Management', path: '/hardware-gates' }]
+            : []),
+        ...(sessionHasFrontendPermission({ role: profile.rawRole, permissions: profile.permissions }, 'deployment.run.read')
+            ? [{ icon: HardDriveDownload, label: 'Deployment Runs', path: '/deployment-runs' }]
+            : []),
+        ...(sessionHasFrontendPermission({ role: profile.rawRole, permissions: profile.permissions }, 'deployment.evidence.read')
+            ? [{ icon: ScrollText, label: 'Evidence', path: '/deployment-evidence' }]
+            : []),
         { icon: Server, label: t('nav.sites'), path: '/sites' },
         { icon: Rocket, label: t('nav.deployment'), path: '/deploy' },
         { icon: Activity, label: t('nav.monitoring'), path: '/scanner', badge: badges.scanner > 0 ? badges.scanner : undefined },
@@ -414,14 +252,22 @@ const Sidebar = ({ mobile = false, onNavigate, onClose }: SidebarProps) => {
                     role: roleMap[user.role] || user.role || t('app.role_not_set'),
                     rawRole: user.role || null,
                     initials,
-                    plan: user.plan || 'starter'
+                    plan: user.plan || 'starter',
+                    permissions: user.permissions,
                 });
             })
             .catch((error) => {
                 if (isRequestAbortError(error, controller.signal)) {
                     return;
                 }
-                setProfile({ name: t('app.unnamed_user'), role: t('app.role_not_set'), rawRole: null, initials: '??', plan: 'starter' });
+                setProfile({
+                    name: t('app.unnamed_user'),
+                    role: t('app.role_not_set'),
+                    rawRole: null,
+                    initials: '??',
+                    plan: 'starter',
+                    permissions: undefined,
+                });
             });
 
         return () => controller.abort();
@@ -471,7 +317,8 @@ const Sidebar = ({ mobile = false, onNavigate, onClose }: SidebarProps) => {
                             <div className="px-3 py-2 text-xxs font-medium tracking-wider text-muted-foreground uppercase">{group.title}</div>
                             <div className="space-y-0.5">
                                 {group.items.map((item: any) => {
-                                    const isActive = location.pathname === item.path;
+                                    const isActive = location.pathname === item.path
+                                        || location.pathname.startsWith(`${item.path}/`);
                                     return (
                                         <Link
                                             key={item.path}
@@ -761,30 +608,43 @@ const Header = ({ isMobileNavigationOpen, onOpenMobileNavigation }: HeaderProps)
                 <div className="hidden sm:block h-8 w-px bg-border"></div>
 
                 {/* Theme Toggle */}
-                <div className="flex items-center gap-1 bg-muted border border-border rounded-full p-0.5">
+                <div
+                    className="flex items-center gap-1 bg-muted border border-border rounded-full p-0.5"
+                    role="group"
+                    aria-label="Theme preference"
+                >
                     <button
                         type="button"
                         onClick={() => setTheme('light')}
                         className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all ${theme === 'light' ? 'bg-background shadow text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        data-testid="theme-light"
+                        aria-label="Use light theme"
+                        aria-pressed={theme === 'light'}
                         title="Light Mode"
                     >
-                        <Sun size={14} />
+                        <Sun size={14} aria-hidden="true" />
                     </button>
                     <button
                         type="button"
                         onClick={() => setTheme('system')}
                         className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all ${theme === 'system' ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        data-testid="theme-system"
+                        aria-label="Use system theme"
+                        aria-pressed={theme === 'system'}
                         title="System"
                     >
-                        <Laptop size={14} />
+                        <Laptop size={14} aria-hidden="true" />
                     </button>
                     <button
                         type="button"
                         onClick={() => setTheme('dark')}
                         className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all ${theme === 'dark' ? 'bg-background text-primary shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        data-testid="theme-dark"
+                        aria-label="Use dark theme"
+                        aria-pressed={theme === 'dark'}
                         title="Dark Mode"
                     >
-                        <Moon size={14} />
+                        <Moon size={14} aria-hidden="true" />
                     </button>
                 </div>
 
@@ -947,9 +807,9 @@ const AnimatedRoutes = () => {
                     }
                 />
                 <Route path="/devices" element={<PrivateRoute><PageWrapper><Devices /></PageWrapper></PrivateRoute>} />
-                <Route path="/hardware-gates" element={<PrivateRoute><GovernanceRoute><PageWrapper><HardwareGates /></PageWrapper></GovernanceRoute></PrivateRoute>} />
-                <Route path="/deployment-runs" element={<PrivateRoute><GovernanceRoute><PageWrapper><DeploymentRuns /></PageWrapper></GovernanceRoute></PrivateRoute>} />
-                <Route path="/deployment-evidence" element={<PrivateRoute><GovernanceRoute><PageWrapper><DeploymentEvidence /></PageWrapper></GovernanceRoute></PrivateRoute>} />
+                <Route path="/hardware-gates" element={<PrivateRoute><PermissionRoute permission="gate.read"><PageWrapper><HardwareGates /></PageWrapper></PermissionRoute></PrivateRoute>} />
+                <Route path="/deployment-runs" element={<PrivateRoute><PermissionRoute permission="deployment.run.read"><PageWrapper><DeploymentRuns /></PageWrapper></PermissionRoute></PrivateRoute>} />
+                <Route path="/deployment-evidence" element={<PrivateRoute><PermissionRoute permission="deployment.evidence.read"><PageWrapper><DeploymentEvidence /></PageWrapper></PermissionRoute></PrivateRoute>} />
                 <Route path="/sites" element={<PrivateRoute><PageWrapper><Sites /></PageWrapper></PrivateRoute>} />
                 <Route path="/deploy" element={<PrivateRoute><PageWrapper><DeploymentWizard /></PageWrapper></PrivateRoute>} />
                 <Route path="/scanner" element={<PrivateRoute><PageWrapper><Scanner /></PageWrapper></PrivateRoute>} />

@@ -160,7 +160,7 @@ const LandingStory = () => {
     const c = useMemo(() => COPY[lang], [lang]);
 
     return (
-        <div className="min-h-screen bg-[#060913] text-slate-100">
+        <div data-testid="landing-workshop-story" className="min-h-screen bg-[#060913] text-slate-100">
             {/* Chrome */}
             <header className="absolute inset-x-0 top-0 z-40">
                 <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5 text-sm">

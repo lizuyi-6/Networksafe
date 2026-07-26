@@ -298,7 +298,7 @@ const LandingIndustrial = () => {
     const c = useMemo(() => COPY[lang], [lang]);
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
+        <div data-testid="landing-workshop-industrial" className="min-h-screen bg-background text-foreground">
             {/* Nav */}
             <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
