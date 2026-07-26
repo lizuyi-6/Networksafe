@@ -1,0 +1,25 @@
+[Unit]
+Description=AetherGuard Rust Fastpath
+After=network.target
+
+[Service]
+Type=simple
+User=@@APP_USER@@
+Group=@@APP_GROUP@@
+RuntimeDirectory=aetherguard-fastpath
+RuntimeDirectoryMode=0750
+Environment=FASTPATH_TRANSPORT=unix
+Environment=FASTPATH_SOCKET_PATH=@@FASTPATH_SOCKET@@
+Environment=RUST_LOG=info
+ExecStart=/usr/local/bin/aetherguard-fastpath
+ExecStartPost=/bin/sh -c 'for attempt in $(seq 1 30); do test -S @@FASTPATH_SOCKET@@ && exit 0; sleep 1; done; exit 1'
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+UMask=0007
+
+[Install]
+WantedBy=multi-user.target
