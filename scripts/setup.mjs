@@ -183,6 +183,7 @@ const GENERATED_KEYS = {
   S3_SECRET_KEY: hex(16),
   DEVICE_API_KEYS: `device_key_${hex(8)}`,
   ENTERPRISE_RUNTIME_MODE: 'prod-enterprise',
+  ALLOW_LOCAL_PASSWORD_LOGIN: 'true',
   ALLOW_BREAK_GLASS_PASSWORD_LOGIN: 'false',
   ALLOW_PUBLIC_REGISTRATION: 'false',
 };
@@ -205,6 +206,7 @@ const backendResult = generateEnvFile({
     AUDIT_LOG_FAIL_CLOSED: 'false',
     AUDIT_SHADOW_REQUIRED: 'false',
     ENTERPRISE_RUNTIME_MODE: 'lab',
+    ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS: 'true',
     ALLOW_PUBLIC_REGISTRATION: 'true',
     REDIS_PASSWORD: hex(16),
     ADMIN_PASSWORD,

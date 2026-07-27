@@ -41,6 +41,10 @@ function sanitizeKey(value: string): string {
   return String(value || '').replace(/[^a-zA-Z0-9._/-]/g, '_').replace(/\/+/g, '/').replace(/^\/|\/$/g, '') || 'artifact';
 }
 
+function ensureJsonExtension(value: string): string {
+  return value.toLowerCase().endsWith('.json') ? value : `${value}.json`;
+}
+
 function parseLocalArtifactRef(artifactRef: string): string | null {
   const prefix = 'artifact://local/';
   if (!artifactRef.startsWith(prefix)) {
@@ -144,7 +148,7 @@ class LocalArtifactStore implements ArtifactStore {
   }
 
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
-    return this.writeText(scope, `${key}.json`, JSON.stringify(payload, null, 2), 'application/json');
+    return this.writeText(scope, ensureJsonExtension(key), JSON.stringify(payload, null, 2), 'application/json');
   }
 
   async writeText(scope: string, key: string, payload: string, _contentType = 'text/plain; charset=utf-8'): Promise<ArtifactWriteResult> {
@@ -263,7 +267,7 @@ class S3ArtifactStore implements ArtifactStore {
   }
 
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
-    return this.writeText(scope, `${key}.json`, JSON.stringify(payload, null, 2), 'application/json');
+    return this.writeText(scope, ensureJsonExtension(key), JSON.stringify(payload, null, 2), 'application/json');
   }
 
   async writeText(scope: string, key: string, payload: string, contentType = 'text/plain; charset=utf-8'): Promise<ArtifactWriteResult> {

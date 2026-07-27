@@ -367,6 +367,7 @@ describe('dependency health: AI layer (multi-agent analyzer)', () => {
 
   it('aiLayer is unhealthy in prod when the analyzer is unavailable', async () => {
     mocks.aiLayerHealth!.mockReturnValue({ available: false, degraded: true, prepared: true, mode: 'fail-closed-degraded', message: 'degraded' });
+    const previousNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     try {
       const input = defaultInput();
@@ -374,7 +375,11 @@ describe('dependency health: AI layer (multi-agent analyzer)', () => {
       const snapshot = await buildRuntimeHealthSnapshot(input);
       expect(snapshot.dependencies.aiLayer.status).toBe('unhealthy');
     } finally {
-      delete process.env.NODE_ENV;
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
     }
   });
 });

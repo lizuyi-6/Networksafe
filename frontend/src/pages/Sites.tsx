@@ -51,7 +51,7 @@ const Sites = () => {
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className={`rounded border px-2 py-1 text-xs ${site.status === 'secure' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}>{site.status?.toUpperCase() || 'UNKNOWN'}</span>
-                                    <Link to={`/sites/${site.id}`} className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/30">
+                                    <Link to={`/sites/${encodeURIComponent(site.id)}`} className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/30">
                                         {t('sites.viewDetail')}
                                         <ArrowRight size={12} />
                                     </Link>

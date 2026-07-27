@@ -8,6 +8,7 @@
         "build": "tsc && vite build",
         "typecheck": "tsc --noEmit",
         "test:credential-hygiene": "node scripts/test-no-bundled-credentials.mjs",
+        "test:navigation-hygiene": "node scripts/test-navigation-hygiene.mjs",
         "test:i18n": "node scripts/test-i18n-contract.mjs",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview"
@@ -22,7 +23,7 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-i18next": "^16.5.4",
-        "react-router-dom": "^6.21.3",
+        "react-router-dom": "6.30.4",
         "recharts": "^3.6.0",
         "socket.io-client": "^4.8.3",
         "tailwind-merge": "^3.4.0"
@@ -37,9 +38,12 @@
         "autoprefixer": "^10.4.16",
         "eslint": "^10.0.3",
         "playwright": "^1.58.2",
-        "postcss": "^8.4.33",
+        "postcss": "^8.5.23",
         "tailwindcss": "^3.4.1",
         "typescript": "^5.2.2",
         "vite": "^8.0.16"
+    },
+    "overrides": {
+        "brace-expansion": "5.0.8"
     }
 }

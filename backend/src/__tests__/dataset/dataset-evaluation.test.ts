@@ -38,6 +38,8 @@ interface DatasetSample {
   pattern?: string;
   packets_per_second?: number;
   timestamp?: string;
+  sourceDataset?: string;
+  sourceFile?: string;
   [k: string]: any;
 }
 
@@ -82,7 +84,8 @@ function loadDataset(root: string): DatasetSample[] {
         const data = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
         if (Array.isArray(data)) {
           for (const sample of data) {
-            (sample as any).__file = f;
+            (sample as DatasetSample).sourceDataset = sub;
+            (sample as DatasetSample).sourceFile = f;
             all.push(sample);
           }
         }
@@ -245,16 +248,20 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
     const validator = new InputValidator();
 
     const perType: Record<string, PerTypeStats> = {};
+    const perDataset: Record<string, PerTypeStats> = {};
     const globalLatencies: number[] = [];
     const latenciesByType: Record<string, number[]> = {};
+    const latenciesByDataset: Record<string, number[]> = {};
     let TP = 0, FN = 0, TN = 0, FP = 0;
     const fpSamples: any[] = [];
     const fnSamples: any[] = [];
+    const fnSampleCountByType: Record<string, number> = {};
 
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
       const isAttack = s.expected_detection === true;
       const type = s.type || 'unknown';
+      const sourceDataset = s.sourceDataset || 'unknown';
       // Rate-based attack families need a burst of requests from
       // the same source IP to trigger the threshold. Fire 10
       // requests (or the metadata.packetsPerSecond if provided)
@@ -294,37 +301,66 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
       const latencyMs = requestsEvaluated > 0 ? totalLatency / requestsEvaluated : 0;
       globalLatencies.push(latencyMs);
       (latenciesByType[type] = latenciesByType[type] || []).push(latencyMs);
+      (latenciesByDataset[sourceDataset] = latenciesByDataset[sourceDataset] || []).push(latencyMs);
 
-      perType[type] = perType[type] || {
-        total: 0, expected_attacks: 0, expected_normal: 0,
-        detected: 0, missed: 0, false_positives: 0, true_negatives: 0,
-        detection_rate: 0, false_positive_rate: 0,
-        median_latency_ms: 0, p95_latency_ms: 0
-      };
-      const t = perType[type];
-      t.total++;
-      if (isAttack) t.expected_attacks++; else t.expected_normal++;
+      const typeStats = perType[type] = perType[type] || createEmptyStats();
+      const datasetStats = perDataset[sourceDataset] = perDataset[sourceDataset] || createEmptyStats();
+      typeStats.total++;
+      datasetStats.total++;
+      if (isAttack) {
+        typeStats.expected_attacks++;
+        datasetStats.expected_attacks++;
+      } else {
+        typeStats.expected_normal++;
+        datasetStats.expected_normal++;
+      }
 
-      if (isAttack && flagged) { TP++; t.detected++; }
+      if (isAttack && flagged) {
+        TP++;
+        typeStats.detected++;
+        datasetStats.detected++;
+      }
       else if (isAttack && !flagged) {
-        FN++; t.missed++;
-        if (fnSamples.length < 5) fnSamples.push({ id: s.id, type, payload: (s.payload || '').substring(0, 200) });
+        FN++;
+        typeStats.missed++;
+        datasetStats.missed++;
+        const representativeCount = fnSampleCountByType[type] || 0;
+        if (representativeCount < 5) {
+          fnSamples.push({
+            id: s.id,
+            type,
+            sourceDataset,
+            sourceFile: s.sourceFile,
+            payload: (s.payload || '').substring(0, 200)
+          });
+          fnSampleCountByType[type] = representativeCount + 1;
+        }
       }
       else if (!isAttack && flagged) {
-        FP++; t.false_positives++;
-        if (fpSamples.length < 5) fpSamples.push({ id: s.id, type, payload: (s.payload || '').substring(0, 200), matchedRules, flagReason });
+        FP++;
+        typeStats.false_positives++;
+        datasetStats.false_positives++;
+        if (fpSamples.length < 5) {
+          fpSamples.push({
+            id: s.id,
+            type,
+            sourceDataset,
+            sourceFile: s.sourceFile,
+            payload: (s.payload || '').substring(0, 200),
+            matchedRules,
+            flagReason
+          });
+        }
       }
-      else { TN++; t.true_negatives++; }
+      else {
+        TN++;
+        typeStats.true_negatives++;
+        datasetStats.true_negatives++;
+      }
     }
 
-    // Compute per-type detection rate and FPR
-    for (const [type, t] of Object.entries(perType)) {
-      t.detection_rate = t.expected_attacks > 0 ? t.detected / t.expected_attacks : 1;
-      t.false_positive_rate = t.expected_normal > 0 ? t.false_positives / t.expected_normal : 0;
-      const lats = latenciesByType[type] || [];
-      t.median_latency_ms = percentile(lats, 50);
-      t.p95_latency_ms = percentile(lats, 95);
-    }
+    finalizeGroupedStats(perType, latenciesByType);
+    finalizeGroupedStats(perDataset, latenciesByDataset);
 
     const totalAttacks = TP + FN;
     const totalNormal = TN + FP;
@@ -351,15 +387,21 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
     // Persist a JSON report for later inspection
     const reportPath = path.resolve(__dirname, '../../../test-data/dataset-eval-report.json');
     fs.writeFileSync(reportPath, JSON.stringify({
+      schemaVersion: 2,
+      generatedAt: new Date().toISOString(),
+      evaluationBoundary: 'Tracked synthetic corpus evaluated by the local heuristic pipeline and input validator; not production traffic, end-to-end network latency, or an external product comparison.',
+      hardPassThresholdEnforced: false,
       samples: samples.length,
       TP, FN, TN, FP,
       overallDetectionRate,
       overallFpr,
       medianLatencyMs: percentile(globalLatencies, 50),
       p95LatencyMs: percentile(globalLatencies, 95),
+      perDataset,
       perType,
       fpSamples,
-      fnSamples
+      fnSamples,
+      representativeFalseNegativeLimitPerType: 5
     }, null, 2));
 
     // The test does not enforce a hard pass threshold — that would be
@@ -374,4 +416,37 @@ function percentile(values: number[], p: number): number {
   const sorted = [...values].sort((a, b) => a - b);
   const idx = Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length));
   return sorted[idx];
+}
+
+function createEmptyStats(): PerTypeStats {
+  return {
+    total: 0,
+    expected_attacks: 0,
+    expected_normal: 0,
+    detected: 0,
+    missed: 0,
+    false_positives: 0,
+    true_negatives: 0,
+    detection_rate: 0,
+    false_positive_rate: 0,
+    median_latency_ms: 0,
+    p95_latency_ms: 0
+  };
+}
+
+function finalizeGroupedStats(
+  statsByGroup: Record<string, PerTypeStats>,
+  latenciesByGroup: Record<string, number[]>
+): void {
+  for (const [groupName, groupStats] of Object.entries(statsByGroup)) {
+    groupStats.detection_rate = groupStats.expected_attacks > 0
+      ? groupStats.detected / groupStats.expected_attacks
+      : 1;
+    groupStats.false_positive_rate = groupStats.expected_normal > 0
+      ? groupStats.false_positives / groupStats.expected_normal
+      : 0;
+    const groupLatencies = latenciesByGroup[groupName] || [];
+    groupStats.median_latency_ms = percentile(groupLatencies, 50);
+    groupStats.p95_latency_ms = percentile(groupLatencies, 95);
+  }
 }

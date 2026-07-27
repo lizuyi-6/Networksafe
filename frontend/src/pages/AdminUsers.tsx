@@ -320,7 +320,7 @@ export default function AdminUsers() {
                                         <div className="flex gap-2">
                                             <Link
                                                 data-testid={`admin-user-detail-${u.id}`}
-                                                to={`/super-admin/users/${u.id}`}
+                                                to={`/super-admin/users/${encodeURIComponent(u.id)}`}
                                                 className="inline-flex rounded border border-border px-3 py-2 text-xs text-foreground transition-colors hover:bg-muted/40"
                                             >
                                                 {t('adminUsers.basic_info')}

@@ -162,7 +162,7 @@ const Agents = () => {
 
                                         <div className="flex gap-2">
                                             <button data-testid={`agent-scan-${agent.agentId}`} onClick={() => triggerScan(agent.agentId)} disabled={!agent.isOnline} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2 text-xs font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"><Scan size={14} />{t('agents.initiate_scan')}</button>
-                                            <Link data-testid={`agent-detail-${agent.agentId}`} to={`/agents/${agent.agentId}`} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-all hover:bg-muted/50 hover:border-primary/30">{t('agents.view_detail')}</Link>
+                                            <Link data-testid={`agent-detail-${agent.agentId}`} to={`/agents/${encodeURIComponent(agent.agentId)}`} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-all hover:bg-muted/50 hover:border-primary/30">{t('agents.view_detail')}</Link>
                                         </div>
                                     </motion.div>
                                 ))}

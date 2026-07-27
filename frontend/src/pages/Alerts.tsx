@@ -412,7 +412,7 @@ const Alerts = () => {
                                         )}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <Link data-testid={`alert-detail-${alert.id}`} to={`/alerts/${alert.id}`} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title={t('alerts.viewDetail')}>
+                                        <Link data-testid={`alert-detail-${alert.id}`} to={`/alerts/${encodeURIComponent(alert.id)}`} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title={t('alerts.viewDetail')}>
                                             <ExternalLink size={16} />
                                         </Link>
                                         <button data-testid={`alert-acknowledge-${alert.id}`} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title={t('alerts.confirm')} onClick={() => executeAction(() => acknowledgeAlert(alert.id))}>

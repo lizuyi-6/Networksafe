@@ -428,7 +428,7 @@ const Scanner = () => {
                                         <div className="mt-2 text-[11px] text-muted-foreground">{new Date(item.createdAt).toLocaleString('zh-CN')}</div>
                                     </button>
                                     <div className="mt-3 flex justify-end">
-                                        <Link to={`/scanner/runs/${item.id}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
+                                        <Link to={`/scanner/runs/${encodeURIComponent(item.id)}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
                                             {t('scanner.view_detail')}
                                         </Link>
                                     </div>

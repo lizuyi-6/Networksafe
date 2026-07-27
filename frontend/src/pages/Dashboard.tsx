@@ -386,6 +386,7 @@ export default function Dashboard() {
             initial="hidden"
             animate="visible"
             className="mx-auto min-h-screen max-w-[1600px] space-y-4 p-6 pb-12"
+            data-testid="dashboard-page"
         >
             {/* Header: title + time range + actions */}
             <DashboardHeader

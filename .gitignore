@@ -58,6 +58,7 @@ venv/
 /backend/data/*.db-shm
 /backend/data/*.db-wal
 /backend/data/*.db-journal
+/backend/data/artifacts/
 !/backend/data/.gitkeep
 
 # Archives and local artifact store
@@ -212,4 +213,3 @@ docs/video/**/*.jpg
 
 # IntelliJ headless inspector output (scripts/dev/run-idea-inspect.ps1)
 .idea-inspect-results/
-

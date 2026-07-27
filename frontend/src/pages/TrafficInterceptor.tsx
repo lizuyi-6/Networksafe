@@ -276,7 +276,7 @@ export default function TrafficInterceptor() {
                                             <td className="px-4 py-3 text-right font-mono font-bold text-foreground">{(flow.packetCount ?? 0).toLocaleString()}</td>
                                             <td className="px-4 py-3 text-right font-mono font-bold text-muted-foreground">{formatBytes(flow.byteCount ?? 0)}</td>
                                             <td className="px-4 py-3 text-right">
-                                                <Link to={`/traffic/sessions/${flow.id}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
+                                                <Link to={`/traffic/sessions/${encodeURIComponent(flow.id)}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
                                                     {t('trafficInterceptor.detail')}
                                                 </Link>
                                             </td>

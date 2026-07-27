@@ -41,8 +41,7 @@ export function isLabRuntime(mode = getEnterpriseRuntimeMode()): boolean {
 export function allowDemoFeatures(mode = getEnterpriseRuntimeMode()): boolean {
   // Lab runtime always allows demo. prod-enterprise and trial allow demo only
   // when an operator explicitly sets ALLOW_DEMO_FEATURES=true (e.g. a release
-  // verification stack that must exercise the demo-mode UI paths). This mirrors
-  // the ALLOW_BREAK_GLASS_PASSWORD_LOGIN escape hatch on allowPasswordLogin().
+  // verification stack that must exercise the demo-mode UI paths).
   return mode === 'lab' || process.env.ALLOW_DEMO_FEATURES === 'true';
 }
 
@@ -51,7 +50,31 @@ export function allowGatewayDestructiveCommands(mode = getEnterpriseRuntimeMode(
 }
 
 export function allowPasswordLogin(mode = getEnterpriseRuntimeMode()): boolean {
-  return mode === 'lab' || process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN === 'true';
+  return mode === 'lab'
+    || process.env.ALLOW_LOCAL_PASSWORD_LOGIN === 'true'
+    || process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN === 'true';
+}
+
+/**
+ * Process-local sessions are useful for an explicitly configured lab server,
+ * but they cannot provide durable revocation or survive a process restart.
+ * Keep this policy shared by login, request authentication, and readiness so
+ * the server never issues a session that its own middleware will reject.
+ */
+export function allowLabInMemoryAuthSessions(
+  mode = getEnterpriseRuntimeMode(),
+  nodeEnv = String(process.env.NODE_ENV || 'development').trim().toLowerCase()
+): boolean {
+  if (nodeEnv === 'test') {
+    return true;
+  }
+
+  if (nodeEnv === 'production' || mode !== 'lab') {
+    return false;
+  }
+
+  return process.env.ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS === 'true'
+    || process.env.ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN === 'true';
 }
 
 export function oidcEnabled(): boolean {
