@@ -321,6 +321,7 @@ async function main() {
     await runStep('frontend api contract guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-frontend-api-contract.mjs')]);
     await runStep('repository hygiene guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-repository-hygiene.mjs')]);
     await runStep('rescue release-capability guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-rescue-no-release.mjs')]);
+    await runStep('deployment image pin guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-deployment-image-pins.mjs')]);
 
     await runStep('e2e install', npmExecutable, ['ci'], { cwd: path.join(workspaceRoot, 'e2e') });
 

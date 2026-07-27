@@ -18,6 +18,7 @@ const [composeContents, bareMetalInstallerContents] = await Promise.all([
 
 const violations = [];
 const mutableMinioReference = /minio\/minio:latest\b/;
+const datedMinioReleaseReference = /^minio\/minio:RELEASE\.\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:@sha256:[a-f0-9]{64})?$/;
 
 for (const [relativePath, contents] of [
   ['docker-compose.yml', composeContents],
@@ -40,6 +41,12 @@ if (!composeImageMatch) {
 }
 if (!bareMetalImageMatch) {
   violations.push('deployment/bare-metal/install.sh: unable to resolve AG_MINIO_IMAGE');
+}
+if (composeImageMatch && !datedMinioReleaseReference.test(composeImageMatch[1])) {
+  violations.push(`docker-compose.yml: MinIO image is not a dated immutable release reference: ${composeImageMatch[1]}`);
+}
+if (bareMetalImageMatch && !datedMinioReleaseReference.test(bareMetalImageMatch[1])) {
+  violations.push(`deployment/bare-metal/install.sh: MinIO image is not a dated immutable release reference: ${bareMetalImageMatch[1]}`);
 }
 if (
   composeImageMatch &&

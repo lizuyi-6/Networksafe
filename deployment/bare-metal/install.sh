@@ -26,7 +26,7 @@
 # Usage:
 #   sudo bash install.sh                          # deploy current HEAD
 #   sudo bash install.sh <commit-or-tag>          # deploy a specific ref
-#   sudo bash install.sh --source-tarball path.tar.gz   # offline, prebuilt tarball
+#   sudo bash install.sh --source-tarball path.tar.gz --source-sha <full-sha>
 #   sudo bash install.sh --reset-db               # DESTRUCTIVE: recreate DB+secrets
 #   sudo bash install.sh --check                  # read-only preflight, exit 0 = ok
 #
@@ -40,6 +40,9 @@
 #   AG_BUILD_JOBS=1            # low-RAM hosts: 1 job; raise on >4GB boxes
 #   AG_SKIP_FASTPATH=0         # 1 = do not build/install rust-fastpath
 #   AG_MINIO_IMAGE=minio/minio:RELEASE.2025-02-18T16-25-55Z
+#   AG_MINIO_DATA_DIR=/var/lib/minio/data
+#   AG_MINIO_CREDENTIALS_DIR=/root
+#   AG_DEPLOY_LOCK_FILE=/run/lock/aetherguard-deployment.lock
 #
 # See deployment/bare-metal/README.md for the full matrix and rollback steps.
 # =============================================================================
@@ -51,6 +54,7 @@ umask 027
 AG_RESET_DB=0
 AG_CHECK_ONLY=0
 AG_SOURCE_TARBALL=""
+AG_SOURCE_SHA=""
 TARGET_REF="HEAD"
 
 while [[ $# -gt 0 ]]; do
@@ -72,6 +76,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --source-tarball)
       AG_SOURCE_TARBALL="${2:?--source-tarball needs a path}"
+      shift 2
+      ;;
+    --source-sha)
+      AG_SOURCE_SHA="${2:?--source-sha needs a full commit SHA}"
       shift 2
       ;;
     --help|-h)
@@ -96,6 +104,14 @@ if [[ "${AG_RESET_DB}" == "1" && "${AG_CONFIRM_DESTRUCTIVE:-0}" != "1" ]]; then
   exit 2
 fi
 
+if [[ -n "${AG_SOURCE_TARBALL}" ]]; then
+  [[ "${AG_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]] \
+    || { printf '%s\n' '--source-tarball requires --source-sha with a full lowercase commit SHA.' >&2; exit 2; }
+elif [[ -n "${AG_SOURCE_SHA}" ]]; then
+  printf '%s\n' '--source-sha is only valid with --source-tarball.' >&2
+  exit 2
+fi
+
 # ─── configuration ───────────────────────────────────────────────────────────
 : "${AG_DEPLOY_ROOT:=/opt/aetherguard}"
 : "${AG_FRONTEND_DIR:=/var/www/aetherguard}"
@@ -106,6 +122,10 @@ fi
 : "${AG_BUILD_JOBS:=1}"
 : "${AG_SKIP_FASTPATH:=0}"
 : "${AG_MINIO_IMAGE:=minio/minio:RELEASE.2025-02-18T16-25-55Z}"
+: "${AG_MINIO_DATA_DIR:=/var/lib/minio/data}"
+: "${AG_MINIO_CREDENTIALS_DIR:=/root}"
+: "${AG_DEPLOY_LOCK_FILE:=/run/lock/aetherguard-deployment.lock}"
+: "${AG_ALLOW_UNPINNED_MINIO_IMAGE:=0}"
 
 RELEASES_DIR="${AG_DEPLOY_ROOT}/releases"
 SHARED_DIR="${AG_DEPLOY_ROOT}/shared"
@@ -149,6 +169,25 @@ require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
     die "Run as root (sudo). The script manages systemd, postgres, and nginx."
   fi
+}
+
+acquire_deployment_lock() {
+  command -v flock >/dev/null 2>&1 || die "flock is required for serialized deployment operations"
+  install -d -m 0755 "$(dirname "${AG_DEPLOY_LOCK_FILE}")"
+  exec 9>"${AG_DEPLOY_LOCK_FILE}"
+  flock --nonblock 9 \
+    || die "another AetherGuard install or rollback operation is already running"
+}
+
+validate_minio_image_reference() {
+  if [[ "${AG_MINIO_IMAGE}" =~ ^minio/minio:RELEASE\.[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}Z(@sha256:[a-f0-9]{64})?$ ]]; then
+    return
+  fi
+  if [[ "${AG_ALLOW_UNPINNED_MINIO_IMAGE}" == "1" ]]; then
+    warn "AG_ALLOW_UNPINNED_MINIO_IMAGE=1 accepts non-release image ${AG_MINIO_IMAGE}"
+    return
+  fi
+  die "AG_MINIO_IMAGE must use a dated MinIO RELEASE tag or tag@sha256 digest"
 }
 
 detect_public_host() {
@@ -198,6 +237,7 @@ preflight() {
   [[ -f "${TEMPLATE_DIR}/aetherguard-backend.service" ]] || die "backend unit template missing"
   [[ -f "${TEMPLATE_DIR}/aetherguard-fastpath.service" ]] || die "fastpath unit template missing"
   [[ -f "${TEMPLATE_DIR}/nginx-aetherguard.conf" ]] || die "nginx template missing"
+  [[ -f "${SELF_DIR}/rollback.sh" ]] || die "rollback helper missing"
 
   command -v bash >/dev/null || die "bash not found"
   # OS family
@@ -419,32 +459,48 @@ ensure_minio() {
     echo ""   # empty S3 triple → caller will mark archive unconfigured
     return
   fi
+  validate_minio_image_reference
   if docker ps -a --format '{{.Names}}' | grep -qx aetherguard-minio; then
-    local existing_image existing_data_source access secret
+    local existing_image existing_data_source api_binding console_binding
+    local container_access container_secret access secret
     existing_image="$(docker inspect aetherguard-minio --format '{{.Config.Image}}')"
     existing_data_source="$(docker inspect aetherguard-minio --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Source}}{{end}}{{end}}')"
+    api_binding="$(docker inspect aetherguard-minio --format '{{with $bindings := index .HostConfig.PortBindings "9000/tcp"}}{{with index $bindings 0}}{{.HostIp}}:{{.HostPort}}{{end}}{{end}}')"
+    console_binding="$(docker inspect aetherguard-minio --format '{{with $bindings := index .HostConfig.PortBindings "9001/tcp"}}{{with index $bindings 0}}{{.HostIp}}:{{.HostPort}}{{end}}{{end}}')"
 
-    if [[ "${existing_data_source}" != "/var/lib/minio/data" ]]; then
+    if [[ "${existing_data_source}" != "${AG_MINIO_DATA_DIR}" ]]; then
       die "existing aetherguard-minio uses unexpected /data source: ${existing_data_source:-missing}"
     fi
+    [[ "${api_binding}" == "127.0.0.1:9000" ]] \
+      || die "existing MinIO API binding is not loopback-only: ${api_binding:-missing}"
+    [[ "${console_binding}" == "127.0.0.1:9001" ]] \
+      || die "existing MinIO console binding is not loopback-only: ${console_binding:-missing}"
     if [[ "${existing_image}" != "${AG_MINIO_IMAGE}" ]]; then
       warn "Existing MinIO image is ${existing_image}; expected ${AG_MINIO_IMAGE}."
       warn "  Leaving the existing data container unchanged. New installations use the pinned image."
     fi
 
-    access="$(cat /root/.minio-access 2>/dev/null || true)"
-    secret="$(cat /root/.minio-secret 2>/dev/null || true)"
-    if [[ -z "${access}" || -z "${secret}" ]]; then
-      access="$(docker inspect aetherguard-minio --format '{{range .Config.Env}}{{println .}}{{end}}' \
-        | awk -F= '$1 == "MINIO_ROOT_USER" { sub(/^[^=]*=/, ""); print; exit }')"
-      secret="$(docker inspect aetherguard-minio --format '{{range .Config.Env}}{{println .}}{{end}}' \
-        | awk -F= '$1 == "MINIO_ROOT_PASSWORD" { sub(/^[^=]*=/, ""); print; exit }')"
-      [[ -n "${access}" && -n "${secret}" ]] \
-        || die "existing MinIO credentials are unavailable; refusing to generate mismatched credentials"
-      printf '%s' "${access}" > /root/.minio-access
-      printf '%s' "${secret}" > /root/.minio-secret
-      chmod 600 /root/.minio-access /root/.minio-secret
+    container_access="$(docker inspect aetherguard-minio --format '{{range .Config.Env}}{{println .}}{{end}}' \
+      | awk -F= '$1 == "MINIO_ROOT_USER" { sub(/^[^=]*=/, ""); print; exit }')"
+    container_secret="$(docker inspect aetherguard-minio --format '{{range .Config.Env}}{{println .}}{{end}}' \
+      | awk -F= '$1 == "MINIO_ROOT_PASSWORD" { sub(/^[^=]*=/, ""); print; exit }')"
+    [[ -n "${container_access}" && -n "${container_secret}" ]] \
+      || die "existing MinIO credentials are unavailable in the container configuration"
+
+    access="$(cat "${AG_MINIO_CREDENTIALS_DIR}/.minio-access" 2>/dev/null || true)"
+    secret="$(cat "${AG_MINIO_CREDENTIALS_DIR}/.minio-secret" 2>/dev/null || true)"
+    if [[ -n "${access}" && "${access}" != "${container_access}" ]] \
+      || [[ -n "${secret}" && "${secret}" != "${container_secret}" ]]; then
+      warn "Stored MinIO credential files did not match the active container; restoring the container values"
     fi
+    access="${container_access}"
+    secret="${container_secret}"
+    install -d -m 0700 "${AG_MINIO_CREDENTIALS_DIR}"
+    printf '%s' "${access}" > "${AG_MINIO_CREDENTIALS_DIR}/.minio-access"
+    printf '%s' "${secret}" > "${AG_MINIO_CREDENTIALS_DIR}/.minio-secret"
+    chmod 600 \
+      "${AG_MINIO_CREDENTIALS_DIR}/.minio-access" \
+      "${AG_MINIO_CREDENTIALS_DIR}/.minio-secret"
 
     if [[ "$(docker inspect aetherguard-minio --format '{{.State.Running}}')" != "true" ]]; then
       log "starting existing MinIO container"
@@ -463,19 +519,22 @@ ensure_minio() {
     die "existing MinIO container did not become ready within 30s"
   fi
   log "starting MinIO (loopback-only, 512MB cap)"
-  install -d -m 0750 /var/lib/minio/data
+  install -d -m 0750 "${AG_MINIO_DATA_DIR}"
   local access secret
   access="aetherguard-$(openssl rand -hex 6)"
   secret="$(openssl rand -base64 36 | tr -dc 'A-Za-z0-9' | head -c 40)"
   docker run -d --name aetherguard-minio --restart unless-stopped \
     -p 127.0.0.1:9000:9000 -p 127.0.0.1:9001:9001 \
-    -v /var/lib/minio/data:/data \
+    -v "${AG_MINIO_DATA_DIR}:/data" \
     -e MINIO_ROOT_USER="${access}" -e MINIO_ROOT_PASSWORD="${secret}" \
     --memory=512m --memory-swap=1024m \
     "${AG_MINIO_IMAGE}" server /data --console-address ":9001" >/dev/null
-  printf '%s' "${access}" > /root/.minio-access
-  printf '%s' "${secret}" > /root/.minio-secret
-  chmod 600 /root/.minio-access /root/.minio-secret
+  install -d -m 0700 "${AG_MINIO_CREDENTIALS_DIR}"
+  printf '%s' "${access}" > "${AG_MINIO_CREDENTIALS_DIR}/.minio-access"
+  printf '%s' "${secret}" > "${AG_MINIO_CREDENTIALS_DIR}/.minio-secret"
+  chmod 600 \
+    "${AG_MINIO_CREDENTIALS_DIR}/.minio-access" \
+    "${AG_MINIO_CREDENTIALS_DIR}/.minio-secret"
   # Wait for readiness; the backend creates the bucket itself (Object Lock).
   for _ in $(seq 1 30); do
     if curl -fsS -m 3 http://127.0.0.1:9000/minio/health/ready >/dev/null 2>&1; then
@@ -492,7 +551,7 @@ ensure_minio() {
 resolve_target_sha() {
   # From a git worktree at REPO_ROOT. HEAD if no arg.
   if [[ -n "${AG_SOURCE_TARBALL}" ]]; then
-    echo "tarball"
+    printf '%s\n' "${AG_SOURCE_SHA}"
     return
   fi
   (cd "${REPO_ROOT}" && git rev-parse --verify "${TARGET_REF}^{commit}") \
@@ -589,8 +648,10 @@ build_fastpath() {
     return
   fi
   if [[ -x /usr/local/bin/aetherguard-fastpath ]] \
-     && /usr/local/bin/aetherguard-fastpath --version >/dev/null 2>&1; then
-    log "fastpath binary already installed"
+     && FASTPATH_TRANSPORT=unix \
+        FASTPATH_SOCKET_PATH="${FASTPATH_SOCKET}" \
+        timeout 10 /usr/local/bin/aetherguard-fastpath self-check >/dev/null 2>&1; then
+    log "fastpath binary already installed and healthy"
     return
   fi
   log "installing rust toolchain + building fastpath (1 job for low-RAM hosts)"
@@ -638,6 +699,16 @@ render_template() {
 
 install_units_and_nginx() {
   log "rendering systemd units + nginx site"
+  install -d -o root -g root -m 0755 /etc/aetherguard
+  {
+    printf 'AG_CONFIG_DEPLOY_ROOT=%q\n' "${AG_DEPLOY_ROOT}"
+    printf 'AG_CONFIG_FRONTEND_DIR=%q\n' "${AG_FRONTEND_DIR}"
+    printf 'AG_CONFIG_BACKEND_PORT=%q\n' "${AG_BACKEND_PORT}"
+    printf 'AG_CONFIG_DEPLOY_LOCK_FILE=%q\n' "${AG_DEPLOY_LOCK_FILE}"
+  } > /etc/aetherguard/rollback.conf
+  chown root:root /etc/aetherguard/rollback.conf
+  chmod 0644 /etc/aetherguard/rollback.conf
+  install -m 0755 "${SELF_DIR}/rollback.sh" /usr/local/sbin/aetherguard-rollback
   render_template "${TEMPLATE_DIR}/aetherguard-backend.service" \
     /etc/systemd/system/aetherguard-backend.service
   render_template "${TEMPLATE_DIR}/aetherguard-fastpath.service" \
@@ -714,6 +785,7 @@ cleanup_old_releases() {
 main() {
   require_root
   preflight
+  acquire_deployment_lock
   install_os_deps
   ensure_swap
   ensure_app_user
@@ -763,8 +835,10 @@ main() {
   printf '  Source:       %s\n' "${target_sha:0:12}"
   printf '  Credentials:  %s (chmod 600)\n' "${CREDENTIALS_FILE}"
   printf '  Logs:         journalctl -u aetherguard-backend -f\n'
-  printf '  Rollback:     ln -sfn %s/releases/<prev-sha> %s/current && systemctl restart aetherguard-backend\n' "${AG_DEPLOY_ROOT}" "${AG_DEPLOY_ROOT}"
+  printf '  Rollback:     sudo aetherguard-rollback <prev-sha>\n'
   printf '=========================================\n'
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
