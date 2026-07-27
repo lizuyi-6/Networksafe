@@ -60,6 +60,7 @@ All optional, via environment:
 | `AG_NODE_HEAP_MB` | `1024` | `--max-old-space-size` for the service |
 | `AG_BUILD_JOBS` | `1` | cargo parallelism (raise on >4GB hosts) |
 | `AG_SKIP_FASTPATH` | `0` | `1` = don't build/install rust-fastpath |
+| `AG_MINIO_IMAGE` | `minio/minio:RELEASE.2025-02-18T16-25-55Z` | pinned MinIO server image for new installations |
 
 ## Low-memory hosts (≤2GB)
 
@@ -102,6 +103,12 @@ backend then creates the `aetherguard-audit-lock` bucket with **Object Lock
 COMPLIANCE / 30-day retention** on first archive. If Docker is absent, the
 backend falls back to the local artifact store (the nested-key ENOENT fixed in
 `artifact-store.service.ts`).
+
+New installations use the same dated MinIO image as canonical Compose. On an
+upgrade, the installer never replaces or downgrades an existing MinIO data
+container automatically. It verifies the `/data` mount, recovers the original
+credentials when needed, starts a stopped matching container, and emits a
+warning when the existing image differs from the current pin.
 
 ## Not covered
 

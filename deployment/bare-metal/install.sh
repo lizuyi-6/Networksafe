@@ -39,6 +39,7 @@
 #   AG_NODE_HEAP_MB=1024
 #   AG_BUILD_JOBS=1            # low-RAM hosts: 1 job; raise on >4GB boxes
 #   AG_SKIP_FASTPATH=0         # 1 = do not build/install rust-fastpath
+#   AG_MINIO_IMAGE=minio/minio:RELEASE.2025-02-18T16-25-55Z
 #
 # See deployment/bare-metal/README.md for the full matrix and rollback steps.
 # =============================================================================
@@ -104,6 +105,7 @@ fi
 : "${AG_NODE_HEAP_MB:=1024}"
 : "${AG_BUILD_JOBS:=1}"
 : "${AG_SKIP_FASTPATH:=0}"
+: "${AG_MINIO_IMAGE:=minio/minio:RELEASE.2025-02-18T16-25-55Z}"
 
 RELEASES_DIR="${AG_DEPLOY_ROOT}/releases"
 SHARED_DIR="${AG_DEPLOY_ROOT}/shared"
@@ -139,7 +141,7 @@ assert_owned_path() {
   esac
 }
 
-log()  { printf '\033[1;34m[%s]\033[0m %s\n' "$(date +%H:%M:%S)" "$*"; }
+log()  { printf '\033[1;34m[%s]\033[0m %s\n' "$(date +%H:%M:%S)" "$*" >&2; }
 warn() { printf '\033[1;33m[%s] WARN\033[0m %s\n' "$(date +%H:%M:%S)" "$*" >&2; }
 die()  { printf '\033[1;31m[%s] FAIL\033[0m %s\n' "$(date +%H:%M:%S)" "$*" >&2; exit 1; }
 
@@ -417,14 +419,48 @@ ensure_minio() {
     echo ""   # empty S3 triple → caller will mark archive unconfigured
     return
   fi
-  if docker ps --format '{{.Names}}' | grep -qx aetherguard-minio; then
-    log "MinIO container already running"
-    # Reuse the credentials we wrote last time.
-    if [[ -f /root/.minio-access && -f /root/.minio-secret ]]; then
-      printf '%s\t%s\t%s\n' "http://127.0.0.1:9000" \
-        "$(cat /root/.minio-access)" "$(cat /root/.minio-secret)"
+  if docker ps -a --format '{{.Names}}' | grep -qx aetherguard-minio; then
+    local existing_image existing_data_source access secret
+    existing_image="$(docker inspect aetherguard-minio --format '{{.Config.Image}}')"
+    existing_data_source="$(docker inspect aetherguard-minio --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Source}}{{end}}{{end}}')"
+
+    if [[ "${existing_data_source}" != "/var/lib/minio/data" ]]; then
+      die "existing aetherguard-minio uses unexpected /data source: ${existing_data_source:-missing}"
     fi
-    return
+    if [[ "${existing_image}" != "${AG_MINIO_IMAGE}" ]]; then
+      warn "Existing MinIO image is ${existing_image}; expected ${AG_MINIO_IMAGE}."
+      warn "  Leaving the existing data container unchanged. New installations use the pinned image."
+    fi
+
+    access="$(cat /root/.minio-access 2>/dev/null || true)"
+    secret="$(cat /root/.minio-secret 2>/dev/null || true)"
+    if [[ -z "${access}" || -z "${secret}" ]]; then
+      access="$(docker inspect aetherguard-minio --format '{{range .Config.Env}}{{println .}}{{end}}' \
+        | awk -F= '$1 == "MINIO_ROOT_USER" { sub(/^[^=]*=/, ""); print; exit }')"
+      secret="$(docker inspect aetherguard-minio --format '{{range .Config.Env}}{{println .}}{{end}}' \
+        | awk -F= '$1 == "MINIO_ROOT_PASSWORD" { sub(/^[^=]*=/, ""); print; exit }')"
+      [[ -n "${access}" && -n "${secret}" ]] \
+        || die "existing MinIO credentials are unavailable; refusing to generate mismatched credentials"
+      printf '%s' "${access}" > /root/.minio-access
+      printf '%s' "${secret}" > /root/.minio-secret
+      chmod 600 /root/.minio-access /root/.minio-secret
+    fi
+
+    if [[ "$(docker inspect aetherguard-minio --format '{{.State.Running}}')" != "true" ]]; then
+      log "starting existing MinIO container"
+      docker start aetherguard-minio >/dev/null
+    else
+      log "MinIO container already running"
+    fi
+
+    for _ in $(seq 1 30); do
+      if curl -fsS -m 3 http://127.0.0.1:9000/minio/health/ready >/dev/null 2>&1; then
+        printf '%s\t%s\t%s\n' "http://127.0.0.1:9000" "${access}" "${secret}"
+        return
+      fi
+      sleep 1
+    done
+    die "existing MinIO container did not become ready within 30s"
   fi
   log "starting MinIO (loopback-only, 512MB cap)"
   install -d -m 0750 /var/lib/minio/data
@@ -436,13 +472,13 @@ ensure_minio() {
     -v /var/lib/minio/data:/data \
     -e MINIO_ROOT_USER="${access}" -e MINIO_ROOT_PASSWORD="${secret}" \
     --memory=512m --memory-swap=1024m \
-    minio/minio:latest server /data --console-address ":9001" >/dev/null
+    "${AG_MINIO_IMAGE}" server /data --console-address ":9001" >/dev/null
   printf '%s' "${access}" > /root/.minio-access
   printf '%s' "${secret}" > /root/.minio-secret
   chmod 600 /root/.minio-access /root/.minio-secret
   # Wait for readiness; the backend creates the bucket itself (Object Lock).
   for _ in $(seq 1 30); do
-    if curl -fsS -m 3 http://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; then
+    if curl -fsS -m 3 http://127.0.0.1:9000/minio/health/ready >/dev/null 2>&1; then
       printf '%s\t%s\t%s\n' "http://127.0.0.1:9000" "${access}" "${secret}"
       return
     fi
