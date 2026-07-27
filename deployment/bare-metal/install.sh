@@ -363,6 +363,7 @@ write_env_file() {
   # in the script propagates without touching secrets.
   env_upsert "${env_file}" NODE_ENV                  production
   env_upsert "${env_file}" PORT                      "${AG_BACKEND_PORT}"
+  env_upsert "${env_file}" BACKEND_BIND_ADDRESS      127.0.0.1
   env_upsert "${env_file}" PROFILE                   prod
   env_upsert "${env_file}" APP_ROLE                  all
   env_upsert "${env_file}" APP_MODE                  production
