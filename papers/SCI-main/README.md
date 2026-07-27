@@ -1,5 +1,7 @@
 # AetherGuard SCI Paper
 
+> **Evidence status (2026-07-27):** The manuscript has been synchronized to `docs/reports/software-validation-status-2026-07-27.md`. Do not restore the prior 96.2% accuracy, 2.3% FPR, 1,200+ production-server, production-uptime, or unversioned ablation claims without new raw evidence.
+
 ## 论文信息
 
 - **标题**: AetherGuard: A Multi-Agent AI Architecture for Distributed Server Security
@@ -61,10 +63,11 @@ latexmk -pdf AetherGuard-SCI-Final.tex
 5. 生产级开源实现
 
 ### 实验结果
-- 检测准确率: 96.2%
-- 误报率: 2.3%
-- 响应延迟(P95): 520ms
-- 部署规模: 1200+服务器
+- 4,500 条合成语料攻击检测率: 63.97%
+- 1,200 条合成正常样本 FPR: 0%；不代表生产误报率
+- 合成语料启发式评估延迟: median 0.522ms、p95 1.530ms
+- Rust 固定 key loopback: 三轮 56.6k--61.6k QPS，零错误
+- 生产部署规模: 未验证
 
 ## 注意事项
 

@@ -2,7 +2,7 @@
  * AetherGuard Dataset Evaluation
  * ==============================
  *
- * Runs the 4,300-sample aetherguard-security-dataset through the
+ * Runs the tracked 4,500-sample aetherguard-security-dataset through the
  * DetectionPipelineService heuristics and the input-validator
  * defenses, and measures:
  *
@@ -233,7 +233,7 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
     samples = loadDataset(datasetRoot);
   }, 120_000);
 
-  it('detects attacks and avoids false positives on the 4,300-sample dataset', async () => {
+  it('evaluates detection outcomes on the tracked 4,500-sample dataset', async () => {
     if (!datasetRoot) {
       console.warn('[dataset-eval] dataset not found, skipping');
       return;
@@ -266,6 +266,7 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
         : needsBurst ? 10 : 1;
       let flagged = false;
       let totalLatency = 0;
+      let requestsEvaluated = 0;
       let matchedRules: string[] = [];
       let flagReason = '';
       for (let k = 0; k < burstSize; k++) {
@@ -279,6 +280,7 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
             const r = await evaluateSample(parsed, i + k, validator);
             if (r.flagged) { flagged = true; flagReason = r.flagReason; matchedRules = r.matchedRules; }
             totalLatency += r.latencyMs;
+            requestsEvaluated += 1;
             if (flagged) break;
             continue;
           } catch (e) { /* fallthrough */ }
@@ -286,9 +288,10 @@ describe('AetherGuard dataset evaluation (aetherguard-security-dataset)', () => 
         const r = await evaluateSample(s, i + k, validator);
         if (r.flagged) { flagged = true; flagReason = r.flagReason; matchedRules = r.matchedRules; }
         totalLatency += r.latencyMs;
+        requestsEvaluated += 1;
         if (flagged) break;
       }
-      const latencyMs = totalLatency / burstSize;
+      const latencyMs = requestsEvaluated > 0 ? totalLatency / requestsEvaluated : 0;
       globalLatencies.push(latencyMs);
       (latenciesByType[type] = latenciesByType[type] || []).push(latencyMs);
 

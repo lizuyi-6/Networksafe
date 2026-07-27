@@ -3,7 +3,7 @@
 ## 1. 产品概述
 AetherGuard 是下一代 API 安全中间件平台，集成实时流量监控、自动化漏洞扫描、智能威胁防御与可视化管理于一体。系统采用现代化微服务架构，支持 Docker 容器化部署，并内置 AI 驱动的错误分析引擎。
 
-> Validation Note (2026-03-08): Deployment target generation now covers `nginx`, `apache`, `caddy`, `docker_compose`, `binary_agent`, and `k8s_daemonset`, but only Docker runtime is fully validated in this workspace. Notification outbox, audit archive with object lock, and backend-simulated device OTA/physical-confirmation smoke are validated. Historical performance and hardware production claims should be treated as unvalidated unless they are repeated in `docs/reports/validated-capability-status-2026-03-08.md`.
+> Validation Note (2026-07-27): Use `docs/reports/software-validation-status-2026-07-27.md` for current software evidence and test failures. Keep Docker, Object Lock, notification and simulated device evidence tied to the dated 2026-03-08 report. Stable 100k QPS, live external integrations, cross-platform rollout, local-AI latency, agent resource targets and physical hardware are not validated by the current local software run.
 
 ## 2. 核心功能模块
 
@@ -111,4 +111,3 @@ AetherGuard 当前提供的主硬件基线是 **AetherGuard Root-Resistant Gatew
 - **限制**：当前 v1 固件仅对 Linux 主机执行部署/卸载；Windows 仅做环境识别，不执行安装。
 
 > 仓库中的 `/ws/device`、OTA 和 physical-confirmation smoke 属于后端模拟链路与后续联网设备实验，不是当前串口部署器固件能力。
-
