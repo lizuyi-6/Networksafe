@@ -930,7 +930,7 @@ export default function AttackSimulator() {
                                         </span>
                                     </div>
                                     <div className="mt-3 flex justify-end">
-                                        <Link data-testid={`attack-run-detail-${getAttackRunRouteId(item)}`} to={`/attack-sim/runs/${getAttackRunRouteId(item)}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
+                                        <Link data-testid={`attack-run-detail-${getAttackRunRouteId(item)}`} to={`/attack-sim/runs/${encodeURIComponent(getAttackRunRouteId(item))}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30">
                                             {t('attackSimulator.view_detail')}
                                         </Link>
                                     </div>

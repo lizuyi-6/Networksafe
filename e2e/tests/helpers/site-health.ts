@@ -47,10 +47,16 @@ const DEV_PRESET_CREDENTIALS: Record<DevPreset, Credentials> = {
     },
 };
 
-const envFileCandidates = [
-    path.resolve(process.cwd(), '../.env'),
-    path.resolve(process.cwd(), '../backend/.env'),
-];
+const targetsLocalDevelopmentServer = String(process.env.PLAYWRIGHT_BASE_URL || '').includes(':5173');
+const envFileCandidates = targetsLocalDevelopmentServer
+    ? [
+        path.resolve(process.cwd(), '../backend/.env'),
+        path.resolve(process.cwd(), '../.env'),
+    ]
+    : [
+        path.resolve(process.cwd(), '../.env'),
+        path.resolve(process.cwd(), '../backend/.env'),
+    ];
 
 const parseEnvFile = (filePath: string): Record<string, string> => {
     if (!fs.existsSync(filePath)) return {};
@@ -172,8 +178,13 @@ export const loginWithCredentials = async (page: Page, credentials: Credentials)
     await page.locator('button[type="submit"]').click();
 
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20000 });
-    await expect(page.locator('header').first()).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('aside').first()).toBeVisible({ timeout: 15000 });
+    await expect.poll(
+        () => page.evaluate(async () => (await fetch('/api/auth/me', { credentials: 'include' })).status),
+        { message: 'login must create a session accepted by protected APIs', timeout: 15000 },
+    ).toBe(200);
+    await expect(page.getByTestId('route-loading')).toHaveCount(0);
+    await expect(page.getByTestId('session-unavailable')).toHaveCount(0);
+    await expect(page.getByTestId('dashboard-page')).toBeVisible({ timeout: 15000 });
 };
 
 export const loginAsAdmin = async (page: Page) => loginWithCredentials(page, resolveAdminCredentials());

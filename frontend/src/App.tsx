@@ -38,6 +38,7 @@ import { WebSocketProvider } from './context/WebSocketContext';
 import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusContext';
 import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
 import Logo from './components/Logo';
+import { requireInternalRoute } from './utils/internal-navigation';
 import {
     AdminRoute,
     isAdminRole,
@@ -322,7 +323,7 @@ const Sidebar = ({ mobile = false, onNavigate, onClose }: SidebarProps) => {
                                     return (
                                         <Link
                                             key={item.path}
-                                            to={item.path}
+                                            to={requireInternalRoute(item.path)}
                                             onClick={onNavigate}
                                             className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors group ${isActive
                                                 ? 'text-foreground bg-primary/10 border border-primary/20 shadow-sm'
@@ -785,7 +786,7 @@ const AnimatedRoutes = () => {
                 <Route path="/promo" element={<Promo />} />
                 <Route path="/promo-film" element={<PromoFilm />} />
                 <Route path="/aetherguard-deck" element={SHOW_PITCH_ROUTES ? <XiongcaiFinalDeck /> : <Navigate to="/dashboard" replace />} />
-                <Route path="/xiongcai-final" element={<Navigate to={SHOW_PITCH_ROUTES ? '/aetherguard-deck' : '/dashboard'} replace />} />
+                <Route path="/xiongcai-final" element={<Navigate to={requireInternalRoute(SHOW_PITCH_ROUTES ? '/aetherguard-deck' : '/dashboard')} replace />} />
                 <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
                 <Route path="/privacy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
                 <Route path="/terms" element={<PageWrapper><TermsOfService /></PageWrapper>} />

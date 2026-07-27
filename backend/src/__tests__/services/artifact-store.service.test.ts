@@ -133,12 +133,18 @@ describe('artifactStoreService', () => {
     it('serializes object to JSON', async () => {
       const result = await artifactStoreService.writeJson('reports', 'data.json', { key: 'value' });
 
-      expect(result.artifactRef).toMatch(/^artifact:\/\/local\/reports\/data\.json\.json$/);
+      expect(result.artifactRef).toMatch(/^artifact:\/\/local\/reports\/data\.json$/);
       expect(mocks.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('"key"'),
         'utf8'
       );
+    });
+
+    it('adds the JSON extension when callers provide a bare artifact key', async () => {
+      const result = await artifactStoreService.writeJson('reports', 'bare-key', { key: 'value' });
+
+      expect(result.artifactRef).toMatch(/^artifact:\/\/local\/reports\/bare-key\.json$/);
     });
   });
 

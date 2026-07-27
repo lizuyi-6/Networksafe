@@ -5,7 +5,7 @@
 ## 1. 版本与环境
 
 - 源码基线：`32b39ff25a909a3a32268fdff1dbe208fffdd4f6`
-- 验证时未提交变更：数据集测试名称、样本数说明和 burst 延迟分母修正，以及本次文档同步
+- 验证时未提交变更：数据集测试名称、样本数说明和 burst 延迟分母修正；评测 artifact schema v2 的分区统计与漏检来源；以及本次文档同步
 - 操作系统：Linux `7.0.0-28-generic`，x86_64
 - CPU：Intel Core i5-9300H，8 个逻辑 CPU
 - 内存：`7,616,966,656` bytes
@@ -21,11 +21,11 @@
 | 后端自动化测试 | 248 suites、3,291 tests，全部通过 | 测试模式禁用 Redis；不代表真实 PostgreSQL、Redis、S3、SMTP、OIDC 或 LLM 集成 |
 | 后端覆盖率 | statements 65.90%、branches 51.41%、functions 65.90%、lines 66.21% | Jest 全量覆盖率；替代 2026-02-16 报告中的 15–20% 人工估算 |
 | 4,500 样本合成数据集 | 检测率 63.97%，合成正常样本 FPR 0% | 3,300 个攻击样本、1,200 个正常样本；不是生产流量指标，也没有外部基线 |
-| 数据集评估延迟 | median 0.546 ms、p95 1.557 ms | 单进程本机启发式评估；burst 按实际执行请求数计算 |
+| 数据集评估延迟 | median 0.575 ms、p95 1.612 ms | 2026-07-27 12:47 UTC 最终运行；单进程本机启发式评估，burst 按实际执行请求数计算 |
 | Rust fastpath 软件门禁 | 17 tests、Clippy、release build 全部通过 | x86_64 Linux 本机构建 |
 | Rescue 软件门禁 | 51 tests、Clippy、release build、12 drills 全部通过 | 纯软件故障演练，不代表真实硬件 interlock |
 | Frontend | typecheck、lint、8/8 i18n、credential hygiene、production build 全部通过 | 构建产生约 1.619 MB 主 JS chunk，Vite 给出大于 500 kB 的非阻断警告 |
-| Chromium 发布子集 | 10 个可运行用例中 8 通过、2 失败；另 1 条按条件跳过 | 失败涉及路由重定向契约和认证后 API 503；不能声明 E2E 全通过 |
+| Chromium 发布子集 | 10 个可运行用例全部通过；另 1 条按条件跳过 | 使用本机管理员凭据、pitch-disabled 构建和本地前后端；不代表其他浏览器或生产环境 |
 | Rust 固定 key rate-check | 三轮均值 59,112 QPS；扫描峰值 75,078 QPS | loopback、200 连接、pipeline 10/20、客户端与服务端共享 CPU；本次未稳定达到 100k |
 | Node 开发控制面 `/health` | 三轮均值 3,188 QPS | 单进程开发模式且开启每请求日志；不是生产构建上限 |
 | npm 生产依赖审计 | root/backend/e2e/installer/simulator 为 0；frontend 有 2 个 moderate | 前端问题来自 React Router 公告；未自动修改依赖图 |
@@ -49,7 +49,16 @@ node node_modules/jest/bin/jest.js \
 
 | 样本 | TP | FN | TN | FP | 检测率 | FPR | median | p95 |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 4,500 | 2,111 | 1,189 | 1,200 | 0 | 63.97% | 0.00% | 0.546 ms | 1.557 ms |
+| 4,500 | 2,111 | 1,189 | 1,200 | 0 | 63.97% | 0.00% | 0.575 ms | 1.612 ms |
+
+子数据集结果：
+
+| 子数据集 | 样本 | 攻击 | TP | FN | 正常 | TN | FP | 检测率 | 正常样本 FPR |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| full_test_dataset | 1,300 | 1,100 | 979 | 121 | 200 | 200 | 0 | 89.00% | 0.00% |
+| complete_dataset | 1,050 | 550 | 327 | 223 | 500 | 500 | 0 | 59.45% | 0.00% |
+| advanced_dataset | 1,150 | 650 | 260 | 390 | 500 | 500 | 0 | 40.00% | 0.00% |
+| zeroday_dataset | 1,000 | 1,000 | 545 | 455 | 0 | 0 | 0 | 54.50% | 不适用 |
 
 代表性分类结果：
 
@@ -65,6 +74,8 @@ node node_modules/jest/bin/jest.js \
 | log4j_injection | 100% | unicode_homoglyph | 6% |
 
 因此，数据集文档中的“基础 >95%、高级 >90%、0day >85%”只能作为历史目标，不能作为已经达到的结果。原先 92.2% 检测率、1.19% FPR、与 Suricata/ModSecurity 的显著性比较和消融数据没有可复现原始 artifact，本报告不采用这些数字。
+
+`dataset-eval-report.json` schema v2 还记录了每个攻击类型和子数据集的计数与延迟，并为每个存在漏检的类型最多保留 5 个代表性 FN，包含来源子数据集和 JSON 文件名。当前没有 FP 样例。代表性缺口包括 loopback SSRF URL、多重编码路径、Unicode 同形字、类型混淆、GraphQL/NoSQL 结构和原型污染；这些样例是后续规则改进输入，而不是把所有漏检载荷完整复制进本报告。
 
 ## 4. 自动化测试与覆盖率
 
@@ -88,18 +99,15 @@ node node_modules/jest/bin/jest.js \
 
 ## 5. Chromium E2E
 
-测试目标为本地前端 `http://127.0.0.1:5173` 和后端 `http://127.0.0.1:3005`。首次运行暴露 E2E 默认凭据与本机随机管理员凭据不一致；用 `backend/.env` 中的实际凭据重跑认证用例后，两个受保护页面视觉用例通过。
+测试目标为本地前端 `http://127.0.0.1:5173` 和后端 `http://127.0.0.1:3005`。测试使用 `backend/.env` 中的本机管理员凭据，并设置 `E2E_EXPECT_PITCH_ROUTES_DISABLED=true` 验证 pitch-disabled 构建。
 
-合并去重后的发布子集结果：
+2026-07-27 12:31 UTC 完整 Chromium 发布子集结果：
 
-- 8 passed
-- 2 failed
+- 10 passed
+- 0 failed
 - 1 skipped（只在 pitch-enabled build 运行）
 
-未通过项：
-
-1. pitch-disabled feature route 期望重定向到 `/dashboard`，实际重定向到 `/login`。
-2. 完整 walkthrough 登录成功后，`GET /api/stats/badges` 和 `GET /api/auth/me` 出现 503；同期公共 `/health` 和 `/health/ready` 均为 200。
+此前暴露的 feature-route 重定向契约和认证后 API 503 均在最终完整子集中通过。walkthrough 单独复跑也为 1/1 通过。该结论只覆盖列出的 Chromium 发布子集，不能扩展为所有浏览器、所有 E2E 文件或生产部署验收。
 
 当前只安装并验证 Chromium。Firefox、WebKit、Edge 和其他操作系统未验证。
 

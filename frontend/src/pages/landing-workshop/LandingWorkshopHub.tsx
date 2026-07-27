@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, BookOpen, Building2, Factory, RefreshCcw, TerminalSquare } from 'lucide-react';
+import { requireInternalRoute } from '../../utils/internal-navigation';
 import consoleDashboard from '../../assets/landing-workshop/console-dashboard.png';
 import consoleTraffic from '../../assets/landing-workshop/console-traffic.png';
 import consoleDevices from '../../assets/landing-workshop/console-devices.png';
@@ -231,7 +232,7 @@ const LandingWorkshopHub = () => {
                             <button
                                 key={v.key}
                                 type="button"
-                                onClick={() => navigate(v.route)}
+                                onClick={() => navigate(requireInternalRoute(v.route))}
                                 className="group relative rounded-3xl border border-slate-800 bg-slate-900/60 p-5 text-left transition hover:border-slate-500"
                             >
                                 {index === 0 && (

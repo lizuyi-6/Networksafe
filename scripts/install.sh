@@ -63,18 +63,19 @@ fi
 echo "--> Building and starting all services (this builds backend, frontend and the Rust fastpath)..."
 docker compose up -d --build
 
-# ─── 4. Wait for backend health ──────────────────────────────────────────────
-BACKEND_PORT="$(grep -E '^BACKEND_PORT=' .env | cut -d= -f2 || true)"
-BACKEND_PORT="${BACKEND_PORT:-3005}"
+# ─── 4. Wait for control-plane readiness through the public edge ────────────
 FRONTEND_PORT="$(grep -E '^FRONTEND_PORT=' .env | cut -d= -f2 || true)"
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 
-echo "--> Waiting for backend health at http://localhost:${BACKEND_PORT}/health ..."
+READINESS_URL="http://localhost:${FRONTEND_PORT}/health/ready"
+echo "--> Waiting for control-plane readiness at ${READINESS_URL} ..."
 HEALTH_OK=0
 for _ in $(seq 1 60); do
-    if curl -fsS "http://localhost:${BACKEND_PORT}/health" >/dev/null 2>&1; then
-        HEALTH_OK=1
-        break
+    if READINESS_RESPONSE="$(curl -fsS "${READINESS_URL}" 2>/dev/null)"; then
+        if printf '%s' "${READINESS_RESPONSE}" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"ready"'; then
+            HEALTH_OK=1
+            break
+        fi
     fi
     sleep 2
 done
@@ -82,17 +83,18 @@ done
 echo ""
 if [[ "${HEALTH_OK}" -eq 1 ]]; then
     echo "==========================================="
-    echo "   Installation Complete — backend healthy"
+    echo "   Installation Complete — control plane ready"
     echo "==========================================="
 else
     echo "==========================================="
     echo "   Containers started, but the backend did NOT report healthy within 120s."
     echo "   Inspect logs before using the system:  docker compose logs -f backend"
     echo "==========================================="
+    exit 1
 fi
 echo ""
 echo "  Frontend:  http://localhost:${FRONTEND_PORT}"
-echo "  Backend:   http://localhost:${BACKEND_PORT}"
+echo "  API:       proxied through http://localhost:${FRONTEND_PORT}/api"
 echo "  Login:     ADMIN_EMAIL / ADMIN_PASSWORD from ${PROJECT_ROOT}/.env"
 echo "             (setup-env.sh printed the generated admin password above)"
 echo ""

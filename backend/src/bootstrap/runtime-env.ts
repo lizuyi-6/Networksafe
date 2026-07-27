@@ -133,11 +133,18 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
     }
 
     if (enterpriseRuntimeMode === 'prod-enterprise' && !oidcEnabled()) {
-      warnings.push(
-        allowPasswordLogin()
-          ? 'OIDC is not configured; explicitly enabled local password login is the only interactive login path.'
-          : 'OIDC is not configured and local password login is disabled; no interactive login path is available.'
-      );
+      if (allowPasswordLogin()) {
+        warnings.push('OIDC is not configured; local password login is the only interactive login path.');
+      } else {
+        errors.push('No interactive login path is configured. Enable local password login or configure all required OIDC endpoints.');
+      }
+    }
+
+    if (
+      process.env.ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS === 'true'
+      || process.env.ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN === 'true'
+    ) {
+      errors.push('Process-local authentication sessions cannot be enabled in production.');
     }
 
     if (String(process.env.ENABLE_DEV_LOGIN_PRESETS || '').trim().toLowerCase() === 'true') {
@@ -175,7 +182,7 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
     warnings.push(`APP_MODE=demo requested but ENTERPRISE_RUNTIME_MODE=${enterpriseRuntimeMode} disables demo features; runtime will behave as production.`);
   }
 
-  if (isEnterpriseStrictMode() && String(process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN || '').trim().toLowerCase() !== 'true') {
+  if (isEnterpriseStrictMode() && !allowPasswordLogin()) {
     warnings.push('prod-enterprise mode is active; local password login is disabled for every role.');
   }
 

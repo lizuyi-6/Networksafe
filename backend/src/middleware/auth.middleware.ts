@@ -23,6 +23,7 @@ import {
 import authSecurityService from '../security/auth-security.service';
 import { findAuthUserById } from '../modules/auth/auth-user.repository';
 import { sendError } from '../core/http/api-response';
+import { allowLabInMemoryAuthSessions } from '../config/enterprise-runtime';
 
 // Validate environment variables at module load
 try {
@@ -188,19 +189,15 @@ export async function verifyTokenAsyncDetailed(token: string): Promise<TokenVeri
             return { user: null, failureReason: 'blacklist_check_failed' };
         }
     } else {
-        // When Redis is unavailable and bypass is enabled, skip blacklist check and accept the token.
-        // This is acceptable because: (1) tokens not in blacklist are valid, (2) logout blacklist
-        // is a defense-in-depth measure, not a hard security requirement.
-        const allowInsecureBypass =
-            process.env.NODE_ENV === 'test' ||
-            process.env.ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN === 'true';
-
-        if (!allowInsecureBypass) {
+        // A process-local session store is allowed only in an explicitly
+        // configured non-production lab. Login uses the same policy, so a 200
+        // response can never issue a session rejected by the next request.
+        if (!allowLabInMemoryAuthSessions()) {
             logger.warn('Redis unavailable, rejecting token for security (fail-secure)');
             return { user: null, failureReason: 'redis_unavailable' };
         }
 
-        logger.warn('Redis unavailable, allowing token (blacklist check skipped) due to ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN=true');
+        logger.warn('Redis unavailable; using explicitly configured lab in-memory authentication sessions');
     }
 
     if (!decoded.sessionId) {
@@ -343,11 +340,18 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
             verification.failureReason === 'identity_check_failed'
         ) {
             const sessionStoreUnavailable = verification.failureReason === 'session_check_failed';
+            const identityStoreUnavailable = verification.failureReason === 'identity_check_failed';
             sendError(res, 503, {
-                code: sessionStoreUnavailable ? 'AUTH_SESSION_STORE_UNAVAILABLE' : 'AUTH_BLACKLIST_UNAVAILABLE',
+                code: sessionStoreUnavailable
+                    ? 'AUTH_SESSION_STORE_UNAVAILABLE'
+                    : identityStoreUnavailable
+                        ? 'AUTH_IDENTITY_STORE_UNAVAILABLE'
+                        : 'AUTH_BLACKLIST_UNAVAILABLE',
                 message: sessionStoreUnavailable
                     ? 'backend.auth_session_store_unavailable'
-                    : 'backend.auth_blacklist_check_unavailable',
+                    : identityStoreUnavailable
+                        ? 'backend.auth_identity_store_unavailable'
+                        : 'backend.auth_blacklist_check_unavailable',
                 details: { retryable: true }
             }, {
                 legacy: { retryable: true }

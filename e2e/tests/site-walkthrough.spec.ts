@@ -16,31 +16,12 @@ import { PITCH_PUBLIC_ROUTE_CONTRACT } from '../../frontend/src/config/public-ro
 test.describe('Site walkthrough', () => {
     test('pitch-disabled build keeps every feature-flagged route out of production', async ({ page }) => {
         test.skip(process.env.E2E_EXPECT_PITCH_ROUTES_DISABLED !== 'true', 'Requires the default frontend build');
-        await page.route('**/api/auth/me', async (route) => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    success: true,
-                    data: {
-                        user: {
-                            userId: 'pitch-disabled-admin',
-                            email: 'pitch-disabled@example.test',
-                            username: 'pitch-disabled-admin',
-                            role: 'admin',
-                            plan: 'ultra',
-                            authProvider: 'local',
-                        },
-                    },
-                    error: null,
-                }),
-            });
-        });
+        await loginAsAdmin(page);
 
         for (const routeContract of PITCH_PUBLIC_ROUTE_CONTRACT) {
             await page.goto(routeContract.path);
             await expect(page).toHaveURL(/\/dashboard$/);
-            await expect(page.getByTestId('system-health-indicator')).toBeVisible();
+            await expect(page.getByTestId('dashboard-page')).toBeVisible();
             await expect(page.getByTestId(routeContract.landmarkTestId)).toHaveCount(0);
         }
     });

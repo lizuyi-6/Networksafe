@@ -46,7 +46,7 @@ const FixHistory = () => {
                                     <div className="mt-1 text-xs text-muted-foreground">{row.status} / {row.phase} / {row.progress}%</div>
                                     <div className="mt-1 text-[11px] text-muted-foreground">{new Date(row.createdAt).toLocaleString()}</div>
                                 </div>
-                                <Link to={`/history/${row.id}`} className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/30">
+                                <Link to={`/history/${encodeURIComponent(row.id)}`} className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/30">
                                     {t('fixHistory.view_detail')}
                                     <ArrowRight size={12} />
                                 </Link>

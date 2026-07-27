@@ -4,8 +4,12 @@
 [![Dataset Size](https://img.shields.io/badge/Dataset-4%2C500%20samples-blue)]()
 [![Attack Types](https://img.shields.io/badge/Attack%20Types-31-green)]()
 [![CVE Coverage](https://img.shields.io/badge/CVE-10%2B-red)]()
+[![Current Synthetic Detection](https://img.shields.io/badge/Current%20Detection-63.97%25-yellow)]()
+[![Synthetic Normal FPR](https://img.shields.io/badge/Synthetic%20Normal%20FPR-0%25-green)]()
 
-A comprehensive security test dataset for evaluating AI-powered server defense systems. This dataset contains **4,500 curated attack samples** covering **31 attack types**, including **10+ CVE exploits** at the 0day level.
+A comprehensive security test dataset for evaluating AI-powered server defense systems. It contains **4,500 synthetic samples** (3,300 attack samples and 1,200 normal samples) covering **31 attack types**, including 0day-level payloads associated with **10+ CVEs**.
+
+> **Evidence update (2026-07-27):** The current repository evaluation measured 63.97% attack detection and 0% FPR on the synthetic normal corpus, with 0.575 ms median and 1.612 ms p95 local evaluation latency. Historical 92.2%/1.19% figures, external-product comparisons, significance claims, ablations, hardware-environment claims, and case-study latency figures do not have reproducible raw artifacts and must not be cited as current results. See `backend/test-data/dataset-eval-report.json` and `docs/reports/software-validation-status-2026-07-27.md`.
 
 > 📖 English | [简体中文](README.md)
 
@@ -20,6 +24,20 @@ A comprehensive security test dataset for evaluating AI-powered server defense s
 | **advanced_dataset** | 650 | 500 | 1,150 | Advanced attack types |
 | **zeroday_dataset** | 1,000 | 0 | 1,000 | 0day-level attacks |
 | **Total** | **3,300** | **1,200** | **4,500** | |
+
+---
+
+## Current Local Benchmark
+
+| Dataset | TP / FN | TN / FP | Attack Detection | Synthetic Normal FPR |
+|---------|--------:|--------:|-----------------:|---------------------:|
+| full_test_dataset | 979 / 121 | 200 / 0 | 89.00% | 0.00% |
+| complete_dataset | 327 / 223 | 500 / 0 | 59.45% | 0.00% |
+| advanced_dataset | 260 / 390 | 500 / 0 | 40.00% | 0.00% |
+| zeroday_dataset | 545 / 455 | 0 / 0 | 54.50% | N/A (no normal samples) |
+| **Total** | **2,111 / 1,189** | **1,200 / 0** | **63.97%** | **0.00%** |
+
+These figures come from the tracked synthetic corpus evaluated by the local heuristic pipeline and input validator. They are not production-traffic metrics, end-to-end network latency, or an external product comparison. No hard pass threshold is enforced. The schema-v2 artifact includes per-type results and up to five representative false negatives per missed type, with source dataset and file provenance; this run produced no false-positive examples.
 
 ---
 
@@ -199,7 +217,7 @@ All samples undergo the following validation process:
   year={2026},
   publisher={GitHub},
   url={https://github.com/lizuyi-6/aetherguard-security-dataset},
-  note={4,500 attack samples covering 31 attack types and 10+ CVEs}
+  note={4,500 synthetic samples, including 3,300 attack samples and 1,200 normal samples, covering 31 attack types and 10+ CVEs}
 }
 ```
 

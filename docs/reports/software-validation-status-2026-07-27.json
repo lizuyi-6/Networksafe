@@ -1,12 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-27T10:56:58Z",
+  "generatedAt": "2026-07-27T12:48:00Z",
   "scope": "software-only-local-validation",
   "source": {
     "commit": "32b39ff25a909a3a32268fdff1dbe208fffdd4f6",
     "uncommittedValidationChanges": [
       "dataset test description corrected from 4,300 to 4,500 samples",
       "dataset burst latency divided by requests actually evaluated",
+      "dataset artifact schema v2 adds per-dataset metrics and representative false-negative provenance",
       "software validation documentation synchronized"
     ]
   },
@@ -84,6 +85,8 @@
   },
   "datasetEvaluation": {
     "artifact": "backend/test-data/dataset-eval-report.json",
+    "artifactSchemaVersion": 2,
+    "artifactGeneratedAt": "2026-07-27T12:47:26.918Z",
     "sampleCount": 4500,
     "attackSampleCount": 3300,
     "normalSampleCount": 1200,
@@ -93,29 +96,73 @@
     "falsePositive": 0,
     "detectionRate": 0.6396969696969697,
     "syntheticNormalFalsePositiveRate": 0,
-    "medianLatencyMs": 0.54605,
-    "p95LatencyMs": 1.557175,
+    "medianLatencyMs": 0.575185,
+    "p95LatencyMs": 1.612131,
+    "perDataset": {
+      "full_test_dataset": {
+        "sampleCount": 1300,
+        "attackSampleCount": 1100,
+        "normalSampleCount": 200,
+        "truePositive": 979,
+        "falseNegative": 121,
+        "trueNegative": 200,
+        "falsePositive": 0,
+        "detectionRate": 0.89,
+        "syntheticNormalFalsePositiveRate": 0
+      },
+      "complete_dataset": {
+        "sampleCount": 1050,
+        "attackSampleCount": 550,
+        "normalSampleCount": 500,
+        "truePositive": 327,
+        "falseNegative": 223,
+        "trueNegative": 500,
+        "falsePositive": 0,
+        "detectionRate": 0.5945454545454546,
+        "syntheticNormalFalsePositiveRate": 0
+      },
+      "advanced_dataset": {
+        "sampleCount": 1150,
+        "attackSampleCount": 650,
+        "normalSampleCount": 500,
+        "truePositive": 260,
+        "falseNegative": 390,
+        "trueNegative": 500,
+        "falsePositive": 0,
+        "detectionRate": 0.4,
+        "syntheticNormalFalsePositiveRate": 0
+      },
+      "zeroday_dataset": {
+        "sampleCount": 1000,
+        "attackSampleCount": 1000,
+        "normalSampleCount": 0,
+        "truePositive": 545,
+        "falseNegative": 455,
+        "trueNegative": 0,
+        "falsePositive": 0,
+        "detectionRate": 0.545,
+        "syntheticNormalFalsePositiveRate": null
+      }
+    },
+    "falsePositiveExampleCount": 0,
+    "representativeFalseNegativeExampleCount": 104,
+    "representativeFalseNegativeLimitPerType": 5,
     "hardPassThresholdEnforced": false,
-    "boundary": "synthetic tracked corpus evaluated by local heuristic pipeline; not production traffic or an external product comparison"
+    "boundary": "synthetic tracked corpus evaluated by local heuristic pipeline and input validator; not production traffic, end-to-end network latency, or an external product comparison"
   },
   "browserValidation": {
     "browser": "Chromium 151.0.7922.34",
     "baseUrl": "http://127.0.0.1:5173",
     "backendUrl": "http://127.0.0.1:3005",
+    "completedAt": "2026-07-27T12:32:11.097Z",
+    "pitchRoutesExpectedDisabled": true,
+    "localAdministratorCredentialsUsed": true,
     "runnableTests": 10,
-    "passed": 8,
-    "failed": 2,
+    "passed": 10,
+    "failed": 0,
     "conditionallySkipped": 1,
-    "failures": [
-      {
-        "test": "pitch-disabled build keeps every feature-flagged route out of production",
-        "observed": "expected /dashboard redirect, received /login"
-      },
-      {
-        "test": "browses public pages, protected pages, and demo pages without display issues",
-        "observed": "authenticated walkthrough observed 503 from /api/stats/badges and /api/auth/me while public liveness and readiness remained 200"
-      }
-    ],
+    "failures": [],
+    "boundary": "local Chromium release subset only; not every E2E file, browser, operating system, or production deployment",
     "unvalidatedBrowsers": [
       "Firefox",
       "WebKit",

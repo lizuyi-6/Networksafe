@@ -9,7 +9,7 @@
 
 > **首个包含 0day 级别攻击的中文安全测试数据集**
 
-一个用于评估 AI 驱动服务器防御系统的综合安全测试数据集。本数据集包含 **4,500 个精选攻击样本**，覆盖 **31 种攻击类型**，包括 **10+ 个 CVE 漏洞利用**的 0day 级别载荷。
+一个用于评估 AI 驱动服务器防御系统的综合安全测试数据集。本数据集包含 **4,500 个合成样本**（3,300 个攻击样本和 1,200 个正常样本），覆盖 **31 种攻击类型**，包括 **10+ 个 CVE 漏洞利用**的 0day 级别载荷。
 
 > **证据更新（2026-07-27）**：当前仓库评测实际得到 63.97% 攻击检测率和 0% 合成正常样本 FPR，详见 `backend/test-data/dataset-eval-report.json` 与 `docs/reports/software-validation-status-2026-07-27.md`。旧版 92.2%、1.19%、外部产品对比、显著性、消融、硬件环境和案例延迟数字缺少可复现原始 artifact，不得作为当前结果或论文证据。
 
@@ -46,9 +46,16 @@
 
 | 样本 | TP | FN | TN | FP | 检测率 | 合成正常样本 FPR | median 延迟 | p95 延迟 |
 |------:|---:|---:|---:|---:|-------:|-----------------:|------------:|---------:|
-| 4,500 | 2,111 | 1,189 | 1,200 | 0 | 63.97% | 0.00% | 0.546 ms | 1.557 ms |
+| 4,500 | 2,111 | 1,189 | 1,200 | 0 | 63.97% | 0.00% | 0.575 ms | 1.612 ms |
 
-分类结果差异很大：command injection、brute force、DDoS、port scan、file upload、HTTP smuggling、Log4j 和 Text4Shell 为 100%，XSS 为 98%；SQL injection 为 64%、SSRF 为 20%、JWT attack 为 24%、encoding bypass 为 13%、type confusion 为 11%、Unicode homoglyph 为 6%。当前测试不设置硬性通过阈值，只断言全部样本确实被评估。
+| 子数据集 | TP / FN | TN / FP | 攻击检测率 | 合成正常样本 FPR |
+|----------|--------:|--------:|-----------:|------------------:|
+| full_test_dataset | 979 / 121 | 200 / 0 | 89.00% | 0.00% |
+| complete_dataset | 327 / 223 | 500 / 0 | 59.45% | 0.00% |
+| advanced_dataset | 260 / 390 | 500 / 0 | 40.00% | 0.00% |
+| zeroday_dataset | 545 / 455 | 0 / 0 | 54.50% | 不适用（无正常样本） |
+
+分类结果差异很大：command injection、brute force、DDoS、port scan、file upload、HTTP smuggling、Log4j 和 Text4Shell 为 100%，XSS 为 98%；SQL injection 为 64%、SSRF 为 20%、JWT attack 为 24%、encoding bypass 为 13%、type confusion 为 11%、Unicode homoglyph 为 6%。当前测试不设置硬性通过阈值，只断言全部样本确实被评估。机器可读报告 schema v2 为每个存在漏检的类型最多保留 5 个代表性 FN，并记录其来源子数据集和文件名；本次没有 FP 样例。
 
 当前机器没有运行 Suricata、ModSecurity、Fail2ban 或独立 iptables 基线，也没有对应原始逐样本结果，因此不提供系统间排名、显著性结论或效应量。
 
