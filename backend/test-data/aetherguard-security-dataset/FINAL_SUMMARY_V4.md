@@ -165,13 +165,28 @@ networksafe-benchmark/
 3. **第三优先级**: 扩展攻击 (complete_dataset/)
 4. **第四优先级**: 基础攻击 (full_test_dataset/)
 
-### 预期检测率
+### 当前实测结果（2026-07-27）
 
-| 攻击级别 | 预期检测率 |
-|---------|-----------|
-| 基础攻击 | > 95% |
-| 高级攻击 | > 90% |
-| 0day 攻击 | > 85% |
+`backend/src/__tests__/dataset/dataset-evaluation.test.ts` 在本机启发式流水线上评估了全部 4,500 个样本，结果写入 `backend/test-data/dataset-eval-report.json`：
+
+| 指标 | 实测值 |
+|---------|-----------:|
+| 攻击样本 | 3,300 |
+| 合成正常样本 | 1,200 |
+| TP / FN | 2,111 / 1,189 |
+| TN / FP | 1,200 / 0 |
+| 总体检测率 | 63.97% |
+| 合成正常样本 FPR | 0.00% |
+| median / p95 评估延迟 | 0.575 ms / 1.612 ms |
+
+| 子数据集 | 攻击检测率 | TP / FN | TN / FP |
+|---------|-----------:|--------:|--------:|
+| full_test_dataset | 89.00% | 979 / 121 | 200 / 0 |
+| complete_dataset | 59.45% | 327 / 223 | 500 / 0 |
+| advanced_dataset | 40.00% | 260 / 390 | 500 / 0 |
+| zeroday_dataset | 54.50% | 545 / 455 | 0 / 0 |
+
+原先“基础攻击 >95%、高级攻击 >90%、0day 攻击 >85%”是没有落地的目标，不是已经达到的结果。当前报告已经给出四个子数据集聚合值，但没有运行 Suricata、ModSecurity 或其他外部系统，因此不得据此声明外部产品优势。详细边界见 `docs/reports/software-validation-status-2026-07-27.md`。
 
 ---
 

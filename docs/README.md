@@ -11,6 +11,8 @@ This directory keeps production-facing documentation near the top level and move
 | `brand_story.md` | Current brand narrative |
 | `enterprise-m1-trial-readiness.md` | Enterprise trial readiness notes |
 | `productionization-status-2026-03-12.md` | Prior productionization status |
+| `reports/software-validation-status-2026-07-27.md` | Current software-only test results, claim boundaries, and unresolved failures |
+| `reports/software-validation-status-2026-07-27.json` | Machine-readable copy of the current software validation evidence |
 | `artifact-archive-index.md` | External archive location and generated artifact cleanup record |
 | `adr/` | Architecture decision records |
 | `api/` | API documentation |

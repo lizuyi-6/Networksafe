@@ -64,6 +64,25 @@ node scripts/guards/check-route-db-access.mjs
 node scripts/guards/check-no-direct-api-fetch.mjs
 ```
 
+## Current Software Validation
+
+The latest software-only local validation is recorded in:
+
+- `docs/reports/software-validation-status-2026-07-27.md`
+- `docs/reports/software-validation-status-2026-07-27.json`
+- `backend/test-data/dataset-eval-report.json`
+
+Current evidence on the tested x86_64 Linux host:
+
+- Backend: 248 Jest suites and 3,291 tests passed. Coverage is 65.90% statements, 51.41% branches, 65.90% functions, and 66.21% lines. Tests ran with Redis disabled and do not substitute for live external-service integration.
+- Synthetic dataset: 4,500 samples produced 63.97% attack detection and 0% false positives on the 1,200 tracked synthetic normal samples. These are corpus results, not production detection or FPR claims.
+- Rust fastpath: tests, Clippy, and release build passed. The latest fixed-key loopback reproduction measured 56.6k–61.6k QPS across three rounds, with a short concurrency-sweep peak of 75.1k QPS and no request errors. A stable 100k QPS result was not reproduced in this run.
+- Chromium release subset: all 10 runnable tests passed, and 1 pitch-enabled-only test was skipped. This covers the local Chromium release subset only, not every E2E file, browser, operating system, or production deployment.
+- Rescue and gateway simulator fail-closed checks passed as software tests only; they do not validate physical hardware.
+- Local AI latency, live PostgreSQL/Redis/S3/IdP/notification integrations, ARM64/cross-OS support, agent resource targets, and production network capacity remain unvalidated in this environment.
+
+The historical March 2026 Docker report remains useful as a dated snapshot, but it is not the source of truth for current software performance or dataset claims.
+
 Focused Final Defense checks:
 
 ```bash

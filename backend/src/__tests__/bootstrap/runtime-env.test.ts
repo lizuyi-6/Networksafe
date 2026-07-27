@@ -32,7 +32,16 @@ describe('validateRuntimeEnvironment (Sprint 5 R5 / V2.1)', () => {
     DB_MODE: process.env.DB_MODE,
     APP_MODE: process.env.APP_MODE,
     DISABLE_REDIS: process.env.DISABLE_REDIS,
-    ENTERPRISE_RUNTIME_MODE: process.env.ENTERPRISE_RUNTIME_MODE
+    ENTERPRISE_RUNTIME_MODE: process.env.ENTERPRISE_RUNTIME_MODE,
+    ALLOW_LOCAL_PASSWORD_LOGIN: process.env.ALLOW_LOCAL_PASSWORD_LOGIN,
+    ALLOW_BREAK_GLASS_PASSWORD_LOGIN: process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN,
+    ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS: process.env.ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS,
+    ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN: process.env.ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN,
+    OIDC_CLIENT_ID: process.env.OIDC_CLIENT_ID,
+    OIDC_CLIENT_SECRET: process.env.OIDC_CLIENT_SECRET,
+    OIDC_AUTHORIZATION_ENDPOINT: process.env.OIDC_AUTHORIZATION_ENDPOINT,
+    OIDC_TOKEN_ENDPOINT: process.env.OIDC_TOKEN_ENDPOINT,
+    OIDC_USERINFO_ENDPOINT: process.env.OIDC_USERINFO_ENDPOINT
   };
 
   function restoreEnv() {
@@ -65,6 +74,15 @@ describe('validateRuntimeEnvironment (Sprint 5 R5 / V2.1)', () => {
     process.env.DISABLE_REDIS = 'false';
     process.env.APP_MODE = 'production';
     process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+    process.env.ALLOW_LOCAL_PASSWORD_LOGIN = 'true';
+    process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = 'false';
+    delete process.env.ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS;
+    delete process.env.ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN;
+    delete process.env.OIDC_CLIENT_ID;
+    delete process.env.OIDC_CLIENT_SECRET;
+    delete process.env.OIDC_AUTHORIZATION_ENDPOINT;
+    delete process.env.OIDC_TOKEN_ENDPOINT;
+    delete process.env.OIDC_USERINFO_ENDPOINT;
   }
 
   afterEach(() => {
@@ -118,6 +136,29 @@ describe('validateRuntimeEnvironment (Sprint 5 R5 / V2.1)', () => {
     baseProductionEnv();
     process.env.ENTERPRISE_RUNTIME_MODE = 'lab';
     expect(() => validateRuntimeEnvironment()).toThrow(/ENTERPRISE_RUNTIME_MODE must be set to prod-enterprise/);
+  });
+
+  it('rejects production without local login or a complete OIDC provider', () => {
+    baseProductionEnv();
+    process.env.ALLOW_LOCAL_PASSWORD_LOGIN = 'false';
+    process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = 'false';
+    delete process.env.OIDC_CLIENT_ID;
+    delete process.env.OIDC_CLIENT_SECRET;
+    delete process.env.OIDC_AUTHORIZATION_ENDPOINT;
+    delete process.env.OIDC_TOKEN_ENDPOINT;
+    delete process.env.OIDC_USERINFO_ENDPOINT;
+
+    expect(() => validateRuntimeEnvironment()).toThrow(/No interactive login path is configured/);
+  });
+
+  it.each([
+    'ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS',
+    'ALLOW_INSECURE_AUTH_WHEN_REDIS_DOWN'
+  ])('rejects process-local authentication flag %s in production', (key) => {
+    baseProductionEnv();
+    process.env[key] = 'true';
+
+    expect(() => validateRuntimeEnvironment()).toThrow(/Process-local authentication sessions cannot be enabled/);
   });
 
   it.each([

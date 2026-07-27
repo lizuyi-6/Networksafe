@@ -4,7 +4,7 @@
 > 日期：2026-06-12
 > 阶段：平台级产品定义 / 企业 PoC
 > 文档性质：AetherGuard 平台顶层 PRD（父文档）
-> 关联文档：`docs/root-resistant-gateway-prd.md`（网关一体机子 PRD，v0.3）、`docs/product_whitepaper.md`、`docs/product_manual.md`、`docs/reports/validated-capability-status-2026-03-08.md`
+> 关联文档：`docs/root-resistant-gateway-prd.md`（网关一体机子 PRD，v0.3）、`docs/product_whitepaper.md`、`docs/product_manual.md`、`docs/reports/software-validation-status-2026-07-27.md`；历史 Docker 证据见 `docs/reports/validated-capability-status-2026-03-08.md`
 
 ---
 
@@ -12,11 +12,11 @@
 
 本 PRD 区分三类陈述：
 
-- **已验证**：在当前工作区有可复现证据（来源见 `docs/reports/validated-capability-status-2026-03-08.md`）。这类陈述可直接对外。
+- **已验证**：在当前工作区有可复现证据（当前软件来源见 `docs/reports/software-validation-status-2026-07-27.md`；历史基础设施证据必须保留原日期）。这类陈述只能连同测试边界对外。
 - **已实现待验证**：代码已存在，但尚未在真实外部环境取得性能或落地证据。这类陈述须标注"待验证"。
 - **方向性**：产品愿景与 roadmap，不属于已完成能力。
 
-性能强主张（100,000+ QPS、<10ms 本地 AI、<2% CPU、<50MB 内存、真板量产）目前**均未在本工作区验证**，不得作为已完成能力陈述。当前 smoke 实测见第 11 节。
+性能强主张（稳定 100,000+ QPS、<10ms 本地 AI、<2% CPU、<50MB 内存、真板量产）目前**均未验证**，不得作为已完成能力陈述。当前 fixed-key Rust loopback、Node 开发服务和合成语料实测见第 11 节。
 
 对外口径遵循第 14 节"宣传口径纪律"：不使用"绝对安全 / 永不失陷 / 无法绕过 / 完全防勒索 / 替代防火墙或 EDR / 自研硬件已量产 / 通过所有安全认证 / 任何 root 攻击都无效"等表述。
 
@@ -222,30 +222,28 @@ UI 显示"root-resistant active"必须同时满足：appliance 在位、策略�
 - 对象锁审计归档 + 链式校验（segment 校验含 `valid / chainValid / contentValid / linkageValid / objectLockValid`）。
 - 多租户隔离；命令 HMAC 签名；JWT/API-key 双轨认证；WebSocket 限流（Redis + 内存回退）。
 
-### 11.2 当前已验证（2026-03-08 工作区证据）
+### 11.2 当前软件验证（2026-07-27）与历史基础设施证据
 
-- Docker 运行时（backend / frontend / fastpath / postgres / redis）健康。
-- 六类部署包生成与静态校验（nginx / apache / caddy / docker_compose / binary_agent / k8s_daemonset），含 install/upgrade/rollback/healthcheck 与 manifest。
-- 审计归档对象锁 + 链式校验通过。
-- 通知 outbox 与重试跟踪（webhook smoke 观察到 retrying）。
-- AI 路由与 fastpath 配置经 `/api/config` 暴露；fastpath 接入 API 与 socket 限流。
-- 设备流 `/ws/device` + `/ws/status` 双通道；模拟设备完成 register / heartbeat / OTA / 物理确认 / reboot 全流程。
+- 当前软件证据见 `docs/reports/software-validation-status-2026-07-27.md`：后端 248 suites / 3,291 tests 全通过，覆盖率 lines 66.21%；前端、Rust、Rescue、simulator 和部署回归门禁结果均已记录。
+- 4,500 条合成语料实测为 63.97% 检测率、0% 合成正常样本 FPR；该结果不是生产检测率。
+- 2026-03-08 的 Docker、六类部署包、对象锁、通知 outbox 和模拟设备流属于历史基础设施快照，应继续绑定旧报告，不能视为本轮无 Docker 环境的重新验证。
 
-### 11.3 性能（当前 smoke 实测，非强主张）
+### 11.3 性能（2026-07-27 本机软件实测，非 SLA）
 
-| 指标 | 当前 smoke | 历史强主张（未验证） |
+| 指标 | 当前实测 | 目标或边界 |
 | --- | ---: | ---: |
-| Fastpath QPS | 1329.79 | 100,000+ |
-| p95 延迟 | 21 ms | < 10 ms |
-| Agent 代理 CPU | 6.22% | < 2% |
-| Agent 代理内存 | 99.64 MB | < 50 MB |
-| 本地 AI 延迟 | 不可用（Ollama 未运行） | < 10 ms |
+| Rust 固定 key rate-check | 三轮 56.6k–61.6k QPS；短扫描峰值 75.1k | loopback，稳定 100,000+ 未复现 |
+| Rust p99 | 三轮 78–79 ms；峰值档 108 ms | 客户端和服务端共享 8 个逻辑 CPU |
+| Node 开发控制面 `/health` | 三轮均值 3.19k QPS | 单进程开发模式，不是生产上限 |
+| Agent CPU / 内存 | 本轮未测 | `<2%` / `<50MB` 仍是未验证目标 |
+| 本地 AI 延迟 | 本轮无真实模型 | `<10ms` 仍是未验证目标 |
 
-对外陈述性能时，以"当前 smoke 实测"为准；强主张须取得更强证据后再使用。
+对外陈述性能时必须同时给出 endpoint、fixed-key、loopback、并发、pipeline、运行模式和共享主机边界。
 
 ### 11.4 尚未在本工作区验证
 
-- 100,000+ QPS、<10ms 本地 AI、<2% CPU、<50MB 内存。
+- 稳定 100,000+ QPS、<10ms 本地 AI、<2% CPU、<50MB 内存。
+- live PostgreSQL/Redis/S3/IdP/通知/模型服务，Firefox/WebKit/Edge、ARM64 和跨 OS。
 - 真实 Gateway Appliance（STM32H5/U5 安全控制器）板载固件烧录与真板 rollout；前代 ESP32-WROOM-32 硬件方案已于 2026-06-13 退役并归档至 `X:\repos\Networksafe-archive\20260513-pre-cleanup`，不再作为目标硬件。
 - 真实外部 Linux 主机上 binary_agent 的 install/upgrade/rollback。
 - Caddy / Apache / Kubernetes 部署包在真实外部基础设施的生产执行。
@@ -298,7 +296,8 @@ UI 显示"root-resistant active"必须同时满足：appliance 在位、策略�
 
 - `docs/root-resistant-gateway-prd.md` —— 网关一体机子 PRD（v0.3），本 PRD 第 8 节的展开。
 - `docs/product_whitepaper.md`、`docs/product_manual.md`、`docs/technical_manual.md` —— 产品与使用文档。
-- `docs/reports/validated-capability-status-2026-03-08.md` —— 验证状态来源（本 PRD 第 11 节依据）。
+- `docs/reports/software-validation-status-2026-07-27.md` 及 JSON —— 当前软件验证状态来源（本 PRD 第 11 节依据）。
+- `docs/reports/validated-capability-status-2026-03-08.md` —— 历史 Docker、Object Lock、通知和模拟设备流快照。
 - `docs/security-audit/` —— 安全审计发现（2026-06 系列报告）。
 - `docs/adr/` —— 架构决策记录（信封兼容、模块边界、Postgres 写路径、启动入口统一）。
 - `CLAUDE.md` —— Final Defense Mode 与 root-resistant 的权威工程定义。

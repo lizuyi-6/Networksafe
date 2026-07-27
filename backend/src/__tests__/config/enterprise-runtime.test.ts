@@ -10,6 +10,7 @@ import {
     isLabRuntime,
     allowDemoFeatures,
     allowGatewayDestructiveCommands,
+    allowLabInMemoryAuthSessions,
     allowPasswordLogin,
     oidcEnabled,
     type EnterpriseRuntimeMode
@@ -17,13 +18,19 @@ import {
 
 describe('enterprise-runtime', () => {
     const originalMode = process.env.ENTERPRISE_RUNTIME_MODE;
+    const originalLocalPasswordLogin = process.env.ALLOW_LOCAL_PASSWORD_LOGIN;
     const originalBreakGlass = process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN;
+    const originalLabInMemorySessions = process.env.ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS;
 
     afterEach(() => {
         if (originalMode === undefined) delete process.env.ENTERPRISE_RUNTIME_MODE;
         else process.env.ENTERPRISE_RUNTIME_MODE = originalMode;
+        if (originalLocalPasswordLogin === undefined) delete process.env.ALLOW_LOCAL_PASSWORD_LOGIN;
+        else process.env.ALLOW_LOCAL_PASSWORD_LOGIN = originalLocalPasswordLogin;
         if (originalBreakGlass === undefined) delete process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN;
         else process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = originalBreakGlass;
+        if (originalLabInMemorySessions === undefined) delete process.env.ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS;
+        else process.env.ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS = originalLabInMemorySessions;
     });
 
     it('getEnterpriseRuntimeMode returns a valid mode', () => {
@@ -59,6 +66,7 @@ describe('enterprise-runtime', () => {
 
     it.each([undefined, 'false'])('disables production password login when the explicit flag is %s', (flag) => {
         process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        delete process.env.ALLOW_LOCAL_PASSWORD_LOGIN;
         if (flag === undefined) delete process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN;
         else process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = flag;
 
@@ -67,9 +75,26 @@ describe('enterprise-runtime', () => {
 
     it('enables production password login only when the explicit flag is true', () => {
         process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        delete process.env.ALLOW_LOCAL_PASSWORD_LOGIN;
         process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = 'true';
 
         expect(allowPasswordLogin()).toBe(true);
+    });
+
+    it('enables the normal single-server local operator login flag', () => {
+        process.env.ENTERPRISE_RUNTIME_MODE = 'prod-enterprise';
+        process.env.ALLOW_LOCAL_PASSWORD_LOGIN = 'true';
+        process.env.ALLOW_BREAK_GLASS_PASSWORD_LOGIN = 'false';
+
+        expect(allowPasswordLogin()).toBe(true);
+    });
+
+    it('allows process-local sessions only in an explicitly configured non-production lab', () => {
+        process.env.ALLOW_LAB_IN_MEMORY_AUTH_SESSIONS = 'true';
+
+        expect(allowLabInMemoryAuthSessions('lab', 'development')).toBe(true);
+        expect(allowLabInMemoryAuthSessions('trial', 'development')).toBe(false);
+        expect(allowLabInMemoryAuthSessions('lab', 'production')).toBe(false);
     });
 
     it.each([undefined, 'false'])('disables demo features in prod-enterprise when ALLOW_DEMO_FEATURES is %s', (flag) => {

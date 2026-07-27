@@ -1,6 +1,6 @@
 # AetherGuard 项目答辩 PPT 插页文案
 
-> Validation Note (2026-03-08): When preparing the defense deck, use `docs/reports/validated-capability-status-2026-03-08.md` as the source of truth for current capability claims. The strongest historical claims around `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, and fully proven physical hardware rollout should not be presented as completed in the current workspace.
+> Validation Note (2026-07-27): When preparing the defense deck, use `docs/reports/software-validation-status-2026-07-27.md` as the source of truth for current software claims. Use 63.97% only for the tracked synthetic corpus, and 56.6k–61.6k QPS only for the latest fixed-key Rust loopback reproduction. Do not present stable `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, live external integrations, production detection/FPR, cross-platform rollout or physical hardware as completed.
 
 以下文案按 `P1` 到 `P15` 顺序编排，可直接拆分插入答辩 PPT。每页均采用“1 段主文案 + 3-5 个要点”的中密度结构，便于与架构图、流程图、对比图或数据图配合排版。
 
@@ -67,8 +67,9 @@ AetherGuard 的第三层核心壁垒，是其 7 层多 Agent AI 决策系统与�
 
 在性能设计上，AetherGuard 现阶段已经通过轻量化 Agent、事件驱动后端、WebSocket 长连接和本地处理链路，实现了高吞吐、低时延、低资源占用的运行特征；而“Rust 驱动”的含义，在当前答辩口径中更适合作为底层性能优化方向，面向未来的流量快路径、设备驱动与高频检测模块继续增强系统性能，而不是将其表述为已完成的全栈实现。
 
-- 当前平台已具备 `<5ms` 级攻击检测延迟、`<2%` Agent CPU 开销和 `<50MB` Agent 内存占用能力。
-- 单节点吞吐能力达到 `100,000+ QPS`，能够支撑高并发业务场景下的实时检测与策略执行。
+- 当前 4,500 条合成语料的本机启发式评估延迟为 median `0.522ms`、p95 `1.530ms`；它不是网络端到端延迟或真实 AI 模型延迟。
+- 当前 Rust 固定 key loopback 复测为三轮 `56.6k–61.6k QPS`，短扫描峰值 `75.1k QPS`，全部零错误；本轮没有稳定复现 `100,000+ QPS`。
+- Agent `<2% CPU` 与 `<50MB` 内存仍是待独立测量的产品目标。
 - 分布式 Agent 与本地处理链路避免了额外流量绕行，使性能优化与安全增强可以同时成立。
 - WebSocket 实时通信、Redis 状态同步与轻量任务调度共同支撑控制平面的快速响应。
 - Rust 方向可作为后续在流量快路径、设备侧执行模块和高频安全分析引擎上的性能演进抓手。
@@ -108,7 +109,7 @@ AetherGuard 面向的是一个持续扩张且正在发生结构性变化的安�
 如果将 AetherGuard 与传统 WAF、云安全服务和单点式 AI 安全工具放在同一矩阵中比较，它的优势不是单一指标领先，而是多项关键能力同时成立：部署更轻、响应更快、数据更可控、软硬件联动更强、智能决策链更完整。正是这些能力的组合，形成了平台在项目答辩中最核心的综合竞争力。
 
 - 在部署复杂度上，AetherGuard 通过自动化向导与设备辅助接入，将上线周期压缩到可控的分钟级。
-- 在响应速度上，平台通过本地 Agent 和轻量链路实现 `<5ms` 级检测延迟，明显优于依赖流量绕行的方案。
+- 在响应速度上，当前证据只支持本机合成语料启发式评估的 median `0.522ms` 和 p95 `1.530ms`；尚无外部方案端到端对照实验。
 - 在数据主权上，平台支持完全本地化 AI 推理与私有化部署，更适合高合规和高敏感场景。
 - 在能力完整性上，平台同时具备多 Agent AI、攻击模拟、漏洞扫描、硬件联动和审计追踪能力。
 - 在可靠性上，分布式执行与设备联动降低了单点故障风险，使防御体系更具韧性和可持续运营性。

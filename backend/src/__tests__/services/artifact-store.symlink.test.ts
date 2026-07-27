@@ -182,4 +182,64 @@ describe('artifactStoreService symlink-escape prevention', () => {
     const result = await canCreateSymlink();
     expect(typeof result).toBe('boolean');
   });
+
+  // ---- nested-key regression (production audit-archive fallback path) ----
+  //
+  // audit-segment.service.ts writes its fallback segment with a key that
+  // itself contains "/" ("<tenant>/<segmentKey>.json"). mkdir previously
+  // covered only the scope dir, so the write threw ENOENT in production and
+  // every audit segment fell through to the degraded (artifactRef:null) row
+  // while the mocked-fs suite stayed green.
+
+  it(
+    'writeJson creates parent directories for a key containing subdirectories',
+    async () => {
+      const base = await makeTempBase();
+      try {
+        const store = await createStore(base);
+        const result = await store.writeJson(
+          'audit-segments-fallback',
+          'platform/2026-07-26T11-32-33-950Z-a48ef8ed',
+          { segmentId: 'a48ef8ed', recordCount: 1 }
+        );
+
+        // The file must actually exist on disk — this is the assertion the
+        // mocked suite could never make.
+        const onDisk = await fs.readFile(result.location, 'utf8');
+        expect(JSON.parse(onDisk).segmentId).toBe('a48ef8ed');
+        expect(result.artifactRef).toBe(
+          'artifact://local/audit-segments-fallback/platform/2026-07-26T11-32-33-950Z-a48ef8ed.json'
+        );
+      } finally {
+        delete process.env.ARTIFACTS_DIR;
+        await fs.rm(base, { recursive: true, force: true });
+      }
+    }
+  );
+
+  it(
+    'writeText rejects when a subdirectory INSIDE the key is an escaping symlink',
+    async () => {
+      const base = await makeTempBase();
+      try {
+        const outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ag-outside-key-'));
+        // scope dir is legitimate...
+        const scopeDir = path.join(base, 'audit-segments-fallback');
+        await fs.mkdir(scopeDir, { recursive: true });
+        // ...but a directory named inside the KEY is a symlink pointing out.
+        // Checking only the scope dir would have let this write escape.
+        await fs.symlink(outsideDir, path.join(scopeDir, 'tenant-evil'));
+
+        const store = await createStore(base);
+        await expect(
+          store.writeText('audit-segments-fallback', 'tenant-evil/seg.json', '{}')
+        ).rejects.toThrow('backend.artifact_path_escape_detected');
+
+        await fs.rm(outsideDir, { recursive: true, force: true });
+      } finally {
+        delete process.env.ARTIFACTS_DIR;
+        await fs.rm(base, { recursive: true, force: true });
+      }
+    }
+  );
 });

@@ -213,7 +213,7 @@ const DeviceCard = ({
                     <Settings size={12} />
                 </button>
                 <div onClick={(e) => e.stopPropagation()} className="ml-auto">
-                    <Link to={`/devices/board-status/${device.deviceId}`} className="px-3 py-2 text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition-all flex items-center gap-1">
+                    <Link to={`/devices/board-status/${encodeURIComponent(device.deviceId)}`} className="px-3 py-2 text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition-all flex items-center gap-1">
                         <Activity size={12} /> {t('devices.view_status')}
                     </Link>
                 </div>

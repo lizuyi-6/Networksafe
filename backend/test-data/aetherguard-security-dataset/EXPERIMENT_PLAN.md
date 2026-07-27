@@ -1,5 +1,7 @@
 # AetherGuard 核心期刊论文实验方案
 
+> **状态更新（2026-07-27）**：本文是实验计划，不是实验结果。当前只完成了仓库内 4,500 条合成样本的本地启发式评估，结果为 63.97% 检测率、0% 合成正常样本 FPR、median 0.575 ms、p95 1.612 ms。子数据集攻击检测率为 full 89.00%、complete 59.45%、advanced 40.00%、zeroday 54.50%。下列 Xeon 环境、Suricata/ModSecurity/Fail2ban/iptables 对比、资源消耗和消融实验尚未执行；不得把计划参数或预期值写成已验证数据。当前证据见 `backend/test-data/dataset-eval-report.json` 和 `docs/reports/software-validation-status-2026-07-27.md`。
+
 **目标期刊**: 信息安全学报（核心期刊）  
 **设计时间**: 2026-03-13  
 **预计完成**: 5-7 天

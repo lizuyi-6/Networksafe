@@ -187,7 +187,7 @@ Both passed. This supports the implementation claim that route handlers avoid di
 
 The validated capability report dated 2026-03-08 records a Docker runtime with backend, frontend, fastpath, Postgres, and Redis; deployment bundle generation and static validation for nginx, Apache, Caddy, Docker Compose, binary agent, and Kubernetes daemonset; object-lock-backed audit archive verification; notification outbox behavior; configurable AI routing and fastpath integration; and a simulated ESP32-compatible device flow including registration, heartbeat, OTA status, physical confirmation requirement, physical confirmation acknowledgment, and follow-up reboot dispatch.
 
-The same report records a smoke performance snapshot of 1329.79 QPS and 21 ms p95 latency for the fastpath path. This is a smoke result, not a production-scale performance claim.
+The same report records a historical smoke performance snapshot of 1329.79 QPS and 21 ms p95 latency. It has been superseded for current software claims by `docs/reports/software-validation-status-2026-07-27.md`. The newer fixed-key Rust loopback reproduction measured 56.6k--61.6k QPS over three rounds and a 75.1k short-sweep peak, but did not reproduce stable 100k QPS. Neither snapshot is a production-scale performance claim, and neither validates the physical hardware discussed in this paper.
 
 The deployment bundle validation report records all six bundle targets passing their static or containerized validations. The release readiness report, however, records an overall no-go decision because external Linux binary-agent install/healthcheck/upgrade/rollback evidence failed at the healthcheck step. This no-go result is important: the paper should not imply a completed external host lifecycle validation.
 
@@ -295,4 +295,3 @@ To be completed by the authors.
 8. M. Bellare, R. Canetti, and H. Krawczyk, "Keying Hash Functions for Message Authentication," CRYPTO, 1996.
 9. P. A. Karger and R. R. Schell, "Thirty Years Later: Lessons from the Multics Security Evaluation," ACSAC, 2002.
 10. AetherGuard repository artifacts listed in `papers/hardware-final-defense/evidence-register.md`.
-

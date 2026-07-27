@@ -41,6 +41,10 @@ function sanitizeKey(value: string): string {
   return String(value || '').replace(/[^a-zA-Z0-9._/-]/g, '_').replace(/\/+/g, '/').replace(/^\/|\/$/g, '') || 'artifact';
 }
 
+function ensureJsonExtension(value: string): string {
+  return value.toLowerCase().endsWith('.json') ? value : `${value}.json`;
+}
+
 function parseLocalArtifactRef(artifactRef: string): string | null {
   const prefix = 'artifact://local/';
   if (!artifactRef.startsWith(prefix)) {
@@ -144,7 +148,7 @@ class LocalArtifactStore implements ArtifactStore {
   }
 
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
-    return this.writeText(scope, `${key}.json`, JSON.stringify(payload, null, 2), 'application/json');
+    return this.writeText(scope, ensureJsonExtension(key), JSON.stringify(payload, null, 2), 'application/json');
   }
 
   async writeText(scope: string, key: string, payload: string, _contentType = 'text/plain; charset=utf-8'): Promise<ArtifactWriteResult> {
@@ -155,8 +159,14 @@ class LocalArtifactStore implements ArtifactStore {
     const resolvedTargetDir = path.resolve(targetDir);
     const resolvedTargetPath = path.resolve(targetPath);
     this.assertWithinBaseDir(resolvedTargetPath, resolvedTargetDir);
-    await fs.mkdir(resolvedTargetDir, { recursive: true });
-    await this.assertRealDirWithinBaseDir(resolvedTargetDir);
+    // A key may itself contain "/" (e.g. audit fallback writes
+    // "<tenant>/<segment>.json"). mkdir must cover the key's own parent
+    // directories, not just the scope dir, or writeFile throws ENOENT.
+    // Verifying the real parent also closes the symlinked-subdirectory gap
+    // that checking only the scope dir left open.
+    const resolvedParentDir = path.dirname(resolvedTargetPath);
+    await fs.mkdir(resolvedParentDir, { recursive: true });
+    await this.assertRealDirWithinBaseDir(resolvedParentDir);
     await fs.writeFile(resolvedTargetPath, payload, 'utf8');
     return {
       artifactRef: `artifact://local/${safeScope}/${safeKey}`,
@@ -172,8 +182,10 @@ class LocalArtifactStore implements ArtifactStore {
     const resolvedTargetDir = path.resolve(targetDir);
     const resolvedTargetPath = path.resolve(targetPath);
     this.assertWithinBaseDir(resolvedTargetPath, resolvedTargetDir);
-    await fs.mkdir(resolvedTargetDir, { recursive: true });
-    await this.assertRealDirWithinBaseDir(resolvedTargetDir);
+    // Same nested-key rule as writeText: mkdir the key's real parent.
+    const resolvedParentDir = path.dirname(resolvedTargetPath);
+    await fs.mkdir(resolvedParentDir, { recursive: true });
+    await this.assertRealDirWithinBaseDir(resolvedParentDir);
     await fs.writeFile(resolvedTargetPath, payload);
     return {
       artifactRef: `artifact://local/${safeScope}/${safeKey}`,
@@ -255,7 +267,7 @@ class S3ArtifactStore implements ArtifactStore {
   }
 
   async writeJson(scope: string, key: string, payload: unknown): Promise<ArtifactWriteResult> {
-    return this.writeText(scope, `${key}.json`, JSON.stringify(payload, null, 2), 'application/json');
+    return this.writeText(scope, ensureJsonExtension(key), JSON.stringify(payload, null, 2), 'application/json');
   }
 
   async writeText(scope: string, key: string, payload: string, contentType = 'text/plain; charset=utf-8'): Promise<ArtifactWriteResult> {

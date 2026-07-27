@@ -37,7 +37,10 @@ import {
     touchAuthUserLastLogin,
     updateAuthUserPassword
 } from '../../modules/auth/auth-user.repository';
-import { allowPasswordLogin } from '../../config/enterprise-runtime';
+import {
+    allowLabInMemoryAuthSessions,
+    allowPasswordLogin
+} from '../../config/enterprise-runtime';
 import { getRuntimeProfile } from '../../config/platform-runtime';
 import { oidcAuthService } from '../../services/oidc-auth.service';
 import { buildAllowedOrigins } from '../../bootstrap/allowed-origins';
@@ -65,7 +68,12 @@ async function establishTrackedSession(req: AuthenticatedRequest, userId: string
     sessionId: string;
     concurrentWarning: string | null;
 } | null> {
-    if (process.env.NODE_ENV === 'production' && !redisService.isAvailable()) {
+    const redisAvailable = redisService.isAvailable();
+    if (!redisAvailable && !allowLabInMemoryAuthSessions()) {
+        logger.warn('Login rejected because no authoritative session store is available', {
+            userId,
+            runtimeMode: process.env.ENTERPRISE_RUNTIME_MODE || null
+        });
         return null;
     }
 

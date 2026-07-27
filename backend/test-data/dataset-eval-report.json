@@ -1,4 +1,8 @@
 {
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-27T12:47:26.918Z",
+  "evaluationBoundary": "Tracked synthetic corpus evaluated by the local heuristic pipeline and input validator; not production traffic, end-to-end network latency, or an external product comparison.",
+  "hardPassThresholdEnforced": false,
   "samples": 4500,
   "TP": 2111,
   "FN": 1189,
@@ -6,8 +10,62 @@
   "FP": 0,
   "overallDetectionRate": 0.6396969696969697,
   "overallFpr": 0,
-  "medianLatencyMs": 0.5143,
-  "p95LatencyMs": 3.4705,
+  "medianLatencyMs": 0.575185,
+  "p95LatencyMs": 1.612131,
+  "perDataset": {
+    "full_test_dataset": {
+      "total": 1300,
+      "expected_attacks": 1100,
+      "expected_normal": 200,
+      "detected": 979,
+      "missed": 121,
+      "false_positives": 0,
+      "true_negatives": 200,
+      "detection_rate": 0.89,
+      "false_positive_rate": 0,
+      "median_latency_ms": 0.821261,
+      "p95_latency_ms": 2.08856
+    },
+    "complete_dataset": {
+      "total": 1050,
+      "expected_attacks": 550,
+      "expected_normal": 500,
+      "detected": 327,
+      "missed": 223,
+      "false_positives": 0,
+      "true_negatives": 500,
+      "detection_rate": 0.5945454545454546,
+      "false_positive_rate": 0,
+      "median_latency_ms": 0.593547,
+      "p95_latency_ms": 1.527438
+    },
+    "advanced_dataset": {
+      "total": 1150,
+      "expected_attacks": 650,
+      "expected_normal": 500,
+      "detected": 260,
+      "missed": 390,
+      "false_positives": 0,
+      "true_negatives": 500,
+      "detection_rate": 0.4,
+      "false_positive_rate": 0,
+      "median_latency_ms": 0.549028,
+      "p95_latency_ms": 1.036374
+    },
+    "zeroday_dataset": {
+      "total": 1000,
+      "expected_attacks": 1000,
+      "expected_normal": 0,
+      "detected": 545,
+      "missed": 455,
+      "false_positives": 0,
+      "true_negatives": 0,
+      "detection_rate": 0.545,
+      "false_positive_rate": 0,
+      "median_latency_ms": 0.380765,
+      "p95_latency_ms": 1.124902
+    }
+  },
   "perType": {
     "sql_injection": {
       "total": 200,
@@ -19,8 +77,8 @@
       "true_negatives": 0,
       "detection_rate": 0.64,
       "false_positive_rate": 0,
-      "median_latency_ms": 2.4068,
-      "p95_latency_ms": 9.4775
+      "median_latency_ms": 1.384257,
+      "p95_latency_ms": 3.268828
     },
     "xss": {
       "total": 200,
@@ -32,8 +90,8 @@
       "true_negatives": 0,
       "detection_rate": 0.98,
       "false_positive_rate": 0,
-      "median_latency_ms": 3.282,
-      "p95_latency_ms": 7.0634
+      "median_latency_ms": 1.479175,
+      "p95_latency_ms": 2.240392
     },
     "command_injection": {
       "total": 200,
@@ -45,8 +103,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 2.7311,
-      "p95_latency_ms": 5.5974
+      "median_latency_ms": 1.283135,
+      "p95_latency_ms": 2.041547
     },
     "path_traversal": {
       "total": 150,
@@ -58,8 +116,8 @@
       "true_negatives": 0,
       "detection_rate": 0.7,
       "false_positive_rate": 0,
-      "median_latency_ms": 1.3118,
-      "p95_latency_ms": 3.3495
+      "median_latency_ms": 1.204346,
+      "p95_latency_ms": 1.796102
     },
     "brute_force": {
       "total": 150,
@@ -71,8 +129,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.28581,
-      "p95_latency_ms": 0.41534000000000004
+      "median_latency_ms": 0.5854424,
+      "p95_latency_ms": 0.783223
     },
     "ddos": {
       "total": 100,
@@ -84,8 +142,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.013136666666666666,
-      "p95_latency_ms": 0.024135000000000004
+      "median_latency_ms": 0.2470996,
+      "p95_latency_ms": 0.26550440000000003
     },
     "port_scan": {
       "total": 100,
@@ -97,8 +155,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.2117,
-      "p95_latency_ms": 0.28315999999999997
+      "median_latency_ms": 0.4525008,
+      "p95_latency_ms": 0.5145284
     },
     "normal": {
       "total": 1200,
@@ -110,8 +168,8 @@
       "true_negatives": 1200,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.5531,
-      "p95_latency_ms": 0.9998
+      "median_latency_ms": 0.582002,
+      "p95_latency_ms": 0.9789
     },
     "xxe": {
       "total": 100,
@@ -123,8 +181,8 @@
       "true_negatives": 0,
       "detection_rate": 0.79,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4474,
-      "p95_latency_ms": 1.297
+      "median_latency_ms": 0.469132,
+      "p95_latency_ms": 1.570397
     },
     "ssrf": {
       "total": 100,
@@ -136,8 +194,8 @@
       "true_negatives": 0,
       "detection_rate": 0.2,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.394,
-      "p95_latency_ms": 0.7262
+      "median_latency_ms": 0.496315,
+      "p95_latency_ms": 0.652962
     },
     "deserialization": {
       "total": 100,
@@ -149,8 +207,8 @@
       "true_negatives": 0,
       "detection_rate": 0.54,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.5781,
-      "p95_latency_ms": 1.4917
+      "median_latency_ms": 0.964795,
+      "p95_latency_ms": 1.435328
     },
     "file_upload": {
       "total": 100,
@@ -162,8 +220,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.5474,
-      "p95_latency_ms": 1.2926
+      "median_latency_ms": 1.184379,
+      "p95_latency_ms": 2.816773
     },
     "jwt_attack": {
       "total": 100,
@@ -175,8 +233,8 @@
       "true_negatives": 0,
       "detection_rate": 0.24,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.5383,
-      "p95_latency_ms": 0.6946
+      "median_latency_ms": 0.660164,
+      "p95_latency_ms": 1.264526
     },
     "ldap_injection": {
       "total": 50,
@@ -188,8 +246,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.3657,
-      "p95_latency_ms": 0.6759
+      "median_latency_ms": 0.812841,
+      "p95_latency_ms": 1.011777
     },
     "http_smuggling": {
       "total": 100,
@@ -201,8 +259,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.301,
-      "p95_latency_ms": 0.6178
+      "median_latency_ms": 0.410321,
+      "p95_latency_ms": 0.46031
     },
     "ssti": {
       "total": 100,
@@ -214,8 +272,8 @@
       "true_negatives": 0,
       "detection_rate": 0.46,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.3397,
-      "p95_latency_ms": 1.0582
+      "median_latency_ms": 0.359074,
+      "p95_latency_ms": 1.320015
     },
     "oauth_bypass": {
       "total": 100,
@@ -227,8 +285,8 @@
       "true_negatives": 0,
       "detection_rate": 0.33,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4774,
-      "p95_latency_ms": 0.9795
+      "median_latency_ms": 0.541499,
+      "p95_latency_ms": 1.21355
     },
     "api_abuse": {
       "total": 100,
@@ -240,8 +298,8 @@
       "true_negatives": 0,
       "detection_rate": 0.27,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.453,
-      "p95_latency_ms": 0.9043
+      "median_latency_ms": 0.488822,
+      "p95_latency_ms": 0.973585
     },
     "websocket_attack": {
       "total": 50,
@@ -253,8 +311,8 @@
       "true_negatives": 0,
       "detection_rate": 0.3,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.1961,
-      "p95_latency_ms": 0.4602
+      "median_latency_ms": 0.308989,
+      "p95_latency_ms": 0.647441
     },
     "cache_poison": {
       "total": 50,
@@ -266,8 +324,8 @@
       "true_negatives": 0,
       "detection_rate": 0.18,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4309,
-      "p95_latency_ms": 0.835
+      "median_latency_ms": 0.501192,
+      "p95_latency_ms": 1.007998
     },
     "encoding_bypass": {
       "total": 100,
@@ -279,8 +337,8 @@
       "true_negatives": 0,
       "detection_rate": 0.13,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.519,
-      "p95_latency_ms": 1.3529
+      "median_latency_ms": 0.5109,
+      "p95_latency_ms": 1.363921
     },
     "protocol_pollution": {
       "total": 50,
@@ -292,8 +350,8 @@
       "true_negatives": 0,
       "detection_rate": 0.34,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4129,
-      "p95_latency_ms": 0.6532
+      "median_latency_ms": 0.477061,
+      "p95_latency_ms": 0.800839
     },
     "log4j_injection": {
       "total": 100,
@@ -305,8 +363,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4383,
-      "p95_latency_ms": 0.9106
+      "median_latency_ms": 0.516687,
+      "p95_latency_ms": 0.908022
     },
     "spring4shell": {
       "total": 100,
@@ -318,8 +376,8 @@
       "true_negatives": 0,
       "detection_rate": 0.75,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.2534,
-      "p95_latency_ms": 0.5252
+      "median_latency_ms": 0.345121,
+      "p95_latency_ms": 0.654601
     },
     "text4shell": {
       "total": 100,
@@ -331,8 +389,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.853,
-      "p95_latency_ms": 2.07
+      "median_latency_ms": 0.928923,
+      "p95_latency_ms": 1.599079
     },
     "prototype_pollution": {
       "total": 100,
@@ -344,8 +402,8 @@
       "true_negatives": 0,
       "detection_rate": 0.18,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.2893,
-      "p95_latency_ms": 0.9158
+      "median_latency_ms": 0.309823,
+      "p95_latency_ms": 1.018945
     },
     "http_smuggling_advanced": {
       "total": 100,
@@ -357,8 +415,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4152,
-      "p95_latency_ms": 0.6445
+      "median_latency_ms": 0.376634,
+      "p95_latency_ms": 0.420434
     },
     "type_confusion": {
       "total": 100,
@@ -370,8 +428,8 @@
       "true_negatives": 0,
       "detection_rate": 0.11,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4503,
-      "p95_latency_ms": 0.8096
+      "median_latency_ms": 0.475026,
+      "p95_latency_ms": 0.906526
     },
     "redos": {
       "total": 100,
@@ -383,8 +441,8 @@
       "true_negatives": 0,
       "detection_rate": 0.2,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.5317,
-      "p95_latency_ms": 0.695
+      "median_latency_ms": 0.608002,
+      "p95_latency_ms": 0.919644
     },
     "unicode_homoglyph": {
       "total": 100,
@@ -396,8 +454,8 @@
       "true_negatives": 0,
       "detection_rate": 0.06,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4769,
-      "p95_latency_ms": 0.7744
+      "median_latency_ms": 0.480351,
+      "p95_latency_ms": 0.978925
     },
     "graphql_injection": {
       "total": 100,
@@ -409,8 +467,8 @@
       "true_negatives": 0,
       "detection_rate": 0.36,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.2387,
-      "p95_latency_ms": 0.5172
+      "median_latency_ms": 0.320454,
+      "p95_latency_ms": 0.655903
     },
     "nosql_injection_advanced": {
       "total": 100,
@@ -422,8 +480,8 @@
       "true_negatives": 0,
       "detection_rate": 0.79,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.2186,
-      "p95_latency_ms": 0.5047
+      "median_latency_ms": 0.306945,
+      "p95_latency_ms": 0.341852
     }
   },
   "fpSamples": [],
@@ -431,27 +489,731 @@
     {
       "id": "sqli_0001",
       "type": "sql_injection",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "01_sql_injection.json",
       "payload": "' group by 1--"
     },
     {
       "id": "sqli_0006",
       "type": "sql_injection",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "01_sql_injection.json",
       "payload": "admin'--"
     },
     {
       "id": "sqli_0007",
       "type": "sql_injection",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "01_sql_injection.json",
       "payload": "{'$gt': ''}"
     },
     {
       "id": "sqli_0011",
       "type": "sql_injection",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "01_sql_injection.json",
       "payload": "1 OR 1=1"
     },
     {
       "id": "sqli_0014",
       "type": "sql_injection",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "01_sql_injection.json",
       "payload": "' having 1=1--"
+    },
+    {
+      "id": "xss_0053",
+      "type": "xss",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "02_xss.json",
+      "payload": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>"
+    },
+    {
+      "id": "xss_0064",
+      "type": "xss",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "02_xss.json",
+      "payload": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>"
+    },
+    {
+      "id": "xss_0089",
+      "type": "xss",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "02_xss.json",
+      "payload": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>"
+    },
+    {
+      "id": "xss_0159",
+      "type": "xss",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "02_xss.json",
+      "payload": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>"
+    },
+    {
+      "id": "path_0003",
+      "type": "path_traversal",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "04_path_traversal.json",
+      "payload": "/etc/hosts"
+    },
+    {
+      "id": "path_0006",
+      "type": "path_traversal",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "04_path_traversal.json",
+      "payload": "/root/.bash_history"
+    },
+    {
+      "id": "path_0009",
+      "type": "path_traversal",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "04_path_traversal.json",
+      "payload": "/etc/hosts"
+    },
+    {
+      "id": "path_0010",
+      "type": "path_traversal",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "04_path_traversal.json",
+      "payload": "/etc/hosts"
+    },
+    {
+      "id": "path_0011",
+      "type": "path_traversal",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "04_path_traversal.json",
+      "payload": "/proc/self/environ"
+    },
+    {
+      "id": "xxe_0015",
+      "type": "xxe",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "08_xxe.json",
+      "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>"
+    },
+    {
+      "id": "xxe_0016",
+      "type": "xxe",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "08_xxe.json",
+      "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>"
+    },
+    {
+      "id": "xxe_0020",
+      "type": "xxe",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "08_xxe.json",
+      "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>"
+    },
+    {
+      "id": "xxe_0024",
+      "type": "xxe",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "08_xxe.json",
+      "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:22\">]><foo>&xxe;</foo>"
+    },
+    {
+      "id": "xxe_0032",
+      "type": "xxe",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "08_xxe.json",
+      "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>"
+    },
+    {
+      "id": "ssrf_0000",
+      "type": "ssrf",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "09_ssrf.json",
+      "payload": "http://127.0.0.1#example.com"
+    },
+    {
+      "id": "ssrf_0002",
+      "type": "ssrf",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "09_ssrf.json",
+      "payload": "http://127.0.0.1:22"
+    },
+    {
+      "id": "ssrf_0003",
+      "type": "ssrf",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "09_ssrf.json",
+      "payload": "http://127.0.0.1"
+    },
+    {
+      "id": "ssrf_0004",
+      "type": "ssrf",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "09_ssrf.json",
+      "payload": "http://127.0.0.1:80"
+    },
+    {
+      "id": "ssrf_0006",
+      "type": "ssrf",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "09_ssrf.json",
+      "payload": "http://[::1]"
+    },
+    {
+      "id": "deser_0001",
+      "type": "deserialization",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "10_deserialization.json",
+      "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}"
+    },
+    {
+      "id": "deser_0007",
+      "type": "deserialization",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "10_deserialization.json",
+      "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}"
+    },
+    {
+      "id": "deser_0009",
+      "type": "deserialization",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "10_deserialization.json",
+      "payload": "{\"__class__\":\"stdClass\",\"test\":\"value\"}"
+    },
+    {
+      "id": "deser_0011",
+      "type": "deserialization",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "10_deserialization.json",
+      "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}"
+    },
+    {
+      "id": "deser_0013",
+      "type": "deserialization",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "10_deserialization.json",
+      "payload": "{\"@type\":\"java.net.Inet4Address\",\"val\":\"127.0.0.1\"}"
+    },
+    {
+      "id": "jwt_0001",
+      "type": "jwt_attack",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "12_jwt.json",
+      "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SIGNATURE_PLACEHOLDER"
+    },
+    {
+      "id": "jwt_0002",
+      "type": "jwt_attack",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "12_jwt.json",
+      "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    },
+    {
+      "id": "jwt_0004",
+      "type": "jwt_attack",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "12_jwt.json",
+      "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    },
+    {
+      "id": "jwt_0005",
+      "type": "jwt_attack",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "12_jwt.json",
+      "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    },
+    {
+      "id": "jwt_0006",
+      "type": "jwt_attack",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "12_jwt.json",
+      "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    },
+    {
+      "id": "ssti_0000",
+      "type": "ssti",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "16_ssti.json",
+      "payload": "{{self.__class__}}"
+    },
+    {
+      "id": "ssti_0002",
+      "type": "ssti",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "16_ssti.json",
+      "payload": "{{self.__class__}}"
+    },
+    {
+      "id": "ssti_0003",
+      "type": "ssti",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "16_ssti.json",
+      "payload": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}"
+    },
+    {
+      "id": "ssti_0009",
+      "type": "ssti",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "16_ssti.json",
+      "payload": "{%import os%}{{os.popen('id').read()}}"
+    },
+    {
+      "id": "ssti_0011",
+      "type": "ssti",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "16_ssti.json",
+      "payload": "{%import os%}{{os.popen('id').read()}}"
+    },
+    {
+      "id": "oauth_0000",
+      "type": "oauth_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "17_oauth_bypass.json",
+      "payload": "/redirect?url=http://evil.com"
+    },
+    {
+      "id": "oauth_0002",
+      "type": "oauth_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "17_oauth_bypass.json",
+      "payload": "X-Rewrite-URL: /admin"
+    },
+    {
+      "id": "oauth_0003",
+      "type": "oauth_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "17_oauth_bypass.json",
+      "payload": "Authorization: Basic YWRtaW46YWRtaW4="
+    },
+    {
+      "id": "oauth_0004",
+      "type": "oauth_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "17_oauth_bypass.json",
+      "payload": "/redirect?url=http://evil.com"
+    },
+    {
+      "id": "oauth_0005",
+      "type": "oauth_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "17_oauth_bypass.json",
+      "payload": "Authorization: Basic YWRtaW46YWRtaW4="
+    },
+    {
+      "id": "api_0000",
+      "type": "api_abuse",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "18_api_abuse.json",
+      "payload": "/api/orders/123"
+    },
+    {
+      "id": "api_0001",
+      "type": "api_abuse",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "18_api_abuse.json",
+      "payload": "/api/users?page=1&size=1000"
+    },
+    {
+      "id": "api_0005",
+      "type": "api_abuse",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "18_api_abuse.json",
+      "payload": "{\"query\": \"mutation { deleteUser(id: 1) }\"}"
+    },
+    {
+      "id": "api_0007",
+      "type": "api_abuse",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "18_api_abuse.json",
+      "payload": "/api/documents/456"
+    },
+    {
+      "id": "api_0008",
+      "type": "api_abuse",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "18_api_abuse.json",
+      "payload": "/api/users?page=1&size=1000"
+    },
+    {
+      "id": "ws_0002",
+      "type": "websocket_attack",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "19_websocket.json",
+      "payload": "Sec-WebSocket-Protocol: admin"
+    },
+    {
+      "id": "ws_0003",
+      "type": "websocket_attack",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "19_websocket.json",
+      "payload": "{\"type\":\"subscribe\",\"channel\":\"admin\"}"
+    },
+    {
+      "id": "ws_0004",
+      "type": "websocket_attack",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "19_websocket.json",
+      "payload": "{\"type\":\"admin\",\"action\":\"delete_all\"}"
+    },
+    {
+      "id": "ws_0006",
+      "type": "websocket_attack",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "19_websocket.json",
+      "payload": "{\"type\":\"execute\",\"command\":\"id\"}"
+    },
+    {
+      "id": "ws_0007",
+      "type": "websocket_attack",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "19_websocket.json",
+      "payload": "{\"type\":\"execute\",\"command\":\"id\"}"
+    },
+    {
+      "id": "cache_0000",
+      "type": "cache_poison",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "20_cache_poison.json",
+      "payload": "/admin/settings.css"
+    },
+    {
+      "id": "cache_0001",
+      "type": "cache_poison",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "20_cache_poison.json",
+      "payload": "/admin/settings.css"
+    },
+    {
+      "id": "cache_0002",
+      "type": "cache_poison",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "20_cache_poison.json",
+      "payload": "X-Host: evil.com\r\nX-Forwarded-Server: evil.com"
+    },
+    {
+      "id": "cache_0003",
+      "type": "cache_poison",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "20_cache_poison.json",
+      "payload": "X-Forwarded-Host: evil.com\r\nX-Forwarded-Scheme: http"
+    },
+    {
+      "id": "cache_0004",
+      "type": "cache_poison",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "20_cache_poison.json",
+      "payload": "X-Forwarded-Proto: http"
+    },
+    {
+      "id": "encode_0001",
+      "type": "encoding_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "21_encoding_bypass.json",
+      "payload": "%2e%2e%5c%2e%2e%5c%2e%2e%5c"
+    },
+    {
+      "id": "encode_0005",
+      "type": "encoding_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "21_encoding_bypass.json",
+      "payload": "%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd"
+    },
+    {
+      "id": "encode_0006",
+      "type": "encoding_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "21_encoding_bypass.json",
+      "payload": "%2e%2e%5c%2e%2e%5c%2e%2e%5c"
+    },
+    {
+      "id": "encode_0007",
+      "type": "encoding_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "21_encoding_bypass.json",
+      "payload": "%2525252e%2525252e%2525252f"
+    },
+    {
+      "id": "encode_0008",
+      "type": "encoding_bypass",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "21_encoding_bypass.json",
+      "payload": "pаssword"
+    },
+    {
+      "id": "proto_0001",
+      "type": "protocol_pollution",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "22_protocol_pollution.json",
+      "payload": "test\r\nSet-Cookie: session=attacker"
+    },
+    {
+      "id": "proto_0003",
+      "type": "protocol_pollution",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "22_protocol_pollution.json",
+      "payload": ":method: GET\r\n:path: /admin\r\n:authority: internal.com"
+    },
+    {
+      "id": "proto_0004",
+      "type": "protocol_pollution",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "22_protocol_pollution.json",
+      "payload": "test%0d%0aSet-Cookie: hacked=true"
+    },
+    {
+      "id": "proto_0008",
+      "type": "protocol_pollution",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "22_protocol_pollution.json",
+      "payload": "test\r\nSet-Cookie: session=attacker"
+    },
+    {
+      "id": "proto_0009",
+      "type": "protocol_pollution",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "22_protocol_pollution.json",
+      "payload": "test%0d%0aSet-Cookie: hacked=true"
+    },
+    {
+      "id": "spring4shell_0027",
+      "type": "spring4shell",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "25_spring4shell.json",
+      "payload": "module.classLoader.DefaultAssertionStatus=n"
+    },
+    {
+      "id": "spring4shell_0030",
+      "type": "spring4shell",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "25_spring4shell.json",
+      "payload": "module.classLoader.DefaultAssertionStatus=n"
+    },
+    {
+      "id": "spring4shell_0033",
+      "type": "spring4shell",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "25_spring4shell.json",
+      "payload": "module.classLoader.DefaultAssertionStatus=n"
+    },
+    {
+      "id": "spring4shell_0034",
+      "type": "spring4shell",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "25_spring4shell.json",
+      "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=..."
+    },
+    {
+      "id": "spring4shell_0035",
+      "type": "spring4shell",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "25_spring4shell.json",
+      "payload": "module.classLoader.classLoaderResources.context.parent.pipeline.first.pattern=..."
+    },
+    {
+      "id": "proto_pollute_0000",
+      "type": "prototype_pollution",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "27_prototype_pollution.json",
+      "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}"
+    },
+    {
+      "id": "proto_pollute_0002",
+      "type": "prototype_pollution",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "27_prototype_pollution.json",
+      "payload": "{\"__proto__\":{\"polluted\":\"yes\"}}"
+    },
+    {
+      "id": "proto_pollute_0003",
+      "type": "prototype_pollution",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "27_prototype_pollution.json",
+      "payload": "{\"__proto__\":{\"admin\":true}}"
+    },
+    {
+      "id": "proto_pollute_0006",
+      "type": "prototype_pollution",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "27_prototype_pollution.json",
+      "payload": "{\"__proto__\":{\"0\":\"polluted\"}}"
+    },
+    {
+      "id": "proto_pollute_0007",
+      "type": "prototype_pollution",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "27_prototype_pollution.json",
+      "payload": "{\"constructor\":{\"prototype\":{\"admin\":true}}}"
+    },
+    {
+      "id": "type_confuse_0001",
+      "type": "type_confusion",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "29_type_confusion.json",
+      "payload": "{\"password\":0}"
+    },
+    {
+      "id": "type_confuse_0003",
+      "type": "type_confusion",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "29_type_confusion.json",
+      "payload": "\"0e123\" == \"0\""
+    },
+    {
+      "id": "type_confuse_0004",
+      "type": "type_confusion",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "29_type_confusion.json",
+      "payload": "{\"password\":1}"
+    },
+    {
+      "id": "type_confuse_0005",
+      "type": "type_confusion",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "29_type_confusion.json",
+      "payload": "{\"password\":0}"
+    },
+    {
+      "id": "type_confuse_0006",
+      "type": "type_confusion",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "29_type_confusion.json",
+      "payload": "0 == \"password\""
+    },
+    {
+      "id": "redos_0000",
+      "type": "redos",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "30_redos.json",
+      "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!"
+    },
+    {
+      "id": "redos_0001",
+      "type": "redos",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "30_redos.json",
+      "payload": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111!"
+    },
+    {
+      "id": "redos_0002",
+      "type": "redos",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "30_redos.json",
+      "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!"
+    },
+    {
+      "id": "redos_0003",
+      "type": "redos",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "30_redos.json",
+      "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+    },
+    {
+      "id": "redos_0004",
+      "type": "redos",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "30_redos.json",
+      "payload": "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+    },
+    {
+      "id": "unicode_0000",
+      "type": "unicode_homoglyph",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "31_unicode_homoglyph.json",
+      "payload": "admin‍admin"
+    },
+    {
+      "id": "unicode_0001",
+      "type": "unicode_homoglyph",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "31_unicode_homoglyph.json",
+      "payload": "rootаdmin"
+    },
+    {
+      "id": "unicode_0002",
+      "type": "unicode_homoglyph",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "31_unicode_homoglyph.json",
+      "payload": "faceb00k"
+    },
+    {
+      "id": "unicode_0003",
+      "type": "unicode_homoglyph",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "31_unicode_homoglyph.json",
+      "payload": "paypa1"
+    },
+    {
+      "id": "unicode_0004",
+      "type": "unicode_homoglyph",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "31_unicode_homoglyph.json",
+      "payload": "adminа"
+    },
+    {
+      "id": "graphql_0003",
+      "type": "graphql_injection",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "32_graphql_injection.json",
+      "payload": "{\"query\":\"subscription{onUserCreated{password}}\"}"
+    },
+    {
+      "id": "graphql_0005",
+      "type": "graphql_injection",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "32_graphql_injection.json",
+      "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}"
+    },
+    {
+      "id": "graphql_0006",
+      "type": "graphql_injection",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "32_graphql_injection.json",
+      "payload": "{\"query\":\"mutation{updateUser(id:1,role:\\\"admin\\\"){ok}}\"}"
+    },
+    {
+      "id": "graphql_0008",
+      "type": "graphql_injection",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "32_graphql_injection.json",
+      "payload": "{\"query\":\"{a:user(id:1){password}b:user(id:2){password}}\"}"
+    },
+    {
+      "id": "graphql_0010",
+      "type": "graphql_injection",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "32_graphql_injection.json",
+      "payload": "{\"query\":\"query($id:ID!){user(id:$id){name}}\",\"variables\":{\"id\":\"1 OR 1=1\"}}"
+    },
+    {
+      "id": "nosql_adv_0002",
+      "type": "nosql_injection_advanced",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "33_nosql_advanced.json",
+      "payload": "{\"username\":[\"admin\",\"root\"]}"
+    },
+    {
+      "id": "nosql_adv_0007",
+      "type": "nosql_injection_advanced",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "33_nosql_advanced.json",
+      "payload": "{\"username\":[\"admin\",\"root\"]}"
+    },
+    {
+      "id": "nosql_adv_0011",
+      "type": "nosql_injection_advanced",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "33_nosql_advanced.json",
+      "payload": "{\"location\":{\"$near\":{\"$geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}}}}"
+    },
+    {
+      "id": "nosql_adv_0022",
+      "type": "nosql_injection_advanced",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "33_nosql_advanced.json",
+      "payload": "{\"username\":[\"admin\",\"root\"]}"
+    },
+    {
+      "id": "nosql_adv_0023",
+      "type": "nosql_injection_advanced",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "33_nosql_advanced.json",
+      "payload": "{\"username\":{\"$type\":2}}"
     }
-  ]
+  ],
+  "representativeFalseNegativeLimitPerType": 5
 }

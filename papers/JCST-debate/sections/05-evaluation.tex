@@ -2,90 +2,74 @@
 
 \subsection{Evidence Layers and Reporting Policy}
 
-The evaluation is intentionally split into two layers.
+The evaluation is intentionally split into a reproducible public software layer and a future model-comparison layer.
 
-\textbf{Public layer.} This layer is already available in the repository and is therefore used as the current evidence base for this draft. It consists of a 32-sample balanced corpus derived from OWASP Benchmark v1.2~\cite{owaspBenchmark2026}, covering four request families: SQL injection, cross-site scripting, path traversal, and command injection. The repository evaluation compares three configurations: \texttt{single\_agent}, \texttt{multi\_agent\_no\_debate}, and \texttt{multi\_agent\_with\_debate}.
+\textbf{Current public layer.} The repository contains a 4,500-sample synthetic AetherGuard corpus with 3,300 labeled attacks and 1,200 labeled normal requests across 31 categories. The current run evaluates the local heuristic detection pipeline, not real single-agent and multi-agent model configurations. The repository also records automated software gates, local fastpath throughput, and Chromium acceptance results. The complete environment and machine-readable values are versioned in \nolinkurl{docs/reports/software-validation-status-2026-07-27.json}.
 
-\textbf{Private layer.} This layer is reserved for future labeled alert data. The present manuscript specifies how such a layer should be reported, but does not fabricate its results. If timestamps are available, splitting should follow early 70\%, middle 10\% for threshold calibration, and late 20\% for final reporting. Otherwise, a fixed-seed stratified 80/20 split should be used.
+\textbf{Future comparison layer.} The historical 32-sample OWASP-derived artifact and its 87.5\%/100\% model-comparison values were not reproduced with an external OWASP Benchmark checkout and real configured models in the current environment. We therefore withdraw those values from the current evidence layer. A future comparison must run single-agent, multi-agent without debate, and multi-agent with debate over a versioned external corpus, preserve per-sample outputs, and report model identifiers, prompts, route modes, random seeds, latency, cost, and errors.
 
-\subsection{Metrics}
+\textbf{Private layer.} This layer remains reserved for future labeled operational alerts. If timestamps are available, splitting should follow early 70\%, middle 10\% for threshold calibration, and late 20\% for final reporting. Otherwise, a fixed-seed stratified 80/20 split should be used.
 
-The public layer reports the metrics that directly test the thesis of the paper:
-\begin{itemize}
-  \item accuracy, precision, recall, and F1;
-  \item false positive count and false negative count;
-  \item debate trigger ratio and average debate rounds;
-  \item end-to-end orchestration latency.
-\end{itemize}
-The emphasis is deliberate. Since the paper claims that debate helps on ambiguous cases, false positives and debate trigger behavior are treated as first-class outputs rather than footnotes.
+\subsection{Current Synthetic-Corpus Result}
 
-\subsection{Public Baseline Comparison}
-
-Table~\ref{tab:public-baselines} reports the main public comparison. The result is compact but important. The debate-enabled setting eliminates the four false positives that remain in both non-debate baselines, improving accuracy from 87.5\% to 100\% on the current balanced slice. The repository summary further notes that these four false positives all occur in benign command-injection-like requests, which is exactly the kind of ambiguity this method is meant to resolve.
-
-\begin{table*}[t]
-  \centering
-  \footnotesize
-  \caption{Public baseline comparison on the repository OWASP-derived 32-sample corpus.}
-  \label{tab:public-baselines}
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabularx}{\textwidth}{@{}lcccccc@{}}
-    \toprule
-    Configuration & Accuracy & Precision & Recall & F1 & False positives & False negatives \\
-    \midrule
-    \texttt{single\_agent} & 0.8750 & 0.8000 & 1.0000 & 0.8889 & 4 & 0 \\
-    \texttt{multi\_agent\_no\_debate} & 0.8750 & 0.8000 & 1.0000 & 0.8889 & 4 & 0 \\
-    \texttt{multi\_agent\_with\_debate} & 1.0000 & 1.0000 & 1.0000 & 1.0000 & 0 & 0 \\
-    \bottomrule
-  \end{tabularx}
-\end{table*}
-
-In this comparison, \texttt{single\_agent} uses the repository's \texttt{cloud\_only} route, while \texttt{multi\_agent\_no\_debate} preserves the role decomposition but disables explicit disagreement handling. The paper's main claim should not be overstated beyond this result. The corpus is small, balanced, and derived from a benchmark suite rather than from production traffic. Still, the pattern is coherent with the method: debate is most useful when a superficially suspicious request is actually benign.
-
-\subsection{Ablation and Overhead}
-
-Table~\ref{tab:ablation} combines the evidence currently available for ablation-style interpretation. The first part isolates the effect of debate. The second part reports route-mode latency observations from the repository summary. These values are orchestration measurements and should not be interpreted as full model inference latency. The third part records the current system-overhead snapshot from the validated workspace report.
-
-\begin{table*}[t]
-  \centering
-  \footnotesize
-  \caption{Repository-traceable ablation and overhead evidence.}
-  \label{tab:ablation}
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabularx}{\textwidth}{@{}p{0.18\textwidth}p{0.18\textwidth}p{0.20\textwidth}Y@{}}
-    \toprule
-    Evidence slice & Setting & Observed metric & Interpretation \\
-    \midrule
-    Debate ablation & no debate & accuracy 0.8750; 4 false positives & retains all four benign command-injection-like false positives \\
-    Debate ablation & with debate & accuracy 1.0000; mean orchestration latency 0.5000 ms & removes all four false positives on the public slice \\
-    Route mode & \texttt{cloud\_only} & mean orchestration latency 0.8438 ms & highest observed orchestration overhead in the repository summary \\
-    Route mode & \texttt{local\_preferred} & mean orchestration latency 0.7500 ms & lower orchestration overhead than \texttt{cloud\_only} \\
-    Route mode & \texttt{hybrid\_verify} & mean orchestration latency 0.7813 ms; debate latency 0.0938 ms & lowest reported debate latency among the route-mode entries \\
-    Workspace smoke benchmark & fastpath snapshot & 1329.79 QPS; 21 ms p95 latency & validated smoke profile only, not a full production-scale claim \\
-    \bottomrule
-  \end{tabularx}
-\end{table*}
-
-Across the public corpus, debate is triggered on 12 out of 32 requests, or 37.5\%, with an average of 0.75 debate rounds per sample. This is consistent with the intended design: most requests do not require explicit disagreement handling, while a smaller subset benefits from it.
-
-\subsection{Limitations of the Current Public Layer}
-
-The public evidence should be read with several constraints in mind. First, the corpus size is too small for broad generalization. Second, a benchmark-derived slice is not equivalent to operational traffic. Third, the repository includes a scaffold for a ModSecurity + CRS baseline, but it was not executable in the current environment and is therefore not reported as a competitive result. The comparison is mentioned only to document evaluation intent and to avoid implying that the baseline already ran~\cite{owaspCRS2026}.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{fig-results-summary.pdf}
-  \caption{Summary of the public benchmark and overhead evidence used in this draft.}
-  \label{fig:results-summary}
-\end{figure}
-
-\subsection{Private Labeled-Alert Reporting Template}
-
-The manuscript reserves a second evidence layer for private labeled alerts because that is the correct place to test whether debate reduces false positives on real ambiguity. Table~\ref{tab:private-template} provides the reporting template instead of inventing numbers.
+Table~\ref{tab:public-corpus} reports the current reproducible classification counts. The test enforces no quality threshold; it asserts that all samples were evaluated and emits the detailed JSON artifact.
 
 \begin{table}[t]
   \centering
-  \caption{Template for the private labeled-alert dataset revision.}
+  \footnotesize
+  \caption{Current tracked synthetic-corpus result.}
+  \label{tab:public-corpus}
+  \begin{tabular}{@{}lr@{}}
+    \toprule
+    Metric & Measured value \\
+    \midrule
+    Samples & 4,500 \\
+    True positives / false negatives & 2,111 / 1,189 \\
+    True negatives / false positives & 1,200 / 0 \\
+    Attack detection rate & 63.97\% \\
+    Synthetic-normal FPR & 0.00\% \\
+    Median / p95 evaluation latency & 0.546 / 1.557 ms \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The category results are heterogeneous. Several direct or sequence-based categories reach 100\% on this corpus, while SQL injection reaches 64\%, SSRF 20\%, JWT attacks 24\%, encoding bypass 13\%, type confusion 11\%, and Unicode homoglyph attacks 6\%. The 0\% FPR applies only to the 1,200 synthetic normal samples and must not be described as an operational false-positive rate. No ModSecurity, Suricata, Snort, or other external baseline ran in this environment.
+
+Most importantly for the thesis of this draft, the current synthetic-corpus run does not isolate the contribution of debate. It therefore cannot establish that debate improves accuracy or removes a particular number of false positives. The implementation and unit scenarios establish that disagreement can create a debate session, but quantitative benefit remains an open research question.
+
+\subsection{Software and Throughput Evidence}
+
+The backend coverage run passed 248 suites and 3,291 tests, with 65.90\% statement, 51.41\% branch, 65.90\% function, and 66.21\% line coverage. Rust fastpath, rescue, frontend, simulator, and deployment regression gates also passed within their documented software boundaries. Chromium acceptance produced eight passes and two failures among ten runnable release-subset tests, plus one conditionally skipped test.
+
+The Rust release fastpath fixed-key loopback test used 200 connections, HTTP/1.1 pipeline depth 10, and three 20-second rounds. Results are shown in Table~\ref{tab:fastpath-current}.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \caption{Current Rust fixed-key loopback rate-check.}
+  \label{tab:fastpath-current}
+  \begin{tabular}{@{}rrrr@{}}
+    \toprule
+    Round & QPS & p99 (ms) & Errors \\
+    \midrule
+    1 & 61,552.8 & 78 & 0 \\
+    2 & 59,200.8 & 78 & 0 \\
+    3 & 56,581.6 & 79 & 0 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+A short concurrency sweep peaked at 75,078 QPS with p99 latency of 108~ms and no errors. The client and server shared eight logical CPUs. Stable 100,000-QPS capacity was not reproduced, and these loopback results are not production capacity evidence.
+
+\subsection{Limitations and Required Debate Experiment}
+
+The current public layer has four central limitations. First, it uses synthetic traffic rather than operational alerts. Second, the classification run evaluates a local heuristic pipeline rather than real heterogeneous models. Third, it includes no external IDS/WAF baseline. Fourth, it does not provide a debate ablation.
+
+The required next experiment must pre-register the corpus, labels, split policy, model versions, prompts, route modes, debate trigger, maximum rounds, random seeds, and failure handling. It must preserve a per-sample artifact for all three model configurations and report confidence intervals rather than only point estimates. Debate benefit should be tested on ambiguous cases selected without access to final labels, with false-positive and false-negative error analyses reviewed by independent annotators.
+
+\begin{table}[t]
+  \centering
+  \caption{Template for the future labeled-alert and debate-ablation revision.}
   \label{tab:private-template}
   \footnotesize
   \begin{tabularx}{\columnwidth}{@{}p{0.39\columnwidth}Y@{}}
@@ -97,11 +81,11 @@ The manuscript reserves a second evidence layer for private labeled alerts becau
     Label space & benign / suspicious / malicious or mapped binary labels \\
     Time span covered & TBD \\
     Split policy & 70/10/20 by time if timestamps exist, else fixed-seed stratified 80/20 \\
-    Main thesis test & whether debate reduces false positives on ambiguous alerts \\
-    Required baselines & single agent, multi-agent without debate, multi-agent with debate \\
-    Required error analysis & at least 10 representative false positives before and after debate \\
+    Required configurations & single agent; multi-agent without debate; multi-agent with debate \\
+    Main thesis test & whether debate reduces errors on ambiguous alerts \\
+    Required error analysis & at least 10 representative false positives and false negatives per configuration \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-This template keeps the draft honest: the paper is ready for a stronger second evidence layer, but it does not pretend that the layer already exists.
+This reporting policy keeps the draft falsifiable: the software architecture and current baseline are public, while the central quantitative debate claim remains explicitly unproven until the required experiment is completed.

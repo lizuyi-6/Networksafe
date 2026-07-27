@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-27T12:48:00Z",
+  "scope": "software-only-local-validation",
+  "source": {
+    "commit": "32b39ff25a909a3a32268fdff1dbe208fffdd4f6",
+    "uncommittedValidationChanges": [
+      "dataset test description corrected from 4,300 to 4,500 samples",
+      "dataset burst latency divided by requests actually evaluated",
+      "dataset artifact schema v2 adds per-dataset metrics and representative false-negative provenance",
+      "software validation documentation synchronized"
+    ]
+  },
+  "environment": {
+    "operatingSystem": "Linux 7.0.0-28-generic",
+    "architecture": "x86_64",
+    "cpuModel": "Intel(R) Core(TM) i5-9300H CPU @ 2.40GHz",
+    "logicalCpuCount": 8,
+    "memoryBytes": 7616966656,
+    "nodeVersion": "v22.22.1",
+    "npmVersion": "9.2.0",
+    "rustcVersion": "1.97.1",
+    "cargoVersion": "1.97.1",
+    "containerRuntimeUsed": false,
+    "backendTestRedisDisabled": true
+  },
+  "qualityGates": {
+    "backend": {
+      "testSuites": 248,
+      "tests": 3291,
+      "failedTests": 0,
+      "coveragePercent": {
+        "statements": 65.9,
+        "branches": 51.41,
+        "functions": 65.9,
+        "lines": 66.21
+      },
+      "typecheck": "passed",
+      "lint": "passed",
+      "boundary": "NODE_ENV=test with DISABLE_REDIS=true; live external services not exercised"
+    },
+    "frontend": {
+      "typecheck": "passed",
+      "lint": "passed",
+      "i18nContracts": {
+        "passed": 8,
+        "total": 8
+      },
+      "credentialHygiene": "passed",
+      "productionBuild": "passed",
+      "mainJavaScriptChunkBytesApproximate": 1619000,
+      "largeChunkWarning": true
+    },
+    "rustFastpath": {
+      "testsPassed": 17,
+      "testsFailed": 0,
+      "clippy": "passed",
+      "releaseBuild": "passed"
+    },
+    "rescue": {
+      "testsPassed": 51,
+      "testsFailed": 0,
+      "clippy": "passed",
+      "releaseBuild": "passed",
+      "softwareDrillsPassed": 12,
+      "softwareDrillsFailed": 0,
+      "physicalHardwareValidated": false
+    },
+    "simulator": {
+      "typecheck": "passed",
+      "scenariosPassed": [
+        "invalid-signature",
+        "counter-rollback",
+        "heartbeat-stale",
+        "estop"
+      ],
+      "physicalHardwareValidated": false
+    },
+    "deployment": {
+      "pm2RegressionPassed": 4,
+      "pm2RegressionFailed": 0,
+      "offlineEnvironmentBackfillPassed": 1,
+      "offlineEnvironmentBackfillFailed": 0
+    }
+  },
+  "datasetEvaluation": {
+    "artifact": "backend/test-data/dataset-eval-report.json",
+    "artifactSchemaVersion": 2,
+    "artifactGeneratedAt": "2026-07-27T12:47:26.918Z",
+    "sampleCount": 4500,
+    "attackSampleCount": 3300,
+    "normalSampleCount": 1200,
+    "truePositive": 2111,
+    "falseNegative": 1189,
+    "trueNegative": 1200,
+    "falsePositive": 0,
+    "detectionRate": 0.6396969696969697,
+    "syntheticNormalFalsePositiveRate": 0,
+    "medianLatencyMs": 0.575185,
+    "p95LatencyMs": 1.612131,
+    "perDataset": {
+      "full_test_dataset": {
+        "sampleCount": 1300,
+        "attackSampleCount": 1100,
+        "normalSampleCount": 200,
+        "truePositive": 979,
+        "falseNegative": 121,
+        "trueNegative": 200,
+        "falsePositive": 0,
+        "detectionRate": 0.89,
+        "syntheticNormalFalsePositiveRate": 0
+      },
+      "complete_dataset": {
+        "sampleCount": 1050,
+        "attackSampleCount": 550,
+        "normalSampleCount": 500,
+        "truePositive": 327,
+        "falseNegative": 223,
+        "trueNegative": 500,
+        "falsePositive": 0,
+        "detectionRate": 0.5945454545454546,
+        "syntheticNormalFalsePositiveRate": 0
+      },
+      "advanced_dataset": {
+        "sampleCount": 1150,
+        "attackSampleCount": 650,
+        "normalSampleCount": 500,
+        "truePositive": 260,
+        "falseNegative": 390,
+        "trueNegative": 500,
+        "falsePositive": 0,
+        "detectionRate": 0.4,
+        "syntheticNormalFalsePositiveRate": 0
+      },
+      "zeroday_dataset": {
+        "sampleCount": 1000,
+        "attackSampleCount": 1000,
+        "normalSampleCount": 0,
+        "truePositive": 545,
+        "falseNegative": 455,
+        "trueNegative": 0,
+        "falsePositive": 0,
+        "detectionRate": 0.545,
+        "syntheticNormalFalsePositiveRate": null
+      }
+    },
+    "falsePositiveExampleCount": 0,
+    "representativeFalseNegativeExampleCount": 104,
+    "representativeFalseNegativeLimitPerType": 5,
+    "hardPassThresholdEnforced": false,
+    "boundary": "synthetic tracked corpus evaluated by local heuristic pipeline and input validator; not production traffic, end-to-end network latency, or an external product comparison"
+  },
+  "browserValidation": {
+    "browser": "Chromium 151.0.7922.34",
+    "baseUrl": "http://127.0.0.1:5173",
+    "backendUrl": "http://127.0.0.1:3005",
+    "completedAt": "2026-07-27T12:32:11.097Z",
+    "pitchRoutesExpectedDisabled": true,
+    "localAdministratorCredentialsUsed": true,
+    "runnableTests": 10,
+    "passed": 10,
+    "failed": 0,
+    "conditionallySkipped": 1,
+    "failures": [],
+    "boundary": "local Chromium release subset only; not every E2E file, browser, operating system, or production deployment",
+    "unvalidatedBrowsers": [
+      "Firefox",
+      "WebKit",
+      "Microsoft Edge"
+    ]
+  },
+  "performance": {
+    "sharedHostWarning": "load generator and server shared the same eight logical CPUs",
+    "rustFixedKeyRateCheck": {
+      "transport": "HTTP/1.1 loopback",
+      "binaryProfile": "release",
+      "path": "/v1/rate/check",
+      "connections": 200,
+      "pipelining": 10,
+      "durationSecondsPerRound": 20,
+      "requestBody": {
+        "tenantId": "validation",
+        "key": "fixed-hot-key",
+        "windowMs": 600000,
+        "limit": 1000000000
+      },
+      "rounds": [
+        {
+          "qps": 61552.8,
+          "requestCount": 1231012,
+          "averageLatencyMs": 32.47,
+          "p99LatencyMs": 78,
+          "errors": 0,
+          "timeouts": 0,
+          "non2xx": 0
+        },
+        {
+          "qps": 59200.8,
+          "requestCount": 1184117,
+          "averageLatencyMs": 33.73,
+          "p99LatencyMs": 78,
+          "errors": 0,
+          "timeouts": 0,
+          "non2xx": 0
+        },
+        {
+          "qps": 56581.6,
+          "requestCount": 1131627,
+          "averageLatencyMs": 35.25,
+          "p99LatencyMs": 79,
+          "errors": 0,
+          "timeouts": 0,
+          "non2xx": 0
+        }
+      ],
+      "meanQps": 59111.73,
+      "sweepPeak": {
+        "qps": 75078,
+        "connections": 200,
+        "pipelining": 20,
+        "p99LatencyMs": 108,
+        "errors": 0,
+        "timeouts": 0,
+        "non2xx": 0
+      },
+      "stable100kValidated": false,
+      "historicalUnreproducedQps": [
+        101984,
+        101105.07,
+        100657.07
+      ]
+    },
+    "nodeDevelopmentControlPlaneHealth": {
+      "runtimeProfile": "single-process development server with request logging",
+      "path": "/health",
+      "connections": 100,
+      "pipelining": 10,
+      "durationSecondsPerRound": 15,
+      "rounds": [
+        {
+          "qps": 3119.94,
+          "p99LatencyMs": 451,
+          "errors": 0,
+          "timeouts": 0,
+          "non2xx": 0
+        },
+        {
+          "qps": 3242.47,
+          "p99LatencyMs": 362,
+          "errors": 0,
+          "timeouts": 0,
+          "non2xx": 0
+        },
+        {
+          "qps": 3202.87,
+          "p99LatencyMs": 398,
+          "errors": 0,
+          "timeouts": 0,
+          "non2xx": 0
+        }
+      ],
+      "meanQps": 3188.43,
+      "productionCapacityClaim": false
+    }
+  },
+  "dependencyAudit": {
+    "root": {
+      "vulnerabilityCount": 0
+    },
+    "backend": {
+      "vulnerabilityCount": 0
+    },
+    "e2e": {
+      "vulnerabilityCount": 0
+    },
+    "installer": {
+      "vulnerabilityCount": 0
+    },
+    "simulator": {
+      "vulnerabilityCount": 0
+    },
+    "frontend": {
+      "moderate": 2,
+      "high": 0,
+      "critical": 0,
+      "affectedPackages": [
+        "react-router",
+        "react-router-dom"
+      ]
+    }
+  },
+  "notValidated": [
+    "live PostgreSQL",
+    "live Redis",
+    "multi-node high availability",
+    "S3 or MinIO Object Lock enforcement",
+    "live SMTP, Slack, or generic webhook delivery",
+    "live external OIDC identity provider",
+    "real cloud or local LLM inference",
+    "ModSecurity, Suricata, Fail2ban, or iptables external baselines",
+    "complete external OWASP Benchmark dataset",
+    "Caddy, Apache, Kubernetes, or external Linux deployment lifecycle",
+    "ARM64, Windows, or macOS",
+    "Firefox, WebKit, or Microsoft Edge",
+    "below two percent agent CPU",
+    "below fifty megabytes agent memory",
+    "production network or TLS capacity SLA",
+    "physical hardware"
+  ]
+}

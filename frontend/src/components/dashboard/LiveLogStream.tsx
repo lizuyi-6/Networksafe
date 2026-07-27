@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Terminal } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
@@ -22,8 +23,31 @@ const levelRowClass = (level?: string, status?: number) => {
     return 'border-transparent bg-transparent';
 };
 
+const getLogIdentity = (log: LogItem): string => [
+    log.id,
+    log.time,
+    log.type,
+    log.level,
+    log.status ?? '',
+    log.method ?? '',
+    log.path ?? '',
+    log.ip,
+    log.message,
+].join('|');
+
 export const LiveLogStream = ({ logs, filterQuery, onFilterChange, emptyText }: LiveLogStreamProps) => {
     const { t } = useLanguage();
+    const uniqueLogs = useMemo(() => {
+        const observedLogIdentities = new Set<string>();
+        return logs.filter((log) => {
+            const logIdentity = getLogIdentity(log);
+            if (observedLogIdentities.has(logIdentity)) {
+                return false;
+            }
+            observedLogIdentities.add(logIdentity);
+            return true;
+        });
+    }, [logs]);
 
     return (
         <ConsolePanel
@@ -48,9 +72,9 @@ export const LiveLogStream = ({ logs, filterQuery, onFilterChange, emptyText }: 
             {/* Log list */}
             <div className="h-[400px] overflow-y-auto rounded-xl border border-border bg-muted/10 p-3 font-mono text-xs">
                 <AnimatePresence initial={false}>
-                    {logs.map((log) => (
+                    {uniqueLogs.map((log) => (
                         <motion.div
-                            key={`${log.id}-${log.time}`}
+                            key={getLogIdentity(log)}
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.15 }}
@@ -71,7 +95,7 @@ export const LiveLogStream = ({ logs, filterQuery, onFilterChange, emptyText }: 
                         </motion.div>
                     ))}
                 </AnimatePresence>
-                {logs.length === 0 && (
+                {uniqueLogs.length === 0 && (
                     <div className="flex h-full items-center justify-center py-12 font-sans text-sm text-muted-foreground">
                         {emptyText}
                     </div>

@@ -7,6 +7,7 @@ import { postgresShadowStoreService } from '../../services/postgres-shadow-store
 import { runtimeEmulatorService } from '../../services/runtime-emulator.service';
 import { detectionPipelineService } from '../../services/detection-pipeline.service';
 import redisService from '../../security/redis.service';
+import { allowLabInMemoryAuthSessions } from '../../config/enterprise-runtime';
 
 export type DependencyStatus = 'healthy' | 'degraded' | 'unhealthy' | 'disabled';
 
@@ -108,7 +109,9 @@ export async function buildRuntimeHealthSnapshot(input: {
   const redis = await redisService.healthCheck();
   const fastpathHealthy = await fastpathClientService.health('global').catch(() => false);
   const blockers: string[] = [];
-  const redisRequiredForAuthentication = input.runtime.profile === 'prod';
+  const inMemoryAuthenticationAllowed = input.runtime.profile !== 'prod'
+    && allowLabInMemoryAuthSessions();
+  const redisRequiredForAuthentication = !inMemoryAuthenticationAllowed;
   const redisDisabled = redisService.isDisabled();
 
   const dependencies = {
@@ -118,7 +121,8 @@ export async function buildRuntimeHealthSnapshot(input: {
           message: 'Redis is connected.',
           details: {
             latencyMs: redis.latency ?? null,
-            requiredForAuthentication: redisRequiredForAuthentication
+            requiredForAuthentication: redisRequiredForAuthentication,
+            inMemoryAuthenticationAllowed
           }
         }
       : {
@@ -131,6 +135,7 @@ export async function buildRuntimeHealthSnapshot(input: {
           details: {
             disabled: redisDisabled,
             requiredForAuthentication: redisRequiredForAuthentication,
+            inMemoryAuthenticationAllowed,
             reason: redisRequiredForAuthentication
               ? REDIS_AUTH_UNAVAILABLE_REASON
               : redisDisabled
