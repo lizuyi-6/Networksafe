@@ -163,7 +163,9 @@ mod tests {
         use std::io::Write as _;
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let addr = listener.local_addr().unwrap();
+        let (ready_sender, ready_receiver) = std::sync::mpsc::sync_channel(0);
         let handle = std::thread::spawn(move || {
+            ready_sender.send(()).unwrap();
             if let Ok((mut s, _)) = listener.accept() {
                 let mut buf = [0u8; 512];
                 let _ = std::io::Read::read(&mut s, &mut buf);
@@ -172,9 +174,10 @@ mod tests {
                 let _ = s.shutdown(std::net::Shutdown::Write);
             }
         });
-        let st = probe_health(&format!("http://{addr}/health"), Duration::from_secs(2));
+        ready_receiver.recv_timeout(Duration::from_secs(2)).unwrap();
+        let st = probe_health(&format!("http://{addr}/health"), Duration::from_secs(5));
         handle.join().unwrap();
-        assert_eq!(st.status, "up");
+        assert_eq!(st.status, "up", "probe detail: {:?}", st.detail);
         assert_eq!(st.detail.as_deref(), Some("HTTP/1.0 200 OK"));
     }
 
