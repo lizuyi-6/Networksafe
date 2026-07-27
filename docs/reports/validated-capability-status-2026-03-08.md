@@ -2,6 +2,8 @@
 
 This report records what is implemented and what is actually evidenced in the current workspace as of 2026-03-08.
 
+> **Historical snapshot — superseded for current software claims.** The current software-only evidence is `software-validation-status-2026-07-27.md` and its machine-readable JSON companion. Keep the Docker, Object Lock, notification, and device-flow statements below tied to the 2026-03-08 environment. Do not reuse the old `1329.79 QPS`, `21 ms`, `6.22%`, or `99.64 MB` snapshot as the latest result. The 2026-07-27 fixed-key Rust loopback reproduction measured 56.6k–61.6k QPS across three rounds with a 75.1k short-sweep peak, and did not reproduce a stable 100k result.
+
 ## 1. Scope
 
 - Environment: `docker compose` runtime on the current repository workspace.

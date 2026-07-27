@@ -2,21 +2,21 @@
 
 \subsection{What the Current Evidence Supports}
 
-The public results support a precise and limited conclusion. In the current repository evaluation, debate-driven triage improves request-level precision on ambiguous web threats without materially changing the lightweight orchestration profile of the pipeline. The strongest direct evidence is the removal of four false positives that remain in both non-debate baselines. This aligns with the design intent of the method and with the observable behavior of the code paths that compute disagreement and launch bounded debate.
+The public results support a precise and limited conclusion. The repository implements disagreement scoring and bounded debate orchestration, while the current 4,500-sample run establishes only the behavior of the local heuristic detection pipeline. It does not isolate debate and therefore provides no quantitative evidence that debate improves precision or removes false positives. The current direct evidence for debate is implementation-level: disagreement can create a structured session and preserve an auditable procedural artifact.
 
 The system evidence is also meaningful, but should remain conservative. The validated workspace snapshot confirms that the paper is not describing an isolated algorithm detached from a deployable security stack. Authenticated gateways, signed command dispatch, audit-chain retention, and benchmark harnesses are present. However, these artifacts do not justify broad claims about production scale, full LLM latency, or externally validated rollout. The draft therefore frames \system\ as a concrete realization environment, not as proof of every historical platform claim.
 
 \subsection{Threats to Validity}
 
-Three threats are especially important.
+Four threats are especially important.
 
-First, the public corpus is small and benchmark-derived. It demonstrates mechanism behavior, not broad field performance. Second, the current route-mode latency values describe orchestration in the validated workspace rather than full downstream model latency under all deployment modes. Third, the role-specialization argument is stronger conceptually than empirically in the current draft because the repository does not yet include a separate public ablation that removes role specialization while preserving all other variables.
+First, the public corpus is synthetic and cannot estimate field detection or false-positive rates. Second, the current run uses a heuristic pipeline rather than real local and cloud models. Third, there is no external IDS/WAF baseline. Fourth, the role-specialization and debate arguments remain conceptually stronger than their empirical support because the current evidence has no controlled debate or role ablation.
 
 The planned private labeled-alert layer addresses the first and third limitations most directly. Once that data is available, the paper should add a role-specialization ablation and a targeted error analysis on genuine alert ambiguity.
 
 \subsection{Conclusion}
 
-This draft reframes \system\ into a narrower, more defensible JCST contribution. The paper does not argue that a broad security platform is itself the novelty. Instead, it argues that debate-driven multi-agent judgment is a practical way to improve distributed web threat triage when evidence is ambiguous and operators require an auditable decision trail. The repository already supports this claim with a functioning implementation, a traceable public benchmark slice, and conservative system-overhead evidence. The next revision should strengthen the paper through a private labeled-alert dataset, but even in its present form the draft provides a coherent method-and-system narrative centered on role-specialized debate, auditable outputs, and deployment-aware realization.
+This draft reframes \system\ into a narrower, falsifiable JCST contribution. The paper does not argue that a broad security platform is itself the novelty. It proposes debate-driven multi-agent judgment as a method for distributed web threat triage and establishes that the repository contains a functioning, auditable implementation surface. Whether that method improves accuracy is deliberately left open. The next revision must add a versioned external corpus, real configured models, a controlled debate ablation, and independent error analysis before making a quantitative benefit claim.
 
 \bmhead{Acknowledgements}
 

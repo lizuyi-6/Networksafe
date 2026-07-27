@@ -12,12 +12,11 @@ Table~\ref{tab:traceability} maps the manuscript's numeric and implementation-sp
     \toprule
     Manuscript claim & Repository artifact \\
     \midrule
-    32 balanced benchmark-derived samples across four web attack families & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval.json} \\
-    87.5\% accuracy and four false positives for \texttt{single\_agent} and \texttt{multi\_agent\_no\_debate} & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval-summary.md} \\
-    100\% accuracy and zero false positives for \texttt{multi\_agent\_with\_debate} & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval-summary.md} \\
-    12/32 debate trigger ratio and 0.75 average debate rounds & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval-summary.md} \\
-    route-mode orchestration latency values & \nolinkurl{docs/papers/ieee-access-submission/experimental-results/owasp-web-eval-summary.md} \\
-    fastpath smoke snapshot of 1329.79 QPS and 21 ms p95 latency & \nolinkurl{docs/reports/validated-capability-status-2026-03-08.md} \\
+    4,500 synthetic samples; TP 2,111, FN 1,189, TN 1,200, FP 0 & \nolinkurl{backend/test-data/dataset-eval-report.json} \\
+    63.97\% attack detection and 0\% FPR on synthetic normal samples & \nolinkurl{docs/reports/software-validation-status-2026-07-27.json} \\
+    248 backend suites and 3,291 tests with measured coverage & \nolinkurl{docs/reports/software-validation-status-2026-07-27.json} \\
+    Rust fixed-key loopback rounds of 56.6k--61.6k QPS & \nolinkurl{docs/reports/software-validation-status-2026-07-27.json} \\
+    Historical 32-sample model comparisons & withdrawn pending external-corpus and real-model reproduction \\
     disagreement logic using label conflict, Jensen--Shannon divergence, and confidence range & \nolinkurl{backend/src/ai-agents/core/scoring.ts} \\
     bounded debate orchestration and Aristotle arbitration & \nolinkurl{backend/src/ai-agents/debate/debate-protocol.ts} \\
     route-mode names and privacy configuration surface & \nolinkurl{backend/src/services/platform-config.service.ts} \\

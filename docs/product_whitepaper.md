@@ -6,7 +6,7 @@
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
+> Validation Note (2026-07-27): This whitepaper includes target and historical marketing language. Current software evidence is tracked in `docs/reports/software-validation-status-2026-07-27.md`. The latest fixed-key Rust loopback reproduction measured 56.6k–61.6k QPS across three rounds and a 75.1k short-sweep peak; stable `100,000+ QPS` was not reproduced. The 4,500-sample synthetic corpus measured 63.97% detection and 0% FPR on its 1,200 synthetic normal samples. `<10ms local AI`, `<2% CPU`, `<50MB`, live external integrations, cross-platform rollout, production capacity, and physical hardware remain unvalidated by that report.
 
 ## 1. 产品愿景
 
@@ -20,20 +20,20 @@
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
+> Evidence note: 2026-03-08 Docker and hardware-flow evidence remains a dated historical snapshot. Use `docs/reports/software-validation-status-2026-07-27.md` for current software metrics and unresolved validation gaps.
 
 ## 2. 核心价值主张
 
 | 传统 WAF | AetherGuard | 价值提升 |
 | :--- | :--- | :--- |
-| **流量清洗** (黑盒) | **应用内 Hook** (白盒) | 直达业务逻辑，误报率降低 90% |
+| **流量清洗** (黑盒) | **应用内 Hook** (白盒) | 直达业务逻辑；“误报率降低 90%”尚无外部对照实验，不作为当前结果 |
 | **IP 封禁** | **身份指纹封禁** | 更精准识别伪造 IP 的攻击者 |
 | **人工运维** | **Gateway Appliance 硬件授权 + Final Defense Mode** | 高危动作需要本地硬件 grant 与签名策略共同放行 |
 | **规则死板** | **AI 动态分析** | 自适应未知的 0-Day 攻击模式 |
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
+> Evidence note: 2026-03-08 Docker and hardware-flow evidence remains a dated historical snapshot. Use `docs/reports/software-validation-status-2026-07-27.md` for current software metrics and unresolved validation gaps.
 
 ## 3. 十大核心功能模块详解
 
@@ -81,7 +81,7 @@ AetherGuard 独有的硬件创新已演进为 **Root-Resistant Gateway Appliance
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
+> Evidence note: 2026-03-08 Docker and hardware-flow evidence remains a dated historical snapshot. Use `docs/reports/software-validation-status-2026-07-27.md` for current software metrics and unresolved validation gaps.
 
 ## 4. 硬件创新：Root-Resistant Gateway Appliance
 
@@ -99,21 +99,22 @@ Interlock 状态统一为 `isolated`、`armed`、`released`、`fault`、`disable
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
+> Evidence note: The targets below are current only where the table says they were measured. Use `docs/reports/software-validation-status-2026-07-27.md` for methodology and boundaries.
 
 ## 5. 技术规格
 
-| 指标 | 参数 | 说明 |
+| 指标 | 当前证据或目标 | 说明 |
 | :--- | :--- | :--- |
-| **支持架构** | x86_64, ARM64 | 完美适配 Intel Xeon 及各类国产信创服务器 |
-| **Agent 资源占用** | < 2% CPU, < 50MB RAM | 极致轻量，对业务性能几乎无损耗 |
-| **最大吞吐量** | 100,000+ QPS (单节点) | 基于 Rust 高性能核心重写 |
-| **AI 分析延迟** | < 10ms (Local Mode) | 本地小模型推理，极速响应 |
-| **部署方式** | Docker, Binary, K8s DaemonSet | 灵活适配各种基础设施 |
+| **支持架构** | x86_64 Linux 已验证；ARM64 为未验证目标 | 当前 Rust release、Node 和浏览器结果来自一台 x86_64 Linux 主机 |
+| **Agent 资源占用** | `<2% CPU, <50MB RAM` 为未验证目标 | 本轮没有独立 Agent 资源基准，不得写成已达标 |
+| **Rust rate-check 吞吐** | 三轮 56.6k–61.6k QPS；短扫描峰值 75.1k | 本机 loopback、固定 key、release binary；不是整个平台或生产 SLA |
+| **Node 开发控制面吞吐** | `/health` 三轮均值 3.19k QPS | 单进程开发模式且开启请求日志；不是 production build 上限 |
+| **AI 分析延迟** | `<10ms Local Mode` 为未验证目标 | 当前机器没有真实本地模型推理证据 |
+| **部署方式** | Docker、Binary、K8s 代码/包存在 | 本轮未执行 Docker、外部 Linux 或真实 Kubernetes 生命周期验收 |
 
 ---
 
-> Validation Note (2026-03-08): This document contains historical strong-claim wording. The current evidence-backed status is tracked in `docs/reports/validated-capability-status-2026-03-08.md`. In this workspace, Docker runtime, locked audit archive, notification outbox, AI routing config, deployment bundle generation, and `/ws/device` + `/ws/status` device flows are validated. `100,000+ QPS`, `<10ms local AI`, `<2% CPU`, `<50MB`, physical Gateway Appliance board flashing, and external Linux binary rollout are not yet validated here.
+> Evidence note: Performance and integration claims must remain tied to the dated validation reports; target values are not warranties or production SLAs.
 
 ### 📞 立即联系我们
 
@@ -121,4 +122,3 @@ Interlock 状态统一为 `isolated`、`armed`、`released`、`fault`、`disable
 致力于为构建更安全的数字世界提供基础设施级保护。
 
 如需预约演示或申请 POC 测试，请访问我们的开发者门户或联系销售代表。
-

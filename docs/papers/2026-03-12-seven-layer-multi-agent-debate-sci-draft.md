@@ -207,7 +207,7 @@ The unit conflict scenario in [A3] directly demonstrates the architectural purpo
 
 ### 5.4 RQ3: Feasibility and measured prototype overhead
 
-The validated capability snapshot [A1] provides the clearest current performance evidence for the prototype. In the present workspace, the latest smoke benchmark reported `1329.79` QPS, `21 ms` p95 latency, `6.22%` agent CPU proxy usage, and `99.64 MB` agent memory proxy usage. The same report explicitly states that stronger historical claims such as `100,000+ QPS`, `<10 ms` local AI latency, `<2%` CPU, and `<50 MB` memory are not validated in the current workspace [A1]. This matters because it frames the prototype as feasible but not yet benchmark-dominant.
+The March validated capability snapshot [A1] is now historical. The current software report, `docs/reports/software-validation-status-2026-07-27.md`, records a Rust fixed-key loopback reproduction of 56.6k--61.6k QPS across three rounds, a 75.1k short-sweep peak, and no request errors. It did not reproduce stable 100k QPS. The same report records 3.19k mean QPS for the single-process Node development health path and explicitly leaves local-AI latency and Agent CPU/memory targets unvalidated. This frames the prototype as measurable but not production-capacity evidence.
 
 The local platform acceptance report [A2] adds deployment-path evidence. In that run, Docker services were healthy for `backend`, `frontend`, `postgres`, `redis`, `minio`, and `fastpath`; a deterministic remote-AI proof returned the exact text `AETHERGUARD_REMOTE_AI_OK` with reported latency `973 ms`; and the business-path SQL simulation used the `cloud_only` route and still produced a blocking verdict [A2]. The validated capability report further records that the current runtime snapshot exposed `aiRouting.mode: cloud_only`, `privacyMode: off`, and `fastpath.enabled: true` [A1]. Together, these artifacts support the narrower claim that the architecture can run inside a local, containerized deployment with measured but non-dominant overhead.
 
@@ -215,7 +215,7 @@ The local platform acceptance report [A2] adds deployment-path evidence. In that
 
 | Artifact | Setting | Observed result | Interpretation |
 | --- | --- | --- | --- |
-| [A1] Validated capability status | Local workspace benchmark snapshot | `1329.79` QPS, `21 ms` p95, `6.22%` CPU proxy, `99.64 MB` memory proxy | Feasible local prototype, not evidence for aggressive performance claims |
+| Current software validation | x86_64 Linux fixed-key loopback | Rust 56.6k--61.6k QPS over three rounds; 75.1k short-sweep peak; zero errors | Reproducible local hot-path evidence, not stable 100k or production capacity |
 | [A1] Runtime and deployment surface | Docker runtime plus deployment bundles | Healthy runtime and validated bundle generation for six targets | The broader platform around the AI subsystem is operationally coherent |
 | [A1] AI routing snapshot | Current config snapshot | `cloud_only`, privacy mode off, fastpath enabled | Heterogeneous routing exists, but current evidence reflects cloud-first execution |
 | [A2] Deterministic AI proof | Local acceptance run | Exact proof output with `973 ms` latency | Remote-AI path is functionally reachable |
