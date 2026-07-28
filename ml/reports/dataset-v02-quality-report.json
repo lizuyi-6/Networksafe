@@ -2,50 +2,64 @@
   "counts": {
     "byAttackFamily": {
       "api_abuse": 491,
-      "authentication": 513,
-      "automation": 485,
-      "benign": 5870,
+      "authentication": 554,
+      "automation": 490,
+      "benign": 8244,
       "business_logic": 478,
-      "command_injection": 568,
-      "deserialization": 488,
-      "file_upload": 478,
-      "other": 1809,
-      "path_traversal": 499,
-      "protocol_attack": 521,
-      "sqli": 552,
-      "ssrf": 489,
-      "xss": 503
+      "command_injection": 1014,
+      "deserialization": 714,
+      "file_upload": 498,
+      "other": 2988,
+      "path_traversal": 563,
+      "protocol_attack": 790,
+      "sqli": 999,
+      "ssrf": 520,
+      "xss": 709
     },
     "byCategory": {
-      "attack": 6524,
-      "hard_negative": 2020,
-      "normal": 3850,
+      "attack": 9458,
+      "hard_negative": 2971,
+      "normal": 5273,
       "unknown": 1350
     },
     "byEncoding": {
-      "double_url_encoded": 355,
-      "plain": 7532,
-      "unicode": 4632,
-      "url_encoded": 1225
+      "double_url_encoded": 356,
+      "plain": 10875,
+      "unicode": 6439,
+      "url_encoded": 1382
     },
     "byEvaluationSuite": {
       "authorized_attack_test": 1125,
-      "development": 11994,
+      "development": 11993,
       "independent_hard_negative": 88,
       "independent_synthetic_normal": 200,
       "independent_unknown": 150,
       "long_input_test": 50,
-      "prompt_injection_test": 137
+      "prompt_injection_test": 137,
+      "public_training_openapi_normal": 1174,
+      "public_training_prompt_injection": 2200,
+      "public_training_waf_regression": 1935
     },
     "byProvenance": {
       "deterministic_synthetic_v02": 13354,
-      "tracked_synthetic_security_corpus_v02_conversion": 390
+      "public_open_source_derived": 5309,
+      "tracked_synthetic_security_corpus_v02_conversion": 389
+    },
+    "bySourceDataset": {
+      "advanced_dataset": 104,
+      "aetherargus-v02-deterministic": 13354,
+      "complete_dataset": 46,
+      "full_test_dataset": 119,
+      "owasp-crs-regression": 1935,
+      "s-labs-prompt-injection-train": 2200,
+      "stripe-openapi": 1174,
+      "zeroday_dataset": 120
     },
     "bySplit": {
-      "test_closed": 1153,
+      "test_closed": 1236,
       "test_independent": 1750,
-      "train": 9535,
-      "validation": 1306
+      "train": 14314,
+      "validation": 1752
     },
     "independentAttackFamily": {
       "api_abuse": 100,
@@ -87,59 +101,75 @@
     "passed": false,
     "reason": "This delivery expands and audits data only. Model training, inference, quantization, prompt-injection obedience measurement, recall and false-positive gates were not run."
   },
+  "publicSources": {
+    "allowedSplits": [
+      "train",
+      "validation"
+    ],
+    "derivedRecordCount": 5309,
+    "statement": "Public records are checksum-pinned, license-reviewed synthetic or contract-derived training inputs; they are not claimed as production traffic.",
+    "upstreamEvaluationSplitsUsedForTraining": false
+  },
   "quality": {
-    "accepted": 13744,
+    "accepted": 19052,
     "byAttackFamily": {
       "api_abuse": 491,
-      "authentication": 513,
-      "automation": 485,
-      "benign": 5870,
+      "authentication": 554,
+      "automation": 490,
+      "benign": 8244,
       "business_logic": 478,
-      "command_injection": 568,
-      "deserialization": 488,
-      "file_upload": 478,
-      "other": 1809,
-      "path_traversal": 499,
-      "protocol_attack": 521,
-      "sqli": 552,
-      "ssrf": 489,
-      "xss": 503
+      "command_injection": 1014,
+      "deserialization": 714,
+      "file_upload": 498,
+      "other": 2988,
+      "path_traversal": 563,
+      "protocol_attack": 790,
+      "sqli": 999,
+      "ssrf": 520,
+      "xss": 709
     },
     "byCategory": {
-      "attack": 6524,
-      "hard_negative": 2020,
-      "normal": 3850,
+      "attack": 9458,
+      "hard_negative": 2971,
+      "normal": 5273,
       "unknown": 1350
     },
     "byEncoding": {
-      "double_url_encoded": 355,
-      "plain": 7532,
-      "unicode": 4632,
-      "url_encoded": 1225
+      "double_url_encoded": 356,
+      "plain": 10875,
+      "unicode": 6439,
+      "url_encoded": 1382
     },
     "byEvaluationSuite": {
       "authorized_attack_test": 1125,
-      "development": 11994,
+      "development": 11993,
       "independent_hard_negative": 88,
       "independent_synthetic_normal": 200,
       "independent_unknown": 150,
       "long_input_test": 50,
-      "prompt_injection_test": 137
+      "prompt_injection_test": 137,
+      "public_training_openapi_normal": 1174,
+      "public_training_prompt_injection": 2200,
+      "public_training_waf_regression": 1935
     },
     "byProvenance": {
       "deterministic_synthetic_v02": 13354,
-      "tracked_synthetic_security_corpus_v02_conversion": 390
+      "public_open_source_derived": 5309,
+      "tracked_synthetic_security_corpus_v02_conversion": 389
     },
     "byScenario": {
       "admin_config": 146,
       "admin_deploy_script": 144,
       "body_or_argument": 135,
       "bulk_import": 146,
+      "business_file_operation": 14,
+      "checkout_session": 12,
       "command_injection_payload_variant": 399,
       "comment": 147,
       "conflicting_rules": 135,
       "contextual_attack": 633,
       "cross_tenant_or_privilege_violation": 478,
+      "customer_profile": 94,
       "database_read_sql": 144,
       "database_tool": 146,
       "deserialization_advisory": 144,
@@ -147,8 +177,10 @@
       "file_download": 147,
       "file_upload": 147,
       "file_upload_payload_variant": 398,
+      "financial_report": 14,
       "health_check": 147,
       "internal_service": 147,
+      "invoice_management": 52,
       "large_scale_resource_export": 478,
       "legacy_api_abuse": 13,
       "legacy_cache_poison": 9,
@@ -170,7 +202,7 @@
       "legacy_redos": 7,
       "legacy_spring4shell": 7,
       "legacy_sql_injection": 38,
-      "legacy_ssrf": 11,
+      "legacy_ssrf": 10,
       "legacy_ssti": 19,
       "legacy_text4shell": 8,
       "legacy_type_confusion": 11,
@@ -194,10 +226,27 @@
       "password_change": 148,
       "path_traversal_payload_variant": 399,
       "payment_status": 147,
+      "payment_status_and_update": 122,
       "profile_update": 148,
       "protocol_documentation": 144,
+      "public_api_operation": 788,
+      "public_benign_message": 249,
+      "public_crs_authentication": 41,
+      "public_crs_automation": 5,
+      "public_crs_command_injection": 446,
+      "public_crs_deserialization": 226,
+      "public_crs_file_upload": 20,
+      "public_crs_other": 179,
+      "public_crs_path_traversal": 64,
+      "public_crs_protocol_attack": 269,
+      "public_crs_sqli": 447,
+      "public_crs_ssrf": 32,
+      "public_crs_xss": 206,
+      "public_prompt_hard_negative": 951,
+      "public_prompt_injection": 1000,
       "rapid_login_failures": 478,
       "redacted_body": 135,
+      "refund_management": 38,
       "registration": 148,
       "report_export": 147,
       "repository_commit": 146,
@@ -209,6 +258,7 @@
       "security_report_evidence": 144,
       "sqli_payload_variant": 398,
       "ssrf_payload_variant": 398,
+      "subscription_management": 40,
       "ticket": 146,
       "ticket_ssrf": 144,
       "training_passwd": 144,
@@ -227,7 +277,7 @@
     "duplicateSampleIds": 0,
     "problems": {},
     "rejected": 0,
-    "total": 13744
+    "total": 19052
   },
   "realData": {
     "authorizedRealAttackTest": 0,
@@ -240,7 +290,7 @@
   },
   "schemaVersion": 1,
   "synthetic": {
-    "count": 13744,
+    "count": 19052,
     "ratio": 1.0
   }
 }

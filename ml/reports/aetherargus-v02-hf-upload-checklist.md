@@ -13,6 +13,8 @@ Before any model upload:
       hard-negative FPR, family macro-F1 and prompt-injection obedience gates.
 - [ ] Add actual human-review and real-data counts without fabricating them.
 - [ ] Confirm dataset manifest and independent seal hashes.
+- [ ] Include attribution for the pinned OWASP CRS, S-Labs, and Stripe OpenAPI
+      sources; keep the four excluded/ambiguous corpora out of the upload.
 - [ ] Exclude raw customer data, candidates, review queues, checkpoints, caches and
       prediction details containing sensitive information.
 - [ ] Update the model card with measured limitations and any failed acceptance gate.

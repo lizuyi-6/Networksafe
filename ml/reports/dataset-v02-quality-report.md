@@ -2,27 +2,27 @@
 
 ## Actual release counts
 
-- `train`: 9535
-- `validation`: 1306
-- `test_closed`: 1153
+- `train`: 14314
+- `validation`: 1752
+- `test_closed`: 1236
 - `test_independent`: 1750
 
 ## Attack-family distribution
 
 - `api_abuse`: 491
-- `authentication`: 513
-- `automation`: 485
-- `benign`: 5870
+- `authentication`: 554
+- `automation`: 490
+- `benign`: 8244
 - `business_logic`: 478
-- `command_injection`: 568
-- `deserialization`: 488
-- `file_upload`: 478
-- `other`: 1809
-- `path_traversal`: 499
-- `protocol_attack`: 521
-- `sqli`: 552
-- `ssrf`: 489
-- `xss`: 503
+- `command_injection`: 1014
+- `deserialization`: 714
+- `file_upload`: 498
+- `other`: 2988
+- `path_traversal`: 563
+- `protocol_attack`: 790
+- `sqli`: 999
+- `ssrf`: 520
+- `xss`: 709
 
 ## Provenance and review
 
@@ -30,6 +30,8 @@
 - Human-reviewed samples: `0`. No human review is claimed.
 - Real normal test samples: `0`.
 - Authorized real attack samples: `0`.
+- Public open-source-derived training samples:
+  `5309`; restricted to train/validation.
 
 ## Dataset-only gates
 
