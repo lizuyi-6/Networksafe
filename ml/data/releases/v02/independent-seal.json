@@ -1,0 +1,9 @@
+{
+  "datasetVersion": "v02",
+  "recordCount": 1750,
+  "recordsSha256": "169237c5301f6e6c70b4bdb145cd9a0f4f16e465a01a0ac41853164fa6e92de8",
+  "schemaVersion": 1,
+  "sealedBeforeDevelopmentGeneration": true,
+  "sourceSampleIdsSha256": "65b5f461bcf1cf222f997c8e452cb90f48467702025f5bf570336783d6c8fffc",
+  "templateFingerprintsSha256": "5c373dd3010d379d6df3c49b3194689825dfd0e31091d0e0b4b5a84aea6fe65b"
+}
