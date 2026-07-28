@@ -1,0 +1,185 @@
+{
+  "authorizedRealAttackCount": 0,
+  "counts": {
+    "byAttackFamily": {
+      "api_abuse": 491,
+      "authentication": 513,
+      "automation": 485,
+      "benign": 5870,
+      "business_logic": 478,
+      "command_injection": 568,
+      "deserialization": 488,
+      "file_upload": 478,
+      "other": 1809,
+      "path_traversal": 499,
+      "protocol_attack": 521,
+      "sqli": 552,
+      "ssrf": 489,
+      "xss": 503
+    },
+    "byCategory": {
+      "attack": 6524,
+      "hard_negative": 2020,
+      "normal": 3850,
+      "unknown": 1350
+    },
+    "byEncoding": {
+      "double_url_encoded": 355,
+      "plain": 7532,
+      "unicode": 4632,
+      "url_encoded": 1225
+    },
+    "byEvaluationSuite": {
+      "authorized_attack_test": 1125,
+      "development": 11994,
+      "independent_hard_negative": 88,
+      "independent_synthetic_normal": 200,
+      "independent_unknown": 150,
+      "long_input_test": 50,
+      "prompt_injection_test": 137
+    },
+    "byProvenance": {
+      "deterministic_synthetic_v02": 13354,
+      "tracked_synthetic_security_corpus_v02_conversion": 390
+    },
+    "bySplit": {
+      "test_closed": 1153,
+      "test_independent": 1750,
+      "train": 9535,
+      "validation": 1306
+    }
+  },
+  "datasetAcceptance": {
+    "gates": {
+      "all_records_deterministically_valid": true,
+      "core_independent_family_each_at_least_100": true,
+      "family_minimums_met": true,
+      "independent_test_at_least_1500": true,
+      "train_at_least_8000": true,
+      "validation_at_least_1000": true
+    },
+    "passed": true
+  },
+  "datasetVersion": "v02",
+  "files": {
+    "test_closed": {
+      "bytes": 3911783,
+      "path": "ml/data/releases/v02/test-closed.jsonl",
+      "records": 1153,
+      "sha256": "fb154a6ddfbff553d420c7b11c3f3933c99e2796b9510d293597f49dcdc4e83d"
+    },
+    "test_independent": {
+      "bytes": 6501255,
+      "path": "ml/data/releases/v02/test-independent.jsonl",
+      "records": 1750,
+      "sha256": "3228747cd3739840450b1fae50a7472238b860a8595bd09409123d400dd9fa06"
+    },
+    "train": {
+      "bytes": 32693034,
+      "path": "ml/data/releases/v02/train.jsonl",
+      "records": 9535,
+      "sha256": "6682cc0f8b9b09c0a5b6e9db6d5f7d79b73e6e260e3408a8ee2790ba3b17c8d3"
+    },
+    "validation": {
+      "bytes": 4419561,
+      "path": "ml/data/releases/v02/validation.jsonl",
+      "records": 1306,
+      "sha256": "3b7896db8a6e4c5ecd1dbeaf67a2cb2de8eaba01dafa3ee1da5eda91ba9a7f6e"
+    }
+  },
+  "generation": {
+    "generatedAt": "2026-07-28T00:00:00Z",
+    "generatorModel": "deterministic-aetherargus-v02",
+    "generatorPromptVersion": "dataset-v02.1",
+    "independentSealedFirst": true
+  },
+  "humanReviewCount": 0,
+  "independentSeal": {
+    "datasetVersion": "v02",
+    "recordCount": 1750,
+    "recordsSha256": "169237c5301f6e6c70b4bdb145cd9a0f4f16e465a01a0ac41853164fa6e92de8",
+    "schemaVersion": 1,
+    "sealedBeforeDevelopmentGeneration": true,
+    "sourceSampleIdsSha256": "65b5f461bcf1cf222f997c8e452cb90f48467702025f5bf570336783d6c8fffc",
+    "templateFingerprintsSha256": "5c373dd3010d379d6df3c49b3194689825dfd0e31091d0e0b4b5a84aea6fe65b"
+  },
+  "leakage": {
+    "checks": [
+      "normalized SHA-256",
+      "template fingerprint",
+      "source-seed group",
+      "CVE group",
+      "generator model and prompt version group",
+      "64-bit SimHash retained per sample",
+      "24-permutation MinHash retained per sample",
+      "character n-gram hashing vectors (non-neural fallback)"
+    ],
+    "detected": false,
+    "limitations": [
+      "No neural embedding model was available in this execution environment.",
+      "SimHash/MinHash are lexical similarity controls and do not prove absence of all semantic leakage."
+    ],
+    "pairwise": {
+      "test_closed_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_test_closed": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_validation": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "validation_vs_test_closed": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "validation_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      }
+    }
+  },
+  "preview02Acceptance": {
+    "passed": false,
+    "reason": "This delivery expands and audits data only. Model training, inference, quantization, prompt-injection obedience measurement, recall and false-positive gates were not run."
+  },
+  "process": {
+    "duplicatesRemoved": 6,
+    "generated": 13750,
+    "output": 13744,
+    "redactions": 850,
+    "reviewRejected": 0,
+    "rulesAccepted": 13750,
+    "selectionDropped": 0,
+    "semanticPairsClustered": 6
+  },
+  "realNormalCount": 0,
+  "schemaVersion": 2,
+  "seed": 20260728,
+  "smoke": false,
+  "sourceRegistry": {
+    "path": "ml/data/manifests/dataset-v02-source-registry.json",
+    "sourceSampleIdCount": 12494,
+    "sourceSampleIdsSha256": "38943091ae7c40238f78ffae5f523cd647cb2563c1547c71b198163259619054"
+  },
+  "sourceCorpusIsSynthetic": true
+}
