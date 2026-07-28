@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import type { AuthenticatedRequest } from './auth.middleware';
 import { detectionPipelineService } from '../services/detection-pipeline.service';
 import { fastpathTrafficShadowService } from '../services/fastpath-traffic-shadow.service';
+import { securityDetectionShadowService } from '../ai/security-detection/security-detection-shadow.service';
 import {
   ANONYMOUS_TENANT_ID,
   normalizeTenantId,
@@ -244,6 +245,31 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
     });
 
     (req as any).detectionDecision = decision;
+
+    // Shadow-mode AetherArgus invocation. Fire-and-forget: bounded queue,
+    // never throws, never mutates the formal decision above.
+    try {
+      securityDetectionShadowService.submit({
+        requestId: String(req.headers['x-request-id'] || randomUUID()),
+        snapshot: {
+          method: req.method,
+          path: rawUrl,
+          query: urlShape.query,
+          headers,
+          body: rawBody
+        },
+        decision: {
+          verdict: decision.verdict,
+          matchedRuleIds: decision.matchedRuleIds,
+          riskScore: decision.riskScore,
+          signals: decision.signals,
+          decisionSource: decision.decisionSource,
+          aiVerdict: decision.aiVerdict
+        }
+      });
+    } catch {
+      // Shadow path is strictly read-only; failures are swallowed by design.
+    }
 
     if (decision.verdict === 'block') {
       const settings = await detectionPipelineService.getSettings(tenantId);
