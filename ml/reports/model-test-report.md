@@ -1,7 +1,7 @@
 # AetherGuard 安全判定模型 — 测试报告（GGUF/Ollama 部署态 vs 基线 vs LoRA）
 
 生成时间：2026-07-28
-评测后端：GGUF Q4_K_M 经 Ollama 0.32.5（`ollama create aetherguard-security`，真实 HTTP 推理）
+评测后端：GGUF Q4_K_M 经 Ollama 0.32.5（`ollama create aetherargus`，真实 HTTP 推理）
 测试集：固定 `ml/data/processed/test.jsonl`（120 条，与基线/LoRA 完全相同）
 指标定义：`evaluation/evaluate_model.py::calculate_metrics`（三种产物同一套）
 证据文件：`reports/ollama-metrics.json`、`output/ollama-predictions.jsonl`（逐样本原始输出+校验错误）

@@ -39,8 +39,8 @@ recommendedAction∈ {allow, monitor, challenge, block}
 
 ```text
 SecurityDetectionEngine
- ├── provider: "local-lora"   → transformers + peft 加载 ml/output/aetherguard-qwen-lora（或 merged）
- └── provider: "ollama"       → HTTP 调本机 Ollama（模型名 aetherguard-security，GGUF Q4_K_M）
+ ├── provider: "local-lora"   → transformers + peft 加载 ml/output/aetherargus-lora（或 merged）
+ └── provider: "ollama"       → HTTP 调本机 Ollama（模型名 aetherargus，GGUF Q4_K_M）
 ```
 
 - `local-lora`：精度最高（bf16 + LoRA），适合控制面同机部署、有 GPU 时。
@@ -51,8 +51,8 @@ SecurityDetectionEngine
 
 | 形态 | 模型来源 | 位置 |
 | --- | --- | --- |
-| GPU 控制面同机 | `ml/output/aetherguard-qwen-merged/`（合并模型）或 LoRA adapter + 基座 | transformers 直接加载 |
-| CPU / 边缘 | `aetherguard-security`（GGUF Q4_K_M） | Ollama `localhost:11434` |
+| GPU 控制面同机 | `ml/output/aetherargus-merged/`（合并模型）或 LoRA adapter + 基座 | transformers 直接加载 |
+| CPU / 边缘 | `aetherargus`（GGUF Q4_K_M） | Ollama `localhost:11434` |
 
 ## 6. 渐进接入（特性开关，不替换生产）
 

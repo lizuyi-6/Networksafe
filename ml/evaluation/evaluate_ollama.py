@@ -36,7 +36,7 @@ from evaluate_model import (  # noqa: E402
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", default="aetherguard-security")
+    parser.add_argument("--model", default="aetherargus")
     parser.add_argument("--base-url", default="http://127.0.0.1:11434")
     parser.add_argument(
         "--test-file",

@@ -28,12 +28,12 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--adapter-path",
         type=Path,
-        default=repository_root() / "ml" / "output" / "aetherguard-qwen-lora",
+        default=repository_root() / "ml" / "output" / "aetherargus-lora",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=repository_root() / "ml" / "output" / "aetherguard-qwen-merged",
+        default=repository_root() / "ml" / "output" / "aetherargus-merged",
     )
     parser.add_argument("--smoke-samples", type=int, default=20)
     return parser.parse_args()

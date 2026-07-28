@@ -151,7 +151,7 @@ def main() -> int:
         _finish(summary, failed=True)
         return 1
 
-    adapter_path = OUTPUT / "aetherguard-qwen-lora"
+    adapter_path = OUTPUT / "aetherargus-lora"
     # 5. LoRA evaluation
     rc, _ = run(
         "lora_eval",
@@ -184,7 +184,7 @@ def main() -> int:
         [PYTHON, "training/merge_adapter.py",
          "--base-model", str(MODEL),
          "--adapter-path", str(adapter_path),
-         "--output-dir", str(OUTPUT / "aetherguard-qwen-merged")],
+         "--output-dir", str(OUTPUT / "aetherargus-merged")],
         timeout=7200,
     )
     summary["steps"].append({"step": "merge_adapter", "status": "OK" if rc == 0 else "FAIL", "rc": rc})

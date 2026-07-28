@@ -4,7 +4,7 @@ model_source: huggingface
 local_model_path: null
 train_file: ml/data/processed/train.jsonl
 validation_file: ml/data/processed/validation.jsonl
-output_dir: ml/output/aetherguard-qwen-lora
+output_dir: ml/output/aetherargus-lora
 max_length: 768
 # 注：规范初始值为 3。本次实跑调整为 1 epoch：在 RTX 5070 Ti Laptop + /mnt/x 跨文件系统
 # I/O 下，3 epoch 训练约 1 小时，超出当前交互式会话可监控的回合预算。1 epoch 的真实训练

@@ -21,17 +21,17 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--merged-model",
         type=Path,
-        default=repository_root() / "ml" / "output" / "aetherguard-qwen-merged",
+        default=repository_root() / "ml" / "output" / "aetherargus-merged",
     )
     parser.add_argument(
         "--f16-output",
         type=Path,
-        default=repository_root() / "ml" / "output" / "aetherguard-security-f16.gguf",
+        default=repository_root() / "ml" / "output" / "aetherargus-f16.gguf",
     )
     parser.add_argument(
         "--q4-output",
         type=Path,
-        default=repository_root() / "ml" / "output" / "aetherguard-security-q4_k_m.gguf",
+        default=repository_root() / "ml" / "output" / "aetherargus-q4_k_m.gguf",
     )
     return parser.parse_args()
 

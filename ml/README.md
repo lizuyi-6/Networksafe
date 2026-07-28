@@ -93,7 +93,7 @@ python training/train_qlora.py --config configs/qwen3-4b-qlora.yaml \
 - assistant-only loss（prompt token 被 -100 mask），原始 `Trainer`（不依赖 SFTTrainer）。
 - 4-bit NF4 + double quant + bf16 compute；gradient checkpointing（use_reentrant=False）；paged_adamw_8bit。
 - `use_cache=false`、只训 LoRA、基座冻结；信号感知中断保存；支持 `--resume-from-checkpoint auto`。
-- 产物：`ml/output/aetherguard-qwen-lora/`（adapter + tokenizer + trainer_state + training-summary.json）。
+- 产物：`ml/output/aetherargus-lora/`（adapter + tokenizer + trainer_state + training-summary.json）。
 
 ### 断点恢复
 
@@ -106,7 +106,7 @@ python training/train_qlora.py --config configs/qwen3-4b-qlora.yaml \
 
 ```bash
 python evaluation/evaluate_model.py --mode model --run-name lora \
-  --model-name output/base-model --adapter-path output/aetherguard-qwen-lora \
+  --model-name output/base-model --adapter-path output/aetherargus-lora \
   --max-input-length 1024 --max-new-tokens 320 --seed 42
 ```
 
@@ -116,7 +116,7 @@ python evaluation/evaluate_model.py --mode model --run-name lora \
 
 ```bash
 python training/merge_adapter.py --base-model output/base-model \
-  --adapter-path output/aetherguard-qwen-lora --output-dir output/aetherguard-qwen-merged
+  --adapter-path output/aetherargus-lora --output-dir output/aetherargus-merged
 ```
 
 合并后在 bf16 全精度重载并对 ≥20 条固定样本 smoke test。GPU 显存不足时可 CPU 合并（脚本监控内存）。
@@ -126,8 +126,8 @@ python training/merge_adapter.py --base-model output/base-model \
 ```bash
 # 需 llama.cpp（convert_hf_to_gguf.py + 编译的 llama-quantize）
 python training/export_gguf.py --llama-cpp <llama.cpp路径> \
-  --merged-model output/aetherguard-qwen-merged
-ollama create aetherguard-security -f deployment/Modelfile
+  --merged-model output/aetherargus-merged
+ollama create aetherargus -f deployment/Modelfile
 ```
 
 无法可靠转换时不伪造 GGUF，保留 HF 合并模型 + LoRA adapter，在 `ml/reports/gguf-export-report.md` 注明阻塞。
@@ -155,7 +155,7 @@ python evaluation/compare_results.py    # 需 baseline/lora/rules/combined 四�
 
 ## 13. 实际训练结果
 
-> 实测来源：`output/aetherguard-qwen-lora/training-summary.json`、`reports/baseline-metrics.json`、
+> 实测来源：`output/aetherargus-lora/training-summary.json`、`reports/baseline-metrics.json`、
 > `reports/lora-metrics.json`、`reports/combined-metrics.json`、`reports/baseline-vs-lora.json`。
 
 - 实际模型：Qwen3-4B-Instruct-2507（commit `cdbee75f17c01a7cc42f958dc650907174af0554`，未降级 1.7B）
@@ -176,7 +176,7 @@ python evaluation/compare_results.py    # 需 baseline/lora/rules/combined 四�
 - rules+LoRA 组合：verdict 0.7083 / 恶意 F1 0.7255 / FPR 0.3939（规则 guardrail 引入误报，LoRA 单独更优；
   组合仅作对照，未接入生产路由）
 - 数据泄漏：无（manifest leakageCheck.detected=false，跨 split 共享组 0）
-- adapter 路径：`ml/output/aetherguard-qwen-lora/`（adapter_model.safetensors 64MB + tokenizer + trainer_state）
-- 合并模型路径：`ml/output/aetherguard-qwen-merged/`（CPU 合并 + 20 条重载 smoke，见 `merge-summary.json`）
-- GGUF / Ollama：F16 8.05GB + Q4_K_M 2.50GB（`ml/output/aetherguard-security-*.gguf`，`reports/gguf-export-report.json`）；
-  已 `ollama create aetherguard-security`（2.5GB）并实测一次推理返回合法 JSON（7 键齐全、正确判 SQL 注入为 attack），非 heuristic
+- adapter 路径：`ml/output/aetherargus-lora/`（adapter_model.safetensors 64MB + tokenizer + trainer_state）
+- 合并模型路径：`ml/output/aetherargus-merged/`（CPU 合并 + 20 条重载 smoke，见 `merge-summary.json`）
+- GGUF / Ollama：F16 8.05GB + Q4_K_M 2.50GB（`ml/output/aetherargus-*.gguf`，`reports/gguf-export-report.json`）；
+  已 `ollama create aetherargus`（2.5GB）并实测一次推理返回合法 JSON（7 键齐全、正确判 SQL 注入为 attack），非 heuristic
