@@ -7,7 +7,7 @@
     "db:status": "docker compose -f docker-compose.yml -f deployment/development/docker-compose.jetbrains.yml ps postgres",
     "db:down": "docker compose -f docker-compose.yml -f deployment/development/docker-compose.jetbrains.yml stop postgres",
     "check:project-structure": "node scripts/guards/check-project-structure.mjs",
-    "check:release-guards": "node scripts/guards/check-route-db-access.mjs && node scripts/guards/check-no-direct-api-fetch.mjs && node scripts/guards/check-frontend-api-contract.mjs && node scripts/guards/check-repository-hygiene.mjs && node scripts/guards/check-rescue-no-release.mjs",
+    "check:release-guards": "node scripts/guards/check-route-db-access.mjs && node scripts/guards/check-no-direct-api-fetch.mjs && node scripts/guards/check-frontend-api-contract.mjs && node scripts/guards/check-repository-hygiene.mjs && node scripts/guards/check-rescue-no-release.mjs && node scripts/guards/check-deployment-image-pins.mjs",
     "check:backend": "npm --prefix backend run typecheck && npm --prefix backend run lint && npm --prefix backend run test:all",
     "check:frontend": "npm --prefix frontend run typecheck && npm --prefix frontend run lint && npm --prefix frontend run test:i18n && npm --prefix frontend run test:credential-hygiene && npm --prefix frontend run test:navigation-hygiene && npm --prefix frontend run build",
     "check:installer": "npm --prefix installer audit --omit=dev --audit-level=high && npm --prefix installer run build",

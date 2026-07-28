@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/detection-output.schema.json",
+  "title": "AetherGuard Detection Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "verdict",
+    "confidence",
+    "attackFamily",
+    "severity",
+    "reasoning",
+    "evidence",
+    "recommendedAction"
+  ],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["safe", "suspicious", "malicious", "unknown"]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "attackFamily": {
+      "type": "string",
+      "enum": [
+        "benign",
+        "sqli",
+        "xss",
+        "command_injection",
+        "path_traversal",
+        "ssrf",
+        "authentication",
+        "automation",
+        "api_abuse",
+        "deserialization",
+        "file_upload",
+        "protocol_attack",
+        "business_logic",
+        "other"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "reasoning": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "evidence": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "value", "reason"],
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "value": {},
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "recommendedAction": {
+      "type": "string",
+      "enum": ["allow", "monitor", "challenge", "block"]
+    }
+  }
+}

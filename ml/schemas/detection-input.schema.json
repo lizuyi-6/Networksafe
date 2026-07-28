@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/detection-input.schema.json",
+  "title": "AetherGuard Detection Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "method",
+    "path",
+    "query",
+    "headers",
+    "body",
+    "sourceContext",
+    "ruleSignals"
+  ],
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "CONNECT", "TRACE", "EVENT"]
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "query": {
+      "type": "string",
+      "maxLength": 8192
+    },
+    "headers": {
+      "type": "object",
+      "maxProperties": 100,
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 8192
+      }
+    },
+    "body": {
+      "type": "string",
+      "maxLength": 32768
+    },
+    "sourceContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestsLastMinute", "distinctPathsLastMinute", "recentFailureCount"],
+      "properties": {
+        "requestsLastMinute": {"type": "integer", "minimum": 0},
+        "distinctPathsLastMinute": {"type": "integer", "minimum": 0},
+        "recentFailureCount": {"type": "integer", "minimum": 0},
+        "historicalRiskScore": {"type": "number", "minimum": 0, "maximum": 1},
+        "authenticated": {"type": "boolean"},
+        "accountPrivilege": {"type": "string", "maxLength": 80},
+        "internalService": {"type": "boolean"},
+        "endpointSensitivity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+        "openApiMatched": {"type": "boolean"},
+        "assetType": {"type": "string", "maxLength": 120},
+        "distinctUsernamesLastMinute": {"type": "integer", "minimum": 0},
+        "sessionAgeSeconds": {"type": "integer", "minimum": 0},
+        "geoConsistency": {"type": "boolean"},
+        "statusCodeHistory": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"type": "integer", "minimum": 100, "maximum": 599}
+        }
+      }
+    },
+    "ruleSignals": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId", "score", "field", "description"],
+        "properties": {
+          "ruleId": {"type": "string", "minLength": 1, "maxLength": 160},
+          "score": {"type": "number", "minimum": 0, "maximum": 1},
+          "field": {"type": "string", "minLength": 1, "maxLength": 160},
+          "description": {"type": "string", "minLength": 1, "maxLength": 500}
+        }
+      }
+    }
+  }
+}

@@ -92,6 +92,14 @@ jobs:
         working-directory: .
         run: bash scripts/release/test-deploy-pm2-release.sh
 
+      - name: Test Bare-Metal Rollback Script
+        working-directory: .
+        run: bash scripts/release/test-bare-metal-rollback.sh
+
+      - name: Test Bare-Metal MinIO Reconciliation
+        working-directory: .
+        run: bash scripts/release/test-bare-metal-minio.sh
+
       - name: Prepare Frontend Build Artifact
         working-directory: .
         run: |
@@ -399,12 +407,7 @@ jobs:
 
       - name: Run Release Guards
         working-directory: .
-        run: |
-          node scripts/guards/check-route-db-access.mjs
-          node scripts/guards/check-no-direct-api-fetch.mjs
-          node scripts/guards/check-frontend-api-contract.mjs
-          node scripts/guards/check-repository-hygiene.mjs
-          node scripts/guards/check-rescue-no-release.mjs
+        run: npm run check:release-guards
 
   release-verify:
     runs-on: ubuntu-latest

@@ -18,6 +18,7 @@ const releasePostgresPassword =
 
 const defaultEnv = {
   ...process.env,
+  CARGO_INCREMENTAL: process.env.CARGO_INCREMENTAL || '0',
   JWT_SECRET: process.env.JWT_SECRET || 'release-verify-jwt-secret-minimum-32-chars',
   AUDIT_LOG_SECRET: process.env.AUDIT_LOG_SECRET || 'release-verify-audit-secret-minimum-32',
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || 'AetherGuardRedisPassword2026!',
@@ -77,6 +78,8 @@ async function runStep(name, command, args, options = {}) {
     env = defaultEnv,
     shell = false,
   } = options;
+  const commandRequiresWindowsShell =
+    process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(command);
 
   const logPath = path.join(stepsDir, `${String(stepResults.length + 1).padStart(2, '0')}-${name.replace(/[^a-z0-9]+/gi, '-')}.log`);
   const header = `# ${name}\n# cwd: ${cwd}\n# command: ${formatCommand(command, args)}\n\n`;
@@ -87,7 +90,7 @@ async function runStep(name, command, args, options = {}) {
   const child = spawn(command, args, {
     cwd,
     env,
-    shell,
+    shell: shell || commandRequiresWindowsShell,
   });
 
   let output = '';
@@ -321,6 +324,7 @@ async function main() {
     await runStep('frontend api contract guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-frontend-api-contract.mjs')]);
     await runStep('repository hygiene guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-repository-hygiene.mjs')]);
     await runStep('rescue release-capability guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-rescue-no-release.mjs')]);
+    await runStep('deployment image pin guard', nodeExecutable, [path.join(workspaceRoot, 'scripts', 'guards', 'check-deployment-image-pins.mjs')]);
 
     await runStep('e2e install', npmExecutable, ['ci'], { cwd: path.join(workspaceRoot, 'e2e') });
 

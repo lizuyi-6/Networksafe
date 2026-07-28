@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.cache/
+
+# Regenerable or potentially sensitive dataset material.
+data/raw/*
+data/processed/*.jsonl
+data/processed/*.parquet
+
+# Training logs, checkpoints, adapters, merged weights, and GGUF files.
+logs/*
+output/*
+*.gguf
+*.safetensors
+
+# Keep the directory structure visible without tracking generated contents.
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!logs/.gitkeep
+!output/.gitkeep

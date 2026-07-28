@@ -4,6 +4,7 @@ import { closeDatabase } from './config/database';
 import { getRuntimeDescriptor } from './config/platform-runtime';
 import { bootstrapPersistence } from './bootstrap/persistence';
 import { createControlPlaneApp } from './bootstrap/control-plane-app';
+import { resolveBackendBindAddress } from './bootstrap/listen-config';
 import { validateRuntimeEnvironment } from './bootstrap/runtime-env';
 import logger from './utils/logger';
 import { AgentGateway } from './websocket/agent-gateway';
@@ -99,6 +100,7 @@ async function start(): Promise<void> {
 
   try {
     const envReport = validateRuntimeEnvironment();
+    const bindAddress = resolveBackendBindAddress(envReport);
     await bootstrapPersistence();
     configureRealtimeRuntime();
 
@@ -125,16 +127,23 @@ async function start(): Promise<void> {
       }
     }
 
-    httpServer.listen(port, () => {
+    const handleListening = (): void => {
       logger.info('AetherGuard Control Platform started', {
         port,
+        bindAddress: bindAddress || 'node-default',
         runtime,
         queueBackend: jobQueueService.backend(),
         artifactStore: artifactStoreService.describe(),
         shadowStore: postgresShadowStoreService.describe(),
         envWarnings: envReport.warnings
       });
-    });
+    };
+
+    if (bindAddress) {
+      httpServer.listen(port, bindAddress, handleListening);
+    } else {
+      httpServer.listen(port, handleListening);
+    }
   } catch (error: any) {
     logger.error('Failed to start server', { error: error?.message || error });
     process.exit(1);

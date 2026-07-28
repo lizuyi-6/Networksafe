@@ -24,7 +24,10 @@ sudo bash deployment/bare-metal/install.sh v1.2.3
 sudo bash deployment/bare-metal/install.sh --check
 
 # Offline install from a prebuilt tarball:
-sudo bash deployment/bare-metal/install.sh --source-tarball /path/release.tar.gz
+SOURCE_SHA=0123456789abcdef0123456789abcdef01234567
+sudo bash deployment/bare-metal/install.sh \
+  --source-tarball /path/release.tar.gz \
+  --source-sha "${SOURCE_SHA}"
 ```
 
 Credentials are written to `/root/aetherguard-credentials.txt` (chmod 600).
@@ -60,6 +63,11 @@ All optional, via environment:
 | `AG_NODE_HEAP_MB` | `1024` | `--max-old-space-size` for the service |
 | `AG_BUILD_JOBS` | `1` | cargo parallelism (raise on >4GB hosts) |
 | `AG_SKIP_FASTPATH` | `0` | `1` = don't build/install rust-fastpath |
+| `AG_MINIO_IMAGE` | `minio/minio:RELEASE.2025-02-18T16-25-55Z` | pinned MinIO server image for new installations |
+| `AG_MINIO_DATA_DIR` | `/var/lib/minio/data` | persistent host path mounted at MinIO `/data` |
+| `AG_MINIO_CREDENTIALS_DIR` | `/root` | root-only directory holding MinIO credential files |
+| `AG_DEPLOY_LOCK_FILE` | `/run/lock/aetherguard-deployment.lock` | shared installer/rollback operation lock |
+| `AG_ALLOW_UNPINNED_MINIO_IMAGE` | `0` | emergency-only opt-in for a non-`RELEASE.*` MinIO image |
 
 ## Low-memory hosts (≤2GB)
 
@@ -78,21 +86,51 @@ cd frontend && npm run build && cd ..
 tar czf release.tar.gz backend/src backend/dist backend/package*.json \
   frontend/dist rust-fastpath Cargo.toml ...
 # host
-sudo bash deployment/bare-metal/install.sh --source-tarball release.tar.gz
+sudo bash deployment/bare-metal/install.sh \
+  --source-tarball release.tar.gz \
+  --source-sha "$(git rev-parse HEAD)"
 ```
+
+`--source-sha` is mandatory for tarball installs so the release directory,
+credentials record, and rollback target retain the exact source identity.
 
 ## Rollback
 
 Releases are kept under `${AG_DEPLOY_ROOT}/releases/<sha>/` (3 most recent +
-current). To roll back:
+current). The installer places a validated rollback helper at
+`/usr/local/sbin/aetherguard-rollback`. To roll back the backend and frontend
+together:
 
 ```bash
 PREV_SHA=1af99c9556c6c23da4af64b1ff95f7b8f38aca85
-ln -sfn /opt/aetherguard/releases/${PREV_SHA} /opt/aetherguard/current
-sudo systemctl restart aetherguard-backend
+sudo aetherguard-rollback "${PREV_SHA}"
 ```
 
-Secrets and the database are **not** rolled back (they live under `shared/`).
+The release identifier is mandatory. Automatic selection is intentionally
+disabled because a newer release directory may be a staged build that never
+passed activation health checks.
+
+The helper stages and atomically switches both application layers, verifies
+internal and nginx-proxied readiness, and restores the starting release if the
+target fails. Secrets, PostgreSQL, Redis, MinIO, and files under `shared/` are
+**never** rolled back. Automatic database restoration could discard writes
+made after deployment, so it requires a separate reviewed recovery procedure.
+
+Each release carries `deployment/bare-metal/database-compatibility-epoch`.
+Rollback fails closed when the current and target epochs differ. Increment the
+epoch only for a migration that is intentionally incompatible with the prior
+application release. Releases created before this marker existed are rejected
+by default. After manually reviewing schema compatibility, a one-time legacy
+rollback can be requested explicitly:
+
+```bash
+sudo aetherguard-rollback --allow-legacy-database-epoch "${PREV_SHA}"
+```
+
+The installer and rollback helper share a non-blocking `flock`, so concurrent
+activation operations are rejected. The installer also persists custom deploy
+root, frontend path, backend port, and lock path values in the root-owned
+`/etc/aetherguard/rollback.conf`; no secrets are stored there.
 
 ## Audit archive
 
@@ -103,10 +141,19 @@ COMPLIANCE / 30-day retention** on first archive. If Docker is absent, the
 backend falls back to the local artifact store (the nested-key ENOENT fixed in
 `artifact-store.service.ts`).
 
+New installations use the same dated MinIO image as canonical Compose. On an
+upgrade, the installer never replaces or downgrades an existing MinIO data
+container automatically. It verifies the `/data` mount, recovers the original
+container credentials, requires both published ports to remain bound to
+`127.0.0.1`, starts a stopped compatible container, and emits a warning when
+the existing image differs from the current pin. An arbitrary image override
+is rejected unless `AG_ALLOW_UNPINNED_MINIO_IMAGE=1` is explicitly supplied.
+
 ## Not covered
 
-- **HTTPS** — the installer sets up port 80 only. Add a certificate (Let's
-  Encrypt via `certbot`, or a self-signed cert for IP-only hosts) and an
-  `https` server block afterward.
+- **HTTPS** — the installer sets up port 80 only. Browser-trusted production
+  TLS normally requires a controlled DNS name resolving to the host before a
+  certificate can be issued. A self-signed IP certificate is suitable only
+  for explicitly managed private trust stores, not as public delivery proof.
 - **`PLATFORM_API_KEY`** — left blank; cloud-AI routes run degraded until set.
 - **Multi-host / HA** — single-host only.

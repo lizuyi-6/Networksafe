@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-28T01:49:34.385249+00:00",
+  "runName": "merged-smoke",
+  "sampleCount": 20,
+  "modelInvocationCount": 20,
+  "heuristicOnly": false,
+  "jsonSyntaxSuccessRate": 1.0,
+  "schemaValidRate": 1.0,
+  "verdictAccuracy": 0.95,
+  "maliciousPrecision": 1.0,
+  "maliciousRecall": 1.0,
+  "maliciousF1": 1.0,
+  "normalFalsePositiveRate": 0.0,
+  "normalFalsePositiveCount": 0,
+  "normalSampleCount": 14,
+  "attackFamilyMacroF1": 0.6580459770114943,
+  "recommendedActionAccuracy": 0.95,
+  "unknownUsageRate": 0.1,
+  "averageLatencyMs": 2805.1711582500047,
+  "p50LatencyMs": 2454.468293500213,
+  "p95LatencyMs": 4111.782672000348,
+  "peakGpuMemoryGiB": 2.6309828758239746,
+  "categoryBreakdown": {
+    "attack": {
+      "count": 3,
+      "verdictAccuracy": 1.0,
+      "predictedVerdicts": {
+        "malicious": 3
+      }
+    },
+    "hard_negative": {
+      "count": 7,
+      "verdictAccuracy": 1.0,
+      "predictedVerdicts": {
+        "safe": 7
+      }
+    },
+    "normal": {
+      "count": 7,
+      "verdictAccuracy": 1.0,
+      "predictedVerdicts": {
+        "safe": 7
+      }
+    },
+    "unknown": {
+      "count": 3,
+      "verdictAccuracy": 0.6666666666666666,
+      "predictedVerdicts": {
+        "safe": 1,
+        "unknown": 2
+      }
+    }
+  },
+  "familyBreakdown": {
+    "benign": {
+      "count": 14,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 0.0
+    },
+    "deserialization": {
+      "count": 2,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "other": {
+      "count": 3,
+      "attackFamilyAccuracy": 0.6666666666666666,
+      "maliciousRecall": 0.0
+    },
+    "protocol_attack": {
+      "count": 1,
+      "attackFamilyAccuracy": 0.0,
+      "maliciousRecall": 1.0
+    }
+  }
+}

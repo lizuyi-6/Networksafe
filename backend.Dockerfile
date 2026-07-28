@@ -8,13 +8,20 @@ WORKDIR /app/backend
 RUN apk add --no-cache python3 make g++
 
 COPY backend/package.json backend/package-lock.json ./
-RUN mkdir -p /root/.cache/node-gyp && npm ci
+RUN mkdir -p /root/.cache/node-gyp && \
+    npm_config_build_from_source=true \
+    npm_config_nodedir=/usr/local \
+    npm ci --no-audit --no-fund
 
 COPY backend/ ./
 RUN rm -rf dist
 COPY backend/tsconfig.build.json ./tsconfig.build.json
 RUN npm run build
 RUN test -f dist/index.js
+# Compile native modules once against the Node headers already present in the
+# pinned base image, then retain only production dependencies for the runner.
+RUN npm prune --omit=dev --no-audit --no-fund && \
+    node -e "require('better-sqlite3')"
 
 # ============================================================
 # Stage 2: Production Runner
@@ -26,9 +33,6 @@ RUN apk add --no-cache \
     tar \
     ca-certificates \
     git \
-    python3 \
-    make \
-    g++ \
     unzip \
     dumb-init
 
@@ -53,8 +57,7 @@ RUN case "$TARGETARCH" in \
 WORKDIR /app/backend
 
 COPY backend/package.json backend/package-lock.json ./
-RUN mkdir -p /root/.cache/node-gyp && npm ci --omit=dev
-
+COPY --from=builder /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/dist ./dist
 
 RUN mkdir -p /app/data /app/scan-results /app/artifacts /app/backend/data

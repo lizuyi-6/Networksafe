@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-28T01:01:02.614461+00:00",
+  "runName": "lora-smoke",
+  "sampleCount": 3,
+  "modelInvocationCount": 3,
+  "heuristicOnly": false,
+  "jsonSyntaxSuccessRate": 1.0,
+  "schemaValidRate": 1.0,
+  "verdictAccuracy": 1.0,
+  "maliciousPrecision": 0.0,
+  "maliciousRecall": 0.0,
+  "maliciousF1": 0.0,
+  "normalFalsePositiveRate": 0.0,
+  "normalFalsePositiveCount": 0,
+  "normalSampleCount": 3,
+  "attackFamilyMacroF1": 1.0,
+  "recommendedActionAccuracy": 1.0,
+  "unknownUsageRate": 0.0,
+  "averageLatencyMs": 5751.647327000076,
+  "p50LatencyMs": 6272.911387000022,
+  "p95LatencyMs": 7684.32331360018,
+  "peakGpuMemoryGiB": 2.692460060119629,
+  "categoryBreakdown": {
+    "hard_negative": {
+      "count": 2,
+      "verdictAccuracy": 1.0,
+      "predictedVerdicts": {
+        "safe": 2
+      }
+    },
+    "normal": {
+      "count": 1,
+      "verdictAccuracy": 1.0,
+      "predictedVerdicts": {
+        "safe": 1
+      }
+    }
+  },
+  "familyBreakdown": {
+    "benign": {
+      "count": 3,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 0.0
+    }
+  }
+}

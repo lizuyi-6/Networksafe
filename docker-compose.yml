@@ -88,6 +88,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3005
+      - BACKEND_BIND_ADDRESS=0.0.0.0
       - PROFILE=${PROFILE:-prod}
       - APP_ROLE=${APP_ROLE:-all}
       - DB_MODE=${DB_MODE:-postgres}

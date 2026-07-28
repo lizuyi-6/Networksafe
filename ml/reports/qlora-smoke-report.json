@@ -1,0 +1,133 @@
+{
+  "generatedAt": "2026-07-28T00:22:24.174096+00:00",
+  "model": "Qwen/Qwen3-4B-Instruct-2507",
+  "localModelPath": "/mnt/x/repos/Networksafe/ml/output/base-model",
+  "smokeRoot": "/mnt/x/repos/Networksafe/ml/output/smoke-test/20260728T001441Z",
+  "logPath": "/mnt/x/repos/Networksafe/ml/logs/smoke-adaptation-20260728T001441Z.log",
+  "attempts": [
+    {
+      "name": "4b_initial",
+      "maxLength": 768,
+      "loraR": 8,
+      "loraAlpha": 16,
+      "evalSteps": 2,
+      "changeFromPrevious": "initial requested configuration",
+      "startedAt": "2026-07-28T00:14:41.545268+00:00",
+      "completedAt": "2026-07-28T00:22:24.150025+00:00",
+      "elapsedSeconds": 462.604757,
+      "returnCode": 0,
+      "outOfMemory": false,
+      "outputDirectory": "/mnt/x/repos/Networksafe/ml/output/smoke-test/20260728T001441Z/attempt-1-4b_initial",
+      "trainingSummary": {
+        "completedAt": "2026-07-28T00:22:19.601329+00:00",
+        "smokeTest": true,
+        "modelReference": "/mnt/x/repos/Networksafe/ml/output/base-model",
+        "outputDirectory": "/mnt/x/repos/Networksafe/ml/output/smoke-test/20260728T001441Z/attempt-1-4b_initial",
+        "elapsedSeconds": 234.49532107600004,
+        "peakGpuAllocatedGiB": 5.147518157958984,
+        "peakGpuReservedGiB": 5.458984375,
+        "startup": {
+          "totalParameters": 2222325248,
+          "trainableParameters": 16515072,
+          "trainablePercent": 0.7431437866650201,
+          "trainSamples": 16,
+          "validationSamples": 4,
+          "effectiveBatchSize": 16,
+          "gpuName": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "gpuTotalMemoryGiB": 11.94000244140625,
+          "maxLength": 768,
+          "loraR": 8,
+          "loraAlpha": 16
+        },
+        "trainMetrics": {
+          "train_runtime": 49.8364,
+          "train_samples_per_second": 0.963,
+          "train_steps_per_second": 0.06,
+          "total_flos": 423439633198080.0,
+          "train_loss": 2.5503114064534507,
+          "epoch": 3.0
+        },
+        "evaluationMetrics": {
+          "eval_loss": 2.124032974243164,
+          "eval_runtime": 0.7068,
+          "eval_samples_per_second": 5.659,
+          "eval_steps_per_second": 5.659,
+          "epoch": 3.0
+        },
+        "globalStep": 3,
+        "epoch": 3.0,
+        "adapterFiles": {
+          "adapterModel": true,
+          "adapterConfig": true,
+          "tokenizerConfig": true,
+          "trainerState": true
+        }
+      }
+    }
+  ],
+  "succeeded": true,
+  "successfulAttempt": {
+    "name": "4b_initial",
+    "maxLength": 768,
+    "loraR": 8,
+    "loraAlpha": 16,
+    "evalSteps": 2,
+    "changeFromPrevious": "initial requested configuration",
+    "startedAt": "2026-07-28T00:14:41.545268+00:00",
+    "completedAt": "2026-07-28T00:22:24.150025+00:00",
+    "elapsedSeconds": 462.604757,
+    "returnCode": 0,
+    "outOfMemory": false,
+    "outputDirectory": "/mnt/x/repos/Networksafe/ml/output/smoke-test/20260728T001441Z/attempt-1-4b_initial",
+    "trainingSummary": {
+      "completedAt": "2026-07-28T00:22:19.601329+00:00",
+      "smokeTest": true,
+      "modelReference": "/mnt/x/repos/Networksafe/ml/output/base-model",
+      "outputDirectory": "/mnt/x/repos/Networksafe/ml/output/smoke-test/20260728T001441Z/attempt-1-4b_initial",
+      "elapsedSeconds": 234.49532107600004,
+      "peakGpuAllocatedGiB": 5.147518157958984,
+      "peakGpuReservedGiB": 5.458984375,
+      "startup": {
+        "totalParameters": 2222325248,
+        "trainableParameters": 16515072,
+        "trainablePercent": 0.7431437866650201,
+        "trainSamples": 16,
+        "validationSamples": 4,
+        "effectiveBatchSize": 16,
+        "gpuName": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+        "gpuTotalMemoryGiB": 11.94000244140625,
+        "maxLength": 768,
+        "loraR": 8,
+        "loraAlpha": 16
+      },
+      "trainMetrics": {
+        "train_runtime": 49.8364,
+        "train_samples_per_second": 0.963,
+        "train_steps_per_second": 0.06,
+        "total_flos": 423439633198080.0,
+        "train_loss": 2.5503114064534507,
+        "epoch": 3.0
+      },
+      "evaluationMetrics": {
+        "eval_loss": 2.124032974243164,
+        "eval_runtime": 0.7068,
+        "eval_samples_per_second": 5.659,
+        "eval_steps_per_second": 5.659,
+        "epoch": 3.0
+      },
+      "globalStep": 3,
+      "epoch": 3.0,
+      "adapterFiles": {
+        "adapterModel": true,
+        "adapterConfig": true,
+        "tokenizerConfig": true,
+        "trainerState": true
+      }
+    }
+  },
+  "generationDuringEvaluation": false,
+  "evalBatchSize": 1,
+  "trainBatchSize": 1,
+  "gradientCheckpointing": true,
+  "fallbackRequired": false
+}
