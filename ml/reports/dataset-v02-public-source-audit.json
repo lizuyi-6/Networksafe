@@ -1,0 +1,148 @@
+{
+  "acceptedSources": [
+    {
+      "allowedSplits": [
+        "train",
+        "validation"
+      ],
+      "id": "owasp-crs-regression",
+      "license": "Apache-2.0",
+      "revision": "76204946a679c0d5c634bd65e1d606f191ad756e",
+      "upstreamNature": "synthetic_security_regression_requests"
+    },
+    {
+      "allowedSplits": [
+        "train",
+        "validation"
+      ],
+      "id": "s-labs-prompt-injection-train",
+      "license": "MIT",
+      "revision": "002a9dd18514abd021869823d6b0429b38606d99",
+      "upstreamNature": "labeled_public_text_dataset"
+    },
+    {
+      "allowedSplits": [
+        "train",
+        "validation"
+      ],
+      "id": "stripe-openapi",
+      "license": "MIT",
+      "revision": "6dfda253ec9229dd4d20e0cac3ec9b1ff31fac69",
+      "upstreamNature": "public_api_contract"
+    }
+  ],
+  "adapters": [
+    {
+      "positiveStages": 3938,
+      "rejected": {
+        "body_too_long": 2,
+        "family_cap": 1724,
+        "not_positive_expect_ids": 1006,
+        "unsupported_method": 3
+      },
+      "selected": 2209,
+      "selectedByAttackFamily": {
+        "authentication": 42,
+        "automation": 5,
+        "command_injection": 450,
+        "deserialization": 450,
+        "file_upload": 20,
+        "other": 200,
+        "path_traversal": 67,
+        "protocol_attack": 282,
+        "sqli": 450,
+        "ssrf": 36,
+        "xss": 207
+      },
+      "sourceId": "owasp-crs-regression"
+    },
+    {
+      "eligibleBenign": 6265,
+      "eligibleMalicious": 2764,
+      "rejected": {
+        "class_cap": 6829,
+        "content_boundary": 5,
+        "duplicate_text": 40,
+        "injection_marker_missing": 2007,
+        "too_short": 8
+      },
+      "selected": 2200,
+      "selectedByCategory": {
+        "attack": 1000,
+        "hard_negative": 951,
+        "normal": 249
+      },
+      "sourceId": "s-labs-prompt-injection-train"
+    },
+    {
+      "eligibleOperations": 587,
+      "rejected": {},
+      "selected": 1174,
+      "sourceId": "stripe-openapi",
+      "variantsPerOperation": 2
+    }
+  ],
+  "byAttackFamily": {
+    "authentication": 42,
+    "automation": 5,
+    "benign": 2374,
+    "command_injection": 450,
+    "deserialization": 450,
+    "file_upload": 20,
+    "other": 1200,
+    "path_traversal": 67,
+    "protocol_attack": 282,
+    "sqli": 450,
+    "ssrf": 36,
+    "xss": 207
+  },
+  "byCategory": {
+    "attack": 3209,
+    "hard_negative": 951,
+    "normal": 1423
+  },
+  "bySourceDataset": {
+    "owasp-crs-regression": 2209,
+    "s-labs-prompt-injection-train": 2200,
+    "stripe-openapi": 1174
+  },
+  "claims": {
+    "humanReviewPerformedByThisProject": false,
+    "publicDerivedRequestsAreSynthetic": true,
+    "realProductionTraffic": false,
+    "upstreamValidationOrTestSplitsUsedForTraining": false
+  },
+  "crossCorpusDuplicatesRemoved": 0,
+  "excludedSources": [
+    {
+      "homepage": "https://huggingface.co/datasets/deepset/prompt-injections",
+      "id": "deepset-prompt-injections",
+      "reason": "license_metadata_conflict"
+    },
+    {
+      "homepage": "https://github.com/sunbeamdotpt/csic-dataset",
+      "id": "csic-2010-http",
+      "reason": "upstream_dataset_has_no_stated_license"
+    },
+    {
+      "homepage": "https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection",
+      "id": "vnu-sqli-detection",
+      "reason": "mixed_and_partly_unclear_provenance"
+    },
+    {
+      "homepage": "https://huggingface.co/datasets/prodnull/prompt-injection-repo-dataset",
+      "id": "prodnull-prompt-injection-repo",
+      "reason": "gated_access_and_out_of_scope_attack_content"
+    }
+  ],
+  "invalid": 0,
+  "postPipelineAccepted": 5309,
+  "postPipelineBySplit": {
+    "train": 4779,
+    "validation": 530
+  },
+  "registryReviewedAt": "2026-07-28T00:00:00Z",
+  "registryVersion": "public-sources-v01",
+  "schemaVersion": 1,
+  "selected": 5583
+}

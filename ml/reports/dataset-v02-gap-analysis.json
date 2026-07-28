@@ -1,0 +1,120 @@
+{
+  "baselineActualSamples": 1200,
+  "baselineLimitations": [
+    "The 120-sample test split validates mechanics, not production capability.",
+    "The source corpus and generated auxiliary data are synthetic.",
+    "No real normal traffic or independent authorized-range capture is present.",
+    "The baseline uses normalized hashes but no neural semantic embedding audit."
+  ],
+  "baselineManifest": "ml/data/manifests/dataset-manifest.json",
+  "baselineSourceCorpusIsSynthetic": true,
+  "contextualAttackSamplesCurrentExplicitlyEngineered": 0,
+  "families": {
+    "api_abuse": {
+      "current": 29,
+      "gap": 371,
+      "targetMinimum": 400
+    },
+    "authentication": {
+      "current": 46,
+      "gap": 404,
+      "targetMinimum": 450
+    },
+    "automation": {
+      "current": 19,
+      "gap": 381,
+      "targetMinimum": 400
+    },
+    "benign": {
+      "current": 660,
+      "gap": 4340,
+      "targetMinimum": 5000
+    },
+    "business_logic": {
+      "current": 6,
+      "gap": 394,
+      "targetMinimum": 400
+    },
+    "command_injection": {
+      "current": 49,
+      "gap": 401,
+      "targetMinimum": 450
+    },
+    "deserialization": {
+      "current": 38,
+      "gap": 362,
+      "targetMinimum": 400
+    },
+    "file_upload": {
+      "current": 7,
+      "gap": 393,
+      "targetMinimum": 400
+    },
+    "other": {
+      "current": 132,
+      "gap": 1168,
+      "targetMinimum": 1300
+    },
+    "path_traversal": {
+      "current": 48,
+      "gap": 402,
+      "targetMinimum": 450
+    },
+    "protocol_attack": {
+      "current": 48,
+      "gap": 352,
+      "targetMinimum": 400
+    },
+    "sqli": {
+      "current": 48,
+      "gap": 402,
+      "targetMinimum": 450
+    },
+    "ssrf": {
+      "current": 22,
+      "gap": 428,
+      "targetMinimum": 450
+    },
+    "xss": {
+      "current": 48,
+      "gap": 402,
+      "targetMinimum": 450
+    }
+  },
+  "hardNegativeScenarioGaps": [
+    "waf_rule_editor_with_attack_regex",
+    "ticket_discussing_ssrf",
+    "administrator_reviewed_deployment_script",
+    "security_report_with_request_evidence",
+    "database_tool_legitimate_sql",
+    "log_poisoning_literal_as_read_only_data"
+  ],
+  "normalScenarioGaps": [
+    "registration",
+    "password_change",
+    "payment_status_query",
+    "oauth_callback",
+    "file_download",
+    "bulk_import",
+    "security_report_upload",
+    "websocket_message",
+    "waf_rule_edit",
+    "repository_commit",
+    "ticket_system",
+    "markdown_editor"
+  ],
+  "promptInjectionSamplesCurrent": 0,
+  "schemaVersion": 1,
+  "statisticallyThinFamilies": {
+    "automation": 19,
+    "business_logic": 6,
+    "file_upload": 7,
+    "ssrf": 22
+  },
+  "unknownScenarioGaps": [
+    "missing_identity_and_permission",
+    "body_vs_execution_argument_ambiguity",
+    "multiple_weak_attack_families",
+    "partially_decoded_input"
+  ]
+}

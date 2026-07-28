@@ -213,3 +213,11 @@ docs/video/**/*.jpg
 
 # IntelliJ headless inspector output (scripts/dev/run-idea-inspect.ps1)
 .idea-inspect-results/
+# AetherArgus v0.2 generated data artifacts (reproducible; manifests/reports stay tracked)
+/ml/data/candidates/
+/ml/data/review_queue/
+/ml/data/cache/
+/ml/data/releases/*/*.jsonl
+/ml/data/releases/*/sealed/
+/ml/data_pipeline/.state/
+

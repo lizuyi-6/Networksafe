@@ -1,0 +1,212 @@
+{
+  "authorizedRealAttackCount": 0,
+  "counts": {
+    "byAttackFamily": {
+      "api_abuse": 491,
+      "authentication": 554,
+      "automation": 490,
+      "benign": 8244,
+      "business_logic": 478,
+      "command_injection": 1014,
+      "deserialization": 714,
+      "file_upload": 498,
+      "other": 2988,
+      "path_traversal": 563,
+      "protocol_attack": 790,
+      "sqli": 999,
+      "ssrf": 520,
+      "xss": 709
+    },
+    "byCategory": {
+      "attack": 9458,
+      "hard_negative": 2971,
+      "normal": 5273,
+      "unknown": 1350
+    },
+    "byEncoding": {
+      "double_url_encoded": 356,
+      "plain": 10875,
+      "unicode": 6439,
+      "url_encoded": 1382
+    },
+    "byEvaluationSuite": {
+      "authorized_attack_test": 1125,
+      "development": 11993,
+      "independent_hard_negative": 88,
+      "independent_synthetic_normal": 200,
+      "independent_unknown": 150,
+      "long_input_test": 50,
+      "prompt_injection_test": 137,
+      "public_training_openapi_normal": 1174,
+      "public_training_prompt_injection": 2200,
+      "public_training_waf_regression": 1935
+    },
+    "byProvenance": {
+      "deterministic_synthetic_v02": 13354,
+      "public_open_source_derived": 5309,
+      "tracked_synthetic_security_corpus_v02_conversion": 389
+    },
+    "bySourceDataset": {
+      "advanced_dataset": 104,
+      "aetherargus-v02-deterministic": 13354,
+      "complete_dataset": 46,
+      "full_test_dataset": 119,
+      "owasp-crs-regression": 1935,
+      "s-labs-prompt-injection-train": 2200,
+      "stripe-openapi": 1174,
+      "zeroday_dataset": 120
+    },
+    "bySplit": {
+      "test_closed": 1236,
+      "test_independent": 1750,
+      "train": 14314,
+      "validation": 1752
+    }
+  },
+  "datasetAcceptance": {
+    "gates": {
+      "all_records_deterministically_valid": true,
+      "core_independent_family_each_at_least_100": true,
+      "family_minimums_met": true,
+      "independent_test_at_least_1500": true,
+      "train_at_least_8000": true,
+      "validation_at_least_1000": true
+    },
+    "passed": true
+  },
+  "datasetVersion": "v02",
+  "files": {
+    "test_closed": {
+      "bytes": 4214042,
+      "path": "ml/data/releases/v02/test-closed.jsonl",
+      "records": 1236,
+      "sha256": "d2d3a4651c2db69732fe8f8e668e4e5d29ea4b06696efe7e6efadd6209fc13f8"
+    },
+    "test_independent": {
+      "bytes": 6501084,
+      "path": "ml/data/releases/v02/test-independent.jsonl",
+      "records": 1750,
+      "sha256": "766010d0c9b9a432831c8660711a57f8b07e43693b97a0e592fcc1971b5c4eab"
+    },
+    "train": {
+      "bytes": 51939028,
+      "path": "ml/data/releases/v02/train.jsonl",
+      "records": 14314,
+      "sha256": "750ed4def5def336252cd7d27933f25ef57a830085591a44f676ff3e5317f8d7"
+    },
+    "validation": {
+      "bytes": 6292081,
+      "path": "ml/data/releases/v02/validation.jsonl",
+      "records": 1752,
+      "sha256": "bea53b5dcc8265fe2b4438e1412b164142c839b353732d985a241165785b9ad3"
+    }
+  },
+  "generation": {
+    "generatedAt": "2026-07-28T00:00:00Z",
+    "generatorModel": "deterministic-aetherargus-v02",
+    "generatorPromptVersion": "dataset-v02.1",
+    "independentSealedFirst": true
+  },
+  "humanReviewCount": 0,
+  "independentSeal": {
+    "datasetVersion": "v02",
+    "recordCount": 1750,
+    "recordsSha256": "4d2ccde072970368f6abbab0fddf38bdc6e1ec3f4ee2598c47d0cbacea7b111b",
+    "schemaVersion": 1,
+    "sealedBeforeDevelopmentGeneration": true,
+    "sourceSampleIdsSha256": "65b5f461bcf1cf222f997c8e452cb90f48467702025f5bf570336783d6c8fffc",
+    "templateFingerprintsSha256": "5c373dd3010d379d6df3c49b3194689825dfd0e31091d0e0b4b5a84aea6fe65b"
+  },
+  "leakage": {
+    "checks": [
+      "normalized SHA-256",
+      "template fingerprint",
+      "source-seed group",
+      "CVE group",
+      "generator model and prompt version group",
+      "64-bit SimHash retained per sample",
+      "24-permutation MinHash retained per sample",
+      "character n-gram hashing vectors (non-neural fallback)"
+    ],
+    "detected": false,
+    "limitations": [
+      "No neural embedding model was available in this execution environment.",
+      "SimHash/MinHash are lexical similarity controls and do not prove absence of all semantic leakage."
+    ],
+    "pairwise": {
+      "test_closed_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_test_closed": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_validation": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "validation_vs_test_closed": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "validation_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      }
+    }
+  },
+  "preview02Acceptance": {
+    "passed": false,
+    "reason": "This delivery expands and audits data only. Model training, inference, quantization, prompt-injection obedience measurement, recall and false-positive gates were not run."
+  },
+  "process": {
+    "crossCorpusDuplicatesRemoved": 0,
+    "duplicatesRemoved": 281,
+    "generated": 19333,
+    "output": 19052,
+    "redactions": 5096,
+    "reviewRejected": 0,
+    "rulesAccepted": 19333,
+    "selectionDropped": 0,
+    "semanticPairsClustered": 301
+  },
+  "publicSources": {
+    "acceptedAfterPipeline": 5309,
+    "acceptedSourceCount": 3,
+    "allowedSplits": [
+      "train",
+      "validation"
+    ],
+    "auditPath": "ml/reports/dataset-v02-public-source-audit.json",
+    "excludedSourceCount": 4,
+    "selectedBeforePipeline": 5583,
+    "upstreamEvaluationSplitsUsedForTraining": false
+  },
+  "realNormalCount": 0,
+  "schemaVersion": 2,
+  "seed": 20260728,
+  "smoke": false,
+  "sourceCorpusIsSynthetic": true,
+  "sourceRegistry": {
+    "path": "ml/data/manifests/dataset-v02-source-registry.json",
+    "sourceSampleIdCount": 17215,
+    "sourceSampleIdsSha256": "8ad6e94c199bd83af3edbe7f8f8efe4eb8bceee8d665d70c4d38485a2739c2ce"
+  }
+}

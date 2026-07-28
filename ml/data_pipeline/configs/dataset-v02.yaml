@@ -1,0 +1,74 @@
+version: v02
+seed: 20260728
+
+generation:
+  generator_model: deterministic-aetherargus-v02
+  prompt_version: dataset-v02.1
+  generated_at: "2026-07-28T00:00:00Z"
+  legacy_max_records: 1200
+  prompt_injection_interval: 11
+  source_group_size: 12
+
+targets:
+  smoke_total: 100
+  development_total: 12000
+  independent_total: 1750
+  development_categories:
+    attack: 5280
+    normal: 3600
+    hard_negative: 1920
+    unknown: 1200
+  independent:
+    core_family_each: 100
+    deserialization: 80
+    other_attack: 70
+    normal: 250
+    hard_negative: 100
+    unknown: 150
+
+split_ratios:
+  train: 0.80
+  validation: 0.10
+  test_closed: 0.10
+
+public_sources:
+  enabled: true
+  registry: ml/data_pipeline/configs/public-sources-v01.yaml
+  cache_dir: ml/data/cache/public-v01
+  smoke_total: 100
+  split_ratios:
+    train: 0.90
+    validation: 0.10
+
+quality:
+  unknown_max_confidence: 0.60
+  near_duplicate_jaccard: 0.985
+  simhash_max_distance: 3
+  minhash_similarity: 0.92
+
+paths:
+  source_root: backend/test-data/aetherguard-security-dataset
+  candidates_dir: ml/data/candidates/v02
+  review_queue: ml/data/review_queue/v02
+  release_dir: ml/data/releases/v02
+  smoke_release_dir: ml/data/releases/v02-smoke
+  reports_dir: ml/reports
+  manifest: ml/data/manifests/dataset-v02-manifest.json
+  source_registry: ml/data/manifests/dataset-v02-source-registry.json
+  public_source_audit: ml/reports/dataset-v02-public-source-audit.json
+
+minimum_family_targets:
+  benign: 5000
+  sqli: 450
+  xss: 450
+  command_injection: 450
+  path_traversal: 450
+  ssrf: 450
+  authentication: 450
+  automation: 400
+  api_abuse: 400
+  deserialization: 400
+  file_upload: 400
+  protocol_attack: 400
+  business_logic: 400
+  other: 1300
