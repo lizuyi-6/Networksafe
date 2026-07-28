@@ -68,6 +68,7 @@ def build_quality_report(
             "byCategory": count_distribution(all_records, "labelCategory"),
             "byAttackFamily": dict(sorted(family_counts.items())),
             "byProvenance": count_distribution(all_records, "provenance"),
+            "bySourceDataset": count_distribution(all_records, "sourceDataset"),
             "byEncoding": count_distribution(all_records, "encoding"),
             "byEvaluationSuite": count_distribution(all_records, "evaluationSuite"),
             "independentAttackFamily": dict(sorted(independent_family_counts.items())),
@@ -86,6 +87,19 @@ def build_quality_report(
             "realNormalTest": 0,
             "authorizedRealAttackTest": 0,
             "statement": "No real production traffic or real authorized-range capture is included.",
+        },
+        "publicSources": {
+            "derivedRecordCount": sum(
+                1
+                for record in all_records
+                if record["metadata"]["provenance"] == "public_open_source_derived"
+            ),
+            "allowedSplits": ["train", "validation"],
+            "upstreamEvaluationSplitsUsedForTraining": False,
+            "statement": (
+                "Public records are checksum-pinned, license-reviewed synthetic or contract-derived "
+                "training inputs; they are not claimed as production traffic."
+            ),
         },
         "datasetAcceptance": {
             "gates": dataset_gates,
@@ -127,6 +141,8 @@ def render_quality_markdown(report: dict[str, Any]) -> str:
 - Human-reviewed samples: `{report['review']['humanReviewed']}`. No human review is claimed.
 - Real normal test samples: `0`.
 - Authorized real attack samples: `0`.
+- Public open-source-derived training samples:
+  `{report['publicSources']['derivedRecordCount']}`; restricted to train/validation.
 
 ## Dataset-only gates
 

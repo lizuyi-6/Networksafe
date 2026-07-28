@@ -15,6 +15,9 @@ merge, quantize, publish, or connect a model to `backend/src/`.
   actual artifact is supplied.
 - The independent synthetic test is generated and sealed before development
   candidates are generated. Its records are never inputs to development generation.
+- Public sources are checksum-pinned, license-reviewed, and restricted to
+  `train`/`validation`. Their upstream validation/test splits are not used for
+  training, and the public-source cache is ignored by Git.
 - `detection-input.schema.json` and `detection-output.schema.json` are consumed as
   immutable contracts. This pipeline does not change them.
 
@@ -24,6 +27,13 @@ From the repository root:
 
 ```bash
 python ml/data_pipeline/build_release.py --help
+
+# Review the fetch plan, then download the three approved pinned artifacts
+python ml/data_pipeline/fetch_public_sources.py --dry-run
+python ml/data_pipeline/fetch_public_sources.py
+
+# Public-source-only 100-record adapter gate
+python ml/data_pipeline/import_public_sources.py --smoke
 
 # Plan only; writes nothing
 python ml/data_pipeline/build_release.py --dry-run --smoke
@@ -48,22 +58,26 @@ existing output when its bytes are identical to the reproducible result.
    source seed, transformations, generation type, timestamp, and pending review state.
 2. `import_external_candidates.py` imports already authorized JSONL without inventing
    provenance. Real data must be explicitly marked `authorized_sanitized_real`.
-3. `redact_sensitive_data.py` replaces credential-like values, public targets, and
+3. `fetch_public_sources.py` downloads only accepted registry entries and verifies
+   byte length plus SHA-256. `import_public_sources.py` maps the pinned OWASP CRS,
+   prompt-injection training split, and OpenAPI contract into synthetic HTTP records.
+   Sources with unclear, conflicting, gated, or out-of-scope terms remain excluded.
+4. `redact_sensitive_data.py` replaces credential-like values, public targets, and
    non-reserved domains in a copied output.
-4. `validate_schema.py`, `validate_labels.py`, and `validate_evidence.py` enforce the
+5. `validate_schema.py`, `validate_labels.py`, and `validate_evidence.py` enforce the
    fixed contract and deterministic consistency rules.
-5. `review_candidates.py` writes immutable review decisions. It never silently edits
+6. `review_candidates.py` writes immutable review decisions. It never silently edits
    labels. Reviewer disagreement or suggested relabeling is queued.
-6. `deduplicate.py` removes exact and normalized duplicates.
-7. `semantic_deduplicate.py` assigns conservative lexical clusters using SimHash,
+7. `deduplicate.py` removes exact and normalized duplicates.
+8. `semantic_deduplicate.py` assigns conservative lexical clusters using SimHash,
    MinHash and character n-gram vectors. It does not claim a neural embedding run.
-8. `assign_groups.py` binds template, CVE, generator, prompt and semantic provenance
+9. `assign_groups.py` binds template, CVE, generator, prompt and semantic provenance
    into leakage groups.
-9. `split_dataset.py` performs group-aware development splitting and preserves the
+10. `split_dataset.py` performs group-aware development splitting and preserves the
    separately sealed independent test.
-10. `audit_dataset.py` checks counts, schemas, provenance, suites and dataset-only
+11. `audit_dataset.py` checks counts, schemas, provenance, suites and dataset-only
     gates.
-11. `build_release.py` orchestrates all stages and writes manifests and reports.
+12. `build_release.py` orchestrates all stages and writes manifests and reports.
 
 ## Generated data policy
 
@@ -76,6 +90,23 @@ artifacts and are ignored by Git. The following small evidence files are tracked
 - `ml/data/manifests/dataset-v02-source-registry.json`
 - `ml/reports/dataset-v02-*.md`
 - `ml/reports/dataset-v02-*.json`
+
+The source registry itself is tracked at
+`ml/data_pipeline/configs/public-sources-v01.yaml`; downloaded archives, CSV files,
+OpenAPI documents, candidates, and full release JSONL remain ignored.
+
+## Public-source boundary
+
+- OWASP CRS: positive `expect_ids` request stages only; `no_expect_ids` is not
+  treated as proof of a benign label.
+- S-Labs prompt-injection dataset: only the upstream `train` split is eligible.
+  A deterministic content-boundary filter rejects malware, credential-harvesting,
+  persistence, exfiltration, and executable downloader patterns.
+- Stripe OpenAPI: methods, paths, and parameter schemas seed realistic payment and
+  account request shapes. Generated values use reserved domains and redacted
+  credentials. These records are contract-derived synthetic traffic.
+- CSIC 2010, VNU-SQLi, deepset prompt-injections, and the gated prodnull corpus are
+  recorded as excluded with reasons in the source registry and audit report.
 
 ## Independent suites
 

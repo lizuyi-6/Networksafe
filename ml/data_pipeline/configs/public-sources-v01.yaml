@@ -1,0 +1,110 @@
+schemaVersion: 1
+registryVersion: public-sources-v01
+reviewedAt: "2026-07-28T00:00:00Z"
+
+sources:
+  - id: owasp-crs-regression
+    status: accepted
+    purpose: attack_request_structure
+    homepage: https://github.com/coreruleset/coreruleset
+    revision: 76204946a679c0d5c634bd65e1d606f191ad756e
+    license: Apache-2.0
+    licenseEvidence: https://github.com/coreruleset/coreruleset/blob/76204946a679c0d5c634bd65e1d606f191ad756e/LICENSE
+    upstreamNature: synthetic_security_regression_requests
+    adapter: owasp_crs_regression
+    allowedSplits: [train, validation]
+    artifact:
+      url: https://github.com/coreruleset/coreruleset/archive/76204946a679c0d5c634bd65e1d606f191ad756e.tar.gz
+      cachePath: owasp-crs-regression/archive.tar.gz
+      sha256: 60dd49fbc7223a530a85fa6f98778ba3e5b9d2c922c316428a845bd5e7e72595
+      bytes: 618908
+    selection:
+      positiveExpectIdsOnly: true
+      maxByAttackFamily:
+        authentication: 50
+        automation: 20
+        command_injection: 450
+        deserialization: 450
+        file_upload: 50
+        other: 200
+        path_traversal: 100
+        protocol_attack: 300
+        sqli: 450
+        ssrf: 100
+        xss: 250
+
+  - id: s-labs-prompt-injection-train
+    status: accepted
+    purpose: prompt_injection_and_hard_negative
+    homepage: https://huggingface.co/datasets/S-Labs/prompt-injection-dataset
+    revision: 002a9dd18514abd021869823d6b0429b38606d99
+    license: MIT
+    licenseEvidence: https://huggingface.co/datasets/S-Labs/prompt-injection-dataset/blob/002a9dd18514abd021869823d6b0429b38606d99/README.md
+    upstreamNature: labeled_public_text_dataset
+    adapter: s_labs_prompt_injection
+    allowedSplits: [train, validation]
+    upstreamSplitsUsed: [train]
+    upstreamSplitsExcluded: [validation, test]
+    artifact:
+      url: https://huggingface.co/datasets/S-Labs/prompt-injection-dataset/resolve/002a9dd18514abd021869823d6b0429b38606d99/data/train.csv
+      cachePath: s-labs-prompt-injection/train.csv
+      sha256: bab012fec95d4214599b18777fd6efc5cc5e9545354df581880aeca5c1d487d7
+      bytes: 747016
+    selection:
+      maliciousMax: 1000
+      benignMax: 1200
+      minimumLength: 8
+      maximumLength: 1024
+
+  - id: stripe-openapi
+    status: accepted
+    purpose: realistic_normal_business_shapes
+    homepage: https://github.com/stripe/openapi
+    revision: 6dfda253ec9229dd4d20e0cac3ec9b1ff31fac69
+    license: MIT
+    licenseEvidence: https://github.com/stripe/openapi/blob/6dfda253ec9229dd4d20e0cac3ec9b1ff31fac69/LICENSE
+    upstreamNature: public_api_contract
+    adapter: stripe_openapi
+    allowedSplits: [train, validation]
+    artifact:
+      url: https://raw.githubusercontent.com/stripe/openapi/6dfda253ec9229dd4d20e0cac3ec9b1ff31fac69/openapi/spec3.json
+      cachePath: stripe-openapi/spec3.json
+      sha256: e24a26de4188fd64dec4c043d5d3726277fdcb07556a493ea481c305b0a223d8
+      bytes: 7866866
+    selection:
+      variantsPerOperation: 2
+      methods: [GET, POST, DELETE]
+      maximumOperations: 600
+
+  - id: deepset-prompt-injections
+    status: excluded
+    homepage: https://huggingface.co/datasets/deepset/prompt-injections
+    revision: 4f61ecb038e9c3fb77e21034b22511b523772cdd
+    reason: license_metadata_conflict
+    evidence:
+      - "Top-level dataset card reports Apache-2.0."
+      - "Dataset API nested dataset_info.license reports CC-BY-4.0."
+
+  - id: csic-2010-http
+    status: excluded
+    homepage: https://github.com/sunbeamdotpt/csic-dataset
+    reason: upstream_dataset_has_no_stated_license
+    evidence:
+      - "The mirror explicitly says dataset files are excluded from its Apache-2.0 license."
+      - "The mirror relies on a fair-use statement, which is not a reusable dataset license."
+
+  - id: vnu-sqli-detection
+    status: excluded
+    homepage: https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection
+    reason: mixed_and_partly_unclear_provenance
+    evidence:
+      - "The dataset card marks the aggregate license as unknown."
+      - "One merged source has unclear original terms and cannot be isolated reliably."
+
+  - id: prodnull-prompt-injection-repo
+    status: excluded
+    homepage: https://huggingface.co/datasets/prodnull/prompt-injection-repo-dataset
+    reason: gated_access_and_out_of_scope_attack_content
+    evidence:
+      - "The public page requires accepting additional access conditions."
+      - "The malicious class includes credential harvesting, persistence, and exfiltration categories outside this task's data boundary."

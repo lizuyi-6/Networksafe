@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import ipaddress
 import re
 from pathlib import Path
 from typing import Any
@@ -24,9 +25,23 @@ from common import (
 )
 
 
-URL_RE = re.compile(r"(?i)\b(https?://)([a-z0-9.-]+)")
+URL_RE = re.compile(r"(?i)\b(https?://)([^/\s\"'<>]+)")
 IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+IPV6_RE = re.compile(
+    r"(?<![0-9A-Za-z])(?:\[[0-9A-Fa-f:.%]+\]|(?:[0-9A-Fa-f]{1,4}:){2,7}[0-9A-Fa-f:%]*)(?![0-9A-Za-z])"
+)
+DOMAIN_RE = re.compile(r"(?i)\b(?:[a-z0-9-]+\.)+[a-z]{2,63}\b")
 ALLOWED_HOSTS = {"example.com", "example.org", "test.local", "example.invalid", "localhost"}
+
+
+def allowed_network_host(raw_host: str) -> bool:
+    host = raw_host.strip("[]").split("%", 1)[0].lower()
+    if host in ALLOWED_HOSTS or host.endswith(".test.local"):
+        return True
+    try:
+        return not ipaddress.ip_address(host).is_global
+    except ValueError:
+        return False
 
 
 def redact_network(value: str) -> tuple[str, int]:
@@ -34,8 +49,16 @@ def redact_network(value: str) -> tuple[str, int]:
 
     def replace_url(match: re.Match[str]) -> str:
         nonlocal count
-        host = match.group(2).lower()
-        if host in ALLOWED_HOSTS or host.endswith(".test.local"):
+        authority = match.group(2)
+        candidate = authority.rsplit("@", 1)[-1]
+        if candidate.startswith("["):
+            closing = candidate.find("]")
+            host = candidate[: closing + 1] if closing >= 0 else candidate
+        else:
+            host = candidate.split(":", 1)[0]
+            if candidate.count(":") >= 2:
+                host = candidate
+        if allowed_network_host(host):
             return match.group(0)
         count += 1
         return f"{match.group(1)}example.com"
@@ -45,21 +68,37 @@ def redact_network(value: str) -> tuple[str, int]:
     def replace_ip(match: re.Match[str]) -> str:
         nonlocal count
         address = match.group(0)
-        parts = [int(part) for part in address.split(".")]
-        allowed = (
-            parts[0] in {10, 127}
-            or (parts[0] == 169 and parts[1] == 254)
-            or (parts[0] == 172 and 16 <= parts[1] <= 31)
-            or (parts[0] == 192 and parts[1] in {0, 168})
-            or (parts[0] == 198 and parts[1] == 51)
-            or (parts[0] == 203 and parts[1] == 0)
-        )
-        if allowed:
+        if allowed_network_host(address):
             return address
         count += 1
         return "192.0.2.10"
 
-    return IPV4_RE.sub(replace_ip, value), count
+    value = IPV4_RE.sub(replace_ip, value)
+
+    def replace_ipv6(match: re.Match[str]) -> str:
+        nonlocal count
+        address = match.group(0)
+        candidate = address.strip("[]").split("%", 1)[0]
+        try:
+            parsed = ipaddress.ip_address(candidate)
+        except ValueError:
+            return address
+        if not parsed.is_global:
+            return address
+        count += 1
+        return "2001:db8::10"
+
+    value = IPV6_RE.sub(replace_ipv6, value)
+
+    def replace_domain(match: re.Match[str]) -> str:
+        nonlocal count
+        domain = match.group(0).lower()
+        if domain in ALLOWED_HOSTS or domain.endswith(".test.local"):
+            return match.group(0)
+        count += 1
+        return "example.com"
+
+    return DOMAIN_RE.sub(replace_domain, value), count
 
 
 def redact_value(value: Any) -> tuple[Any, int]:
@@ -79,9 +118,11 @@ def redact_value(value: Any) -> tuple[Any, int]:
         result = {}
         total = 0
         for key, item in value.items():
-            if str(key).lower() in {"authorization", "proxy-authorization", "x-api-key", "cookie", "set-cookie"}:
-                # Synthetic carrier cookies are safe to retain after token-level redaction.
-                redacted, count = redact_value(item)
+            if str(key) in {"field", "ruleId"}:
+                # These values are contract identifiers such as
+                # ``sourceContext.assetType``; treating them as DNS names breaks
+                # evidence and rule-signal field resolution.
+                redacted, count = item, 0
             else:
                 redacted, count = redact_value(item)
             result[key] = redacted

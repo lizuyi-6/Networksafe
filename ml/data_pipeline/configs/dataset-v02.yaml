@@ -31,6 +31,15 @@ split_ratios:
   validation: 0.10
   test_closed: 0.10
 
+public_sources:
+  enabled: true
+  registry: ml/data_pipeline/configs/public-sources-v01.yaml
+  cache_dir: ml/data/cache/public-v01
+  smoke_total: 100
+  split_ratios:
+    train: 0.90
+    validation: 0.10
+
 quality:
   unknown_max_confidence: 0.60
   near_duplicate_jaccard: 0.985
@@ -46,6 +55,7 @@ paths:
   reports_dir: ml/reports
   manifest: ml/data/manifests/dataset-v02-manifest.json
   source_registry: ml/data/manifests/dataset-v02-source-registry.json
+  public_source_audit: ml/reports/dataset-v02-public-source-audit.json
 
 minimum_family_targets:
   benign: 5000

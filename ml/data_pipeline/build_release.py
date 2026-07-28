@@ -28,6 +28,7 @@ from common import (
 )
 from deduplicate import deduplicate_records
 from generate_candidates import CORE_FAMILIES, generate_development, generate_independent
+from public_source_adapters import generate_public_candidates, render_public_source_audit
 from redact_sensitive_data import redact_records
 from review_candidates import review_records
 from semantic_deduplicate import semantic_cluster_records
@@ -80,6 +81,43 @@ def artifact_metadata(path: str, records: list[dict[str, Any]]) -> dict[str, Any
         "bytes": len(content.encode("utf-8")),
         "sha256": stable_hash(content),
     }
+
+
+def reject_public_cross_corpus_duplicates(
+    public_records: list[dict[str, Any]],
+    protected_records: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Keep public-derived training data from duplicating sealed or existing development data."""
+
+    protected_hashes = {
+        (record["metadata"]["attackFamily"], record["metadata"]["normalizedHash"])
+        for record in protected_records
+    }
+    protected_templates = {
+        record["metadata"]["templateFingerprint"] for record in protected_records
+    }
+    accepted = []
+    rejected = []
+    for record in public_records:
+        metadata = record["metadata"]
+        problems = []
+        if (metadata["attackFamily"], metadata["normalizedHash"]) in protected_hashes:
+            problems.append("normalized_duplicate_of_protected_corpus")
+        if metadata["templateFingerprint"] in protected_templates:
+            problems.append("template_duplicate_of_protected_corpus")
+        if problems:
+            rejected.append(
+                {
+                    "sampleId": record["sampleId"],
+                    "accepted": False,
+                    "problems": problems,
+                    "suggestedLabel": None,
+                    "needsManualReview": False,
+                }
+            )
+            continue
+        accepted.append(record)
+    return accepted, rejected
 
 
 def make_gap_analysis(config: dict[str, Any], root: Path) -> dict[str, Any]:
@@ -208,12 +246,20 @@ def render_final_report(
     manifest: dict[str, Any],
     quality: dict[str, Any],
     process_stats: dict[str, Any],
+    public_audit: dict[str, Any],
 ) -> str:
     family_lines = "\n".join(
         f"- `{family}`: {count}" for family, count in manifest["counts"]["byAttackFamily"].items()
     )
     source_lines = "\n".join(
         f"- `{source}`: {count}" for source, count in manifest["counts"]["byProvenance"].items()
+    )
+    source_dataset_lines = "\n".join(
+        f"- `{source}`: {count}" for source, count in manifest["counts"]["bySourceDataset"].items()
+    )
+    public_filter_lines = "\n".join(
+        f"   - `{adapter['sourceId']}`: `{stable_json(adapter.get('rejected', {}))}`"
+        for adapter in public_audit.get("adapters", [])
     )
     return f"""# AetherArgus Preview 0.2 data-only delivery report
 
@@ -223,12 +269,17 @@ def render_final_report(
    `{manifest['counts']['bySplit']['test_independent']}`.
 2. **Source distribution**:
 {source_lines}
+   Source datasets:
+{source_dataset_lines}
 3. **Attack-family counts**:
 {family_lines}
 4. **Synthetic ratio**: `{quality['synthetic']['ratio']:.2%}`.
 5. **Human-reviewed count**: `0`; no human review is claimed.
 6. **Rejected samples**: deterministic review `{process_stats['reviewRejected']}`;
-   reasons are recorded in the generated review queue.
+   public-source filter/cap decisions:
+{public_filter_lines}
+   Exact details are recorded in the public-source audit; caps are selection decisions,
+   not label-review failures.
 7. **Duplicates removed**: `{process_stats['duplicatesRemoved']}`.
 8. **Leakage result**: known group/hash/template leakage detected =
    `{manifest['leakage']['detected']}`. Neural embedding was not available; lexical
@@ -311,8 +362,9 @@ def build_release(
         development = development[:200]
     development_processed, development_stats = process_records(development, config, seed)
     if smoke:
-        development_stats["selectionDropped"] = max(0, len(development_processed) - 75)
-        development_processed = development_processed[:75]
+        development_target = 50 if config.get("public_sources", {}).get("enabled") else 75
+        development_stats["selectionDropped"] = max(0, len(development_processed) - development_target)
+        development_processed = development_processed[:development_target]
         development_stats["output"] = len(development_processed)
     else:
         development_stats["selectionDropped"] = 0
@@ -335,7 +387,89 @@ def build_release(
         resume=resume,
     )
 
+    # 3. Import approved public sources into development-only partitions. The
+    # independent seal and closed-test pool are never passed to these adapters.
+    public_processed: list[dict[str, Any]] = []
+    public_audit: dict[str, Any] = {
+        "acceptedSources": [],
+        "excludedSources": [],
+        "adapters": [],
+        "selected": 0,
+        "byCategory": {},
+        "byAttackFamily": {},
+        "bySourceDataset": {},
+    }
+    public_stats = {
+        "generated": 0,
+        "redactions": 0,
+        "rulesAccepted": 0,
+        "reviewRejected": 0,
+        "duplicatesRemoved": 0,
+        "semanticPairsClustered": 0,
+        "selectionDropped": 0,
+        "output": 0,
+        "crossCorpusDuplicatesRemoved": 0,
+        "reviewDecisions": [],
+        "reviewQueue": [],
+    }
+    public_cross_rejected: list[dict[str, Any]] = []
+    if config.get("public_sources", {}).get("enabled"):
+        public_candidates, public_audit = generate_public_candidates(
+            root,
+            config,
+            seed,
+            smoke=smoke,
+        )
+        public_processed, public_stats = process_records(public_candidates, config, seed + 101)
+        if smoke:
+            public_stats["selectionDropped"] = max(0, len(public_processed) - 25)
+            public_processed = public_processed[:25]
+        else:
+            public_stats["selectionDropped"] = 0
+        public_processed, public_cross_rejected = reject_public_cross_corpus_duplicates(
+            public_processed,
+            independent_processed + development_processed,
+        )
+        public_stats["crossCorpusDuplicatesRemoved"] = len(public_cross_rejected)
+        public_stats["output"] = len(public_processed)
+        public_audit["postPipelineAccepted"] = len(public_processed)
+        public_audit["crossCorpusDuplicatesRemoved"] = len(public_cross_rejected)
+        write_jsonl(
+            candidates_dir / "public-source-reviewed-grouped.jsonl",
+            public_processed,
+            dry_run=dry_run,
+            resume=resume,
+        )
+        write_jsonl(
+            review_dir / "public-source-review-decisions.jsonl",
+            public_stats["reviewDecisions"],
+            dry_run=dry_run,
+            resume=resume,
+        )
+        write_jsonl(
+            review_dir / "public-source-review-queue.jsonl",
+            public_stats["reviewQueue"],
+            dry_run=dry_run,
+            resume=resume,
+        )
+        write_jsonl(
+            review_dir / "public-source-cross-corpus-rejections.jsonl",
+            public_cross_rejected,
+            dry_run=dry_run,
+            resume=resume,
+        )
+
     splits = grouped_split(development_processed, config["split_ratios"], seed)
+    public_splits: dict[str, list[dict[str, Any]]] = {}
+    if public_processed:
+        public_splits = grouped_split(
+            public_processed,
+            config["public_sources"]["split_ratios"],
+            seed + 101,
+        )
+        for split_name in ("train", "validation"):
+            splits[split_name].extend(public_splits.get(split_name, []))
+            splits[split_name].sort(key=lambda record: stable_hash(f"{seed}|{record['sampleId']}"))
     for record in independent_processed:
         record["metadata"]["split"] = "test_independent"
     split_records = {**splits, "test_independent": independent_processed}
@@ -359,7 +493,11 @@ def build_release(
     quality = build_quality_report(split_records, config)
     registry = source_registry(all_records)
     combined_stats = {
-        key: independent_stats.get(key, 0) + development_stats.get(key, 0)
+        key: (
+            independent_stats.get(key, 0)
+            + development_stats.get(key, 0)
+            + public_stats.get(key, 0)
+        )
         for key in (
             "generated",
             "redactions",
@@ -370,6 +508,13 @@ def build_release(
             "selectionDropped",
             "output",
         )
+    }
+    combined_stats["crossCorpusDuplicatesRemoved"] = public_stats.get(
+        "crossCorpusDuplicatesRemoved",
+        0,
+    )
+    public_audit["postPipelineBySplit"] = {
+        name: len(records) for name, records in public_splits.items()
     }
     manifest = {
         "schemaVersion": 2,
@@ -387,6 +532,7 @@ def build_release(
             "byCategory": count_distribution(all_records, "labelCategory"),
             "byAttackFamily": count_distribution(all_records, "attackFamily"),
             "byProvenance": count_distribution(all_records, "provenance"),
+            "bySourceDataset": count_distribution(all_records, "sourceDataset"),
             "byEncoding": count_distribution(all_records, "encoding"),
             "byEvaluationSuite": count_distribution(all_records, "evaluationSuite"),
         },
@@ -399,6 +545,15 @@ def build_release(
             "path": config["paths"]["source_registry"],
             "sourceSampleIdCount": registry["sourceSampleIdCount"],
             "sourceSampleIdsSha256": registry["sourceSampleIdsSha256"],
+        },
+        "publicSources": {
+            "auditPath": config["paths"]["public_source_audit"],
+            "acceptedSourceCount": len(public_audit["acceptedSources"]),
+            "excludedSourceCount": len(public_audit["excludedSources"]),
+            "selectedBeforePipeline": public_audit["selected"],
+            "acceptedAfterPipeline": len(public_processed),
+            "allowedSplits": ["train", "validation"],
+            "upstreamEvaluationSplitsUsedForTraining": False,
         },
         "leakage": leakage,
         "independentSeal": independent_seal,
@@ -442,6 +597,23 @@ def build_release(
         dry_run=dry_run,
         resume=resume,
     )
+    public_audit_json = (
+        reports_dir / "dataset-v02-public-source-audit-smoke.json"
+        if smoke
+        else resolve_path(root, config["paths"]["public_source_audit"])
+    )
+    write_json(
+        public_audit_json,
+        public_audit,
+        dry_run=dry_run,
+        resume=resume,
+    )
+    guarded_write_text(
+        public_audit_json.with_suffix(".md"),
+        render_public_source_audit(public_audit),
+        dry_run=dry_run,
+        resume=resume,
+    )
     if not smoke:
         gap = make_gap_analysis(config, root)
         write_json(
@@ -470,7 +642,7 @@ def build_release(
         )
         guarded_write_text(
             reports_dir / "dataset-v02-final-report.md",
-            render_final_report(manifest, quality, combined_stats),
+            render_final_report(manifest, quality, combined_stats, public_audit),
             dry_run=dry_run,
             resume=resume,
         )
