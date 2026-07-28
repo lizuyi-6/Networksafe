@@ -1,0 +1,441 @@
+{
+  "schemaVersion": 1,
+  "sourceGroups": [
+    {
+      "examples": [
+        "legacy-advanced_dataset-15_http_smuggling-smuggle_0000",
+        "legacy-advanced_dataset-15_http_smuggling-smuggle_0001",
+        "legacy-advanced_dataset-15_http_smuggling-smuggle_0005"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/15_http_smuggling.json",
+      "sourceSampleCount": 4,
+      "sourceSampleIdsSha256": "8058a06ade3d57b874d8ba02b79586049a0ec96614f3ca7a0d1b604693f62cdc",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-advanced_dataset-16_ssti-ssti_0000",
+        "legacy-advanced_dataset-16_ssti-ssti_0001",
+        "legacy-advanced_dataset-16_ssti-ssti_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/16_ssti.json",
+      "sourceSampleCount": 19,
+      "sourceSampleIdsSha256": "6e516ce5d5efcc9ad9a2de107863b33c7b1951b00c4c3839dfe20442e6d120ac",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-advanced_dataset-17_oauth_bypass-oauth_0000",
+        "legacy-advanced_dataset-17_oauth_bypass-oauth_0001",
+        "legacy-advanced_dataset-17_oauth_bypass-oauth_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/17_oauth_bypass.json",
+      "sourceSampleCount": 13,
+      "sourceSampleIdsSha256": "4fab0f9b5c5e4922b540ac7b252e78d6e7bbfff653fe271437d1552846c98d28",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-advanced_dataset-18_api_abuse-api_0000",
+        "legacy-advanced_dataset-18_api_abuse-api_0001",
+        "legacy-advanced_dataset-18_api_abuse-api_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/18_api_abuse.json",
+      "sourceSampleCount": 13,
+      "sourceSampleIdsSha256": "434f39786053d86bbdc29d70bb88f2575b24fd51243c74ae9c5fcb98bbb68ff1",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-advanced_dataset-19_websocket-ws_0000",
+        "legacy-advanced_dataset-19_websocket-ws_0002",
+        "legacy-advanced_dataset-19_websocket-ws_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/19_websocket.json",
+      "sourceSampleCount": 6,
+      "sourceSampleIdsSha256": "5de2ba99c985603fc498af6b8fe1fee9aad189dc19fc9df007f2b4cd84916e0a",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-advanced_dataset-20_cache_poison-cache_0000",
+        "legacy-advanced_dataset-20_cache_poison-cache_0002",
+        "legacy-advanced_dataset-20_cache_poison-cache_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/20_cache_poison.json",
+      "sourceSampleCount": 9,
+      "sourceSampleIdsSha256": "cfd200447c1fb11e8cbd3df97c151337ef2c6e62bb64f4a187db42670c85ccb1",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-advanced_dataset-21_encoding_bypass-encode_0000",
+        "legacy-advanced_dataset-21_encoding_bypass-encode_0001",
+        "legacy-advanced_dataset-21_encoding_bypass-encode_0004"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/21_encoding_bypass.json",
+      "sourceSampleCount": 14,
+      "sourceSampleIdsSha256": "9dc0acdd9cf49e28d400dcee3bfcafeb60a45e99888352e972965a3896b0fb04",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-advanced_dataset-22_protocol_pollution-proto_0000",
+        "legacy-advanced_dataset-22_protocol_pollution-proto_0001",
+        "legacy-advanced_dataset-22_protocol_pollution-proto_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/22_protocol_pollution.json",
+      "sourceSampleCount": 7,
+      "sourceSampleIdsSha256": "998ae2bfb070b8d21a372595f5dd1e28f688608596787eb4113e5c526ced746e",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-advanced_dataset-23_normal_extended-normal_v3_0000",
+        "legacy-advanced_dataset-23_normal_extended-normal_v3_0001",
+        "legacy-advanced_dataset-23_normal_extended-normal_v3_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "advanced_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/advanced_dataset/23_normal_extended.json",
+      "sourceSampleCount": 19,
+      "sourceSampleIdsSha256": "622d52a226c6f8a00d9870a9b0a0fd779241dcf7b3f28aaff96c563291939b90",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "seed-v02-development-api_abuse-00-0001",
+        "seed-v02-development-api_abuse-00-0006",
+        "seed-v02-development-api_abuse-00-0010"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "aetherargus-v02-deterministic",
+      "sourceFile": "ml/data_pipeline/generate_candidates.py",
+      "sourceSampleCount": 12104,
+      "sourceSampleIdsSha256": "d83c5a5e3b43c550dc4ce8129f3cdd3bb60738ef695ba2abcf18c089d125929a",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-complete_dataset-08_xxe-xxe_0000",
+        "legacy-complete_dataset-08_xxe-xxe_0001",
+        "legacy-complete_dataset-08_xxe-xxe_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/complete_dataset/08_xxe.json",
+      "sourceSampleCount": 10,
+      "sourceSampleIdsSha256": "bafa8c5e12532eddbd6917325a168214f88c3d3574d26fc8f6bc74c122889a49",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-complete_dataset-09_ssrf-ssrf_0000",
+        "legacy-complete_dataset-09_ssrf-ssrf_0001",
+        "legacy-complete_dataset-09_ssrf-ssrf_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/complete_dataset/09_ssrf.json",
+      "sourceSampleCount": 11,
+      "sourceSampleIdsSha256": "33a382b7dd460c97933f90bc299d38cd58bebe03771b14d6e593bb5916b35f53",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-complete_dataset-10_deserialization-deser_0000",
+        "legacy-complete_dataset-10_deserialization-deser_0001",
+        "legacy-complete_dataset-10_deserialization-deser_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/complete_dataset/10_deserialization.json",
+      "sourceSampleCount": 7,
+      "sourceSampleIdsSha256": "b7876f19c616998d5724c6374571afab923d13e2ea298ae0d7ad110325531201",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-complete_dataset-12_jwt-jwt_0000",
+        "legacy-complete_dataset-12_jwt-jwt_0001",
+        "legacy-complete_dataset-12_jwt-jwt_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/complete_dataset/12_jwt.json",
+      "sourceSampleCount": 4,
+      "sourceSampleIdsSha256": "b0b54a27ec81e5447de885fd5403a2e566cdafed07fe0bffb346b0dec2fb9ed3",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-complete_dataset-13_ldap-ldap_0000",
+        "legacy-complete_dataset-13_ldap-ldap_0001",
+        "legacy-complete_dataset-13_ldap-ldap_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/complete_dataset/13_ldap.json",
+      "sourceSampleCount": 6,
+      "sourceSampleIdsSha256": "126e18604f2df20b277566723920f51869e4c23c36bbba8d55542583c16a9054",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-complete_dataset-14_normal_extended-normal_0000",
+        "legacy-complete_dataset-14_normal_extended-normal_0001",
+        "legacy-complete_dataset-14_normal_extended-normal_0004"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "complete_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/complete_dataset/14_normal_extended.json",
+      "sourceSampleCount": 9,
+      "sourceSampleIdsSha256": "a9680f811884dc22087f8f58c8e2f69965f87ae6e0bc3b59840167304e52390d",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-full_test_dataset-01_sql_injection-sqli_0000",
+        "legacy-full_test_dataset-01_sql_injection-sqli_0001",
+        "legacy-full_test_dataset-01_sql_injection-sqli_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/full_test_dataset/01_sql_injection.json",
+      "sourceSampleCount": 38,
+      "sourceSampleIdsSha256": "7b1d619fbea963d80bb359976166953dd082e41087f54a19cbf656aa3566dfb0",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-full_test_dataset-02_xss-xss_0000",
+        "legacy-full_test_dataset-02_xss-xss_0001",
+        "legacy-full_test_dataset-02_xss-xss_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/full_test_dataset/02_xss.json",
+      "sourceSampleCount": 24,
+      "sourceSampleIdsSha256": "2068f14dbc09f5a764e6d080dc198db45bf68626c3f8d0e6324ec79713697965",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-full_test_dataset-03_command_injection-cmdi_0000",
+        "legacy-full_test_dataset-03_command_injection-cmdi_0001",
+        "legacy-full_test_dataset-03_command_injection-cmdi_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/full_test_dataset/03_command_injection.json",
+      "sourceSampleCount": 34,
+      "sourceSampleIdsSha256": "b4409bb3f54178aa1fd88fa07e6d4113ce1a51b9fe5788e70860f52351f49ff7",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-full_test_dataset-04_path_traversal-path_0000",
+        "legacy-full_test_dataset-04_path_traversal-path_0001",
+        "legacy-full_test_dataset-04_path_traversal-path_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/full_test_dataset/04_path_traversal.json",
+      "sourceSampleCount": 17,
+      "sourceSampleIdsSha256": "63bf5048ad7869c8f067bdd45365234e48928a530800a58102b8c5054dc0fb51",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-full_test_dataset-08_normal_traffic-normal_0000",
+        "legacy-full_test_dataset-08_normal_traffic-normal_0001",
+        "legacy-full_test_dataset-08_normal_traffic-normal_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "full_test_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/full_test_dataset/08_normal_traffic.json",
+      "sourceSampleCount": 6,
+      "sourceSampleIdsSha256": "967709e91f066bcdd4d921736e6e6cd70ffe692d115675546fb9bdc619e76947",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-24_log4j-log4j_0000",
+        "legacy-zeroday_dataset-24_log4j-log4j_0001",
+        "legacy-zeroday_dataset-24_log4j-log4j_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/24_log4j.json",
+      "sourceSampleCount": 21,
+      "sourceSampleIdsSha256": "d2c862d3d5b0d9bd9cd1e3096d029b7946e60aa40055b1a97969a8405e22d3b1",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-25_spring4shell-spring4shell_0000",
+        "legacy-zeroday_dataset-25_spring4shell-spring4shell_0002",
+        "legacy-zeroday_dataset-25_spring4shell-spring4shell_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/25_spring4shell.json",
+      "sourceSampleCount": 7,
+      "sourceSampleIdsSha256": "a5b578e666b2b501b53255e0503a7e34d143a5a13fab8581ab015ea105027a18",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-26_text4shell-text4shell_0000",
+        "legacy-zeroday_dataset-26_text4shell-text4shell_0001",
+        "legacy-zeroday_dataset-26_text4shell-text4shell_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/26_text4shell.json",
+      "sourceSampleCount": 8,
+      "sourceSampleIdsSha256": "a361192c83d969be7c46d4cf420c15d80c4da87481eb6ef55b7c5a0e34dc8f6d",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-27_prototype_pollution-proto_pollute_0000",
+        "legacy-zeroday_dataset-27_prototype_pollution-proto_pollute_0001",
+        "legacy-zeroday_dataset-27_prototype_pollution-proto_pollute_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/27_prototype_pollution.json",
+      "sourceSampleCount": 12,
+      "sourceSampleIdsSha256": "7105db6caeab9399ec048da209e6f152c3c4b31f5ea43dffa9e5e5046b221dac",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-28_smuggling_advanced-smuggle_adv_0000",
+        "legacy-zeroday_dataset-28_smuggling_advanced-smuggle_adv_0001",
+        "legacy-zeroday_dataset-28_smuggling_advanced-smuggle_adv_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/28_smuggling_advanced.json",
+      "sourceSampleCount": 7,
+      "sourceSampleIdsSha256": "80b980371087fdb2b0372edcb9fab952f39d265fc54b4a7432fc9dc7589e0b23",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-29_type_confusion-type_confuse_0000",
+        "legacy-zeroday_dataset-29_type_confusion-type_confuse_0001",
+        "legacy-zeroday_dataset-29_type_confusion-type_confuse_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/29_type_confusion.json",
+      "sourceSampleCount": 11,
+      "sourceSampleIdsSha256": "ad28537b233588d348a2602df6e9f1f133e41581d5a5d1b144e16892665ec72c",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-30_redos-redos_0000",
+        "legacy-zeroday_dataset-30_redos-redos_0002",
+        "legacy-zeroday_dataset-30_redos-redos_0003"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/30_redos.json",
+      "sourceSampleCount": 7,
+      "sourceSampleIdsSha256": "7d29e4dcf85877ee76da31ddf295c770e12ea83fb635460fdbfdffab856ac5bd",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-31_unicode_homoglyph-unicode_0000",
+        "legacy-zeroday_dataset-31_unicode_homoglyph-unicode_0001",
+        "legacy-zeroday_dataset-31_unicode_homoglyph-unicode_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/31_unicode_homoglyph.json",
+      "sourceSampleCount": 18,
+      "sourceSampleIdsSha256": "7e7ceb9ad773f2a14b7cd66481fa6982c1f449163c59fd66c56eccda6e20bf62",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-32_graphql_injection-graphql_0000",
+        "legacy-zeroday_dataset-32_graphql_injection-graphql_0001",
+        "legacy-zeroday_dataset-32_graphql_injection-graphql_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/32_graphql_injection.json",
+      "sourceSampleCount": 13,
+      "sourceSampleIdsSha256": "d00d893bc611ee12a6fb14a62e580f731195928cda21987b08b57f9cb66a93e2",
+      "synthetic": true
+    },
+    {
+      "examples": [
+        "legacy-zeroday_dataset-33_nosql_advanced-nosql_adv_0000",
+        "legacy-zeroday_dataset-33_nosql_advanced-nosql_adv_0001",
+        "legacy-zeroday_dataset-33_nosql_advanced-nosql_adv_0002"
+      ],
+      "generatorModel": "deterministic-aetherargus-v02",
+      "generatorPromptVersion": "dataset-v02.1",
+      "sourceDataset": "zeroday_dataset",
+      "sourceFile": "backend/test-data/aetherguard-security-dataset/zeroday_dataset/33_nosql_advanced.json",
+      "sourceSampleCount": 16,
+      "sourceSampleIdsSha256": "b09595872cdf76b830e97472576ce2b9bc6fb603f50e0f56879894a433be763f",
+      "synthetic": true
+    }
+  ],
+  "sourceSampleIdCount": 12494,
+  "sourceSampleIdsSha256": "38943091ae7c40238f78ffae5f523cd647cb2563c1547c71b198163259619054"
+}
