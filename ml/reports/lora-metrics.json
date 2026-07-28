@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-28T01:21:51.969178+00:00",
+  "runName": "lora",
+  "sampleCount": 120,
+  "modelInvocationCount": 120,
+  "heuristicOnly": false,
+  "jsonSyntaxSuccessRate": 0.9916666666666667,
+  "schemaValidRate": 0.9833333333333333,
+  "verdictAccuracy": 0.9,
+  "maliciousPrecision": 0.8809523809523809,
+  "maliciousRecall": 0.9024390243902439,
+  "maliciousF1": 0.891566265060241,
+  "normalFalsePositiveRate": 0.045454545454545456,
+  "normalFalsePositiveCount": 3,
+  "normalSampleCount": 66,
+  "attackFamilyMacroF1": 0.614699396788949,
+  "recommendedActionAccuracy": 0.9,
+  "unknownUsageRate": 0.08333333333333333,
+  "averageLatencyMs": 6116.393399333325,
+  "p50LatencyMs": 6116.215590000138,
+  "p95LatencyMs": 9110.618119400238,
+  "peakGpuMemoryGiB": 2.694413661956787,
+  "categoryBreakdown": {
+    "attack": {
+      "count": 42,
+      "verdictAccuracy": 0.8809523809523809,
+      "predictedVerdicts": {
+        "malicious": 38,
+        "safe": 2,
+        "unknown": 2
+      }
+    },
+    "hard_negative": {
+      "count": 24,
+      "verdictAccuracy": 0.9166666666666666,
+      "predictedVerdicts": {
+        "malicious": 2,
+        "safe": 22
+      }
+    },
+    "normal": {
+      "count": 42,
+      "verdictAccuracy": 0.9761904761904762,
+      "predictedVerdicts": {
+        "malicious": 1,
+        "safe": 41
+      }
+    },
+    "unknown": {
+      "count": 12,
+      "verdictAccuracy": 0.6666666666666666,
+      "predictedVerdicts": {
+        "malicious": 1,
+        "safe": 3,
+        "unknown": 8
+      }
+    }
+  },
+  "familyBreakdown": {
+    "api_abuse": {
+      "count": 3,
+      "attackFamilyAccuracy": 0.0,
+      "maliciousRecall": 0.3333333333333333
+    },
+    "authentication": {
+      "count": 4,
+      "attackFamilyAccuracy": 0.75,
+      "maliciousRecall": 1.0
+    },
+    "automation": {
+      "count": 2,
+      "attackFamilyAccuracy": 0.5,
+      "maliciousRecall": 1.0
+    },
+    "benign": {
+      "count": 66,
+      "attackFamilyAccuracy": 0.9545454545454546,
+      "maliciousRecall": 0.0
+    },
+    "command_injection": {
+      "count": 5,
+      "attackFamilyAccuracy": 0.6,
+      "maliciousRecall": 1.0
+    },
+    "deserialization": {
+      "count": 4,
+      "attackFamilyAccuracy": 0.75,
+      "maliciousRecall": 1.0
+    },
+    "file_upload": {
+      "count": 1,
+      "attackFamilyAccuracy": 0.0,
+      "maliciousRecall": 1.0
+    },
+    "other": {
+      "count": 13,
+      "attackFamilyAccuracy": 0.6153846153846154,
+      "maliciousRecall": 1.0
+    },
+    "path_traversal": {
+      "count": 5,
+      "attackFamilyAccuracy": 0.8,
+      "maliciousRecall": 0.8
+    },
+    "protocol_attack": {
+      "count": 5,
+      "attackFamilyAccuracy": 0.6,
+      "maliciousRecall": 1.0
+    },
+    "sqli": {
+      "count": 5,
+      "attackFamilyAccuracy": 0.6,
+      "maliciousRecall": 0.8
+    },
+    "ssrf": {
+      "count": 2,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "xss": {
+      "count": 5,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    }
+  }
+}

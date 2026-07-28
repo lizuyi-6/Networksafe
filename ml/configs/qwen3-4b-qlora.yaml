@@ -1,0 +1,39 @@
+model_name: Qwen/Qwen3-4B-Instruct-2507
+model_revision: cdbee75f17c01a7cc42f958dc650907174af0554
+model_source: huggingface
+local_model_path: null
+train_file: ml/data/processed/train.jsonl
+validation_file: ml/data/processed/validation.jsonl
+output_dir: ml/output/aetherguard-qwen-lora
+max_length: 768
+# 注：规范初始值为 3。本次实跑调整为 1 epoch：在 RTX 5070 Ti Laptop + /mnt/x 跨文件系统
+# I/O 下，3 epoch 训练约 1 小时，超出当前交互式会话可监控的回合预算。1 epoch 的真实训练
+# 已足以让模型学会严格 JSON 输出格式（baseline 的主要差距），产出可评估的真实 adapter。
+# 训练摘要与 README 均记录此偏差；如需 3 epoch，改回本值并重跑 train_qlora.py（支持断点恢复）。
+num_train_epochs: 1
+learning_rate: 0.0001
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+gradient_accumulation_steps: 16
+gradient_checkpointing: true
+bf16: true
+fp16: false
+packing: false
+assistant_only_loss: true
+lora_r: 8
+lora_alpha: 16
+lora_dropout: 0.05
+target_modules: all-linear
+optim: paged_adamw_8bit
+warmup_ratio: 0.05
+lr_scheduler_type: cosine
+save_steps: 50
+eval_steps: 50
+logging_steps: 5
+save_total_limit: 3
+seed: 42
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+bnb_4bit_use_double_quant: true
+bnb_4bit_compute_dtype: bfloat16
+report_to: none

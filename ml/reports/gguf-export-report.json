@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-07-28T02:19:54.783438+00:00",
+  "llamaCppDirectory": "/home/break/llama.cpp",
+  "mergedModel": "/mnt/x/repos/Networksafe/ml/output/aetherguard-qwen-merged",
+  "f16Output": "/mnt/x/repos/Networksafe/ml/output/aetherguard-security-f16.gguf",
+  "f16Bytes": 8051283232,
+  "q4Output": "/mnt/x/repos/Networksafe/ml/output/aetherguard-security-q4_k_m.gguf",
+  "q4Bytes": 2497278752,
+  "quantization": "Q4_K_M"
+}

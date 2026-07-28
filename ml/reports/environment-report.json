@@ -1,0 +1,102 @@
+{
+  "generatedAt": "2026-07-27T16:13:03.082854+00:00",
+  "platform": {
+    "system": "Linux",
+    "release": "6.18.35.2-microsoft-standard-WSL2",
+    "version": "#1 SMP PREEMPT_DYNAMIC Wed Jun 17 23:14:00 UTC 2026",
+    "machine": "x86_64",
+    "platform": "Linux-6.18.35.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "isWsl": true
+  },
+  "python": {
+    "version": "3.11.15",
+    "executable": "/mnt/x/repos/Networksafe/ml/.venv/bin/python",
+    "implementation": "CPython"
+  },
+  "commands": {
+    "nvidiaSmi": {
+      "available": true,
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=name,memory.total,memory.free,driver_version",
+        "--format=csv,noheader,nounits"
+      ],
+      "stdout": "NVIDIA GeForce RTX 5070 Ti Laptop GPU, 12227, 10707, 610.62",
+      "stderr": "",
+      "returnCode": 0
+    },
+    "nvcc": {
+      "available": false,
+      "command": [
+        "nvcc",
+        "--version"
+      ],
+      "stdout": "",
+      "stderr": "not found",
+      "returnCode": null
+    },
+    "pip": {
+      "available": true,
+      "command": [
+        "/mnt/x/repos/Networksafe/ml/.venv/bin/python",
+        "-m",
+        "pip",
+        "--version"
+      ],
+      "stdout": "",
+      "stderr": "/mnt/x/repos/Networksafe/ml/.venv/bin/python: No module named pip",
+      "returnCode": 1
+    }
+  },
+  "packages": {
+    "torch": {
+      "imported": true,
+      "version": "2.11.0+cu128"
+    },
+    "bitsandbytes": {
+      "imported": true,
+      "version": "0.50.0"
+    },
+    "transformers": {
+      "imported": true,
+      "version": "5.14.1"
+    },
+    "peft": {
+      "imported": true,
+      "version": "0.19.1"
+    },
+    "trl": {
+      "imported": true,
+      "version": "1.9.1"
+    },
+    "datasets": {
+      "imported": true,
+      "version": "5.0.0"
+    }
+  },
+  "torch": {
+    "imported": true,
+    "version": "2.11.0+cu128",
+    "cudaAvailable": true,
+    "cudaRuntime": "12.8",
+    "deviceName": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "deviceCapability": [
+      12,
+      0
+    ],
+    "totalMemoryBytes": 12820480000,
+    "totalMemoryGiB": 11.94000244140625,
+    "supportedArchitectures": [
+      "sm_75",
+      "sm_80",
+      "sm_86",
+      "sm_90",
+      "sm_100",
+      "sm_120"
+    ],
+    "minimalCudaOperation": {
+      "succeeded": true,
+      "result": 140.0
+    }
+  }
+}

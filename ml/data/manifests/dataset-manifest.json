@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-27T16:28:55.955749+00:00",
+  "seed": 42,
+  "requestedSamples": 1200,
+  "actualSamples": 1200,
+  "sourceRoot": "backend/test-data/aetherguard-security-dataset",
+  "sourceCorpusIsSynthetic": true,
+  "categoryTargetRatios": {
+    "attack": 0.35,
+    "normal": 0.35,
+    "hard_negative": 0.2,
+    "unknown": 0.1
+  },
+  "splitTargetRatios": {
+    "train": 0.8,
+    "validation": 0.1,
+    "test": 0.1
+  },
+  "categoryShortages": {
+    "attack": 0,
+    "normal": 0,
+    "hard_negative": 0,
+    "unknown": 0
+  },
+  "counts": {
+    "bySplit": {
+      "train": 958,
+      "validation": 122,
+      "test": 120
+    },
+    "byCategory": {
+      "attack": 420,
+      "hard_negative": 240,
+      "normal": 420,
+      "unknown": 120
+    },
+    "byAttackFamily": {
+      "api_abuse": 29,
+      "authentication": 46,
+      "automation": 19,
+      "benign": 660,
+      "business_logic": 6,
+      "command_injection": 49,
+      "deserialization": 38,
+      "file_upload": 7,
+      "other": 132,
+      "path_traversal": 48,
+      "protocol_attack": 48,
+      "sqli": 48,
+      "ssrf": 22,
+      "xss": 48
+    },
+    "bySourceDataset": {
+      "advanced_dataset": 98,
+      "aetherguard-sft-batch-001": 179,
+      "complete_dataset": 52,
+      "full_test_dataset": 139,
+      "synthetic_hard_negative_v1": 204,
+      "synthetic_normal_v1": 322,
+      "synthetic_unknown_v1": 112,
+      "zeroday_dataset": 94
+    },
+    "byProvenance": {
+      "generated_auxiliary": 638,
+      "tracked_sft_batch": 179,
+      "tracked_synthetic_security_corpus": 383
+    },
+    "byEncoding": {
+      "double_url_encoded": 20,
+      "plain": 744,
+      "token_or_base64": 7,
+      "unicode": 388,
+      "url_encoded": 41
+    }
+  },
+  "sourceInspection": {
+    "rawFilesRead": 34,
+    "rawRecordsRead": 4500,
+    "existingSftRecordsRead": 200,
+    "redactionsApplied": 770,
+    "exactDuplicatesRemoved": 3551,
+    "ambiguousRecordsRejected": 450,
+    "schemaRecordsRejected": 0,
+    "sourceDatasetRecords": {
+      "advanced_dataset": 1150,
+      "complete_dataset": 1050,
+      "full_test_dataset": 1300,
+      "zeroday_dataset": 1000
+    },
+    "requestedFieldPresence": {
+      "payload": 4050,
+      "type": 4500,
+      "expected_detection": 4500,
+      "severity": 4500,
+      "source_ip": 4500,
+      "pattern": 100,
+      "cve": 300,
+      "method": 0,
+      "path": 0,
+      "headers": 0,
+      "body": 0,
+      "query": 0
+    }
+  },
+  "grouping": {
+    "factors": [
+      "decoded and normalized payload template",
+      "attack family (stratification)",
+      "CVE (single leakage group when present)",
+      "encoding form",
+      "generation source and scenario",
+      "exact content hash",
+      "similarity hash"
+    ],
+    "leakageGroups": 466,
+    "similarityGroups": 521
+  },
+  "leakageCheck": {
+    "detected": false,
+    "pairwise": {
+      "train_vs_validation": {
+        "sharedLeakageGroups": 0,
+        "sharedExactContentHashes": 0
+      },
+      "train_vs_test": {
+        "sharedLeakageGroups": 0,
+        "sharedExactContentHashes": 0
+      },
+      "validation_vs_test": {
+        "sharedLeakageGroups": 0,
+        "sharedExactContentHashes": 0
+      }
+    }
+  },
+  "files": {
+    "train": "ml/data/processed/train.jsonl",
+    "validation": "ml/data/processed/validation.jsonl",
+    "test": "ml/data/processed/test.jsonl"
+  }
+}
