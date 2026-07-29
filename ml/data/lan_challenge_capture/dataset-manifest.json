@@ -1,0 +1,134 @@
+{
+  "datasetName": "viguard-lan-challenge-capture-20260729",
+  "datasetDescription": "Authorized LAN Live-Execution Challenge Set (live-captured synthetic attack-attempt benchmark). Every request was really sent to the authorized target and every retained sample captured a real response; attack payloads and attack-intent labels were pre-designed by the test plan, not naturally occurring. exploitConfirmed=0 and canaryObserved=0. Target-specific. Not production/naturally-occurring traffic. NOT eligible for training; reserved as an external independent challenge test set.",
+  "targetApplication": "AetherGuard (codename VIguard)",
+  "targetIp": "192.168.3.140",
+  "captureDate": "2026-07-29",
+  "sampleCounts": {
+    "normal": 152,
+    "attack": 69,
+    "hardNegative": 85,
+    "promptInjection": 56,
+    "unknown": 51
+  },
+  "totalSamples": 413,
+  "files": {
+    "normal-traffic.jsonl": 152,
+    "attack-traffic.jsonl": 69,
+    "hard-negatives.jsonl": 85,
+    "prompt-injection.jsonl": 56,
+    "unknown-cases.jsonl": 51,
+    "all-sanitized.jsonl": 413,
+    "model-benchmark.jsonl": 413,
+    "model-inputs.jsonl": 413,
+    "model-labels.jsonl": 413,
+    "review-queue.jsonl": 413
+  },
+  "idMapping": {
+    "method": "hmac-sha256[salt=raw-private/.id-salt(gitignored),trunc=8hex]",
+    "salted": true,
+    "canonicalEvidence": {
+      "uniqueInternalIdsMapped": 10,
+      "totalMappedOccurrences": 206,
+      "mappedByCategory": {
+        "session": {
+          "unique": 3,
+          "occurrences": 30
+        },
+        "user": {
+          "unique": 1,
+          "occurrences": 34
+        },
+        "tenant": {
+          "unique": 2,
+          "occurrences": 35
+        },
+        "resource": {
+          "unique": 4,
+          "occurrences": 107
+        }
+      },
+      "fileSet": "5 category evidence files (source of truth; distinct captured identifiers)"
+    },
+    "allCommittedViews": {
+      "uniqueInternalIdsMapped": 10,
+      "totalMappedOccurrences": 688,
+      "mappedByCategory": {
+        "session": {
+          "unique": 3,
+          "occurrences": 60
+        },
+        "user": {
+          "unique": 1,
+          "occurrences": 68
+        },
+        "tenant": {
+          "unique": 2,
+          "occurrences": 73
+        },
+        "resource": {
+          "unique": 4,
+          "occurrences": 487
+        }
+      },
+      "fileSet": "5 evidence + all-sanitized + benchmark + model-inputs + model-labels + review-queue (CROSS-VIEW occurrences of the same placeholders; NOT distinct identifiers)"
+    },
+    "residualLegacySequential": 0,
+    "residualRawIdentifiers": 0,
+    "residualPartialIdentifiers": 0,
+    "malformedPlaceholderCount": 0,
+    "legacyPlaceholderRemapped": true,
+    "bodiesOmitted": 72,
+    "bodiesOmittedReason": "legacy_capture_structurally_truncated + legacy_capture_truncated_before_complete_sanitization",
+    "bodiesOmittedReasonBreakdown": {
+      "legacy_capture_truncated_before_complete_sanitization": 29,
+      "legacy_capture_structurally_truncated": 43
+    },
+    "omittedBodiesWithUnknownRetainedLength": 29,
+    "note": "Two explicitly-named metrics: canonicalEvidence scans the 5 category evidence files only (distinct captured identifiers); allCommittedViews scans every committed data view (evidence + derived) and counts CROSS-VIEW occurrences of the SAME placeholders -- allCommittedViews.totalMappedOccurrences is NOT the number of distinct identifiers (derived views re-project the same identifiers). manifest/verification-report/privacy-audit-report are all produced from one shared computation (dataset-files.js buildIdMappingReport) so the same metric name has the same value everywhere. legacyPlaceholderRemapped=true means prior sequential placeholders were re-mapped through HMAC(salt, \"legacy:\"+old); the original resource id is gone (opaque remap, not recovery). bodiesOmittedReason is the sorted union of per-sample bodyOmittedReason; bodiesOmittedReasonBreakdown is the machine-readable per-reason count. omittedBodiesWithUnknownRetainedLength counts partial-fragment omissions whose pre-omission retained bytes are 0 (unrecoverable historical damage; 0 = UNKNOWN length, not a real 0-length body).",
+    "reviewQueueEntries": 413
+  },
+  "datasetMetadata": {
+    "split": "external_challenge_test",
+    "eligibleForTraining": false,
+    "humanReviewed": false,
+    "reviewerCount": 0,
+    "interAnnotatorAgreement": null,
+    "cohenKappa": null,
+    "adjudicatedSamples": 0,
+    "targetSpecific": true
+  },
+  "responseStatusDistribution": {
+    "200": 191,
+    "400": 1,
+    "401": 12,
+    "403": 80,
+    "404": 119,
+    "500": 10
+  },
+  "failedConnectionSamples": 0,
+  "exploitConfirmedCount": 0,
+  "canaryObservedCount": 0,
+  "attackFamilyDistribution": {
+    "sqli": 15,
+    "xss": 10,
+    "command_injection": 8,
+    "path_traversal": 9,
+    "ssrf": 6,
+    "auth_bypass": 3,
+    "idor": 6,
+    "privilege_escalation": 3,
+    "malicious_upload": 2,
+    "csrf": 1,
+    "cors_misconfig": 1,
+    "api_abuse": 3,
+    "business_logic": 2,
+    "prompt_injection": 56
+  },
+  "schemaVersion": "2.1",
+  "allSamplesReal": true,
+  "fabricationUsed": false,
+  "redactionApplied": true,
+  "gitignoreExcludesRawPrivate": true,
+  "verifiedAt": "2026-07-29T23:33:35.510Z"
+}

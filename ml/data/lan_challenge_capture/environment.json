@@ -1,0 +1,20 @@
+{
+  "workspacePath": "X:/repos/Networksafe",
+  "gitBranch": "agent/viguard-lan-capture-20260729",
+  "targetIp": "192.168.3.140",
+  "targetReachable": true,
+  "targetHttpPort": 5173,
+  "targetApp": "AetherGuard (Vite dev frontend + Express API via /api proxy)",
+  "apiBase": "http://192.168.3.140:5173/api",
+  "localMachineIp": "192.168.3.107",
+  "localMachineIsTarget": false,
+  "proxyConfiguredToLeaveLan": false,
+  "collectionTool": "Node.js v24.13.1 built-in http",
+  "rateLimitObserved": {
+    "auth": "120 req/window",
+    "general": "600 req/window"
+  },
+  "targetStabilityNote": "During sequential challenge capture the client observed repeated authenticated-session invalidation and at least one period of connection failure. Root cause is unconfirmed: no server-side PID, restart counter, OOM log, or stack trace was collected.",
+  "loginVerified": true,
+  "timestamp": "2026-07-29T23:33:35.509Z"
+}

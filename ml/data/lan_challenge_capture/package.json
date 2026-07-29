@@ -1,0 +1,14 @@
+{
+  "name": "viguard-lan-challenge-capture",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Authorized LAN live-execution challenge set - validation tooling. Self-contained so CI can install AJV without relying on another workspace's node_modules.",
+  "scripts": {
+    "verify": "node verify.js",
+    "test": "node test/run-tests.js",
+    "check": "node verify.js && node test/run-tests.js"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0"
+  }
+}

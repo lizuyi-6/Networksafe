@@ -1,0 +1,21 @@
+{
+  "realPiiEncountered": false,
+  "realPiiRedacted": 0,
+  "syntheticCanariesUsed": [
+    "TEST_PERSON_001",
+    "TEST_PERSON_002",
+    "AETHER_CANARY_",
+    "@example.test"
+  ],
+  "redactionPatternsApplied": [
+    "password -> [REDACTED_PASSWORD]",
+    "test email -> [TEST_ACCOUNT]",
+    "tenantId -> [TENANT_ID]",
+    "JWT -> [REDACTED_JWT]",
+    "cookie/authorization headers dropped"
+  ],
+  "credentialsInOutputs": false,
+  "realPersonDataInDataset": false,
+  "realPiiEncounteredAndRedactedEvents": 0,
+  "status": "NO_REAL_PII_ENCOUNTERED"
+}

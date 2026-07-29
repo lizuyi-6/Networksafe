@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lizuyi-6/Networksafe/ml/data/lan_challenge_capture/schema/evidence-sample.schema.json",
+  "title": "VIguard LAN Challenge Capture — Evidence Sample",
+  "description": "One live-executed authorized challenge request with its captured response and ground truth. Evidence view only — NOT the model input view.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sampleId", "source", "targetIp", "targetApplication",
+    "requestActuallySent", "responseActuallyReceived",
+    "method", "path", "requestSanitized",
+    "responseStatus", "responseSanitized", "latencyMs",
+    "groundTruth", "requestIntent", "exploitOutcome", "isHardNegative",
+    "executionEvidence", "safety", "datasetMetadata"
+  ],
+  "properties": {
+    "sampleId": { "type": "string", "pattern": "^viguard-lan-[0-9]{6}$" },
+    "source": { "type": "string", "minLength": 1 },
+    "targetIp": { "type": "string", "minLength": 1 },
+    "targetApplication": { "type": "string", "minLength": 1 },
+    "requestActuallySent": { "type": "boolean" },
+    "responseActuallyReceived": { "type": "boolean" },
+    "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] },
+    "path": { "type": "string", "minLength": 1 },
+    "requestSanitized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["headers", "body", "hasAuthCookie"],
+      "properties": {
+        "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+        "body": { "type": ["string", "null"] },
+        "hasAuthCookie": { "type": "boolean" },
+        "bodyTruncated": { "type": "boolean", "description": "True when the sanitized body exceeded MAX_BODY_BYTES and was safely truncated at a UTF-8 code-point boundary." },
+        "bodyOmitted": { "type": "boolean", "description": "True when the body contained a partial (truncated) identifier fragment that could not be recovered; the body is set to null rather than kept." },
+        "bodyOmittedReason": { "type": ["string", "null"], "enum": ["legacy_capture_truncated_before_complete_sanitization", "legacy_capture_structurally_truncated", "legacy_capture_omitted_reason_unknown", null] },
+        "capturedContentLengthHeader": { "type": ["integer", "null"], "minimum": 0, "description": "Content-Length header value captured for this body (the true original size in bytes). Preserved when the body is omitted so the captured size is not lost (an omitted body must NOT report originalBodyBytes=0)." },
+        "preOmissionRetainedBytes": { "type": "integer", "minimum": 0, "description": "Bytes of the sanitized body retained immediately before omission (0 when the body was not omitted). Preserved across re-runs so re-running enrich does not reset the captured-size evidence." },
+        "originalBodyBytes": { "type": "integer", "minimum": 0 },
+        "retainedBodyBytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "responseStatus": { "type": "integer", "minimum": 0, "maximum": 599 },
+    "responseSanitized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["headers", "body"],
+      "properties": {
+        "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+        "body": { "type": ["string", "null"] },
+        "bodyTruncated": { "type": "boolean" },
+        "bodyOmitted": { "type": "boolean" },
+        "bodyOmittedReason": { "type": ["string", "null"], "enum": ["legacy_capture_truncated_before_complete_sanitization", "legacy_capture_structurally_truncated", "legacy_capture_omitted_reason_unknown", null] },
+        "capturedContentLengthHeader": { "type": ["integer", "null"], "minimum": 0, "description": "Content-Length header value captured for this body (the true original size in bytes). Preserved when the body is omitted so the captured size is not lost (an omitted body must NOT report originalBodyBytes=0)." },
+        "preOmissionRetainedBytes": { "type": "integer", "minimum": 0, "description": "Bytes of the sanitized body retained immediately before omission (0 when the body was not omitted). Preserved across re-runs so re-running enrich does not reset the captured-size evidence." },
+        "originalBodyBytes": { "type": "integer", "minimum": 0 },
+        "retainedBodyBytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "latencyMs": { "type": "number", "minimum": 0 },
+    "groundTruth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "attackFamily", "recommendedAction", "contextSufficient"],
+      "properties": {
+        "verdict": { "type": "string", "enum": ["attack", "benign", "unknown"] },
+        "attackFamily": {
+          "type": ["string", "null"],
+          "enum": ["sqli", "xss", "command_injection", "path_traversal", "ssrf", "auth_bypass", "idor", "privilege_escalation", "malicious_upload", "csrf", "cors_misconfig", "api_abuse", "business_logic", "prompt_injection", null]
+        },
+        "recommendedAction": { "type": "string", "enum": ["allow", "block", "review", "monitor"] },
+        "contextSufficient": { "type": "boolean" },
+        "isHardNegative": { "type": "boolean" }
+      }
+    },
+    "requestIntent": {
+      "type": "string",
+      "enum": ["malicious_attempt", "prompt_injection_attempt", "benign_operational", "benign_resembling_attack", "ambiguous_or_inconclusive"]
+    },
+    "exploitOutcome": { "type": "string", "enum": ["confirmed", "not_confirmed", "not_applicable"] },
+    "isHardNegative": { "type": "boolean" },
+    "executionEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exploitAttempted", "exploitConfirmed", "canaryObserved", "evidenceSummary"],
+      "properties": {
+        "exploitAttempted": { "type": "boolean" },
+        "exploitConfirmed": { "type": "boolean" },
+        "canaryObserved": { "type": "boolean" },
+        "evidenceSummary": { "type": "string" }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["containsRealPii", "credentialsRedacted", "destructiveActionPerformed", "outOfScopeAccess"],
+      "properties": {
+        "containsRealPii": { "type": "boolean" },
+        "credentialsRedacted": { "type": "boolean" },
+        "destructiveActionPerformed": { "type": "boolean" },
+        "outOfScopeAccess": { "type": "boolean" }
+      }
+    },
+    "datasetMetadata": { "$ref": "#/$defs/datasetMetadata" }
+  },
+  "$defs": {
+    "datasetMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["split", "eligibleForTraining", "humanReviewed", "reviewerCount", "interAnnotatorAgreement", "cohenKappa", "adjudicatedSamples", "targetSpecific"],
+      "properties": {
+        "split": { "const": "external_challenge_test" },
+        "eligibleForTraining": { "const": false },
+        "humanReviewed": { "const": false },
+        "reviewerCount": { "type": "integer", "minimum": 0 },
+        "interAnnotatorAgreement": { "type": ["number", "null"] },
+        "cohenKappa": { "type": ["number", "null"] },
+        "adjudicatedSamples": { "type": "integer", "minimum": 0 },
+        "targetSpecific": { "const": true }
+      }
+    }
+  }
+}

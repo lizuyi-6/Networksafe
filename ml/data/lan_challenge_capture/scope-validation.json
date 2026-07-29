@@ -1,0 +1,25 @@
+{
+  "authorizedTargetIp": "192.168.3.140",
+  "authorizedTargetUrl": "http://192.168.3.140:5173",
+  "targetApplicationIdentified": "AetherGuard",
+  "operatorCodename": "VIguard",
+  "identificationEvidence": [
+    "GET / returned <title>AetherGuard | 杭州视界奇点科技有限公司</title> and /aetherguard-logo-512.png",
+    "Vite dev server markers (/@vite/client, /@react-refresh)",
+    "GET /health -> 200 {\"status\":\"ok\"} (AetherGuard direct health endpoint)",
+    "GET /api/health -> 401 AUTH_TOKEN_MISSING (AetherGuard auth middleware, {success,data,error} envelope)",
+    "POST /api/auth/login -> 200 with accessToken/refreshToken httpOnly cookies"
+  ],
+  "codenameJustification": "\"VIguard\" appears nowhere in the codebase (3 case-insensitive grep variants, 0 matches). The live service at 192.168.3.140:5173 is unambiguously AetherGuard from this repo. \"VIguard\" is the operator-assigned codename for the deployed AetherGuard instance.",
+  "scopeAdherence": {
+    "onlyAccessedAuthorizedIp": true,
+    "noSubnetScan": true,
+    "noLateralMovement": true,
+    "noOtherLanHostsAccessed": true,
+    "maxConcurrency": 1,
+    "maxRatePerSec": 2,
+    "actualAvgDelayMs": 550
+  },
+  "redirectToOtherHostObserved": false,
+  "outOfScopeRedirect": null
+}

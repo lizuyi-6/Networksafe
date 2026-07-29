@@ -131,19 +131,39 @@ jobs:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173
         run: |
           set -euo pipefail
-          frontend/node_modules/.bin/vite preview --host 127.0.0.1 --port 4173 > "$RUNNER_TEMP/default-preview.log" 2>&1 &
+          # Pass `frontend` as the positional root so vite resolves vite.config.ts + dist/ from
+          # frontend/ (this step runs with working-directory=. at repo root; without the root arg
+          # vite serves ./dist which does not exist and returns 404 for every path, making the
+          # readiness curl --fail fail forever - a 404, NOT a slow startup).
+          frontend/node_modules/.bin/vite preview frontend --host 127.0.0.1 --port 4173 > "$RUNNER_TEMP/default-preview.log" 2>&1 &
           PREVIEW_PID=$!
           trap 'kill "$PREVIEW_PID" 2>/dev/null || true; wait "$PREVIEW_PID" 2>/dev/null || true' EXIT
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
-              break
-            fi
-            if [ "$attempt" -eq 30 ]; then
-              cat "$RUNNER_TEMP/default-preview.log"
+          # Bounded readiness wait (<=60s, 0.5s poll). Fail IMMEDIATELY with logs if the preview
+          # process dies before becoming ready; print the full log + the actual HTTP status code
+          # on timeout (so a 404 mislabeled as "slow startup" is self-diagnosing). No fixed sleep,
+          # no infinite retry, no || true on the readiness check, E2E is never skipped.
+          ready=0
+          for _ in $(seq 1 120); do
+            if ! kill -0 "$PREVIEW_PID" 2>/dev/null; then
+              echo "vite preview process exited early before becoming ready; full log:" >&2
+              cat "$RUNNER_TEMP/default-preview.log" >&2
               exit 1
             fi
-            sleep 1
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 0.5
           done
+          if [ "$ready" -ne 1 ]; then
+            echo "vite preview did not become ready within 60s; full log:" >&2
+            cat "$RUNNER_TEMP/default-preview.log" >&2
+            # Probe the actual HTTP status so a 404 (wrong root) vs 000 (not listening) is visible,
+            # not just the banner-only log that hides the real failure mode.
+            probe=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:4173/ 2>/dev/null || echo "curl-failed")
+            echo "readiness probe http_code for GET / = $probe (200=ok; 404=wrong root/no dist; 000=not listening)" >&2
+            exit 1
+          fi
           npm --prefix e2e run test -- tests/site-walkthrough.spec.ts --project=chromium --grep pitch-disabled
           npm --prefix e2e run test -- tests/security-hardening-acceptance.spec.ts --project=chromium --grep "header health|mounted admin|hanging session|hanging refresh|enterprise read-permission matrix"
           npm --prefix e2e run test -- tests/frontend-interaction-boundaries.spec.ts --project=chromium
@@ -163,19 +183,32 @@ jobs:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173
         run: |
           set -euo pipefail
-          frontend/node_modules/.bin/vite preview --host 127.0.0.1 --port 4173 > "$RUNNER_TEMP/pitch-preview.log" 2>&1 &
+          # Pass `frontend` as the positional root (see default-route step for rationale).
+          frontend/node_modules/.bin/vite preview frontend --host 127.0.0.1 --port 4173 > "$RUNNER_TEMP/pitch-preview.log" 2>&1 &
           PREVIEW_PID=$!
           trap 'kill "$PREVIEW_PID" 2>/dev/null || true; wait "$PREVIEW_PID" 2>/dev/null || true' EXIT
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/aetherguard-deck > /dev/null; then
-              break
-            fi
-            if [ "$attempt" -eq 30 ]; then
-              cat "$RUNNER_TEMP/pitch-preview.log"
+          # Bounded readiness wait (<=60s, 0.5s poll). Fail IMMEDIATELY with logs if the preview
+          # process dies before becoming ready; print the full log + actual HTTP status on timeout.
+          ready=0
+          for _ in $(seq 1 120); do
+            if ! kill -0 "$PREVIEW_PID" 2>/dev/null; then
+              echo "vite preview process exited early before becoming ready; full log:" >&2
+              cat "$RUNNER_TEMP/pitch-preview.log" >&2
               exit 1
             fi
-            sleep 1
+            if curl --fail --silent http://127.0.0.1:4173/aetherguard-deck > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 0.5
           done
+          if [ "$ready" -ne 1 ]; then
+            echo "vite preview did not become ready within 60s; full log:" >&2
+            cat "$RUNNER_TEMP/pitch-preview.log" >&2
+            probe=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:4173/aetherguard-deck 2>/dev/null || echo "curl-failed")
+            echo "readiness probe http_code for GET /aetherguard-deck = $probe (200=ok; 404=wrong root/no dist; 000=not listening)" >&2
+            exit 1
+          fi
           npm --prefix e2e run test -- tests/site-walkthrough.spec.ts --project=chromium --grep pitch-enabled
           kill "$PREVIEW_PID" 2>/dev/null || true
           wait "$PREVIEW_PID" 2>/dev/null || true
@@ -335,6 +368,32 @@ jobs:
         working-directory: ./firmware/controller-stm32h5
         run: make -f test/Makefile test
 
+  challenge-dataset-check:
+    runs-on: ubuntu-latest
+    needs: project-contracts
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ml/data/lan_challenge_capture
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ml/data/lan_challenge_capture/package-lock.json
+
+      - name: Install validation dependencies (self-contained AJV)
+        run: npm ci
+
+      - name: "Verify dataset (fail-closed: schema + semantic + privacy + label-isolation + alignment)"
+        run: node verify.js
+
+      - name: Run challenge-capture test suite (partial-fragment / whitelist / schema-rejection)
+        run: node test/run-tests.js
+
   docker-build:
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-build, rust-fastpath-check]
@@ -411,7 +470,7 @@ jobs:
 
   release-verify:
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-build, installer-build, rust-fastpath-check, rescue-check, gateway-safety-check, docker-build, security-scan]
+    needs: [backend-test, frontend-build, installer-build, rust-fastpath-check, rescue-check, gateway-safety-check, docker-build, security-scan, challenge-dataset-check]
     timeout-minutes: 60
 
     steps:

@@ -1,0 +1,72 @@
+{
+  "auditedAt": "2026-07-30T02:44:49.860Z",
+  "method": "Static scan of committed sanitized data files for residual sensitive indicators (full + PARTIAL). Partial detection is context-aware (UUID prefix shape, sensitive key + non-placeholder value, session/token key + long hex, partial JWT). Values are never copied into this report (indicator names + counts only).",
+  "idMapping": {
+    "method": "hmac-sha256[salt=raw-private/.id-salt(gitignored),trunc=8hex]",
+    "salted": true,
+    "canonicalEvidence": {
+      "uniqueInternalIdsMapped": 10,
+      "totalMappedOccurrences": 206,
+      "mappedByCategory": {
+        "session": {
+          "unique": 3,
+          "occurrences": 30
+        },
+        "user": {
+          "unique": 1,
+          "occurrences": 34
+        },
+        "tenant": {
+          "unique": 2,
+          "occurrences": 35
+        },
+        "resource": {
+          "unique": 4,
+          "occurrences": 107
+        }
+      },
+      "fileSet": "5 category evidence files (source of truth; distinct captured identifiers)"
+    },
+    "allCommittedViews": {
+      "uniqueInternalIdsMapped": 10,
+      "totalMappedOccurrences": 688,
+      "mappedByCategory": {
+        "session": {
+          "unique": 3,
+          "occurrences": 60
+        },
+        "user": {
+          "unique": 1,
+          "occurrences": 68
+        },
+        "tenant": {
+          "unique": 2,
+          "occurrences": 73
+        },
+        "resource": {
+          "unique": 4,
+          "occurrences": 487
+        }
+      },
+      "fileSet": "5 evidence + all-sanitized + benchmark + model-inputs + model-labels + review-queue (CROSS-VIEW occurrences of the same placeholders; NOT distinct identifiers)"
+    },
+    "residualLegacySequential": 0,
+    "residualRawIdentifiers": 0,
+    "residualPartialIdentifiers": 0,
+    "malformedPlaceholderCount": 0,
+    "legacyPlaceholderRemapped": true,
+    "bodiesOmitted": 72,
+    "bodiesOmittedReason": "legacy_capture_structurally_truncated + legacy_capture_truncated_before_complete_sanitization",
+    "bodiesOmittedReasonBreakdown": {
+      "legacy_capture_truncated_before_complete_sanitization": 29,
+      "legacy_capture_structurally_truncated": 43
+    },
+    "omittedBodiesWithUnknownRetainedLength": 29,
+    "note": "Internal identifiers (sessionId/userId/tenantId/findingId/UUID) are replaced with stable, non-reversible HMAC placeholders. Legacy sequential placeholders are remapped; original resource ids are gone (opaque remap, not recovery). canonicalEvidence = 5 evidence files only; allCommittedViews = every committed derived view (cross-view occurrences of the same 10 distinct internal ids).",
+    "reviewQueueEntries": 413
+  },
+  "categories": {},
+  "residualFindingsTotal": 0,
+  "clean": true,
+  "note": "clean=true means no residual red-line indicator (full OR partial) remains after sanitization. The verifier fails (exit 1) whenever residualFindingsTotal>0."
+}

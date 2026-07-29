@@ -1,0 +1,60 @@
+{
+  "findings": [
+    {
+      "id": "FND-001",
+      "category": "auth",
+      "severity": "info",
+      "title": "Authentication enforced on all /api endpoints",
+      "evidence": "GET /api/health -> 401 AUTH_TOKEN_MISSING; missing/malformed/forged JWT -> 401 (see attack-traffic auth_bypass samples)."
+    },
+    {
+      "id": "FND-002",
+      "category": "input-validation",
+      "severity": "info",
+      "title": "No injection canary observed",
+      "evidence": "0 exploit(s) confirmed; 0 canary(ies) observed across 69 attack samples. SQLi/XSS/cmdi/path-traversal payloads were rejected or returned no canary (see attack-traffic.jsonl)."
+    },
+    {
+      "id": "FND-003",
+      "category": "ssrf",
+      "severity": "info",
+      "title": "No SSRF observed",
+      "evidence": "Local echo listener on 192.168.3.107:9999 received 0 fetch from the target across SSRF payloads (echoHits=0)."
+    },
+    {
+      "id": "FND-004",
+      "category": "stability",
+      "severity": "needs-investigation",
+      "title": "Availability anomalies and repeated session invalidation observed during sequential challenge capture",
+      "evidence": "During sequential requests at concurrency 1 and approximately 1.8 requests/s, the client observed repeated authenticated-session invalidation and at least one period of connection failure. The capture harness re-authenticated automatically to keep payloads reaching the application layer. No server-side PID, restart counter, OOM log, memory telemetry, or stack trace was collected; therefore the root cause is unconfirmed.",
+      "recommendation": "Inspect backend process logs, systemd/Docker restart counters, memory telemetry, OOM-killer logs, and endpoint-specific traces before attributing the anomaly to crash, restart, OOM, or concurrency."
+    },
+    {
+      "id": "FND-005",
+      "category": "rate-limiting",
+      "severity": "info",
+      "title": "Rate limiting present",
+      "evidence": "x-ratelimit-limit headers: 120 (auth) / 600 (general) per window."
+    }
+  ],
+  "attackFamilyDistribution": {
+    "sqli": 15,
+    "xss": 10,
+    "command_injection": 8,
+    "path_traversal": 9,
+    "ssrf": 6,
+    "auth_bypass": 3,
+    "idor": 6,
+    "privilege_escalation": 3,
+    "malicious_upload": 2,
+    "csrf": 1,
+    "cors_misconfig": 1,
+    "api_abuse": 3,
+    "business_logic": 2,
+    "prompt_injection": 56
+  },
+  "echoHitsTotal": 0,
+  "exploitConfirmedCount": 0,
+  "canaryObservedCount": 0,
+  "generatedAt": "2026-07-29T23:33:35.510Z"
+}

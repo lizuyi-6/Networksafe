@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lizuyi-6/Networksafe/ml/data/lan_challenge_capture/schema/manifest.schema.json",
+  "title": "VIguard LAN Challenge Capture - Dataset Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "datasetName", "datasetDescription", "targetApplication", "captureDate",
+    "sampleCounts", "totalSamples", "files", "datasetMetadata",
+    "exploitConfirmedCount", "canaryObservedCount", "schemaVersion",
+    "allSamplesReal", "fabricationUsed", "redactionApplied", "verifiedAt"
+  ],
+  "properties": {
+    "datasetName": { "type": "string", "minLength": 1 },
+    "datasetDescription": { "type": "string", "minLength": 1 },
+    "targetApplication": { "type": "string", "minLength": 1 },
+    "targetIp": { "type": "string", "minLength": 1 },
+    "captureDate": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "sampleCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["normal", "attack", "hardNegative", "promptInjection", "unknown"],
+      "properties": {
+        "normal": { "type": "integer", "minimum": 0 },
+        "attack": { "type": "integer", "minimum": 0 },
+        "hardNegative": { "type": "integer", "minimum": 0 },
+        "promptInjection": { "type": "integer", "minimum": 0 },
+        "unknown": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "totalSamples": { "type": "integer", "minimum": 0 },
+    "files": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+    "datasetMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["split", "eligibleForTraining", "humanReviewed", "reviewerCount", "interAnnotatorAgreement", "cohenKappa", "adjudicatedSamples", "targetSpecific"],
+      "properties": {
+        "split": { "const": "external_challenge_test" },
+        "eligibleForTraining": { "const": false },
+        "humanReviewed": { "const": false },
+        "reviewerCount": { "type": "integer", "minimum": 0 },
+        "interAnnotatorAgreement": { "type": ["number", "null"] },
+        "cohenKappa": { "type": ["number", "null"] },
+        "adjudicatedSamples": { "type": "integer", "minimum": 0 },
+        "targetSpecific": { "const": true }
+      }
+    },
+    "exploitConfirmedCount": { "type": "integer", "minimum": 0 },
+    "canaryObservedCount": { "type": "integer", "minimum": 0 },
+    "responseStatusDistribution": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+    "failedConnectionSamples": { "type": "integer", "minimum": 0 },
+    "attackFamilyDistribution": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+    "idMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "salted", "canonicalEvidence", "allCommittedViews", "legacyPlaceholderRemapped", "residualRawIdentifiers", "residualPartialIdentifiers", "bodiesOmitted", "bodiesOmittedReasonBreakdown", "omittedBodiesWithUnknownRetainedLength"],
+      "properties": {
+        "method": { "type": "string", "minLength": 1 },
+        "salted": { "type": "boolean" },
+        "canonicalEvidence": { "$ref": "#/$defs/idMappingBucket" },
+        "allCommittedViews": { "$ref": "#/$defs/idMappingBucket" },
+        "legacyPlaceholderRemapped": { "type": "boolean" },
+        "residualLegacySequential": { "type": "integer", "minimum": 0 },
+        "residualRawIdentifiers": { "type": "integer", "minimum": 0 },
+        "residualPartialIdentifiers": { "type": "integer", "minimum": 0 },
+        "malformedPlaceholderCount": { "type": "integer", "minimum": 0 },
+        "bodiesOmitted": { "type": "integer", "minimum": 0 },
+        "bodiesOmittedReason": { "type": ["string", "null"] },
+        "bodiesOmittedReasonBreakdown": {
+          "type": "object",
+          "description": "Per-reason count of omitted bodies (machine-readable). Keys are the bodyOmittedReason enum values from evidence-sample.schema.json; values are sample counts. legacy_capture_truncated_before_complete_sanitization = partial-fragment-safe omission (body hit the limit mid-sensitive-value); legacy_capture_structurally_truncated = JSON structural break detected at enrichment/verify-time, body omitted to avoid corrupting the benchmark with an unparseable JSON response; legacy_capture_omitted_reason_unknown = historical data whose prior omission reason was genuinely missing.",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "omittedBodiesWithUnknownRetainedLength": { "type": "integer", "minimum": 0, "description": "Count of partial-fragment omissions whose preOmissionRetainedBytes/originalBodyBytes are 0 (unrecoverable historical damage from a prior non-idempotent enrich run; 0 here means UNKNOWN retained length, not a real 0-length body)." },
+        "reviewQueueEntries": { "type": "integer", "minimum": 0 },
+        "note": { "type": "string" }
+      }
+    },
+    "schemaVersion": { "type": "string", "minLength": 1 },
+    "allSamplesReal": { "type": "boolean" },
+    "fabricationUsed": { "type": "boolean" },
+    "redactionApplied": { "type": "boolean" },
+    "gitignoreExcludesRawPrivate": { "type": "boolean" },
+    "verifiedAt": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "idMappingBucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uniqueInternalIdsMapped", "totalMappedOccurrences", "mappedByCategory", "fileSet"],
+      "properties": {
+        "uniqueInternalIdsMapped": { "type": "integer", "minimum": 0 },
+        "totalMappedOccurrences": { "type": "integer", "minimum": 0 },
+        "mappedByCategory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["session", "user", "tenant", "resource"],
+          "properties": {
+            "session": { "type": "object", "required": ["unique", "occurrences"], "properties": { "unique": { "type": "integer", "minimum": 0 }, "occurrences": { "type": "integer", "minimum": 0 } }, "additionalProperties": false },
+            "user": { "type": "object", "required": ["unique", "occurrences"], "properties": { "unique": { "type": "integer", "minimum": 0 }, "occurrences": { "type": "integer", "minimum": 0 } }, "additionalProperties": false },
+            "tenant": { "type": "object", "required": ["unique", "occurrences"], "properties": { "unique": { "type": "integer", "minimum": 0 }, "occurrences": { "type": "integer", "minimum": 0 } }, "additionalProperties": false },
+            "resource": { "type": "object", "required": ["unique", "occurrences"], "properties": { "unique": { "type": "integer", "minimum": 0 }, "occurrences": { "type": "integer", "minimum": 0 } }, "additionalProperties": false }
+          }
+        },
+        "fileSet": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "testedRole": "tenant_admin",
+  "note": "Actual per-endpoint status codes are in each sample's responseStatus field. tenant_admin received 403 on superadmin/oversight endpoints and was allowed on tenant-scoped alert/agent/device/dashboard reads.",
+  "permissionsObserved": [
+    {
+      "endpoint": "GET /api/auth/me",
+      "result": "allowed (200)"
+    },
+    {
+      "endpoint": "GET /api/alerts",
+      "result": "allowed (tenant-scoped, 200/404)"
+    },
+    {
+      "endpoint": "GET /api/agents",
+      "result": "allowed (200)"
+    },
+    {
+      "endpoint": "GET /api/devices",
+      "result": "allowed (200)"
+    },
+    {
+      "endpoint": "GET /api/dashboard",
+      "result": "allowed (200)"
+    },
+    {
+      "endpoint": "GET /api/admin/tenant-oversight/tenants",
+      "result": "denied (403) - see normal-traffic permission-insufficient samples"
+    },
+    {
+      "endpoint": "PUT /api/admin/users/:id/role",
+      "result": "denied (403) - see attack-traffic privilege_escalation samples"
+    },
+    {
+      "endpoint": "POST /api/admin/tenant-oversight/exports",
+      "result": "denied (403) - see attack-traffic privilege_escalation samples"
+    }
+  ]
+}
