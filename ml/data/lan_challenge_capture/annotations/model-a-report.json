@@ -1,0 +1,45 @@
+{
+  "annotatorId": "annotator-a",
+  "modelName": "GPT-5.6-SOL",
+  "modelVersion": "5.6-SOL",
+  "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
+  "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "sampleCount": 413,
+  "verdictDistribution": {
+    "attack": 129,
+    "safe": 244,
+    "unknown": 40
+  },
+  "attackFamilyDistribution": {
+    "api_abuse": 3,
+    "authentication": 6,
+    "authorization": 7,
+    "business_logic": 4,
+    "command_injection": 8,
+    "cors": 1,
+    "csrf": 1,
+    "file_upload": 2,
+    "idor_bola": 17,
+    "none": 244,
+    "path_traversal": 9,
+    "prompt_injection": 56,
+    "protocol_attack": 12,
+    "sqli": 23,
+    "ssrf": 10,
+    "xss": 10
+  },
+  "confidenceDistribution": {
+    "2": 11,
+    "3": 30,
+    "4": 102,
+    "5": 270
+  },
+  "expertReviewCount": 204,
+  "schemaErrorCount": 0,
+  "duplicateSampleIdCount": 0,
+  "missingSampleIdCount": 0,
+  "forbiddenFileAccessed": false,
+  "forbiddenFiles": [],
+  "startedAt": "2026-07-30T15:21:51+08:00",
+  "completedAt": "2026-07-30T07:28:14.093Z"
+}
