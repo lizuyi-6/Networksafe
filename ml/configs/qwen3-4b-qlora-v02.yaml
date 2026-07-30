@@ -1,0 +1,47 @@
+model_name: Qwen/Qwen3-4B-Instruct-2507
+model_revision: cdbee75f17c01a7cc42f958dc650907174af0554
+model_source: huggingface
+local_model_path: null
+
+dataset_version: v02
+dataset_manifest: ml/data/releases/v02/manifest.json
+train_file: ml/data/releases/v02/train.jsonl
+validation_file: ml/data/releases/v02/validation.jsonl
+
+output_dir: ml/output/aetherargus-v02-lora
+
+max_length: 1024
+num_train_epochs: 1
+learning_rate: 0.0001
+
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+gradient_accumulation_steps: 16
+gradient_checkpointing: true
+
+bf16: true
+fp16: false
+packing: false
+assistant_only_loss: true
+
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+target_modules: all-linear
+
+optim: paged_adamw_8bit
+warmup_ratio: 0.05
+lr_scheduler_type: cosine
+
+save_steps: 200
+eval_steps: 200
+logging_steps: 10
+save_total_limit: 3
+
+seed: 20260728
+
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+bnb_4bit_use_double_quant: true
+bnb_4bit_compute_dtype: bfloat16
+report_to: none

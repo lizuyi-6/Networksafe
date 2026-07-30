@@ -77,28 +77,28 @@
   "datasetVersion": "v02",
   "files": {
     "test_closed": {
-      "bytes": 4214042,
+      "bytes": 4916613,
       "path": "ml/data/releases/v02/test-closed.jsonl",
       "records": 1236,
-      "sha256": "d2d3a4651c2db69732fe8f8e668e4e5d29ea4b06696efe7e6efadd6209fc13f8"
+      "sha256": "c1cba66e4ceeabed129b344e867566fa4df40ff9e8fae05d3b7eee3fb55ad003"
     },
     "test_independent": {
-      "bytes": 6501084,
+      "bytes": 7495809,
       "path": "ml/data/releases/v02/test-independent.jsonl",
       "records": 1750,
-      "sha256": "766010d0c9b9a432831c8660711a57f8b07e43693b97a0e592fcc1971b5c4eab"
+      "sha256": "4a0dbda1122eaa461ebe3358a43745f004af4c379c5b64cb72a0febed1de01f4"
     },
     "train": {
-      "bytes": 51939028,
+      "bytes": 60123833,
       "path": "ml/data/releases/v02/train.jsonl",
       "records": 14314,
-      "sha256": "750ed4def5def336252cd7d27933f25ef57a830085591a44f676ff3e5317f8d7"
+      "sha256": "e8ff084fc251f3e9ede791dabac747b1021c199e24685d6af9e6a696da2fc3e1"
     },
     "validation": {
-      "bytes": 6292081,
+      "bytes": 7293617,
       "path": "ml/data/releases/v02/validation.jsonl",
       "records": 1752,
-      "sha256": "bea53b5dcc8265fe2b4438e1412b164142c839b353732d985a241165785b9ad3"
+      "sha256": "ea6f3d070ed796bba4f0ea2582c7eb406794b0162f871ceaf9f07de7e1f55606"
     }
   },
   "generation": {

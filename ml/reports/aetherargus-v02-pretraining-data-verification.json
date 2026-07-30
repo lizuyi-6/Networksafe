@@ -1,0 +1,96 @@
+{
+  "datasetVersion": "v02",
+  "seed": 20260728,
+  "generatedBy": "rebuild in agent/aetherargus-v02-training",
+  "files": {
+    "train": {
+      "path": "ml/data/releases/v02/train.jsonl",
+      "records": 14314,
+      "bytes": 51939028,
+      "sha256": "750ed4def5def336252cd7d27933f25ef57a830085591a44f676ff3e5317f8d7",
+      "manifestSha256": "750ed4def5def336252cd7d27933f25ef57a830085591a44f676ff3e5317f8d7",
+      "match": true
+    },
+    "validation": {
+      "path": "ml/data/releases/v02/validation.jsonl",
+      "records": 1752,
+      "bytes": 6292081,
+      "sha256": "bea53b5dcc8265fe2b4438e1412b164142c839b353732d985a241165785b9ad3",
+      "manifestSha256": "bea53b5dcc8265fe2b4438e1412b164142c839b353732d985a241165785b9ad3",
+      "match": true
+    },
+    "test_closed": {
+      "path": "ml/data/releases/v02/test-closed.jsonl",
+      "records": 1236,
+      "bytes": 4214042,
+      "sha256": "d2d3a4651c2db69732fe8f8e668e4e5d29ea4b06696efe7e6efadd6209fc13f8",
+      "manifestSha256": "d2d3a4651c2db69732fe8f8e668e4e5d29ea4b06696efe7e6efadd6209fc13f8",
+      "match": true
+    },
+    "test_independent": {
+      "path": "ml/data/releases/v02/test-independent.jsonl",
+      "records": 1750,
+      "bytes": 6501084,
+      "sha256": "766010d0c9b9a432831c8660711a57f8b07e43693b97a0e592fcc1971b5c4eab",
+      "manifestSha256": "766010d0c9b9a432831c8660711a57f8b07e43693b97a0e592fcc1971b5c4eab",
+      "match": true
+    }
+  },
+  "distributions": {
+    "attackFamily": {
+      "other": 2988,
+      "benign": 8244,
+      "command_injection": 1014,
+      "business_logic": 478,
+      "file_upload": 498,
+      "path_traversal": 563,
+      "api_abuse": 491,
+      "protocol_attack": 790,
+      "sqli": 999,
+      "authentication": 554,
+      "xss": 709,
+      "deserialization": 714,
+      "ssrf": 520,
+      "automation": 490
+    },
+    "labelCategory": {
+      "attack": 9458,
+      "normal": 5273,
+      "hard_negative": 2971,
+      "unknown": 1350
+    },
+    "evaluationSuite": {
+      "public_training_prompt_injection": 2200,
+      "development": 11993,
+      "public_training_waf_regression": 1935,
+      "public_training_openapi_normal": 1174,
+      "prompt_injection_test": 137,
+      "authorized_attack_test": 1125,
+      "long_input_test": 50,
+      "independent_synthetic_normal": 200,
+      "independent_hard_negative": 88,
+      "independent_unknown": 150
+    },
+    "encoding": {
+      "plain": 10875,
+      "unicode": 6439,
+      "url_encoded": 1382,
+      "double_url_encoded": 356
+    },
+    "provenance": {
+      "public_open_source_derived": 5309,
+      "deterministic_synthetic_v02": 13354,
+      "tracked_synthetic_security_corpus_v02_conversion": 389
+    }
+  },
+  "manifestSha256": "c7b442b117d1a78866f3a9e3d56461fdf1c434eac51a158765bfefd5243c9a48",
+  "independentSealSha256": "99481dff204f83308ad21f8452fd2d82cb4fa3c1a86c80ff3542ba4b424a1ba9",
+  "checks": {
+    "schemaAndEnums": "PASS (roles==[system,user,assistant]; user/assistant strict JSON; 7 keys; closed enums)",
+    "hardConstraints": "PASS (safe!=block, malicious!=allow, unknown conf<=0.5)",
+    "crossSplitLeakage": "PASS (0 shared groupId/normalizedHash/templateFingerprint)",
+    "publicSourcesOnlyTrainVal": "PASS (public_open_source_derived only in train 4779 + validation 530)",
+    "independentSealMatch": "PASS (recordsSha256 4d2ccde0... matches seal)",
+    "evidenceEncodingNote": "14028 evidence values verified; 1470 (train 1081) reference URL-encoded fragments present in input with quote-escaping difference; attribution confirmed, not a defect"
+  }
+}

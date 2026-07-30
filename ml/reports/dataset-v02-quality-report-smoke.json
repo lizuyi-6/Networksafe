@@ -1,0 +1,197 @@
+{
+  "counts": {
+    "byAttackFamily": {
+      "api_abuse": 4,
+      "authentication": 5,
+      "automation": 2,
+      "benign": 24,
+      "business_logic": 1,
+      "command_injection": 2,
+      "deserialization": 2,
+      "file_upload": 4,
+      "other": 18,
+      "path_traversal": 4,
+      "protocol_attack": 5,
+      "sqli": 27,
+      "ssrf": 1,
+      "xss": 1
+    },
+    "byCategory": {
+      "attack": 69,
+      "hard_negative": 10,
+      "normal": 14,
+      "unknown": 7
+    },
+    "byEncoding": {
+      "double_url_encoded": 3,
+      "plain": 49,
+      "unicode": 31,
+      "url_encoded": 17
+    },
+    "byEvaluationSuite": {
+      "authorized_attack_test": 22,
+      "development": 50,
+      "prompt_injection_test": 3,
+      "public_training_openapi_normal": 1,
+      "public_training_prompt_injection": 12,
+      "public_training_waf_regression": 12
+    },
+    "byProvenance": {
+      "deterministic_synthetic_v02": 74,
+      "public_open_source_derived": 25,
+      "tracked_synthetic_security_corpus_v02_conversion": 1
+    },
+    "bySourceDataset": {
+      "aetherargus-v02-deterministic": 74,
+      "owasp-crs-regression": 12,
+      "s-labs-prompt-injection-train": 12,
+      "stripe-openapi": 1,
+      "zeroday_dataset": 1
+    },
+    "bySplit": {
+      "test_closed": 4,
+      "test_independent": 25,
+      "train": 67,
+      "validation": 4
+    },
+    "independentAttackFamily": {
+      "sqli": 25
+    },
+    "independentSuites": {
+      "authorized_attack_test": 22,
+      "prompt_injection_test": 3
+    }
+  },
+  "datasetAcceptance": {
+    "gates": {
+      "all_records_deterministically_valid": true,
+      "core_independent_family_each_at_least_100": false,
+      "family_minimums_met": false,
+      "independent_test_at_least_1500": false,
+      "train_at_least_8000": false,
+      "validation_at_least_1000": false
+    },
+    "passed": false
+  },
+  "datasetVersion": "v02",
+  "preview02Acceptance": {
+    "passed": false,
+    "reason": "This delivery expands and audits data only. Model training, inference, quantization, prompt-injection obedience measurement, recall and false-positive gates were not run."
+  },
+  "publicSources": {
+    "allowedSplits": [
+      "train",
+      "validation"
+    ],
+    "derivedRecordCount": 25,
+    "statement": "Public records are checksum-pinned, license-reviewed synthetic or contract-derived training inputs; they are not claimed as production traffic.",
+    "upstreamEvaluationSplitsUsedForTraining": false
+  },
+  "quality": {
+    "accepted": 100,
+    "byAttackFamily": {
+      "api_abuse": 4,
+      "authentication": 5,
+      "automation": 2,
+      "benign": 24,
+      "business_logic": 1,
+      "command_injection": 2,
+      "deserialization": 2,
+      "file_upload": 4,
+      "other": 18,
+      "path_traversal": 4,
+      "protocol_attack": 5,
+      "sqli": 27,
+      "ssrf": 1,
+      "xss": 1
+    },
+    "byCategory": {
+      "attack": 69,
+      "hard_negative": 10,
+      "normal": 14,
+      "unknown": 7
+    },
+    "byEncoding": {
+      "double_url_encoded": 3,
+      "plain": 49,
+      "unicode": 31,
+      "url_encoded": 17
+    },
+    "byEvaluationSuite": {
+      "authorized_attack_test": 22,
+      "development": 50,
+      "prompt_injection_test": 3,
+      "public_training_openapi_normal": 1,
+      "public_training_prompt_injection": 12,
+      "public_training_waf_regression": 12
+    },
+    "byProvenance": {
+      "deterministic_synthetic_v02": 74,
+      "public_open_source_derived": 25,
+      "tracked_synthetic_security_corpus_v02_conversion": 1
+    },
+    "byScenario": {
+      "admin_deploy_script": 1,
+      "contextual_attack": 9,
+      "cross_tenant_or_privilege_violation": 1,
+      "file_upload": 1,
+      "file_upload_payload_variant": 3,
+      "health_check": 2,
+      "internal_service": 1,
+      "large_scale_resource_export": 4,
+      "legacy_prototype_pollution": 1,
+      "login": 2,
+      "low_speed_or_bulk_enumeration": 1,
+      "missing_context": 2,
+      "missing_headers": 1,
+      "other_payload_variant": 1,
+      "pagination": 1,
+      "partial_encoding": 2,
+      "profile_update": 2,
+      "public_api_operation": 1,
+      "public_crs_authentication": 4,
+      "public_crs_automation": 1,
+      "public_crs_command_injection": 1,
+      "public_crs_file_upload": 1,
+      "public_crs_other": 1,
+      "public_crs_path_traversal": 2,
+      "public_crs_protocol_attack": 2,
+      "public_prompt_hard_negative": 3,
+      "public_prompt_injection": 9,
+      "rapid_login_failures": 1,
+      "registration": 1,
+      "report_export": 1,
+      "repository_commit": 1,
+      "repository_shell_example": 2,
+      "search": 1,
+      "security_article_sqli": 1,
+      "security_report_evidence": 1,
+      "sqli_payload_variant": 22,
+      "ssrf_payload_variant": 1,
+      "training_passwd": 1,
+      "truncated_log": 1,
+      "waf_rule_editor": 1,
+      "weak_multi_family": 1,
+      "websocket_or_http_protocol_anomaly": 3,
+      "xss_payload_variant": 1
+    },
+    "duplicateSampleIds": 0,
+    "problems": {},
+    "rejected": 0,
+    "total": 100
+  },
+  "realData": {
+    "authorizedRealAttackTest": 0,
+    "realNormalTest": 0,
+    "statement": "No real production traffic or real authorized-range capture is included."
+  },
+  "review": {
+    "humanReviewed": 0,
+    "statement": "No human review is claimed. Deterministic rule review only."
+  },
+  "schemaVersion": 1,
+  "synthetic": {
+    "count": 100,
+    "ratio": 1.0
+  }
+}
