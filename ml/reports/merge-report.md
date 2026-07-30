@@ -1,10 +1,10 @@
 # LoRA 合并报告
 
-- 基座模型：`output/base-model`
-- Adapter：`/mnt/x/repos/Networksafe/ml/output/aetherguard-qwen-lora`
-- 合并模型：`/mnt/x/repos/Networksafe/ml/output/aetherguard-qwen-merged`
+- 基座模型：`ml/output/base-model`
+- Adapter：`/mnt/x/repos/Networksafe/ml/output/aetherargus-v02-lora`
+- 合并模型：`/mnt/d/aetherargus-v02-merged`
 - 合并设备：CPU
-- 观测到的进程 RSS 峰值：14.32 GiB
+- 观测到的进程 RSS 峰值：14.61 GiB
 - 固定样本重载 smoke test：20 条，完整执行成功
 - smoke Schema 合法率：1.0000
 

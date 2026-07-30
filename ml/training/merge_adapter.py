@@ -36,6 +36,15 @@ def parse_arguments() -> argparse.Namespace:
         default=repository_root() / "ml" / "output" / "aetherargus-merged",
     )
     parser.add_argument("--smoke-samples", type=int, default=20)
+    parser.add_argument(
+        "--test-file",
+        type=Path,
+        default=None,
+        help="Test JSONL forwarded to evaluate_model.py; falls back to its default.",
+    )
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--max-input-length", type=int, default=1024)
+    parser.add_argument("--max-new-tokens", type=int, default=320)
     return parser.parse_args()
 
 
@@ -115,7 +124,15 @@ def main() -> int:
         str(output_directory),
         "--max-samples",
         str(arguments.smoke_samples),
+        "--seed",
+        str(arguments.seed),
+        "--max-input-length",
+        str(arguments.max_input_length),
+        "--max-new-tokens",
+        str(arguments.max_new_tokens),
     ]
+    if arguments.test_file is not None:
+        smoke_command.extend(["--test-file", str(arguments.test_file)])
     completed_smoke_test = subprocess.run(smoke_command, check=False)
     if completed_smoke_test.returncode != 0:
         raise RuntimeError(f"merged-model reload smoke test failed with exit {completed_smoke_test.returncode}")

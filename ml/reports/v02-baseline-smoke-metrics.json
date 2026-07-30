@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-29T01:37:52.098661+00:00",
+  "runName": "v02-baseline-smoke",
+  "sampleCount": 100,
+  "modelInvocationCount": 100,
+  "heuristicOnly": false,
+  "jsonSyntaxSuccessRate": 0.79,
+  "schemaValidRate": 0.78,
+  "verdictAccuracy": 0.01,
+  "maliciousPrecision": 0.0,
+  "maliciousRecall": 0.0,
+  "maliciousF1": 0.0,
+  "normalFalsePositiveRate": 0.9285714285714286,
+  "normalFalsePositiveCount": 13,
+  "normalSampleCount": 14,
+  "hardNegativeFalsePositiveRate": 1.0,
+  "hardNegativeFalsePositiveCount": 7,
+  "hardNegativeSampleCount": 7,
+  "unknownAccuracy": 0.14285714285714285,
+  "unknownExpectedCount": 7,
+  "promptInjectionObedience": null,
+  "promptInjectionCount": 0,
+  "attackFamilyMacroF1": 0.34009441495896603,
+  "recommendedActionAccuracy": 0.12,
+  "unknownUsageRate": 0.22,
+  "averageLatencyMs": 13903.60522736053,
+  "p50LatencyMs": 14091.482150506636,
+  "p95LatencyMs": 16325.268192503427,
+  "peakGpuMemoryGiB": 2.6428608894348145,
+  "categoryBreakdown": {
+    "attack": {
+      "count": 79,
+      "verdictAccuracy": 0.0,
+      "predictedVerdicts": {
+        "suspicious": 59,
+        "unknown": 20
+      }
+    },
+    "hard_negative": {
+      "count": 7,
+      "verdictAccuracy": 0.0,
+      "predictedVerdicts": {
+        "suspicious": 7
+      }
+    },
+    "normal": {
+      "count": 7,
+      "verdictAccuracy": 0.0,
+      "predictedVerdicts": {
+        "suspicious": 6,
+        "unknown": 1
+      }
+    },
+    "unknown": {
+      "count": 7,
+      "verdictAccuracy": 0.14285714285714285,
+      "predictedVerdicts": {
+        "suspicious": 6,
+        "unknown": 1
+      }
+    }
+  },
+  "familyBreakdown": {
+    "api_abuse": {
+      "count": 8,
+      "attackFamilyAccuracy": 0.625,
+      "maliciousRecall": 0.0
+    },
+    "authentication": {
+      "count": 8,
+      "attackFamilyAccuracy": 0.25,
+      "maliciousRecall": 0.0
+    },
+    "automation": {
+      "count": 7,
+      "attackFamilyAccuracy": 0.5714285714285714,
+      "maliciousRecall": 0.0
+    },
+    "benign": {
+      "count": 14,
+      "attackFamilyAccuracy": 0.0,
+      "maliciousRecall": 0.0
+    },
+    "command_injection": {
+      "count": 7,
+      "attackFamilyAccuracy": 0.14285714285714285,
+      "maliciousRecall": 0.0
+    },
+    "deserialization": {
+      "count": 7,
+      "attackFamilyAccuracy": 0.2857142857142857,
+      "maliciousRecall": 0.0
+    },
+    "other": {
+      "count": 14,
+      "attackFamilyAccuracy": 0.07142857142857142,
+      "maliciousRecall": 0.0
+    },
+    "path_traversal": {
+      "count": 7,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 0.0
+    },
+    "protocol_attack": {
+      "count": 7,
+      "attackFamilyAccuracy": 0.14285714285714285,
+      "maliciousRecall": 0.0
+    },
+    "sqli": {
+      "count": 7,
+      "attackFamilyAccuracy": 0.8571428571428571,
+      "maliciousRecall": 0.0
+    },
+    "ssrf": {
+      "count": 7,
+      "attackFamilyAccuracy": 0.0,
+      "maliciousRecall": 0.0
+    },
+    "xss": {
+      "count": 7,
+      "attackFamilyAccuracy": 0.5714285714285714,
+      "maliciousRecall": 0.0
+    }
+  },
+  "evaluationSuiteBreakdown": {
+    "development": {
+      "count": 100,
+      "jsonSyntaxSuccessRate": 0.79,
+      "schemaValidRate": 0.78,
+      "verdictAccuracy": 0.01
+    }
+  },
+  "provenanceBreakdown": {
+    "deterministic_synthetic_v02": {
+      "count": 47,
+      "jsonSyntaxSuccessRate": 0.6170212765957447,
+      "schemaValidRate": 0.6170212765957447,
+      "verdictAccuracy": 0.02127659574468085
+    },
+    "tracked_synthetic_security_corpus_v02_conversion": {
+      "count": 53,
+      "jsonSyntaxSuccessRate": 0.9433962264150944,
+      "schemaValidRate": 0.9245283018867925,
+      "verdictAccuracy": 0.0
+    }
+  },
+  "encodingBreakdown": {
+    "double_url_encoded": {
+      "count": 1,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 0.0
+    },
+    "plain": {
+      "count": 62,
+      "jsonSyntaxSuccessRate": 0.7741935483870968,
+      "schemaValidRate": 0.7580645161290323,
+      "verdictAccuracy": 0.0
+    },
+    "unicode": {
+      "count": 27,
+      "jsonSyntaxSuccessRate": 0.8888888888888888,
+      "schemaValidRate": 0.8888888888888888,
+      "verdictAccuracy": 0.037037037037037035
+    },
+    "url_encoded": {
+      "count": 10,
+      "jsonSyntaxSuccessRate": 0.6,
+      "schemaValidRate": 0.6,
+      "verdictAccuracy": 0.0
+    }
+  }
+}

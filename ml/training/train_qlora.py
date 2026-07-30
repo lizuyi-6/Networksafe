@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import inspect
 import json
 import logging
@@ -11,6 +12,7 @@ import os
 import random
 import shutil
 import signal
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -110,6 +112,86 @@ def resolve_repo_path(path_value: str | Path) -> Path:
     return candidate_path if candidate_path.is_absolute() else repository_root() / candidate_path
 
 
+FORBIDDEN_TRAINING_TOKENS = ("test-closed", "test-independent", "test_closed", "test_independent")
+
+
+def sha256_file(file_path: Path) -> str:
+    digest = hashlib.sha256()
+    with file_path.open("rb") as file_handle:
+        for chunk in iter(lambda: file_handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def reject_test_split_path(path_value: str | Path, field_name: str) -> None:
+    normalized = str(path_value).replace("\\", "/").lower()
+    for token in FORBIDDEN_TRAINING_TOKENS:
+        if token.lower() in normalized:
+            raise ValueError(
+                f"{field_name} must not point at a test split: {path_value} (matched '{token}')"
+            )
+
+
+def verify_dataset_integrity(configuration: dict[str, Any]) -> dict[str, Any]:
+    train_path = resolve_repo_path(configuration["train_file"])
+    validation_path = resolve_repo_path(configuration["validation_file"])
+    reject_test_split_path(configuration["train_file"], "train_file")
+    reject_test_split_path(configuration["validation_file"], "validation_file")
+
+    integrity: dict[str, Any] = {
+        "datasetVersion": configuration.get("dataset_version"),
+        "trainFile": str(configuration["train_file"]),
+        "validationFile": str(configuration["validation_file"]),
+        "trainSha256": sha256_file(train_path),
+        "validationSha256": sha256_file(validation_path),
+        "trainBytes": train_path.stat().st_size,
+        "validationBytes": validation_path.stat().st_size,
+    }
+
+    manifest_value = configuration.get("dataset_manifest")
+    if manifest_value:
+        manifest_path = resolve_repo_path(manifest_value)
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        integrity["manifestFile"] = str(manifest_value)
+        integrity["manifestSha256"] = sha256_file(manifest_path)
+        expected_files = manifest.get("files", {})
+        for split_name, actual_path, actual_sha256 in (
+            ("train", train_path, integrity["trainSha256"]),
+            ("validation", validation_path, integrity["validationSha256"]),
+        ):
+            expected_entry = expected_files.get(split_name)
+            if not expected_entry:
+                raise ValueError(f"manifest is missing the '{split_name}' file entry: {manifest_path}")
+            expected_sha256 = str(expected_entry.get("sha256", "")).lower()
+            if expected_sha256 and expected_sha256 != actual_sha256.lower():
+                raise ValueError(
+                    f"{split_name} SHA-256 mismatch vs manifest: expected {expected_sha256}, "
+                    f"got {actual_sha256.lower()} ({actual_path})"
+                )
+        LOGGER.info(
+            "dataset_integrity_verified version=%s manifest=%s",
+            integrity["datasetVersion"],
+            manifest_path,
+        )
+    return integrity
+
+
+def current_git_commit() -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repository_root(),
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    commit = result.stdout.strip()
+    return commit if result.returncode == 0 and commit else None
+
+
 def load_jsonl_records(dataset_path: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     with dataset_path.open("r", encoding="utf-8") as dataset_file:
@@ -136,6 +218,9 @@ class AssistantOnlyDataset(Dataset):
     def __init__(self, records: list[dict[str, Any]], tokenizer: Any, max_length: int) -> None:
         self.examples: list[dict[str, torch.Tensor]] = []
         dropped_without_assistant_tokens = 0
+        truncated_count = 0
+        input_token_lengths: list[int] = []
+        assistant_token_lengths: list[int] = []
         for record in records:
             messages = record["messages"]
             prompt_messages = messages[:-1]
@@ -158,9 +243,14 @@ class AssistantOnlyDataset(Dataset):
             )
             prompt_token_ids = prompt_enc["input_ids"][0].tolist()
             full_token_ids = full_enc["input_ids"][0].tolist()
+            input_token_lengths.append(len(full_token_ids))
+            if len(full_token_ids) > max_length:
+                truncated_count += 1
             truncated_input_ids = full_token_ids[:max_length]
             prompt_length = min(len(prompt_token_ids), len(truncated_input_ids))
             labels = [-100] * prompt_length + truncated_input_ids[prompt_length:]
+            assistant_token_count = len(truncated_input_ids) - prompt_length
+            assistant_token_lengths.append(assistant_token_count)
             if not any(label_token_id != -100 for label_token_id in labels):
                 dropped_without_assistant_tokens += 1
                 continue
@@ -173,6 +263,12 @@ class AssistantOnlyDataset(Dataset):
             )
         if not self.examples:
             raise ValueError("all records lost assistant tokens after max_length truncation")
+        self.source_record_count = len(records)
+        self.dropped_without_assistant_tokens = dropped_without_assistant_tokens
+        self.truncated_count = truncated_count
+        self.max_length = max_length
+        self.input_token_lengths = input_token_lengths
+        self.assistant_token_lengths = assistant_token_lengths
         if dropped_without_assistant_tokens:
             LOGGER.warning("dropped_without_assistant_tokens=%d", dropped_without_assistant_tokens)
 
@@ -207,6 +303,33 @@ class AssistantOnlyCollator:
                 padding_value=-100,
             ),
         }
+
+
+def percentile(sorted_values: list[int], fraction: float) -> int:
+    if not sorted_values:
+        return 0
+    index = min(len(sorted_values) - 1, max(0, round(fraction * (len(sorted_values) - 1))))
+    return sorted_values[index]
+
+
+def token_length_statistics(lengths: list[int]) -> dict[str, Any]:
+    ordered = sorted(lengths)
+    if not ordered:
+        return {"count": 0}
+    return {
+        "count": len(ordered),
+        "min": ordered[0],
+        "mean": round(sum(ordered) / len(ordered), 2),
+        "median": percentile(ordered, 0.50),
+        "p90": percentile(ordered, 0.90),
+        "p95": percentile(ordered, 0.95),
+        "p99": percentile(ordered, 0.99),
+        "max": ordered[-1],
+        "over512": sum(1 for value in ordered if value > 512) / len(ordered),
+        "over768": sum(1 for value in ordered if value > 768) / len(ordered),
+        "over1024": sum(1 for value in ordered if value > 1024) / len(ordered),
+        "over1536": sum(1 for value in ordered if value > 1536) / len(ordered),
+    }
 
 
 class EvidenceLoggingCallback(TrainerCallback):
@@ -411,6 +534,9 @@ def main() -> int:
     torch.cuda.empty_cache()
     torch.cuda.reset_peak_memory_stats()
 
+    dataset_integrity = verify_dataset_integrity(configuration)
+    LOGGER.info("dataset_integrity=%s", json.dumps(dataset_integrity, ensure_ascii=False, sort_keys=True))
+
     train_records = load_jsonl_records(resolve_repo_path(configuration["train_file"]))
     validation_records = load_jsonl_records(resolve_repo_path(configuration["validation_file"]))
     if arguments.smoke_test:
@@ -421,6 +547,28 @@ def main() -> int:
     model, tokenizer, model_reference = load_model_and_tokenizer(configuration)
     train_dataset = AssistantOnlyDataset(train_records, tokenizer, int(configuration["max_length"]))
     validation_dataset = AssistantOnlyDataset(validation_records, tokenizer, int(configuration["max_length"]))
+
+    truncation = {
+        "maxLength": train_dataset.max_length,
+        "trainSourceRecords": train_dataset.source_record_count,
+        "trainUsableExamples": len(train_dataset),
+        "trainTruncated": train_dataset.truncated_count,
+        "trainDroppedWithoutAssistantTokens": train_dataset.dropped_without_assistant_tokens,
+        "validationTruncated": validation_dataset.truncated_count,
+        "validationDroppedWithoutAssistantTokens": validation_dataset.dropped_without_assistant_tokens,
+        "trainInputTokenLength": token_length_statistics(train_dataset.input_token_lengths),
+        "trainAssistantTokenLength": token_length_statistics(train_dataset.assistant_token_lengths),
+    }
+    drop_ratio = train_dataset.dropped_without_assistant_tokens / max(1, train_dataset.source_record_count)
+    truncation["trainDropRatio"] = drop_ratio
+    LOGGER.info("truncation_evidence=%s", json.dumps(truncation, ensure_ascii=False, sort_keys=True))
+    if not arguments.smoke_test and drop_ratio > 0.001:
+        raise RuntimeError(
+            f"{train_dataset.dropped_without_assistant_tokens} of {train_dataset.source_record_count} train "
+            f"records ({drop_ratio:.4%}) lost all assistant tokens at max_length={train_dataset.max_length}; "
+            "above the 0.1% gate — raise max_length or fix the data instead of silently dropping"
+        )
+
     total_parameters, trainable_parameters = count_parameters(model)
     effective_batch_size = int(configuration["per_device_train_batch_size"]) * int(
         configuration["gradient_accumulation_steps"]
@@ -467,11 +615,19 @@ def main() -> int:
         "completedAt": datetime.now(UTC).isoformat(),
         "smokeTest": arguments.smoke_test,
         "modelReference": model_reference,
+        "baseModelRevision": configuration.get("model_revision"),
+        "gitCommit": current_git_commit(),
+        "datasetVersion": dataset_integrity.get("datasetVersion"),
+        "datasetManifest": dataset_integrity.get("manifestFile"),
+        "datasetManifestSha256": dataset_integrity.get("manifestSha256"),
+        "trainSha256": dataset_integrity["trainSha256"],
+        "validationSha256": dataset_integrity["validationSha256"],
         "outputDirectory": str(output_directory),
         "elapsedSeconds": elapsed_seconds,
         "peakGpuAllocatedGiB": torch.cuda.max_memory_allocated() / 1024**3,
         "peakGpuReservedGiB": torch.cuda.max_memory_reserved() / 1024**3,
         "startup": startup_evidence,
+        "truncation": truncation,
         "trainMetrics": train_result.metrics,
         "evaluationMetrics": evaluation_metrics,
         "globalStep": trainer.state.global_step,

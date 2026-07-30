@@ -1,0 +1,205 @@
+{
+  "authorizedRealAttackCount": 0,
+  "counts": {
+    "byAttackFamily": {
+      "api_abuse": 4,
+      "authentication": 5,
+      "automation": 2,
+      "benign": 24,
+      "business_logic": 1,
+      "command_injection": 2,
+      "deserialization": 2,
+      "file_upload": 4,
+      "other": 18,
+      "path_traversal": 4,
+      "protocol_attack": 5,
+      "sqli": 27,
+      "ssrf": 1,
+      "xss": 1
+    },
+    "byCategory": {
+      "attack": 69,
+      "hard_negative": 10,
+      "normal": 14,
+      "unknown": 7
+    },
+    "byEncoding": {
+      "double_url_encoded": 3,
+      "plain": 49,
+      "unicode": 31,
+      "url_encoded": 17
+    },
+    "byEvaluationSuite": {
+      "authorized_attack_test": 22,
+      "development": 50,
+      "prompt_injection_test": 3,
+      "public_training_openapi_normal": 1,
+      "public_training_prompt_injection": 12,
+      "public_training_waf_regression": 12
+    },
+    "byProvenance": {
+      "deterministic_synthetic_v02": 74,
+      "public_open_source_derived": 25,
+      "tracked_synthetic_security_corpus_v02_conversion": 1
+    },
+    "bySourceDataset": {
+      "aetherargus-v02-deterministic": 74,
+      "owasp-crs-regression": 12,
+      "s-labs-prompt-injection-train": 12,
+      "stripe-openapi": 1,
+      "zeroday_dataset": 1
+    },
+    "bySplit": {
+      "test_closed": 4,
+      "test_independent": 25,
+      "train": 67,
+      "validation": 4
+    }
+  },
+  "datasetAcceptance": {
+    "gates": {
+      "all_records_deterministically_valid": true,
+      "core_independent_family_each_at_least_100": false,
+      "family_minimums_met": false,
+      "independent_test_at_least_1500": false,
+      "train_at_least_8000": false,
+      "validation_at_least_1000": false
+    },
+    "passed": false
+  },
+  "datasetVersion": "v02",
+  "files": {
+    "test_closed": {
+      "bytes": 13548,
+      "path": "ml/data/releases/v02-smoke/test-closed.jsonl",
+      "records": 4,
+      "sha256": "2941a3dfa3d402704397b30bc8ee75ac5fa8a4ae09d5f534b730aec478f706d6"
+    },
+    "test_independent": {
+      "bytes": 88341,
+      "path": "ml/data/releases/v02-smoke/test-independent.jsonl",
+      "records": 25,
+      "sha256": "911b51aca0ba4e61b773dc69d83504bfa407c420416c713fd4fe6e3b75c3e821"
+    },
+    "train": {
+      "bytes": 246251,
+      "path": "ml/data/releases/v02-smoke/train.jsonl",
+      "records": 67,
+      "sha256": "ae7b8fe5963b7a2433639637c4c0ddbfd97aebc795ed162f4831db24e872726e"
+    },
+    "validation": {
+      "bytes": 14074,
+      "path": "ml/data/releases/v02-smoke/validation.jsonl",
+      "records": 4,
+      "sha256": "306c412e5576368a93ab48afef2817fc9e4e9caa82973e4ef58bbcfde2af9c62"
+    }
+  },
+  "generation": {
+    "generatedAt": "2026-07-28T00:00:00Z",
+    "generatorModel": "deterministic-aetherargus-v02",
+    "generatorPromptVersion": "dataset-v02.1",
+    "independentSealedFirst": true
+  },
+  "humanReviewCount": 0,
+  "independentSeal": {
+    "datasetVersion": "v02",
+    "recordCount": 25,
+    "recordsSha256": "c7bbc39cbcb9ba3fd00cd52337c24af58c40470fdae651417b49ce8e7b0eee8e",
+    "schemaVersion": 1,
+    "sealedBeforeDevelopmentGeneration": true,
+    "sourceSampleIdsSha256": "4521e3717ceac5e63f61c38fed35397fd7eac24c66f1b699a2b615383bf99af7",
+    "templateFingerprintsSha256": "60526b0fb2fa85bd409a0253997b8f85cd2cc04de6b8ccfcd312ccbc2667d022"
+  },
+  "leakage": {
+    "checks": [
+      "normalized SHA-256",
+      "template fingerprint",
+      "source-seed group",
+      "CVE group",
+      "generator model and prompt version group",
+      "64-bit SimHash retained per sample",
+      "24-permutation MinHash retained per sample",
+      "character n-gram hashing vectors (non-neural fallback)"
+    ],
+    "detected": false,
+    "limitations": [
+      "No neural embedding model was available in this execution environment.",
+      "SimHash/MinHash are lexical similarity controls and do not prove absence of all semantic leakage."
+    ],
+    "pairwise": {
+      "test_closed_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_test_closed": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "train_vs_validation": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "validation_vs_test_closed": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      },
+      "validation_vs_test_independent": {
+        "detected": false,
+        "sharedGroupIds": 0,
+        "sharedNormalizedHashes": 0,
+        "sharedTemplateFingerprints": 0
+      }
+    }
+  },
+  "preview02Acceptance": {
+    "passed": false,
+    "reason": "This delivery expands and audits data only. Model training, inference, quantization, prompt-injection obedience measurement, recall and false-positive gates were not run."
+  },
+  "process": {
+    "crossCorpusDuplicatesRemoved": 0,
+    "duplicatesRemoved": 0,
+    "generated": 400,
+    "output": 100,
+    "redactions": 110,
+    "reviewRejected": 0,
+    "rulesAccepted": 400,
+    "selectionDropped": 300,
+    "semanticPairsClustered": 1
+  },
+  "publicSources": {
+    "acceptedAfterPipeline": 25,
+    "acceptedSourceCount": 3,
+    "allowedSplits": [
+      "train",
+      "validation"
+    ],
+    "auditPath": "ml/reports/dataset-v02-public-source-audit.json",
+    "excludedSourceCount": 4,
+    "selectedBeforePipeline": 100,
+    "upstreamEvaluationSplitsUsedForTraining": false
+  },
+  "realNormalCount": 0,
+  "schemaVersion": 2,
+  "seed": 20260728,
+  "smoke": true,
+  "sourceCorpusIsSynthetic": true,
+  "sourceRegistry": {
+    "path": "ml/data/manifests/dataset-v02-source-registry.json",
+    "sourceSampleIdCount": 80,
+    "sourceSampleIdsSha256": "2191228264828c174ed40a671141da9edb6067e90a8b220a4e37e4851055405e"
+  }
+}

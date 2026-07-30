@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-30T00:16:24.370343+00:00",
+  "runName": "gguf-q6_k-independent",
+  "sampleCount": 1750,
+  "modelInvocationCount": 1750,
+  "heuristicOnly": false,
+  "jsonSyntaxSuccessRate": 0.9988571428571429,
+  "schemaValidRate": 0.9988571428571429,
+  "verdictAccuracy": 0.9857142857142858,
+  "maliciousPrecision": 0.9912767644726408,
+  "maliciousRecall": 1.0,
+  "maliciousF1": 0.9956192751891677,
+  "normalFalsePositiveRate": 0.06571428571428571,
+  "normalFalsePositiveCount": 23,
+  "normalSampleCount": 350,
+  "hardNegativeFalsePositiveRate": 0.15,
+  "hardNegativeFalsePositiveCount": 15,
+  "hardNegativeSampleCount": 100,
+  "unknownAccuracy": 1.0,
+  "unknownExpectedCount": 150,
+  "promptInjectionObedience": 0.9343065693430657,
+  "promptInjectionCount": 137,
+  "attackFamilyMacroF1": 0.9880775054643235,
+  "recommendedActionAccuracy": 0.9925714285714285,
+  "unknownUsageRate": 0.08685714285714285,
+  "averageLatencyMs": 1438.2580839006864,
+  "p50LatencyMs": 1440.532072490896,
+  "p95LatencyMs": 1880.5854743972304,
+  "peakGpuMemoryGiB": null,
+  "categoryBreakdown": {
+    "attack": {
+      "count": 1250,
+      "verdictAccuracy": 1.0,
+      "predictedVerdicts": {
+        "malicious": 1250
+      }
+    },
+    "hard_negative": {
+      "count": 100,
+      "verdictAccuracy": 0.85,
+      "predictedVerdicts": {
+        "malicious": 3,
+        "safe": 85,
+        "suspicious": 12
+      }
+    },
+    "normal": {
+      "count": 250,
+      "verdictAccuracy": 0.96,
+      "predictedVerdicts": {
+        "malicious": 8,
+        "safe": 240,
+        "unknown": 2
+      }
+    },
+    "unknown": {
+      "count": 150,
+      "verdictAccuracy": 1.0,
+      "predictedVerdicts": {
+        "unknown": 150
+      }
+    }
+  },
+  "familyBreakdown": {
+    "api_abuse": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "authentication": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "automation": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "benign": {
+      "count": 350,
+      "attackFamilyAccuracy": 0.9257142857142857,
+      "maliciousRecall": 0.0
+    },
+    "business_logic": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "command_injection": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "deserialization": {
+      "count": 80,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "file_upload": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "other": {
+      "count": 220,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "path_traversal": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "protocol_attack": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "sqli": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "ssrf": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    },
+    "xss": {
+      "count": 100,
+      "attackFamilyAccuracy": 1.0,
+      "maliciousRecall": 1.0
+    }
+  },
+  "evaluationSuiteBreakdown": {
+    "authorized_attack_test": {
+      "count": 1125,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 1.0
+    },
+    "independent_hard_negative": {
+      "count": 88,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 0.8636363636363636
+    },
+    "independent_synthetic_normal": {
+      "count": 200,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 0.96
+    },
+    "independent_unknown": {
+      "count": 150,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 1.0
+    },
+    "long_input_test": {
+      "count": 50,
+      "jsonSyntaxSuccessRate": 0.96,
+      "schemaValidRate": 0.96,
+      "verdictAccuracy": 0.96
+    },
+    "prompt_injection_test": {
+      "count": 137,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 0.9781021897810219
+    }
+  },
+  "provenanceBreakdown": {
+    "deterministic_synthetic_v02": {
+      "count": 1750,
+      "jsonSyntaxSuccessRate": 0.9988571428571429,
+      "schemaValidRate": 0.9988571428571429,
+      "verdictAccuracy": 0.9857142857142858
+    }
+  },
+  "encodingBreakdown": {
+    "double_url_encoded": {
+      "count": 164,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 1.0
+    },
+    "plain": {
+      "count": 919,
+      "jsonSyntaxSuccessRate": 0.9978237214363439,
+      "schemaValidRate": 0.9978237214363439,
+      "verdictAccuracy": 0.9891186071817193
+    },
+    "unicode": {
+      "count": 560,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 0.9732142857142857
+    },
+    "url_encoded": {
+      "count": 107,
+      "jsonSyntaxSuccessRate": 1.0,
+      "schemaValidRate": 1.0,
+      "verdictAccuracy": 1.0
+    }
+  }
+}
