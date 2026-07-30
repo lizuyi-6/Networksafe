@@ -89,9 +89,35 @@ const FORBIDDEN_TEXT = /\b(responseStatus|responseBody|responseHeaders|responseS
 const leaks = anns.filter((a) => FORBIDDEN_TEXT.test([...a.evidence, a.rationale, a.alternativeInterpretation, a.reviewReason].join(' ')));
 check('6 no response-side artefact referenced', leaks.length === 0, leaks.length ? leaks.slice(0, 5).map((l) => l.sampleId).join(',') : '0 samples');
 
-// 7. 未查看其他标注结果 —— 断言 annotations/ 下不存在 A 方产物
-const otherA = fs.readdirSync(__dirname).filter((f) => /model-a|annotator-a|reviewerA/i.test(f));
-check('7 no annotator-A artefact in annotations dir', otherA.length === 0, otherA.length ? otherA.join(',') : 'none');
+// 7. 未查看/未受影响于其他标注结果。
+// A 方产物 (model-a-*) 在两份标注合并进同一分支后本就应当共存, 所以
+// "目录下不存在 A 方文件" 不再是正确的不变量。真正要守的是:
+//   (a) 我的脚本没有任何一处读取 A 方文件;
+//   (b) 我的标注产物内容与 A 方文件出现之前逐字节相同。
+// (b) 用 commit 4576869 (annotator-b 独立提交, 早于 cherry-pick A) 作锚点。
+const aFiles = fs.readdirSync(__dirname).filter((f) => /model-a|annotator-a|reviewerA/i.test(f));
+const aReadInCode = [];
+for (const sf of scripts) {
+  // _selfcheck.js 自身必然包含 "model-a" 字面量(就是这段检查代码), 排除自指。
+  if (sf === '_selfcheck.js') continue;
+  const src = fs.readFileSync(path.join(__dirname, sf), 'utf8');
+  if (/model-a|annotator-a|reviewerA/i.test(src)) aReadInCode.push(sf);
+}
+check('7a no annotation script references an annotator-A file', aReadInCode.length === 0,
+  aReadInCode.length ? aReadInCode.join(',') : `${aFiles.length} annotator-A file(s) present, referenced by 0 of ${scripts.length - 1} scripts`);
+
+const B_ANCHOR = '4576869';
+let bDrift = 'anchor commit not reachable (skipped)';
+let bIntact = true;
+try {
+  const anchored = execSync(`git -C "${REPO}" show ${B_ANCHOR}:ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl`, { maxBuffer: 64 * 1024 * 1024 });
+  const nowBuf = fs.readFileSync(OUT);
+  const shaA = crypto.createHash('sha256').update(anchored).digest('hex');
+  const shaB = crypto.createHash('sha256').update(nowBuf).digest('hex');
+  bIntact = shaA === shaB;
+  bDrift = bIntact ? `sha256 ${shaB.slice(0, 16)}… unchanged since ${B_ANCHOR}` : `DRIFT anchor=${shaA.slice(0, 16)} now=${shaB.slice(0, 16)}`;
+} catch (e) { bDrift = `anchor check failed: ${e.message.split('\n')[0]}`; bIntact = false; }
+check('7b annotator-B output unchanged since its pre-merge commit', bIntact, bDrift);
 
 // 8. 未修改原始挑战集 —— 断言提取出的文件与 git blob 逐字节一致
 const REF = 'agent/viguard-lan-capture-20260729';
