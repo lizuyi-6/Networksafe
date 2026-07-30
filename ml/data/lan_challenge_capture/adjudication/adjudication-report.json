@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "title": "VIguard LAN Challenge Set — Dual-LLM Annotation Adjudication Report",
   "annotators": {
     "A": "GPT-5.6-SOL",
@@ -41,24 +41,24 @@
   "resolution": {
     "consensusCount": 160,
     "modelAdjudicationCount": 253,
-    "acceptA": 197,
-    "acceptB": 20,
+    "acceptA": 137,
+    "acceptB": 12,
     "newResolution": 0,
-    "insufficientContext": 36,
-    "acceptedAnnotatorA": 197,
-    "acceptedAnnotatorB": 20,
-    "acceptedAnnotatorNull": 36
+    "insufficientContext": 104,
+    "acceptedAnnotatorA": 137,
+    "acceptedAnnotatorB": 12,
+    "acceptedAnnotatorNull": 104
   },
   "finalLabelDistribution": {
     "verdict": {
-      "safe": 251,
-      "unknown": 39,
-      "attack": 123
+      "safe": 209,
+      "unknown": 107,
+      "attack": 97
     },
     "attackFamily": {
-      "none": 251,
-      "idor_bola": 17,
-      "authorization": 7,
+      "none": 209,
+      "authorization": 26,
+      "idor_bola": 40,
       "sqli": 23,
       "xss": 10,
       "command_injection": 8,
@@ -74,20 +74,39 @@
     },
     "recommendedAction": {
       "allow": 138,
-      "monitor": 113,
-      "challenge": 39,
-      "block": 121,
-      "isolate": 2
+      "challenge": 107,
+      "block": 95,
+      "isolate": 2,
+      "monitor": 71
     },
-    "finalUnknownCount": 39
+    "finalUnknownCount": 107
   },
   "humanAudit": {
     "requiresHumanAuditCount": 251,
     "humanReviewed": false,
     "reviewerCount": 0
   },
-  "finalLabelsSha256": "4fb2ad16836c6b53adbfa7ef9191b8e064b8e21129c383456e354f0a904336dc",
-  "frozenAt": "2026-07-30T15:39:02.566Z",
+  "contextVisibilityAudit": {
+    "auditedSampleCount": 413,
+    "hiddenContextIssueCount": 68,
+    "correctedLabelCount": 68,
+    "unchangedLabelCount": 345,
+    "issueCategories": {
+      "principal_role_missing": 26,
+      "object_ownership_missing": 23,
+      "tenant_boundary_missing": 0,
+      "server_execution_semantics_missing": 19,
+      "response_side_dependency": 0,
+      "collector_intent_dependency": 0,
+      "other": 0
+    },
+    "responseSideEvidenceUsed": false,
+    "collectorGroundTruthUsed": false
+  },
+  "finalLabelsSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+  "labelsFrozenAt": "2026-07-30T16:02:03.000Z",
+  "provenanceMetadataCorrectedAt": "2026-07-30T16:02:03.000Z",
+  "frozenAt": "2026-07-30T16:02:03.000Z",
   "declarations": {
     "dualLlmAnnotationAndThirdLlmAdjudication": true,
     "notHumanAnnotated": true,
@@ -100,5 +119,13 @@
     "intraClassCorrelationRisk": true,
     "adjudicatorCannotEliminateSharedSystematicBias": true
   },
-  "knownLimitations": []
+  "knownLimitations": [
+    "Annotator B labels were produced by a deterministic rule program authored in one model session, creating intra-class correlation risk.",
+    "The three AI systems may still share common training-data or safety-policy biases.",
+    "AI annotation and AI adjudication do not constitute human review.",
+    "Samples requiring identity, role, ownership, tenant-boundary, or server-side execution semantics may remain unknown when those facts are absent from the model-visible input.",
+    "The dataset is an authorized live-execution challenge set, not natural production traffic.",
+    "The benchmark does not contain confirmed successful exploits.",
+    "Reference labels should not be described as objective human-verified ground truth."
+  ]
 }

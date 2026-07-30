@@ -1,7 +1,7 @@
 # VIguard LAN Challenge Set — Dual-LLM Adjudication
 
 Third-party adjudication of the two independent LLM annotation sets for the VIguard LAN
-challenge capture (`model-inputs.jsonl`, 413 samples), producing a frozen ground-truth label
+challenge capture (`model-inputs.jsonl`, 413 samples), producing a frozen reference-label
 set **before** AetherArgus is evaluated on this set.
 
 ## Identities
@@ -13,9 +13,11 @@ set **before** AetherArgus is evaluated on this set.
 ```bash
 cd <repo-root>
 node ml/data/lan_challenge_capture/adjudication/compare-annotations.js   # Phase 1+2: integrity, metrics, queue, consensus
+node ml/data/lan_challenge_capture/adjudication/apply-context-visibility-corrections.js # Audit all 413 model-visible inputs
 node ml/data/lan_challenge_capture/adjudication/build-outputs.js         # Phase 4+5: adjudication.jsonl + final-labels.jsonl (413)
 node ml/data/lan_challenge_capture/adjudication/build-manifest.js        # Phase 5: final-labels-manifest.json (SHA + counts)
 node ml/data/lan_challenge_capture/adjudication/build-report.js          # Phase 6: adjudication-report.{md,json}
+node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js # Model-visible evidence boundary
 node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js # Phase 6: 15-check validator (exit 0 = pass)
 ```
 The adjudicator's per-sample decisions live in `decisions/batch-0[1-8].jsonl` and are joined
@@ -26,5 +28,11 @@ to the queue by `build-outputs.js`; they are the auditable record of adjudicator
 - All rows `eligibleForTraining=false`, `split=external_challenge_test`.
 - `humanReviewed=false`, `reviewerCount=0` (two AI annotators + one AI adjudicator ≠ human review).
 - `requiresHumanAudit=true` on 251/413 rows — a **sampling queue**, not completed review.
+- Cohen's kappa metadata is mechanically computed: Po=0.927361, Pe=0.461620,
+  kappa=0.865078.
+- `labelsFrozenAt` tracks final-label byte changes; `provenanceMetadataCorrectedAt` tracks
+  provenance corrections. Metadata-only changes never move the label freeze.
 - Final labels were frozen before AetherArgus evaluation. No AetherArgus predictions, collector
-  ground truth, or response-side fields were read or used. See `adjudication-report.md`.
+  ground truth, or response-side fields were read or used. Environment and permission-matrix
+  files are provenance aids, not decisive label evidence. See `context-visibility-audit.md`
+  and `adjudication-report.md`.

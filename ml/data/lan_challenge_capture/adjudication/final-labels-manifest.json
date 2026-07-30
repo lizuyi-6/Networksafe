@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "sampleCount": 413,
   "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
   "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
@@ -8,7 +8,7 @@
   "annotatorBFile": "ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl",
   "annotatorBSha256": "9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357",
   "finalLabelsFile": "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl",
-  "finalLabelsSha256": "4fb2ad16836c6b53adbfa7ef9191b8e064b8e21129c383456e354f0a904336dc",
+  "finalLabelsSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
   "consensusCount": 160,
   "modelAdjudicationCount": 253,
   "requiresHumanAuditCount": 251,
@@ -17,8 +17,11 @@
   "eligibleForTraining": false,
   "split": "external_challenge_test",
   "labelsFrozenBeforeAetherArgusEvaluation": true,
-  "frozenAt": "2026-07-30T15:39:02.566Z",
-  "sourceCommit": "886b696792f1425e904c957755199836c86960ff",
+  "labelsFrozenAt": "2026-07-30T16:02:03.000Z",
+  "provenanceMetadataCorrectedAt": "2026-07-30T16:02:03.000Z",
+  "frozenAt": "2026-07-30T16:02:03.000Z",
+  "timestampSemantics": "Metadata corrections do not alter the label-freeze timestamp unless the byte content of final-labels.jsonl changes.",
+  "sourceCommit": "ec871baa7caffea6f9deccf2e548408b476d4d90",
   "adjudicationCommit": null,
   "annotators": {
     "A": {
@@ -36,14 +39,14 @@
     "note": "Adjudicator identity is operator-confirmed: the operator states GLM-5.2 (Zhipu AI) actually served the adjudication session. The harness session label displayed a different (Claude-class) name; the running model cannot self-introspect its exact build/checkpoint from inside the session (the same limitation annotator B documented in model-b-report.json), so the precise version follows operator confirmation rather than self-identification. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0)."
   },
   "finalVerdictDistribution": {
-    "safe": 251,
-    "unknown": 39,
-    "attack": 123
+    "safe": 209,
+    "unknown": 107,
+    "attack": 97
   },
   "finalAttackFamilyDistribution": {
-    "none": 251,
-    "idor_bola": 17,
-    "authorization": 7,
+    "none": 209,
+    "authorization": 26,
+    "idor_bola": 40,
     "sqli": 23,
     "xss": 10,
     "command_injection": 8,
@@ -58,8 +61,8 @@
     "protocol_attack": 11
   },
   "resolutionDecisionDistribution": {
-    "accept_b": 20,
-    "insufficient_context": 36,
-    "accept_a": 197
+    "insufficient_context": 104,
+    "accept_a": 137,
+    "accept_b": 12
   }
 }

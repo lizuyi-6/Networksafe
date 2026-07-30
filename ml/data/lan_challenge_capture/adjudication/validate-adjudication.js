@@ -34,6 +34,8 @@ const queue = readJsonl(path.join(OUT, 'disagreement-queue.jsonl'));
 const consensus = readJsonl(path.join(OUT, 'consensus.jsonl'));
 const manifest = JSON.parse(fs.readFileSync(path.join(OUT, 'final-labels-manifest.json'), 'utf8'));
 const integrity = JSON.parse(fs.readFileSync(path.join(OUT, 'integrity-check.json'), 'utf8'));
+const agreementReport = JSON.parse(fs.readFileSync(path.join(OUT, 'agreement-report.json'), 'utf8'));
+const adjudicationReport = JSON.parse(fs.readFileSync(path.join(OUT, 'adjudication-report.json'), 'utf8'));
 
 const aMap = new Map(annA.map(r => [r.sampleId, r]));
 const bMap = new Map(annB.map(r => [r.sampleId, r]));
@@ -146,6 +148,18 @@ check(manifest.sampleCount === 413 && manifest.consensusCount + manifest.modelAd
 check(manifest.humanReviewed === false && manifest.reviewerCount === 0, 'manifest not humanReviewed=false/reviewerCount=0');
 check(manifest.labelsFrozenBeforeAetherArgusEvaluation === true, 'manifest frozen flag not true');
 check(manifest.eligibleForTraining === false, 'manifest eligibleForTraining not false');
+check(typeof manifest.labelsFrozenAt === 'string' && !!Date.parse(manifest.labelsFrozenAt), 'manifest labelsFrozenAt missing/invalid');
+check(typeof manifest.provenanceMetadataCorrectedAt === 'string' && !!Date.parse(manifest.provenanceMetadataCorrectedAt),
+  'manifest provenanceMetadataCorrectedAt missing/invalid');
+check(manifest.frozenAt === manifest.labelsFrozenAt, 'legacy frozenAt must alias labelsFrozenAt');
+check(adjudicationReport.humanAudit.humanReviewed === false && adjudicationReport.humanAudit.reviewerCount === 0,
+  'adjudication report falsely claims human review');
+check(Array.isArray(adjudicationReport.knownLimitations) && adjudicationReport.knownLimitations.length >= 7,
+  'adjudication report knownLimitations incomplete');
+check(agreementReport.verdict.kappaComponents.Po === 0.927361, 'agreement-report Po drift');
+check(agreementReport.verdict.kappaComponents.Pe === 0.46162, 'agreement-report Pe drift');
+check(agreementReport.verdict.cohensKappa === 0.865078, 'agreement-report kappa drift');
+check(adjudicationReport.agreement.kappaComponents.Pe === 0.46162, 'adjudication-report Pe drift');
 
 // 14. no AetherArgus prediction files referenced: assert forbidden prediction/collector files
 //     are NOT present inside the adjudication output directory tree.

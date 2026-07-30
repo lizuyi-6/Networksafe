@@ -1,8 +1,8 @@
 /*
  * build-manifest.js — final-labels-manifest.json (§15).
- * Computes SHA-256 of inputs/A/B/final-labels, pulls counts from build-stats.json, stamps
- * frozenAt from the real clock (this is a plain Node script, not a workflow sandbox), and
- * records the source commit. adjudicationCommit stays null until the branch is committed.
+ * Computes SHA-256 of inputs/A/B/final-labels and pulls counts from build-stats.json.
+ * labelsFrozenAt changes only when final-labels.jsonl bytes change. Provenance-only
+ * corrections have a separate timestamp and never silently move the label freeze.
  */
 'use strict';
 
@@ -24,9 +24,26 @@ function git(args) {
 }
 
 const stats = JSON.parse(fs.readFileSync(path.join(OUT, 'build-stats.json'), 'utf8'));
+const manifestPath = path.join(OUT, 'final-labels-manifest.json');
+let previous = null;
+try { previous = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch (e) {}
+
+const now = process.env.VIGUARD_MANIFEST_AT || new Date().toISOString();
+const finalLabelsSha256 = sha256File(path.join(OUT, 'final-labels.jsonl'));
+const labelsChanged = !previous || previous.finalLabelsSha256 !== finalLabelsSha256;
+const previousLabelsFrozenAt = previous && (previous.labelsFrozenAt || previous.frozenAt);
+const labelsFrozenAt = process.env.VIGUARD_LABELS_FROZEN_AT
+  || (labelsChanged ? now : (previousLabelsFrozenAt || now));
+const provenanceMetadataCorrectedAt = process.env.VIGUARD_PROVENANCE_CORRECTED_AT
+  || (labelsChanged ? now : (previous && previous.provenanceMetadataCorrectedAt))
+  || now;
+const sourceCommit = process.env.VIGUARD_SOURCE_COMMIT
+  || (previous && previous.sourceCommit)
+  || git('rev-parse HEAD')
+  || null;
 
 const manifest = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   sampleCount: 413,
   inputFile: 'ml/data/lan_challenge_capture/model-inputs.jsonl',
   inputSha256: sha256File(path.join(DATA, 'model-inputs.jsonl')),
@@ -35,7 +52,7 @@ const manifest = {
   annotatorBFile: 'ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl',
   annotatorBSha256: sha256File(path.join(ANN, 'model-b-annotations.jsonl')),
   finalLabelsFile: 'ml/data/lan_challenge_capture/adjudication/final-labels.jsonl',
-  finalLabelsSha256: sha256File(path.join(OUT, 'final-labels.jsonl')),
+  finalLabelsSha256,
   consensusCount: stats.consensusCount,
   modelAdjudicationCount: stats.modelAdjudicationCount,
   requiresHumanAuditCount: stats.requiresHumanAuditCount,
@@ -44,9 +61,12 @@ const manifest = {
   eligibleForTraining: false,
   split: 'external_challenge_test',
   labelsFrozenBeforeAetherArgusEvaluation: true,
-  frozenAt: new Date().toISOString(),
-  sourceCommit: git('rev-parse HEAD'),
-  adjudicationCommit: null,
+  labelsFrozenAt,
+  provenanceMetadataCorrectedAt,
+  frozenAt: labelsFrozenAt,
+  timestampSemantics: 'Metadata corrections do not alter the label-freeze timestamp unless the byte content of final-labels.jsonl changes.',
+  sourceCommit,
+  adjudicationCommit: previous && previous.adjudicationCommit ? previous.adjudicationCommit : null,
   annotators: {
     A: { model: 'GPT-5.6-SOL', reportFile: 'ml/data/lan_challenge_capture/annotations/model-a-report.json' },
     B: { model: 'Claude Opus 5', reportFile: 'ml/data/lan_challenge_capture/annotations/model-b-report.json' },
@@ -61,7 +81,9 @@ const manifest = {
   resolutionDecisionDistribution: stats.resolutionDecisionDistribution,
 };
 
-fs.writeFileSync(path.join(OUT, 'final-labels-manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 console.log('manifest written. final-labels sha256:', manifest.finalLabelsSha256);
-console.log('frozenAt:', manifest.frozenAt);
+console.log('labels changed:', labelsChanged);
+console.log('labelsFrozenAt:', manifest.labelsFrozenAt);
+console.log('provenanceMetadataCorrectedAt:', manifest.provenanceMetadataCorrectedAt);
 console.log('sourceCommit:', manifest.sourceCommit);

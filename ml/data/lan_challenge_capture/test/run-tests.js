@@ -172,19 +172,55 @@ test('20. verify.js exits 0 on the clean regenerated dataset', () => {
 // If `mustContain` is given, the test additionally asserts that exact substring appears in the
 // verifier output -- this proves the SPECIFIC gate fired (not some other check coincidentally
 // failing), so a green mutation test actually demonstrates the invariant it claims to.
-function withMutatedDataset(mutate, expectDesc, mustContain) {
-  const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vig-verify-'));
-  for (const f of fs.readdirSync(DATA)) {
-    const src = path.join(DATA, f);
-    const stat = fs.statSync(src);
-    if (stat.isDirectory()) {
-      if (f === 'raw-private' || f === 'node_modules') continue;
-      fs.mkdirSync(path.join(tmp, f), { recursive: true });
-      for (const g of fs.readdirSync(src)) fs.copyFileSync(path.join(src, g), path.join(tmp, f, g));
-    } else {
-      fs.copyFileSync(src, path.join(tmp, f));
+const COPY_EXCLUDES = new Set(['raw-private', 'node_modules', '.git']);
+function copyDatasetTree(source, destination) {
+  fs.mkdirSync(destination, { recursive: true });
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    if (COPY_EXCLUDES.has(entry.name)) continue;
+    const src = path.join(source, entry.name);
+    const dst = path.join(destination, entry.name);
+    if (entry.isDirectory()) {
+      copyDatasetTree(src, dst);
+    } else if (entry.isFile()) {
+      fs.copyFileSync(src, dst);
     }
   }
+}
+
+test('COPY1. mutation-test dataset copy supports nested directories and excludes private/VCS trees', () => {
+  const root = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vig-copy-'));
+  const source = path.join(root, 'source');
+  const destination = path.join(root, 'destination');
+  fs.mkdirSync(path.join(source, 'adjudication', 'decisions'), { recursive: true });
+  fs.mkdirSync(path.join(source, 'raw-private'), { recursive: true });
+  fs.mkdirSync(path.join(source, 'node_modules'), { recursive: true });
+  fs.mkdirSync(path.join(source, '.git'), { recursive: true });
+  fs.writeFileSync(path.join(source, 'adjudication', 'decisions', 'batch.jsonl'), '{}\n');
+  fs.writeFileSync(path.join(source, 'raw-private', 'secret'), 'do-not-copy');
+  fs.writeFileSync(path.join(source, 'node_modules', 'module.js'), 'do-not-copy');
+  fs.writeFileSync(path.join(source, '.git', 'config'), 'do-not-copy');
+
+  copyDatasetTree(source, destination);
+
+  assert(fs.existsSync(path.join(destination, 'adjudication', 'decisions', 'batch.jsonl')), 'nested decision file not copied');
+  assert(!fs.existsSync(path.join(destination, 'raw-private')), 'raw-private copied');
+  assert(!fs.existsSync(path.join(destination, 'node_modules')), 'node_modules copied');
+  assert(!fs.existsSync(path.join(destination, '.git')), '.git copied');
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('ADJ1. context-visibility validator passes over all frozen adjudication artifacts', () => {
+  const validator = path.join(DATA, 'adjudication', 'validate-context-visibility.js');
+  const result = spawnSync(process.execPath, [validator], { cwd: DATA, encoding: 'utf8' });
+  assertEq(result.status, 0,
+    `context visibility validation failed; stdout=${(result.stdout || '').slice(0, 600)} stderr=${(result.stderr || '').slice(0, 600)}`);
+  assert((result.stdout || '').includes('CONTEXT VISIBILITY VALIDATION PASSED'),
+    'context visibility validator did not emit its success marker');
+});
+
+function withMutatedDataset(mutate, expectDesc, mustContain) {
+  const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vig-verify-'));
+  copyDatasetTree(DATA, tmp);
   // Neutralize AJV in the temp copy: replace the draft-2020 loader with a stub that yields
   // no-op validators, so schema validation passes trivially and only the injected fault fails.
   const vf = path.join(tmp, 'verify.js');

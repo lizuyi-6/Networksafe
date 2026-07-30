@@ -1,0 +1,1764 @@
+{
+  "schemaVersion": 1,
+  "auditedAt": "2026-07-30T16:05:33.321Z",
+  "modelVisibleInputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
+  "sampleCount": 413,
+  "adjudicatedSampleCount": 253,
+  "consensusSampleCount": 160,
+  "auditedSampleCount": 413,
+  "hiddenContextIssueCount": 68,
+  "correctedLabelCount": 68,
+  "unchangedLabelCount": 345,
+  "issueCategories": {
+    "principal_role_missing": 26,
+    "object_ownership_missing": 23,
+    "tenant_boundary_missing": 0,
+    "server_execution_semantics_missing": 19,
+    "response_side_dependency": 0,
+    "collector_intent_dependency": 0,
+    "other": 0
+  },
+  "responseSideEvidenceUsed": false,
+  "collectorGroundTruthUsed": false,
+  "auditedSampleIds": [
+    "viguard-lan-000001",
+    "viguard-lan-000002",
+    "viguard-lan-000003",
+    "viguard-lan-000004",
+    "viguard-lan-000005",
+    "viguard-lan-000006",
+    "viguard-lan-000007",
+    "viguard-lan-000008",
+    "viguard-lan-000009",
+    "viguard-lan-000010",
+    "viguard-lan-000011",
+    "viguard-lan-000012",
+    "viguard-lan-000013",
+    "viguard-lan-000014",
+    "viguard-lan-000015",
+    "viguard-lan-000016",
+    "viguard-lan-000017",
+    "viguard-lan-000018",
+    "viguard-lan-000019",
+    "viguard-lan-000020",
+    "viguard-lan-000021",
+    "viguard-lan-000022",
+    "viguard-lan-000023",
+    "viguard-lan-000024",
+    "viguard-lan-000025",
+    "viguard-lan-000026",
+    "viguard-lan-000027",
+    "viguard-lan-000028",
+    "viguard-lan-000029",
+    "viguard-lan-000030",
+    "viguard-lan-000031",
+    "viguard-lan-000032",
+    "viguard-lan-000033",
+    "viguard-lan-000034",
+    "viguard-lan-000035",
+    "viguard-lan-000036",
+    "viguard-lan-000037",
+    "viguard-lan-000038",
+    "viguard-lan-000039",
+    "viguard-lan-000040",
+    "viguard-lan-000041",
+    "viguard-lan-000042",
+    "viguard-lan-000043",
+    "viguard-lan-000044",
+    "viguard-lan-000045",
+    "viguard-lan-000046",
+    "viguard-lan-000047",
+    "viguard-lan-000048",
+    "viguard-lan-000049",
+    "viguard-lan-000050",
+    "viguard-lan-000051",
+    "viguard-lan-000052",
+    "viguard-lan-000053",
+    "viguard-lan-000054",
+    "viguard-lan-000055",
+    "viguard-lan-000056",
+    "viguard-lan-000057",
+    "viguard-lan-000058",
+    "viguard-lan-000059",
+    "viguard-lan-000060",
+    "viguard-lan-000061",
+    "viguard-lan-000062",
+    "viguard-lan-000063",
+    "viguard-lan-000064",
+    "viguard-lan-000065",
+    "viguard-lan-000066",
+    "viguard-lan-000067",
+    "viguard-lan-000068",
+    "viguard-lan-000069",
+    "viguard-lan-000070",
+    "viguard-lan-000071",
+    "viguard-lan-000072",
+    "viguard-lan-000073",
+    "viguard-lan-000074",
+    "viguard-lan-000075",
+    "viguard-lan-000076",
+    "viguard-lan-000077",
+    "viguard-lan-000078",
+    "viguard-lan-000079",
+    "viguard-lan-000080",
+    "viguard-lan-000081",
+    "viguard-lan-000082",
+    "viguard-lan-000083",
+    "viguard-lan-000084",
+    "viguard-lan-000085",
+    "viguard-lan-000086",
+    "viguard-lan-000087",
+    "viguard-lan-000088",
+    "viguard-lan-000089",
+    "viguard-lan-000090",
+    "viguard-lan-000091",
+    "viguard-lan-000092",
+    "viguard-lan-000093",
+    "viguard-lan-000094",
+    "viguard-lan-000095",
+    "viguard-lan-000096",
+    "viguard-lan-000097",
+    "viguard-lan-000098",
+    "viguard-lan-000099",
+    "viguard-lan-000100",
+    "viguard-lan-000101",
+    "viguard-lan-000102",
+    "viguard-lan-000103",
+    "viguard-lan-000104",
+    "viguard-lan-000105",
+    "viguard-lan-000106",
+    "viguard-lan-000107",
+    "viguard-lan-000108",
+    "viguard-lan-000109",
+    "viguard-lan-000110",
+    "viguard-lan-000111",
+    "viguard-lan-000112",
+    "viguard-lan-000113",
+    "viguard-lan-000114",
+    "viguard-lan-000115",
+    "viguard-lan-000116",
+    "viguard-lan-000117",
+    "viguard-lan-000118",
+    "viguard-lan-000119",
+    "viguard-lan-000120",
+    "viguard-lan-000121",
+    "viguard-lan-000122",
+    "viguard-lan-000123",
+    "viguard-lan-000124",
+    "viguard-lan-000125",
+    "viguard-lan-000126",
+    "viguard-lan-000127",
+    "viguard-lan-000128",
+    "viguard-lan-000129",
+    "viguard-lan-000130",
+    "viguard-lan-000131",
+    "viguard-lan-000132",
+    "viguard-lan-000133",
+    "viguard-lan-000134",
+    "viguard-lan-000135",
+    "viguard-lan-000136",
+    "viguard-lan-000137",
+    "viguard-lan-000138",
+    "viguard-lan-000139",
+    "viguard-lan-000140",
+    "viguard-lan-000141",
+    "viguard-lan-000142",
+    "viguard-lan-000143",
+    "viguard-lan-000144",
+    "viguard-lan-000145",
+    "viguard-lan-000146",
+    "viguard-lan-000147",
+    "viguard-lan-000148",
+    "viguard-lan-000149",
+    "viguard-lan-000150",
+    "viguard-lan-000151",
+    "viguard-lan-000152",
+    "viguard-lan-000153",
+    "viguard-lan-000154",
+    "viguard-lan-000155",
+    "viguard-lan-000156",
+    "viguard-lan-000157",
+    "viguard-lan-000158",
+    "viguard-lan-000159",
+    "viguard-lan-000160",
+    "viguard-lan-000161",
+    "viguard-lan-000162",
+    "viguard-lan-000163",
+    "viguard-lan-000164",
+    "viguard-lan-000165",
+    "viguard-lan-000166",
+    "viguard-lan-000167",
+    "viguard-lan-000168",
+    "viguard-lan-000169",
+    "viguard-lan-000170",
+    "viguard-lan-000171",
+    "viguard-lan-000172",
+    "viguard-lan-000173",
+    "viguard-lan-000174",
+    "viguard-lan-000175",
+    "viguard-lan-000176",
+    "viguard-lan-000177",
+    "viguard-lan-000178",
+    "viguard-lan-000179",
+    "viguard-lan-000180",
+    "viguard-lan-000181",
+    "viguard-lan-000182",
+    "viguard-lan-000183",
+    "viguard-lan-000184",
+    "viguard-lan-000185",
+    "viguard-lan-000186",
+    "viguard-lan-000187",
+    "viguard-lan-000188",
+    "viguard-lan-000189",
+    "viguard-lan-000190",
+    "viguard-lan-000191",
+    "viguard-lan-000192",
+    "viguard-lan-000193",
+    "viguard-lan-000194",
+    "viguard-lan-000195",
+    "viguard-lan-000196",
+    "viguard-lan-000197",
+    "viguard-lan-000198",
+    "viguard-lan-000199",
+    "viguard-lan-000200",
+    "viguard-lan-000201",
+    "viguard-lan-000202",
+    "viguard-lan-000203",
+    "viguard-lan-000204",
+    "viguard-lan-000205",
+    "viguard-lan-000206",
+    "viguard-lan-000207",
+    "viguard-lan-000208",
+    "viguard-lan-000209",
+    "viguard-lan-000210",
+    "viguard-lan-000211",
+    "viguard-lan-000212",
+    "viguard-lan-000213",
+    "viguard-lan-000214",
+    "viguard-lan-000215",
+    "viguard-lan-000216",
+    "viguard-lan-000217",
+    "viguard-lan-000218",
+    "viguard-lan-000219",
+    "viguard-lan-000220",
+    "viguard-lan-000221",
+    "viguard-lan-000222",
+    "viguard-lan-000223",
+    "viguard-lan-000224",
+    "viguard-lan-000225",
+    "viguard-lan-000226",
+    "viguard-lan-000227",
+    "viguard-lan-000228",
+    "viguard-lan-000229",
+    "viguard-lan-000230",
+    "viguard-lan-000231",
+    "viguard-lan-000232",
+    "viguard-lan-000233",
+    "viguard-lan-000234",
+    "viguard-lan-000235",
+    "viguard-lan-000236",
+    "viguard-lan-000237",
+    "viguard-lan-000238",
+    "viguard-lan-000239",
+    "viguard-lan-000240",
+    "viguard-lan-000241",
+    "viguard-lan-000242",
+    "viguard-lan-000243",
+    "viguard-lan-000244",
+    "viguard-lan-000245",
+    "viguard-lan-000246",
+    "viguard-lan-000247",
+    "viguard-lan-000248",
+    "viguard-lan-000249",
+    "viguard-lan-000250",
+    "viguard-lan-000251",
+    "viguard-lan-000252",
+    "viguard-lan-000253",
+    "viguard-lan-000254",
+    "viguard-lan-000255",
+    "viguard-lan-000256",
+    "viguard-lan-000257",
+    "viguard-lan-000258",
+    "viguard-lan-000259",
+    "viguard-lan-000260",
+    "viguard-lan-000261",
+    "viguard-lan-000262",
+    "viguard-lan-000263",
+    "viguard-lan-000264",
+    "viguard-lan-000265",
+    "viguard-lan-000266",
+    "viguard-lan-000267",
+    "viguard-lan-000268",
+    "viguard-lan-000269",
+    "viguard-lan-000270",
+    "viguard-lan-000271",
+    "viguard-lan-000272",
+    "viguard-lan-000273",
+    "viguard-lan-000274",
+    "viguard-lan-000275",
+    "viguard-lan-000276",
+    "viguard-lan-000277",
+    "viguard-lan-000278",
+    "viguard-lan-000279",
+    "viguard-lan-000280",
+    "viguard-lan-000281",
+    "viguard-lan-000282",
+    "viguard-lan-000283",
+    "viguard-lan-000284",
+    "viguard-lan-000285",
+    "viguard-lan-000286",
+    "viguard-lan-000287",
+    "viguard-lan-000288",
+    "viguard-lan-000289",
+    "viguard-lan-000290",
+    "viguard-lan-000291",
+    "viguard-lan-000292",
+    "viguard-lan-000293",
+    "viguard-lan-000294",
+    "viguard-lan-000295",
+    "viguard-lan-000296",
+    "viguard-lan-000297",
+    "viguard-lan-000298",
+    "viguard-lan-000299",
+    "viguard-lan-000300",
+    "viguard-lan-000301",
+    "viguard-lan-000302",
+    "viguard-lan-000303",
+    "viguard-lan-000304",
+    "viguard-lan-000305",
+    "viguard-lan-000306",
+    "viguard-lan-000307",
+    "viguard-lan-000308",
+    "viguard-lan-000309",
+    "viguard-lan-000310",
+    "viguard-lan-000311",
+    "viguard-lan-000312",
+    "viguard-lan-000313",
+    "viguard-lan-000314",
+    "viguard-lan-000315",
+    "viguard-lan-000316",
+    "viguard-lan-000317",
+    "viguard-lan-000318",
+    "viguard-lan-000319",
+    "viguard-lan-000320",
+    "viguard-lan-000321",
+    "viguard-lan-000322",
+    "viguard-lan-000323",
+    "viguard-lan-000324",
+    "viguard-lan-000325",
+    "viguard-lan-000326",
+    "viguard-lan-000327",
+    "viguard-lan-000328",
+    "viguard-lan-000329",
+    "viguard-lan-000330",
+    "viguard-lan-000331",
+    "viguard-lan-000332",
+    "viguard-lan-000333",
+    "viguard-lan-000334",
+    "viguard-lan-000335",
+    "viguard-lan-000336",
+    "viguard-lan-000337",
+    "viguard-lan-000338",
+    "viguard-lan-000339",
+    "viguard-lan-000340",
+    "viguard-lan-000341",
+    "viguard-lan-000342",
+    "viguard-lan-000343",
+    "viguard-lan-000344",
+    "viguard-lan-000345",
+    "viguard-lan-000346",
+    "viguard-lan-000347",
+    "viguard-lan-000348",
+    "viguard-lan-000349",
+    "viguard-lan-000350",
+    "viguard-lan-000351",
+    "viguard-lan-000352",
+    "viguard-lan-000353",
+    "viguard-lan-000354",
+    "viguard-lan-000355",
+    "viguard-lan-000356",
+    "viguard-lan-000357",
+    "viguard-lan-000358",
+    "viguard-lan-000359",
+    "viguard-lan-000360",
+    "viguard-lan-000361",
+    "viguard-lan-000362",
+    "viguard-lan-000363",
+    "viguard-lan-000364",
+    "viguard-lan-000365",
+    "viguard-lan-000366",
+    "viguard-lan-000367",
+    "viguard-lan-000368",
+    "viguard-lan-000369",
+    "viguard-lan-000370",
+    "viguard-lan-000371",
+    "viguard-lan-000372",
+    "viguard-lan-000373",
+    "viguard-lan-000374",
+    "viguard-lan-000375",
+    "viguard-lan-000376",
+    "viguard-lan-000377",
+    "viguard-lan-000378",
+    "viguard-lan-000379",
+    "viguard-lan-000380",
+    "viguard-lan-000381",
+    "viguard-lan-000382",
+    "viguard-lan-000383",
+    "viguard-lan-000384",
+    "viguard-lan-000385",
+    "viguard-lan-000386",
+    "viguard-lan-000387",
+    "viguard-lan-000388",
+    "viguard-lan-000389",
+    "viguard-lan-000390",
+    "viguard-lan-000391",
+    "viguard-lan-000392",
+    "viguard-lan-000393",
+    "viguard-lan-000394",
+    "viguard-lan-000395",
+    "viguard-lan-000396",
+    "viguard-lan-000397",
+    "viguard-lan-000398",
+    "viguard-lan-000399",
+    "viguard-lan-000400",
+    "viguard-lan-000401",
+    "viguard-lan-000402",
+    "viguard-lan-000403",
+    "viguard-lan-000404",
+    "viguard-lan-000405",
+    "viguard-lan-000406",
+    "viguard-lan-000407",
+    "viguard-lan-000408",
+    "viguard-lan-000409",
+    "viguard-lan-000410",
+    "viguard-lan-000411",
+    "viguard-lan-000412",
+    "viguard-lan-000413"
+  ],
+  "correctedSampleIds": [
+    "viguard-lan-000115",
+    "viguard-lan-000116",
+    "viguard-lan-000117",
+    "viguard-lan-000118",
+    "viguard-lan-000119",
+    "viguard-lan-000120",
+    "viguard-lan-000121",
+    "viguard-lan-000122",
+    "viguard-lan-000128",
+    "viguard-lan-000129",
+    "viguard-lan-000130",
+    "viguard-lan-000131",
+    "viguard-lan-000132",
+    "viguard-lan-000163",
+    "viguard-lan-000164",
+    "viguard-lan-000165",
+    "viguard-lan-000168",
+    "viguard-lan-000169",
+    "viguard-lan-000170",
+    "viguard-lan-000171",
+    "viguard-lan-000172",
+    "viguard-lan-000173",
+    "viguard-lan-000174",
+    "viguard-lan-000175",
+    "viguard-lan-000210",
+    "viguard-lan-000212",
+    "viguard-lan-000258",
+    "viguard-lan-000259",
+    "viguard-lan-000260",
+    "viguard-lan-000261",
+    "viguard-lan-000262",
+    "viguard-lan-000263",
+    "viguard-lan-000264",
+    "viguard-lan-000265",
+    "viguard-lan-000266",
+    "viguard-lan-000267",
+    "viguard-lan-000268",
+    "viguard-lan-000269",
+    "viguard-lan-000270",
+    "viguard-lan-000271",
+    "viguard-lan-000272",
+    "viguard-lan-000273",
+    "viguard-lan-000274",
+    "viguard-lan-000275",
+    "viguard-lan-000276",
+    "viguard-lan-000277",
+    "viguard-lan-000278",
+    "viguard-lan-000279",
+    "viguard-lan-000280",
+    "viguard-lan-000286",
+    "viguard-lan-000287",
+    "viguard-lan-000288",
+    "viguard-lan-000289",
+    "viguard-lan-000290",
+    "viguard-lan-000291",
+    "viguard-lan-000292",
+    "viguard-lan-000293",
+    "viguard-lan-000304",
+    "viguard-lan-000305",
+    "viguard-lan-000306",
+    "viguard-lan-000397",
+    "viguard-lan-000398",
+    "viguard-lan-000399",
+    "viguard-lan-000400",
+    "viguard-lan-000401",
+    "viguard-lan-000402",
+    "viguard-lan-000403",
+    "viguard-lan-000404"
+  ],
+  "issues": [
+    {
+      "sampleId": "viguard-lan-000115",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000116",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000117",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000118",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000119",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000120",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000121",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000122",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000128",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000129",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000130",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000131",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000132",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000163",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000164",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000165",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000168",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "xss",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note is rendered into an executable HTML context"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note is rendered into an executable HTML context rather than stored or escaped as text."
+    },
+    {
+      "sampleId": "viguard-lan-000169",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "xss",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note is rendered into an executable HTML context"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note is rendered into an executable HTML context rather than stored or escaped as text."
+    },
+    {
+      "sampleId": "viguard-lan-000170",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "xss",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note is rendered into an executable HTML context"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note is rendered into an executable HTML context rather than stored or escaped as text."
+    },
+    {
+      "sampleId": "viguard-lan-000171",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "xss",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note is rendered into an executable HTML context"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note is rendered into an executable HTML context rather than stored or escaped as text."
+    },
+    {
+      "sampleId": "viguard-lan-000172",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "xss",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note is rendered into an executable HTML context"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note is rendered into an executable HTML context rather than stored or escaped as text."
+    },
+    {
+      "sampleId": "viguard-lan-000173",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "xss",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note is rendered into an executable HTML context"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note is rendered into an executable HTML context rather than stored or escaped as text."
+    },
+    {
+      "sampleId": "viguard-lan-000174",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "xss",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note is rendered into an executable HTML context"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note is rendered into an executable HTML context rather than stored or escaped as text."
+    },
+    {
+      "sampleId": "viguard-lan-000175",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "xss",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note is rendered into an executable HTML context"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note is rendered into an executable HTML context rather than stored or escaped as text."
+    },
+    {
+      "sampleId": "viguard-lan-000210",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000212",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000258",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000259",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000260",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000261",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000262",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000263",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000264",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000265",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000266",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000267",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000268",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000269",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000270",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000271",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000272",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000273",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000274",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000275",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000276",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000277",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000278",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000279",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000280",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "authorization",
+      "category": "principal_role_missing",
+      "hiddenEvidence": [
+        "actual acting principal role",
+        "role-permission-matrix outcome for the collection account"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The model-visible input confirms authentication but does not identify the acting principal role, so a legitimate privileged admin, rule-management, or deployment operation cannot be distinguished from an authorization attack."
+    },
+    {
+      "sampleId": "viguard-lan-000286",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000287",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000288",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000289",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000290",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000291",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000292",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000293",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000304",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000305",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000306",
+      "previousVerdict": "safe",
+      "finalVerdict": "unknown",
+      "attackFamily": "idor_bola",
+      "category": "object_ownership_missing",
+      "hiddenEvidence": [
+        "ownership and tenant scope of the referenced alert object",
+        "whether the acting principal may modify that object"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body",
+        "input.sourceContext.authenticated"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The request performs a state-changing action on an opaque alert identifier, while the model-visible input contains no owner, tenant, or permission scope for that object."
+    },
+    {
+      "sampleId": "viguard-lan-000397",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000398",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000399",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000400",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000401",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000402",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000403",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    },
+    {
+      "sampleId": "viguard-lan-000404",
+      "previousVerdict": "attack",
+      "finalVerdict": "unknown",
+      "attackFamily": "sqli",
+      "category": "server_execution_semantics_missing",
+      "hiddenEvidence": [
+        "whether body.note, body.filter, or body.q is parsed or concatenated into a SQL interpreter"
+      ],
+      "visibleInputFields": [
+        "input.method",
+        "input.path",
+        "input.body.note"
+      ],
+      "resolution": "changed_to_unknown",
+      "reason": "The payload is visible, but the input does not establish that the acknowledgement note/filter/q fields reach a SQL interpreter rather than being stored as text."
+    }
+  ]
+}

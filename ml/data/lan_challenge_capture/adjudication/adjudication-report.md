@@ -16,7 +16,7 @@
 | Metric | Value |
 |---|---:|
 | Verdict observed agreement | 383/413 = 92.74% |
-| **Cohen's kappa (verdict)** | **0.8651** (Po=0.927361, Pe=0.46162) |
+| **Cohen's kappa (verdict)** | **0.865078** (Po=0.927361, Pe=0.461620) |
 | Attack family full agreement | 92.01% |
 | Attack family macro agreement | 72.91% |
 | Recommended action full agreement | 88.38% |
@@ -30,47 +30,58 @@ Verdict conflicts: safe↔attack (severe) = **4**; attack↔unknown = 15; safe�
 |---|---:|
 | Auto-consensus (strict, unmodified) | 160 |
 | Third-party adjudication (queue) | 253 |
-| → accept A | 197 |
-| → accept B | 20 |
+| → accept A | 137 |
+| → accept B | 12 |
 | → new_resolution | 0 |
-| → insufficient_context (final verdict unknown) | 36 |
+| → insufficient_context (final verdict unknown) | 104 |
 
-Accepted annotator (when a side was accepted): A = 197, B = 20, neither (insufficient_context/new_resolution) = 36.
+Accepted annotator (when a side was accepted): A = 137, B = 12, neither (insufficient_context/new_resolution) = 104.
 
 ## 4. Final frozen-label distribution
 
-- **Verdict:** {"safe":251,"unknown":39,"attack":123} (final unknown count = 39)
-- **Recommended action:** {"allow":138,"monitor":113,"challenge":39,"block":121,"isolate":2}
-- **Attack family:** {"none":251,"idor_bola":17,"authorization":7,"sqli":23,"xss":10,"command_injection":8,"path_traversal":9,"ssrf":7,"business_logic":3,"file_upload":2,"csrf":1,"cors":1,"prompt_injection":56,"authentication":7,"protocol_attack":11}
-- **final-labels.jsonl SHA-256:** `4fb2ad16836c6b53adbfa7ef9191b8e064b8e21129c383456e354f0a904336dc`
-- **frozenAt:** 2026-07-30T15:39:02.566Z (UTC) — before evaluating AetherArgus on this set.
+- **Verdict:** {"safe":209,"unknown":107,"attack":97} (final unknown count = 107)
+- **Recommended action:** {"allow":138,"challenge":107,"block":95,"isolate":2,"monitor":71}
+- **Attack family:** {"none":209,"authorization":26,"idor_bola":40,"sqli":23,"xss":10,"command_injection":8,"path_traversal":9,"ssrf":7,"business_logic":3,"file_upload":2,"csrf":1,"cors":1,"prompt_injection":56,"authentication":7,"protocol_attack":11}
+- **final-labels.jsonl SHA-256:** `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`
+- **labelsFrozenAt:** 2026-07-30T16:02:03.000Z (UTC) — the last time the bytes of `final-labels.jsonl` changed.
+- **provenanceMetadataCorrectedAt:** 2026-07-30T16:02:03.000Z (UTC).
+- Metadata corrections do not alter the label-freeze timestamp unless the byte content of `final-labels.jsonl` changes.
 
-## 5. Human-audit sampling list
+## 5. Context-visibility audit
+
+- Audited model-visible inputs: **413/413** (253 model-adjudication + 160 consensus).
+- Hidden-context issues corrected: **68**; unchanged labels: **345**.
+- Issue categories: {"principal_role_missing":26,"object_ownership_missing":23,"tenant_boundary_missing":0,"server_execution_semantics_missing":19,"response_side_dependency":0,"collector_intent_dependency":0,"other":0}.
+- Response-side evidence used: **no**; Collector Ground Truth or collector intent used: **no**.
+- Full audit: `context-visibility-audit.{json,md}`.
+
+## 6. Human-audit sampling list
 
 - Samples flagged `requiresHumanAudit=true`: **251** / 413.
 - `humanReviewed=false`, `reviewerCount=0`. Two AI annotators + one AI adjudicator do **not** constitute human review; this list is a sampling queue, not completed review.
 
-## 6. Mandatory declarations
+## 7. Mandatory declarations
 
 - This is **dual-LLM independent annotation (A + B) followed by a third-LLM adjudication (C)** — not human annotation.
 - The challenge traffic is **pre-designed, live-captured synthetic attack-attempt traffic against an authorized target** — **not production / naturally-occurring traffic**.
 - **No AetherArgus predictions, model evaluation metrics, or model error lists were read or used.** Final labels were frozen before evaluating AetherArgus on the VIguard LAN challenge set.
-- **No response-side evidence was used** (no responseStatus / responseBody / responseSanitized / executionEvidence / exploitConfirmed / canaryObserved). Adjudication used request-side evidence plus the permitted environment context (role-permission-matrix, endpoint-inventory, environment).
+- **No response-side evidence was used** (no responseStatus / responseBody / responseSanitized / executionEvidence / exploitConfirmed / canaryObserved). Final reference labels are bounded by the corresponding `model-inputs.jsonl` row and endpoint semantics directly inferable from the request. Environment, endpoint-inventory, and role-matrix files are provenance aids only and are not decisive label evidence.
 - **The challenge set was not added to any training/validation set** (`eligibleForTraining=false`, `split=external_challenge_test` for all 413).
 - **Annotator B's labels were produced by a deterministic rule-based program** (`annotations/_build-b.js`) authored by the model in a single session, whereas annotator A produced per-sample judgments directly. This asymmetry creates **intra-class correlation risk** for B's labels (all B labels follow one rule set, so B-vs-B internal consistency is not evidence of independent correctness).
 - **A third-LLM adjudicator cannot eliminate systematic bias that the annotator models share** (e.g. a common misreading of the `/api/admin/tenant-oversight` boundary or a shared blind spot on stored-vs-parsed fields). The kappa and agreement numbers reflect LLM-vs-LLM agreement, not ground-truth accuracy.
 
-## 7. Known limitations
+## 8. Known limitations
 
-- **Object ownership is not observable** in any sample: all direct-object-reference reads/actions on `/api/{alerts,agents,devices,admin/users,traffic}/[RESOURCE_ID]` are labelled `unknown` (idor_bola), not a definite verdict, regardless of how benign the note body looks.
-- **The acting principal's effective RBAC is only partially documented.** `role-permission-matrix.json` records that `tenant_admin` is denied on `/api/admin/tenant-oversight/*`, `PUT /api/admin/users/:id/role`, and `POST /api/admin/tenant-oversight/exports`; requests to those are labelled `attack` (authorization). Endpoints not in the matrix whose permissibility is genuinely ambiguous (e.g. `PUT /api/admin/users/:id/plan`) are labelled `unknown`, and authenticated admin-namespaced reads (`GET /api/admin/users`) are labelled `safe` with a `requiresHumanAudit` flag because tenant_admin's access is not request-observable.
-- **Stored-vs-parsed field position is not observable.** Bare attack payloads placed in a `note`/`q` field that may be storage-only (e.g. samples 000397–000404) were adjudicated `attack` on probe intent (systematic, no business narrative) but with reduced confidence and a human-audit flag, since success depends on whether the field reaches an interpreter.
-- **api_abuse / rate-dependent verdicts cannot be confirmed from a single request** (e.g. `limit=1000/2000`, `limit=0`, negative pagination): adjudicated `safe`/`monitor`, not `attack`, because abuse is a volume phenomenon invisible in one sample.
-- **Malformed/truncated bodies** (samples 000370–000380, 000410, 000413) are `unknown`: parser-fuzzing vs client defect is indistinguishable from the request alone.
-- **B-side intra-class correlation** (see §6) means agreement metrics may overstate label reliability for rule-determined categories.
+- Annotator B labels were produced by a deterministic rule program authored in one model session, creating intra-class correlation risk.
+- The three AI systems may still share common training-data or safety-policy biases.
+- AI annotation and AI adjudication do not constitute human review.
+- Samples requiring identity, role, ownership, tenant-boundary, or server-side execution semantics may remain unknown when those facts are absent from the model-visible input.
+- The dataset is an authorized live-execution challenge set, not natural production traffic.
+- The benchmark does not contain confirmed successful exploits.
+- Reference labels should not be described as objective human-verified ground truth.
 
-## 8. Artifacts
+## 9. Artifacts
 
-All under `ml/data/lan_challenge_capture/adjudication/`: `compare-annotations.js`, `build-outputs.js`, `build-manifest.js`, `validate-adjudication.js`, `build-report.js`, `agreement-report.{json,md}`, the three confusion matrices, `disagreement-queue.jsonl`, `consensus.jsonl`, `adjudication-worksheet.jsonl`, `decisions/batch-0[1-8].jsonl`, `adjudication.jsonl`, `final-labels.jsonl`, `final-labels-manifest.json`, `adjudication-report.{json,md}`, `build-stats.json`, `integrity-check.json`.
+All under `ml/data/lan_challenge_capture/adjudication/`: `compare-annotations.js`, `apply-context-visibility-corrections.js`, `build-outputs.js`, `build-manifest.js`, `validate-context-visibility.js`, `validate-adjudication.js`, `build-report.js`, `context-visibility-audit.{json,md}`, `agreement-report.{json,md}`, the three confusion matrices, `disagreement-queue.jsonl`, `consensus.jsonl`, `adjudication-worksheet.jsonl`, `decisions/batch-0[1-8].jsonl`, `adjudication.jsonl`, `final-labels.jsonl`, `final-labels-manifest.json`, `adjudication-report.{json,md}`, `build-stats.json`, `integrity-check.json`.
 
-Validation command: `node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js` → all 15 checks pass (exit 0).
+Validation commands: `node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js` and `node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js`.

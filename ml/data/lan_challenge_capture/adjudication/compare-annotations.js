@@ -466,7 +466,7 @@ md.push(`- model-b-annotations.jsonl sha256: \`${sha.b}\``);
 md.push('');
 md.push('## 6.1 Verdict');
 md.push(`- observed agreement: **${verdictAgree}/${N} = ${(Po * 100).toFixed(2)}%**`);
-md.push(`- Cohen's kappa: **${kappa.toFixed(4)}**  (Po=${Po.toFixed(4)}, Pe=${Pe.toFixed(4)})`);
+md.push(`- Cohen's kappa: **${kappa.toFixed(6)}**  (Po=${Po.toFixed(6)}, Pe=${Pe.toFixed(6)})`);
 md.push(`- marginal A: ${JSON.stringify(aVerdictMarg)}`);
 md.push(`- marginal B: ${JSON.stringify(bVerdictMarg)}`);
 md.push(`- agreement by label: ${JSON.stringify(verdictByLabelAgree)}`);

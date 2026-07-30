@@ -13,11 +13,21 @@ const OUT = __dirname;
 const agree = JSON.parse(fs.readFileSync(path.join(OUT, 'agreement-report.json'), 'utf8'));
 const stats = JSON.parse(fs.readFileSync(path.join(OUT, 'build-stats.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(OUT, 'final-labels-manifest.json'), 'utf8'));
+const visibilityAudit = JSON.parse(fs.readFileSync(path.join(OUT, 'context-visibility-audit.json'), 'utf8'));
 
 const rd = stats.resolutionDecisionDistribution;
 const aa = stats.acceptedAnnotatorDistribution;
+const knownLimitations = [
+  'Annotator B labels were produced by a deterministic rule program authored in one model session, creating intra-class correlation risk.',
+  'The three AI systems may still share common training-data or safety-policy biases.',
+  'AI annotation and AI adjudication do not constitute human review.',
+  'Samples requiring identity, role, ownership, tenant-boundary, or server-side execution semantics may remain unknown when those facts are absent from the model-visible input.',
+  'The dataset is an authorized live-execution challenge set, not natural production traffic.',
+  'The benchmark does not contain confirmed successful exploits.',
+  'Reference labels should not be described as objective human-verified ground truth.',
+];
 const report = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   title: 'VIguard LAN Challenge Set — Dual-LLM Annotation Adjudication Report',
   annotators: agree.annotators,
   adjudicator: manifest.adjudicator,
@@ -64,8 +74,19 @@ const report = {
     humanReviewed: false,
     reviewerCount: 0,
   },
+  contextVisibilityAudit: {
+    auditedSampleCount: visibilityAudit.auditedSampleCount,
+    hiddenContextIssueCount: visibilityAudit.hiddenContextIssueCount,
+    correctedLabelCount: visibilityAudit.correctedLabelCount,
+    unchangedLabelCount: visibilityAudit.unchangedLabelCount,
+    issueCategories: visibilityAudit.issueCategories,
+    responseSideEvidenceUsed: visibilityAudit.responseSideEvidenceUsed,
+    collectorGroundTruthUsed: visibilityAudit.collectorGroundTruthUsed,
+  },
   finalLabelsSha256: manifest.finalLabelsSha256,
-  frozenAt: manifest.frozenAt,
+  labelsFrozenAt: manifest.labelsFrozenAt,
+  provenanceMetadataCorrectedAt: manifest.provenanceMetadataCorrectedAt,
+  frozenAt: manifest.labelsFrozenAt,
   declarations: {
     dualLlmAnnotationAndThirdLlmAdjudication: true,
     notHumanAnnotated: true,
@@ -78,7 +99,7 @@ const report = {
     intraClassCorrelationRisk: true,
     adjudicatorCannotEliminateSharedSystematicBias: true,
   },
-  knownLimitations: [],
+  knownLimitations,
 };
 fs.writeFileSync(path.join(OUT, 'adjudication-report.json'), JSON.stringify(report, null, 2) + '\n');
 
@@ -103,7 +124,7 @@ L.push('');
 L.push('| Metric | Value |');
 L.push('|---|---:|');
 L.push('| Verdict observed agreement | ' + agree.verdict.observedAgreement + '/' + agree.sampleCount + ' = ' + (agree.verdict.observedAgreementRate * 100).toFixed(2) + '% |');
-L.push('| **Cohen\'s kappa (verdict)** | **' + agree.verdict.cohensKappa.toFixed(4) + '** (Po=' + agree.verdict.kappaComponents.Po + ', Pe=' + agree.verdict.kappaComponents.Pe + ') |');
+L.push('| **Cohen\'s kappa (verdict)** | **' + agree.verdict.cohensKappa.toFixed(6) + '** (Po=' + agree.verdict.kappaComponents.Po.toFixed(6) + ', Pe=' + agree.verdict.kappaComponents.Pe.toFixed(6) + ') |');
 L.push('| Attack family full agreement | ' + (agree.attackFamily.fullAgreementRate * 100).toFixed(2) + '% |');
 L.push('| Attack family macro agreement | ' + (agree.attackFamily.macroAgreementRate * 100).toFixed(2) + '% |');
 L.push('| Recommended action full agreement | ' + (agree.recommendedAction.fullAgreementRate * 100).toFixed(2) + '% |');
@@ -132,41 +153,47 @@ L.push('- **Verdict:** ' + JSON.stringify(stats.finalVerdictDistribution) + ' (f
 L.push('- **Recommended action:** ' + JSON.stringify(stats.finalRecommendedActionDistribution));
 L.push('- **Attack family:** ' + JSON.stringify(stats.finalAttackFamilyDistribution));
 L.push('- **final-labels.jsonl SHA-256:** `' + manifest.finalLabelsSha256 + '`');
-L.push('- **frozenAt:** ' + manifest.frozenAt + ' (UTC) — before evaluating AetherArgus on this set.');
+L.push('- **labelsFrozenAt:** ' + manifest.labelsFrozenAt + ' (UTC) — the last time the bytes of `final-labels.jsonl` changed.');
+L.push('- **provenanceMetadataCorrectedAt:** ' + manifest.provenanceMetadataCorrectedAt + ' (UTC).');
+L.push('- Metadata corrections do not alter the label-freeze timestamp unless the byte content of `final-labels.jsonl` changes.');
 L.push('');
 
-L.push('## 5. Human-audit sampling list');
+L.push('## 5. Context-visibility audit');
+L.push('');
+L.push('- Audited model-visible inputs: **' + visibilityAudit.auditedSampleCount + '/413** (253 model-adjudication + 160 consensus).');
+L.push('- Hidden-context issues corrected: **' + visibilityAudit.correctedLabelCount + '**; unchanged labels: **' + visibilityAudit.unchangedLabelCount + '**.');
+L.push('- Issue categories: ' + JSON.stringify(visibilityAudit.issueCategories) + '.');
+L.push('- Response-side evidence used: **no**; Collector Ground Truth or collector intent used: **no**.');
+L.push('- Full audit: `context-visibility-audit.{json,md}`.');
+L.push('');
+
+L.push('## 6. Human-audit sampling list');
 L.push('');
 L.push('- Samples flagged `requiresHumanAudit=true`: **' + stats.requiresHumanAuditCount + '** / 413.');
 L.push('- `humanReviewed=false`, `reviewerCount=0`. Two AI annotators + one AI adjudicator do **not** constitute human review; this list is a sampling queue, not completed review.');
 L.push('');
 
-L.push('## 6. Mandatory declarations');
+L.push('## 7. Mandatory declarations');
 L.push('');
 L.push('- This is **dual-LLM independent annotation (A + B) followed by a third-LLM adjudication (C)** — not human annotation.');
 L.push('- The challenge traffic is **pre-designed, live-captured synthetic attack-attempt traffic against an authorized target** — **not production / naturally-occurring traffic**.');
 L.push('- **No AetherArgus predictions, model evaluation metrics, or model error lists were read or used.** Final labels were frozen before evaluating AetherArgus on the VIguard LAN challenge set.');
-L.push('- **No response-side evidence was used** (no responseStatus / responseBody / responseSanitized / executionEvidence / exploitConfirmed / canaryObserved). Adjudication used request-side evidence plus the permitted environment context (role-permission-matrix, endpoint-inventory, environment).');
+L.push('- **No response-side evidence was used** (no responseStatus / responseBody / responseSanitized / executionEvidence / exploitConfirmed / canaryObserved). Final reference labels are bounded by the corresponding `model-inputs.jsonl` row and endpoint semantics directly inferable from the request. Environment, endpoint-inventory, and role-matrix files are provenance aids only and are not decisive label evidence.');
 L.push('- **The challenge set was not added to any training/validation set** (`eligibleForTraining=false`, `split=external_challenge_test` for all 413).');
 L.push('- **Annotator B\'s labels were produced by a deterministic rule-based program** (`annotations/_build-b.js`) authored by the model in a single session, whereas annotator A produced per-sample judgments directly. This asymmetry creates **intra-class correlation risk** for B\'s labels (all B labels follow one rule set, so B-vs-B internal consistency is not evidence of independent correctness).');
 L.push('- **A third-LLM adjudicator cannot eliminate systematic bias that the annotator models share** (e.g. a common misreading of the `/api/admin/tenant-oversight` boundary or a shared blind spot on stored-vs-parsed fields). The kappa and agreement numbers reflect LLM-vs-LLM agreement, not ground-truth accuracy.');
 L.push('');
 
-L.push('## 7. Known limitations');
+L.push('## 8. Known limitations');
 L.push('');
-L.push('- **Object ownership is not observable** in any sample: all direct-object-reference reads/actions on `/api/{alerts,agents,devices,admin/users,traffic}/[RESOURCE_ID]` are labelled `unknown` (idor_bola), not a definite verdict, regardless of how benign the note body looks.');
-L.push('- **The acting principal\'s effective RBAC is only partially documented.** `role-permission-matrix.json` records that `tenant_admin` is denied on `/api/admin/tenant-oversight/*`, `PUT /api/admin/users/:id/role`, and `POST /api/admin/tenant-oversight/exports`; requests to those are labelled `attack` (authorization). Endpoints not in the matrix whose permissibility is genuinely ambiguous (e.g. `PUT /api/admin/users/:id/plan`) are labelled `unknown`, and authenticated admin-namespaced reads (`GET /api/admin/users`) are labelled `safe` with a `requiresHumanAudit` flag because tenant_admin\'s access is not request-observable.');
-L.push('- **Stored-vs-parsed field position is not observable.** Bare attack payloads placed in a `note`/`q` field that may be storage-only (e.g. samples 000397–000404) were adjudicated `attack` on probe intent (systematic, no business narrative) but with reduced confidence and a human-audit flag, since success depends on whether the field reaches an interpreter.');
-L.push('- **api_abuse / rate-dependent verdicts cannot be confirmed from a single request** (e.g. `limit=1000/2000`, `limit=0`, negative pagination): adjudicated `safe`/`monitor`, not `attack`, because abuse is a volume phenomenon invisible in one sample.');
-L.push('- **Malformed/truncated bodies** (samples 000370–000380, 000410, 000413) are `unknown`: parser-fuzzing vs client defect is indistinguishable from the request alone.');
-L.push('- **B-side intra-class correlation** (see §6) means agreement metrics may overstate label reliability for rule-determined categories.');
+for (const limitation of knownLimitations) L.push('- ' + limitation);
 L.push('');
 
-L.push('## 8. Artifacts');
+L.push('## 9. Artifacts');
 L.push('');
-L.push('All under `ml/data/lan_challenge_capture/adjudication/`: `compare-annotations.js`, `build-outputs.js`, `build-manifest.js`, `validate-adjudication.js`, `build-report.js`, `agreement-report.{json,md}`, the three confusion matrices, `disagreement-queue.jsonl`, `consensus.jsonl`, `adjudication-worksheet.jsonl`, `decisions/batch-0[1-8].jsonl`, `adjudication.jsonl`, `final-labels.jsonl`, `final-labels-manifest.json`, `adjudication-report.{json,md}`, `build-stats.json`, `integrity-check.json`.');
+L.push('All under `ml/data/lan_challenge_capture/adjudication/`: `compare-annotations.js`, `apply-context-visibility-corrections.js`, `build-outputs.js`, `build-manifest.js`, `validate-context-visibility.js`, `validate-adjudication.js`, `build-report.js`, `context-visibility-audit.{json,md}`, `agreement-report.{json,md}`, the three confusion matrices, `disagreement-queue.jsonl`, `consensus.jsonl`, `adjudication-worksheet.jsonl`, `decisions/batch-0[1-8].jsonl`, `adjudication.jsonl`, `final-labels.jsonl`, `final-labels-manifest.json`, `adjudication-report.{json,md}`, `build-stats.json`, `integrity-check.json`.');
 L.push('');
-L.push('Validation command: `node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js` → all 15 checks pass (exit 0).');
+L.push('Validation commands: `node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js` and `node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js`.');
 fs.writeFileSync(path.join(OUT, 'adjudication-report.md'), L.join('\n') + '\n');
 
 console.log('adjudication-report.md/json written.');

@@ -12,7 +12,7 @@ Mechanically computed from `model-a-annotations.jsonl` (annotator A = **GPT-5.6-
 
 ## 6.1 Verdict
 - observed agreement: **383/413 = 92.74%**
-- Cohen's kappa: **0.8651**  (Po=0.9274, Pe=0.4616)
+- Cohen's kappa: **0.865078**  (Po=0.927361, Pe=0.461620)
 - marginal A: {"safe":244,"attack":129,"unknown":40}
 - marginal B: {"safe":257,"attack":110,"unknown":46}
 - agreement by label: {"safe":243,"attack":110,"unknown":30}
