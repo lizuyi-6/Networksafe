@@ -4,7 +4,7 @@
 
 - **Annotator A:** GPT-5.6-SOL (model-a-annotations.jsonl)
 - **Annotator B:** Claude Opus 5 (model-b-annotations.jsonl)
-- **Adjudicator C:** Claude (Opus-class) acting as independent third-party adjudicator C
+- **Adjudicator C:** GLM-5.2 (Zhipu AI) acting as independent third-party adjudicator C
 - **Input:** `ml/data/lan_challenge_capture/model-inputs.jsonl`
 - **Input SHA-256:** `c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3`
 - **Annotator A SHA-256:** `381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662`
@@ -43,7 +43,7 @@ Accepted annotator (when a side was accepted): A = 197, B = 20, neither (insuffi
 - **Recommended action:** {"allow":138,"monitor":113,"challenge":39,"block":121,"isolate":2}
 - **Attack family:** {"none":251,"idor_bola":17,"authorization":7,"sqli":23,"xss":10,"command_injection":8,"path_traversal":9,"ssrf":7,"business_logic":3,"file_upload":2,"csrf":1,"cors":1,"prompt_injection":56,"authentication":7,"protocol_attack":11}
 - **final-labels.jsonl SHA-256:** `4fb2ad16836c6b53adbfa7ef9191b8e064b8e21129c383456e354f0a904336dc`
-- **frozenAt:** 2026-07-30T15:29:06.230Z (UTC) — before evaluating AetherArgus on this set.
+- **frozenAt:** 2026-07-30T15:39:02.566Z (UTC) — before evaluating AetherArgus on this set.
 
 ## 5. Human-audit sampling list
 

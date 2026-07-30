@@ -17,8 +17,8 @@
   "eligibleForTraining": false,
   "split": "external_challenge_test",
   "labelsFrozenBeforeAetherArgusEvaluation": true,
-  "frozenAt": "2026-07-30T15:29:06.230Z",
-  "sourceCommit": "e32d73c488aad77240216c7b087cd957efb12204",
+  "frozenAt": "2026-07-30T15:39:02.566Z",
+  "sourceCommit": "886b696792f1425e904c957755199836c86960ff",
   "adjudicationCommit": null,
   "annotators": {
     "A": {
@@ -31,8 +31,9 @@
     }
   },
   "adjudicator": {
-    "model": "Claude (Opus-class) acting as independent third-party adjudicator C",
-    "note": "Adjudicator C is a third LLM. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0)."
+    "model": "GLM-5.2 (Zhipu AI) acting as independent third-party adjudicator C",
+    "modelIdentityBasis": "operator-confirmed",
+    "note": "Adjudicator identity is operator-confirmed: the operator states GLM-5.2 (Zhipu AI) actually served the adjudication session. The harness session label displayed a different (Claude-class) name; the running model cannot self-introspect its exact build/checkpoint from inside the session (the same limitation annotator B documented in model-b-report.json), so the precise version follows operator confirmation rather than self-identification. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0)."
   },
   "finalVerdictDistribution": {
     "safe": 251,

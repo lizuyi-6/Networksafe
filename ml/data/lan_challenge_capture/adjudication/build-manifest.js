@@ -52,8 +52,9 @@ const manifest = {
     B: { model: 'Claude Opus 5', reportFile: 'ml/data/lan_challenge_capture/annotations/model-b-report.json' },
   },
   adjudicator: {
-    model: 'Claude (Opus-class) acting as independent third-party adjudicator C',
-    note: 'Adjudicator C is a third LLM. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0).',
+    model: 'GLM-5.2 (Zhipu AI) acting as independent third-party adjudicator C',
+    modelIdentityBasis: 'operator-confirmed',
+    note: 'Adjudicator identity is operator-confirmed: the operator states GLM-5.2 (Zhipu AI) actually served the adjudication session. The harness session label displayed a different (Claude-class) name; the running model cannot self-introspect its exact build/checkpoint from inside the session (the same limitation annotator B documented in model-b-report.json), so the precise version follows operator confirmation rather than self-identification. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0).',
   },
   finalVerdictDistribution: stats.finalVerdictDistribution,
   finalAttackFamilyDistribution: stats.finalAttackFamilyDistribution,

@@ -7,7 +7,7 @@ set **before** AetherArgus is evaluated on this set.
 ## Identities
 - **Annotator A:** GPT-5.6-SOL → `annotations/model-a-annotations.jsonl`
 - **Annotator B:** Claude Opus 5 → `annotations/model-b-annotations.jsonl`
-- **Adjudicator C:** Claude (Opus-class), independent third party.
+- **Adjudicator C:** GLM-5.2 (Zhipu AI) — operator-confirmed identity (the harness session label differs; the exact build cannot be self-verified from inside the session, per the same limitation annotator B documented).
 
 ## Pipeline (run in order; each script is hermetic — no LLM API, no network)
 ```bash
