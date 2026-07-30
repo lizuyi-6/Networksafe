@@ -1,0 +1,7 @@
+# Per task contract: raw-private/ holds unsanitized captures (creds, cookies, raw bodies).
+# Only sanitized JSONL/JSON/MD may be committed. Never commit raw-private/.
+raw-private/
+.test-creds.env
+.session.json
+.id-salt
+node_modules/

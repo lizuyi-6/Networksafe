@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lizuyi-6/Networksafe/ml/data/lan_challenge_capture/schema/model-label-sample.schema.json",
+  "title": "VIguard LAN Challenge Capture - Model Label (scoring-time view)",
+  "description": "Scoring-side record joined to model-inputs.jsonl on sampleId. Holds labels + metadata. This file is used ONLY for scoring, never fed to the model prompt. sampleId is a join key.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sampleId", "labels", "metadata"],
+  "properties": {
+    "sampleId": { "type": "string", "pattern": "^viguard-lan-[0-9]{6}$" },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "attackFamily", "recommendedAction", "contextSufficient", "requestIntent", "exploitOutcome", "isHardNegative"],
+      "properties": {
+        "verdict": { "type": "string", "enum": ["attack", "benign", "unknown"] },
+        "attackFamily": {
+          "type": ["string", "null"],
+          "enum": ["sqli", "xss", "command_injection", "path_traversal", "ssrf", "auth_bypass", "idor", "privilege_escalation", "malicious_upload", "csrf", "cors_misconfig", "api_abuse", "business_logic", "prompt_injection", null]
+        },
+        "recommendedAction": { "type": "string", "enum": ["allow", "block", "review", "monitor"] },
+        "contextSufficient": { "type": "boolean" },
+        "requestIntent": {
+          "type": "string",
+          "enum": ["malicious_attempt", "prompt_injection_attempt", "benign_operational", "benign_resembling_attack", "ambiguous_or_inconclusive"]
+        },
+        "exploitOutcome": { "type": ["string", "null"], "enum": ["confirmed", "not_confirmed", "not_applicable", null] },
+        "isHardNegative": { "type": "boolean" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["split", "eligibleForTraining", "humanReviewed", "reviewerCount", "interAnnotatorAgreement", "cohenKappa", "adjudicatedSamples", "targetSpecific"],
+      "properties": {
+        "split": { "const": "external_challenge_test" },
+        "eligibleForTraining": { "const": false },
+        "humanReviewed": { "const": false },
+        "reviewerCount": { "type": "integer", "minimum": 0 },
+        "interAnnotatorAgreement": { "type": ["number", "null"] },
+        "cohenKappa": { "type": ["number", "null"] },
+        "adjudicatedSamples": { "type": "integer", "minimum": 0 },
+        "targetSpecific": { "const": true }
+      }
+    }
+  }
+}

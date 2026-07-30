@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lizuyi-6/Networksafe/ml/data/lan_challenge_capture/schema/model-input-sample.schema.json",
+  "title": "VIguard LAN Challenge Capture - Model Input (inference-time view)",
+  "description": "The ONLY data the model may read at inference time: sampleId (join key, never in prompt) + input. MUST NOT contain labels, metadata, requestIntent, verdict, responseStatus, latencyMs, or any post-response field. build-model-input.js serializes this to a prompt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sampleId", "input"],
+  "properties": {
+    "sampleId": { "type": "string", "pattern": "^viguard-lan-[0-9]{6}$" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path", "headers", "body", "sourceContext"],
+      "not": {
+        "anyOf": [
+          { "required": ["verdict"] }, { "required": ["attackFamily"] }, { "required": ["recommendedAction"] },
+          { "required": ["contextSufficient"] }, { "required": ["requestIntent"] }, { "required": ["exploitOutcome"] },
+          { "required": ["isHardNegative"] }, { "required": ["groundTruth"] }, { "required": ["labels"] },
+          { "required": ["metadata"] }, { "required": ["responseStatus"] }, { "required": ["responseHeaders"] },
+          { "required": ["responseBody"] }, { "required": ["responseSanitized"] }, { "required": ["latencyMs"] },
+          { "required": ["executionEvidence"] }, { "required": ["canaryObserved"] }, { "required": ["exploitConfirmed"] },
+          { "required": ["split"] }, { "required": ["eligibleForTraining"] }, { "required": ["humanReviewed"] }
+        ]
+      },
+      "properties": {
+        "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] },
+        "path": { "type": "string", "minLength": 1 },
+        "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+        "body": { "type": ["string", "null"] },
+        "sourceContext": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authenticated", "targetApplication"],
+          "properties": {
+            "authenticated": { "type": "boolean" },
+            "targetApplication": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

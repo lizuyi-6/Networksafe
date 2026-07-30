@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lizuyi-6/Networksafe/ml/data/lan_challenge_capture/schema/benchmark-sample.schema.json",
+  "title": "VIguard LAN Challenge Capture - Model Benchmark Sample (input/labels/metadata isolation)",
+  "description": "Isolated model benchmark record. `input` holds ONLY pre-request, client-observable information that a model may read at inference time. `labels` and `metadata` are scoring/audit data and MUST NOT be fed to the model prompt. This schema deliberately rejects the legacy flat structure (top-level method/path/requestIntent/groundTruth/datasetMetadata) - additionalProperties:false + required input/labels/metadata makes any flat record invalid.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sampleId", "input", "labels", "metadata"],
+  "properties": {
+    "sampleId": { "type": "string", "pattern": "^viguard-lan-[0-9]{6}$" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path", "headers", "body", "sourceContext"],
+      "description": "ONLY this object may be read by the model prompt builder (see build-model-input.js). It MUST NOT contain any response-time or label field.",
+      "not": {
+        "anyOf": [
+          { "required": ["verdict"] },
+          { "required": ["attackFamily"] },
+          { "required": ["recommendedAction"] },
+          { "required": ["contextSufficient"] },
+          { "required": ["requestIntent"] },
+          { "required": ["exploitOutcome"] },
+          { "required": ["isHardNegative"] },
+          { "required": ["groundTruth"] },
+          { "required": ["labels"] },
+          { "required": ["metadata"] },
+          { "required": ["responseStatus"] },
+          { "required": ["responseHeaders"] },
+          { "required": ["responseBody"] },
+          { "required": ["responseSanitized"] },
+          { "required": ["latencyMs"] },
+          { "required": ["executionEvidence"] },
+          { "required": ["canaryObserved"] },
+          { "required": ["exploitConfirmed"] },
+          { "required": ["split"] },
+          { "required": ["eligibleForTraining"] },
+          { "required": ["humanReviewed"] }
+        ]
+      },
+      "properties": {
+        "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] },
+        "path": { "type": "string", "minLength": 1 },
+        "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+        "body": { "type": ["string", "null"] },
+        "sourceContext": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authenticated", "targetApplication"],
+          "properties": {
+            "authenticated": { "type": "boolean" },
+            "targetApplication": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "attackFamily", "recommendedAction", "contextSufficient", "requestIntent", "exploitOutcome", "isHardNegative"],
+      "description": "Scoring labels. requestIntent is a LABEL (derived from capture verdict), NOT a model input. A model prompt must never contain these fields.",
+      "properties": {
+        "verdict": { "type": "string", "enum": ["attack", "benign", "unknown"] },
+        "attackFamily": {
+          "type": ["string", "null"],
+          "enum": ["sqli", "xss", "command_injection", "path_traversal", "ssrf", "auth_bypass", "idor", "privilege_escalation", "malicious_upload", "csrf", "cors_misconfig", "api_abuse", "business_logic", "prompt_injection", null]
+        },
+        "recommendedAction": { "type": "string", "enum": ["allow", "block", "review", "monitor"] },
+        "contextSufficient": { "type": "boolean" },
+        "requestIntent": {
+          "type": "string",
+          "enum": ["malicious_attempt", "prompt_injection_attempt", "benign_operational", "benign_resembling_attack", "ambiguous_or_inconclusive"]
+        },
+        "exploitOutcome": { "type": ["string", "null"], "enum": ["confirmed", "not_confirmed", "not_applicable", null] },
+        "isHardNegative": { "type": "boolean" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["split", "eligibleForTraining", "humanReviewed", "reviewerCount", "interAnnotatorAgreement", "cohenKappa", "adjudicatedSamples", "targetSpecific"],
+      "description": "Audit/training-provenance metadata. These are NOT labels and NOT model inputs.",
+      "properties": {
+        "split": { "const": "external_challenge_test" },
+        "eligibleForTraining": { "const": false },
+        "humanReviewed": { "const": false },
+        "reviewerCount": { "type": "integer", "minimum": 0 },
+        "interAnnotatorAgreement": { "type": ["number", "null"] },
+        "cohenKappa": { "type": ["number", "null"] },
+        "adjudicatedSamples": { "type": "integer", "minimum": 0 },
+        "targetSpecific": { "const": true }
+      }
+    }
+  }
+}

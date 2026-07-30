@@ -1,0 +1,121 @@
+{
+  "result": "PASS",
+  "verifiedAt": "2026-07-30T02:44:49.859Z",
+  "idMapping": {
+    "method": "hmac-sha256[salt=raw-private/.id-salt(gitignored),trunc=8hex]",
+    "salted": true,
+    "canonicalEvidence": {
+      "uniqueInternalIdsMapped": 10,
+      "totalMappedOccurrences": 206,
+      "mappedByCategory": {
+        "session": {
+          "unique": 3,
+          "occurrences": 30
+        },
+        "user": {
+          "unique": 1,
+          "occurrences": 34
+        },
+        "tenant": {
+          "unique": 2,
+          "occurrences": 35
+        },
+        "resource": {
+          "unique": 4,
+          "occurrences": 107
+        }
+      },
+      "fileSet": "5 category evidence files (source of truth; distinct captured identifiers)"
+    },
+    "allCommittedViews": {
+      "uniqueInternalIdsMapped": 10,
+      "totalMappedOccurrences": 688,
+      "mappedByCategory": {
+        "session": {
+          "unique": 3,
+          "occurrences": 60
+        },
+        "user": {
+          "unique": 1,
+          "occurrences": 68
+        },
+        "tenant": {
+          "unique": 2,
+          "occurrences": 73
+        },
+        "resource": {
+          "unique": 4,
+          "occurrences": 487
+        }
+      },
+      "fileSet": "5 evidence + all-sanitized + benchmark + model-inputs + model-labels + review-queue (CROSS-VIEW occurrences of the same placeholders; NOT distinct identifiers)"
+    },
+    "residualLegacySequential": 0,
+    "residualRawIdentifiers": 0,
+    "residualPartialIdentifiers": 0,
+    "malformedPlaceholderCount": 0,
+    "legacyPlaceholderRemapped": true,
+    "bodiesOmitted": 72,
+    "bodiesOmittedReason": "legacy_capture_structurally_truncated + legacy_capture_truncated_before_complete_sanitization",
+    "bodiesOmittedReasonBreakdown": {
+      "legacy_capture_truncated_before_complete_sanitization": 29,
+      "legacy_capture_structurally_truncated": 43
+    },
+    "omittedBodiesWithUnknownRetainedLength": 29,
+    "note": "Two explicitly-named metrics: canonicalEvidence scans the 5 category evidence files only (distinct captured identifiers); allCommittedViews scans every committed data view (evidence + derived) and counts CROSS-VIEW occurrences of the SAME placeholders -- allCommittedViews.totalMappedOccurrences is NOT the number of distinct identifiers (derived views re-project the same identifiers). manifest/verification-report/privacy-audit-report are all produced from one shared computation (dataset-files.js buildIdMappingReport) so the same metric name has the same value everywhere. legacyPlaceholderRemapped=true means prior sequential placeholders were re-mapped through HMAC(salt, \"legacy:\"+old); the original resource id is gone (opaque remap, not recovery). bodiesOmittedReason is the sorted union of per-sample bodyOmittedReason; bodiesOmittedReasonBreakdown is the machine-readable per-reason count. omittedBodiesWithUnknownRetainedLength counts partial-fragment omissions whose pre-omission retained bytes are 0 (unrecoverable historical damage; 0 = UNKNOWN length, not a real 0-length body).",
+    "reviewQueueEntries": 413
+  },
+  "countsFromActualLines": {
+    "normal": 152,
+    "attack": 69,
+    "hardNegative": 85,
+    "promptInjection": 56,
+    "unknown": 51
+  },
+  "totalSamples": 413,
+  "bodiesOmitted": 72,
+  "bodiesOmittedReasonBreakdown": {
+    "legacy_capture_truncated_before_complete_sanitization": 29,
+    "legacy_capture_structurally_truncated": 43
+  },
+  "omittedBodiesWithUnknownRetainedLength": 29,
+  "responseStatusDistribution": {
+    "200": 191,
+    "400": 1,
+    "401": 12,
+    "403": 80,
+    "404": 119,
+    "500": 10
+  },
+  "exploitConfirmedCount": 0,
+  "canaryObservedCount": 0,
+  "schemaErrorCount": 0,
+  "semanticErrorCount": 0,
+  "privacyFindingCount": 0,
+  "duplicateIdCount": 0,
+  "benchmarkLeakageCount": 0,
+  "alignmentErrorCount": 0,
+  "manifestErrorCount": 0,
+  "structuralErrorCount": 0,
+  "reviewQueueErrorCount": 0,
+  "bodyOmissionErrorCount": 0,
+  "malformedPlaceholderCount": 0,
+  "partialPlaceholderCount": 0,
+  "invalidPlaceholderCount": 0,
+  "doubleBracketPlaceholderCount": 0,
+  "schemaErrors": [],
+  "semanticErrors": [],
+  "privacyFindings": [],
+  "duplicateSampleIds": [],
+  "benchmarkLeakage": [],
+  "alignmentErrors": [],
+  "manifestErrors": [],
+  "structuralErrors": [],
+  "reviewQueueErrors": [],
+  "bodyOmissionErrors": [],
+  "passGate": {
+    "description": "failCount = schema + semantic + privacy + dupId + benchmarkLeak + alignment + manifest + structural + reviewQueue + bodyOmission. A PASS requires every term == 0; any non-zero term is a real defect, not a tolerated warning.",
+    "failCount": 0,
+    "nonZeroTerms": []
+  }
+}

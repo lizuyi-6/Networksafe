@@ -160,15 +160,32 @@ mod tests {
 
     #[test]
     fn probe_up_against_local_mock() {
-        use std::io::Write as _;
+        use std::io::{Read as _, Write as _};
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let addr = listener.local_addr().unwrap();
         let (ready_sender, ready_receiver) = std::sync::mpsc::sync_channel(0);
         let handle = std::thread::spawn(move || {
             ready_sender.send(()).unwrap();
             if let Ok((mut s, _)) = listener.accept() {
+                // Read until the HTTP/1.0 request head is fully received ("\r\n\r\n"). The
+                // probe sends the whole request in one write, but a single read() may return
+                // 0 (not-yet-arrived) or a partial head; responding too early lets our
+                // shutdown(Write) RST the probe mid-write (observed as "Broken pipe (os
+                // error 32)" on the probe -> flaky "down"). Blocking until the terminator
+                // makes the exchange deterministic.
+                let _ = s.set_read_timeout(Some(Duration::from_secs(5)));
+                let mut req = Vec::new();
                 let mut buf = [0u8; 512];
-                let _ = std::io::Read::read(&mut s, &mut buf);
+                while !req.windows(4).any(|w| w == b"\r\n\r\n") {
+                    match s.read(&mut buf) {
+                        Ok(0) => break,           // peer closed without a full request
+                        Ok(n) => req.extend_from_slice(&buf[..n]),
+                        Err(_) => break,          // timeout / closed: respond anyway below
+                    }
+                    if req.len() > 8192 {
+                        break;
+                    }
+                }
                 let _ = s.write_all(b"HTTP/1.0 200 OK\r\nContent-Length: 2\r\n\r\nok");
                 let _ = s.flush();
                 let _ = s.shutdown(std::net::Shutdown::Write);
