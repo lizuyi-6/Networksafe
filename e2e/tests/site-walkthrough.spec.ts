@@ -5,8 +5,10 @@ import {
     assertRenderedPage,
     createIssueMonitor,
     ensureDemoMode,
+    installStaticPreviewSessionMocks,
     loginAsAdmin,
     openFirstBoardStatusPage,
+    staticPreviewSessionMocksEnabled,
     visitPublicPage,
     visitSidebarPage,
 } from './helpers/site-health';
@@ -16,7 +18,23 @@ import { PITCH_PUBLIC_ROUTE_CONTRACT } from '../../frontend/src/config/public-ro
 test.describe('Site walkthrough', () => {
     test('pitch-disabled build keeps every feature-flagged route out of production', async ({ page }) => {
         test.skip(process.env.E2E_EXPECT_PITCH_ROUTES_DISABLED !== 'true', 'Requires the default frontend build');
+
+        // This test asserts a BUILD-FLAG contract: with VITE_ENABLE_PITCH_ROUTES unset,
+        // every pitchOnly route must redirect to /dashboard and its landmark must not
+        // exist. It needs a session only to get past PrivateRoute -- it asserts nothing
+        // about authentication. CI serves dist/ via `vite preview` with no backend, so
+        // the session is supplied at the network boundary instead (opt-in, see helper).
+        const mocks = staticPreviewSessionMocksEnabled()
+            ? await installStaticPreviewSessionMocks(page)
+            : null;
         await loginAsAdmin(page);
+        if (mocks) {
+            // Prove the interception actually fired rather than assuming installation
+            // implies use -- if the app stopped calling these, the mock would be a
+            // silently-dead fixture and this test would be asserting nothing.
+            expect(mocks.fulfilledFor('/api/system/mode'), 'login page must load auth capabilities').toBeGreaterThan(0);
+            expect(mocks.fulfilledFor('/api/auth/me'), 'PrivateRoute must verify the session').toBeGreaterThan(0);
+        }
 
         for (const routeContract of PITCH_PUBLIC_ROUTE_CONTRACT) {
             await page.goto(routeContract.path);

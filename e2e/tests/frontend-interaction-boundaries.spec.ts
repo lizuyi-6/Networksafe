@@ -119,6 +119,32 @@ test.describe('Frontend interaction boundaries', () => {
                 body: JSON.stringify({ success: true, data: { user: adminSession }, error: null }),
             });
         });
+        // Dashboard also loads its own data. Under `vite preview` (no backend) those
+        // calls 502, Dashboard.tsx renders <ErrorDisplay> instead of the page, and
+        // `dashboard-page` never appears -- so loginAsAdmin times out. Reproduced
+        // locally: "Dashboard unavailable / FG-DASHBOARD-RULES-502". This step is only
+        // measuring header control hit-targets, so stub the data the header's page
+        // needs to mount. Without these the test passes only by timing luck.
+        await page.route('**/api/dashboard/rules/summary', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ success: true, data: { totalRules: 0, activeRules: 0, topRules: [] }, error: null }),
+            });
+        });
+        await page.route('**/api/stats/badges', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0 }),
+            });
+        });
+        await page.route(/\/api\/stats(?:\?.*)?$/, async (route) => {
+            await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+        });
+        await page.route('**/api/logs**', async (route) => {
+            await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+        });
         await loginAsAdmin(page);
 
         await expectMinimumTarget(page.getByTestId('theme-light'), 'light theme');

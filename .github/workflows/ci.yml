@@ -129,6 +129,15 @@ jobs:
         env:
           E2E_EXPECT_PITCH_ROUTES_DISABLED: 'true'
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173
+          # This step serves frontend/dist through `vite preview` with NO backend, so
+          # every /api/* call returns 502. The app is fail-closed on that path by design
+          # (Login.tsx keeps passwordLoginEnabled false until /api/system/mode confirms
+          # it; PrivateRoute renders session-unavailable without /api/auth/me), so tests
+          # that must reach a protected route get their session at the network boundary.
+          # Scope: these specs may only assert client-side routing/rendering -- they
+          # prove NOTHING about backend auth or RBAC. Real login is covered against a
+          # real stack by e2e test:release (dev-login.spec.ts, smoke.spec.ts).
+          E2E_STATIC_PREVIEW: 'true'
         run: |
           set -euo pipefail
           # Pass `frontend` as the positional root so vite resolves vite.config.ts + dist/ from
