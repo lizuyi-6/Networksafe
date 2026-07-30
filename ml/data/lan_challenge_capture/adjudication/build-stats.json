@@ -1,0 +1,45 @@
+{
+  "sampleCount": 413,
+  "consensusCount": 160,
+  "modelAdjudicationCount": 253,
+  "requiresHumanAuditCount": 251,
+  "finalVerdictDistribution": {
+    "safe": 251,
+    "unknown": 39,
+    "attack": 123
+  },
+  "finalAttackFamilyDistribution": {
+    "none": 251,
+    "idor_bola": 17,
+    "authorization": 7,
+    "sqli": 23,
+    "xss": 10,
+    "command_injection": 8,
+    "path_traversal": 9,
+    "ssrf": 7,
+    "business_logic": 3,
+    "file_upload": 2,
+    "csrf": 1,
+    "cors": 1,
+    "prompt_injection": 56,
+    "authentication": 7,
+    "protocol_attack": 11
+  },
+  "finalRecommendedActionDistribution": {
+    "allow": 138,
+    "monitor": 113,
+    "challenge": 39,
+    "block": 121,
+    "isolate": 2
+  },
+  "resolutionDecisionDistribution": {
+    "accept_b": 20,
+    "insufficient_context": 36,
+    "accept_a": 197
+  },
+  "acceptedAnnotatorDistribution": {
+    "B": 20,
+    "null": 36,
+    "A": 197
+  }
+}

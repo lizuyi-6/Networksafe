@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "sampleCount": 413,
+  "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
+  "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "annotatorAFile": "ml/data/lan_challenge_capture/annotations/model-a-annotations.jsonl",
+  "annotatorASha256": "381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662",
+  "annotatorBFile": "ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl",
+  "annotatorBSha256": "9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357",
+  "finalLabelsFile": "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl",
+  "finalLabelsSha256": "4fb2ad16836c6b53adbfa7ef9191b8e064b8e21129c383456e354f0a904336dc",
+  "consensusCount": 160,
+  "modelAdjudicationCount": 253,
+  "requiresHumanAuditCount": 251,
+  "humanReviewed": false,
+  "reviewerCount": 0,
+  "eligibleForTraining": false,
+  "split": "external_challenge_test",
+  "labelsFrozenBeforeAetherArgusEvaluation": true,
+  "frozenAt": "2026-07-30T15:29:06.230Z",
+  "sourceCommit": "e32d73c488aad77240216c7b087cd957efb12204",
+  "adjudicationCommit": null,
+  "annotators": {
+    "A": {
+      "model": "GPT-5.6-SOL",
+      "reportFile": "ml/data/lan_challenge_capture/annotations/model-a-report.json"
+    },
+    "B": {
+      "model": "Claude Opus 5",
+      "reportFile": "ml/data/lan_challenge_capture/annotations/model-b-report.json"
+    }
+  },
+  "adjudicator": {
+    "model": "Claude (Opus-class) acting as independent third-party adjudicator C",
+    "note": "Adjudicator C is a third LLM. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0)."
+  },
+  "finalVerdictDistribution": {
+    "safe": 251,
+    "unknown": 39,
+    "attack": 123
+  },
+  "finalAttackFamilyDistribution": {
+    "none": 251,
+    "idor_bola": 17,
+    "authorization": 7,
+    "sqli": 23,
+    "xss": 10,
+    "command_injection": 8,
+    "path_traversal": 9,
+    "ssrf": 7,
+    "business_logic": 3,
+    "file_upload": 2,
+    "csrf": 1,
+    "cors": 1,
+    "prompt_injection": 56,
+    "authentication": 7,
+    "protocol_attack": 11
+  },
+  "resolutionDecisionDistribution": {
+    "accept_b": 20,
+    "insufficient_context": 36,
+    "accept_a": 197
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "title": "VIguard LAN Challenge Set — Dual-LLM Annotation Adjudication Report",
+  "annotators": {
+    "A": "GPT-5.6-SOL",
+    "B": "Claude Opus 5"
+  },
+  "adjudicator": {
+    "model": "Claude (Opus-class) acting as independent third-party adjudicator C",
+    "note": "Adjudicator C is a third LLM. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0)."
+  },
+  "inputs": {
+    "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
+    "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+    "annotatorAFile": "ml/data/lan_challenge_capture/annotations/model-a-annotations.jsonl",
+    "annotatorASha256": "381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662",
+    "annotatorBFile": "ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl",
+    "annotatorBSha256": "9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357",
+    "sampleCountA": 413,
+    "sampleCountB": 413
+  },
+  "agreement": {
+    "verdictObservedAgreement": 383,
+    "verdictObservedAgreementRate": 0.927361,
+    "cohensKappa": 0.865078,
+    "kappaComponents": {
+      "Po": 0.927361,
+      "Pe": 0.46162
+    },
+    "attackFamilyFullAgreementRate": 0.920097,
+    "attackFamilyMacroAgreementRate": 0.729106,
+    "actionFullAgreementRate": 0.883777,
+    "contextSufficientAgreementRate": 0.937046,
+    "verdictConflicts": {
+      "safe_attack": 4,
+      "attack_unknown": 15,
+      "safe_unknown": 11
+    }
+  },
+  "resolution": {
+    "consensusCount": 160,
+    "modelAdjudicationCount": 253,
+    "acceptA": 197,
+    "acceptB": 20,
+    "newResolution": 0,
+    "insufficientContext": 36,
+    "acceptedAnnotatorA": 197,
+    "acceptedAnnotatorB": 20,
+    "acceptedAnnotatorNull": 36
+  },
+  "finalLabelDistribution": {
+    "verdict": {
+      "safe": 251,
+      "unknown": 39,
+      "attack": 123
+    },
+    "attackFamily": {
+      "none": 251,
+      "idor_bola": 17,
+      "authorization": 7,
+      "sqli": 23,
+      "xss": 10,
+      "command_injection": 8,
+      "path_traversal": 9,
+      "ssrf": 7,
+      "business_logic": 3,
+      "file_upload": 2,
+      "csrf": 1,
+      "cors": 1,
+      "prompt_injection": 56,
+      "authentication": 7,
+      "protocol_attack": 11
+    },
+    "recommendedAction": {
+      "allow": 138,
+      "monitor": 113,
+      "challenge": 39,
+      "block": 121,
+      "isolate": 2
+    },
+    "finalUnknownCount": 39
+  },
+  "humanAudit": {
+    "requiresHumanAuditCount": 251,
+    "humanReviewed": false,
+    "reviewerCount": 0
+  },
+  "finalLabelsSha256": "4fb2ad16836c6b53adbfa7ef9191b8e064b8e21129c383456e354f0a904336dc",
+  "frozenAt": "2026-07-30T15:29:06.230Z",
+  "declarations": {
+    "dualLlmAnnotationAndThirdLlmAdjudication": true,
+    "notHumanAnnotated": true,
+    "notProductionNaturalTraffic": true,
+    "noAetherArgusPredictionsUsed": true,
+    "noResponseResultsUsed": true,
+    "challengeSetNotAddedToTraining": true,
+    "labelsFrozenBeforeModelEvaluation": true,
+    "bSideDeterministicProgram": true,
+    "intraClassCorrelationRisk": true,
+    "adjudicatorCannotEliminateSharedSystematicBias": true
+  },
+  "knownLimitations": []
+}

@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": {
+    "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
+    "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+    "annotatorAFile": "ml/data/lan_challenge_capture/annotations/model-a-annotations.jsonl",
+    "annotatorASha256": "381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662",
+    "annotatorBFile": "ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl",
+    "annotatorBSha256": "9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
+  },
+  "sampleCount": 413,
+  "annotators": {
+    "A": "GPT-5.6-SOL",
+    "B": "Claude Opus 5"
+  },
+  "verdict": {
+    "observedAgreement": 383,
+    "observedAgreementRate": 0.927361,
+    "cohensKappa": 0.865078,
+    "kappaComponents": {
+      "Po": 0.927361,
+      "Pe": 0.46162
+    },
+    "marginalA": {
+      "safe": 244,
+      "attack": 129,
+      "unknown": 40
+    },
+    "marginalB": {
+      "safe": 257,
+      "attack": 110,
+      "unknown": 46
+    },
+    "agreementByLabel": {
+      "safe": 243,
+      "attack": 110,
+      "unknown": 30
+    },
+    "conflicts": {
+      "safe_attack": 4,
+      "attack_unknown": 15,
+      "safe_unknown": 11
+    }
+  },
+  "attackFamily": {
+    "fullAgreement": 380,
+    "fullAgreementRate": 0.920097,
+    "macroAgreementRate": 0.729106,
+    "perFamily": [
+      {
+        "family": "api_abuse",
+        "observed": 3,
+        "agreed": 0,
+        "rate": 0
+      },
+      {
+        "family": "authentication",
+        "observed": 6,
+        "agreed": 6,
+        "rate": 1
+      },
+      {
+        "family": "authorization",
+        "observed": 7,
+        "agreed": 7,
+        "rate": 1
+      },
+      {
+        "family": "business_logic",
+        "observed": 4,
+        "agreed": 2,
+        "rate": 0.5
+      },
+      {
+        "family": "command_injection",
+        "observed": 8,
+        "agreed": 8,
+        "rate": 1
+      },
+      {
+        "family": "cors",
+        "observed": 1,
+        "agreed": 1,
+        "rate": 1
+      },
+      {
+        "family": "csrf",
+        "observed": 1,
+        "agreed": 1,
+        "rate": 1
+      },
+      {
+        "family": "file_upload",
+        "observed": 2,
+        "agreed": 2,
+        "rate": 1
+      },
+      {
+        "family": "idor_bola",
+        "observed": 17,
+        "agreed": 6,
+        "rate": 0.35294117647058826
+      },
+      {
+        "family": "none",
+        "observed": 258,
+        "agreed": 243,
+        "rate": 0.9418604651162791
+      },
+      {
+        "family": "path_traversal",
+        "observed": 9,
+        "agreed": 9,
+        "rate": 1
+      },
+      {
+        "family": "prompt_injection",
+        "observed": 56,
+        "agreed": 56,
+        "rate": 1
+      },
+      {
+        "family": "protocol_attack",
+        "observed": 12,
+        "agreed": 0,
+        "rate": 0
+      },
+      {
+        "family": "sqli",
+        "observed": 23,
+        "agreed": 23,
+        "rate": 1
+      },
+      {
+        "family": "ssrf",
+        "observed": 10,
+        "agreed": 6,
+        "rate": 0.6
+      },
+      {
+        "family": "unknown",
+        "observed": 19,
+        "agreed": 0,
+        "rate": 0
+      },
+      {
+        "family": "xss",
+        "observed": 10,
+        "agreed": 10,
+        "rate": 1
+      }
+    ],
+    "aOnly": [
+      "api_abuse",
+      "protocol_attack"
+    ],
+    "bOnly": [
+      "unknown"
+    ],
+    "verdictAgreeButFamilyDisagree": 18
+  },
+  "recommendedAction": {
+    "fullAgreement": 365,
+    "fullAgreementRate": 0.883777,
+    "conflicts": {
+      "allow_block": 0,
+      "allow_challenge": 6,
+      "monitor_block": 3,
+      "challenge_block": 15
+    }
+  },
+  "contextSufficient": {
+    "agreement": 387,
+    "agreementRate": 0.937046
+  },
+  "needsExpertReview": {
+    "agreement": 379,
+    "agreementRate": 0.917676,
+    "bothTrue": 192,
+    "onlyA": 12,
+    "onlyB": 22
+  },
+  "confidence": {
+    "a": {
+      "mean": 4.5278,
+      "median": 5,
+      "distribution": {
+        "1": 0,
+        "2": 11,
+        "3": 30,
+        "4": 102,
+        "5": 270
+      }
+    },
+    "b": {
+      "mean": 3.7821,
+      "median": 4,
+      "distribution": {
+        "1": 0,
+        "2": 46,
+        "3": 34,
+        "4": 297,
+        "5": 36
+      }
+    },
+    "absoluteDifferenceDistribution": {
+      "0": 128,
+      "1": 267,
+      "2": 3,
+      "3": 15
+    },
+    "bothHighConfButCoreLabelDisagree": 16
+  },
+  "split": {
+    "consensus": 160,
+    "adjudicationQueue": 253
+  }
+}
