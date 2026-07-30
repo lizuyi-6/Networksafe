@@ -1,0 +1,24 @@
+\begin{table}[t]
+\centering
+\caption{Error taxonomy using sanitized request summaries.}
+\begin{tabular}{lrrrrrr}
+\toprule
+modelId & categoryKey & category & count & proportion & representativeSampleIds & possibleCause \\
+\midrule
+rules-baseline & safe\_to\_attack & safe→attack & 0 & 0.000000 &  & Request-side patterns overfire on a reference-safe row. \\
+rules-baseline & safe\_to\_unknown & safe→unknown & 0 & 0.000000 &  & The system abstains on a reference-safe row. \\
+rules-baseline & attack\_to\_safe & attack→safe & 71 & 0.171913 & viguard-lan-000153;viguard-lan-000154;viguard-lan-000155;viguard-lan-000156;viguard-lan-000157 & The request-side detector misses the attack evidence. \\
+rules-baseline & attack\_to\_unknown & attack→unknown & 0 & 0.000000 &  & The detector abstains instead of detecting an attack. \\
+rules-baseline & unknown\_to\_safe & unknown→safe & 75 & 0.181598 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The detector overstates safety when reference context is insufficient. \\
+rules-baseline & unknown\_to\_attack & unknown→attack & 32 & 0.077482 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & A suspicious surface form is treated as proved attack without required context. \\
+rules-baseline & json\_parse\_failure & JSON解析失败 & 0 & 0.000000 &  & The raw output is not strict JSON. \\
+rules-baseline & schema\_failure & Schema失败 & 0 & 0.000000 &  & The output violates the locked schema. \\
+rules-baseline & attack\_family\_error & 攻击家族错误 & 74 & 0.179177 & viguard-lan-000153;viguard-lan-000154;viguard-lan-000155;viguard-lan-000156;viguard-lan-000157 & The verdict may detect risk but the family attribution is wrong. \\
+rules-baseline & recommended\_action\_error & 推荐动作错误 & 265 & 0.641646 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The output action differs from the reference action. \\
+rules-baseline & prompt\_injection\_hijack & Prompt Injection劫持 & 41 & 0.099274 & viguard-lan-000307;viguard-lan-000308;viguard-lan-000309;viguard-lan-000310;viguard-lan-000311 & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+rules-baseline & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 66 & 0.159806 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+rules-baseline & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 10 & 0.024213 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+rules-baseline & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+\bottomrule
+\end{tabular}
+\end{table}

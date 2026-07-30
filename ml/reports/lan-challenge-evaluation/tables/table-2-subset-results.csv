@@ -1,0 +1,17 @@
+modelId,subset,status,count,accuracy,macroF1,safeFPR
+rules-baseline,all_413,SUCCESS,413,0.569007,0.358873,0.000000
+rules-baseline,context_sufficient_true,SUCCESS,306,0.767974,0.425857,0.000000
+rules-baseline,context_sufficient_false,SUCCESS,107,0.000000,0.000000,
+rules-baseline,consensus,SUCCESS,160,0.850000,0.306306,0.000000
+rules-baseline,model_adjudication,SUCCESS,253,0.391304,0.313908,0.000000
+rules-baseline,safe,SUCCESS,209,1.000000,0.333333,0.000000
+rules-baseline,attack,SUCCESS,97,0.268041,0.140921,
+rules-baseline,unknown,SUCCESS,107,0.000000,0.000000,
+rules-baseline,prompt_injection,SUCCESS,56,0.267857,0.140845,
+rules-baseline,authorization,SUCCESS,26,0.000000,0.000000,
+rules-baseline,idor_bola,SUCCESS,40,0.000000,0.000000,
+rules-baseline,sqli,SUCCESS,23,0.000000,0.000000,
+rules-baseline,xss,SUCCESS,10,0.000000,0.000000,
+rules-baseline,command_injection,SUCCESS,8,0.625000,0.256410,
+rules-baseline,path_traversal,SUCCESS,9,0.000000,0.000000,
+rules-baseline,ssrf,SUCCESS,7,0.571429,0.266667,

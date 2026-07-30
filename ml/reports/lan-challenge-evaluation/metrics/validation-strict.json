@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "mode": "strict",
+  "checksPassed": 20,
+  "checksTotal": 21,
+  "failed": [
+    {
+      "name": "3_each_model_covers_413",
+      "passed": false,
+      "detail": "successful=1 notRun=7; strict mode requires all locked runs"
+    }
+  ],
+  "checks": [
+    {
+      "name": "1_input_exactly_413",
+      "passed": true,
+      "detail": "rows=413 sha256=c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+    },
+    {
+      "name": "2_labels_exactly_413",
+      "passed": true,
+      "detail": "rows=413 sha256=13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+    },
+    {
+      "name": "3_each_model_covers_413",
+      "passed": false,
+      "detail": "successful=1 notRun=7; strict mode requires all locked runs"
+    },
+    {
+      "name": "4_no_duplicate_or_missing_ids",
+      "passed": true,
+      "detail": "sampleId sets aligned"
+    },
+    {
+      "name": "5_inference_scoring_process_isolation",
+      "passed": true,
+      "detail": "banned references found=[]"
+    },
+    {
+      "name": "6_same_input_sha_for_all_models",
+      "passed": true,
+      "detail": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+    },
+    {
+      "name": "7_metrics_recompute_exactly",
+      "passed": true,
+      "detail": "mismatches=[]"
+    },
+    {
+      "name": "8_figures_tables_match_metrics",
+      "passed": true,
+      "detail": "main CSV values and required figure files"
+    },
+    {
+      "name": "9_bootstrap_seed_fixed",
+      "passed": true,
+      "detail": "seed=20260731 iterations=10000"
+    },
+    {
+      "name": "10_statistical_tests_are_paired",
+      "passed": true,
+      "detail": "paired comparison status recorded"
+    },
+    {
+      "name": "11_challenge_not_used_for_tuning",
+      "passed": true,
+      "detail": "both protocol and manifest are false"
+    },
+    {
+      "name": "12_unknown_handling_consistent",
+      "passed": true,
+      "detail": "unknown accuracy equals class recall"
+    },
+    {
+      "name": "13_parse_failures_never_become_safe",
+      "passed": true,
+      "detail": "all parse failures remain fail-safe unknown"
+    },
+    {
+      "name": "14_no_response_side_evidence",
+      "passed": true,
+      "detail": "static inference scan and locked protocol"
+    },
+    {
+      "name": "15_final_labels_unchanged",
+      "passed": true,
+      "detail": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+    },
+    {
+      "name": "16_ab_annotations_unchanged",
+      "passed": true,
+      "detail": "A=381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662 B=9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
+    },
+    {
+      "name": "17_training_data_unchanged",
+      "passed": true,
+      "detail": "commit scope excludes ml/data/releases and production paths"
+    },
+    {
+      "name": "18_prediction_privacy_scan",
+      "passed": true,
+      "detail": "hits=[]"
+    },
+    {
+      "name": "19_human_review_still_false",
+      "passed": true,
+      "detail": "humanReviewed=False reviewerCount=0"
+    },
+    {
+      "name": "20_all_claims_have_evidence",
+      "passed": true,
+      "detail": "claims=4"
+    },
+    {
+      "name": "protocol_canonical_hash",
+      "passed": true,
+      "detail": "computed=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276 recorded=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
+    }
+  ]
+}

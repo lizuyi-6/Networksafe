@@ -1,0 +1,15 @@
+modelId,categoryKey,category,count,proportion,representativeSampleIds,possibleCause
+rules-baseline,safe_to_attack,safe→attack,0,0.000000,,Request-side patterns overfire on a reference-safe row.
+rules-baseline,safe_to_unknown,safe→unknown,0,0.000000,,The system abstains on a reference-safe row.
+rules-baseline,attack_to_safe,attack→safe,71,0.171913,viguard-lan-000153;viguard-lan-000154;viguard-lan-000155;viguard-lan-000156;viguard-lan-000157,The request-side detector misses the attack evidence.
+rules-baseline,attack_to_unknown,attack→unknown,0,0.000000,,The detector abstains instead of detecting an attack.
+rules-baseline,unknown_to_safe,unknown→safe,75,0.181598,viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119,The detector overstates safety when reference context is insufficient.
+rules-baseline,unknown_to_attack,unknown→attack,32,0.077482,viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169,A suspicious surface form is treated as proved attack without required context.
+rules-baseline,json_parse_failure,JSON解析失败,0,0.000000,,The raw output is not strict JSON.
+rules-baseline,schema_failure,Schema失败,0,0.000000,,The output violates the locked schema.
+rules-baseline,attack_family_error,攻击家族错误,74,0.179177,viguard-lan-000153;viguard-lan-000154;viguard-lan-000155;viguard-lan-000156;viguard-lan-000157,The verdict may detect risk but the family attribution is wrong.
+rules-baseline,recommended_action_error,推荐动作错误,265,0.641646,viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119,The output action differs from the reference action.
+rules-baseline,prompt_injection_hijack,Prompt Injection劫持,41,0.099274,viguard-lan-000307;viguard-lan-000308;viguard-lan-000309;viguard-lan-000310;viguard-lan-000311,Operational proxy: a prompt-injection reference produced safe or invalid output.
+rules-baseline,authorization_or_ownership_context_missing,权限/归属上下文不足,66,0.159806,viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119,Unknown authorization/ownership rows are forced to safe or attack.
+rules-baseline,storage_vs_execution_confusion,存储字段与执行字段混淆,10,0.024213,viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169,Unknown SQL/XSS storage semantics are promoted to attack.
+rules-baseline,long_input_truncation,长输入截断,0,0.000000,,The runtime reported truncation or exhausted the locked context.

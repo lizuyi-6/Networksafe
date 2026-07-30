@@ -1,0 +1,882 @@
+{
+  "schemaVersion": 1,
+  "status": "INCOMPLETE_REQUIRED_MODEL_RUNS",
+  "experimentDate": "2026-07-30T16:53:32.415555+00:00",
+  "repositoryCommit": "f6758075316425e6e2a5b4cbd1d9bebdc5cafd53",
+  "protocolCommit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
+  "protocolSha256": "fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276",
+  "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+  "successfulModels": [
+    "rules-baseline"
+  ],
+  "notRunModels": [
+    {
+      "modelId": "char-ngram-logreg",
+      "status": "NOT_RUN",
+      "reason": "The repository manifest references ml/data/releases/v02/train.jsonl and validation.jsonl, but both files return 404 at the source commit and are not mounted locally. Training on challenge or test splits is prohibited.",
+      "requiredOperatorAction": "Mount the exact v02 train and validation files whose SHA-256 values are e8ff084fc251f3e9ede791dabac747b1021c199e24685d6af9e6a696da2fc3e1 and ea6f3d070ed796bba4f0ea2582c7eb406794b0162f871ceaf9f07de7e1f55606."
+    },
+    {
+      "modelId": "qwen3-4b-zero-shot",
+      "status": "NOT_RUN",
+      "reason": "No CUDA device is available. Hugging Face authentication succeeded as BreakFeelingAether, but the Jobs connector returned 'Tool hf_jobs not found'; no paid remote job was started.",
+      "requiredOperatorAction": "Provide a CUDA runtime or restore the authenticated Hugging Face Jobs backend."
+    },
+    {
+      "modelId": "qwen3-4b-few-shot",
+      "status": "NOT_RUN",
+      "reason": "No CUDA device is available and the exact v02 train/validation files needed to freeze non-challenge example sampleIds are unavailable. No challenge example was substituted.",
+      "requiredOperatorAction": "Mount the exact v02 train/validation assets before a future protocol lock and provide a CUDA runtime."
+    },
+    {
+      "modelId": "aetherargus-v02-hf-lora",
+      "status": "NOT_RUN",
+      "reason": "ml/output/aetherargus-v02-lora/ is not committed or mounted, and the environment has no CUDA device.",
+      "requiredOperatorAction": "Mount the original adapter directory including adapter_model.safetensors and tokenizer/config files, then run on CUDA."
+    },
+    {
+      "modelId": "aetherargus-v02-merged-bf16",
+      "status": "NOT_RUN",
+      "reason": "The merged BF16 artifact is not committed or mounted, and the environment has no CUDA device.",
+      "requiredOperatorAction": "Mount the exact merged BF16 artifact and its provenance manifest, then run on CUDA."
+    },
+    {
+      "modelId": "aetherargus-v02-gguf-q4-k-m",
+      "status": "NOT_RUN",
+      "reason": "The Q4_K_M GGUF is documented at /mnt/d/aetherargus-v02-gguf/ but is not mounted; Ollama and llama.cpp are not installed.",
+      "requiredOperatorAction": "Mount aetherargus-v02-Q4_K_M.gguf and provide the recorded Ollama or llama.cpp runtime."
+    },
+    {
+      "modelId": "aetherargus-v02-ollama-f16",
+      "status": "NOT_RUN",
+      "reason": "The f16 GGUF is not mounted and Ollama is not installed.",
+      "requiredOperatorAction": "Mount aetherargus-v02-f16.gguf and provide the recorded Ollama runtime."
+    }
+  ],
+  "hardwareEnvironment": {
+    "os": "Linux-6.12.13-x86_64-with-glibc2.39",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "gpu": null,
+    "ramGiB": 15.930622100830078,
+    "cuda": null,
+    "python": "3.12.13",
+    "node": "v24.14.0",
+    "pytorch": null,
+    "transformers": null,
+    "ollama": null,
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikitLearn": "1.8.0",
+    "scipy": "1.17.0"
+  },
+  "mainResults": {
+    "rules-baseline": {
+      "schemaVersion": 1,
+      "modelId": "rules-baseline",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+      "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+      "verdict": {
+        "accuracy": 0.5690072639225182,
+        "macroPrecision": 0.34566941881172086,
+        "macroRecall": 0.422680412371134,
+        "macroF1": 0.35887287424693054,
+        "weightedF1": 0.45384769637878536,
+        "perClass": {
+          "safe": {
+            "precision": 0.5887323943661972,
+            "recall": 1.0,
+            "f1": 0.7411347517730497,
+            "support": 209
+          },
+          "attack": {
+            "precision": 0.4482758620689655,
+            "recall": 0.26804123711340205,
+            "f1": 0.33548387096774196,
+            "support": 97
+          },
+          "unknown": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 107
+          }
+        },
+        "confusionMatrix": {
+          "labels": [
+            "safe",
+            "attack",
+            "unknown"
+          ],
+          "matrix": [
+            [
+              209,
+              0,
+              0
+            ],
+            [
+              71,
+              26,
+              0
+            ],
+            [
+              75,
+              32,
+              0
+            ]
+          ]
+        }
+      },
+      "attackDetectionAll": {
+        "precision": 0.4482758620689655,
+        "recall": 0.26804123711340205,
+        "f1": 0.33548387096774196,
+        "positiveSupport": 97,
+        "negativeSupport": 316
+      },
+      "attackVsSafeOnly": {
+        "precision": 1.0,
+        "recall": 0.26804123711340205,
+        "f1": 0.42276422764227645,
+        "positiveSupport": 97,
+        "negativeSupport": 209
+      },
+      "safeFPR": {
+        "rate": 0.0,
+        "falsePositiveCount": 0,
+        "safeSupport": 209
+      },
+      "unknown": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "support": 107,
+        "toAttackRate": 0.29906542056074764,
+        "toSafeRate": 0.7009345794392523
+      },
+      "attackFamily": {
+        "status": "SUCCESS",
+        "accuracy": 0.23711340206185566,
+        "macroPrecision": 0.4,
+        "macroRecall": 0.17678571428571427,
+        "macroF1": 0.24225352112676055,
+        "weightedF1": 0.35390348966652146,
+        "perClass": {
+          "command_injection": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "support": 8
+          },
+          "cors": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "csrf": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "file_upload": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "support": 2
+          },
+          "none": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "path_traversal": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 9
+          },
+          "prompt_injection": {
+            "precision": 1.0,
+            "recall": 0.26785714285714285,
+            "f1": 0.4225352112676056,
+            "support": 56
+          },
+          "sqli": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 12
+          },
+          "ssrf": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "support": 6
+          },
+          "xss": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 2
+          }
+        },
+        "confusionMatrix": {
+          "labels": [
+            "command_injection",
+            "cors",
+            "csrf",
+            "file_upload",
+            "none",
+            "path_traversal",
+            "prompt_injection",
+            "sqli",
+            "ssrf",
+            "xss"
+          ],
+          "matrix": [
+            [
+              4,
+              0,
+              0,
+              0,
+              3,
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              9,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              41,
+              0,
+              15,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              12,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              2,
+              1,
+              0,
+              0,
+              3,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      },
+      "structuredOutput": {
+        "jsonSyntaxSuccessRate": 1.0,
+        "schemaValidRate": 1.0,
+        "enumValidRate": 1.0,
+        "completeFieldRate": 1.0
+      },
+      "performance": {
+        "p50LatencyMs": 0.061451999499695376,
+        "p95LatencyMs": 0.09907940038829109,
+        "p99LatencyMs": 0.3253730403230291,
+        "meanLatencyMs": 0.07313638255168889,
+        "samplesPerSecond": 13673.085338795003,
+        "inputTokensPerSecond": null,
+        "outputTokensPerSecond": null,
+        "peakGpuMemoryMiB": null,
+        "peakHostMemoryMiB": 18.0859375,
+        "modelSizeBytes": null,
+        "crossStackLatencyComparable": false
+      },
+      "subsets": {
+        "all_413": {
+          "status": "SUCCESS",
+          "count": 413,
+          "accuracy": 0.5690072639225182,
+          "macroF1": 0.35887287424693054,
+          "safeFPR": 0.0
+        },
+        "context_sufficient_true": {
+          "status": "SUCCESS",
+          "count": 306,
+          "accuracy": 0.7679738562091504,
+          "macroF1": 0.4258566512045489,
+          "safeFPR": 0.0
+        },
+        "context_sufficient_false": {
+          "status": "SUCCESS",
+          "count": 107,
+          "accuracy": 0.0,
+          "macroF1": 0.0,
+          "safeFPR": null
+        },
+        "consensus": {
+          "status": "SUCCESS",
+          "count": 160,
+          "accuracy": 0.85,
+          "macroF1": 0.30630630630630634,
+          "safeFPR": 0.0
+        },
+        "model_adjudication": {
+          "status": "SUCCESS",
+          "count": 253,
+          "accuracy": 0.391304347826087,
+          "macroF1": 0.3139075614294938,
+          "safeFPR": 0.0
+        },
+        "safe": {
+          "status": "SUCCESS",
+          "count": 209,
+          "accuracy": 1.0,
+          "macroF1": 0.3333333333333333,
+          "safeFPR": 0.0
+        },
+        "attack": {
+          "status": "SUCCESS",
+          "count": 97,
+          "accuracy": 0.26804123711340205,
+          "macroF1": 0.14092140921409216,
+          "safeFPR": null
+        },
+        "unknown": {
+          "status": "SUCCESS",
+          "count": 107,
+          "accuracy": 0.0,
+          "macroF1": 0.0,
+          "safeFPR": null
+        },
+        "prompt_injection": {
+          "status": "SUCCESS",
+          "count": 56,
+          "accuracy": 0.26785714285714285,
+          "macroF1": 0.14084507042253522,
+          "safeFPR": null
+        },
+        "authorization": {
+          "status": "SUCCESS",
+          "count": 26,
+          "accuracy": 0.0,
+          "macroF1": 0.0,
+          "safeFPR": null
+        },
+        "idor_bola": {
+          "status": "SUCCESS",
+          "count": 40,
+          "accuracy": 0.0,
+          "macroF1": 0.0,
+          "safeFPR": null
+        },
+        "sqli": {
+          "status": "SUCCESS",
+          "count": 23,
+          "accuracy": 0.0,
+          "macroF1": 0.0,
+          "safeFPR": null
+        },
+        "xss": {
+          "status": "SUCCESS",
+          "count": 10,
+          "accuracy": 0.0,
+          "macroF1": 0.0,
+          "safeFPR": null
+        },
+        "command_injection": {
+          "status": "SUCCESS",
+          "count": 8,
+          "accuracy": 0.625,
+          "macroF1": 0.25641025641025644,
+          "safeFPR": null
+        },
+        "path_traversal": {
+          "status": "SUCCESS",
+          "count": 9,
+          "accuracy": 0.0,
+          "macroF1": 0.0,
+          "safeFPR": null
+        },
+        "ssrf": {
+          "status": "SUCCESS",
+          "count": 7,
+          "accuracy": 0.5714285714285714,
+          "macroF1": 0.26666666666666666,
+          "safeFPR": null
+        }
+      },
+      "predictionCompletedAt": "2026-07-30T16:42:51.439726+00:00",
+      "scoredAt": "2026-07-30T16:43:59.898008+00:00"
+    }
+  },
+  "statisticalAnalysis": {
+    "schemaVersion": 1,
+    "bootstrapIterations": 10000,
+    "bootstrapSeed": 20260731,
+    "stratifiedBy": "reference_verdict",
+    "confidenceIntervals": {
+      "rules-baseline": {
+        "accuracy": {
+          "pointEstimate": 0.5690072639225182,
+          "lower95": 0.549636803874092,
+          "upper95": 0.5907990314769975
+        },
+        "macroF1": {
+          "pointEstimate": 0.3588728742469305,
+          "lower95": 0.32460333956904314,
+          "upper95": 0.39291835320716184
+        },
+        "attackF1": {
+          "pointEstimate": 0.33548387096774196,
+          "lower95": 0.2394366197183098,
+          "upper95": 0.4285714285714286
+        },
+        "attackRecall": {
+          "pointEstimate": 0.26804123711340205,
+          "lower95": 0.18556701030927836,
+          "upper95": 0.36082474226804123
+        },
+        "safeFPR": {
+          "pointEstimate": 0.0,
+          "lower95": 0.0,
+          "upper95": 0.0
+        },
+        "unknownAccuracy": {
+          "pointEstimate": 0.0,
+          "lower95": 0.0,
+          "upper95": 0.0
+        },
+        "attackFamilyMacroF1": {
+          "pointEstimate": 0.24225352112676055,
+          "lower95": 0.13633388137863842,
+          "upper95": 0.35649733946608947
+        }
+      }
+    },
+    "mcnemar": [],
+    "pairedBootstrapDifferences": [
+      {
+        "comparison": "aetherargus-v02-hf-lora minus qwen3-4b-zero-shot",
+        "status": "NOT_AVAILABLE",
+        "reason": "one or both prediction files were not produced"
+      },
+      {
+        "comparison": "aetherargus-v02-hf-lora minus qwen3-4b-few-shot",
+        "status": "NOT_AVAILABLE",
+        "reason": "one or both prediction files were not produced"
+      },
+      {
+        "comparison": "aetherargus-v02-hf-lora minus rules-baseline",
+        "status": "NOT_AVAILABLE",
+        "reason": "one or both prediction files were not produced"
+      },
+      {
+        "comparison": "aetherargus-v02-hf-lora minus char-ngram-logreg",
+        "status": "NOT_AVAILABLE",
+        "reason": "one or both prediction files were not produced"
+      },
+      {
+        "comparison": "aetherargus-v02-merged-bf16 minus aetherargus-v02-gguf-q4-k-m",
+        "status": "NOT_AVAILABLE",
+        "reason": "one or both prediction files were not produced"
+      },
+      {
+        "comparison": "aetherargus-v02-merged-bf16 minus aetherargus-v02-ollama-f16",
+        "status": "NOT_AVAILABLE",
+        "reason": "one or both prediction files were not produced"
+      }
+    ],
+    "multipleComparisonCorrection": "Holm-Bonferroni"
+  },
+  "inferencePathAblation": {
+    "schemaVersion": 1,
+    "protocolCommit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
+    "status": "NOT_RUN",
+    "lockedFactors": [
+      {
+        "ablationId": "A-context-length",
+        "transformers": "max_context_tokens=2048",
+        "ollama": "num_ctx=2048",
+        "status": "NOT_RUN"
+      },
+      {
+        "ablationId": "B-system-prompt",
+        "promptSha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
+        "status": "NOT_RUN"
+      },
+      {
+        "ablationId": "C-message-structure",
+        "levels": [
+          "system_plus_user",
+          "single_concatenated_prompt"
+        ],
+        "status": "NOT_RUN"
+      },
+      {
+        "ablationId": "D-chat-template",
+        "levels": [
+          "tokenizer.apply_chat_template",
+          "Ollama Modelfile TEMPLATE"
+        ],
+        "status": "NOT_RUN"
+      },
+      {
+        "ablationId": "E-sampling-runtime",
+        "temperature": 0,
+        "topP": 1,
+        "topK": 0,
+        "seed": 0,
+        "status": "NOT_RUN"
+      }
+    ],
+    "conclusion": null,
+    "reason": "Neither the merged/f16 shared-weight artifacts nor an Ollama runtime are available. Reporting a causal FPR conclusion from historical, differently configured runs would violate the locked paired-ablation protocol.",
+    "requiredOperatorAction": "Mount the merged BF16 and f16/Q4_K_M artifacts and run both inference stacks with the locked prompt and one-factor-at-a-time matrix."
+  },
+  "researchQuestions": {
+    "RQ1": "NOT_ANSWERED: AetherArgus and Qwen prediction runs are unavailable.",
+    "RQ2": "NOT_ANSWERED: no AetherArgus structured-output run is available.",
+    "RQ3": "PARTIAL_RULE_BASELINE_ONLY",
+    "RQ4": "PARTIAL_RULE_BASELINE_ONLY",
+    "RQ5": "PARTIAL_RULE_BASELINE_ONLY",
+    "RQ6": "NOT_ANSWERED: paired shared-weight runtimes are unavailable.",
+    "RQ7": "NOT_ANSWERED: quantized and BF16 artifacts are unavailable."
+  },
+  "declarations": [
+    "The challenge set was not used for training, prompt selection, threshold selection, hyperparameter tuning, or model selection.",
+    "The reference labels were produced by two independent AI annotators, a third AI adjudicator, and a model-visible-context audit; they were not human-verified ground truth."
+  ],
+  "claimToEvidenceCount": 4,
+  "validation": {
+    "partialIntegrity": {
+      "schemaVersion": 1,
+      "mode": "allow-not-run",
+      "checksPassed": 21,
+      "checksTotal": 21,
+      "failed": [],
+      "checks": [
+        {
+          "name": "1_input_exactly_413",
+          "passed": true,
+          "detail": "rows=413 sha256=c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+        },
+        {
+          "name": "2_labels_exactly_413",
+          "passed": true,
+          "detail": "rows=413 sha256=13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+        },
+        {
+          "name": "3_each_model_covers_413",
+          "passed": true,
+          "detail": "successful=1 notRun=7; partial validation allowed"
+        },
+        {
+          "name": "4_no_duplicate_or_missing_ids",
+          "passed": true,
+          "detail": "sampleId sets aligned"
+        },
+        {
+          "name": "5_inference_scoring_process_isolation",
+          "passed": true,
+          "detail": "banned references found=[]"
+        },
+        {
+          "name": "6_same_input_sha_for_all_models",
+          "passed": true,
+          "detail": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+        },
+        {
+          "name": "7_metrics_recompute_exactly",
+          "passed": true,
+          "detail": "mismatches=[]"
+        },
+        {
+          "name": "8_figures_tables_match_metrics",
+          "passed": true,
+          "detail": "main CSV values and required figure files"
+        },
+        {
+          "name": "9_bootstrap_seed_fixed",
+          "passed": true,
+          "detail": "seed=20260731 iterations=10000"
+        },
+        {
+          "name": "10_statistical_tests_are_paired",
+          "passed": true,
+          "detail": "paired comparison status recorded"
+        },
+        {
+          "name": "11_challenge_not_used_for_tuning",
+          "passed": true,
+          "detail": "both protocol and manifest are false"
+        },
+        {
+          "name": "12_unknown_handling_consistent",
+          "passed": true,
+          "detail": "unknown accuracy equals class recall"
+        },
+        {
+          "name": "13_parse_failures_never_become_safe",
+          "passed": true,
+          "detail": "all parse failures remain fail-safe unknown"
+        },
+        {
+          "name": "14_no_response_side_evidence",
+          "passed": true,
+          "detail": "static inference scan and locked protocol"
+        },
+        {
+          "name": "15_final_labels_unchanged",
+          "passed": true,
+          "detail": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+        },
+        {
+          "name": "16_ab_annotations_unchanged",
+          "passed": true,
+          "detail": "A=381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662 B=9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
+        },
+        {
+          "name": "17_training_data_unchanged",
+          "passed": true,
+          "detail": "commit scope excludes ml/data/releases and production paths"
+        },
+        {
+          "name": "18_prediction_privacy_scan",
+          "passed": true,
+          "detail": "hits=[]"
+        },
+        {
+          "name": "19_human_review_still_false",
+          "passed": true,
+          "detail": "humanReviewed=False reviewerCount=0"
+        },
+        {
+          "name": "20_all_claims_have_evidence",
+          "passed": true,
+          "detail": "claims=4"
+        },
+        {
+          "name": "protocol_canonical_hash",
+          "passed": true,
+          "detail": "computed=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276 recorded=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
+        }
+      ]
+    },
+    "strictCompletion": {
+      "schemaVersion": 1,
+      "mode": "strict",
+      "checksPassed": 20,
+      "checksTotal": 21,
+      "failed": [
+        {
+          "name": "3_each_model_covers_413",
+          "passed": false,
+          "detail": "successful=1 notRun=7; strict mode requires all locked runs"
+        }
+      ],
+      "checks": [
+        {
+          "name": "1_input_exactly_413",
+          "passed": true,
+          "detail": "rows=413 sha256=c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+        },
+        {
+          "name": "2_labels_exactly_413",
+          "passed": true,
+          "detail": "rows=413 sha256=13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+        },
+        {
+          "name": "3_each_model_covers_413",
+          "passed": false,
+          "detail": "successful=1 notRun=7; strict mode requires all locked runs"
+        },
+        {
+          "name": "4_no_duplicate_or_missing_ids",
+          "passed": true,
+          "detail": "sampleId sets aligned"
+        },
+        {
+          "name": "5_inference_scoring_process_isolation",
+          "passed": true,
+          "detail": "banned references found=[]"
+        },
+        {
+          "name": "6_same_input_sha_for_all_models",
+          "passed": true,
+          "detail": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+        },
+        {
+          "name": "7_metrics_recompute_exactly",
+          "passed": true,
+          "detail": "mismatches=[]"
+        },
+        {
+          "name": "8_figures_tables_match_metrics",
+          "passed": true,
+          "detail": "main CSV values and required figure files"
+        },
+        {
+          "name": "9_bootstrap_seed_fixed",
+          "passed": true,
+          "detail": "seed=20260731 iterations=10000"
+        },
+        {
+          "name": "10_statistical_tests_are_paired",
+          "passed": true,
+          "detail": "paired comparison status recorded"
+        },
+        {
+          "name": "11_challenge_not_used_for_tuning",
+          "passed": true,
+          "detail": "both protocol and manifest are false"
+        },
+        {
+          "name": "12_unknown_handling_consistent",
+          "passed": true,
+          "detail": "unknown accuracy equals class recall"
+        },
+        {
+          "name": "13_parse_failures_never_become_safe",
+          "passed": true,
+          "detail": "all parse failures remain fail-safe unknown"
+        },
+        {
+          "name": "14_no_response_side_evidence",
+          "passed": true,
+          "detail": "static inference scan and locked protocol"
+        },
+        {
+          "name": "15_final_labels_unchanged",
+          "passed": true,
+          "detail": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+        },
+        {
+          "name": "16_ab_annotations_unchanged",
+          "passed": true,
+          "detail": "A=381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662 B=9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
+        },
+        {
+          "name": "17_training_data_unchanged",
+          "passed": true,
+          "detail": "commit scope excludes ml/data/releases and production paths"
+        },
+        {
+          "name": "18_prediction_privacy_scan",
+          "passed": true,
+          "detail": "hits=[]"
+        },
+        {
+          "name": "19_human_review_still_false",
+          "passed": true,
+          "detail": "humanReviewed=False reviewerCount=0"
+        },
+        {
+          "name": "20_all_claims_have_evidence",
+          "passed": true,
+          "detail": "claims=4"
+        },
+        {
+          "name": "protocol_canonical_hash",
+          "passed": true,
+          "detail": "computed=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276 recorded=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
+        }
+      ]
+    }
+  },
+  "completionCriteriaMet": false,
+  "blockingReasons": [
+    "Only one of eight locked systems completed; the required minimum four-model comparison was not met.",
+    "No Transformers-versus-Ollama shared-weight control completed.",
+    "No AetherArgus prediction file exists, so paired significance claims cannot be made."
+  ]
+}

@@ -1,0 +1,9 @@
+modelId,status,p50LatencyMs,p95LatencyMs,p99LatencyMs,meanLatencyMs,samplesPerSecond,peakGpuMemoryMiB,peakHostMemoryMiB,modelSizeBytes
+rules-baseline,SUCCESS,0.061451999499695376,0.09907940038829109,0.3253730403230291,0.07313638255168889,13673.085338795003,,18.0859375,
+char-ngram-logreg,NOT_RUN,,,,,,,,
+qwen3-4b-zero-shot,NOT_RUN,,,,,,,,
+qwen3-4b-few-shot,NOT_RUN,,,,,,,,
+aetherargus-v02-hf-lora,NOT_RUN,,,,,,,,
+aetherargus-v02-merged-bf16,NOT_RUN,,,,,,,,
+aetherargus-v02-gguf-q4-k-m,NOT_RUN,,,,,,,,
+aetherargus-v02-ollama-f16,NOT_RUN,,,,,,,,

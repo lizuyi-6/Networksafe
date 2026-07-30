@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+  "protocolCommit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
+  "evaluationCommit": "f6758075316425e6e2a5b4cbd1d9bebdc5cafd53",
+  "protectedArtifactHashes": {
+    "ml/data/lan_challenge_capture/model-inputs.jsonl": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+    "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+    "ml/data/lan_challenge_capture/annotations/model-a-annotations.jsonl": "381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662",
+    "ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl": "9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
+  },
+  "trainingDataModified": false,
+  "finalLabelsModified": false,
+  "annotatorFilesModified": false,
+  "productionDetectionPathModified": false,
+  "allowedChangedPrefixes": [
+    "ml/evaluation/lan_challenge/",
+    "ml/reports/lan-challenge-evaluation/"
+  ],
+  "successfulModels": [
+    "rules-baseline"
+  ]
+}

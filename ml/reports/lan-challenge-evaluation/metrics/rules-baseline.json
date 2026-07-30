@@ -1,0 +1,427 @@
+{
+  "schemaVersion": 1,
+  "modelId": "rules-baseline",
+  "status": "SUCCESS",
+  "sampleCount": 413,
+  "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+  "verdict": {
+    "accuracy": 0.5690072639225182,
+    "macroPrecision": 0.34566941881172086,
+    "macroRecall": 0.422680412371134,
+    "macroF1": 0.35887287424693054,
+    "weightedF1": 0.45384769637878536,
+    "perClass": {
+      "safe": {
+        "precision": 0.5887323943661972,
+        "recall": 1.0,
+        "f1": 0.7411347517730497,
+        "support": 209
+      },
+      "attack": {
+        "precision": 0.4482758620689655,
+        "recall": 0.26804123711340205,
+        "f1": 0.33548387096774196,
+        "support": 97
+      },
+      "unknown": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 107
+      }
+    },
+    "confusionMatrix": {
+      "labels": [
+        "safe",
+        "attack",
+        "unknown"
+      ],
+      "matrix": [
+        [
+          209,
+          0,
+          0
+        ],
+        [
+          71,
+          26,
+          0
+        ],
+        [
+          75,
+          32,
+          0
+        ]
+      ]
+    }
+  },
+  "attackDetectionAll": {
+    "precision": 0.4482758620689655,
+    "recall": 0.26804123711340205,
+    "f1": 0.33548387096774196,
+    "positiveSupport": 97,
+    "negativeSupport": 316
+  },
+  "attackVsSafeOnly": {
+    "precision": 1.0,
+    "recall": 0.26804123711340205,
+    "f1": 0.42276422764227645,
+    "positiveSupport": 97,
+    "negativeSupport": 209
+  },
+  "safeFPR": {
+    "rate": 0.0,
+    "falsePositiveCount": 0,
+    "safeSupport": 209
+  },
+  "unknown": {
+    "accuracy": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "support": 107,
+    "toAttackRate": 0.29906542056074764,
+    "toSafeRate": 0.7009345794392523
+  },
+  "attackFamily": {
+    "status": "SUCCESS",
+    "accuracy": 0.23711340206185566,
+    "macroPrecision": 0.4,
+    "macroRecall": 0.17678571428571427,
+    "macroF1": 0.24225352112676055,
+    "weightedF1": 0.35390348966652146,
+    "perClass": {
+      "command_injection": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.6666666666666666,
+        "support": 8
+      },
+      "cors": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "csrf": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "file_upload": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.6666666666666666,
+        "support": 2
+      },
+      "none": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      },
+      "path_traversal": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 9
+      },
+      "prompt_injection": {
+        "precision": 1.0,
+        "recall": 0.26785714285714285,
+        "f1": 0.4225352112676056,
+        "support": 56
+      },
+      "sqli": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 12
+      },
+      "ssrf": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.6666666666666666,
+        "support": 6
+      },
+      "xss": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 2
+      }
+    },
+    "confusionMatrix": {
+      "labels": [
+        "command_injection",
+        "cors",
+        "csrf",
+        "file_upload",
+        "none",
+        "path_traversal",
+        "prompt_injection",
+        "sqli",
+        "ssrf",
+        "xss"
+      ],
+      "matrix": [
+        [
+          4,
+          0,
+          0,
+          0,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          9,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          41,
+          0,
+          15,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          12,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          0,
+          0,
+          3,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    }
+  },
+  "structuredOutput": {
+    "jsonSyntaxSuccessRate": 1.0,
+    "schemaValidRate": 1.0,
+    "enumValidRate": 1.0,
+    "completeFieldRate": 1.0
+  },
+  "performance": {
+    "p50LatencyMs": 0.061451999499695376,
+    "p95LatencyMs": 0.09907940038829109,
+    "p99LatencyMs": 0.3253730403230291,
+    "meanLatencyMs": 0.07313638255168889,
+    "samplesPerSecond": 13673.085338795003,
+    "inputTokensPerSecond": null,
+    "outputTokensPerSecond": null,
+    "peakGpuMemoryMiB": null,
+    "peakHostMemoryMiB": 18.0859375,
+    "modelSizeBytes": null,
+    "crossStackLatencyComparable": false
+  },
+  "subsets": {
+    "all_413": {
+      "status": "SUCCESS",
+      "count": 413,
+      "accuracy": 0.5690072639225182,
+      "macroF1": 0.35887287424693054,
+      "safeFPR": 0.0
+    },
+    "context_sufficient_true": {
+      "status": "SUCCESS",
+      "count": 306,
+      "accuracy": 0.7679738562091504,
+      "macroF1": 0.4258566512045489,
+      "safeFPR": 0.0
+    },
+    "context_sufficient_false": {
+      "status": "SUCCESS",
+      "count": 107,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "consensus": {
+      "status": "SUCCESS",
+      "count": 160,
+      "accuracy": 0.85,
+      "macroF1": 0.30630630630630634,
+      "safeFPR": 0.0
+    },
+    "model_adjudication": {
+      "status": "SUCCESS",
+      "count": 253,
+      "accuracy": 0.391304347826087,
+      "macroF1": 0.3139075614294938,
+      "safeFPR": 0.0
+    },
+    "safe": {
+      "status": "SUCCESS",
+      "count": 209,
+      "accuracy": 1.0,
+      "macroF1": 0.3333333333333333,
+      "safeFPR": 0.0
+    },
+    "attack": {
+      "status": "SUCCESS",
+      "count": 97,
+      "accuracy": 0.26804123711340205,
+      "macroF1": 0.14092140921409216,
+      "safeFPR": null
+    },
+    "unknown": {
+      "status": "SUCCESS",
+      "count": 107,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "prompt_injection": {
+      "status": "SUCCESS",
+      "count": 56,
+      "accuracy": 0.26785714285714285,
+      "macroF1": 0.14084507042253522,
+      "safeFPR": null
+    },
+    "authorization": {
+      "status": "SUCCESS",
+      "count": 26,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "idor_bola": {
+      "status": "SUCCESS",
+      "count": 40,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "sqli": {
+      "status": "SUCCESS",
+      "count": 23,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "xss": {
+      "status": "SUCCESS",
+      "count": 10,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "command_injection": {
+      "status": "SUCCESS",
+      "count": 8,
+      "accuracy": 0.625,
+      "macroF1": 0.25641025641025644,
+      "safeFPR": null
+    },
+    "path_traversal": {
+      "status": "SUCCESS",
+      "count": 9,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "ssrf": {
+      "status": "SUCCESS",
+      "count": 7,
+      "accuracy": 0.5714285714285714,
+      "macroF1": 0.26666666666666666,
+      "safeFPR": null
+    }
+  },
+  "predictionCompletedAt": "2026-07-30T16:42:51.439726+00:00",
+  "scoredAt": "2026-07-30T16:43:59.898008+00:00"
+}

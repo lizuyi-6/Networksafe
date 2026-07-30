@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "repositoryCommit": "f6758075316425e6e2a5b4cbd1d9bebdc5cafd53",
+  "protocolCommit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
+  "protocolSha256": "fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276",
+  "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+  "modelArtifacts": [
+    {
+      "modelId": "rules-baseline",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/rules-baseline.jsonl",
+      "predictionSha256": "2cf70dc80ee197e05882020995814e0ab881cff294c495202494354f2ee2aebe"
+    },
+    {
+      "modelId": "char-ngram-logreg",
+      "status": "NOT_RUN",
+      "reason": "The repository manifest references ml/data/releases/v02/train.jsonl and validation.jsonl, but both files return 404 at the source commit and are not mounted locally. Training on challenge or test splits is prohibited.",
+      "requiredOperatorAction": "Mount the exact v02 train and validation files whose SHA-256 values are e8ff084fc251f3e9ede791dabac747b1021c199e24685d6af9e6a696da2fc3e1 and ea6f3d070ed796bba4f0ea2582c7eb406794b0162f871ceaf9f07de7e1f55606."
+    },
+    {
+      "modelId": "qwen3-4b-zero-shot",
+      "status": "NOT_RUN",
+      "reason": "No CUDA device is available. Hugging Face authentication succeeded as BreakFeelingAether, but the Jobs connector returned 'Tool hf_jobs not found'; no paid remote job was started.",
+      "requiredOperatorAction": "Provide a CUDA runtime or restore the authenticated Hugging Face Jobs backend."
+    },
+    {
+      "modelId": "qwen3-4b-few-shot",
+      "status": "NOT_RUN",
+      "reason": "No CUDA device is available and the exact v02 train/validation files needed to freeze non-challenge example sampleIds are unavailable. No challenge example was substituted.",
+      "requiredOperatorAction": "Mount the exact v02 train/validation assets before a future protocol lock and provide a CUDA runtime."
+    },
+    {
+      "modelId": "aetherargus-v02-hf-lora",
+      "status": "NOT_RUN",
+      "reason": "ml/output/aetherargus-v02-lora/ is not committed or mounted, and the environment has no CUDA device.",
+      "requiredOperatorAction": "Mount the original adapter directory including adapter_model.safetensors and tokenizer/config files, then run on CUDA."
+    },
+    {
+      "modelId": "aetherargus-v02-merged-bf16",
+      "status": "NOT_RUN",
+      "reason": "The merged BF16 artifact is not committed or mounted, and the environment has no CUDA device.",
+      "requiredOperatorAction": "Mount the exact merged BF16 artifact and its provenance manifest, then run on CUDA."
+    },
+    {
+      "modelId": "aetherargus-v02-gguf-q4-k-m",
+      "status": "NOT_RUN",
+      "reason": "The Q4_K_M GGUF is documented at /mnt/d/aetherargus-v02-gguf/ but is not mounted; Ollama and llama.cpp are not installed.",
+      "requiredOperatorAction": "Mount aetherargus-v02-Q4_K_M.gguf and provide the recorded Ollama or llama.cpp runtime."
+    },
+    {
+      "modelId": "aetherargus-v02-ollama-f16",
+      "status": "NOT_RUN",
+      "reason": "The f16 GGUF is not mounted and Ollama is not installed.",
+      "requiredOperatorAction": "Mount aetherargus-v02-f16.gguf and provide the recorded Ollama runtime."
+    }
+  ],
+  "promptArtifacts": [
+    {
+      "path": "ml/evaluation/lan_challenge/system-prompt.txt",
+      "sha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8"
+    }
+  ],
+  "environment": {
+    "os": "Linux-6.12.13-x86_64-with-glibc2.39",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "gpu": null,
+    "ramGiB": 15.930622100830078,
+    "cuda": null,
+    "python": "3.12.13",
+    "node": "v24.14.0",
+    "pytorch": null,
+    "transformers": null,
+    "ollama": null,
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikitLearn": "1.8.0",
+    "scipy": "1.17.0"
+  },
+  "runs": [
+    {
+      "modelId": "rules-baseline",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/rules-baseline.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/rules-baseline.json"
+    }
+  ],
+  "statisticalSeed": 20260731,
+  "challengeSetUsedForTuning": false,
+  "labelsChangedAfterEvaluation": false,
+  "completedAt": "2026-07-30T16:53:32.415555+00:00"
+}

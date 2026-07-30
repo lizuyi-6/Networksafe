@@ -1,0 +1,9 @@
+modelId,status,accuracy,accuracyLower95,accuracyUpper95,macroF1,attackF1,attackRecall,safeFPR,unknownAccuracy,schemaValidRate
+rules-baseline,SUCCESS,0.569007,0.549637,0.590799,0.358873,0.335484,0.268041,0.000000,0.000000,1.000000
+char-ngram-logreg,NOT_RUN,,,,,,,,,
+qwen3-4b-zero-shot,NOT_RUN,,,,,,,,,
+qwen3-4b-few-shot,NOT_RUN,,,,,,,,,
+aetherargus-v02-hf-lora,NOT_RUN,,,,,,,,,
+aetherargus-v02-merged-bf16,NOT_RUN,,,,,,,,,
+aetherargus-v02-gguf-q4-k-m,NOT_RUN,,,,,,,,,
+aetherargus-v02-ollama-f16,NOT_RUN,,,,,,,,,
