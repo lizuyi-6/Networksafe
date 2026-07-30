@@ -169,6 +169,104 @@ export const createIssueMonitor = (page: Page, baseUrl: string) => {
     };
 };
 
+export const staticPreviewSessionMocksEnabled = (): boolean => (
+    String(process.env.E2E_STATIC_PREVIEW || '').trim().toLowerCase() === 'true'
+);
+
+/**
+ * Supplies a session at the network boundary for the CI steps that assert
+ * frontend *build-flag* contracts.
+ *
+ * Those steps serve `frontend/dist` through `vite preview` with no backend
+ * behind it, so every `/api/*` call returns 502. That is fatal for any test
+ * that has to reach a protected route, because the app is deliberately
+ * fail-closed at both gates on the way there:
+ *   - Login.tsx leaves `passwordLoginEnabled` false until /api/system/mode
+ *     confirms it, so a 502 means the password form is never rendered and
+ *     `input[name="email"]` does not exist.
+ *   - PrivateRoute renders <RouteSessionUnavailable> unless /api/auth/me
+ *     returns a session.
+ * Both defaults are correct and are NOT relaxed in product code; the fixture
+ * is what changes, not the fail-closed behaviour.
+ *
+ * Opt-in only, via E2E_STATIC_PREVIEW=true. Unset -- the default, and what
+ * every full-stack run uses -- installs nothing, so a genuinely broken login
+ * still fails those suites.
+ *
+ * What this does NOT prove: nothing whatsoever about backend authentication,
+ * session cookies, or RBAC. A test using it may only assert client-side
+ * routing and rendering. Real login is covered against a real stack by
+ * dev-login.spec.ts and smoke.spec.ts.
+ *
+ * Returns a live counter so callers can assert the interception actually fired
+ * rather than trusting that it was installed.
+ */
+export const installStaticPreviewSessionMocks = async (
+    page: Page,
+    role: 'admin' | 'platform_admin' = 'admin',
+) => {
+    const fulfilled: string[] = [];
+    const session = {
+        userId: `e2e-static-preview-${role}`,
+        email: `${role}@example.test`,
+        username: `e2e-static-preview-${role}`,
+        role,
+        plan: 'ultra',
+        authProvider: 'local',
+    };
+
+    const json = (route: Parameters<Parameters<Page['route']>[1]>[0], pathname: string, body: unknown) => {
+        fulfilled.push(pathname);
+        return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(body),
+        });
+    };
+
+    await page.route('**/api/system/mode', async (route) => json(route, '/api/system/mode', {
+        success: true,
+        data: {
+            oidcEnabled: false,
+            passwordLoginEnabled: true,
+            adminPasswordLoginEnabled: true,
+            passwordRecoveryMode: 'local',
+            attackSimEnabled: false,
+        },
+        error: null,
+    }));
+    await page.route('**/api/auth/login', async (route) => json(route, '/api/auth/login', {
+        success: true,
+        data: { user: session },
+        error: null,
+    }));
+    await page.route('**/api/auth/me', async (route) => json(route, '/api/auth/me', {
+        success: true,
+        data: { user: session },
+        error: null,
+    }));
+    await page.route('**/health/ready', async (route) => json(route, '/health/ready', {
+        status: 'ready',
+        checks: { database: 'ok', redis: 'ok' },
+    }));
+    await page.route('**/api/stats/badges', async (route) => json(route, '/api/stats/badges', {
+        agents: 0, alerts: 0, devices: 0, agentMonitor: 0, traffic: 0, scanner: 0,
+    }));
+    await page.route(/\/api\/stats(?:\?.*)?$/, async (route) => json(route, '/api/stats', {}));
+    await page.route('**/api/logs**', async (route) => json(route, '/api/logs', []));
+    await page.route('**/api/dashboard/rules/summary', async (route) => json(route, '/api/dashboard/rules/summary', {
+        success: true,
+        data: { totalRules: 0, activeRules: 0, topRules: [] },
+        error: null,
+    }));
+
+    return {
+        get count() { return fulfilled.length; },
+        get paths() { return [...fulfilled]; },
+        fulfilledFor(pathname: string) { return fulfilled.filter((value) => value === pathname).length; },
+    };
+};
+
 export const loginWithCredentials = async (page: Page, credentials: Credentials) => {
     await page.goto('/login');
     await expect(page.locator('input[name="email"]')).toBeVisible();
