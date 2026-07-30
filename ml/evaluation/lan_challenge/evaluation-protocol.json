@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "parent": {
+    "pullRequest": "https://github.com/lizuyi-6/Networksafe/pull/15",
+    "pullRequestMergedAtLock": false,
+    "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+    "branch": "agent/aetherargus-paper-evidence-20260731"
+  },
+  "dataset": {
+    "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
+    "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+    "labelFile": "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl",
+    "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+    "sampleCount": 413,
+    "referenceDistribution": {
+      "safe": 209,
+      "attack": 97,
+      "unknown": 107
+    },
+    "alignmentKey": "sampleId"
+  },
+  "prompt": {
+    "file": "ml/evaluation/lan_challenge/system-prompt.txt",
+    "sha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
+    "challengeExamplesIncluded": false,
+    "labelValuesInjected": false
+  },
+  "primaryModels": [
+    {
+      "modelId": "rules-baseline",
+      "kind": "request-side rule engine",
+      "required": true
+    },
+    {
+      "modelId": "char-ngram-logreg",
+      "kind": "character n-gram logistic regression",
+      "required": true,
+      "trainingSplits": [
+        "train",
+        "validation"
+      ],
+      "ngramRange": [
+        3,
+        5
+      ],
+      "minDf": 2,
+      "maxFeatures": 250000,
+      "classWeight": "balanced",
+      "solver": "liblinear",
+      "randomState": 20260728
+    },
+    {
+      "modelId": "qwen3-4b-zero-shot",
+      "kind": "Transformers base model",
+      "required": true,
+      "model": "Qwen/Qwen3-4B-Instruct-2507",
+      "revision": "cdbee75f17c01a7cc42f958dc650907174af0554"
+    },
+    {
+      "modelId": "qwen3-4b-few-shot",
+      "kind": "Transformers base model with frozen train/validation examples",
+      "required": true,
+      "model": "Qwen/Qwen3-4B-Instruct-2507",
+      "revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+      "exampleManifest": "ml/evaluation/lan_challenge/few-shot-examples.json"
+    },
+    {
+      "modelId": "aetherargus-v02-hf-lora",
+      "kind": "Transformers PEFT adapter",
+      "required": true,
+      "adapterPath": "ml/output/aetherargus-v02-lora/"
+    },
+    {
+      "modelId": "aetherargus-v02-merged-bf16",
+      "kind": "Transformers merged BF16",
+      "required": true
+    },
+    {
+      "modelId": "aetherargus-v02-gguf-q4-k-m",
+      "kind": "Ollama or llama.cpp GGUF",
+      "required": true,
+      "quantization": "Q4_K_M"
+    },
+    {
+      "modelId": "aetherargus-v02-ollama-f16",
+      "kind": "Ollama f16 path control",
+      "required": true,
+      "quantization": "f16"
+    }
+  ],
+  "subsets": [
+    "all_413",
+    "context_sufficient_true",
+    "context_sufficient_false",
+    "consensus",
+    "model_adjudication",
+    "safe",
+    "attack",
+    "unknown",
+    "prompt_injection",
+    "authorization",
+    "idor_bola",
+    "sqli",
+    "xss",
+    "command_injection",
+    "path_traversal",
+    "ssrf"
+  ],
+  "cohortSubsets": {
+    "names": [
+      "normal",
+      "attack_attempt",
+      "hard_negative",
+      "prompt_injection_cohort",
+      "unknown_cohort"
+    ],
+    "status": "NOT_AVAILABLE",
+    "reason": "No independently verified sampleId-to-cohort mapping is committed at protocol lock; sampleId ranges and prediction outcomes will not be used to infer cohorts."
+  },
+  "metrics": [
+    "accuracy",
+    "macro_precision",
+    "macro_recall",
+    "macro_f1",
+    "weighted_f1",
+    "per_class_precision_recall_f1",
+    "verdict_confusion_matrix",
+    "attack_precision_recall_f1_all",
+    "attack_precision_recall_f1_attack_vs_safe",
+    "safe_fpr",
+    "unknown_accuracy",
+    "unknown_precision",
+    "unknown_recall",
+    "unknown_to_attack_rate",
+    "unknown_to_safe_rate",
+    "attack_family_macro_f1",
+    "attack_family_weighted_f1",
+    "attack_family_per_class",
+    "attack_family_confusion_matrix",
+    "json_syntax_success_rate",
+    "schema_valid_rate",
+    "enum_valid_rate",
+    "complete_field_rate",
+    "latency_p50_p95_p99_mean",
+    "samples_per_second",
+    "input_tokens_per_second",
+    "output_tokens_per_second",
+    "peak_gpu_memory",
+    "peak_host_memory",
+    "model_size"
+  ],
+  "statisticalTests": [
+    {
+      "name": "stratified_bootstrap_confidence_interval",
+      "iterations": 10000,
+      "seed": 20260731,
+      "confidenceLevel": 0.95,
+      "stratifyBy": "reference_verdict"
+    },
+    {
+      "name": "paired_mcnemar",
+      "referenceModel": "aetherargus-v02-hf-lora",
+      "smallCountMethod": "exact"
+    },
+    {
+      "name": "paired_stratified_bootstrap_difference",
+      "iterations": 10000,
+      "seed": 20260731,
+      "confidenceLevel": 0.95,
+      "stratifyBy": "reference_verdict"
+    },
+    {
+      "name": "holm_bonferroni",
+      "family": "comparisons_against_aetherargus_v02_hf_lora"
+    }
+  ],
+  "inferenceDefaults": {
+    "temperature": 0,
+    "topP": 1,
+    "topK": 0,
+    "seed": 0,
+    "maxContextTokens": 2048,
+    "maxNewTokens": 320,
+    "messageStructure": "system_plus_user",
+    "appendAndFlushPerSample": true,
+    "resumeSkipsCompletedSampleIds": true
+  },
+  "normalizationRules": {
+    "strictSingleJsonObject": true,
+    "stripMarkdownFences": false,
+    "enumAliases": {},
+    "invalidEnumMappingAllowed": false,
+    "parseFailure": {
+      "parsed": false,
+      "schemaValid": false,
+      "effectiveVerdictForScoring": "unknown",
+      "errorType": "json_parse_error"
+    },
+    "requiredFields": [
+      "verdict",
+      "attackFamily",
+      "recommendedAction",
+      "contextSufficient",
+      "confidence"
+    ]
+  },
+  "leakageControls": {
+    "separateInferenceAndScoringProcesses": true,
+    "inferenceReadableFiles": [
+      "ml/data/lan_challenge_capture/model-inputs.jsonl",
+      "model/tokenizer/configuration artifacts",
+      "ml/evaluation/lan_challenge/system-prompt.txt",
+      "ml/evaluation/lan_challenge/few-shot-examples.json"
+    ],
+    "scoringMayReadLabelsOnlyAfterPredictionsComplete": true,
+    "responseSideEvidenceAllowed": false,
+    "collectorGroundTruthAllowed": false,
+    "challengeSetFewShotAllowed": false,
+    "postResultPromptOrThresholdChangesAllowed": false
+  },
+  "inferencePathAblations": [
+    "context_length_2048",
+    "byte_identical_system_prompt",
+    "system_user_vs_single_concatenated_prompt",
+    "transformers_vs_ollama_chat_template",
+    "deterministic_sampling_equivalence"
+  ],
+  "challengeSetUsedForTuning": false,
+  "labelsMutableAfterEvaluation": false,
+  "protocolLockedAt": "2026-07-30T16:33:57Z",
+  "protocolHashSemantics": "SHA-256 of the canonical UTF-8 JSON with protocolSha256 set to the empty string.",
+  "protocolSha256": "fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
+}
