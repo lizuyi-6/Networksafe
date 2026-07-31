@@ -1,0 +1,5 @@
+Leakage-controlled evaluation compares eight systems on 413 HTTP requests.
+AetherArgus improves macro-F1 over zero-shot Qwen3-4B by 0.0482.
+Attack recall reaches 90.72%, while safe false positives remain 20.57%.
+The model fails to recognize all 107 insufficient-context requests.
+Changing message structure alters 11 of 413 security verdicts.
