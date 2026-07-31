@@ -15,6 +15,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 
 from inference_common import (
     assert_complete,
+    EXPECTED_INPUT_SHA256,
     make_prediction_record,
     prepare_append_only_output,
     read_model_inputs,
@@ -30,7 +31,11 @@ def sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def load_serialized_prompts(path: Path | None, rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def load_serialized_prompts(
+    path: Path | None,
+    rows: list[dict[str, Any]],
+    expected_system_prompt_sha: str,
+) -> dict[str, dict[str, Any]]:
     if path is None:
         raise ValueError("--serialized-prompts is required for pre-serialized mode")
     prompts: dict[str, dict[str, Any]] = {}
@@ -47,6 +52,10 @@ def load_serialized_prompts(path: Path | None, rows: list[dict[str, Any]]) -> di
                 raise ValueError(f"duplicate serialized prompt sampleId: {sample_id}")
             if sha256_text(serialized) != item.get("serializedPromptSha256"):
                 raise ValueError(f"serialized prompt SHA mismatch for {sample_id}")
+            if item.get("systemPromptSha256") != expected_system_prompt_sha:
+                raise ValueError(f"serialized prompt used a different system prompt for {sample_id}")
+            if item.get("inputSha256") != EXPECTED_INPUT_SHA256:
+                raise ValueError(f"serialized prompt used a different frozen input for {sample_id}")
             prompts[sample_id] = item
     expected_ids = {row["sampleId"] for row in rows}
     if set(prompts) != expected_ids:
@@ -82,7 +91,7 @@ def main() -> int:
     system_prompt = arguments.prompt.read_text(encoding="utf-8")
     system_prompt_sha = sha256_text(system_prompt)
     serialized_prompts = (
-        load_serialized_prompts(arguments.serialized_prompts, rows)
+        load_serialized_prompts(arguments.serialized_prompts, rows, system_prompt_sha)
         if arguments.message_mode == "pre-serialized"
         else {}
     )
