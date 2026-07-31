@@ -144,6 +144,37 @@ def main() -> int:
     arguments = parser.parse_args()
     checks: list[dict[str, Any]] = []
 
+    missing_operator_assets = [
+        str(path.relative_to(ROOT)).replace("\\", "/")
+        for path in (TRAIN_PATH, VALIDATION_PATH)
+        if not path.is_file()
+    ]
+    if missing_operator_assets:
+        result = {
+            "schemaVersion": 3,
+            "mode": "allow-not-run" if arguments.allow_not_run else "strict",
+            "status": "BLOCKED_OPERATOR_ASSETS_MISSING",
+            "checksPassed": 0,
+            "checksTotal": 27,
+            "failed": [
+                {
+                    "num": "ASSET",
+                    "name": "frozen_train_validation_assets_available",
+                    "passed": False,
+                    "detail": "missing=" + ",".join(missing_operator_assets),
+                }
+            ],
+            "checks": [],
+            "requiredOperatorAction": "Mount the SHA-locked v02 train and validation JSONL assets, then rerun. They are required to prove challenge-set exclusion and are intentionally not reconstructed from predictions.",
+        }
+        METRICS.mkdir(parents=True, exist_ok=True)
+        output = METRICS / (
+            "validation-partial.json" if arguments.allow_not_run else "validation-strict.json"
+        )
+        output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(result, indent=2))
+        return 2
+
     def check(num: str, name: str, condition: bool, detail: str) -> None:
         checks.append({"num": num, "name": name, "passed": bool(condition), "detail": detail})
 
