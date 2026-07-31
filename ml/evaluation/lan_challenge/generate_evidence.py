@@ -30,10 +30,12 @@ PREDICTIONS = REPORT / "predictions"
 FIGURES = REPORT / "figures"
 TABLES = REPORT / "tables"
 PAPER = REPORT / "paper"
-PROTOCOL_COMMIT = "79f146f2c8d400ef4afa292015b70a6bf91280ec"
+PROTOCOL_COMMIT = "553c0a9"  # protocol v2 lock commit (evaluation-protocol-v2.json); v1 preserved at 79f146f
 EVALUATION_COMMIT = "f6758075316425e6e2a5b4cbd1d9bebdc5cafd53"
-PROTOCOL_SHA256 = "fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
+PROTOCOL_SHA256 = "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb"  # v2 canonical hash
 PROMPT_SHA256 = "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8"
+PROTOCOL_V1_COMMIT = "79f146f2c8d400ef4afa292015b70a6bf91280ec"
+PROTOCOL_V1_SHA256 = "fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
 
 
 def sha256_file(path: Path) -> str:
@@ -661,31 +663,67 @@ def create_claim_matrix(metrics: dict[str, dict[str, Any]], stats: dict[str, Any
 
 
 def environment_manifest() -> dict[str, Any]:
-    cpu = subprocess.run(
-        ["bash", "-lc", "lscpu | awk -F: '/Model name/ {gsub(/^ +/,\"\",$2); print $2; exit}'"],
-        capture_output=True,
-        text=True,
-        check=False,
-    ).stdout.strip()
-    memory_kib = int(
-        subprocess.run(
+    # CPU + RAM are read cross-platform (lscpu/proc on Linux; WMI/psutil on Windows).
+    cpu = platform.processor() or platform.machine()
+    ram_gib: float | None = None
+    try:
+        import psutil  # type: ignore[import-not-found]
+        ram_gib = psutil.virtual_memory().total / (1024 ** 3)
+        if not cpu:
+            cpu = psutil.cpu_info().model if hasattr(psutil, "cpu_info") else cpu
+    except Exception:
+        pass
+    if ram_gib is None:
+        proc = subprocess.run(
             ["bash", "-lc", "awk '/MemTotal/ {print $2}' /proc/meminfo"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    )
+            capture_output=True, text=True, check=False,
+        )
+        if proc.stdout.strip().isdigit():
+            ram_gib = int(proc.stdout.strip()) / 1024 / 1024
+    if not cpu:
+        lscpu = subprocess.run(["bash", "-lc", "lscpu"], capture_output=True, text=True, check=False).stdout
+        for line in lscpu.splitlines():
+            if line.lower().startswith("model name"):
+                cpu = line.split(":", 1)[1].strip()
+                break
+    # GPU / CUDA
+    gpu: str | None = None
+    cuda: str | None = None
+    try:
+        import torch  # type: ignore[import-not-found]
+        if torch.cuda.is_available():
+            gpu = torch.cuda.get_device_name(0)
+            cuda = torch.version.cuda
+    except Exception:
+        pass
+    if gpu is None:
+        smi = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"],
+                             capture_output=True, text=True, check=False).stdout.strip()
+        if smi:
+            gpu = smi
+    # Python ML stack versions (best-effort imports)
+    def _ver(mod: str) -> str | None:
+        try:
+            import importlib
+            return importlib.import_module(mod).__version__
+        except Exception:
+            return None
+    ollama_ver = subprocess.run(["ollama", "--version"], capture_output=True, text=True, check=False).stdout.strip() or None
+    if not ollama_ver:
+        ollama_ver = subprocess.run(["/tmp/ollama-bin/ollama.exe", "--version"],
+                                    capture_output=True, text=True, check=False).stdout.strip() or None
     return {
         "os": platform.platform(),
-        "cpu": cpu or platform.machine(),
-        "gpu": None,
-        "ramGiB": memory_kib / 1024 / 1024,
-        "cuda": None,
+        "cpu": cpu,
+        "gpu": gpu,
+        "ramGiB": ram_gib if ram_gib is not None else 0.0,
+        "cuda": cuda,
         "python": platform.python_version(),
-        "node": subprocess.run(["node", "--version"], capture_output=True, text=True).stdout.strip(),
-        "pytorch": None,
-        "transformers": None,
-        "ollama": None,
+        "node": subprocess.run(["node", "--version"], capture_output=True, text=True, check=False).stdout.strip(),
+        "pytorch": _ver("torch"),
+        "transformers": _ver("transformers"),
+        "peft": _ver("peft"),
+        "ollama": ollama_ver,
         "numpy": np.__version__,
         "pandas": pd.__version__,
         "scikitLearn": sklearn.__version__,
@@ -748,12 +786,50 @@ def create_reports(
     (REPORT / "evaluation-manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
+    all_complete = len(not_run) == 0 and len(completed) == 8
+    status_text = "COMPLETE_ALL_REQUIRED_MODELS" if all_complete else "INCOMPLETE_REQUIRED_MODEL_RUNS"
+    ablation_v2 = REPORT / "inference-path-ablation-v2.json"
+    ablation_data = (
+        json.loads(ablation_v2.read_text(encoding="utf-8")) if ablation_v2.is_file()
+        else json.loads((EVAL / "inference-path-ablation.json").read_text(encoding="utf-8"))
+    )
+    has = {m: (m in completed) for m in [
+        "aetherargus-v02-hf-lora", "qwen3-4b-zero-shot", "qwen3-4b-few-shot",
+        "aetherargus-v02-merged-bf16", "aetherargus-v02-ollama-f16", "aetherargus-v02-gguf-q4-k-m",
+    ]}
+    def rq(ok: bool, answered: str, otherwise: str) -> str:
+        return answered if ok else otherwise
+    research_questions = {
+        "RQ1": rq(has["aetherargus-v02-hf-lora"] and (has["qwen3-4b-zero-shot"] or has["qwen3-4b-few-shot"]),
+                  "ANSWERED: AetherArgus HF-LoRA vs Qwen baselines — see mainResults + statistical-analysis.mcnemar.",
+                  "NOT_ANSWERED: AetherArgus and Qwen prediction runs are unavailable."),
+        "RQ2": rq(has["aetherargus-v02-hf-lora"],
+                  "ANSWERED: AetherArgus structured-output rates in mainResults.aetherargus-v02-hf-lora.structuredOutput.",
+                  "NOT_ANSWERED: no AetherArgus structured-output run is available."),
+        "RQ3": rq(has["aetherargus-v02-hf-lora"], "ANSWERED: subset metrics in mainResults.aetherargus-v02-hf-lora.subsets.", "PARTIAL_RULE_BASELINE_ONLY"),
+        "RQ4": rq(has["aetherargus-v02-hf-lora"], "ANSWERED: attack-family Macro-F1 (reference-only labels) in mainResults.aetherargus-v02-hf-lora.attackFamily.", "PARTIAL_RULE_BASELINE_ONLY"),
+        "RQ5": rq(has["aetherargus-v02-hf-lora"], "ANSWERED: latency/size in mainResults.aetherargus-v02-hf-lora.performance (crossStackLatencyComparable=false).", "PARTIAL_RULE_BASELINE_ONLY"),
+        "RQ6": rq(has["aetherargus-v02-merged-bf16"] and has["aetherargus-v02-ollama-f16"],
+                  "ANSWERED: Transformers merged-BF16 vs Ollama f16 — see inferencePathAblation.",
+                  "NOT_ANSWERED: paired shared-weight runtimes are unavailable."),
+        "RQ7": rq(has["aetherargus-v02-merged-bf16"] and has["aetherargus-v02-gguf-q4-k-m"],
+                  "ANSWERED: BF16 vs Q4_K_M — see mainResults + pairedBootstrapDifferences.",
+                  "NOT_ANSWERED: quantized and BF16 artifacts are unavailable."),
+    }
+    blocking_reasons = [] if all_complete else [
+        f"{len(completed)} of eight locked systems completed; the required eight-model comparison was not met.",
+        "No Transformers-versus-Ollama shared-weight control completed." if not (has["aetherargus-v02-merged-bf16"] and has["aetherargus-v02-ollama-f16"]) else "",
+        "No AetherArgus prediction file exists, so paired significance claims cannot be made." if not has["aetherargus-v02-hf-lora"] else "",
+    ]
+    blocking_reasons = [r for r in blocking_reasons if r]
     report = {
-        "schemaVersion": 1,
-        "status": "INCOMPLETE_REQUIRED_MODEL_RUNS",
+        "schemaVersion": 2,
+        "status": status_text,
         "experimentDate": completed_at,
         "repositoryCommit": EVALUATION_COMMIT,
         "protocolCommit": PROTOCOL_COMMIT,
+        "protocolVersion": "v2",
+        "protocolV1Commit": PROTOCOL_V1_COMMIT,
         "protocolSha256": PROTOCOL_SHA256,
         "inputSha256": EXPECTED_INPUT_SHA256,
         "labelSha256": EXPECTED_LABEL_SHA256,
@@ -762,18 +838,8 @@ def create_reports(
         "hardwareEnvironment": environment,
         "mainResults": {model_id: metrics[model_id] for model_id in completed},
         "statisticalAnalysis": stats,
-        "inferencePathAblation": json.loads(
-            (EVAL / "inference-path-ablation.json").read_text(encoding="utf-8")
-        ),
-        "researchQuestions": {
-            "RQ1": "NOT_ANSWERED: AetherArgus and Qwen prediction runs are unavailable.",
-            "RQ2": "NOT_ANSWERED: no AetherArgus structured-output run is available.",
-            "RQ3": "PARTIAL_RULE_BASELINE_ONLY",
-            "RQ4": "PARTIAL_RULE_BASELINE_ONLY",
-            "RQ5": "PARTIAL_RULE_BASELINE_ONLY",
-            "RQ6": "NOT_ANSWERED: paired shared-weight runtimes are unavailable.",
-            "RQ7": "NOT_ANSWERED: quantized and BF16 artifacts are unavailable.",
-        },
+        "inferencePathAblation": ablation_data,
+        "researchQuestions": research_questions,
         "declarations": [
             "The challenge set was not used for training, prompt selection, threshold selection, hyperparameter tuning, or model selection.",
             "The reference labels were produced by two independent AI annotators, a third AI adjudicator, and a model-visible-context audit; they were not human-verified ground truth.",
@@ -783,16 +849,60 @@ def create_reports(
             "partialIntegrity": partial_validation,
             "strictCompletion": strict_validation,
         },
-        "completionCriteriaMet": False,
-        "blockingReasons": [
-            "Only one of eight locked systems completed; the required minimum four-model comparison was not met.",
-            "No Transformers-versus-Ollama shared-weight control completed.",
-            "No AetherArgus prediction file exists, so paired significance claims cannot be made.",
-        ],
+        "completionCriteriaMet": all_complete,
+        "blockingReasons": blocking_reasons,
     }
     (REPORT / "aetherargus-lan-challenge-report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
+    # Data-driven main results table + significance summary for the report markdown.
+    def _safe_fpr_text(model_id: str) -> str:
+        m = metrics[model_id]
+        cp = m.get("proportions", {}).get("safeFPR", {}).get("clopperPearson95") or m.get("safeFPR", {}).get("clopperPearson95")
+        rate = m["safeFPR"]["rate"]
+        return f"{rate:.4f}" + (f" (CP95≤{cp[1]:.4f})" if cp else "")
+
+    preferred_order = ["aetherargus-v02-hf-lora", "qwen3-4b-few-shot", "qwen3-4b-zero-shot",
+                       "char-ngram-logreg", "rules-baseline", "aetherargus-v02-merged-bf16",
+                       "aetherargus-v02-gguf-q4-k-m", "aetherargus-v02-ollama-f16"]
+    ordered = [m for m in preferred_order if m in completed] + [m for m in completed if m not in preferred_order]
+    primary = "aetherargus-v02-hf-lora" if has["aetherargus-v02-hf-lora"] else (ordered[0] if ordered else "")
+    main_results_table = (
+        "| Model | Accuracy | Macro-F1 | Attack F1 | Attack recall | Safe FPR | Unknown acc | Schema valid |\n"
+        "|---|---:|---:|---:|---:|---:|---:|---:|\n"
+    )
+    for mid in ordered:
+        m = metrics[mid]
+        main_results_table += (
+            f"| {mid} | {m['verdict']['accuracy']:.4f} | {m['verdict']['macroF1']:.4f} | "
+            f"{m['attackDetectionAll']['f1']:.4f} | {m['attackDetectionAll']['recall']:.4f} | "
+            f"{_safe_fpr_text(mid)} | {m['unknown']['accuracy']:.4f} | "
+            f"{m['structuredOutput']['schemaValidRate']:.4f} |\n"
+        )
+    sig_lines: list[str] = []
+    for row in stats.get("mcnemar", []):
+        sig_lines.append(
+            f"- McNemar {row['comparison']}: p_raw={row.get('pValueRaw'):.4g}, "
+            f"p_Holm={row.get('pValueHolm'):.4g}, method={row.get('method')}"
+        )
+    for row in stats.get("pairedBootstrapDifferences", []):
+        if row.get("status") == "SUCCESS":
+            d = row["deltas"]
+            sig_lines.append(
+                f"- Paired bootstrap {row['comparison']}: macroF1 Δ={d['macroF1']['pointEstimate']:+.4f} "
+                f"[{d['macroF1']['lower95']:+.4f},{d['macroF1']['upper95']:+.4f}]"
+            )
+        else:
+            sig_lines.append(f"- Paired bootstrap {row['comparison']}: {row.get('status')}")
+    significance_section = "\n".join(sig_lines) if sig_lines else "No paired comparison available (primary model not present)."
+    abl = ablation_data or {}
+    ablation_md = (
+        f"Transformers merged-BF16 vs Ollama f16 verdict agreement: "
+        f"{abl.get('verdictAgreement', {}).get('agree')}/{abl.get('verdictAgreement', {}).get('total')} "
+        f"({(abl.get('verdictAgreement', {}) or {}).get('rate', 0):.1%}). See `inference-path-ablation-v2.json`."
+        if abl.get("verdictAgreement") else "Inference-path ablation NOT_RUN (both shared-weight runs not available)."
+    )
+
     markdown = f"""# AetherArgus frozen LAN challenge evidence report
 
 ## 1. Experiment identity
@@ -803,9 +913,9 @@ def create_reports(
 - Canonical protocol SHA-256: `{PROTOCOL_SHA256}`
 - Input SHA-256: `{EXPECTED_INPUT_SHA256}`
 - Label SHA-256: `{EXPECTED_LABEL_SHA256}`
-- Status: **INCOMPLETE_REQUIRED_MODEL_RUNS**
-- Partial-artifact integrity validation: **21/21 passed**
-- Strict completion validation: **20/21 passed**; required-model coverage failed
+- Status: **{status_text}**
+- Partial-artifact integrity validation: **{f"{partial_validation['checksPassed']}/{partial_validation['checksTotal']} passed" if partial_validation else "not run"}**
+- Strict completion validation: **{f"{strict_validation['checksPassed']}/{strict_validation['checksTotal']} passed" if strict_validation else "not run"}**
 
 The challenge set was not used for training, prompt selection, threshold
 selection, hyperparameter tuning, or model selection.
@@ -819,11 +929,12 @@ ground truth.
 - OS: `{environment['os']}`
 - CPU: `{environment['cpu']}`
 - RAM: `{environment['ramGiB']:.2f} GiB`
-- GPU / CUDA: unavailable
+- GPU / CUDA: `{environment['gpu']}` / `{environment['cuda']}`
 - Python: `{environment['python']}`
 - Node: `{environment['node']}`
 - scikit-learn / SciPy: `{environment['scikitLearn']} / {environment['scipy']}`
-- Transformers / Ollama: unavailable
+- PyTorch / Transformers / PEFT: `{environment['pytorch']}` / `{environment['transformers']}` / `{environment['peft']}`
+- Ollama: `{environment['ollama']}`
 
 ## 3. Models and artifact inventory
 
@@ -845,17 +956,20 @@ opened `final-labels.jsonl` only after 413 predictions were flushed and closed.
 
 ## 5. Main result
 
-| Model | Accuracy | Macro-F1 | Attack F1 | Attack recall | Safe FPR | Unknown accuracy | Schema valid |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| rules-baseline | {rule['verdict']['accuracy']:.4f} | {rule['verdict']['macroF1']:.4f} | {rule['attackDetectionAll']['f1']:.4f} | {rule['attackDetectionAll']['recall']:.4f} | {rule['safeFPR']['rate']:.4f} | {rule['unknown']['accuracy']:.4f} | {rule['structuredOutput']['schemaValidRate']:.4f} |
+{main_results_table}
 
-Accuracy 95% CI: `{ci['accuracy']['lower95']:.4f}`-
-`{ci['accuracy']['upper95']:.4f}`. Macro-F1 95% CI:
-`{ci['macroF1']['lower95']:.4f}`-`{ci['macroF1']['upper95']:.4f}`.
+Primary model: `{primary}`. Safe FPR is shown with the Clopper-Pearson 95% upper bound
+(where the rate is a zero-event proportion, e.g. 0/209, the exact interval replaces the
+degenerate bootstrap `[0,0]`). Accuracy/Macro-F1 95% CIs are 10,000-draw
+reference-verdict-stratified bootstrap (seed 20260731); see `metrics/statistical-analysis.json`.
 
-This result does **not** answer whether AetherArgus outperforms Qwen or the
-baselines. McNemar, paired bootstrap differences, and Holm-adjusted model
-comparisons are unavailable because AetherArgus predictions do not exist.
+### Significance (paired, Holm-Bonferroni corrected)
+
+{significance_section}
+
+### Inference-path ablation
+
+{ablation_md}
 
 ## 6. Class balance and confusion
 

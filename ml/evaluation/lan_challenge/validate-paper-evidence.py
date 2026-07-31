@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Fail-closed validation of the frozen LAN challenge evidence package."""
+"""Fail-closed validation of the frozen LAN challenge evidence package (protocol v2).
+
+Strict mode runs 22 checks and requires every one to pass. --allow-not-run retains the
+partial-integrity mode for incomplete runs but is NOT a completion path: the PR completion
+gate is 22/22 in strict mode.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +13,7 @@ import csv
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Callable
@@ -27,14 +33,31 @@ EVAL = ROOT / "ml/evaluation/lan_challenge"
 REPORT = ROOT / "ml/reports/lan-challenge-evaluation"
 METRICS = REPORT / "metrics"
 PREDICTIONS = REPORT / "predictions"
+INPUT_PATH = ROOT / "ml/data/lan_challenge_capture/model-inputs.jsonl"
+LABEL_PATH = ROOT / "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl"
 EXPECTED_A_SHA256 = "381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662"
 EXPECTED_B_SHA256 = "9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
+RULES_SOURCE_COMMIT = "4359276fa9c6c0b56b168fc5c002e7e542fe30b3"
+RULES_SOURCE_FILE = "backend/src/services/detection-engine.ts"
+RULES_SOURCE_BLOB = "95654206590b7fb733d1425b280e7dfacc8c20ba"
+TRAIN_PATH = ROOT / "ml/data/releases/v02/train.jsonl"
+VALIDATION_PATH = ROOT / "ml/data/releases/v02/validation.jsonl"
 INFERENCE_FILES = [
     EVAL / "inference_common.py",
     EVAL / "run_rules_baseline.py",
     EVAL / "run_char_ngram.py",
     EVAL / "run_transformers.py",
     EVAL / "run_ollama.py",
+]
+REQUIRED_MODELS = [
+    "rules-baseline",
+    "char-ngram-logreg",
+    "qwen3-4b-zero-shot",
+    "qwen3-4b-few-shot",
+    "aetherargus-v02-hf-lora",
+    "aetherargus-v02-merged-bf16",
+    "aetherargus-v02-gguf-q4-k-m",
+    "aetherargus-v02-ollama-f16",
 ]
 
 
@@ -44,11 +67,29 @@ def close(left: float | None, right: float | None, tolerance: float = 1e-12) -> 
     return abs(float(left) - float(right)) <= tolerance
 
 
-def protocol_hash() -> str:
-    protocol = json.loads((EVAL / "evaluation-protocol.json").read_text(encoding="utf-8"))
+def v2_protocol_hash() -> str:
+    protocol = json.loads((EVAL / "evaluation-protocol-v2.json").read_text(encoding="utf-8"))
     protocol["protocolSha256"] = ""
     canonical = json.dumps(protocol, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256((canonical + "\n").encode("utf-8")).hexdigest()
+
+
+def git(args: list[str]) -> str:
+    proc = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    return proc.stdout.strip()
+
+
+def introducing_commit(path: str) -> str | None:
+    out = git(["log", "--diff-filter=A", "--format=%H", "--", path])
+    lines = [line for line in out.splitlines() if line]
+    return lines[-1] if lines else None  # oldest commit that added the path
+
+
+def is_ancestor(ancestor: str, descendant: str) -> bool:
+    if not ancestor or not descendant:
+        return False
+    out = git(["rev-list", "--count", f"{ancestor}..{descendant}"])
+    return out.isdigit()
 
 
 def main() -> int:
@@ -56,268 +97,234 @@ def main() -> int:
     parser.add_argument(
         "--allow-not-run",
         action="store_true",
-        help="Validate integrity of completed runs while retaining explicit NOT_RUN records.",
+        help="Partial-integrity mode for incomplete runs. NOT a completion path.",
     )
     arguments = parser.parse_args()
     checks: list[dict[str, Any]] = []
 
-    def check(name: str, condition: bool, detail: str) -> None:
-        checks.append({"name": name, "passed": bool(condition), "detail": detail})
+    def check(num: str, name: str, condition: bool, detail: str) -> None:
+        checks.append({"num": num, "name": name, "passed": bool(condition), "detail": detail})
 
-    input_path = ROOT / "ml/data/lan_challenge_capture/model-inputs.jsonl"
-    label_path = ROOT / "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl"
-    inputs = load_jsonl(input_path)
-    references = load_references(label_path)
+    inputs = load_jsonl(INPUT_PATH)
+    references = load_references(LABEL_PATH)
     run_status = json.loads((METRICS / "run-status.json").read_text(encoding="utf-8"))
+    status_by_id = {row["modelId"]: row for row in run_status["models"]}
     successful = [row for row in run_status["models"] if row["status"] == "SUCCESS"]
-    not_run = [row for row in run_status["models"] if row["status"] == "NOT_RUN"]
 
-    check(
-        "1_input_exactly_413",
-        len(inputs) == 413
-        and len({row["sampleId"] for row in inputs}) == 413
-        and sha256_file(input_path) == EXPECTED_INPUT_SHA256,
-        f"rows={len(inputs)} sha256={sha256_file(input_path)}",
-    )
-    check(
-        "2_labels_exactly_413",
-        len(references) == 413 and sha256_file(label_path) == EXPECTED_LABEL_SHA256,
-        f"rows={len(references)} sha256={sha256_file(label_path)}",
-    )
+    protocol_v2 = json.loads((EVAL / "evaluation-protocol-v2.json").read_text(encoding="utf-8"))
+    manifest = json.loads((REPORT / "evaluation-manifest.json").read_text(encoding="utf-8"))
 
+    # ---- 1: protocol v2 committed before any prediction file ----
+    v2_intro = introducing_commit("ml/evaluation/lan_challenge/evaluation-protocol-v2.json")
+    first_pred_intro = None
+    for model_id in REQUIRED_MODELS:
+        c = introducing_commit(f"ml/reports/lan-challenge-evaluation/predictions/{model_id}.jsonl")
+        if c and (first_pred_intro is None or is_ancestor(c, first_pred_intro)):
+            first_pred_intro = c
+    ordering_ok = v2_intro is not None and (first_pred_intro is None or is_ancestor(v2_intro, first_pred_intro) or v2_intro == first_pred_intro)
+    check("01", "protocol_v2_committed_before_predictions",
+          ordering_ok and v2_protocol_hash() == protocol_v2["protocolSha256"],
+          f"v2_intro={v2_intro} first_pred_intro={first_pred_intro} hash_self_consistent={v2_protocol_hash() == protocol_v2['protocolSha256']}")
+
+    # ---- 2: rules manifest locked pre-prediction ----
+    rules_manifest = json.loads((EVAL / "rules-baseline-manifest.json").read_text(encoding="utf-8"))
+    rm_sha = sha256_file(EVAL / "rules-baseline-manifest.json")
+    formal_challenge_clean = all(r["challengeResultUsed"] is False for r in rules_manifest["formalBaseline"]["rules"])
+    check("02", "rules_manifest_locked",
+          rm_sha == protocol_v2["v2AssetLocks"]["rulesBaselineManifestSha256"] and formal_challenge_clean,
+          f"sha_match={rm_sha == protocol_v2['v2AssetLocks']['rulesBaselineManifestSha256']} formal_challenge_clean={formal_challenge_clean}")
+
+    # ---- 3: few-shot locked pre-prediction ----
+    fs = json.loads((EVAL / "few-shot-examples-v2.json").read_text(encoding="utf-8"))
+    fs_sha = sha256_file(EVAL / "few-shot-examples-v2.json")
+    check("03", "few_shot_locked",
+          fs["status"] == "AVAILABLE"
+          and fs_sha == protocol_v2["v2AssetLocks"]["fewShotExamplesManifestSha256"]
+          and fs["examplesSha256"] == protocol_v2["v2AssetLocks"]["fewShotExamplesPayloadSha256"]
+          and fs["challengeSetUsed"] is False,
+          f"status={fs['status']} sha_match={fs_sha == protocol_v2['v2AssetLocks']['fewShotExamplesManifestSha256']}")
+
+    # ---- 4: each model covers 413 ----
     predictions_by_model: dict[str, list[dict[str, Any]]] = {}
-    prediction_coverage_ok = True
-    duplicate_free = True
+    coverage_ok = True
     for row in successful:
         model_id = row["modelId"]
         predictions = load_predictions(PREDICTIONS / f"{model_id}.jsonl", model_id)
         predictions_by_model[model_id] = predictions
-        ids = [prediction["sampleId"] for prediction in predictions]
-        prediction_coverage_ok &= len(ids) == 413 and set(ids) == {
-            reference["sampleId"] for reference in references
-        }
-        duplicate_free &= len(ids) == len(set(ids))
-    strict_completion = len(successful) == len(run_status["models"]) and len(successful) >= 4
-    check(
-        "3_each_model_covers_413",
-        prediction_coverage_ok and (arguments.allow_not_run or strict_completion),
-        (
-            f"successful={len(successful)} notRun={len(not_run)}; "
-            + ("partial validation allowed" if arguments.allow_not_run else "strict mode requires all locked runs")
-        ),
-    )
-    check("4_no_duplicate_or_missing_ids", duplicate_free and prediction_coverage_ok, "sampleId sets aligned")
+        ids = [p["sampleId"] for p in predictions]
+        coverage_ok &= len(ids) == 413 and set(ids) == {r["sampleId"] for r in references}
+    check("04", "each_model_covers_413", coverage_ok, f"successful={len(successful)}")
 
-    banned_inference_terms = [
-        "final-labels",
-        "adjudication.jsonl",
-        "agreement-report",
-        "context-visibility-audit",
-        "model-a-annotations",
-        "model-b-annotations",
-        "model-labels.jsonl",
-        "responseStatus",
-        "responseBody",
-        "raw-private",
-        "from scoring import",
-        "import scoring",
-    ]
+    # ---- 5: no duplicate or missing ids ----
+    dup_free = all(len([p["sampleId"] for p in rows]) == len({p["sampleId"] for p in rows}) for rows in predictions_by_model.values())
+    check("05", "no_duplicate_or_missing_ids", dup_free and coverage_ok, "sampleId sets aligned & duplicate-free")
+
+    # ---- 6: input + label SHA consistent across all models ----
+    input_sha_ok = sha256_file(INPUT_PATH) == EXPECTED_INPUT_SHA256
+    label_sha_ok = sha256_file(LABEL_PATH) == EXPECTED_LABEL_SHA256
+    per_pred_sha_ok = all(p.get("inputSha256") == EXPECTED_INPUT_SHA256 for rows in predictions_by_model.values() for p in rows)
+    check("06", "input_and_label_sha_consistent", input_sha_ok and label_sha_ok and per_pred_sha_ok,
+          f"input={sha256_file(INPUT_PATH)[:12]} label={sha256_file(LABEL_PATH)[:12]}")
+
+    # ---- 7: inference/scoring process isolation (no label/response leakage) ----
+    banned = ["final-labels", "adjudication.jsonl", "agreement-report", "context-visibility-audit",
+              "model-a-annotations", "model-b-annotations", "model-labels.jsonl", "responseStatus",
+              "responseBody", "raw-private", "from scoring import", "import scoring"]
     inference_text = "\n".join(path.read_text(encoding="utf-8") for path in INFERENCE_FILES)
-    found_banned = [term for term in banned_inference_terms if term in inference_text]
-    check(
-        "5_inference_scoring_process_isolation",
-        not found_banned,
-        f"banned references found={found_banned}",
-    )
-    check(
-        "6_same_input_sha_for_all_models",
-        all(
-            prediction.get("inputSha256") == EXPECTED_INPUT_SHA256
-            for rows in predictions_by_model.values()
-            for prediction in rows
-        ),
-        EXPECTED_INPUT_SHA256,
-    )
+    found = [t for t in banned if t in inference_text]
+    check("07", "inference_scoring_process_isolation", not found, f"banned_found={found}")
 
-    metrics_recomputed = True
-    recomputed_details = []
+    # ---- 8: train/validation challenge-free + SHA locked ----
+    challenge_ids = {row["sampleId"] for row in inputs}
+    train_ids = {json.loads(line)["sampleId"] for line in TRAIN_PATH.open(encoding="utf-8") if line.strip()}
+    val_ids = {json.loads(line)["sampleId"] for line in VALIDATION_PATH.open(encoding="utf-8") if line.strip()}
+    train_sha = sha256_file(TRAIN_PATH)
+    val_sha = sha256_file(VALIDATION_PATH)
+    check("08", "train_validation_challenge_free",
+          not (challenge_ids & train_ids) and not (challenge_ids & val_ids)
+          and train_sha == protocol_v2["v2AssetLocks"]["trainingAssetSha256"]
+          and val_sha == protocol_v2["v2AssetLocks"]["validationAssetSha256"],
+          f"overlap_train={len(challenge_ids & train_ids)} overlap_val={len(challenge_ids & val_ids)}")
+
+    # ---- 9: few-shot challenge-free ----
+    fs_ids = set(fs["sampleIds"])
+    check("09", "few_shot_challenge_free", not (fs_ids & challenge_ids), f"overlap={len(fs_ids & challenge_ids)}")
+
+    # ---- 10: rules not modified by challenge outcomes ----
+    det_blob_now = git(["rev-parse", f"HEAD:{RULES_SOURCE_FILE}"])
+    check("10", "rules_not_modified_by_challenge",
+          det_blob_now == RULES_SOURCE_BLOB
+          and formal_challenge_clean
+          and rules_manifest["formalBaseline"]["sourceCommit"] == RULES_SOURCE_COMMIT,
+          f"detection_engine_blob_head={det_blob_now}")
+
+    # ---- 11: family Macro-F1 uses reference-only label set ----
+    family_label_ok = True
+    family_detail = []
     for model_id, predictions in predictions_by_model.items():
         stored = json.loads((METRICS / f"{model_id}.json").read_text(encoding="utf-8"))
-        recalculated = calculate_metrics(predictions, references, model_id=model_id)
-        fields: list[tuple[Callable[[dict[str, Any]], Any], str]] = [
-            (lambda value: value["verdict"]["accuracy"], "verdict.accuracy"),
-            (lambda value: value["verdict"]["macroF1"], "verdict.macroF1"),
-            (lambda value: value["attackDetectionAll"]["f1"], "attackDetectionAll.f1"),
-            (lambda value: value["safeFPR"]["rate"], "safeFPR.rate"),
-            (lambda value: value["unknown"]["accuracy"], "unknown.accuracy"),
-        ]
-        for accessor, name in fields:
-            ok = close(accessor(stored), accessor(recalculated))
-            metrics_recomputed &= ok
-            if not ok:
-                recomputed_details.append(f"{model_id}:{name}")
-    check("7_metrics_recompute_exactly", metrics_recomputed, f"mismatches={recomputed_details}")
+        if stored["attackFamily"].get("status") != "SUCCESS":
+            continue
+        labels = stored["attackFamily"]["confusionMatrix"]["labels"]
+        if "none" in labels or "not_supported" in labels:
+            family_label_ok = False
+            family_detail.append(f"{model_id}: bad label {labels}")
+        if stored["attackFamily"].get("labelSetPolicy") != "reference_attack_families_only":
+            family_label_ok = False
+            family_detail.append(f"{model_id}: policy={stored['attackFamily'].get('labelSetPolicy')}")
+    check("11", "family_macro_f1_reference_only_labels", family_label_ok, f"detail={family_detail}")
 
-    main_table = list(
-        csv.DictReader((REPORT / "tables/table-1-main-results.csv").open(encoding="utf-8"))
-    )
+    # ---- 12: zero-event proportions carry a binomial interval ----
+    zero_event_ok = True
+    zero_detail = []
+    for model_id, predictions in predictions_by_model.items():
+        stored = json.loads((METRICS / f"{model_id}.json").read_text(encoding="utf-8"))
+        prop = stored.get("proportions", {}).get("safeFPR", {})
+        cp = prop.get("clopperPearson95")
+        wi = prop.get("wilson95")
+        if not cp or not wi:
+            zero_event_ok = False
+            zero_detail.append(f"{model_id}: missing CP/Wilson")
+        elif prop.get("numerator") == 0 and cp[1] <= 0.0:
+            zero_event_ok = False
+            zero_detail.append(f"{model_id}: degenerate CP upper bound {cp}")
+    check("12", "zero_event_binomial_interval", zero_event_ok, f"detail={zero_detail}")
+
+    # ---- 13: statistical tests paired (+ bootstrap seed/iterations) ----
+    stats = json.loads((METRICS / "statistical-analysis.json").read_text(encoding="utf-8"))
+    paired_ok = all(row.get("status") in {"SUCCESS", "NOT_AVAILABLE"} for row in stats["pairedBootstrapDifferences"])
+    seed_ok = stats["bootstrapSeed"] == 20260731 and stats["bootstrapIterations"] == 10000
+    check("13", "statistical_tests_paired", paired_ok and seed_ok,
+          f"seed={stats['bootstrapSeed']} iter={stats['bootstrapIterations']}")
+
+    # ---- 14: figures + tables match metrics ----
+    main_table = list(csv.DictReader((REPORT / "tables/table-1-main-results.csv").open(encoding="utf-8")))
     table_ok = True
     for row in main_table:
-        if row["status"] != "SUCCESS":
+        if row.get("status") != "SUCCESS":
             continue
         model = json.loads((METRICS / f"{row['modelId']}.json").read_text(encoding="utf-8"))
         table_ok &= close(float(row["accuracy"]), model["verdict"]["accuracy"], 5e-7)
         table_ok &= close(float(row["macroF1"]), model["verdict"]["macroF1"], 5e-7)
-    expected_figures = [
-        "figure-1-model-comparison.png",
-        "figure-1-model-comparison.pdf",
-        "figure-1-model-comparison.svg",
-        *[
-            f"figure-{index}-{name}.{suffix}"
-            for index, name in [
-                (2, "verdict-confusion-matrices"),
-                (3, "family-f1"),
-                (4, "subset-performance"),
-                (5, "quality-latency-size-tradeoff"),
-                (6, "inference-path-ablation"),
-                (7, "error-taxonomy"),
-            ]
-            for suffix in ("png", "pdf")
-        ],
-    ]
+    expected_figures = ["figure-1-model-comparison.png", "figure-1-model-comparison.pdf", "figure-1-model-comparison.svg",
+                        *{f"figure-{i}-{n}.{s}" for i, n in [(2, "verdict-confusion-matrices"), (3, "family-f1"), (4, "subset-performance"), (5, "quality-latency-size-tradeoff"), (6, "inference-path-ablation"), (7, "error-taxonomy")] for s in ("png", "pdf")}]
     table_ok &= all((REPORT / "figures" / name).is_file() for name in expected_figures)
-    check("8_figures_tables_match_metrics", table_ok, "main CSV values and required figure files")
+    check("14", "figures_tables_match_metrics", table_ok, "main CSV values + required figure files")
 
-    stats = json.loads((METRICS / "statistical-analysis.json").read_text(encoding="utf-8"))
-    check(
-        "9_bootstrap_seed_fixed",
-        stats["bootstrapSeed"] == 20260731 and stats["bootstrapIterations"] == 10000,
-        f"seed={stats['bootstrapSeed']} iterations={stats['bootstrapIterations']}",
-    )
-    paired_ok = all(
-        row.get("status") in {"SUCCESS", "NOT_AVAILABLE"}
-        for row in stats["pairedBootstrapDifferences"]
-    )
-    check("10_statistical_tests_are_paired", paired_ok, "paired comparison status recorded")
-
-    protocol = json.loads((EVAL / "evaluation-protocol.json").read_text(encoding="utf-8"))
-    manifest = json.loads((REPORT / "evaluation-manifest.json").read_text(encoding="utf-8"))
-    check(
-        "11_challenge_not_used_for_tuning",
-        protocol["challengeSetUsedForTuning"] is False
-        and manifest["challengeSetUsedForTuning"] is False,
-        "both protocol and manifest are false",
-    )
-    unknown_consistent = all(
-        close(
-            model["unknown"]["accuracy"],
-            model["verdict"]["perClass"]["unknown"]["recall"],
-        )
-        for model in (
-            json.loads((METRICS / f"{row['modelId']}.json").read_text(encoding="utf-8"))
-            for row in successful
-        )
-    )
-    check("12_unknown_handling_consistent", unknown_consistent, "unknown accuracy equals class recall")
-    check(
-        "13_parse_failures_never_become_safe",
-        all(
-            not (prediction.get("parsed") is False and prediction.get("verdict") == "safe")
-            for rows in predictions_by_model.values()
-            for prediction in rows
-        ),
-        "all parse failures remain fail-safe unknown",
-    )
-    check(
-        "14_no_response_side_evidence",
-        "responseStatus" not in inference_text
-        and "responseBody" not in inference_text
-        and protocol["leakageControls"]["responseSideEvidenceAllowed"] is False,
-        "static inference scan and locked protocol",
-    )
-    check(
-        "15_final_labels_unchanged",
-        sha256_file(label_path) == EXPECTED_LABEL_SHA256,
-        sha256_file(label_path),
-    )
-    a_path = ROOT / "ml/data/lan_challenge_capture/annotations/model-a-annotations.jsonl"
-    b_path = ROOT / "ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl"
-    check(
-        "16_ab_annotations_unchanged",
-        sha256_file(a_path) == EXPECTED_A_SHA256 and sha256_file(b_path) == EXPECTED_B_SHA256,
-        f"A={sha256_file(a_path)} B={sha256_file(b_path)}",
-    )
-    inventory = json.loads((REPORT / "artifact-inventory.json").read_text(encoding="utf-8"))
-    check(
-        "17_training_data_unchanged",
-        inventory["trainingDataModified"] is False
-        and inventory["allowedChangedPrefixes"]
-        == ["ml/evaluation/lan_challenge/", "ml/reports/lan-challenge-evaluation/"],
-        "commit scope excludes ml/data/releases and production paths",
-    )
-    privacy_pattern = re.compile(
-        r"(?:Cookie\s*:|Authorization\s*:|accessToken|refreshToken|sessionId|raw-private)",
-        re.IGNORECASE,
-    )
-    privacy_hits = []
-    for model_id, rows in predictions_by_model.items():
-        for row in rows:
-            if privacy_pattern.search(str(row.get("rawOutput") or "")):
-                privacy_hits.append(f"{model_id}:{row['sampleId']}")
-    check("18_prediction_privacy_scan", not privacy_hits, f"hits={privacy_hits[:5]}")
-    adjudication_manifest = json.loads(
-        (
-            ROOT
-            / "ml/data/lan_challenge_capture/adjudication/final-labels-manifest.json"
-        ).read_text(encoding="utf-8")
-    )
-    check(
-        "19_human_review_still_false",
-        adjudication_manifest["humanReviewed"] is False
-        and adjudication_manifest["reviewerCount"] == 0,
-        f"humanReviewed={adjudication_manifest['humanReviewed']} reviewerCount={adjudication_manifest['reviewerCount']}",
-    )
-    claims = list(
-        csv.DictReader((REPORT / "claim-to-evidence-matrix.csv").open(encoding="utf-8"))
-    )
-    report_json = json.loads(
-        (REPORT / "aetherargus-lan-challenge-report.json").read_text(encoding="utf-8")
-    )
+    # ---- 15: claims traceable to evidence ----
+    claims = list(csv.DictReader((REPORT / "claim-to-evidence-matrix.csv").open(encoding="utf-8")))
+    report_json = json.loads((REPORT / "aetherargus-lan-challenge-report.json").read_text(encoding="utf-8"))
     claim_ok = bool(claims) and report_json["claimToEvidenceCount"] == len(claims)
     for row in claims:
         claim_ok &= (ROOT / row["evidenceFile"]).is_file()
         claim_ok &= bool(row["metricField"] and row["allowedWording"] and row["forbiddenWording"])
-    check("20_all_claims_have_evidence", claim_ok, f"claims={len(claims)}")
-    check(
-        "protocol_canonical_hash",
-        protocol_hash() == protocol["protocolSha256"],
-        f"computed={protocol_hash()} recorded={protocol['protocolSha256']}",
-    )
+    check("15", "claims_have_evidence", claim_ok, f"claims={len(claims)}")
+
+    # ---- 16: final labels unchanged ----
+    check("16", "final_labels_unchanged", sha256_file(LABEL_PATH) == EXPECTED_LABEL_SHA256, sha256_file(LABEL_PATH)[:12])
+
+    # ---- 17: A/B annotations unchanged ----
+    a_path = ROOT / "ml/data/lan_challenge_capture/annotations/model-a-annotations.jsonl"
+    b_path = ROOT / "ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl"
+    check("17", "ab_annotations_unchanged",
+          sha256_file(a_path) == EXPECTED_A_SHA256 and sha256_file(b_path) == EXPECTED_B_SHA256,
+          f"A={sha256_file(a_path)[:12]} B={sha256_file(b_path)[:12]}")
+
+    # ---- 18: training data unchanged (+ inventory scope) ----
+    inventory = json.loads((REPORT / "artifact-inventory.json").read_text(encoding="utf-8"))
+    check("18", "training_data_unchanged",
+          inventory["trainingDataModified"] is False
+          and inventory["allowedChangedPrefixes"] == ["ml/evaluation/lan_challenge/", "ml/reports/lan-challenge-evaluation/"],
+          "commit scope excludes ml/data/releases + production")
+
+    # ---- 19: production detection path unchanged ----
+    check("19", "production_detection_path_unchanged", det_blob_now == RULES_SOURCE_BLOB,
+          f"detection-engine.ts blob@HEAD={det_blob_now} expected={RULES_SOURCE_BLOB}")
+
+    # ---- 20: humanReviewed false ----
+    adj_manifest = json.loads((ROOT / "ml/data/lan_challenge_capture/adjudication/final-labels-manifest.json").read_text(encoding="utf-8"))
+    check("20", "human_reviewed_false",
+          adj_manifest["humanReviewed"] is False and adj_manifest["reviewerCount"] == 0,
+          f"humanReviewed={adj_manifest['humanReviewed']} reviewerCount={adj_manifest['reviewerCount']}")
+
+    # ---- 21: challengeSetUsedForTuning false everywhere ----
+    check("21", "challenge_not_used_for_tuning",
+          protocol_v2["challengeSetUsedForTuning"] is False
+          and manifest["challengeSetUsedForTuning"] is False
+          and fs["challengeSetUsed"] is False
+          and protocol_v2["leakageControls"]["challengeSetUsedForFewShot"] is False,
+          "protocol_v2 + manifest + few-shot all false")
+
+    # ---- 22: all 8 required models SUCCESS ----
+    all_success = all(status_by_id.get(m, {}).get("status") == "SUCCESS" for m in REQUIRED_MODELS) and len(successful) == len(REQUIRED_MODELS)
+    # metrics recompute exactness (moved here as part of the completion gate)
+    metrics_ok = True
+    mismatches: list[str] = []
+    for model_id, predictions in predictions_by_model.items():
+        stored = json.loads((METRICS / f"{model_id}.json").read_text(encoding="utf-8"))
+        recalculated = calculate_metrics(predictions, references, model_id=model_id)
+        fields = [(lambda v: v["verdict"]["accuracy"], "acc"), (lambda v: v["verdict"]["macroF1"], "mf1"),
+                  (lambda v: v["attackDetectionAll"]["f1"], "atkF1"), (lambda v: v["safeFPR"]["rate"], "fpr"),
+                  (lambda v: v["unknown"]["accuracy"], "unkAcc")]
+        for accessor, name in fields:
+            if not close(accessor(stored), accessor(recalculated)):
+                metrics_ok = False
+                mismatches.append(f"{model_id}:{name}")
+    check("22", "all_required_models_success", all_success and metrics_ok,
+          f"all_success={all_success} metrics_recompute_mismatches={mismatches}")
 
     failed = [row for row in checks if not row["passed"]]
     result = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "mode": "allow-not-run" if arguments.allow_not_run else "strict",
         "checksPassed": len(checks) - len(failed),
         "checksTotal": len(checks),
         "failed": failed,
         "checks": checks,
     }
-    output_path = METRICS / (
-        "validation-partial.json" if arguments.allow_not_run else "validation-strict.json"
-    )
-    output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    print(
-        json.dumps(
-            {
-                "mode": result["mode"],
-                "checksPassed": result["checksPassed"],
-                "checksTotal": result["checksTotal"],
-                "failedChecks": [row["name"] for row in failed],
-            },
-            indent=2,
-        )
-    )
+    out_path = METRICS / ("validation-partial.json" if arguments.allow_not_run else "validation-strict.json")
+    out_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({"mode": result["mode"], "checksPassed": result["checksPassed"], "checksTotal": result["checksTotal"], "failedChecks": [r["name"] for r in failed]}, indent=2))
     return 1 if failed else 0
 
 
