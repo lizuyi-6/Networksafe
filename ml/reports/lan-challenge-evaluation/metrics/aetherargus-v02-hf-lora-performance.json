@@ -1,0 +1,54 @@
+{
+  "modelSizeBytes": 8177169888,
+  "modelSizeMeasurement": {
+    "method": "filesystem_stat",
+    "scope": "sum_of_measured_components",
+    "description": "base weights plus LoRA adapter weights",
+    "components": [
+      {
+        "method": "filesystem_stat",
+        "scope": "weight_files_recursive",
+        "path": "ml\\output\\base-model",
+        "includedSuffixes": [
+          ".bin",
+          ".gguf",
+          ".pt",
+          ".pth",
+          ".safetensors"
+        ],
+        "componentCount": 3,
+        "components": [
+          {
+            "relativePath": "model-00001-of-00003.safetensors",
+            "sizeBytes": 3957900840,
+            "sha256": "75311d91bb08cf0b882913da464a1e722a31fb44db35208663487efb7a3d8ed6"
+          },
+          {
+            "relativePath": "model-00002-of-00003.safetensors",
+            "sizeBytes": 3987450520,
+            "sha256": "0b48adbb1f60e901153d91907ba11ce63bd4b8b584482e730f48808d055dfba1"
+          },
+          {
+            "relativePath": "model-00003-of-00003.safetensors",
+            "sizeBytes": 99630640,
+            "sha256": "7dd39ccca5e4de123c74c14af44c9bf2eb75df33b4614382af0134528e060d5d"
+          }
+        ],
+        "artifactSha256": "bdec48103953e491f3a62548537f572479147de65620ba703ad614a030121688",
+        "sizeBytes": 8044982000
+      },
+      {
+        "method": "filesystem_stat",
+        "scope": "single_file",
+        "path": "X:\\repos\\Networksafe\\ml\\output\\aetherargus-v02-lora\\adapter_model.safetensors",
+        "artifactSha256": "3f786390b6dffb27ee6be9740acfb27b7961cd2c29da7bbbaab6f932d99aea2d",
+        "sizeBytes": 132187888
+      }
+    ],
+    "artifactSha256": "e8ea0f2f880ea477fa810dec46f1a874b68bd8e6af4d2f648cf59be60fcc7819",
+    "sizeBytes": 8177169888
+  },
+  "peakGpuMemoryMiB": null,
+  "peakHostMemoryMiB": null,
+  "crossStackLatencyComparable": false
+}

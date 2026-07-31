@@ -1,0 +1,497 @@
+{
+  "schemaVersion": 1,
+  "modelId": "aetherargus-v02-gguf-q4-k-m",
+  "status": "SUCCESS",
+  "sampleCount": 413,
+  "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+  "verdict": {
+    "accuracy": 0.6004842615012107,
+    "macroPrecision": 0.39364647593141305,
+    "macroRecall": 0.5575889113599368,
+    "macroF1": 0.4559118402518851,
+    "weightedF1": 0.5153736475315364,
+    "perClass": {
+      "safe": {
+        "precision": 0.6722689075630253,
+        "recall": 0.7655502392344498,
+        "f1": 0.7158836689038032,
+        "support": 209
+      },
+      "attack": {
+        "precision": 0.5086705202312138,
+        "recall": 0.9072164948453608,
+        "f1": 0.6518518518518519,
+        "support": 97
+      },
+      "unknown": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 107
+      }
+    },
+    "confusionMatrix": {
+      "labels": [
+        "safe",
+        "attack",
+        "unknown"
+      ],
+      "matrix": [
+        [
+          160,
+          47,
+          2
+        ],
+        [
+          9,
+          88,
+          0
+        ],
+        [
+          69,
+          38,
+          0
+        ]
+      ]
+    }
+  },
+  "attackDetectionAll": {
+    "precision": 0.5086705202312138,
+    "recall": 0.9072164948453608,
+    "f1": 0.6518518518518519,
+    "positiveSupport": 97,
+    "negativeSupport": 316
+  },
+  "attackVsSafeOnly": {
+    "precision": 0.6518518518518519,
+    "recall": 0.9072164948453608,
+    "f1": 0.7586206896551724,
+    "positiveSupport": 97,
+    "negativeSupport": 209
+  },
+  "safeFPR": {
+    "rate": 0.22488038277511962,
+    "falsePositiveCount": 47,
+    "safeSupport": 209,
+    "pointEstimate": 0.22488038277511962,
+    "numerator": 47,
+    "denominator": 209,
+    "clopperPearson95": [
+      0.1701597270908688,
+      0.2875811396651493
+    ],
+    "wilson95": [
+      0.17353718847637525,
+      0.2861545434014802
+    ],
+    "bootstrap95": null
+  },
+  "proportions": {
+    "safeFPR": {
+      "pointEstimate": 0.22488038277511962,
+      "numerator": 47,
+      "denominator": 209,
+      "clopperPearson95": [
+        0.1701597270908688,
+        0.2875811396651493
+      ],
+      "wilson95": [
+        0.17353718847637525,
+        0.2861545434014802
+      ],
+      "bootstrap95": null
+    },
+    "verdictAccuracy": {
+      "pointEstimate": 0.6004842615012107,
+      "numerator": 248,
+      "denominator": 413,
+      "clopperPearson95": [
+        0.5514539656426133,
+        0.6480640791932234
+      ],
+      "wilson95": [
+        0.5525293583720285,
+        0.6465871120357358
+      ],
+      "bootstrap95": null
+    },
+    "attackRecall": {
+      "pointEstimate": 0.9072164948453608,
+      "numerator": 88,
+      "denominator": 97,
+      "clopperPearson95": [
+        0.8311638105610094,
+        0.9566904273301691
+      ],
+      "wilson95": [
+        0.8329911632283566,
+        0.9504167815185518
+      ],
+      "bootstrap95": null
+    },
+    "attackPrecision": {
+      "pointEstimate": 0.5086705202312138,
+      "numerator": 88,
+      "denominator": 173,
+      "clopperPearson95": [
+        0.43170050197196075,
+        0.5853383917831656
+      ],
+      "wilson95": [
+        0.4348000456743291,
+        0.5821643020527603
+      ],
+      "bootstrap95": null
+    },
+    "unknownAccuracy": {
+      "pointEstimate": 0.0,
+      "numerator": 0,
+      "denominator": 107,
+      "clopperPearson95": [
+        0.0,
+        0.03388799947401148
+      ],
+      "wilson95": [
+        0.0,
+        0.03465723801874867
+      ],
+      "bootstrap95": null
+    }
+  },
+  "unknown": {
+    "accuracy": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "support": 107,
+    "toAttackRate": 0.35514018691588783,
+    "toSafeRate": 0.6448598130841121
+  },
+  "attackFamily": {
+    "status": "SUCCESS",
+    "labelSetPolicy": "reference_attack_families_only",
+    "accuracy": 0.8144329896907216,
+    "macroPrecision": 0.6860670194003526,
+    "macroRecall": 0.6891534391534392,
+    "macroF1": 0.6543121467588645,
+    "weightedF1": 0.8677996033315463,
+    "perClass": {
+      "command_injection": {
+        "precision": 0.8888888888888888,
+        "recall": 1.0,
+        "f1": 0.9411764705882353,
+        "support": 8
+      },
+      "cors": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "csrf": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "file_upload": {
+        "precision": 0.2857142857142857,
+        "recall": 1.0,
+        "f1": 0.4444444444444444,
+        "support": 2
+      },
+      "path_traversal": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 9
+      },
+      "prompt_injection": {
+        "precision": 1.0,
+        "recall": 0.7857142857142857,
+        "f1": 0.88,
+        "support": 56
+      },
+      "sqli": {
+        "precision": 1.0,
+        "recall": 0.9166666666666666,
+        "f1": 0.9565217391304348,
+        "support": 12
+      },
+      "ssrf": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.6666666666666666,
+        "support": 6
+      },
+      "xss": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      }
+    },
+    "confusionMatrix": {
+      "labels": [
+        "command_injection",
+        "cors",
+        "csrf",
+        "file_upload",
+        "path_traversal",
+        "prompt_injection",
+        "sqli",
+        "ssrf",
+        "xss"
+      ],
+      "matrix": [
+        [
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          9,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          5,
+          0,
+          44,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          11,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ]
+      ]
+    },
+    "predictedOnlyFamilies": [
+      "idor_bola",
+      "none",
+      "protocol_attack"
+    ],
+    "predictedNoneOnAttackCount": 9
+  },
+  "structuredOutput": {
+    "jsonSyntaxSuccessRate": 0.9951573849878934,
+    "schemaValidRate": 0.9951573849878934,
+    "enumValidRate": 1.0,
+    "completeFieldRate": 1.0
+  },
+  "performance": {
+    "p50LatencyMs": 446.17339999967953,
+    "p95LatencyMs": 1535.340599999472,
+    "p99LatencyMs": 1680.9749199989892,
+    "meanLatencyMs": 789.7571038741617,
+    "samplesPerSecond": 1.2662120987509826,
+    "inputTokensPerSecond": 491.8574837542891,
+    "outputTokensPerSecond": 35.006318991619175,
+    "peakGpuMemoryMiB": null,
+    "peakHostMemoryMiB": null,
+    "modelSizeBytes": 2497278752,
+    "modelSizeMeasurement": {
+      "method": "filesystem_stat",
+      "scope": "single_file",
+      "path": "D:\\aetherargus-v02-gguf\\aetherargus-v02-Q4_K_M.gguf",
+      "artifactSha256": "5d17d15ce0d19376ee0a18a700b6ac79b4e480f376c75f4cc465ec7c1b3aa8ed",
+      "sizeBytes": 2497278752
+    },
+    "crossStackLatencyComparable": false
+  },
+  "subsets": {
+    "all_413": {
+      "status": "SUCCESS",
+      "count": 413,
+      "accuracy": 0.6004842615012107,
+      "macroF1": 0.4559118402518851,
+      "safeFPR": 0.22488038277511962
+    },
+    "context_sufficient_true": {
+      "status": "SUCCESS",
+      "count": 306,
+      "accuracy": 0.8104575163398693,
+      "macroF1": 0.5350605120720063,
+      "safeFPR": 0.22488038277511962
+    },
+    "context_sufficient_false": {
+      "status": "SUCCESS",
+      "count": 107,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "consensus": {
+      "status": "SUCCESS",
+      "count": 160,
+      "accuracy": 0.99375,
+      "macroF1": 0.6586339332781083,
+      "safeFPR": 0.007352941176470588
+    },
+    "model_adjudication": {
+      "status": "SUCCESS",
+      "count": 253,
+      "accuracy": 0.35177865612648224,
+      "macroF1": 0.28775880981763335,
+      "safeFPR": 0.6301369863013698
+    },
+    "safe": {
+      "status": "SUCCESS",
+      "count": 209,
+      "accuracy": 0.7655502392344498,
+      "macroF1": 0.2890695573622403,
+      "safeFPR": 0.22488038277511962
+    },
+    "attack": {
+      "status": "SUCCESS",
+      "count": 97,
+      "accuracy": 0.9072164948453608,
+      "macroF1": 0.31711711711711715,
+      "safeFPR": null
+    },
+    "unknown": {
+      "status": "SUCCESS",
+      "count": 107,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "prompt_injection": {
+      "status": "SUCCESS",
+      "count": 56,
+      "accuracy": 0.875,
+      "macroF1": 0.3111111111111111,
+      "safeFPR": null
+    },
+    "authorization": {
+      "status": "SUCCESS",
+      "count": 26,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "idor_bola": {
+      "status": "SUCCESS",
+      "count": 40,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": null
+    },
+    "sqli": {
+      "status": "SUCCESS",
+      "count": 23,
+      "accuracy": 0.5217391304347826,
+      "macroF1": 0.22857142857142856,
+      "safeFPR": null
+    },
+    "xss": {
+      "status": "SUCCESS",
+      "count": 10,
+      "accuracy": 0.2,
+      "macroF1": 0.1111111111111111,
+      "safeFPR": null
+    },
+    "command_injection": {
+      "status": "SUCCESS",
+      "count": 8,
+      "accuracy": 1.0,
+      "macroF1": 0.3333333333333333,
+      "safeFPR": null
+    },
+    "path_traversal": {
+      "status": "SUCCESS",
+      "count": 9,
+      "accuracy": 1.0,
+      "macroF1": 0.3333333333333333,
+      "safeFPR": null
+    },
+    "ssrf": {
+      "status": "SUCCESS",
+      "count": 7,
+      "accuracy": 0.8571428571428571,
+      "macroF1": 0.3076923076923077,
+      "safeFPR": null
+    }
+  },
+  "predictionCompletedAt": "2026-07-31T09:20:01.532013+00:00",
+  "scoredAt": "2026-07-31T12:37:12.169884+00:00"
+}

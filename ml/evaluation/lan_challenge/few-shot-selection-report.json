@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "selectionSeed": 20260731,
+  "sourcesScanned": [
+    "ml/data/releases/v02/train.jsonl",
+    "ml/data/releases/v02/validation.jsonl"
+  ],
+  "candidateCountsByStratum": {
+    "attack:authentication": 436,
+    "attack:business_logic": 378,
+    "attack:command_injection": 870,
+    "attack:file_upload": 398,
+    "attack:path_traversal": 450,
+    "attack:protocol_attack": 668,
+    "attack:sqli": 863,
+    "attack:ssrf": 326,
+    "attack:xss": 515,
+    "safe": 7312,
+    "unknown": 1080
+  },
+  "selectedCount": 11,
+  "selectedSampleIds": [
+    "v02-legacy-000324",
+    "v02-dev-attack-business_logic-003950",
+    "v02-legacy-000130",
+    "v02-dev-attack-file_upload-003610",
+    "v02-legacy-000188",
+    "v02-legacy-000097",
+    "v02-legacy-000286",
+    "v02-legacy-000139",
+    "v02-legacy-000384",
+    "v02-dev-normal-000219",
+    "v02-dev-unknown-000391"
+  ],
+  "examplesUsedTokens": 1472,
+  "tokenBudget": {
+    "systemBaseTokens": 273,
+    "userAllowanceTokens": 200,
+    "safetyCapTokens": 2000,
+    "examplesUsedTokens": 1472
+  },
+  "coverage": {
+    "safe": 1,
+    "attack": 9,
+    "unknown": 1,
+    "attackFamiliesCovered": [
+      "authentication",
+      "business_logic",
+      "command_injection",
+      "file_upload",
+      "path_traversal",
+      "protocol_attack",
+      "sqli",
+      "ssrf",
+      "xss"
+    ],
+    "attackFamiliesCoveredCount": 9
+  },
+  "examplesSha256": "e17c38a14e89487f83e11469d53eafb8551cfe286be0e1f4be45541acfb6df5b",
+  "challengeSetOpened": false,
+  "determinism": "hash-based sha256(seed:sampleId) + measured-marginal-full-prompt-cost greedy; no RNG/Date; reproducible with fixed tokenizer"
+}

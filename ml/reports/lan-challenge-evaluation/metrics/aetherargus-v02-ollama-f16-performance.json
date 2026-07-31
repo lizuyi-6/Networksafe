@@ -1,0 +1,13 @@
+{
+  "modelSizeBytes": 8051283232,
+  "modelSizeMeasurement": {
+    "method": "filesystem_stat",
+    "scope": "single_file",
+    "path": "D:\\aetherargus-v02-gguf\\aetherargus-v02-f16.gguf",
+    "artifactSha256": "7f134c21a1a685343573e313198b933f5ce5e78dc239635245aee24327a2ce48",
+    "sizeBytes": 8051283232
+  },
+  "peakGpuMemoryMiB": null,
+  "peakHostMemoryMiB": null,
+  "crossStackLatencyComparable": false
+}

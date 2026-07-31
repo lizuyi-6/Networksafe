@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "repositoryCommit": "9ebd1d2393efaf86b75adb3646c71e0727965768",
+  "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
+  "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
+  "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+  "modelArtifacts": [
+    {
+      "modelId": "rules-baseline",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/rules-baseline.jsonl",
+      "predictionSha256": "e7d4d714dd0936d7c4e5e137b19a915b8e5842ad2d34de55af97844b72042108",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/rules-baseline.json"
+    },
+    {
+      "modelId": "char-ngram-logreg",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/char-ngram-logreg.jsonl",
+      "predictionSha256": "abb90b1846bc856a6cd5d6b660a17ae28b2d2e763c438550c49bbe6aa8fe7955",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/char-ngram-logreg.json"
+    },
+    {
+      "modelId": "qwen3-4b-zero-shot",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/qwen3-4b-zero-shot.jsonl",
+      "predictionSha256": "7b3558d745deaed3bfa49c54ff58b9dadbff995658a58a346ca87603c4284f0b",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/qwen3-4b-zero-shot.json"
+    },
+    {
+      "modelId": "qwen3-4b-few-shot",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/qwen3-4b-few-shot.jsonl",
+      "predictionSha256": "a884b9d2f119c345f42b892554cdabfb1628d7ae8fd9690cf6fe63c2a521f4b4",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/qwen3-4b-few-shot.json"
+    },
+    {
+      "modelId": "aetherargus-v02-hf-lora",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/aetherargus-v02-hf-lora.jsonl",
+      "predictionSha256": "596cb71ce9a421a90ce7669d05aabe7445307b59e30abbd26f757c5823154fe1",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-hf-lora.json"
+    },
+    {
+      "modelId": "aetherargus-v02-merged-bf16",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/aetherargus-v02-merged-bf16.jsonl",
+      "predictionSha256": "44a7e8d8a8ea946cd39222d890f5886432fa5aea008dab22c61f46bd2e02d25e",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-merged-bf16.json"
+    },
+    {
+      "modelId": "aetherargus-v02-gguf-q4-k-m",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/aetherargus-v02-gguf-q4-k-m.jsonl",
+      "predictionSha256": "7ee9b03b50fbdb4f0442b9933f2056098ae109805feedf8275134411f680eec9",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-gguf-q4-k-m.json"
+    },
+    {
+      "modelId": "aetherargus-v02-ollama-f16",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/aetherargus-v02-ollama-f16.jsonl",
+      "predictionSha256": "5cdfa70e5478f4c619b902a45b6937d2a08e160baff8402777b94d7b603d1351",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-ollama-f16.json"
+    }
+  ],
+  "promptArtifacts": [
+    {
+      "path": "ml/evaluation/lan_challenge/system-prompt.txt",
+      "sha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8"
+    }
+  ],
+  "environment": {
+    "os": "Windows-11-10.0.26220-SP0",
+    "cpu": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "ramGiB": 31.727115631103516,
+    "cuda": "13.0",
+    "python": "3.12.10",
+    "node": "v24.13.1",
+    "pytorch": "2.12.0.dev20260223+cu130",
+    "transformers": "5.2.0",
+    "peft": "0.20.0",
+    "ollama": "ollama version is 0.32.5",
+    "numpy": "2.4.2",
+    "pandas": "3.0.1",
+    "scikitLearn": "1.8.0",
+    "scipy": "1.17.1"
+  },
+  "runs": [
+    {
+      "modelId": "rules-baseline",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/rules-baseline.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/rules-baseline.json"
+    },
+    {
+      "modelId": "char-ngram-logreg",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/char-ngram-logreg.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/char-ngram-logreg.json"
+    },
+    {
+      "modelId": "qwen3-4b-zero-shot",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/qwen3-4b-zero-shot.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/qwen3-4b-zero-shot.json"
+    },
+    {
+      "modelId": "qwen3-4b-few-shot",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/qwen3-4b-few-shot.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/qwen3-4b-few-shot.json"
+    },
+    {
+      "modelId": "aetherargus-v02-hf-lora",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/aetherargus-v02-hf-lora.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-hf-lora.json"
+    },
+    {
+      "modelId": "aetherargus-v02-merged-bf16",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/aetherargus-v02-merged-bf16.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-merged-bf16.json"
+    },
+    {
+      "modelId": "aetherargus-v02-gguf-q4-k-m",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/aetherargus-v02-gguf-q4-k-m.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-gguf-q4-k-m.json"
+    },
+    {
+      "modelId": "aetherargus-v02-ollama-f16",
+      "status": "SUCCESS",
+      "sampleCount": 413,
+      "predictionFile": "ml/reports/lan-challenge-evaluation/predictions/aetherargus-v02-ollama-f16.jsonl",
+      "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-ollama-f16.json"
+    }
+  ],
+  "statisticalSeed": 20260731,
+  "challengeSetUsedForTuning": false,
+  "labelsChangedAfterEvaluation": false,
+  "inferencePathAblationStatus": "COMPLETE",
+  "completedAt": "2026-07-31T12:42:52.104104+00:00"
+}

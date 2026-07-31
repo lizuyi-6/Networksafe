@@ -1,0 +1,105 @@
+\begin{table}[t]
+\centering
+\caption{Confidence intervals and paired statistical tests.}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+comparison & test & metric & pointEstimate & lower95 & upper95 & pValueRaw & pValueHolm & status \\
+\midrule
+rules-baseline & stratified bootstrap & accuracy & 0.5205811138014528 & 0.5012106537530266 & 0.5423728813559322 &  &  & SUCCESS \\
+rules-baseline & stratified bootstrap & macroF1 & 0.299426785518753 & 0.26591360470766867 & 0.3346784635101043 &  &  & SUCCESS \\
+rules-baseline & stratified bootstrap & attackF1 & 0.16058394160583944 & 0.08 & 0.24489795918367346 &  &  & SUCCESS \\
+rules-baseline & stratified bootstrap & attackRecall & 0.1134020618556701 & 0.05154639175257732 & 0.18556701030927836 &  &  & SUCCESS \\
+rules-baseline & stratified bootstrap & attackPrecision & 0.275 & 0.15 & 0.40542652027027 &  &  & SUCCESS \\
+rules-baseline & stratified bootstrap & safeFPR & 0.014354066985645933 & 0.0 & 0.03349282296650718 &  &  & SUCCESS \\
+rules-baseline & stratified bootstrap & unknownAccuracy & 0.018691588785046728 & 0.0 & 0.04672897196261682 &  &  & SUCCESS \\
+rules-baseline & stratified bootstrap & attackFamilyMacroF1 & 0.1356125356125356 & 0.07460784313725492 & 0.23421394922491412 &  &  & SUCCESS \\
+char-ngram-logreg & stratified bootstrap & accuracy & 0.23486682808716708 & 0.23486682808716708 & 0.23486682808716708 &  &  & SUCCESS \\
+char-ngram-logreg & stratified bootstrap & macroF1 & 0.1272965879265092 & 0.12679738562091505 & 0.12805280528052804 &  &  & SUCCESS \\
+char-ngram-logreg & stratified bootstrap & attackF1 & 0.38188976377952755 & 0.38039215686274513 & 0.3841584158415841 &  &  & SUCCESS \\
+char-ngram-logreg & stratified bootstrap & attackRecall & 1.0 & 1.0 & 1.0 &  &  & SUCCESS \\
+char-ngram-logreg & stratified bootstrap & attackPrecision & 0.2360097323600973 & 0.23486682808716708 & 0.23774509803921567 &  &  & SUCCESS \\
+char-ngram-logreg & stratified bootstrap & safeFPR & 1.0 & 1.0 & 1.0 &  &  & SUCCESS \\
+char-ngram-logreg & stratified bootstrap & unknownAccuracy & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+char-ngram-logreg & stratified bootstrap & attackFamilyMacroF1 &  &  &  &  &  & SUCCESS \\
+qwen3-4b-zero-shot & stratified bootstrap & accuracy & 0.5230024213075061 & 0.48184019370460046 & 0.5617433414043583 &  &  & SUCCESS \\
+qwen3-4b-zero-shot & stratified bootstrap & macroF1 & 0.41754297711256294 & 0.37779767619753296 & 0.4582627541445148 &  &  & SUCCESS \\
+qwen3-4b-zero-shot & stratified bootstrap & attackF1 & 0.49640287769784186 & 0.4395604395604396 & 0.5507246376811594 &  &  & SUCCESS \\
+qwen3-4b-zero-shot & stratified bootstrap & attackRecall & 0.711340206185567 & 0.6185567010309279 & 0.8041237113402062 &  &  & SUCCESS \\
+qwen3-4b-zero-shot & stratified bootstrap & attackPrecision & 0.3812154696132597 & 0.33668341708542715 & 0.42857142857142855 &  &  & SUCCESS \\
+qwen3-4b-zero-shot & stratified bootstrap & safeFPR & 0.32057416267942584 & 0.2583732057416268 & 0.3827751196172249 &  &  & SUCCESS \\
+qwen3-4b-zero-shot & stratified bootstrap & unknownAccuracy & 0.056074766355140186 & 0.018691588785046728 & 0.102803738317757 &  &  & SUCCESS \\
+qwen3-4b-zero-shot & stratified bootstrap & attackFamilyMacroF1 & 0.6325358851674641 & 0.569233258061383 & 0.8606105039538774 &  &  & SUCCESS \\
+qwen3-4b-few-shot & stratified bootstrap & accuracy & 0.513317191283293 & 0.4745762711864407 & 0.5544794188861986 &  &  & SUCCESS \\
+qwen3-4b-few-shot & stratified bootstrap & macroF1 & 0.411356780167264 & 0.3707901155141355 & 0.45308145612800765 &  &  & SUCCESS \\
+qwen3-4b-few-shot & stratified bootstrap & attackF1 & 0.4758064516129032 & 0.4104429774205893 & 0.5403225806451613 &  &  & SUCCESS \\
+qwen3-4b-few-shot & stratified bootstrap & attackRecall & 0.6082474226804123 & 0.5154639175257731 & 0.7010309278350515 &  &  & SUCCESS \\
+qwen3-4b-few-shot & stratified bootstrap & attackPrecision & 0.39072847682119205 & 0.3357142857142857 & 0.4482758620689655 &  &  & SUCCESS \\
+qwen3-4b-few-shot & stratified bootstrap & safeFPR & 0.2679425837320574 & 0.21052631578947367 & 0.33014354066985646 &  &  & SUCCESS \\
+qwen3-4b-few-shot & stratified bootstrap & unknownAccuracy & 0.06542056074766354 & 0.018691588785046728 & 0.12149532710280374 &  &  & SUCCESS \\
+qwen3-4b-few-shot & stratified bootstrap & attackFamilyMacroF1 & 0.6661023187338978 & 0.6036873722342473 & 0.8945399995996866 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora & stratified bootstrap & accuracy & 0.6150121065375302 & 0.5835351089588378 & 0.6440677966101694 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora & stratified bootstrap & macroF1 & 0.465757232117048 & 0.4414751668149408 & 0.4893848029799388 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora & stratified bootstrap & attackF1 & 0.6692015209125476 & 0.6220472440944882 & 0.7166666666666667 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora & stratified bootstrap & attackRecall & 0.9072164948453608 & 0.845360824742268 & 0.9587628865979382 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora & stratified bootstrap & attackPrecision & 0.5301204819277109 & 0.4835164835164835 & 0.5844155844155844 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora & stratified bootstrap & safeFPR & 0.20574162679425836 & 0.15311004784688995 & 0.2631578947368421 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora & stratified bootstrap & unknownAccuracy & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora & stratified bootstrap & attackFamilyMacroF1 & 0.6425446638231075 & 0.572163651393279 & 0.8722854997854996 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 & stratified bootstrap & accuracy & 0.6150121065375302 & 0.5835351089588378 & 0.6440677966101694 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 & stratified bootstrap & macroF1 & 0.46607758308695385 & 0.44157841170161916 & 0.4897578025259775 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 & stratified bootstrap & attackF1 & 0.6717557251908397 & 0.6245059288537549 & 0.7193675889328064 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 & stratified bootstrap & attackRecall & 0.9072164948453608 & 0.845360824742268 & 0.9587628865979382 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 & stratified bootstrap & attackPrecision & 0.5333333333333333 & 0.4860335195530726 & 0.5882352941176471 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 & stratified bootstrap & safeFPR & 0.20574162679425836 & 0.15311004784688995 & 0.2631578947368421 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 & stratified bootstrap & unknownAccuracy & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 & stratified bootstrap & attackFamilyMacroF1 & 0.6425446638231075 & 0.572163651393279 & 0.8722854997854996 &  &  & SUCCESS \\
+aetherargus-v02-gguf-q4-k-m & stratified bootstrap & accuracy & 0.6004842615012107 & 0.5690072639225182 & 0.6319612590799032 &  &  & SUCCESS \\
+aetherargus-v02-gguf-q4-k-m & stratified bootstrap & macroF1 & 0.45591184025188497 & 0.43117725945125085 & 0.4797930416116382 &  &  & SUCCESS \\
+aetherargus-v02-gguf-q4-k-m & stratified bootstrap & attackF1 & 0.6518518518518518 & 0.6062664977299124 & 0.6988847583643122 &  &  & SUCCESS \\
+aetherargus-v02-gguf-q4-k-m & stratified bootstrap & attackRecall & 0.9072164948453608 & 0.845360824742268 & 0.9587628865979382 &  &  & SUCCESS \\
+aetherargus-v02-gguf-q4-k-m & stratified bootstrap & attackPrecision & 0.5086705202312138 & 0.4631578947368421 & 0.5595294249775381 &  &  & SUCCESS \\
+aetherargus-v02-gguf-q4-k-m & stratified bootstrap & safeFPR & 0.22488038277511962 & 0.17212918660287094 & 0.2822966507177033 &  &  & SUCCESS \\
+aetherargus-v02-gguf-q4-k-m & stratified bootstrap & unknownAccuracy & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-gguf-q4-k-m & stratified bootstrap & attackFamilyMacroF1 & 0.6543121467588645 & 0.5842440235429354 & 0.8886048085120233 &  &  & SUCCESS \\
+aetherargus-v02-ollama-f16 & stratified bootstrap & accuracy & 0.6150121065375302 & 0.5835351089588378 & 0.6440677966101694 &  &  & SUCCESS \\
+aetherargus-v02-ollama-f16 & stratified bootstrap & macroF1 & 0.46607758308695385 & 0.44157841170161916 & 0.4897578025259775 &  &  & SUCCESS \\
+aetherargus-v02-ollama-f16 & stratified bootstrap & attackF1 & 0.6717557251908397 & 0.6245059288537549 & 0.7193675889328064 &  &  & SUCCESS \\
+aetherargus-v02-ollama-f16 & stratified bootstrap & attackRecall & 0.9072164948453608 & 0.845360824742268 & 0.9587628865979382 &  &  & SUCCESS \\
+aetherargus-v02-ollama-f16 & stratified bootstrap & attackPrecision & 0.5333333333333333 & 0.4860335195530726 & 0.5882352941176471 &  &  & SUCCESS \\
+aetherargus-v02-ollama-f16 & stratified bootstrap & safeFPR & 0.20574162679425836 & 0.15311004784688995 & 0.2631578947368421 &  &  & SUCCESS \\
+aetherargus-v02-ollama-f16 & stratified bootstrap & unknownAccuracy & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-ollama-f16 & stratified bootstrap & attackFamilyMacroF1 & 0.6418566693270633 & 0.5715516774891775 & 0.8722852777474625 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora vs rules-baseline & McNemar & verdict correctness &  &  &  & 0.0006117636822975012 & 0.002447054729190005 & SUCCESS \\
+aetherargus-v02-hf-lora vs char-ngram-logreg & McNemar & verdict correctness &  &  &  & 4.267268597865329e-32 & 2.9870880185057304e-31 & SUCCESS \\
+aetherargus-v02-hf-lora vs qwen3-4b-zero-shot & McNemar & verdict correctness &  &  &  & 1.671510579091462e-07 & 8.35755289545731e-07 & SUCCESS \\
+aetherargus-v02-hf-lora vs qwen3-4b-few-shot & McNemar & verdict correctness &  &  &  & 1.2027508944618598e-07 & 7.216505366771159e-07 & SUCCESS \\
+aetherargus-v02-hf-lora vs aetherargus-v02-merged-bf16 & McNemar & verdict correctness &  &  &  & 1.0 & 1.0 & SUCCESS \\
+aetherargus-v02-hf-lora vs aetherargus-v02-gguf-q4-k-m & McNemar & verdict correctness &  &  &  & 0.1795654296875 & 0.5386962890625 & SUCCESS \\
+aetherargus-v02-hf-lora vs aetherargus-v02-ollama-f16 & McNemar & verdict correctness &  &  &  & 1.0 & 1.0 & SUCCESS \\
+aetherargus-v02-hf-lora minus qwen3-4b-zero-shot & paired stratified bootstrap & macroF1 & 0.04821425500448506 & 0.011259540045157853 & 0.08349493464516929 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus qwen3-4b-zero-shot & paired stratified bootstrap & attackF1 & 0.17279864321470573 & 0.12462379942948354 & 0.22530317668005828 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus qwen3-4b-zero-shot & paired stratified bootstrap & safeFPR & -0.11483253588516748 & -0.15789473684210528 & -0.07177033492822968 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus qwen3-4b-zero-shot & paired stratified bootstrap & unknownAccuracy & -0.056074766355140186 & -0.102803738317757 & -0.018691588785046728 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus qwen3-4b-few-shot & paired stratified bootstrap & macroF1 & 0.05440045194978399 & 0.0156633235158357 & 0.09124177430699268 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus qwen3-4b-few-shot & paired stratified bootstrap & attackF1 & 0.1933950692996444 & 0.13338898948558153 & 0.2579728808200401 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus qwen3-4b-few-shot & paired stratified bootstrap & safeFPR & -0.06220095693779906 & -0.10047846889952153 & -0.02392344497607657 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus qwen3-4b-few-shot & paired stratified bootstrap & unknownAccuracy & -0.06542056074766354 & -0.12149532710280374 & -0.018691588785046728 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus rules-baseline & paired stratified bootstrap & macroF1 & 0.166330446598295 & 0.12623700045160832 & 0.20648175268866342 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus rules-baseline & paired stratified bootstrap & attackF1 & 0.5086175793067081 & 0.41592980689324827 & 0.5992880657939958 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus rules-baseline & paired stratified bootstrap & safeFPR & 0.19138755980861244 & 0.13875598086124402 & 0.24401913875598089 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus rules-baseline & paired stratified bootstrap & unknownAccuracy & -0.018691588785046728 & -0.04672897196261682 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus char-ngram-logreg & paired stratified bootstrap & macroF1 & 0.3384606441905388 & 0.3140661173939063 & 0.36220198350091026 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus char-ngram-logreg & paired stratified bootstrap & attackF1 & 0.28731175713302004 & 0.24028827279052883 & 0.3347482435162168 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus char-ngram-logreg & paired stratified bootstrap & safeFPR & -0.7942583732057417 & -0.84688995215311 & -0.736842105263158 &  &  & SUCCESS \\
+aetherargus-v02-hf-lora minus char-ngram-logreg & paired stratified bootstrap & unknownAccuracy & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 minus aetherargus-v02-gguf-q4-k-m & paired stratified bootstrap & macroF1 & 0.01016574283506888 & -0.004311530509471844 & 0.024898981409148833 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 minus aetherargus-v02-gguf-q4-k-m & paired stratified bootstrap & attackF1 & 0.01990387333898791 & -0.010125418126654167 & 0.050192895213387184 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 minus aetherargus-v02-gguf-q4-k-m & paired stratified bootstrap & safeFPR & -0.01913875598086126 & -0.04784688995215314 & 0.009569377990430616 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 minus aetherargus-v02-gguf-q4-k-m & paired stratified bootstrap & unknownAccuracy & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 minus aetherargus-v02-ollama-f16 & paired stratified bootstrap & macroF1 & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 minus aetherargus-v02-ollama-f16 & paired stratified bootstrap & attackF1 & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 minus aetherargus-v02-ollama-f16 & paired stratified bootstrap & safeFPR & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+aetherargus-v02-merged-bf16 minus aetherargus-v02-ollama-f16 & paired stratified bootstrap & unknownAccuracy & 0.0 & 0.0 & 0.0 &  &  & SUCCESS \\
+\bottomrule
+\end{tabular}
+\end{table}

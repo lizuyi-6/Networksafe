@@ -1,0 +1,10 @@
+{
+  "modelSizeBytes": null,
+  "modelSizeMeasurement": {
+    "method": "not_available",
+    "reason": "rules baseline has no standalone model artifact"
+  },
+  "peakGpuMemoryMiB": null,
+  "peakHostMemoryMiB": null,
+  "crossStackLatencyComparable": false
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "repository": "lizuyi-6/Networksafe",
+  "pullRequest": "https://github.com/lizuyi-6/Networksafe/pull/16",
+  "baseBranch": "master",
+  "headBranch": "agent/aetherargus-paper-evidence-20260731",
+  "sourcePullRequest": "https://github.com/lizuyi-6/Networksafe/pull/15",
+  "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+  "pr15MergeCommit": "fc71bb430b5f5bf365d3a7a42c22304a9e048f37",
+  "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
+  "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
+  "evidenceCommit": "9ebd1d2393efaf86b75adb3646c71e0727965768",
+  "baseSelectionReason": "PR #15 merged at fc71bb430b5f5bf365d3a7a42c22304a9e048f37; PR #16 targets that master state and preserves the adjudicated labels.",
+  "evidenceStatus": "COMPLETE_PENDING_CI",
+  "autoMergeRequested": false,
+  "completionClaimAllowed": true
+}

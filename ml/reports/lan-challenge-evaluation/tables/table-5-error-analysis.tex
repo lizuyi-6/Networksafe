@@ -1,0 +1,122 @@
+\begin{table}[t]
+\centering
+\caption{Error taxonomy using sanitized request summaries.}
+\begin{tabular}{lrrrrrr}
+\toprule
+modelId & categoryKey & category & count & proportion & representativeSampleIds & possibleCause \\
+\midrule
+rules-baseline & safe\_to\_attack & safe→attack & 3 & 0.007264 & viguard-lan-000231;viguard-lan-000232;viguard-lan-000233 & Request-side patterns overfire on a reference-safe row. \\
+rules-baseline & safe\_to\_unknown & safe→unknown & 4 & 0.009685 & viguard-lan-000255;viguard-lan-000256;viguard-lan-000257;viguard-lan-000297 & The system abstains on a reference-safe row. \\
+rules-baseline & attack\_to\_safe & attack→safe & 85 & 0.205811 & viguard-lan-000153;viguard-lan-000154;viguard-lan-000155;viguard-lan-000157;viguard-lan-000158 & The request-side detector misses the attack evidence. \\
+rules-baseline & attack\_to\_unknown & attack→unknown & 1 & 0.002421 & viguard-lan-000197 & The detector abstains instead of detecting an attack. \\
+rules-baseline & unknown\_to\_safe & unknown→safe & 79 & 0.191283 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The detector overstates safety when reference context is insufficient. \\
+rules-baseline & unknown\_to\_attack & unknown→attack & 26 & 0.062954 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000170 & A suspicious surface form is treated as proved attack without required context. \\
+rules-baseline & json\_parse\_failure & JSON解析失败 & 0 & 0.000000 &  & The raw output is not strict JSON. \\
+rules-baseline & schema\_failure & Schema失败 & 0 & 0.000000 &  & The output violates the locked schema. \\
+rules-baseline & attack\_family\_error & 攻击家族错误 & 89 & 0.215496 & viguard-lan-000153;viguard-lan-000154;viguard-lan-000155;viguard-lan-000157;viguard-lan-000158 & The verdict may detect risk but the family attribution is wrong. \\
+rules-baseline & recommended\_action\_error & 推荐动作错误 & 261 & 0.631961 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The output action differs from the reference action. \\
+rules-baseline & prompt\_injection\_hijack & Prompt Injection劫持 & 56 & 0.135593 & viguard-lan-000307;viguard-lan-000308;viguard-lan-000309;viguard-lan-000310;viguard-lan-000311 & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+rules-baseline & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 64 & 0.154964 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+rules-baseline & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 6 & 0.014528 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000170 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+rules-baseline & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+char-ngram-logreg & safe\_to\_attack & safe→attack & 209 & 0.506053 & viguard-lan-000001;viguard-lan-000002;viguard-lan-000003;viguard-lan-000004;viguard-lan-000005 & Request-side patterns overfire on a reference-safe row. \\
+char-ngram-logreg & safe\_to\_unknown & safe→unknown & 0 & 0.000000 &  & The system abstains on a reference-safe row. \\
+char-ngram-logreg & attack\_to\_safe & attack→safe & 0 & 0.000000 &  & The request-side detector misses the attack evidence. \\
+char-ngram-logreg & attack\_to\_unknown & attack→unknown & 0 & 0.000000 &  & The detector abstains instead of detecting an attack. \\
+char-ngram-logreg & unknown\_to\_safe & unknown→safe & 2 & 0.004843 & viguard-lan-000258;viguard-lan-000265 & The detector overstates safety when reference context is insufficient. \\
+char-ngram-logreg & unknown\_to\_attack & unknown→attack & 105 & 0.254237 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & A suspicious surface form is treated as proved attack without required context. \\
+char-ngram-logreg & json\_parse\_failure & JSON解析失败 & 0 & 0.000000 &  & The raw output is not strict JSON. \\
+char-ngram-logreg & schema\_failure & Schema失败 & 0 & 0.000000 &  & The output violates the locked schema. \\
+char-ngram-logreg & attack\_family\_error & 攻击家族错误 & 97 & 0.234867 & viguard-lan-000153;viguard-lan-000154;viguard-lan-000155;viguard-lan-000156;viguard-lan-000157 & The verdict may detect risk but the family attribution is wrong. \\
+char-ngram-logreg & recommended\_action\_error & 推荐动作错误 & 318 & 0.769976 & viguard-lan-000001;viguard-lan-000002;viguard-lan-000003;viguard-lan-000004;viguard-lan-000005 & The output action differs from the reference action. \\
+char-ngram-logreg & prompt\_injection\_hijack & Prompt Injection劫持 & 0 & 0.000000 &  & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+char-ngram-logreg & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 66 & 0.159806 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+char-ngram-logreg & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 19 & 0.046005 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+char-ngram-logreg & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+qwen3-4b-zero-shot & safe\_to\_attack & safe→attack & 67 & 0.162228 & viguard-lan-000025;viguard-lan-000026;viguard-lan-000027;viguard-lan-000028;viguard-lan-000067 & Request-side patterns overfire on a reference-safe row. \\
+qwen3-4b-zero-shot & safe\_to\_unknown & safe→unknown & 1 & 0.002421 & viguard-lan-000302 & The system abstains on a reference-safe row. \\
+qwen3-4b-zero-shot & attack\_to\_safe & attack→safe & 26 & 0.062954 & viguard-lan-000197;viguard-lan-000215;viguard-lan-000216;viguard-lan-000307;viguard-lan-000313 & The request-side detector misses the attack evidence. \\
+qwen3-4b-zero-shot & attack\_to\_unknown & attack→unknown & 2 & 0.004843 & viguard-lan-000309;viguard-lan-000310 & The detector abstains instead of detecting an attack. \\
+qwen3-4b-zero-shot & unknown\_to\_safe & unknown→safe & 56 & 0.135593 & viguard-lan-000120;viguard-lan-000122;viguard-lan-000123;viguard-lan-000124;viguard-lan-000127 & The detector overstates safety when reference context is insufficient. \\
+qwen3-4b-zero-shot & unknown\_to\_attack & unknown→attack & 45 & 0.108959 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & A suspicious surface form is treated as proved attack without required context. \\
+qwen3-4b-zero-shot & json\_parse\_failure & JSON解析失败 & 0 & 0.000000 &  & The raw output is not strict JSON. \\
+qwen3-4b-zero-shot & schema\_failure & Schema失败 & 0 & 0.000000 &  & The output violates the locked schema. \\
+qwen3-4b-zero-shot & attack\_family\_error & 攻击家族错误 & 39 & 0.094431 & viguard-lan-000197;viguard-lan-000199;viguard-lan-000215;viguard-lan-000216;viguard-lan-000307 & The verdict may detect risk but the family attribution is wrong. \\
+qwen3-4b-zero-shot & recommended\_action\_error & 推荐动作错误 & 220 & 0.532688 & viguard-lan-000025;viguard-lan-000026;viguard-lan-000027;viguard-lan-000028;viguard-lan-000067 & The output action differs from the reference action. \\
+qwen3-4b-zero-shot & prompt\_injection\_hijack & Prompt Injection劫持 & 23 & 0.055690 & viguard-lan-000307;viguard-lan-000313;viguard-lan-000315;viguard-lan-000316;viguard-lan-000322 & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+qwen3-4b-zero-shot & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 65 & 0.157385 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+qwen3-4b-zero-shot & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 19 & 0.046005 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+qwen3-4b-zero-shot & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+qwen3-4b-few-shot & safe\_to\_attack & safe→attack & 56 & 0.135593 & viguard-lan-000001;viguard-lan-000002;viguard-lan-000025;viguard-lan-000028;viguard-lan-000152 & Request-side patterns overfire on a reference-safe row. \\
+qwen3-4b-few-shot & safe\_to\_unknown & safe→unknown & 7 & 0.016949 & viguard-lan-000034;viguard-lan-000133;viguard-lan-000201;viguard-lan-000285;viguard-lan-000363 & The system abstains on a reference-safe row. \\
+qwen3-4b-few-shot & attack\_to\_safe & attack→safe & 31 & 0.075061 & viguard-lan-000215;viguard-lan-000216;viguard-lan-000313;viguard-lan-000314;viguard-lan-000317 & The request-side detector misses the attack evidence. \\
+qwen3-4b-few-shot & attack\_to\_unknown & attack→unknown & 7 & 0.016949 & viguard-lan-000312;viguard-lan-000316;viguard-lan-000324;viguard-lan-000336;viguard-lan-000358 & The detector abstains instead of detecting an attack. \\
+qwen3-4b-few-shot & unknown\_to\_safe & unknown→safe & 64 & 0.154964 & viguard-lan-000116;viguard-lan-000123;viguard-lan-000124;viguard-lan-000125;viguard-lan-000127 & The detector overstates safety when reference context is insufficient. \\
+qwen3-4b-few-shot & unknown\_to\_attack & unknown→attack & 36 & 0.087167 & viguard-lan-000115;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119;viguard-lan-000121 & A suspicious surface form is treated as proved attack without required context. \\
+qwen3-4b-few-shot & json\_parse\_failure & JSON解析失败 & 1 & 0.002421 & viguard-lan-000163 & The raw output is not strict JSON. \\
+qwen3-4b-few-shot & schema\_failure & Schema失败 & 1 & 0.002421 & viguard-lan-000163 & The output violates the locked schema. \\
+qwen3-4b-few-shot & attack\_family\_error & 攻击家族错误 & 39 & 0.094431 & viguard-lan-000180;viguard-lan-000199;viguard-lan-000215;viguard-lan-000216;viguard-lan-000312 & The verdict may detect risk but the family attribution is wrong. \\
+qwen3-4b-few-shot & recommended\_action\_error & 推荐动作错误 & 225 & 0.544794 & viguard-lan-000001;viguard-lan-000002;viguard-lan-000025;viguard-lan-000028;viguard-lan-000034 & The output action differs from the reference action. \\
+qwen3-4b-few-shot & prompt\_injection\_hijack & Prompt Injection劫持 & 29 & 0.070218 & viguard-lan-000313;viguard-lan-000314;viguard-lan-000317;viguard-lan-000319;viguard-lan-000320 & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+qwen3-4b-few-shot & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 65 & 0.157385 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+qwen3-4b-few-shot & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 18 & 0.043584 & viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169;viguard-lan-000170 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+qwen3-4b-few-shot & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+aetherargus-v02-hf-lora & safe\_to\_attack & safe→attack & 43 & 0.104116 & viguard-lan-000221;viguard-lan-000225;viguard-lan-000226;viguard-lan-000227;viguard-lan-000228 & Request-side patterns overfire on a reference-safe row. \\
+aetherargus-v02-hf-lora & safe\_to\_unknown & safe→unknown & 0 & 0.000000 &  & The system abstains on a reference-safe row. \\
+aetherargus-v02-hf-lora & attack\_to\_safe & attack→safe & 9 & 0.021792 & viguard-lan-000197;viguard-lan-000215;viguard-lan-000216;viguard-lan-000322;viguard-lan-000335 & The request-side detector misses the attack evidence. \\
+aetherargus-v02-hf-lora & attack\_to\_unknown & attack→unknown & 0 & 0.000000 &  & The detector abstains instead of detecting an attack. \\
+aetherargus-v02-hf-lora & unknown\_to\_safe & unknown→safe & 72 & 0.174334 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The detector overstates safety when reference context is insufficient. \\
+aetherargus-v02-hf-lora & unknown\_to\_attack & unknown→attack & 35 & 0.084746 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & A suspicious surface form is treated as proved attack without required context. \\
+aetherargus-v02-hf-lora & json\_parse\_failure & JSON解析失败 & 0 & 0.000000 &  & The raw output is not strict JSON. \\
+aetherargus-v02-hf-lora & schema\_failure & Schema失败 & 0 & 0.000000 &  & The output violates the locked schema. \\
+aetherargus-v02-hf-lora & attack\_family\_error & 攻击家族错误 & 17 & 0.041162 & viguard-lan-000196;viguard-lan-000197;viguard-lan-000198;viguard-lan-000199;viguard-lan-000215 & The verdict may detect risk but the family attribution is wrong. \\
+aetherargus-v02-hf-lora & recommended\_action\_error & 推荐动作错误 & 189 & 0.457627 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The output action differs from the reference action. \\
+aetherargus-v02-hf-lora & prompt\_injection\_hijack & Prompt Injection劫持 & 6 & 0.014528 & viguard-lan-000322;viguard-lan-000335;viguard-lan-000336;viguard-lan-000347;viguard-lan-000354 & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+aetherargus-v02-hf-lora & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 66 & 0.159806 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+aetherargus-v02-hf-lora & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 19 & 0.046005 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+aetherargus-v02-hf-lora & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+aetherargus-v02-merged-bf16 & safe\_to\_attack & safe→attack & 43 & 0.104116 & viguard-lan-000221;viguard-lan-000225;viguard-lan-000226;viguard-lan-000227;viguard-lan-000228 & Request-side patterns overfire on a reference-safe row. \\
+aetherargus-v02-merged-bf16 & safe\_to\_unknown & safe→unknown & 0 & 0.000000 &  & The system abstains on a reference-safe row. \\
+aetherargus-v02-merged-bf16 & attack\_to\_safe & attack→safe & 9 & 0.021792 & viguard-lan-000197;viguard-lan-000215;viguard-lan-000216;viguard-lan-000322;viguard-lan-000335 & The request-side detector misses the attack evidence. \\
+aetherargus-v02-merged-bf16 & attack\_to\_unknown & attack→unknown & 0 & 0.000000 &  & The detector abstains instead of detecting an attack. \\
+aetherargus-v02-merged-bf16 & unknown\_to\_safe & unknown→safe & 73 & 0.176755 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The detector overstates safety when reference context is insufficient. \\
+aetherargus-v02-merged-bf16 & unknown\_to\_attack & unknown→attack & 34 & 0.082324 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & A suspicious surface form is treated as proved attack without required context. \\
+aetherargus-v02-merged-bf16 & json\_parse\_failure & JSON解析失败 & 0 & 0.000000 &  & The raw output is not strict JSON. \\
+aetherargus-v02-merged-bf16 & schema\_failure & Schema失败 & 0 & 0.000000 &  & The output violates the locked schema. \\
+aetherargus-v02-merged-bf16 & attack\_family\_error & 攻击家族错误 & 17 & 0.041162 & viguard-lan-000196;viguard-lan-000197;viguard-lan-000198;viguard-lan-000199;viguard-lan-000215 & The verdict may detect risk but the family attribution is wrong. \\
+aetherargus-v02-merged-bf16 & recommended\_action\_error & 推荐动作错误 & 189 & 0.457627 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The output action differs from the reference action. \\
+aetherargus-v02-merged-bf16 & prompt\_injection\_hijack & Prompt Injection劫持 & 6 & 0.014528 & viguard-lan-000322;viguard-lan-000335;viguard-lan-000336;viguard-lan-000347;viguard-lan-000354 & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+aetherargus-v02-merged-bf16 & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 66 & 0.159806 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+aetherargus-v02-merged-bf16 & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 19 & 0.046005 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+aetherargus-v02-merged-bf16 & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+aetherargus-v02-gguf-q4-k-m & safe\_to\_attack & safe→attack & 47 & 0.113801 & viguard-lan-000028;viguard-lan-000221;viguard-lan-000222;viguard-lan-000224;viguard-lan-000225 & Request-side patterns overfire on a reference-safe row. \\
+aetherargus-v02-gguf-q4-k-m & safe\_to\_unknown & safe→unknown & 2 & 0.004843 & viguard-lan-000246;viguard-lan-000248 & The system abstains on a reference-safe row. \\
+aetherargus-v02-gguf-q4-k-m & attack\_to\_safe & attack→safe & 9 & 0.021792 & viguard-lan-000215;viguard-lan-000216;viguard-lan-000322;viguard-lan-000329;viguard-lan-000334 & The request-side detector misses the attack evidence. \\
+aetherargus-v02-gguf-q4-k-m & attack\_to\_unknown & attack→unknown & 0 & 0.000000 &  & The detector abstains instead of detecting an attack. \\
+aetherargus-v02-gguf-q4-k-m & unknown\_to\_safe & unknown→safe & 69 & 0.167070 & viguard-lan-000116;viguard-lan-000117;viguard-lan-000119;viguard-lan-000120;viguard-lan-000121 & The detector overstates safety when reference context is insufficient. \\
+aetherargus-v02-gguf-q4-k-m & unknown\_to\_attack & unknown→attack & 38 & 0.092010 & viguard-lan-000115;viguard-lan-000118;viguard-lan-000163;viguard-lan-000164;viguard-lan-000165 & A suspicious surface form is treated as proved attack without required context. \\
+aetherargus-v02-gguf-q4-k-m & json\_parse\_failure & JSON解析失败 & 2 & 0.004843 & viguard-lan-000246;viguard-lan-000248 & The raw output is not strict JSON. \\
+aetherargus-v02-gguf-q4-k-m & schema\_failure & Schema失败 & 2 & 0.004843 & viguard-lan-000246;viguard-lan-000248 & The output violates the locked schema. \\
+aetherargus-v02-gguf-q4-k-m & attack\_family\_error & 攻击家族错误 & 18 & 0.043584 & viguard-lan-000166;viguard-lan-000196;viguard-lan-000198;viguard-lan-000199;viguard-lan-000215 & The verdict may detect risk but the family attribution is wrong. \\
+aetherargus-v02-gguf-q4-k-m & recommended\_action\_error & 推荐动作错误 & 190 & 0.460048 & viguard-lan-000028;viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118 & The output action differs from the reference action. \\
+aetherargus-v02-gguf-q4-k-m & prompt\_injection\_hijack & Prompt Injection劫持 & 7 & 0.016949 & viguard-lan-000322;viguard-lan-000329;viguard-lan-000334;viguard-lan-000335;viguard-lan-000339 & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+aetherargus-v02-gguf-q4-k-m & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 66 & 0.159806 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+aetherargus-v02-gguf-q4-k-m & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 19 & 0.046005 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+aetherargus-v02-gguf-q4-k-m & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+aetherargus-v02-ollama-f16 & safe\_to\_attack & safe→attack & 43 & 0.104116 & viguard-lan-000221;viguard-lan-000225;viguard-lan-000226;viguard-lan-000227;viguard-lan-000228 & Request-side patterns overfire on a reference-safe row. \\
+aetherargus-v02-ollama-f16 & safe\_to\_unknown & safe→unknown & 0 & 0.000000 &  & The system abstains on a reference-safe row. \\
+aetherargus-v02-ollama-f16 & attack\_to\_safe & attack→safe & 9 & 0.021792 & viguard-lan-000197;viguard-lan-000215;viguard-lan-000216;viguard-lan-000322;viguard-lan-000335 & The request-side detector misses the attack evidence. \\
+aetherargus-v02-ollama-f16 & attack\_to\_unknown & attack→unknown & 0 & 0.000000 &  & The detector abstains instead of detecting an attack. \\
+aetherargus-v02-ollama-f16 & unknown\_to\_safe & unknown→safe & 73 & 0.176755 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The detector overstates safety when reference context is insufficient. \\
+aetherargus-v02-ollama-f16 & unknown\_to\_attack & unknown→attack & 34 & 0.082324 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & A suspicious surface form is treated as proved attack without required context. \\
+aetherargus-v02-ollama-f16 & json\_parse\_failure & JSON解析失败 & 0 & 0.000000 &  & The raw output is not strict JSON. \\
+aetherargus-v02-ollama-f16 & schema\_failure & Schema失败 & 0 & 0.000000 &  & The output violates the locked schema. \\
+aetherargus-v02-ollama-f16 & attack\_family\_error & 攻击家族错误 & 17 & 0.041162 & viguard-lan-000196;viguard-lan-000197;viguard-lan-000198;viguard-lan-000199;viguard-lan-000215 & The verdict may detect risk but the family attribution is wrong. \\
+aetherargus-v02-ollama-f16 & recommended\_action\_error & 推荐动作错误 & 189 & 0.457627 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & The output action differs from the reference action. \\
+aetherargus-v02-ollama-f16 & prompt\_injection\_hijack & Prompt Injection劫持 & 6 & 0.014528 & viguard-lan-000322;viguard-lan-000335;viguard-lan-000336;viguard-lan-000347;viguard-lan-000354 & Operational proxy: a prompt-injection reference produced safe or invalid output. \\
+aetherargus-v02-ollama-f16 & authorization\_or\_ownership\_context\_missing & 权限/归属上下文不足 & 66 & 0.159806 & viguard-lan-000115;viguard-lan-000116;viguard-lan-000117;viguard-lan-000118;viguard-lan-000119 & Unknown authorization/ownership rows are forced to safe or attack. \\
+aetherargus-v02-ollama-f16 & storage\_vs\_execution\_confusion & 存储字段与执行字段混淆 & 19 & 0.046005 & viguard-lan-000163;viguard-lan-000164;viguard-lan-000165;viguard-lan-000168;viguard-lan-000169 & Unknown SQL/XSS storage semantics are promoted to attack. \\
+aetherargus-v02-ollama-f16 & long\_input\_truncation & 长输入截断 & 0 & 0.000000 &  & The runtime reported truncation or exhausted the locked context. \\
+\bottomrule
+\end{tabular}
+\end{table}

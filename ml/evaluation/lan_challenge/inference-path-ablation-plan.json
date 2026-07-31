@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "status": "LOCKED_PRE_RUN",
+  "lockedAt": "2026-07-31T00:00:00Z",
+  "inheritsProtocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
+  "inheritsProtocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
+  "purpose": "Complete the inference-path diagnostics predeclared in protocol v1/v2 without changing any primary model, prompt, threshold, label, or hyperparameter.",
+  "frozenControls": {
+    "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+    "systemPromptSha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
+    "baseRevision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+    "maxContextTokens": 2048,
+    "maxNewTokens": 320,
+    "temperature": 0,
+    "topP": 1,
+    "topK": 0,
+    "seed": 0
+  },
+  "diagnostics": [
+    {
+      "diagnosticId": "system_user_vs_single_concatenated",
+      "changedVariable": "message structure",
+      "heldConstant": [
+        "runtime",
+        "model artifact",
+        "input",
+        "system prompt bytes",
+        "context length",
+        "output cap",
+        "sampling"
+      ],
+      "variants": [
+        "aetherargus-v02-merged-bf16-single-concat",
+        "aetherargus-v02-ollama-f16-single-concat"
+      ],
+      "sampleCountPerVariant": 413
+    },
+    {
+      "diagnosticId": "native_template_vs_shared_hf_serialization",
+      "changedVariable": "native runtime chat-template application versus pre-serialized Transformers template",
+      "heldConstant": [
+        "runtime",
+        "model artifact",
+        "input",
+        "serialized prompt bytes per sample",
+        "context length",
+        "output cap",
+        "sampling"
+      ],
+      "variants": [
+        "aetherargus-v02-merged-bf16-hf-serialized",
+        "aetherargus-v02-ollama-f16-hf-serialized"
+      ],
+      "sampleCountPerVariant": 413
+    },
+    {
+      "diagnosticId": "shared_serialized_prompt_across_runtimes",
+      "changedVariable": "runtime plus unavoidable BF16-to-f16 artifact representation",
+      "heldConstant": [
+        "checkpoint lineage",
+        "input",
+        "serialized prompt bytes per sample",
+        "context length",
+        "output cap",
+        "sampling"
+      ],
+      "variants": [
+        "aetherargus-v02-merged-bf16-hf-serialized",
+        "aetherargus-v02-ollama-f16-hf-serialized"
+      ],
+      "sampleCountPerVariant": 413,
+      "limitation": "Merged BF16 safetensors and f16 GGUF are not bit-identical artifacts, so a residual difference cannot be attributed solely to runtime."
+    }
+  ],
+  "inferenceMayRead": [
+    "ml/data/lan_challenge_capture/model-inputs.jsonl",
+    "ml/evaluation/lan_challenge/system-prompt.txt",
+    "model/tokenizer/configuration artifacts",
+    "local serialized prompt intermediate produced without labels"
+  ],
+  "inferenceMayNotRead": [
+    "final-labels.jsonl",
+    "adjudication.jsonl",
+    "agreement-report.json",
+    "context-visibility-audit.json",
+    "model-a-annotations.jsonl",
+    "model-b-annotations.jsonl",
+    "collector ground truth",
+    "responseStatus",
+    "responseBody"
+  ],
+  "outputPolicy": {
+    "serializedPromptIntermediateCommitted": false,
+    "diagnosticPredictionsCommittedAfterPrivacyScan": true,
+    "appendAndFlushPerSample": true,
+    "resumeSkipsCompletedSampleIds": true,
+    "missingVariantMakesAblationIncomplete": true
+  },
+  "challengeSetUsedForTuning": false,
+  "labelsMutableAfterEvaluation": false
+}

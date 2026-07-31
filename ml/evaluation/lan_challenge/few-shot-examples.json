@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "sourceSplits": [
+    "ml/data/releases/v02/train.jsonl",
+    "ml/data/releases/v02/validation.jsonl"
+  ],
+  "selectionSeed": 20260731,
+  "sampleIds": [],
+  "examplesSha256": null,
+  "status": "NOT_AVAILABLE",
+  "reason": "The v02 train and validation JSONL assets referenced by the repository manifest are not committed at the PR #15 head and are not mounted in the execution environment. No challenge-set example was substituted."
+}

@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 2,
+  "status": "AVAILABLE",
+  "sourceSplits": [
+    "ml/data/releases/v02/train.jsonl",
+    "ml/data/releases/v02/validation.jsonl"
+  ],
+  "selectionSeed": 20260731,
+  "selectionRule": "train+val only; verdict malicious->attack/safe->safe/unknown->unknown; attack restricted to challenge-enum families; deterministic order sha256(seed:sampleId) + measured-marginal-full-prompt-cost greedy; sized so system+examples+worst-user <= 2000 (lock 2048).",
+  "challengeSetUsed": false,
+  "challengeLabelsUsed": false,
+  "maxContextTokens": 2048,
+  "tokenBudget": {
+    "systemBaseTokens": 273,
+    "userAllowanceTokens": 200,
+    "safetyCapTokens": 2000,
+    "examplesUsedTokens": 1472
+  },
+  "sampleIds": [
+    "v02-legacy-000324",
+    "v02-dev-attack-business_logic-003950",
+    "v02-legacy-000130",
+    "v02-dev-attack-file_upload-003610",
+    "v02-legacy-000188",
+    "v02-legacy-000097",
+    "v02-legacy-000286",
+    "v02-legacy-000139",
+    "v02-legacy-000384",
+    "v02-dev-normal-000219",
+    "v02-dev-unknown-000391"
+  ],
+  "examplesSha256": "e17c38a14e89487f83e11469d53eafb8551cfe286be0e1f4be45541acfb6df5b",
+  "examples": [
+    {
+      "sampleId": "v02-legacy-000324",
+      "sourceSplit": "ml/data/releases/v02/validation.jsonl",
+      "verdict": "attack",
+      "attackFamily": "authentication",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"example.com\"},\"method\":\"GET\",\"path\":\"/legacy-synthetic/inspect\",\"query\":\"input=adminа\",\"ruleSignals\":[],\"sourceContext\":{\"authenticated\":false,\"distinctPathsLastMinute\":1,\"historicalRiskScore\":0.5,\"openApiMatched\":false,\"recentFailureCount\":0,\"requestsLastMinute\":1}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"authentication\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 113
+    },
+    {
+      "sampleId": "v02-dev-attack-business_logic-003950",
+      "sourceSplit": "ml/data/releases/v02/validation.jsonl",
+      "verdict": "attack",
+      "attackFamily": "business_logic",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"test.local\",\"X-Request-ID\":\"req-003950\"},\"method\":\"GET\",\"path\":\"/api/business-logic/inspect\",\"query\":\"value=role=user&requestedRole=owner\",\"ruleSignals\":[],\"sourceContext\":{\"accountPrivilege\":\"user\",\"authenticated\":true,\"distinctPathsLastMinute\":3,\"distinctUsernamesLastMinute\":1,\"endpointSensitivity\":\"high\",\"geoConsistency\":true,\"historicalRiskScore\":0.62,\"internalService\":false,\"openApiMatched\":true,\"recentFailureCount\":0,\"requestsLastMinute\":4,\"sessionAgeSeconds\":410,\"statusCodeHistory\":[200,200,400]}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"business_logic\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 190
+    },
+    {
+      "sampleId": "v02-legacy-000130",
+      "sourceSplit": "ml/data/releases/v02/validation.jsonl",
+      "verdict": "attack",
+      "attackFamily": "command_injection",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"example.com\"},\"method\":\"GET\",\"path\":\"/legacy-synthetic/inspect\",\"query\":\"input=| id\",\"ruleSignals\":[],\"sourceContext\":{\"authenticated\":false,\"distinctPathsLastMinute\":1,\"historicalRiskScore\":0.5,\"openApiMatched\":false,\"recentFailureCount\":0,\"requestsLastMinute\":1}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"command_injection\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 116
+    },
+    {
+      "sampleId": "v02-dev-attack-file_upload-003610",
+      "sourceSplit": "ml/data/releases/v02/train.jsonl",
+      "verdict": "attack",
+      "attackFamily": "file_upload",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"test.local\",\"X-Request-ID\":\"req-003610\"},\"method\":\"GET\",\"path\":\"/api/file-upload/inspect\",\"query\":\"value=filename=example.com&entry=../../example.com\",\"ruleSignals\":[],\"sourceContext\":{\"accountPrivilege\":\"user\",\"authenticated\":true,\"distinctPathsLastMinute\":3,\"distinctUsernamesLastMinute\":1,\"endpointSensitivity\":\"high\",\"geoConsistency\":true,\"historicalRiskScore\":0.62,\"internalService\":false,\"openApiMatched\":true,\"recentFailureCount\":0,\"requestsLastMinute\":5,\"sessionAgeSeconds\":70,\"statusCodeHistory\":[200,200,400]}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"file_upload\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 191
+    },
+    {
+      "sampleId": "v02-legacy-000188",
+      "sourceSplit": "ml/data/releases/v02/train.jsonl",
+      "verdict": "attack",
+      "attackFamily": "path_traversal",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"example.com\"},\"method\":\"GET\",\"path\":\"/legacy-synthetic/inspect\",\"query\":\"input=/etc/shadow\",\"ruleSignals\":[],\"sourceContext\":{\"authenticated\":false,\"distinctPathsLastMinute\":1,\"historicalRiskScore\":0.5,\"openApiMatched\":false,\"recentFailureCount\":0,\"requestsLastMinute\":1}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"path_traversal\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 117
+    },
+    {
+      "sampleId": "v02-legacy-000097",
+      "sourceSplit": "ml/data/releases/v02/validation.jsonl",
+      "verdict": "attack",
+      "attackFamily": "protocol_attack",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"example.com\"},\"method\":\"GET\",\"path\":\"/legacy-synthetic/inspect\",\"query\":\"input=/private/example.com\",\"ruleSignals\":[],\"sourceContext\":{\"authenticated\":false,\"distinctPathsLastMinute\":1,\"historicalRiskScore\":0.5,\"openApiMatched\":false,\"recentFailureCount\":0,\"requestsLastMinute\":1}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"protocol_attack\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 116
+    },
+    {
+      "sampleId": "v02-legacy-000286",
+      "sourceSplit": "ml/data/releases/v02/validation.jsonl",
+      "verdict": "attack",
+      "attackFamily": "sqli",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"example.com\"},\"method\":\"GET\",\"path\":\"/legacy-synthetic/inspect\",\"query\":\"input=admin'/*\",\"ruleSignals\":[],\"sourceContext\":{\"authenticated\":false,\"distinctPathsLastMinute\":1,\"historicalRiskScore\":0.5,\"openApiMatched\":false,\"recentFailureCount\":0,\"requestsLastMinute\":1}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"sqli\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 115
+    },
+    {
+      "sampleId": "v02-legacy-000139",
+      "sourceSplit": "ml/data/releases/v02/validation.jsonl",
+      "verdict": "attack",
+      "attackFamily": "ssrf",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"example.com\"},\"method\":\"GET\",\"path\":\"/legacy-synthetic/inspect\",\"query\":\"input=http://localhost\",\"ruleSignals\":[],\"sourceContext\":{\"authenticated\":false,\"distinctPathsLastMinute\":1,\"historicalRiskScore\":0.5,\"openApiMatched\":false,\"recentFailureCount\":0,\"requestsLastMinute\":1}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"ssrf\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 115
+    },
+    {
+      "sampleId": "v02-legacy-000384",
+      "sourceSplit": "ml/data/releases/v02/validation.jsonl",
+      "verdict": "attack",
+      "attackFamily": "xss",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Host\":\"example.com\"},\"method\":\"GET\",\"path\":\"/legacy-synthetic/inspect\",\"query\":\"input=<script>alert(1)//\",\"ruleSignals\":[],\"sourceContext\":{\"authenticated\":false,\"distinctPathsLastMinute\":1,\"historicalRiskScore\":0.5,\"openApiMatched\":false,\"recentFailureCount\":0,\"requestsLastMinute\":1}}",
+      "assistantResponse": "{\"verdict\":\"attack\",\"attackFamily\":\"xss\",\"recommendedAction\":\"block\",\"contextSufficient\":true,\"confidence\":5}",
+      "tokenCost": 118
+    },
+    {
+      "sampleId": "v02-dev-normal-000219",
+      "sourceSplit": "ml/data/releases/v02/train.jsonl",
+      "verdict": "safe",
+      "attackFamily": "none",
+      "userMessage": "{\"body\":\"\",\"headers\":{\"Accept\":\"application/json\",\"Content-Type\":\"application/json\",\"Host\":\"example.com\",\"X-Request-ID\":\"normal-000219\"},\"method\":\"GET\",\"path\":\"/health/ready\",\"query\":\"\",\"ruleSignals\":[],\"sourceContext\":{\"accountPrivilege\":\"user\",\"authenticated\":false,\"distinctPathsLastMinute\":5,\"endpointSensitivity\":\"medium\",\"geoConsistency\":true,\"historicalRiskScore\":0.02,\"internalService\":true,\"openApiMatched\":true,\"recentFailureCount\":0,\"requestsLastMinute\":4,\"sessionAgeSeconds\":339,\"statusCodeHistory\":[200,200,204]}}",
+      "assistantResponse": "{\"verdict\":\"safe\",\"attackFamily\":\"none\",\"recommendedAction\":\"allow\",\"contextSufficient\":true,\"confidence\":4}",
+      "tokenCost": 174
+    },
+    {
+      "sampleId": "v02-dev-unknown-000391",
+      "sourceSplit": "ml/data/releases/v02/train.jsonl",
+      "verdict": "unknown",
+      "attackFamily": "none",
+      "userMessage": "{\"body\":\"关键 Header 缺失，无法确认内容类型与调用方；synthetic fragment 000391\",\"headers\":{},\"method\":\"EVENT\",\"path\":\"/security/ambiguous/missing_headers\",\"query\":\"\",\"ruleSignals\":[],\"sourceContext\":{\"distinctPathsLastMinute\":0,\"recentFailureCount\":1,\"requestsLastMinute\":1}}",
+      "assistantResponse": "{\"verdict\":\"unknown\",\"attackFamily\":\"none\",\"recommendedAction\":\"challenge\",\"contextSufficient\":true,\"confidence\":2}",
+      "tokenCost": 107
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 3,
+  "mode": "allow-not-run",
+  "status": "NOT_RUN_AFTER_GATE_CHANGE",
+  "checksPassed": 0,
+  "checksTotal": 27,
+  "failed": [
+    {
+      "num": "GATE",
+      "name": "evidence_gate_invalidated",
+      "passed": false,
+      "detail": "Prior validation predates the corrected ancestry, privacy, diagnostic-ablation, provenance, and measured-size checks. Rerun validate-paper-evidence.py after the four diagnostic prediction files and regenerated artifacts exist."
+    }
+  ],
+  "checks": [],
+  "invalidatedPriorResult": true,
+  "requiredOperatorAction": "Run the locked inference-path diagnostics, finalize_evidence.py, then validate-paper-evidence.py on the frozen operator environment."
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "protocolCommit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
+  "status": "SUPERSEDED_BY_LOCKED_DIAGNOSTIC_PLAN",
+  "lockedFactors": [
+    {
+      "ablationId": "A-context-length",
+      "transformers": "max_context_tokens=2048",
+      "ollama": "num_ctx=2048",
+      "status": "NOT_RUN"
+    },
+    {
+      "ablationId": "B-system-prompt",
+      "promptSha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
+      "status": "NOT_RUN"
+    },
+    {
+      "ablationId": "C-message-structure",
+      "levels": [
+        "system_plus_user",
+        "single_concatenated_prompt"
+      ],
+      "status": "NOT_RUN"
+    },
+    {
+      "ablationId": "D-chat-template",
+      "levels": [
+        "tokenizer.apply_chat_template",
+        "Ollama Modelfile TEMPLATE"
+      ],
+      "status": "NOT_RUN"
+    },
+    {
+      "ablationId": "E-sampling-runtime",
+      "temperature": 0,
+      "topP": 1,
+      "topK": 0,
+      "seed": 0,
+      "status": "NOT_RUN"
+    }
+  ],
+  "conclusion": null,
+  "reason": "Neither the merged/f16 shared-weight artifacts nor an Ollama runtime are available. Reporting a causal FPR conclusion from historical, differently configured runs would violate the locked paired-ablation protocol.",
+  "requiredOperatorAction": "Mount the merged BF16 and f16/Q4_K_M artifacts and run both inference stacks with the locked prompt and one-factor-at-a-time matrix.",
+  "supersededBy": "ml/evaluation/lan_challenge/inference-path-ablation-plan.json",
+  "currentResult": "ml/reports/lan-challenge-evaluation/inference-path-ablation-v2.json",
+  "note": "This v1 placeholder contains no results. The v2 report remains INCOMPLETE until four predeclared diagnostic prediction files cover 413 samples."
+}
