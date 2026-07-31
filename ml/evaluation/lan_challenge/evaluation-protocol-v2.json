@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 2,
+  "parent": {
+    "pullRequest": "https://github.com/lizuyi-6/Networksafe/pull/16",
+    "pullRequestMergedAtLock": false,
+    "pr15MergedAtCommit": "fc71bb430b5f5bf365d3a7a42c22304a9e048f37",
+    "protocolV1Commit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
+    "protocolV1CanonicalSha256": "fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276",
+    "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+    "branch": "agent/aetherargus-paper-evidence-20260731"
+  },
+  "protocolV2Reason": "Assets became available and metric implementation bugs were corrected before any v2 model run. v2 inherits every v1 lock (data SHA, label SHA, 8 systems, main metric, subsets, statistical methods, inference params, leakage boundary) verbatim and adds asset + scoring-implementation locks. Protocol v1 (commit 79f146f) is preserved unmodified as the original pre-registration; v2 is not a rewrite of v1.",
+  "dataset": {
+    "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
+    "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+    "labelFile": "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl",
+    "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+    "sampleCount": 413,
+    "referenceDistribution": {
+      "safe": 209,
+      "attack": 97,
+      "unknown": 107
+    },
+    "alignmentKey": "sampleId"
+  },
+  "prompt": {
+    "file": "ml/evaluation/lan_challenge/system-prompt.txt",
+    "sha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
+    "challengeExamplesIncluded": false,
+    "labelValuesInjected": false
+  },
+  "primaryModels": [
+    {
+      "modelId": "rules-baseline",
+      "kind": "offline repository detection-engine adapter (Option A provenance)",
+      "required": true,
+      "rulesBaselineManifest": "ml/evaluation/lan_challenge/rules-baseline-manifest.json",
+      "adapter": "ml/evaluation/lan_challenge/rules_engine_adapter.ts"
+    },
+    {
+      "modelId": "char-ngram-logreg",
+      "kind": "character n-gram logistic regression",
+      "required": true,
+      "trainingSplits": [
+        "train",
+        "validation"
+      ],
+      "ngramRange": [
+        3,
+        5
+      ],
+      "minDf": 2,
+      "maxFeatures": 250000,
+      "classWeight": "balanced",
+      "solver": "liblinear",
+      "randomState": 20260728
+    },
+    {
+      "modelId": "qwen3-4b-zero-shot",
+      "kind": "Transformers base model",
+      "required": true,
+      "model": "Qwen/Qwen3-4B-Instruct-2507",
+      "revision": "cdbee75f17c01a7cc42f958dc650907174af0554"
+    },
+    {
+      "modelId": "qwen3-4b-few-shot",
+      "kind": "Transformers base model with frozen train/validation examples",
+      "required": true,
+      "model": "Qwen/Qwen3-4B-Instruct-2507",
+      "revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+      "exampleManifest": "ml/evaluation/lan_challenge/few-shot-examples-v2.json"
+    },
+    {
+      "modelId": "aetherargus-v02-hf-lora",
+      "kind": "Transformers PEFT adapter over the locked base model",
+      "required": true,
+      "baseModel": "Qwen/Qwen3-4B-Instruct-2507",
+      "baseRevision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+      "adapterPath": "ml/output/aetherargus-v02-lora/"
+    },
+    {
+      "modelId": "aetherargus-v02-merged-bf16",
+      "kind": "Transformers merged BF16 (adapter merged into base, no retraining)",
+      "required": true,
+      "mergedManifest": "D:/aetherargus-v02-merged/merge-summary.json"
+    },
+    {
+      "modelId": "aetherargus-v02-gguf-q4-k-m",
+      "kind": "Ollama/llama.cpp GGUF (Q4_K_M)",
+      "required": true,
+      "quantization": "Q4_K_M",
+      "ggufFile": "D:/aetherargus-v02-gguf/aetherargus-v02-Q4_K_M.gguf"
+    },
+    {
+      "modelId": "aetherargus-v02-ollama-f16",
+      "kind": "Ollama f16 path control",
+      "required": true,
+      "quantization": "f16",
+      "ggufFile": "D:/aetherargus-v02-gguf/aetherargus-v02-f16.gguf"
+    }
+  ],
+  "subsets": [
+    "all_413",
+    "context_sufficient_true",
+    "context_sufficient_false",
+    "consensus",
+    "model_adjudication",
+    "safe",
+    "attack",
+    "unknown",
+    "prompt_injection",
+    "authorization",
+    "idor_bola",
+    "sqli",
+    "xss",
+    "command_injection",
+    "path_traversal",
+    "ssrf"
+  ],
+  "cohortSubsets": {
+    "names": [
+      "normal",
+      "attack_attempt",
+      "hard_negative",
+      "prompt_injection_cohort",
+      "unknown_cohort"
+    ],
+    "status": "NOT_AVAILABLE",
+    "reason": "No independently verified sampleId-to-cohort mapping is committed at protocol lock; sampleId ranges and prediction outcomes will not be used to infer cohorts."
+  },
+  "metrics": [
+    "accuracy",
+    "macro_precision",
+    "macro_recall",
+    "macro_f1",
+    "weighted_f1",
+    "per_class_precision_recall_f1",
+    "verdict_confusion_matrix",
+    "attack_precision_recall_f1_all",
+    "attack_precision_recall_f1_attack_vs_safe",
+    "safe_fpr",
+    "unknown_accuracy",
+    "unknown_precision",
+    "unknown_recall",
+    "unknown_to_attack_rate",
+    "unknown_to_safe_rate",
+    "attack_family_macro_f1",
+    "attack_family_weighted_f1",
+    "attack_family_per_class",
+    "attack_family_confusion_matrix",
+    "json_syntax_success_rate",
+    "schema_valid_rate",
+    "enum_valid_rate",
+    "complete_field_rate",
+    "latency_p50_p95_p99_mean",
+    "samples_per_second",
+    "input_tokens_per_second",
+    "output_tokens_per_second",
+    "peak_gpu_memory",
+    "peak_host_memory",
+    "model_size",
+    "proportion_intervals_clopper_pearson_exact",
+    "proportion_intervals_wilson_score",
+    "proportion_intervals_bootstrap95"
+  ],
+  "metricImplementationNotes": {
+    "attackFamilyMacroF1LabelSet": "reference_attack_families_only (predicted 'none' counts as a false negative for the true family but adds no support=0 denominator class). See protocol-amendments.md stat-issue-4.2.",
+    "proportionIntervals": "safeFPR/accuracy/attackRecall/attackPrecision/unknownAccuracy each report pointEstimate+numerator+denominator+clopperPearson95+wilson95+bootstrap95. Zero-event rates (e.g. 0/209) report a non-degenerate exact/Wilson upper bound, never only [0,0]. See protocol-amendments.md stat-issue-4.1."
+  },
+  "statisticalTests": [
+    {
+      "name": "stratified_bootstrap_confidence_interval",
+      "iterations": 10000,
+      "seed": 20260731,
+      "confidenceLevel": 0.95,
+      "stratifyBy": "reference_verdict"
+    },
+    {
+      "name": "paired_mcnemar",
+      "referenceModel": "aetherargus-v02-hf-lora",
+      "smallCountMethod": "exact"
+    },
+    {
+      "name": "paired_stratified_bootstrap_difference",
+      "iterations": 10000,
+      "seed": 20260731,
+      "confidenceLevel": 0.95,
+      "stratifyBy": "reference_verdict"
+    },
+    {
+      "name": "holm_bonferroni",
+      "family": "comparisons_against_aetherargus_v02_hf_lora"
+    },
+    {
+      "name": "clopper_pearson_exact_binomial_interval",
+      "appliesTo": "proportion_metrics",
+      "confidenceLevel": 0.95
+    },
+    {
+      "name": "wilson_score_interval",
+      "appliesTo": "proportion_metrics",
+      "confidenceLevel": 0.95
+    }
+  ],
+  "inferenceDefaults": {
+    "temperature": 0,
+    "topP": 1,
+    "topK": 0,
+    "seed": 0,
+    "maxContextTokens": 2048,
+    "maxNewTokens": 320,
+    "messageStructure": "system_plus_user",
+    "appendAndFlushPerSample": true,
+    "resumeSkipsCompletedSampleIds": true,
+    "fewShotMessageStructure": "system_plus_frozen_example_turns_plus_user (examples sized so the full few-shot prompt fits 2048 for every input)"
+  },
+  "normalizationRules": {
+    "strictSingleJsonObject": true,
+    "stripMarkdownFences": false,
+    "enumAliases": {},
+    "invalidEnumMappingAllowed": false,
+    "parseFailure": {
+      "parsed": false,
+      "schemaValid": false,
+      "effectiveVerdictForScoring": "unknown",
+      "errorType": "json_parse_error"
+    },
+    "requiredFields": [
+      "verdict",
+      "attackFamily",
+      "recommendedAction",
+      "contextSufficient",
+      "confidence"
+    ]
+  },
+  "leakageControls": {
+    "separateInferenceAndScoringProcesses": true,
+    "inferenceReadableFiles": [
+      "ml/data/lan_challenge_capture/model-inputs.jsonl",
+      "model/tokenizer/configuration artifacts",
+      "ml/evaluation/lan_challenge/system-prompt.txt",
+      "ml/evaluation/lan_challenge/few-shot-examples-v2.json"
+    ],
+    "scoringMayReadLabelsOnlyAfterPredictionsComplete": true,
+    "responseSideEvidenceAllowed": false,
+    "collectorGroundTruthAllowed": false,
+    "challengeSetFewShotAllowed": false,
+    "postResultPromptOrThresholdChangesAllowed": false,
+    "challengeSetUsedForTraining": false,
+    "challengeSetUsedForFewShot": false,
+    "challengeSetUsedForPromptOrThresholdTuning": false
+  },
+  "v2AssetLocks": {
+    "rulesBaselineManifestSha256": "f49e2738bad7d540c713f11ed8b342efea596cfe20933171f17844f0c66561e3",
+    "rulesEngineAdapterSha256": "73913a25ed8715372a14a65326a4b7e2720c22557e33c215c15cbf004b87c3f2",
+    "fewShotExamplesManifestSha256": "3dce86bf902a9871a3f14553a4dbe9332d3bb67d690258f3fccdfd169513a069",
+    "fewShotExamplesPayloadSha256": "e17c38a14e89487f83e11469d53eafb8551cfe286be0e1f4be45541acfb6df5b",
+    "fewShotSelectionReportSha256": "106480b3fa9151adc3139850f9b0f5262414668ef291cb8404b49c5a7ab6099c",
+    "trainingAssetSha256": "e8ff084fc251f3e9ede791dabac747b1021c199e24685d6af9e6a696da2fc3e1",
+    "validationAssetSha256": "ea6f3d070ed796bba4f0ea2582c7eb406794b0162f871ceaf9f07de7e1f55606",
+    "adapterModelSha256": "3f786390b6dffb27ee6be9740acfb27b7961cd2c29da7bbbaab6f932d99aea2d",
+    "adapterConfigSha256": "6d8ec692f15d3aabcc1affeef4d9c9d65898ad75ab1d07c07154ce9f7a3e14b0",
+    "baseModel": "Qwen/Qwen3-4B-Instruct-2507",
+    "baseModelRevision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+    "baseModelFingerprintVerification": "config.json, model.safetensors.index.json, tokenizer_config.json, vocab.json SHA-256 match the exact HF revision",
+    "mergedModelManifestSha256": "c74bd457f21c83797dec3b22afbe1064e58a20237489f66c69bfd39280c1bd9b",
+    "q4GgufSha256": "5d17d15ce0d19376ee0a18a700b6ac79b4e480f376c75f4cc465ec7c1b3aa8ed",
+    "f16GgufSha256": "7f134c21a1a685343573e313198b933f5ce5e78dc239635245aee24327a2ce48",
+    "systemPromptSha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
+    "scoringImplementationSha256": "74ebf031ba231aaa1b2d075bfe4c7ee323df502157d90a16259c810a36d0a684",
+    "scoringImplementationFiles": [
+      "ml/evaluation/lan_challenge/scoring.py (83bcf125...)",
+      "ml/evaluation/lan_challenge/statistical-analysis.py (f33c9a1a...)"
+    ]
+  },
+  "protocolAmendments": {
+    "file": "ml/evaluation/lan_challenge/protocol-amendments.md",
+    "sha256": "7f0738d51699072c22a410179e0ab7c67fdf8bdd8bee239ca1b1daa37189356c",
+    "items": [
+      "stat-issue-4.1 (Clopper-Pearson + Wilson proportion intervals)",
+      "stat-issue-4.2 (attack-family Macro-F1 reference-only label set)"
+    ],
+    "rerunInferenceRequired": false
+  },
+  "inferencePathAblations": [
+    "context_length_2048",
+    "byte_identical_system_prompt",
+    "system_user_vs_single_concatenated_prompt",
+    "transformers_vs_ollama_chat_template",
+    "deterministic_sampling_equivalence"
+  ],
+  "challengeSetUsedForTuning": false,
+  "labelsMutableAfterEvaluation": false,
+  "humanReviewed": false,
+  "reviewerCount": 0,
+  "protocolLockedAt": "2026-07-31T00:00:00Z",
+  "protocolHashSemantics": "SHA-256 of the canonical UTF-8 JSON with protocolSha256 set to the empty string.",
+  "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb"
+}
