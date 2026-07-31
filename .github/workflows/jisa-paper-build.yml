@@ -139,12 +139,14 @@ jobs:
           Label SHA-256: 13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad
           EOF
 
+          manifest_tmp="$(mktemp)"
           (
             cd "$root"
-            find . -type f ! -name MANIFEST.sha256 -print0 \
+            find . -type f -print0 \
               | sort -z \
-              | xargs -0 sha256sum > MANIFEST.sha256
+              | xargs -0 sha256sum > "$manifest_tmp"
           )
+          mv "$manifest_tmp" "$root/MANIFEST.sha256"
           zip -qr aetherargus-jisa-reviewer-evidence.zip "$root"
 
       - name: Upload reviewer evidence package
