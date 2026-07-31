@@ -1,28 +1,53 @@
-# VIguard LAN Challenge Set Human Review
+# VIguard LAN Challenge Set Confidential Human Review
 
 ## Status
 
-Human blind review has been completed for the 413-sample external challenge reference set.
+A complete blind human review was performed for all 413 samples after the frozen model evaluation. The review confirmed the existing reference labels and required zero changes to `final-labels.jsonl`.
 
-## Public repository policy
+## Review design
 
-Raw reviewer worksheets and reviewer identity information are intentionally not stored in this repository because they contain confidential benchmark-review material.
+- The review was conducted outside the public repository in a restricted environment.
+- Human reviewers assessed the model-visible challenge inputs without seeing annotator A/B labels, the third-model adjudication, AetherArgus predictions, or evaluation metrics before making their decisions.
+- Human decisions were compared with the frozen AI-assisted reference labels only after the blind decisions were complete.
+- The comparison found 413/413 confirmations and zero label disagreements.
 
-This public attestation records:
+## Confidentiality policy
 
-- review completion status;
-- blind-review methodology;
-- whether final labels changed;
-- final label hash binding.
+Reviewer identities, reviewer count, worksheets, and raw review materials are intentionally withheld from the public repository to prevent disclosure of confidential benchmark and operational information. Human reviewers did not operate the public repository.
 
-## Review properties
+The public evidence is therefore an operator-confirmed attestation bound to:
 
-- Reviewers did not use AetherArgus predictions as reference.
-- Reviewers did not use model evaluation results.
-- Review was performed against the frozen challenge inputs and reference labels.
-- The final label file hash remains unchanged.
+- the 413-sample review scope;
+- the blind-review constraints;
+- the unchanged final-label SHA-256;
+- the statement that zero label changes were required.
 
-## Terminology
+The machine-readable attestation is `human-review-attestation.json`.
 
-The dataset should be described as **human-reviewed reference labels**.
-It should not be described as natural production traffic or an absolute objective ground truth.
+## Label binding
+
+```text
+final-labels.jsonl SHA-256 before review:
+13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad
+
+final-labels.jsonl SHA-256 after review:
+13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad
+```
+
+Because the label bytes did not change, the existing model predictions, scoring outputs, statistical tests, tables, and figures remain valid and do not require rerunning.
+
+## Publication terminology
+
+Allowed:
+
+> confidentially human-reviewed reference labels
+
+> AI-assisted reference labels subsequently confirmed by confidential blind human review
+
+Not allowed:
+
+> publicly reproducible raw human annotations
+
+> infallible or universally generalizable ground truth
+
+The dataset remains an authorized LAN challenge set and is not natural production traffic.
