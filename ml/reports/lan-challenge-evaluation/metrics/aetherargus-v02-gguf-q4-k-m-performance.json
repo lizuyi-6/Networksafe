@@ -1,5 +1,9 @@
 {
-  "modelSizeBytes": 2497278752,
+  "modelSizeBytes": null,
   "peakGpuMemoryMiB": null,
-  "crossStackLatencyComparable": false
+  "crossStackLatencyComparable": false,
+  "modelSizeMeasurement": {
+    "method": "not_available",
+    "reason": "Prior hard-coded estimate removed; rerun finalize_evidence.py with mounted artifact paths to record filesystem stat plus SHA-256."
+  }
 }
