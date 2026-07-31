@@ -63,6 +63,12 @@ REQUIRED_MODELS = [
     "aetherargus-v02-gguf-q4-k-m",
     "aetherargus-v02-ollama-f16",
 ]
+DIAGNOSTIC_MODELS = {
+    "aetherargus-v02-merged-bf16-single-concat": "single-concatenated",
+    "aetherargus-v02-ollama-f16-single-concat": "single-concatenated",
+    "aetherargus-v02-merged-bf16-hf-serialized": "pre-serialized",
+    "aetherargus-v02-ollama-f16-hf-serialized": "pre-serialized",
+}
 
 
 def close(left: float | None, right: float | None, tolerance: float = 1e-12) -> bool:
@@ -370,6 +376,23 @@ def main() -> int:
     check("22", "all_required_models_success", all_success and metrics_ok,
           f"all_success={all_success} metrics_recompute_mismatches={mismatches}")
 
+    # Load diagnostics without converting a missing/invalid file into a fabricated result.
+    diagnostic_predictions_by_model: dict[str, list[dict[str, Any]]] = {}
+    diagnostic_load_errors: list[str] = []
+    for model_id in DIAGNOSTIC_MODELS:
+        path = PREDICTIONS / "ablation" / f"{model_id}.jsonl"
+        if not path.is_file():
+            diagnostic_load_errors.append(f"{model_id}:missing")
+            continue
+        try:
+            diagnostic_predictions_by_model[model_id] = load_predictions(path, model_id)
+        except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+            diagnostic_load_errors.append(f"{model_id}:{type(error).__name__}")
+    all_prediction_sets = {
+        **predictions_by_model,
+        **diagnostic_predictions_by_model,
+    }
+
     # ---- 23: committed predictions contain no credential/session material ----
     privacy_patterns = [
         re.compile(r"(?i)\\b(?:cookie|set-cookie|authorization|proxy-authorization)\\s*[:=]"),
@@ -378,7 +401,7 @@ def main() -> int:
         re.compile(r"(?i)raw-private"),
     ]
     privacy_hits: list[str] = []
-    for model_id, predictions in predictions_by_model.items():
+    for model_id, predictions in all_prediction_sets.items():
         for prediction in predictions:
             serialized = json.dumps(prediction, ensure_ascii=False, sort_keys=True)
             if any(pattern.search(serialized) for pattern in privacy_patterns):
@@ -388,7 +411,7 @@ def main() -> int:
 
     # ---- 24: parse/schema failures are never repaired to safe ----
     invalid_failure_rows: list[str] = []
-    for model_id, predictions in predictions_by_model.items():
+    for model_id, predictions in all_prediction_sets.items():
         for prediction in predictions:
             failed_output = not prediction.get("parsed") or not prediction.get("schemaValid")
             if failed_output and (
@@ -405,18 +428,57 @@ def main() -> int:
     diagnostics = ablation.get("diagnostics", {})
     message_diag = diagnostics.get("systemUserVsSingleConcat", {})
     template_diag = diagnostics.get("sharedSerializedPromptAcrossRuntimes", {})
+    plan_path = EVAL / "inference-path-ablation-plan.json"
+    plan = json.loads(plan_path.read_text(encoding="utf-8")) if plan_path.is_file() else {}
+    plan_intro = introducing_commit("ml/evaluation/lan_challenge/inference-path-ablation-plan.json")
+    diagnostic_order_ok = bool(plan_intro)
+    metadata_ok = len(diagnostic_predictions_by_model) == len(DIAGNOSTIC_MODELS)
+    prompt_sha = protocol_v2["v2AssetLocks"]["systemPromptSha256"]
+    for model_id, expected_mode in DIAGNOSTIC_MODELS.items():
+        intro = introducing_commit(
+            f"ml/reports/lan-challenge-evaluation/predictions/ablation/{model_id}.jsonl"
+        )
+        diagnostic_order_ok &= bool(
+            intro and plan_intro and is_ancestor(plan_intro, intro) and is_ancestor(intro, "HEAD")
+        )
+        rows = diagnostic_predictions_by_model.get(model_id, [])
+        metadata_ok &= len(rows) == 413 and all(
+            row.get("messageMode") == expected_mode
+            and row.get("systemPromptSha256") == prompt_sha
+            for row in rows
+        )
+    left_serialized = {
+        row["sampleId"]: row.get("serializedPromptSha256")
+        for row in diagnostic_predictions_by_model.get(
+            "aetherargus-v02-merged-bf16-hf-serialized", []
+        )
+    }
+    right_serialized = {
+        row["sampleId"]: row.get("serializedPromptSha256")
+        for row in diagnostic_predictions_by_model.get(
+            "aetherargus-v02-ollama-f16-hf-serialized", []
+        )
+    }
+    shared_prompt_ok = bool(left_serialized) and left_serialized == right_serialized
     ablation_ok = (
         ablation.get("status") == "COMPLETE"
+        and plan.get("status") == "LOCKED_PRE_RUN"
+        and plan.get("challengeSetUsedForTuning") is False
+        and not diagnostic_load_errors
+        and diagnostic_order_ok
+        and metadata_ok
+        and shared_prompt_ok
         and message_diag.get("status") == "SUCCESS"
         and message_diag.get("sampleCountPerVariant") == 413
         and template_diag.get("status") == "SUCCESS"
         and template_diag.get("sampleCountPerVariant") == 413
-        and ablation.get("controlledVariables", {}).get("context_length_tokens") == 2048
-        and ablation.get("controlledVariables", {}).get("system_prompt_sha256")
-            == protocol_v2["v2AssetLocks"]["systemPromptSha256"]
+        and ablation.get("controlledVariables", {}).get("contextLengthTokens") == 2048
+        and ablation.get("controlledVariables", {}).get("systemPromptSha256") == prompt_sha
     )
     check("25", "inference_path_one_variable_matrix_complete", ablation_ok,
-          f"status={ablation.get('status')} message={message_diag.get('status')} template={template_diag.get('status')}")
+          f"status={ablation.get('status')} message={message_diag.get('status')} "
+          f"template={template_diag.get('status')} loadErrors={diagnostic_load_errors} "
+          f"order={diagnostic_order_ok} metadata={metadata_ok} sharedPrompt={shared_prompt_ok}")
 
     # ---- 26: claims and provenance resolve to real fields and reachable commits ----
     inventory = json.loads((REPORT / "artifact-inventory.json").read_text(encoding="utf-8"))
@@ -450,15 +512,32 @@ def main() -> int:
     # ---- 27: model sizes are measured, never estimated, and report status is consistent ----
     size_detail: list[str] = []
     sizes_ok = True
+    performance_table = {
+        row["modelId"]: row
+        for row in csv.DictReader(
+            (REPORT / "tables/table-4-latency-memory-size.csv").open(encoding="utf-8")
+        )
+    }
     for model_id in REQUIRED_MODELS:
         stored = json.loads((METRICS / f"{model_id}.json").read_text(encoding="utf-8"))
         size = stored.get("performance", {}).get("modelSizeBytes")
         measurement = stored.get("performance", {}).get("modelSizeMeasurement")
-        if size is not None and not (
-            isinstance(measurement, dict)
+        table_size = performance_table.get(model_id, {}).get("modelSizeBytes", "")
+        measured_ok = (
+            size is None
+            and isinstance(measurement, dict)
+            and measurement.get("method") == "not_available"
+            and table_size in {"", "null"}
+        ) or (
+            isinstance(size, int)
+            and isinstance(measurement, dict)
             and measurement.get("method") == "filesystem_stat"
-            and measurement.get("artifactSha256")
-        ):
+            and measurement.get("sizeBytes") == size
+            and re.fullmatch(r"[0-9a-f]{64}", measurement.get("artifactSha256", "")) is not None
+            and table_size not in {"", "null"}
+            and int(float(table_size)) == size
+        )
+        if not measured_ok:
             sizes_ok = False
             size_detail.append(model_id)
     report_md = (REPORT / "aetherargus-lan-challenge-report.md").read_text(encoding="utf-8")
