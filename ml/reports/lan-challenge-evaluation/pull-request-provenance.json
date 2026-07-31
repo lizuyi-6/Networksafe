@@ -1,14 +1,23 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repository": "lizuyi-6/Networksafe",
   "pullRequest": "https://github.com/lizuyi-6/Networksafe/pull/16",
   "baseBranch": "master",
   "headBranch": "agent/aetherargus-paper-evidence-20260731",
   "sourcePullRequest": "https://github.com/lizuyi-6/Networksafe/pull/15",
   "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
-  "protocolCommit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
-  "evidenceCommit": "4ce510575f6c2667f7e937c00aa23d691aaa21bf",
-  "baseSelectionReason": "The CI workflow listens only to pull requests targeting master. Until PR #15 merges, PR #16 includes it as a visible dependency.",
+  "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
+  "evidenceCommit": "fa1661ddc68ac77ff7304ce11c4bdf2ccc699737",
+  "baseSelectionReason": "PR #15 merged at fc71bb430b5f5bf365d3a7a42c22304a9e048f37; PR #16 targets that master state and preserves the adjudicated labels.",
   "autoMergeRequested": false,
-  "completionClaimAllowed": false
+  "completionClaimAllowed": false,
+  "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
+  "pr15MergeCommit": "fc71bb430b5f5bf365d3a7a42c22304a9e048f37",
+  "pullRequestState": "DRAFT",
+  "evidenceStatus": "INCOMPLETE_REQUIRED_ABLATIONS_AND_REVALIDATION",
+  "blockers": [
+    "four diagnostic prediction files missing",
+    "strict evidence gate not rerun",
+    "measured-size tables and figures not regenerated"
+  ]
 }
