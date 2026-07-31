@@ -124,7 +124,7 @@ Clopper-Pearson exact and Wilson score intervals (`proportionIntervals`).
 
 ## 10. Quality-latency-size trade-off
 
-Latency fields are retained for transparency in `tables/table-4-latency-memory-size.csv`, but cross-stack timing is not a fair ranking because timing boundaries and runtime overhead differ. Previously hard-coded size estimates are invalidated; model size must be regenerated from filesystem stat plus artifact SHA-256, otherwise it is `null`. Figure 5 and table 4 must be regenerated before citation.
+Latency fields are retained for transparency in `tables/table-4-latency-memory-size.csv`, but cross-stack timing is not a fair ranking because timing boundaries and runtime overhead differ. Previously hard-coded size estimates are invalidated; model size must be regenerated from filesystem stat plus artifact SHA-256, otherwise it is `null`. Figure 5 and table 4 must be regenerated before citation. The rules baseline p50 (0.000100 ms) measures only an in-process adapter call, while Qwen few-shot p95 (259882.680 ms) is an observed outlier; neither is a fair cross-stack speed ranking.
 
 ## 11. Error analysis
 
