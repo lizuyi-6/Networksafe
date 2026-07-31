@@ -5,11 +5,14 @@
 - [x] Confirm the complete author list and order: sole author Zuyi Li (李祖祎).
 - [x] Confirm that the listed author meets authorship requirements and approves submission.
 - [x] Replace the corresponding-author email placeholder: 2251213429@qq.com.
-- [ ] Add the full institutional affiliation and postal address.
+- [x] Set the manuscript affiliation: Hebei Xiong'an Qiongyu Technology Co., Ltd.
+- [ ] Verify the company's official English legal name against an authoritative corporate record.
+- [ ] Add the registered street address and postal code.
 - [ ] Add the corresponding-author phone number in Editorial Manager.
-- [ ] Confirm or replace the funding statement.
-- [ ] Select the accurate competing-interest statement and generate the required .doc/.docx file through Elsevier's declarations tool.
-- [ ] Decide whether any commercial founder, employment, ownership, patent, consultancy, or investment relationship must be disclosed.
+- [ ] Confirm that the company permits use of its name as the author's affiliation.
+- [ ] Confirm whether company resources constitute reportable financial or in-kind support.
+- [ ] Confirm the author's precise company role for the competing-interest declaration, such as founder, shareholder, director, employee, or patent holder.
+- [ ] Generate the required competing-interest .doc/.docx file through Elsevier's declarations tool.
 - [ ] Provide editors and reviewers with repository access or create a persistent reviewer-access archive.
 - [ ] Decide which de-identified data and code can be publicly archived and obtain a DOI or persistent identifier where possible.
 
@@ -22,8 +25,8 @@
 - [x] Every highlight is at most 85 characters.
 - [x] Data-availability statement included.
 - [x] CRediT statement included for the sole author.
-- [x] Funding section included as a draft.
-- [x] Competing-interest section included as a submission blocker.
+- [x] Funding section states that no external grant funding was received.
+- [x] Company-specific competing-interest disclosure drafted.
 - [x] Generative-AI declaration included immediately before references.
 - [x] Negative results retained: 20.57% safe FPR and zero unknown recall.
 - [x] Human-review timing is reported as post-evaluation.
