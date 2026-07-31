@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repositoryCommit": "9ebd1d2393efaf86b75adb3646c71e0727965768",
   "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
   "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
@@ -155,6 +155,27 @@
   "statisticalSeed": 20260731,
   "challengeSetUsedForTuning": false,
   "labelsChangedAfterEvaluation": false,
+  "labelReviewStatusAtEvaluation": {
+    "humanReviewed": false,
+    "meaning": "The model predictions and frozen-set scoring were completed before the confidential human review."
+  },
+  "postEvaluationHumanReview": {
+    "status": "completed",
+    "humanReviewed": true,
+    "reviewMode": "confidential_blind_review",
+    "coverage": 413,
+    "disagreementCount": 0,
+    "labelsChanged": false,
+    "attestationFile": "ml/data/lan_challenge_capture/human-review/human-review-attestation.json",
+    "attestationSha256": "2c273945369cf41d98fe02072518b01151e17e2d98a5642e657dc3be2b5b9cbd",
+    "completedAt": "2026-07-31T13:26:00Z",
+    "reviewerCount": null,
+    "reviewerCountDisclosure": "withheld_for_confidentiality",
+    "predictionsRerunRequired": false,
+    "rescoringRequired": false,
+    "reason": "The final-label file remained byte-identical and retained SHA-256 13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad."
+  },
+  "publicationLabelStatus": "confidentially_human_reviewed_reference_labels",
   "inferencePathAblationStatus": "COMPLETE",
   "completedAt": "2026-07-31T12:42:52.104104+00:00"
 }
