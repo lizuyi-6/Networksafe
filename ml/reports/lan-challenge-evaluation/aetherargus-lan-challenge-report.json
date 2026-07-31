@@ -5092,5 +5092,11 @@
       "status": "NOT_RUN_AFTER_GATE_CHANGE",
       "reason": "Prior 22/22 result was invalidated."
     }
-  ]
+  ],
+  "performanceMeasurementLimitations": {
+    "crossStackLatencyComparable": false,
+    "rulesBaselineP50LatencyMs": 0.00009999985195463523,
+    "fewShotP95LatencyMs": 259882.67972000095,
+    "note": "Rules p50 measures only an in-process adapter call. Qwen few-shot p95 is an observed outlier. Neither may be used as a fair cross-stack speed ranking; both require remeasurement/investigation before paper citation."
+  }
 }
