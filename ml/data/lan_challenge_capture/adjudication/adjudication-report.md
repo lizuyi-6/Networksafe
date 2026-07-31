@@ -1,87 +1,95 @@
-# VIguard LAN Challenge Set — Dual-LLM Annotation Adjudication Report
+# VIguard LAN Challenge Set — AI-Assisted Adjudication and Confidential Blind Human Review Report
 
-## 1. Provenance and identities
+## 1. Provenance
 
-- **Annotator A:** GPT-5.6-SOL (model-a-annotations.jsonl)
-- **Annotator B:** Claude Opus 5 (model-b-annotations.jsonl)
-- **Adjudicator C:** GLM-5.2 (Zhipu AI) acting as independent third-party adjudicator C
+- **Annotator A:** GPT-5.6-SOL
+- **Annotator B:** Claude Opus 5
+- **Adjudicator C:** GLM-5.2 (Zhipu AI), operator-confirmed
 - **Input:** `ml/data/lan_challenge_capture/model-inputs.jsonl`
 - **Input SHA-256:** `c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3`
 - **Annotator A SHA-256:** `381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662`
 - **Annotator B SHA-256:** `9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357`
-- **Sample count:** A = 413, B = 413 (both exactly 413, identical sampleId sets, no duplicates)
+- **Samples:** 413
 
-## 2. Mechanical inter-annotator agreement (Phase 2)
+## 2. AI inter-annotator agreement
 
 | Metric | Value |
 |---|---:|
-| Verdict observed agreement | 383/413 = 92.74% |
-| **Cohen's kappa (verdict)** | **0.865078** (Po=0.927361, Pe=0.461620) |
-| Attack family full agreement | 92.01% |
-| Attack family macro agreement | 72.91% |
-| Recommended action full agreement | 88.38% |
-| contextSufficient agreement | 93.70% |
+| Verdict agreement | 383/413 = 92.74% |
+| Cohen's kappa | 0.865078 |
+| Attack-family full agreement | 92.01% |
+| Attack-family macro agreement | 72.91% |
+| Recommended-action agreement | 88.38% |
+| `contextSufficient` agreement | 93.70% |
 
-Verdict conflicts: safe↔attack (severe) = **4**; attack↔unknown = 15; safe↔unknown = 11.
+Verdict conflicts before adjudication: safe↔attack = 4, attack↔unknown = 15, safe↔unknown = 11.
 
-## 3. Resolution outcome (Phase 3 + Phase 4)
+## 3. AI adjudication outcome
 
 | Outcome | Count |
 |---|---:|
-| Auto-consensus (strict, unmodified) | 160 |
-| Third-party adjudication (queue) | 253 |
-| → accept A | 137 |
-| → accept B | 12 |
-| → new_resolution | 0 |
-| → insufficient_context (final verdict unknown) | 104 |
+| Strict auto-consensus | 160 |
+| Third-model adjudication | 253 |
+| Accept annotator A | 137 |
+| Accept annotator B | 12 |
+| Insufficient context | 104 |
 
-Accepted annotator (when a side was accepted): A = 137, B = 12, neither (insufficient_context/new_resolution) = 104.
+## 4. Frozen reference labels
 
-## 4. Final frozen-label distribution
+- Verdict distribution: `safe=209`, `attack=97`, `unknown=107`.
+- Final-label SHA-256: `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`.
+- Labels frozen at: `2026-07-30T16:02:03.000Z`.
+- The label bytes did not change after model evaluation or after human review.
 
-- **Verdict:** {"safe":209,"unknown":107,"attack":97} (final unknown count = 107)
-- **Recommended action:** {"allow":138,"challenge":107,"block":95,"isolate":2,"monitor":71}
-- **Attack family:** {"none":209,"authorization":26,"idor_bola":40,"sqli":23,"xss":10,"command_injection":8,"path_traversal":9,"ssrf":7,"business_logic":3,"file_upload":2,"csrf":1,"cors":1,"prompt_injection":56,"authentication":7,"protocol_attack":11}
-- **final-labels.jsonl SHA-256:** `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`
-- **labelsFrozenAt:** 2026-07-30T16:02:03.000Z (UTC) — the last time the bytes of `final-labels.jsonl` changed.
-- **provenanceMetadataCorrectedAt:** 2026-07-30T16:02:03.000Z (UTC).
-- Metadata corrections do not alter the label-freeze timestamp unless the byte content of `final-labels.jsonl` changes.
+## 5. Model-visible-context audit
 
-## 5. Context-visibility audit
+- Audited: **413/413** inputs.
+- Hidden-context corrections before evaluation: **68**.
+- Unchanged after that audit: **345**.
+- Response-side evidence used: **no**.
+- Collector ground truth used: **no**.
 
-- Audited model-visible inputs: **413/413** (253 model-adjudication + 160 consensus).
-- Hidden-context issues corrected: **68**; unchanged labels: **345**.
-- Issue categories: {"principal_role_missing":26,"object_ownership_missing":23,"tenant_boundary_missing":0,"server_execution_semantics_missing":19,"response_side_dependency":0,"collector_intent_dependency":0,"other":0}.
-- Response-side evidence used: **no**; Collector Ground Truth or collector intent used: **no**.
-- Full audit: `context-visibility-audit.{json,md}`.
+## 6. Confidential blind human review
 
-## 6. Human-audit sampling list
+A complete blind human review was performed after the frozen model evaluation.
 
-- Samples flagged `requiresHumanAudit=true`: **251** / 413.
-- `humanReviewed=false`, `reviewerCount=0`. Two AI annotators + one AI adjudicator do **not** constitute human review; this list is a sampling queue, not completed review.
+- Coverage: **413/413** samples.
+- Human-vs-frozen-reference disagreements: **0**.
+- Label changes required: **0**.
+- Reviewers were blind to annotator A/B labels, the third-model decision, AetherArgus predictions, and evaluation metrics before making their decisions.
+- Reviewer identities, reviewer count, worksheets, and raw review materials are retained outside the public repository in a restricted environment.
+- Human-review attestation: `ml/data/lan_challenge_capture/human-review/human-review-attestation.json`.
+- Attestation SHA-256: `2c273945369cf41d98fe02072518b01151e17e2d98a5642e657dc3be2b5b9cbd`.
 
-## 7. Mandatory declarations
+Because `final-labels.jsonl` remained byte-identical, the existing model predictions, scoring results, confidence intervals, significance tests, tables, and figures remain applicable. No model rerun or rescoring was required.
 
-- This is **dual-LLM independent annotation (A + B) followed by a third-LLM adjudication (C)** — not human annotation.
-- The challenge traffic is **pre-designed, live-captured synthetic attack-attempt traffic against an authorized target** — **not production / naturally-occurring traffic**.
-- **No AetherArgus predictions, model evaluation metrics, or model error lists were read or used.** Final labels were frozen before evaluating AetherArgus on the VIguard LAN challenge set.
-- **No response-side evidence was used** (no responseStatus / responseBody / responseSanitized / executionEvidence / exploitConfirmed / canaryObserved). Final reference labels are bounded by the corresponding `model-inputs.jsonl` row and endpoint semantics directly inferable from the request. Environment, endpoint-inventory, and role-matrix files are provenance aids only and are not decisive label evidence.
-- **The challenge set was not added to any training/validation set** (`eligibleForTraining=false`, `split=external_challenge_test` for all 413).
-- **Annotator B's labels were produced by a deterministic rule-based program** (`annotations/_build-b.js`) authored by the model in a single session, whereas annotator A produced per-sample judgments directly. This asymmetry creates **intra-class correlation risk** for B's labels (all B labels follow one rule set, so B-vs-B internal consistency is not evidence of independent correctness).
-- **A third-LLM adjudicator cannot eliminate systematic bias that the annotator models share** (e.g. a common misreading of the `/api/admin/tenant-oversight` boundary or a shared blind spot on stored-vs-parsed fields). The kappa and agreement numbers reflect LLM-vs-LLM agreement, not ground-truth accuracy.
+## 7. Publication terminology
 
-## 8. Known limitations
+Recommended wording:
 
-- Annotator B labels were produced by a deterministic rule program authored in one model session, creating intra-class correlation risk.
-- The three AI systems may still share common training-data or safety-policy biases.
-- AI annotation and AI adjudication do not constitute human review.
-- Samples requiring identity, role, ownership, tenant-boundary, or server-side execution semantics may remain unknown when those facts are absent from the model-visible input.
-- The dataset is an authorized live-execution challenge set, not natural production traffic.
-- The benchmark does not contain confirmed successful exploits.
-- Reference labels should not be described as objective human-verified ground truth.
+> The reference labels were produced through dual-AI annotation and third-AI adjudication, then subsequently confirmed through a confidential blind human review conducted outside the public repository. The review covered all 413 samples and produced zero label changes.
 
-## 9. Artifacts
+Use **confidentially human-reviewed reference labels**.
 
-All under `ml/data/lan_challenge_capture/adjudication/`: `compare-annotations.js`, `apply-context-visibility-corrections.js`, `build-outputs.js`, `build-manifest.js`, `validate-context-visibility.js`, `validate-adjudication.js`, `build-report.js`, `context-visibility-audit.{json,md}`, `agreement-report.{json,md}`, the three confusion matrices, `disagreement-queue.jsonl`, `consensus.jsonl`, `adjudication-worksheet.jsonl`, `decisions/batch-0[1-8].jsonl`, `adjudication.jsonl`, `final-labels.jsonl`, `final-labels-manifest.json`, `adjudication-report.{json,md}`, `build-stats.json`, `integrity-check.json`.
+Do not describe the dataset as:
 
-Validation commands: `node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js` and `node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js`.
+- publicly reproducible raw human annotations;
+- infallible objective ground truth;
+- natural production traffic.
+
+## 8. Limitations
+
+- The public human-review evidence is an operator-confirmed attestation; raw reviewer records are confidential and not independently auditable from this repository.
+- Human review occurred after the frozen model evaluation, although the unchanged label hash preserves the applicability of the existing scoring.
+- The three AI systems may share systematic biases.
+- Annotator B used a deterministic rule program authored within one model session, creating intra-class correlation risk.
+- The dataset is an authorized challenge capture, not natural production traffic.
+- The benchmark contains no confirmed successful exploit executions.
+- Human confirmation does not make the reference labels universally generalizable or error-free.
+
+## 9. Validation
+
+```bash
+node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js
+node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js
+```
