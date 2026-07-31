@@ -1,0 +1,51 @@
+\section{Task Formulation and Model}
+\label{sec:method}
+
+\subsection{Request-Side Classification Task}
+Let an HTTP request be represented as
+\begin{equation}
+    x = (m, p, h, b, c),
+\end{equation}
+where $m$ is the method, $p$ the path and query, $h$ the model-visible headers, $b$ the request body, and $c$ a bounded source-context description available at decision time. Response status, response body, hidden object ownership, collector labels, and adjudication metadata are excluded from inference.
+
+The primary prediction is
+\begin{equation}
+    \hat{y} \in \{\texttt{safe},\texttt{attack},\texttt{unknown}\}.
+\end{equation}
+The \texttt{unknown} label is not a miscellaneous attack category. It denotes insufficient model-visible evidence for a justified safe/attack decision. This distinction is operationally important because authorization, IDOR/BOLA, business-logic, and workflow attacks can be impossible to resolve from request syntax alone.
+
+Each generative model must return a JSON object containing:
+\begin{itemize}
+    \item \texttt{verdict}: \texttt{safe}, \texttt{attack}, or \texttt{unknown};
+    \item \texttt{attackFamily}: a fixed enumeration including injection, authorization, traversal, SSRF, prompt injection, and related families;
+    \item \texttt{recommendedAction}: a bounded action recommendation;
+    \item \texttt{contextSufficient}: whether request-side evidence is adequate;
+    \item \texttt{confidence}: an ordinal confidence value;
+    \item supporting fields required by the frozen schema.
+\end{itemize}
+Raw model text is preserved before parsing. Invalid JSON, missing fields, and illegal enum values are counted separately. A parse failure is mapped to \texttt{unknown} for scoring rather than silently repaired to \texttt{safe}.
+
+\subsection{Base Model and Adaptation}
+\model{} v0.2 is derived from Qwen3-4B-Instruct-2507. The model is adapted using QLoRA: the base weights are loaded in 4-bit NF4 form and kept frozen while rank-16 low-rank adapters are trained with scaling factor 32 and dropout 0.05. Training uses BF16 computation where supported. The locked training seed is 20260728.
+
+The training run used a single NVIDIA RTX 5070 Ti Laptop GPU with 11.94~GiB available memory. One epoch required 12,695 seconds (approximately 3.53 hours) and reached a peak GPU allocation of 6.77~GiB. The run completed 895 optimization steps with reported training loss 0.07975 and validation loss 0.00963. Only the adapter parameters are updated; the resulting adapter occupies approximately 132~MB, while the combined base-plus-adapter directory measures approximately 7.62~GiB.
+
+The system prompt defines the evidence boundary, output schema, enum constraints, and instruction hierarchy. It explicitly treats all request content as untrusted data. For the frozen challenge evaluation, all generative systems use the same prompt bytes, a 2,048-token context cap, a 320-token output cap, deterministic decoding, and seed 0 where the runtime supports it.
+
+\subsection{Training Objective and Data Mixture}
+Training examples serialize request-side evidence and a target JSON decision. The corpus combines deterministic synthetic generation and public-source-derived examples, including normal requests, attack families, hard negatives, unknown-context cases, and prompt-injection attempts. The objective is standard causal language modeling over the complete response sequence. Because schema tokens and verdict tokens are learned jointly, task adaptation can improve both semantic classification and serialization compliance. The evaluation therefore reports these components separately.
+
+The v0.2 release contains 14,314 training examples, 1,752 validation examples, 1,236 closed-test examples, and 1,750 sealed independent examples. Split construction is deterministic and audited for exact and near-duplicate leakage. The sealed independent split was created before later development generation. None of these internal test sets are used to select the final external-challenge prompt or threshold.
+
+\subsection{Inference Artifacts}
+We evaluate four representations of the adapted model:
+\begin{enumerate}
+    \item \textbf{HF-LoRA}: Qwen3-4B plus the learned adapter through Transformers/PEFT;
+    \item \textbf{Merged BF16}: adapter weights merged into a BF16 Transformers model;
+    \item \textbf{Ollama f16}: an f16 GGUF artifact served through Ollama;
+    \item \textbf{GGUF Q4\_K\_M}: a quantized GGUF artifact for reduced local storage and faster tested inference.
+\end{enumerate}
+Measured artifact sizes are 8.18~GB for the base-plus-adapter directory, 8.04~GB for merged BF16, 8.05~GB for f16 GGUF, and 2.50~GB for Q4\_K\_M (decimal units). These artifacts share a model lineage but are not assumed to be numerically identical.
+
+\subsection{Safety Boundary}
+\model{} does not directly execute a block, delete, credential, or hardware action. A model output is an analytical signal consumed by a separate policy layer. The intended deployment mode for the evaluated version is shadow analysis or second-stage review. This boundary is essential because a high-recall classifier with a 20.57\% safe false-positive rate is unsuitable as an autonomous enforcement authority.
