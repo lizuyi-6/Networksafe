@@ -1,12 +1,21 @@
 \section{Threats to Validity}
-The reference labels were produced by two independent AI annotators, a third AI
-adjudicator, and a model-visible-context audit; they are \emph{not} human-verified
-ground truth. The authorized challenge set is not natural production traffic. An observed
-low/zero safe FPR is a finite-sample result whose residual uncertainty is quantified by
-the Clopper-Pearson upper bound, not a population guarantee. Cross-stack latency
-(Transformers GPU generate vs Ollama HTTP round-trip) is not comparable across runtimes.
-Family Macro-F1 uses reference-attack-family labels only. 0 of eight locked
-primary systems did not complete: none.
-The primary model's unknown recall was 0.0000. Model size is reported
-only when derived from filesystem stat and tied to an artifact SHA-256. The merged BF16
-safetensors and f16 GGUF are not bit-identical artifacts.
+The reference labels were generated through two AI annotators, a third AI adjudicator,
+and a model-visible-context audit, then subsequently confirmed through a confidential
+blind human review conducted outside the public repository. The review covered all 413
+samples and produced zero disagreements and zero label changes. However, the public
+evidence is an operator-confirmed attestation: reviewer identities, reviewer count,
+worksheets, and raw materials are withheld for confidentiality and cannot be independently
+audited from the repository. Human review occurred after the frozen model evaluation;
+the unchanged label SHA preserves the applicability of the existing scoring but does not
+make the labels infallible or universally generalizable ground truth.
+
+The authorized challenge set is not natural production traffic and contains no confirmed
+successful exploit executions. The primary model's safe FPR was 43/209 (20.57\%) and its
+unknown recall was 0, so the model is not suitable for autonomous production blocking.
+An observed low or zero rate is a finite-sample result whose residual uncertainty is
+quantified by exact binomial intervals, not a population guarantee. Cross-stack latency
+(Transformers GPU generation versus Ollama HTTP round-trip) is not directly comparable.
+Family Macro-F1 uses reference-attack-family labels only. All eight locked primary systems
+completed. Model size is reported only when derived from filesystem stat and tied to an
+artifact SHA-256. The merged BF16 safetensors and f16 GGUF share a checkpoint lineage but
+are not bit-identical artifacts.
