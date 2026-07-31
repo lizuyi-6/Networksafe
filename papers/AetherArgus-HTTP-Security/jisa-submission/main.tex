@@ -38,14 +38,7 @@
 \author[aff1]{Zuyi Li\corref{cor1}}
 \cortext[cor1]{Corresponding author}
 \ead{[CORRESPONDING EMAIL REQUIRED]}
-
-\affiliation[aff1]{
-  organization={[FULL INSTITUTIONAL AFFILIATION REQUIRED]},
-  addressline={[STREET ADDRESS REQUIRED]},
-  city={[CITY REQUIRED]},
-  postcode={[POSTCODE REQUIRED]},
-  country={[COUNTRY REQUIRED]}
-}
+\address[aff1]{[FULL INSTITUTIONAL AFFILIATION AND POSTAL ADDRESS REQUIRED]}
 
 \begin{abstract}
 Large language models are increasingly proposed for application-layer security analysis, but internal test sets, label leakage, and inconsistent inference stacks can obscure actual performance. We present AetherArgus, a 4B-parameter QLoRA-adapted language model for structured HTTP request classification into safe, attack, or unknown, together with a leakage-controlled evaluation protocol. The model was trained on 14,314 records and evaluated on a frozen 413-sample authorized LAN challenge set that was excluded from training and tuning. Reference labels were produced by dual-model annotation and independent model adjudication, then confirmed after evaluation through a confidential blind human review with zero label changes. Eight systems were compared under a locked protocol. AetherArgus achieved 0.6150 accuracy and 0.4658 macro-F1, compared with 0.5230 and 0.4175 for zero-shot Qwen3-4B. The paired macro-F1 improvement was 0.0482 (95\% confidence interval 0.0113--0.0835), and attack recall reached 0.9072. However, the safe false-positive rate remained 0.2057 and unknown recall was zero, precluding autonomous blocking. Q4\_K\_M quantization reduced storage from approximately 7.49 GiB to 2.33 GiB with a small observed macro-F1 reduction, while changing message structure altered 11 of 413 verdicts. These results show that compact task-adapted models can improve attack-oriented classification, but deployment claims require explicit false-positive, abstention, and inference-path analysis.
