@@ -220,5 +220,3 @@ docs/video/**/*.jpg
 /ml/data/releases/*/*.jsonl
 /ml/data/releases/*/sealed/
 /ml/data_pipeline/.state/
-# Local label-blind ablation intermediates (contain serialized model inputs)
-/ml/evaluation/lan_challenge/.local/
