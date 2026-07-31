@@ -924,6 +924,11 @@ def create_reports(
         "statisticalSeed": 20260731,
         "challengeSetUsedForTuning": False,
         "labelsChangedAfterEvaluation": False,
+        "inferencePathAblationStatus": (
+            json.loads((REPORT / "inference-path-ablation-v2.json").read_text(encoding="utf-8")).get("status")
+            if (REPORT / "inference-path-ablation-v2.json").is_file()
+            else "NOT_RUN"
+        ),
         "completedAt": completed_at,
     }
     (REPORT / "evaluation-manifest.json").write_text(
@@ -1311,6 +1316,36 @@ def create_inventory(run_status: dict[str, Any]) -> None:
     }
     (REPORT / "artifact-inventory.json").write_text(
         json.dumps(inventory, indent=2) + "\n", encoding="utf-8"
+    )
+    ablation = json.loads(
+        (REPORT / "inference-path-ablation-v2.json").read_text(encoding="utf-8")
+    )
+    all_models_complete = (
+        len(run_status["models"]) == 8
+        and all(row.get("status") == "SUCCESS" for row in run_status["models"])
+    )
+    completion_allowed = all_models_complete and ablation.get("status") == "COMPLETE"
+    provenance = {
+        "schemaVersion": 2,
+        "repository": "lizuyi-6/Networksafe",
+        "pullRequest": "https://github.com/lizuyi-6/Networksafe/pull/16",
+        "baseBranch": "master",
+        "headBranch": "agent/aetherargus-paper-evidence-20260731",
+        "sourcePullRequest": "https://github.com/lizuyi-6/Networksafe/pull/15",
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "pr15MergeCommit": "fc71bb430b5f5bf365d3a7a42c22304a9e048f37",
+        "protocolCommit": PROTOCOL_COMMIT,
+        "protocolSha256": PROTOCOL_SHA256,
+        "evidenceCommit": EVALUATION_COMMIT,
+        "baseSelectionReason": "PR #15 merged at fc71bb430b5f5bf365d3a7a42c22304a9e048f37; PR #16 targets that master state and preserves the adjudicated labels.",
+        "evidenceStatus": (
+            "COMPLETE_PENDING_CI" if completion_allowed else "INCOMPLETE_REQUIRED_ABLATIONS_OR_MODEL_RUNS"
+        ),
+        "autoMergeRequested": False,
+        "completionClaimAllowed": completion_allowed,
+    }
+    (REPORT / "pull-request-provenance.json").write_text(
+        json.dumps(provenance, indent=2) + "\n", encoding="utf-8"
     )
 
 
