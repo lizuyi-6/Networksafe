@@ -305,6 +305,7 @@ def calculate_metrics(
         "peakGpuMemoryMiB": performance_metadata.get("peakGpuMemoryMiB"),
         "peakHostMemoryMiB": performance_metadata.get("peakHostMemoryMiB"),
         "modelSizeBytes": performance_metadata.get("modelSizeBytes"),
+        "modelSizeMeasurement": performance_metadata.get("modelSizeMeasurement"),
         "crossStackLatencyComparable": bool(performance_metadata.get("crossStackLatencyComparable", False)),
     }
     structured = {
