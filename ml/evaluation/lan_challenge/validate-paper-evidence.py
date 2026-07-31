@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Fail-closed validation of the frozen LAN challenge evidence package (protocol v2).
 
-Strict mode runs 22 checks and requires every one to pass. --allow-not-run retains the
-partial-integrity mode for incomplete runs but is NOT a completion path: the PR completion
-gate is 22/22 in strict mode.
+Strict mode runs fail-closed checks and requires every one to pass. --allow-not-run retains
+the partial-integrity mode for incomplete runs but is NOT a completion path. Completion also
+requires the pre-registered one-variable-at-a-time inference-path diagnostics.
 """
 
 from __future__ import annotations
@@ -45,9 +45,13 @@ VALIDATION_PATH = ROOT / "ml/data/releases/v02/validation.jsonl"
 INFERENCE_FILES = [
     EVAL / "inference_common.py",
     EVAL / "run_rules_baseline.py",
+    EVAL / "rules_engine_adapter.ts",
+    EVAL / "generate_rules_manifest.ts",
+    EVAL / "run_research_augmented_rules.py",
     EVAL / "run_char_ngram.py",
     EVAL / "run_transformers.py",
     EVAL / "run_ollama.py",
+    EVAL / "prepare_ablation_prompts.py",
 ]
 REQUIRED_MODELS = [
     "rules-baseline",
@@ -86,10 +90,42 @@ def introducing_commit(path: str) -> str | None:
 
 
 def is_ancestor(ancestor: str, descendant: str) -> bool:
+    """Return true only when git proves ancestor is reachable from descendant."""
     if not ancestor or not descendant:
         return False
-    out = git(["rev-list", "--count", f"{ancestor}..{descendant}"])
-    return out.isdigit()
+    proc = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return proc.returncode == 0
+
+
+def reachable_commit(value: str) -> bool:
+    if not re.fullmatch(r"[0-9a-f]{40}", value or ""):
+        return False
+    proc = subprocess.run(
+        ["git", "cat-file", "-e", f"{value}^{{commit}}"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return proc.returncode == 0 and is_ancestor(value, "HEAD")
+
+
+def json_field_exists(document: Any, dotted_path: str) -> bool:
+    current = document
+    for part in dotted_path.strip().split("."):
+        if not part:
+            return False
+        if isinstance(current, dict) and part in current:
+            current = current[part]
+        else:
+            return False
+    return True
 
 
 def main() -> int:
@@ -114,17 +150,38 @@ def main() -> int:
     protocol_v2 = json.loads((EVAL / "evaluation-protocol-v2.json").read_text(encoding="utf-8"))
     manifest = json.loads((REPORT / "evaluation-manifest.json").read_text(encoding="utf-8"))
 
-    # ---- 1: protocol v2 committed before any prediction file ----
+    # ---- 1: the applicable locked protocol predates each prediction ----
+    # rules-baseline was first produced under protocol v1; the other seven runs were
+    # introduced after protocol v2 locked their newly available assets.
+    v1_intro = introducing_commit("ml/evaluation/lan_challenge/evaluation-protocol.json")
     v2_intro = introducing_commit("ml/evaluation/lan_challenge/evaluation-protocol-v2.json")
-    first_pred_intro = None
-    for model_id in REQUIRED_MODELS:
-        c = introducing_commit(f"ml/reports/lan-challenge-evaluation/predictions/{model_id}.jsonl")
-        if c and (first_pred_intro is None or is_ancestor(c, first_pred_intro)):
-            first_pred_intro = c
-    ordering_ok = v2_intro is not None and (first_pred_intro is None or is_ancestor(v2_intro, first_pred_intro) or v2_intro == first_pred_intro)
-    check("01", "protocol_v2_committed_before_predictions",
-          ordering_ok and v2_protocol_hash() == protocol_v2["protocolSha256"],
-          f"v2_intro={v2_intro} first_pred_intro={first_pred_intro} hash_self_consistent={v2_protocol_hash() == protocol_v2['protocolSha256']}")
+    prediction_intros = {
+        model_id: introducing_commit(
+            f"ml/reports/lan-challenge-evaluation/predictions/{model_id}.jsonl"
+        )
+        for model_id in REQUIRED_MODELS
+    }
+    ordering_detail: list[str] = []
+    ordering_ok = bool(v1_intro and v2_intro)
+    for model_id, intro in prediction_intros.items():
+        protocol_intro = v1_intro if model_id == "rules-baseline" else v2_intro
+        model_ok = bool(
+            intro
+            and protocol_intro
+            and is_ancestor(protocol_intro, intro)
+            and is_ancestor(intro, "HEAD")
+        )
+        ordering_ok &= model_ok
+        ordering_detail.append(
+            f"{model_id}:protocol={protocol_intro}:prediction={intro}:ok={model_ok}"
+        )
+    check(
+        "01",
+        "applicable_protocol_committed_before_predictions",
+        ordering_ok and v2_protocol_hash() == protocol_v2["protocolSha256"],
+        "; ".join(ordering_detail)
+        + f"; hash_self_consistent={v2_protocol_hash() == protocol_v2['protocolSha256']}",
+    )
 
     # ---- 2: rules manifest locked pre-prediction ----
     rules_manifest = json.loads((EVAL / "rules-baseline-manifest.json").read_text(encoding="utf-8"))
@@ -312,6 +369,107 @@ def main() -> int:
                 mismatches.append(f"{model_id}:{name}")
     check("22", "all_required_models_success", all_success and metrics_ok,
           f"all_success={all_success} metrics_recompute_mismatches={mismatches}")
+
+    # ---- 23: committed predictions contain no credential/session material ----
+    privacy_patterns = [
+        re.compile(r"(?i)\\b(?:cookie|set-cookie|authorization|proxy-authorization)\\s*[:=]"),
+        re.compile(r"(?i)\\b(?:access[_-]?token|refresh[_-]?token|session(?:id)?)\\s*[:=]"),
+        re.compile(r"(?i)\\bbearer\\s+[a-z0-9._~+/=-]{8,}"),
+        re.compile(r"(?i)raw-private"),
+    ]
+    privacy_hits: list[str] = []
+    for model_id, predictions in predictions_by_model.items():
+        for prediction in predictions:
+            serialized = json.dumps(prediction, ensure_ascii=False, sort_keys=True)
+            if any(pattern.search(serialized) for pattern in privacy_patterns):
+                privacy_hits.append(f"{model_id}:{prediction.get('sampleId')}")
+    check("23", "prediction_privacy_scan", not privacy_hits,
+          f"hits={privacy_hits[:20]} total={len(privacy_hits)}")
+
+    # ---- 24: parse/schema failures are never repaired to safe ----
+    invalid_failure_rows: list[str] = []
+    for model_id, predictions in predictions_by_model.items():
+        for prediction in predictions:
+            failed_output = not prediction.get("parsed") or not prediction.get("schemaValid")
+            if failed_output and (
+                prediction.get("verdict") != "unknown"
+                or not prediction.get("errorType")
+            ):
+                invalid_failure_rows.append(f"{model_id}:{prediction.get('sampleId')}")
+    check("24", "parse_and_schema_failures_remain_unknown", not invalid_failure_rows,
+          f"invalid={invalid_failure_rows[:20]} total={len(invalid_failure_rows)}")
+
+    # ---- 25: one-variable-at-a-time inference-path matrix is complete ----
+    ablation_path = REPORT / "inference-path-ablation-v2.json"
+    ablation = json.loads(ablation_path.read_text(encoding="utf-8")) if ablation_path.is_file() else {}
+    diagnostics = ablation.get("diagnostics", {})
+    message_diag = diagnostics.get("systemUserVsSingleConcat", {})
+    template_diag = diagnostics.get("sharedSerializedPromptAcrossRuntimes", {})
+    ablation_ok = (
+        ablation.get("status") == "COMPLETE"
+        and message_diag.get("status") == "SUCCESS"
+        and message_diag.get("sampleCountPerVariant") == 413
+        and template_diag.get("status") == "SUCCESS"
+        and template_diag.get("sampleCountPerVariant") == 413
+        and ablation.get("controlledVariables", {}).get("context_length_tokens") == 2048
+        and ablation.get("controlledVariables", {}).get("system_prompt_sha256")
+            == protocol_v2["v2AssetLocks"]["systemPromptSha256"]
+    )
+    check("25", "inference_path_one_variable_matrix_complete", ablation_ok,
+          f"status={ablation.get('status')} message={message_diag.get('status')} template={template_diag.get('status')}")
+
+    # ---- 26: claims and provenance resolve to real fields and reachable commits ----
+    inventory = json.loads((REPORT / "artifact-inventory.json").read_text(encoding="utf-8"))
+    provenance = json.loads((REPORT / "pull-request-provenance.json").read_text(encoding="utf-8"))
+    provenance_commits = [
+        manifest.get("repositoryCommit", ""),
+        report_json.get("repositoryCommit", ""),
+        inventory.get("evaluationCommit", ""),
+        provenance.get("evidenceCommit", ""),
+    ]
+    claim_detail: list[str] = []
+    claims_resolve = True
+    for row in claims:
+        evidence_path = ROOT / row["evidenceFile"]
+        row_ok = evidence_path.is_file() and reachable_commit(row["commit"])
+        if row_ok and evidence_path.suffix == ".json":
+            evidence_doc = json.loads(evidence_path.read_text(encoding="utf-8"))
+            for field in row["metricField"].split(";"):
+                row_ok &= json_field_exists(evidence_doc, field)
+        claims_resolve &= row_ok
+        if not row_ok:
+            claim_detail.append(row.get("claimId", "?"))
+    provenance_ok = (
+        len(set(provenance_commits)) == 1
+        and all(reachable_commit(value) for value in provenance_commits)
+        and claims_resolve
+    )
+    check("26", "provenance_and_claim_fields_resolve", provenance_ok,
+          f"commits={provenance_commits} badClaims={claim_detail}")
+
+    # ---- 27: model sizes are measured, never estimated, and report status is consistent ----
+    size_detail: list[str] = []
+    sizes_ok = True
+    for model_id in REQUIRED_MODELS:
+        stored = json.loads((METRICS / f"{model_id}.json").read_text(encoding="utf-8"))
+        size = stored.get("performance", {}).get("modelSizeBytes")
+        measurement = stored.get("performance", {}).get("modelSizeMeasurement")
+        if size is not None and not (
+            isinstance(measurement, dict)
+            and measurement.get("method") == "filesystem_stat"
+            and measurement.get("artifactSha256")
+        ):
+            sizes_ok = False
+            size_detail.append(model_id)
+    report_md = (REPORT / "aetherargus-lan-challenge-report.md").read_text(encoding="utf-8")
+    expected_complete = all_success and ablation_ok
+    report_ok = (
+        report_json.get("completionCriteriaMet") is expected_complete
+        and ("table-4-latency-memory-size.csv" in report_md)
+        and ("table-4-performance.csv" not in report_md)
+    )
+    check("27", "measured_sizes_and_report_consistency", sizes_ok and report_ok,
+          f"unprovenSizes={size_detail} expectedComplete={expected_complete} reportComplete={report_json.get('completionCriteriaMet')}")
 
     failed = [row for row in checks if not row["passed"]]
     result = {
