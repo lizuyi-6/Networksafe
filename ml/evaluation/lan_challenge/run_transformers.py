@@ -30,6 +30,7 @@ def main() -> int:
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--prompt", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--few-shot", type=Path, help="few-shot-examples-v2.json manifest; prepends frozen example turns")
     parser.add_argument("--max-context", type=int, default=2048)
     parser.add_argument("--max-new-tokens", type=int, default=320)
     arguments = parser.parse_args()
@@ -39,6 +40,16 @@ def main() -> int:
         raise FileNotFoundError(f"adapter not found: {arguments.adapter}")
     rows = read_model_inputs(arguments.input)
     system_prompt = arguments.prompt.read_text(encoding="utf-8")
+    few_shot_turns: list[dict[str, str]] = []
+    few_shot_sha: str | None = None
+    if arguments.few_shot is not None:
+        manifest = json.loads(arguments.few_shot.read_text(encoding="utf-8"))
+        if manifest.get("status") != "AVAILABLE":
+            raise RuntimeError(f"few-shot manifest not AVAILABLE: {manifest.get('status')}")
+        few_shot_sha = manifest.get("examplesSha256")
+        for example in manifest["examples"]:
+            few_shot_turns.append({"role": "user", "content": example["userMessage"]})
+            few_shot_turns.append({"role": "assistant", "content": example["assistantResponse"]})
     tokenizer_reference = str(arguments.adapter) if arguments.adapter else arguments.model
     tokenizer = AutoTokenizer.from_pretrained(
         tokenizer_reference,
@@ -65,6 +76,7 @@ def main() -> int:
                 continue
             messages = [
                 {"role": "system", "content": system_prompt},
+                *few_shot_turns,
                 {"role": "user", "content": user_message(row["input"])},
             ]
             inputs = tokenizer.apply_chat_template(
@@ -99,6 +111,8 @@ def main() -> int:
                 input_token_count=prompt_tokens,
                 output_token_count=len(output_ids),
             )
+            if few_shot_sha is not None:
+                record["fewShotExamplesSha256"] = few_shot_sha
             write_prediction(output, record)
     finally:
         output.close()
