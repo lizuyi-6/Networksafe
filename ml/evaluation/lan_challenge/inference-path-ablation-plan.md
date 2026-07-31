@@ -22,12 +22,12 @@ The cross-runtime comparison still couples runtime with the unavoidable BF16-to-
 
 ## Operator commands
 
-Run from the repository root on the same frozen operator machine used for the primary BF16/f16 runs. Set `AA_MERGED_MODEL` to the locked merged-model directory and `AA_OLLAMA_F16` to the existing locked Ollama f16 tag. `AA_SERIALIZED` is deliberately under the ignored `.local` directory.
+Run from the repository root on the same frozen operator machine used for the primary BF16/f16 runs. Set `AA_MERGED_MODEL` to the locked merged-model directory and `AA_OLLAMA_F16` to the existing locked Ollama f16 tag. `AA_SERIALIZED` is deliberately under the repository-ignored `tmp/` directory.
 
 ```bash
 export AA_MERGED_MODEL='D:/aetherargus-v02-merged'
 export AA_OLLAMA_F16='aetherargus-v02-f16'
-export AA_SERIALIZED='ml/evaluation/lan_challenge/.local/hf-serialized-prompts.jsonl'
+export AA_SERIALIZED='tmp/aetherargus-hf-serialized-prompts.jsonl'
 
 python ml/evaluation/lan_challenge/prepare_ablation_prompts.py \
   --tokenizer "$AA_MERGED_MODEL" \
