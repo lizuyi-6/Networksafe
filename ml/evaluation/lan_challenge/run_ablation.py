@@ -13,7 +13,12 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from scoring import EXPECTED_INPUT_SHA256, load_predictions, load_references
+from scoring import (
+    EXPECTED_INPUT_SHA256,
+    clopper_pearson_interval,
+    load_predictions,
+    load_references,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -73,7 +78,12 @@ def compare(
         "leftModelId": left_id,
         "rightModelId": right_id,
         "sampleCount": len(sample_ids),
-        "verdictAgreement": {"agree": agree, "total": len(sample_ids), "rate": agree / len(sample_ids)},
+        "verdictAgreement": {
+            "agree": agree,
+            "total": len(sample_ids),
+            "rate": agree / len(sample_ids),
+            "clopperPearson95": clopper_pearson_interval(agree, len(sample_ids)),
+        },
         "verdictDisagreementBreakdown": {
             f"{left_verdict}->{right_verdict}": count
             for (left_verdict, right_verdict), count in sorted(pairs.items())
