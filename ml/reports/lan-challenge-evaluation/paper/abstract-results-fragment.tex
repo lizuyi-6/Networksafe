@@ -1,8 +1,11 @@
 On a frozen 413-sample external challenge set under a pre-registered protocol,
-\texttt{aetherargus-v02-hf-lora} reached macro-F1 0.4658 and accuracy
-0.6150 with observed safe FPR
-43/209; significance is
-reported as paired McNemar / paired bootstrap differences with Holm-Bonferroni correction,
-and the predeclared Transformers-vs-Ollama diagnostics completed on all 413 paired inputs.
-The cross-runtime comparison still couples runtime to BF16-to-f16 representation. No
-historical or mismatched run was substituted for a missing prediction.
+\texttt{aetherargus-v02-hf-lora} reached verdict macro-F1 0.4658 and accuracy
+0.6150, with attack F1 0.6692, observed safe FPR 43/209, and unknown recall 0.
+Relative to Qwen3-4B zero-shot, its macro-F1 improvement was +0.0482 with a paired
+bootstrap 95\% confidence interval of [+0.0113,+0.0835]. The AI-assisted reference
+labels were subsequently confirmed through a confidential blind human review conducted
+outside the public repository; all 413 samples were confirmed and no label bytes changed.
+Significance is reported using paired McNemar tests and paired bootstrap differences with
+Holm--Bonferroni correction. Predeclared Transformers--Ollama diagnostics completed on all
+413 paired inputs; cross-runtime comparisons still couple runtime to BF16-to-f16
+representation.
