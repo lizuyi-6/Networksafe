@@ -1233,22 +1233,26 @@ with a heuristic.
     PAPER.mkdir(parents=True, exist_ok=True)
     (PAPER / "evaluation-section-draft.tex").write_text(
         rf"""\section{{Frozen External-Challenge Evaluation}}
-We locked evaluation protocol v2 before any v2 model prediction (protocol v2 commit
-\texttt{{{PROTOCOL_COMMIT}}}; v1 preserved at \texttt{{{PROTOCOL_V1_COMMIT}}}) on 413
-request-side samples (input SHA \texttt{{{EXPECTED_INPUT_SHA256}}}, reference-label SHA
+Protocol v1 was committed before the rules baseline; protocol v2 (commit
+\texttt{{{PROTOCOL_COMMIT}}}) was committed before the other seven primary prediction
+files. The frozen set contains 413 request-side samples (input SHA
+\texttt{{{EXPECTED_INPUT_SHA256}}}, reference-label SHA
 \texttt{{{EXPECTED_LABEL_SHA256}}}, distribution safe/attack/unknown = 209/97/107).
-All eight locked systems ran under the same prompt (SHA
-\texttt{{{PROMPT_SHA256}}}), context length 2048, 320 output tokens, deterministic
-decoding. The primary model \texttt{{{primary}}} achieved accuracy
+The six generative systems used the same system prompt (SHA
+\texttt{{{PROMPT_SHA256}}}), context cap 2048, output cap 320, and deterministic
+decoding. The request-side rule and character n-gram baselines did not receive response
+evidence. The primary model \texttt{{{primary}}} achieved accuracy
 {pm['verdict']['accuracy']:.4f} (95\% stratified-bootstrap CI
 [{acc_lo:.4f}, {acc_hi:.4f}])
 and verdict macro-F1 {pm['verdict']['macroF1']:.4f} (95\% CI
 [{mf1_lo:.4f}, {mf1_hi:.4f}]),
 with observed safe FPR {pm['safeFPR']['falsePositiveCount']}/{pm['safeFPR']['safeSupport']}
-(exact Clopper-Pearson 95\% upper bound reported, not a zero-population claim). Paired
+(exact Clopper--Pearson 95\% interval reported, not a population guarantee) and unknown
+recall {pm['unknown']['recall']:.4f}. Paired
 McNemar and paired bootstrap differences against the baselines are Holm-Bonferroni
 corrected; the Transformers-merged-BF16 vs Ollama-f16 diagnostics use byte-identical
-serialized prompts but cannot separate runtime from the BF16-to-f16 artifact representation.
+serialized prompts but cannot separate runtime from the BF16-to-f16 artifact
+representation.
 """,
         encoding="utf-8",
     )
@@ -1261,7 +1265,10 @@ low/zero safe FPR is a finite-sample result whose residual uncertainty is quanti
 the Clopper-Pearson upper bound, not a population guarantee. Cross-stack latency
 (Transformers GPU generate vs Ollama HTTP round-trip) is not comparable across runtimes.
 Family Macro-F1 uses reference-attack-family labels only. {len(not_run)} of eight locked
-systems did not complete: {', '.join(r['modelId'] for r in not_run) or 'none'}.
+primary systems did not complete: {', '.join(r['modelId'] for r in not_run) or 'none'}.
+The primary model's unknown recall was {pm['unknown']['recall']:.4f}. Model size is reported
+only when derived from filesystem stat and tied to an artifact SHA-256. The merged BF16
+safetensors and f16 GGUF are not bit-identical artifacts.
 """,
         encoding="utf-8",
     )
@@ -1271,8 +1278,9 @@ systems did not complete: {', '.join(r['modelId'] for r in not_run) or 'none'}.
 {pm['verdict']['accuracy']:.4f} with observed safe FPR
 {pm['safeFPR']['falsePositiveCount']}/{pm['safeFPR']['safeSupport']}; significance is
 reported as paired McNemar / paired bootstrap differences with Holm-Bonferroni correction,
-and the predeclared Transformers-vs-Ollama diagnostics are included only when complete.
-No historical or mismatched run was substituted for a missing prediction.
+and the predeclared Transformers-vs-Ollama diagnostics completed on all 413 paired inputs.
+The cross-runtime comparison still couples runtime to BF16-to-f16 representation. No
+historical or mismatched run was substituted for a missing prediction.
 """,
         encoding="utf-8",
     )
@@ -1282,8 +1290,10 @@ No historical or mismatched run was substituted for a missing prediction.
 \texttt{{{EXPECTED_LABEL_SHA256}}}, system prompt hash, prediction schema, bootstrap
 seed, paired-test definitions, proportion intervals (Clopper-Pearson + Wilson), the
 rules-baseline provenance manifest, the few-shot example manifest, and
-claim-to-evidence traceability. It does not claim production validation or human ground
-truth.
+claim-to-evidence traceability. Completion fails closed on missing diagnostic predictions,
+unmeasured model sizes, unresolved evidence fields, or stale commit provenance. It does
+not claim production validation, human ground truth, safe autonomous blocking, or
+universal model superiority.
 """,
         encoding="utf-8",
     )
