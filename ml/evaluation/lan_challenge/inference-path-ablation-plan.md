@@ -1,6 +1,6 @@
 # Locked inference-path ablation plan
 
-Status: **LOCKED_PRE_RUN**. This plan completes diagnostics already named by protocol v1/v2. It does not change a primary model, system prompt, label, threshold, or generation hyperparameter, and it was committed before the four diagnostic prediction files.
+Status: **LOCKED_PRE_RUN**. Implementation-only fixes made before any diagnostic prediction are disclosed in `inference-path-ablation-amendments.md`. This plan completes diagnostics already named by protocol v1/v2. It does not change a primary model, system prompt, label, threshold, or generation hyperparameter, and it was committed before the four diagnostic prediction files.
 
 Protocol v2 commit: `553c0a9317e8c21f616991e92149fc828d7e8902`; canonical protocol SHA-256: `b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb`.
 
