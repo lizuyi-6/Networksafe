@@ -199,4 +199,6 @@ if (failures.length) {
   for (const failure of failures.slice(0, 50)) console.log('  FAIL:', failure);
   process.exit(1);
 }
+// Preserve the legacy marker consumed by the challenge-capture regression suite.
+console.log('CONTEXT VISIBILITY VALIDATION PASSED');
 console.log('CONTEXT VISIBILITY AND HUMAN REVIEW VALIDATION PASSED');
