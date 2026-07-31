@@ -8,23 +8,21 @@ Use this file to complete the Elsevier declarations tool and final manuscript.
 
 ## Funding
 
-Current statement, subject to final author confirmation:
+> This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
 
-> This research received no external grant funding.
-
-If the company provided reportable financial or in-kind support beyond the author's ordinary employment or affiliation, describe that support and state whether it influenced study design, data collection, analysis, interpretation, writing, or the decision to submit.
+If the company provided reportable financial or in-kind support beyond ordinary affiliation, describe that support and state whether it influenced study design, data collection, analysis, interpretation, writing, or the decision to submit.
 
 ## Competing interests
 
-Use the following company-specific disclosure unless the author's precise ownership, employment, patent, or investment relationship requires a more detailed statement:
+Use the following disclosure in Elsevier's declarations tool:
 
-> The author is affiliated with Hebei Xiong'an Qiongyu Technology Co., Ltd., which may have a commercial interest in artificial-intelligence and cybersecurity technologies related to this work. This relationship is disclosed as a potential competing interest. No external sponsor controlled the frozen evaluation protocol, analysis, interpretation, or reporting.
+> Zuyi Li is the founder of Hebei Xiong'an Qiongyu Technology Co., Ltd., the author's affiliation. The company may have a commercial interest in artificial-intelligence and cybersecurity technologies related to this work. This relationship is disclosed as a potential competing interest. The study received no external grant funding, and no external sponsor influenced the study design, frozen evaluation protocol, statistical analysis, interpretation, reporting, or decision to submit the manuscript.
 
 Company legal name in Chinese:
 
 > 河北雄安穹驭科技有限公司
 
-Before submission, confirm whether the disclosure should additionally identify the author as a founder, shareholder, director, employee, patent holder, or other role. Elsevier's declarations tool should generate the final .doc or .docx declaration file.
+Do not add shareholder, director, patent-holder, or investor status unless those descriptions are independently confirmed. Elsevier's declarations tool should generate the official `.doc` or `.docx` declaration file for upload.
 
 ## Generative AI declaration
 
