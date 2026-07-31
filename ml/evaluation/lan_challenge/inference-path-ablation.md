@@ -1,21 +1,7 @@
-# Inference-path ablation
+# Inference-path ablation — v1 placeholder
 
-Status: **NOT_RUN**
+Status: **SUPERSEDED_BY_LOCKED_DIAGNOSTIC_PLAN**
 
-The one-factor-at-a-time matrix was locked before results, but the execution
-environment contains neither the merged/f16 shared-weight artifacts nor an
-Ollama or llama.cpp runtime. Historical metrics use a different test set and
-configuration, so they are not copied into this 413-sample experiment and
-cannot support a causal claim about FPR.
+This file contains no experimental result. The executable, pre-run plan is `inference-path-ablation-plan.json` / `.md`; its result target is `ml/reports/lan-challenge-evaluation/inference-path-ablation-v2.json`.
 
-The locked factors are:
-
-1. Transformers `max_context_tokens=2048` versus Ollama `num_ctx=2048`;
-2. byte-identical system prompt, SHA-256
-   `9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8`;
-3. `system + user` versus one concatenated prompt;
-4. `tokenizer.apply_chat_template` versus the Ollama Modelfile template;
-5. temperature 0, top-p 1, disabled top-k where supported, and seed 0.
-
-No conclusion is reported for context truncation, system prompt, chat template,
-message serialization, sampling, runtime, or quantization.
+The current v2 result is **INCOMPLETE** because four predeclared diagnostic prediction files have not yet been produced on the frozen operator environment. No causal claim about runtime, chat template, serialization, context truncation, sampling, or BF16-to-f16 representation is permitted until the strict completion gate passes.
