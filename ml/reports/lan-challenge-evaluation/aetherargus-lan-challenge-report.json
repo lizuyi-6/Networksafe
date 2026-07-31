@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 2,
-  "status": "COMPLETE_ALL_REQUIRED_MODELS",
+  "schemaVersion": 3,
+  "status": "INCOMPLETE_REQUIRED_ABLATIONS_AND_REVALIDATION",
   "experimentDate": "2026-07-31T09:48:52.131991+00:00",
-  "repositoryCommit": "f6758075316425e6e2a5b4cbd1d9bebdc5cafd53",
-  "protocolCommit": "553c0a9",
+  "repositoryCommit": "fa1661ddc68ac77ff7304ce11c4bdf2ccc699737",
+  "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
   "protocolVersion": "v2",
   "protocolV1Commit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
   "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
@@ -217,27 +217,27 @@
         "weightedF1": 0.11112873380914619,
         "perClass": {
           "command_injection": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.5,
             "f1": 0.6666666666666666,
             "support": 8
           },
           "cors": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "csrf": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "file_upload": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 2
           },
           "path_traversal": {
@@ -247,27 +247,27 @@
             "support": 9
           },
           "prompt_injection": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 56
           },
           "sqli": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.08333333333333333,
             "f1": 0.15384615384615385,
             "support": 12
           },
           "ssrf": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 6
           },
           "xss": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 2
           }
         },
@@ -391,23 +391,27 @@
         "predictedNoneOnAttackCount": 86
       },
       "structuredOutput": {
-        "jsonSyntaxSuccessRate": 1.0,
-        "schemaValidRate": 1.0,
-        "enumValidRate": 1.0,
-        "completeFieldRate": 1.0
+        "jsonSyntaxSuccessRate": 1,
+        "schemaValidRate": 1,
+        "enumValidRate": 1,
+        "completeFieldRate": 1
       },
       "performance": {
-        "p50LatencyMs": 9.999985195463523e-05,
+        "p50LatencyMs": 0.00009999985195463523,
         "p95LatencyMs": 0.00020000015865662135,
         "p99LatencyMs": 0.0003000000106112566,
-        "meanLatencyMs": 9.903149004312757e-05,
+        "meanLatencyMs": 0.00009903149004312757,
         "samplesPerSecond": 10097798.180805989,
         "inputTokensPerSecond": null,
         "outputTokensPerSecond": null,
         "peakGpuMemoryMiB": null,
         "peakHostMemoryMiB": null,
         "modelSizeBytes": null,
-        "crossStackLatencyComparable": false
+        "crossStackLatencyComparable": false,
+        "modelSizeMeasurement": {
+          "method": "not_available",
+          "reason": "Prior hard-coded estimate removed; rerun requires filesystem stat plus artifact SHA-256."
+        }
       },
       "subsets": {
         "all_413": {
@@ -436,7 +440,7 @@
           "count": 160,
           "accuracy": 0.875,
           "macroF1": 0.4057403783431181,
-          "safeFPR": 0.0
+          "safeFPR": 0
         },
         "model_adjudication": {
           "status": "SUCCESS",
@@ -469,15 +473,15 @@
         "prompt_injection": {
           "status": "SUCCESS",
           "count": 56,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "authorization": {
           "status": "SUCCESS",
           "count": 26,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "idor_bola": {
@@ -497,8 +501,8 @@
         "xss": {
           "status": "SUCCESS",
           "count": 10,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "command_injection": {
@@ -541,21 +545,21 @@
         "weightedF1": 0.08969323749785514,
         "perClass": {
           "safe": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 209
           },
           "attack": {
             "precision": 0.2360097323600973,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.38188976377952755,
             "support": 97
           },
           "unknown": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 107
           }
         },
@@ -586,47 +590,47 @@
       },
       "attackDetectionAll": {
         "precision": 0.2360097323600973,
-        "recall": 1.0,
+        "recall": 1,
         "f1": 0.38188976377952755,
         "positiveSupport": 97,
         "negativeSupport": 316
       },
       "attackVsSafeOnly": {
         "precision": 0.31699346405228757,
-        "recall": 1.0,
+        "recall": 1,
         "f1": 0.4813895781637717,
         "positiveSupport": 97,
         "negativeSupport": 209
       },
       "safeFPR": {
-        "rate": 1.0,
+        "rate": 1,
         "falsePositiveCount": 209,
         "safeSupport": 209,
-        "pointEstimate": 1.0,
+        "pointEstimate": 1,
         "numerator": 209,
         "denominator": 209,
         "clopperPearson95": [
           0.9825047104208134,
-          1.0
+          1
         ],
         "wilson95": [
           0.9819515481524193,
-          1.0
+          1
         ],
         "bootstrap95": null
       },
       "proportions": {
         "safeFPR": {
-          "pointEstimate": 1.0,
+          "pointEstimate": 1,
           "numerator": 209,
           "denominator": 209,
           "clopperPearson95": [
             0.9825047104208134,
-            1.0
+            1
           ],
           "wilson95": [
             0.9819515481524193,
-            1.0
+            1
           ],
           "bootstrap95": null
         },
@@ -645,16 +649,16 @@
           "bootstrap95": null
         },
         "attackRecall": {
-          "pointEstimate": 1.0,
+          "pointEstimate": 1,
           "numerator": 97,
           "denominator": 97,
           "clopperPearson95": [
             0.9626843630912639,
-            1.0
+            1
           ],
           "wilson95": [
             0.9619059574740523,
-            1.0
+            1
           ],
           "bootstrap95": null
         },
@@ -673,24 +677,24 @@
           "bootstrap95": null
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": null
         }
       },
       "unknown": {
-        "accuracy": 0.0,
-        "precision": 0.0,
-        "recall": 0.0,
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
         "support": 107,
         "toAttackRate": 0.9813084112149533,
         "toSafeRate": 0.018691588785046728
@@ -699,10 +703,10 @@
         "status": "NOT_SUPPORTED"
       },
       "structuredOutput": {
-        "jsonSyntaxSuccessRate": 1.0,
-        "schemaValidRate": 1.0,
-        "enumValidRate": 1.0,
-        "completeFieldRate": 1.0
+        "jsonSyntaxSuccessRate": 1,
+        "schemaValidRate": 1,
+        "enumValidRate": 1,
+        "completeFieldRate": 1
       },
       "performance": {
         "p50LatencyMs": 1.2514999998529674,
@@ -715,7 +719,11 @@
         "peakGpuMemoryMiB": null,
         "peakHostMemoryMiB": null,
         "modelSizeBytes": null,
-        "crossStackLatencyComparable": false
+        "crossStackLatencyComparable": false,
+        "modelSizeMeasurement": {
+          "method": "not_available",
+          "reason": "Prior hard-coded estimate removed; rerun requires filesystem stat plus artifact SHA-256."
+        }
       },
       "subsets": {
         "all_413": {
@@ -723,20 +731,20 @@
           "count": 413,
           "accuracy": 0.23486682808716708,
           "macroF1": 0.1272965879265092,
-          "safeFPR": 1.0
+          "safeFPR": 1
         },
         "context_sufficient_true": {
           "status": "SUCCESS",
           "count": 306,
           "accuracy": 0.31699346405228757,
           "macroF1": 0.16046319272125723,
-          "safeFPR": 1.0
+          "safeFPR": 1
         },
         "context_sufficient_false": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "consensus": {
@@ -744,55 +752,55 @@
           "count": 160,
           "accuracy": 0.15,
           "macroF1": 0.08695652173913043,
-          "safeFPR": 1.0
+          "safeFPR": 1
         },
         "model_adjudication": {
           "status": "SUCCESS",
           "count": 253,
           "accuracy": 0.2885375494071146,
           "macroF1": 0.15020576131687244,
-          "safeFPR": 1.0
+          "safeFPR": 1
         },
         "safe": {
           "status": "SUCCESS",
           "count": 209,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
-          "safeFPR": 1.0
+          "accuracy": 0,
+          "macroF1": 0,
+          "safeFPR": 1
         },
         "attack": {
           "status": "SUCCESS",
           "count": 97,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "unknown": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "prompt_injection": {
           "status": "SUCCESS",
           "count": 56,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "authorization": {
           "status": "SUCCESS",
           "count": 26,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "idor_bola": {
           "status": "SUCCESS",
           "count": 40,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "sqli": {
@@ -812,14 +820,14 @@
         "command_injection": {
           "status": "SUCCESS",
           "count": 8,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "path_traversal": {
           "status": "SUCCESS",
           "count": 9,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
@@ -1013,57 +1021,57 @@
         "weightedF1": 0.6873378385044147,
         "perClass": {
           "command_injection": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 8
           },
           "cors": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "csrf": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "file_upload": {
             "precision": 0.25,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.4,
             "support": 2
           },
           "path_traversal": {
             "precision": 0.9,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.9473684210526315,
             "support": 9
           },
           "prompt_injection": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.375,
             "f1": 0.5454545454545454,
             "support": 56
           },
           "sqli": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 12
           },
           "ssrf": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.6666666666666666,
             "f1": 0.8,
             "support": 6
           },
           "xss": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 2
           }
         },
@@ -1190,10 +1198,10 @@
         "predictedNoneOnAttackCount": 28
       },
       "structuredOutput": {
-        "jsonSyntaxSuccessRate": 1.0,
-        "schemaValidRate": 1.0,
-        "enumValidRate": 1.0,
-        "completeFieldRate": 1.0
+        "jsonSyntaxSuccessRate": 1,
+        "schemaValidRate": 1,
+        "enumValidRate": 1,
+        "completeFieldRate": 1
       },
       "performance": {
         "p50LatencyMs": 2186.541899999611,
@@ -1205,8 +1213,12 @@
         "outputTokensPerSecond": 18.140551131173936,
         "peakGpuMemoryMiB": null,
         "peakHostMemoryMiB": null,
-        "modelSizeBytes": 8044986000,
-        "crossStackLatencyComparable": false
+        "modelSizeBytes": null,
+        "crossStackLatencyComparable": false,
+        "modelSizeMeasurement": {
+          "method": "not_available",
+          "reason": "Prior hard-coded estimate removed; rerun requires filesystem stat plus artifact SHA-256."
+        }
       },
       "subsets": {
         "all_413": {
@@ -1275,8 +1287,8 @@
         "authorization": {
           "status": "SUCCESS",
           "count": 26,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "idor_bola": {
@@ -1303,14 +1315,14 @@
         "command_injection": {
           "status": "SUCCESS",
           "count": 8,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "path_traversal": {
           "status": "SUCCESS",
           "count": 9,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
@@ -1504,32 +1516,32 @@
         "weightedF1": 0.6900485298749,
         "perClass": {
           "command_injection": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.875,
             "f1": 0.9333333333333333,
             "support": 8
           },
           "cors": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "csrf": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "file_upload": {
             "precision": 0.5,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.6666666666666666,
             "support": 2
           },
           "path_traversal": {
             "precision": 0.9,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.9473684210526315,
             "support": 9
           },
@@ -1540,21 +1552,21 @@
             "support": 56
           },
           "sqli": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 12
           },
           "ssrf": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.8333333333333334,
             "f1": 0.9090909090909091,
             "support": 6
           },
           "xss": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 2
           }
         },
@@ -1681,8 +1693,8 @@
       "structuredOutput": {
         "jsonSyntaxSuccessRate": 0.9975786924939467,
         "schemaValidRate": 0.9975786924939467,
-        "enumValidRate": 1.0,
-        "completeFieldRate": 1.0
+        "enumValidRate": 1,
+        "completeFieldRate": 1
       },
       "performance": {
         "p50LatencyMs": 4977.074999998877,
@@ -1694,8 +1706,12 @@
         "outputTokensPerSecond": 0.6861937324560595,
         "peakGpuMemoryMiB": null,
         "peakHostMemoryMiB": null,
-        "modelSizeBytes": 8044986000,
-        "crossStackLatencyComparable": false
+        "modelSizeBytes": null,
+        "crossStackLatencyComparable": false,
+        "modelSizeMeasurement": {
+          "method": "not_available",
+          "reason": "Prior hard-coded estimate removed; rerun requires filesystem stat plus artifact SHA-256."
+        }
       },
       "subsets": {
         "all_413": {
@@ -1771,8 +1787,8 @@
         "idor_bola": {
           "status": "SUCCESS",
           "count": 40,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "sqli": {
@@ -1792,14 +1808,14 @@
         "command_injection": {
           "status": "SUCCESS",
           "count": 8,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "path_traversal": {
           "status": "SUCCESS",
           "count": 9,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
@@ -1841,9 +1857,9 @@
             "support": 97
           },
           "unknown": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 107
           }
         },
@@ -1961,24 +1977,24 @@
           "bootstrap95": null
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": null
         }
       },
       "unknown": {
-        "accuracy": 0.0,
-        "precision": 0.0,
-        "recall": 0.0,
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
         "support": 107,
         "toAttackRate": 0.32710280373831774,
         "toSafeRate": 0.6728971962616822
@@ -1993,57 +2009,57 @@
         "weightedF1": 0.8692391214162111,
         "perClass": {
           "command_injection": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 8
           },
           "cors": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "csrf": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "file_upload": {
             "precision": 0.2857142857142857,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.4444444444444444,
             "support": 2
           },
           "path_traversal": {
             "precision": 0.9,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.9473684210526315,
             "support": 9
           },
           "prompt_injection": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.8035714285714286,
             "f1": 0.8910891089108911,
             "support": 56
           },
           "sqli": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 12
           },
           "ssrf": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.3333333333333333,
             "f1": 0.5,
             "support": 6
           },
           "xss": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 2
           }
         },
@@ -2168,10 +2184,10 @@
         "predictedNoneOnAttackCount": 9
       },
       "structuredOutput": {
-        "jsonSyntaxSuccessRate": 1.0,
-        "schemaValidRate": 1.0,
-        "enumValidRate": 1.0,
-        "completeFieldRate": 1.0
+        "jsonSyntaxSuccessRate": 1,
+        "schemaValidRate": 1,
+        "enumValidRate": 1,
+        "completeFieldRate": 1
       },
       "performance": {
         "p50LatencyMs": 2729.901399998198,
@@ -2183,8 +2199,12 @@
         "outputTokensPerSecond": 3.7028166194978422,
         "peakGpuMemoryMiB": null,
         "peakHostMemoryMiB": null,
-        "modelSizeBytes": 8177173888,
-        "crossStackLatencyComparable": false
+        "modelSizeBytes": null,
+        "crossStackLatencyComparable": false,
+        "modelSizeMeasurement": {
+          "method": "not_available",
+          "reason": "Prior hard-coded estimate removed; rerun requires filesystem stat plus artifact SHA-256."
+        }
       },
       "subsets": {
         "all_413": {
@@ -2204,16 +2224,16 @@
         "context_sufficient_false": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "consensus": {
           "status": "SUCCESS",
           "count": 160,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.6666666666666666,
-          "safeFPR": 0.0
+          "safeFPR": 0
         },
         "model_adjudication": {
           "status": "SUCCESS",
@@ -2239,8 +2259,8 @@
         "unknown": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "prompt_injection": {
@@ -2253,15 +2273,15 @@
         "authorization": {
           "status": "SUCCESS",
           "count": 26,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "idor_bola": {
           "status": "SUCCESS",
           "count": 40,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "sqli": {
@@ -2281,14 +2301,14 @@
         "command_injection": {
           "status": "SUCCESS",
           "count": 8,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "path_traversal": {
           "status": "SUCCESS",
           "count": 9,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
@@ -2330,9 +2350,9 @@
             "support": 97
           },
           "unknown": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 107
           }
         },
@@ -2450,24 +2470,24 @@
           "bootstrap95": null
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": null
         }
       },
       "unknown": {
-        "accuracy": 0.0,
-        "precision": 0.0,
-        "recall": 0.0,
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
         "support": 107,
         "toAttackRate": 0.3177570093457944,
         "toSafeRate": 0.6822429906542056
@@ -2482,57 +2502,57 @@
         "weightedF1": 0.8692391214162111,
         "perClass": {
           "command_injection": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 8
           },
           "cors": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "csrf": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "file_upload": {
             "precision": 0.2857142857142857,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.4444444444444444,
             "support": 2
           },
           "path_traversal": {
             "precision": 0.9,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.9473684210526315,
             "support": 9
           },
           "prompt_injection": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.8035714285714286,
             "f1": 0.8910891089108911,
             "support": 56
           },
           "sqli": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 12
           },
           "ssrf": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.3333333333333333,
             "f1": 0.5,
             "support": 6
           },
           "xss": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 2
           }
         },
@@ -2657,10 +2677,10 @@
         "predictedNoneOnAttackCount": 9
       },
       "structuredOutput": {
-        "jsonSyntaxSuccessRate": 1.0,
-        "schemaValidRate": 1.0,
-        "enumValidRate": 1.0,
-        "completeFieldRate": 1.0
+        "jsonSyntaxSuccessRate": 1,
+        "schemaValidRate": 1,
+        "enumValidRate": 1,
+        "completeFieldRate": 1
       },
       "performance": {
         "p50LatencyMs": 12102.965399997629,
@@ -2672,8 +2692,12 @@
         "outputTokensPerSecond": 2.9098638761605056,
         "peakGpuMemoryMiB": null,
         "peakHostMemoryMiB": null,
-        "modelSizeBytes": 8044986000,
-        "crossStackLatencyComparable": false
+        "modelSizeBytes": null,
+        "crossStackLatencyComparable": false,
+        "modelSizeMeasurement": {
+          "method": "not_available",
+          "reason": "Prior hard-coded estimate removed; rerun requires filesystem stat plus artifact SHA-256."
+        }
       },
       "subsets": {
         "all_413": {
@@ -2693,16 +2717,16 @@
         "context_sufficient_false": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "consensus": {
           "status": "SUCCESS",
           "count": 160,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.6666666666666666,
-          "safeFPR": 0.0
+          "safeFPR": 0
         },
         "model_adjudication": {
           "status": "SUCCESS",
@@ -2728,8 +2752,8 @@
         "unknown": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "prompt_injection": {
@@ -2742,15 +2766,15 @@
         "authorization": {
           "status": "SUCCESS",
           "count": 26,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "idor_bola": {
           "status": "SUCCESS",
           "count": 40,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "sqli": {
@@ -2770,14 +2794,14 @@
         "command_injection": {
           "status": "SUCCESS",
           "count": 8,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "path_traversal": {
           "status": "SUCCESS",
           "count": 9,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
@@ -2819,9 +2843,9 @@
             "support": 97
           },
           "unknown": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 107
           }
         },
@@ -2939,24 +2963,24 @@
           "bootstrap95": null
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": null
         }
       },
       "unknown": {
-        "accuracy": 0.0,
-        "precision": 0.0,
-        "recall": 0.0,
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
         "support": 107,
         "toAttackRate": 0.35514018691588783,
         "toSafeRate": 0.6448598130841121
@@ -2972,56 +2996,56 @@
         "perClass": {
           "command_injection": {
             "precision": 0.8888888888888888,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.9411764705882353,
             "support": 8
           },
           "cors": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "csrf": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "file_upload": {
             "precision": 0.2857142857142857,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.4444444444444444,
             "support": 2
           },
           "path_traversal": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 9
           },
           "prompt_injection": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.7857142857142857,
             "f1": 0.88,
             "support": 56
           },
           "sqli": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.9166666666666666,
             "f1": 0.9565217391304348,
             "support": 12
           },
           "ssrf": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.5,
             "f1": 0.6666666666666666,
             "support": 6
           },
           "xss": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 2
           }
         },
@@ -3149,8 +3173,8 @@
       "structuredOutput": {
         "jsonSyntaxSuccessRate": 0.9951573849878934,
         "schemaValidRate": 0.9951573849878934,
-        "enumValidRate": 1.0,
-        "completeFieldRate": 1.0
+        "enumValidRate": 1,
+        "completeFieldRate": 1
       },
       "performance": {
         "p50LatencyMs": 446.17339999967953,
@@ -3162,8 +3186,12 @@
         "outputTokensPerSecond": 35.006318991619175,
         "peakGpuMemoryMiB": null,
         "peakHostMemoryMiB": null,
-        "modelSizeBytes": 2497278752,
-        "crossStackLatencyComparable": false
+        "modelSizeBytes": null,
+        "crossStackLatencyComparable": false,
+        "modelSizeMeasurement": {
+          "method": "not_available",
+          "reason": "Prior hard-coded estimate removed; rerun requires filesystem stat plus artifact SHA-256."
+        }
       },
       "subsets": {
         "all_413": {
@@ -3183,8 +3211,8 @@
         "context_sufficient_false": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "consensus": {
@@ -3218,8 +3246,8 @@
         "unknown": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "prompt_injection": {
@@ -3232,15 +3260,15 @@
         "authorization": {
           "status": "SUCCESS",
           "count": 26,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "idor_bola": {
           "status": "SUCCESS",
           "count": 40,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "sqli": {
@@ -3260,14 +3288,14 @@
         "command_injection": {
           "status": "SUCCESS",
           "count": 8,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "path_traversal": {
           "status": "SUCCESS",
           "count": 9,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
@@ -3309,9 +3337,9 @@
             "support": 97
           },
           "unknown": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 107
           }
         },
@@ -3429,24 +3457,24 @@
           "bootstrap95": null
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": null
         }
       },
       "unknown": {
-        "accuracy": 0.0,
-        "precision": 0.0,
-        "recall": 0.0,
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
         "support": 107,
         "toAttackRate": 0.3177570093457944,
         "toSafeRate": 0.6822429906542056
@@ -3462,56 +3490,56 @@
         "perClass": {
           "command_injection": {
             "precision": 0.8888888888888888,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.9411764705882353,
             "support": 8
           },
           "cors": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "csrf": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
             "support": 1
           },
           "file_upload": {
             "precision": 0.2857142857142857,
-            "recall": 1.0,
+            "recall": 1,
             "f1": 0.4444444444444444,
             "support": 2
           },
           "path_traversal": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 9
           },
           "prompt_injection": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.8035714285714286,
             "f1": 0.8910891089108911,
             "support": 56
           },
           "sqli": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 12
           },
           "ssrf": {
-            "precision": 1.0,
+            "precision": 1,
             "recall": 0.3333333333333333,
             "f1": 0.5,
             "support": 6
           },
           "xss": {
-            "precision": 1.0,
-            "recall": 1.0,
-            "f1": 1.0,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
             "support": 2
           }
         },
@@ -3636,10 +3664,10 @@
         "predictedNoneOnAttackCount": 9
       },
       "structuredOutput": {
-        "jsonSyntaxSuccessRate": 1.0,
-        "schemaValidRate": 1.0,
-        "enumValidRate": 1.0,
-        "completeFieldRate": 1.0
+        "jsonSyntaxSuccessRate": 1,
+        "schemaValidRate": 1,
+        "enumValidRate": 1,
+        "completeFieldRate": 1
       },
       "performance": {
         "p50LatencyMs": 1678.8912000010896,
@@ -3651,8 +3679,12 @@
         "outputTokensPerSecond": 14.529801594102771,
         "peakGpuMemoryMiB": null,
         "peakHostMemoryMiB": null,
-        "modelSizeBytes": 8051283232,
-        "crossStackLatencyComparable": false
+        "modelSizeBytes": null,
+        "crossStackLatencyComparable": false,
+        "modelSizeMeasurement": {
+          "method": "not_available",
+          "reason": "Prior hard-coded estimate removed; rerun requires filesystem stat plus artifact SHA-256."
+        }
       },
       "subsets": {
         "all_413": {
@@ -3672,16 +3704,16 @@
         "context_sufficient_false": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "consensus": {
           "status": "SUCCESS",
           "count": 160,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.6666666666666666,
-          "safeFPR": 0.0
+          "safeFPR": 0
         },
         "model_adjudication": {
           "status": "SUCCESS",
@@ -3707,8 +3739,8 @@
         "unknown": {
           "status": "SUCCESS",
           "count": 107,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "prompt_injection": {
@@ -3721,15 +3753,15 @@
         "authorization": {
           "status": "SUCCESS",
           "count": 26,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "idor_bola": {
           "status": "SUCCESS",
           "count": 40,
-          "accuracy": 0.0,
-          "macroF1": 0.0,
+          "accuracy": 0,
+          "macroF1": 0,
           "safeFPR": null
         },
         "sqli": {
@@ -3749,14 +3781,14 @@
         "command_injection": {
           "status": "SUCCESS",
           "count": 8,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
         "path_traversal": {
           "status": "SUCCESS",
           "count": 9,
-          "accuracy": 1.0,
+          "accuracy": 1,
           "macroF1": 0.3333333333333333,
           "safeFPR": null
         },
@@ -3806,12 +3838,12 @@
         },
         "safeFPR": {
           "pointEstimate": 0.014354066985645933,
-          "lower95": 0.0,
+          "lower95": 0,
           "upper95": 0.03349282296650718
         },
         "unknownAccuracy": {
           "pointEstimate": 0.018691588785046728,
-          "lower95": 0.0,
+          "lower95": 0,
           "upper95": 0.04672897196261682
         },
         "attackFamilyMacroF1": {
@@ -3837,9 +3869,9 @@
           "upper95": 0.3841584158415841
         },
         "attackRecall": {
-          "pointEstimate": 1.0,
-          "lower95": 1.0,
-          "upper95": 1.0
+          "pointEstimate": 1,
+          "lower95": 1,
+          "upper95": 1
         },
         "attackPrecision": {
           "pointEstimate": 0.2360097323600973,
@@ -3847,14 +3879,14 @@
           "upper95": 0.23774509803921567
         },
         "safeFPR": {
-          "pointEstimate": 1.0,
-          "lower95": 1.0,
-          "upper95": 1.0
+          "pointEstimate": 1,
+          "lower95": 1,
+          "upper95": 1
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
-          "lower95": 0.0,
-          "upper95": 0.0
+          "pointEstimate": 0,
+          "lower95": 0,
+          "upper95": 0
         },
         "attackFamilyMacroF1": {
           "pointEstimate": null,
@@ -3978,9 +4010,9 @@
           "upper95": 0.2631578947368421
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
-          "lower95": 0.0,
-          "upper95": 0.0
+          "pointEstimate": 0,
+          "lower95": 0,
+          "upper95": 0
         },
         "attackFamilyMacroF1": {
           "pointEstimate": 0.6425446638231075,
@@ -4020,9 +4052,9 @@
           "upper95": 0.2631578947368421
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
-          "lower95": 0.0,
-          "upper95": 0.0
+          "pointEstimate": 0,
+          "lower95": 0,
+          "upper95": 0
         },
         "attackFamilyMacroF1": {
           "pointEstimate": 0.6425446638231075,
@@ -4062,9 +4094,9 @@
           "upper95": 0.2822966507177033
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
-          "lower95": 0.0,
-          "upper95": 0.0
+          "pointEstimate": 0,
+          "lower95": 0,
+          "upper95": 0
         },
         "attackFamilyMacroF1": {
           "pointEstimate": 0.6543121467588645,
@@ -4104,9 +4136,9 @@
           "upper95": 0.2631578947368421
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
-          "lower95": 0.0,
-          "upper95": 0.0
+          "pointEstimate": 0,
+          "lower95": 0,
+          "upper95": 0
         },
         "attackFamilyMacroF1": {
           "pointEstimate": 0.6418566693270633,
@@ -4130,7 +4162,7 @@
             0.04134497465744219
           ],
           "bootstrap95": [
-            0.0,
+            0,
             0.03349282296650718
           ]
         },
@@ -4195,27 +4227,27 @@
             0.06560385306972287
           ],
           "bootstrap95": [
-            0.0,
+            0,
             0.04672897196261682
           ]
         }
       },
       "char-ngram-logreg": {
         "safeFPR": {
-          "pointEstimate": 1.0,
+          "pointEstimate": 1,
           "numerator": 209,
           "denominator": 209,
           "clopperPearson95": [
             0.9825047104208134,
-            1.0
+            1
           ],
           "wilson95": [
             0.9819515481524193,
-            1.0
+            1
           ],
           "bootstrap95": [
-            1.0,
-            1.0
+            1,
+            1
           ]
         },
         "verdictAccuracy": {
@@ -4233,20 +4265,20 @@
           "bootstrap95": null
         },
         "attackRecall": {
-          "pointEstimate": 1.0,
+          "pointEstimate": 1,
           "numerator": 97,
           "denominator": 97,
           "clopperPearson95": [
             0.9626843630912639,
-            1.0
+            1
           ],
           "wilson95": [
             0.9619059574740523,
-            1.0
+            1
           ],
           "bootstrap95": [
-            1.0,
-            1.0
+            1,
+            1
           ]
         },
         "attackPrecision": {
@@ -4267,20 +4299,20 @@
           ]
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": [
-            0.0,
-            0.0
+            0,
+            0
           ]
         }
       },
@@ -4519,20 +4551,20 @@
           ]
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": [
-            0.0,
-            0.0
+            0,
+            0
           ]
         }
       },
@@ -4603,20 +4635,20 @@
           ]
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": [
-            0.0,
-            0.0
+            0,
+            0
           ]
         }
       },
@@ -4687,20 +4719,20 @@
           ]
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": [
-            0.0,
-            0.0
+            0,
+            0
           ]
         }
       },
@@ -4771,20 +4803,20 @@
           ]
         },
         "unknownAccuracy": {
-          "pointEstimate": 0.0,
+          "pointEstimate": 0,
           "numerator": 0,
           "denominator": 107,
           "clopperPearson95": [
-            0.0,
+            0,
             0.03388799947401148
           ],
           "wilson95": [
-            0.0,
+            0,
             0.03465723801874867
           ],
           "bootstrap95": [
-            0.0,
-            0.0
+            0,
+            0
           ]
         }
       }
@@ -4814,8 +4846,8 @@
         "n10BaselineCorrectAetherargusWrong": 6,
         "method": "continuity_corrected_chi_square",
         "statistic": 27.38,
-        "pValueRaw": 1.671510579091462e-07,
-        "pValueHolm": 8.35755289545731e-07
+        "pValueRaw": 1.671510579091462e-7,
+        "pValueHolm": 8.35755289545731e-7
       },
       {
         "comparison": "aetherargus-v02-hf-lora vs qwen3-4b-few-shot",
@@ -4823,8 +4855,8 @@
         "n10BaselineCorrectAetherargusWrong": 9,
         "method": "continuity_corrected_chi_square",
         "statistic": 28.016666666666666,
-        "pValueRaw": 1.2027508944618598e-07,
-        "pValueHolm": 7.216505366771159e-07
+        "pValueRaw": 1.2027508944618598e-7,
+        "pValueHolm": 7.216505366771159e-7
       },
       {
         "comparison": "aetherargus-v02-hf-lora vs aetherargus-v02-merged-bf16",
@@ -4832,8 +4864,8 @@
         "n10BaselineCorrectAetherargusWrong": 0,
         "method": "exact_binomial",
         "statistic": null,
-        "pValueRaw": 1.0,
-        "pValueHolm": 1.0
+        "pValueRaw": 1,
+        "pValueHolm": 1
       },
       {
         "comparison": "aetherargus-v02-hf-lora vs aetherargus-v02-gguf-q4-k-m",
@@ -4850,8 +4882,8 @@
         "n10BaselineCorrectAetherargusWrong": 0,
         "method": "exact_binomial",
         "statistic": null,
-        "pValueRaw": 1.0,
-        "pValueHolm": 1.0
+        "pValueRaw": 1,
+        "pValueHolm": 1
       }
     ],
     "pairedBootstrapDifferences": [
@@ -4929,7 +4961,7 @@
           "unknownAccuracy": {
             "pointEstimate": -0.018691588785046728,
             "lower95": -0.04672897196261682,
-            "upper95": 0.0
+            "upper95": 0
           }
         }
       },
@@ -4953,9 +4985,9 @@
             "upper95": -0.736842105263158
           },
           "unknownAccuracy": {
-            "pointEstimate": 0.0,
-            "lower95": 0.0,
-            "upper95": 0.0
+            "pointEstimate": 0,
+            "lower95": 0,
+            "upper95": 0
           }
         }
       },
@@ -4979,9 +5011,9 @@
             "upper95": 0.009569377990430616
           },
           "unknownAccuracy": {
-            "pointEstimate": 0.0,
-            "lower95": 0.0,
-            "upper95": 0.0
+            "pointEstimate": 0,
+            "lower95": 0,
+            "upper95": 0
           }
         }
       },
@@ -4990,24 +5022,24 @@
         "status": "SUCCESS",
         "deltas": {
           "macroF1": {
-            "pointEstimate": 0.0,
-            "lower95": 0.0,
-            "upper95": 0.0
+            "pointEstimate": 0,
+            "lower95": 0,
+            "upper95": 0
           },
           "attackF1": {
-            "pointEstimate": 0.0,
-            "lower95": 0.0,
-            "upper95": 0.0
+            "pointEstimate": 0,
+            "lower95": 0,
+            "upper95": 0
           },
           "safeFPR": {
-            "pointEstimate": 0.0,
-            "lower95": 0.0,
-            "upper95": 0.0
+            "pointEstimate": 0,
+            "lower95": 0,
+            "upper95": 0
           },
           "unknownAccuracy": {
-            "pointEstimate": 0.0,
-            "lower95": 0.0,
-            "upper95": 0.0
+            "pointEstimate": 0,
+            "lower95": 0,
+            "upper95": 0
           }
         }
       }
@@ -5015,67 +5047,10 @@
     "multipleComparisonCorrection": "Holm-Bonferroni"
   },
   "inferencePathAblation": {
-    "schemaVersion": 2,
-    "comparison": "aetherargus-v02-merged-bf16 (Transformers) vs aetherargus-v02-ollama-f16 (Ollama f16)",
-    "sampleCount": 413,
-    "sharedWeights": true,
-    "sharedWeightsNote": "Ollama f16 GGUF is a lossless cast of the merged BF16 safetensors; weights are identical.",
-    "controlledVariables": {
-      "context_length_tokens": 2048,
-      "system_prompt_sha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
-      "message_structure": "system_plus_user (no few-shot in these two systems)",
-      "sampling": {
-        "temperature": 0,
-        "top_p": 1,
-        "top_k": 0,
-        "seed": 0,
-        "do_sample": false
-      },
-      "max_new_tokens": 320,
-      "input_sha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
-    },
-    "liveDifference": "runtime (Transformers vs Ollama/llama.cpp) + chat-template application + bf16->f16 cast",
-    "verdictAgreement": {
-      "agree": 413,
-      "total": 413,
-      "rate": 1.0
-    },
-    "familyAgreementOnMutualAttack": {
-      "agree": 163,
-      "bothAttack": 165,
-      "rate": 0.9878787878787879
-    },
-    "verdictDisagreementBreakdown": {},
-    "parseQuality": {
-      "aetherargus-v02-merged-bf16": {
-        "parsed": 413,
-        "rate": 1.0
-      },
-      "aetherargus-v02-ollama-f16": {
-        "parsed": 413,
-        "rate": 1.0
-      }
-    },
-    "latencyMs": {
-      "note": "NOT cross-stack comparable: Transformers = GPU generate time only; Ollama = HTTP round-trip + generate. Hardware/runtime differ.",
-      "aetherargus-v02-merged-bf16": {
-        "p50": 12102.965399997629,
-        "p95": 15070.748400001321,
-        "p99": 15538.03109999717,
-        "mean": 9485.97829443095
-      },
-      "aetherargus-v02-ollama-f16": {
-        "p50": 1678.8912000010896,
-        "p95": 1935.8023999993748,
-        "p99": 2001.4794999988226,
-        "mean": 1899.5775050846844
-      }
-    },
-    "singleConcatenatedPromptDiagnostic": {
-      "status": "NOT_RUN_AS_SEPARATE_SYSTEM",
-      "reason": "Both locked runs use the chat-template message structure. A single-concatenated-prompt variant is a 9th system outside the locked protocol; running it would not change the conclusion that the two locked paths agree."
-    },
-    "conclusion": "With weights, system prompt, message structure, sampling, context length, and output cap held identical, Transformers merged-BF16 and Ollama f16 agree on 413/413 verdicts (100.0%); residual disagreement isolates the runtime + chat-template + bf16->f16-cast effect."
+    "schemaVersion": 3,
+    "status": "INCOMPLETE",
+    "reason": "Four predeclared one-variable diagnostic prediction files have not been run on the frozen operator environment.",
+    "requiredOperatorAction": "Run inference-path-ablation-plan.md, then finalize_evidence.py and validate-paper-evidence.py."
   },
   "researchQuestions": {
     "RQ1": "ANSWERED: AetherArgus HF-LoRA vs Qwen baselines — see mainResults + statistical-analysis.mcnemar.",
@@ -5083,250 +5058,39 @@
     "RQ3": "ANSWERED: subset metrics in mainResults.aetherargus-v02-hf-lora.subsets.",
     "RQ4": "ANSWERED: attack-family Macro-F1 (reference-only labels) in mainResults.aetherargus-v02-hf-lora.attackFamily.",
     "RQ5": "ANSWERED: latency/size in mainResults.aetherargus-v02-hf-lora.performance (crossStackLatencyComparable=false).",
-    "RQ6": "ANSWERED: Transformers merged-BF16 vs Ollama f16 — see inferencePathAblation.",
+    "RQ6": "NOT_ANSWERED: the predeclared one-variable inference-path diagnostics are incomplete.",
     "RQ7": "ANSWERED: BF16 vs Q4_K_M — see mainResults + pairedBootstrapDifferences."
   },
   "declarations": [
     "The challenge set was not used for training, prompt selection, threshold selection, hyperparameter tuning, or model selection.",
     "The reference labels were produced by two independent AI annotators, a third AI adjudicator, and a model-visible-context audit; they were not human-verified ground truth."
   ],
-  "claimToEvidenceCount": 5,
+  "claimToEvidenceCount": 4,
   "validation": {
     "partialIntegrity": {
-      "schemaVersion": 1,
-      "mode": "allow-not-run",
-      "checksPassed": 21,
-      "checksTotal": 21,
-      "failed": [],
-      "checks": [
-        {
-          "name": "1_input_exactly_413",
-          "passed": true,
-          "detail": "rows=413 sha256=c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
-        },
-        {
-          "name": "2_labels_exactly_413",
-          "passed": true,
-          "detail": "rows=413 sha256=13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
-        },
-        {
-          "name": "3_each_model_covers_413",
-          "passed": true,
-          "detail": "successful=1 notRun=7; partial validation allowed"
-        },
-        {
-          "name": "4_no_duplicate_or_missing_ids",
-          "passed": true,
-          "detail": "sampleId sets aligned"
-        },
-        {
-          "name": "5_inference_scoring_process_isolation",
-          "passed": true,
-          "detail": "banned references found=[]"
-        },
-        {
-          "name": "6_same_input_sha_for_all_models",
-          "passed": true,
-          "detail": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
-        },
-        {
-          "name": "7_metrics_recompute_exactly",
-          "passed": true,
-          "detail": "mismatches=[]"
-        },
-        {
-          "name": "8_figures_tables_match_metrics",
-          "passed": true,
-          "detail": "main CSV values and required figure files"
-        },
-        {
-          "name": "9_bootstrap_seed_fixed",
-          "passed": true,
-          "detail": "seed=20260731 iterations=10000"
-        },
-        {
-          "name": "10_statistical_tests_are_paired",
-          "passed": true,
-          "detail": "paired comparison status recorded"
-        },
-        {
-          "name": "11_challenge_not_used_for_tuning",
-          "passed": true,
-          "detail": "both protocol and manifest are false"
-        },
-        {
-          "name": "12_unknown_handling_consistent",
-          "passed": true,
-          "detail": "unknown accuracy equals class recall"
-        },
-        {
-          "name": "13_parse_failures_never_become_safe",
-          "passed": true,
-          "detail": "all parse failures remain fail-safe unknown"
-        },
-        {
-          "name": "14_no_response_side_evidence",
-          "passed": true,
-          "detail": "static inference scan and locked protocol"
-        },
-        {
-          "name": "15_final_labels_unchanged",
-          "passed": true,
-          "detail": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
-        },
-        {
-          "name": "16_ab_annotations_unchanged",
-          "passed": true,
-          "detail": "A=381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662 B=9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
-        },
-        {
-          "name": "17_training_data_unchanged",
-          "passed": true,
-          "detail": "commit scope excludes ml/data/releases and production paths"
-        },
-        {
-          "name": "18_prediction_privacy_scan",
-          "passed": true,
-          "detail": "hits=[]"
-        },
-        {
-          "name": "19_human_review_still_false",
-          "passed": true,
-          "detail": "humanReviewed=False reviewerCount=0"
-        },
-        {
-          "name": "20_all_claims_have_evidence",
-          "passed": true,
-          "detail": "claims=4"
-        },
-        {
-          "name": "protocol_canonical_hash",
-          "passed": true,
-          "detail": "computed=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276 recorded=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
-        }
-      ]
+      "status": "NOT_RUN_AFTER_GATE_CHANGE"
     },
     "strictCompletion": {
-      "schemaVersion": 1,
-      "mode": "strict",
-      "checksPassed": 20,
-      "checksTotal": 21,
-      "failed": [
-        {
-          "name": "3_each_model_covers_413",
-          "passed": false,
-          "detail": "successful=1 notRun=7; strict mode requires all locked runs"
-        }
-      ],
-      "checks": [
-        {
-          "name": "1_input_exactly_413",
-          "passed": true,
-          "detail": "rows=413 sha256=c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
-        },
-        {
-          "name": "2_labels_exactly_413",
-          "passed": true,
-          "detail": "rows=413 sha256=13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
-        },
-        {
-          "name": "3_each_model_covers_413",
-          "passed": false,
-          "detail": "successful=1 notRun=7; strict mode requires all locked runs"
-        },
-        {
-          "name": "4_no_duplicate_or_missing_ids",
-          "passed": true,
-          "detail": "sampleId sets aligned"
-        },
-        {
-          "name": "5_inference_scoring_process_isolation",
-          "passed": true,
-          "detail": "banned references found=[]"
-        },
-        {
-          "name": "6_same_input_sha_for_all_models",
-          "passed": true,
-          "detail": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
-        },
-        {
-          "name": "7_metrics_recompute_exactly",
-          "passed": true,
-          "detail": "mismatches=[]"
-        },
-        {
-          "name": "8_figures_tables_match_metrics",
-          "passed": true,
-          "detail": "main CSV values and required figure files"
-        },
-        {
-          "name": "9_bootstrap_seed_fixed",
-          "passed": true,
-          "detail": "seed=20260731 iterations=10000"
-        },
-        {
-          "name": "10_statistical_tests_are_paired",
-          "passed": true,
-          "detail": "paired comparison status recorded"
-        },
-        {
-          "name": "11_challenge_not_used_for_tuning",
-          "passed": true,
-          "detail": "both protocol and manifest are false"
-        },
-        {
-          "name": "12_unknown_handling_consistent",
-          "passed": true,
-          "detail": "unknown accuracy equals class recall"
-        },
-        {
-          "name": "13_parse_failures_never_become_safe",
-          "passed": true,
-          "detail": "all parse failures remain fail-safe unknown"
-        },
-        {
-          "name": "14_no_response_side_evidence",
-          "passed": true,
-          "detail": "static inference scan and locked protocol"
-        },
-        {
-          "name": "15_final_labels_unchanged",
-          "passed": true,
-          "detail": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
-        },
-        {
-          "name": "16_ab_annotations_unchanged",
-          "passed": true,
-          "detail": "A=381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662 B=9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
-        },
-        {
-          "name": "17_training_data_unchanged",
-          "passed": true,
-          "detail": "commit scope excludes ml/data/releases and production paths"
-        },
-        {
-          "name": "18_prediction_privacy_scan",
-          "passed": true,
-          "detail": "hits=[]"
-        },
-        {
-          "name": "19_human_review_still_false",
-          "passed": true,
-          "detail": "humanReviewed=False reviewerCount=0"
-        },
-        {
-          "name": "20_all_claims_have_evidence",
-          "passed": true,
-          "detail": "claims=4"
-        },
-        {
-          "name": "protocol_canonical_hash",
-          "passed": true,
-          "detail": "computed=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276 recorded=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
-        }
-      ]
+      "status": "NOT_RUN_AFTER_GATE_CHANGE",
+      "checksTotal": 27
     }
   },
-  "completionCriteriaMet": true,
-  "blockingReasons": []
+  "completionCriteriaMet": false,
+  "blockingReasons": [
+    "Four predeclared diagnostic prediction files are missing.",
+    "Strict validation has not been rerun after completion-gate hardening.",
+    "Reports, figures, tables, claims, manifests, and measured model sizes require regeneration on the frozen operator environment."
+  ],
+  "failedOrNotRunItems": [
+    {
+      "item": "inference-path one-variable diagnostics",
+      "status": "NOT_RUN",
+      "reason": "Requires locked merged BF16 and Ollama f16 assets on the operator machine."
+    },
+    {
+      "item": "strict evidence validation",
+      "status": "NOT_RUN_AFTER_GATE_CHANGE",
+      "reason": "Prior 22/22 result was invalidated."
+    }
+  ]
 }
