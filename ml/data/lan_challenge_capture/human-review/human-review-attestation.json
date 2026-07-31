@@ -1,33 +1,55 @@
 {
-  "schemaVersion": 1,
-  "title": "VIguard LAN Challenge Set Human Review Attestation",
+  "schemaVersion": 2,
+  "title": "VIguard LAN Challenge Set Confidential Blind Human Review Attestation",
   "status": "completed",
+  "attestationBasis": "operator-confirmed",
   "reviewMode": "blind_review",
+  "reviewEnvironment": "restricted_non_repository_environment",
   "reviewerMaterialVisibility": "restricted",
-  "reasonForRestriction": "Reviewer source materials are maintained in a restricted environment to prevent disclosure of confidential benchmark and operational information.",
+  "reviewerCount": null,
+  "reviewerCountDisclosure": "withheld_for_confidentiality",
+  "reasonForRestriction": "Human reviewers did not operate the public repository. Reviewer identities, worksheets, and source materials are retained in a restricted environment to prevent disclosure of confidential benchmark and operational information.",
   "reviewScope": {
     "sampleCount": 413,
-    "reviewedAgainst": "model-visible challenge inputs and frozen reference labels",
-    "reviewerSawModelPredictions": false,
-    "reviewerSawAetherArgusEvaluationResults": false
+    "coverage": "complete",
+    "reviewedAgainst": "model-visible challenge inputs",
+    "reviewerSawAnnotatorAOrBLabelsBeforeDecision": false,
+    "reviewerSawAdjudicatorDecisionBeforeDecision": false,
+    "reviewerSawAetherArgusPredictions": false,
+    "reviewerSawAetherArgusEvaluationResults": false,
+    "comparisonPerformedAfterBlindDecision": true
   },
   "reviewOutcome": {
     "labelsConfirmed": true,
+    "confirmedSampleCount": 413,
+    "disagreementWithFrozenReferenceCount": 0,
     "finalLabelsChanged": false,
-    "finalLabelsSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+    "finalLabelsSha256BeforeReview": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+    "finalLabelsSha256AfterReview": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
   },
   "agreement": {
-    "aiAnnotatorsAndAdjudicatorConsistent": true,
-    "humanReviewConfirmedExistingReferenceLabels": true
+    "humanReviewConfirmedAnnotatorAAndAnnotatorBReferenceOutcome": true,
+    "humanReviewConfirmedThirdModelAdjudicationOutcome": true,
+    "labelChangeRequired": false
   },
-  "updatedClaims": {
+  "publicationClaims": {
     "humanReviewed": true,
-    "reviewerCount": "restricted",
-    "labelStatus": "human-reviewed reference labels"
+    "labelStatus": "confidentially human-reviewed reference labels",
+    "allowedWording": "The AI-assisted reference labels were subsequently confirmed through a confidential blind human review conducted outside the public repository; the review produced zero label changes.",
+    "forbiddenWording": "Publicly reproducible human ground truth or independently auditable raw human annotations."
+  },
+  "temporalRelationship": {
+    "reviewOccurredAfterFrozenModelEvaluation": true,
+    "modelPredictionsRerunRequired": false,
+    "rescoringRequired": false,
+    "reason": "The byte content and SHA-256 of final-labels.jsonl did not change."
   },
   "limitations": [
     "Reviewer identities and raw review artifacts are intentionally withheld from the public repository.",
-    "The dataset remains an authorized LAN challenge set and not natural production traffic."
+    "The public artifact is an operator attestation rather than a release of the confidential reviewer worksheets.",
+    "The dataset remains an authorized LAN challenge set and is not natural production traffic.",
+    "Human review confirmation does not make the labels infallible or universally generalizable ground truth."
   ],
-  "completedAt": "2026-07-31T13:26:00Z"
+  "completedAt": "2026-07-31T13:26:00Z",
+  "attestedAt": "2026-07-31T13:26:00Z"
 }
