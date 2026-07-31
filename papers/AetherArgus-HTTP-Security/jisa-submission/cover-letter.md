@@ -15,14 +15,15 @@ AetherArgus improves macro-F1 from 0.4175 for zero-shot Qwen3-4B to 0.4658, with
 
 I believe the manuscript fits JISA’s emphasis on original and practice-driven information-security research because it addresses network and application security, model robustness, reproducibility, operational false positives, and responsible deployment. The complete source, protocols, statistical outputs, and claim-to-evidence mappings are maintained in the associated repository. Operationally sensitive raw captures and confidential reviewer worksheets are not publicly released, and this limitation is stated in the manuscript.
 
-The manuscript is original, has not been published previously, and is not under consideration elsewhere. I approve the final version and take responsibility for the integrity of the work. Funding and competing interests will be declared through the submission system and in the final manuscript. The use of OpenAI ChatGPT for manuscript organization, language drafting, and consistency checking is disclosed in accordance with Elsevier policy; I reviewed and verified the content and retain full responsibility for it.
+The manuscript is original, has not been published previously, and is not under consideration elsewhere. I approve the final version and take responsibility for the integrity of the work. The manuscript discloses my affiliation with Hebei Xiong'an Qiongyu Technology Co., Ltd. and the company's potential commercial interest in related artificial-intelligence and cybersecurity technologies. The work received no external grant funding. The use of OpenAI ChatGPT for manuscript organization, language drafting, and consistency checking is disclosed in accordance with Elsevier policy; I reviewed and verified the content and retain full responsibility for it.
 
 Thank you for considering this manuscript.
 
 Sincerely,
 
 Zuyi Li
-[CORRESPONDING AUTHOR AFFILIATION]
-[POSTAL ADDRESS]
+Hebei Xiong'an Qiongyu Technology Co., Ltd.
+Xiong'an New Area, Hebei, China
+[REGISTERED STREET ADDRESS AND POSTAL CODE REQUIRED]
 2251213429@qq.com
-[PHONE]
+[PHONE REQUIRED]
