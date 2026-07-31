@@ -1009,6 +1009,12 @@ def create_reports(
         },
         "completionCriteriaMet": all_complete,
         "blockingReasons": blocking_reasons,
+        "performanceMeasurementLimitations": {
+            "crossStackLatencyComparable": False,
+            "rulesBaselineP50LatencyMs": metrics.get("rules-baseline", {}).get("performance", {}).get("p50LatencyMs"),
+            "fewShotP95LatencyMs": metrics.get("qwen3-4b-few-shot", {}).get("performance", {}).get("p95LatencyMs"),
+            "note": "Rules timing is an in-process adapter measurement; generative runtimes use different timing boundaries. The few-shot p95 is retained as observed and should be investigated, not silently removed.",
+        },
     }
     (REPORT / "aetherargus-lan-challenge-report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -1084,6 +1090,7 @@ def create_reports(
             "The set is an authorized challenge capture, not natural production traffic.",
             "An observed low/zero safe FPR is a finite-sample result (Clopper-Pearson upper bound quantifies the residual), not a population guarantee.",
             "Cross-stack latency (Transformers GPU vs Ollama HTTP) is NOT comparable; no fairness ranking is claimed across runtimes.",
+            f"The rules baseline p50 ({metrics['rules-baseline']['performance']['p50LatencyMs']:.6g} ms) is an in-process adapter timing, while Qwen few-shot p95 ({metrics['qwen3-4b-few-shot']['performance']['p95LatencyMs']:.3f} ms) is an observed outlier; both require their stated timing boundaries and are not a fair speed ranking.",
             "Family Macro-F1 uses reference-attack-family labels only; families absent from the reference are not in the denominator.",
             "Cohort mappings were not guessed from sampleId ranges.",
             f"{len(not_run)} locked system(s) did not complete: {', '.join(r['modelId'] for r in not_run) or 'none'}.",
@@ -1191,7 +1198,12 @@ Clopper-Pearson exact and Wilson score intervals (`proportionIntervals`).
 Latency (p50/p95/p99/mean) and model size are in `tables/table-4-latency-memory-size.csv` and each
 model's `metrics/*.json` performance block. Cross-stack latency (Transformers GPU generate
 vs Ollama HTTP round-trip) is flagged `crossStackLatencyComparable=false` and is NOT ranked
-as equivalent across runtimes.
+as equivalent across runtimes. The rules baseline p50
+(`{metrics['rules-baseline']['performance']['p50LatencyMs']:.6g}` ms) measures only an
+in-process adapter call; the Qwen few-shot p95
+(`{metrics['qwen3-4b-few-shot']['performance']['p95LatencyMs']:.3f}` ms) is retained as an
+observed outlier that requires investigation. Model size is included only when its
+performance block contains filesystem-stat and artifact-SHA provenance.
 
 ## 11. Error analysis
 
