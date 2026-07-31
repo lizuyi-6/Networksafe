@@ -12,12 +12,16 @@ from pathlib import Path
 from typing import Any, Iterable
 
 import numpy as np
+from scipy.stats import beta as scipy_beta
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
     f1_score,
     precision_recall_fscore_support,
 )
+
+# Two-sided 95% normal quantile, kept symbolic (no Date/randomness).
+_Z_95 = 1.959963984540054
 
 EXPECTED_INPUT_SHA256 = "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
 EXPECTED_LABEL_SHA256 = "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
@@ -85,6 +89,52 @@ def percentile(values: list[float], quantile: float) -> float | None:
     if not values:
         return None
     return float(np.quantile(np.asarray(values, dtype=float), quantile))
+
+
+def clopper_pearson_interval(successes: int, trials: int, alpha: float = 0.05) -> list[float]:
+    """Exact binomial (Clopper-Pearson) two-sided CI for a proportion successes/trials.
+
+    Required so a zero-event FPR (e.g. 0/209) reports a non-degenerate upper bound
+    instead of the bootstrap's [0,0]."""
+    if trials <= 0:
+        return [0.0, 1.0]
+    successes = int(min(max(successes, 0), trials))
+    lower = 0.0 if successes == 0 else float(scipy_beta.ppf(alpha / 2, successes, trials - successes + 1))
+    upper = 1.0 if successes == trials else float(scipy_beta.ppf(1 - alpha / 2, successes + 1, trials - successes))
+    return [lower, upper]
+
+
+def wilson_interval(successes: int, trials: int, alpha: float = 0.05) -> list[float]:
+    """Wilson score two-sided CI for a proportion successes/trials."""
+    if trials <= 0:
+        return [0.0, 1.0]
+    successes = int(min(max(successes, 0), trials))
+    phat = successes / trials
+    denom = 1.0 + _Z_95 * _Z_95 / trials
+    center = (phat + _Z_95 * _Z_95 / (2 * trials)) / denom
+    half = _Z_95 * math.sqrt(phat * (1 - phat) / trials + _Z_95 * _Z_95 / (4 * trials * trials)) / denom
+    return [max(0.0, center - half), min(1.0, center + half)]
+
+
+def proportion_block(
+    successes: int,
+    trials: int,
+    *,
+    bootstrap95: list[float] | None = None,
+) -> dict[str, Any]:
+    """Unified interval reporting for a proportion metric.
+
+    Point + Clopper-Pearson exact + Wilson score are computed here (deterministic,
+    no resampling). The bootstrap95 slot is filled later by statistical-analysis.py
+    from the 10k stratified resamples; scoring.py itself never bootstraps."""
+    return {
+        "pointEstimate": (successes / trials) if trials else 0.0,
+        "numerator": int(successes),
+        "denominator": int(trials),
+        "clopperPearson95": clopper_pearson_interval(successes, trials),
+        "wilson95": wilson_interval(successes, trials),
+        "bootstrap95": bootstrap95,
+    }
 
 
 def classification_block(reference: list[str], predicted: list[str], labels: list[str]) -> dict[str, Any]:
@@ -200,11 +250,44 @@ def calculate_metrics(
     if any(value == "not_supported" for value in predicted_families):
         family: dict[str, Any] = {"status": "NOT_SUPPORTED"}
     else:
-        family_labels = sorted(set(reference_families) | set(predicted_families))
+        # Family Macro-F1 label set = ONLY families present among reference-attack rows.
+        # Predicted-only families (notably "none", which a model may emit on a reference
+        # attack row) are NOT added to the macro denominator: sklearn counts such a
+        # prediction as a false negative for the true reference family (so it is still
+        # scored as wrong) without creating a support=0 reference class that would
+        # artificially depress Macro-F1. See protocol-amendments.md (stat-issue-4.2).
+        family_labels = sorted(set(reference_families))
+        predicted_only_families = sorted(set(predicted_families) - set(reference_families))
         family = {
             "status": "SUCCESS",
+            "labelSetPolicy": "reference_attack_families_only",
             **classification_block(reference_families, predicted_families, family_labels),
+            "predictedOnlyFamilies": predicted_only_families,
+            "predictedNoneOnAttackCount": int(sum(1 for value in predicted_families if value == "none")),
         }
+
+    # Counts for unified proportion-interval reporting (Clopper-Pearson exact + Wilson +
+    # bootstrap placeholder). Required so zero-event rates (e.g. safeFPR 0/209) report a
+    # non-degenerate interval instead of bootstrap's [0,0]. See protocol-amendments.md
+    # (stat-issue-4.1).
+    total_count = len(aligned_predictions)
+    verdict_correct = sum(1 for index in range(total_count) if predicted_verdicts[index] == reference_verdicts[index])
+    attack_true_positive = sum(1 for index in attack_indexes if predicted_verdicts[index] == "attack")
+    attack_false_negative = len(attack_indexes) - attack_true_positive
+    attack_false_positive = sum(
+        1
+        for index in range(total_count)
+        if reference_verdicts[index] != "attack" and predicted_verdicts[index] == "attack"
+    )
+    unknown_correct = sum(1 for index in unknown_indexes if predicted_verdicts[index] == "unknown")
+    safe_fpr_block = proportion_block(safe_attack_count, len(safe_indexes))
+    proportions = {
+        "safeFPR": safe_fpr_block,
+        "verdictAccuracy": proportion_block(verdict_correct, total_count),
+        "attackRecall": proportion_block(attack_true_positive, attack_true_positive + attack_false_negative),
+        "attackPrecision": proportion_block(attack_true_positive, attack_true_positive + attack_false_positive),
+        "unknownAccuracy": proportion_block(unknown_correct, len(unknown_indexes)),
+    }
 
     latencies = [float(row["latencyMs"]) for row in aligned_predictions if row.get("latencyMs") is not None]
     total_latency_seconds = sum(latencies) / 1000
@@ -269,10 +352,12 @@ def calculate_metrics(
         "attackDetectionAll": attack_all,
         "attackVsSafeOnly": attack_vs_safe,
         "safeFPR": {
-            "rate": safe_attack_count / len(safe_indexes),
-            "falsePositiveCount": safe_attack_count,
-            "safeSupport": len(safe_indexes),
+            "rate": safe_fpr_block["pointEstimate"],
+            "falsePositiveCount": safe_fpr_block["numerator"],
+            "safeSupport": safe_fpr_block["denominator"],
+            **safe_fpr_block,
         },
+        "proportions": proportions,
         "unknown": {
             "accuracy": unknown_recall,
             "precision": unknown_precision,

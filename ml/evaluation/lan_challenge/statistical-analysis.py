@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 from scipy.stats import binomtest, chi2
 
-from scoring import load_predictions, load_references
+from scoring import load_predictions, load_references, proportion_block
 
 BOOTSTRAP_ITERATIONS = 10_000
 BOOTSTRAP_SEED = 20260731
@@ -43,6 +43,46 @@ def f1_from_matrix(matrix: np.ndarray) -> np.ndarray:
     )
 
 
+def macro_f1_over_reference_labels(reference: np.ndarray, predicted: np.ndarray, labels: list[str]) -> float:
+    """Macro-F1 averaged over reference-present labels only, matching sklearn semantics.
+
+    A prediction outside ``labels`` (notably family "none" on a reference attack row) is
+    counted as a false negative for the true reference family (so it is still wrong) but
+    adds no support=0 reference class to the macro denominator. See protocol-amendments.md
+    (stat-issue-4.2)."""
+    if not labels:
+        return 0.0
+    scores: list[float] = []
+    for label in labels:
+        tp = float(np.sum((reference == label) & (predicted == label)))
+        ref_support = float(np.sum(reference == label))
+        pred_support = float(np.sum(predicted == label))
+        precision = tp / pred_support if pred_support else 0.0
+        recall = tp / ref_support if ref_support else 0.0
+        scores.append(2 * precision * recall / (precision + recall) if (precision + recall) else 0.0)
+    return float(np.mean(scores))
+
+
+def proportion_counts(reference: np.ndarray, predicted: np.ndarray) -> dict[str, tuple[int, int]]:
+    """(successes, trials) for every proportion metric, for exact/Wilson intervals."""
+    attack_mask = reference == "attack"
+    safe_mask = reference == "safe"
+    unknown_mask = reference == "unknown"
+    attack_tp = int(np.sum(attack_mask & (predicted == "attack")))
+    attack_fn = int(np.sum(attack_mask) - attack_tp)
+    attack_fp = int(np.sum(~attack_mask & (predicted == "attack")))
+    safe_fp = int(np.sum(safe_mask & (predicted == "attack")))
+    unknown_correct = int(np.sum(unknown_mask & (predicted == "unknown")))
+    correct = int(np.sum(reference == predicted))
+    return {
+        "safeFPR": (safe_fp, int(np.sum(safe_mask))),
+        "verdictAccuracy": (correct, int(reference.size)),
+        "attackRecall": (attack_tp, attack_tp + attack_fn),
+        "attackPrecision": (attack_tp, attack_tp + attack_fp),
+        "unknownAccuracy": (unknown_correct, int(np.sum(unknown_mask))),
+    }
+
+
 def metric_vector(
     reference: np.ndarray,
     predicted: np.ndarray,
@@ -67,9 +107,9 @@ def metric_vector(
     family_reference = reference_families[family_mask]
     family_prediction = predicted_families[family_mask]
     if len(family_reference) and not np.any(family_prediction == "not_supported"):
-        family_labels = sorted(set(family_reference.tolist()) | set(family_prediction.tolist()))
-        family_macro_f1: float | None = float(
-            np.mean(f1_from_matrix(confusion(family_reference, family_prediction, family_labels)))
+        family_labels = sorted(set(family_reference.tolist()))
+        family_macro_f1: float | None = macro_f1_over_reference_labels(
+            family_reference, family_prediction, family_labels
         )
     else:
         family_macro_f1 = None
@@ -78,6 +118,7 @@ def metric_vector(
         "macroF1": float(np.mean(f1_from_matrix(matrix))),
         "attackF1": attack_f1,
         "attackRecall": attack_recall,
+        "attackPrecision": attack_precision,
         "safeFPR": float(matrix[safe_index, attack_index] / max(1, matrix[safe_index, :].sum())),
         "unknownAccuracy": float(
             matrix[unknown_index, unknown_index] / max(1, matrix[unknown_index, :].sum())
@@ -124,7 +165,22 @@ def bootstrap_model(
         for name, value in values.items():
             if value is not None:
                 samples[name].append(value)
-    return {name: interval(value, samples[name]) for name, value in point.items()}
+    confidence_intervals = {name: interval(value, samples[name]) for name, value in point.items()}
+    # Unified proportion intervals: deterministic Clopper-Pearson exact + Wilson score
+    # over the full-sample counts, plus bootstrap95 from the 10k stratified resamples.
+    counts = proportion_counts(reference, predicted)
+    proportion_names = ["safeFPR", "verdictAccuracy", "attackRecall", "attackPrecision", "unknownAccuracy"]
+    proportion_intervals: dict[str, Any] = {}
+    for name in proportion_names:
+        successes, trials = counts[name]
+        bootstrap_draws = samples.get(name, [])
+        bootstrap95 = (
+            [float(np.quantile(bootstrap_draws, 0.025)), float(np.quantile(bootstrap_draws, 0.975))]
+            if bootstrap_draws
+            else None
+        )
+        proportion_intervals[name] = proportion_block(successes, trials, bootstrap95=bootstrap95)
+    return {"confidenceIntervals": confidence_intervals, "proportionIntervals": proportion_intervals}
 
 
 def mcnemar(reference: np.ndarray, baseline: np.ndarray, aetherargus: np.ndarray) -> dict[str, Any]:
@@ -204,6 +260,7 @@ def main() -> int:
     predictions: dict[str, np.ndarray] = {}
     families: dict[str, np.ndarray] = {}
     confidence_intervals: dict[str, Any] = {}
+    proportion_intervals: dict[str, Any] = {}
     for status in statuses:
         if status["status"] != "SUCCESS":
             continue
@@ -214,9 +271,9 @@ def main() -> int:
         families[model_id] = np.asarray(
             [by_id[sample_id]["attackFamily"] for sample_id in reference_ids], dtype=object
         )
-        confidence_intervals[model_id] = bootstrap_model(
-            reference, predictions[model_id], reference_families, families[model_id]
-        )
+        boot = bootstrap_model(reference, predictions[model_id], reference_families, families[model_id])
+        confidence_intervals[model_id] = boot["confidenceIntervals"]
+        proportion_intervals[model_id] = boot["proportionIntervals"]
 
     primary = "aetherargus-v02-hf-lora"
     mcnemar_rows: list[dict[str, Any]] = []
@@ -267,6 +324,7 @@ def main() -> int:
         "bootstrapSeed": BOOTSTRAP_SEED,
         "stratifiedBy": "reference_verdict",
         "confidenceIntervals": confidence_intervals,
+        "proportionIntervals": proportion_intervals,
         "mcnemar": mcnemar_rows,
         "pairedBootstrapDifferences": paired,
         "multipleComparisonCorrection": "Holm-Bonferroni",
