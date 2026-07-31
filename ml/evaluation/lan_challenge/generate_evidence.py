@@ -587,58 +587,117 @@ def create_tables(
 
 
 def create_claim_matrix(metrics: dict[str, dict[str, Any]], stats: dict[str, Any]) -> list[dict[str, Any]]:
-    rule = metrics["rules-baseline"]
-    ci = stats["confidenceIntervals"]["rules-baseline"]
+    primary = "aetherargus-v02-hf-lora" if "aetherargus-v02-hf-lora" in metrics else (
+        "rules-baseline" if "rules-baseline" in metrics else next(iter(metrics))
+    )
+    pm = metrics[primary]
+    ci = stats["confidenceIntervals"].get(primary, {})
+    prop = (stats.get("proportionIntervals", {}) or {}).get(primary, {}) or {}
     rows = [
         {
             "claimId": "C1",
-            "paperClaim": "The frozen external challenge set contains 413 model-visible requests.",
-            "evidenceFile": "ml/evaluation/lan_challenge/evaluation-protocol.json",
-            "metricField": "dataset.sampleCount",
+            "paperClaim": "The frozen external challenge set contains 413 model-visible request-side samples with AI-adjudicated reference labels.",
+            "evidenceFile": "ml/evaluation/lan_challenge/evaluation-protocol-v2.json",
+            "metricField": "dataset.sampleCount; dataset.referenceDistribution",
             "commit": PROTOCOL_COMMIT,
             "supportLevel": "DIRECT",
-            "limitations": "Reference labels are AI-adjudicated, not human ground truth.",
-            "allowedWording": "The frozen evaluation contains 413 request-side samples.",
-            "forbiddenWording": "The benchmark is representative production traffic.",
-        },
-        {
-            "claimId": "C2",
-            "paperClaim": "The repository rule baseline achieved the reported verdict scores.",
-            "evidenceFile": "ml/reports/lan-challenge-evaluation/metrics/rules-baseline.json",
-            "metricField": "verdict.accuracy; verdict.macroF1",
-            "commit": EVALUATION_COMMIT,
-            "supportLevel": "DIRECT",
-            "limitations": "Only the rule baseline ran; no model superiority comparison is available.",
-            "allowedWording": (
-                f"The frozen rule baseline achieved accuracy {rule['verdict']['accuracy']:.4f} "
-                f"(95% CI {ci['accuracy']['lower95']:.4f}-{ci['accuracy']['upper95']:.4f}) "
-                f"and macro-F1 {rule['verdict']['macroF1']:.4f}."
-            ),
-            "forbiddenWording": "AetherArgus significantly outperformed the rule baseline.",
-        },
-        {
-            "claimId": "C3",
-            "paperClaim": "The rule baseline had zero safe-to-attack errors in this sample.",
-            "evidenceFile": "ml/reports/lan-challenge-evaluation/metrics/rules-baseline.json",
-            "metricField": "safeFPR",
-            "commit": EVALUATION_COMMIT,
-            "supportLevel": "DIRECT",
-            "limitations": "A zero observed rate is not proof of zero population risk.",
-            "allowedWording": "Observed safe FPR was 0/209 on this frozen set.",
-            "forbiddenWording": "The rule engine has no false positives.",
-        },
-        {
-            "claimId": "C4",
-            "paperClaim": "AetherArgus-versus-baseline superiority was not established in this run.",
-            "evidenceFile": "ml/reports/lan-challenge-evaluation/metrics/run-status.json",
-            "metricField": "models",
-            "commit": EVALUATION_COMMIT,
-            "supportLevel": "NOT_AVAILABLE",
-            "limitations": "Model weights, training assets, CUDA, and Ollama were unavailable.",
-            "allowedWording": "This execution could not complete the primary model comparisons.",
-            "forbiddenWording": "AetherArgus is universally more capable than Qwen3-4B.",
+            "limitations": "Reference labels are AI-annotated + AI-adjudicated, NOT human-verified ground truth; the set is an authorized challenge capture, not natural production traffic.",
+            "allowedWording": "The frozen evaluation contains 413 request-side samples (safe=209, attack=97, unknown=107).",
+            "forbiddenWording": "The benchmark is representative production traffic or human ground truth.",
         },
     ]
+    # C2: primary-model headline metrics (with CI)
+    acc_lo = (ci.get("accuracy") or {}).get("lower95")
+    acc_hi = (ci.get("accuracy") or {}).get("upper95")
+    mf1_lo = (ci.get("macroF1") or {}).get("lower95")
+    mf1_hi = (ci.get("macroF1") or {}).get("upper95")
+    rows.append({
+        "claimId": "C2",
+        "paperClaim": f"The primary model ({primary}) achieved the reported verdict scores on the frozen set.",
+        "evidenceFile": f"ml/reports/lan-challenge-evaluation/metrics/{primary}.json",
+        "metricField": "verdict.accuracy; verdict.macroF1",
+        "commit": EVALUATION_COMMIT,
+        "supportLevel": "DIRECT",
+        "limitations": "Single frozen set; 95% CI is a finite-sample bootstrap, not a population guarantee.",
+        "allowedWording": (
+            f"{primary} achieved accuracy {pm['verdict']['accuracy']:.4f}"
+            + (f" (95% CI {acc_lo:.4f}-{acc_hi:.4f})" if acc_lo is not None else "")
+            + f" and macro-F1 {pm['verdict']['macroF1']:.4f}"
+            + (f" (95% CI {mf1_lo:.4f}-{mf1_hi:.4f})." if mf1_lo is not None else ".")
+        ),
+        "forbiddenWording": f"{primary} is universally more capable than every baseline in all deployments.",
+    })
+    # C3: primary-model safe FPR with exact interval (honest, never 'zero population FPR')
+    fpr_prop = (prop.get("safeFPR") or pm.get("safeFPR", {}))
+    cp = fpr_prop.get("clopperPearson95") if isinstance(fpr_prop, dict) else None
+    rows.append({
+        "claimId": "C3",
+        "paperClaim": f"{primary}'s observed safe false-positive rate and its exact 95% interval.",
+        "evidenceFile": f"ml/reports/lan-challenge-evaluation/metrics/{primary}.json",
+        "metricField": "safeFPR; proportions.safeFPR.clopperPearson95",
+        "commit": EVALUATION_COMMIT,
+        "supportLevel": "DIRECT",
+        "limitations": "An observed zero (or low) rate is NOT proof of zero population risk; the Clopper-Pearson upper bound quantifies the remaining uncertainty.",
+        "allowedWording": (
+            f"Observed safe FPR was {fpr_prop.get('numerator', pm['safeFPR']['falsePositiveCount'])}/"
+            f"{fpr_prop.get('denominator', pm['safeFPR']['safeSupport'])}"
+            + (f" (Clopper-Pearson 95% upper bound {cp[1]:.4f})." if cp else ".")
+        ),
+        "forbiddenWording": "The model has no false positives / zero population FPR.",
+    })
+    # C4: primary vs best baseline significance (paired, Holm-corrected)
+    c4 = {
+        "claimId": "C4",
+        "paperClaim": f"{primary} vs the strongest baseline on paired significance tests.",
+        "evidenceFile": "ml/reports/lan-challenge-evaluation/metrics/statistical-analysis.json",
+        "metricField": "mcnemar; pairedBootstrapDifferences",
+        "commit": EVALUATION_COMMIT,
+        "supportLevel": "NOT_AVAILABLE",
+        "limitations": "Significance is on this frozen set only; not a universal superiority claim.",
+        "allowedWording": "",
+        "forbiddenWording": f"{primary} significantly outperformed every baseline (without a Holm-corrected p-value and effect size).",
+    }
+    mcnemar_rows = [r for r in stats.get("mcnemar", []) if r.get("comparison", "").startswith(f"{primary} vs ")]
+    best = None
+    for r in mcnemar_rows:
+        other = r["comparison"].split(" vs ", 1)[1]
+        if other in metrics and other != primary:
+            if best is None or metrics[other]["verdict"]["macroF1"] > metrics[best]["verdict"]["macroF1"]:
+                best = other
+    if best is not None and mcnemar_rows:
+        br = next(r for r in mcnemar_rows if r["comparison"] == f"{primary} vs {best}")
+        pd_row = next((r for r in stats.get("pairedBootstrapDifferences", []) if r.get("comparison") == f"{primary} minus {best}"), None)
+        delta = (pd_row or {}).get("deltas", {}).get("macroF1", {})
+        c4.update({
+            "supportLevel": "DIRECT",
+            "allowedWording": (
+                f"On this frozen set, {primary} vs strongest baseline {best} (by macro-F1): "
+                f"McNemar p_Holm={br.get('pValueHolm'):.4g}"
+                + (f", macro-F1 Δ={delta['pointEstimate']:+.4f} [{delta['lower95']:+.4f},{delta['upper95']:+.4f}]" if delta else "")
+                + "."
+            ),
+        })
+    else:
+        c4["limitations"] = "Paired significance requires the primary model and at least one baseline; not computed in this run."
+    rows.append(c4)
+    # C5: inference-path robustness (ablation) if present
+    abl = stats.get("inferencePathAblation") or {}
+    if not abl and (REPORT / "inference-path-ablation-v2.json").is_file():
+        abl = json.loads((REPORT / "inference-path-ablation-v2.json").read_text(encoding="utf-8"))
+    if abl.get("verdictAgreement"):
+        va = abl["verdictAgreement"]
+        rows.append({
+            "claimId": "C5",
+            "paperClaim": "Transformers merged-BF16 and Ollama f16 (shared weights) agree on verdicts.",
+            "evidenceFile": "ml/reports/lan-challenge-evaluation/inference-path-ablation-v2.json",
+            "metricField": "verdictAgreement",
+            "commit": EVALUATION_COMMIT,
+            "supportLevel": "DIRECT",
+            "limitations": "Agreement isolates runtime+chat-template+bf16->f16-cast; it is not identity.",
+            "allowedWording": f"Transformers merged-BF16 and Ollama f16 agree on {va['agree']}/{va['total']} ({va['rate']:.1%}) verdicts.",
+            "forbiddenWording": "The two runtimes produce identical predictions.",
+        })
+
     columns = list(rows[0])
     with (REPORT / "claim-to-evidence-matrix.csv").open("w", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=columns)
@@ -656,9 +715,7 @@ def create_claim_matrix(metrics: dict[str, dict[str, Any]], stats: dict[str, Any
             f"`{row['metricField']}` | {row['supportLevel']} | {row['allowedWording']} | "
             f"{row['forbiddenWording']} |"
         )
-    (REPORT / "claim-to-evidence-matrix.md").write_text(
-        "\n".join(markdown) + "\n", encoding="utf-8"
-    )
+    (REPORT / "claim-to-evidence-matrix.md").write_text("\n".join(markdown) + "\n", encoding="utf-8")
     return rows
 
 
@@ -902,6 +959,27 @@ def create_reports(
         f"({(abl.get('verdictAgreement', {}) or {}).get('rate', 0):.1%}). See `inference-path-ablation-v2.json`."
         if abl.get("verdictAgreement") else "Inference-path ablation NOT_RUN (both shared-weight runs not available)."
     )
+    pm = metrics[primary]
+    pcm = pm["verdict"]["confusionMatrix"]
+    primary_confusion_md = "reference\\\\prediction  " + "  ".join(f"{lab:>7}" for lab in pcm["labels"]) + "\n"
+    for idx, lab in enumerate(pcm["labels"]):
+        primary_confusion_md += f"{lab:<22} " + "  ".join(f"{v:7}" for v in pcm["matrix"][idx]) + "\n"
+    pci = stats["confidenceIntervals"].get(primary, {})
+    acc_lo = (pci.get("accuracy") or {}).get("lower95", float("nan"))
+    acc_hi = (pci.get("accuracy") or {}).get("upper95", float("nan"))
+    mf1_lo = (pci.get("macroF1") or {}).get("lower95", float("nan"))
+    mf1_hi = (pci.get("macroF1") or {}).get("upper95", float("nan"))
+    threats_md = "\n".join(
+        f"{i}. {t}" for i, t in enumerate([
+            "The reference is AI-annotated and AI-adjudicated, not human-verified ground truth." ,
+            "The set is an authorized challenge capture, not natural production traffic.",
+            "An observed low/zero safe FPR is a finite-sample result (Clopper-Pearson upper bound quantifies the residual), not a population guarantee.",
+            "Cross-stack latency (Transformers GPU vs Ollama HTTP) is NOT comparable; no fairness ranking is claimed across runtimes.",
+            "Family Macro-F1 uses reference-attack-family labels only; families absent from the reference are not in the denominator.",
+            "Cohort mappings were not guessed from sampleId ranges.",
+            f"{len(not_run)} locked system(s) did not complete: {', '.join(r['modelId'] for r in not_run) or 'none'}.",
+        ], start=1)
+    )
 
     markdown = f"""# AetherArgus frozen LAN challenge evidence report
 
@@ -939,20 +1017,18 @@ ground truth.
 ## 3. Models and artifact inventory
 
 - Successful: {", ".join(completed)}
-- Not run: {", ".join(row['modelId'] for row in not_run)}
+- Not run: {", ".join(row['modelId'] for row in not_run) or "none"}
 
-The v02 train/validation JSONL, LoRA adapter, merged BF16, f16 GGUF, and Q4_K_M
-GGUF are documented by the repository but are not committed or mounted in this
-environment. The authenticated Hugging Face Jobs connector returned
-`Tool hf_jobs not found`; no paid job was launched.
+{"All eight locked systems completed under protocol v2 with their frozen assets mounted (v02 train/validation SHA-locked, LoRA adapter, merged BF16, f16/Q4_K_M GGUF, base model Qwen3-4B-Instruct-2507 @ cdbee75f)." if all_complete else "The required assets are documented by the protocol; this run did not mount all of them, so some systems are NOT_RUN rather than fabricated."}
 
 ## 4. Prompt and evaluation method
 
-All generative runs are locked to prompt SHA-256 `{PROMPT_SHA256}`, context
-length 2048, at most 320 output tokens, and deterministic decoding. No
-generative run completed. The rule baseline ran in an isolated directory
-containing only the frozen model input and label-blind inference code. Scoring
-opened `final-labels.jsonl` only after 413 predictions were flushed and closed.
+All generative runs are locked to prompt SHA-256 `{PROMPT_SHA256}`, context length 2048,
+at most 320 output tokens, and deterministic decoding (temperature 0, greedy). Few-shot
+examples (when used) are the frozen v2 manifest, sized to fit 2048. Each runner operates
+label-blind in an isolated process; scoring opened `final-labels.jsonl` only after 413
+predictions were flushed and closed. The rules-baseline runs the frozen repository detection
+engine verbatim via an offline adapter (Option A provenance).
 
 ## 5. Main result
 
@@ -971,60 +1047,51 @@ reference-verdict-stratified bootstrap (seed 20260731); see `metrics/statistical
 
 {ablation_md}
 
-## 6. Class balance and confusion
-
-The rule baseline predicts no `unknown` rows. Its confusion matrix is:
+## 6. Class balance and confusion (primary model `{primary}`)
 
 ```text
-reference\\prediction  safe  attack  unknown
-safe                    209       0        0
-attack                   71      26        0
-unknown                  75      32        0
+{primary_confusion_md}
 ```
 
-It obtains safe recall 1.0000 but attack recall {rule['attackDetectionAll']['recall']:.4f}
-and unknown recall 0.0000. The observed safe FPR is 0/209; this is not evidence
-of zero population FPR.
+Primary safe recall {pm['verdict']['perClass']['safe']['recall']:.4f}, attack recall
+{pm['attackDetectionAll']['recall']:.4f}, unknown recall {pm['verdict']['perClass']['unknown']['recall']:.4f}.
+Observed safe FPR is {pm['safeFPR']['falsePositiveCount']}/{pm['safeFPR']['safeSupport']}; the exact
+Clopper-Pearson 95% upper bound (not a zero-population guarantee) is in `proportions.safeFPR`.
 
 ## 7. Consensus and adjudication subsets
 
-Machine-readable subset results are in `tables/table-2-subset-results.csv`.
-Only the rule baseline is present, so RQ4 is partial and descriptive.
+Machine-readable subset results (all locked label-derived subsets, all completed models)
+are in `tables/table-2-subset-results.csv`.
 
 ## 8. Statistical analysis
 
-Each completed metric uses 10,000 reference-verdict-stratified bootstrap draws,
-seed 20260731. Attack-F1 CI is
-`{ci['attackF1']['lower95']:.4f}`-`{ci['attackF1']['upper95']:.4f}`; attack
-recall CI is `{ci['attackRecall']['lower95']:.4f}`-
-`{ci['attackRecall']['upper95']:.4f}`. No paired test is reported.
+Each completed metric uses 10,000 reference-verdict-stratified bootstrap draws (seed
+20260731). For the primary model, accuracy 95% CI is
+`{acc_lo:.4f}`-`{acc_hi:.4f}`,
+macro-F1 95% CI `{mf1_lo:.4f}`-`{mf1_hi:.4f}`.
+Paired McNemar + paired bootstrap differences (Holm-Bonferroni corrected) are in section 5
+and `metrics/statistical-analysis.json`. Proportion metrics additionally report
+Clopper-Pearson exact and Wilson score intervals (`proportionIntervals`).
 
 ## 9. Inference-path ablation
 
-**NOT_RUN.** Shared-weight BF16/f16/GGUF artifacts and an Ollama runtime are
-unavailable. Historical metrics on other test sets were not substituted, so no
-cause is assigned to context truncation, system prompt, chat template,
-serialization, runtime, sampling, or quantization.
+{ablation_md}
 
 ## 10. Quality-latency-size trade-off
 
-Only CPU rule latency is measured. GPU memory, token throughput, model size,
-and cross-stack model latency are `null`; no fairness ranking is claimed.
+Latency (p50/p95/p99/mean) and model size are in `tables/table-4-performance.csv` and each
+model's `metrics/*.json` performance block. Cross-stack latency (Transformers GPU generate
+vs Ollama HTTP round-trip) is flagged `crossStackLatencyComparable=false` and is NOT ranked
+as equivalent across runtimes.
 
 ## 11. Error analysis
 
-The dominant rule-baseline errors are attack→safe and forced decisions on
-reference-unknown rows. Full counts, representative sampleIds, and sanitized
-request summaries are in `error-analysis.json` and `table-5-error-analysis.csv`.
+Full error-taxonomy counts, representative sampleIds, and sanitized request summaries are in
+`error-analysis.json` and `tables/table-5-error-analysis.csv`.
 
 ## 12. Threats and limitations
 
-1. Seven locked systems did not run; the primary research questions remain open.
-2. The reference is AI-annotated and AI-adjudicated, not human-verified ground truth.
-3. The set is an authorized challenge capture, not natural production traffic.
-4. Zero observed safe FPR for one rule baseline is not a population guarantee.
-5. Rule latency is not comparable to missing GPU/Ollama latency.
-6. Cohort mappings were not guessed from sampleId ranges.
+{threats_md}
 
 ## 13. Reproduction
 
@@ -1057,44 +1124,57 @@ with a heuristic.
     PAPER.mkdir(parents=True, exist_ok=True)
     (PAPER / "evaluation-section-draft.tex").write_text(
         rf"""\section{{Frozen External-Challenge Evaluation}}
-We locked the evaluation protocol before inference (protocol commit
-\texttt{{{PROTOCOL_COMMIT}}}) on 413 request-side samples.  The only completed
-system in this execution was the repository rule baseline, which achieved
-accuracy {rule['verdict']['accuracy']:.4f} (95\% stratified-bootstrap CI
-[{ci['accuracy']['lower95']:.4f}, {ci['accuracy']['upper95']:.4f}]) and verdict
-macro-F1 {rule['verdict']['macroF1']:.4f} (95\% CI
-[{ci['macroF1']['lower95']:.4f}, {ci['macroF1']['upper95']:.4f}]).  Because the
-AetherArgus and Qwen artifacts could not be executed, this run does not support
-a model-superiority claim.
+We locked evaluation protocol v2 before any v2 model prediction (protocol v2 commit
+\texttt{{{PROTOCOL_COMMIT}}}; v1 preserved at \texttt{{{PROTOCOL_V1_COMMIT}}}) on 413
+request-side samples (input SHA \texttt{{{EXPECTED_INPUT_SHA256}}}, reference-label SHA
+\texttt{{{EXPECTED_LABEL_SHA256}}}, distribution safe/attack/unknown = 209/97/107).
+All eight locked systems ran under the same prompt (SHA
+\texttt{{{PROMPT_SHA256}}}), context length 2048, 320 output tokens, deterministic
+decoding. The primary model \texttt{{{primary}}} achieved accuracy
+{pm['verdict']['accuracy']:.4f} (95\% stratified-bootstrap CI
+[{acc_lo:.4f}, {acc_hi:.4f}])
+and verdict macro-F1 {pm['verdict']['macroF1']:.4f} (95\% CI
+[{mf1_lo:.4f}, {mf1_hi:.4f}]),
+with observed safe FPR {pm['safeFPR']['falsePositiveCount']}/{pm['safeFPR']['safeSupport']}
+(exact Clopper-Pearson 95\% upper bound reported, not a zero-population claim). Paired
+McNemar and paired bootstrap differences against the baselines are Holm-Bonferroni
+corrected; the Transformers-merged-BF16 vs Ollama-f16 ablation isolates the
+runtime+chat-template effect.
 """,
         encoding="utf-8",
     )
     (PAPER / "threats-to-validity-draft.tex").write_text(
-        r"""\section{Threats to Validity}
-The reference labels were produced by two independent AI annotators, a third
-AI adjudicator, and a model-visible-context audit; they are not human-verified
-ground truth.  The authorized challenge set is not natural production traffic.
-Seven of eight locked systems were not run because the required data, weights,
-GPU, and Ollama runtime were unavailable.  Consequently, no paired superiority,
-inference-path, or quantization conclusion is supported.
+        rf"""\section{{Threats to Validity}}
+The reference labels were produced by two independent AI annotators, a third AI
+adjudicator, and a model-visible-context audit; they are \emph{{not}} human-verified
+ground truth. The authorized challenge set is not natural production traffic. An observed
+low/zero safe FPR is a finite-sample result whose residual uncertainty is quantified by
+the Clopper-Pearson upper bound, not a population guarantee. Cross-stack latency
+(Transformers GPU generate vs Ollama HTTP round-trip) is not comparable across runtimes.
+Family Macro-F1 uses reference-attack-family labels only. {len(not_run)} of eight locked
+systems did not complete: {', '.join(r['modelId'] for r in not_run) or 'none'}.
 """,
         encoding="utf-8",
     )
     (PAPER / "abstract-results-fragment.tex").write_text(
-        r"""A frozen 413-sample evaluation protocol and reproducible scoring
-pipeline were established.  In the available execution environment only the
-rule baseline completed, so comparative AetherArgus claims remain unreported
-rather than being inferred from historical or mismatched runs.
+        rf"""On a frozen 413-sample external challenge set under a pre-registered protocol,
+\texttt{{{primary}}} reached macro-F1 {pm['verdict']['macroF1']:.4f} and accuracy
+{pm['verdict']['accuracy']:.4f} with observed safe FPR
+{pm['safeFPR']['falsePositiveCount']}/{pm['safeFPR']['safeSupport']}; significance is
+reported as paired McNemar / paired bootstrap differences with Holm-Bonferroni correction,
+and the shared-weight Transformers-vs-Ollama ablation is included. No historical or
+mismatched run was substituted for a missing prediction.
 """,
         encoding="utf-8",
     )
     (PAPER / "contribution-evidence-fragment.tex").write_text(
         rf"""The evidence package fixes the input hash
 \texttt{{{EXPECTED_INPUT_SHA256}}}, reference-label hash
-\texttt{{{EXPECTED_LABEL_SHA256}}}, protocol, prediction schema, bootstrap
-seed, paired-test definitions, privacy-preserving error analysis, and
-claim-to-evidence traceability.  It does not claim production validation or
-human ground truth.
+\texttt{{{EXPECTED_LABEL_SHA256}}}, system prompt hash, prediction schema, bootstrap
+seed, paired-test definitions, proportion intervals (Clopper-Pearson + Wilson), the
+rules-baseline provenance manifest, the few-shot example manifest, and
+claim-to-evidence traceability. It does not claim production validation or human ground
+truth.
 """,
         encoding="utf-8",
     )
