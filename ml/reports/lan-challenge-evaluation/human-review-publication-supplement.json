@@ -5,7 +5,8 @@
   "reason": "The machine-readable evaluation report is a frozen evaluation-time snapshot. A confidential blind human review was completed after evaluation without changing final-labels.jsonl.",
   "evaluationTimeState": {
     "humanReviewed": false,
-    "evidenceCommit": "279282128f7bb1d11c2f4d49aa043a57a7b82fb5"
+    "evidenceMergeCommit": "279282128f7bb1d11c2f4d49aa043a57a7b82fb5",
+    "strictValidation": "27/27 PASS"
   },
   "publicationTimeState": {
     "humanReviewed": true,
