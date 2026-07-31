@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
-  "repositoryCommit": "f6758075316425e6e2a5b4cbd1d9bebdc5cafd53",
-  "protocolCommit": "553c0a9",
+  "schemaVersion": 2,
+  "repositoryCommit": "fa1661ddc68ac77ff7304ce11c4bdf2ccc699737",
+  "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
   "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
   "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
   "labelSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
@@ -155,5 +155,9 @@
   "statisticalSeed": 20260731,
   "challengeSetUsedForTuning": false,
   "labelsChangedAfterEvaluation": false,
-  "completedAt": "2026-07-31T09:48:52.131991+00:00"
+  "completedAt": null,
+  "evidenceStatus": "INCOMPLETE_REQUIRED_ABLATIONS_AND_REVALIDATION",
+  "completionCriteriaMet": false,
+  "inferencePathAblationStatus": "INCOMPLETE",
+  "validationStatus": "NOT_RUN_AFTER_GATE_CHANGE"
 }
