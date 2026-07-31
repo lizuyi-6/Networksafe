@@ -362,45 +362,103 @@ def create_figures(
         fig.savefig(FIGURES / f"figure-4-subset-performance.{suffix}", bbox_inches="tight")
     plt.close(fig)
 
-    fig, axis = plt.subplots(figsize=(7.2, 4.2))
+    fig, axes = plt.subplots(1, 2, figsize=(12.0, 4.6))
+    latency_axis, size_axis = axes
     for model in completed:
         latency = metrics[model]["performance"]["meanLatencyMs"]
         score = metrics[model]["verdict"]["macroF1"]
-        axis.scatter(latency, score, s=80)
-        axis.annotate(model, (latency, score), xytext=(5, 5), textcoords="offset points")
-    axis.set_ylim(0, 1)
+        interval = stats["confidenceIntervals"][model]["macroF1"]
+        lower = score - interval["lower95"]
+        upper = interval["upper95"] - score
+        if latency is not None and latency > 0:
+            latency_axis.errorbar(
+                latency,
+                score,
+                yerr=np.asarray([[lower], [upper]]),
+                fmt="o",
+                capsize=3,
+            )
+            latency_axis.annotate(model, (latency, score), xytext=(4, 4), textcoords="offset points", fontsize=7)
+        size = metrics[model]["performance"].get("modelSizeBytes")
+        if size is not None:
+            size_gib = size / (1024 ** 3)
+            size_axis.errorbar(
+                size_gib,
+                score,
+                yerr=np.asarray([[lower], [upper]]),
+                fmt="o",
+                capsize=3,
+            )
+            size_axis.annotate(model, (size_gib, score), xytext=(4, 4), textcoords="offset points", fontsize=7)
+    latency_axis.set_ylim(0, 1)
+    size_axis.set_ylim(0, 1)
     observed_latencies = [
         metrics[model]["performance"]["meanLatencyMs"]
         for model in completed
         if metrics[model]["performance"]["meanLatencyMs"] is not None
+        and metrics[model]["performance"]["meanLatencyMs"] > 0
     ]
-    axis.set_xlim(0, max(1.0, max(observed_latencies, default=0.0) * 1.2))
-    axis.set_xlabel("Mean latency (ms; cross-stack ranking not implied)")
-    axis.set_ylabel("Verdict Macro-F1")
-    axis.set_title("Quality-latency-size trade-off; model size unavailable for rules")
+    if observed_latencies:
+        latency_axis.set_xscale("log")
+        latency_axis.set_xlim(min(observed_latencies) / 2, max(observed_latencies) * 2)
+    observed_sizes = [
+        metrics[model]["performance"]["modelSizeBytes"] / (1024 ** 3)
+        for model in completed
+        if metrics[model]["performance"].get("modelSizeBytes") is not None
+    ]
+    size_axis.set_xlim(0, max(1.0, max(observed_sizes, default=0.0) * 1.15))
+    latency_axis.set_xlabel("Mean latency (ms, log scale; cross-stack ranking not implied)")
+    latency_axis.set_ylabel("Verdict Macro-F1 (95% bootstrap CI)")
+    latency_axis.set_title("Quality vs latency")
+    size_axis.set_xlabel("Measured model weight size (GiB; stat + SHA-256)")
+    size_axis.set_ylabel("Verdict Macro-F1 (95% bootstrap CI)")
+    size_axis.set_title("Quality vs measured size")
+    fig.suptitle("Quality–latency–size trade-off (runtime timing boundaries differ)")
     fig.tight_layout()
     for suffix in ("png", "pdf"):
         fig.savefig(FIGURES / f"figure-5-quality-latency-size-tradeoff.{suffix}", bbox_inches="tight")
     plt.close(fig)
 
-    fig, axis = plt.subplots(figsize=(7.2, 4.2))
-    axis.axis("off")
-    axis.text(
-        0.5,
-        0.55,
-        "Inference-path ablation: NOT RUN",
-        ha="center",
-        va="center",
-        fontsize=16,
-        weight="bold",
+    ablation = json.loads((REPORT / "inference-path-ablation-v2.json").read_text(encoding="utf-8"))
+    if ablation.get("status") != "COMPLETE":
+        raise RuntimeError("cannot generate figure 6: inference-path diagnostics are incomplete")
+    diagnostics = ablation["diagnostics"]
+    comparisons = [
+        ("HF: message structure", diagnostics["systemUserVsSingleConcat"]["transformers"]),
+        ("Ollama: message structure", diagnostics["systemUserVsSingleConcat"]["ollama"]),
+        ("HF: native vs serialized", diagnostics["nativeTemplateVsSharedHfSerialization"]["transformers"]),
+        ("Ollama: native vs serialized", diagnostics["nativeTemplateVsSharedHfSerialization"]["ollama"]),
+        ("Shared bytes: cross-runtime", diagnostics["sharedSerializedPromptAcrossRuntimes"]["comparison"]),
+    ]
+    agreement = [block["verdictAgreement"]["rate"] for _, block in comparisons]
+    lower_error = [
+        rate - block["verdictAgreement"]["clopperPearson95"][0]
+        for rate, (_, block) in zip(agreement, comparisons, strict=True)
+    ]
+    upper_error = [
+        block["verdictAgreement"]["clopperPearson95"][1] - rate
+        for rate, (_, block) in zip(agreement, comparisons, strict=True)
+    ]
+    fig, axis = plt.subplots(figsize=(8.6, 4.8))
+    positions = np.arange(len(comparisons))
+    axis.bar(
+        positions,
+        agreement,
+        yerr=np.asarray([lower_error, upper_error]),
+        capsize=4,
     )
+    axis.set_ylim(0, 1)
+    axis.set_xticks(positions, [name for name, _ in comparisons], rotation=15, ha="right")
+    axis.set_ylabel("Verdict agreement (Clopper–Pearson 95% CI)")
+    axis.set_title("Predeclared inference-path diagnostics on 413 paired inputs")
+    for position, value in zip(positions, agreement, strict=True):
+        axis.text(position, min(0.98, value + 0.025), f"{value:.1%}", ha="center")
     axis.text(
-        0.5,
-        0.38,
-        "Shared-weight BF16/f16/GGUF artifacts and Ollama runtime were unavailable.\n"
-        "No historical cross-dataset FPR values were substituted.",
-        ha="center",
-        va="center",
+        0.01,
+        0.02,
+        "Cross-runtime comparison still couples runtime with BF16-to-f16 artifact representation.",
+        transform=axis.transAxes,
+        fontsize=8,
     )
     fig.tight_layout()
     for suffix in ("png", "pdf"):
