@@ -1,10 +1,17 @@
 \section{Frozen External-Challenge Evaluation}
-We locked the evaluation protocol before inference (protocol commit
-\texttt{79f146f2c8d400ef4afa292015b70a6bf91280ec}) on 413 request-side samples.  The only completed
-system in this execution was the repository rule baseline, which achieved
-accuracy 0.5690 (95\% stratified-bootstrap CI
-[0.5496, 0.5908]) and verdict
-macro-F1 0.3589 (95\% CI
-[0.3246, 0.3929]).  Because the
-AetherArgus and Qwen artifacts could not be executed, this run does not support
-a model-superiority claim.
+We locked evaluation protocol v2 before any v2 model prediction (protocol v2 commit
+\texttt{553c0a9}; v1 preserved at \texttt{79f146f2c8d400ef4afa292015b70a6bf91280ec}) on 413
+request-side samples (input SHA \texttt{c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3}, reference-label SHA
+\texttt{13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad}, distribution safe/attack/unknown = 209/97/107).
+All eight locked systems ran under the same prompt (SHA
+\texttt{9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8}), context length 2048, 320 output tokens, deterministic
+decoding. The primary model \texttt{aetherargus-v02-hf-lora} achieved accuracy
+0.6150 (95\% stratified-bootstrap CI
+[0.5835, 0.6441])
+and verdict macro-F1 0.4658 (95\% CI
+[0.4415, 0.4894]),
+with observed safe FPR 43/209
+(exact Clopper-Pearson 95\% upper bound reported, not a zero-population claim). Paired
+McNemar and paired bootstrap differences against the baselines are Holm-Bonferroni
+corrected; the Transformers-merged-BF16 vs Ollama-f16 ablation isolates the
+runtime+chat-template effect.

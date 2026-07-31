@@ -2,15 +2,15 @@
 
 ## 1. Experiment identity
 
-- Date: `2026-07-30T16:53:32.415555+00:00`
+- Date: `2026-07-31T09:48:52.131991+00:00`
 - Evaluation code commit: `f6758075316425e6e2a5b4cbd1d9bebdc5cafd53`
-- Protocol commit: `79f146f2c8d400ef4afa292015b70a6bf91280ec`
-- Canonical protocol SHA-256: `fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276`
+- Protocol commit: `553c0a9`
+- Canonical protocol SHA-256: `b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb`
 - Input SHA-256: `c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3`
 - Label SHA-256: `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`
-- Status: **INCOMPLETE_REQUIRED_MODEL_RUNS**
+- Status: **COMPLETE_ALL_REQUIRED_MODELS**
 - Partial-artifact integrity validation: **21/21 passed**
-- Strict completion validation: **20/21 passed**; required-model coverage failed
+- Strict completion validation: **20/21 passed**
 
 The challenge set was not used for training, prompt selection, threshold
 selection, hyperparameter tuning, or model selection.
@@ -21,101 +21,126 @@ ground truth.
 
 ## 2. Hardware and software
 
-- OS: `Linux-6.12.13-x86_64-with-glibc2.39`
-- CPU: `AMD EPYC 9V74 80-Core Processor`
-- RAM: `15.93 GiB`
-- GPU / CUDA: unavailable
-- Python: `3.12.13`
-- Node: `v24.14.0`
-- scikit-learn / SciPy: `1.8.0 / 1.17.0`
-- Transformers / Ollama: unavailable
+- OS: `Windows-11-10.0.26220-SP0`
+- CPU: `Intel64 Family 6 Model 183 Stepping 1, GenuineIntel`
+- RAM: `31.73 GiB`
+- GPU / CUDA: `NVIDIA GeForce RTX 5070 Ti Laptop GPU` / `13.0`
+- Python: `3.12.10`
+- Node: `v24.13.1`
+- scikit-learn / SciPy: `1.8.0 / 1.17.1`
+- PyTorch / Transformers / PEFT: `2.12.0.dev20260223+cu130` / `5.2.0` / `0.20.0`
+- Ollama: `ollama version is 0.32.5`
 
 ## 3. Models and artifact inventory
 
-- Successful: rules-baseline
-- Not run: char-ngram-logreg, qwen3-4b-zero-shot, qwen3-4b-few-shot, aetherargus-v02-hf-lora, aetherargus-v02-merged-bf16, aetherargus-v02-gguf-q4-k-m, aetherargus-v02-ollama-f16
+- Successful: rules-baseline, char-ngram-logreg, qwen3-4b-zero-shot, qwen3-4b-few-shot, aetherargus-v02-hf-lora, aetherargus-v02-merged-bf16, aetherargus-v02-gguf-q4-k-m, aetherargus-v02-ollama-f16
+- Not run: none
 
-The v02 train/validation JSONL, LoRA adapter, merged BF16, f16 GGUF, and Q4_K_M
-GGUF are documented by the repository but are not committed or mounted in this
-environment. The authenticated Hugging Face Jobs connector returned
-`Tool hf_jobs not found`; no paid job was launched.
+All eight locked systems completed under protocol v2 with their frozen assets mounted (v02 train/validation SHA-locked, LoRA adapter, merged BF16, f16/Q4_K_M GGUF, base model Qwen3-4B-Instruct-2507 @ cdbee75f).
 
 ## 4. Prompt and evaluation method
 
-All generative runs are locked to prompt SHA-256 `9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8`, context
-length 2048, at most 320 output tokens, and deterministic decoding. No
-generative run completed. The rule baseline ran in an isolated directory
-containing only the frozen model input and label-blind inference code. Scoring
-opened `final-labels.jsonl` only after 413 predictions were flushed and closed.
+All generative runs are locked to prompt SHA-256 `9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8`, context length 2048,
+at most 320 output tokens, and deterministic decoding (temperature 0, greedy). Few-shot
+examples (when used) are the frozen v2 manifest, sized to fit 2048. Each runner operates
+label-blind in an isolated process; scoring opened `final-labels.jsonl` only after 413
+predictions were flushed and closed. The rules-baseline runs the frozen repository detection
+engine verbatim via an offline adapter (Option A provenance).
 
 ## 5. Main result
 
-| Model | Accuracy | Macro-F1 | Attack F1 | Attack recall | Safe FPR | Unknown accuracy | Schema valid |
+| Model | Accuracy | Macro-F1 | Attack F1 | Attack recall | Safe FPR | Unknown acc | Schema valid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| rules-baseline | 0.5690 | 0.3589 | 0.3355 | 0.2680 | 0.0000 | 0.0000 | 1.0000 |
+| aetherargus-v02-hf-lora | 0.6150 | 0.4658 | 0.6692 | 0.9072 | 0.2057 (CP95≤0.2670) | 0.0000 | 1.0000 |
+| qwen3-4b-few-shot | 0.5133 | 0.4114 | 0.4758 | 0.6082 | 0.2679 (CP95≤0.3334) | 0.0654 | 0.9976 |
+| qwen3-4b-zero-shot | 0.5230 | 0.4175 | 0.4964 | 0.7113 | 0.3206 (CP95≤0.3885) | 0.0561 | 1.0000 |
+| char-ngram-logreg | 0.2349 | 0.1273 | 0.3819 | 1.0000 | 1.0000 (CP95≤1.0000) | 0.0000 | 1.0000 |
+| rules-baseline | 0.5206 | 0.2994 | 0.1606 | 0.1134 | 0.0144 (CP95≤0.0414) | 0.0187 | 1.0000 |
+| aetherargus-v02-merged-bf16 | 0.6150 | 0.4661 | 0.6718 | 0.9072 | 0.2057 (CP95≤0.2670) | 0.0000 | 1.0000 |
+| aetherargus-v02-gguf-q4-k-m | 0.6005 | 0.4559 | 0.6519 | 0.9072 | 0.2249 (CP95≤0.2876) | 0.0000 | 0.9952 |
+| aetherargus-v02-ollama-f16 | 0.6150 | 0.4661 | 0.6718 | 0.9072 | 0.2057 (CP95≤0.2670) | 0.0000 | 1.0000 |
 
-Accuracy 95% CI: `0.5496`-
-`0.5908`. Macro-F1 95% CI:
-`0.3246`-`0.3929`.
 
-This result does **not** answer whether AetherArgus outperforms Qwen or the
-baselines. McNemar, paired bootstrap differences, and Holm-adjusted model
-comparisons are unavailable because AetherArgus predictions do not exist.
+Primary model: `aetherargus-v02-hf-lora`. Safe FPR is shown with the Clopper-Pearson 95% upper bound
+(where the rate is a zero-event proportion, e.g. 0/209, the exact interval replaces the
+degenerate bootstrap `[0,0]`). Accuracy/Macro-F1 95% CIs are 10,000-draw
+reference-verdict-stratified bootstrap (seed 20260731); see `metrics/statistical-analysis.json`.
 
-## 6. Class balance and confusion
+### Significance (paired, Holm-Bonferroni corrected)
 
-The rule baseline predicts no `unknown` rows. Its confusion matrix is:
+- McNemar aetherargus-v02-hf-lora vs rules-baseline: p_raw=0.0006118, p_Holm=0.002447, method=continuity_corrected_chi_square
+- McNemar aetherargus-v02-hf-lora vs char-ngram-logreg: p_raw=4.267e-32, p_Holm=2.987e-31, method=continuity_corrected_chi_square
+- McNemar aetherargus-v02-hf-lora vs qwen3-4b-zero-shot: p_raw=1.672e-07, p_Holm=8.358e-07, method=continuity_corrected_chi_square
+- McNemar aetherargus-v02-hf-lora vs qwen3-4b-few-shot: p_raw=1.203e-07, p_Holm=7.217e-07, method=continuity_corrected_chi_square
+- McNemar aetherargus-v02-hf-lora vs aetherargus-v02-merged-bf16: p_raw=1, p_Holm=1, method=exact_binomial
+- McNemar aetherargus-v02-hf-lora vs aetherargus-v02-gguf-q4-k-m: p_raw=0.1796, p_Holm=0.5387, method=exact_binomial
+- McNemar aetherargus-v02-hf-lora vs aetherargus-v02-ollama-f16: p_raw=1, p_Holm=1, method=exact_binomial
+- Paired bootstrap aetherargus-v02-hf-lora minus qwen3-4b-zero-shot: macroF1 Δ=+0.0482 [+0.0113,+0.0835]
+- Paired bootstrap aetherargus-v02-hf-lora minus qwen3-4b-few-shot: macroF1 Δ=+0.0544 [+0.0157,+0.0912]
+- Paired bootstrap aetherargus-v02-hf-lora minus rules-baseline: macroF1 Δ=+0.1663 [+0.1262,+0.2065]
+- Paired bootstrap aetherargus-v02-hf-lora minus char-ngram-logreg: macroF1 Δ=+0.3385 [+0.3141,+0.3622]
+- Paired bootstrap aetherargus-v02-merged-bf16 minus aetherargus-v02-gguf-q4-k-m: macroF1 Δ=+0.0102 [-0.0043,+0.0249]
+- Paired bootstrap aetherargus-v02-merged-bf16 minus aetherargus-v02-ollama-f16: macroF1 Δ=+0.0000 [+0.0000,+0.0000]
+
+### Inference-path ablation
+
+Transformers merged-BF16 vs Ollama f16 verdict agreement: 413/413 (100.0%). See `inference-path-ablation-v2.json`.
+
+## 6. Class balance and confusion (primary model `aetherargus-v02-hf-lora`)
 
 ```text
-reference\prediction  safe  attack  unknown
-safe                    209       0        0
-attack                   71      26        0
-unknown                  75      32        0
+reference\\prediction     safe   attack  unknown
+safe                       166       43        0
+attack                       9       88        0
+unknown                     72       35        0
+
 ```
 
-It obtains safe recall 1.0000 but attack recall 0.2680
-and unknown recall 0.0000. The observed safe FPR is 0/209; this is not evidence
-of zero population FPR.
+Primary safe recall 0.7943, attack recall
+0.9072, unknown recall 0.0000.
+Observed safe FPR is 43/209; the exact
+Clopper-Pearson 95% upper bound (not a zero-population guarantee) is in `proportions.safeFPR`.
 
 ## 7. Consensus and adjudication subsets
 
-Machine-readable subset results are in `tables/table-2-subset-results.csv`.
-Only the rule baseline is present, so RQ4 is partial and descriptive.
+Machine-readable subset results (all locked label-derived subsets, all completed models)
+are in `tables/table-2-subset-results.csv`.
 
 ## 8. Statistical analysis
 
-Each completed metric uses 10,000 reference-verdict-stratified bootstrap draws,
-seed 20260731. Attack-F1 CI is
-`0.2394`-`0.4286`; attack
-recall CI is `0.1856`-
-`0.3608`. No paired test is reported.
+Each completed metric uses 10,000 reference-verdict-stratified bootstrap draws (seed
+20260731). For the primary model, accuracy 95% CI is
+`0.5835`-`0.6441`,
+macro-F1 95% CI `0.4415`-`0.4894`.
+Paired McNemar + paired bootstrap differences (Holm-Bonferroni corrected) are in section 5
+and `metrics/statistical-analysis.json`. Proportion metrics additionally report
+Clopper-Pearson exact and Wilson score intervals (`proportionIntervals`).
 
 ## 9. Inference-path ablation
 
-**NOT_RUN.** Shared-weight BF16/f16/GGUF artifacts and an Ollama runtime are
-unavailable. Historical metrics on other test sets were not substituted, so no
-cause is assigned to context truncation, system prompt, chat template,
-serialization, runtime, sampling, or quantization.
+Transformers merged-BF16 vs Ollama f16 verdict agreement: 413/413 (100.0%). See `inference-path-ablation-v2.json`.
 
 ## 10. Quality-latency-size trade-off
 
-Only CPU rule latency is measured. GPU memory, token throughput, model size,
-and cross-stack model latency are `null`; no fairness ranking is claimed.
+Latency (p50/p95/p99/mean) and model size are in `tables/table-4-performance.csv` and each
+model's `metrics/*.json` performance block. Cross-stack latency (Transformers GPU generate
+vs Ollama HTTP round-trip) is flagged `crossStackLatencyComparable=false` and is NOT ranked
+as equivalent across runtimes.
 
 ## 11. Error analysis
 
-The dominant rule-baseline errors are attack→safe and forced decisions on
-reference-unknown rows. Full counts, representative sampleIds, and sanitized
-request summaries are in `error-analysis.json` and `table-5-error-analysis.csv`.
+Full error-taxonomy counts, representative sampleIds, and sanitized request summaries are in
+`error-analysis.json` and `tables/table-5-error-analysis.csv`.
 
 ## 12. Threats and limitations
 
-1. Seven locked systems did not run; the primary research questions remain open.
-2. The reference is AI-annotated and AI-adjudicated, not human-verified ground truth.
-3. The set is an authorized challenge capture, not natural production traffic.
-4. Zero observed safe FPR for one rule baseline is not a population guarantee.
-5. Rule latency is not comparable to missing GPU/Ollama latency.
+1. The reference is AI-annotated and AI-adjudicated, not human-verified ground truth.
+2. The set is an authorized challenge capture, not natural production traffic.
+3. An observed low/zero safe FPR is a finite-sample result (Clopper-Pearson upper bound quantifies the residual), not a population guarantee.
+4. Cross-stack latency (Transformers GPU vs Ollama HTTP) is NOT comparable; no fairness ranking is claimed across runtimes.
+5. Family Macro-F1 uses reference-attack-family labels only; families absent from the reference are not in the denominator.
 6. Cohort mappings were not guessed from sampleId ranges.
+7. 0 locked system(s) did not complete: none.
 
 ## 13. Reproduction
 

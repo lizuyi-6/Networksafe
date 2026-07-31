@@ -1,120 +1,141 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "mode": "strict",
-  "checksPassed": 20,
-  "checksTotal": 21,
-  "failed": [
-    {
-      "name": "3_each_model_covers_413",
-      "passed": false,
-      "detail": "successful=1 notRun=7; strict mode requires all locked runs"
-    }
-  ],
+  "checksPassed": 22,
+  "checksTotal": 22,
+  "failed": [],
   "checks": [
     {
-      "name": "1_input_exactly_413",
+      "num": "01",
+      "name": "protocol_v2_committed_before_predictions",
       "passed": true,
-      "detail": "rows=413 sha256=c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+      "detail": "v2_intro=553c0a9317e8c21f616991e92149fc828d7e8902 first_pred_intro=29d2b1cd63a9f29b774f10fab357fa41912113de hash_self_consistent=True"
     },
     {
-      "name": "2_labels_exactly_413",
+      "num": "02",
+      "name": "rules_manifest_locked",
       "passed": true,
-      "detail": "rows=413 sha256=13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+      "detail": "sha_match=True formal_challenge_clean=True"
     },
     {
-      "name": "3_each_model_covers_413",
-      "passed": false,
-      "detail": "successful=1 notRun=7; strict mode requires all locked runs"
-    },
-    {
-      "name": "4_no_duplicate_or_missing_ids",
+      "num": "03",
+      "name": "few_shot_locked",
       "passed": true,
-      "detail": "sampleId sets aligned"
+      "detail": "status=AVAILABLE sha_match=True"
     },
     {
-      "name": "5_inference_scoring_process_isolation",
+      "num": "04",
+      "name": "each_model_covers_413",
       "passed": true,
-      "detail": "banned references found=[]"
+      "detail": "successful=8"
     },
     {
-      "name": "6_same_input_sha_for_all_models",
+      "num": "05",
+      "name": "no_duplicate_or_missing_ids",
       "passed": true,
-      "detail": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+      "detail": "sampleId sets aligned & duplicate-free"
     },
     {
-      "name": "7_metrics_recompute_exactly",
+      "num": "06",
+      "name": "input_and_label_sha_consistent",
       "passed": true,
-      "detail": "mismatches=[]"
+      "detail": "input=c77f4949cbe1 label=13fd71f5507e"
     },
     {
-      "name": "8_figures_tables_match_metrics",
+      "num": "07",
+      "name": "inference_scoring_process_isolation",
       "passed": true,
-      "detail": "main CSV values and required figure files"
+      "detail": "banned_found=[]"
     },
     {
-      "name": "9_bootstrap_seed_fixed",
+      "num": "08",
+      "name": "train_validation_challenge_free",
       "passed": true,
-      "detail": "seed=20260731 iterations=10000"
+      "detail": "overlap_train=0 overlap_val=0"
     },
     {
-      "name": "10_statistical_tests_are_paired",
+      "num": "09",
+      "name": "few_shot_challenge_free",
       "passed": true,
-      "detail": "paired comparison status recorded"
+      "detail": "overlap=0"
     },
     {
-      "name": "11_challenge_not_used_for_tuning",
+      "num": "10",
+      "name": "rules_not_modified_by_challenge",
       "passed": true,
-      "detail": "both protocol and manifest are false"
+      "detail": "detection_engine_blob_head=95654206590b7fb733d1425b280e7dfacc8c20ba"
     },
     {
-      "name": "12_unknown_handling_consistent",
+      "num": "11",
+      "name": "family_macro_f1_reference_only_labels",
       "passed": true,
-      "detail": "unknown accuracy equals class recall"
+      "detail": "detail=[]"
     },
     {
-      "name": "13_parse_failures_never_become_safe",
+      "num": "12",
+      "name": "zero_event_binomial_interval",
       "passed": true,
-      "detail": "all parse failures remain fail-safe unknown"
+      "detail": "detail=[]"
     },
     {
-      "name": "14_no_response_side_evidence",
+      "num": "13",
+      "name": "statistical_tests_paired",
       "passed": true,
-      "detail": "static inference scan and locked protocol"
+      "detail": "seed=20260731 iter=10000"
     },
     {
-      "name": "15_final_labels_unchanged",
+      "num": "14",
+      "name": "figures_tables_match_metrics",
       "passed": true,
-      "detail": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+      "detail": "main CSV values + required figure files"
     },
     {
-      "name": "16_ab_annotations_unchanged",
+      "num": "15",
+      "name": "claims_have_evidence",
       "passed": true,
-      "detail": "A=381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662 B=9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357"
+      "detail": "claims=5"
     },
     {
-      "name": "17_training_data_unchanged",
+      "num": "16",
+      "name": "final_labels_unchanged",
       "passed": true,
-      "detail": "commit scope excludes ml/data/releases and production paths"
+      "detail": "13fd71f5507e"
     },
     {
-      "name": "18_prediction_privacy_scan",
+      "num": "17",
+      "name": "ab_annotations_unchanged",
       "passed": true,
-      "detail": "hits=[]"
+      "detail": "A=381dd788a057 B=9c52f7cbdb66"
     },
     {
-      "name": "19_human_review_still_false",
+      "num": "18",
+      "name": "training_data_unchanged",
+      "passed": true,
+      "detail": "commit scope excludes ml/data/releases + production"
+    },
+    {
+      "num": "19",
+      "name": "production_detection_path_unchanged",
+      "passed": true,
+      "detail": "detection-engine.ts blob@HEAD=95654206590b7fb733d1425b280e7dfacc8c20ba expected=95654206590b7fb733d1425b280e7dfacc8c20ba"
+    },
+    {
+      "num": "20",
+      "name": "human_reviewed_false",
       "passed": true,
       "detail": "humanReviewed=False reviewerCount=0"
     },
     {
-      "name": "20_all_claims_have_evidence",
+      "num": "21",
+      "name": "challenge_not_used_for_tuning",
       "passed": true,
-      "detail": "claims=4"
+      "detail": "protocol_v2 + manifest + few-shot all false"
     },
     {
-      "name": "protocol_canonical_hash",
+      "num": "22",
+      "name": "all_required_models_success",
       "passed": true,
-      "detail": "computed=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276 recorded=fc3f2af2bdfa911c99cf143ec248ae51654297d40b949fa95f8b8866bf897276"
+      "detail": "all_success=True metrics_recompute_mismatches=[]"
     }
   ]
 }

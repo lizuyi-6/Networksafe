@@ -754,8 +754,11 @@ def environment_manifest() -> dict[str, Any]:
     except Exception:
         pass
     if gpu is None:
-        smi = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"],
-                             capture_output=True, text=True, check=False).stdout.strip()
+        try:
+            smi = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"],
+                                 capture_output=True, text=True, check=False).stdout.strip()
+        except Exception:
+            smi = ""
         if smi:
             gpu = smi
     # Python ML stack versions (best-effort imports)
@@ -765,10 +768,27 @@ def environment_manifest() -> dict[str, Any]:
             return importlib.import_module(mod).__version__
         except Exception:
             return None
-    ollama_ver = subprocess.run(["ollama", "--version"], capture_output=True, text=True, check=False).stdout.strip() or None
-    if not ollama_ver:
-        ollama_ver = subprocess.run(["/tmp/ollama-bin/ollama.exe", "--version"],
-                                    capture_output=True, text=True, check=False).stdout.strip() or None
+    def _probe(cmd: list) -> str | None:
+        # Best-effort external-command probe. A missing executable raises
+        # FileNotFoundError even with check=False, so guard the whole call.
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, check=False).stdout.strip()
+            return out or None
+        except Exception:
+            return None
+
+    import os
+    ollama_candidates = [
+        "ollama",
+        os.path.expandvars(r"%LOCALAPPDATA%\Temp\ollama-bin\ollama.exe"),
+        r"X:\ollama-bin\ollama.exe",
+        "/tmp/ollama-bin/ollama.exe",
+    ]
+    ollama_ver = None
+    for cand in ollama_candidates:
+        ollama_ver = _probe([cand, "--version"])
+        if ollama_ver:
+            break
     return {
         "os": platform.platform(),
         "cpu": cpu,
@@ -776,7 +796,7 @@ def environment_manifest() -> dict[str, Any]:
         "ramGiB": ram_gib if ram_gib is not None else 0.0,
         "cuda": cuda,
         "python": platform.python_version(),
-        "node": subprocess.run(["node", "--version"], capture_output=True, text=True, check=False).stdout.strip(),
+        "node": _probe(["node", "--version"]),
         "pytorch": _ver("torch"),
         "transformers": _ver("transformers"),
         "peft": _ver("peft"),

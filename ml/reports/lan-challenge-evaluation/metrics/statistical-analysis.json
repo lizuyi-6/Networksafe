@@ -6,29 +6,76 @@
   "confidenceIntervals": {
     "rules-baseline": {
       "accuracy": {
-        "pointEstimate": 0.5690072639225182,
-        "lower95": 0.549636803874092,
-        "upper95": 0.5907990314769975
+        "pointEstimate": 0.5205811138014528,
+        "lower95": 0.5012106537530266,
+        "upper95": 0.5423728813559322
       },
       "macroF1": {
-        "pointEstimate": 0.3588728742469305,
-        "lower95": 0.32460333956904314,
-        "upper95": 0.39291835320716184
+        "pointEstimate": 0.299426785518753,
+        "lower95": 0.26591360470766867,
+        "upper95": 0.3346784635101043
       },
       "attackF1": {
-        "pointEstimate": 0.33548387096774196,
-        "lower95": 0.2394366197183098,
-        "upper95": 0.4285714285714286
+        "pointEstimate": 0.16058394160583944,
+        "lower95": 0.08,
+        "upper95": 0.24489795918367346
       },
       "attackRecall": {
-        "pointEstimate": 0.26804123711340205,
-        "lower95": 0.18556701030927836,
-        "upper95": 0.36082474226804123
+        "pointEstimate": 0.1134020618556701,
+        "lower95": 0.05154639175257732,
+        "upper95": 0.18556701030927836
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.275,
+        "lower95": 0.15,
+        "upper95": 0.40542652027027
       },
       "safeFPR": {
-        "pointEstimate": 0.0,
+        "pointEstimate": 0.014354066985645933,
         "lower95": 0.0,
-        "upper95": 0.0
+        "upper95": 0.03349282296650718
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.018691588785046728,
+        "lower95": 0.0,
+        "upper95": 0.04672897196261682
+      },
+      "attackFamilyMacroF1": {
+        "pointEstimate": 0.1356125356125356,
+        "lower95": 0.07460784313725492,
+        "upper95": 0.23421394922491412
+      }
+    },
+    "char-ngram-logreg": {
+      "accuracy": {
+        "pointEstimate": 0.23486682808716708,
+        "lower95": 0.23486682808716708,
+        "upper95": 0.23486682808716708
+      },
+      "macroF1": {
+        "pointEstimate": 0.1272965879265092,
+        "lower95": 0.12679738562091505,
+        "upper95": 0.12805280528052804
+      },
+      "attackF1": {
+        "pointEstimate": 0.38188976377952755,
+        "lower95": 0.38039215686274513,
+        "upper95": 0.3841584158415841
+      },
+      "attackRecall": {
+        "pointEstimate": 1.0,
+        "lower95": 1.0,
+        "upper95": 1.0
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.2360097323600973,
+        "lower95": 0.23486682808716708,
+        "upper95": 0.23774509803921567
+      },
+      "safeFPR": {
+        "pointEstimate": 1.0,
+        "lower95": 1.0,
+        "upper95": 1.0
       },
       "unknownAccuracy": {
         "pointEstimate": 0.0,
@@ -36,43 +83,1159 @@
         "upper95": 0.0
       },
       "attackFamilyMacroF1": {
-        "pointEstimate": 0.24225352112676055,
-        "lower95": 0.13633388137863842,
-        "upper95": 0.35649733946608947
+        "pointEstimate": null,
+        "lower95": null,
+        "upper95": null
+      }
+    },
+    "qwen3-4b-zero-shot": {
+      "accuracy": {
+        "pointEstimate": 0.5230024213075061,
+        "lower95": 0.48184019370460046,
+        "upper95": 0.5617433414043583
+      },
+      "macroF1": {
+        "pointEstimate": 0.41754297711256294,
+        "lower95": 0.37779767619753296,
+        "upper95": 0.4582627541445148
+      },
+      "attackF1": {
+        "pointEstimate": 0.49640287769784186,
+        "lower95": 0.4395604395604396,
+        "upper95": 0.5507246376811594
+      },
+      "attackRecall": {
+        "pointEstimate": 0.711340206185567,
+        "lower95": 0.6185567010309279,
+        "upper95": 0.8041237113402062
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.3812154696132597,
+        "lower95": 0.33668341708542715,
+        "upper95": 0.42857142857142855
+      },
+      "safeFPR": {
+        "pointEstimate": 0.32057416267942584,
+        "lower95": 0.2583732057416268,
+        "upper95": 0.3827751196172249
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.056074766355140186,
+        "lower95": 0.018691588785046728,
+        "upper95": 0.102803738317757
+      },
+      "attackFamilyMacroF1": {
+        "pointEstimate": 0.6325358851674641,
+        "lower95": 0.569233258061383,
+        "upper95": 0.8606105039538774
+      }
+    },
+    "qwen3-4b-few-shot": {
+      "accuracy": {
+        "pointEstimate": 0.513317191283293,
+        "lower95": 0.4745762711864407,
+        "upper95": 0.5544794188861986
+      },
+      "macroF1": {
+        "pointEstimate": 0.411356780167264,
+        "lower95": 0.3707901155141355,
+        "upper95": 0.45308145612800765
+      },
+      "attackF1": {
+        "pointEstimate": 0.4758064516129032,
+        "lower95": 0.4104429774205893,
+        "upper95": 0.5403225806451613
+      },
+      "attackRecall": {
+        "pointEstimate": 0.6082474226804123,
+        "lower95": 0.5154639175257731,
+        "upper95": 0.7010309278350515
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.39072847682119205,
+        "lower95": 0.3357142857142857,
+        "upper95": 0.4482758620689655
+      },
+      "safeFPR": {
+        "pointEstimate": 0.2679425837320574,
+        "lower95": 0.21052631578947367,
+        "upper95": 0.33014354066985646
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.06542056074766354,
+        "lower95": 0.018691588785046728,
+        "upper95": 0.12149532710280374
+      },
+      "attackFamilyMacroF1": {
+        "pointEstimate": 0.6661023187338978,
+        "lower95": 0.6036873722342473,
+        "upper95": 0.8945399995996866
+      }
+    },
+    "aetherargus-v02-hf-lora": {
+      "accuracy": {
+        "pointEstimate": 0.6150121065375302,
+        "lower95": 0.5835351089588378,
+        "upper95": 0.6440677966101694
+      },
+      "macroF1": {
+        "pointEstimate": 0.465757232117048,
+        "lower95": 0.4414751668149408,
+        "upper95": 0.4893848029799388
+      },
+      "attackF1": {
+        "pointEstimate": 0.6692015209125476,
+        "lower95": 0.6220472440944882,
+        "upper95": 0.7166666666666667
+      },
+      "attackRecall": {
+        "pointEstimate": 0.9072164948453608,
+        "lower95": 0.845360824742268,
+        "upper95": 0.9587628865979382
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.5301204819277109,
+        "lower95": 0.4835164835164835,
+        "upper95": 0.5844155844155844
+      },
+      "safeFPR": {
+        "pointEstimate": 0.20574162679425836,
+        "lower95": 0.15311004784688995,
+        "upper95": 0.2631578947368421
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "lower95": 0.0,
+        "upper95": 0.0
+      },
+      "attackFamilyMacroF1": {
+        "pointEstimate": 0.6425446638231075,
+        "lower95": 0.572163651393279,
+        "upper95": 0.8722854997854996
+      }
+    },
+    "aetherargus-v02-merged-bf16": {
+      "accuracy": {
+        "pointEstimate": 0.6150121065375302,
+        "lower95": 0.5835351089588378,
+        "upper95": 0.6440677966101694
+      },
+      "macroF1": {
+        "pointEstimate": 0.46607758308695385,
+        "lower95": 0.44157841170161916,
+        "upper95": 0.4897578025259775
+      },
+      "attackF1": {
+        "pointEstimate": 0.6717557251908397,
+        "lower95": 0.6245059288537549,
+        "upper95": 0.7193675889328064
+      },
+      "attackRecall": {
+        "pointEstimate": 0.9072164948453608,
+        "lower95": 0.845360824742268,
+        "upper95": 0.9587628865979382
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.5333333333333333,
+        "lower95": 0.4860335195530726,
+        "upper95": 0.5882352941176471
+      },
+      "safeFPR": {
+        "pointEstimate": 0.20574162679425836,
+        "lower95": 0.15311004784688995,
+        "upper95": 0.2631578947368421
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "lower95": 0.0,
+        "upper95": 0.0
+      },
+      "attackFamilyMacroF1": {
+        "pointEstimate": 0.6425446638231075,
+        "lower95": 0.572163651393279,
+        "upper95": 0.8722854997854996
+      }
+    },
+    "aetherargus-v02-gguf-q4-k-m": {
+      "accuracy": {
+        "pointEstimate": 0.6004842615012107,
+        "lower95": 0.5690072639225182,
+        "upper95": 0.6319612590799032
+      },
+      "macroF1": {
+        "pointEstimate": 0.45591184025188497,
+        "lower95": 0.43117725945125085,
+        "upper95": 0.4797930416116382
+      },
+      "attackF1": {
+        "pointEstimate": 0.6518518518518518,
+        "lower95": 0.6062664977299124,
+        "upper95": 0.6988847583643122
+      },
+      "attackRecall": {
+        "pointEstimate": 0.9072164948453608,
+        "lower95": 0.845360824742268,
+        "upper95": 0.9587628865979382
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.5086705202312138,
+        "lower95": 0.4631578947368421,
+        "upper95": 0.5595294249775381
+      },
+      "safeFPR": {
+        "pointEstimate": 0.22488038277511962,
+        "lower95": 0.17212918660287094,
+        "upper95": 0.2822966507177033
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "lower95": 0.0,
+        "upper95": 0.0
+      },
+      "attackFamilyMacroF1": {
+        "pointEstimate": 0.6543121467588645,
+        "lower95": 0.5842440235429354,
+        "upper95": 0.8886048085120233
+      }
+    },
+    "aetherargus-v02-ollama-f16": {
+      "accuracy": {
+        "pointEstimate": 0.6150121065375302,
+        "lower95": 0.5835351089588378,
+        "upper95": 0.6440677966101694
+      },
+      "macroF1": {
+        "pointEstimate": 0.46607758308695385,
+        "lower95": 0.44157841170161916,
+        "upper95": 0.4897578025259775
+      },
+      "attackF1": {
+        "pointEstimate": 0.6717557251908397,
+        "lower95": 0.6245059288537549,
+        "upper95": 0.7193675889328064
+      },
+      "attackRecall": {
+        "pointEstimate": 0.9072164948453608,
+        "lower95": 0.845360824742268,
+        "upper95": 0.9587628865979382
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.5333333333333333,
+        "lower95": 0.4860335195530726,
+        "upper95": 0.5882352941176471
+      },
+      "safeFPR": {
+        "pointEstimate": 0.20574162679425836,
+        "lower95": 0.15311004784688995,
+        "upper95": 0.2631578947368421
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "lower95": 0.0,
+        "upper95": 0.0
+      },
+      "attackFamilyMacroF1": {
+        "pointEstimate": 0.6418566693270633,
+        "lower95": 0.5715516774891775,
+        "upper95": 0.8722852777474625
       }
     }
   },
-  "mcnemar": [],
+  "proportionIntervals": {
+    "rules-baseline": {
+      "safeFPR": {
+        "pointEstimate": 0.014354066985645933,
+        "numerator": 3,
+        "denominator": 209,
+        "clopperPearson95": [
+          0.002969992487868389,
+          0.041373364935452406
+        ],
+        "wilson95": [
+          0.00489347378781561,
+          0.04134497465744219
+        ],
+        "bootstrap95": [
+          0.0,
+          0.03349282296650718
+        ]
+      },
+      "verdictAccuracy": {
+        "pointEstimate": 0.5205811138014528,
+        "numerator": 215,
+        "denominator": 413,
+        "clopperPearson95": [
+          0.47119037725459906,
+          0.5696749494264446
+        ],
+        "wilson95": [
+          0.472432701051154,
+          0.5683501904781472
+        ],
+        "bootstrap95": null
+      },
+      "attackRecall": {
+        "pointEstimate": 0.1134020618556701,
+        "numerator": 11,
+        "denominator": 97,
+        "clopperPearson95": [
+          0.05798869664503772,
+          0.19385385964292476
+        ],
+        "wilson95": [
+          0.06451358102935628,
+          0.1917446992742115
+        ],
+        "bootstrap95": [
+          0.05154639175257732,
+          0.18556701030927836
+        ]
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.275,
+        "numerator": 11,
+        "denominator": 40,
+        "clopperPearson95": [
+          0.14600899196386566,
+          0.43888290717904815
+        ],
+        "wilson95": [
+          0.16108016247667337,
+          0.42834955806210573
+        ],
+        "bootstrap95": [
+          0.15,
+          0.40542652027027
+        ]
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.018691588785046728,
+        "numerator": 2,
+        "denominator": 107,
+        "clopperPearson95": [
+          0.002271708370415114,
+          0.06589189699243277
+        ],
+        "wilson95": [
+          0.005140964836175373,
+          0.06560385306972287
+        ],
+        "bootstrap95": [
+          0.0,
+          0.04672897196261682
+        ]
+      }
+    },
+    "char-ngram-logreg": {
+      "safeFPR": {
+        "pointEstimate": 1.0,
+        "numerator": 209,
+        "denominator": 209,
+        "clopperPearson95": [
+          0.9825047104208134,
+          1.0
+        ],
+        "wilson95": [
+          0.9819515481524193,
+          1.0
+        ],
+        "bootstrap95": [
+          1.0,
+          1.0
+        ]
+      },
+      "verdictAccuracy": {
+        "pointEstimate": 0.23486682808716708,
+        "numerator": 97,
+        "denominator": 413,
+        "clopperPearson95": [
+          0.19479834481990851,
+          0.27878133350132167
+        ],
+        "wilson95": [
+          0.19654182534025277,
+          0.2780785720175743
+        ],
+        "bootstrap95": null
+      },
+      "attackRecall": {
+        "pointEstimate": 1.0,
+        "numerator": 97,
+        "denominator": 97,
+        "clopperPearson95": [
+          0.9626843630912639,
+          1.0
+        ],
+        "wilson95": [
+          0.9619059574740523,
+          1.0
+        ],
+        "bootstrap95": [
+          1.0,
+          1.0
+        ]
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.2360097323600973,
+        "numerator": 97,
+        "denominator": 411,
+        "clopperPearson95": [
+          0.19576938577682948,
+          0.2800981960155627
+        ],
+        "wilson95": [
+          0.19751959247158743,
+          0.2793890062569852
+        ],
+        "bootstrap95": [
+          0.23486682808716708,
+          0.23774509803921567
+        ]
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "numerator": 0,
+        "denominator": 107,
+        "clopperPearson95": [
+          0.0,
+          0.03388799947401148
+        ],
+        "wilson95": [
+          0.0,
+          0.03465723801874867
+        ],
+        "bootstrap95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "qwen3-4b-zero-shot": {
+      "safeFPR": {
+        "pointEstimate": 0.32057416267942584,
+        "numerator": 67,
+        "denominator": 209,
+        "clopperPearson95": [
+          0.2578677002711092,
+          0.38845753429847935
+        ],
+        "wilson95": [
+          0.26103071874542527,
+          0.3865943237836109
+        ],
+        "bootstrap95": [
+          0.2583732057416268,
+          0.3827751196172249
+        ]
+      },
+      "verdictAccuracy": {
+        "pointEstimate": 0.5230024213075061,
+        "numerator": 216,
+        "denominator": 413,
+        "clopperPearson95": [
+          0.4736043445566672,
+          0.5720686654253015
+        ],
+        "wilson95": [
+          0.4748417413954169,
+          0.5707391373726256
+        ],
+        "bootstrap95": null
+      },
+      "attackRecall": {
+        "pointEstimate": 0.711340206185567,
+        "numerator": 69,
+        "denominator": 97,
+        "clopperPearson95": [
+          0.610483479581775,
+          0.7988670362864558
+        ],
+        "wilson95": [
+          0.6144813647096283,
+          0.7920974420577547
+        ],
+        "bootstrap95": [
+          0.6185567010309279,
+          0.8041237113402062
+        ]
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.3812154696132597,
+        "numerator": 69,
+        "denominator": 181,
+        "clopperPearson95": [
+          0.31017639362543764,
+          0.4562135625866912
+        ],
+        "wilson95": [
+          0.3136236171510597,
+          0.45374458977424803
+        ],
+        "bootstrap95": [
+          0.33668341708542715,
+          0.42857142857142855
+        ]
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.056074766355140186,
+        "numerator": 6,
+        "denominator": 107,
+        "clopperPearson95": [
+          0.020853944066721714,
+          0.11806157326441484
+        ],
+        "wilson95": [
+          0.02595036250362482,
+          0.11696961517657262
+        ],
+        "bootstrap95": [
+          0.018691588785046728,
+          0.102803738317757
+        ]
+      }
+    },
+    "qwen3-4b-few-shot": {
+      "safeFPR": {
+        "pointEstimate": 0.2679425837320574,
+        "numerator": 56,
+        "denominator": 209,
+        "clopperPearson95": [
+          0.20919101114613353,
+          0.333405890752861
+        ],
+        "wilson95": [
+          0.21248411856259167,
+          0.33177760310829507
+        ],
+        "bootstrap95": [
+          0.21052631578947367,
+          0.33014354066985646
+        ]
+      },
+      "verdictAccuracy": {
+        "pointEstimate": 0.513317191283293,
+        "numerator": 212,
+        "denominator": 413,
+        "clopperPearson95": [
+          0.46395523227043683,
+          0.562487040891579
+        ],
+        "wilson95": [
+          0.46521228601573705,
+          0.5611766437973402
+        ],
+        "bootstrap95": null
+      },
+      "attackRecall": {
+        "pointEstimate": 0.6082474226804123,
+        "numerator": 59,
+        "denominator": 97,
+        "clopperPearson95": [
+          0.5038750772240245,
+          0.7058238763489707
+        ],
+        "wilson95": [
+          0.5087606012781543,
+          0.6994870802368467
+        ],
+        "bootstrap95": [
+          0.5154639175257731,
+          0.7010309278350515
+        ]
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.39072847682119205,
+        "numerator": 59,
+        "denominator": 151,
+        "clopperPearson95": [
+          0.3124504362982047,
+          0.4733832846985588
+        ],
+        "wilson95": [
+          0.3165409622035035,
+          0.47033782173889094
+        ],
+        "bootstrap95": [
+          0.3357142857142857,
+          0.4482758620689655
+        ]
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.06542056074766354,
+        "numerator": 7,
+        "denominator": 107,
+        "clopperPearson95": [
+          0.02670489688560792,
+          0.13015346468755773
+        ],
+        "wilson95": [
+          0.03204830428813078,
+          0.1289154633356414
+        ],
+        "bootstrap95": [
+          0.018691588785046728,
+          0.12149532710280374
+        ]
+      }
+    },
+    "aetherargus-v02-hf-lora": {
+      "safeFPR": {
+        "pointEstimate": 0.20574162679425836,
+        "numerator": 43,
+        "denominator": 209,
+        "clopperPearson95": [
+          0.15307932778053865,
+          0.26695312920918096
+        ],
+        "wilson95": [
+          0.15648569938932663,
+          0.26561937035829264
+        ],
+        "bootstrap95": [
+          0.15311004784688995,
+          0.2631578947368421
+        ]
+      },
+      "verdictAccuracy": {
+        "pointEstimate": 0.6150121065375302,
+        "numerator": 254,
+        "denominator": 413,
+        "clopperPearson95": [
+          0.5661841247820578,
+          0.6621795545987792
+        ],
+        "wilson95": [
+          0.5672282226612971,
+          0.660676171178915
+        ],
+        "bootstrap95": null
+      },
+      "attackRecall": {
+        "pointEstimate": 0.9072164948453608,
+        "numerator": 88,
+        "denominator": 97,
+        "clopperPearson95": [
+          0.8311638105610094,
+          0.9566904273301691
+        ],
+        "wilson95": [
+          0.8329911632283566,
+          0.9504167815185518
+        ],
+        "bootstrap95": [
+          0.845360824742268,
+          0.9587628865979382
+        ]
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.5301204819277109,
+        "numerator": 88,
+        "denominator": 166,
+        "clopperPearson95": [
+          0.4512398325109386,
+          0.6079064875702023
+        ],
+        "wilson95": [
+          0.4543764348285193,
+          0.6045020043313636
+        ],
+        "bootstrap95": [
+          0.4835164835164835,
+          0.5844155844155844
+        ]
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "numerator": 0,
+        "denominator": 107,
+        "clopperPearson95": [
+          0.0,
+          0.03388799947401148
+        ],
+        "wilson95": [
+          0.0,
+          0.03465723801874867
+        ],
+        "bootstrap95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "aetherargus-v02-merged-bf16": {
+      "safeFPR": {
+        "pointEstimate": 0.20574162679425836,
+        "numerator": 43,
+        "denominator": 209,
+        "clopperPearson95": [
+          0.15307932778053865,
+          0.26695312920918096
+        ],
+        "wilson95": [
+          0.15648569938932663,
+          0.26561937035829264
+        ],
+        "bootstrap95": [
+          0.15311004784688995,
+          0.2631578947368421
+        ]
+      },
+      "verdictAccuracy": {
+        "pointEstimate": 0.6150121065375302,
+        "numerator": 254,
+        "denominator": 413,
+        "clopperPearson95": [
+          0.5661841247820578,
+          0.6621795545987792
+        ],
+        "wilson95": [
+          0.5672282226612971,
+          0.660676171178915
+        ],
+        "bootstrap95": null
+      },
+      "attackRecall": {
+        "pointEstimate": 0.9072164948453608,
+        "numerator": 88,
+        "denominator": 97,
+        "clopperPearson95": [
+          0.8311638105610094,
+          0.9566904273301691
+        ],
+        "wilson95": [
+          0.8329911632283566,
+          0.9504167815185518
+        ],
+        "bootstrap95": [
+          0.845360824742268,
+          0.9587628865979382
+        ]
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.5333333333333333,
+        "numerator": 88,
+        "denominator": 165,
+        "clopperPearson95": [
+          0.45417890802565447,
+          0.6112688776358348
+        ],
+        "wilson95": [
+          0.45732028560774496,
+          0.6078295897654697
+        ],
+        "bootstrap95": [
+          0.4860335195530726,
+          0.5882352941176471
+        ]
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "numerator": 0,
+        "denominator": 107,
+        "clopperPearson95": [
+          0.0,
+          0.03388799947401148
+        ],
+        "wilson95": [
+          0.0,
+          0.03465723801874867
+        ],
+        "bootstrap95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "aetherargus-v02-gguf-q4-k-m": {
+      "safeFPR": {
+        "pointEstimate": 0.22488038277511962,
+        "numerator": 47,
+        "denominator": 209,
+        "clopperPearson95": [
+          0.1701597270908688,
+          0.2875811396651493
+        ],
+        "wilson95": [
+          0.17353718847637525,
+          0.2861545434014802
+        ],
+        "bootstrap95": [
+          0.17212918660287094,
+          0.2822966507177033
+        ]
+      },
+      "verdictAccuracy": {
+        "pointEstimate": 0.6004842615012107,
+        "numerator": 248,
+        "denominator": 413,
+        "clopperPearson95": [
+          0.5514539656426133,
+          0.6480640791932234
+        ],
+        "wilson95": [
+          0.5525293583720285,
+          0.6465871120357358
+        ],
+        "bootstrap95": null
+      },
+      "attackRecall": {
+        "pointEstimate": 0.9072164948453608,
+        "numerator": 88,
+        "denominator": 97,
+        "clopperPearson95": [
+          0.8311638105610094,
+          0.9566904273301691
+        ],
+        "wilson95": [
+          0.8329911632283566,
+          0.9504167815185518
+        ],
+        "bootstrap95": [
+          0.845360824742268,
+          0.9587628865979382
+        ]
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.5086705202312138,
+        "numerator": 88,
+        "denominator": 173,
+        "clopperPearson95": [
+          0.43170050197196075,
+          0.5853383917831656
+        ],
+        "wilson95": [
+          0.4348000456743291,
+          0.5821643020527603
+        ],
+        "bootstrap95": [
+          0.4631578947368421,
+          0.5595294249775381
+        ]
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "numerator": 0,
+        "denominator": 107,
+        "clopperPearson95": [
+          0.0,
+          0.03388799947401148
+        ],
+        "wilson95": [
+          0.0,
+          0.03465723801874867
+        ],
+        "bootstrap95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "aetherargus-v02-ollama-f16": {
+      "safeFPR": {
+        "pointEstimate": 0.20574162679425836,
+        "numerator": 43,
+        "denominator": 209,
+        "clopperPearson95": [
+          0.15307932778053865,
+          0.26695312920918096
+        ],
+        "wilson95": [
+          0.15648569938932663,
+          0.26561937035829264
+        ],
+        "bootstrap95": [
+          0.15311004784688995,
+          0.2631578947368421
+        ]
+      },
+      "verdictAccuracy": {
+        "pointEstimate": 0.6150121065375302,
+        "numerator": 254,
+        "denominator": 413,
+        "clopperPearson95": [
+          0.5661841247820578,
+          0.6621795545987792
+        ],
+        "wilson95": [
+          0.5672282226612971,
+          0.660676171178915
+        ],
+        "bootstrap95": null
+      },
+      "attackRecall": {
+        "pointEstimate": 0.9072164948453608,
+        "numerator": 88,
+        "denominator": 97,
+        "clopperPearson95": [
+          0.8311638105610094,
+          0.9566904273301691
+        ],
+        "wilson95": [
+          0.8329911632283566,
+          0.9504167815185518
+        ],
+        "bootstrap95": [
+          0.845360824742268,
+          0.9587628865979382
+        ]
+      },
+      "attackPrecision": {
+        "pointEstimate": 0.5333333333333333,
+        "numerator": 88,
+        "denominator": 165,
+        "clopperPearson95": [
+          0.45417890802565447,
+          0.6112688776358348
+        ],
+        "wilson95": [
+          0.45732028560774496,
+          0.6078295897654697
+        ],
+        "bootstrap95": [
+          0.4860335195530726,
+          0.5882352941176471
+        ]
+      },
+      "unknownAccuracy": {
+        "pointEstimate": 0.0,
+        "numerator": 0,
+        "denominator": 107,
+        "clopperPearson95": [
+          0.0,
+          0.03388799947401148
+        ],
+        "wilson95": [
+          0.0,
+          0.03465723801874867
+        ],
+        "bootstrap95": [
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "mcnemar": [
+    {
+      "comparison": "aetherargus-v02-hf-lora vs rules-baseline",
+      "n01BaselineWrongAetherargusCorrect": 81,
+      "n10BaselineCorrectAetherargusWrong": 42,
+      "method": "continuity_corrected_chi_square",
+      "statistic": 11.739837398373984,
+      "pValueRaw": 0.0006117636822975012,
+      "pValueHolm": 0.002447054729190005
+    },
+    {
+      "comparison": "aetherargus-v02-hf-lora vs char-ngram-logreg",
+      "n01BaselineWrongAetherargusCorrect": 166,
+      "n10BaselineCorrectAetherargusWrong": 9,
+      "method": "continuity_corrected_chi_square",
+      "statistic": 139.06285714285715,
+      "pValueRaw": 4.267268597865329e-32,
+      "pValueHolm": 2.9870880185057304e-31
+    },
+    {
+      "comparison": "aetherargus-v02-hf-lora vs qwen3-4b-zero-shot",
+      "n01BaselineWrongAetherargusCorrect": 44,
+      "n10BaselineCorrectAetherargusWrong": 6,
+      "method": "continuity_corrected_chi_square",
+      "statistic": 27.38,
+      "pValueRaw": 1.671510579091462e-07,
+      "pValueHolm": 8.35755289545731e-07
+    },
+    {
+      "comparison": "aetherargus-v02-hf-lora vs qwen3-4b-few-shot",
+      "n01BaselineWrongAetherargusCorrect": 51,
+      "n10BaselineCorrectAetherargusWrong": 9,
+      "method": "continuity_corrected_chi_square",
+      "statistic": 28.016666666666666,
+      "pValueRaw": 1.2027508944618598e-07,
+      "pValueHolm": 7.216505366771159e-07
+    },
+    {
+      "comparison": "aetherargus-v02-hf-lora vs aetherargus-v02-merged-bf16",
+      "n01BaselineWrongAetherargusCorrect": 0,
+      "n10BaselineCorrectAetherargusWrong": 0,
+      "method": "exact_binomial",
+      "statistic": null,
+      "pValueRaw": 1.0,
+      "pValueHolm": 1.0
+    },
+    {
+      "comparison": "aetherargus-v02-hf-lora vs aetherargus-v02-gguf-q4-k-m",
+      "n01BaselineWrongAetherargusCorrect": 10,
+      "n10BaselineCorrectAetherargusWrong": 4,
+      "method": "exact_binomial",
+      "statistic": null,
+      "pValueRaw": 0.1795654296875,
+      "pValueHolm": 0.5386962890625
+    },
+    {
+      "comparison": "aetherargus-v02-hf-lora vs aetherargus-v02-ollama-f16",
+      "n01BaselineWrongAetherargusCorrect": 0,
+      "n10BaselineCorrectAetherargusWrong": 0,
+      "method": "exact_binomial",
+      "statistic": null,
+      "pValueRaw": 1.0,
+      "pValueHolm": 1.0
+    }
+  ],
   "pairedBootstrapDifferences": [
     {
       "comparison": "aetherargus-v02-hf-lora minus qwen3-4b-zero-shot",
-      "status": "NOT_AVAILABLE",
-      "reason": "one or both prediction files were not produced"
+      "status": "SUCCESS",
+      "deltas": {
+        "macroF1": {
+          "pointEstimate": 0.04821425500448506,
+          "lower95": 0.011259540045157853,
+          "upper95": 0.08349493464516929
+        },
+        "attackF1": {
+          "pointEstimate": 0.17279864321470573,
+          "lower95": 0.12462379942948354,
+          "upper95": 0.22530317668005828
+        },
+        "safeFPR": {
+          "pointEstimate": -0.11483253588516748,
+          "lower95": -0.15789473684210528,
+          "upper95": -0.07177033492822968
+        },
+        "unknownAccuracy": {
+          "pointEstimate": -0.056074766355140186,
+          "lower95": -0.102803738317757,
+          "upper95": -0.018691588785046728
+        }
+      }
     },
     {
       "comparison": "aetherargus-v02-hf-lora minus qwen3-4b-few-shot",
-      "status": "NOT_AVAILABLE",
-      "reason": "one or both prediction files were not produced"
+      "status": "SUCCESS",
+      "deltas": {
+        "macroF1": {
+          "pointEstimate": 0.05440045194978399,
+          "lower95": 0.0156633235158357,
+          "upper95": 0.09124177430699268
+        },
+        "attackF1": {
+          "pointEstimate": 0.1933950692996444,
+          "lower95": 0.13338898948558153,
+          "upper95": 0.2579728808200401
+        },
+        "safeFPR": {
+          "pointEstimate": -0.06220095693779906,
+          "lower95": -0.10047846889952153,
+          "upper95": -0.02392344497607657
+        },
+        "unknownAccuracy": {
+          "pointEstimate": -0.06542056074766354,
+          "lower95": -0.12149532710280374,
+          "upper95": -0.018691588785046728
+        }
+      }
     },
     {
       "comparison": "aetherargus-v02-hf-lora minus rules-baseline",
-      "status": "NOT_AVAILABLE",
-      "reason": "one or both prediction files were not produced"
+      "status": "SUCCESS",
+      "deltas": {
+        "macroF1": {
+          "pointEstimate": 0.166330446598295,
+          "lower95": 0.12623700045160832,
+          "upper95": 0.20648175268866342
+        },
+        "attackF1": {
+          "pointEstimate": 0.5086175793067081,
+          "lower95": 0.41592980689324827,
+          "upper95": 0.5992880657939958
+        },
+        "safeFPR": {
+          "pointEstimate": 0.19138755980861244,
+          "lower95": 0.13875598086124402,
+          "upper95": 0.24401913875598089
+        },
+        "unknownAccuracy": {
+          "pointEstimate": -0.018691588785046728,
+          "lower95": -0.04672897196261682,
+          "upper95": 0.0
+        }
+      }
     },
     {
       "comparison": "aetherargus-v02-hf-lora minus char-ngram-logreg",
-      "status": "NOT_AVAILABLE",
-      "reason": "one or both prediction files were not produced"
+      "status": "SUCCESS",
+      "deltas": {
+        "macroF1": {
+          "pointEstimate": 0.3384606441905388,
+          "lower95": 0.3140661173939063,
+          "upper95": 0.36220198350091026
+        },
+        "attackF1": {
+          "pointEstimate": 0.28731175713302004,
+          "lower95": 0.24028827279052883,
+          "upper95": 0.3347482435162168
+        },
+        "safeFPR": {
+          "pointEstimate": -0.7942583732057417,
+          "lower95": -0.84688995215311,
+          "upper95": -0.736842105263158
+        },
+        "unknownAccuracy": {
+          "pointEstimate": 0.0,
+          "lower95": 0.0,
+          "upper95": 0.0
+        }
+      }
     },
     {
       "comparison": "aetherargus-v02-merged-bf16 minus aetherargus-v02-gguf-q4-k-m",
-      "status": "NOT_AVAILABLE",
-      "reason": "one or both prediction files were not produced"
+      "status": "SUCCESS",
+      "deltas": {
+        "macroF1": {
+          "pointEstimate": 0.01016574283506888,
+          "lower95": -0.004311530509471844,
+          "upper95": 0.024898981409148833
+        },
+        "attackF1": {
+          "pointEstimate": 0.01990387333898791,
+          "lower95": -0.010125418126654167,
+          "upper95": 0.050192895213387184
+        },
+        "safeFPR": {
+          "pointEstimate": -0.01913875598086126,
+          "lower95": -0.04784688995215314,
+          "upper95": 0.009569377990430616
+        },
+        "unknownAccuracy": {
+          "pointEstimate": 0.0,
+          "lower95": 0.0,
+          "upper95": 0.0
+        }
+      }
     },
     {
       "comparison": "aetherargus-v02-merged-bf16 minus aetherargus-v02-ollama-f16",
-      "status": "NOT_AVAILABLE",
-      "reason": "one or both prediction files were not produced"
+      "status": "SUCCESS",
+      "deltas": {
+        "macroF1": {
+          "pointEstimate": 0.0,
+          "lower95": 0.0,
+          "upper95": 0.0
+        },
+        "attackF1": {
+          "pointEstimate": 0.0,
+          "lower95": 0.0,
+          "upper95": 0.0
+        },
+        "safeFPR": {
+          "pointEstimate": 0.0,
+          "lower95": 0.0,
+          "upper95": 0.0
+        },
+        "unknownAccuracy": {
+          "pointEstimate": 0.0,
+          "lower95": 0.0,
+          "upper95": 0.0
+        }
+      }
     }
   ],
   "multipleComparisonCorrection": "Holm-Bonferroni"

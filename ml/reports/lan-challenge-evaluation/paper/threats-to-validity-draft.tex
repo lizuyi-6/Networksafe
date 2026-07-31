@@ -1,7 +1,9 @@
 \section{Threats to Validity}
-The reference labels were produced by two independent AI annotators, a third
-AI adjudicator, and a model-visible-context audit; they are not human-verified
-ground truth.  The authorized challenge set is not natural production traffic.
-Seven of eight locked systems were not run because the required data, weights,
-GPU, and Ollama runtime were unavailable.  Consequently, no paired superiority,
-inference-path, or quantization conclusion is supported.
+The reference labels were produced by two independent AI annotators, a third AI
+adjudicator, and a model-visible-context audit; they are \emph{not} human-verified
+ground truth. The authorized challenge set is not natural production traffic. An observed
+low/zero safe FPR is a finite-sample result whose residual uncertainty is quantified by
+the Clopper-Pearson upper bound, not a population guarantee. Cross-stack latency
+(Transformers GPU generate vs Ollama HTTP round-trip) is not comparable across runtimes.
+Family Macro-F1 uses reference-attack-family labels only. 0 of eight locked
+systems did not complete: none.

@@ -5,22 +5,134 @@
 \toprule
 modelId & subset & status & count & accuracy & macroF1 & safeFPR \\
 \midrule
-rules-baseline & all\_413 & SUCCESS & 413 & 0.569007 & 0.358873 & 0.000000 \\
-rules-baseline & context\_sufficient\_true & SUCCESS & 306 & 0.767974 & 0.425857 & 0.000000 \\
-rules-baseline & context\_sufficient\_false & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
-rules-baseline & consensus & SUCCESS & 160 & 0.850000 & 0.306306 & 0.000000 \\
-rules-baseline & model\_adjudication & SUCCESS & 253 & 0.391304 & 0.313908 & 0.000000 \\
-rules-baseline & safe & SUCCESS & 209 & 1.000000 & 0.333333 & 0.000000 \\
-rules-baseline & attack & SUCCESS & 97 & 0.268041 & 0.140921 &  \\
-rules-baseline & unknown & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
-rules-baseline & prompt\_injection & SUCCESS & 56 & 0.267857 & 0.140845 &  \\
+rules-baseline & all\_413 & SUCCESS & 413 & 0.520581 & 0.299427 & 0.014354 \\
+rules-baseline & context\_sufficient\_true & SUCCESS & 306 & 0.696078 & 0.337571 & 0.014354 \\
+rules-baseline & context\_sufficient\_false & SUCCESS & 107 & 0.018692 & 0.012232 &  \\
+rules-baseline & consensus & SUCCESS & 160 & 0.875000 & 0.405740 & 0.000000 \\
+rules-baseline & model\_adjudication & SUCCESS & 253 & 0.296443 & 0.209986 & 0.041096 \\
+rules-baseline & safe & SUCCESS & 209 & 0.966507 & 0.327656 & 0.014354 \\
+rules-baseline & attack & SUCCESS & 97 & 0.113402 & 0.067901 &  \\
+rules-baseline & unknown & SUCCESS & 107 & 0.018692 & 0.012232 &  \\
+rules-baseline & prompt\_injection & SUCCESS & 56 & 0.000000 & 0.000000 &  \\
 rules-baseline & authorization & SUCCESS & 26 & 0.000000 & 0.000000 &  \\
-rules-baseline & idor\_bola & SUCCESS & 40 & 0.000000 & 0.000000 &  \\
-rules-baseline & sqli & SUCCESS & 23 & 0.000000 & 0.000000 &  \\
+rules-baseline & idor\_bola & SUCCESS & 40 & 0.050000 & 0.031746 &  \\
+rules-baseline & sqli & SUCCESS & 23 & 0.043478 & 0.041667 &  \\
 rules-baseline & xss & SUCCESS & 10 & 0.000000 & 0.000000 &  \\
 rules-baseline & command\_injection & SUCCESS & 8 & 0.625000 & 0.256410 &  \\
-rules-baseline & path\_traversal & SUCCESS & 9 & 0.000000 & 0.000000 &  \\
-rules-baseline & ssrf & SUCCESS & 7 & 0.571429 & 0.266667 &  \\
+rules-baseline & path\_traversal & SUCCESS & 9 & 0.333333 & 0.166667 &  \\
+rules-baseline & ssrf & SUCCESS & 7 & 0.142857 & 0.095238 &  \\
+char-ngram-logreg & all\_413 & SUCCESS & 413 & 0.234867 & 0.127297 & 1.000000 \\
+char-ngram-logreg & context\_sufficient\_true & SUCCESS & 306 & 0.316993 & 0.160463 & 1.000000 \\
+char-ngram-logreg & context\_sufficient\_false & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+char-ngram-logreg & consensus & SUCCESS & 160 & 0.150000 & 0.086957 & 1.000000 \\
+char-ngram-logreg & model\_adjudication & SUCCESS & 253 & 0.288538 & 0.150206 & 1.000000 \\
+char-ngram-logreg & safe & SUCCESS & 209 & 0.000000 & 0.000000 & 1.000000 \\
+char-ngram-logreg & attack & SUCCESS & 97 & 1.000000 & 0.333333 &  \\
+char-ngram-logreg & unknown & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+char-ngram-logreg & prompt\_injection & SUCCESS & 56 & 1.000000 & 0.333333 &  \\
+char-ngram-logreg & authorization & SUCCESS & 26 & 0.000000 & 0.000000 &  \\
+char-ngram-logreg & idor\_bola & SUCCESS & 40 & 0.000000 & 0.000000 &  \\
+char-ngram-logreg & sqli & SUCCESS & 23 & 0.521739 & 0.228571 &  \\
+char-ngram-logreg & xss & SUCCESS & 10 & 0.200000 & 0.111111 &  \\
+char-ngram-logreg & command\_injection & SUCCESS & 8 & 1.000000 & 0.333333 &  \\
+char-ngram-logreg & path\_traversal & SUCCESS & 9 & 1.000000 & 0.333333 &  \\
+char-ngram-logreg & ssrf & SUCCESS & 7 & 0.857143 & 0.307692 &  \\
+qwen3-4b-zero-shot & all\_413 & SUCCESS & 413 & 0.523002 & 0.417543 & 0.320574 \\
+qwen3-4b-zero-shot & context\_sufficient\_true & SUCCESS & 306 & 0.686275 & 0.447425 & 0.320574 \\
+qwen3-4b-zero-shot & context\_sufficient\_false & SUCCESS & 107 & 0.056075 & 0.035398 &  \\
+qwen3-4b-zero-shot & consensus & SUCCESS & 160 & 0.931250 & 0.590471 & 0.080882 \\
+qwen3-4b-zero-shot & model\_adjudication & SUCCESS & 253 & 0.264822 & 0.233847 & 0.767123 \\
+qwen3-4b-zero-shot & safe & SUCCESS & 209 & 0.674641 & 0.268571 & 0.320574 \\
+qwen3-4b-zero-shot & attack & SUCCESS & 97 & 0.711340 & 0.277108 &  \\
+qwen3-4b-zero-shot & unknown & SUCCESS & 107 & 0.056075 & 0.035398 &  \\
+qwen3-4b-zero-shot & prompt\_injection & SUCCESS & 56 & 0.553571 & 0.237548 &  \\
+qwen3-4b-zero-shot & authorization & SUCCESS & 26 & 0.000000 & 0.000000 &  \\
+qwen3-4b-zero-shot & idor\_bola & SUCCESS & 40 & 0.025000 & 0.016260 &  \\
+qwen3-4b-zero-shot & sqli & SUCCESS & 23 & 0.521739 & 0.228571 &  \\
+qwen3-4b-zero-shot & xss & SUCCESS & 10 & 0.200000 & 0.111111 &  \\
+qwen3-4b-zero-shot & command\_injection & SUCCESS & 8 & 1.000000 & 0.333333 &  \\
+qwen3-4b-zero-shot & path\_traversal & SUCCESS & 9 & 1.000000 & 0.333333 &  \\
+qwen3-4b-zero-shot & ssrf & SUCCESS & 7 & 0.714286 & 0.277778 &  \\
+qwen3-4b-few-shot & all\_413 & SUCCESS & 413 & 0.513317 & 0.411357 & 0.267943 \\
+qwen3-4b-few-shot & context\_sufficient\_true & SUCCESS & 306 & 0.669935 & 0.437693 & 0.267943 \\
+qwen3-4b-few-shot & context\_sufficient\_false & SUCCESS & 107 & 0.065421 & 0.040936 &  \\
+qwen3-4b-few-shot & consensus & SUCCESS & 160 & 0.950000 & 0.625119 & 0.036765 \\
+qwen3-4b-few-shot & model\_adjudication & SUCCESS & 253 & 0.237154 & 0.221508 & 0.698630 \\
+qwen3-4b-few-shot & safe & SUCCESS & 209 & 0.698565 & 0.274178 & 0.267943 \\
+qwen3-4b-few-shot & attack & SUCCESS & 97 & 0.608247 & 0.252137 &  \\
+qwen3-4b-few-shot & unknown & SUCCESS & 107 & 0.065421 & 0.040936 &  \\
+qwen3-4b-few-shot & prompt\_injection & SUCCESS & 56 & 0.357143 & 0.175439 &  \\
+qwen3-4b-few-shot & authorization & SUCCESS & 26 & 0.038462 & 0.024691 &  \\
+qwen3-4b-few-shot & idor\_bola & SUCCESS & 40 & 0.000000 & 0.000000 &  \\
+qwen3-4b-few-shot & sqli & SUCCESS & 23 & 0.565217 & 0.290850 &  \\
+qwen3-4b-few-shot & xss & SUCCESS & 10 & 0.200000 & 0.111111 &  \\
+qwen3-4b-few-shot & command\_injection & SUCCESS & 8 & 1.000000 & 0.333333 &  \\
+qwen3-4b-few-shot & path\_traversal & SUCCESS & 9 & 1.000000 & 0.333333 &  \\
+qwen3-4b-few-shot & ssrf & SUCCESS & 7 & 0.857143 & 0.307692 &  \\
+aetherargus-v02-hf-lora & all\_413 & SUCCESS & 413 & 0.615012 & 0.465757 & 0.205742 \\
+aetherargus-v02-hf-lora & context\_sufficient\_true & SUCCESS & 306 & 0.830065 & 0.545504 & 0.205742 \\
+aetherargus-v02-hf-lora & context\_sufficient\_false & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-hf-lora & consensus & SUCCESS & 160 & 1.000000 & 0.666667 & 0.000000 \\
+aetherargus-v02-hf-lora & model\_adjudication & SUCCESS & 253 & 0.371542 & 0.307145 & 0.589041 \\
+aetherargus-v02-hf-lora & safe & SUCCESS & 209 & 0.794258 & 0.295111 & 0.205742 \\
+aetherargus-v02-hf-lora & attack & SUCCESS & 97 & 0.907216 & 0.317117 &  \\
+aetherargus-v02-hf-lora & unknown & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-hf-lora & prompt\_injection & SUCCESS & 56 & 0.892857 & 0.314465 &  \\
+aetherargus-v02-hf-lora & authorization & SUCCESS & 26 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-hf-lora & idor\_bola & SUCCESS & 40 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-hf-lora & sqli & SUCCESS & 23 & 0.521739 & 0.228571 &  \\
+aetherargus-v02-hf-lora & xss & SUCCESS & 10 & 0.200000 & 0.111111 &  \\
+aetherargus-v02-hf-lora & command\_injection & SUCCESS & 8 & 1.000000 & 0.333333 &  \\
+aetherargus-v02-hf-lora & path\_traversal & SUCCESS & 9 & 1.000000 & 0.333333 &  \\
+aetherargus-v02-hf-lora & ssrf & SUCCESS & 7 & 0.714286 & 0.277778 &  \\
+aetherargus-v02-merged-bf16 & all\_413 & SUCCESS & 413 & 0.615012 & 0.466078 & 0.205742 \\
+aetherargus-v02-merged-bf16 & context\_sufficient\_true & SUCCESS & 306 & 0.830065 & 0.545504 & 0.205742 \\
+aetherargus-v02-merged-bf16 & context\_sufficient\_false & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-merged-bf16 & consensus & SUCCESS & 160 & 1.000000 & 0.666667 & 0.000000 \\
+aetherargus-v02-merged-bf16 & model\_adjudication & SUCCESS & 253 & 0.371542 & 0.307485 & 0.589041 \\
+aetherargus-v02-merged-bf16 & safe & SUCCESS & 209 & 0.794258 & 0.295111 & 0.205742 \\
+aetherargus-v02-merged-bf16 & attack & SUCCESS & 97 & 0.907216 & 0.317117 &  \\
+aetherargus-v02-merged-bf16 & unknown & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-merged-bf16 & prompt\_injection & SUCCESS & 56 & 0.892857 & 0.314465 &  \\
+aetherargus-v02-merged-bf16 & authorization & SUCCESS & 26 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-merged-bf16 & idor\_bola & SUCCESS & 40 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-merged-bf16 & sqli & SUCCESS & 23 & 0.521739 & 0.228571 &  \\
+aetherargus-v02-merged-bf16 & xss & SUCCESS & 10 & 0.200000 & 0.111111 &  \\
+aetherargus-v02-merged-bf16 & command\_injection & SUCCESS & 8 & 1.000000 & 0.333333 &  \\
+aetherargus-v02-merged-bf16 & path\_traversal & SUCCESS & 9 & 1.000000 & 0.333333 &  \\
+aetherargus-v02-merged-bf16 & ssrf & SUCCESS & 7 & 0.714286 & 0.277778 &  \\
+aetherargus-v02-gguf-q4-k-m & all\_413 & SUCCESS & 413 & 0.600484 & 0.455912 & 0.224880 \\
+aetherargus-v02-gguf-q4-k-m & context\_sufficient\_true & SUCCESS & 306 & 0.810458 & 0.535061 & 0.224880 \\
+aetherargus-v02-gguf-q4-k-m & context\_sufficient\_false & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-gguf-q4-k-m & consensus & SUCCESS & 160 & 0.993750 & 0.658634 & 0.007353 \\
+aetherargus-v02-gguf-q4-k-m & model\_adjudication & SUCCESS & 253 & 0.351779 & 0.287759 & 0.630137 \\
+aetherargus-v02-gguf-q4-k-m & safe & SUCCESS & 209 & 0.765550 & 0.289070 & 0.224880 \\
+aetherargus-v02-gguf-q4-k-m & attack & SUCCESS & 97 & 0.907216 & 0.317117 &  \\
+aetherargus-v02-gguf-q4-k-m & unknown & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-gguf-q4-k-m & prompt\_injection & SUCCESS & 56 & 0.875000 & 0.311111 &  \\
+aetherargus-v02-gguf-q4-k-m & authorization & SUCCESS & 26 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-gguf-q4-k-m & idor\_bola & SUCCESS & 40 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-gguf-q4-k-m & sqli & SUCCESS & 23 & 0.521739 & 0.228571 &  \\
+aetherargus-v02-gguf-q4-k-m & xss & SUCCESS & 10 & 0.200000 & 0.111111 &  \\
+aetherargus-v02-gguf-q4-k-m & command\_injection & SUCCESS & 8 & 1.000000 & 0.333333 &  \\
+aetherargus-v02-gguf-q4-k-m & path\_traversal & SUCCESS & 9 & 1.000000 & 0.333333 &  \\
+aetherargus-v02-gguf-q4-k-m & ssrf & SUCCESS & 7 & 0.857143 & 0.307692 &  \\
+aetherargus-v02-ollama-f16 & all\_413 & SUCCESS & 413 & 0.615012 & 0.466078 & 0.205742 \\
+aetherargus-v02-ollama-f16 & context\_sufficient\_true & SUCCESS & 306 & 0.830065 & 0.545504 & 0.205742 \\
+aetherargus-v02-ollama-f16 & context\_sufficient\_false & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-ollama-f16 & consensus & SUCCESS & 160 & 1.000000 & 0.666667 & 0.000000 \\
+aetherargus-v02-ollama-f16 & model\_adjudication & SUCCESS & 253 & 0.371542 & 0.307485 & 0.589041 \\
+aetherargus-v02-ollama-f16 & safe & SUCCESS & 209 & 0.794258 & 0.295111 & 0.205742 \\
+aetherargus-v02-ollama-f16 & attack & SUCCESS & 97 & 0.907216 & 0.317117 &  \\
+aetherargus-v02-ollama-f16 & unknown & SUCCESS & 107 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-ollama-f16 & prompt\_injection & SUCCESS & 56 & 0.892857 & 0.314465 &  \\
+aetherargus-v02-ollama-f16 & authorization & SUCCESS & 26 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-ollama-f16 & idor\_bola & SUCCESS & 40 & 0.000000 & 0.000000 &  \\
+aetherargus-v02-ollama-f16 & sqli & SUCCESS & 23 & 0.521739 & 0.228571 &  \\
+aetherargus-v02-ollama-f16 & xss & SUCCESS & 10 & 0.200000 & 0.111111 &  \\
+aetherargus-v02-ollama-f16 & command\_injection & SUCCESS & 8 & 1.000000 & 0.333333 &  \\
+aetherargus-v02-ollama-f16 & path\_traversal & SUCCESS & 9 & 1.000000 & 0.333333 &  \\
+aetherargus-v02-ollama-f16 & ssrf & SUCCESS & 7 & 0.714286 & 0.277778 &  \\
 \bottomrule
 \end{tabular}
 \end{table}

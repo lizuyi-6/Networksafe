@@ -1,7 +1,5 @@
 {
-  "peakGpuMemoryMiB": null,
-  "peakHostMemoryMiB": 18.0859375,
   "modelSizeBytes": null,
-  "crossStackLatencyComparable": false,
-  "notes": "In-process Python ru_maxrss on the local CPU-only evaluator. Rule latency is not directly comparable to GPU or Ollama model latency."
+  "peakGpuMemoryMiB": null,
+  "crossStackLatencyComparable": false
 }

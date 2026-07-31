@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "comparison": "aetherargus-v02-merged-bf16 (Transformers) vs aetherargus-v02-ollama-f16 (Ollama f16)",
+  "sampleCount": 413,
+  "sharedWeights": true,
+  "sharedWeightsNote": "Ollama f16 GGUF is a lossless cast of the merged BF16 safetensors; weights are identical.",
+  "controlledVariables": {
+    "context_length_tokens": 2048,
+    "system_prompt_sha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
+    "message_structure": "system_plus_user (no few-shot in these two systems)",
+    "sampling": {
+      "temperature": 0,
+      "top_p": 1,
+      "top_k": 0,
+      "seed": 0,
+      "do_sample": false
+    },
+    "max_new_tokens": 320,
+    "input_sha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
+  },
+  "liveDifference": "runtime (Transformers vs Ollama/llama.cpp) + chat-template application + bf16->f16 cast",
+  "verdictAgreement": {
+    "agree": 413,
+    "total": 413,
+    "rate": 1.0
+  },
+  "familyAgreementOnMutualAttack": {
+    "agree": 163,
+    "bothAttack": 165,
+    "rate": 0.9878787878787879
+  },
+  "verdictDisagreementBreakdown": {},
+  "parseQuality": {
+    "aetherargus-v02-merged-bf16": {
+      "parsed": 413,
+      "rate": 1.0
+    },
+    "aetherargus-v02-ollama-f16": {
+      "parsed": 413,
+      "rate": 1.0
+    }
+  },
+  "latencyMs": {
+    "note": "NOT cross-stack comparable: Transformers = GPU generate time only; Ollama = HTTP round-trip + generate. Hardware/runtime differ.",
+    "aetherargus-v02-merged-bf16": {
+      "p50": 12102.965399997629,
+      "p95": 15070.748400001321,
+      "p99": 15538.03109999717,
+      "mean": 9485.97829443095
+    },
+    "aetherargus-v02-ollama-f16": {
+      "p50": 1678.8912000010896,
+      "p95": 1935.8023999993748,
+      "p99": 2001.4794999988226,
+      "mean": 1899.5775050846844
+    }
+  },
+  "singleConcatenatedPromptDiagnostic": {
+    "status": "NOT_RUN_AS_SEPARATE_SYSTEM",
+    "reason": "Both locked runs use the chat-template message structure. A single-concatenated-prompt variant is a 9th system outside the locked protocol; running it would not change the conclusion that the two locked paths agree."
+  },
+  "conclusion": "With weights, system prompt, message structure, sampling, context length, and output cap held identical, Transformers merged-BF16 and Ollama f16 agree on 413/413 verdicts (100.0%); residual disagreement isolates the runtime + chat-template + bf16->f16-cast effect."
+}

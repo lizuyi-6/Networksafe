@@ -5,14 +5,14 @@
 \toprule
 modelId & status & p50LatencyMs & p95LatencyMs & p99LatencyMs & meanLatencyMs & samplesPerSecond & peakGpuMemoryMiB & peakHostMemoryMiB & modelSizeBytes \\
 \midrule
-rules-baseline & SUCCESS & 0.061451999499695376 & 0.09907940038829109 & 0.3253730403230291 & 0.07313638255168889 & 13673.085338795003 &  & 18.0859375 &  \\
-char-ngram-logreg & NOT\_RUN &  &  &  &  &  &  &  &  \\
-qwen3-4b-zero-shot & NOT\_RUN &  &  &  &  &  &  &  &  \\
-qwen3-4b-few-shot & NOT\_RUN &  &  &  &  &  &  &  &  \\
-aetherargus-v02-hf-lora & NOT\_RUN &  &  &  &  &  &  &  &  \\
-aetherargus-v02-merged-bf16 & NOT\_RUN &  &  &  &  &  &  &  &  \\
-aetherargus-v02-gguf-q4-k-m & NOT\_RUN &  &  &  &  &  &  &  &  \\
-aetherargus-v02-ollama-f16 & NOT\_RUN &  &  &  &  &  &  &  &  \\
+rules-baseline & SUCCESS & 9.999985195463523e-05 & 0.00020000015865662135 & 0.0003000000106112566 & 9.903149004312757e-05 & 10097798.180805989 &  &  &  \\
+char-ngram-logreg & SUCCESS & 1.2514999998529674 & 1.7020199997205052 & 1.9633559998692363 & 1.3026736077540755 & 767.6519997392811 &  &  &  \\
+qwen3-4b-zero-shot & SUCCESS & 2186.541899999611 & 2620.36285999984 & 3375.4864800004348 & 2343.9520004842216 & 0.4266298967698215 &  &  & 8044986000 \\
+qwen3-4b-few-shot & SUCCESS & 4977.074999998877 & 259882.67972000095 & 274672.855143999 & 40010.866483535116 & 0.024993210292296727 &  &  & 8044986000 \\
+aetherargus-v02-hf-lora & SUCCESS & 2729.901399998198 & 22653.71848000068 & 23990.734596001712 & 7455.22387772393 & 0.1341341341858266 &  &  & 8177173888 \\
+aetherargus-v02-merged-bf16 & SUCCESS & 12102.965399997629 & 15056.139420000545 & 15528.793151997816 & 9485.97829443095 & 0.10541875270651656 &  &  & 8044986000 \\
+aetherargus-v02-gguf-q4-k-m & SUCCESS & 446.17339999967953 & 1535.340599999472 & 1680.9749199989892 & 789.7571038741617 & 1.2662120987509826 &  &  & 2497278752 \\
+aetherargus-v02-ollama-f16 & SUCCESS & 1678.8912000010896 & 1934.9188399988634 & 2000.475063999038 & 1899.5775050846844 & 0.5264328501065396 &  &  & 8051283232 \\
 \bottomrule
 \end{tabular}
 \end{table}
