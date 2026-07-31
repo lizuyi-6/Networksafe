@@ -15,7 +15,7 @@ from pathlib import Path
 
 from transformers import AutoTokenizer
 
-from inference_common import read_model_inputs, user_message
+from inference_common import EXPECTED_INPUT_SHA256, read_model_inputs, user_message
 
 
 def sha256_text(value: str) -> str:
@@ -57,6 +57,8 @@ def main() -> int:
                     raise ValueError(f"existing prompt SHA mismatch for {sample_id}")
                 if item.get("systemPromptSha256") != system_prompt_sha:
                     raise ValueError("existing prompt file used a different system prompt")
+                if item.get("inputSha256") != EXPECTED_INPUT_SHA256:
+                    raise ValueError("existing prompt file used a different frozen input")
                 completed[sample_id] = item
 
     expected_ids = {row["sampleId"] for row in rows}
@@ -83,6 +85,7 @@ def main() -> int:
                 "schemaVersion": 1,
                 "sampleId": sample_id,
                 "serialization": "transformers.tokenizer.apply_chat_template",
+                "inputSha256": EXPECTED_INPUT_SHA256,
                 "systemPromptSha256": system_prompt_sha,
                 "serializedPromptSha256": sha256_text(serialized),
                 "serializedPrompt": serialized,
