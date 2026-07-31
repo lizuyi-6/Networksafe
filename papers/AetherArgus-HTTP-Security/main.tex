@@ -13,16 +13,16 @@
 \usepackage{balance}
 
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
-\graphicspath{{../../ml/reports/lan-challenge-evaluation/figures/}}
 
 \newcommand{\model}{AetherArgus}
 \newcommand{\challenge}{VIguard-LAN}
 \newcommand{\commitid}{\texttt{825fb95fb87a08d14e15e59078c7cf88beb9c5e8}}
 \newcommand{\labelhash}{\texttt{13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad}}
+\newcommand{\figroot}{../../ml/reports/lan-challenge-evaluation/figures/}
 \newcommand{\evidencefigure}[4]{%
   \begin{figure}[t]
     \centering
-    \IfFileExists{#1}{\includegraphics[width=#2\linewidth]{#1}}{\fbox{\parbox[c][0.16\textheight][c]{0.92\linewidth}{\centering Evidence figure generated in the repository:\\ \texttt{#1}}}}
+    \IfFileExists{\figroot#1}{\includegraphics[width=#2\linewidth]{\figroot#1}}{\fbox{\parbox[c][0.16\textheight][c]{0.92\linewidth}{\centering Evidence figure generated in the repository:\\ \texttt{#1}}}}
     \caption{#3}
     \label{#4}
   \end{figure}}
