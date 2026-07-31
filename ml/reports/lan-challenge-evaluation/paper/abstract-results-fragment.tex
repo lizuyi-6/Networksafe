@@ -1,7 +1,9 @@
-On a frozen 413-sample external challenge set under a pre-registered protocol,
-\texttt{aetherargus-v02-hf-lora} reached macro-F1 0.4658 and accuracy
-0.6150 with observed safe FPR
-43/209; significance is
-reported as paired McNemar / paired bootstrap differences with Holm-Bonferroni correction,
-and the shared-weight Transformers-vs-Ollama ablation is included. No historical or
-mismatched run was substituted for a missing prediction.
+% DRAFT / PRIMARY RESULTS ONLY: do not describe the full evidence package as complete.
+On a frozen 413-sample external challenge set,
+\texttt{aetherargus-v02-hf-lora} reached verdict macro-F1 0.4658
+(95\% bootstrap CI [0.4415,0.4894]) and accuracy 0.6150
+([0.5835,0.6441]), with observed safe FPR 43/209 and unknown recall 0.
+Relative to the strongest non-AetherArgus baseline,
+\texttt{qwen3-4b-zero-shot}, the macro-F1 difference was +0.0482
+(paired 95\% CI [+0.0113,+0.0835]). The predeclared inference-path diagnostics
+and hardened completion validation remain outstanding.
