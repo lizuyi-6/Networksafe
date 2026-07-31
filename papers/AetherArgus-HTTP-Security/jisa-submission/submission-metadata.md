@@ -36,19 +36,19 @@ Abstract word count: 197.
 - Role: sole author and corresponding author
 - Email: 2251213429@qq.com
 - Phone: [REQUIRED BY SUBMISSION CHECKLIST]
-- Full affiliation: [REQUIRED]
-- Full postal address: [REQUIRED]
+- Affiliation: Hebei Xiong'an Qiongyu Technology Co., Ltd.
+- Chinese legal name: 河北雄安穹驭科技有限公司
+- Location currently recorded: Xiong'an New Area, Hebei, China
+- Registered street address and postal code: [REQUIRED]
 - ORCID: [ADD IF AVAILABLE]
 
-## Affiliation rule
+## Affiliation verification
 
-A company affiliation is not required. Use the full, independently verifiable name and postal address of the institution where the work was carried out. Preferred options, in order:
+The working English translation is `Hebei Xiong'an Qiongyu Technology Co., Ltd.` Before external submission, compare it with the company's business licence, official website, bank records, or other authoritative English-language corporate document. If the company has no registered English name, retain a consistent direct translation and the exact Chinese legal name in internal submission records.
 
-1. the author's university and relevant school/department, if the research was carried out while enrolled there;
-2. the author's company, only if the work was genuinely carried out under that company or used company resources;
-3. `Independent Researcher, [City], China`, if the research was genuinely independent of both school and company.
+## Competing-interest disclosure
 
-Do not list an institution merely for prestige or convenience.
+The manuscript discloses the author's company affiliation and the possibility that the company may have a commercial interest in AI and cybersecurity technologies related to the work. Do not select the no-conflict option unless this relationship is reassessed and documented.
 
 ## Suggested subject areas
 
@@ -70,6 +70,7 @@ No preprint is currently declared in this package. If the manuscript is uploaded
 
 - The manuscript is not under consideration elsewhere.
 - The sole author must approve the final version.
-- The final funding statement must be confirmed.
-- The final competing-interest declaration must be selected and generated through Elsevier's declarations tool.
+- The work received no external grant funding, subject to final author confirmation.
+- The company affiliation and potential commercial interest must be disclosed.
+- The final competing-interest document must be generated through Elsevier's declarations tool.
 - Generative-AI assistance is disclosed in the manuscript.
