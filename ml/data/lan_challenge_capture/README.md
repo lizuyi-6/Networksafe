@@ -1,92 +1,85 @@
 # VIguard (AetherGuard) — Authorized LAN Live-Execution Challenge Set
 
-**Dataset class:** *Authorized LAN Live-Execution Challenge Set* — a *live-captured synthetic
-attack-attempt benchmark*. It is an **external independent challenge test set** for the
-AetherArgus work, **not** training data.
+**Dataset class:** *Authorized LAN Live-Execution Challenge Set* — a live-captured synthetic attack-attempt benchmark. It is an **external independent challenge test set** for the AetherArgus work, **not** training data.
 
 ## Read this first: what the labels mean
 
-- Every request was **really sent** to the authorized target (`192.168.3.140:5173`) and every
-  retained sample **really captured a response** (`responseActuallyReceived`, 0 connection
-  failures in the final set).
-- The attack payloads were **pre-designed by the test plan** and the attack-intent labels come
-  **primarily from that design**. This is **not** "real-world / production / naturally-occurring
-  attack traffic".
-- `exploitConfirmed = 0` and `canaryObserved = 0` across the whole set: **no** payload is
-  confirmed to have succeeded. A failed exploit is still a malicious *attempt*
-  (`requestIntent=malicious_attempt`, `exploitOutcome=not_confirmed`) — it is **not** relabeled
-  benign.
-- The set is **target-specific** (`targetSpecific=true`) and **not eligible for training**
-  (`split=external_challenge_test`, `eligibleForTraining=false`).
-- Human double-review has **not** been completed: `humanReviewed=false`, `reviewerCount=0`,
-  `interAnnotatorAgreement=null`, `cohenKappa=null`, `adjudicatedSamples=0`. See
-  `review-guidelines.md` for the workflow that must run before any of those change.
+- Every request was really sent to the authorized target and every retained sample captured a response.
+- The attack payloads were pre-designed by the test plan. This is not real-world, production, or naturally occurring attack traffic.
+- `exploitConfirmed=0` and `canaryObserved=0`: no payload is confirmed to have succeeded. A failed exploit can still be a malicious attempt.
+- The set is target-specific and not eligible for training (`split=external_challenge_test`, `eligibleForTraining=false`).
+- The model-facing reference labels were produced through dual-AI annotation, third-AI adjudication, and a model-visible-context audit.
+- A complete confidential blind human review was subsequently conducted outside the public repository. It covered **413/413** samples, found **0** disagreements, and required **0** label changes.
+- Reviewer identities, reviewer count, worksheets, and raw materials are retained in a restricted environment. The public repository contains a SHA-bound operator attestation at `human-review/human-review-attestation.json`.
+- The final-label SHA-256 remains `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`.
 
-## Three views – do not conflate (input / labels / metadata isolation)
+## Three views — do not conflate input, labels, and metadata
 
-`model-benchmark.jsonl` is the full bundle. It is split into three strictly-isolated sections,
-exactly one of which a model is ever allowed to see:
+`model-benchmark.jsonl` is split into three isolated sections, exactly one of which a model may see:
 
-```
+```text
 model-benchmark.jsonl
-├── input       ← the ONLY part a model may see (method, path, headers, body, sourceContext)
-├── labels      ← scoring only; MUST NOT enter the prompt (verdict, attackFamily, requestIntent, …)
-└── metadata    ← governance only; MUST NOT enter the prompt (split, eligibleForTraining, humanReviewed, …)
+├── input       ← the only model-visible part
+├── labels      ← scoring only; must not enter the prompt
+└── metadata    ← governance only; must not enter the prompt
 ```
 
-`requestIntent`, `exploitOutcome`, `verdict`, `attackFamily`, `recommendedAction`,
-`contextSufficient`, and `isHardNegative` are **labels** (they encode the attack-intent design
-and the scoring target), **not** pre-request client-observable fields. Conflating them with
-`input` is exactly the label-leakage this dataset was restructured to prevent.
+`requestIntent`, `exploitOutcome`, `verdict`, `attackFamily`, `recommendedAction`, `contextSufficient`, and `isHardNegative` are labels, not pre-request client-observable fields.
 
 | View | Files | Contents | Use |
 |---|---|---|---|
-| **Evidence capture** | `normal-traffic.jsonl`, `attack-traffic.jsonl`, `hard-negatives.jsonl`, `prompt-injection.jsonl`, `unknown-cases.jsonl`, `all-sanitized.jsonl` | request + response status/headers/body + latency + groundTruth + executionEvidence | Proves each request was really executed. **Not a valid model input.** |
-| **Model benchmark (full bundle)** | `model-benchmark.jsonl` | `input` + `labels` + `metadata` (joined by `sampleId`) | The canonical record. **Never feed the whole bundle to a model** – it contains labels. |
-| **Process-isolated splits** | `model-inputs.jsonl` (=`sampleId`+`input`), `model-labels.jsonl` (=`sampleId`+`labels`+`metadata`) | input alone vs. labels+metadata alone | **Recommended:** the model process reads `model-inputs.jsonl`; the scoring process reads `model-labels.jsonl`; results are joined by `sampleId`. This physically prevents a label from reaching the prompt. |
+| Evidence capture | category JSONL files and `all-sanitized.jsonl` | request + response evidence + collection metadata | Proves execution; not valid model input. |
+| Full benchmark bundle | `model-benchmark.jsonl` | input + labels + metadata | Canonical joined record; never feed the whole bundle to a model. |
+| Process-isolated views | `model-inputs.jsonl`, `model-labels.jsonl` | input alone vs labels + metadata | Recommended inference/scoring isolation. |
 
-`verify.js` enforces this isolation: `requestIntent` and every other label field is absent from
-`input`, and any post-response or label field appearing in the model-input view fails the
-benchmark-leak gate (see `WB1`-`WB4`, `ML1`-`ML4` in `test/run-tests.js`).
+`verify.js` enforces this separation and fails if labels or post-response fields appear in the model-input view.
 
 ## Privacy sanitization
 
-`sanitize.js` performs (1) recursive key-based redaction of sensitive fields (case-insensitive:
-password/secret/token/cookie/authorization/sessionId/tenantId/userId/email/findingId/…) and
-(2) string-level matching so the same identifiers are caught when embedded inside a
-stringified-JSON body. Internal identifiers (sessionId/userId/tenantId/findingId/UUID) are
-replaced with **stable, non-reversible placeholders** (e.g. `[RESOURCE_ID_4F91A2C8]`) via
-HMAC-SHA256 keyed by a dataset-local salt in `raw-private/.id-salt` (gitignored; never
-committed). The same real id always maps to the same placeholder within this dataset
-(entity consistency) but the mapping is neither reversible nor cross-dataset stable.
-`privacy-audit-report.json` records the method and per-category residual findings (should be 0).
+`sanitize.js` recursively redacts sensitive keys and scans string content for embedded identifiers. Session IDs, user IDs, tenant IDs, finding IDs, UUIDs, and related values are replaced with stable, non-reversible HMAC-SHA256 placeholders using a dataset-local secret salt in `raw-private/.id-salt`, which is gitignored and never committed.
 
-## Regenerate + validate (offline; does not contact the target)
+`privacy-audit-report.json` records residual privacy findings and should remain at zero.
+
+## Regenerate and validate offline
 
 ```bash
 cd ml/data/lan_challenge_capture
-node enrich.js      # re-sanitize + enrich (requestIntent/exploitOutcome/datasetMetadata), rebuild all-sanitized + model-benchmark + review-queue
-node finalize.js    # regenerate dataset-manifest.json + collection-report.md + findings.json + pii-redaction-report.json
-node verify.js      # fail-closed: JSON Schema (draft 2020-12) + semantic + privacy + benchmark-leak + manifest checks; exit != 0 on any failure
-node test/run-tests.js   # fail-closed suite (prints `passed/total`); covers verify.js + sanitizer + salt isolation + safe-truncation boundaries
+node enrich.js
+node finalize.js
+node verify.js
+node test/run-tests.js
+
+cd ../../..
+node ml/data/lan_challenge_capture/adjudication/build-manifest.js
+node ml/data/lan_challenge_capture/adjudication/build-report.js
+node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js
+node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js
 ```
 
-`verify.js` returns a **non-zero exit code** on: unparseable JSON, schema error, semantic
-error, duplicate sampleId, any red-line privacy finding (sessionId token / JWT / cookie /
-authorization / raw UUID / real email / tenant value / windows user path), any post-response
-field in the benchmark, manifest/actual count mismatch, or `all-sanitized.jsonl` ≠ union of
-the category files.
+These commands are offline and do not contact the target.
 
 ## Training-leak protection
 
-`scripts/guards/check-training-leak-challenge-capture.mjs` (wired into `npm run
-check:release-guards`, which runs in CI) fails if any `viguard-lan-*` sampleId appears in a
-training/release/manifest artifact, if any file outside this directory references it as a data
-source, or if any sample is marked `eligibleForTraining=true` / a non-challenge split.
+`scripts/guards/check-training-leak-challenge-capture.mjs`, wired into release guards and CI, fails if any `viguard-lan-*` sample appears in training/release artifacts, if files outside this directory reference the challenge data as a training source, or if any challenge sample is marked training-eligible.
+
+## Human-review terminology
+
+Allowed:
+
+> confidentially human-reviewed reference labels
+
+> AI-assisted reference labels subsequently confirmed through confidential blind human review
+
+Not allowed:
+
+> publicly reproducible raw human annotations
+
+> infallible objective ground truth
+
+> representative natural production traffic
+
+The human-review attestation is post-evaluation. Because the final-label file remained byte-identical, model predictions and scoring did not require rerunning.
 
 ## Files
 
-See `dataset-manifest.json` for authoritative counts and dataset metadata. Operator action
-required after any rotation of the capture: **invalidate all sessions for the dedicated test
-account** (the captured evidence references session identifiers that, while now placeholder-
-mapped, were issued to that account).
+See `dataset-manifest.json` for capture-level counts and metadata, `adjudication/final-labels-manifest.json` for label provenance, and `human-review/` for the public confidential-review attestation.

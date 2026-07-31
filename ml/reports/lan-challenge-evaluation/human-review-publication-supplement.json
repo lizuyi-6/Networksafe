@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "status": "ACTIVE_PUBLICATION_SUPPLEMENT",
+  "supplements": "ml/reports/lan-challenge-evaluation/aetherargus-lan-challenge-report.json",
+  "reason": "The machine-readable evaluation report is a frozen evaluation-time snapshot. A confidential blind human review was completed after evaluation without changing final-labels.jsonl.",
+  "evaluationTimeState": {
+    "humanReviewed": false,
+    "evidenceMergeCommit": "279282128f7bb1d11c2f4d49aa043a57a7b82fb5",
+    "strictValidation": "27/27 PASS"
+  },
+  "publicationTimeState": {
+    "humanReviewed": true,
+    "reviewMode": "confidential_blind_review",
+    "coverage": 413,
+    "confirmedSampleCount": 413,
+    "disagreementCount": 0,
+    "labelsChanged": false,
+    "reviewerCount": null,
+    "reviewerCountDisclosure": "withheld_for_confidentiality",
+    "attestationFile": "ml/data/lan_challenge_capture/human-review/human-review-attestation.json",
+    "attestationSha256": "2c273945369cf41d98fe02072518b01151e17e2d98a5642e657dc3be2b5b9cbd",
+    "finalLabelsSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+    "modelPredictionsRerunRequired": false,
+    "rescoringRequired": false
+  },
+  "supersededDeclaration": "The reference labels were not human-verified ground truth.",
+  "replacementDeclaration": "The AI-assisted reference labels were subsequently confirmed through a confidential blind human review conducted outside the public repository; the review covered all 413 samples and produced zero label changes.",
+  "allowedLabelDescription": "confidentially human-reviewed reference labels",
+  "forbiddenClaims": [
+    "publicly reproducible raw human annotations",
+    "infallible objective ground truth",
+    "natural production traffic"
+  ]
+}

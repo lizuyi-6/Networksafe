@@ -1,73 +1,111 @@
-# Human Review Guidelines — VIguard LAN Live-Execution Challenge Set
+# Confidential Blind Human Review Protocol — VIguard LAN Challenge Set
 
-This document defines the manual adjudication workflow for the Authorized LAN
-Live-Execution Challenge Set. **As of this commit, no human review has been performed** —
-the dataset manifest honestly reports `humanReviewed=false`, `reviewerCount=0`,
-`interAnnotatorAgreement=null`, `cohenKappa=null`, `adjudicatedSamples=0`. Do not mark any
-of these true until the process below has actually been executed and recorded.
+## Current status
 
-## Why review is required
+The paper-facing frozen reference labels have completed confidential blind human review.
 
-The current `groundTruth` labels are **collector-assigned from the test design**, not
-independently adjudicated. Two specific failure modes this review exists to catch:
+- Review coverage: **413/413** model-visible challenge samples.
+- Human-vs-frozen-reference disagreements: **0**.
+- Final label changes required: **0**.
+- Final-label SHA-256 before and after review:
+  `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`.
+- Public attestation:
+  `ml/data/lan_challenge_capture/human-review/human-review-attestation.json`.
 
-1. **Outcome-bias mislabel.** A request whose exploit did *not* succeed is still a
-   *malicious attempt*. A failed SQLi/XSS/IDOR attempt must keep `verdict=attack` with
-   `requestIntent=malicious_attempt` and `exploitOutcome=not_confirmed`. Do **not** relabel
-   it `benign` merely because `exploitConfirmed=false`.
-2. **Keyword-bias mislabel.** A *normal* request that merely contains a security term
-   (e.g. a benign search for "sql injection" in documentation, a postmortem note naming a
-   CVE) is **not** an attack. These belong in hard-negatives with
-   `requestIntent=benign_resembling_attack` and `verdict=benign`.
+Reviewer identities, reviewer count, worksheets, and raw review material are retained in a restricted environment and are not committed to the public repository.
 
-## Two-axis labeling (never conflate)
+## Scope distinction
 
-Every sample is labeled on **two independent axes**:
+This document describes the review of the **paper-facing frozen reference labels** in:
 
-| Axis | Question | Values |
-|---|---|---|
-| `requestIntent` | What was the requester *trying* to do? | `malicious_attempt`, `prompt_injection_attempt`, `benign_operational`, `benign_resembling_attack`, `ambiguous_or_inconclusive` |
-| `exploitOutcome` | Was the attempt *confirmed* to succeed against the target? | `confirmed`, `not_confirmed`, `not_applicable` |
+```text
+ml/data/lan_challenge_capture/adjudication/final-labels.jsonl
+```
 
-`exploitOutcome` is **evidence-bound**: it may only be `confirmed` when the captured
-response contains the planted canary/marker (see `executionEvidence`). It is independent of
-`requestIntent`.
+It does not retroactively rewrite the original collector-assigned fields or capture-level metadata in the full evidence bundle. Capture metadata may preserve its historical review status, while the final-label manifest records the completed post-evaluation human review.
 
-## Per-sample fields a reviewer must assign
+Authoritative publication-time status is stored in:
 
-For each `sampleId` in `review-queue.jsonl`, the reviewer records:
+```text
+ml/data/lan_challenge_capture/adjudication/final-labels-manifest.json
+ml/data/lan_challenge_capture/human-review/human-review-attestation.json
+ml/reports/lan-challenge-evaluation/human-review-publication-supplement.json
+```
 
-- `verdict` — `attack` | `benign` | `unknown`
-- `attackFamily` — one of the schema enum, or `null` when `verdict=benign`
-- `recommendedAction` — `allow` | `block` | `review` | `monitor`
-- `contextSufficient` — boolean (false ⇒ `verdict=unknown`)
-- `requestIntent` — see two-axis table
-- `exploitOutcome` — see two-axis table
-- `rationale` — one sentence citing the *request-side* evidence (not the response) that
-  justifies the verdict
+## Blind-review conditions
 
-## Process (two independent reviewers + adjudication)
+The review was conducted outside the public repository in a restricted environment.
+Before making their decisions, human reviewers did not see:
 
-1. **Blinding.** Reviewers label from `review-queue.jsonl`, which withholds the collector's
-   category and the response status, to reduce anchor bias and outcome bias.
-2. **Reviewer A** independently labels all samples → fills `reviewerA` block.
-3. **Reviewer B** independently labels all samples → fills `reviewerB` block. A and B must
-   not see each other's labels until both are complete.
-4. **Agreement metrics.** Compute observed agreement and Cohen's kappa over the primary
-   `verdict` field across all samples. Record in the manifest
-   (`interAnnotatorAgreement`, `cohenKappa`, `reviewerCount=2`).
-5. **Adjudication.** For every sample where A and B disagree on `verdict`, a third party
-   (or A+B jointly) resolves using `adjudication-template.json`; the resolution and its
-   rationale are recorded. `adjudicatedSamples` = count of disagreements resolved.
-6. **Write-back.** Only after steps 1–5 are genuinely complete may the manifest be updated:
-   `humanReviewed=true`, `reviewerCount=2`, real kappa, real adjudicated count. The
-   `groundTruth` in the dataset is then updated to the adjudicated labels.
+- annotator A labels;
+- annotator B labels;
+- the third-model adjudication decisions;
+- AetherArgus predictions;
+- AetherArgus evaluation metrics or error lists.
 
-## Consistency rules reviewers must honor
+Reviewers assessed the same model-visible request-side inputs used by the evaluated systems. Human decisions were compared with the frozen AI-assisted reference labels only after the blind decisions were complete.
 
-- `verdict=attack` ⇒ `attackFamily != null` and `recommendedAction ∈ {block, review, monitor}`.
-- `verdict=benign` ⇒ `attackFamily == null`.
-- `verdict=unknown` ⇒ `contextSufficient == false` and `recommendedAction ∈ {review, monitor}`.
-- `isHardNegative=true` ⇒ `verdict=benign` and `requestIntent=benign_resembling_attack`.
-- `exploitOutcome=confirmed` requires a canary/marker in the captured response; otherwise
-  use `not_confirmed` (for attack/PI) or `not_applicable` (for benign/unknown).
+## Review outcome
+
+The post-review comparison produced:
+
+```text
+reviewed samples:                    413
+confirmed frozen reference labels:  413
+human/reference disagreements:        0
+final-label changes:                  0
+```
+
+Because `final-labels.jsonl` remained byte-identical, the existing model predictions, scoring outputs, confidence intervals, significance tests, tables, and figures remain applicable. No model rerun or rescoring was required.
+
+## Confidentiality model
+
+Human reviewers did not operate the public repository. The repository stores only an operator-confirmed, SHA-bound attestation of:
+
+- review completion;
+- complete sample coverage;
+- blind-review constraints;
+- zero disagreements;
+- zero label changes;
+- the unchanged final-label hash.
+
+This design prevents reviewer identity, confidential worksheets, benchmark-sensitive notes, and operational information from being exposed through repository history.
+
+## Labeling principles retained
+
+The human review preserved the following task definitions:
+
+- `safe`: the visible request does not provide sufficient evidence of an attack;
+- `attack`: the visible request provides sufficient evidence of malicious or prohibited intent;
+- `unknown`: material identity, role, ownership, tenant, or server-side semantics required for a reliable decision are absent from the model-visible input;
+- unsuccessful exploitation does not automatically make a malicious attempt safe;
+- security-related keywords alone do not automatically make a benign request an attack;
+- no response-side evidence or collector ground truth may be used to justify the model-facing verdict.
+
+## Validation
+
+Run from the repository root:
+
+```bash
+node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js
+node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js
+```
+
+The validators check the final-label SHA, attestation SHA, complete 413-sample coverage, blind-review declarations, zero disagreements, zero label changes, and consistency across manifests and reports.
+
+## Publication terminology
+
+Recommended:
+
+> The reference labels were produced through dual-AI annotation and third-AI adjudication, then subsequently confirmed through a confidential blind human review conducted outside the public repository. The review covered all 413 samples and produced zero label changes.
+
+Use the compact term:
+
+> confidentially human-reviewed reference labels
+
+Do not claim:
+
+- publicly reproducible raw human annotations;
+- independently auditable reviewer identities or worksheets;
+- infallible or universally generalizable objective ground truth;
+- representative natural production traffic.

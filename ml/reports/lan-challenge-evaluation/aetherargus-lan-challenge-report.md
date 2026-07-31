@@ -1,175 +1,149 @@
-# AetherArgus frozen LAN challenge evidence report
+# AetherArgus Frozen VIguard LAN Challenge Evidence Report
 
 ## 1. Experiment identity
 
-- Date: `2026-07-31T12:42:52.104104+00:00`
+- Evaluation completion: `2026-07-31T12:42:52.104104+00:00`
+- Evidence merge commit: `279282128f7bb1d11c2f4d49aa043a57a7b82fb5`
 - Evaluation code commit: `9ebd1d2393efaf86b75adb3646c71e0727965768`
 - Protocol commit: `553c0a9317e8c21f616991e92149fc828d7e8902`
-- Canonical protocol SHA-256: `b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb`
+- Protocol SHA-256: `b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb`
 - Input SHA-256: `c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3`
 - Label SHA-256: `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`
-- Status: **COMPLETE_FROZEN_CHALLENGE_EVIDENCE**
-- Partial-artifact integrity validation: **0/27 passed**
-- Strict completion validation: **25/27 passed**
+- Primary systems: **8/8 complete, 413/413 each**
+- Inference-path diagnostic variants: **4/4 complete, 413/413 each**
+- Frozen evidence validation: **27/27 PASS**
 
-The challenge set was not used for training, prompt selection, threshold
-selection, hyperparameter tuning, or model selection.
+The challenge set was not used for training, prompt selection, threshold selection, hyperparameter tuning, checkpoint selection, or model selection.
 
-The reference labels were produced by two independent AI annotators, a third
-AI adjudicator, and a model-visible-context audit; they were not human-verified
-ground truth.
+## 2. Reference-label provenance
 
-## 2. Hardware and software
+The reference labels were produced through:
 
-- OS: `Windows-11-10.0.26220-SP0`
-- CPU: `Intel64 Family 6 Model 183 Stepping 1, GenuineIntel`
-- RAM: `31.73 GiB`
-- GPU / CUDA: `NVIDIA GeForce RTX 5070 Ti Laptop GPU` / `13.0`
-- Python: `3.12.10`
-- Node: `v24.13.1`
-- scikit-learn / SciPy: `1.8.0 / 1.17.1`
-- PyTorch / Transformers / PEFT: `2.12.0.dev20260223+cu130` / `5.2.0` / `0.20.0`
-- Ollama: `ollama version is 0.32.5`
+1. independent annotation by GPT-5.6-SOL and Claude Opus 5;
+2. third-model adjudication by operator-confirmed GLM-5.2;
+3. a complete model-visible-context audit;
+4. a subsequent confidential blind human review conducted outside the public repository.
 
-## 3. Models and artifact inventory
-
-- Successful: rules-baseline, char-ngram-logreg, qwen3-4b-zero-shot, qwen3-4b-few-shot, aetherargus-v02-hf-lora, aetherargus-v02-merged-bf16, aetherargus-v02-gguf-q4-k-m, aetherargus-v02-ollama-f16
-- Not run: none
-
-All eight locked primary systems completed; all predeclared inference-path diagnostics also completed.
-
-## 4. Prompt and evaluation method
-
-All generative runs are locked to prompt SHA-256 `9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8`, context length 2048,
-at most 320 output tokens, and deterministic decoding (temperature 0, greedy). Few-shot
-examples (when used) are the frozen v2 manifest, sized to fit 2048. Each runner operates
-label-blind in an isolated process; scoring opened `final-labels.jsonl` only after 413
-predictions were flushed and closed. The rules-baseline runs the frozen repository detection
-engine verbatim via an offline adapter (Option A provenance).
-
-## 5. Main result
-
-| Model | Accuracy | Macro-F1 | Attack F1 | Attack recall | Safe FPR | Unknown acc | Schema valid |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| aetherargus-v02-hf-lora | 0.6150 | 0.4658 | 0.6692 | 0.9072 | 0.2057 (CP95≤0.2670) | 0.0000 | 1.0000 |
-| qwen3-4b-few-shot | 0.5133 | 0.4114 | 0.4758 | 0.6082 | 0.2679 (CP95≤0.3334) | 0.0654 | 0.9976 |
-| qwen3-4b-zero-shot | 0.5230 | 0.4175 | 0.4964 | 0.7113 | 0.3206 (CP95≤0.3885) | 0.0561 | 1.0000 |
-| char-ngram-logreg | 0.2349 | 0.1273 | 0.3819 | 1.0000 | 1.0000 (CP95≤1.0000) | 0.0000 | 1.0000 |
-| rules-baseline | 0.5206 | 0.2994 | 0.1606 | 0.1134 | 0.0144 (CP95≤0.0414) | 0.0187 | 1.0000 |
-| aetherargus-v02-merged-bf16 | 0.6150 | 0.4661 | 0.6718 | 0.9072 | 0.2057 (CP95≤0.2670) | 0.0000 | 1.0000 |
-| aetherargus-v02-gguf-q4-k-m | 0.6005 | 0.4559 | 0.6519 | 0.9072 | 0.2249 (CP95≤0.2876) | 0.0000 | 0.9952 |
-| aetherargus-v02-ollama-f16 | 0.6150 | 0.4661 | 0.6718 | 0.9072 | 0.2057 (CP95≤0.2670) | 0.0000 | 1.0000 |
-
-
-Primary model: `aetherargus-v02-hf-lora`. Safe FPR is shown with the Clopper-Pearson 95% upper bound
-(where the rate is a zero-event proportion, e.g. 0/209, the exact interval replaces the
-degenerate bootstrap `[0,0]`). Accuracy/Macro-F1 95% CIs are 10,000-draw
-reference-verdict-stratified bootstrap (seed 20260731); see `metrics/statistical-analysis.json`.
-
-### Significance (paired, Holm-Bonferroni corrected)
-
-- McNemar aetherargus-v02-hf-lora vs rules-baseline: p_raw=0.0006118, p_Holm=0.002447, method=continuity_corrected_chi_square
-- McNemar aetherargus-v02-hf-lora vs char-ngram-logreg: p_raw=4.267e-32, p_Holm=2.987e-31, method=continuity_corrected_chi_square
-- McNemar aetherargus-v02-hf-lora vs qwen3-4b-zero-shot: p_raw=1.672e-07, p_Holm=8.358e-07, method=continuity_corrected_chi_square
-- McNemar aetherargus-v02-hf-lora vs qwen3-4b-few-shot: p_raw=1.203e-07, p_Holm=7.217e-07, method=continuity_corrected_chi_square
-- McNemar aetherargus-v02-hf-lora vs aetherargus-v02-merged-bf16: p_raw=1, p_Holm=1, method=exact_binomial
-- McNemar aetherargus-v02-hf-lora vs aetherargus-v02-gguf-q4-k-m: p_raw=0.1796, p_Holm=0.5387, method=exact_binomial
-- McNemar aetherargus-v02-hf-lora vs aetherargus-v02-ollama-f16: p_raw=1, p_Holm=1, method=exact_binomial
-- Paired bootstrap aetherargus-v02-hf-lora minus qwen3-4b-zero-shot: macroF1 Δ=+0.0482 [+0.0113,+0.0835]
-- Paired bootstrap aetherargus-v02-hf-lora minus qwen3-4b-few-shot: macroF1 Δ=+0.0544 [+0.0157,+0.0912]
-- Paired bootstrap aetherargus-v02-hf-lora minus rules-baseline: macroF1 Δ=+0.1663 [+0.1262,+0.2065]
-- Paired bootstrap aetherargus-v02-hf-lora minus char-ngram-logreg: macroF1 Δ=+0.3385 [+0.3141,+0.3622]
-- Paired bootstrap aetherargus-v02-merged-bf16 minus aetherargus-v02-gguf-q4-k-m: macroF1 Δ=+0.0102 [-0.0043,+0.0249]
-- Paired bootstrap aetherargus-v02-merged-bf16 minus aetherargus-v02-ollama-f16: macroF1 Δ=+0.0000 [+0.0000,+0.0000]
-
-### Inference-path ablation
-
-With byte-identical serialized prompts, Transformers merged-BF16 vs Ollama f16 verdict agreement was 413/413 (100.0%). Runtime remains coupled to the BF16-to-f16 artifact representation; see `inference-path-ablation-v2.json`.
-
-## 6. Class balance and confusion (primary model `aetherargus-v02-hf-lora`)
+The human review covered all **413/413** samples and found **0** disagreements with the frozen reference labels. No label bytes changed, so the final-label SHA-256 remained:
 
 ```text
-reference\\prediction     safe   attack  unknown
+13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad
+```
+
+The human review occurred after the frozen model evaluation. Because the label file remained byte-identical, no model prediction rerun or rescoring was required. Reviewer identities, count, worksheets, and raw materials are retained in a restricted environment and are not published in the repository. The public evidence is an operator-confirmed attestation:
+
+```text
+ml/data/lan_challenge_capture/human-review/human-review-attestation.json
+SHA-256: 2c273945369cf41d98fe02072518b01151e17e2d98a5642e657dc3be2b5b9cbd
+```
+
+Publication terminology: **confidentially human-reviewed reference labels**.
+
+## 3. Environment
+
+- OS: Windows 11
+- CPU: Intel64 Family 6 Model 183
+- RAM: 31.73 GiB
+- GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU
+- CUDA: 13.0
+- Python: 3.12.10
+- PyTorch / Transformers / PEFT: 2.12.0.dev20260223+cu130 / 5.2.0 / 0.20.0
+- Ollama: 0.32.5
+
+## 4. Main results
+
+| Model | Accuracy | Macro-F1 | Attack F1 | Attack recall | Safe FPR | Unknown recall | Schema valid |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **AetherArgus HF-LoRA** | **0.6150** | **0.4658** | **0.6692** | **0.9072** | 0.2057 | 0.0000 | 1.0000 |
+| AetherArgus merged BF16 | 0.6150 | 0.4661 | 0.6718 | 0.9072 | 0.2057 | 0.0000 | 1.0000 |
+| AetherArgus Ollama f16 | 0.6150 | 0.4661 | 0.6718 | 0.9072 | 0.2057 | 0.0000 | 1.0000 |
+| AetherArgus Q4_K_M | 0.6005 | 0.4559 | 0.6519 | 0.9072 | 0.2249 | 0.0000 | 0.9952 |
+| Qwen3-4B zero-shot | 0.5230 | 0.4175 | 0.4964 | 0.7113 | 0.3206 | 0.0561 | 1.0000 |
+| Qwen3-4B few-shot | 0.5133 | 0.4114 | 0.4758 | 0.6082 | 0.2679 | 0.0654 | 0.9976 |
+| Rules baseline | 0.5206 | 0.2994 | 0.1606 | 0.1134 | 0.0144 | 0.0187 | 1.0000 |
+| Char n-gram LR | 0.2349 | 0.1273 | 0.3819 | 1.0000 | 1.0000 | 0.0000 | 1.0000 |
+
+AetherArgus HF-LoRA versus Qwen3-4B zero-shot:
+
+- Macro-F1 difference: **+0.0482**, paired bootstrap 95% CI **[+0.0113, +0.0835]**.
+- Attack F1: **0.6692 vs 0.4964**.
+- Safe FPR: **20.57% vs 32.06%**.
+- Holm-corrected McNemar p-value: **8.358e-7**.
+
+These are frozen-set results, not universal model-capability claims.
+
+## 5. Primary-model confusion matrix
+
+```text
+reference\prediction     safe   attack  unknown
 safe                       166       43        0
 attack                       9       88        0
 unknown                     72       35        0
-
 ```
 
-Primary safe recall 0.7943, attack recall
-0.9072, unknown recall 0.0000.
-Observed safe FPR is 43/209; the exact
-Clopper-Pearson 95% upper bound (not a zero-population guarantee) is in `proportions.safeFPR`.
+Material limitations:
 
-## 7. Consensus and adjudication subsets
+- Safe FPR: **43/209 = 20.57%**.
+- Unknown recall: **0/107 = 0%**.
+- The model is attack-sensitive but does not provide reliable abstention.
+- The model is not suitable for autonomous production blocking.
 
-Machine-readable subset results (all locked label-derived subsets, all completed models)
-are in `tables/table-2-subset-results.csv`.
+## 6. Statistical analysis
 
-## 8. Statistical analysis
+- 10,000-draw reference-verdict-stratified bootstrap, seed `20260731`.
+- Paired McNemar tests.
+- Paired bootstrap differences.
+- Holm-Bonferroni correction.
+- Clopper-Pearson and Wilson intervals for proportion metrics.
 
-Each completed metric uses 10,000 reference-verdict-stratified bootstrap draws (seed
-20260731). For the primary model, accuracy 95% CI is
-`0.5835`-`0.6441`,
-macro-F1 95% CI `0.4415`-`0.4894`.
-Paired McNemar + paired bootstrap differences (Holm-Bonferroni corrected) are in section 5
-and `metrics/statistical-analysis.json`. Proportion metrics additionally report
-Clopper-Pearson exact and Wilson score intervals (`proportionIntervals`).
+For AetherArgus HF-LoRA:
 
-## 9. Inference-path ablation
+- Accuracy 95% CI: `[0.5835, 0.6441]`.
+- Macro-F1 95% CI: `[0.4415, 0.4894]`.
 
-With byte-identical serialized prompts, Transformers merged-BF16 vs Ollama f16 verdict agreement was 413/413 (100.0%). Runtime remains coupled to the BF16-to-f16 artifact representation; see `inference-path-ablation-v2.json`.
+Machine-readable results are in `metrics/statistical-analysis.json`.
 
-## 10. Quality-latency-size trade-off
+## 7. Inference-path ablation
 
-Latency (p50/p95/p99/mean) and model size are in `tables/table-4-latency-memory-size.csv` and each
-model's `metrics/*.json` performance block. Cross-stack latency (Transformers GPU generate
-vs Ollama HTTP round-trip) is flagged `crossStackLatencyComparable=false` and is NOT ranked
-as equivalent across runtimes. The rules baseline p50
-(`9.99999e-05` ms) measures only an
-in-process adapter call; the Qwen few-shot p95
-(`259882.680` ms) is retained as an
-observed outlier that requires investigation. Model size is included only when its
-performance block contains filesystem-stat and artifact-SHA provenance.
+Changing only message structure from native `system + user` to one concatenated message changed 11/413 verdicts in both Transformers and Ollama:
 
-## 11. Error analysis
+| Runtime | Native safe FPR | Single-concat safe FPR | Verdict agreement |
+|---|---:|---:|---:|
+| Transformers | 43/209 | 47/209 | 402/413 |
+| Ollama | 43/209 | 48/209 | 402/413 |
 
-Full error-taxonomy counts, representative sampleIds, and sanitized request summaries are in
-`error-analysis.json` and `tables/table-5-error-analysis.csv`.
+With byte-identical HF-pre-serialized prompts, Transformers merged BF16 and Ollama f16 agreed on **413/413** verdicts. This does not prove numerical equivalence outside the frozen set and does not isolate runtime from BF16-to-f16 representation effects.
 
-## 12. Threats and limitations
+## 8. Model size
 
-1. The reference is AI-annotated and AI-adjudicated, not human-verified ground truth.
-2. The set is an authorized challenge capture, not natural production traffic.
-3. An observed low/zero safe FPR is a finite-sample result (Clopper-Pearson upper bound quantifies the residual), not a population guarantee.
-4. Cross-stack latency (Transformers GPU vs Ollama HTTP) is NOT comparable; no fairness ranking is claimed across runtimes.
-5. The rules baseline p50 (9.99999e-05 ms) is an in-process adapter timing, while Qwen few-shot p95 (259882.680 ms) is an observed outlier; both require their stated timing boundaries and are not a fair speed ranking.
-6. Family Macro-F1 uses reference-attack-family labels only; families absent from the reference are not in the denominator.
-7. Cohort mappings were not guessed from sampleId ranges.
-8. 0 locked system(s) did not complete: none.
+| Artifact | Measured size |
+|---|---:|
+| Qwen3-4B base | 8,044,982,000 B |
+| Base + LoRA adapter | 8,177,169,888 B |
+| Merged BF16 | 8,044,982,000 B |
+| f16 GGUF | 8,051,283,232 B |
+| Q4_K_M GGUF | 2,497,278,752 B |
 
-## 13. Reproduction
+Q4_K_M uses approximately 31% of the BF16 storage while preserving most verdict-level performance. The observed Macro-F1 difference between merged BF16 and Q4_K_M was +0.0102 in favor of BF16, with 95% CI `[-0.0043, +0.0249]`.
+
+## 9. Threats and limitations
+
+1. The public human-review evidence is an operator-confirmed attestation; confidential raw reviewer worksheets are not publicly auditable.
+2. Human review occurred after evaluation, although the unchanged label hash preserves the applicability of the existing scoring.
+3. Human confirmation does not make the labels infallible or universally generalizable ground truth.
+4. The challenge set is authorized synthetic/live-captured challenge traffic, not natural production traffic.
+5. The benchmark contains no confirmed successful exploits.
+6. AetherArgus has a 20.57% safe FPR and 0% unknown recall.
+7. Cross-stack latency is not directly comparable because timing boundaries differ.
+8. Q4 and BF16 are not proven equivalent.
+9. The AI annotation systems may share systematic biases; annotator B also has intra-class correlation risk from a deterministic program authored in one model session.
+
+## 10. Reproduction and validation
 
 ```bash
-python3 ml/evaluation/lan_challenge/run_rules_baseline.py \
-  --input ml/data/lan_challenge_capture/model-inputs.jsonl \
-  --output ml/reports/lan-challenge-evaluation/predictions/rules-baseline.jsonl
-python3 ml/evaluation/lan_challenge/score_predictions.py \
-  --model-id rules-baseline \
-  --predictions ml/reports/lan-challenge-evaluation/predictions/rules-baseline.jsonl \
-  --labels ml/data/lan_challenge_capture/adjudication/final-labels.jsonl \
-  --output ml/reports/lan-challenge-evaluation/metrics/rules-baseline.json
-python3 ml/evaluation/lan_challenge/statistical-analysis.py \
-  --labels ml/data/lan_challenge_capture/adjudication/final-labels.jsonl \
-  --predictions-dir ml/reports/lan-challenge-evaluation/predictions \
-  --run-status ml/reports/lan-challenge-evaluation/metrics/run-status.json \
-  --output ml/reports/lan-challenge-evaluation/metrics/statistical-analysis.json
-python3 ml/evaluation/lan_challenge/generate_evidence.py
-python3 ml/evaluation/lan_challenge/validate-paper-evidence.py
+node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js
+node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js
+python ml/evaluation/lan_challenge/validate-paper-evidence.py
 ```
 
-## 14. Failed or unrun items
-
-See `metrics/run-status.json`. No result was copied from an older test set, no
-prediction was duplicated from another model, and no missing run was replaced
-with a heuristic.
+The original frozen evaluation validation remains a historical 27/27 result. The post-evaluation human-review state is validated by the two dataset-side validators and the SHA-bound attestation without rewriting the historical prediction files.

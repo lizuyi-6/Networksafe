@@ -4,18 +4,22 @@ Protocol v1 was committed before the rules baseline; protocol v2 (commit
 files. The frozen set contains 413 request-side samples (input SHA
 \texttt{c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3}, reference-label SHA
 \texttt{13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad}, distribution safe/attack/unknown = 209/97/107).
+The labels were produced through dual-AI annotation, third-AI adjudication, and a
+model-visible-context audit. After the frozen evaluation, a confidential blind human
+review conducted outside the public repository confirmed all 413 labels with zero
+disagreements and zero label changes. Reviewer identities, count, worksheets, and raw
+materials are withheld for confidentiality; the public repository contains a SHA-bound
+operator attestation. Because the label file remained byte-identical, no model rerun or
+rescoring was required.
+
 The six generative systems used the same system prompt (SHA
 \texttt{9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8}), context cap 2048, output cap 320, and deterministic
 decoding. The request-side rule and character n-gram baselines did not receive response
 evidence. The primary model \texttt{aetherargus-v02-hf-lora} achieved accuracy
-0.6150 (95\% stratified-bootstrap CI
-[0.5835, 0.6441])
-and verdict macro-F1 0.4658 (95\% CI
-[0.4415, 0.4894]),
-with observed safe FPR 43/209
-(exact Clopper--Pearson 95\% interval reported, not a population guarantee) and unknown
-recall 0.0000. Paired
-McNemar and paired bootstrap differences against the baselines are Holm-Bonferroni
-corrected; the Transformers-merged-BF16 vs Ollama-f16 diagnostics use byte-identical
-serialized prompts but cannot separate runtime from the BF16-to-f16 artifact
-representation.
+0.6150 (95\% stratified-bootstrap CI [0.5835, 0.6441]) and verdict macro-F1 0.4658
+(95\% CI [0.4415, 0.4894]), with observed safe FPR 43/209 and unknown recall
+0.0000. Relative to Qwen3-4B zero-shot, the macro-F1 difference was +0.0482 with
+paired-bootstrap 95\% CI [+0.0113,+0.0835]. Paired McNemar and paired bootstrap
+differences are Holm--Bonferroni corrected. The Transformers merged-BF16 versus
+Ollama-f16 diagnostics use byte-identical serialized prompts but cannot separate runtime
+from the BF16-to-f16 artifact representation.

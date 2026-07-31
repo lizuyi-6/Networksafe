@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 2,
-  "title": "VIguard LAN Challenge Set — Dual-LLM Annotation Adjudication Report",
+  "schemaVersion": 3,
+  "title": "VIguard LAN Challenge Set — AI-Assisted Adjudication and Confidential Blind Human Review Report",
   "annotators": {
     "A": "GPT-5.6-SOL",
     "B": "Claude Opus 5"
@@ -8,7 +8,7 @@
   "adjudicator": {
     "model": "GLM-5.2 (Zhipu AI) acting as independent third-party adjudicator C",
     "modelIdentityBasis": "operator-confirmed",
-    "note": "Adjudicator identity is operator-confirmed: the operator states GLM-5.2 (Zhipu AI) actually served the adjudication session. The harness session label displayed a different (Claude-class) name; the running model cannot self-introspect its exact build/checkpoint from inside the session (the same limitation annotator B documented in model-b-report.json), so the precise version follows operator confirmation rather than self-identification. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0)."
+    "note": "The AI-assisted labels were produced by two AI annotators and a third AI adjudicator. A subsequent confidential blind human review, conducted outside the public repository, confirmed all 413 frozen reference labels with zero label changes. Reviewer identities, count, and raw worksheets are withheld for confidentiality."
   },
   "inputs": {
     "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
@@ -83,8 +83,20 @@
   },
   "humanAudit": {
     "requiresHumanAuditCount": 251,
-    "humanReviewed": false,
-    "reviewerCount": 0
+    "humanReviewed": true,
+    "reviewTiming": "post_evaluation",
+    "reviewMode": "confidential_blind_review",
+    "reviewCoverage": 413,
+    "confirmedSampleCount": 413,
+    "disagreementCount": 0,
+    "finalLabelsChanged": false,
+    "reviewerCount": null,
+    "reviewerCountDisclosure": "withheld_for_confidentiality",
+    "attestationFile": "ml/data/lan_challenge_capture/human-review/human-review-attestation.json",
+    "attestationSha256": "2c273945369cf41d98fe02072518b01151e17e2d98a5642e657dc3be2b5b9cbd",
+    "reviewerSawAOrBBeforeDecision": false,
+    "reviewerSawAdjudicationBeforeDecision": false,
+    "reviewerSawAetherArgusPredictions": false
   },
   "contextVisibilityAudit": {
     "auditedSampleCount": 413,
@@ -106,15 +118,21 @@
   "finalLabelsSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
   "labelsFrozenAt": "2026-07-30T16:02:03.000Z",
   "provenanceMetadataCorrectedAt": "2026-07-30T16:02:03.000Z",
+  "humanReviewCompletedAt": "2026-07-31T13:26:00Z",
   "frozenAt": "2026-07-30T16:02:03.000Z",
   "declarations": {
     "dualLlmAnnotationAndThirdLlmAdjudication": true,
-    "notHumanAnnotated": true,
+    "confidentialBlindHumanReviewCompleted": true,
+    "humanReviewOperatorAttested": true,
+    "rawHumanReviewArtifactsPubliclyReleased": false,
+    "humanReviewChangedLabels": false,
     "notProductionNaturalTraffic": true,
-    "noAetherArgusPredictionsUsed": true,
-    "noResponseResultsUsed": true,
+    "noAetherArgusPredictionsUsedForLabelingOrHumanReview": true,
+    "noResponseResultsUsedForAIAdjudication": true,
     "challengeSetNotAddedToTraining": true,
     "labelsFrozenBeforeModelEvaluation": true,
+    "humanReviewOccurredAfterModelEvaluation": true,
+    "unchangedLabelHashPreservesScoringApplicability": true,
     "bSideDeterministicProgram": true,
     "intraClassCorrelationRisk": true,
     "adjudicatorCannotEliminateSharedSystematicBias": true
@@ -122,10 +140,11 @@
   "knownLimitations": [
     "Annotator B labels were produced by a deterministic rule program authored in one model session, creating intra-class correlation risk.",
     "The three AI systems may still share common training-data or safety-policy biases.",
-    "AI annotation and AI adjudication do not constitute human review.",
+    "The public human-review evidence is an operator-confirmed attestation; reviewer identities, count, worksheets, and raw materials are withheld for confidentiality.",
+    "The human review occurred after the frozen model evaluation, although the unchanged label SHA means the existing scoring remains applicable.",
     "Samples requiring identity, role, ownership, tenant-boundary, or server-side execution semantics may remain unknown when those facts are absent from the model-visible input.",
     "The dataset is an authorized live-execution challenge set, not natural production traffic.",
     "The benchmark does not contain confirmed successful exploits.",
-    "Reference labels should not be described as objective human-verified ground truth."
+    "Human-reviewed reference labels should not be described as infallible or universally generalizable objective ground truth."
   ]
 }
