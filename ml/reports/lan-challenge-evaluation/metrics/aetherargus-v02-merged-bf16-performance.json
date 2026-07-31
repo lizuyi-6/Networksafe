@@ -1,9 +1,39 @@
 {
-  "modelSizeBytes": null,
-  "peakGpuMemoryMiB": null,
-  "crossStackLatencyComparable": false,
+  "modelSizeBytes": 8044982000,
   "modelSizeMeasurement": {
-    "method": "not_available",
-    "reason": "Prior hard-coded estimate removed; rerun finalize_evidence.py with mounted artifact paths to record filesystem stat plus SHA-256."
-  }
+    "method": "filesystem_stat",
+    "scope": "weight_files_recursive",
+    "path": "D:\\aetherargus-v02-merged",
+    "includedSuffixes": [
+      ".bin",
+      ".gguf",
+      ".pt",
+      ".pth",
+      ".safetensors"
+    ],
+    "componentCount": 3,
+    "components": [
+      {
+        "relativePath": "model-00001-of-00003.safetensors",
+        "sizeBytes": 3981504152,
+        "sha256": "cdbd51010ccd20e1128bab2cd23ed38eb5a6df8eb8e32dfbb157621202834010"
+      },
+      {
+        "relativePath": "model-00002-of-00003.safetensors",
+        "sizeBytes": 3961229912,
+        "sha256": "4e6e363948c50388e1cb094a8025227830859931ec9213b8ac60caf9e273bd77"
+      },
+      {
+        "relativePath": "model-00003-of-00003.safetensors",
+        "sizeBytes": 102247936,
+        "sha256": "ad4ac90ff889d1dad3add494a2cf58f49193e8dd586b9ed49825884e11810814"
+      }
+    ],
+    "artifactSha256": "addbc6ca33c14752700ac26e16998fc7b8d9f773743ab209d618665cd4b628ac",
+    "sizeBytes": 8044982000,
+    "provenanceManifestSha256": "c74bd457f21c83797dec3b22afbe1064e58a20237489f66c69bfd39280c1bd9b"
+  },
+  "peakGpuMemoryMiB": null,
+  "peakHostMemoryMiB": null,
+  "crossStackLatencyComparable": false
 }

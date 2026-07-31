@@ -1,12 +1,12 @@
 \section{Threats to Validity}
 The reference labels were produced by two independent AI annotators, a third AI
 adjudicator, and a model-visible-context audit; they are \emph{not} human-verified
-ground truth. The authorized challenge set is not natural production traffic. Observed
-rates are finite-sample results and do not establish population performance. The primary
-model's unknown recall was zero, so its aggregate accuracy and attack recall must not be
-read as balanced three-class performance. Cross-stack latency is not directly comparable
-because the Transformers and Ollama timing boundaries and overheads differ. Model-size
-values are withheld unless obtained by filesystem stat and tied to an artifact SHA-256.
-The merged BF16 safetensors and f16 GGUF share checkpoint lineage but are not bit-identical,
-so runtime and numeric representation remain coupled. Four predeclared inference-path
-diagnostic prediction files and the hardened strict validation remain incomplete.
+ground truth. The authorized challenge set is not natural production traffic. An observed
+low/zero safe FPR is a finite-sample result whose residual uncertainty is quantified by
+the Clopper-Pearson upper bound, not a population guarantee. Cross-stack latency
+(Transformers GPU generate vs Ollama HTTP round-trip) is not comparable across runtimes.
+Family Macro-F1 uses reference-attack-family labels only. 0 of eight locked
+primary systems did not complete: none.
+The primary model's unknown recall was 0.0000. Model size is reported
+only when derived from filesystem stat and tied to an artifact SHA-256. The merged BF16
+safetensors and f16 GGUF are not bit-identical artifacts.

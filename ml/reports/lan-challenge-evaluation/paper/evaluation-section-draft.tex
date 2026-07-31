@@ -1,24 +1,21 @@
-% DRAFT: primary-run results only; full evidence completion is blocked on four diagnostics.
 \section{Frozen External-Challenge Evaluation}
 Protocol v1 was committed before the rules baseline; protocol v2 (commit
-\texttt{553c0a9317e8c21f616991e92149fc828d7e8902}) was committed before the other seven
-primary prediction files. The frozen set contains 413 request-side samples (input SHA
-\texttt{c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3};
-reference-label SHA
-\texttt{13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad};
-safe/attack/unknown = 209/97/107). The six generative systems used the same system prompt
-(SHA \texttt{9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8}),
-context cap 2048, output cap 320, and deterministic decoding. The rules and character
-n-gram baselines consumed the same model-visible request fields without response evidence.
-
-The primary model \texttt{aetherargus-v02-hf-lora} achieved accuracy 0.6150
-(95\% stratified-bootstrap CI [0.5835, 0.6441]) and verdict macro-F1 0.4658
-(95\% CI [0.4415, 0.4894]), with observed safe FPR 43/209 (Clopper--Pearson
-95\% upper bound 0.2670). Against the strongest non-AetherArgus baseline by verdict
-macro-F1, \texttt{qwen3-4b-zero-shot}, the macro-F1 difference was +0.0482
-(paired 95\% CI [+0.0113,+0.0835]; Holm-adjusted McNemar $p=8.36\times10^{-7}$).
-Unknown recall for the primary model was 0, a material limitation.
-
-The predeclared single-concatenated and byte-identical serialized-prompt diagnostics are
-not yet complete. Therefore this draft makes no causal claim about whether historical FPR
-differences arise from runtime, chat template, serialization, or numeric representation.
+\texttt{553c0a9317e8c21f616991e92149fc828d7e8902}) was committed before the other seven primary prediction
+files. The frozen set contains 413 request-side samples (input SHA
+\texttt{c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3}, reference-label SHA
+\texttt{13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad}, distribution safe/attack/unknown = 209/97/107).
+The six generative systems used the same system prompt (SHA
+\texttt{9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8}), context cap 2048, output cap 320, and deterministic
+decoding. The request-side rule and character n-gram baselines did not receive response
+evidence. The primary model \texttt{aetherargus-v02-hf-lora} achieved accuracy
+0.6150 (95\% stratified-bootstrap CI
+[0.5835, 0.6441])
+and verdict macro-F1 0.4658 (95\% CI
+[0.4415, 0.4894]),
+with observed safe FPR 43/209
+(exact Clopper--Pearson 95\% interval reported, not a population guarantee) and unknown
+recall 0.0000. Paired
+McNemar and paired bootstrap differences against the baselines are Holm-Bonferroni
+corrected; the Transformers-merged-BF16 vs Ollama-f16 diagnostics use byte-identical
+serialized prompts but cannot separate runtime from the BF16-to-f16 artifact
+representation.

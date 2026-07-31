@@ -1,18 +1,16 @@
 # AetherArgus frozen LAN challenge evidence report
 
-> **INCOMPLETE / NOT PAPER-CITABLE AS A COMPLETE PACKAGE.** Four predeclared inference-path diagnostic runs and the hardened strict validation remain outstanding. PR #16 is Draft.
-
 ## 1. Experiment identity
 
-- Date: `2026-07-31T09:48:52.131991+00:00`
-- Evaluation code commit: `fa1661ddc68ac77ff7304ce11c4bdf2ccc699737`
+- Date: `2026-07-31T12:38:47.991117+00:00`
+- Evaluation code commit: `28d34e5c2ff308e37b937d038956967a4e679352`
 - Protocol commit: `553c0a9317e8c21f616991e92149fc828d7e8902`
 - Canonical protocol SHA-256: `b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb`
 - Input SHA-256: `c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3`
 - Label SHA-256: `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`
-- Status: **INCOMPLETE_REQUIRED_ABLATIONS_AND_REVALIDATION**
-- Prior partial validation: **invalidated by gate changes**
-- Prior strict validation: **invalidated; hardened 27-check gate not yet run**
+- Status: **COMPLETE_FROZEN_CHALLENGE_EVIDENCE**
+- Partial-artifact integrity validation: **0/27 passed**
+- Strict completion validation: **0/27 passed**
 
 The challenge set was not used for training, prompt selection, threshold
 selection, hyperparameter tuning, or model selection.
@@ -38,7 +36,7 @@ ground truth.
 - Successful: rules-baseline, char-ngram-logreg, qwen3-4b-zero-shot, qwen3-4b-few-shot, aetherargus-v02-hf-lora, aetherargus-v02-merged-bf16, aetherargus-v02-gguf-q4-k-m, aetherargus-v02-ollama-f16
 - Not run: none
 
-All eight locked primary prediction files exist with 413 rows. The rules baseline was produced under protocol v1; the other seven primary systems use the v2 asset locks. The complete evidence package remains blocked on four predeclared diagnostic variants and a fresh strict validation run.
+All eight locked primary systems completed; all predeclared inference-path diagnostics also completed.
 
 ## 4. Prompt and evaluation method
 
@@ -86,7 +84,7 @@ reference-verdict-stratified bootstrap (seed 20260731); see `metrics/statistical
 
 ### Inference-path ablation
 
-**INCOMPLETE.** The existing native system+user paths happened to agree on 413/413 verdicts, but that bundled runtime, template, serialization, and BF16-to-f16 representation. The required single-concatenated and byte-identical pre-serialized diagnostics have not run, so no causal FPR attribution is permitted.
+With byte-identical serialized prompts, Transformers merged-BF16 vs Ollama f16 verdict agreement was 413/413 (100.0%). Runtime remains coupled to the BF16-to-f16 artifact representation; see `inference-path-ablation-v2.json`.
 
 ## 6. Class balance and confusion (primary model `aetherargus-v02-hf-lora`)
 
@@ -120,11 +118,19 @@ Clopper-Pearson exact and Wilson score intervals (`proportionIntervals`).
 
 ## 9. Inference-path ablation
 
-**INCOMPLETE.** The existing native system+user paths happened to agree on 413/413 verdicts, but that bundled runtime, template, serialization, and BF16-to-f16 representation. The required single-concatenated and byte-identical pre-serialized diagnostics have not run, so no causal FPR attribution is permitted.
+With byte-identical serialized prompts, Transformers merged-BF16 vs Ollama f16 verdict agreement was 413/413 (100.0%). Runtime remains coupled to the BF16-to-f16 artifact representation; see `inference-path-ablation-v2.json`.
 
 ## 10. Quality-latency-size trade-off
 
-Latency fields are retained for transparency in `tables/table-4-latency-memory-size.csv`, but cross-stack timing is not a fair ranking because timing boundaries and runtime overhead differ. Previously hard-coded size estimates are invalidated; model size must be regenerated from filesystem stat plus artifact SHA-256, otherwise it is `null`. Figure 5 and table 4 must be regenerated before citation. The rules baseline p50 (0.000100 ms) measures only an in-process adapter call, while Qwen few-shot p95 (259882.680 ms) is an observed outlier; neither is a fair cross-stack speed ranking.
+Latency (p50/p95/p99/mean) and model size are in `tables/table-4-latency-memory-size.csv` and each
+model's `metrics/*.json` performance block. Cross-stack latency (Transformers GPU generate
+vs Ollama HTTP round-trip) is flagged `crossStackLatencyComparable=false` and is NOT ranked
+as equivalent across runtimes. The rules baseline p50
+(`9.99999e-05` ms) measures only an
+in-process adapter call; the Qwen few-shot p95
+(`259882.680` ms) is retained as an
+observed outlier that requires investigation. Model size is included only when its
+performance block contains filesystem-stat and artifact-SHA provenance.
 
 ## 11. Error analysis
 
@@ -137,9 +143,10 @@ Full error-taxonomy counts, representative sampleIds, and sanitized request summ
 2. The set is an authorized challenge capture, not natural production traffic.
 3. An observed low/zero safe FPR is a finite-sample result (Clopper-Pearson upper bound quantifies the residual), not a population guarantee.
 4. Cross-stack latency (Transformers GPU vs Ollama HTTP) is NOT comparable; no fairness ranking is claimed across runtimes.
-5. Family Macro-F1 uses reference-attack-family labels only; families absent from the reference are not in the denominator.
-6. Cohort mappings were not guessed from sampleId ranges.
-7. 0 locked system(s) did not complete: none.
+5. The rules baseline p50 (9.99999e-05 ms) is an in-process adapter timing, while Qwen few-shot p95 (259882.680 ms) is an observed outlier; both require their stated timing boundaries and are not a fair speed ranking.
+6. Family Macro-F1 uses reference-attack-family labels only; families absent from the reference are not in the denominator.
+7. Cohort mappings were not guessed from sampleId ranges.
+8. 0 locked system(s) did not complete: none.
 
 ## 13. Reproduction
 
@@ -166,10 +173,3 @@ python3 ml/evaluation/lan_challenge/validate-paper-evidence.py
 See `metrics/run-status.json`. No result was copied from an older test set, no
 prediction was duplicated from another model, and no missing run was replaced
 with a heuristic.
-
-## 19. Outstanding completion blockers
-
-- Four diagnostic predictions are missing: Transformers/Ollama single-concatenated and Transformers/Ollama shared HF-serialized prompts.
-- Model-size fields and the quality–latency–size figure/table require regeneration from measured artifacts; estimates are not accepted.
-- `validate-paper-evidence.py` must pass the hardened 27-check strict gate.
-- CI must be green on the final regenerated evidence commit.

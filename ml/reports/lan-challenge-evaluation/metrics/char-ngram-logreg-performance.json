@@ -1,9 +1,10 @@
 {
   "modelSizeBytes": null,
-  "peakGpuMemoryMiB": null,
-  "crossStackLatencyComparable": false,
   "modelSizeMeasurement": {
     "method": "not_available",
-    "reason": "Prior hard-coded estimate removed; rerun finalize_evidence.py with mounted artifact paths to record filesystem stat plus SHA-256."
-  }
+    "reason": "classifier artifact was not persisted; size cannot be recovered reliably"
+  },
+  "peakGpuMemoryMiB": null,
+  "peakHostMemoryMiB": null,
+  "crossStackLatencyComparable": false
 }

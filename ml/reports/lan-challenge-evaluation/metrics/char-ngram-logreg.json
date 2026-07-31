@@ -13,21 +13,21 @@
     "weightedF1": 0.08969323749785514,
     "perClass": {
       "safe": {
-        "precision": 0,
-        "recall": 0,
-        "f1": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "support": 209
       },
       "attack": {
         "precision": 0.2360097323600973,
-        "recall": 1,
+        "recall": 1.0,
         "f1": 0.38188976377952755,
         "support": 97
       },
       "unknown": {
-        "precision": 0,
-        "recall": 0,
-        "f1": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "support": 107
       }
     },
@@ -58,47 +58,47 @@
   },
   "attackDetectionAll": {
     "precision": 0.2360097323600973,
-    "recall": 1,
+    "recall": 1.0,
     "f1": 0.38188976377952755,
     "positiveSupport": 97,
     "negativeSupport": 316
   },
   "attackVsSafeOnly": {
     "precision": 0.31699346405228757,
-    "recall": 1,
+    "recall": 1.0,
     "f1": 0.4813895781637717,
     "positiveSupport": 97,
     "negativeSupport": 209
   },
   "safeFPR": {
-    "rate": 1,
+    "rate": 1.0,
     "falsePositiveCount": 209,
     "safeSupport": 209,
-    "pointEstimate": 1,
+    "pointEstimate": 1.0,
     "numerator": 209,
     "denominator": 209,
     "clopperPearson95": [
       0.9825047104208134,
-      1
+      1.0
     ],
     "wilson95": [
       0.9819515481524193,
-      1
+      1.0
     ],
     "bootstrap95": null
   },
   "proportions": {
     "safeFPR": {
-      "pointEstimate": 1,
+      "pointEstimate": 1.0,
       "numerator": 209,
       "denominator": 209,
       "clopperPearson95": [
         0.9825047104208134,
-        1
+        1.0
       ],
       "wilson95": [
         0.9819515481524193,
-        1
+        1.0
       ],
       "bootstrap95": null
     },
@@ -117,16 +117,16 @@
       "bootstrap95": null
     },
     "attackRecall": {
-      "pointEstimate": 1,
+      "pointEstimate": 1.0,
       "numerator": 97,
       "denominator": 97,
       "clopperPearson95": [
         0.9626843630912639,
-        1
+        1.0
       ],
       "wilson95": [
         0.9619059574740523,
-        1
+        1.0
       ],
       "bootstrap95": null
     },
@@ -145,24 +145,24 @@
       "bootstrap95": null
     },
     "unknownAccuracy": {
-      "pointEstimate": 0,
+      "pointEstimate": 0.0,
       "numerator": 0,
       "denominator": 107,
       "clopperPearson95": [
-        0,
+        0.0,
         0.03388799947401148
       ],
       "wilson95": [
-        0,
+        0.0,
         0.03465723801874867
       ],
       "bootstrap95": null
     }
   },
   "unknown": {
-    "accuracy": 0,
-    "precision": 0,
-    "recall": 0,
+    "accuracy": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
     "support": 107,
     "toAttackRate": 0.9813084112149533,
     "toSafeRate": 0.018691588785046728
@@ -171,10 +171,10 @@
     "status": "NOT_SUPPORTED"
   },
   "structuredOutput": {
-    "jsonSyntaxSuccessRate": 1,
-    "schemaValidRate": 1,
-    "enumValidRate": 1,
-    "completeFieldRate": 1
+    "jsonSyntaxSuccessRate": 1.0,
+    "schemaValidRate": 1.0,
+    "enumValidRate": 1.0,
+    "completeFieldRate": 1.0
   },
   "performance": {
     "p50LatencyMs": 1.2514999998529674,
@@ -187,11 +187,11 @@
     "peakGpuMemoryMiB": null,
     "peakHostMemoryMiB": null,
     "modelSizeBytes": null,
-    "crossStackLatencyComparable": false,
     "modelSizeMeasurement": {
       "method": "not_available",
-      "reason": "Prior hard-coded estimate removed; rerun finalize_evidence.py with mounted artifact paths to record filesystem stat plus SHA-256."
-    }
+      "reason": "classifier artifact was not persisted; size cannot be recovered reliably"
+    },
+    "crossStackLatencyComparable": false
   },
   "subsets": {
     "all_413": {
@@ -199,20 +199,20 @@
       "count": 413,
       "accuracy": 0.23486682808716708,
       "macroF1": 0.1272965879265092,
-      "safeFPR": 1
+      "safeFPR": 1.0
     },
     "context_sufficient_true": {
       "status": "SUCCESS",
       "count": 306,
       "accuracy": 0.31699346405228757,
       "macroF1": 0.16046319272125723,
-      "safeFPR": 1
+      "safeFPR": 1.0
     },
     "context_sufficient_false": {
       "status": "SUCCESS",
       "count": 107,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "consensus": {
@@ -220,55 +220,55 @@
       "count": 160,
       "accuracy": 0.15,
       "macroF1": 0.08695652173913043,
-      "safeFPR": 1
+      "safeFPR": 1.0
     },
     "model_adjudication": {
       "status": "SUCCESS",
       "count": 253,
       "accuracy": 0.2885375494071146,
       "macroF1": 0.15020576131687244,
-      "safeFPR": 1
+      "safeFPR": 1.0
     },
     "safe": {
       "status": "SUCCESS",
       "count": 209,
-      "accuracy": 0,
-      "macroF1": 0,
-      "safeFPR": 1
+      "accuracy": 0.0,
+      "macroF1": 0.0,
+      "safeFPR": 1.0
     },
     "attack": {
       "status": "SUCCESS",
       "count": 97,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.3333333333333333,
       "safeFPR": null
     },
     "unknown": {
       "status": "SUCCESS",
       "count": 107,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "prompt_injection": {
       "status": "SUCCESS",
       "count": 56,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.3333333333333333,
       "safeFPR": null
     },
     "authorization": {
       "status": "SUCCESS",
       "count": 26,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "idor_bola": {
       "status": "SUCCESS",
       "count": 40,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "sqli": {
@@ -288,14 +288,14 @@
     "command_injection": {
       "status": "SUCCESS",
       "count": 8,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.3333333333333333,
       "safeFPR": null
     },
     "path_traversal": {
       "status": "SUCCESS",
       "count": 9,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.3333333333333333,
       "safeFPR": null
     },
@@ -308,5 +308,5 @@
     }
   },
   "predictionCompletedAt": "2026-07-31T02:14:28.350581+00:00",
-  "scoredAt": "2026-07-31T09:35:43.906843+00:00"
+  "scoredAt": "2026-07-31T12:37:02.815900+00:00"
 }

@@ -177,32 +177,32 @@
     "weightedF1": 0.6900485298749,
     "perClass": {
       "command_injection": {
-        "precision": 1,
+        "precision": 1.0,
         "recall": 0.875,
         "f1": 0.9333333333333333,
         "support": 8
       },
       "cors": {
-        "precision": 0,
-        "recall": 0,
-        "f1": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "support": 1
       },
       "csrf": {
-        "precision": 0,
-        "recall": 0,
-        "f1": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "support": 1
       },
       "file_upload": {
         "precision": 0.5,
-        "recall": 1,
+        "recall": 1.0,
         "f1": 0.6666666666666666,
         "support": 2
       },
       "path_traversal": {
         "precision": 0.9,
-        "recall": 1,
+        "recall": 1.0,
         "f1": 0.9473684210526315,
         "support": 9
       },
@@ -213,21 +213,21 @@
         "support": 56
       },
       "sqli": {
-        "precision": 1,
-        "recall": 1,
-        "f1": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "support": 12
       },
       "ssrf": {
-        "precision": 1,
+        "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091,
         "support": 6
       },
       "xss": {
-        "precision": 1,
-        "recall": 1,
-        "f1": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "support": 2
       }
     },
@@ -354,8 +354,8 @@
   "structuredOutput": {
     "jsonSyntaxSuccessRate": 0.9975786924939467,
     "schemaValidRate": 0.9975786924939467,
-    "enumValidRate": 1,
-    "completeFieldRate": 1
+    "enumValidRate": 1.0,
+    "completeFieldRate": 1.0
   },
   "performance": {
     "p50LatencyMs": 4977.074999998877,
@@ -367,12 +367,40 @@
     "outputTokensPerSecond": 0.6861937324560595,
     "peakGpuMemoryMiB": null,
     "peakHostMemoryMiB": null,
-    "modelSizeBytes": null,
-    "crossStackLatencyComparable": false,
+    "modelSizeBytes": 8044982000,
     "modelSizeMeasurement": {
-      "method": "not_available",
-      "reason": "Prior hard-coded estimate removed; rerun finalize_evidence.py with mounted artifact paths to record filesystem stat plus SHA-256."
-    }
+      "method": "filesystem_stat",
+      "scope": "weight_files_recursive",
+      "path": "ml\\output\\base-model",
+      "includedSuffixes": [
+        ".bin",
+        ".gguf",
+        ".pt",
+        ".pth",
+        ".safetensors"
+      ],
+      "componentCount": 3,
+      "components": [
+        {
+          "relativePath": "model-00001-of-00003.safetensors",
+          "sizeBytes": 3957900840,
+          "sha256": "75311d91bb08cf0b882913da464a1e722a31fb44db35208663487efb7a3d8ed6"
+        },
+        {
+          "relativePath": "model-00002-of-00003.safetensors",
+          "sizeBytes": 3987450520,
+          "sha256": "0b48adbb1f60e901153d91907ba11ce63bd4b8b584482e730f48808d055dfba1"
+        },
+        {
+          "relativePath": "model-00003-of-00003.safetensors",
+          "sizeBytes": 99630640,
+          "sha256": "7dd39ccca5e4de123c74c14af44c9bf2eb75df33b4614382af0134528e060d5d"
+        }
+      ],
+      "artifactSha256": "bdec48103953e491f3a62548537f572479147de65620ba703ad614a030121688",
+      "sizeBytes": 8044982000
+    },
+    "crossStackLatencyComparable": false
   },
   "subsets": {
     "all_413": {
@@ -448,8 +476,8 @@
     "idor_bola": {
       "status": "SUCCESS",
       "count": 40,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "sqli": {
@@ -469,14 +497,14 @@
     "command_injection": {
       "status": "SUCCESS",
       "count": 8,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.3333333333333333,
       "safeFPR": null
     },
     "path_traversal": {
       "status": "SUCCESS",
       "count": 9,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.3333333333333333,
       "safeFPR": null
     },
@@ -489,5 +517,5 @@
     }
   },
   "predictionCompletedAt": "2026-07-31T07:14:32.770636+00:00",
-  "scoredAt": "2026-07-31T09:35:46.454208+00:00"
+  "scoredAt": "2026-07-31T12:37:06.108547+00:00"
 }

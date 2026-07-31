@@ -66,6 +66,5 @@
       "predictionSha256": "5cdfa70e5478f4c619b902a45b6937d2a08e160baff8402777b94d7b603d1351",
       "metricsFile": "ml/reports/lan-challenge-evaluation/metrics/aetherargus-v02-ollama-f16.json"
     }
-  ],
-  "evidenceStatus": "PRIMARY_RUNS_COMPLETE_DIAGNOSTICS_PENDING"
+  ]
 }

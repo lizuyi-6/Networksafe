@@ -1,14 +1,12 @@
 {
   "schemaVersion": 3,
-  "status": "INCOMPLETE",
-  "reason": "Required predeclared diagnostic prediction files are missing.",
-  "missingPredictionFiles": [
-    "ml/reports/lan-challenge-evaluation/predictions/ablation/aetherargus-v02-merged-bf16-single-concat.jsonl",
-    "ml/reports/lan-challenge-evaluation/predictions/ablation/aetherargus-v02-ollama-f16-single-concat.jsonl",
-    "ml/reports/lan-challenge-evaluation/predictions/ablation/aetherargus-v02-merged-bf16-hf-serialized.jsonl",
-    "ml/reports/lan-challenge-evaluation/predictions/ablation/aetherargus-v02-ollama-f16-hf-serialized.jsonl"
-  ],
-  "requiredOperatorAction": "Run all commands in inference-path-ablation-plan.md on the frozen operator environment, commit the four diagnostic prediction files, then rerun this scorer and strict validation.",
+  "status": "COMPLETE",
+  "sampleCount": 413,
+  "artifactRelationship": {
+    "sameCheckpointLineage": true,
+    "bitIdenticalArtifacts": false,
+    "note": "Transformers uses merged BF16 safetensors and Ollama uses an f16 GGUF conversion. Runtime and numeric representation remain coupled in cross-runtime comparisons; the artifacts are not claimed to be bit-identical."
+  },
   "controlledVariables": {
     "contextLengthTokens": 2048,
     "systemPromptSha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
@@ -20,5 +18,203 @@
     },
     "maxNewTokens": 320,
     "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3"
-  }
+  },
+  "diagnostics": {
+    "systemUserVsSingleConcat": {
+      "status": "SUCCESS",
+      "changedVariable": "chat message structure only within each runtime",
+      "sampleCountPerVariant": 413,
+      "transformers": {
+        "leftModelId": "aetherargus-v02-merged-bf16",
+        "rightModelId": "aetherargus-v02-merged-bf16-single-concat",
+        "sampleCount": 413,
+        "verdictAgreement": {
+          "agree": 402,
+          "total": 413,
+          "rate": 0.9733656174334141,
+          "clopperPearson95": [
+            0.9528442322685687,
+            0.986630855907984
+          ]
+        },
+        "verdictDisagreementBreakdown": {
+          "attack->safe": 6,
+          "safe->attack": 5
+        },
+        "safeFPR": {
+          "left": {
+            "falsePositiveCount": 43,
+            "safeSupport": 209,
+            "rate": 0.20574162679425836
+          },
+          "right": {
+            "falsePositiveCount": 47,
+            "safeSupport": 209,
+            "rate": 0.22488038277511962
+          },
+          "deltaRightMinusLeft": 0.01913875598086126
+        }
+      },
+      "ollama": {
+        "leftModelId": "aetherargus-v02-ollama-f16",
+        "rightModelId": "aetherargus-v02-ollama-f16-single-concat",
+        "sampleCount": 413,
+        "verdictAgreement": {
+          "agree": 402,
+          "total": 413,
+          "rate": 0.9733656174334141,
+          "clopperPearson95": [
+            0.9528442322685687,
+            0.986630855907984
+          ]
+        },
+        "verdictDisagreementBreakdown": {
+          "attack->safe": 5,
+          "safe->attack": 6
+        },
+        "safeFPR": {
+          "left": {
+            "falsePositiveCount": 43,
+            "safeSupport": 209,
+            "rate": 0.20574162679425836
+          },
+          "right": {
+            "falsePositiveCount": 48,
+            "safeSupport": 209,
+            "rate": 0.22966507177033493
+          },
+          "deltaRightMinusLeft": 0.02392344497607657
+        }
+      }
+    },
+    "sharedSerializedPromptAcrossRuntimes": {
+      "status": "SUCCESS",
+      "changedVariable": "runtime plus unavoidable BF16-to-f16 artifact representation; prompt bytes are identical per sample",
+      "sampleCountPerVariant": 413,
+      "comparison": {
+        "leftModelId": "aetherargus-v02-merged-bf16-hf-serialized",
+        "rightModelId": "aetherargus-v02-ollama-f16-hf-serialized",
+        "sampleCount": 413,
+        "verdictAgreement": {
+          "agree": 413,
+          "total": 413,
+          "rate": 1.0,
+          "clopperPearson95": [
+            0.9911078595119468,
+            1.0
+          ]
+        },
+        "verdictDisagreementBreakdown": {},
+        "safeFPR": {
+          "left": {
+            "falsePositiveCount": 43,
+            "safeSupport": 209,
+            "rate": 0.20574162679425836
+          },
+          "right": {
+            "falsePositiveCount": 43,
+            "safeSupport": 209,
+            "rate": 0.20574162679425836
+          },
+          "deltaRightMinusLeft": 0.0
+        }
+      }
+    },
+    "nativeTemplateVsSharedHfSerialization": {
+      "status": "SUCCESS",
+      "changedVariable": "native chat-template application versus a pre-serialized Transformers template within each runtime",
+      "sampleCountPerVariant": 413,
+      "transformers": {
+        "leftModelId": "aetherargus-v02-merged-bf16",
+        "rightModelId": "aetherargus-v02-merged-bf16-hf-serialized",
+        "sampleCount": 413,
+        "verdictAgreement": {
+          "agree": 413,
+          "total": 413,
+          "rate": 1.0,
+          "clopperPearson95": [
+            0.9911078595119468,
+            1.0
+          ]
+        },
+        "verdictDisagreementBreakdown": {},
+        "safeFPR": {
+          "left": {
+            "falsePositiveCount": 43,
+            "safeSupport": 209,
+            "rate": 0.20574162679425836
+          },
+          "right": {
+            "falsePositiveCount": 43,
+            "safeSupport": 209,
+            "rate": 0.20574162679425836
+          },
+          "deltaRightMinusLeft": 0.0
+        }
+      },
+      "ollama": {
+        "leftModelId": "aetherargus-v02-ollama-f16",
+        "rightModelId": "aetherargus-v02-ollama-f16-hf-serialized",
+        "sampleCount": 413,
+        "verdictAgreement": {
+          "agree": 413,
+          "total": 413,
+          "rate": 1.0,
+          "clopperPearson95": [
+            0.9911078595119468,
+            1.0
+          ]
+        },
+        "verdictDisagreementBreakdown": {},
+        "safeFPR": {
+          "left": {
+            "falsePositiveCount": 43,
+            "safeSupport": 209,
+            "rate": 0.20574162679425836
+          },
+          "right": {
+            "falsePositiveCount": 43,
+            "safeSupport": 209,
+            "rate": 0.20574162679425836
+          },
+          "deltaRightMinusLeft": 0.0
+        }
+      }
+    }
+  },
+  "nativeSystemUserCrossRuntime": {
+    "leftModelId": "aetherargus-v02-merged-bf16",
+    "rightModelId": "aetherargus-v02-ollama-f16",
+    "sampleCount": 413,
+    "verdictAgreement": {
+      "agree": 413,
+      "total": 413,
+      "rate": 1.0,
+      "clopperPearson95": [
+        0.9911078595119468,
+        1.0
+      ]
+    },
+    "verdictDisagreementBreakdown": {},
+    "safeFPR": {
+      "left": {
+        "falsePositiveCount": 43,
+        "safeSupport": 209,
+        "rate": 0.20574162679425836
+      },
+      "right": {
+        "falsePositiveCount": 43,
+        "safeSupport": 209,
+        "rate": 0.20574162679425836
+      },
+      "deltaRightMinusLeft": 0.0
+    }
+  },
+  "interpretationLimits": [
+    "The challenge set was not used to choose prompts or runtime settings.",
+    "A zero observed verdict difference does not prove numerical equivalence outside these 413 inputs.",
+    "The cross-runtime comparison cannot separate runtime effects from the BF16-to-f16 artifact representation without a bit-identical backend pair.",
+    "Latency remains non-comparable across stacks because timing boundaries and hardware/runtime overhead differ."
+  ],
+  "conclusion": "With byte-identical pre-serialized prompts, the Transformers merged-BF16 and Ollama f16 paths agreed on 413/413 verdicts (100.0%) on this frozen set. The within-runtime message-structure comparisons quantify template/serialization sensitivity. Any residual cross-runtime effect still combines runtime and BF16-to-f16 representation and must not be attributed to quantization alone."
 }

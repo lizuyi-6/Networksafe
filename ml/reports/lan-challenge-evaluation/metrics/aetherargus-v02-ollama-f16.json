@@ -25,9 +25,9 @@
         "support": 97
       },
       "unknown": {
-        "precision": 0,
-        "recall": 0,
-        "f1": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "support": 107
       }
     },
@@ -145,24 +145,24 @@
       "bootstrap95": null
     },
     "unknownAccuracy": {
-      "pointEstimate": 0,
+      "pointEstimate": 0.0,
       "numerator": 0,
       "denominator": 107,
       "clopperPearson95": [
-        0,
+        0.0,
         0.03388799947401148
       ],
       "wilson95": [
-        0,
+        0.0,
         0.03465723801874867
       ],
       "bootstrap95": null
     }
   },
   "unknown": {
-    "accuracy": 0,
-    "precision": 0,
-    "recall": 0,
+    "accuracy": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
     "support": 107,
     "toAttackRate": 0.3177570093457944,
     "toSafeRate": 0.6822429906542056
@@ -178,56 +178,56 @@
     "perClass": {
       "command_injection": {
         "precision": 0.8888888888888888,
-        "recall": 1,
+        "recall": 1.0,
         "f1": 0.9411764705882353,
         "support": 8
       },
       "cors": {
-        "precision": 0,
-        "recall": 0,
-        "f1": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "support": 1
       },
       "csrf": {
-        "precision": 0,
-        "recall": 0,
-        "f1": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "support": 1
       },
       "file_upload": {
         "precision": 0.2857142857142857,
-        "recall": 1,
+        "recall": 1.0,
         "f1": 0.4444444444444444,
         "support": 2
       },
       "path_traversal": {
-        "precision": 1,
-        "recall": 1,
-        "f1": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "support": 9
       },
       "prompt_injection": {
-        "precision": 1,
+        "precision": 1.0,
         "recall": 0.8035714285714286,
         "f1": 0.8910891089108911,
         "support": 56
       },
       "sqli": {
-        "precision": 1,
-        "recall": 1,
-        "f1": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "support": 12
       },
       "ssrf": {
-        "precision": 1,
+        "precision": 1.0,
         "recall": 0.3333333333333333,
         "f1": 0.5,
         "support": 6
       },
       "xss": {
-        "precision": 1,
-        "recall": 1,
-        "f1": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "support": 2
       }
     },
@@ -352,10 +352,10 @@
     "predictedNoneOnAttackCount": 9
   },
   "structuredOutput": {
-    "jsonSyntaxSuccessRate": 1,
-    "schemaValidRate": 1,
-    "enumValidRate": 1,
-    "completeFieldRate": 1
+    "jsonSyntaxSuccessRate": 1.0,
+    "schemaValidRate": 1.0,
+    "enumValidRate": 1.0,
+    "completeFieldRate": 1.0
   },
   "performance": {
     "p50LatencyMs": 1678.8912000010896,
@@ -367,12 +367,15 @@
     "outputTokensPerSecond": 14.529801594102771,
     "peakGpuMemoryMiB": null,
     "peakHostMemoryMiB": null,
-    "modelSizeBytes": null,
-    "crossStackLatencyComparable": false,
+    "modelSizeBytes": 8051283232,
     "modelSizeMeasurement": {
-      "method": "not_available",
-      "reason": "Prior hard-coded estimate removed; rerun finalize_evidence.py with mounted artifact paths to record filesystem stat plus SHA-256."
-    }
+      "method": "filesystem_stat",
+      "scope": "single_file",
+      "path": "D:\\aetherargus-v02-gguf\\aetherargus-v02-f16.gguf",
+      "artifactSha256": "7f134c21a1a685343573e313198b933f5ce5e78dc239635245aee24327a2ce48",
+      "sizeBytes": 8051283232
+    },
+    "crossStackLatencyComparable": false
   },
   "subsets": {
     "all_413": {
@@ -392,16 +395,16 @@
     "context_sufficient_false": {
       "status": "SUCCESS",
       "count": 107,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "consensus": {
       "status": "SUCCESS",
       "count": 160,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.6666666666666666,
-      "safeFPR": 0
+      "safeFPR": 0.0
     },
     "model_adjudication": {
       "status": "SUCCESS",
@@ -427,8 +430,8 @@
     "unknown": {
       "status": "SUCCESS",
       "count": 107,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "prompt_injection": {
@@ -441,15 +444,15 @@
     "authorization": {
       "status": "SUCCESS",
       "count": 26,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "idor_bola": {
       "status": "SUCCESS",
       "count": 40,
-      "accuracy": 0,
-      "macroF1": 0,
+      "accuracy": 0.0,
+      "macroF1": 0.0,
       "safeFPR": null
     },
     "sqli": {
@@ -469,14 +472,14 @@
     "command_injection": {
       "status": "SUCCESS",
       "count": 8,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.3333333333333333,
       "safeFPR": null
     },
     "path_traversal": {
       "status": "SUCCESS",
       "count": 9,
-      "accuracy": 1,
+      "accuracy": 1.0,
       "macroF1": 0.3333333333333333,
       "safeFPR": null
     },
@@ -489,5 +492,5 @@
     }
   },
   "predictionCompletedAt": "2026-07-31T09:33:06.404043+00:00",
-  "scoredAt": "2026-07-31T09:35:51.606623+00:00"
+  "scoredAt": "2026-07-31T12:37:13.668320+00:00"
 }

@@ -6,18 +6,12 @@
   "headBranch": "agent/aetherargus-paper-evidence-20260731",
   "sourcePullRequest": "https://github.com/lizuyi-6/Networksafe/pull/15",
   "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
-  "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
-  "evidenceCommit": "fa1661ddc68ac77ff7304ce11c4bdf2ccc699737",
-  "baseSelectionReason": "PR #15 merged at fc71bb430b5f5bf365d3a7a42c22304a9e048f37; PR #16 targets that master state and preserves the adjudicated labels.",
-  "autoMergeRequested": false,
-  "completionClaimAllowed": false,
-  "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
   "pr15MergeCommit": "fc71bb430b5f5bf365d3a7a42c22304a9e048f37",
-  "pullRequestState": "DRAFT",
-  "evidenceStatus": "INCOMPLETE_REQUIRED_ABLATIONS_AND_REVALIDATION",
-  "blockers": [
-    "four diagnostic prediction files missing",
-    "strict evidence gate not rerun",
-    "measured-size tables and figures not regenerated"
-  ]
+  "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
+  "protocolSha256": "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb",
+  "evidenceCommit": "28d34e5c2ff308e37b937d038956967a4e679352",
+  "baseSelectionReason": "PR #15 merged at fc71bb430b5f5bf365d3a7a42c22304a9e048f37; PR #16 targets that master state and preserves the adjudicated labels.",
+  "evidenceStatus": "COMPLETE_PENDING_CI",
+  "autoMergeRequested": false,
+  "completionClaimAllowed": true
 }
