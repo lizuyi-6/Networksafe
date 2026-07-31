@@ -8,7 +8,7 @@
 - [x] Add the company affiliation and registered address.
 - [ ] Verify the official English company name and translated address against the business-registration record.
 - [ ] Confirm that postal code 071700 is appropriate for the company's preferred mailing address.
-- [ ] Add the corresponding-author phone number in Editorial Manager.
+- [x] Add the corresponding-author phone number: +86 152 2722 5280.
 - [x] Record the current funding statement: no external grant funding.
 - [x] Add a company-specific potential competing-interest disclosure.
 - [ ] Generate the required declaration .doc/.docx through Elsevier's declarations tool.
