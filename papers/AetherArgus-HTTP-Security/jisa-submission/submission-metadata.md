@@ -35,7 +35,7 @@ Abstract word count: 197.
 - Chinese name: 李祖祎
 - Role: sole author and corresponding author
 - Email: 2251213429@qq.com
-- Phone: [REQUIRED BY SUBMISSION CHECKLIST]
+- Phone: +86 152 2722 5280
 - Affiliation: Hebei Xiong'an Qiongyu Technology Co., Ltd.
 - Chinese legal name: 河北雄安穹驭科技有限公司
 - Registered address (Chinese): 中国（河北）自由贸易试验区雄安片区雄安高新区服务中心621-045（自主申报）
