@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "generate_rules_manifest.ts (imports buildSeedDetectionRules from the frozen engine)",
+  "formalBaseline": {
+    "systemId": "rules-baseline",
+    "implementation": "offline detection-engine adapter (rules_engine_adapter.ts) calling buildSeedDetectionRules + evaluateDetectionRules",
+    "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+    "sourceFile": "backend/src/services/detection-engine.ts",
+    "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+    "seedRuleCount": 8,
+    "challengeResultUsed": false,
+    "verdictMapping": {
+      "block": "attack",
+      "monitor_review_only": "unknown",
+      "no_match": "safe"
+    },
+    "rules": [
+      {
+        "ruleId": "seed-sqli-union",
+        "name": "SQLi UNION SELECT",
+        "attackFamily": "sqli",
+        "action": "block",
+        "priority": 1000,
+        "severity": "critical",
+        "scope": "all",
+        "matcher": {
+          "keywordPatterns": [
+            "(?:\\s|%20)union(?:\\s|%20)+(?:all(?:\\s|%20)+)?select"
+          ]
+        },
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "sourceFile": "backend/src/services/detection-engine.ts",
+        "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+        "transformation": "none",
+        "role": "formal_seed",
+        "challengeResultUsed": false
+      },
+      {
+        "ruleId": "seed-sqli-auth-bypass",
+        "name": "SQLi Auth Bypass",
+        "attackFamily": "sqli",
+        "action": "block",
+        "priority": 995,
+        "severity": "high",
+        "scope": "all",
+        "matcher": {
+          "keywordPatterns": [
+            "'\\s*or\\s*'1'\\s*=\\s*'1",
+            "'\\s*or\\s*1\\s*=\\s*1"
+          ]
+        },
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "sourceFile": "backend/src/services/detection-engine.ts",
+        "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+        "transformation": "none",
+        "role": "formal_seed",
+        "challengeResultUsed": false
+      },
+      {
+        "ruleId": "seed-sqli-stacked",
+        "name": "SQLi Stacked Query",
+        "attackFamily": "sqli",
+        "action": "block",
+        "priority": 1000,
+        "severity": "critical",
+        "scope": "all",
+        "matcher": {
+          "keywordPatterns": [
+            ";\\s*(drop|delete|insert|update|alter|truncate|create)\\b"
+          ]
+        },
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "sourceFile": "backend/src/services/detection-engine.ts",
+        "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+        "transformation": "none",
+        "role": "formal_seed",
+        "challengeResultUsed": false
+      },
+      {
+        "ruleId": "seed-xss-script",
+        "name": "XSS Script Tag",
+        "attackFamily": "xss",
+        "action": "block",
+        "priority": 1000,
+        "severity": "critical",
+        "scope": "all",
+        "matcher": {
+          "keywordPatterns": [
+            "<script[^>]*>",
+            "</script>",
+            "javascript:"
+          ]
+        },
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "sourceFile": "backend/src/services/detection-engine.ts",
+        "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+        "transformation": "none",
+        "role": "formal_seed",
+        "challengeResultUsed": false
+      },
+      {
+        "ruleId": "seed-path-traversal",
+        "name": "Path Traversal",
+        "attackFamily": "path_traversal",
+        "action": "block",
+        "priority": 1000,
+        "severity": "critical",
+        "scope": "all",
+        "matcher": {
+          "keywordPatterns": [
+            "\\.\\./",
+            "\\.\\.%2[fF]",
+            "%2e%2e%2f",
+            "/etc/passwd",
+            "/etc/shadow",
+            "\\.env\\b",
+            "\\.git/"
+          ]
+        },
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "sourceFile": "backend/src/services/detection-engine.ts",
+        "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+        "transformation": "none",
+        "role": "formal_seed",
+        "challengeResultUsed": false
+      },
+      {
+        "ruleId": "seed-command-injection",
+        "name": "Command Injection",
+        "attackFamily": "command_injection",
+        "action": "block",
+        "priority": 1000,
+        "severity": "critical",
+        "scope": "all",
+        "matcher": {
+          "keywordPatterns": [
+            ";\\s*(cat|ls|curl|wget|bash|sh|whoami|id|uname)\\b",
+            "\\|\\s*(cat|ls|curl|wget|bash|sh|whoami|id|uname)\\b",
+            "`[^`]+`",
+            "\\$\\([^)]+\\)"
+          ]
+        },
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "sourceFile": "backend/src/services/detection-engine.ts",
+        "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+        "transformation": "none",
+        "role": "formal_seed",
+        "challengeResultUsed": false
+      },
+      {
+        "ruleId": "seed-ssrf-review",
+        "name": "SSRF Metadata Probe",
+        "attackFamily": "ssrf",
+        "action": "review",
+        "priority": 450,
+        "severity": "medium",
+        "scope": "http_api",
+        "matcher": {
+          "keywordPatterns": [
+            "169\\.254\\.169\\.254",
+            "metadata\\.google\\.internal",
+            "latest/meta-data"
+          ]
+        },
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "sourceFile": "backend/src/services/detection-engine.ts",
+        "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+        "transformation": "none",
+        "role": "formal_seed",
+        "challengeResultUsed": false
+      },
+      {
+        "ruleId": "seed-automation-review",
+        "name": "Suspicious Automation User-Agent",
+        "attackFamily": "automation",
+        "action": "review",
+        "priority": 420,
+        "severity": "medium",
+        "scope": "all",
+        "matcher": {
+          "userAgentPatterns": [
+            "sqlmap",
+            "nikto",
+            "masscan",
+            "zgrab",
+            "curl/",
+            "wget/",
+            "python-requests",
+            "axios",
+            "headless",
+            "selenium",
+            "scrapy",
+            "crawler",
+            "spider",
+            "bot"
+          ]
+        },
+        "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
+        "sourceFile": "backend/src/services/detection-engine.ts",
+        "sourceBlobSha1": "95654206590b7fb733d1425b280e7dfacc8c20ba",
+        "transformation": "none",
+        "role": "formal_seed",
+        "challengeResultUsed": false
+      }
+    ]
+  },
+  "researchAugmentedRules": {
+    "systemId": "research-augmented-rules",
+    "status": "downgraded_out_of_formal_baseline",
+    "challengeResultUsed": true,
+    "reason": "families absent from the repository seed table; authored with knowledge of challenge attack categories; reported separately, not one of the 8 locked systems",
+    "rules": [
+      {
+        "ruleId": "research-augmented-xss",
+        "attackFamily": "xss",
+        "pattern": "(?:<script\\b|javascript:|on(?:error|load|click|mouseover)\\s*=)",
+        "note": "expands seed xss (script tag / javascript:) with on* event-handler and entity-encoded variants",
+        "sourceCommit": null,
+        "sourceFile": null,
+        "transformation": "authored",
+        "role": "research_augmented_not_from_repo_engine",
+        "challengeResultUsed": true,
+        "reportingRole": "secondary_exploratory_only_not_a_locked_system"
+      },
+      {
+        "ruleId": "research-augmented-ssrf",
+        "attackFamily": "ssrf",
+        "pattern": "(?:https?://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0|\\[?::1\\]?|169\\.254\\.169\\.254|metadata\\.google\\.internal|100\\.100\\.100\\.200)|(?:dict|file|gopher|ldap|ftp|tftp|jar|netdoc|php)://)",
+        "note": "expands seed ssrf (metadata endpoints, review-tier) with loopback and dangerous-scheme variants, promoted to block-tier",
+        "sourceCommit": null,
+        "sourceFile": null,
+        "transformation": "authored",
+        "role": "research_augmented_not_from_repo_engine",
+        "challengeResultUsed": true,
+        "reportingRole": "secondary_exploratory_only_not_a_locked_system"
+      },
+      {
+        "ruleId": "research-augmented-file-upload",
+        "attackFamily": "file_upload",
+        "pattern": "(?:\\b\\w+\\.(?:phtml|php\\d?|asp|aspx|jspx?|cgi|sh|exe|war)\\b|\\b\\w+\\.(?:jpg|png|gif|pdf|txt)\\.(?:php|asp|jsp|exe|sh)\\b|<\\?(?:php|=)?[\\s\\S]{0,80}(?:system|exec|passthru|shell_exec|eval)\\s*\\()",
+        "note": "no repository seed rule; authored for the file_upload challenge category",
+        "sourceCommit": null,
+        "sourceFile": null,
+        "transformation": "authored",
+        "role": "research_augmented_not_from_repo_engine",
+        "challengeResultUsed": true,
+        "reportingRole": "secondary_exploratory_only_not_a_locked_system"
+      },
+      {
+        "ruleId": "research-augmented-protocol-attack",
+        "attackFamily": "protocol_attack",
+        "pattern": "(?:Content-Length:\\s*\\d+[\\s\\S]{0,200}Transfer-Encoding:\\s*chunked|Transfer-Encoding:\\s*chunked[\\s\\S]{0,200}Content-Length:\\s*\\d+)",
+        "note": "no repository seed rule; HTTP request-smuggling signature authored for the protocol_attack category",
+        "sourceCommit": null,
+        "sourceFile": null,
+        "transformation": "authored",
+        "role": "research_augmented_not_from_repo_engine",
+        "challengeResultUsed": true,
+        "reportingRole": "secondary_exploratory_only_not_a_locked_system"
+      },
+      {
+        "ruleId": "research-augmented-authentication",
+        "attackFamily": "authentication",
+        "pattern": "(?:eyJhbGciOiJub25l[A-Za-z0-9_-]{0,80}\\.|\"type\"\\s*:\\s*\"(?:change_password|change_role|grant_admin|disable_mfa|reset_password)\")",
+        "note": "no repository seed rule; JWT alg=none and privilege-change token signatures for the authentication category",
+        "sourceCommit": null,
+        "sourceFile": null,
+        "transformation": "authored",
+        "role": "research_augmented_not_from_repo_engine",
+        "challengeResultUsed": true,
+        "reportingRole": "secondary_exploratory_only_not_a_locked_system"
+      },
+      {
+        "ruleId": "research-augmented-prompt-injection",
+        "attackFamily": "prompt_injection",
+        "pattern": "(?:ignore (?:all |the )?(?:previous|prior) instructions|忽略(?:之前|以上|前面)的(?:所有)?指令|system prompt|reveal (?:your )?(?:instructions|prompt))",
+        "note": "no repository seed rule; LLM-prompt-injection phrases for the prompt_injection category",
+        "sourceCommit": null,
+        "sourceFile": null,
+        "transformation": "authored",
+        "role": "research_augmented_not_from_repo_engine",
+        "challengeResultUsed": true,
+        "reportingRole": "secondary_exploratory_only_not_a_locked_system"
+      }
+    ]
+  }
+}
