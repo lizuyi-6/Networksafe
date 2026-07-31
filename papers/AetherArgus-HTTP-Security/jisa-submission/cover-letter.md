@@ -1,4 +1,4 @@
-[DATE]
+31 July 2026
 
 Editor-in-Chief
 Journal of Information Security and Applications
@@ -15,13 +15,14 @@ AetherArgus improves macro-F1 from 0.4175 for zero-shot Qwen3-4B to 0.4658, with
 
 I believe the manuscript fits JISA’s emphasis on original and practice-driven information-security research because it addresses network and application security, model robustness, reproducibility, operational false positives, and responsible deployment. The complete source, protocols, statistical outputs, and claim-to-evidence mappings are maintained in the associated repository. Operationally sensitive raw captures and confidential reviewer worksheets are not publicly released, and this limitation is stated in the manuscript.
 
-The manuscript is original, has not been published previously, and is not under consideration elsewhere. I approve the final version and take responsibility for the integrity of the work. Funding and competing interests are declared in the manuscript and will also be entered in the submission system. The use of OpenAI ChatGPT for manuscript organization, language drafting, and consistency checking is disclosed in accordance with Elsevier policy; I reviewed and verified the content and retain full responsibility for it.
+The manuscript is original, has not been published previously, and is not under consideration elsewhere. I approve the final version and take responsibility for the integrity of the work. I am the founder of the affiliated company, and this potential competing interest is disclosed in the manuscript and will be entered through Elsevier’s declarations tool. The work received no external grant funding. The use of OpenAI ChatGPT for manuscript organization, language drafting, and consistency checking is disclosed in accordance with Elsevier policy; I reviewed and verified the content and retain full responsibility for it.
 
 Thank you for considering this manuscript.
 
 Sincerely,
 
 Zuyi Li
+Founder
 Hebei Xiong'an Qiongyu Technology Co., Ltd.
 No. 621-045, Xiong'an High-tech Zone Service Center
 Xiong'an Area, China (Hebei) Pilot Free Trade Zone
