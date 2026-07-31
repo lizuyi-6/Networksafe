@@ -265,6 +265,10 @@ def main() -> int:
     )
     run([sys.executable, str(EVAL / "generate_evidence.py")])
     run([sys.executable, str(EVAL / "validate-paper-evidence.py")])
+    # Embed the fresh validation result into the report, then verify the regenerated
+    # report/manifest/claim files once more. HEAD does not change during these steps.
+    run([sys.executable, str(EVAL / "generate_evidence.py")])
+    run([sys.executable, str(EVAL / "validate-paper-evidence.py")])
     print("\nFINALIZE_DONE")
     return 0
 
