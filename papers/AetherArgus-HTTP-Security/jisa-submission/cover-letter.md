@@ -27,4 +27,4 @@ No. 621-045, Xiong'an High-tech Zone Service Center
 Xiong'an Area, China (Hebei) Pilot Free Trade Zone
 Xiong'an New Area, Hebei 071700, China
 2251213429@qq.com
-[PHONE]
++86 152 2722 5280
