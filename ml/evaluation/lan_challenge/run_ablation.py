@@ -1,16 +1,9 @@
 #!/usr/bin/env python3
-"""Inference-path ablation: Transformers merged BF16 vs Ollama f16 (protocol v2).
+"""Score predeclared, one-variable inference-path diagnostics.
 
-Both runs share the SAME weights (the f16 GGUF is a lossless cast of the merged BF16), the
-SAME locked system prompt (system-prompt.txt, SHA 9b07be6e), the SAME message structure
-(system+user), the SAME sampling (temperature 0 / greedy, top_p 1, top_k 0, seed 0), the
-SAME context length (2048) and output cap (320). The ablation therefore isolates the
-remaining live difference — runtime (Transformers vs Ollama/llama.cpp) + chat-template
-application + the bf16->f16 cast — by measuring verdict agreement across the 413 inputs.
-
-Run AFTER both prediction files exist. Writes:
-  - ml/reports/lan-challenge-evaluation/inference-path-ablation-v2.json
-  - ml/reports/lan-challenge-evaluation/inference-path-ablation-v2.md
+This scorer runs only after every prediction file has been produced by a label-blind
+inference process. It never mutates prompts or predictions. Missing diagnostics produce
+an INCOMPLETE report and a non-zero exit status; they are never treated as evidence.
 """
 
 from __future__ import annotations
@@ -18,144 +11,256 @@ from __future__ import annotations
 import json
 from collections import Counter
 from pathlib import Path
+from typing import Any
 
-from scoring import EXPECTED_INPUT_SHA256, load_predictions
+from scoring import EXPECTED_INPUT_SHA256, load_predictions, load_references
+
 
 ROOT = Path(__file__).resolve().parents[3]
 REPORT = ROOT / "ml/reports/lan-challenge-evaluation"
 PREDICTIONS = REPORT / "predictions"
+ABLATION_PREDICTIONS = PREDICTIONS / "ablation"
 LABELS = ROOT / "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl"
+OUT_JSON = REPORT / "inference-path-ablation-v2.json"
+OUT_MD = REPORT / "inference-path-ablation-v2.md"
 
-LEFT = "aetherargus-v02-merged-bf16"   # Transformers
-RIGHT = "aetherargus-v02-ollama-f16"   # Ollama f16
+SYSTEM_PROMPT_SHA256 = "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8"
+PRIMARY_HF = "aetherargus-v02-merged-bf16"
+PRIMARY_OLLAMA = "aetherargus-v02-ollama-f16"
+HF_SINGLE = "aetherargus-v02-merged-bf16-single-concat"
+OLLAMA_SINGLE = "aetherargus-v02-ollama-f16-single-concat"
+HF_SERIALIZED = "aetherargus-v02-merged-bf16-hf-serialized"
+OLLAMA_SERIALIZED = "aetherargus-v02-ollama-f16-hf-serialized"
+
+FILES = {
+    PRIMARY_HF: PREDICTIONS / f"{PRIMARY_HF}.jsonl",
+    PRIMARY_OLLAMA: PREDICTIONS / f"{PRIMARY_OLLAMA}.jsonl",
+    HF_SINGLE: ABLATION_PREDICTIONS / f"{HF_SINGLE}.jsonl",
+    OLLAMA_SINGLE: ABLATION_PREDICTIONS / f"{OLLAMA_SINGLE}.jsonl",
+    HF_SERIALIZED: ABLATION_PREDICTIONS / f"{HF_SERIALIZED}.jsonl",
+    OLLAMA_SERIALIZED: ABLATION_PREDICTIONS / f"{OLLAMA_SERIALIZED}.jsonl",
+}
+
+
+def indexed(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {row["sampleId"]: row for row in rows}
+
+
+def safe_fpr(rows: dict[str, dict[str, Any]], references: dict[str, str]) -> dict[str, Any]:
+    safe_ids = [sample_id for sample_id, verdict in references.items() if verdict == "safe"]
+    false_positives = sum(rows[sample_id]["verdict"] == "attack" for sample_id in safe_ids)
+    return {
+        "falsePositiveCount": false_positives,
+        "safeSupport": len(safe_ids),
+        "rate": false_positives / len(safe_ids),
+    }
+
+
+def compare(
+    left_id: str,
+    right_id: str,
+    predictions: dict[str, dict[str, dict[str, Any]]],
+    references: dict[str, str],
+) -> dict[str, Any]:
+    left = predictions[left_id]
+    right = predictions[right_id]
+    sample_ids = sorted(references)
+    pairs = Counter((left[sample_id]["verdict"], right[sample_id]["verdict"]) for sample_id in sample_ids)
+    agree = sum(count for (left_verdict, right_verdict), count in pairs.items() if left_verdict == right_verdict)
+    left_fpr = safe_fpr(left, references)
+    right_fpr = safe_fpr(right, references)
+    return {
+        "leftModelId": left_id,
+        "rightModelId": right_id,
+        "sampleCount": len(sample_ids),
+        "verdictAgreement": {"agree": agree, "total": len(sample_ids), "rate": agree / len(sample_ids)},
+        "verdictDisagreementBreakdown": {
+            f"{left_verdict}->{right_verdict}": count
+            for (left_verdict, right_verdict), count in sorted(pairs.items())
+            if left_verdict != right_verdict
+        },
+        "safeFPR": {
+            "left": left_fpr,
+            "right": right_fpr,
+            "deltaRightMinusLeft": right_fpr["rate"] - left_fpr["rate"],
+        },
+    }
+
+
+def validate_diagnostic_metadata(
+    predictions: dict[str, dict[str, dict[str, Any]]],
+) -> None:
+    expected_modes = {
+        HF_SINGLE: "single-concatenated",
+        OLLAMA_SINGLE: "single-concatenated",
+        HF_SERIALIZED: "pre-serialized",
+        OLLAMA_SERIALIZED: "pre-serialized",
+    }
+    for model_id, mode in expected_modes.items():
+        for row in predictions[model_id].values():
+            if row.get("messageMode") != mode:
+                raise ValueError(f"{model_id}: expected messageMode={mode}")
+            if row.get("systemPromptSha256") != SYSTEM_PROMPT_SHA256:
+                raise ValueError(f"{model_id}: system prompt SHA mismatch")
+    for sample_id in predictions[HF_SERIALIZED]:
+        left_sha = predictions[HF_SERIALIZED][sample_id].get("serializedPromptSha256")
+        right_sha = predictions[OLLAMA_SERIALIZED][sample_id].get("serializedPromptSha256")
+        if not isinstance(left_sha, str) or left_sha != right_sha:
+            raise ValueError(f"shared serialized prompt mismatch for {sample_id}")
+
+
+def write_incomplete(missing: list[str]) -> None:
+    result = {
+        "schemaVersion": 3,
+        "status": "INCOMPLETE",
+        "reason": "Required predeclared diagnostic prediction files are missing.",
+        "missingPredictionFiles": missing,
+        "requiredOperatorAction": "Run all commands in inference-path-ablation-plan.md on the frozen operator environment, commit the four diagnostic prediction files, then rerun this scorer and strict validation.",
+        "controlledVariables": {
+            "contextLengthTokens": 2048,
+            "systemPromptSha256": SYSTEM_PROMPT_SHA256,
+            "sampling": {"temperature": 0, "topP": 1, "topK": 0, "seed": 0},
+            "maxNewTokens": 320,
+            "inputSha256": EXPECTED_INPUT_SHA256,
+        },
+    }
+    OUT_JSON.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    OUT_MD.write_text(
+        "# Inference-Path Ablation v2\n\n"
+        "**Status: INCOMPLETE.** The required one-variable diagnostics have not all been run.\n\n"
+        "Missing prediction files:\n\n"
+        + "\n".join(f"- `{path}`" for path in missing)
+        + "\n\nRun the locked commands in `inference-path-ablation-plan.md`, then rerun "
+        "`python ml/evaluation/lan_challenge/run_ablation.py`. No causal conclusion about the "
+        "historical FPR difference is permitted while this report is incomplete.\n",
+        encoding="utf-8",
+    )
 
 
 def main() -> int:
-    left = {r["sampleId"]: r for r in load_predictions(PREDICTIONS / f"{LEFT}.jsonl", LEFT)}
-    right = {r["sampleId"]: r for r in load_predictions(PREDICTIONS / f"{RIGHT}.jsonl", RIGHT)}
-    ids = sorted(set(left) & set(right))
-    if len(ids) != 413:
-        raise SystemExit(f"expected 413 overlapping ids, got {len(ids)}")
+    missing = [str(path.relative_to(ROOT)) for path in FILES.values() if not path.exists()]
+    if missing:
+        write_incomplete(missing)
+        print(json.dumps({"status": "INCOMPLETE", "missingPredictionFiles": missing}, indent=2))
+        return 2
 
-    verdict_agree = sum(1 for i in ids if left[i]["verdict"] == right[i]["verdict"])
-    family_agree_on_attack = sum(
-        1 for i in ids
-        if left[i]["verdict"] == "attack" and right[i]["verdict"] == "attack"
-        and left[i]["attackFamily"] == right[i]["attackFamily"]
-    )
-    both_attack = sum(1 for i in ids if left[i]["verdict"] == "attack" and right[i]["verdict"] == "attack")
+    loaded = {model_id: indexed(load_predictions(path, model_id)) for model_id, path in FILES.items()}
+    reference_rows = load_references(LABELS)
+    references = {row["sampleId"]: row["verdict"] for row in reference_rows}
+    if any(set(rows) != set(references) for rows in loaded.values()):
+        raise ValueError("ablation prediction/reference sampleId mismatch")
+    validate_diagnostic_metadata(loaded)
 
-    verdict_pairs = Counter((left[i]["verdict"], right[i]["verdict"]) for i in ids)
-    disagreements = {
-        f"{lv}->{rv}": cnt for (lv, rv), cnt in verdict_pairs.items()
-        if lv != rv
-    }
-
-    # latency comparison (NOT cross-stack comparable; Transformers GPU generate vs Ollama HTTP)
-    left_lat = sorted(float(left[i].get("latencyMs") or 0) for i in ids)
-    right_lat = sorted(float(right[i].get("latencyMs") or 0) for i in ids)
-
-    def pct(lst):
-        n = len(lst)
-        return {"p50": lst[n // 2] if n else None, "p95": lst[int(n * 0.95)] if n else None,
-                "p99": lst[int(n * 0.99)] if n else None, "mean": (sum(lst) / n) if n else None}
-
-    # JSON-schema / parse-quality comparison (isolates runtime robustness)
-    left_parse = sum(1 for i in ids if left[i].get("parsed"))
-    right_parse = sum(1 for i in ids if right[i].get("parsed"))
+    native_runtime = compare(PRIMARY_HF, PRIMARY_OLLAMA, loaded, references)
+    hf_message = compare(PRIMARY_HF, HF_SINGLE, loaded, references)
+    ollama_message = compare(PRIMARY_OLLAMA, OLLAMA_SINGLE, loaded, references)
+    shared_runtime = compare(HF_SERIALIZED, OLLAMA_SERIALIZED, loaded, references)
+    hf_serialization = compare(PRIMARY_HF, HF_SERIALIZED, loaded, references)
+    ollama_serialization = compare(PRIMARY_OLLAMA, OLLAMA_SERIALIZED, loaded, references)
 
     result = {
-        "schemaVersion": 2,
-        "comparison": f"{LEFT} (Transformers) vs {RIGHT} (Ollama f16)",
-        "sampleCount": len(ids),
-        "sharedWeights": True,
-        "sharedWeightsNote": "Ollama f16 GGUF is a lossless cast of the merged BF16 safetensors; weights are identical.",
+        "schemaVersion": 3,
+        "status": "COMPLETE",
+        "sampleCount": 413,
+        "artifactRelationship": {
+            "sameCheckpointLineage": True,
+            "bitIdenticalArtifacts": False,
+            "note": "Transformers uses merged BF16 safetensors and Ollama uses an f16 GGUF conversion. Runtime and numeric representation remain coupled in cross-runtime comparisons; the artifacts are not claimed to be bit-identical.",
+        },
         "controlledVariables": {
-            "context_length_tokens": 2048,
-            "system_prompt_sha256": "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8",
-            "message_structure": "system_plus_user (no few-shot in these two systems)",
-            "sampling": {"temperature": 0, "top_p": 1, "top_k": 0, "seed": 0, "do_sample": False},
-            "max_new_tokens": 320,
-            "input_sha256": EXPECTED_INPUT_SHA256,
+            "contextLengthTokens": 2048,
+            "systemPromptSha256": SYSTEM_PROMPT_SHA256,
+            "sampling": {"temperature": 0, "topP": 1, "topK": 0, "seed": 0},
+            "maxNewTokens": 320,
+            "inputSha256": EXPECTED_INPUT_SHA256,
         },
-        "liveDifference": "runtime (Transformers vs Ollama/llama.cpp) + chat-template application + bf16->f16 cast",
-        "verdictAgreement": {
-            "agree": verdict_agree,
-            "total": len(ids),
-            "rate": verdict_agree / len(ids),
+        "diagnostics": {
+            "systemUserVsSingleConcat": {
+                "status": "SUCCESS",
+                "changedVariable": "chat message structure only within each runtime",
+                "sampleCountPerVariant": 413,
+                "transformers": hf_message,
+                "ollama": ollama_message,
+            },
+            "sharedSerializedPromptAcrossRuntimes": {
+                "status": "SUCCESS",
+                "changedVariable": "runtime plus unavoidable BF16-to-f16 artifact representation; prompt bytes are identical per sample",
+                "sampleCountPerVariant": 413,
+                "comparison": shared_runtime,
+            },
+            "nativeTemplateVsSharedHfSerialization": {
+                "status": "SUCCESS",
+                "changedVariable": "native chat-template application versus a pre-serialized Transformers template within each runtime",
+                "sampleCountPerVariant": 413,
+                "transformers": hf_serialization,
+                "ollama": ollama_serialization,
+            },
         },
-        "familyAgreementOnMutualAttack": {
-            "agree": family_agree_on_attack,
-            "bothAttack": both_attack,
-            "rate": (family_agree_on_attack / both_attack) if both_attack else None,
-        },
-        "verdictDisagreementBreakdown": disagreements,
-        "parseQuality": {LEFT: {"parsed": left_parse, "rate": left_parse / len(ids)},
-                         RIGHT: {"parsed": right_parse, "rate": right_parse / len(ids)}},
-        "latencyMs": {
-            "note": "NOT cross-stack comparable: Transformers = GPU generate time only; Ollama = HTTP round-trip + generate. Hardware/runtime differ.",
-            LEFT: pct(left_lat),
-            RIGHT: pct(right_lat),
-        },
-        "singleConcatenatedPromptDiagnostic": {
-            "status": "NOT_RUN_AS_SEPARATE_SYSTEM",
-            "reason": "Both locked runs use the chat-template message structure. A single-concatenated-prompt variant is a 9th system outside the locked protocol; running it would not change the conclusion that the two locked paths agree.",
-        },
+        "nativeSystemUserCrossRuntime": native_runtime,
+        "interpretationLimits": [
+            "The challenge set was not used to choose prompts or runtime settings.",
+            "A zero observed verdict difference does not prove numerical equivalence outside these 413 inputs.",
+            "The cross-runtime comparison cannot separate runtime effects from the BF16-to-f16 artifact representation without a bit-identical backend pair.",
+            "Latency remains non-comparable across stacks because timing boundaries and hardware/runtime overhead differ.",
+        ],
     }
-    rate = verdict_agree / len(ids)
+    shared_agreement = shared_runtime["verdictAgreement"]
     result["conclusion"] = (
-        f"With weights, system prompt, message structure, sampling, context length, and output cap held identical, "
-        f"Transformers merged-BF16 and Ollama f16 agree on {verdict_agree}/{len(ids)} verdicts "
-        f"({rate:.1%}); residual disagreement isolates the "
-        "runtime + chat-template + bf16->f16-cast effect."
+        "With byte-identical pre-serialized prompts, the Transformers merged-BF16 and Ollama f16 "
+        f"paths agreed on {shared_agreement['agree']}/{shared_agreement['total']} verdicts "
+        f"({shared_agreement['rate']:.1%}) on this frozen set. The within-runtime message-structure "
+        "comparisons quantify template/serialization sensitivity. Any residual cross-runtime effect "
+        "still combines runtime and BF16-to-f16 representation and must not be attributed to quantization alone."
     )
-    out_json = REPORT / "inference-path-ablation-v2.json"
-    out_json.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    OUT_JSON.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
 
-    md = [
-        "# Inference-Path Ablation v2 — Transformers merged BF16 vs Ollama f16",
-        "",
-        f"**Verdict agreement: {verdict_agree}/{len(ids)} ({verdict_agree/len(ids):.1%})** on the frozen 413 inputs.",
-        "",
-        "## Controlled (identical across both runs)",
-        "- Weights: the Ollama f16 GGUF is a **lossless cast** of the merged BF16 safetensors — identical weights.",
-        "- System prompt: `system-prompt.txt` SHA-256 `9b07be6e…4cd8` (byte-identical, injected via each runtime's system channel).",
-        "- Message structure: system + user (no few-shot in these two systems).",
-        "- Sampling: temperature 0 / greedy, top_p 1, top_k 0, seed 0.",
-        "- Context length: 2048 tokens. Output cap: 320 new tokens.",
-        "- Input: `model-inputs.jsonl` SHA-256 `c77f4949…b8c3`.",
-        "",
-        "## Live difference (the variable being isolated)",
-        "Runtime (Transformers vs Ollama/llama.cpp) + chat-template application + the bf16→f16 cast.",
-        "",
-        "## Disagreement breakdown",
-        "| left (Transformers) -> right (Ollama f16) | count |",
-        "| --- | ---: |",
+    comparisons = [
+        ("Native system+user: Transformers vs Ollama", native_runtime),
+        ("Transformers: system+user vs single concatenated", hf_message),
+        ("Ollama: system+user vs single concatenated", ollama_message),
+        ("Shared HF-serialized prompt: Transformers vs Ollama", shared_runtime),
+        ("Transformers: native vs pre-serialized", hf_serialization),
+        ("Ollama: native vs pre-serialized", ollama_serialization),
     ]
-    for pair, cnt in sorted(disagreements.items(), key=lambda kv: -kv[1]):
-        md.append(f"| {pair} | {cnt} |")
+    md = [
+        "# Inference-Path Ablation v2",
+        "",
+        "**Status: COMPLETE.** Every predeclared diagnostic covers all 413 frozen inputs.",
+        "",
+        "## Controls",
+        "",
+        "Context length 2048, output cap 320, temperature 0, top_p 1, top_k 0, seed 0, "
+        f"system prompt SHA-256 `{SYSTEM_PROMPT_SHA256}`, input SHA-256 `{EXPECTED_INPUT_SHA256}`.",
+        "",
+        "## Results",
+        "",
+        "| comparison | verdict agreement | left safe FPR | right safe FPR | delta (right-left) |",
+        "| --- | ---: | ---: | ---: | ---: |",
+    ]
+    for name, block in comparisons:
+        agreement = block["verdictAgreement"]
+        fpr = block["safeFPR"]
+        md.append(
+            f"| {name} | {agreement['agree']}/{agreement['total']} ({agreement['rate']:.1%}) "
+            f"| {fpr['left']['rate']:.4f} | {fpr['right']['rate']:.4f} "
+            f"| {fpr['deltaRightMinusLeft']:+.4f} |"
+        )
     md += [
         "",
-        f"## Family agreement on mutual attack rows",
-        f"{family_agree_on_attack}/{both_attack} attack-family agreements on rows both called attack"
-        + (f" ({family_agree_on_attack/both_attack:.1%})." if both_attack else "."),
+        "## Artifact qualification",
         "",
-        "## Latency (NOT cross-stack comparable)",
-        "Transformers latency is GPU `generate` time only; Ollama latency includes the HTTP round-trip + "
-        "generate. Different hardware/runtime; the numbers are reported for transparency, not for direct comparison.",
-        f"- {LEFT}: p50 {left_lat[len(left_lat)//2]:.0f} ms, p95 {left_lat[int(len(left_lat)*0.95)]:.0f} ms",
-        f"- {RIGHT}: p50 {right_lat[len(right_lat)//2]:.0f} ms, p95 {right_lat[int(len(right_lat)*0.95)]:.0f} ms",
-        "",
-        "## Single-concatenated-prompt variant",
-        "Not run as a separate system: both locked runs use the chat-template message structure, and a "
-        "single-concat variant would be a 9th system outside the locked protocol. It would not change the "
-        "agreement conclusion above.",
+        "Both artifacts descend from the same trained checkpoint, but they are not bit-identical: "
+        "Transformers uses merged BF16 safetensors and Ollama uses an f16 GGUF conversion. Therefore "
+        "cross-runtime differences still combine runtime and numeric-representation effects.",
         "",
         "## Conclusion",
+        "",
         result["conclusion"],
+        "",
+        "Latency is intentionally excluded from causal ranking because the two timing boundaries and runtime overheads differ.",
     ]
-    (REPORT / "inference-path-ablation-v2.md").write_text("\n".join(md) + "\n", encoding="utf-8")
-    print(json.dumps({"verdictAgreement": result["verdictAgreement"], "familyAgreement": result["familyAgreementOnMutualAttack"], "wrote": [str(out_json.name), "inference-path-ablation-v2.md"]}, indent=2))
+    OUT_MD.write_text("\n".join(md) + "\n", encoding="utf-8")
+    print(json.dumps({"status": "COMPLETE", "wrote": [OUT_JSON.name, OUT_MD.name]}, indent=2))
     return 0
 
 
