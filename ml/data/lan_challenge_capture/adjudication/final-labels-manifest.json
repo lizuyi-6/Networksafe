@@ -18,6 +18,7 @@
   "reviewerCount": null,
   "reviewerCountDisclosure": "withheld_for_confidentiality",
   "humanReviewAttestationFile": "ml/data/lan_challenge_capture/human-review/human-review-attestation.json",
+  "humanReviewAttestationSha256": "2c273945369cf41d98fe02072518b01151e17e2d98a5642e657dc3be2b5b9cbd",
   "humanReviewMode": "confidential_blind_review",
   "humanReviewDisagreementCount": 0,
   "finalLabelsChangedAfterHumanReview": false,
