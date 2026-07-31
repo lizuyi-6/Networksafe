@@ -5,13 +5,18 @@ from __future__ import annotations
 
 import argparse
 import json
-import resource
 import time
 from pathlib import Path
 from typing import Any
 
+try:
+    import resource  # type: ignore[import-not-found]
+except ImportError:
+    resource = None  # type: ignore[assignment]  (Windows has no resource module)
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.pipeline import Pipeline
 
 from inference_common import (
@@ -75,11 +80,17 @@ def main() -> int:
             ),
             (
                 "classifier",
-                LogisticRegression(
-                    class_weight="balanced",
-                    solver="liblinear",
-                    random_state=20260728,
-                    max_iter=2000,
+                # The protocol locks solver=liblinear. liblinear is binary-only, so for the
+                # 3-class verdict task we wrap it in OneVsRestClassifier (one binary liblinear
+                # model per class). This is the faithful multiclass realisation of the locked
+                # solver; it does NOT change the solver or any other locked hyperparameter.
+                OneVsRestClassifier(
+                    LogisticRegression(
+                        class_weight="balanced",
+                        solver="liblinear",
+                        random_state=20260728,
+                        max_iter=2000,
+                    )
                 ),
             ),
         ]
@@ -131,7 +142,7 @@ def main() -> int:
         "validationRecordCount": len(validation_texts),
         "actualFeatureCount": len(pipeline.named_steps["tfidf"].vocabulary_),
         "elapsedSeconds": time.perf_counter() - started,
-        "peakHostMemoryMiB": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
+        "peakHostMemoryMiB": (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024) if resource is not None else None,
     }
     print(json.dumps(summary, indent=2))
     return 0
