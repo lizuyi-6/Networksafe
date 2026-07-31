@@ -28,18 +28,27 @@ Abstract word count: 197.
 6. Abstention
 7. Reproducibility
 
-## Corresponding author
+## Author and corresponding author
 
-- Name: Zuyi Li
-- Email: [REQUIRED]
+- Author count: 1
+- Manuscript name: Zuyi Li
+- Chinese name: 李祖祎
+- Role: sole author and corresponding author
+- Email: 2251213429@qq.com
 - Phone: [REQUIRED BY SUBMISSION CHECKLIST]
 - Full affiliation: [REQUIRED]
 - Full postal address: [REQUIRED]
 - ORCID: [ADD IF AVAILABLE]
 
-## Author list
+## Affiliation rule
 
-The complete author list, order, affiliations, and CRediT roles must be finalized before submission. JISA generally does not permit routine authorship changes after submission.
+A company affiliation is not required. Use the full, independently verifiable name and postal address of the institution where the work was carried out. Preferred options, in order:
+
+1. the author's university and relevant school/department, if the research was carried out while enrolled there;
+2. the author's company, only if the work was genuinely carried out under that company or used company resources;
+3. `Independent Researcher, [City], China`, if the research was genuinely independent of both school and company.
+
+Do not list an institution merely for prestige or convenience.
 
 ## Suggested subject areas
 
@@ -60,7 +69,7 @@ No preprint is currently declared in this package. If the manuscript is uploaded
 ## Submission declarations
 
 - The manuscript is not under consideration elsewhere.
-- All qualifying authors must approve the final version.
+- The sole author must approve the final version.
 - The final funding statement must be confirmed.
 - The final competing-interest declaration must be selected and generated through Elsevier's declarations tool.
 - Generative-AI assistance is disclosed in the manuscript.
