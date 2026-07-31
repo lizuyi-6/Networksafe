@@ -1,0 +1,52 @@
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{Research Questions}
+The evaluation addresses the following questions:
+\begin{description}
+    \item[RQ1] Does task-adapted \model{} outperform the untuned 4B base model and conventional baselines on the frozen external challenge set?
+    \item[RQ2] Are gains attributable only to structured-output alignment, or do verdict-level security decisions improve?
+    \item[RQ3] How does the model trade attack recall against false positives and abstention?
+    \item[RQ4] What quality and storage trade-offs arise from merged and quantized artifacts?
+    \item[RQ5] Do message structure, prompt serialization, or runtime path change verdicts?
+\end{description}
+
+\subsection{Compared Systems}
+All eight primary systems receive the same 413 request-side samples.
+
+\textbf{Rules baseline.} A read-only offline adapter directly invokes the repository's frozen detection engine. It does not access response evidence or labels and is not extended after challenge outcomes are observed.
+
+\textbf{Character n-gram logistic regression.} This baseline uses character 3--5 grams over serialized request-side evidence, a maximum of 250,000 features, minimum document frequency 2, balanced class weights, and deterministic random seed 20260728. Training uses only v0.2 train and validation data.
+
+\textbf{Qwen3-4B zero-shot.} The base instruction model receives the frozen task description and output schema without demonstrations.
+
+\textbf{Qwen3-4B fixed few-shot.} The base model receives a precommitted set of demonstrations selected from train/validation data. Challenge examples are excluded, and the example file is hash-locked before evaluation.
+
+\textbf{\model{} artifacts.} We evaluate HF-LoRA, merged BF16, Ollama f16 GGUF, and GGUF Q4\_K\_M variants. The primary analysis uses HF-LoRA; the others measure merge, runtime, and quantization effects.
+
+\subsection{Metrics}
+The primary metric is three-class Macro-F1, which prevents the large safe class from dominating the reported score. We also report accuracy, weighted F1, per-class precision/recall/F1, and a $3\times3$ confusion matrix. Attack detection is additionally evaluated as attack versus safe-or-unknown and as attack versus safe only.
+
+Safe false-positive rate is
+\begin{equation}
+ \mathrm{FPR}_{safe}=\frac{\#(y=\texttt{safe},\hat y=\texttt{attack})}{\#(y=\texttt{safe})}.
+\end{equation}
+Unknown performance includes precision, recall, accuracy on reference-unknown samples, and unknown-to-safe/attack transition rates. Attack-family Macro-F1 is computed only over attack families present in the reference attack subset; a predicted \texttt{none} counts as an error but is not added as a zero-support reference class.
+
+Structured-output quality includes JSON syntax success, complete-field rate, enum validity, and schema validity. Performance evidence includes per-sample latency, throughput, measured artifact size, and available memory observations. Cross-runtime latency is descriptive because timing boundaries and serving stacks differ.
+
+\subsection{Statistical Analysis}
+Point estimates are accompanied by 10,000-iteration stratified bootstrap 95\% confidence intervals with seed 20260731. Pairwise verdict correctness is compared using McNemar's test, using the exact form when discordant counts are small. Paired stratified bootstrap estimates differences in Macro-F1, attack F1, safe FPR, and unknown accuracy. Holm--Bonferroni correction controls family-wise error across planned model comparisons. For binomial proportions, Wilson and Clopper--Pearson intervals are retained in the machine-readable evidence, particularly for zero-event outcomes where bootstrap intervals can degenerate.
+
+\subsection{Hardware and Software}
+Primary generative-model runs were executed on Windows 11 with an NVIDIA GeForce RTX 5070 Ti Laptop GPU. The recorded environment includes Python 3.12.10, a CUDA 13.0 development stack, PyTorch 2.12.0 development build, Transformers 5.2.0, PEFT 0.20.0, and Ollama 0.32.5. Exact model revisions, prompt hashes, runtime settings, and artifact hashes are stored in the evaluation manifest. This unusual forward-version environment is reported for reproduction rather than treated as a performance advantage.
+
+\subsection{Inference-Path Diagnostics}
+Four pre-registered diagnostics isolate message and serialization effects:
+\begin{enumerate}
+    \item merged BF16 with native \texttt{system+user} messages;
+    \item merged BF16 with a single concatenated message;
+    \item Ollama f16 with native \texttt{system+user} messages;
+    \item Ollama f16 with the same HF-pre-serialized prompt bytes used by the Transformers path.
+\end{enumerate}
+Equivalent comparisons are repeated with shared serialized prompts. Each diagnostic covers all 413 samples. Because Transformers uses a BF16 merged artifact while Ollama uses an f16 GGUF artifact, residual differences cannot be attributed solely to runtime even when prompt bytes are identical.
