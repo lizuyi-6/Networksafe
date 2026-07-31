@@ -1,7 +1,8 @@
 /*
  * Mechanical floor for the VIguard context-visibility contract.
  * Natural-language sufficiency still requires the completed audit; this validator blocks
- * known leakage fields, inconsistent unknown labels, unaudited samples, and audit drift.
+ * known leakage fields, inconsistent unknown labels, unaudited samples, audit drift, and
+ * inconsistent post-evaluation human-review provenance.
  */
 'use strict';
 
@@ -13,6 +14,7 @@ const OUT = __dirname;
 const DATA = path.resolve(OUT, '..');
 const ANN = path.join(DATA, 'annotations');
 const DECISIONS = path.join(OUT, 'decisions');
+const HUMAN_ATTESTATION = path.join(DATA, 'human-review', 'human-review-attestation.json');
 
 function readJsonl(file) {
   return fs.readFileSync(file, 'utf8').split(/\r?\n/).filter(Boolean).map((line, index) => {
@@ -37,6 +39,7 @@ const adjudication = readJsonl(path.join(OUT, 'adjudication.jsonl'));
 const audit = JSON.parse(fs.readFileSync(path.join(OUT, 'context-visibility-audit.json'), 'utf8'));
 const integrity = JSON.parse(fs.readFileSync(path.join(OUT, 'integrity-check.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(OUT, 'final-labels-manifest.json'), 'utf8'));
+const humanAttestation = JSON.parse(fs.readFileSync(HUMAN_ATTESTATION, 'utf8'));
 const decisions = [];
 for (const file of fs.readdirSync(DECISIONS).filter((name) => /^batch-\d+\.jsonl$/.test(name)).sort()) {
   decisions.push(...readJsonl(path.join(DECISIONS, file)));
@@ -72,8 +75,7 @@ for (const row of decisions) {
   }
 }
 
-// 3. A context-sufficient label cannot simultaneously claim that critical RBAC/object facts
-// are unknown. This is intentionally a narrow mechanical regex, not a semantic substitute.
+// 3. A context-sufficient label cannot simultaneously claim that critical RBAC/object facts are unknown.
 const criticalContext = /(实际调用者|主体角色|调用者角色|对象归属|资源归属|当前租户|目标租户|principal\s+role|object\s+ownership|tenant\s+scope)/i;
 const unavailable = /(不可观测|未知|未提供|未确认|不在.*输入|absent|unknown|not observable|not provided|not confirmed)/i;
 for (const row of decisions) {
@@ -157,20 +159,44 @@ check(categoryTotal === audit.issues.length, `audit issue category total ${categ
 check(audit.responseSideEvidenceUsed === false, 'audit does not declare responseSideEvidenceUsed=false');
 check(audit.collectorGroundTruthUsed === false, 'audit does not declare collectorGroundTruthUsed=false');
 
-// 10. Freeze timestamp semantics and final hash are internally consistent.
+// 10. Freeze timestamp, final hash, and confidential post-evaluation human-review attestation.
 check(typeof manifest.labelsFrozenAt === 'string' && !!Date.parse(manifest.labelsFrozenAt), 'manifest labelsFrozenAt missing/invalid');
 check(typeof manifest.provenanceMetadataCorrectedAt === 'string' && !!Date.parse(manifest.provenanceMetadataCorrectedAt),
   'manifest provenanceMetadataCorrectedAt missing/invalid');
 check(manifest.frozenAt === manifest.labelsFrozenAt, 'legacy frozenAt does not alias labelsFrozenAt');
 check(sha256File(path.join(OUT, 'final-labels.jsonl')) === manifest.finalLabelsSha256, 'manifest final-labels SHA drift');
-check(manifest.humanReviewed === false && manifest.reviewerCount === 0, 'manifest falsely claims human review');
+check(manifest.humanReviewed === true, 'manifest humanReviewed must be true after blind review confirmation');
+check(manifest.humanReviewTiming === 'post_evaluation', 'manifest humanReviewTiming must be post_evaluation');
+check(manifest.humanReviewCoverage === 413, 'manifest humanReviewCoverage must be 413');
+check(manifest.reviewerCount === null && manifest.reviewerCountDisclosure === 'withheld_for_confidentiality',
+  'manifest reviewer-count confidentiality declaration is inconsistent');
+check(manifest.humanReviewDisagreementCount === 0, 'manifest human-review disagreement count must be zero');
+check(manifest.finalLabelsChangedAfterHumanReview === false, 'manifest must state no post-review label changes');
+check(manifest.humanReviewAttestationSha256 === sha256File(HUMAN_ATTESTATION), 'human-review attestation SHA drift');
+check(humanAttestation.status === 'completed', 'human-review attestation is not completed');
+check(humanAttestation.reviewMode === 'blind_review', 'human-review mode is not blind_review');
+check(humanAttestation.reviewScope.sampleCount === 413, 'human-review attestation does not cover 413');
+check(humanAttestation.reviewScope.reviewerSawAnnotatorAOrBLabelsBeforeDecision === false,
+  'human reviewer saw A/B labels before blind decision');
+check(humanAttestation.reviewScope.reviewerSawAdjudicatorDecisionBeforeDecision === false,
+  'human reviewer saw adjudicator decision before blind decision');
+check(humanAttestation.reviewScope.reviewerSawAetherArgusPredictions === false,
+  'human reviewer saw AetherArgus predictions');
+check(humanAttestation.reviewOutcome.disagreementWithFrozenReferenceCount === 0,
+  'human-review attestation reports disagreement');
+check(humanAttestation.reviewOutcome.finalLabelsChanged === false,
+  'human-review attestation reports label changes');
+check(humanAttestation.reviewOutcome.finalLabelsSha256AfterReview === manifest.finalLabelsSha256,
+  'human-review attestation final SHA does not match manifest');
 check(manifest.eligibleForTraining === false, 'manifest makes challenge labels eligible for training');
 
 console.log('=== validate-context-visibility ===');
 console.log('audited:', audit.auditedSampleCount, ' corrected:', audit.correctedLabelCount, ' unchanged:', audit.unchangedLabelCount);
+console.log('human review:', humanAttestation.status, ' coverage:', humanAttestation.reviewScope.sampleCount,
+  ' disagreements:', humanAttestation.reviewOutcome.disagreementWithFrozenReferenceCount);
 console.log('checks failed:', failures.length);
 if (failures.length) {
   for (const failure of failures.slice(0, 50)) console.log('  FAIL:', failure);
   process.exit(1);
 }
-console.log('CONTEXT VISIBILITY VALIDATION PASSED');
+console.log('CONTEXT VISIBILITY AND HUMAN REVIEW VALIDATION PASSED');
