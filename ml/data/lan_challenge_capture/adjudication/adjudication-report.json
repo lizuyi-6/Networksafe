@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 2,
+  "title": "VIguard LAN Challenge Set — Dual-LLM Annotation Adjudication Report",
+  "annotators": {
+    "A": "GPT-5.6-SOL",
+    "B": "Claude Opus 5"
+  },
+  "adjudicator": {
+    "model": "GLM-5.2 (Zhipu AI) acting as independent third-party adjudicator C",
+    "modelIdentityBasis": "operator-confirmed",
+    "note": "Adjudicator identity is operator-confirmed: the operator states GLM-5.2 (Zhipu AI) actually served the adjudication session. The harness session label displayed a different (Claude-class) name; the running model cannot self-introspect its exact build/checkpoint from inside the session (the same limitation annotator B documented in model-b-report.json), so the precise version follows operator confirmation rather than self-identification. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0)."
+  },
+  "inputs": {
+    "inputFile": "ml/data/lan_challenge_capture/model-inputs.jsonl",
+    "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+    "annotatorAFile": "ml/data/lan_challenge_capture/annotations/model-a-annotations.jsonl",
+    "annotatorASha256": "381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662",
+    "annotatorBFile": "ml/data/lan_challenge_capture/annotations/model-b-annotations.jsonl",
+    "annotatorBSha256": "9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357",
+    "sampleCountA": 413,
+    "sampleCountB": 413
+  },
+  "agreement": {
+    "verdictObservedAgreement": 383,
+    "verdictObservedAgreementRate": 0.927361,
+    "cohensKappa": 0.865078,
+    "kappaComponents": {
+      "Po": 0.927361,
+      "Pe": 0.46162
+    },
+    "attackFamilyFullAgreementRate": 0.920097,
+    "attackFamilyMacroAgreementRate": 0.729106,
+    "actionFullAgreementRate": 0.883777,
+    "contextSufficientAgreementRate": 0.937046,
+    "verdictConflicts": {
+      "safe_attack": 4,
+      "attack_unknown": 15,
+      "safe_unknown": 11
+    }
+  },
+  "resolution": {
+    "consensusCount": 160,
+    "modelAdjudicationCount": 253,
+    "acceptA": 137,
+    "acceptB": 12,
+    "newResolution": 0,
+    "insufficientContext": 104,
+    "acceptedAnnotatorA": 137,
+    "acceptedAnnotatorB": 12,
+    "acceptedAnnotatorNull": 104
+  },
+  "finalLabelDistribution": {
+    "verdict": {
+      "safe": 209,
+      "unknown": 107,
+      "attack": 97
+    },
+    "attackFamily": {
+      "none": 209,
+      "authorization": 26,
+      "idor_bola": 40,
+      "sqli": 23,
+      "xss": 10,
+      "command_injection": 8,
+      "path_traversal": 9,
+      "ssrf": 7,
+      "business_logic": 3,
+      "file_upload": 2,
+      "csrf": 1,
+      "cors": 1,
+      "prompt_injection": 56,
+      "authentication": 7,
+      "protocol_attack": 11
+    },
+    "recommendedAction": {
+      "allow": 138,
+      "challenge": 107,
+      "block": 95,
+      "isolate": 2,
+      "monitor": 71
+    },
+    "finalUnknownCount": 107
+  },
+  "humanAudit": {
+    "requiresHumanAuditCount": 251,
+    "humanReviewed": false,
+    "reviewerCount": 0
+  },
+  "contextVisibilityAudit": {
+    "auditedSampleCount": 413,
+    "hiddenContextIssueCount": 68,
+    "correctedLabelCount": 68,
+    "unchangedLabelCount": 345,
+    "issueCategories": {
+      "principal_role_missing": 26,
+      "object_ownership_missing": 23,
+      "tenant_boundary_missing": 0,
+      "server_execution_semantics_missing": 19,
+      "response_side_dependency": 0,
+      "collector_intent_dependency": 0,
+      "other": 0
+    },
+    "responseSideEvidenceUsed": false,
+    "collectorGroundTruthUsed": false
+  },
+  "finalLabelsSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",
+  "labelsFrozenAt": "2026-07-30T16:02:03.000Z",
+  "provenanceMetadataCorrectedAt": "2026-07-30T16:02:03.000Z",
+  "frozenAt": "2026-07-30T16:02:03.000Z",
+  "declarations": {
+    "dualLlmAnnotationAndThirdLlmAdjudication": true,
+    "notHumanAnnotated": true,
+    "notProductionNaturalTraffic": true,
+    "noAetherArgusPredictionsUsed": true,
+    "noResponseResultsUsed": true,
+    "challengeSetNotAddedToTraining": true,
+    "labelsFrozenBeforeModelEvaluation": true,
+    "bSideDeterministicProgram": true,
+    "intraClassCorrelationRisk": true,
+    "adjudicatorCannotEliminateSharedSystematicBias": true
+  },
+  "knownLimitations": [
+    "Annotator B labels were produced by a deterministic rule program authored in one model session, creating intra-class correlation risk.",
+    "The three AI systems may still share common training-data or safety-policy biases.",
+    "AI annotation and AI adjudication do not constitute human review.",
+    "Samples requiring identity, role, ownership, tenant-boundary, or server-side execution semantics may remain unknown when those facts are absent from the model-visible input.",
+    "The dataset is an authorized live-execution challenge set, not natural production traffic.",
+    "The benchmark does not contain confirmed successful exploits.",
+    "Reference labels should not be described as objective human-verified ground truth."
+  ]
+}

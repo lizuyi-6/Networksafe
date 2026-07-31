@@ -1,0 +1,15 @@
+{
+  "inputRowCount": 413,
+  "aRowCount": 413,
+  "bRowCount": 413,
+  "inputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "aSha256": "381dd788a057bef9761c54ef5842b6578f4b038c8dc8aa8057e844be661c7662",
+  "bSha256": "9c52f7cbdb6650efad43bd04f0282835bd08a47d5ae7860902819833faffa357",
+  "aReportInputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "bReportInputSha256": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
+  "setIdAlignment": true,
+  "duplicateSampleIds": 0,
+  "parseErrors": 0,
+  "schemaProblems": 0,
+  "problems": []
+}

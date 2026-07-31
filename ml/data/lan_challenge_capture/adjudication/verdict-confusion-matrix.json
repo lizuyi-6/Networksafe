@@ -1,0 +1,29 @@
+{
+  "order_rows_A": [
+    "safe",
+    "attack",
+    "unknown"
+  ],
+  "order_cols_B": [
+    "safe",
+    "attack",
+    "unknown"
+  ],
+  "matrix": {
+    "safe": {
+      "safe": 243,
+      "attack": 0,
+      "unknown": 1
+    },
+    "attack": {
+      "safe": 4,
+      "attack": 110,
+      "unknown": 15
+    },
+    "unknown": {
+      "safe": 10,
+      "attack": 0,
+      "unknown": 30
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "order_rows_A": [
+    "allow",
+    "block",
+    "challenge",
+    "isolate",
+    "monitor"
+  ],
+  "order_cols_B": [
+    "allow",
+    "block",
+    "challenge",
+    "isolate",
+    "monitor"
+  ],
+  "matrix": {
+    "allow": {
+      "allow": 136,
+      "block": 0,
+      "challenge": 1,
+      "isolate": 0,
+      "monitor": 10
+    },
+    "block": {
+      "allow": 0,
+      "block": 100,
+      "challenge": 15,
+      "isolate": 7,
+      "monitor": 3
+    },
+    "challenge": {
+      "allow": 5,
+      "block": 0,
+      "challenge": 30,
+      "isolate": 0,
+      "monitor": 6
+    },
+    "isolate": {
+      "allow": 0,
+      "block": 1,
+      "challenge": 0,
+      "isolate": 2,
+      "monitor": 0
+    },
+    "monitor": {
+      "allow": 0,
+      "block": 0,
+      "challenge": 0,
+      "isolate": 0,
+      "monitor": 97
+    }
+  }
+}
