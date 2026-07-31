@@ -38,6 +38,59 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Assemble editable JISA source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="jisa-source-package"
+          mkdir -p "$root/papers/AetherArgus-HTTP-Security"
+          mkdir -p "$root/ml/reports/lan-challenge-evaluation"
+
+          cp -R papers/AetherArgus-HTTP-Security/jisa-submission \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp -R papers/AetherArgus-HTTP-Security/sections \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp papers/AetherArgus-HTTP-Security/references.bib \
+            papers/AetherArgus-HTTP-Security/CLAIM-TO-EVIDENCE.md \
+            papers/AetherArgus-HTTP-Security/README.md \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp -R ml/reports/lan-challenge-evaluation/figures \
+            "$root/ml/reports/lan-challenge-evaluation/"
+
+          rm -f \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.aux" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.bbl" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.blg" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.fdb_latexmk" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.fls" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.log" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.out" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.pdf"
+
+          cat > "$root/UPLOAD-NOTES.txt" <<'EOF'
+          JISA editable source package
+
+          Main file:
+          papers/AetherArgus-HTTP-Security/jisa-submission/main.tex
+
+          Upload separately from this source archive:
+          - passport-type author photograph;
+          - author biography Word document;
+          - official Elsevier declarations-tool Word document;
+          - cover letter;
+          - reviewer evidence archive, when requested.
+          EOF
+
+          zip -qr aetherargus-jisa-editable-source.zip "$root"
+
+      - name: Upload editable JISA source package
+        uses: actions/upload-artifact@v7
+        with:
+          name: aetherargus-jisa-editable-source
+          path: aetherargus-jisa-editable-source.zip
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Assemble de-identified reviewer evidence
         shell: bash
         run: |
