@@ -30,8 +30,11 @@ PREDICTIONS = REPORT / "predictions"
 FIGURES = REPORT / "figures"
 TABLES = REPORT / "tables"
 PAPER = REPORT / "paper"
-PROTOCOL_COMMIT = "553c0a9"  # protocol v2 lock commit (evaluation-protocol-v2.json); v1 preserved at 79f146f
-EVALUATION_COMMIT = "f6758075316425e6e2a5b4cbd1d9bebdc5cafd53"
+PROTOCOL_COMMIT = "553c0a9317e8c21f616991e92149fc828d7e8902"
+EVALUATION_COMMIT = subprocess.run(
+    ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
+).stdout.strip()
+BASELINE_MODELS = {"rules-baseline", "char-ngram-logreg", "qwen3-4b-zero-shot", "qwen3-4b-few-shot"}
 PROTOCOL_SHA256 = "b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb"  # v2 canonical hash
 PROMPT_SHA256 = "9b07be6e2cf57443232df24ffde5f7765a1b071029eaf86c06724ed6182a4cd8"
 PROTOCOL_V1_COMMIT = "79f146f2c8d400ef4afa292015b70a6bf91280ec"
@@ -661,7 +664,7 @@ def create_claim_matrix(metrics: dict[str, dict[str, Any]], stats: dict[str, Any
     best = None
     for r in mcnemar_rows:
         other = r["comparison"].split(" vs ", 1)[1]
-        if other in metrics and other != primary:
+        if other in metrics and other in BASELINE_MODELS:
             if best is None or metrics[other]["verdict"]["macroF1"] > metrics[best]["verdict"]["macroF1"]:
                 best = other
     if best is not None and mcnemar_rows:
@@ -680,22 +683,27 @@ def create_claim_matrix(metrics: dict[str, dict[str, Any]], stats: dict[str, Any
     else:
         c4["limitations"] = "Paired significance requires the primary model and at least one baseline; not computed in this run."
     rows.append(c4)
-    # C5: inference-path robustness (ablation) if present
-    abl = stats.get("inferencePathAblation") or {}
-    if not abl and (REPORT / "inference-path-ablation-v2.json").is_file():
+    # C5: inference-path robustness only after every predeclared diagnostic succeeds.
+    abl = {}
+    if (REPORT / "inference-path-ablation-v2.json").is_file():
         abl = json.loads((REPORT / "inference-path-ablation-v2.json").read_text(encoding="utf-8"))
-    if abl.get("verdictAgreement"):
-        va = abl["verdictAgreement"]
+    shared = (
+        abl.get("diagnostics", {})
+        .get("sharedSerializedPromptAcrossRuntimes", {})
+        .get("comparison", {})
+        .get("verdictAgreement")
+    )
+    if abl.get("status") == "COMPLETE" and shared:
         rows.append({
             "claimId": "C5",
-            "paperClaim": "Transformers merged-BF16 and Ollama f16 (shared weights) agree on verdicts.",
+            "paperClaim": "Transformers merged-BF16 and Ollama f16 agree under byte-identical serialized prompts on the frozen set.",
             "evidenceFile": "ml/reports/lan-challenge-evaluation/inference-path-ablation-v2.json",
-            "metricField": "verdictAgreement",
+            "metricField": "diagnostics.sharedSerializedPromptAcrossRuntimes.comparison.verdictAgreement",
             "commit": EVALUATION_COMMIT,
             "supportLevel": "DIRECT",
-            "limitations": "Agreement isolates runtime+chat-template+bf16->f16-cast; it is not identity.",
-            "allowedWording": f"Transformers merged-BF16 and Ollama f16 agree on {va['agree']}/{va['total']} ({va['rate']:.1%}) verdicts.",
-            "forbiddenWording": "The two runtimes produce identical predictions.",
+            "limitations": "The artifacts share checkpoint lineage but are not bit-identical; runtime and BF16-to-f16 representation remain coupled.",
+            "allowedWording": f"With byte-identical serialized prompts, Transformers merged-BF16 and Ollama f16 agreed on {shared['agree']}/{shared['total']} ({shared['rate']:.1%}) verdicts on the frozen set.",
+            "forbiddenWording": "The two runtimes or artifacts are numerically identical, or any difference is caused solely by quantization.",
         })
 
     columns = list(rows[0])
@@ -863,12 +871,17 @@ def create_reports(
     (REPORT / "evaluation-manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    all_complete = len(not_run) == 0 and len(completed) == 8
-    status_text = "COMPLETE_ALL_REQUIRED_MODELS" if all_complete else "INCOMPLETE_REQUIRED_MODEL_RUNS"
+    all_models_complete = len(not_run) == 0 and len(completed) == 8
     ablation_v2 = REPORT / "inference-path-ablation-v2.json"
     ablation_data = (
-        json.loads(ablation_v2.read_text(encoding="utf-8")) if ablation_v2.is_file()
-        else json.loads((EVAL / "inference-path-ablation.json").read_text(encoding="utf-8"))
+        json.loads(ablation_v2.read_text(encoding="utf-8")) if ablation_v2.is_file() else {}
+    )
+    ablation_complete = ablation_data.get("status") == "COMPLETE"
+    all_complete = all_models_complete and ablation_complete
+    status_text = (
+        "COMPLETE_FROZEN_CHALLENGE_EVIDENCE"
+        if all_complete
+        else "INCOMPLETE_REQUIRED_ABLATIONS_OR_MODEL_RUNS"
     )
     has = {m: (m in completed) for m in [
         "aetherargus-v02-hf-lora", "qwen3-4b-zero-shot", "qwen3-4b-few-shot",
@@ -886,19 +899,24 @@ def create_reports(
         "RQ3": rq(has["aetherargus-v02-hf-lora"], "ANSWERED: subset metrics in mainResults.aetherargus-v02-hf-lora.subsets.", "PARTIAL_RULE_BASELINE_ONLY"),
         "RQ4": rq(has["aetherargus-v02-hf-lora"], "ANSWERED: attack-family Macro-F1 (reference-only labels) in mainResults.aetherargus-v02-hf-lora.attackFamily.", "PARTIAL_RULE_BASELINE_ONLY"),
         "RQ5": rq(has["aetherargus-v02-hf-lora"], "ANSWERED: latency/size in mainResults.aetherargus-v02-hf-lora.performance (crossStackLatencyComparable=false).", "PARTIAL_RULE_BASELINE_ONLY"),
-        "RQ6": rq(has["aetherargus-v02-merged-bf16"] and has["aetherargus-v02-ollama-f16"],
-                  "ANSWERED: Transformers merged-BF16 vs Ollama f16 — see inferencePathAblation.",
-                  "NOT_ANSWERED: paired shared-weight runtimes are unavailable."),
+        "RQ6": rq(ablation_complete,
+                  "ANSWERED WITH LIMITATION: byte-identical prompt and message-structure diagnostics completed; runtime remains coupled to BF16-to-f16 representation.",
+                  "NOT_ANSWERED: the predeclared one-variable inference-path diagnostics are incomplete."),
         "RQ7": rq(has["aetherargus-v02-merged-bf16"] and has["aetherargus-v02-gguf-q4-k-m"],
                   "ANSWERED: BF16 vs Q4_K_M — see mainResults + pairedBootstrapDifferences.",
                   "NOT_ANSWERED: quantized and BF16 artifacts are unavailable."),
     }
-    blocking_reasons = [] if all_complete else [
-        f"{len(completed)} of eight locked systems completed; the required eight-model comparison was not met.",
-        "No Transformers-versus-Ollama shared-weight control completed." if not (has["aetherargus-v02-merged-bf16"] and has["aetherargus-v02-ollama-f16"]) else "",
-        "No AetherArgus prediction file exists, so paired significance claims cannot be made." if not has["aetherargus-v02-hf-lora"] else "",
-    ]
-    blocking_reasons = [r for r in blocking_reasons if r]
+    blocking_reasons = []
+    if not all_models_complete:
+        blocking_reasons.append(
+            f"{len(completed)} of eight locked systems completed; the required eight-model comparison was not met."
+        )
+    if not ablation_complete:
+        blocking_reasons.append(
+            "The predeclared system+user vs single-concatenated and shared-serialized-prompt diagnostics are incomplete."
+        )
+    if not has["aetherargus-v02-hf-lora"]:
+        blocking_reasons.append("No AetherArgus prediction file exists, so paired significance claims cannot be made.")
     report = {
         "schemaVersion": 2,
         "status": status_text,
@@ -973,11 +991,19 @@ def create_reports(
             sig_lines.append(f"- Paired bootstrap {row['comparison']}: {row.get('status')}")
     significance_section = "\n".join(sig_lines) if sig_lines else "No paired comparison available (primary model not present)."
     abl = ablation_data or {}
+    shared_agreement = (
+        abl.get("diagnostics", {})
+        .get("sharedSerializedPromptAcrossRuntimes", {})
+        .get("comparison", {})
+        .get("verdictAgreement", {})
+    )
     ablation_md = (
-        f"Transformers merged-BF16 vs Ollama f16 verdict agreement: "
-        f"{abl.get('verdictAgreement', {}).get('agree')}/{abl.get('verdictAgreement', {}).get('total')} "
-        f"({(abl.get('verdictAgreement', {}) or {}).get('rate', 0):.1%}). See `inference-path-ablation-v2.json`."
-        if abl.get("verdictAgreement") else "Inference-path ablation NOT_RUN (both shared-weight runs not available)."
+        f"With byte-identical serialized prompts, Transformers merged-BF16 vs Ollama f16 "
+        f"verdict agreement was {shared_agreement.get('agree')}/{shared_agreement.get('total')} "
+        f"({shared_agreement.get('rate', 0):.1%}). Runtime remains coupled to the BF16-to-f16 "
+        "artifact representation; see `inference-path-ablation-v2.json`."
+        if ablation_complete
+        else "INCOMPLETE: required one-variable inference-path diagnostics have not all run; no causal FPR attribution is made."
     )
     pm = metrics[primary]
     pcm = pm["verdict"]["confusionMatrix"]
@@ -1039,7 +1065,7 @@ ground truth.
 - Successful: {", ".join(completed)}
 - Not run: {", ".join(row['modelId'] for row in not_run) or "none"}
 
-{"All eight locked systems completed under protocol v2 with their frozen assets mounted (v02 train/validation SHA-locked, LoRA adapter, merged BF16, f16/Q4_K_M GGUF, base model Qwen3-4B-Instruct-2507 @ cdbee75f)." if all_complete else "The required assets are documented by the protocol; this run did not mount all of them, so some systems are NOT_RUN rather than fabricated."}
+{"All eight locked primary systems completed; all predeclared inference-path diagnostics also completed." if all_complete else f"Primary systems complete: {all_models_complete}; inference-path diagnostics complete: {ablation_complete}. Missing evidence is not fabricated."}
 
 ## 4. Prompt and evaluation method
 
@@ -1099,7 +1125,7 @@ Clopper-Pearson exact and Wilson score intervals (`proportionIntervals`).
 
 ## 10. Quality-latency-size trade-off
 
-Latency (p50/p95/p99/mean) and model size are in `tables/table-4-performance.csv` and each
+Latency (p50/p95/p99/mean) and model size are in `tables/table-4-latency-memory-size.csv` and each
 model's `metrics/*.json` performance block. Cross-stack latency (Transformers GPU generate
 vs Ollama HTTP round-trip) is flagged `crossStackLatencyComparable=false` and is NOT ranked
 as equivalent across runtimes.
@@ -1158,8 +1184,8 @@ and verdict macro-F1 {pm['verdict']['macroF1']:.4f} (95\% CI
 with observed safe FPR {pm['safeFPR']['falsePositiveCount']}/{pm['safeFPR']['safeSupport']}
 (exact Clopper-Pearson 95\% upper bound reported, not a zero-population claim). Paired
 McNemar and paired bootstrap differences against the baselines are Holm-Bonferroni
-corrected; the Transformers-merged-BF16 vs Ollama-f16 ablation isolates the
-runtime+chat-template effect.
+corrected; the Transformers-merged-BF16 vs Ollama-f16 diagnostics use byte-identical
+serialized prompts but cannot separate runtime from the BF16-to-f16 artifact representation.
 """,
         encoding="utf-8",
     )
@@ -1182,8 +1208,8 @@ systems did not complete: {', '.join(r['modelId'] for r in not_run) or 'none'}.
 {pm['verdict']['accuracy']:.4f} with observed safe FPR
 {pm['safeFPR']['falsePositiveCount']}/{pm['safeFPR']['safeSupport']}; significance is
 reported as paired McNemar / paired bootstrap differences with Holm-Bonferroni correction,
-and the shared-weight Transformers-vs-Ollama ablation is included. No historical or
-mismatched run was substituted for a missing prediction.
+and the predeclared Transformers-vs-Ollama diagnostics are included only when complete.
+No historical or mismatched run was substituted for a missing prediction.
 """,
         encoding="utf-8",
     )
