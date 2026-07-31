@@ -38,10 +38,9 @@
 \cortext[cor1]{Corresponding author}
 \ead{2251213429@qq.com}
 
-% AFFILIATION BLOCKING ITEM: use the institution where the research was carried out.
-% A company is not required. Use the full university name when applicable.
-% If the work was genuinely independent, use: Independent Researcher, [City], China.
-\address[aff1]{[FULL UNIVERSITY, COMPANY, OR INDEPENDENT-RESEARCHER AFFILIATION AND POSTAL ADDRESS REQUIRED], China}
+% Verify the company's official English legal name before external submission.
+% Editorial Manager still requires the registered street address and postal code.
+\address[aff1]{Hebei Xiong'an Qiongyu Technology Co., Ltd., Xiong'an New Area, Hebei, China}
 
 \begin{abstract}
 Large language models are increasingly proposed for application-layer security analysis, but internal test sets, label leakage, and inconsistent inference stacks can obscure actual performance. We present AetherArgus, a 4B-parameter QLoRA-adapted language model for structured HTTP request classification into safe, attack, or unknown, together with a leakage-controlled evaluation protocol. The model was trained on 14,314 records and evaluated on a frozen 413-sample authorized LAN challenge set that was excluded from training and tuning. Reference labels were produced by dual-model annotation and independent model adjudication, then confirmed after evaluation through a confidential blind human review with zero label changes. Eight systems were compared under a locked protocol. AetherArgus achieved 0.6150 accuracy and 0.4658 macro-F1, compared with 0.5230 and 0.4175 for zero-shot Qwen3-4B. The paired macro-F1 improvement was 0.0482 (95\% confidence interval 0.0113--0.0835), and attack recall reached 0.9072. However, the safe false-positive rate remained 0.2057 and unknown recall was zero, precluding autonomous blocking. Q4\_K\_M quantization reduced storage from approximately 7.49 GiB to 2.33 GiB with a small observed macro-F1 reduction, while changing message structure altered 11 of 413 verdicts. These results show that compact task-adapted models can improve attack-oriented classification, but deployment claims require explicit false-positive, abstention, and inference-path analysis.
@@ -71,13 +70,10 @@ The protocols, scripts, manifests, aggregate metrics, statistical outputs, and c
 Zuyi Li: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Visualization, Writing -- original draft, Writing -- review and editing, Project administration.
 
 \section*{Funding}
-% FUNDING BLOCKING ITEM: replace this sentence if any grant, institution, company, or sponsor supported the work.
-This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+This research received no external grant funding.
 
 \section*{Declaration of competing interest}
-% COMPETING-INTEREST BLOCKING ITEM: verify whether company ownership, employment,
-% patents, investment, or commercial interests related to AetherArgus must be disclosed.
-The author declares that the final competing-interest statement will be supplied through the Elsevier declarations tool before submission.
+The author is affiliated with Hebei Xiong'an Qiongyu Technology Co., Ltd., which may have a commercial interest in artificial-intelligence and cybersecurity technologies related to this work. This relationship is disclosed as a potential competing interest. No external sponsor controlled the frozen evaluation protocol, analysis, interpretation, or reporting.
 
 \section*{Ethics and responsible deployment}
 All challenge traffic was collected in an authorized LAN environment. The study does not claim that \model{} is suitable for autonomous blocking. The evaluated model is best interpreted as a shadow-mode or second-stage analytical component. High-risk actions remain outside the model and require independent policy or hardware authorization.
