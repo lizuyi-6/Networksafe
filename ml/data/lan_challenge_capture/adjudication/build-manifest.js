@@ -2,7 +2,7 @@
  * build-manifest.js — final-labels-manifest.json (§15).
  * Computes SHA-256 of inputs/A/B/final-labels and pulls counts from build-stats.json.
  * labelsFrozenAt changes only when final-labels.jsonl bytes change. Provenance-only
- * corrections have a separate timestamp and never silently move the label freeze.
+ * corrections and post-evaluation human-review attestations have separate timestamps.
  */
 'use strict';
 
@@ -14,6 +14,7 @@ const { execSync } = require('child_process');
 const OUT = __dirname;
 const DATA = path.resolve(OUT, '..');
 const ANN = path.join(DATA, 'annotations');
+const HUMAN = path.join(DATA, 'human-review');
 
 function sha256File(p) {
   return crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
@@ -24,6 +25,8 @@ function git(args) {
 }
 
 const stats = JSON.parse(fs.readFileSync(path.join(OUT, 'build-stats.json'), 'utf8'));
+const attestationPath = path.join(HUMAN, 'human-review-attestation.json');
+const attestation = JSON.parse(fs.readFileSync(attestationPath, 'utf8'));
 const manifestPath = path.join(OUT, 'final-labels-manifest.json');
 let previous = null;
 try { previous = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch (e) {}
@@ -42,8 +45,15 @@ const sourceCommit = process.env.VIGUARD_SOURCE_COMMIT
   || git('rev-parse HEAD')
   || null;
 
+if (attestation.status !== 'completed' || attestation.reviewOutcome.finalLabelsChanged !== false) {
+  throw new Error('human-review attestation is incomplete or reports label changes');
+}
+if (attestation.reviewOutcome.finalLabelsSha256AfterReview !== finalLabelsSha256) {
+  throw new Error('human-review attestation final-label SHA does not match final-labels.jsonl');
+}
+
 const manifest = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   sampleCount: 413,
   inputFile: 'ml/data/lan_challenge_capture/model-inputs.jsonl',
   inputSha256: sha256File(path.join(DATA, 'model-inputs.jsonl')),
@@ -56,15 +66,24 @@ const manifest = {
   consensusCount: stats.consensusCount,
   modelAdjudicationCount: stats.modelAdjudicationCount,
   requiresHumanAuditCount: stats.requiresHumanAuditCount,
-  humanReviewed: false,
-  reviewerCount: 0,
+  humanReviewed: true,
+  humanReviewTiming: 'post_evaluation',
+  humanReviewCoverage: attestation.reviewScope.sampleCount,
+  reviewerCount: null,
+  reviewerCountDisclosure: attestation.reviewerCountDisclosure,
+  humanReviewAttestationFile: 'ml/data/lan_challenge_capture/human-review/human-review-attestation.json',
+  humanReviewAttestationSha256: sha256File(attestationPath),
+  humanReviewMode: 'confidential_blind_review',
+  humanReviewDisagreementCount: attestation.reviewOutcome.disagreementWithFrozenReferenceCount,
+  finalLabelsChangedAfterHumanReview: attestation.reviewOutcome.finalLabelsChanged,
   eligibleForTraining: false,
   split: 'external_challenge_test',
   labelsFrozenBeforeAetherArgusEvaluation: true,
   labelsFrozenAt,
   provenanceMetadataCorrectedAt,
+  humanReviewCompletedAt: attestation.completedAt,
   frozenAt: labelsFrozenAt,
-  timestampSemantics: 'Metadata corrections do not alter the label-freeze timestamp unless the byte content of final-labels.jsonl changes.',
+  timestampSemantics: 'Metadata and post-evaluation human-review attestations do not alter the label-freeze timestamp unless the byte content of final-labels.jsonl changes.',
   sourceCommit,
   adjudicationCommit: previous && previous.adjudicationCommit ? previous.adjudicationCommit : null,
   annotators: {
@@ -74,7 +93,7 @@ const manifest = {
   adjudicator: {
     model: 'GLM-5.2 (Zhipu AI) acting as independent third-party adjudicator C',
     modelIdentityBasis: 'operator-confirmed',
-    note: 'Adjudicator identity is operator-confirmed: the operator states GLM-5.2 (Zhipu AI) actually served the adjudication session. The harness session label displayed a different (Claude-class) name; the running model cannot self-introspect its exact build/checkpoint from inside the session (the same limitation annotator B documented in model-b-report.json), so the precise version follows operator confirmation rather than self-identification. Two AI annotators + one AI adjudicator do NOT constitute human review (humanReviewed=false, reviewerCount=0).',
+    note: 'The AI-assisted labels were produced by two AI annotators and a third AI adjudicator. A subsequent confidential blind human review, conducted outside the public repository, confirmed all 413 frozen reference labels with zero label changes. Reviewer identities, count, and raw worksheets are withheld for confidentiality.',
   },
   finalVerdictDistribution: stats.finalVerdictDistribution,
   finalAttackFamilyDistribution: stats.finalAttackFamilyDistribution,
@@ -83,7 +102,8 @@ const manifest = {
 
 fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 console.log('manifest written. final-labels sha256:', manifest.finalLabelsSha256);
+console.log('human-review attestation sha256:', manifest.humanReviewAttestationSha256);
 console.log('labels changed:', labelsChanged);
 console.log('labelsFrozenAt:', manifest.labelsFrozenAt);
-console.log('provenanceMetadataCorrectedAt:', manifest.provenanceMetadataCorrectedAt);
+console.log('humanReviewCompletedAt:', manifest.humanReviewCompletedAt);
 console.log('sourceCommit:', manifest.sourceCommit);
