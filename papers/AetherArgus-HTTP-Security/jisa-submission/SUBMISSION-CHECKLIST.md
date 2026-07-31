@@ -4,21 +4,23 @@
 
 - [x] Confirm the complete author list and order: sole author Zuyi Li (李祖祎).
 - [x] Confirm that the listed author meets authorship requirements and approves submission.
-- [x] Replace the corresponding-author email placeholder: 2251213429@qq.com.
+- [x] Add the corresponding-author email: 2251213429@qq.com.
+- [x] Add the corresponding-author phone number: +86 152 2722 5280.
 - [x] Add the company affiliation and registered address.
 - [ ] Verify the official English company name and translated address against the business-registration record.
 - [ ] Confirm that postal code 071700 is appropriate for the company's preferred mailing address.
-- [x] Add the corresponding-author phone number: +86 152 2722 5280.
 - [x] Record the current funding statement: no external grant funding.
 - [x] Add a company-specific potential competing-interest disclosure.
-- [ ] Generate the required declaration .doc/.docx through Elsevier's declarations tool.
 - [ ] Confirm the author's precise company role and whether ownership, patents, investment, or in-kind company support require more detailed disclosure.
+- [ ] Complete Elsevier's declarations tool and upload its generated `.doc` or `.docx` file.
 - [ ] Provide editors and reviewers with repository access or create a persistent reviewer-access archive.
 - [ ] Decide which de-identified data and code can be publicly archived and obtain a DOI or persistent identifier where possible.
+- [x] Add an editable author biography below 100 words.
+- [ ] Upload a passport-type author photograph as a separate figure.
 
 ## Manuscript checks
 
-- [x] JISA/Elsevier LaTeX source prepared with elsarticle.
+- [x] JISA/Elsevier LaTeX source prepared with `elsarticle`.
 - [x] Restore and verify the full LaTeX preamble after metadata edits.
 - [x] Abstract is concise and below 250 words (197 words).
 - [x] Seven English keywords provided.
@@ -49,6 +51,8 @@
 - [ ] All figure PDF/EPS files as separate uploads
 - [ ] `figure-captions.txt`
 - [ ] `highlights.txt`
+- [ ] `author-biography.txt`
+- [ ] Passport-type author photograph
 - [ ] Elsevier declarations `.doc` or `.docx`
 - [ ] Cover letter text
 - [ ] Any supplementary reproducibility archive
