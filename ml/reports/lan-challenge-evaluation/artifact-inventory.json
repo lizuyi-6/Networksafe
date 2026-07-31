@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "sourceCommit": "4359276fa9c6c0b56b168fc5c002e7e542fe30b3",
   "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
-  "evaluationCommit": "28d34e5c2ff308e37b937d038956967a4e679352",
+  "evaluationCommit": "9ebd1d2393efaf86b75adb3646c71e0727965768",
   "protectedArtifactHashes": {
     "ml/data/lan_challenge_capture/model-inputs.jsonl": "c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3",
     "ml/data/lan_challenge_capture/adjudication/final-labels.jsonl": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad",

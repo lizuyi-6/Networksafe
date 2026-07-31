@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
   "status": "COMPLETE_FROZEN_CHALLENGE_EVIDENCE",
-  "experimentDate": "2026-07-31T12:38:47.991117+00:00",
-  "repositoryCommit": "28d34e5c2ff308e37b937d038956967a4e679352",
+  "experimentDate": "2026-07-31T12:42:52.104104+00:00",
+  "repositoryCommit": "9ebd1d2393efaf86b75adb3646c71e0727965768",
   "protocolCommit": "553c0a9317e8c21f616991e92149fc828d7e8902",
   "protocolVersion": "v2",
   "protocolV1Commit": "79f146f2c8d400ef4afa292015b70a6bf91280ec",
@@ -5435,22 +5435,188 @@
       "requiredOperatorAction": "Run the locked inference-path diagnostics, finalize_evidence.py, then validate-paper-evidence.py on the frozen operator environment."
     },
     "strictCompletion": {
-      "schemaVersion": 3,
+      "schemaVersion": 2,
       "mode": "strict",
-      "status": "NOT_RUN_AFTER_GATE_CHANGE",
-      "checksPassed": 0,
+      "checksPassed": 25,
       "checksTotal": 27,
       "failed": [
         {
-          "num": "GATE",
-          "name": "evidence_gate_invalidated",
+          "num": "25",
+          "name": "inference_path_one_variable_matrix_complete",
           "passed": false,
-          "detail": "Prior validation predates the corrected ancestry, privacy, diagnostic-ablation, provenance, and measured-size checks. Rerun validate-paper-evidence.py after the four diagnostic prediction files and regenerated artifacts exist."
+          "detail": "status=COMPLETE message=SUCCESS template=SUCCESS loadErrors=[] order=False metadata=True sharedPrompt=True"
+        },
+        {
+          "num": "27",
+          "name": "measured_sizes_and_report_consistency",
+          "passed": false,
+          "detail": "unprovenSizes=[] expectedComplete=False reportComplete=True"
         }
       ],
-      "checks": [],
-      "invalidatedPriorResult": true,
-      "requiredOperatorAction": "Run the locked inference-path diagnostics, finalize_evidence.py, then validate-paper-evidence.py on the frozen operator environment."
+      "checks": [
+        {
+          "num": "01",
+          "name": "applicable_protocol_committed_before_predictions",
+          "passed": true,
+          "detail": "rules-baseline:protocol=79f146f2c8d400ef4afa292015b70a6bf91280ec:prediction=4ce510575f6c2667f7e937c00aa23d691aaa21bf:ok=True; char-ngram-logreg:protocol=553c0a9317e8c21f616991e92149fc828d7e8902:prediction=6549533c5b7d3b48bbd644f68f6adf0ea8463deb:ok=True; qwen3-4b-zero-shot:protocol=553c0a9317e8c21f616991e92149fc828d7e8902:prediction=6549533c5b7d3b48bbd644f68f6adf0ea8463deb:ok=True; qwen3-4b-few-shot:protocol=553c0a9317e8c21f616991e92149fc828d7e8902:prediction=6549533c5b7d3b48bbd644f68f6adf0ea8463deb:ok=True; aetherargus-v02-hf-lora:protocol=553c0a9317e8c21f616991e92149fc828d7e8902:prediction=6549533c5b7d3b48bbd644f68f6adf0ea8463deb:ok=True; aetherargus-v02-merged-bf16:protocol=553c0a9317e8c21f616991e92149fc828d7e8902:prediction=6549533c5b7d3b48bbd644f68f6adf0ea8463deb:ok=True; aetherargus-v02-gguf-q4-k-m:protocol=553c0a9317e8c21f616991e92149fc828d7e8902:prediction=6549533c5b7d3b48bbd644f68f6adf0ea8463deb:ok=True; aetherargus-v02-ollama-f16:protocol=553c0a9317e8c21f616991e92149fc828d7e8902:prediction=6549533c5b7d3b48bbd644f68f6adf0ea8463deb:ok=True; hash_self_consistent=True"
+        },
+        {
+          "num": "02",
+          "name": "rules_manifest_locked",
+          "passed": true,
+          "detail": "sha_match=True formal_challenge_clean=True"
+        },
+        {
+          "num": "03",
+          "name": "few_shot_locked",
+          "passed": true,
+          "detail": "status=AVAILABLE sha_match=True"
+        },
+        {
+          "num": "04",
+          "name": "each_model_covers_413",
+          "passed": true,
+          "detail": "successful=8"
+        },
+        {
+          "num": "05",
+          "name": "no_duplicate_or_missing_ids",
+          "passed": true,
+          "detail": "sampleId sets aligned & duplicate-free"
+        },
+        {
+          "num": "06",
+          "name": "input_and_label_sha_consistent",
+          "passed": true,
+          "detail": "input=c77f4949cbe1 label=13fd71f5507e"
+        },
+        {
+          "num": "07",
+          "name": "inference_scoring_process_isolation",
+          "passed": true,
+          "detail": "banned_found=[]"
+        },
+        {
+          "num": "08",
+          "name": "train_validation_challenge_free",
+          "passed": true,
+          "detail": "overlap_train=0 overlap_val=0"
+        },
+        {
+          "num": "09",
+          "name": "few_shot_challenge_free",
+          "passed": true,
+          "detail": "overlap=0"
+        },
+        {
+          "num": "10",
+          "name": "rules_not_modified_by_challenge",
+          "passed": true,
+          "detail": "detection_engine_blob_head=95654206590b7fb733d1425b280e7dfacc8c20ba"
+        },
+        {
+          "num": "11",
+          "name": "family_macro_f1_reference_only_labels",
+          "passed": true,
+          "detail": "detail=[]"
+        },
+        {
+          "num": "12",
+          "name": "zero_event_binomial_interval",
+          "passed": true,
+          "detail": "detail=[]"
+        },
+        {
+          "num": "13",
+          "name": "statistical_tests_paired",
+          "passed": true,
+          "detail": "seed=20260731 iter=10000"
+        },
+        {
+          "num": "14",
+          "name": "figures_tables_match_metrics",
+          "passed": true,
+          "detail": "main CSV values + required figure files"
+        },
+        {
+          "num": "15",
+          "name": "claims_have_evidence",
+          "passed": true,
+          "detail": "claims=5"
+        },
+        {
+          "num": "16",
+          "name": "final_labels_unchanged",
+          "passed": true,
+          "detail": "13fd71f5507e"
+        },
+        {
+          "num": "17",
+          "name": "ab_annotations_unchanged",
+          "passed": true,
+          "detail": "A=381dd788a057 B=9c52f7cbdb66"
+        },
+        {
+          "num": "18",
+          "name": "training_data_unchanged",
+          "passed": true,
+          "detail": "commit scope excludes ml/data/releases + production"
+        },
+        {
+          "num": "19",
+          "name": "production_detection_path_unchanged",
+          "passed": true,
+          "detail": "detection-engine.ts blob@HEAD=95654206590b7fb733d1425b280e7dfacc8c20ba expected=95654206590b7fb733d1425b280e7dfacc8c20ba"
+        },
+        {
+          "num": "20",
+          "name": "human_reviewed_false",
+          "passed": true,
+          "detail": "humanReviewed=False reviewerCount=0"
+        },
+        {
+          "num": "21",
+          "name": "challenge_not_used_for_tuning",
+          "passed": true,
+          "detail": "protocol_v2 + manifest + few-shot all false"
+        },
+        {
+          "num": "22",
+          "name": "all_required_models_success",
+          "passed": true,
+          "detail": "all_success=True metrics_recompute_mismatches=[]"
+        },
+        {
+          "num": "23",
+          "name": "prediction_privacy_scan",
+          "passed": true,
+          "detail": "hits=[] total=0"
+        },
+        {
+          "num": "24",
+          "name": "parse_and_schema_failures_remain_unknown",
+          "passed": true,
+          "detail": "invalid=[] total=0"
+        },
+        {
+          "num": "25",
+          "name": "inference_path_one_variable_matrix_complete",
+          "passed": false,
+          "detail": "status=COMPLETE message=SUCCESS template=SUCCESS loadErrors=[] order=False metadata=True sharedPrompt=True"
+        },
+        {
+          "num": "26",
+          "name": "provenance_and_claim_fields_resolve",
+          "passed": true,
+          "detail": "commits=['28d34e5c2ff308e37b937d038956967a4e679352', '28d34e5c2ff308e37b937d038956967a4e679352', '28d34e5c2ff308e37b937d038956967a4e679352', '28d34e5c2ff308e37b937d038956967a4e679352'] badClaims=[]"
+        },
+        {
+          "num": "27",
+          "name": "measured_sizes_and_report_consistency",
+          "passed": false,
+          "detail": "unprovenSizes=[] expectedComplete=False reportComplete=True"
+        }
+      ]
     }
   },
   "completionCriteriaMet": true,

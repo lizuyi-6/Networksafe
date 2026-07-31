@@ -1,22 +1,9 @@
 {
   "schemaVersion": 2,
   "mode": "strict",
-  "checksPassed": 25,
+  "checksPassed": 27,
   "checksTotal": 27,
-  "failed": [
-    {
-      "num": "25",
-      "name": "inference_path_one_variable_matrix_complete",
-      "passed": false,
-      "detail": "status=COMPLETE message=SUCCESS template=SUCCESS loadErrors=[] order=False metadata=True sharedPrompt=True"
-    },
-    {
-      "num": "27",
-      "name": "measured_sizes_and_report_consistency",
-      "passed": false,
-      "detail": "unprovenSizes=[] expectedComplete=False reportComplete=True"
-    }
-  ],
+  "failed": [],
   "checks": [
     {
       "num": "01",
@@ -165,20 +152,20 @@
     {
       "num": "25",
       "name": "inference_path_one_variable_matrix_complete",
-      "passed": false,
-      "detail": "status=COMPLETE message=SUCCESS template=SUCCESS loadErrors=[] order=False metadata=True sharedPrompt=True"
+      "passed": true,
+      "detail": "status=COMPLETE message=SUCCESS template=SUCCESS loadErrors=[] order=True metadata=True sharedPrompt=True"
     },
     {
       "num": "26",
       "name": "provenance_and_claim_fields_resolve",
       "passed": true,
-      "detail": "commits=['28d34e5c2ff308e37b937d038956967a4e679352', '28d34e5c2ff308e37b937d038956967a4e679352', '28d34e5c2ff308e37b937d038956967a4e679352', '28d34e5c2ff308e37b937d038956967a4e679352'] badClaims=[]"
+      "detail": "commits=['9ebd1d2393efaf86b75adb3646c71e0727965768', '9ebd1d2393efaf86b75adb3646c71e0727965768', '9ebd1d2393efaf86b75adb3646c71e0727965768', '9ebd1d2393efaf86b75adb3646c71e0727965768'] badClaims=[]"
     },
     {
       "num": "27",
       "name": "measured_sizes_and_report_consistency",
-      "passed": false,
-      "detail": "unprovenSizes=[] expectedComplete=False reportComplete=True"
+      "passed": true,
+      "detail": "unprovenSizes=[] expectedComplete=True reportComplete=True"
     }
   ]
 }

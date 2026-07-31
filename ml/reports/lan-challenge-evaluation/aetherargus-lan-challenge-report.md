@@ -2,15 +2,15 @@
 
 ## 1. Experiment identity
 
-- Date: `2026-07-31T12:38:47.991117+00:00`
-- Evaluation code commit: `28d34e5c2ff308e37b937d038956967a4e679352`
+- Date: `2026-07-31T12:42:52.104104+00:00`
+- Evaluation code commit: `9ebd1d2393efaf86b75adb3646c71e0727965768`
 - Protocol commit: `553c0a9317e8c21f616991e92149fc828d7e8902`
 - Canonical protocol SHA-256: `b5fe38cb554a8ee63adfbb767a2ff5a2a73b18ac096e2f8812183f7979b4fdeb`
 - Input SHA-256: `c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3`
 - Label SHA-256: `13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad`
 - Status: **COMPLETE_FROZEN_CHALLENGE_EVIDENCE**
 - Partial-artifact integrity validation: **0/27 passed**
-- Strict completion validation: **0/27 passed**
+- Strict completion validation: **25/27 passed**
 
 The challenge set was not used for training, prompt selection, threshold
 selection, hyperparameter tuning, or model selection.
