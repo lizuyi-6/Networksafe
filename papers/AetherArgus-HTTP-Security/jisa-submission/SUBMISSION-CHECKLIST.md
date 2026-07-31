@@ -10,13 +10,14 @@
 - [ ] Verify the official English company name and translated address against the business-registration record.
 - [ ] Confirm that postal code 071700 is appropriate for the company's preferred mailing address.
 - [x] Record the current funding statement: no external grant funding.
-- [x] Add a company-specific potential competing-interest disclosure.
-- [ ] Confirm the author's precise company role and whether ownership, patents, investment, or in-kind company support require more detailed disclosure.
+- [x] Confirm the author's company role: Founder.
+- [x] Add a founder-specific potential competing-interest disclosure.
+- [x] Prepare an editable competing-interest Word draft.
 - [ ] Complete Elsevier's declarations tool and upload its generated `.doc` or `.docx` file.
 - [ ] Provide editors and reviewers with repository access or create a persistent reviewer-access archive.
 - [ ] Decide which de-identified data and code can be publicly archived and obtain a DOI or persistent identifier where possible.
 - [x] Add an editable author biography below 100 words.
-- [ ] Upload a passport-type author photograph as a separate figure.
+- [x] Prepare a passport-type author photograph as a separate 1200 × 1500, 300 dpi JPEG.
 
 ## Manuscript checks
 
@@ -29,7 +30,7 @@
 - [x] Data-availability statement included.
 - [x] CRediT statement included for the sole author.
 - [x] Funding section included.
-- [x] Company-specific competing-interest section included.
+- [x] Founder-specific competing-interest section included.
 - [x] Generative-AI declaration included immediately before references.
 - [x] Negative results retained: 20.57% safe FPR and zero unknown recall.
 - [x] Human-review timing is reported as post-evaluation.
@@ -51,9 +52,11 @@
 - [ ] All figure PDF/EPS files as separate uploads
 - [ ] `figure-captions.txt`
 - [ ] `highlights.txt`
-- [ ] `author-biography.txt`
-- [ ] Passport-type author photograph
-- [ ] Elsevier declarations `.doc` or `.docx`
+- [x] `author-biography.txt`
+- [x] `Zuyi_Li_author_biography.docx`
+- [x] `Zuyi_Li_author_photo.jpg`
+- [x] `JISA_competing_interests_draft.docx`
+- [ ] Official Elsevier declarations `.doc` or `.docx`
 - [ ] Cover letter text
 - [ ] Any supplementary reproducibility archive
 
