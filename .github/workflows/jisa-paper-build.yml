@@ -1,0 +1,39 @@
+name: JISA Paper Build
+
+on:
+  pull_request:
+    paths:
+      - 'papers/AetherArgus-HTTP-Security/**'
+      - '.github/workflows/jisa-paper-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-jisa-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Compile JISA manuscript
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: papers/AetherArgus-HTTP-Security/jisa-submission/main.tex
+          work_in_root_file_dir: true
+          texlive_version: 2026
+          os: debian
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+
+      - name: Upload compiled PDF and log
+        uses: actions/upload-artifact@v7
+        with:
+          name: aetherargus-jisa-manuscript
+          path: |
+            papers/AetherArgus-HTTP-Security/jisa-submission/main.pdf
+            papers/AetherArgus-HTTP-Security/jisa-submission/main.log
+          if-no-files-found: error
+          retention-days: 30
