@@ -15,7 +15,7 @@ A complete blind human review was performed for all 413 samples after the frozen
 
 Reviewer identities, reviewer count, worksheets, and raw review materials are intentionally withheld from the public repository to prevent disclosure of confidential benchmark and operational information. Human reviewers did not operate the public repository.
 
-The public evidence is therefore an operator-confirmed attestation bound to:
+The public evidence is an operator-confirmed attestation bound to:
 
 - the 413-sample review scope;
 - the blind-review constraints;
@@ -35,6 +35,15 @@ final-labels.jsonl SHA-256 after review:
 ```
 
 Because the label bytes did not change, the existing model predictions, scoring outputs, statistical tests, tables, and figures remain valid and do not require rerunning.
+
+## Validation
+
+The original frozen evaluation passed its strict 27/27 validation before this post-evaluation review. The current label provenance is additionally validated by:
+
+```bash
+node ml/data/lan_challenge_capture/adjudication/validate-context-visibility.js
+node ml/data/lan_challenge_capture/adjudication/validate-adjudication.js
+```
 
 ## Publication terminology
 
