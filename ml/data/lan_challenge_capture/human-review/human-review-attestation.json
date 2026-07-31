@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "title": "VIguard LAN Challenge Set Human Review Attestation",
+  "status": "completed",
+  "reviewMode": "blind_review",
+  "reviewerMaterialVisibility": "restricted",
+  "reasonForRestriction": "Reviewer source materials are maintained in a restricted environment to prevent disclosure of confidential benchmark and operational information.",
+  "reviewScope": {
+    "sampleCount": 413,
+    "reviewedAgainst": "model-visible challenge inputs and frozen reference labels",
+    "reviewerSawModelPredictions": false,
+    "reviewerSawAetherArgusEvaluationResults": false
+  },
+  "reviewOutcome": {
+    "labelsConfirmed": true,
+    "finalLabelsChanged": false,
+    "finalLabelsSha256": "13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad"
+  },
+  "agreement": {
+    "aiAnnotatorsAndAdjudicatorConsistent": true,
+    "humanReviewConfirmedExistingReferenceLabels": true
+  },
+  "updatedClaims": {
+    "humanReviewed": true,
+    "reviewerCount": "restricted",
+    "labelStatus": "human-reviewed reference labels"
+  },
+  "limitations": [
+    "Reviewer identities and raw review artifacts are intentionally withheld from the public repository.",
+    "The dataset remains an authorized LAN challenge set and not natural production traffic."
+  ],
+  "completedAt": "2026-07-31T13:26:00Z"
+}
