@@ -38,17 +38,13 @@ Abstract word count: 197.
 - Phone: [REQUIRED BY SUBMISSION CHECKLIST]
 - Affiliation: Hebei Xiong'an Qiongyu Technology Co., Ltd.
 - Chinese legal name: 河北雄安穹驭科技有限公司
-- Location currently recorded: Xiong'an New Area, Hebei, China
-- Registered street address and postal code: [REQUIRED]
+- Registered address (Chinese): 中国（河北）自由贸易试验区雄安片区雄安高新区服务中心621-045（自主申报）
+- Working English address: No. 621-045, Xiong'an High-tech Zone Service Center, Xiong'an Area, China (Hebei) Pilot Free Trade Zone, Xiong'an New Area, Hebei 071700, China
 - ORCID: [ADD IF AVAILABLE]
 
-## Affiliation verification
+## Address verification note
 
-The working English translation is `Hebei Xiong'an Qiongyu Technology Co., Ltd.` Before external submission, compare it with the company's business licence, official website, bank records, or other authoritative English-language corporate document. If the company has no registered English name, retain a consistent direct translation and the exact Chinese legal name in internal submission records.
-
-## Competing-interest disclosure
-
-The manuscript discloses the author's company affiliation and the possibility that the company may have a commercial interest in AI and cybersecurity technologies related to the work. Do not select the no-conflict option unless this relationship is reassessed and documented.
+The English company name and translated address are working publication forms. Before external submission, compare them against the business-registration record and any official English company materials. `621-045` is treated as the registered unit or declaration code, not as a postal code. The working postal code `071700` is based on official Xiong'an Area government contact information and should be confirmed against the company's preferred mailing record.
 
 ## Suggested subject areas
 
@@ -70,7 +66,7 @@ No preprint is currently declared in this package. If the manuscript is uploaded
 
 - The manuscript is not under consideration elsewhere.
 - The sole author must approve the final version.
-- The work received no external grant funding, subject to final author confirmation.
-- The company affiliation and potential commercial interest must be disclosed.
-- The final competing-interest document must be generated through Elsevier's declarations tool.
+- The research received no external grant funding unless later corrected.
+- The company affiliation and possible commercial interest are disclosed.
+- The final declaration file must be generated through Elsevier's declarations tool.
 - Generative-AI assistance is disclosed in the manuscript.
