@@ -1,36 +1,30 @@
 # JISA Declarations
 
-Use this file to complete the Elsevier declarations tool and final manuscript. Do not submit both competing-interest options.
+Use this file to complete the Elsevier declarations tool and final manuscript.
 
 ## CRediT authorship contribution statement
 
-Current one-author draft:
-
 > Zuyi Li: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Visualization, Writing – original draft, Writing – review and editing, Project administration.
-
-Before submission, add every person who meets the journal's authorship requirements and assign only roles they actually performed.
 
 ## Funding
 
-Use this statement only if no specific grant or sponsor supported the research:
+Current statement, subject to final author confirmation:
 
-> This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+> This research received no external grant funding.
 
-If funding or institutional support existed, replace it with the official funder name and grant number and state whether the sponsor influenced study design, data collection, analysis, interpretation, writing, or the decision to submit.
+If the company provided reportable financial or in-kind support beyond the author's ordinary employment or affiliation, describe that support and state whether it influenced study design, data collection, analysis, interpretation, writing, or the decision to submit.
 
-## Competing interests — Option A
+## Competing interests
 
-Use only if no financial, employment, ownership, patent, consultancy, or other relationship could reasonably be perceived as relevant:
+Use the following company-specific disclosure unless the author's precise ownership, employment, patent, or investment relationship requires a more detailed statement:
 
-> The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+> The author is affiliated with Hebei Xiong'an Qiongyu Technology Co., Ltd., which may have a commercial interest in artificial-intelligence and cybersecurity technologies related to this work. This relationship is disclosed as a potential competing interest. No external sponsor controlled the frozen evaluation protocol, analysis, interpretation, or reporting.
 
-## Competing interests — Option B
+Company legal name in Chinese:
 
-Use if an author has a founder, ownership, employment, patent, or commercial relationship connected to AI or cybersecurity:
+> 河北雄安穹驭科技有限公司
 
-> The author is affiliated with commercial technology activities in artificial intelligence and cybersecurity. This relationship is disclosed as a potential competing interest. The study protocol, frozen evaluation, statistical analysis, and reporting were conducted without sponsor control over the reported results.
-
-Edit Option B to identify the relevant company, ownership, employment, patent, or other relationship accurately. Elsevier's declarations tool should generate the final .doc or .docx declaration file.
+Before submission, confirm whether the disclosure should additionally identify the author as a founder, shareholder, director, employee, patent holder, or other role. Elsevier's declarations tool should generate the final .doc or .docx declaration file.
 
 ## Generative AI declaration
 
@@ -42,10 +36,11 @@ Edit Option B to identify the relevant company, ownership, employment, patent, o
 
 ## Submission declaration
 
-Before pressing Submit, every author must confirm that:
+Before pressing Submit, the author must confirm that:
 
 - the manuscript has not been published previously except as an allowed preprint or report;
 - it is not under consideration by another journal;
-- all authors approve the manuscript and author order;
-- the responsible institution or organization permits submission;
-- all reported data, citations, and declarations have been reviewed by the human authors.
+- the author approves the manuscript and affiliation;
+- the company permits use of its name as the author's affiliation;
+- the responsible organization permits submission;
+- all reported data, citations, and declarations have been reviewed by the human author.
