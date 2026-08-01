@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AetherGuard hardware campaign",
+  "type": "object",
+  "required": [
+    "resultKind",
+    "schemaVersion",
+    "runId",
+    "startedAt",
+    "finishedAt",
+    "complete",
+    "gatewayCommit",
+    "transport",
+    "expectedTests"
+  ],
+  "properties": {
+    "resultKind": {"const": "campaign"},
+    "schemaVersion": {"const": 1},
+    "runId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "startedAt": {"type": "string", "format": "date-time"},
+    "finishedAt": {"type": ["string", "null"], "format": "date-time"},
+    "complete": {"type": "boolean"},
+    "gatewayCommit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "transport": {"type": "string", "minLength": 1},
+    "sourceTreeDirty": {"type": "boolean"},
+    "deploymentArtifacts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "repositoryPath", "remotePath", "sha256"],
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
+          "repositoryPath": {"type": "string", "minLength": 1},
+          "remotePath": {"type": "string", "pattern": "^/[^\\u0000]+$"},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "runtimeConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gatewayConfigPath", "gatewayConfigSha256", "testConfigPath", "testConfigSha256"],
+      "properties": {
+        "gatewayConfigPath": {"type": "string", "pattern": "^/[^\\u0000]+$"},
+        "gatewayConfigSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "testConfigPath": {"type": "string", "pattern": "^/[^\\u0000]+$"},
+        "testConfigSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "expectedTests": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["testId", "category"],
+        "properties": {
+          "testId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+          "category": {
+            "enum": ["connectivity", "isolation", "authorization", "fault", "topology", "performance", "reboot"]
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"complete": {"const": true}},
+        "required": ["complete"]
+      },
+      "then": {"properties": {"finishedAt": {"type": "string", "format": "date-time"}}},
+      "else": {"properties": {"finishedAt": {"type": "null"}}}
+    },
+    {
+      "if": {"required": ["sourceTreeDirty"]},
+      "then": {
+        "required": ["deploymentArtifacts", "runtimeConfiguration"],
+        "properties": {"sourceTreeDirty": {"const": false}}
+      }
+    }
+  ],
+  "additionalProperties": false
+}

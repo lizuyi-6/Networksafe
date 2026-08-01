@@ -1,57 +1,72 @@
-# CLAIM BOUNDARIES - AetherGuard Cat2 External Gateway Prototype
+# Claim boundaries
 
-This file is the binding rule set for any statement made about this
-experiment, including papers, presentations and PR descriptions. If a claim
-is not explicitly listed under "supported", do not make it.
+These rules bind papers, presentations, result summaries, and PR descriptions.
+Only a claim backed by a current `PASSED` per-test JSON and primary manifest
+evidence may be used.
 
-## Supported claims (only if the matching test actually PASSED)
+## Evaluated scope
 
-1. The Cat2 is a physically separate dual-NIC SBC gateway in series between
-   the protected Linux host and its upstream network. *(inventory)*
-2. With only root on the protected host, an attacker cannot modify the Cat2
-   gate, because the gate state lives in the Cat2 kernel and management
-   requires credentials the host does not possess. *(fault tests F17-F20)*
-3. The default and post-reboot state of the gate is **isolated**: no L2
-   frames cross between the protected host and upstream. *(tests B, F06-F08)*
-4. A release is always time-bounded (1..600 s); expiry is scheduled by PID1
-   at release time and does not depend on any userspace process surviving.
-   *(tests C, D, F01-F02)*
-5. Signed release authorizations (ECDSA P-256 + SHA-256) are verified on the
-   gateway; tampered, replayed, counter-rolled-back, expired, future-dated
-   and over-duration authorizations are rejected. *(test E)*
-6. The management plane (USB RNDIS) stayed available during every executed
-   test, including reboots. *(test logs)*
-7. Performance numbers exactly as measured, with their environment attached.
-   *(test G, only where status = PASSED)*
+- Gateway: physically separate LubanCat-2 / RK3568 SBC.
+- Data plane: two logical USB RNDIS functions, Cat2 `usb1` and `usb2`.
+- Gate: Linux bridge membership of `usb1`, serialized and lease-identified.
+- Protected endpoint: single-path Linux network namespace `victim` with only
+  `agvictim0`.
+- Management: logical RNDIS function `usb0`; it shares the composite gadget,
+  USB controller, and cable with the data functions.
+- Authorization: ECDSA P-256 + SHA-256 and a root-owned file counter.
 
-## Unsupported claims (FORBIDDEN)
+## Conditionally supported claims
 
-- "Secure Element-backed" anything. Keys are ordinary files.
-- "Hardware-enforced", "physical interlock", "relay", "air-gap", "tamper-resistant".
-- "Resists compromise of the Cat2 itself" (its root can change everything).
-- "STM32 safety controller verified" / "relay feedback verified" (no such
-  hardware is present or tested).
-- "Root-Resistant Gateway Appliance complete" - this is a software-gate
-  prototype on one board with one protected host.
-- "Production-grade", "SLA", "zero risk", "absolute security".
-- Any performance or reliability number whose test did not actually run.
-- Any claim that PID1 lease expiry is equivalent to a kernel packet-filter
-  timer. It is the strongest mechanism this kernel supports (evidence:
-  inventory/cat2-system.json), and the difference is documented.
+When the corresponding current test is `PASSED`, this run can establish:
 
-## Known limitations that MUST accompany any write-up
+1. Traffic emitted by the single-path victim namespace does not appear on the
+   Cat2 UPLINK capture while `usb1` is outside `agbr0`.
+2. During a valid bounded lease, the victim reaches a local upstream target,
+   establishes TCP, and produces matching UPLINK capture evidence.
+3. After expiry, the identical probe fails and no matching UPLINK packet is
+   observed.
+4. Repeated release failure closes the gate, removes incomplete lease state,
+   and leaves no active timer after reconciliation.
+5. Expiry callbacks are lease-ID scoped and transitions are serialized.
+6. The authorization verifier rejects the tested mutations, strict-type
+   violations, replay, rollback/equal counters, expiry/future timestamps, and
+   malformed signatures.
+7. The counter is durably consumed before release; release failure does not
+   permit the same authorization to be replayed.
+8. `usb0` management and the recorded ReactorOS services remained available
+   for the specifically executed checks.
 
-1. Gate enforcement is Linux bridge membership in software, on the same
-   kernel that runs other services (ReactorOS). A Cat2 kernel compromise or
-   Cat2 root shell defeats everything.
-2. Boot-time isolation: the protected host's port is not a bridge member
-   until explicitly enslaved by a verified release; the boot unit simply
-   never enslaves it, so the boot window is zero by construction (verified
-   in fault test F06).
-3. The anti-replay counter is rollback-able by Cat2 root (no monotonic
-   hardware counter on this board).
-4. Bypass interfaces on the protected host (WiFi, VPN) are outside the
-   gateway's control; experiments disable them with auto-restore, but a real
-   deployment needs physical control of the host's radios.
-5. The protected host and the operator console are the same laptop in this
-   evaluation; a dedicated victim machine would be cleaner.
+## Forbidden claims
+
+- Fully compromised physical Linux host or full root on the operator laptop.
+- Physical `eth0`/`eth1` inline gateway validation, dual-Ethernet data-plane
+  validation, PHY/link-flap behavior, VLAN behavior, gigabit negotiation, or
+  Ethernet performance.
+- Hardware-enforced isolation, physical interlock, relay, air gap, Secure
+  Element, hardware anti-rollback, STM32 safety controller, or relay feedback.
+- Resistance to Cat2 root, Cat2 kernel compromise, gadget-controller failure,
+  USB cable failure, or physical tampering.
+- Production-grade, paper-ready, SLA, zero-risk, or absolute-security wording.
+- Any metric or reliability conclusion from `PARTIAL`, `NOT_RUN`, or `BLOCKED`.
+- A complete post-reboot fail-closed result, automatic USB restoration, or a
+  zero boot window from the historical F06 observation.
+
+## Reboot boundary
+
+The historical reboot restored `usb0` management and ReactorOS but removed the
+runtime-created `usb1`, `usb2`, and the runtime bridge. Interface absence prevented
+forwarding; it did not demonstrate a restored operational gateway. Therefore:
+
+- F06 is `PARTIAL` unless automatic topology recovery plus continuous UPLINK
+  capture is rerun.
+- F07 is `NOT_RUN`.
+- No real power-cycle claim exists; physical power cycling requires explicit
+  user confirmation.
+
+## Trust and credential boundary
+
+The victim namespace does not contain Cat2 credentials and cannot change the
+Cat2 bridge. However, the enclosing operator laptop stores the Cat2 SSH key and
+authorization private key. Root on that whole laptop can access those
+credentials. Only namespace-confined processes, not whole-host root, are the
+evaluated attacker.

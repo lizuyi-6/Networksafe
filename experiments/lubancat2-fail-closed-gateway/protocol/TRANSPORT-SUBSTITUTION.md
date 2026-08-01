@@ -1,47 +1,72 @@
-# Transport Substitution (why no ethernet cables, and what it means)
+# USB RNDIS transport substitution
 
-The user's environment had **no ethernet cables** available, so the canonical
-topology (protected host --eth-- Cat2 SERVER port, Cat2 UPLINK port --eth--
-router) could not be wired. To still produce hardware-real evidence on the
-actual Cat2, the two gateway links are realized as **two extra USB RNDIS
-gadget functions** on the Cat2's existing USB OTG port:
+No Ethernet cables were available for this run. The evaluated data links were
+two additional logical RNDIS functions on the real Cat2:
 
-- `rndis.usb1` (host MAC `02:11:11:11:11:01`) = SERVER link  → laptop `agvictim0`
-- `rndis.usb2` (host MAC `02:22:22:22:22:01`) = UPLINK link  → laptop `aguplink0`
-- `rndis.gs0`  (host MAC `fe:12:29:d4:4c:e2`) = management  → laptop `board0` (unchanged)
+| Role | Cat2 function/interface | Host interface | MAC seen by host |
+| --- | --- | --- | --- |
+| SERVER | `rndis.usb1` / `usb1` | `agvictim0` in `victim` | `02:11:11:11:11:01` |
+| UPLINK | `rndis.usb2` / `usb2` | `aguplink0` | `02:22:22:22:22:01` |
+| management | existing `rndis.gs0` / `usb0` | discovered by `192.168.100.1/24` | verified at runtime |
 
-The Cat2 kernel builds the RNDIS function (`CONFIG_USB_F_RNDIS=y`,
-`CONFIG_USB_CONFIGFS_RNDIS=y`); ECM is not built, hence RNDIS. The laptop
-distinguishes the three by MAC via systemd `.link` rules
-(`10-board-rndis.link`, `11-ag-victim.link`, `12-ag-uplink.link`).
+The Cat2 gate, bridge, transition lock, lease state, PID1 timer, ECDSA P-256 +
+SHA-256 verifier, journal, and ReactorOS coexist on the actual RK3568 board.
+The transport does not validate the Ethernet PHYs and does not make `usb0`
+physically independent: all three logical functions share the gadget,
+controller, physical cable, and re-enumeration event.
 
-## What is still hardware-real on the Cat2
+The protected endpoint is a network namespace with one non-loopback interface.
+This proves only a namespace-confined single-path endpoint. The enclosing
+laptop owns the interfaces and credentials and is trusted.
 
-- The bridge `br0`, its two member ports, the **gate primitive (bridge
-  membership of `usb1`)**, the PID1 lease timer, the `ag-cat2-gateway`
-  state machine, Ed25519…/ECDSA authorization, journal logging, reboot
-  behaviour — all run on the actual LubanCat-2 (RK3568, kernel 4.19.232).
-- The protected host is a network namespace `victim` on the laptop that
-  contains **only** `agvictim0` — it has no WiFi, no VPN, no other NIC, so
-  the Cat2 is genuinely its only path out. This is at least as strong a
-  no-bypass property as a cabled laptop.
-- Upstream is the real home router + internet, reached through the laptop's
-  NAT on `aguplink0`. `ping 192.168.3.1`, `ping 223.5.5.5`, and
-  `tcp 1.1.1.1:443` from inside `victim` all succeed while the gate is
-  released, and all fail while isolated (measured).
+Primary released connectivity uses a local-only host upstream at
+`10.99.0.1` and a local TCP marker server bound to `aguplink0`. The host
+setup does not enable global `ip_forward`, does not create a NAT rule, does
+not touch nftables, and does not write persistent `.link` profiles. Internet
+endpoints are never the pass/fail oracle.
 
-## What is NOT validated by this run (Ethernet-transport-specific)
+## Reproduction
 
-- 1000 Mb/s full-duplex negotiation, PHY-level link flap / driver reset
-  behaviour, VLAN-tagged frame forwarding, hardware offload differences.
-- These require cabling eth0/eth1 to real Ethernet peers and are marked
-  **NOT_RUN** in the results. The scripts are transport-agnostic and will
-  run unchanged once cables are available (just set SERVER_IF/UPLINK_IF to
-  eth0/eth1 and drop the gadget/NAT scaffolding).
+Committed implementation:
 
-## Reproducing the USB-net topology
+```text
+transport/usb-rndis/
+  cat2-setup.sh
+  cat2-teardown.sh
+  host-setup.sh
+  host-teardown.sh
+  verify-topology.sh
+  systemd/
+  README.md
+```
 
-See `protected-host/scripts/` (TODO: committed helpers) and the operator
-runbook in `README.md`. Teardown removes the two gadget functions, the
-netns, the NAT table, and the `.link` rules; the management RNDIS link and
-all pre-existing configuration are untouched.
+The scripts are ownership-tracked under a lifecycle lock. Cat2 setup validates
+the management function, MAC, IP, and non-membership before modification and
+rebinds the original UDC on failure. Host setup discovers the two fixed-MAC
+RNDIS interfaces, renames them to `agvictim0`/`aguplink0`, moves the victim
+into a dedicated `victim` namespace, and arms a finite auto-rollback watchdog.
+No script enables global `ip_forward`, creates a NAT rule, writes a nftables
+table, installs persistent `.link` profiles, or deletes NetworkManager
+profiles.
+
+## Non-transferable results
+
+USB results cannot be extrapolated to:
+
+- `eth0`/`eth1` inline operation;
+- 1000BASE-T speed or duplex;
+- VLAN tags or Ethernet offload;
+- PHY/link flap or cable pull;
+- Ethernet throughput or latency;
+- a separate physical host with full root.
+
+All such items remain `NOT_RUN`.
+
+## Reboot status
+
+The evaluated topology is runtime-only. The systemd units are unenabled
+templates. Historical F06 showed eventual `usb0` management and ReactorOS
+recovery while the experiment data interfaces and bridge (historically named
+`usb1`, `usb2`, and `br0`; the current dedicated bridge is `agbr0`) were
+absent. Therefore F06 is `PARTIAL`, F07 is `NOT_RUN`, and no zero-boot-window
+or automatic-restoration claim is permitted.

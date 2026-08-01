@@ -1,12 +1,15 @@
 # AetherGuard Cat2 gateway configuration (EXAMPLE - copy to /etc/aetherguard-cat2.conf on the Cat2)
 # Real file is machine-specific and gitignored. No secrets belong here.
 
-# Physical port facing the protected host (assigned by cable test, see inventory/interface-map.json)
-SERVER_IF=eth0
-# Physical port facing the upstream router/switch
-UPLINK_IF=eth1
-# Bridge name (management IP lives on usb0, NOT on br0, in this deployment)
-BRIDGE_IF=br0
+# Logical RNDIS data function facing the victim namespace.
+SERVER_IF=usb1
+# Logical RNDIS data function facing the local-only host upstream endpoint.
+UPLINK_IF=usb2
+# Dedicated bridge created and owned by the runtime USB setup transaction.
+BRIDGE_IF=agbr0
+# Management is never added to BRIDGE_IF.
+AG_MANAGEMENT_IF=usb0
+AG_MANAGEMENT_ADDRESS=192.168.100.2/24
 
 # Lease policy
 DEFAULT_RELEASE_SECONDS=60
@@ -16,3 +19,8 @@ MAX_RELEASE_SECONDS=600
 AG_GATEWAY_ID=cat2-gateway-01
 AG_AUTHZ_PUBKEY=/etc/aetherguard-cat2/authorizer-public.pem
 AG_COUNTER_FILE=/var/lib/aetherguard-cat2/authorizer-counter
+AG_COUNTER_LOCK_FILE=/var/lib/aetherguard-cat2/authorizer-counter.lock
+
+# Deterministic transition failpoints are forbidden in production. A separate
+# local test configuration must set this to 1 together with AG_TEST_MODE=1.
+AG_ALLOW_TEST_FAILPOINTS=0

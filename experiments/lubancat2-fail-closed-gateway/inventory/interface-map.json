@@ -1,7 +1,7 @@
 {
   "detectedAt": "2026-08-01T07:30:00Z",
   "status": "AS-BUILT (USB-net transport substitution - see note)",
-  "transportNote": "No ethernet cables were available, so the two gateway links are USB CDC/RNDIS gadget functions on the Cat2 instead of eth0/eth1. The Cat2 is still a physically separate dual-NIC gateway in series; L2 bridging, gate membership, PID1 lease, auth and fault behaviour are all hardware-real on the Cat2. Ethernet-PHY-specific items (1000Mb/s duplex, VLAN tag forwarding, PHY flap) are NOT_RUN. See protocol/TRANSPORT-SUBSTITUTION.md.",
+  "transportNote": "No Ethernet cables were available. The evaluated data plane used two logical USB RNDIS gadget functions on the physically separate Cat2 instead of eth0/eth1. Bridge membership, PID1 lease, authorization, and selected faults ran on the real Cat2. Ethernet PHY, speed/duplex, VLAN, and link-flap items are NOT_RUN. See protocol/TRANSPORT-SUBSTITUTION.md.",
   "cat2": {
     "serverInterface": "usb1",
     "uplinkInterface": "usb2",
@@ -11,22 +11,22 @@
     "uplinkTransport": "USB RNDIS gadget function rndis.usb2 (host MAC 02:22:22:22:22:01)",
     "managementInterface": "usb0",
     "managementAddress": "192.168.100.2/24",
-    "managementChannel": "USB RNDIS rndis.gs0 (out-of-band, independent of br0/usb1/usb2)",
+    "managementChannel": "USB RNDIS rndis.gs0 (logically outside agbr0 but sharing the composite gadget, controller, cable, and re-enumeration event)",
     "ethernetPortsPresent": ["eth0 (st_gmac, 7a:6c:05:86:0a:2f, unused/no-carrier)", "eth1 (st_gmac, 7e:6c:05:86:0a:2f, unused/no-carrier)"],
     "ethernetPortsRole": "NOT_USED this run (no cables); available for a future Ethernet-transport replication"
   },
   "protectedHost": {
-    "implementation": "network namespace 'victim' on the operator laptop (stronger no-bypass property than the whole laptop: the namespace contains ONLY agvictim0)",
+    "implementation": "single-path network namespace 'victim' on the trusted operator laptop; the namespace contains only agvictim0 and does not represent whole-laptop root compromise",
     "wiredInterfaceToCat2": "agvictim0 (02:11:11:11:11:01)",
-    "upstreamInterface": "aguplink0 (02:22:22:22:22:01) on the laptop host, NAT-ed to wlo1",
+    "upstreamInterface": "aguplink0 (02:22:22:22:22:01) on the laptop host, local-only upstream endpoint",
     "victimAddress": "10.99.0.2/24",
-    "upstreamGateway": "10.99.0.1 (laptop host, NAT to home router 192.168.3.1)",
+    "upstreamGateway": "10.99.0.1 (local laptop endpoint; no host forwarding or NAT)",
     "managementChannel": "board0 192.168.100.1 (USB RNDIS rndis.gs0, control only)"
   },
   "upstream": {
-    "device": "home router via laptop NAT (wlo1)",
-    "lanSubnet": "192.168.3.0/24",
-    "lanGateway": "192.168.3.1",
-    "internetProbe": "223.5.5.5 / 1.1.1.1:443 (verified reachable through the gate during release)"
+    "device": "local host endpoint aguplink0",
+    "lanSubnet": "10.99.0.0/24",
+    "lanGateway": "10.99.0.1",
+    "internetProbe": "not used; local upstream 10.99.0.1 is the availability oracle"
   }
 }

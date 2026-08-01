@@ -1,39 +1,56 @@
 {
   "protocol": "aetherguard-cat2-fail-closed-gateway",
-  "version": 1,
-  "generatedAt": "2026-08-01T03:45:00Z",
-  "statusEnum": ["PASSED", "FAILED", "NOT_RUN", "BLOCKED"],
-  "phases": [
-    {"id": 0, "name": "machine-identification", "status": "PASSED",
-     "evidence": ["inventory/cat2-system.json", "inventory/protected-host-system.json"]},
-    {"id": 1, "name": "interface-mapping", "status": "BLOCKED",
-     "blocker": "requires operator to plug ethernet cables; ports eth0/eth1 confirmed present via ethtool",
-     "evidence": ["inventory/interface-map.json"]},
-    {"id": 2, "name": "backup-and-rollback", "status": "NOT_RUN",
-     "scripts": ["cat2/scripts/ag-cat2-backup.sh", "cat2/rollback/aetherguard-network-rollback.sh"]},
-    {"id": 3, "name": "tooling", "status": "NOT_RUN",
-     "note": "nftables deliberately excluded: kernel lacks NF_TABLES_BRIDGE/SET (inventory evidence)"},
-    {"id": 4, "name": "temporary-bridge", "status": "NOT_RUN", "requires": "phase 1"},
-    {"id": 5, "name": "fail-closed-gate", "status": "NOT_RUN",
-     "design": "bridge port state + PID1 lease timer (substitute for nftables timed sets, see cat2/nftables/aetherguard-cat2.nft header)"},
-    {"id": 6, "name": "persistence", "status": "NOT_RUN", "requires": "phase 5 verified"},
-    {"id": 7, "name": "protected-host", "status": "NOT_RUN",
-     "scripts": ["protected-host/scripts/ag-protected-host-status",
-                  "protected-host/scripts/ag-protected-host-experiment-mode",
-                  "protected-host/scripts/ag-protected-host-restore"]},
-    {"id": 8, "name": "connectivity-isolation-tests", "status": "NOT_RUN", "requires": "phase 4"},
-    {"id": 9, "name": "fault-injection", "status": "NOT_RUN", "requires": "phase 5",
-     "items": ["kill-9 helpers", "service stop", "service restart", "failed reload",
-                "config corruption (copy)", "reboot isolated", "reboot released",
-                "power cycle (operator)", "SERVER cable pull (operator)", "UPLINK cable pull (operator)",
-                "cpu stress", "memory pressure", "disk-ro simulation", "time jump fwd",
-                "time jump back", "host reboot", "host firewall flush", "host route change",
-                "host MAC change", "host raw socket flood"]},
-    {"id": 10, "name": "authorization-prototype", "status": "NOT_RUN",
-     "algorithm": "ECDSA P-256 + SHA-256 over canonical JSON (Ed25519 rejected: OpenSSL 1.1.1n on Cat2 cannot verify Ed25519)",
-     "antiReplay": "monotonic counter file, flock, atomic write; root-owned; NOT hardware-anchored",
-     "requires": "none (runs without cables)"},
-    {"id": 11, "name": "performance", "status": "NOT_RUN",
-     "requires": "third machine as iperf3 peer; otherwise NOT_RUN with rerun script"}
-  ]
+  "version": 2,
+  "statusEnum": ["PASSED", "FAILED", "PARTIAL", "NOT_RUN", "BLOCKED"],
+  "evaluatedScope": {
+    "gateway": "physically separate LubanCat-2 SBC",
+    "dataPlane": "two logical USB RNDIS interfaces usb1 and usb2",
+    "protectedEndpoint": "single-path Linux network namespace victim/agvictim0",
+    "physicalEthernet": "NOT_RUN"
+  },
+  "gate": {
+    "primitive": "SERVER_IF bridge membership",
+    "transitionLock": "/run/aetherguard-cat2/transition.lock",
+    "leaseState": "/run/aetherguard-cat2/active-lease",
+    "releaseOrder": [
+      "gate_close",
+      "cancel_old_timer",
+      "clear_old_state",
+      "register_identified_timer",
+      "verify_timer_active",
+      "persist_prepared_lease",
+      "gate_open",
+      "verify_gate_and_timer",
+      "persist_active_lease"
+    ],
+    "reconcile": "closes any open state without one exact complete active lease"
+  },
+  "authorization": {
+    "algorithm": "ECDSA P-256 + SHA-256",
+    "canonicalJson": "project-defined UTF-8 sorted object keys compact separators no insignificant whitespace",
+    "counterLock": "/var/lib/aetherguard-cat2/authorizer-counter.lock",
+    "counterOrdering": "atomic file replace plus file and directory fsync before gateway release",
+    "releaseFailure": "counter remains consumed and gateway is forced isolated",
+    "hardwareAntiRollback": false
+  },
+  "requiredIsolationEvidence": [
+    "application probes fail from victim namespace",
+    "probe does not reach local upstream server",
+    "Cat2 UPLINK capture has zero victim packets and bytes",
+    "management remains available"
+  ],
+  "results": {
+    "perTest": "results/raw/<run-id>/<test-id>.txt and .json",
+    "schema": "schemas/test-result.schema.json",
+    "generator": "scripts/generate-evidence.py",
+    "validator": "scripts/validate-results.py"
+  },
+  "currentHardwareLimits": {
+    "f06": "PARTIAL unless persistent topology recovery and boot capture are rerun",
+    "f07": "NOT_RUN",
+    "powerCycle": "NOT_RUN without explicit user confirmation",
+    "performance": "NOT_RUN",
+    "vlanPhyGigabit": "NOT_RUN",
+    "independentPhysicalHost": "NOT_RUN"
+  }
 }

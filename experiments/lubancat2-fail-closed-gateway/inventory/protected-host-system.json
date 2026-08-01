@@ -1,12 +1,12 @@
 {
-  "role": "protected-host",
+  "role": "operator-host containing the victim network namespace",
   "collectedAt": "2026-08-01T03:41:14Z",
   "collector": "local shell as user break (root via sudo when needed)",
   "hostname": "break-HP-Pavilion-Gaming-Laptop-15-dk0xxx",
   "identificationEvidence": {
     "chassis": "laptop (HP Pavilion Gaming 15-dk0xxx)",
     "architecture": "x86_64",
-    "note": "identified by hardware/arch, not by hostname; this is also the experiment operator console"
+    "note": "identified by hardware/arch, not by hostname; the whole laptop is trusted and is not the evaluated compromised endpoint"
   },
   "os": "Ubuntu 26.04 LTS",
   "kernel": "7.0.0-28-generic",
@@ -35,5 +35,5 @@
   },
   "repoCommitAtCollection": "9cbd9fadee4f7eeeafa93e0794af20f4847215b3",
   "bypassInterfacesPresent": ["wlo1 (WiFi)", "YouTu (VPN)"],
-  "note": "This laptop is the user's daily-use machine. Experiment-mode must always auto-restore bypass interfaces; permanent WiFi disable is forbidden by protocol."
+  "note": "Historical host snapshot. The evaluated protected endpoint is the single-path victim namespace, not root on this daily-use laptop. Runtime tooling must not disrupt WiFi, VPN, or NetworkManager profiles and must restore experiment-owned state automatically."
 }

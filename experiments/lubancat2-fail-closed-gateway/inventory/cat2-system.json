@@ -1,7 +1,7 @@
 {
   "role": "cat2-gateway",
   "collectedAt": "2026-08-01T03:41:14Z",
-  "collector": "ssh root@192.168.100.2 (usb0 RNDIS out-of-band management)",
+  "collector": "ssh root@192.168.100.2 (usb0 logical RNDIS management)",
   "hostname": "lubancat",
   "identificationEvidence": {
     "cpuinfoHardware": "EmbedFire LubanCat-2",
@@ -36,14 +36,14 @@
       "CONFIG_BPF_SYSCALL": "y",
       "CONFIG_BRIDGE_EBTABLES": "n (NOT BUILT - ebtables unavailable)"
     },
-    "designConsequence": "no kernel-timer packet-gating primitive exists on this kernel; fail-closed gating uses bridge port state + PID1-scheduled lease expiry (see protocol/evaluation-protocol.md section D)"
+    "designConsequence": "no evaluated kernel-timer packet-gating primitive exists on this kernel; this prototype gates by SERVER_IF bridge membership and an identified PID1-scheduled lease expiry"
   },
   "iproute2Version": "iproute2-ss190107",
   "python3Version": "3.7.3",
   "interfaces": [
     {"name": "eth0", "mac": "7a:6c:05:86:0a:2f", "driver": "st_gmac", "state": "DOWN/NO-CARRIER", "addresses": [], "physical": true},
     {"name": "eth1", "mac": "7e:6c:05:86:0a:2f", "driver": "st_gmac", "state": "DOWN/NO-CARRIER", "addresses": [], "physical": true},
-    {"name": "usb0", "mac": "4a:d5:b5:43:01:90", "driver": "RNDIS gadget (USB)", "state": "UP", "addresses": ["192.168.100.2/24", "fe80::66d8:7f2:3d19:c2c6/64"], "physical": false, "role": "out-of-band management lifeline - MUST NOT be bridged or filtered"},
+    {"name": "usb0", "mac": "4a:d5:b5:43:01:90", "driver": "RNDIS gadget (USB)", "state": "UP", "addresses": ["192.168.100.2/24", "fe80::66d8:7f2:3d19:c2c6/64"], "physical": false, "role": "logical management lifeline outside agbr0; shares the composite USB gadget and MUST NOT be bridged or filtered"},
     {"name": "lo", "mac": "00:00:00:00:00:00", "state": "UNKNOWN", "addresses": ["127.0.0.1/8"], "physical": false}
   ],
   "currentDefaultRoute": null,

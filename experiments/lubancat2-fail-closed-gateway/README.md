@@ -1,117 +1,130 @@
-# AetherGuard Cat2 External Gateway Prototype
+# AetherGuard Cat2 fail-closed gateway prototype
 
-**Externalized Fail-Closed Network Containment for Fully Compromised Hosts**
+This experiment evaluates a **physically separate SBC gateway prototype using
+two logical USB RNDIS data interfaces**. The protected endpoint is a
+**single-path Linux network namespace** named `victim`, not a separate physical
+host. Read [CLAIM-BOUNDARIES.md](CLAIM-BOUNDARIES.md) before citing results.
 
-This directory contains a reproducible evaluation of a fail-closed network
-gateway built from a stock **LubanCat-2 (RK3568) SBC** sitting *outside* the
-protected Linux host. Even with full root on the protected host, an attacker
-cannot lift the isolation, because the gate lives on a different machine they
-have no credentials for.
+## Evaluated topology
 
-> Read [CLAIM-BOUNDARIES.md](CLAIM-BOUNDARIES.md) before citing anything.
-> This is a software-gated prototype. It is **not** a physical relay, has
-> **no** Secure Element, and does **not** resist compromise of the Cat2 itself.
+```text
+victim netns/agvictim0 (10.99.0.2)
+  <-> Cat2 usb1 (SERVER, normally not in agbr0)
+  <-> Cat2 agbr0 membership gate
+  <-> Cat2 usb2 (UPLINK, member of agbr0)
+  <-> host aguplink0 (10.99.0.1, local upstream target)
 
-## Real topology (as tested)
-
-```
-protected host (HP laptop, Ubuntu 26.04)          upstream (home router LAN)
-  eno1                                             192.168.3.1
-     | ethernet                                        |
-     |                                                 |
-  +--+---------------------- Cat2 (LubanCat-2) --------+---+
-  |  SERVER_IF (ethX)            UPLINK_IF (ethY)          |
-  |        \-------- Linux bridge br0 (gated) -------/     |
-  |                                                          |
-  |  usb0 192.168.100.2  <-- out-of-band management (SSH)    |
-  +----------------------------------------------------------+
-            ^
-            | USB cable (RNDIS)
-   operator console (same laptop, board0 192.168.100.1)
+operator host management interface
+  <-> Cat2 usb0 (192.168.100.2, never in agbr0)
 ```
 
-Management reaches the Cat2 over a dedicated USB RNDIS link that never
-touches the bridge, so the gate can never lock the operator out.
+The Cat2 was physically separate from the protected endpoint, while the
+evaluated data plane used two logical USB RNDIS interfaces. The board's two
+Ethernet PHYs were present but not exercised. The operator laptop also hosted
+the victim namespace and signing/SSH credentials; therefore this run does not
+model root compromise of the whole laptop.
 
-## Gate design (and why it is not nftables on this kernel)
+## Gate and lease transaction
 
-The fail-closed gate is the **kernel bridge membership** of `SERVER_IF`:
+`SERVER_IF` bridge membership is the kernel gate:
 
-| state    | SERVER_IF in br0? | effect |
-|----------|-------------------|--------|
-| isolated | no (nomaster)     | kernel has no path to forward the protected host's frames |
-| released | yes (enslaved)    | normal L2 bridging, guarded by a lease |
+| State | `SERVER_IF` membership | Lease requirement |
+| --- | --- | --- |
+| `isolated` | not enslaved | no active lease |
+| `released` | enslaved to configured `agbr0` | one exact active timer plus matching active lease record |
+| `fault` | any uncertain open state | `reconcile` removes `SERVER_IF` from its master |
 
-Bridge *port state* was rejected during bring-up: this kernel refuses
-`state forwarding` on carrier-less ports (ENETDOWN, verified) and resets the
-port to forwarding on carrier regain, which would silently re-open the gate
-after a cable re-plug. Membership is carrier-independent and idempotent.
+`release` takes `/run/aetherguard-cat2/transition.lock`, closes the gate,
+cancels old timers, clears old state, registers and verifies a tokenized PID1
+timer, atomically writes a `prepared` lease, opens and verifies the gate, then
+commits the lease as `active`. Every failure path closes the gate, cancels the
+candidate timer, clears incomplete state, journals a reason, and returns
+nonzero. Old expiry callbacks carry a lease ID and cannot close a newer valid
+lease. `isolate`, `release`, `_expire`, and `reconcile` use the same lock.
 
-Timed release uses a **PID1-registered systemd transient timer** created
-*before* the gate opens. If every userspace helper dies (`kill -9`), PID1
-still fires the timer and the port is un-enslaved (isolated). Reboot
-clears all transient timers and the boot unit keeps the port out of the
-bridge by default.
+The vendor kernel does not provide the planned nftables bridge timed-set path;
+`cat2/nftables/aetherguard-cat2.nft` remains reference-only. PID1 starts a new
+userspace expiry process; no claim is made that this is a kernel packet-filter
+timer.
 
-The canonical nftables timed-set design is kept in
-[cat2/nftables/aetherguard-cat2.nft](cat2/nftables/aetherguard-cat2.nft) but
-is **not deployed**: this vendor kernel 4.19.232 lacks
-`CONFIG_NF_TABLES_BRIDGE`, `CONFIG_NF_TABLES_SET`, `CONFIG_NET_CLS_BPF` and
-`CONFIG_BRIDGE_EBTABLES` (evidence: [inventory/cat2-system.json](inventory/cat2-system.json)).
-No kernel-timer packet gate exists on this board; the PID1 lease is the
-honest substitute and its limits are documented in the claim boundaries.
+## Authorization
 
-## Quick start (operator)
+Release documents use **ECDSA P-256 + SHA-256** over project-defined canonical
+JSON: UTF-8, sorted object keys, compact separators, and no insignificant
+whitespace. This is not represented as complete RFC 8785.
+
+The verifier takes a stable `authorizer-counter.lock`, validates exact fields
+and strict integer types, atomically replaces and fsyncs the counter file,
+fsyncs its directory, and only then calls the gateway. A failed release burns
+the counter and forces isolation; it never rolls the counter back. This file
+counter does not resist Cat2 root or storage rollback.
+
+## Installation on Cat2
+
+Review machine-specific values before installation. Never overwrite a working
+configuration without a backup and local recovery path.
 
 ```bash
-# 0) one-time on the Cat2 (as root): install config + scripts + service
-install -m755 cat2/scripts/ag-cat2-gateway /usr/local/sbin/
-install -m755 cat2/scripts/ag-cat2-backup.sh /usr/local/sbin/
-install -m755 cat2/rollback/aetherguard-network-rollback.sh /root/
-install -m644 cat2/config/aetherguard-cat2.conf /etc/   # fill in real ifnames
-install -m644 cat2/systemd/aetherguard-cat2-gateway.service /etc/systemd/system/
-
-# 1) backup + auto-rollback BEFORE any change
-ag-cat2-backup.sh
-systemd-run --unit=aetherguard-net-rollback --on-active=5m /root/aetherguard-network-rollback.sh
-
-# 2) build the bridge (see protocol/evaluation-protocol.md phase 4)
-# 3) gate operations
-ag-cat2-gateway status      # JSON: state, interfaces, expiry, digests
-ag-cat2-gateway isolate     # idempotent: close now
-ag-cat2-gateway release 60  # open for 60s, PID1 timer closes it
-ag-cat2-gateway verify      # sanity checks, nonzero on fault
-ag-cat2-gateway diagnostics # full dump
-
-# 4) full uninstall / rollback
-/root/aetherguard-network-rollback.sh
+install -m755 cat2/scripts/ag-cat2-gateway /usr/local/sbin/ag-cat2-gateway
+install -m755 protocol/authorization/ag-auth-verify.py /usr/local/sbin/ag-auth-verify.py
+install -m644 protocol/authorization/ag_auth_common.py /usr/local/sbin/ag_auth_common.py
+install -m644 protocol/authorization/keys/authorizer-public.pem \
+  /etc/aetherguard-cat2/authorizer-public.pem
+test -e /etc/aetherguard-cat2.conf || \
+  install -m600 cat2/config/aetherguard-cat2.conf.example /etc/aetherguard-cat2.conf
+install -m644 cat2/systemd/aetherguard-cat2-gateway.service \
+  /etc/systemd/system/aetherguard-cat2-gateway.service
+systemctl daemon-reload
+systemctl enable --now aetherguard-cat2-gateway.service
 ```
 
-## Test campaigns
+Do not install the private key on Cat2 or commit it. The example configuration
+keeps `AG_ALLOW_TEST_FAILPOINTS=0`. Hardware fault injection uses a separate,
+root-only temporary test configuration and removes it after the campaign.
 
-| campaign | script | needs cables? |
-|----------|--------|---------------|
-| A bridge baseline | tests/connectivity/test-a-bridge-baseline.sh | yes |
-| B isolation       | tests/isolation/test-b-isolation.sh          | yes |
-| C timed release   | tests/authorization/test-c-timed-release.sh  | yes |
-| D repeated release| tests/authorization/test-d-repeated-release.sh| yes |
-| E authorization   | tests/authorization/test-e-authorization.sh  | no (crypto only) |
-| F fault matrix    | tests/fault-injection/fault-matrix.sh        | partially |
-| G performance     | tests/performance/perf-plan.sh               | 3rd machine |
+## Reproducible USB transport
 
-Every test writes raw logs + schema-conformant JSON under `results/raw/`;
-`results/SHA256SUMS` and `results/manifest.json` make them tamper-evident.
+See [transport/usb-rndis/README.md](transport/usb-rndis/README.md). Setup and
+teardown are serialized, intent-journaled, preserve `usb0`, refuse to adopt
+pre-existing object names, avoid host forwarding/NAT/firewall changes, and arm
+automatic rollback. No USB persistence units are shipped.
 
-## Authorization prototype (phase 10)
+Consequently, reboot persistence is **not established**. The earlier F06
+observation lost `usb1`, `usb2`, and the runtime bridge; `state=isolated` in
+that condition means the temporary data topology was absent. It does not prove automatic
+topology restoration, a zero forwarding boot window, or reboot-during-release
+behavior. F06 remains `PARTIAL`; F07 remains `NOT_RUN` unless the complete boot
+protocol is rerun.
 
-ECDSA P-256 + SHA-256 signed, canonical-JSON release authorizations with a
-monotonic counter. Signer lives on the operator machine (private key, 0600,
-gitignored); verifier on the Cat2 rejects tampering, replay, counter
-rollback, expiry, future issue dates and over-limit durations. **The counter
-file is ordinary root-owned state: it resists the untrusted protected host,
-not a compromised Cat2 root.** See [protocol/authorization/](protocol/authorization/).
+## Tests and evidence
 
-## Verified / not verified
+All shell campaigns use `set -Eeuo pipefail`, explicit assertions, cleanup
+traps, victim-namespace probes, and real process exit codes. Each test writes:
 
-See [results/normalized/summary.json](results/normalized/summary.json) for the
-machine-readable truth table and CLAIM-BOUNDARIES.md for the wording rules.
+```text
+results/raw/<run-id>/<test-id>.txt
+results/raw/<run-id>/<test-id>.result.json
+```
+
+Run the aggregate matrix under one campaign ID, then generate and validate only
+from committed `*.result.json` files:
+
+```bash
+scripts/run-hardware-campaign.sh
+# or, for an already completed campaign:
+python3 scripts/generate-evidence.py --run-id <run-id>
+python3 scripts/validate-results.py --run-id <run-id>
+```
+
+The validator checks campaign completeness, duplicate IDs, schema, exact
+victim scope, cleanup success, category-specific traffic semantics, evidence
+existence, manifest digests, SHA256SUMS, and a fully reproduced summary.
+
+## Status vocabulary
+
+Every result uses exactly one of:
+
+`PASSED | FAILED | PARTIAL | NOT_RUN | BLOCKED`
+
+`results/normalized/summary.json` is generated and is the machine-readable
+result index. A `NOT_RUN` item supports no positive conclusion.
