@@ -14,7 +14,7 @@ def canonical(obj):
 
 def main():
     ap = argparse.ArgumentParser(description="sign a Cat2 release authorization")
-    ap.add_argument("--key", required=True, help="Ed25519 private key PEM (0600)")
+    ap.add_argument("--key", required=True, help="ECDSA P-256 private key PEM (0600)")
     ap.add_argument("--gateway-id", required=True)
     ap.add_argument("--server-interface", required=True)
     ap.add_argument("--uplink-interface", required=True)
@@ -43,12 +43,22 @@ def main():
         "durationSeconds": args.duration,
     }
     blob = canonical(payload)
-    sig = subprocess.run(
-        ["openssl", "pkeyutl", "-sign", "-inkey", args.key, "-rawin"],
-        input=blob, stdout=subprocess.PIPE, check=True).stdout
+    # ECDSA P-256 + SHA-256 via pkeyutl digest mode - works identically on
+    # OpenSSL 1.1.1 (buster/Cat2) and 3.x (operator laptop). Ed25519 was
+    # rejected: 1.1.1 pkeyutl lacks -rawin and cannot verify Ed25519 at all.
+    import tempfile
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+        tf.write(blob); msg_path = tf.name
+    try:
+        sig = subprocess.run(
+            ["openssl", "pkeyutl", "-sign", "-inkey", args.key,
+             "-pkeyopt", "digest:sha256", "-in", msg_path],
+            stdout=subprocess.PIPE, check=True).stdout
+    finally:
+        os.unlink(msg_path)
     doc = {"payload": payload,
            "canonicalSha256": __import__("hashlib").sha256(blob).hexdigest(),
-           "signatureAlgorithm": "Ed25519 (RFC 8032, pureEdDSA)",
+           "signatureAlgorithm": "ECDSA P-256 + SHA-256 (openssl pkeyutl digest mode)",
            "signatureBase64": base64.b64encode(sig).decode()}
     with open(args.out, "w") as fh:
         json.dump(doc, fh, indent=2)

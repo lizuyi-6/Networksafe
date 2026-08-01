@@ -16,9 +16,9 @@ is not explicitly listed under "supported", do not make it.
 4. A release is always time-bounded (1..600 s); expiry is scheduled by PID1
    at release time and does not depend on any userspace process surviving.
    *(tests C, D, F01-F02)*
-5. Signed release authorizations (Ed25519) are verified on the gateway;
-   tampered, replayed, counter-rolled-back, expired, future-dated and
-   over-duration authorizations are rejected. *(test E)*
+5. Signed release authorizations (ECDSA P-256 + SHA-256) are verified on the
+   gateway; tampered, replayed, counter-rolled-back, expired, future-dated
+   and over-duration authorizations are rejected. *(test E)*
 6. The management plane (USB RNDIS) stayed available during every executed
    test, including reboots. *(test logs)*
 7. Performance numbers exactly as measured, with their environment attached.

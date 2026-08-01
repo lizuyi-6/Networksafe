@@ -104,12 +104,12 @@ Every test writes raw logs + schema-conformant JSON under `results/raw/`;
 
 ## Authorization prototype (phase 10)
 
-Ed25519-signed, canonical-JSON release authorizations with a monotonic
-counter. Signer lives on the operator machine (private key, 0600, gitignored);
-verifier on the Cat2 rejects tampering, replay, counter rollback, expiry,
-future issue dates and over-limit durations. **The counter file is ordinary
-root-owned state: it resists the untrusted protected host, not a compromised
-Cat2 root.** See [protocol/authorization/](protocol/authorization/).
+ECDSA P-256 + SHA-256 signed, canonical-JSON release authorizations with a
+monotonic counter. Signer lives on the operator machine (private key, 0600,
+gitignored); verifier on the Cat2 rejects tampering, replay, counter
+rollback, expiry, future issue dates and over-limit durations. **The counter
+file is ordinary root-owned state: it resists the untrusted protected host,
+not a compromised Cat2 root.** See [protocol/authorization/](protocol/authorization/).
 
 ## Verified / not verified
 

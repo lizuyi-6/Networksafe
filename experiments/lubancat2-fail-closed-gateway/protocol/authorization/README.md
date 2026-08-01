@@ -1,6 +1,6 @@
 # Authorization prototype (phase 10)
 
-Ed25519-signed, time-boxed, counter-protected release authorizations.
+ECDSA P-256 signed, time-boxed, counter-protected release authorizations.
 
 ## Files
 
@@ -14,10 +14,17 @@ Ed25519-signed, time-boxed, counter-protected release authorizations.
 ## Key generation (operator machine, offline)
 
 ```bash
-openssl genpkey -algorithm ed25519 -out keys/authorizer-private.pem
+openssl ecparam -genkey -name prime256v1 -noout -out keys/authorizer-private.pem
 chmod 600 keys/authorizer-private.pem
 openssl pkey -in keys/authorizer-private.pem -pubout -out keys/authorizer-public.pem
 ```
+
+Algorithm: **ECDSA P-256 + SHA-256** (openssl `pkeyutl -pkeyopt digest:sha256`),
+chosen over Ed25519 because the Cat2's OpenSSL 1.1.1n (Debian buster) cannot
+perform Ed25519 verify operations at all (`pkeyutl` reports "operation not
+supported for this keytype", verified 2026-08-01). Both endpoint versions
+(1.1.1n on the Cat2, 3.x on the operator laptop) implement the ECDSA digest
+path identically.
 
 ## Authorization document
 
@@ -31,7 +38,7 @@ openssl pkey -in keys/authorizer-private.pem -pubout -out keys/authorizer-public
 }
 ```
 
-Signature: Ed25519 pureEdDSA over the canonical payload (sorted keys,
+Signature: ECDSA P-256 + SHA-256 over the canonical payload (sorted keys,
 minimal separators, UTF-8). Both signer (py3.13) and verifier (py3.7) use
 `json.dumps(obj, sort_keys=True, separators=(",",":"), ensure_ascii=False)`
 so canonical bytes match exactly.

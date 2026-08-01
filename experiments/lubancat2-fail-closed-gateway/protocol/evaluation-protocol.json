@@ -30,7 +30,7 @@
                 "time jump back", "host reboot", "host firewall flush", "host route change",
                 "host MAC change", "host raw socket flood"]},
     {"id": 10, "name": "authorization-prototype", "status": "NOT_RUN",
-     "algorithm": "Ed25519 (RFC 8032 pureEdDSA) over canonical JSON",
+     "algorithm": "ECDSA P-256 + SHA-256 over canonical JSON (Ed25519 rejected: OpenSSL 1.1.1n on Cat2 cannot verify Ed25519)",
      "antiReplay": "monotonic counter file, flock, atomic write; root-owned; NOT hardware-anchored",
      "requires": "none (runs without cables)"},
     {"id": 11, "name": "performance", "status": "NOT_RUN",
