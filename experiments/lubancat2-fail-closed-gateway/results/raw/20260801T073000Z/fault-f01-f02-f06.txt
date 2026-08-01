@@ -1,0 +1,50 @@
+===F06-POST-REBOOT===
+ 15:36:16 up 4 min,  1 user,  load average: 0.12, 0.27, 0.15
+Device "usb1" does not exist.
+{
+  "state": "isolated",
+  "serverInterface": "usb1",
+  "uplinkInterface": "usb2",
+  "serverGateKernel": "not-enslaved",
+  "releaseExpiresAt": null,
+  "leaseTimerActive": false,
+  "bridgeUp": false,
+  "managementReachable": true,
+  "rulesetDigest": "e30aacd7cfc93a4a284dd2d7403eac68e66c344de4e3fc78c459655f56d5685a",
+  "gatePrimitive": "bridge-membership (kernel) + PID1 lease timer (systemd transient)",
+  "timestamp": "2026-08-01T07:36:16Z"
+}
+===FAULT-LOG-ON-BOARD===
+# FAULT F01/F02/F03 2026-08-01T07:30:25Z
+## F01: release 30, kill -9 every ag helper, expect PID1 expiry STILL fires
+  state-after-release: released
+  state-after-kill9: released  (released OK; PID1 owns expiry)
+  >>> state-after-window: isolated  EXPECT isolated
+Aug 01 15:30:25 lubancat aetherguard-cat2[18599]: action=release uid=0 result=ok seconds=30 lease_unit=ag-cat2-lease-1785569425411601670 server_if=usb1 uplink_if=usb2 gate=enslaved-forwarding
+Aug 01 15:30:59 lubancat aetherguard-cat2[18704]: action=expire uid=0 result=ok server_if=usb1 gate=not-enslaved
+## F02: release 25, STOP gateway service, expect expiry STILL fires
+  state-after-release: released
+  state-after-stop: released  (stop must NOT open/extend)
+  >>> state-after-window: isolated  EXPECT isolated
+## F03: release 20, RESTART gateway service, expect immediate re-isolate
+  state-after-release: released
+  >>> state-after-restart: isolated  EXPECT isolated (fail-closed)
+## F06: reboot from isolated, verify default-isolated after boot
+  state-pre-reboot: isolated  REBOOTING IN 2s
+===JOURNAL-RELEASE-EXPIRE-REBOOT===
+Aug 01 15:29:22 lubancat aetherguard-cat2[17768]: action=release uid=0 result=ok seconds=30 lease_unit=ag-cat2-lease-1785569362753984554 server_if=usb1 uplink_if=usb2 gate=enslaved-forwarding
+Aug 01 15:29:56 lubancat aetherguard-cat2[17899]: action=expire uid=0 result=ok server_if=usb1 gate=not-enslaved
+Aug 01 15:30:25 lubancat aetherguard-cat2[18578]: action=isolate uid=0 result=ok server_if=usb1 gate=not-enslaved
+Aug 01 15:30:25 lubancat aetherguard-cat2[18599]: action=release uid=0 result=ok seconds=30 lease_unit=ag-cat2-lease-1785569425411601670 server_if=usb1 uplink_if=usb2 gate=enslaved-forwarding
+Aug 01 15:30:59 lubancat aetherguard-cat2[18704]: action=expire uid=0 result=ok server_if=usb1 gate=not-enslaved
+Aug 01 15:30:59 lubancat aetherguard-cat2[18718]: action=isolate uid=0 result=ok server_if=usb1 gate=not-enslaved
+Aug 01 15:30:59 lubancat aetherguard-cat2[18739]: action=release uid=0 result=ok seconds=25 lease_unit=ag-cat2-lease-1785569459607351221 server_if=usb1 uplink_if=usb2 gate=enslaved-forwarding
+Aug 01 15:31:28 lubancat aetherguard-cat2[18965]: action=expire uid=0 result=ok server_if=usb1 gate=not-enslaved
+Aug 01 15:31:28 lubancat aetherguard-cat2[18974]: action=isolate uid=0 result=ok server_if=usb1 gate=not-enslaved
+Aug 01 15:31:28 lubancat aetherguard-cat2[18994]: action=release uid=0 result=ok seconds=20 lease_unit=ag-cat2-lease-1785569488783998005 server_if=usb1 uplink_if=usb2 gate=enslaved-forwarding
+Aug 01 15:31:29 lubancat aetherguard-cat2[19036]: action=isolate uid=0 result=ok server_if=usb1 gate=not-enslaved
+Aug 01 15:31:29 lubancat aetherguard-cat2[19066]: action=isolate uid=0 result=ok server_if=usb1 gate=not-enslaved
+===REACTOROS===
+active
+active
+active

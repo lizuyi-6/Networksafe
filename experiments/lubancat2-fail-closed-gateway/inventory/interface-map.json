@@ -1,29 +1,32 @@
 {
-  "detectedAt": "2026-08-01T03:41:14Z",
-  "status": "PRELIMINARY - physical port roles unassigned until cable tests",
+  "detectedAt": "2026-08-01T07:30:00Z",
+  "status": "AS-BUILT (USB-net transport substitution - see note)",
+  "transportNote": "No ethernet cables were available, so the two gateway links are USB CDC/RNDIS gadget functions on the Cat2 instead of eth0/eth1. The Cat2 is still a physically separate dual-NIC gateway in series; L2 bridging, gate membership, PID1 lease, auth and fault behaviour are all hardware-real on the Cat2. Ethernet-PHY-specific items (1000Mb/s duplex, VLAN tag forwarding, PHY flap) are NOT_RUN. See protocol/TRANSPORT-SUBSTITUTION.md.",
   "cat2": {
-    "serverInterface": "PENDING_CABLE_TEST",
-    "uplinkInterface": "PENDING_CABLE_TEST",
-    "serverMac": "PENDING",
-    "uplinkMac": "PENDING",
-    "candidatePorts": [
-      {"name": "eth0", "mac": "7a:6c:05:86:0a:2f", "driver": "st_gmac", "linkAtDetection": false},
-      {"name": "eth1", "mac": "7e:6c:05:86:0a:2f", "driver": "st_gmac", "linkAtDetection": false}
-    ],
-    "managementInterfaceBeforeBridge": "usb0",
-    "managementAddressBeforeBridge": "192.168.100.2/24",
-    "managementChannel": "USB RNDIS (out-of-band, independent of eth0/eth1/br0)",
-    "assignmentMethod": "operator plugs one cable at a time while gateway watches ip monitor link; first port to gain carrier = SERVER (to protected host), second = UPLINK (to router LAN)"
+    "serverInterface": "usb1",
+    "uplinkInterface": "usb2",
+    "serverMac": "02:11:11:11:11:02",
+    "uplinkMac": "02:22:22:22:22:02",
+    "serverTransport": "USB RNDIS gadget function rndis.usb1 (host MAC 02:11:11:11:11:01)",
+    "uplinkTransport": "USB RNDIS gadget function rndis.usb2 (host MAC 02:22:22:22:22:01)",
+    "managementInterface": "usb0",
+    "managementAddress": "192.168.100.2/24",
+    "managementChannel": "USB RNDIS rndis.gs0 (out-of-band, independent of br0/usb1/usb2)",
+    "ethernetPortsPresent": ["eth0 (st_gmac, 7a:6c:05:86:0a:2f, unused/no-carrier)", "eth1 (st_gmac, 7e:6c:05:86:0a:2f, unused/no-carrier)"],
+    "ethernetPortsRole": "NOT_USED this run (no cables); available for a future Ethernet-transport replication"
   },
   "protectedHost": {
-    "wiredInterfaceToCat2": "eno1",
-    "wiredMac": "00:68:eb:77:c7:4d",
-    "managementChannel": "USB RNDIS board0 192.168.100.1 (control only) + local console"
+    "implementation": "network namespace 'victim' on the operator laptop (stronger no-bypass property than the whole laptop: the namespace contains ONLY agvictim0)",
+    "wiredInterfaceToCat2": "agvictim0 (02:11:11:11:11:01)",
+    "upstreamInterface": "aguplink0 (02:22:22:22:22:01) on the laptop host, NAT-ed to wlo1",
+    "victimAddress": "10.99.0.2/24",
+    "upstreamGateway": "10.99.0.1 (laptop host, NAT to home router 192.168.3.1)",
+    "managementChannel": "board0 192.168.100.1 (USB RNDIS rndis.gs0, control only)"
   },
   "upstream": {
-    "device": "home router (LAN side)",
+    "device": "home router via laptop NAT (wlo1)",
     "lanSubnet": "192.168.3.0/24",
     "lanGateway": "192.168.3.1",
-    "evidence": "protected host WiFi default route"
+    "internetProbe": "223.5.5.5 / 1.1.1.1:443 (verified reachable through the gate during release)"
   }
 }

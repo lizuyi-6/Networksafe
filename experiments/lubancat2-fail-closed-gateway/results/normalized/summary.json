@@ -1,0 +1,59 @@
+{
+  "experiment": "aetherguard-cat2-fail-closed-gateway",
+  "runDate": "2026-08-01",
+  "transport": "USB RNDIS gadget substitution (no ethernet cables available); see protocol/TRANSPORT-SUBSTITUTION.md",
+  "gatewayCommit": "see git log of branch experiment/lubancat2-fail-closed-gateway",
+  "cat2": {"hostname": "lubancat", "kernel": "4.19.232", "soc": "RK3568", "gate": "bridge-membership(usb1) + PID1 lease"},
+  "protectedHost": {"implementation": "netns 'victim' on operator laptop", "onlyInterface": "agvictim0"},
+  "headlineResult": "fail-closed loop proven end-to-end: isolated blocks all probes; release opens real internet (ping 223.5.5.5, tcp 1.1.1.1:443); PID1 lease auto-closes with no userspace help; reboot returns to isolated with ReactorOS healthy",
+  "summary": {
+    "PASSED": [
+      {"id": "P0",  "name": "machine identification", "evidence": "inventory/*.json"},
+      {"id": "GATE","name": "gate state machine smoke (isolate/release/auto-expire/verify/fault-detect)", "evidence": "results/raw/20260801T035349Z/, journal"},
+      {"id": "LOOP","name": "fail-closed loop: isolated->released->auto-isolated with real internet probes", "evidence": "results/raw/20260801T072630Z/, board-state-after-cycle.txt"},
+      {"id": "E",   "name": "authorization matrix (14 cases: valid accepted; tamper/replay/rollback/expired/future/over-duration rejected)", "evidence": "results/raw/20260801T041220Z/e-authorization.txt"},
+      {"id": "F01", "name": "kill -9 helpers during release -> PID1 lease still expires -> isolated", "evidence": "results/raw/20260801T073000Z/fault-f01-f02-f06.txt"},
+      {"id": "F02", "name": "stop gateway service during release -> PID1 lease still expires -> isolated", "evidence": "results/raw/20260801T073000Z/fault-f01-f02-f06.txt"},
+      {"id": "F03", "name": "restart gateway service during release -> immediate re-isolate (fail-closed)", "evidence": "results/raw/20260801T073000Z/fault-f01-f02-f06.txt"},
+      {"id": "F06", "name": "Cat2 reboot from isolated -> post-boot isolated, no lease, ReactorOS active, mgmt back", "evidence": "results/raw/20260801T073000Z/fault-f01-f02-f06.txt (uptime 4min, state isolated)"}
+    ],
+    "NOT_RUN": [
+      {"id": "PERF","name": "performance (iperf)", "reason": "requires a third machine as iperf3 peer; only two present"},
+      {"id": "ETH", "name": "ethernet-PHY specifics (1000Mb/s duplex, VLAN tag forwarding, PHY flap)", "reason": "no ethernet cables; USB-net transport used instead"},
+      {"id": "F07","name": "reboot DURING release", "reason": "F06 (reboot isolated) covers the default-closed claim; F07 deferred to avoid extra reboots"},
+      {"id": "F08","name": "power cycle (operator action)"},
+      {"id": "F09","name": "SERVER cable pull (transport is USB, not applicable as written)"},
+      {"id": "F10","name": "UPLINK cable pull (same)"},
+      {"id": "F11","name": "CPU stress during release"},
+      {"id": "F12","name": "memory pressure during release"},
+      {"id": "F14","name": "time-jump forward during release (monotonic lease; lower priority)"},
+      {"id": "F15","name": "time-jump backward during release"},
+      {"id": "F16","name": "protected-host reboot"},
+      {"id": "F17","name": "protected-host firewall flush (netns has no firewall to flush; covered by construction)"},
+      {"id": "F18","name": "protected-host route change (netns only has the one route)"},
+      {"id": "F19","name": "protected-host MAC change"},
+      {"id": "F20","name": "raw-socket flood from protected host"}
+    ],
+    "PARTIAL": [
+      {"id": "P6", "name": "persistence", "note": "gateway service + gate primitive survive reboot and re-isolate (proven F06); USB-net transport functions are runtime-only by design and need a boot unit to persist; full NM-profile persistence is deferred to the ethernet replication"},
+      {"id": "D",  "name": "repeated-release semantics", "note": "replace-lease + invalid-arg refusal verified in smoke test; full D matrix script provided, not re-run standalone"}
+    ]
+  },
+  "counts": {"PASSED": 8, "PARTIAL": 2, "NOT_RUN": 15},
+  "supportedClaims": [
+    "Cat2 is a physically separate dual-NIC SBC gateway in series (USB-net transport this run; eth0/eth1 present and unused)",
+    "default and post-reboot gate state is isolated (F06)",
+    "release is time-bounded 1..600s; expiry is PID1-scheduled, survives kill -9 of helpers (F01) and service stop (F02), does not survive reboot (F06)",
+    "ECDSA P-256 signed release authorizations are verified on the gateway; tampered/replayed/counter-rolled-back/expired/future/over-duration are rejected (E)",
+    "management plane (usb0 RNDIS) stayed available through every executed test including reboot (F06)",
+    "protected host (victim netns) cannot reach upstream while isolated; can reach real internet while released (LOOP)"
+  ],
+  "unsupportedClaims": [
+    "no Secure Element / no hardware anti-rollback (counter is root-owned file)",
+    "no physical relay / air-gap / tamper-resistance",
+    "does NOT resist Cat2 root or Cat2 kernel compromise",
+    "STM32 / relay feedback NOT present or tested",
+    "not production-grade; no SLA; no performance numbers",
+    "PID1 lease is the strongest timer this kernel offers (NF_TABLES_SET/BRIDGE/BPF all =n); it is NOT a kernel packet-filter timer"
+  ]
+}

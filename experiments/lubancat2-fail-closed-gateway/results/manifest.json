@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-08-01T07:37:02Z",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "results/raw/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "results/raw/20260801T040943Z/e-authorization.txt",
+      "sha256": "152351fdb1fae4127738d0484bc049b252a1a41a7edb89c23252db201396bd20",
+      "bytes": 1819
+    },
+    {
+      "path": "results/raw/20260801T040354Z/e-authorization.txt",
+      "sha256": "382adadc1742c2faa87b77bca492405eb1055ad30941950cba072c38b459e029",
+      "bytes": 443
+    },
+    {
+      "path": "results/raw/20260801T040504Z/e-authorization.txt",
+      "sha256": "b59f826390954eb03d26567bcfc99e677d27dd30141d2c4dab2c5b58804c352e",
+      "bytes": 1851
+    },
+    {
+      "path": "results/raw/20260801T073000Z/fault-f01-f02-f06.txt",
+      "sha256": "72d7d4a1d750dbcbc57b4d303018c9ae2ce42d467d7a28af6ced69f688c08ea2",
+      "bytes": 3395
+    },
+    {
+      "path": "results/raw/20260801T073000Z/fault-f01-f03.txt",
+      "sha256": "a1e428585a0e763c80b9a7ccd5106b873bf9fbb74791ef34e07cde9b968ea320",
+      "bytes": 2548
+    },
+    {
+      "path": "results/raw/20260801T040701Z/e-authorization.txt",
+      "sha256": "9b6ead4cdb1b1416443e56edace6ed98bb82b535ae7c4b148f58779b01b3f133",
+      "bytes": 1851
+    },
+    {
+      "path": "results/raw/20260801T072630Z/board-state-after-cycle.txt",
+      "sha256": "f810714faa46df477a646e32afbb1c3a79bc79ff73aec3e8f4f7f9245be2b3bd",
+      "bytes": 834
+    },
+    {
+      "path": "results/raw/20260801T041220Z/e-authorization.txt",
+      "sha256": "fdfe8de3487136455b63d355ed5cab7d24f5c9a727d15e72bac58ae7412e37c4",
+      "bytes": 2025
+    }
+  ]
+}

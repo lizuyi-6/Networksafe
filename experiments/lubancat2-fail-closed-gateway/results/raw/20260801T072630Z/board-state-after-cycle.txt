@@ -1,0 +1,16 @@
+{
+  "state": "isolated",
+  "serverInterface": "usb1",
+  "uplinkInterface": "usb2",
+  "serverGateKernel": "not-enslaved",
+  "releaseExpiresAt": null,
+  "leaseTimerActive": false,
+  "bridgeUp": true,
+  "managementReachable": true,
+  "rulesetDigest": "dede7b2871c83662b64143ddf8077531f96aab8a722b80cf76bb85a706c58918",
+  "gatePrimitive": "bridge-membership (kernel) + PID1 lease timer (systemd transient)",
+  "timestamp": "2026-08-01T07:28:50Z"
+}
+-- Logs begin at Thu 2019-02-14 18:11:58 CST, end at Sat 2026-08-01 15:28:49 CST. --
+Aug 01 15:26:30 lubancat aetherguard-cat2[16446]: action=release uid=0 result=ok seconds=60 lease_unit=ag-cat2-lease-1785569190832296702 server_if=usb1 uplink_if=usb2 gate=enslaved-forwarding
+Aug 01 15:27:37 lubancat aetherguard-cat2[16524]: action=expire uid=0 result=ok server_if=usb1 gate=not-enslaved
