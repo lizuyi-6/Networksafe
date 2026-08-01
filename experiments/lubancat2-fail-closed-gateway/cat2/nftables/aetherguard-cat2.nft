@@ -9,8 +9,10 @@
 #   CONFIG_BRIDGE_EBTABLES=n    (ebtables unavailable)
 # Evidence: /boot/config-4.19.232 on the board, mirrored in inventory/cat2-system.json.
 #
-# The deployed equivalent uses kernel bridge port state + a PID1-registered
-# lease timer. See cat2/scripts/ag-cat2-gateway.
+# The deployed equivalent uses kernel bridge MEMBERSHIP of the server port
+# (enslave/nomaster) + a PID1-registered lease timer. Bridge port *state* was
+# rejected: ENETDOWN on carrier-less ports and auto-forwarding on carrier
+# regain. See cat2/scripts/ag-cat2-gateway.
 #
 # On a kernel WITH the above configs, this file would be the source of truth:
 

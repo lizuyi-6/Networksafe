@@ -35,17 +35,23 @@ touches the bridge, so the gate can never lock the operator out.
 
 ## Gate design (and why it is not nftables on this kernel)
 
-The fail-closed gate is the **kernel bridge port state** of `SERVER_IF`:
+The fail-closed gate is the **kernel bridge membership** of `SERVER_IF`:
 
-| state    | port state | effect |
-|----------|-----------|--------|
-| isolated | disabled  | kernel forwards nothing in/out of the protected host's port |
-| released | forwarding| normal L2 bridging, guarded by a lease |
+| state    | SERVER_IF in br0? | effect |
+|----------|-------------------|--------|
+| isolated | no (nomaster)     | kernel has no path to forward the protected host's frames |
+| released | yes (enslaved)    | normal L2 bridging, guarded by a lease |
+
+Bridge *port state* was rejected during bring-up: this kernel refuses
+`state forwarding` on carrier-less ports (ENETDOWN, verified) and resets the
+port to forwarding on carrier regain, which would silently re-open the gate
+after a cable re-plug. Membership is carrier-independent and idempotent.
 
 Timed release uses a **PID1-registered systemd transient timer** created
 *before* the gate opens. If every userspace helper dies (`kill -9`), PID1
-still fires the timer and the kernel port returns to `disabled`. Reboot
-clears all transient timers and the boot unit re-isolates the port.
+still fires the timer and the port is un-enslaved (isolated). Reboot
+clears all transient timers and the boot unit keeps the port out of the
+bridge by default.
 
 The canonical nftables timed-set design is kept in
 [cat2/nftables/aetherguard-cat2.nft](cat2/nftables/aetherguard-cat2.nft) but

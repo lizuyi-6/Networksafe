@@ -8,7 +8,7 @@
     "state": {"enum": ["isolated", "released", "fault", "unknown"]},
     "serverInterface": {"type": "string"},
     "uplinkInterface": {"type": "string"},
-    "serverPortStateKernel": {"type": "string"},
+    "serverGateKernel": {"type": "string"},
     "releaseExpiresAt": {"type": ["string", "null"], "format": "date-time"},
     "leaseTimerActive": {"type": "boolean"},
     "bridgeUp": {"type": "boolean"},

@@ -36,29 +36,34 @@ missing: iperf3, socat, arping, nmap (install via apt, versions recorded).
 ## Phase 4 - temporary transparent bridge
 
 Order: (a) auto-rollback timer armed; (b) `br0` created, STP off; (c)
-UPLINK_IF enslaved; (d) SERVER_IF enslaved **and immediately port-disabled**;
-(e) verify: bridge link/fdb, no loop (watch for duplicate frames/storm on
-upstream), management over usb0 OK; (f) temporarily set SERVER port
-forwarding to confirm the protected host gets DHCP via the Cat2 and can
-reach the upstream gateway; (g) port back to disabled. Management stays on
-usb0; br0 carries no IP (documented deviation from the generic plan: the
-out-of-band USB link is strictly safer than in-band management).
+UPLINK_IF enslaved; (d) SERVER_IF stays OUT of the bridge (nomaster =
+isolated); (e) verify: bridge link/fdb, no loop (watch for duplicate
+frames/storm on upstream), management over usb0 OK; (f) temporarily enslave
+SERVER_IF to confirm the protected host gets DHCP via the Cat2 and can
+reach the upstream gateway; (g) SERVER_IF back to nomaster. Management
+stays on usb0; br0 carries no IP (documented deviation from the generic
+plan: the out-of-band USB link is strictly safer than in-band management).
 
 ## Phase 5 - fail-closed gate (substitute for nftables on this kernel)
 
-Gate = bridge port state of SERVER_IF inside br0. Release = PID1 transient
+Gate = bridge MEMBERSHIP of SERVER_IF (enslaved = released, nomaster =
+isolated). Port *state* was rejected: ENETDOWN on carrier-less ports and
+auto-forwarding on carrier regain (see README). Release = PID1 transient
 timer (systemd-run --on-active) registered BEFORE opening; timer fires
-`ag-cat2-gateway _expire` which sets port state disabled. Verified properties:
+`ag-cat2-gateway _expire` which un-enslaves the port. Verified properties:
 no timer no open; kill -9 of helpers does not extend; reboot clears;
-wall-clock jumps do not shorten/extend (monotonic).
+wall-clock jumps do not shorten/extend (monotonic); cable events cannot
+re-open a closed gate (nomaster survives carrier changes).
 
 ## Phase 6 - persistence
 
 NetworkManager profiles: `aetherguard-br0` (bridge, stp off, no IP) +
 `aetherguard-uplink-slave` (UPLINK_IF enslaved). SERVER_IF gets **no**
-profile: at boot it is not a bridge member until
-`aetherguard-cat2-gateway.service` (Before=network-online.target) enslaves
-and disables it. Service failure can never open the gate. 10-minute rollback
+profile: at boot it is simply never a bridge member - isolation by
+construction, not by a service that could fail.
+`aetherguard-cat2-gateway.service` (Before=network-online.target) exists as
+a belt-and-suspenders `isolate` (nomaster is idempotent) plus status
+journal entry. Service failure can never open the gate. 10-minute rollback
 timer is armed before the validation reboot.
 
 ## Phase 7 - protected host

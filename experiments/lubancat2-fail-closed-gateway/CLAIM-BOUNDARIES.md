@@ -41,13 +41,13 @@ is not explicitly listed under "supported", do not make it.
 
 ## Known limitations that MUST accompany any write-up
 
-1. Gate enforcement is the Linux bridge port state in software, on the same
+1. Gate enforcement is Linux bridge membership in software, on the same
    kernel that runs other services (ReactorOS). A Cat2 kernel compromise or
    Cat2 root shell defeats everything.
-2. Boot-time isolation has a small race: the protected host's port is not a
-   bridge member until the boot unit runs; the window is milliseconds to
-   seconds and the port has no link partner state before carrier anyway.
-   Measured window is recorded in the fault logs.
+2. Boot-time isolation: the protected host's port is not a bridge member
+   until explicitly enslaved by a verified release; the boot unit simply
+   never enslaves it, so the boot window is zero by construction (verified
+   in fault test F06).
 3. The anti-replay counter is rollback-able by Cat2 root (no monotonic
    hardware counter on this board).
 4. Bypass interfaces on the protected host (WiFi, VPN) are outside the

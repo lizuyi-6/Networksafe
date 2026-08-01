@@ -2,17 +2,23 @@
 # ag-cat2-gateway - AetherGuard Cat2 External Gateway Prototype
 # Fail-closed bridge gate for LubanCat-2 (RK3568, Debian buster, kernel 4.19.232)
 #
-# GATE PRIMITIVE: Linux bridge port state of SERVER_IF inside BRIDGE_IF.
-#   isolated : SERVER_IF port state = disabled (kernel drops all L2 forwarding)
-#   released : SERVER_IF port state = forwarding, guarded by a PID1 lease timer
+# GATE PRIMITIVE: bridge membership of SERVER_IF.
+#   isolated : SERVER_IF is NOT enslaved in BRIDGE_IF (nomaster)
+#   released : SERVER_IF is enslaved; kernel bridges it, guarded by a lease
 #
-# WHY NOT nftables timed sets: this kernel (4.19.232 vendor) is built with
-#   CONFIG_NF_TABLES_BRIDGE=n, CONFIG_NF_TABLES_SET=n, CONFIG_NET_CLS_BPF=n,
-#   CONFIG_BRIDGE_EBTABLES=n  (see inventory/cat2-system.json).
-#   No kernel-timer packet gate exists. Lease expiry is therefore scheduled
-#   with PID1 (systemd transient timer), which cannot be kill -9'd by a
-#   crashed userspace helper, does not survive reboot, and is registered
-#   BEFORE the gate opens (open never happens without a live expiry timer).
+# WHY membership and not bridge port state: on this kernel (4.19.232 vendor)
+#   - `bridge link set state forwarding` is refused with ENETDOWN while the
+#     port has no carrier (verified 2026-08-01), and
+#   - carrier regain auto-resets the port to FORWARDING with STP off, which
+#     would silently re-open a state-based gate after a cable re-plug.
+#   Membership has neither problem: nomaster is carrier-independent, idempotent,
+#   and survives any link event on the port itself.
+#
+# WHY NOT nftables timed sets: kernel lacks CONFIG_NF_TABLES_BRIDGE,
+#   CONFIG_NF_TABLES_SET, CONFIG_NET_CLS_BPF, CONFIG_BRIDGE_EBTABLES
+#   (evidence: inventory/cat2-system.json). Lease expiry is scheduled with
+#   PID1 (systemd transient timer) BEFORE the gate opens: no timer => no open.
+#   PID1 cannot be kill -9'd by a crashed helper; timers never survive reboot.
 #
 # Commands: status | isolate | release <seconds> | verify | diagnostics | _expire
 set -u
@@ -47,22 +53,35 @@ ensure_bridge() {
     ip link set dev "$BRIDGE_IF" up
 }
 
-port_is_enslaved() {  # port_is_enslaved <if>
-    [ -d "/sys/class/net/$1/brport" ]
+port_is_enslaved() { [ -d "/sys/class/net/$1/brport" ]; }
+
+gate_open() {  # enslave SERVER_IF (kernel forwards once carrier appears)
+    ensure_bridge || return 1
+    port_is_enslaved "$SERVER_IF" && return 0
+    ip link set dev "$SERVER_IF" up 2>/dev/null || true
+    ip link set dev "$SERVER_IF" master "$BRIDGE_IF"
 }
 
-port_state() {  # prints kernel-truth port state word, e.g. disabled/forwarding
-    port_is_enslaved "$SERVER_IF" || { echo "not-enslaved"; return; }
-    bridge link show dev "$SERVER_IF" 2>/dev/null | sed -n 's/.*state \([a-z]*\).*/\1/p' | head -1
+gate_close() {  # un-enslave SERVER_IF; idempotent, carrier-independent
+    port_is_enslaved "$SERVER_IF" || return 0
+    ip link set dev "$SERVER_IF" nomaster
 }
 
-set_port_state() {  # set_port_state <0|3>
-    bridge link set dev "$SERVER_IF" state "$1"
+kernel_gate_state() {  # informational kernel truth
+    if port_is_enslaved "$SERVER_IF"; then
+        bridge link show dev "$SERVER_IF" 2>/dev/null \
+            | sed -n 's/.*state \([a-z]*\).*/enslaved-\1/p' | head -1
+    else
+        echo "not-enslaved"
+    fi
 }
 
 lease_timer_names() {
-    systemctl list-timers --no-legend --no-pager 'ag-cat2-lease-*.timer' 2>/dev/null \
-        | awk '{print $NF}' | grep -E '^ag-cat2-lease-.*\.timer$' || true
+    # list-units prints UNIT in column 1; only ACTIVE (waiting) timers count.
+    # (list-timers has ACTIVATES as last column - parsing its last field
+    #  returns the .service, not the .timer; dead units linger briefly.)
+    systemctl list-units --type=timer --state=active --no-legend --no-pager 'ag-cat2-lease-*.timer' 2>/dev/null \
+        | awk '/^ag-cat2-lease-.*[.]timer/ {print $1}' || true
 }
 
 lease_timer_active() { [ -n "$(lease_timer_names)" ]; }
@@ -76,25 +95,18 @@ cancel_lease_timers() {
 }
 
 cmd_isolate() {
-    # idempotent: enslave if needed, then force port disabled, cancel leases
-    ensure_bridge || { log_action isolate "result=fault step=ensure_bridge"; return 1; }
-    if ! port_is_enslaved "$SERVER_IF"; then
-        ip link set dev "$SERVER_IF" up 2>/dev/null || true
-        ip link set dev "$SERVER_IF" master "$BRIDGE_IF" || {
-            log_action isolate "result=fault step=enslave"; return 1; }
-    fi
-    set_port_state 0 || { log_action isolate "result=fault step=disable"; return 1; }
+    gate_close || { log_action isolate "result=fault step=nomaster"; return 1; }
     cancel_lease_timers
-    log_action isolate "result=ok server_if=$SERVER_IF port_state=$(port_state)"
+    log_action isolate "result=ok server_if=$SERVER_IF gate=$(kernel_gate_state)"
     return 0
 }
 
 cmd_expire() {
-    # INTERNAL: called by the PID1 lease timer at expiry.
-    # Does NOT cancel timers (would stop the very unit invoking us).
-    set_port_state 0 2>/dev/null || true
+    # INTERNAL: fired by the PID1 lease timer. Does NOT cancel timers (that
+    # would stop the very unit invoking us).
+    gate_close 2>/dev/null || true
     rm -f "$STATE_DIR/lease_expiry_epoch"
-    log_action expire "result=ok server_if=$SERVER_IF port_state=$(port_state)"
+    log_action expire "result=ok server_if=$SERVER_IF gate=$(kernel_gate_state)"
     return 0
 }
 
@@ -112,7 +124,6 @@ cmd_release() {
         log_action release "result=refused arg=$seconds"
         return 2
     fi
-    port_is_enslaved "$SERVER_IF" || { echo "FAULT: $SERVER_IF not enslaved in $BRIDGE_IF (run: isolate)" >&2; return 1; }
 
     # repeated release semantics: REPLACE the lease (cancel old, register new)
     cancel_lease_timers
@@ -134,20 +145,21 @@ cmd_release() {
     fi
     echo "$(( $(date +%s) + seconds ))" > "$STATE_DIR/lease_expiry_epoch"
     # 3) only now open the gate
-    if ! set_port_state 3; then
+    if ! gate_open; then
         cancel_lease_timers
-        echo "FAULT: could not set port forwarding; timer cancelled" >&2
+        gate_close 2>/dev/null || true
+        echo "FAULT: could not enslave $SERVER_IF; timer cancelled, gate closed" >&2
         log_action release "result=fault step=open"
         return 1
     fi
-    log_action release "result=ok seconds=$seconds lease_unit=$lease_unit server_if=$SERVER_IF uplink_if=$UPLINK_IF port_state=$(port_state)"
+    log_action release "result=ok seconds=$seconds lease_unit=$lease_unit server_if=$SERVER_IF uplink_if=$UPLINK_IF gate=$(kernel_gate_state)"
     echo "released for ${seconds}s (lease expires via PID1 timer $lease_unit)"
     return 0
 }
 
 cmd_status() {
-    local kernel_port_state state bridge_up lease_active expiry_iso="null" mgmt=false digest
-    kernel_port_state=$(port_state)
+    local kernel_state state bridge_up lease_active expiry_iso="null" mgmt=false digest
+    kernel_state=$(kernel_gate_state)
     bridge_exists && ip link show dev "$BRIDGE_IF" 2>/dev/null | grep -q "state UP" \
         && bridge_up=true || bridge_up=false
     lease_timer_active && lease_active=true || lease_active=false
@@ -155,32 +167,28 @@ cmd_status() {
         expiry_iso="\"$(date -u -d @"$(cat "$STATE_DIR/lease_expiry_epoch")" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)\""
     fi
     ip addr show dev usb0 2>/dev/null | grep -q "inet 192\.168\.100\.2" && mgmt=true
-    digest=$( { cat "$CONF"; bridge link show 2>/dev/null; } | sha256sum | cut -d' ' -f1)
+    digest=$( { cat "$CONF"; bridge link show 2>/dev/null; ip link show dev "$SERVER_IF"; } | sha256sum | cut -d' ' -f1)
 
-    if [ "$kernel_port_state" = "forwarding" ]; then
+    if port_is_enslaved "$SERVER_IF"; then
         if $lease_active; then state=released; else state=fault; fi
-    elif [ "$kernel_port_state" = "disabled" ]; then
-        state=isolated
-    elif [ "$kernel_port_state" = "not-enslaved" ]; then
-        state=isolated   # not in bridge at all: nothing can forward (boot default)
     else
-        state=unknown
+        state=isolated
     fi
 
-    python3 - "$state" "$kernel_port_state" "$bridge_up" "$lease_active" "$expiry_iso" "$mgmt" "$digest" "$SERVER_IF" "$UPLINK_IF" <<'PYEOF'
+    python3 - "$state" "$kernel_state" "$bridge_up" "$lease_active" "$expiry_iso" "$mgmt" "$digest" "$SERVER_IF" "$UPLINK_IF" <<'PYEOF'
 import json, sys, datetime
-state, port_state, bridge_up, lease_active, expiry_iso, mgmt, digest, server_if, uplink_if = sys.argv[1:10]
+state, kernel_state, bridge_up, lease_active, expiry_iso, mgmt, digest, server_if, uplink_if = sys.argv[1:10]
 doc = {
   "state": state,
   "serverInterface": server_if,
   "uplinkInterface": uplink_if,
-  "serverPortStateKernel": port_state,
+  "serverGateKernel": kernel_state,
   "releaseExpiresAt": None if expiry_iso == "null" else expiry_iso.strip('"'),
   "leaseTimerActive": lease_active == "true",
   "bridgeUp": bridge_up == "true",
   "managementReachable": mgmt == "true",
   "rulesetDigest": digest,
-  "gatePrimitive": "bridge-port-state (kernel) + PID1 lease timer (systemd transient)",
+  "gatePrimitive": "bridge-membership (kernel) + PID1 lease timer (systemd transient)",
   "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
 }
 print(json.dumps(doc, indent=2))
@@ -190,14 +198,10 @@ PYEOF
 cmd_verify() {
     local failures=0
     bridge_exists || { echo "FAIL: $BRIDGE_IF missing"; failures=$((failures+1)); }
-    port_is_enslaved "$SERVER_IF" || { echo "FAIL: $SERVER_IF not enslaved"; failures=$((failures+1)); }
-    port_is_enslaved "$UPLINK_IF" || { echo "FAIL: $UPLINK_IF not enslaved"; failures=$((failures+1)); }
-    case "$(port_state)" in
-        disabled|not-enslaved) : ;;
-        forwarding)
-            lease_timer_active || { echo "FAIL: port forwarding without lease timer (permanent open)"; failures=$((failures+1)); } ;;
-        *) echo "FAIL: unexpected port state"; failures=$((failures+1)) ;;
-    esac
+    port_is_enslaved "$UPLINK_IF" || { echo "FAIL: $UPLINK_IF not enslaved in $BRIDGE_IF"; failures=$((failures+1)); }
+    if port_is_enslaved "$SERVER_IF"; then
+        lease_timer_active || { echo "FAIL: $SERVER_IF enslaved WITHOUT lease timer (permanent open)"; failures=$((failures+1)); }
+    fi
     ip addr show dev usb0 2>/dev/null | grep -q "inet 192\.168\.100\.2" \
         || { echo "FAIL: usb0 management address missing"; failures=$((failures+1)); }
     [ "$failures" -eq 0 ] && { echo "verify: OK (state=$(cmd_status | python3 -c 'import json,sys; print(json.load(sys.stdin)["state"])'))"; return 0; }
