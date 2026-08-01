@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AetherGuard Cat2 experiment test result",
+  "type": "object",
+  "required": ["testId", "category", "gatewayCommit", "cat2Hostname",
+               "protectedHostHostname", "serverInterface", "uplinkInterface",
+               "stateBefore", "stateAfter", "startedAt", "finishedAt",
+               "command", "exitCode", "expected", "observed", "passed",
+               "unauthorizedConnections", "escapedBytes", "latencyMs", "notes"],
+  "properties": {
+    "testId": {"type": "string"},
+    "category": {"enum": ["connectivity", "isolation", "authorization", "fault", "performance"]},
+    "gatewayCommit": {"type": "string"},
+    "cat2Hostname": {"type": "string"},
+    "protectedHostHostname": {"type": "string"},
+    "serverInterface": {"type": "string"},
+    "uplinkInterface": {"type": "string"},
+    "stateBefore": {"enum": ["isolated", "released", "fault", "unknown", "NOT_RUN"]},
+    "stateAfter": {"enum": ["isolated", "released", "fault", "unknown", "NOT_RUN"]},
+    "startedAt": {"type": "string"},
+    "finishedAt": {"type": "string"},
+    "command": {"type": "string"},
+    "exitCode": {"type": "integer"},
+    "expected": {"type": "string"},
+    "observed": {"type": "string"},
+    "passed": {"type": ["boolean", "string"], "enum": [true, false, "NOT_RUN", "BLOCKED"]},
+    "unauthorizedConnections": {"type": "integer"},
+    "escapedBytes": {"type": "integer"},
+    "latencyMs": {"type": ["number", "null"]},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  }
+}

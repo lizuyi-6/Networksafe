@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AetherGuard Cat2 gateway status",
+  "type": "object",
+  "required": ["state", "serverInterface", "uplinkInterface", "releaseExpiresAt",
+               "bridgeUp", "managementReachable", "rulesetDigest", "timestamp"],
+  "properties": {
+    "state": {"enum": ["isolated", "released", "fault", "unknown"]},
+    "serverInterface": {"type": "string"},
+    "uplinkInterface": {"type": "string"},
+    "serverPortStateKernel": {"type": "string"},
+    "releaseExpiresAt": {"type": ["string", "null"], "format": "date-time"},
+    "leaseTimerActive": {"type": "boolean"},
+    "bridgeUp": {"type": "boolean"},
+    "managementReachable": {"type": "boolean"},
+    "rulesetDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "gatePrimitive": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"}
+  }
+}
