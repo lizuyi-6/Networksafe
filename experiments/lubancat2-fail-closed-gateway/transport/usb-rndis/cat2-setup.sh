@@ -212,7 +212,18 @@ rollback_setup() {
     [[ "$CREATED_UPLINK_FUNCTION" != "true" || ! -d "$GADGET_ROOT/functions/$UPLINK_FUNCTION" ]] \
         || rmdir "$GADGET_ROOT/functions/$UPLINK_FUNCTION" || rollback_failed=1
     if [[ -n "$ORIGINAL_UDC" ]]; then
-        printf '%s\n' "$ORIGINAL_UDC" > "$GADGET_ROOT/UDC" || rollback_failed=1
+        if ! printf '%s\n' "$ORIGINAL_UDC" > "$GADGET_ROOT/UDC" 2>/dev/null; then
+            # The vendor kernel may auto-rebind the gadget first; wait for it.
+            rebound=false
+            for rebind_attempt in $(seq 1 15); do
+                if [[ -n "$(cat "$GADGET_ROOT/UDC" 2>/dev/null)" ]]; then
+                    rebound=true
+                    break
+                fi
+                sleep 1
+            done
+            [[ "$rebound" == "true" ]] || rollback_failed=1
+        fi
         UDC_WAS_UNBOUND=false
     fi
     if (( rollback_failed == 0 )) && verify_management_invariants; then
@@ -317,12 +328,25 @@ ln -s "$GADGET_ROOT/functions/$UPLINK_FUNCTION" "$GADGET_ROOT/configs/$GADGET_CO
 UDC_WAS_UNBOUND=true
 write_state prepared
 : > "$GADGET_ROOT/UDC"
-# Kernel 4.19 DWC3 needs a settle delay after unbind before the gadget can be
-# re-bound; immediate rebind fails with EBUSY ("Device or resource busy").
-sleep 3
 maybe_inject_usb_test_failure after_udc_unbind
 
-printf '%s\n' "$ORIGINAL_UDC" > "$GADGET_ROOT/UDC"
+# The vendor kernel (4.19 DWC3) auto-rebinds the gadget ~1-2s after unbind.
+# A manual rebind write races that automatic re-bind and fails with EBUSY
+# ("Device or resource busy"), so poll for the automatic re-bind instead;
+# an explicit rebind is only a bounded fallback.
+rebound=false
+sleep 2
+for rebind_attempt in $(seq 1 30); do
+    if [[ -n "$(cat "$GADGET_ROOT/UDC" 2>/dev/null)" ]]; then
+        rebound=true
+        break
+    fi
+    sleep 1
+done
+if [[ "$rebound" != "true" ]]; then
+    printf '%s\n' "$ORIGINAL_UDC" > "$GADGET_ROOT/UDC" 2>/dev/null || true
+    sleep 2
+fi
 UDC_WAS_UNBOUND=false
 write_state prepared
 wait_for_interface "$MANAGEMENT_INTERFACE" || { echo "FATAL: management interface did not return" >&2; exit 1; }
