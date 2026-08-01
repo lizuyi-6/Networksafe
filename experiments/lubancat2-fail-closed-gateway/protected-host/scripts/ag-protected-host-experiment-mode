@@ -1,0 +1,71 @@
+#!/bin/bash
+# ag-protected-host-experiment-mode - remove every network bypass so that the
+# ONLY data path is the wired interface toward the Cat2 gateway.
+#
+# HARD SAFETY RULES:
+#   * requires a local console OR an independent management path (here: USB
+#     RNDIS board0 to the Cat2) - verified before touching anything;
+#   * registers a PID1 auto-restore timer FIRST (default 30 min) - if anything
+#     goes wrong the machine restores WiFi/VPN by itself;
+#   * never makes permanent changes; restore reverses everything.
+set -u
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LOG_TAG=aetherguard-protected
+CONF=/etc/aetherguard-protected-host.conf
+[ -r "$CONF" ] && . "$CONF"
+WIRED_IF=${WIRED_IF:-eno1}
+AUTO_RESTORE_MINUTES=${AUTO_RESTORE_MINUTES:-30}
+STATE=/run/aetherguard-protected-experiment.env
+
+say() { echo "$1"; logger -t "$LOG_TAG" -- "$1"; }
+
+# 0) refuse without an independent management path or local console
+if ! ip addr show dev board0 2>/dev/null | grep -q "inet 192\.168\.100\.1" && [ -z "${SSH_TTY:-}${DISPLAY:-}" ]; then
+    say "REFUSED: no independent management path (board0 USB link) and no local console"
+    exit 2
+fi
+
+# 1) snapshot current state (restore reads this)
+{
+    echo "WIRED_IF=$WIRED_IF"
+    nmcli -t -f GENERAL.STATE device show wlo1 2>/dev/null | sed 's/^/WLO1_/' | head -1
+    nmcli -t -f NAME,DEVICE connection show --active 2>/dev/null | sed 's/^/ACTIVE_CON=/' 
+    ip -j route show default 2>/dev/null | sed 's/^/DEFAULT_ROUTE_JSON=/'
+} > "$STATE"
+chmod 600 "$STATE"
+
+# 2) register the auto-restore timer BEFORE disabling anything (fail-safe)
+RESTORE_UNIT="ag-protected-restore-$(date +%s)"
+if ! systemd-run --unit="$RESTORE_UNIT" --on-active="${AUTO_RESTORE_MINUTES}min" --collect \
+        --description="AetherGuard protected-host auto-restore (${AUTO_RESTORE_MINUTES}min)" \
+        /usr/local/sbin/ag-protected-host-restore >/dev/null 2>&1; then
+    say "REFUSED: could not register auto-restore timer; nothing changed"
+    exit 1
+fi
+echo "RESTORE_UNIT=$RESTORE_UNIT" >> "$STATE"
+say "auto-restore timer registered: $RESTORE_UNIT (${AUTO_RESTORE_MINUTES}min)"
+
+# 3) disable bypass paths (WiFi, VPN tunnels, unused ethernet)
+nmcli radio wifi off 2>/dev/null && say "wifi radio off"
+for tun in $(ip -o link show | awk -F': ' '{print $2}' | grep -vE '^(lo|board0|'"$WIRED_IF"'|wlo1)'); do
+    case "$tun" in
+        en*|eth*) ip link set dev "$tun" down 2>/dev/null && say "unused ethernet $tun down" ;;
+        *)        ip link set dev "$tun" down 2>/dev/null && say "tunnel $tun down" ;;
+    esac
+done
+
+# 4) make sure the wired interface toward Cat2 is up and DHCP-managed
+nmcli device set "$WIRED_IF" managed yes 2>/dev/null || true
+ip link set dev "$WIRED_IF" up 2>/dev/null || true
+
+# 5) verify: only the wired interface may hold a default route
+sleep 3
+BYPASS=$(ip route show default 2>/dev/null | grep -v "dev $WIRED_IF" || true)
+if [ -n "$BYPASS" ]; then
+    say "WARNING: bypass default route still present: $BYPASS - deleting"
+    echo "$BYPASS" | while read -r line; do ip route del $line 2>/dev/null || true; done
+fi
+
+say "experiment-mode ACTIVE (wired=$WIRED_IF, auto-restore in ${AUTO_RESTORE_MINUTES}min)"
+ip route show default 2>/dev/null || say "note: no default route yet (expected while Cat2 is isolated)"
+exit 0

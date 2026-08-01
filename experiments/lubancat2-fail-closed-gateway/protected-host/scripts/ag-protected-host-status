@@ -1,0 +1,64 @@
+#!/bin/bash
+# ag-protected-host-status - machine-readable status of the protected host.
+# Output: JSON on stdout. No configuration is changed by this command.
+set -u
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CONF=${AG_PROTECTED_CONF:-/etc/aetherguard-protected-host.conf}
+WIRED_IF=eno1
+[ -r "$CONF" ] && . "$CONF"
+
+python3 - "$WIRED_IF" <<'PYEOF'
+import json, subprocess, sys
+wired_if = sys.argv[1]
+
+def run(cmd):
+    try:
+        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return ""
+
+links = json.loads(run(["ip", "-j", "link", "show"]) or "[]")
+addrs = json.loads(run(["ip", "-j", "addr", "show"]) or "[]")
+routes_v4 = run(["ip", "-j", "route", "show", "default"])
+routes_v6 = run(["ip", "-j", "-6", "route", "show", "default"])
+defaults = (json.loads(routes_v4) if routes_v4 else []) + (json.loads(routes_v6) if routes_v6 else [])
+
+addr_map = {}
+for a in addrs:
+    addr_map[a["ifname"]] = [i.get("local") for i in a.get("addr_info", [])]
+
+ifaces = []
+for link in links:
+    name = link["ifname"]
+    ifaces.append({
+        "name": name,
+        "mac": link.get("address"),
+        "operstate": link.get("operstate"),
+        "addresses": addr_map.get(name, []),
+    })
+
+wifi = run(["nmcli", "-t", "-f", "DEVICE,TYPE,STATE", "device"])
+wifi_active = any(l.split(":")[1] == "wifi" and l.split(":")[2] == "已连接" or
+                  (len(l.split(":")) > 2 and l.split(":")[1] == "wifi" and l.split(":")[2] == "connected")
+                  for l in wifi.splitlines() if l)
+tunnels = [i["name"] for i in ifaces if i["name"] not in ("lo", wired_if)
+           and not i["name"].startswith(("wl", "en", "eth"))]
+
+wired_defaults = [r for r in defaults if r.get("dev") == wired_if]
+bypass_defaults = [r.get("dev") for r in defaults if r.get("dev") != wired_if]
+experiment_ready = bool(wired_defaults) and not bypass_defaults and not wifi_active and not tunnels
+
+print(json.dumps({
+    "hostname": run(["hostname"]),
+    "timestamp": subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"]).decode().strip(),
+    "interfaces": ifaces,
+    "defaultRoutes": defaults,
+    "wiredInterface": wired_if,
+    "wifiActive": wifi_active,
+    "tunnelOrBypassInterfaces": tunnels,
+    "bypassDefaultRouteDevices": bypass_defaults,
+    "cat2Neighbor": run(["sh", "-c", "ip neigh show dev %s | head -5" % wired_if]).splitlines(),
+    "dnsServers": run(["sh", "-c", "grep '^nameserver' /etc/resolv.conf | awk '{print $2}'"]).splitlines(),
+    "experimentReady": experiment_ready,
+}, indent=2))
+PYEOF

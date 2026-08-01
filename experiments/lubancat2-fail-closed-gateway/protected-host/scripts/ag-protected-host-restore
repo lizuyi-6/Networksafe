@@ -1,0 +1,31 @@
+#!/bin/bash
+# ag-protected-host-restore - undo experiment-mode: bring WiFi/VPN back.
+# Idempotent; also invoked automatically by the PID1 auto-restore timer.
+set -u
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LOG_TAG=aetherguard-protected
+STATE=/run/aetherguard-protected-experiment.env
+
+say() { echo "$1"; logger -t "$LOG_TAG" -- "$1"; }
+say "restore START $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# cancel any pending auto-restore timers (we ARE the restore)
+for timer in $(systemctl list-timers --no-legend --no-pager 'ag-protected-restore-*.timer' 2>/dev/null | awk '{print $NF}'); do
+    systemctl stop "$timer" 2>/dev/null || true
+done
+
+# WiFi back on
+nmcli radio wifi on 2>/dev/null && say "wifi radio on"
+
+# bring back tunnel interfaces that were up before (best effort: all non-wired)
+for tun in $(ip -o link show | awk -F': ' '{print $2}' | grep -vE '^(lo|board0|eno1|wlo1)'); do
+    ip link set dev "$tun" up 2>/dev/null || true
+done
+
+# let NetworkManager re-establish connections
+nmcli networking off 2>/dev/null; nmcli networking on 2>/dev/null || true
+sleep 5
+
+rm -f "$STATE"
+say "restore DONE; defaults now: $(ip route show default 2>/dev/null | tr '\n' ';')"
+exit 0

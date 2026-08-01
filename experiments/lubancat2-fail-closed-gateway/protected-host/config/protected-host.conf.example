@@ -1,0 +1,4 @@
+# AetherGuard protected host configuration (EXAMPLE - copy to /etc/aetherguard-protected-host.conf)
+WIRED_IF=eno1
+# auto-restore deadline for experiment-mode (minutes). Never set to "off".
+AUTO_RESTORE_MINUTES=30
