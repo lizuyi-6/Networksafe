@@ -1,0 +1,43 @@
+# TEST E authorization 2026-08-01T04:09:43Z
+## case: valid authorization (expect RC=0, release happens)
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+## tamper cases (expect RC=2 reject for all)
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+## structural rejection cases (valid signature, bad semantics)
+over-duration: {"accepted": false, "reason": "signature verification failed"}
+over-duration: VERIFIER_RC=2
+## replay: reuse the previously-accepted authorization (expect RC=2)
+## counter rollback: sign with an old counter (expect RC=2)
+counter-rollback: {"accepted": false, "reason": "signature verification failed"}
+counter-rollback: VERIFIER_RC=2
+## expired authorization (issued 2h ago, duration 60s) (expect RC=2)
+expired: {"accepted": false, "reason": "signature verification failed"}
+expired: VERIFIER_RC=2
+## future issuedAt (expect RC=2)
+{
+  "state": "isolated",
+  "serverInterface": "eth0",
+  "uplinkInterface": "eth1",
+  "serverGateKernel": "not-enslaved",
+  "releaseExpiresAt": null,
+  "leaseTimerActive": false,
+  "bridgeUp": false,
+  "managementReachable": true,
+  "rulesetDigest": "de44c487850ab71b966453b814ccea82fce420b5a67acfa27e64bd9fb0830604",
+  "gatePrimitive": "bridge-membership (kernel) + PID1 lease timer (systemd transient)",
+  "timestamp": "2026-08-01T04:10:29Z"
+}

@@ -17,7 +17,7 @@ next_counter() {
     echo $((last + 1)) | tee "$COUNTER_FILE_LOCAL"
 }
 
-sign_and_try() {  # sign_and_try <case-name> <extra sign args...> ; expects verifier exit code on stdout
+sign_and_try() {  # sign_and_try <case-name> <extra sign args...>
     local name="$1"; shift
     local out="/tmp/ag-auth-$name.json"
     python3 "$AG_AUTH_DIR/ag-auth-sign.py" --key "$KEY_PRIV" \
@@ -29,8 +29,10 @@ sign_and_try() {  # sign_and_try <case-name> <extra sign args...> ; expects veri
     ag_ssh "python3 /usr/local/sbin/ag-auth-verify.py /tmp/auth-under-test.json; echo VERIFIER_RC=\$?"
 }
 
-tamper_and_try() {  # tamper_and_try <case-name> <jq-style python expr on payload>
-    local name="$1" expr="$2" out="/tmp/ag-auth-$name.json"
+tamper_and_try() {  # tamper_and_try <case-name> <python statement on doc>
+    local name="$1"
+    local expr="$2"
+    local out="/tmp/ag-auth-$name.json"
     python3 "$AG_AUTH_DIR/ag-auth-sign.py" --key "$KEY_PRIV" \
         --gateway-id cat2-gateway-01 \
         --server-interface "$AG_SERVER_IF" --uplink-interface "$AG_UPLINK_IF" \

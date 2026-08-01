@@ -43,22 +43,22 @@ def main():
         "durationSeconds": args.duration,
     }
     blob = canonical(payload)
-    # ECDSA P-256 + SHA-256 via pkeyutl digest mode - works identically on
-    # OpenSSL 1.1.1 (buster/Cat2) and 3.x (operator laptop). Ed25519 was
-    # rejected: 1.1.1 pkeyutl lacks -rawin and cannot verify Ed25519 at all.
+    # ECDSA P-256 + SHA-256 via `openssl dgst` - the only CLI path that works
+    # identically on OpenSSL 1.1.1n (Cat2) and 3.x (operator laptop).
+    # (pkeyutl digest mode broke across versions: 1.1.1 lacks -rawin for
+    # Ed25519 entirely; 3.x rejects -pkeyopt digest for ECDSA sign.)
     import tempfile
     with tempfile.NamedTemporaryFile(delete=False) as tf:
         tf.write(blob); msg_path = tf.name
     try:
         sig = subprocess.run(
-            ["openssl", "pkeyutl", "-sign", "-inkey", args.key,
-             "-pkeyopt", "digest:sha256", "-in", msg_path],
+            ["openssl", "dgst", "-sha256", "-sign", args.key, msg_path],
             stdout=subprocess.PIPE, check=True).stdout
     finally:
         os.unlink(msg_path)
     doc = {"payload": payload,
            "canonicalSha256": __import__("hashlib").sha256(blob).hexdigest(),
-           "signatureAlgorithm": "ECDSA P-256 + SHA-256 (openssl pkeyutl digest mode)",
+           "signatureAlgorithm": "ECDSA P-256 + SHA-256 (openssl dgst)",
            "signatureBase64": base64.b64encode(sig).decode()}
     with open(args.out, "w") as fh:
         json.dump(doc, fh, indent=2)

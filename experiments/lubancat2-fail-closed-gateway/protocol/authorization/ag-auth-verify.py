@@ -51,16 +51,15 @@ def main():
 
     # 1) signature over the canonical payload (binds ALL fields at once)
     blob = canonical(payload)
-    # ECDSA P-256 + SHA-256 via pkeyutl digest mode (openssl 1.1.1 + 3.x).
+    # ECDSA P-256 + SHA-256 via `openssl dgst` (1.1.1n and 3.x compatible).
     with tempfile.NamedTemporaryFile(delete=False) as tf:
         tf.write(sig); sig_path = tf.name
     with tempfile.NamedTemporaryFile(delete=False) as tf:
         tf.write(blob); msg_path = tf.name
-    base = ["openssl", "pkeyutl", "-verify", "-pubin",
-            "-inkey", pubkey, "-pkeyopt", "digest:sha256",
-            "-in", msg_path, "-sigfile", sig_path]
     try:
-        rc = subprocess.run(base, stdout=subprocess.DEVNULL,
+        rc = subprocess.run(["openssl", "dgst", "-sha256", "-verify", pubkey,
+                             "-signature", sig_path, msg_path],
+                            stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL).returncode
     finally:
         os.unlink(sig_path)

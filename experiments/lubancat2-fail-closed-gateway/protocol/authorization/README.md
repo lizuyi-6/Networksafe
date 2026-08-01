@@ -19,12 +19,12 @@ chmod 600 keys/authorizer-private.pem
 openssl pkey -in keys/authorizer-private.pem -pubout -out keys/authorizer-public.pem
 ```
 
-Algorithm: **ECDSA P-256 + SHA-256** (openssl `pkeyutl -pkeyopt digest:sha256`),
+Algorithm: **ECDSA P-256 + SHA-256** (openssl `dgst -sha256 -sign/-verify`),
 chosen over Ed25519 because the Cat2's OpenSSL 1.1.1n (Debian buster) cannot
 perform Ed25519 verify operations at all (`pkeyutl` reports "operation not
-supported for this keytype", verified 2026-08-01). Both endpoint versions
-(1.1.1n on the Cat2, 3.x on the operator laptop) implement the ECDSA digest
-path identically.
+supported for this keytype", verified 2026-08-01). The `dgst` path is the
+only CLI flow verified to behave identically on 1.1.1n (Cat2) and 3.x
+(operator laptop); `pkeyutl` ECDSA digest mode breaks across the two.
 
 ## Authorization document
 
