@@ -293,6 +293,9 @@ trap 'handle_setup_signal 143' TERM
 UDC_WAS_UNBOUND=true
 write_state prepared
 : > "$GADGET_ROOT/UDC"
+# Kernel 4.19 DWC3 needs a settle delay after unbind before the gadget can be
+# re-bound; immediate rebind fails with EBUSY ("Device or resource busy").
+sleep 3
 maybe_inject_usb_test_failure after_udc_unbind
 
 CREATED_SERVER_FUNCTION=true
