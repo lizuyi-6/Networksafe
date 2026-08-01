@@ -1,0 +1,22 @@
+[Unit]
+Description=AetherGuard Cat2 fail-closed gateway (boot-time isolation)
+Documentation=file:/etc/aetherguard-cat2.conf
+# Order before networking is considered online; br0/uplink come from NetworkManager.
+After=NetworkManager.service
+Before=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Failure policy: if anything below fails, SERVER_IF simply stays out of the
+# bridge (or disabled) - the system remains isolated. Failure can never open
+# the gate. Restart= is intentionally absent for oneshot units.
+ExecStartPre=/usr/local/sbin/ag-cat2-gateway verify-prereq
+ExecStart=/usr/local/sbin/ag-cat2-gateway isolate
+# Stop must never open the gate; stopping this unit leaves the kernel port
+# state untouched (stays isolated or times out via its own lease).
+ExecStop=/bin/true
+
+[Install]
+WantedBy=multi-user.target

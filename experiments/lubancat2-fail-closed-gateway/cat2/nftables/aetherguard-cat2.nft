@@ -1,0 +1,36 @@
+# nftables fail-closed reference ruleset - NOT DEPLOYED on the current Cat2 hardware
+#
+# This is the canonical AetherGuard nftables design, kept for reference and for
+# future kernels. It is NOT loaded on the LubanCat-2 because its vendor kernel
+# 4.19.232 is built with:
+#   CONFIG_NF_TABLES_BRIDGE=n   (bridge family unavailable)
+#   CONFIG_NF_TABLES_SET=n      (timed sets unavailable)
+#   CONFIG_NET_CLS_BPF=n        (tc/eBPF time gates unavailable)
+#   CONFIG_BRIDGE_EBTABLES=n    (ebtables unavailable)
+# Evidence: /boot/config-4.19.232 on the board, mirrored in inventory/cat2-system.json.
+#
+# The deployed equivalent uses kernel bridge port state + a PID1-registered
+# lease timer. See cat2/scripts/ag-cat2-gateway.
+#
+# On a kernel WITH the above configs, this file would be the source of truth:
+
+table bridge aetherguard_cat2 {
+    # SERVER_IF presence in this set == release active; element carries a
+    # kernel timeout so expiry needs no userspace at all.
+    set release_gate {
+        type ifname
+        flags timeout
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+
+        # only the two known ports may ever forward, and only while a live
+        # (unexpired) element names the server port; everything else drops.
+        iifname @release_gate oifname "UPLINK_IF" accept
+        iifname "UPLINK_IF" oifname @release_gate accept
+    }
+}
+# Reference operations (never run on current hardware):
+#   release 60:  nft add element bridge aetherguard_cat2 release_gate { "SERVER_IF" timeout 60s }
+#   isolate:     nft delete element bridge aetherguard_cat2 release_gate { "SERVER_IF" }

@@ -1,0 +1,18 @@
+# AetherGuard Cat2 gateway configuration (EXAMPLE - copy to /etc/aetherguard-cat2.conf on the Cat2)
+# Real file is machine-specific and gitignored. No secrets belong here.
+
+# Physical port facing the protected host (assigned by cable test, see inventory/interface-map.json)
+SERVER_IF=eth0
+# Physical port facing the upstream router/switch
+UPLINK_IF=eth1
+# Bridge name (management IP lives on usb0, NOT on br0, in this deployment)
+BRIDGE_IF=br0
+
+# Lease policy
+DEFAULT_RELEASE_SECONDS=60
+MAX_RELEASE_SECONDS=600
+
+# Authorization prototype (phase 10)
+AG_GATEWAY_ID=cat2-gateway-01
+AG_AUTHZ_PUBKEY=/etc/aetherguard-cat2/authorizer-public.pem
+AG_COUNTER_FILE=/var/lib/aetherguard-cat2/authorizer-counter
