@@ -66,6 +66,23 @@ exit 1
             with open(command_path, "w", encoding="ascii") as command_file:
                 command_file.write("#!/bin/bash\nexit 0\n")
             os.chmod(command_path, 0o755)
+        rmdir_path = os.path.join(self.bin_directory, "rmdir")
+        with open(rmdir_path, "w", encoding="utf-8") as rmdir_file:
+            rmdir_file.write(
+                """#!/bin/bash
+# Model configfs semantics: rmdir on a gadget function directory removes the
+# whole config item (attributes disappear with it). Real configfs rejects
+# attribute files, so simulate item removal with rm -rf for the gadget tree.
+for target in "$@"; do
+    if [[ "$target" == *"/functions/"* || "$target" == *"/configs/"* ]]; then
+        rm -rf "$target"
+    else
+        /bin/rmdir "$target"
+    fi
+done
+"""
+            )
+        os.chmod(rmdir_path, 0o755)
 
     def environment(self):
         environment = os.environ.copy()

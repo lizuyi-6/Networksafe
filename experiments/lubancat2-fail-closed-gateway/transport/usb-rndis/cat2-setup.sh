@@ -290,14 +290,11 @@ trap 'handle_setup_signal 129' HUP
 trap 'handle_setup_signal 130' INT
 trap 'handle_setup_signal 143' TERM
 
-UDC_WAS_UNBOUND=true
-write_state prepared
-: > "$GADGET_ROOT/UDC"
-# Kernel 4.19 DWC3 needs a settle delay after unbind before the gadget can be
-# re-bound; immediate rebind fails with EBUSY ("Device or resource busy").
-sleep 3
-maybe_inject_usb_test_failure after_udc_unbind
-
+# Create the experiment functions and config links BEFORE unbinding the UDC.
+# This mirrors the sequence proven on the real Cat2 (kernel 4.19 vendor
+# DWC3): functions created while the gadget is still bound survive the
+# unbind/rebind cycle; creating them after unbind makes the rebind fail
+# with EBUSY ("Device or resource busy").
 CREATED_SERVER_FUNCTION=true
 write_state prepared
 mkdir "$GADGET_ROOT/functions/$SERVER_FUNCTION"
@@ -316,6 +313,14 @@ ln -s "$GADGET_ROOT/functions/$SERVER_FUNCTION" "$GADGET_ROOT/configs/$GADGET_CO
 CREATED_UPLINK_LINK=true
 write_state prepared
 ln -s "$GADGET_ROOT/functions/$UPLINK_FUNCTION" "$GADGET_ROOT/configs/$GADGET_CONFIG/f3"
+
+UDC_WAS_UNBOUND=true
+write_state prepared
+: > "$GADGET_ROOT/UDC"
+# Kernel 4.19 DWC3 needs a settle delay after unbind before the gadget can be
+# re-bound; immediate rebind fails with EBUSY ("Device or resource busy").
+sleep 3
+maybe_inject_usb_test_failure after_udc_unbind
 
 printf '%s\n' "$ORIGINAL_UDC" > "$GADGET_ROOT/UDC"
 UDC_WAS_UNBOUND=false
