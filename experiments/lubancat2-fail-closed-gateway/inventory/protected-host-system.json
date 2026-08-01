@@ -1,0 +1,39 @@
+{
+  "role": "protected-host",
+  "collectedAt": "2026-08-01T03:41:14Z",
+  "collector": "local shell as user break (root via sudo when needed)",
+  "hostname": "break-HP-Pavilion-Gaming-Laptop-15-dk0xxx",
+  "identificationEvidence": {
+    "chassis": "laptop (HP Pavilion Gaming 15-dk0xxx)",
+    "architecture": "x86_64",
+    "note": "identified by hardware/arch, not by hostname; this is also the experiment operator console"
+  },
+  "os": "Ubuntu 26.04 LTS",
+  "kernel": "7.0.0-28-generic",
+  "cpu": "Intel Core i5-9300H @ 2.40GHz (8 threads)",
+  "memoryTotal": "7.1Gi",
+  "networkManager": {
+    "NetworkManager": "active (primary)",
+    "systemd-networkd": "inactive",
+    "networking-ifupdown": "inactive"
+  },
+  "nftables": {"userspaceVersion": "nftables v1.1.6 (Commodore Bullmoose #7)"},
+  "iproute2Version": "iproute2-6.19.0, libbpf 1.6.3",
+  "interfaces": [
+    {"name": "eno1", "mac": "00:68:eb:77:c7:4d", "state": "DOWN/NO-CARRIER", "addresses": [], "physical": true, "role": "wired NIC - will connect to Cat2 SERVER port"},
+    {"name": "wlo1", "mac": "28:7f:cf:9d:aa:a3", "state": "UP", "addresses": ["192.168.3.140/24"], "physical": true, "role": "WiFi to home router 192.168.3.1 - BYPASS interface, disabled only during experiment-mode with auto-restore"},
+    {"name": "board0", "mac": "fe:12:29:d4:4c:e2", "state": "UP", "addresses": ["192.168.100.1/24"], "physical": false, "role": "USB RNDIS management to Cat2 - control channel only, no internet reachability, kept up during experiments"},
+    {"name": "YouTu", "mac": null, "state": "UP", "addresses": ["198.18.0.1/30"], "physical": false, "role": "user VPN tunnel - BYPASS interface, disabled during experiment-mode with auto-restore"},
+    {"name": "lo", "mac": "00:00:00:00:00:00", "state": "UNKNOWN", "addresses": ["127.0.0.1/8"], "physical": false}
+  ],
+  "currentDefaultRoute": "default via 192.168.3.1 dev wlo1 src 192.168.3.140 metric 20600",
+  "currentSshChannel": {
+    "localAddress": "192.168.100.1",
+    "viaInterface": "board0",
+    "target": "192.168.100.2 (Cat2 usb0)",
+    "independentOfWiredNic": true
+  },
+  "repoCommitAtCollection": "9cbd9fadee4f7eeeafa93e0794af20f4847215b3",
+  "bypassInterfacesPresent": ["wlo1 (WiFi)", "YouTu (VPN)"],
+  "note": "This laptop is the user's daily-use machine. Experiment-mode must always auto-restore bypass interfaces; permanent WiFi disable is forbidden by protocol."
+}

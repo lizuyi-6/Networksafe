@@ -1,0 +1,29 @@
+{
+  "detectedAt": "2026-08-01T03:41:14Z",
+  "status": "PRELIMINARY - physical port roles unassigned until cable tests",
+  "cat2": {
+    "serverInterface": "PENDING_CABLE_TEST",
+    "uplinkInterface": "PENDING_CABLE_TEST",
+    "serverMac": "PENDING",
+    "uplinkMac": "PENDING",
+    "candidatePorts": [
+      {"name": "eth0", "mac": "7a:6c:05:86:0a:2f", "driver": "st_gmac", "linkAtDetection": false},
+      {"name": "eth1", "mac": "7e:6c:05:86:0a:2f", "driver": "st_gmac", "linkAtDetection": false}
+    ],
+    "managementInterfaceBeforeBridge": "usb0",
+    "managementAddressBeforeBridge": "192.168.100.2/24",
+    "managementChannel": "USB RNDIS (out-of-band, independent of eth0/eth1/br0)",
+    "assignmentMethod": "operator plugs one cable at a time while gateway watches ip monitor link; first port to gain carrier = SERVER (to protected host), second = UPLINK (to router LAN)"
+  },
+  "protectedHost": {
+    "wiredInterfaceToCat2": "eno1",
+    "wiredMac": "00:68:eb:77:c7:4d",
+    "managementChannel": "USB RNDIS board0 192.168.100.1 (control only) + local console"
+  },
+  "upstream": {
+    "device": "home router (LAN side)",
+    "lanSubnet": "192.168.3.0/24",
+    "lanGateway": "192.168.3.1",
+    "evidence": "protected host WiFi default route"
+  }
+}

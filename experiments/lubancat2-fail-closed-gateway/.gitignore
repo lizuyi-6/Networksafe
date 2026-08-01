@@ -1,0 +1,11 @@
+# local environment configs (never commit real secrets/IPs)
+cat2/config/aetherguard-cat2.conf
+protected-host/config/protected-host.conf
+# authorization private keys - NEVER commit
+protocol/authorization/keys/*private*.pem
+protocol/authorization/keys/*.key
+!protocol/authorization/keys/*.pub
+!protocol/authorization/keys/*public*.pem
+# large raw captures stay local; only manifest+selected logs are committed
+results/raw/**/*.pcap
+results/raw/**/*.pcapng
