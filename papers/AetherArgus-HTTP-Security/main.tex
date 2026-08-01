@@ -1,0 +1,55 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{balance}
+
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newcommand{\model}{AetherArgus}
+\newcommand{\challenge}{VIguard-LAN}
+\newcommand{\commitid}{\texttt{825fb95fb87a08d14e15e59078c7cf88beb9c5e8}}
+\newcommand{\labelhash}{\texttt{13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad}}
+\newcommand{\figroot}{../../ml/reports/lan-challenge-evaluation/figures/}
+\newcommand{\evidencefigure}[4]{%
+  \begin{figure}[t]
+    \centering
+    \IfFileExists{\figroot#1}{\includegraphics[width=#2\linewidth]{\figroot#1}}{\fbox{\parbox[c][0.16\textheight][c]{0.92\linewidth}{\centering Evidence figure generated in the repository:\\ \texttt{#1}}}}
+    \caption{#3}
+    \label{#4}
+  \end{figure}}
+
+\title{\model: Leakage-Controlled Evaluation of a Compact Language Model for HTTP Security Classification}
+
+\author{Anonymous Authors}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract-introduction}
+\input{sections/related-work}
+\input{sections/method}
+\input{sections/dataset-protocol}
+\input{sections/experimental-setup}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\section*{Data, Code, and Evidence Availability}
+The repository contains the training and evaluation programs, frozen protocols, model and prompt manifests, per-sample predictions, machine-readable metrics, bootstrap and McNemar outputs, figures, tables, and claim-to-evidence mappings. The paper evidence baseline is merge commit \commitid. The frozen reference-label file is identified by SHA-256 \labelhash. Raw human-review worksheets and reviewer identities are not publicly released because the review was conducted in a restricted environment over confidential benchmark and operational material; the repository instead provides a hash-bound operator attestation and explicitly records this limitation.
+
+\section*{Ethics and Responsible Deployment}
+All challenge traffic was collected in an authorized LAN environment. The study does not claim that \model{} is suitable for autonomous blocking. The evaluated model is best interpreted as a shadow-mode or second-stage analytical component. High-risk actions remain outside the model and require independent policy or hardware authorization.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\balance
+\end{document}

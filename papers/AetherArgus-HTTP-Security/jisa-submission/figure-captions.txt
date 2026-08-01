@@ -1,0 +1,7 @@
+Figure 1. Model comparison generated from the machine-readable frozen metrics.
+
+Figure 2. Verdict confusion matrices. The adapted model's high attack recall coexists with complete unknown-class collapse.
+
+Figure 3. Quality, latency, and measured artifact-size trade-offs. Cross-stack latency is shown descriptively because runtime stacks and timing boundaries differ.
+
+Figure 4. Pre-registered inference-path diagnostics. Message structure changes decisions, while shared serialized prompts produce identical tested verdicts.

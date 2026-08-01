@@ -1,0 +1,87 @@
+\documentclass[preprint,12pt,authoryear]{elsarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{lineno}
+
+\journal{Journal of Information Security and Applications}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newcommand{\model}{AetherArgus}
+\newcommand{\challenge}{VIguard-LAN}
+\newcommand{\commitid}{\texttt{825fb95f\allowbreak b87a08d1\allowbreak 4e15e590\allowbreak 78c7cf88\allowbreak beb9c5e8}}
+\newcommand{\labelhash}{\texttt{13fd71f5\allowbreak 507ec9bf\allowbreak 6db74c38\allowbreak fafb073c\allowbreak 76e9766c\allowbreak 0e20e874\allowbreak 452d3c62\allowbreak 302ad8ad}}
+\newcommand{\figroot}{../../../ml/reports/lan-challenge-evaluation/figures/}
+\newcommand{\evidencefigure}[4]{%
+  \begin{figure}[t]
+    \centering
+    \IfFileExists{\figroot#1}{\includegraphics[width=#2\linewidth]{\figroot#1}}{\fbox{\parbox[c][0.16\textheight][c]{0.92\linewidth}{\centering Evidence figure generated in the repository:\\ \texttt{#1}}}}
+    \caption{#3}
+    \label{#4}
+  \end{figure}}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{\model: Leakage-Controlled and Reproducible Evaluation of a Compact Language Model for HTTP Security Classification}
+
+\author[aff1]{Zuyi Li\corref{cor1}}
+\cortext[cor1]{Corresponding author}
+\ead{2251213429@qq.com}
+
+% Verify the company's official English legal name and postal code against
+% the business-registration record before external submission.
+\address[aff1]{Hebei Xiong'an Qiongyu Technology Co., Ltd., No. 621-045, Xiong'an High-tech Zone Service Center, Xiong'an Area, China (Hebei) Pilot Free Trade Zone, Xiong'an New Area, Hebei 071700, China}
+
+\begin{abstract}
+Large language models are increasingly proposed for application-layer security analysis, but internal test sets, label leakage, and inconsistent inference stacks can obscure actual performance. We present AetherArgus, a 4B-parameter QLoRA-adapted language model for structured HTTP request classification into safe, attack, or unknown, together with a leakage-controlled evaluation protocol. The model was trained on 14,314 records and evaluated on a frozen 413-sample authorized LAN challenge set that was excluded from training and tuning. Reference labels were produced by dual-model annotation and independent model adjudication, then confirmed after evaluation through a confidential blind human review with zero label changes. Eight systems were compared under a locked protocol. AetherArgus achieved 0.6150 accuracy and 0.4658 macro-F1, compared with 0.5230 and 0.4175 for zero-shot Qwen3-4B. The paired macro-F1 improvement was 0.0482 (95\% confidence interval 0.0113--0.0835), and attack recall reached 0.9072. However, the safe false-positive rate remained 0.2057 and unknown recall was zero, precluding autonomous blocking. Q4\_K\_M quantization reduced storage from approximately 7.49 GiB to 2.33 GiB with a small observed macro-F1 reduction, while changing message structure altered 11 of 413 verdicts. These results show that compact task-adapted models can improve attack-oriented classification, but deployment claims require explicit false-positive, abstention, and inference-path analysis.
+\end{abstract}
+
+\begin{keyword}
+HTTP security \sep intrusion detection \sep language models \sep QLoRA \sep prompt injection \sep abstention \sep reproducibility
+\end{keyword}
+
+\end{frontmatter}
+
+\linenumbers
+
+\input{sections/introduction}
+\input{../sections/related-work}
+\input{../sections/method}
+\input{../sections/dataset-protocol}
+\input{../sections/experimental-setup}
+\input{../sections/results}
+\input{../sections/discussion}
+\input{../sections/conclusion}
+
+\section*{Data availability}
+The protocols, scripts, manifests, aggregate metrics, statistical outputs, and claim-to-evidence mappings are available to editors and reviewers through the associated private repository during peer review. A de-identified reproducibility package containing model-visible challenge inputs, reference labels, per-sample predictions, and evaluation scripts is intended for archival release in a persistent repository. Raw LAN capture material and confidential human-review worksheets are not publicly shared because they contain operationally sensitive information. The paper evidence baseline is merge commit \commitid, and the frozen reference-label file is identified by SHA-256 \labelhash.
+
+\section*{CRediT authorship contribution statement}
+Zuyi Li: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Visualization, Writing -- original draft, Writing -- review and editing, Project administration.
+
+\section*{Funding}
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+\section*{Declaration of competing interest}
+Zuyi Li is the founder of Hebei Xiong'an Qiongyu Technology Co., Ltd., the author's affiliation. The company may have a commercial interest in artificial-intelligence and cybersecurity technologies related to this work. This relationship is disclosed as a potential competing interest. The study received no external grant funding, and no external sponsor influenced the study design, frozen evaluation protocol, statistical analysis, interpretation, reporting, or decision to submit the manuscript.
+
+\section*{Ethics and responsible deployment}
+All challenge traffic was collected in an authorized LAN environment. The study does not claim that \model{} is suitable for autonomous blocking. The evaluated model is best interpreted as a shadow-mode or second-stage analytical component. High-risk actions remain outside the model and require independent policy or hardware authorization.
+
+\section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
+During the preparation of this work, the author used OpenAI ChatGPT to assist with manuscript organization, language drafting, and consistency checking. The author reviewed, verified, and edited the resulting content and takes full responsibility for the content of the article.
+
+\bibliographystyle{elsarticle-harv}
+\bibliography{../references}
+
+\end{document}

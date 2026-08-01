@@ -1,0 +1,59 @@
+\section{Discussion and Threats to Validity}
+\label{sec:discussion}
+
+\subsection{What the Adapter Learned}
+The paired comparison indicates that QLoRA adaptation changes semantic decisions even when the base model already satisfies the output schema. The most visible change is an attack-sensitive boundary: attack recall increases by nearly 20 percentage points relative to zero-shot, and attack F1 rises substantially. The adapter appears to encode domain vocabulary, suspicious request compositions, and the relationship between evidence and verdict more effectively than prompt instructions alone.
+
+The same shift creates a cost. Safe FPR remains 20.57\%, and unknown behavior collapses completely. The training objective jointly rewards a concrete target sequence and schema completion; it does not explicitly reward calibrated abstention. A likely failure mode is that the model learns that a complete answer should contain either safe or attack, even when the intended class is unknown. Future work should treat abstention as a separate optimization target, introduce contrastive sufficient/insufficient-context pairs, and calibrate a reject option on human-reviewed validation data.
+
+\subsection{Rules and Models Are Complementary}
+The rules baseline and \model{} occupy different operating points. Frozen rules provide excellent safe precision but low recall for semantically varied attacks. The adapted model supplies much broader recall but flags too many safe requests. A practical architecture can exploit this complementarity:
+\begin{enumerate}
+    \item high-confidence, high-specificity rules handle known attack signatures;
+    \item the compact model analyzes requests not resolved by rules in shadow mode;
+    \item disagreements, unknown-context cases, and high-impact actions are escalated to policy logic or human review;
+    \item irreversible actions require an independent authorization mechanism.
+\end{enumerate}
+This design is safer than replacing the rule engine or allowing the model to block directly.
+
+\subsection{Message Boundaries Are Part of the Model}
+The inference-path ablation demonstrates that a system prompt, user message, and chat template are not merely transport details. Combining trusted policy and untrusted request content into one message changes 11 verdicts and raises false positives. For security applications, the full serialization pipeline should be versioned and hashed as part of the model artifact. Reproducing only weights and generation temperature is insufficient.
+
+The identical verdicts observed under byte-identical serialized prompts are encouraging for portability, but the result is bounded to the tested 413 samples. Transformers merged BF16 and Ollama f16 still differ in runtime implementation and artifact representation. Numerical-equivalence or universal behavioral-equivalence claims would require token-level logit comparisons and a broader stress corpus.
+
+\subsection{Implications of the Human Review}
+The post-evaluation blind human review confirms that the frozen references were not changed after model outcomes were known. This is stronger than an AI-only label claim and reduces concern that the principal results are driven by obvious adjudication errors. However, the public evidence is an operator attestation rather than released worksheets. External researchers cannot independently inspect reviewer identities, reviewer count, or per-sample rationale. We disclose this limitation and avoid the phrase ``objective ground truth.''
+
+The temporal order is also important. Human review was completed after model evaluation. Since the review produced zero changes, the original predictions and statistics remain valid; the review does not retroactively become a pre-evaluation human annotation process. Future public benchmarks should, where confidentiality permits, complete and publish human annotation before the protocol lock.
+
+\subsection{Threats to Internal Validity}
+Although protocols were committed before the relevant runs, the research team developed the training corpus and system prompt. Unobserved design choices may favor the adapted model. The challenge set was not used for tuning, and the base models use the same prompt and schema, which limits but does not remove this risk.
+
+The v0.2 model was trained with one seed and one epoch. Training variance is therefore unknown. Confidence intervals in this paper quantify challenge-sample uncertainty, not variation across training runs. At least three independent training seeds are needed before making strong stability claims.
+
+The character n-gram baseline collapses to the attack class, reducing its value as a competitive conventional baseline. The rules baseline is stronger operationally but represents one repository-specific engine. Future work should include independently maintained WAF/IDS systems and stronger text classifiers trained with domain-adaptation methods.
+
+\subsection{Threats to Construct Validity}
+The three-class verdict compresses a complex security decision. Some authorization and business-logic attacks cannot be resolved without authenticated identity, object ownership, prior workflow state, or response evidence. The unknown class addresses this issue in principle, but the evaluated model does not use it successfully.
+
+Attack-family labels are secondary and sometimes multi-causal. A request may combine prompt injection with authorization abuse or protocol manipulation. A single family label simplifies scoring but can underrepresent the true threat composition. Family Macro-F1 is therefore not treated as the primary outcome.
+
+Schema validity measures interface compliance, not security quality. Conversely, mapping parse failures to unknown can reward a form of non-response. We report raw parse and schema rates so verdict metrics are not interpreted in isolation.
+
+\subsection{Threats to External Validity}
+The 413-sample challenge set is authorized LAN traffic curated for security evaluation. It is not a prevalence-matched sample of arbitrary production requests. Accuracy and FPR values therefore characterize this benchmark, not a universal deployment rate. The sample count also limits family-specific confidence, particularly for rare families.
+
+The primary hardware is a single consumer laptop GPU and the runtimes use different serving stacks. Artifact-size measurements are exact for the stored files, but latency is not a controlled cross-runtime benchmark. Performance should be remeasured on the intended deployment platform with synchronized timing boundaries and warm-up policies.
+
+Finally, the study evaluates one 4B base family. Results may not transfer to other model architectures, tokenizers, or instruction-training recipes. The paper's strongest claim is local: under the frozen protocol, this specific task-adapted model outperforms its specific base-model prompting baselines on verdict Macro-F1 and attack detection.
+
+\subsection{Next Research Steps}
+The evidence identifies a focused agenda rather than an open-ended request for more scale:
+\begin{itemize}
+    \item train and calibrate explicit abstention using human-reviewed insufficient-context pairs;
+    \item reduce safe FPR without sacrificing attack recall, potentially through a rule-model cascade or cost-sensitive objective;
+    \item repeat training with multiple seeds;
+    \item expand the external set with natural production-like traffic under authorization and privacy controls;
+    \item evaluate stronger conventional and independently maintained security baselines;
+    \item test prompt-injection robustness with adaptive attackers and token-level inference diagnostics.
+\end{itemize}

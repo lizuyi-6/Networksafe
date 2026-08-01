@@ -1,0 +1,158 @@
+name: JISA Paper Build
+
+on:
+  pull_request:
+    paths:
+      - 'papers/AetherArgus-HTTP-Security/**'
+      - '.github/workflows/jisa-paper-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-jisa-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Compile JISA manuscript
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: papers/AetherArgus-HTTP-Security/jisa-submission/main.tex
+          work_in_root_file_dir: true
+          texlive_version: 2026
+          os: debian
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+
+      - name: Upload compiled PDF and log
+        uses: actions/upload-artifact@v7
+        with:
+          name: aetherargus-jisa-manuscript
+          path: |
+            papers/AetherArgus-HTTP-Security/jisa-submission/main.pdf
+            papers/AetherArgus-HTTP-Security/jisa-submission/main.log
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Assemble editable JISA source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="jisa-source-package"
+          mkdir -p "$root/papers/AetherArgus-HTTP-Security"
+          mkdir -p "$root/ml/reports/lan-challenge-evaluation"
+
+          cp -R papers/AetherArgus-HTTP-Security/jisa-submission \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp -R papers/AetherArgus-HTTP-Security/sections \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp papers/AetherArgus-HTTP-Security/references.bib \
+            papers/AetherArgus-HTTP-Security/CLAIM-TO-EVIDENCE.md \
+            papers/AetherArgus-HTTP-Security/README.md \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp -R ml/reports/lan-challenge-evaluation/figures \
+            "$root/ml/reports/lan-challenge-evaluation/"
+
+          rm -f \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.aux" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.bbl" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.blg" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.fdb_latexmk" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.fls" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.log" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.out" \
+            "$root/papers/AetherArgus-HTTP-Security/jisa-submission/main.pdf"
+
+          cat > "$root/UPLOAD-NOTES.txt" <<'EOF'
+          JISA editable source package
+
+          Main file:
+          papers/AetherArgus-HTTP-Security/jisa-submission/main.tex
+
+          Upload separately from this source archive:
+          - passport-type author photograph;
+          - author biography Word document;
+          - official Elsevier declarations-tool Word document;
+          - cover letter;
+          - reviewer evidence archive, when requested.
+          EOF
+
+          zip -qr aetherargus-jisa-editable-source.zip "$root"
+
+      - name: Upload editable JISA source package
+        uses: actions/upload-artifact@v7
+        with:
+          name: aetherargus-jisa-editable-source
+          path: aetherargus-jisa-editable-source.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Assemble de-identified reviewer evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="reviewer-package"
+          mkdir -p "$root/ml/data/lan_challenge_capture/adjudication"
+          mkdir -p "$root/ml/evaluation"
+          mkdir -p "$root/ml/reports"
+          mkdir -p "$root/papers/AetherArgus-HTTP-Security"
+
+          cp ml/data/lan_challenge_capture/model-inputs.jsonl \
+            "$root/ml/data/lan_challenge_capture/"
+          cp ml/data/lan_challenge_capture/adjudication/final-labels.jsonl \
+            "$root/ml/data/lan_challenge_capture/adjudication/"
+          cp ml/data/lan_challenge_capture/adjudication/final-labels-manifest.json \
+            "$root/ml/data/lan_challenge_capture/adjudication/"
+
+          if [ -f ml/data/lan_challenge_capture/adjudication/human-review/human-review-attestation.json ]; then
+            mkdir -p "$root/ml/data/lan_challenge_capture/adjudication/human-review"
+            cp ml/data/lan_challenge_capture/adjudication/human-review/human-review-attestation.json \
+              "$root/ml/data/lan_challenge_capture/adjudication/human-review/"
+          fi
+
+          cp -R ml/evaluation/lan_challenge "$root/ml/evaluation/"
+          cp -R ml/reports/lan-challenge-evaluation "$root/ml/reports/"
+          cp papers/AetherArgus-HTTP-Security/CLAIM-TO-EVIDENCE.md \
+            "$root/papers/AetherArgus-HTTP-Security/"
+
+          cat > "$root/README.md" <<'EOF'
+          # AetherArgus JISA Reviewer Evidence Package
+
+          This archive contains de-identified model-visible challenge inputs,
+          frozen reference labels and manifests, evaluation programs, per-sample
+          predictions, aggregate metrics, statistical outputs, figures, tables,
+          reports, and the manuscript claim-to-evidence audit.
+
+          Deliberately excluded:
+
+          - raw LAN packet captures and operational logs;
+          - confidential human-review worksheets and reviewer identities;
+          - training model weights and proprietary deployment credentials;
+          - unrelated repository and production-system files.
+
+          Evidence baseline: 825fb95fb87a08d14e15e59078c7cf88beb9c5e8
+          Input SHA-256: c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3
+          Label SHA-256: 13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad
+          EOF
+
+          manifest_tmp="$(mktemp)"
+          (
+            cd "$root"
+            find . -type f -print0 \
+              | sort -z \
+              | xargs -0 sha256sum > "$manifest_tmp"
+          )
+          mv "$manifest_tmp" "$root/MANIFEST.sha256"
+          zip -qr aetherargus-jisa-reviewer-evidence.zip "$root"
+
+      - name: Upload reviewer evidence package
+        uses: actions/upload-artifact@v7
+        with:
+          name: aetherargus-jisa-reviewer-evidence
+          path: aetherargus-jisa-reviewer-evidence.zip
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,40 @@
+\section{Datasets, Labels, and Leakage Controls}
+\label{sec:data}
+
+\subsection{Internal Development Data}
+The internal v0.2 corpus supports training, validation, and development-time evaluation. Its examples are assembled from deterministic templates and public-source-derived security cases. The data mixture deliberately includes hard negatives---requests that contain suspicious tokens but should remain safe---and an explicit unknown class for cases in which model-visible context is insufficient. Prompt-injection examples target both the verdict and the recommended-action fields.
+
+Internal evaluation is useful for checking training convergence and output alignment, but it is not the primary evidence in this paper. On the sealed 1,750-example independent split, the LoRA model achieved 0.9657 verdict accuracy, 1.000 malicious recall, 0.0286 normal FPR, and 1.000 unknown accuracy. It nevertheless failed three locked release gates: JSON syntax success was 0.9714, schema validity was 0.9714, and prompt-injection obedience was 0.9197. Eleven of 137 prompt-injection cases hijacked the verdict or action recommendation. These results motivated an external challenge evaluation rather than a production-readiness claim.
+
+\subsection{Frozen \challenge{} Challenge Set}
+The primary test set contains 413 authorized LAN request-side samples. Its model-input file has SHA-256
+\begin{center}
+{\small\texttt{c77f4949\allowbreak cbe1860f\allowbreak 97219a83\allowbreak f0ee16de\allowbreak 40740321\allowbreak a4d2f628\allowbreak d56f1506\allowbreak 9fe6b8c3}}.
+\end{center}
+The frozen reference-label distribution is 209 safe, 97 attack, and 107 unknown. The label file has SHA-256 \labelhash. The set is external to the v0.2 train, validation, closed-test, and independent-test splits. It is not used for training, prompt selection, threshold selection, hyperparameter tuning, checkpoint selection, or model selection.
+
+The challenge set contains request-side fields only. Labels and scoring metadata are stored separately. Cohorts include normal requests, attack attempts, hard negatives, prompt-injection cases, and insufficient-context examples. The dataset is an authorized challenge capture, not a random sample of natural production traffic; prevalence-sensitive metrics must therefore not be interpreted as production base rates.
+
+\subsection{AI-Assisted Annotation and Adjudication}
+Two independent AI annotators produced initial labels. Agreement was high but imperfect, with observed agreement 0.9274 and Cohen's $\kappa=0.8651$. A third AI model adjudicated disagreements. A separate model-visible-context audit corrected 68 provenance issues in which labels depended on information that the classifier could not observe. The resulting frozen reference set contains 160 direct-consensus outcomes and 253 model-adjudicated outcomes. The reference file was frozen before the AetherArgus challenge predictions were generated.
+
+The AI-assisted stage is not described as human ground truth. It is a reproducible label-construction process with known dependence on model judgment. To reduce this threat, the full frozen reference set was subsequently subjected to a confidential blind human review.
+
+\subsection{Confidential Blind Human Review}
+Human review occurred after the frozen model evaluation. Reviewers operated outside the public repository in a restricted environment and made their decisions before seeing annotator-A or annotator-B labels, the third-model adjudication, AetherArgus predictions, or evaluation metrics. After blind decisions were complete, the human outcomes were compared with the frozen references.
+
+The review covered all 413 samples, found zero disagreements, and required zero label changes. The before- and after-review label hashes are therefore identical. No prediction rerun or rescoring was required. The repository records \texttt{humanReviewed=true}, full coverage, zero disagreements, and a SHA-bound operator attestation.
+
+Reviewer identities, reviewer count, worksheets, and raw materials are withheld because they contain confidential benchmark and operational information. This limits external auditability. We consequently use the term \emph{confidentially human-reviewed reference labels}, not publicly reproducible human ground truth.
+
+\subsection{Frozen Protocol and Process Isolation}
+Protocol v1 was committed before the rule baseline. Protocol v2 was committed before the remaining seven primary model runs and fixes model identities, data hashes, metrics, statistical tests, system-prompt hash, few-shot example hash, model-asset hashes, and deterministic generation parameters.
+
+Inference and scoring are process-separated:
+\begin{equation}
+    \text{model inputs} \rightarrow \text{predictions.jsonl}
+\end{equation}
+\begin{equation}
+    \text{predictions.jsonl} + \text{labels} \rightarrow \text{metrics}.
+\end{equation}
+The inference programs do not open the label file or adjudication artifacts. Predictions are append-only, flushed per sample, and keyed by unique sample identifiers. The strict validator checks 413-of-413 coverage, duplicate and omission absence, common input hash, prediction-label alignment, train/test separation, few-shot exclusion, metric recomputation, figure/table consistency, privacy scans, and claim-to-evidence traceability. The frozen evidence package passed all 27 strict checks.

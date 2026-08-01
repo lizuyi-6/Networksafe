@@ -1,0 +1,97 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{Main Comparative Results}
+\Cref{tab:main-results} reports the eight-system comparison. HF-LoRA reaches 0.6150 accuracy and 0.4658 Macro-F1. Merged BF16 and Ollama f16 produce the same accuracy and nearly identical Macro-F1. Q4\_K\_M loses 0.0102 Macro-F1 relative to merged BF16 while retaining 0.9072 attack recall.
+
+\begin{table*}[t]
+\centering
+\caption{Results on the frozen 413-sample \challenge{} challenge set. FPR is computed only over the 209 reference-safe samples. Unknown is accuracy on 107 reference-unknown samples.}
+\label{tab:main-results}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+System & Accuracy & Macro-F1 & Attack F1 & Attack Recall & Safe FPR & Unknown & Schema Valid \\
+\midrule
+Frozen rules & 0.5206 & 0.2994 & 0.1606 & 0.1134 & \textbf{0.0144} & 0.0187 & 1.0000 \\
+Char n-gram LR & 0.2349 & 0.1273 & 0.3819 & \textbf{1.0000} & 1.0000 & 0.0000 & 1.0000 \\
+Qwen3-4B zero-shot & 0.5230 & 0.4175 & 0.4964 & 0.7113 & 0.3206 & 0.0561 & 1.0000 \\
+Qwen3-4B fixed few-shot & 0.5133 & 0.4114 & 0.4758 & 0.6082 & 0.2679 & \textbf{0.0654} & 0.9976 \\
+\model{} HF-LoRA & \textbf{0.6150} & 0.4658 & 0.6692 & 0.9072 & 0.2057 & 0.0000 & 1.0000 \\
+\model{} merged BF16 & \textbf{0.6150} & \textbf{0.4661} & \textbf{0.6718} & 0.9072 & 0.2057 & 0.0000 & 1.0000 \\
+\model{} Ollama f16 & \textbf{0.6150} & \textbf{0.4661} & \textbf{0.6718} & 0.9072 & 0.2057 & 0.0000 & 1.0000 \\
+\model{} Q4\_K\_M & 0.6005 & 0.4559 & 0.6519 & 0.9072 & 0.2249 & 0.0000 & 0.9952 \\
+\bottomrule
+\end{tabular}}
+\end{table*}
+
+\evidencefigure{figure-1-model-comparison.pdf}{0.98}{Model comparison generated from the machine-readable frozen metrics.}{fig:model-comparison}
+
+The character n-gram classifier predicts every challenge sample as attack. This yields perfect attack recall but 100\% safe FPR and zero unknown accuracy. The behavior is evidence of severe domain transfer failure rather than a useful operating point. The frozen rules baseline exhibits the opposite profile: safe FPR is only 3/209 (1.44\%), but it identifies 11/97 attacks (11.34\% recall). \model{} therefore does not dominate the rules baseline in every operational dimension; it exchanges precision for recall.
+
+\subsection{Significance of Task Adaptation}
+Relative to Qwen3-4B zero-shot, HF-LoRA improves Macro-F1 by 0.0482 with paired-bootstrap 95\% CI [0.0113, 0.0835]. Attack F1 improves by 0.1728 with 95\% CI [0.1246, 0.2253]. Safe FPR decreases by 0.1148 with 95\% CI [0.0718, 0.1579] in absolute magnitude. McNemar's test on verdict correctness remains significant after Holm correction ($p=8.36\times10^{-7}$).
+
+Against the fixed few-shot baseline, HF-LoRA improves Macro-F1 by approximately 0.0544 with 95\% CI [0.0157, 0.0912]; the Holm-corrected McNemar value is $7.22\times10^{-7}$. Fixed demonstrations therefore do not reproduce the benefit of task adaptation. In fact, few-shot attack recall falls to 0.6082, below the zero-shot value of 0.7113.
+
+The verdict improvement is not merely a schema effect. Both Qwen zero-shot and HF-LoRA achieve 100\% schema validity on the challenge set, yet their verdict metrics differ significantly. This supports RQ2: the adapter changes security decisions, not only serialization.
+
+\subsection{False Positives and Abstention Failure}
+The central negative result is visible in the HF-LoRA confusion matrix:
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Reference $\backslash$ Prediction & Safe & Attack & Unknown \\
+\midrule
+Safe & 166 & 43 & 0 \\
+Attack & 9 & 88 & 0 \\
+Unknown & 72 & 35 & 0 \\
+\bottomrule
+\end{tabular}
+\end{center}
+The model detects 88 of 97 attacks but incorrectly flags 43 of 209 safe requests. More importantly, it never emits \texttt{unknown}. All 107 insufficient-context samples are forced into safe (72) or attack (35). Compared with Qwen zero-shot, unknown accuracy decreases by 0.0561 with paired-bootstrap 95\% CI [-0.1028,-0.0187]. Task adaptation therefore sharpens the attack decision boundary while degrading abstention.
+
+\evidencefigure{figure-2-verdict-confusion-matrices.pdf}{0.98}{Verdict confusion matrices. The adapted model's high attack recall coexists with complete unknown-class collapse.}{fig:confusion}
+
+These observations rule out a production-safe autonomous-blocking claim. A classifier that flags roughly one in five reference-safe requests and cannot identify insufficient evidence should not directly control irreversible actions.
+
+\subsection{Attack-Family Classification}
+On reference-attack samples, HF-LoRA reaches attack-family Macro-F1 0.6425. Qwen zero-shot reaches 0.6325, while fixed few-shot reaches 0.6661. The family-label result is therefore weaker than the verdict result: task adaptation improves whether a request is classified as an attack, but does not establish superiority in fine-grained family naming. Family metrics are also based on small per-family supports and are treated as secondary evidence.
+
+\subsection{Quantization and Artifact Size}
+\Cref{tab:size} summarizes measured artifact sizes and descriptive latency. Q4\_K\_M reduces storage to 2.50~GB (2.33~GiB), approximately 31\% of the merged-BF16 directory size. Its Macro-F1 is 0.4559 compared with 0.4661 for merged BF16. The paired difference of 0.0102 has 95\% CI [-0.0043,0.0249], and the Holm-corrected McNemar comparison is not significant ($p=0.539$). We therefore conclude that Q4 preserves most verdict-level quality on this set, not that it is lossless.
+
+\begin{table}[t]
+\centering
+\caption{Measured artifact size and descriptive latency. Runtime stacks and timing boundaries differ; latency values are not a controlled speed ranking.}
+\label{tab:size}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Artifact & Size (GB) & P50 (ms) & P95 (ms) \\
+\midrule
+Qwen3-4B zero-shot & 8.04 & 2187 & 2620 \\
+Qwen3-4B few-shot & 8.04 & 4977 & 259883 \\
+HF base + LoRA & 8.18 & 2730 & 22654 \\
+Merged BF16 & 8.04 & 12103 & 15056 \\
+Ollama f16 GGUF & 8.05 & 1679 & 1935 \\
+Q4\_K\_M GGUF & 2.50 & 446 & 1535 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\evidencefigure{figure-5-quality-latency-size-tradeoff.pdf}{0.98}{Quality, latency, and measured artifact-size trade-offs. Cross-stack latency is shown descriptively.}{fig:tradeoff}
+
+The extreme few-shot P95 value reflects long-tail generation behavior under that path. Because model loading, HTTP serving, prompt length, and measurement boundaries differ, the paper does not claim a multiplicative runtime advantage from these observations.
+
+\subsection{Inference Path and Message Serialization}
+Changing from native \texttt{system+user} messages to a single concatenated message changes 11 of 413 verdicts in the Transformers path and 11 of 413 in the Ollama path. Safe FPR rises from 0.2057 to 0.2249 for Transformers and to approximately 0.2297 for Ollama. Message structure is therefore an isolated source of security-decision variance.
+
+When the exact same HF-pre-serialized prompt bytes are supplied to the merged-BF16 and Ollama-f16 paths, verdict agreement is 413/413 and both produce safe FPR 43/209. Native \texttt{system+user} paths also agree on all 413 verdicts in this experiment. This is evidence that prompt-byte control can eliminate the observed verdict discrepancy for this dataset; it is not proof that the runtimes or BF16/f16 artifacts are numerically equivalent on all inputs.
+
+\evidencefigure{figure-6-inference-path-ablation.pdf}{0.98}{Pre-registered inference-path diagnostics. Message structure changes decisions, while shared serialized prompts produce identical tested verdicts.}{fig:ablation}
+
+\subsection{Internal-to-External Generalization Gap}
+The sealed internal independent split and external challenge set produce sharply different outcomes. Internally, verdict accuracy is 0.9657, normal FPR 0.0286, and unknown accuracy 1.000. On \challenge{}, accuracy falls to 0.6150, safe FPR rises to 0.2057, and unknown accuracy falls to zero. The datasets differ in composition and cannot be compared as identical populations, but the direction and magnitude expose substantial domain shift. Internal gate performance alone would have overstated deployment readiness.
+
+The gap also reveals a likely training imbalance: the model learns a strong mapping from suspicious request patterns to attack, yet does not preserve the intended relationship between \texttt{contextSufficient=false} and \texttt{verdict=unknown} under external conditions. This finding motivates explicit abstention calibration and human-reviewed unknown examples in future training.

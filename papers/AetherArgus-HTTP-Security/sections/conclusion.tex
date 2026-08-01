@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presented \model{}, a QLoRA-adapted 4B language model for structured request-side HTTP security classification, and evaluated it under a frozen, leakage-controlled protocol. On a 413-sample external challenge set, HF-LoRA improves verdict Macro-F1 from 0.4175 for Qwen3-4B zero-shot to 0.4658, with a paired-bootstrap 95\% confidence interval excluding zero. Attack recall increases to 0.9072 and safe FPR decreases relative to the untuned base model. These gains persist across merged BF16 and tested f16 serving artifacts, while Q4\_K\_M reduces measured storage to roughly 31\% of BF16 and retains most verdict-level quality.
+
+The evidence also establishes clear limits. \model{} flags 43 of 209 safe requests as attacks and never predicts unknown for any of 107 insufficient-context cases. The rules engine remains substantially more precise on safe requests, although it misses most attacks. Message structure changes 11 of 413 verdicts, demonstrating that serialization is part of the security-critical model configuration. Internal evaluation substantially overestimates external performance, confirming the need for sealed challenge data and explicit leakage controls.
+
+Accordingly, the evaluated model should be used as an attack-sensitive shadow analyzer or second-stage triage signal, not an autonomous blocking authority. The next technical priority is not simply a larger model: it is reliable abstention, lower false-positive cost, multi-seed validation, and broader authorized external evaluation. The repository evidence package, human-review attestation, predictions, statistics, figures, and claim mappings provide a reproducible foundation for that work.
