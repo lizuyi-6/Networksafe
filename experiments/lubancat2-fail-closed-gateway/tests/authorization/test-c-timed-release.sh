@@ -23,9 +23,9 @@ ag_record_topology_preflight
 ag_ssh "ag-cat2-gateway isolate"
 ag_start_upstream_marker_server "$listen_port" "$during_server_log"
 ag_start_uplink_capture "$during_marker" during
-release_start_ms=$(date +%s%3N)
+release_start_ms=$(ag_now_ms)
 ag_ssh "ag-cat2-gateway release $DURATION"
-release_finished_ms=$(date +%s%3N)
+release_finished_ms=$(ag_now_ms)
 AG_TEST_RELEASE_LATENCY_MS=$((release_finished_ms - release_start_ms))
 
 AG_TEST_PROBE_COMMAND_EXECUTED=true
@@ -59,7 +59,7 @@ while [[ "$(ag_gate_state)" != "isolated" ]]; do
     fi
     sleep 1
 done
-isolation_observed_ms=$(date +%s%3N)
+isolation_observed_ms=$(ag_now_ms)
 AG_TEST_ISOLATION_LATENCY_MS=$((isolation_observed_ms - release_finished_ms))
 
 after_marker=$(ag_probe_marker)-AFTER

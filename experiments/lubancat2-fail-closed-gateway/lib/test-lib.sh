@@ -78,6 +78,18 @@ ag_now() {
     date -u +%Y-%m-%dT%H:%M:%SZ
 }
 
+# Monotonic-enough epoch milliseconds for latency arithmetic. Do NOT use
+# "date +%s%3N" string concatenation: uutils coreutils (and any date without
+# zero-padded %N) collapses the concatenated magnitude at second boundaries,
+# producing huge negative deltas. EPOCHREALTIME's fractional part is always
+# exactly six digits, so the arithmetic below is unit-safe.
+ag_now_ms() {
+    local epoch_realtime=$EPOCHREALTIME
+    local epoch_seconds=${epoch_realtime%.*}
+    local epoch_microseconds=${epoch_realtime#*.}
+    printf '%s\n' "$(( epoch_seconds * 1000 + 10#${epoch_microseconds} / 1000 ))"
+}
+
 ag_ssh() {
     timeout 25 ssh -b "$AG_MANAGEMENT_SOURCE_ADDRESS" \
         -o BatchMode=yes -o ConnectTimeout=8 "$AG_BOARD" "$@"

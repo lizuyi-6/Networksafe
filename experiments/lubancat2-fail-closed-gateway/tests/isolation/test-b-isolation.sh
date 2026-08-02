@@ -49,9 +49,9 @@ rg -F -q "$control_marker" "$control_server_log_path" || {
         "positive-control pcap markerCount=$AG_CAPTURED_MARKER_COUNT"
 }
 
-isolation_start_ms=$(date +%s%3N)
+isolation_start_ms=$(ag_now_ms)
 ag_ssh "ag-cat2-gateway isolate"
-isolation_finished_ms=$(date +%s%3N)
+isolation_finished_ms=$(ag_now_ms)
 AG_TEST_ISOLATION_LATENCY_MS=$((isolation_finished_ms - isolation_start_ms))
 [[ "$(ag_gate_state)" == "isolated" ]]
 

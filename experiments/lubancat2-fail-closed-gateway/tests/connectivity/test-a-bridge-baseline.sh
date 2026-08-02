@@ -21,9 +21,9 @@ ag_ssh "ag-cat2-gateway isolate"
 ag_start_upstream_marker_server "$listen_port" "$server_log_path"
 ag_start_uplink_capture "$marker"
 
-release_start_ms=$(date +%s%3N)
+release_start_ms=$(ag_now_ms)
 ag_ssh "ag-cat2-gateway release 20"
-release_finished_ms=$(date +%s%3N)
+release_finished_ms=$(ag_now_ms)
 AG_TEST_RELEASE_LATENCY_MS=$((release_finished_ms - release_start_ms))
 
 AG_TEST_PROBE_COMMAND_EXECUTED=true
@@ -57,9 +57,9 @@ ag_management_available || {
     exit 1
 }
 
-isolation_start_ms=$(date +%s%3N)
+isolation_start_ms=$(ag_now_ms)
 ag_ssh "ag-cat2-gateway isolate"
-isolation_finished_ms=$(date +%s%3N)
+isolation_finished_ms=$(ag_now_ms)
 AG_TEST_ISOLATION_LATENCY_MS=$((isolation_finished_ms - isolation_start_ms))
 
 ag_finish_test PASSED 0 RELEASED_LOCAL_UPSTREAM_CONFIRMED \
