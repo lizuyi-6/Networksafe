@@ -191,7 +191,10 @@ current_udc=$(tr -d '\n' < "$GADGET_ROOT/UDC")
     echo "FATAL: gadget is bound to an unexpected UDC" >&2
     exit 1
 }
-: > "$GADGET_ROOT/UDC"
+# Vendor kernel quirk: a zero-byte write (": >") is treated as a soft
+# no-op-ish detach; a newline write performs the full USB disconnect
+# that makes the next bind re-create the rndis net devices.
+printf '\n' > "$GADGET_ROOT/UDC"
 remove_owned_link_if_present f2 "$SERVER_FUNCTION"
 remove_owned_link_if_present f3 "$UPLINK_FUNCTION"
 if [[ "$created_server_function" == "true" && -d "$GADGET_ROOT/functions/$SERVER_FUNCTION" ]]; then
@@ -204,7 +207,21 @@ if [[ "$created_uplink_function" == "true" && -d "$GADGET_ROOT/functions/$UPLINK
         || { echo "FATAL: uplink function identity changed" >&2; exit 1; }
     rmdir "$GADGET_ROOT/functions/$UPLINK_FUNCTION"
 fi
-printf '%s\n' "$original_udc" > "$GADGET_ROOT/UDC"
+if ! printf '%s\n' "$original_udc" > "$GADGET_ROOT/UDC" 2>/dev/null; then
+    # The vendor kernel may auto-rebind the gadget first; wait for it.
+    rebind_attempt=0
+    while (( rebind_attempt < 15 )); do
+        if [[ -n "$(cat "$GADGET_ROOT/UDC" 2>/dev/null)" ]]; then
+            break
+        fi
+        sleep 1
+        rebind_attempt=$((rebind_attempt + 1))
+    done
+    [[ -n "$(cat "$GADGET_ROOT/UDC" 2>/dev/null)" ]] || {
+        echo "FATAL: gadget did not re-bind after teardown" >&2
+        exit 1
+    }
+fi
 wait_for_management || { echo "FATAL: usb0 management did not recover" >&2; exit 1; }
 MANAGEMENT_REBOUND=true
 

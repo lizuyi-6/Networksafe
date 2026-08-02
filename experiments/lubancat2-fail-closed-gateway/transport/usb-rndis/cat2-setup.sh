@@ -200,7 +200,10 @@ rollback_setup() {
         ip link delete dev "$BRIDGE_INTERFACE" type bridge || rollback_failed=1
     fi
     if [[ "$UDC_WAS_UNBOUND" == "true" || "$CREATED_SERVER_LINK" == "true" || "$CREATED_UPLINK_LINK" == "true" ]]; then
-        : > "$GADGET_ROOT/UDC" || rollback_failed=1
+        # Vendor kernel quirk: a zero-byte write (": >") is treated as a soft
+        # no-op-ish detach; a newline write performs the full USB disconnect
+        # that makes the next bind re-create the rndis net devices.
+        printf '\n' > "$GADGET_ROOT/UDC" || rollback_failed=1
         UDC_WAS_UNBOUND=true
     fi
     [[ "$CREATED_SERVER_LINK" != "true" || ! -e "$GADGET_ROOT/configs/$GADGET_CONFIG/f2" ]] \
@@ -327,7 +330,7 @@ ln -s "$GADGET_ROOT/functions/$UPLINK_FUNCTION" "$GADGET_ROOT/configs/$GADGET_CO
 
 UDC_WAS_UNBOUND=true
 write_state prepared
-: > "$GADGET_ROOT/UDC"
+printf '\n' > "$GADGET_ROOT/UDC"
 maybe_inject_usb_test_failure after_udc_unbind
 
 # The vendor kernel (4.19 DWC3) auto-rebinds the gadget ~1-2s after unbind.
