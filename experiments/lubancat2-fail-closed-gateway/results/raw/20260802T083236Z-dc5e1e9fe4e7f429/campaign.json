@@ -1,0 +1,113 @@
+{
+  "complete": true,
+  "deploymentArtifacts": [
+    {
+      "name": "gateway",
+      "remotePath": "/usr/local/sbin/ag-cat2-gateway",
+      "repositoryPath": "experiments/lubancat2-fail-closed-gateway/cat2/scripts/ag-cat2-gateway",
+      "sha256": "4224aa4da281b80ca6a3bdbfb7043fc24dbb5c3474f6a7ff6d67e45325b18e38"
+    },
+    {
+      "name": "authorization-verifier",
+      "remotePath": "/usr/local/sbin/ag-auth-verify.py",
+      "repositoryPath": "experiments/lubancat2-fail-closed-gateway/protocol/authorization/ag-auth-verify.py",
+      "sha256": "fedcfa5c8831fc640e6af3c27d8b312c26e1882017d682e9da9de7b2fd98eae8"
+    },
+    {
+      "name": "authorization-common",
+      "remotePath": "/usr/local/sbin/ag_auth_common.py",
+      "repositoryPath": "experiments/lubancat2-fail-closed-gateway/protocol/authorization/ag_auth_common.py",
+      "sha256": "e23931fd86d475b0f96c5a7446b96ddeba2817c7c58c8d9459432d94fc5a5c78"
+    },
+    {
+      "name": "gateway-service",
+      "remotePath": "/etc/systemd/system/aetherguard-cat2-gateway.service",
+      "repositoryPath": "experiments/lubancat2-fail-closed-gateway/cat2/systemd/aetherguard-cat2-gateway.service",
+      "sha256": "524e1c3cc745bd4f177f265a3df2f89e2dfab6dc8cf2ec1d6644ea5b58f900b2"
+    }
+  ],
+  "expectedTests": [
+    {
+      "category": "connectivity",
+      "testId": "a-usb-bridge-baseline"
+    },
+    {
+      "category": "isolation",
+      "testId": "b-isolated-multiprotocol"
+    },
+    {
+      "category": "authorization",
+      "testId": "c-timed-release-expiry"
+    },
+    {
+      "category": "fault",
+      "testId": "repeated_release_timer_registration_failure_must_close_gate"
+    },
+    {
+      "category": "authorization",
+      "testId": "e-authorization-matrix"
+    },
+    {
+      "category": "fault",
+      "testId": "f01-helper-crash-after-gate-open"
+    },
+    {
+      "category": "fault",
+      "testId": "f02-service-stop-lease-expiry"
+    },
+    {
+      "category": "fault",
+      "testId": "f03-service-restart-isolates"
+    },
+    {
+      "category": "reboot",
+      "testId": "f06-post-reboot-topology"
+    },
+    {
+      "category": "reboot",
+      "testId": "f07-reboot-during-release"
+    },
+    {
+      "category": "reboot",
+      "testId": "f08-physical-power-cycle"
+    },
+    {
+      "category": "topology",
+      "testId": "eth0-eth1-inline-gateway"
+    },
+    {
+      "category": "topology",
+      "testId": "ethernet-vlan-forwarding"
+    },
+    {
+      "category": "fault",
+      "testId": "ethernet-phy-link-flap"
+    },
+    {
+      "category": "performance",
+      "testId": "ethernet-gigabit-negotiation"
+    },
+    {
+      "category": "isolation",
+      "testId": "independent-physical-host-root-attacker"
+    },
+    {
+      "category": "performance",
+      "testId": "perf-throughput-latency"
+    }
+  ],
+  "finishedAt": "2026-08-02T08:34:36Z",
+  "gatewayCommit": "842b563d26336eef43f8bd278ce63aeaf56578f9",
+  "resultKind": "campaign",
+  "runId": "20260802T083236Z-dc5e1e9fe4e7f429",
+  "runtimeConfiguration": {
+    "gatewayConfigPath": "/etc/aetherguard-cat2.conf",
+    "gatewayConfigSha256": "e78767d513ec0d6d0cd4064210205cd627a3c0df08ebb29d8b096e6730804b55",
+    "testConfigPath": "/root/aetherguard-cat2-test.conf",
+    "testConfigSha256": "d3c1ae786883de933f9257d7fe70839aa51441eeffe8dd8d50c988e112068aa1"
+  },
+  "schemaVersion": 1,
+  "sourceTreeDirty": false,
+  "startedAt": "2026-08-02T08:32:37Z",
+  "transport": "usb-rndis"
+}

@@ -1,0 +1,3 @@
+TEST_START testId=f01-helper-crash-after-gate-open runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:33:57Z stateBefore=isolated
+TEST_COMMAND SIGKILL helper at after_gate_open failpoint; run reconcile; require isolated and zero timers
+TEST_END testId=f01-helper-crash-after-gate-open runId=20260802T083236Z-dc5e1e9fe4e7f429 status=PASSED exitCode=0 stateAfter=isolated reason=HELPER_CRASH_RECONCILED_ISOLATED cleanupSucceeded=true

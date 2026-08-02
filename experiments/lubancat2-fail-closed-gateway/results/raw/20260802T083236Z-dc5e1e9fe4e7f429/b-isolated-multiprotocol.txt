@@ -1,0 +1,27 @@
+TEST_START testId=b-isolated-multiprotocol runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:32:50Z stateBefore=isolated
+TEST_COMMAND isolate; capture usb2; run ARP/IPv4/IPv6/TCP/UDP/DNS/broadcast/multicast/raw probes from netns victim interface agvictim0
+<stdin>:54: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+released for 20s (leaseId=fa31f3fec1ca4d05a69cca692c2bdc53 timer=ag-cat2-lease-fa31f3fec1ca4d05a69cca692c2bdc53)
+uplinkCapturedPackets=5 uplinkCapturedBytes=432 markerCount=1
+arping: invalid option -- 'f'
+ARPing 2.28, by Thomas Habets <thomas@habets.se>
+usage: arping [ -0aAbdDeFpPqrRuUvzZ ] [ -w <sec> ] [ -W <sec> ] [ -S <host/ip> ]
+              [ -T <host/ip ] [ -s <MAC> ] [ -t <MAC> ] [ -c <count> ]
+              [ -C <count> ] [ -i <interface> ] [ -m <type> ] [ -g <group> ]
+              [ -V <vlan> ] [ -Q <priority> ] <host/ip/MAC | -B>
+For complete usage info, use --help or check the manpage.
+PING 10.99.0.1 (10.99.0.1) from 10.99.0.2 agvictim0: 56(84) bytes of data.
+
+--- 10.99.0.1 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1057ms
+
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+TimeoutError: timed out
+PING fd42:ae7e:6a7d::1 (fd42:ae7e:6a7d::1) from fd42:ae7e:6a7d::2 agvictim0: 56 data bytes
+
+--- fd42:ae7e:6a7d::1 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1032ms
+
+uplinkCapturedPackets=0 uplinkCapturedBytes=0 markerCount=0
+TEST_END testId=b-isolated-multiprotocol runId=20260802T083236Z-dc5e1e9fe4e7f429 status=PASSED exitCode=0 stateAfter=isolated reason=ISOLATION_NO_UPLINK_ESCAPE cleanupSucceeded=true

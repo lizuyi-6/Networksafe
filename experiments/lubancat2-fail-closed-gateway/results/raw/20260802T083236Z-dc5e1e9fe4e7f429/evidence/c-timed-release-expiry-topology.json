@@ -1,0 +1,46 @@
+{
+  "cat2": {
+    "activeLeaseId": null,
+    "activeLeaseTimerCount": 0,
+    "bridgeInterface": "agbr0",
+    "bridgeUp": true,
+    "faultReason": null,
+    "gatePrimitive": "bridge-membership (kernel) + identified PID1 transient lease timer",
+    "leaseStatePhase": null,
+    "leaseTimerActive": false,
+    "managementAvailable": true,
+    "managementInterface": "usb0",
+    "policyDigest": "e78767d513ec0d6d0cd4064210205cd627a3c0df08ebb29d8b096e6730804b55",
+    "releaseExpiresAt": null,
+    "serverGateKernel": "not-enslaved",
+    "serverInterface": "usb1",
+    "serverInterfaceExists": true,
+    "state": "isolated",
+    "timestamp": "2026-08-02T08:33:11Z",
+    "topologyReady": true,
+    "uplinkInterface": "usb2",
+    "uplinkInterfaceExists": true
+  },
+  "faults": [],
+  "host": {
+    "forwardingMode": "local-upstream-only",
+    "legacyNftTableAbsent": true,
+    "uplinkInterface": "aguplink0",
+    "uplinkMac": "02:22:22:22:22:01",
+    "victimDefaultRouteDevice": "agvictim0",
+    "victimInterface": "agvictim0",
+    "victimMac": "02:11:11:11:11:01",
+    "victimNamespace": "victim",
+    "victimNonLoopbackInterfaceCount": 1
+  },
+  "managementAvailable": true,
+  "managementPath": {
+    "remoteAddress": "192.168.100.2",
+    "sourceAddress": "192.168.100.1",
+    "sshConnection": "192.168.100.1 33998 192.168.100.2 22",
+    "verified": true
+  },
+  "transport": "usb-rndis",
+  "valid": true,
+  "verifiedAt": "2026-08-02T08:33:14Z"
+}

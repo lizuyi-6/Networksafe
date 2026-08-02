@@ -1,0 +1,3 @@
+TEST_START testId=f08-physical-power-cycle runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:34:25Z stateBefore=isolated
+TEST_COMMAND NOT_RUN: physical power cycle requires explicit operator confirmation
+TEST_END testId=f08-physical-power-cycle runId=20260802T083236Z-dc5e1e9fe4e7f429 status=NOT_RUN exitCode=4 stateAfter=isolated reason=PHYSICAL_POWER_CYCLE_NOT_AUTHORIZED cleanupSucceeded=true

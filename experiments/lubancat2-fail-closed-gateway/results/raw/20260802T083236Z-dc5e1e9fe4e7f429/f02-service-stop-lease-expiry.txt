@@ -1,0 +1,4 @@
+TEST_START testId=f02-service-stop-lease-expiry runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:34:02Z stateBefore=isolated
+TEST_COMMAND release 6; stop aetherguard-cat2-gateway.service; wait for identified PID1 timer; require isolated
+released for 6s (leaseId=90871fb5d1c54c588715a40686a7279b timer=ag-cat2-lease-90871fb5d1c54c588715a40686a7279b)
+TEST_END testId=f02-service-stop-lease-expiry runId=20260802T083236Z-dc5e1e9fe4e7f429 status=PASSED exitCode=0 stateAfter=isolated reason=SERVICE_STOP_DID_NOT_CANCEL_EXPIRY cleanupSucceeded=true

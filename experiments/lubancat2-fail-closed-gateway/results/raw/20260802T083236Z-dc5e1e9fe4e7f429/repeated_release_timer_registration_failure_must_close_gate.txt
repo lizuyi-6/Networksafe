@@ -1,0 +1,15 @@
+TEST_START testId=repeated_release_timer_registration_failure_must_close_gate runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:33:29Z stateBefore=isolated
+TEST_COMMAND release; repeated release; inject timer_register_failure with explicit Cat2 test config; reconcile; probe victim/agvictim0 while capturing usb2
+<stdin>:54: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+released for 30s (leaseId=27869b8a45e249a7aa274e31017f4ae8 timer=ag-cat2-lease-27869b8a45e249a7aa274e31017f4ae8)
+released for 30s (leaseId=ec0fd60ba02c4f0e83caa1ee973364ea timer=ag-cat2-lease-ec0fd60ba02c4f0e83caa1ee973364ea)
+uplinkCapturedPackets=5 uplinkCapturedBytes=467 markerCount=1
+FAULT: release transaction aborted at timer_register; gate forced isolated
+PING 10.99.0.1 (10.99.0.1) from 10.99.0.2 agvictim0: 56(84) bytes of data.
+
+--- 10.99.0.1 ping statistics ---
+1 packets transmitted, 0 received, 100% packet loss, time 0ms
+
+uplinkCapturedPackets=0 uplinkCapturedBytes=0 markerCount=0
+verify: OK
+TEST_END testId=repeated_release_timer_registration_failure_must_close_gate runId=20260802T083236Z-dc5e1e9fe4e7f429 status=PASSED exitCode=0 stateAfter=isolated reason=REPEATED_RELEASE_TIMER_FAILURE_FAILS_CLOSED cleanupSucceeded=true

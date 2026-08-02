@@ -1,0 +1,4 @@
+TEST_START testId=f03-service-restart-isolates runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:34:16Z stateBefore=isolated
+TEST_COMMAND release 20; restart aetherguard-cat2-gateway.service; require immediate isolated and zero timers
+released for 20s (leaseId=b741c61341c540a6b21dfd71cb50fa8f timer=ag-cat2-lease-b741c61341c540a6b21dfd71cb50fa8f)
+TEST_END testId=f03-service-restart-isolates runId=20260802T083236Z-dc5e1e9fe4e7f429 status=PASSED exitCode=0 stateAfter=isolated reason=SERVICE_RESTART_FORCED_ISOLATION cleanupSucceeded=true

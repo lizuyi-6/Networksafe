@@ -1,0 +1,31 @@
+{
+  "capture": {
+    "byteCount": 527,
+    "exitCode": 124,
+    "interface": "usb2",
+    "markerCount": 1,
+    "packetCount": 6,
+    "pcapPath": "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-during.pcap",
+    "ready": true,
+    "textPath": "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-during.pcap.txt",
+    "uplinkInterface": "usb2"
+  },
+  "expectation": "RELEASED_REACHABLE",
+  "marker": "AGPROBE-20260802T083236Z-dc5e1e9fe4e7f429-c-timed-release-expiry-1785659593299777169-DURING",
+  "phase": "during-release",
+  "resultKind": "traffic-observation",
+  "runId": "20260802T083236Z-dc5e1e9fe4e7f429",
+  "schemaVersion": 1,
+  "server": {
+    "exitCode": 0,
+    "logPath": "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-during-server.txt",
+    "markerCount": 1,
+    "ready": true
+  },
+  "source": {
+    "interface": "agvictim0",
+    "mac": "02:11:11:11:11:01",
+    "namespace": "victim"
+  },
+  "testId": "c-timed-release-expiry"
+}

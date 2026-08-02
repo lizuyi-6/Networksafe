@@ -1,0 +1,39 @@
+reading from file /home/break/桌面/netsafe/Networksafe/experiments/lubancat2-fail-closed-gateway/results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-uplink.pcap, link-type EN10MB (Ethernet), snapshot length 262144
+16:32:39.249222 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 98: 10.99.0.2 > 10.99.0.1: ICMP echo request, id 39574, seq 1, length 64
+E..T..@.@.W7
+c..
+c............oj....u....................... !"#$%&'()*+,-./01234567
+16:32:40.250563 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 98: 10.99.0.2 > 10.99.0.1: ICMP echo request, id 39574, seq 2, length 64
+E..T.~@.@.Vb
+c..
+c............oj............................ !"#$%&'()*+,-./01234567
+16:32:40.281058 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 74: 10.99.0.2.46162 > 10.99.0.1.37870: Flags [S], seq 2962577875, win 64240, options [mss 1460,sackOK,TS val 832080398 ecr 0,nop,wscale 10], length 0
+E..<.]@.@.6.
+c..
+c...R....Y.........)..........
+1..........
+
+16:32:40.281652 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 66: 10.99.0.2.46162 > 10.99.0.1.37870: Flags [.], ack 3090608202, win 63, options [nop,nop,TS val 832080399 ecr 152394364], length 0
+E..4.^@.@.6.
+c..
+c...R....Y..6.J...?GP.....
+1...	.Z|
+16:32:40.281827 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 149: 10.99.0.2.46162 > 10.99.0.1.37870: Flags [P.], seq 0:83, ack 1, win 63, options [nop,nop,TS val 832080399 ecr 152394364], length 83
+E...._@.@.6I
+c..
+c...R....Y..6.J...?.......
+1...	.Z|AGPROBE-20260802T083236Z-dc5e1e9fe4e7f429-a-usb-bridge-baseline-1785659558166886381
+16:32:40.281957 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 66: 10.99.0.2.46162 > 10.99.0.1.37870: Flags [F.], seq 83, ack 1, win 63, options [nop,nop,TS val 832080399 ecr 152394364], length 0
+E..4.`@.@.6.
+c..
+c...R....Z'.6.J...?F......
+1...	.Z|
+16:32:40.282738 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 66: 10.99.0.2.46162 > 10.99.0.1.37870: Flags [.], ack 2, win 63, options [nop,nop,TS val 832080400 ecr 152394365], length 0
+E..4.a@.@.6.
+c..
+c...R....Z(.6.K...?F......
+1...	.Z}
+16:32:40.305316 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 125: 10.99.0.2.54995 > 10.99.0.1.37870: UDP, length 83
+E..o1<@.@..y
+c..
+c.......[.yAGPROBE-20260802T083236Z-dc5e1e9fe4e7f429-a-usb-bridge-baseline-1785659558166886381

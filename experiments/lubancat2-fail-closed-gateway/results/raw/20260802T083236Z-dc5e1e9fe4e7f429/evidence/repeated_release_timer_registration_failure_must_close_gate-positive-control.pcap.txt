@@ -1,0 +1,31 @@
+reading from file /home/break/桌面/netsafe/Networksafe/experiments/lubancat2-fail-closed-gateway/results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-positive-control.pcap, link-type EN10MB (Ethernet), snapshot length 262144
+16:33:33.305585 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 74: 10.99.0.2.55596 > 10.99.0.1.39908: Flags [S], seq 561709671, win 64240, options [mss 1460,sackOK,TS val 2139752713 ecr 0,nop,wscale 10], length 0
+E..<.E@.@.1.
+c..
+c...,..!{.g...................
+..		.......
+
+16:33:33.306612 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 66: 10.99.0.2.55596 > 10.99.0.1.39908: Flags [.], ack 3996774418, win 63, options [nop,nop,TS val 2139752715 ecr 173856968], length 0
+E..4.F@.@.1.
+c..
+c...,..!{.h.9.....?~......
+..	.
+\..
+16:33:33.306726 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 195: 10.99.0.2.55596 > 10.99.0.1.39908: Flags [P.], seq 0:129, ack 1, win 63, options [nop,nop,TS val 2139752715 ecr 173856968], length 129
+E....G@.@.13
+c..
+c...,..!{.h.9.....?uf.....
+..	.
+\..AGPROBE-20260802T083236Z-dc5e1e9fe4e7f429-repeated_release_timer_registration_failure_must_close_gate-1785659614829586266-CONTROL
+16:33:33.306805 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 66: 10.99.0.2.55596 > 10.99.0.1.39908: Flags [F.], seq 129, ack 1, win 63, options [nop,nop,TS val 2139752715 ecr 173856968], length 0
+E..4.H@.@.1.
+c..
+c...,..!{...9.....?~8.....
+..	.
+\..
+16:33:33.307484 02:11:11:11:11:01 > 02:22:22:22:22:01, ethertype IPv4 (0x0800), length 66: 10.99.0.2.55596 > 10.99.0.1.39908: Flags [.], ack 2, win 63, options [nop,nop,TS val 2139752716 ecr 173856969], length 0
+E..4.I@.@.1.
+c..
+c...,..!{...9.....?~5.....
+..	.
+\..

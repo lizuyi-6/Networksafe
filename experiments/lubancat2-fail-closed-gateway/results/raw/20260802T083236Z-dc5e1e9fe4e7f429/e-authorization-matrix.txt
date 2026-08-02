@@ -1,0 +1,11 @@
+TEST_START testId=e-authorization-matrix runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:33:47Z stateBefore=isolated
+TEST_COMMAND run strict local authorization suite; run valid, tampered, replay, strict-bool, and release-failure-counter-consumption cases on Cat2
+wrote /home/break/桌面/netsafe/Networksafe/experiments/lubancat2-fail-closed-gateway/results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-valid.json (counter=7 duration=20s canonicalSha256=04c2cb9cf9dbee3836ac0143e9058569b5563c8a7b1378c6f440dbf0e26fced3)
+authorizationCase=valid verifierExitCode=0 expectedExitCode=0
+authorizationCase=replay verifierExitCode=2 expectedExitCode=2
+authorizationCase=tampered-gateway-id verifierExitCode=2 expectedExitCode=2
+authorizationCase=duration-boolean verifierExitCode=2 expectedExitCode=2
+wrote /home/break/桌面/netsafe/Networksafe/experiments/lubancat2-fail-closed-gateway/results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-release-failure.json (counter=8 duration=20s canonicalSha256=26c956bc9cd1ae0511053ddc6f72d9602bf257bbe6007bdb75173ae2995167db)
+authorizationCase=release-failure-counter-consumed verifierExitCode=2 expectedExitCode=2
+authorizationCase=failed-release-replay verifierExitCode=2 expectedExitCode=2
+TEST_END testId=e-authorization-matrix runId=20260802T083236Z-dc5e1e9fe4e7f429 status=PASSED exitCode=0 stateAfter=isolated reason=AUTHORIZATION_MATRIX_AND_COUNTER_ORDER_CONFIRMED cleanupSucceeded=true
