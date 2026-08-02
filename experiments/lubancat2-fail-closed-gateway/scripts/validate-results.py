@@ -6,6 +6,7 @@ import importlib.util
 import json
 import re
 import struct
+import subprocess
 import sys
 from pathlib import Path
 
@@ -14,6 +15,42 @@ import jsonschema
 
 NON_PASS_EXIT_CODES = {"PARTIAL": 3, "NOT_RUN": 4, "BLOCKED": 5}
 SHA256_PATTERN = re.compile(r"^[a-f0-9]{64}$")
+# Set in main(): when True (inside a git work tree) evidence must be tracked.
+_GIT_TRACKING_ENABLED = False
+
+
+def is_inside_git_repository(experiment_root):
+    try:
+        completed_process = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            cwd=str(experiment_root),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return completed_process.returncode == 0 and completed_process.stdout.strip() == "true"
+
+
+def evidence_is_git_tracked(experiment_root, relative_path_text):
+    # Primary evidence, traffic-observation pcaps and result-referenced evidence
+    # must be committed, not merely present on a developer's working tree. A
+    # clean checkout must reproduce validation, so an untracked local file is a
+    # hard failure (EVIDENCE_NOT_GIT_TRACKED), never a warning.
+    try:
+        completed_process = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", relative_path_text],
+            cwd=str(experiment_root),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise ValueError("git tracking check failed for %s: %s" % (relative_path_text, error))
+    return completed_process.returncode == 0
 
 
 class ValidationFailures:
@@ -81,6 +118,14 @@ def resolve_primary_evidence_file(
         return None
     if evidence_path.is_symlink() or not evidence_path.is_file():
         failures.fail("%s: evidence path is not a regular non-symlink file: %s" % (evidence_label, evidence_path_text))
+        return None
+    # Version-control integrity: a local-only file is not acceptable evidence.
+    # The validator must fail with EVIDENCE_NOT_GIT_TRACKED so a clean checkout
+    # can reproduce the verdict instead of silently depending on ignored files.
+    if _GIT_TRACKING_ENABLED and not evidence_is_git_tracked(experiment_root, evidence_path_text):
+        failures.fail(
+            "EVIDENCE_NOT_GIT_TRACKED %s: %s" % (evidence_label, evidence_path_text)
+        )
         return None
     return evidence_path
 
@@ -441,14 +486,25 @@ def validate_manifest_and_checksums(
             manifest_entry.get("classification") == ("primary" if path_is_primary else "supporting"),
             "manifest classification is not path-derived: %s" % manifest_entry.get("path"),
         )
+        # Every primary-evidence manifest entry must be tracked by git (when
+        # running inside a work tree) so the manifest cannot reference an
+        # ignored, developer-local file.
+        if path_is_primary and _GIT_TRACKING_ENABLED:
+            manifest_path_text = manifest_entry.get("path", "")
+            if manifest_path_text and not evidence_is_git_tracked(experiment_root, manifest_path_text):
+                failures.fail(
+                    "EVIDENCE_NOT_GIT_TRACKED manifest primary evidence: %s" % manifest_path_text
+                )
 
 
 def main():
+    global _GIT_TRACKING_ENABLED
     argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument("--run-id", help="must equal manifest.primaryRunId when supplied")
     arguments = argument_parser.parse_args()
 
     experiment_root = Path(__file__).resolve().parent.parent
+    _GIT_TRACKING_ENABLED = is_inside_git_repository(experiment_root)
     failures = ValidationFailures()
     generator_module = load_generator_module(experiment_root / "scripts" / "generate-evidence.py")
     try:

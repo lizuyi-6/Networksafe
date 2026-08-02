@@ -360,5 +360,126 @@ class ResultPipelineTest(unittest.TestCase):
         self.assertIn("server markerCount is not recomputable", validation_process.stderr)
 
 
+class EvidenceGitTrackingTest(ResultPipelineTest):
+    """Primary evidence must be committed, not merely present on disk."""
+
+    def setUp(self):
+        super().setUp()
+        subprocess.run(
+            ["git", "init", "-q"],
+            cwd=self.test_experiment_root,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=self.test_experiment_root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"],
+            cwd=self.test_experiment_root,
+            check=True,
+        )
+
+    def _relative_pcap_path(self):
+        return "results/raw/%s/evidence/sample-test-isolated.pcap" % self.run_id
+
+    def test_local_but_untracked_pcap_fails_with_evidence_not_git_tracked(self):
+        self.write_result(self.build_result())
+        self.assertEqual(self.generate().returncode, 0)
+        # The pcap exists on disk but is not git-tracked.
+        untracked_validation = self.validate()
+        self.assertNotEqual(untracked_validation.returncode, 0)
+        combined_output = untracked_validation.stdout + untracked_validation.stderr
+        self.assertIn("EVIDENCE_NOT_GIT_TRACKED", combined_output)
+
+    def test_tracked_pcap_passes_validation(self):
+        self.write_result(self.build_result())
+        self.assertEqual(self.generate().returncode, 0)
+        subprocess.run(
+            ["git", "add", "-A"],
+            cwd=self.test_experiment_root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "fixture evidence"],
+            cwd=self.test_experiment_root,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        tracked_validation = self.validate()
+        self.assertEqual(tracked_validation.returncode, 0, tracked_validation.stderr)
+
+    def test_symlink_evidence_is_rejected(self):
+        self.write_result(self.build_result())
+        self.assertEqual(self.generate().returncode, 0)
+        pcap_path = os.path.join(self.test_experiment_root, self._relative_pcap_path())
+        target_path = os.path.join(self.run_directory, "evidence", "isolated-target")
+        shutil.move(pcap_path, target_path)
+        os.symlink(target_path, pcap_path)
+        subprocess.run(["git", "add", "-A"], cwd=self.test_experiment_root, check=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "symlink"],
+            cwd=self.test_experiment_root,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        symlink_validation = self.validate()
+        self.assertNotEqual(symlink_validation.returncode, 0)
+        combined_output = symlink_validation.stdout + symlink_validation.stderr
+        self.assertTrue(
+            "not a regular non-symlink file" in combined_output
+            or "EVIDENCE_NOT_GIT_TRACKED" in combined_output,
+            combined_output,
+        )
+
+    def _commit_all_evidence(self):
+        subprocess.run(["git", "add", "-A"], cwd=self.test_experiment_root, check=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "fixture evidence"],
+            cwd=self.test_experiment_root,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+    # In a git work tree, validation requires committed evidence. Override the
+    # parent happy-path checks so they commit the fixture first.
+    def test_generation_and_validation_are_byte_reproducible(self):
+        self.write_result(self.build_result())
+        auxiliary_path = os.path.join(self.run_directory, "authorization-document.json")
+        with open(auxiliary_path, "w", encoding="utf-8") as auxiliary_file:
+            json.dump({"payload": "not a test result"}, auxiliary_file)
+        self.assertEqual(self.generate().returncode, 0, self.generate().stderr)
+        self._commit_all_evidence()
+        validation_process = self.validate()
+        self.assertEqual(validation_process.returncode, 0, validation_process.stderr)
+
+    def test_validator_recomputes_observation_from_pcap_and_server_log(self):
+        self.write_result(self.build_result())
+        self.assertEqual(self.generate().returncode, 0)
+        self._commit_all_evidence()
+        observation_path = os.path.join(
+            self.run_directory,
+            "evidence",
+            "sample-test-positive-control.observation.json",
+        )
+        with open(observation_path, "r", encoding="utf-8") as observation_file:
+            observation = json.load(observation_file)
+        observation["capture"]["markerCount"] = 0
+        observation["server"]["markerCount"] = 0
+        with open(observation_path, "w", encoding="utf-8") as observation_file:
+            json.dump(observation, observation_file, indent=2, sort_keys=True)
+            observation_file.write("\n")
+        validation_process = self.validate()
+        self.assertNotEqual(validation_process.returncode, 0)
+        combined_output = validation_process.stdout + validation_process.stderr
+        self.assertIn("markerCount is not recomputable", combined_output)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -706,12 +706,12 @@
       "sha256": "aff28c99fdae21730d5f050f867985d06dce3dc63d4900488c6e072d1fe16efd"
     },
     {
-      "bytes": 25894,
+      "bytes": 28520,
       "classification": "supporting",
       "note": "validation input",
       "path": "scripts/validate-results.py",
       "primaryEvidence": false,
-      "sha256": "f89115c856c20d07b23548a7409ebbea2cafb23d2538c1adf43ac8b12cf6da9b"
+      "sha256": "032c81af54563363e676a59e7a47ef2769243e0f04810c0cb27cbbc522da579f"
     }
   ],
   "generatedAt": "2026-08-02T08:34:36Z",
