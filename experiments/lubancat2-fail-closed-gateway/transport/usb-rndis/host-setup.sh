@@ -71,13 +71,22 @@ discover_management_interface() {
 }
 
 network_manager_managed_state() {
-    local interface_name=$1
+    local interface_name=$1 lookup_attempt managed_state
     if ! command -v nmcli >/dev/null 2>&1; then
         printf 'unavailable\n'
         return 0
     fi
-    nmcli -g GENERAL.MANAGED device show "$interface_name" 2>/dev/null \
-        | tr '[:upper:]' '[:lower:]' || printf 'unknown\n'
+    # Freshly enumerated RNDIS interfaces can take a moment to appear in
+    # NetworkManager's device list; retry briefly before giving up.
+    for lookup_attempt in 1 2 3 4 5; do
+        managed_state=$(nmcli -g GENERAL.MANAGED device show "$interface_name" 2>/dev/null \
+            | tr '[:upper:]' '[:lower:]')
+        case "$managed_state" in
+            yes|no|true|false) printf '%s\n' "$managed_state"; return 0 ;;
+        esac
+        sleep 1
+    done
+    printf 'unknown\n'
 }
 
 require_pristine_data_interface() {

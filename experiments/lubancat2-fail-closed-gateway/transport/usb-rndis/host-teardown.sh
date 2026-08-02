@@ -54,6 +54,13 @@ restore_managed_state() {
         yes|true) nmcli device set "$interface_name" managed yes ;;
         no|false) nmcli device set "$interface_name" managed no ;;
         unavailable) return 0 ;;
+        unknown)
+            # Setup could not observe the original NM state (transient lookup
+            # failure). Restoring a guessed state would be worse than leaving
+            # the current one, so skip NM restoration but do not block the
+            # rest of the teardown.
+            echo "WARNING: original NetworkManager state was not recorded for $interface_name; leaving current NM state unchanged" >&2
+            return 0 ;;
         *) echo "FATAL: unsafe recorded NetworkManager state: $original_managed_state" >&2; return 1 ;;
     esac
 }
