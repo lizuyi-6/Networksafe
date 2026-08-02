@@ -35,6 +35,26 @@ When the corresponding current test is `PASSED`, this run can establish:
    permit the same authorization to be replayed.
 8. `usb0` management and the recorded ReactorOS services remained available
    for the specifically executed checks.
+9. The gateway recomputes the effective authorization lifetime from the signed
+   `expiresAt` after it holds `transition.lock`, so an authorization that
+   expires while waiting for the lock does not open the gate (unit-test scope;
+   not yet covered by a hardware campaign bound to this code).
+10. The dedicated data bridge converges to the exact closed member set
+    `{UPLINK_IF}`: a rogue member or an old `SERVER_IF` is removed (or the
+    gateway reports `fault`), never reported `isolated` while still forwarding
+    (unit-test scope; not yet covered by a hardware campaign bound to this
+    code).
+
+## Campaign binding
+
+The committed campaign `20260802T083236Z-dc5e1e9fe4e7f429` was captured against
+the gateway build *prior* to the `expiresAt` locked re-check and the exact
+closed-topology reconcile changes. It therefore establishes claims 1-8 above
+for that prior build only. Claims 9-10 are currently established by
+ordinary-Linux unit tests, not by a hardware campaign bound to the final code.
+A new hardware campaign (fresh run ID, never overwriting the old one) is
+required after explicit operator approval and redeployment before any hardware
+claim is made for the new `expiresAt`/topology logic.
 
 ## Forbidden claims
 
