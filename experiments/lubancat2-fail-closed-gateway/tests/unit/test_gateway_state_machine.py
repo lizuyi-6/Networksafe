@@ -741,10 +741,26 @@ esac
         self.assertEqual(invalid_config_process.returncode, 2)
         self.assertFalse(self.gate_is_open())
 
+    def test_boot_state_without_data_bridge_isolates_without_fault(self):
+        # At boot, before the runtime USB transport creates agbr0/usb1/usb2,
+        # the data bridge is absent. That is trivially isolated (no forwarding
+        # path), so isolate/reconcile must succeed and persist the owned
+        # topology rather than faulting on a missing uplink port. This is the
+        # real systemd-service start condition caught by hardware testing.
+        shutil.rmtree(os.path.join(self.sys_class_net, "br0"), ignore_errors=True)
+        uplink_master = os.path.join(self.sys_class_net, "usb2", "master")
+        if os.path.lexists(uplink_master):
+            os.unlink(uplink_master)
+        shutil.rmtree(os.path.join(self.sys_class_net, "usb2", "brport"), ignore_errors=True)
+        isolate_process = self.run_gateway("isolate")
+        self.assertEqual(isolate_process.returncode, 0, isolate_process.stderr)
+        reconcile_process = self.run_gateway("reconcile")
+        self.assertEqual(reconcile_process.returncode, 0, reconcile_process.stderr)
+        topology = self.read_owned_topology()
+        self.assertEqual(topology["serverInterface"], "usb1")
+        self.assertEqual(topology["uplinkInterface"], "usb2")
+
     def test_rogue_bridge_member_must_be_removed_or_fault(self):
-        # A rogue dummy member in the data bridge must be removed by reconcile
-        # so the isolated member set is exactly {UPLINK_IF}. The gateway must
-        # never report isolated while a rogue member keeps forwarding.
         os.makedirs(os.path.join(self.sys_class_net, "rogue0"))
         self.attach_interface_to_bridge("rogue0")
         reconcile_process = self.run_gateway("reconcile")

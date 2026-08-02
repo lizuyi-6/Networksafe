@@ -340,6 +340,11 @@ enforce_exact_closed_topology() {
     # it never touches the interface IP, so a leaked usb0 keeps its management
     # address. A removal failure or a post-cleanup non-exact topology is a
     # fault: the caller must report fault, never isolated.
+    # When the data bridge itself is absent (boot state before the runtime USB
+    # transport creates agbr0/usb1/usb2) there is no forwarding path at all;
+    # that is trivially isolated and safe, so the enforcement short-circuits
+    # instead of faulting on a missing uplink port.
+    bridge_exists || return 0
     local member_interface removal_failed=0
     while IFS= read -r member_interface; do
         [[ -n "$member_interface" ]] || continue
