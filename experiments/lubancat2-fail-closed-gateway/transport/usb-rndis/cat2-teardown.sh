@@ -84,7 +84,9 @@ remove_owned_link_if_present() {
     local link_path="$GADGET_ROOT/configs/$GADGET_CONFIG/$link_name"
     [[ -e "$link_path" || -L "$link_path" ]] || return 0
     [[ -L "$link_path" ]] || { echo "FATAL: owned link path became a non-symlink: $link_path" >&2; return 1; }
-    [[ "$(readlink "$link_path")" == "$GADGET_ROOT/functions/$function_name" ]] || {
+    # Configfs normalizes absolute symlink targets to relative ones, so
+    # compare canonicalized paths on both sides.
+    [[ "$(readlink -f "$link_path")" == "$(readlink -f "$GADGET_ROOT/functions/$function_name")" ]] || {
         echo "FATAL: $link_name no longer references the owned function" >&2
         return 1
     }
