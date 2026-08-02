@@ -72,8 +72,16 @@ if [[ "$*" == "link show dev br0" ]]; then
     [[ -d "$SYS_CLASS_NET/br0" ]]
     exit
 fi
+if [[ "$1" == "link" && "$2" == "show" && "$3" == "dev" && "$#" == "4" ]]; then
+    [[ -d "$SYS_CLASS_NET/$4" ]]
+    exit
+fi
 if [[ "$*" == "link add br0 type bridge" ]]; then
     mkdir -p "$SYS_CLASS_NET/br0"
+    exit 0
+fi
+if [[ "$1" == "link" && "$2" == "add" && "$4" == "type" && "$5" == "bridge" && "$#" == "5" ]]; then
+    mkdir -p "$SYS_CLASS_NET/$3"
     exit 0
 fi
 if [[ "$*" == "addr show dev usb0" || "$*" == "-o address show dev usb0" ]]; then
@@ -85,6 +93,12 @@ if [[ "$*" == "link show dev usb1" ]]; then
     exit 0
 fi
 if [[ "$*" == "link set dev br0 up" || "$*" == "link set br0 type bridge stp_state 0" || "$*" == "link set dev usb1 up" ]]; then
+    exit 0
+fi
+if [[ "$1" == "link" && "$2" == "set" && "$3" == "dev" && "$5" == "up" && "$#" == "5" ]]; then
+    exit 0
+fi
+if [[ "$1" == "link" && "$2" == "set" && "$4" == "type" && "$5" == "bridge" && "$6" == "stp_state" && "$#" == "7" ]]; then
     exit 0
 fi
 if [[ "$*" == "link set dev usb1 master br0" ]]; then
@@ -101,6 +115,13 @@ fi
 if [[ "$*" == "link set dev usb3 nomaster" ]]; then
     rm -rf "$SYS_CLASS_NET/usb3/brport" "$SYS_CLASS_NET/usb3/master"
     exit 0
+fi
+if [[ "$*" == link*dev*nomaster ]]; then
+    member_interface=$(echo "$*" | sed -n 's/^link set dev \([^ ]*\) nomaster$/\1/p')
+    if [[ -n "$member_interface" ]]; then
+        rm -rf "$SYS_CLASS_NET/$member_interface/brport" "$SYS_CLASS_NET/$member_interface/master"
+        exit 0
+    fi
 fi
 if [[ "$*" == "-br link" || "$*" == "-br addr" || "$*" == "route" ]]; then
     exit 0
@@ -268,6 +289,33 @@ esac
         self.assertEqual(self.active_timer_paths(), [])
         self.assertFalse(os.path.exists(os.path.join(self.state_directory, "active-lease")))
 
+    def owned_topology_path(self):
+        return os.path.join(self.state_directory, "owned-topology")
+
+    def read_owned_topology(self):
+        topology = {}
+        topology_path = self.owned_topology_path()
+        with open(topology_path, "r", encoding="ascii") as topology_file:
+            for topology_line in topology_file:
+                topology_key, topology_value = topology_line.rstrip("\n").split("=", 1)
+                topology[topology_key] = topology_value
+        return topology
+
+    def bridge_member_is_attached(self, interface_name):
+        return os.path.isdir(os.path.join(self.sys_class_net, interface_name, "brport"))
+
+    def assert_exact_closed_topology(self):
+        for interface_name in os.listdir(self.sys_class_net):
+            master_path = os.path.join(self.sys_class_net, interface_name, "master")
+            resolved_master = None
+            if os.path.lexists(master_path):
+                resolved_master = os.readlink(master_path)
+            if resolved_master is not None and resolved_master.endswith("/br0"):
+                self.assertEqual(
+                    interface_name, "usb2",
+                    "only UPLINK_IF may remain in the data bridge, found %s" % interface_name,
+                )
+
     def test_normal_release_commits_one_identified_active_lease(self):
         release_process = self.run_gateway("release", "60")
         self.assertEqual(release_process.returncode, 0, release_process.stderr)
@@ -290,9 +338,11 @@ esac
     def test_authorized_release_is_bound_to_locked_config_snapshot(self):
         with open(self.config_path, "rb") as config_file:
             policy_digest = hashlib.sha256(config_file.read()).hexdigest()
+        far_future_expires_at = str(int(time.time()) + 600)
         release_process = self.run_gateway(
             "release-authorized",
             "60",
+            far_future_expires_at,
             policy_digest,
             "cat2-gateway-01",
             "usb1",
@@ -307,12 +357,106 @@ esac
         rejected_process = self.run_gateway(
             "release-authorized",
             "60",
+            far_future_expires_at,
             policy_digest,
             "cat2-gateway-01",
             "usb1",
             "usb2",
         )
         self.assertEqual(rejected_process.returncode, 2)
+        self.assert_isolated_without_lease()
+
+    def test_authorized_release_with_expired_expires_at_is_refused_under_lock(self):
+        # The gateway must recompute the effective authorization lifetime after
+        # it holds the transition lock. An expiresAtEpoch that is already in the
+        # past must be refused with the gate isolated, no timer and no lease,
+        # even though the requested duration was valid.
+        with open(self.config_path, "rb") as config_file:
+            policy_digest = hashlib.sha256(config_file.read()).hexdigest()
+        past_expires_at = str(int(time.time()) - 1)
+        refused_process = self.run_gateway(
+            "release-authorized",
+            "60",
+            past_expires_at,
+            policy_digest,
+            "cat2-gateway-01",
+            "usb1",
+            "usb2",
+        )
+        self.assertNotEqual(refused_process.returncode, 0)
+        self.assert_isolated_without_lease()
+
+    def test_authorized_release_shrinks_duration_to_expires_at_window(self):
+        # When expiresAt is closer than the requested duration, the effective
+        # lease lifetime is the smaller window, recomputed under the lock.
+        with open(self.config_path, "rb") as config_file:
+            policy_digest = hashlib.sha256(config_file.read()).hexdigest()
+        short_expires_at = str(int(time.time()) + 5)
+        release_process = self.run_gateway(
+            "release-authorized",
+            "60",
+            short_expires_at,
+            policy_digest,
+            "cat2-gateway-01",
+            "usb1",
+            "usb2",
+        )
+        self.assertEqual(release_process.returncode, 0, release_process.stderr)
+        self.assertTrue(self.gate_is_open())
+        lease_state = self.read_lease_state()
+        # The persisted expiry epoch must equal the signed expiresAtEpoch, not
+        # now+requestedDuration.
+        self.assertEqual(lease_state["expiresAtEpoch"], short_expires_at)
+        self.run_gateway("isolate")
+
+    def test_authorized_release_rejects_non_canonical_expires_at(self):
+        with open(self.config_path, "rb") as config_file:
+            policy_digest = hashlib.sha256(config_file.read()).hexdigest()
+        for invalid_expires_at in ("1700000060.0", "-1", "0", "08", "1e3", "true"):
+            with self.subTest(invalid_expires_at=invalid_expires_at):
+                refused_process = self.run_gateway(
+                    "release-authorized",
+                    "60",
+                    invalid_expires_at,
+                    policy_digest,
+                    "cat2-gateway-01",
+                    "usb1",
+                    "usb2",
+                )
+                self.assertEqual(refused_process.returncode, 2)
+                self.assert_isolated_without_lease()
+
+    def test_authorization_expires_while_waiting_for_transition_lock_must_not_open_gate(self):
+        # Deterministic lock-synchronization test (no timing race): the test
+        # holds the transition lock so the gateway cannot proceed past the
+        # dispatch until the lock is released. By then the signed expiresAt is
+        # in the past, so the locked re-check must refuse and leave the gate
+        # isolated with no timer and no lease.
+        import fcntl
+        with open(self.config_path, "rb") as config_file:
+            policy_digest = hashlib.sha256(config_file.read()).hexdigest()
+        lock_path = os.path.join(self.state_directory, "transition.lock")
+        with open(lock_path, "w") as lock_holder_file:
+            lock_holder_file.write("")
+            fcntl.flock(lock_holder_file, fcntl.LOCK_EX)
+            near_future_expires_at = str(int(time.time()) + 2)
+            gateway_process = self.start_gateway(
+                "release-authorized",
+                "60",
+                near_future_expires_at,
+                policy_digest,
+                "cat2-gateway-01",
+                "usb1",
+                "usb2",
+            )
+            # Wait until the authorization window has elapsed while the gateway
+            # is blocked on the lock. Because the gateway holds no lock yet, it
+            # cannot open the gate during this interval.
+            time.sleep(3)
+            self.assertTrue(gateway_process.poll() is None, "gateway must block on the held lock")
+            fcntl.flock(lock_holder_file, fcntl.LOCK_UN)
+        gateway_process.communicate(timeout=10)
+        self.assertNotEqual(gateway_process.returncode, 0)
         self.assert_isolated_without_lease()
 
     def test_release_refuses_missing_uplink_or_unexpected_bridge_member(self):
@@ -596,6 +740,113 @@ esac
         self.assertEqual(release_process.returncode, 0)
         self.assertEqual(invalid_config_process.returncode, 2)
         self.assertFalse(self.gate_is_open())
+
+    def test_rogue_bridge_member_must_be_removed_or_fault(self):
+        # A rogue dummy member in the data bridge must be removed by reconcile
+        # so the isolated member set is exactly {UPLINK_IF}. The gateway must
+        # never report isolated while a rogue member keeps forwarding.
+        os.makedirs(os.path.join(self.sys_class_net, "rogue0"))
+        self.attach_interface_to_bridge("rogue0")
+        reconcile_process = self.run_gateway("reconcile")
+        self.assertEqual(reconcile_process.returncode, 0, reconcile_process.stderr)
+        self.assertFalse(self.bridge_member_is_attached("rogue0"))
+        self.assert_exact_closed_topology()
+        self.assertTrue(self.bridge_member_is_attached("usb2"))
+        topology = self.read_owned_topology()
+        self.assertEqual(topology["serverInterface"], "usb1")
+        self.assertEqual(topology["uplinkInterface"], "usb2")
+
+    def test_old_server_interface_after_config_change_must_not_remain_forwarding(self):
+        # After SERVER_IF changes, the old gate interface must be detached from
+        # the data bridge; only the new UPLINK_IF may remain.
+        self.assertEqual(self.run_gateway("release", "60").returncode, 0)
+        self.assertTrue(self.bridge_member_is_attached("usb1"))
+        os.makedirs(os.path.join(self.sys_class_net, "usb3"))
+        with open(self.config_path, "r", encoding="ascii") as config_file:
+            config_text = config_file.read()
+        with open(self.config_path, "w", encoding="ascii") as config_file:
+            config_file.write(config_text.replace("SERVER_IF=usb1", "SERVER_IF=usb3"))
+        reconcile_process = self.run_gateway("reconcile")
+        self.assertNotEqual(reconcile_process.returncode, 0)
+        self.assertFalse(self.bridge_member_is_attached("usb1"))
+        self.assertFalse(self.gate_is_open())
+        self.assertEqual(self.active_timer_paths(), [])
+        self.assert_exact_closed_topology()
+
+    def test_missing_lease_state_must_not_hide_old_open_gate(self):
+        # Volatile lease state is lost on reboot, but an old SERVER_IF left in
+        # the bridge must still be detected and removed by reconcile via the
+        # authoritative bridge membership scan, independent of lease state.
+        self.attach_interface_to_bridge("usb1")
+        self.assertFalse(os.path.exists(os.path.join(self.state_directory, "active-lease")))
+        reconcile_process = self.run_gateway("reconcile")
+        self.assertNotEqual(reconcile_process.returncode, 0)
+        self.assertFalse(self.bridge_member_is_attached("usb1"))
+        self.assert_isolated_without_lease()
+
+    def test_bridge_interface_change_must_cleanup_recorded_old_gate(self):
+        # When BRIDGE_IF changes, the owned-topology record is updated and the
+        # new data bridge converges to the exact closed member set {UPLINK_IF}.
+        # The recorded old gate interface must not keep forwarding on the
+        # abandoned bridge; reconcile_owned_topology_drift detaches it.
+        self.assertEqual(self.run_gateway("isolate").returncode, 0)
+        original_topology = self.read_owned_topology()
+        self.assertEqual(original_topology["bridgeInterface"], "br0")
+        self.assertEqual(original_topology["serverInterface"], "usb1")
+        # Move the uplink to a new bridge and edit the config; leave the old
+        # recorded gate (usb1) detached so the convergence is a clean isolated
+        # transition on the new bridge.
+        os.makedirs(os.path.join(self.sys_class_net, "br1"))
+        uplink_master = os.path.join(self.sys_class_net, "usb2", "master")
+        os.unlink(uplink_master)
+        os.symlink(os.path.join(self.sys_class_net, "br1"), uplink_master)
+        with open(self.config_path, "r", encoding="ascii") as config_file:
+            config_text = config_file.read()
+        with open(self.config_path, "w", encoding="ascii") as config_file:
+            config_file.write(config_text.replace("BRIDGE_IF=br0", "BRIDGE_IF=br1"))
+        reconcile_process = self.run_gateway("reconcile")
+        self.assertEqual(reconcile_process.returncode, 0, reconcile_process.stderr)
+        # The old gate must not be forwarding on the old bridge.
+        self.assertFalse(self.bridge_member_is_attached("usb1"))
+        topology = self.read_owned_topology()
+        self.assertEqual(topology["bridgeInterface"], "br1")
+        self.assertEqual(topology["serverInterface"], "usb1")
+        self.assertEqual(topology["uplinkInterface"], "usb2")
+
+    def test_malformed_owned_topology_must_fail_closed(self):
+        # A malformed owned-topology record is treated as fail-closed: the
+        # current bridge is forced to the exact closed topology and the record
+        # is overwritten, rather than trusting the corrupt state.
+        topology_path = self.owned_topology_path()
+        os.makedirs(os.path.dirname(topology_path), exist_ok=True)
+        with open(topology_path, "w", encoding="ascii") as topology_file:
+            topology_file.write("garbage=no-newline-valid=but=bad=record\n")
+        os.makedirs(os.path.join(self.sys_class_net, "rogue1"))
+        self.attach_interface_to_bridge("rogue1")
+        reconcile_process = self.run_gateway("reconcile")
+        self.assertEqual(reconcile_process.returncode, 0, reconcile_process.stderr)
+        self.assertFalse(self.bridge_member_is_attached("rogue1"))
+        self.assert_exact_closed_topology()
+        topology = self.read_owned_topology()
+        self.assertEqual(topology["serverInterface"], "usb1")
+
+    def test_symlink_owned_topology_must_be_rejected(self):
+        # A symlinked owned-topology must never be followed; it is rejected and
+        # the gateway fail-closes the current bridge, then writes a fresh
+        # regular file.
+        topology_path = self.owned_topology_path()
+        os.makedirs(os.path.dirname(topology_path), exist_ok=True)
+        symlink_target = os.path.join(self.state_directory, "evil-topology")
+        with open(symlink_target, "w", encoding="ascii") as target_file:
+            target_file.write("serverInterface=evil\n")
+        os.symlink(symlink_target, topology_path)
+        reconcile_process = self.run_gateway("reconcile")
+        self.assertEqual(reconcile_process.returncode, 0, reconcile_process.stderr)
+        self.assertFalse(os.path.islink(topology_path))
+        self.assertTrue(os.path.isfile(topology_path))
+        topology = self.read_owned_topology()
+        self.assertEqual(topology["serverInterface"], "usb1")
+        self.assertEqual(topology["uplinkInterface"], "usb2")
 
 
 if __name__ == "__main__":

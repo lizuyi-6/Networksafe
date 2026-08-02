@@ -169,13 +169,18 @@ def parse_maximum_duration(configuration):
     return maximum_duration_seconds
 
 
-def run_gateway_release(gateway_executable, release_seconds, payload, run_command):
+def run_gateway_release(gateway_executable, requested_duration_seconds, payload, run_command):
+    # Pass the absolute expiresAtEpoch from the signed payload so the gateway
+    # can re-validate the authorization lifetime after it holds the transition
+    # lock. The verifier no longer sends a pre-shrunk remainingSeconds because
+    # that value could already be stale if the gateway waited on the lock.
     try:
         return run_command(
             [
                 gateway_executable,
                 "release-authorized",
-                str(release_seconds),
+                str(requested_duration_seconds),
+                str(payload["expiresAt"]),
                 payload["policyDigest"],
                 payload["gatewayId"],
                 payload["serverInterface"],
@@ -278,9 +283,14 @@ def process_authorization(
             raise AuthorizationRejected(
                 "authorization expired after counter consumption and before release"
             )
+        # The verifier forwards the signed durationSeconds and the absolute
+        # expiresAtEpoch. The gateway recomputes the effective lifetime under
+        # the transition lock (compute_effective_release_seconds), so this early
+        # remaining_seconds is only a fast-fail guard, not the authoritative
+        # check.
         release_exit_code = run_gateway_release(
             gateway_executable,
-            remaining_seconds,
+            payload["durationSeconds"],
             payload,
             run_command,
         )
@@ -294,7 +304,8 @@ def process_authorization(
     return {
         "accepted": True,
         "counter": authorization_counter,
-        "releasedSeconds": remaining_seconds,
+        "requestedDurationSeconds": payload["durationSeconds"],
+        "releasedSecondsUpperBound": remaining_seconds,
         "counterPersistedBeforeRelease": True,
         "note": "lease enforced by identified PID1 timer; see ag-cat2-gateway",
     }

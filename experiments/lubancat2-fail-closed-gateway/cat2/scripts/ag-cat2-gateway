@@ -34,6 +34,11 @@ CONFIG_SNAPSHOT_FILE=
 CONFIG_DIGEST=
 TRANSITION_LOCK_FILE=$STATE_DIR/transition.lock
 LEASE_STATE_FILE=$STATE_DIR/active-lease
+if [[ "$AG_TEST_MODE" == "1" ]]; then
+    OWNED_TOPOLOGY_FILE=${AG_OWNED_TOPOLOGY_FILE:-$STATE_DIR/owned-topology}
+else
+    OWNED_TOPOLOGY_FILE=/var/lib/aetherguard-cat2/owned-topology
+fi
 
 SERVER_IF=
 UPLINK_IF=
@@ -55,6 +60,12 @@ ACTIVE_LEASE_PHASE=
 ACTIVE_SERVER_IF=
 ACTIVE_UPLINK_IF=
 ACTIVE_BRIDGE_IF=
+
+RECORDED_GATEWAY_ID=
+RECORDED_BRIDGE_IF=
+RECORDED_SERVER_IF=
+RECORDED_UPLINK_IF=
+RECORDED_CONFIG_DIGEST=
 
 RELEASE_CLEANUP_REQUIRED=0
 RELEASE_CANDIDATE_TIMER_UNIT=
@@ -302,6 +313,184 @@ release_topology_is_safe() {
         && management_interface_is_configured \
         && port_is_enslaved_to_bridge "$UPLINK_IF" "$BRIDGE_IF" \
         && bridge_members_are_exact "$expected_gate_state"
+}
+
+bridge_member_interfaces() {
+    # Enumerate every interface enslaved to the dedicated data bridge. This is
+    # the authoritative membership scan: it is independent of volatile lease
+    # state and independent of the current SERVER_IF, so a rogue member or an
+    # old SERVER_IF left over from a config change cannot hide.
+    local interface_path interface_name master_path
+    bridge_exists || return 0
+    for interface_path in "$SYS_CLASS_NET"/*; do
+        [[ -d "$interface_path" ]] || continue
+        interface_name=${interface_path##*/}
+        master_path="$interface_path/master"
+        [[ -L "$master_path" || -e "$master_path" ]] || continue
+        [[ "$(readlink -f "$master_path")" == "$(readlink -f "$SYS_CLASS_NET/$BRIDGE_IF")" ]] || continue
+        printf '%s\n' "$interface_name"
+    done
+}
+
+enforce_exact_closed_topology() {
+    # For the dedicated data bridge the isolated member set must be exactly
+    # {UPLINK_IF}. Remove every other member (old SERVER_IF after a config
+    # change, a rogue dummy, the management interface if it ever leaked in).
+    # UPLINK_IF is always preserved. nomaster only detaches bridge membership;
+    # it never touches the interface IP, so a leaked usb0 keeps its management
+    # address. A removal failure or a post-cleanup non-exact topology is a
+    # fault: the caller must report fault, never isolated.
+    local member_interface removal_failed=0
+    while IFS= read -r member_interface; do
+        [[ -n "$member_interface" ]] || continue
+        [[ "$member_interface" == "$UPLINK_IF" ]] && continue
+        ip link set dev "$member_interface" nomaster || removal_failed=1
+    done < <(bridge_member_interfaces)
+    bridge_members_are_exact closed || removal_failed=1
+    (( removal_failed == 0 ))
+}
+
+reset_recorded_topology() {
+    RECORDED_GATEWAY_ID=
+    RECORDED_BRIDGE_IF=
+    RECORDED_SERVER_IF=
+    RECORDED_UPLINK_IF=
+    RECORDED_CONFIG_DIGEST=
+}
+
+load_owned_topology() {
+    # Returns:
+    #   0 = a valid owned-topology record was loaded into RECORDED_* vars.
+    #   1 = no record exists (first boot / clean state).
+    #   2 = record exists but is malformed/symlinked/invalid -> fail-closed.
+    reset_recorded_topology
+    [[ -e "$OWNED_TOPOLOGY_FILE" ]] || return 1
+    local topology_stat
+    topology_stat=$(stat -c '%F' "$OWNED_TOPOLOGY_FILE" 2>/dev/null || printf 'missing\n')
+    [[ "$topology_stat" == "regular file" ]] || return 2
+    local topology_line topology_key topology_value
+    local seen_gateway=0 seen_bridge=0 seen_server=0 seen_uplink=0 seen_digest=0
+    declare -A seen_topology_keys=()
+    while IFS= read -r topology_line || [[ -n "$topology_line" ]]; do
+        [[ "$topology_line" =~ ^([A-Za-z][A-Za-z0-9]*)=(.*)$ ]] || return 2
+        topology_key=${BASH_REMATCH[1]}
+        topology_value=${BASH_REMATCH[2]}
+        [[ -z "${seen_topology_keys[$topology_key]:-}" ]] || return 2
+        seen_topology_keys[$topology_key]=1
+        case "$topology_key" in
+            gatewayId)
+                is_safe_identifier "$topology_value" || return 2
+                RECORDED_GATEWAY_ID=$topology_value; seen_gateway=$((seen_gateway + 1)) ;;
+            bridgeInterface)
+                is_safe_identifier "$topology_value" || return 2
+                RECORDED_BRIDGE_IF=$topology_value; seen_bridge=$((seen_bridge + 1)) ;;
+            serverInterface)
+                is_safe_identifier "$topology_value" || return 2
+                RECORDED_SERVER_IF=$topology_value; seen_server=$((seen_server + 1)) ;;
+            uplinkInterface)
+                is_safe_identifier "$topology_value" || return 2
+                RECORDED_UPLINK_IF=$topology_value; seen_uplink=$((seen_uplink + 1)) ;;
+            configDigest)
+                [[ "$topology_value" =~ ^[a-f0-9]{64}$ ]] || return 2
+                RECORDED_CONFIG_DIGEST=$topology_value; seen_digest=$((seen_digest + 1)) ;;
+            version)
+                is_canonical_positive_integer "$topology_value" || return 2 ;;
+            *) return 2 ;;
+        esac
+    done < "$OWNED_TOPOLOGY_FILE"
+    (( seen_gateway == 1 && seen_bridge == 1 && seen_server == 1 \
+        && seen_uplink == 1 && seen_digest == 1 )) || return 2
+}
+
+save_owned_topology() {
+    # Atomic, fsynced persistence. The directory is fsynced so the rename is
+    # durable. Mode 0600, root-owned in production. Regular non-symlink.
+    local topology_directory
+    topology_directory=$(dirname "$OWNED_TOPOLOGY_FILE")
+    mkdir -p "$topology_directory" || return 1
+    python3 - "$OWNED_TOPOLOGY_FILE" "$AG_GATEWAY_ID" "$BRIDGE_IF" "$SERVER_IF" \
+        "$UPLINK_IF" "$CONFIG_DIGEST" <<'PYEOF'
+import os
+import sys
+import tempfile
+
+(topology_path, gateway_id, bridge_interface, server_interface,
+ uplink_interface, config_digest) = sys.argv[1:7]
+topology_directory = os.path.dirname(topology_path)
+file_descriptor, temporary_path = tempfile.mkstemp(prefix=".owned-topology.", dir=topology_directory)
+try:
+    os.fchmod(file_descriptor, 0o600)
+    with os.fdopen(file_descriptor, "w") as topology_file:
+        topology_file.write("gatewayId=%s\n" % gateway_id)
+        topology_file.write("bridgeInterface=%s\n" % bridge_interface)
+        topology_file.write("serverInterface=%s\n" % server_interface)
+        topology_file.write("uplinkInterface=%s\n" % uplink_interface)
+        topology_file.write("configDigest=%s\n" % config_digest)
+        topology_file.write("version=1\n")
+        topology_file.flush()
+        os.fsync(topology_file.fileno())
+    os.replace(temporary_path, topology_path)
+    directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    directory_descriptor = os.open(topology_directory, directory_flags)
+    try:
+        os.fsync(directory_descriptor)
+    finally:
+        os.close(directory_descriptor)
+except Exception:
+    try:
+        os.unlink(temporary_path)
+    except OSError:
+        pass
+    raise
+PYEOF
+}
+
+remove_recorded_gate_interface() {
+    # Detach exactly one recorded gate interface from its (possibly old) bridge.
+    # This is surgical: it only touches the recorded server interface, never an
+    # arbitrary bridge, so a non-AetherGuard host network object is untouched.
+    local gate_interface=$1
+    [[ -n "$gate_interface" ]] || return 0
+    is_safe_identifier "$gate_interface" || return 0
+    [[ -d "$SYS_CLASS_NET/$gate_interface/brport" ]] || return 0
+    ip link set dev "$gate_interface" nomaster >/dev/null 2>&1 || true
+}
+
+reconcile_owned_topology_drift() {
+    # Fail-closed cleanup of configuration drift. Runs under the transition
+    # lock after the config snapshot is loaded. It (1) loads the previously
+    # recorded topology, (2) detaches an old recorded SERVER_IF that is no
+    # longer current, (3) forces the current data bridge to the exact closed
+    # member set {UPLINK_IF}, (4) verifies exactness, then (5) persists the new
+    # owned-topology. A malformed or symlinked record is treated as fail-closed
+    # and forces cleanup of the current bridge too.
+    local load_exit_code
+    load_exit_code=0
+    load_owned_topology || load_exit_code=$?
+
+    if [[ "$load_exit_code" == "2" ]]; then
+        log_action reconcile "result=fault reason=malformed_owned_topology action=fail_closed_cleanup"
+        if ! enforce_exact_closed_topology; then
+            return 1
+        fi
+        save_owned_topology || return 1
+        return 0
+    fi
+
+    if [[ "$load_exit_code" == "0" ]]; then
+        if [[ -n "$RECORDED_SERVER_IF" && "$RECORDED_SERVER_IF" != "$SERVER_IF" ]]; then
+            remove_recorded_gate_interface "$RECORDED_SERVER_IF"
+        fi
+        if [[ -n "$RECORDED_BRIDGE_IF" && "$RECORDED_BRIDGE_IF" != "$BRIDGE_IF" ]]; then
+            remove_recorded_gate_interface "$RECORDED_SERVER_IF"
+        fi
+    fi
+
+    if ! enforce_exact_closed_topology; then
+        return 1
+    fi
+    save_owned_topology || return 1
+    return 0
 }
 
 ensure_bridge() {
@@ -553,12 +742,46 @@ validate_release_seconds() {
     is_canonical_positive_integer "$1" && (( 10#$1 <= MAX_RELEASE_SECONDS ))
 }
 
+compute_effective_release_seconds() {
+    # This is the authoritative authorization-lifetime check. It is invoked
+    # after the global transition lock is held and the immutable config
+    # snapshot is loaded, so a verifier that computed remainingSeconds before
+    # the gateway contended for the lock cannot smuggle a stale lifetime
+    # through. requestedDurationSeconds bounds the lease; expiresAtEpoch bounds
+    # the signed authorization window. The gate is opened for the minimum.
+    local requested_duration_seconds=$1
+    local expires_at_epoch=$2
+    local current_epoch effective_seconds
+    current_epoch=$(date +%s)
+    if (( 10#$expires_at_epoch <= current_epoch )); then
+        log_action release "result=refused reason=authorization_expired_while_waiting_for_transition_lock expires_at=$expires_at_epoch now=$current_epoch"
+        echo "REFUSED: authorization expired while waiting for transition lock" >&2
+        return 1
+    fi
+    effective_seconds=$(( 10#$expires_at_epoch - current_epoch ))
+    (( effective_seconds > 10#$requested_duration_seconds )) && effective_seconds=$requested_duration_seconds
+    (( effective_seconds >= 1 )) || {
+        log_action release "result=refused reason=authorization_expired_while_waiting_for_transition_lock expires_at=$expires_at_epoch now=$current_epoch"
+        echo "REFUSED: authorization expired while waiting for transition lock" >&2
+        return 1
+    }
+    printf '%s\n' "$effective_seconds"
+}
+
 release_locked() {
     local release_seconds=$1
+    local authorized_expires_at_epoch=${2:-}
+    local effective_release_seconds
     local lease_id lease_timer_unit expiry_epoch
 
     RELEASE_CLEANUP_REQUIRED=1
     RELEASE_CANDIDATE_TIMER_UNIT=
+
+    if [[ -n "$authorized_expires_at_epoch" ]]; then
+        effective_release_seconds=$(compute_effective_release_seconds "$release_seconds" "$authorized_expires_at_epoch") \
+            || { RELEASE_CLEANUP_REQUIRED=0; return 1; }
+        release_seconds=$effective_release_seconds
+    fi
 
     gate_close || { abort_release_locked gate_close; return 1; }
     maybe_inject_failpoint after_gate_close || { abort_release_locked after_gate_close; return 1; }
@@ -653,7 +876,18 @@ isolate_locked() {
         log_action isolate "result=fault server_if=$SERVER_IF gate=$(kernel_gate_state)"
         return 1
     fi
-    log_action isolate "result=ok server_if=$SERVER_IF gate=$(kernel_gate_state)"
+    # Force the dedicated data bridge to the exact closed member set {UPLINK_IF}
+    # so a rogue member or an old SERVER_IF cannot keep forwarding while the
+    # gateway reports isolated.
+    if ! enforce_exact_closed_topology; then
+        log_action isolate "result=fault reason=exact_closed_topology_unreachable bridge=$BRIDGE_IF gate=$(kernel_gate_state)"
+        return 1
+    fi
+    save_owned_topology || {
+        log_action isolate "result=fault reason=owned_topology_persist_failed gate=$(kernel_gate_state)"
+        return 1
+    }
+    log_action isolate "result=ok server_if=$SERVER_IF gate=$(kernel_gate_state) members=exact_uplink"
 }
 
 expire_locked() {
@@ -713,7 +947,15 @@ reconcile_locked() {
             log_action reconcile "result=fault reason=$fault_reason state=isolated"
             return 1
         fi
-        log_action reconcile "result=ok state=isolated server_if_present=$(interface_exists "$SERVER_IF" && echo true || echo false)"
+        # Converge the dedicated data bridge to the exact closed member set
+        # {UPLINK_IF} and persist the owned topology. A rogue member or an old
+        # SERVER_IF left over from a config change is removed here; if it
+        # cannot be removed the reconcile is a fault, never an isolated ok.
+        if ! reconcile_owned_topology_drift; then
+            log_action reconcile "result=fault reason=exact_closed_topology_unreachable state=isolated bridge=$BRIDGE_IF"
+            return 1
+        fi
+        log_action reconcile "result=ok state=isolated server_if_present=$(interface_exists "$SERVER_IF" && echo true || echo false) members=exact_uplink"
         return 0
     fi
 
@@ -744,7 +986,11 @@ reconcile_locked() {
     }
     cancel_all_lease_timers || true
     clear_lease_state
-    log_action reconcile "result=fault reason=$fault_reason action=isolated gate=$(kernel_gate_state)"
+    if ! reconcile_owned_topology_drift; then
+        log_action reconcile "result=fault reason=${fault_reason}_and_exact_closed_topology_unreachable gate=$(kernel_gate_state)"
+        return 1
+    fi
+    log_action reconcile "result=fault reason=$fault_reason action=isolated gate=$(kernel_gate_state) members=exact_uplink"
     return 1
 }
 
@@ -867,7 +1113,7 @@ cmd_diagnostics() {
 }
 
 usage() {
-    echo "usage: $0 {status|isolate|release [1-$MAX_RELEASE_SECONDS]|reconcile|verify|diagnostics}" >&2
+    echo "usage: $0 {status|isolate|release [1-$MAX_RELEASE_SECONDS]|release-authorized <requestedDurationSeconds> <expiresAtEpoch> <policyDigest> <gatewayId> <serverInterface> <uplinkInterface>|reconcile|verify|diagnostics}" >&2
 }
 
 command_name=${1:-}
@@ -891,19 +1137,34 @@ case "$command_name" in
         release_locked "$release_seconds"
         ;;
     release-authorized)
-        [[ "$#" == "6" ]] || { usage; exit 2; }
+        # release-authorized <requestedDurationSeconds> <expiresAtEpoch> \
+        #                     <policyDigest> <gatewayId> \
+        #                     <serverInterface> <uplinkInterface>
+        # expiresAtEpoch is the absolute epoch from the signed payload. The
+        # gateway re-validates it against the kernel clock after the transition
+        # lock is held (see compute_effective_release_seconds), so a verifier
+        # that computed remainingSeconds before contending for the lock can no
+        # longer smuggle a stale lifetime past the gate.
+        [[ "$#" == "7" ]] || { usage; exit 2; }
         release_seconds=$2
+        expires_at_epoch=$3
         validate_release_seconds "$release_seconds" || {
             echo "REFUSED: authorized release duration is invalid" >&2
+            log_action release "result=refused reason=invalid_duration"
             exit 2
         }
-        if ! validate_authorized_release_context "$3" "$4" "$5" "$6"; then
+        is_canonical_positive_integer "$expires_at_epoch" || {
+            echo "REFUSED: expiresAtEpoch must be a canonical positive integer" >&2
+            log_action release "result=refused reason=invalid_expires_at"
+            exit 2
+        }
+        if ! validate_authorized_release_context "$4" "$5" "$6" "$7"; then
             gate_close || true
             echo "REFUSED: signed authorization context does not match the locked config snapshot" >&2
             log_action release "result=refused reason=authorization_context_mismatch"
             exit 2
         fi
-        release_locked "$release_seconds"
+        release_locked "$release_seconds" "$expires_at_epoch"
         ;;
     reconcile)
         [[ "$#" == "1" ]] || { usage; exit 2; }
