@@ -11,9 +11,9 @@ This interpretation is consistent with recent local-LLM traffic analysis, which 
 \subsection{What the Adapter Appears to Learn}
 The QLoRA adapter appears to strengthen associations between security vocabulary, suspicious request compositions, and attack-oriented verdicts. Attack recall rises markedly relative to zero-shot inference, and attack F1 improves. The training objective, however, rewards production of a concrete target sequence and valid schema; it does not independently reward calibrated refusal when context is missing. A plausible consequence is that the model learns that a complete response should contain a decisive verdict even when the reference class is unknown.
 
-This explanation remains an inference from behavior rather than a mechanistic claim. The study does not include activation analysis or causal representation probing. A stronger follow-up should train an explicit reject option, use contrastive sufficient/insufficient-context pairs, evaluate calibration, and separate verdict generation from uncertainty estimation.
+This explanation remains an inference from behavior rather than a mechanistic claim. The study does not include activation analysis or causal representation probing. A stronger follow-up should train an explicit reject option, use contrastive pairs with sufficient and insufficient context, evaluate calibration, and separate verdict generation from uncertainty estimation.
 
-\subsection{Rules and Language Models Occupy Different Operating Points}
+\subsection{Rules and Language Models Are Complementary}
 The frozen rules baseline and the adapted language model exhibit complementary error profiles. Rules produce low safe FPR but miss most attacks in the challenge set. The adapted model detects far more attacks but flags many safe requests. This supports a layered role rather than replacement:
 \begin{enumerate}
     \item high-specificity rules handle known patterns with auditable behavior;
@@ -58,7 +58,7 @@ Runtime measurements were collected on a single consumer-laptop GPU and across s
 \subsection{Research Priorities}
 The observed failures define a focused next stage:
 \begin{itemize}
-    \item train and calibrate an explicit abstention mechanism using human-reviewed insufficient-context pairs;
+    \item train and calibrate an explicit abstention mechanism using human-reviewed pairs with insufficient context;
     \item optimize false-positive cost without sacrificing attack recall, including cost-sensitive objectives or a rule--model cascade;
     \item repeat adaptation across multiple random seeds;
     \item evaluate calibration, selective risk, and risk--coverage trade-offs;
