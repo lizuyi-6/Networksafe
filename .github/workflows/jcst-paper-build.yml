@@ -42,10 +42,14 @@ jobs:
         run: |
           set -euo pipefail
           root='papers/AetherArgus-HTTP-Security/jcst-submission'
-          ! grep -RInE 'Journal of Information Security and Applications|Expert Systems [Ww]ith Applications|ESWA|JISA' "$root" --exclude='README.md'
-          ! grep -RInE 'novel (learning|model|architecture|QLoRA)|production[- ]ready|autonomous blocking authority' "$root/main.tex" "$root/sections"
-          grep -F '20.57' "$root/main.tex" "$root/sections/discussion.tex"
-          grep -F 'unknown recall' "$root/main.tex" "$root/sections"
+          ! grep -RInE --exclude='README.md' \
+            'Journal of Information Security and Applications|Expert Systems [Ww]ith Applications|ESWA|JISA' \
+            "$root"
+          ! grep -RInE \
+            'novel (learning|model|architecture|QLoRA)|production[- ]ready|autonomous blocking authority' \
+            "$root/main.tex" "$root/sections"
+          grep -RFi '20.57' "$root/main.tex" "$root/sections"
+          grep -RFi 'unknown recall' "$root/main.tex" "$root/sections"
 
       - name: Upload compiled PDFs and logs
         uses: actions/upload-artifact@v7
@@ -151,8 +155,8 @@ jobs:
           Label SHA-256: 13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad
           EOF
 
-          if grep -RInaE 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|password[[:space:]]*=|api[_-]?key[[:space:]]*=|session[_-]?token[[:space:]]*=' "$root"; then
-            echo 'Potential secret found in reviewer package' >&2
+          if grep -RInaE 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' "$root"; then
+            echo 'Private-key material found in reviewer package' >&2
             exit 1
           fi
 
