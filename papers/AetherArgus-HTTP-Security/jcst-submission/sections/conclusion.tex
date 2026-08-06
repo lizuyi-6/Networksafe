@@ -1,0 +1,10 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper evaluated a compact QLoRA-adapted language model for request-side HTTP security decision support under a frozen, leakage-controlled external protocol. The study does not propose a new learning architecture. Its contribution is an empirical characterization of what task adaptation improves, which reliability failures remain, and how inference-path choices affect security judgments.
+
+On 413 identical challenge requests, the adapted model improves verdict macro-F1 from 0.4175 for zero-shot Qwen3-4B to 0.4658. The paired difference is 0.0482, with a 95\% bootstrap confidence interval of 0.0113--0.0835, and attack recall reaches 0.9072. These results show that compact local models can acquire useful attack-oriented decision behavior.
+
+The same evidence rules out a deployment-ready interpretation. The model classifies 43 of 209 safe requests as attacks and does not predict unknown for any of 107 insufficient-context cases. A change in message structure alters 11 of 413 verdicts, showing that prompt serialization is part of the security-critical configuration. The rules baseline remains substantially more precise on safe requests, although it misses most attacks.
+
+Accordingly, the evaluated model is best treated as a shadow analyzer, second-stage triage signal, or source of analyst prioritization. It should not be granted autonomous blocking authority. The next technical priorities are explicit abstention, lower false-positive cost, calibrated selective prediction, multi-seed validation, stronger independent baselines, and broader authorized external testing. More generally, cybersecurity evaluations of language models should report class-specific failure costs and inference-path controls rather than equating aggregate improvement with operational reliability.
