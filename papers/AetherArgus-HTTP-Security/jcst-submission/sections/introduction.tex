@@ -15,7 +15,7 @@ The paper makes four empirical contributions:
 \begin{enumerate}
     \item \textbf{A leakage-controlled external evaluation.} The study binds a frozen request-only challenge set, separated inference and scoring processes, content hashes, raw outputs, and paired statistical analysis into one auditable evaluation record.
     \item \textbf{A same-input comparison across security decision systems.} Eight systems are evaluated on identical model-visible requests, including repository rules, a character n-gram classifier, zero-shot and few-shot base-model prompts, the QLoRA adapter, merged artifacts, and GGUF serving paths.
-    \item \textbf{A decomposition of cybersecurity failure modes.} The analysis separates attack detection, safe-request false positives, unknown-class abstention, structured-output validity, prompt-injection behavior, quantization effects, and message-serialization sensitivity.
+    \item \textbf{A decomposition of cybersecurity failure modes.} The analysis separates attack detection, safe-request false positives, unknown-class abstention, structured-output validity, prompt-injection behavior, quantization effects, and sensitivity to message serialization.
     \item \textbf{Operationally bounded conclusions.} The results identify where compact models may assist triage and where they remain unsafe, particularly when false-positive cost and insufficient context are ignored.
 \end{enumerate}
 
