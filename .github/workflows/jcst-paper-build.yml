@@ -42,12 +42,18 @@ jobs:
         run: |
           set -euo pipefail
           root='papers/AetherArgus-HTTP-Security/jcst-submission'
-          ! grep -RInE --exclude='README.md' \
+          if grep -RInE --exclude='README.md' \
             'Journal of Information Security and Applications|Expert Systems [Ww]ith Applications|ESWA|JISA' \
-            "$root"
-          ! grep -RInE \
+            "$root"; then
+            echo 'Stale journal name found in JCST submission package' >&2
+            exit 1
+          fi
+          if grep -RInE \
             'novel (learning|model|architecture|QLoRA)|production[- ]ready' \
-            "$root/main.tex" "$root/sections"
+            "$root/main.tex" "$root/sections"; then
+            echo 'Unsupported novelty or readiness wording found' >&2
+            exit 1
+          fi
           grep -RFi '20.57' "$root/main.tex" "$root/sections"
           grep -RFi 'unknown recall' "$root/main.tex" "$root/sections"
           grep -RFi 'not' "$root/sections/conclusion.tex" | grep -Fi 'autonomous blocking'
