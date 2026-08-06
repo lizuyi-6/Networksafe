@@ -15,7 +15,7 @@
 - [ ] Build `title-page.tex` successfully.
 - [ ] Visually inspect every page of the generated manuscript PDF.
 - [ ] Confirm figures are legible and their captions match the evidence package.
-- [ ] Confirm tables contain the frozen values and no ESWA/JISA journal names remain.
+- [ ] Confirm tables contain the frozen values and no prior-journal names remain.
 - [ ] Confirm the manuscript and title page use the final identical title.
 - [ ] Confirm the abstract entered in the submission form matches `submission-metadata.md`.
 
