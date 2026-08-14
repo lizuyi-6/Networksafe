@@ -178,7 +178,10 @@ export class SerialDeviceCompanion {
     private readonly boardWrite: BoardWriter,
     private readonly controlPlaneUrl: string,
     private readonly helperSecret: string,
-    private readonly publicKeyPem?: string
+    private readonly publicKeyPem?: string,
+    // AG-B04: optional named-key identity for the helper secret (see
+    // helper-auth.middleware.ts SERIAL_HELPER_EXTRA_SECRETS).
+    private readonly helperKeyId?: string
   ) {}
 
   start(): void {
@@ -390,7 +393,11 @@ export class SerialDeviceCompanion {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-AetherGuard-Helper-Secret': this.helperSecret
+          'X-AetherGuard-Helper-Secret': this.helperSecret,
+          // AG-B04: named per-helper key (SERIAL_HELPER_KEY_ID + a matching
+          // entry in the control plane's SERIAL_HELPER_EXTRA_SECRETS) lets
+          // deployments revoke one appliance without rotating everyone.
+          ...(this.helperKeyId ? { 'X-AetherGuard-Helper-Key-Id': this.helperKeyId } : {})
         },
         body: JSON.stringify({
           tenantId: this.policy.tenantId,
@@ -432,6 +439,7 @@ export async function startSerialDeviceCompanion(): Promise<SerialDeviceCompanio
   const serialPath = process.env.FINAL_DEFENSE_SERIAL_PORT || process.env.SERIAL_PORT || '/dev/ttyACM0';
   const controlPlaneUrl = process.env.AETHERGUARD_CONTROL_PLANE_URL || process.env.CONTROL_PLANE_URL || 'http://localhost:3005';
   const helperSecret = process.env.SERIAL_HELPER_SHARED_SECRET || process.env.DEVICE_COMMAND_SECRET || '';
+  const helperKeyId = String(process.env.SERIAL_HELPER_KEY_ID || '').trim() || undefined;
   const publicKeyPem = process.env.AETHERGUARD_HARDWARE_GATE_PUBLIC_KEY_PEM || process.env.AETHERGUARD_HARDWARE_GATE_PUBLIC_KEY;
 
   let companion: SerialDeviceCompanion | null = null;
@@ -443,7 +451,7 @@ export async function startSerialDeviceCompanion(): Promise<SerialDeviceCompanio
     }
     bufferedFrames.push(frame);
   });
-  const startedCompanion = new SerialDeviceCompanion(policy, writer, controlPlaneUrl, helperSecret, publicKeyPem);
+  const startedCompanion = new SerialDeviceCompanion(policy, writer, controlPlaneUrl, helperSecret, publicKeyPem, helperKeyId);
   companion = startedCompanion;
   startedCompanion.start();
   for (const frame of bufferedFrames) {

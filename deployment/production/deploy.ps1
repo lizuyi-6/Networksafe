@@ -1,6 +1,14 @@
 # AetherGuard Production Deployment Script
 # Usage: ./deploy.ps1 [command]
-# Commands: start, stop, restart, status, logs, build
+# Commands: start, stop, restart, status, logs, build, clean
+#
+# DP-014 fix (audit 2026-08): previously bootstrapped a LOCAL .env via
+# Copy-Item .env.example (weak change_me* values production validation
+# hard-rejects), invoked the legacy docker-compose v1 binary (cannot parse
+# include/env_file long syntax), and printed stale ports 8888/3010. The prod
+# entrypoint includes the repository-root Compose file and reads the ROOT
+# .env — generate it with deployment/production/setup-env.sh (bash) or
+# scripts/setup.mjs (node).
 
 param(
     [Parameter(Position=0)]
@@ -10,6 +18,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RootEnv = Join-Path $ScriptDir "..\..\.env"
 
 function Write-Header {
     param([string]$Text)
@@ -20,47 +29,57 @@ function Write-Header {
     Write-Host ""
 }
 
+# Compose v2.24+ is REQUIRED (include/env_file long syntax).
 function Test-Docker {
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
         Write-Error "Docker is not installed or not in PATH"
         exit 1
     }
-    if (-not (Get-Command docker-compose -ErrorAction SilentlyContinue)) {
-        Write-Error "docker-compose is not installed or not in PATH"
+    docker compose version | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Docker Compose v2 is required (legacy docker-compose v1 cannot parse this stack)"
         exit 1
     }
+}
+
+function Test-RootEnv {
+    if (-not (Test-Path $RootEnv)) {
+        Write-Host "Error: repository root .env not found ($RootEnv)" -ForegroundColor Red
+        Write-Host "Generate it first:  bash deployment/production/setup-env.sh   (or: node scripts/setup.mjs)" -ForegroundColor Yellow
+        Write-Host "(copying .env.example produces weak change_me* values that production validation rejects)" -ForegroundColor Yellow
+        exit 1
+    }
+}
+
+function Invoke-Compose {
+    param([string[]]$ComposeArgs)
+    & docker compose -f (Join-Path $ScriptDir "docker-compose.prod.yml") @ComposeArgs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
 function Start-Deployment {
     Write-Header "Starting AetherGuard Production Deployment"
 
-    if (-not (Test-Path "$ScriptDir\.env")) {
-        Write-Host "Creating .env file from .env.example..." -ForegroundColor Yellow
-        Copy-Item "$ScriptDir\.env.example" "$ScriptDir\.env"
-        Write-Host "Please edit $ScriptDir\.env with your configuration" -ForegroundColor Yellow
-    }
+    Test-RootEnv
 
     Write-Host "Building and starting containers..." -ForegroundColor Green
-    Set-Location $ScriptDir
-    docker-compose -f docker-compose.prod.yml up -d --build
+    Invoke-Compose @("up", "-d", "--build")
 
     Write-Host ""
-    Write-Host "Waiting for services to be healthy..." -ForegroundColor Yellow
+    Write-Host "Waiting for services to become healthy..." -ForegroundColor Yellow
     Start-Sleep -Seconds 10
 
     Show-Status
 
     Write-Host ""
     Write-Host "Deployment complete!" -ForegroundColor Green
-    Write-Host "Dashboard: http://localhost:8888" -ForegroundColor Cyan
-    Write-Host "API:       http://localhost:3010/api" -ForegroundColor Cyan
-    Write-Host "Health:    http://localhost:3010/health/ready" -ForegroundColor Cyan
+    Write-Host "Dashboard/API entrypoint (nginx reverse proxy): http://localhost:8080" -ForegroundColor Cyan
+    Write-Host "Backend health is reported by: docker compose -f docker-compose.prod.yml ps" -ForegroundColor Cyan
 }
 
 function Stop-Deployment {
     Write-Header "Stopping AetherGuard Production Deployment"
-    Set-Location $ScriptDir
-    docker-compose -f docker-compose.prod.yml down
+    Invoke-Compose @("down")
     Write-Host "Deployment stopped." -ForegroundColor Green
 }
 
@@ -72,48 +91,28 @@ function Restart-Deployment {
 
 function Show-Status {
     Write-Header "AetherGuard Deployment Status"
-    Set-Location $ScriptDir
-    docker-compose -f docker-compose.prod.yml ps
-
-    Write-Host ""
-    Write-Host "Service Health:" -ForegroundColor Yellow
-
-    $backendHealth = Invoke-WebRequest -Uri "http://localhost:3010/health/ready" -UseBasicParsing -ErrorAction SilentlyContinue
-    if ($backendHealth -and $backendHealth.StatusCode -eq 200) {
-        Write-Host "  Backend:  Healthy" -ForegroundColor Green
-    } else {
-        Write-Host "  Backend:  Unhealthy" -ForegroundColor Red
-    }
-
-    $frontendHealth = Invoke-WebRequest -Uri "http://localhost/health" -UseBasicParsing -ErrorAction SilentlyContinue
-    if ($frontendHealth -and $frontendHealth.StatusCode -eq 200) {
-        Write-Host "  Frontend: Healthy" -ForegroundColor Green
-    } else {
-        Write-Host "  Frontend: Unhealthy" -ForegroundColor Red
-    }
+    Invoke-Compose @("ps")
 }
 
 function Show-Logs {
     param([string]$Service = "")
-    Set-Location $ScriptDir
     if ($Service) {
-        docker-compose -f docker-compose.prod.yml logs -f $Service
+        Invoke-Compose @("logs", "-f", $Service)
     } else {
-        docker-compose -f docker-compose.prod.yml logs -f
+        Invoke-Compose @("logs", "-f")
     }
 }
 
 function Build-Images {
     Write-Header "Building AetherGuard Docker Images"
-    Set-Location $ScriptDir
-    docker-compose -f docker-compose.prod.yml build --no-cache
+    Test-RootEnv
+    Invoke-Compose @("build", "--no-cache")
     Write-Host "Images built successfully." -ForegroundColor Green
 }
 
 function Clear-Deployment {
     Write-Header "Cleaning Up AetherGuard Deployment"
-    Set-Location $ScriptDir
-    docker-compose -f docker-compose.prod.yml down -v --rmi local
+    Invoke-Compose @("down", "-v", "--rmi", "local")
     Write-Host "Deployment cleaned up." -ForegroundColor Green
 }
 

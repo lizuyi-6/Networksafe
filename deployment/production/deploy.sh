@@ -1,11 +1,20 @@
-﻿#!/bin/bash
+#!/bin/bash
 
-# AetherGuardduction Deployment Script
+# AetherGuard Production Deployment Script
 # Usage: ./deploy.sh [command]
 # Commands: start, stop, restart, status, logs, build, clean
+#
+# DP-014 fix (audit 2026-08): this script previously bootstrapped a LOCAL
+# .env with `cp .env.example .env` (weak change_me* values that production
+# runtime validation hard-rejects), invoked the legacy docker-compose v1
+# binary (cannot parse the include/env_file long syntax the prod entrypoint
+# needs), and printed stale ports 8888/3010. The prod entrypoint includes
+# the repository-root Compose file and reads the ROOT .env — generate it with
+# deployment/production/setup-env.sh, never by copying .env.example.
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_ENV="$SCRIPT_DIR/../../.env"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -21,47 +30,55 @@ print_header() {
     echo ""
 }
 
+# Compose v2.24+ is REQUIRED (include/env_file long syntax); legacy
+# docker-compose v1 cannot parse the prod entrypoint.
+compose() {
+    docker compose -f "$SCRIPT_DIR/docker-compose.prod.yml" "$@"
+}
+
 check_docker() {
     if ! command -v docker &> /dev/null; then
         echo -e "${RED}Error: Docker is not installed${NC}"
         exit 1
     fi
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-        echo -e "${RED}Error: docker-compose is not installed${NC}"
+    if ! docker compose version &> /dev/null; then
+        echo -e "${RED}Error: Docker Compose v2 is required (legacy docker-compose v1 cannot parse this stack)${NC}"
+        exit 1
+    fi
+}
+
+check_root_env() {
+    if [ ! -f "$ROOT_ENV" ]; then
+        echo -e "${RED}Error: repository root .env not found ($ROOT_ENV)${NC}"
+        echo -e "${YELLOW}Generate it first:  bash deployment/production/setup-env.sh${NC}"
+        echo -e "${YELLOW}(copying .env.example produces weak change_me* values that production validation rejects)${NC}"
         exit 1
     fi
 }
 
 start_deployment() {
-    print_header "Starting AetherGuardduction Deployment"
-    
-    if [ ! -f "$SCRIPT_DIR/.env" ]; then
-        echo -e "${YELLOW}Creating .env file from .env.example...${NC}"
-        cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
-        echo -e "${YELLOW}Please edit $SCRIPT_DIR/.env with your configuration${NC}"
-    fi
-    
+    print_header "Starting AetherGuard Production Deployment"
+
+    check_root_env
+
     echo -e "${GREEN}Building and starting containers...${NC}"
-    cd "$SCRIPT_DIR"
-    docker-compose -f docker-compose.prod.yml up -d --build
-    
+    compose up -d --build
+
     echo ""
-    echo -e "${YELLOW}Waiting for services to be healthy...${NC}"
+    echo -e "${YELLOW}Waiting for services to become healthy...${NC}"
     sleep 10
-    
+
     show_status
-    
+
     echo ""
     echo -e "${GREEN}Deployment complete!${NC}"
-    echo -e "${CYAN}Dashboard: http://localhost:8888${NC}"
-    echo -e "${CYAN}API:       http://localhost:3010/api${NC}"
-    echo -e "${CYAN}Health:    http://localhost:3010/health/ready${NC}"
+    echo -e "${CYAN}Dashboard/API entrypoint (nginx reverse proxy): http://localhost:8080${NC}"
+    echo -e "${CYAN}Backend health is reported by: docker compose -f docker-compose.prod.yml ps${NC}"
 }
 
 stop_deployment() {
-    print_header "Stopping AetherGuardduction Deployment"
-    cd "$SCRIPT_DIR"
-    docker-compose -f docker-compose.prod.yml down
+    print_header "Stopping AetherGuard Production Deployment"
+    compose down
     echo -e "${GREEN}Deployment stopped.${NC}"
 }
 
@@ -73,46 +90,28 @@ restart_deployment() {
 
 show_status() {
     print_header "AetherGuard Deployment Status"
-    cd "$SCRIPT_DIR"
-    docker-compose -f docker-compose.prod.yml ps
-    
-    echo ""
-    echo -e "${YELLOW}Service Health:${NC}"
-    
-    if curl -sf http://localhost:3010/health/ready > /dev/null 2>&1; then
-        echo -e "  Backend:  ${GREEN}Healthy${NC}"
-    else
-        echo -e "  Backend:  ${RED}Unhealthy${NC}"
-    fi
-    
-    if curl -sf http://localhost/health > /dev/null 2>&1; then
-        echo -e "  Frontend: ${GREEN}Healthy${NC}"
-    else
-        echo -e "  Frontend: ${RED}Unhealthy${NC}"
-    fi
+    compose ps
 }
 
 show_logs() {
     local service="${1:-}"
-    cd "$SCRIPT_DIR"
     if [ -n "$service" ]; then
-        docker-compose -f docker-compose.prod.yml logs -f "$service"
+        compose logs -f "$service"
     else
-        docker-compose -f docker-compose.prod.yml logs -f
+        compose logs -f
     fi
 }
 
 build_images() {
     print_header "Building AetherGuard Docker Images"
-    cd "$SCRIPT_DIR"
-    docker-compose -f docker-compose.prod.yml build --no-cache
+    check_root_env
+    compose build --no-cache
     echo -e "${GREEN}Images built successfully.${NC}"
 }
 
 clean_deployment() {
     print_header "Cleaning Up AetherGuard Deployment"
-    cd "$SCRIPT_DIR"
-    docker-compose -f docker-compose.prod.yml down -v --rmi local
+    compose down -v --rmi local
     echo -e "${GREEN}Deployment cleaned up.${NC}"
 }
 

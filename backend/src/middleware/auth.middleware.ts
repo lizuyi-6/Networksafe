@@ -559,8 +559,7 @@ function extractTenantIdFromApiKey(apiKey: string): string {
 /**
  * Combined auth - accepts either JWT or API key
  */
-export async function authenticateAny(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    const authHeader = req.headers.authorization;
+export async function authenticateAny(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {    const authHeader = req.headers.authorization;
     const apiKey = req.headers['x-api-key'] as string;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -578,7 +577,71 @@ export async function authenticateAny(req: AuthenticatedRequest, res: Response, 
 }
 
 // Compatibility export for agent-only routes.
+// SECURITY FIX (audit 2026-08, AG-A06): DEPRECATED — this grants a synthetic
+// `role=tenant, plan=ultra` identity to ANY holder of the static shared
+// VALID_API_KEYS list, bypassing the per-agent registration/revocation
+// system. Agent-only routes must use `authenticateRegisteredAgent` below.
+// Kept only for external embeddings; do not wire new routes to it.
 export const authenticateAgent = authenticateApiKey;
+
+/**
+ * SECURITY FIX (audit 2026-08, AG-A06): per-agent authentication for
+ * agent-only HTTP routes. Verifies `X-Agent-Id` + `X-Api-Key` against the
+ * server-side agent registry (agent-auth.service: approved status + API key
+ * hash, revocation effective immediately) instead of the static shared
+ * VALID_API_KEYS list. The attached identity is a least-privilege service
+ * identity — role 'viewer' (normalizes to tenant_viewer; unknown roles
+ * normalize to tenant_viewer anyway) with NO plan — so a compromised agent
+ * key cannot wield tenant/ultra privileges.
+ */
+export async function authenticateRegisteredAgent(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    const agentId = req.headers['x-agent-id'] as string | undefined;
+    const apiKey = req.headers['x-api-key'] as string | undefined;
+
+    if (!agentId || !apiKey) {
+        sendError(res, 401, {
+            code: 'AGENT_CREDENTIALS_MISSING',
+            message: 'backend.agent_id_and_api_key_required'
+        });
+        return;
+    }
+
+    let agent: import('../security/agent-auth.service').AuthenticatedAgent | null = null;
+    try {
+        const { default: agentAuthService } = await import('../security/agent-auth.service');
+        agent = await agentAuthService.verifyAgent(String(agentId), String(apiKey));
+    } catch (error: any) {
+        logger.error('Agent authentication backend unavailable', { error: error?.message });
+    }
+
+    if (!agent) {
+        logger.warn('Rejected agent credentials for investigation API', {
+            agentId: String(agentId).slice(0, 64),
+            ip: req.ip
+        });
+        sendError(res, 401, {
+            code: 'AGENT_CREDENTIALS_INVALID',
+            message: 'backend.invalid_agent_credentials'
+        });
+        return;
+    }
+
+    req.user = {
+        userId: agent.agentId,
+        email: `${agent.agentId}@agent.AetherGuard.local`,
+        username: agent.hostname || agent.agentId,
+        role: 'viewer',
+        tenantId: agent.tenantId,
+        permissions: getRolePermissions('viewer')
+    };
+    (req as AuthenticatedRequest & { agent?: unknown }).agent = agent;
+
+    next();
+}
 
 /**
  * Request timing middleware interface

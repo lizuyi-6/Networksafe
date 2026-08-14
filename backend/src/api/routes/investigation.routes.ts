@@ -6,14 +6,19 @@
 
 import { Router } from 'express';
 import { InvestigationController } from '../controllers/investigation.controller';
-import { authenticateAgent } from '../../middleware/auth.middleware';
+import { authenticateRegisteredAgent } from '../../middleware/auth.middleware';
 import { validateRequest } from '../../middleware/validation.middleware';
 
 const router = Router();
 const controller = new InvestigationController();
 
-// All investigation routes require agent authentication
-router.use(authenticateAgent);
+// All investigation routes require agent authentication.
+// SECURITY FIX (audit 2026-08, AG-A06): was `authenticateAgent` (static shared
+// VALID_API_KEYS list granting a synthetic role=tenant/plan=ultra identity,
+// bypassing per-agent registration/revocation). Now verifies X-Agent-Id +
+// X-Api-Key against the agent registry and attaches a least-privilege
+// viewer-scoped service identity.
+router.use(authenticateRegisteredAgent);
 
 /**
  * POST /api/investigation/start

@@ -17,6 +17,10 @@ import type { InterlockState } from '../security/final-defense-policy';
 
 export interface DeviceInfo {
     deviceId: string;
+    /** SECURITY FIX (audit 2026-08, AG-B03b): owning tenant, set at WS
+     * registration from the authenticated tenant context. Absent = legacy /
+     * emulator registration (platform-visible). */
+    tenantId?: string;
     version: string;
     chipModel: string;
     flashSize: number;

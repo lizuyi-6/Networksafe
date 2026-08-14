@@ -1,6 +1,7 @@
 import axios from 'axios';
 import nodemailer from 'nodemailer';
 import auditLogger from '../security/audit-logger.service';
+import { assertOutboundUrlAllowed } from '../security/outbound-url-guard';
 import logger from '../utils/logger';
 import type { AlertRecord } from './security-operations.service';
 import {
@@ -327,6 +328,23 @@ class NotificationDispatcherService {
   private async sendWebhook(channel: NotificationChannelConfig, payload: Record<string, any>): Promise<Record<string, any>> {
     if (!channel.target) {
       throw new Error('backend.notification_target_required');
+    }
+
+    // SECURITY FIX (audit 2026-08, AG-B02): webhook targets are
+    // admin-configurable URLs the backend POSTs to — enforce the outbound
+    // URL guard at dispatch time (the security boundary, covers every entry
+    // path). Cloud metadata endpoints are blocked unconditionally; private /
+    // loopback targets require ALLOW_PRIVATE_WEBHOOKS=1 (explicit
+    // acknowledgment for internal notification servers, default off).
+    const allowPrivate = String(process.env.ALLOW_PRIVATE_WEBHOOKS || '').trim() === '1';
+    try {
+      assertOutboundUrlAllowed(channel.target, { allowPrivate });
+    } catch (error: any) {
+      logger.warn('Blocked webhook delivery to forbidden target', {
+        target: channel.target,
+        reason: error?.message
+      });
+      throw new Error(error?.message || 'backend.webhook_target_blocked');
     }
 
     const response = await axios.post(channel.target, payload, {

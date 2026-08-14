@@ -55,7 +55,58 @@
 - guards：route-db / repository-hygiene / no-direct-api-fetch / frontend-api-contract 4/4 exit 0
 - AG-B01 PoC 回归 5/5 PASS
 
+## Batch 3 — P2（本 PR）
+
+### AG-B03b — codebook 全局可写 + 设备读取无租户过滤（Medium）
+- 修复（`backend/src/api/routes/devices.routes.ts` + `services/device-registry.service.ts` + `websocket/device-gateway.ts`）：
+  - `POST /api/devices/codebook` 加 `requireRole('admin')`（codebook 是平台级全局映射，改写仅限管理员；`GET /codebook` 保持只读开放）
+  - `DeviceInfo` 增可选 `tenantId`；WS 注册路径（device-gateway `register_device`）绑定认证租户上下文 `tenantContext.tenantId`
+  - 新增 `canViewDevice`：绑租户的设备仅本租户或 `platform_admin` 可见；legacy/模拟器注册（无 tenantId）保持全员可见（向后兼容）；`GET /:id`、`GET /:id/events`、`GET /:id/config` 三个读取口统一 404-on-mismatch（与不存在不可区分）
+- 证据：devices.routes 套件 25/25 PASS（新增 5 用例：POST /codebook 路由层 wiring pin + 非 admin 403 不落库（jest.doMock 重建 router）、跨租户 404 ×3 端点、本租户/platform_admin 200、legacy 设备仍可见）
+
+### AG-A06 — /api/investigation/* 静态共享 key 伪造 tenant/ultra 身份（Medium）
+- 修复（`backend/src/middleware/auth.middleware.ts` + `api/routes/investigation.routes.ts`）：
+  - 新增 `authenticateRegisteredAgent` 中间件：`X-Agent-Id` + `X-Api-Key` 经 `agent-auth.service.verifyAgent`（注册表 approved 状态 + API key hash + 撤销即时生效），后端不可用时 fail-closed 401
+  - 附着身份为最小权限服务身份（`role='viewer'`、无 plan、带注册租户），修复前 `VALID_API_KEYS` 持有者可伪造 `role=tenant, plan=ultra`
+  - `investigation.routes.ts` 从 `authenticateAgent`（= authenticateApiKey）切到新中间件；旧导出保留并标注 DEPRECATED（防新路由再接线）
+- 证据：authenticate-registered-agent 套件 4/4 PASS（缺头 401、注册表不通过 401、最小权限身份断言 role≠tenant 且 plan=null、后端异常 fail-closed）；investigation 套件 8/8、auth.middleware 套件 24/24 无回归
+
+### AG-B02 — ai-endpoints allowPrivate SSRF（含云元数据）+ webhook URL 无校验（Medium）
+- 修复（新增 `backend/src/security/outbound-url-guard.ts`）：
+  - 共享出站 URL 守卫：云元数据端点（169.254.0.0/16、metadata.google.internal 系、100.100.100.200、168.63.129.16、fd00:ec2::235）**无条件阻断**——即使 `allowPrivate`（ollama）也不例外；协议白名单 http/https；私有目标（loopback/RFC1918/ULA/link-local/IPv6）按 `allowPrivate` 选项放行
+  - `ai-endpoints.routes.ts` `validateAiUrl` 改走守卫（自建 ollama LAN 端点保持可用）
+  - `notification-dispatcher.service.ts` `sendWebhook` 在**派发时**（安全边界，覆盖所有配置入口）强制守卫；私网 webhook 需 `ALLOW_PRIVATE_WEBHOOKS=1` 显式确认（默认关）
+- 证据：outbound-url-guard 套件 13/13 PASS（7 元数据目标 allowPrivate 下仍拒、RFC1918/loopback/IPv6 语义、172.16-31 精确边界、gopher/file 协议拒）；ai-endpoints 套件 16/16（新增 ollama+metadata 400 ×3 不落库）；notification-dispatcher 套件 9/9 无回归
+
+### AG-B04 — SERIAL_HELPER_SHARED_SECRET 单共享密钥不可单点撤销（Medium）
+- 修复（`backend/src/middleware/helper-auth.middleware.ts` + `companion/serial-device-companion.ts` + `bootstrap/runtime-env.ts` + `.env.example`）：
+  - 中间件支持命名多密钥：`SERIAL_HELPER_EXTRA_SECRETS`（逗号分隔 `keyId:secret`）+ 客户端 `X-Aetherguard-Helper-Key-Id` 头；**带 key id 即只比对该命名密钥**——未知 id/不匹配/撤销后一律 401，不回落共享密钥（撤销一台 appliance 不必全员轮换）；匿名请求保持任意已配置密钥可过（legacy 兼容）；命中密钥 id 挂 `req.helperKeyId` 供审计
+  - companion 读 `SERIAL_HELPER_KEY_ID` 并随上报发送 key id 头
+  - runtime-env 生产校验每个条目（≥32 字符、≠ DEVICE_COMMAND_SECRET、≠ 共享密钥、keyId 唯一、格式合法）
+- 证据：helper-auth 套件 9/9 PASS（新增 7 用例：命名密钥通过+id 附着、撤销后 401、命名路径不回落共享密钥、跨 id 密钥 401、legacy 匿名兼容 ×3 密钥、bearer 头、未配置 503）；runtime-env + companion 套件 23/23 无回归
+
+### DP-014 — compose 引用不存在的 backend.Dockerfile + 陈旧生产脚本（Medium）
+- 修复：
+  - `docker-compose.yml` backend build 改 `context: ./backend` + `dockerfile: Dockerfile`（backend/Dockerfile 全部 COPY 路径本就 backend-相对，fresh checkout `docker compose build` 恢复可用）
+  - `deployment/production/deploy.sh`/`deploy.ps1` 重写：删 `cp .env.example .env` 引导（弱值必被生产校验拒），改为强制要求仓库根 `.env` 并指向 setup-env.sh；legacy `docker-compose` v1 调用全部改 `docker compose` v2（include/env_file long syntax 必需）；端口输出从陈旧 8888/3010 改为实际入口 127.0.0.1:8080；健康检查改 `docker compose ps`
+- 证据：`docker compose config`（临时 FASTPATH_AUTH_SECRET 下）exit 0，backend 段解析为 `context: <repo>\backend, dockerfile: Dockerfile`；`bash -n deploy.sh` exit 0
+
+### DP-007 — ci.yml release-verify 硬编码测试密钥（Medium）
+- 修复：四个字面量测试密钥改 `ci-${{ github.run_id }}-...` 运行期拼接（fork 不可见可复用字面量；run 内仍满足最小长度校验；不落入 weak-value 字面量集）
+- 证据：grep 全 workflow 无残余硬编码 SECRET/PASSWORD 字面量（仅 run_id 模板）
+
+## 验证总账（Batch 3）
+- backend `npm run typecheck` clean
+- backend `npm run test:all`：4 shards 全过 exit 0（含全部本批新套件；末 shard 65 suites / 823 tests）
+- firmware host tests（gcc 直编）：**27 passed, 0 failed**
+- rust-fastpath：`cargo test` **24/24**、`cargo clippy -- -D warnings` exit 0
+- rescue：`cargo test` **51/51**、`cargo clippy --all-targets -- -D warnings` exit 0
+- guards：route-db / repository-hygiene / no-direct-api-fetch / frontend-api-contract 4/4 exit 0（api-contract: 109 calls → 171 routes）
+- AG-B01 PoC 回归 5/5 PASS（本批未触碰 generate-bundle，回归确认无破坏）
+- `docker compose config` exit 0（临时 FASTPATH_AUTH_SECRET 下验证 backend build 段解析）；`bash -n deployment/production/deploy.sh` exit 0
+
 ## 未修复项（后续批次）
-- P2：A-06（VALID_API_KEYS 静态身份）、B03b/B02/B04（codebook/events/config 租户过滤）、RF-003/004/005 残余（body limit 已修，连接上限部分）、FE/RS/ML 中低项
+- RF-003/004/005 残余（连接上限等 fastpath 中低项）
+- FE-001/002/003（demo-mode rollback、OIDC origin check）、RS-002（audit_outcome `.ok()?` 吞错）、ML-001/004 等 ml/ 中低项、FW-002/003/004/006/008/011 固件协议项
 - DP-001 运维跟进：FTP 凭证轮换 + git 历史清洗（BFG/filter-repo）+ secret-scan guard——非纯代码可完成
 - FW-002/003/004/006/008/011：固件协议字段失配与时钟持久化（需与 M1 真实对接联调）

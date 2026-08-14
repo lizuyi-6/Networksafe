@@ -9,6 +9,8 @@ jest.mock('../../middleware/auth.middleware', () => ({
     authenticate: jest.fn((_req: any, _res: any, next: any) => next()),
     authenticateAgent: jest.fn((_req: any, _res: any, next: any) => next()),
     authenticateApiKey: jest.fn((_req: any, _res: any, next: any) => next()),
+    // AG-A06: investigation routes now use the per-agent registry middleware.
+    authenticateRegisteredAgent: jest.fn((_req: any, _res: any, next: any) => next()),
     requirePermission: jest.fn(() => (_req: any, _res: any, next: any) => next()),
     AuthenticatedRequest: jest.fn()
 }));
