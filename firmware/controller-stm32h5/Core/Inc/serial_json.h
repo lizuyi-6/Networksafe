@@ -21,6 +21,7 @@
 typedef enum {
     MSG_TYPE_COMMAND = 0,
     MSG_TYPE_HELLO,
+    MSG_TYPE_TIME_SYNC,
     MSG_TYPE_UNKNOWN
 } msg_type_t;
 
@@ -38,6 +39,9 @@ typedef struct {
     msg_type_t type;
     char command[32];              // "interlock_release" or "interlock_assert"
     hardware_grant_t grant;        // Present if command=interlock_release
+    /* FW-004: time_sync frame payload; valid only when time_valid. */
+    uint32_t time_epoch_s;
+    bool time_valid;
 } parsed_message_t;
 
 /* Initialize serial JSON */

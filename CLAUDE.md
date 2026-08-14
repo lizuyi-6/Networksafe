@@ -46,7 +46,7 @@ Firmware（STM32H563，需 ARM GCC toolchain；host-side 测试只需 gcc）：
 ```bash
 cd firmware/controller-stm32h5
 make -j$(nproc)                    # 产物 build/controller-stm32h5.elf/.bin/.hex（需 CubeMX 生成 HAL/Drivers，README.md 记录当前 .ioc 尚未初始化）
-make -f test/Makefile test         # host-side C 单测：mock_hal + controller_tasks/serial_json/interlock_driver，18 用例（含急停锁存、counter UINT32_MAX 饱和闭锁、challenge 16 槽环形窗口、serial_json RFC8259 空格/转义/键名防伪），gcc 编译无 STM32 依赖（test/Makefile 路径为父目录相对，须在 firmware/controller-stm32h5/ 根跑；cd test 会找不到 test/mock_hal.c。Windows 无 make 时可直接 gcc：`gcc -Wall -Wextra -std=c11 -Itest -ICore/Inc -ICore/Src -o test_controller.exe test/mock_hal.c test/test_stubs.c test/test_controller.c Core/Src/controller_tasks.c Core/Src/serial_json.c Core/Src/interlock_driver.c Core/Src/grant_auth.c`）
+make -f test/Makefile test         # host-side C 单测：mock_hal + controller_tasks/serial_json/interlock_driver/grant_auth，34 用例（含急停锁存、counter UINT32_MAX 饱和闭锁、challenge 16 槽环形窗口、serial_json RFC8259 空格/转义/键名防伪、FW-001 无密钥 fail-closed、FW-003 严格数字解析、FW-004 无时间同步拒绝+时钟回拨防护、FW-006 高水位持久化），gcc 编译无 STM32 依赖（test/Makefile 路径为父目录相对，须在 firmware/controller-stm32h5/ 根跑；cd test 会找不到 test/mock_hal.c。Windows 无 make 时可直接 gcc：`gcc -Wall -Wextra -std=c11 -Itest -ICore/Inc -ICore/Src -o test_controller.exe test/mock_hal.c test/test_stubs.c test/test_controller.c Core/Src/controller_tasks.c Core/Src/serial_json.c Core/Src/interlock_driver.c Core/Src/grant_auth.c`）
 ```
 
 Simulator（无额外依赖，复用 backend 的 ts-node）：

@@ -94,10 +94,27 @@ static bool json_find_string(const char *json, const char *key,
     return true;
 }
 
-static bool json_find_uint(const char *json, const char *key, uint32_t *out) {
+/* SECURITY FIX (audit 2026-08, FW-003): strict unsigned parse for
+ * security-relevant numbers (monotonicCounter, expiresAt, epochS). The old
+ * strtoul path silently accepted "-1" (wrapping to UINT32_MAX = "never
+ * expires"), "+5", trailing garbage, and overflow wraps. Grant numbers must
+ * be pure ASCII digits and land in [1, UINT32_MAX-1]; anything else parses
+ * as absent, which the validation chain denies fail-closed. */
+static bool json_find_grant_uint(const char *json, const char *key, uint32_t *out) {
     const char *p = find_value(json, key);
     if (!p) return false;
-    *out = (uint32_t)strtoul(p, NULL, 10);
+    uint32_t value = 0;
+    uint8_t digits = 0;
+    while (p[digits] >= '0' && p[digits] <= '9') {
+        uint32_t d = (uint32_t)(p[digits] - '0');
+        if (value > (UINT32_MAX - d) / 10u) return false; /* overflow */
+        value = value * 10u + d;
+        digits++;
+        if (digits > 10u) return false;
+    }
+    if (digits == 0u) return false;                 /* "-1", "+5", "abc", "" */
+    if (value == 0u || value == UINT32_MAX) return false; /* sentinels */
+    *out = value;
     return true;
 }
 
@@ -106,6 +123,12 @@ void serial_json_init(void) {
 }
 
 bool serial_json_parse(const char *line, parsed_message_t *out) {
+    /* FW-008 (audit 2026-08), documented residual: for duplicate keys the
+     * LAST occurrence wins (find_value scans forward). RFC 8259 leaves
+     * duplicates unspecified and emitters that emit them are broken anyway;
+     * the serial channel MAC binds the exact field values, so a
+     * duplicate-key frame that actually changes a MAC-covered field fails
+     * authentication fail-closed. */
     memset(out, 0, sizeof(*out));
     char type[16];
     if (!json_find_string(line, "type", type, sizeof(type))) {
@@ -120,8 +143,9 @@ bool serial_json_parse(const char *line, parsed_message_t *out) {
         if (strcmp(out->command, "interlock_release") == 0) {
             json_find_string(line, "challenge", out->grant.challenge, SERIAL_JSON_MAX_CHALLENGE);
             json_find_string(line, "policyDigest", out->grant.policy_digest, SERIAL_JSON_MAX_DIGEST);
-            json_find_uint(line, "monotonicCounter", &out->grant.monotonic_counter);
-            json_find_uint(line, "expiresAt", &out->grant.expires_at);
+            /* FW-003: strict parse; malformed/absent leaves 0 (denied). */
+            (void)json_find_grant_uint(line, "monotonicCounter", &out->grant.monotonic_counter);
+            (void)json_find_grant_uint(line, "expiresAt", &out->grant.expires_at);
             /* SECURITY FIX (audit 2026-08, FW-001): channel MAC. Parsed as
              * hex; 32 bytes (64 hex chars) expected for HMAC-SHA256. A
              * missing or malformed field leaves signature_len == 0, which
@@ -155,6 +179,14 @@ bool serial_json_parse(const char *line, parsed_message_t *out) {
     }
     if (strcmp(type, "hello") == 0) {
         out->type = MSG_TYPE_HELLO;
+        return true;
+    }
+    /* FW-004: M1 wall-clock sync. The daemon sends these periodically and
+     * right before arming a release; controller_update_time gates expiry
+     * validation on having seen at least one. */
+    if (strcmp(type, "time_sync") == 0) {
+        out->type = MSG_TYPE_TIME_SYNC;
+        out->time_valid = json_find_grant_uint(line, "epochS", &out->time_epoch_s);
         return true;
     }
     out->type = MSG_TYPE_UNKNOWN;

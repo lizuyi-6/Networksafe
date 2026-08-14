@@ -15,17 +15,40 @@ extern UART_HandleTypeDef huart3;
 
 static controller_state_t g_state;
 static uint32_t g_current_time_s = 0;
+/* SECURITY FIX (audit 2026-08, FW-004): g_current_time_s used to be written
+ * by nothing but tests (controller_update_time had no production caller),
+ * so the expiry check compared against a frozen 0 — every grant with
+ * expires_at > 0 passed forever. The controller now tracks whether a time
+ * sync has EVER arrived (daemon sends {"type":"time_sync","epochS":...});
+ * until then expiry validation fails closed. */
+static bool g_time_synced = false;
 static uint8_t g_channel_key[GRANT_AUTH_KEY_BYTES];
 static bool g_channel_key_provisioned = false;
+/* FW-006: optional persistence backend for the high-water mark. */
+static const controller_counter_store_t *g_counter_store = NULL;
+
+/* FW-004: tolerate small backwards jitter (re-sync races), reject a large
+ * clock rewind — otherwise a UART attacker could replay time_sync frames to
+ * revive the expiry window of already-issued grants. The monotonic counter
+ * independently blocks grant replay; this guard keeps the two consistent. */
+#define TIME_SYNC_MAX_REWIND_S 60u
 
 void controller_init(void) {
     memset(&g_state, 0, sizeof(g_state));
     g_state.state = INTERLOCK_STATE_ISOLATED;
-    strcpy(g_state.local_policy_digest, "policy-digest-baseline-v1");
+    /* SECURITY FIX (audit 2026-08, FW-010): no compile-time policy-digest
+     * placeholder. The local digest is a trust anchor provisioned at
+     * manufacturing/pairing (controller_set_policy_digest), exactly like
+     * the serial channel key. Until provisioned, every release is denied
+     * (empty digest never matches) — fail-closed. */
+    g_state.local_policy_digest[0] = '\0';
     g_state.high_water_counter = 0;
     g_state.se_present = true;
     g_state.feedback_ok = false;
     g_state.estop_pressed = false;
+    /* Fresh boot: no wall-clock sync yet (FW-004). */
+    g_current_time_s = 0;
+    g_time_synced = false;
     /* SECURITY FIX (audit 2026-08, FW-001): channel-key provisioning state
      * intentionally survives controller_init() — the key is provisioned once
      * at boot (manufacturing/pairing path in main.c, before the first
@@ -50,6 +73,21 @@ bool controller_provision_serial_channel_key(const uint8_t key[GRANT_AUTH_KEY_BY
 
 bool controller_channel_key_provisioned(void) {
     return g_channel_key_provisioned;
+}
+
+/* FW-006: attach a persistence backend for the high-water mark. The persisted
+ * value is loaded immediately (never lowering an in-memory mark that is
+ * already higher — e.g. a grant issued before this attach in the same boot).
+ * With no store attached the mark stays RAM-only; deployments then rely on
+ * the control-plane DB high-water and the serial channel MAC. */
+void controller_attach_counter_store(const controller_counter_store_t *store) {
+    g_counter_store = store;
+    if (store && store->load) {
+        uint32_t persisted = 0;
+        if (store->load(&persisted) && persisted > g_state.high_water_counter) {
+            g_state.high_water_counter = persisted;
+        }
+    }
 }
 
 void controller_set_policy_digest(const char *digest) {
@@ -142,6 +180,16 @@ grant_result_t controller_handle_release_request(const hardware_grant_t *grant) 
      * closes the replay window that existed when this branch did not advance
      * the counter; this is a safety tightening, not a relaxation. */
     g_state.high_water_counter = grant->monotonic_counter;
+    /* FW-006: persist the mark when a backend is attached. A failed save
+     * means the replay protection would silently weaken on power loss —
+     * revoke the release we just made and re-assert isolation fail-closed
+     * (better a lost release window than an unpersistable safety mark). */
+    if (g_counter_store && g_counter_store->save
+        && !g_counter_store->save(g_state.high_water_counter)) {
+        controller_assert_isolated();
+        serial_json_send_alert();
+        return GRANT_RESULT_DENIED;
+    }
     interlock_set_light(0, 0, 1, 0);
     serial_json_send_interlock_result(INTERLOCK_STATE_RELEASED, true);
     return GRANT_RESULT_RELEASED;
@@ -170,8 +218,10 @@ bool controller_validate_counter(uint32_t counter) {
     return counter > g_state.high_water_counter;
 }
 
-/* Task 5: validate expiry */
+/* Task 5: validate expiry — fail-closed until a time sync has arrived
+ * (FW-004: an unknown clock cannot prove the grant is still valid). */
 bool controller_validate_expiry(uint32_t expires_at) {
+    if (!g_time_synced) return false;
     return expires_at > g_current_time_s;
 }
 
@@ -236,8 +286,19 @@ void controller_send_alert(void) {
     serial_json_send_alert();
 }
 
-/* Update current time (called from RTC/1Hz tick) */
-void controller_update_time(uint32_t time_s) { g_current_time_s = time_s; }
+/* Update current time. Production callers: the M1 time_sync frame
+ * ({"type":"time_sync","epochS":N}, see main.c) and, once CubeMX brings up
+ * an RTC/tick source, the 1Hz tick. Marks the clock as synced (FW-004) and
+ * rejects a large backwards rewind (replay guard). */
+void controller_update_time(uint32_t time_s) {
+    if (g_time_synced && time_s + TIME_SYNC_MAX_REWIND_S < g_current_time_s) {
+        return;
+    }
+    g_current_time_s = time_s;
+    g_time_synced = true;
+}
+
+bool controller_time_synced(void) { return g_time_synced; }
 
 /* Assert isolated (force fail-closed) */
 void controller_assert_isolated(void) {
