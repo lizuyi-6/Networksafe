@@ -60,24 +60,25 @@ router.get('/status', async (req: AuthenticatedRequest, res: Response) => {
  * Request body:
  * - clearExisting: boolean - Clear existing data before seeding
  * - verbose: boolean - Enable verbose logging
- * - force: boolean - Force seeding in production mode (DANGEROUS)
+ *
+ * SECURITY FIX (audit 2026-08): the force escape hatch is removed — this
+ * endpoint refuses in production mode unconditionally (demo mode only).
  */
 router.post('/execute', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { clearExisting = false, verbose = true, force = false } = req.body;
+    const { clearExisting = false, verbose = true } = req.body;
 
     const options: SeedOptions = {
       clearExisting,
-      verbose,
-      force
+      verbose
     };
 
-    // Check if seeding is allowed
-    if (!SeedManager.canSeed() && !force) {
+    // Check if seeding is allowed — no force override.
+    if (!SeedManager.canSeed()) {
       return res.status(403).json({
         success: false,
         error: 'backend.seeding_not_allowed_in_production_mode',
-        message: 'Seeding is not allowed in production mode. Set APP_MODE=demo or use force=true.'
+        message: 'Seeding is not allowed in production mode. Set APP_MODE=demo.'
       });
     }
 
@@ -104,37 +105,101 @@ router.post('/execute', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 /**
- * DELETE /api/seed/clear
- * Clear all seed data
+ * POST /api/seed/clear-confirm
+ * Issue a single-use confirmation token for DELETE /api/seed/clear.
+ * Token is valid for 60 seconds and bound to the requesting user.
  *
- * Request body:
- * - force: boolean - Force clearing in production mode (DANGEROUS)
- * - verbose: boolean - Enable verbose logging
+ * SECURITY FIX (audit 2026-08): clearing used to be gated only by the admin
+ * role plus a force flag that bypassed the production check entirely. It now
+ * requires a fresh confirmation token in addition to demo mode.
  */
-router.delete('/clear', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/clear-confirm', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { force = false, verbose = true } = req.body;
-
-    const options: SeedOptions = {
-      force,
-      verbose
-    };
-
-    // Check if clearing is allowed
-    if (!SeedManager.canSeed() && !force) {
+    if (!SeedManager.canSeed()) {
       return res.status(403).json({
         success: false,
         error: 'backend.clearing_not_allowed_in_production_mode',
-        message: 'Clearing is not allowed in production mode. Set APP_MODE=demo or use force=true.'
+        message: 'Clearing is not allowed in production mode.'
+      });
+    }
+
+    const token = generateConfirmToken();
+    const userId = req.user?.userId || 'unknown';
+    const ip = req.ip || 'unknown';
+    pendingConfirmations.set(token, {
+      expiresAt: Date.now() + 60_000,
+      userId,
+      ip
+    });
+
+    // Opportunistic cleanup of expired tokens.
+    const now = Date.now();
+    for (const [key, entry] of pendingConfirmations) {
+      if (now > entry.expiresAt) {
+        pendingConfirmations.delete(key);
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      data: { confirmationToken: token, expiresIn: 60 }
+    });
+  } catch (error: any) {
+    logger.error('Failed to issue clear confirmation', { error: error.message });
+    res.status(500).json({
+      success: false,
+      error: 'backend.clear_confirmation_failed',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/seed/clear
+ * Clear all seed data.
+ *
+ * Request body:
+ * - confirmationToken: string - REQUIRED single-use token from
+ *   POST /api/seed/clear-confirm (60s TTL, bound to the requesting user)
+ * - verbose: boolean - Enable verbose logging
+ *
+ * SECURITY FIX (audit 2026-08): production mode always refuses (the force
+ * escape hatch is removed) and even demo mode requires the confirmation
+ * token above.
+ */
+router.delete('/clear', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { confirmationToken, verbose = true } = req.body;
+
+    // Single-use confirmation token, bound to the requesting user.
+    const token = typeof confirmationToken === 'string' ? confirmationToken.trim() : '';
+    const pending = token ? pendingConfirmations.get(token) : undefined;
+    if (!pending || Date.now() > pending.expiresAt || pending.userId !== (req.user?.userId || 'unknown')) {
+      if (pending) {
+        pendingConfirmations.delete(token);
+      }
+      return res.status(403).json({
+        success: false,
+        error: 'backend.clear_confirmation_required',
+        message: 'Clearing requires a fresh confirmation token from POST /api/seed/clear-confirm.'
+      });
+    }
+    pendingConfirmations.delete(token); // consume — single use
+
+    // No force override: production always refuses.
+    if (!SeedManager.canSeed()) {
+      return res.status(403).json({
+        success: false,
+        error: 'backend.clearing_not_allowed_in_production_mode',
+        message: 'Clearing is not allowed in production mode.'
       });
     }
 
     // Execute clearing
-    await SeedManager.clear(options);
+    await SeedManager.clear({ verbose });
 
     logger.info('Seed data cleared', {
-      userId: req.user?.userId,
-      options
+      userId: req.user?.userId
     });
 
     res.json({

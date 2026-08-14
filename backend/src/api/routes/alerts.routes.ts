@@ -1,5 +1,5 @@
 import { Response, Router } from 'express';
-import { authenticate, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
 import { getAgentSystem } from '../../services/agent-system.service';
@@ -228,7 +228,11 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-router.post('/:id/acknowledge', async (req: AuthenticatedRequest, res: Response) => {
+// SECURITY FIX (audit 2026-08): alert state transitions previously had no
+// role gate — any authenticated tenant_viewer could acknowledge, resolve or
+// SUPPRESS real security alerts. Operators may acknowledge/investigate;
+// resolve/suppress (hiding alerts) stays admin/tenant-admin only.
+router.post('/:id/acknowledge', requireRole('admin', 'tenant', 'tenant_operator'), async (req: AuthenticatedRequest, res: Response) => {
   const alert = await securityOperationsService.transitionAlertView(tenantOf(req), req.params.id, 'acknowledged', req.user?.email || req.user?.userId || 'unknown');
   if (!alert) {
     return sendError(res, 404, {
@@ -241,7 +245,7 @@ router.post('/:id/acknowledge', async (req: AuthenticatedRequest, res: Response)
   });
 });
 
-router.post('/:id/investigate', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/investigate', requireRole('admin', 'tenant', 'tenant_operator'), async (req: AuthenticatedRequest, res: Response) => {
   const alert = await securityOperationsService.transitionAlertView(tenantOf(req), req.params.id, 'investigating', req.user?.email || req.user?.userId || 'unknown');
   if (!alert) {
     return sendError(res, 404, {
@@ -254,7 +258,7 @@ router.post('/:id/investigate', async (req: AuthenticatedRequest, res: Response)
   });
 });
 
-router.post('/:id/resolve', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/resolve', requireRole('admin', 'tenant'), async (req: AuthenticatedRequest, res: Response) => {
   const alert = await securityOperationsService.transitionAlertView(tenantOf(req), req.params.id, 'resolved', req.user?.email || req.user?.userId || 'unknown');
   if (!alert) {
     return sendError(res, 404, {
@@ -267,7 +271,7 @@ router.post('/:id/resolve', async (req: AuthenticatedRequest, res: Response) => 
   });
 });
 
-router.post('/:id/suppress', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/suppress', requireRole('admin', 'tenant'), async (req: AuthenticatedRequest, res: Response) => {
   const alert = await securityOperationsService.transitionAlertView(tenantOf(req), req.params.id, 'suppressed', req.user?.email || req.user?.userId || 'unknown');
   if (!alert) {
     return sendError(res, 404, {

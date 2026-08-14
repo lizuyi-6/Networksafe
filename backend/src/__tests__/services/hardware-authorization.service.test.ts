@@ -480,6 +480,42 @@ describe('hardwareAuthorizationService', () => {
     }
   });
 
+  it('refuses to overwrite a provisioned gate public key (trust anchor immutability)', () => {
+    const firstKey = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+    const secondKey = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+    const gateId = `gate-immutable-${Date.now()}`;
+    const firstPem = firstKey.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+    const secondPem = secondKey.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+
+    hardwareAuthorizationService.enrollGate({
+      tenantId: 'tenant-test',
+      gateId,
+      publicKeyPem: firstPem,
+      status: 'online'
+    });
+
+    // A second enrollment presenting a DIFFERENT key must fail — the public
+    // key is the grant verification anchor and may not be silently replaced.
+    expect(() => hardwareAuthorizationService.enrollGate({
+      tenantId: 'tenant-test',
+      gateId,
+      publicKeyPem: secondPem,
+      status: 'online'
+    })).toThrow('backend.hardware_gate_public_key_immutable');
+
+    // Re-enrollment with the SAME key stays idempotent (reconnect path).
+    expect(() => hardwareAuthorizationService.enrollGate({
+      tenantId: 'tenant-test',
+      gateId,
+      publicKeyPem: firstPem,
+      status: 'online'
+    })).not.toThrow();
+
+    // The stored key is unchanged.
+    const gate = hardwareAuthorizationService.getGate(gateId);
+    expect(gate?.publicKeyPem).toBe(firstPem);
+  });
+
   it('rejects unsupported gate algorithms and non-P-256 public keys during enrollment', () => {
     const ecKeyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
     const rsaKeyPair = generateKeyPairSync('rsa', { modulusLength: 2048 });

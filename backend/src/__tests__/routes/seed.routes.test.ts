@@ -92,41 +92,43 @@ describe('Seed Routes', () => {
       expect(response.body.success).toBe(true);
       expect(mockSeedSeed).toHaveBeenCalledWith({
         clearExisting: false,
-        verbose: true,
-        force: false
+        verbose: true
       });
     });
 
-    it('executes with force flag', async () => {
+    it('ignores the removed force flag and still seeds in demo mode', async () => {
       const response = await request(app)
         .post('/api/seed/execute')
         .send({ force: true });
 
       expect(response.status).toBe(200);
-      expect(mockSeedSeed).toHaveBeenCalledWith(
-        expect.objectContaining({ force: true })
-      );
+      // force is no longer forwarded to the seed manager.
+      expect(mockSeedSeed).toHaveBeenCalledWith({
+        clearExisting: false,
+        verbose: true
+      });
     });
 
-    it('returns 403 in production mode without force', async () => {
+    it('returns 403 in production mode', async () => {
       mockSeedCanSeed.mockReturnValue(false);
 
       const response = await request(app)
         .post('/api/seed/execute')
-        .send({ force: false });
+        .send({ clearExisting: false, verbose: true });
 
       expect(response.status).toBe(403);
       expect(response.body.error).toContain('production');
     });
 
-    it('allows seeding in production with force=true', async () => {
+    it('rejects seeding in production even with force=true (escape hatch removed)', async () => {
       mockSeedCanSeed.mockReturnValue(false);
 
       const response = await request(app)
         .post('/api/seed/execute')
         .send({ force: true });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(403);
+      expect(mockSeedSeed).not.toHaveBeenCalled();
     });
 
     it('returns 500 on seeding error', async () => {
@@ -141,48 +143,111 @@ describe('Seed Routes', () => {
     });
   });
 
-  describe('DELETE /clear', () => {
-    it('clears seed data in demo mode', async () => {
+  describe('POST /clear-confirm + DELETE /clear', () => {
+    async function obtainToken(): Promise<string> {
+      const confirm = await request(app).post('/api/seed/clear-confirm');
+      expect(confirm.status).toBe(201);
+      return confirm.body.data.confirmationToken;
+    }
+
+    it('clears seed data in demo mode with a valid confirmation token', async () => {
+      mockSeedCanSeed.mockReturnValue(true);
+      const token = await obtainToken();
+
+      const response = await request(app)
+        .delete('/api/seed/clear')
+        .send({ confirmationToken: token, verbose: true });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(mockSeedClear).toHaveBeenCalledWith({ verbose: true });
+    });
+
+    it('rejects clearing without a confirmation token', async () => {
       mockSeedCanSeed.mockReturnValue(true);
 
       const response = await request(app)
         .delete('/api/seed/clear')
         .send({ verbose: true });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(mockSeedClear).toHaveBeenCalledWith(
-        expect.objectContaining({ verbose: true })
-      );
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('backend.clear_confirmation_required');
+      expect(mockSeedClear).not.toHaveBeenCalled();
     });
 
-    it('returns 403 in production mode without force', async () => {
-      mockSeedCanSeed.mockReturnValue(false);
+    it('rejects clearing with an invalid confirmation token', async () => {
+      mockSeedCanSeed.mockReturnValue(true);
 
       const response = await request(app)
         .delete('/api/seed/clear')
-        .send({});
+        .send({ confirmationToken: 'not-a-real-token' });
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toContain('production');
+      expect(mockSeedClear).not.toHaveBeenCalled();
     });
 
-    it('allows clearing in production with force=true', async () => {
+    it('rejects clearing in production mode even with a valid confirmation token', async () => {
       mockSeedCanSeed.mockReturnValue(false);
 
       const response = await request(app)
         .delete('/api/seed/clear')
-        .send({ force: true });
+        .send({ confirmationToken: 'whatever' });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('backend.clear_confirmation_required');
+      expect(mockSeedClear).not.toHaveBeenCalled();
+    });
+
+    it('refuses to issue a confirmation token in production mode', async () => {
+      mockSeedCanSeed.mockReturnValue(false);
+
+      const response = await request(app).post('/api/seed/clear-confirm');
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('backend.clearing_not_allowed_in_production_mode');
+    });
+
+    it('consumes the confirmation token (single use only)', async () => {
+      mockSeedCanSeed.mockReturnValue(true);
+      const token = await obtainToken();
+
+      const first = await request(app)
+        .delete('/api/seed/clear')
+        .send({ confirmationToken: token });
+      expect(first.status).toBe(200);
+
+      const second = await request(app)
+        .delete('/api/seed/clear')
+        .send({ confirmationToken: token });
+      expect(second.status).toBe(403);
+      expect(second.body.error).toBe('backend.clear_confirmation_required');
+      expect(mockSeedClear).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects an expired confirmation token', async () => {
+      mockSeedCanSeed.mockReturnValue(true);
+      const token = await obtainToken();
+
+      const realNow = Date.now;
+      const spy = jest.spyOn(Date, 'now').mockReturnValue(realNow() + 120_000);
+      const response = await request(app)
+        .delete('/api/seed/clear')
+        .send({ confirmationToken: token });
+      spy.mockRestore();
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('backend.clear_confirmation_required');
+      expect(mockSeedClear).not.toHaveBeenCalled();
     });
 
     it('returns 500 on clear error', async () => {
       mockSeedClear.mockRejectedValue(new Error('Clear failed'));
+      mockSeedCanSeed.mockReturnValue(true);
+      const token = await obtainToken();
 
       const response = await request(app)
         .delete('/api/seed/clear')
-        .send({});
+        .send({ confirmationToken: token });
 
       expect(response.status).toBe(500);
     });

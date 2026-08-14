@@ -219,6 +219,21 @@ class HardwareAuthorizationService {
     this.assertPrepared();
     const now = new Date().toISOString();
     const existing = this.getGate(input.gateId);
+
+    // SECURITY FIX (audit 2026-08, Critical): the gate public_key_pem is the
+    // verification anchor for every hardware grant signature. Registration
+    // authenticates only the shared static DEVICE_API_KEYS list, so a
+    // compromised appliance could previously upsert its own key here and
+    // forge grants for any gate. Once a key is provisioned it is immutable
+    // through this path; rotation must go through a dedicated, audited admin
+    // flow.
+    if (
+      existing?.publicKeyPem
+      && String(input.publicKeyPem).trim() !== String(existing.publicKeyPem).trim()
+    ) {
+      throw new Error('backend.hardware_gate_public_key_immutable');
+    }
+
     const status = input.status || existing?.status || 'enrolled';
     const displayName = input.displayName || existing?.displayName || input.gateId;
     const algorithm = input.algorithm || existing?.algorithm || 'ECDSA_P256_SHA256';

@@ -27,6 +27,7 @@ jest.mock('../../services/device-registry.service', () => ({
   updateDeviceStatus: jest.fn().mockResolvedValue({}),
   setDeviceOffline: jest.fn().mockResolvedValue({}),
   getCodebook: jest.fn().mockReturnValue({ codes: {} }),
+  getDeviceById: jest.fn(),
   addDeviceEvent: jest.fn().mockResolvedValue({}),
 }));
 
@@ -181,6 +182,7 @@ describe('DeviceGateway', () => {
     mockSocket.connected = true;
     mockSocket.deviceId = undefined;
     mockSocket.tenantContext = undefined;
+    mockSocket.hardwareGateId = undefined;
     mockSocket.handshake = { address: '127.0.0.1', headers: {} };
 
     // Reset mockServer.on to capture new handlers
@@ -365,6 +367,79 @@ describe('DeviceGateway', () => {
         status: 'success',
       }));
       expect(logger.info).toHaveBeenCalledWith('[DeviceGateway] Device registered', expect.any(Object));
+    });
+
+    // SECURITY FIX (audit 2026-08): registration must not be able to overwrite
+    // a provisioned device public key (grant verification anchor).
+    it('rejects a register that presents a different public key than the provisioned one', async () => {
+      jest.spyOn(payloadValidator, 'validateDeviceRegisterPayload').mockReturnValueOnce({
+        device_id: 'esp32-001',
+        api_key: 'test-device-key-001',
+        version: '1.0.0',
+        chip_model: 'ESP32',
+        public_key_pem: 'attacker-key',
+      } as any);
+      (deviceRoutes.getDeviceById as jest.Mock).mockReturnValueOnce({
+        deviceId: 'esp32-001',
+        physicalAuth: { publicKeyPem: 'provisioned-key' },
+      });
+      jest.spyOn(hardwareAuthorizationService, 'getGate').mockReturnValueOnce(undefined as any);
+      new DeviceGateway(mockHttpServer as HttpServer);
+      const handler = getHandler('register');
+
+      await callHandlerAndWait(handler, { device_id: 'esp32-001', api_key: 'test-device-key-001' });
+
+      expect(mockSocket.emit).toHaveBeenCalledWith('register_error', {
+        error: 'backend.device_public_key_already_provisioned',
+        reason: 'device_key_immutable',
+      });
+      expect(mockSocket.disconnect).toHaveBeenCalled();
+      expect(deviceRoutes.registerDevice).not.toHaveBeenCalled();
+      expect(mockSocket.deviceId).toBeUndefined();
+    });
+
+    it('rejects a register that omits the public key for a device whose key is provisioned', async () => {
+      (deviceRoutes.getDeviceById as jest.Mock).mockReturnValueOnce({
+        deviceId: 'esp32-001',
+        physicalAuth: { publicKeyPem: 'provisioned-key' },
+      });
+      new DeviceGateway(mockHttpServer as HttpServer);
+      const handler = getHandler('register');
+
+      await callHandlerAndWait(handler, { device_id: 'esp32-001', api_key: 'test-device-key-001' });
+
+      expect(mockSocket.emit).toHaveBeenCalledWith('register_error', {
+        error: 'backend.device_public_key_already_provisioned',
+        reason: 'device_key_immutable',
+      });
+      expect(mockSocket.disconnect).toHaveBeenCalled();
+      expect(deviceRoutes.registerDevice).not.toHaveBeenCalled();
+    });
+
+    it('allows re-register with the SAME provisioned public key', async () => {
+      jest.spyOn(payloadValidator, 'validateDeviceRegisterPayload').mockReturnValueOnce({
+        device_id: 'esp32-001',
+        api_key: 'test-device-key-001',
+        version: '1.0.0',
+        chip_model: 'ESP32',
+        public_key_pem: 'provisioned-key',
+      } as any);
+      (deviceRoutes.getDeviceById as jest.Mock).mockReturnValueOnce({
+        deviceId: 'esp32-001',
+        physicalAuth: { publicKeyPem: 'provisioned-key' },
+      });
+      jest.spyOn(hardwareAuthorizationService, 'getGate').mockReturnValueOnce(undefined as any);
+      jest.spyOn(hardwareAuthorizationService, 'enrollGate').mockImplementationOnce(() => ({} as any));
+      new DeviceGateway(mockHttpServer as HttpServer);
+      const handler = getHandler('register');
+
+      await callHandlerAndWait(handler, { device_id: 'esp32-001', api_key: 'test-device-key-001' });
+
+      expect(mockSocket.emit).toHaveBeenCalledWith('register_success', expect.any(Object));
+      expect(deviceRoutes.registerDevice).toHaveBeenCalledWith(expect.objectContaining({
+        deviceId: 'esp32-001',
+        physicalAuth: { publicKeyPem: 'provisioned-key' },
+      }));
     });
 
     it('rejects invalid payload', async () => {

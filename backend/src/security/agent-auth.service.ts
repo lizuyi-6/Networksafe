@@ -257,11 +257,40 @@ export class AgentAuthService {
    */
   async verifyAgent(agentId: string, apiKey: string): Promise<AuthenticatedAgent | null> {
     try {
+      if (!apiKey) {
+        return null;
+      }
+
       // Check cache first
       const cacheKey = `agent:auth:${agentId}`;
       const cached = await redisService.get(cacheKey);
       if (cached) {
-        return JSON.parse(cached);
+        try {
+          const parsed = JSON.parse(cached) as AuthenticatedAgent & { apiKeyHash?: string };
+          // SECURITY FIX (audit 2026-08, Critical): a cache hit must NEVER skip
+          // apiKey verification. The previous behavior returned the cached
+          // agent for any non-empty apiKey for the whole TTL window, letting
+          // an attacker authenticate as a recently-connected agent with a
+          // bogus key. Re-verify the presented key against the hash stored
+          // alongside the cached entry; legacy entries without a hash are
+          // treated as a cache miss and fall through to the DB path.
+          if (
+            typeof parsed.apiKeyHash === 'string'
+            && parsed.apiKeyHash.length === 64
+            && this.verifyApiKeyHash(apiKey, parsed.apiKeyHash)
+          ) {
+            return {
+              agentId: parsed.agentId,
+              hostname: parsed.hostname,
+              platform: parsed.platform,
+              tenantId: parsed.tenantId
+            };
+          }
+          logger.warn('Agent auth cache entry rejected (key mismatch or legacy entry)', { agentId });
+        } catch {
+          // Malformed cache entry -> treat as cache miss, fall through to DB.
+          logger.warn('Agent auth cache entry unparseable, falling back to DB', { agentId });
+        }
       }
 
       // Check database
@@ -292,8 +321,13 @@ export class AgentAuthService {
         tenantId: result.tenant_id || undefined
       };
 
-      // Cache successful authentication
-      await redisService.set(cacheKey, JSON.stringify(agent), this.CACHE_TTL);
+      // Cache successful authentication. Store the api key hash alongside
+      // the entry so cache hits can re-verify the presented key (see above).
+      await redisService.set(
+        cacheKey,
+        JSON.stringify({ ...agent, apiKeyHash: result.api_key_hash }),
+        this.CACHE_TTL
+      );
 
       return agent;
     } catch (error: any) {

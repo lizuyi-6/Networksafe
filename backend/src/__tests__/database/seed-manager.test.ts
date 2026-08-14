@@ -8,6 +8,7 @@ import os from 'os';
 import path from 'path';
 import { initDatabase, closeDatabase } from '../../config/database';
 import { SeedManager } from '../../database/seeds/seed-manager';
+import { setAppMode } from '../../config/app-mode';
 
 jest.mock('../../database/seeds/demo_data', () => ({
     seedDatabase: jest.fn().mockResolvedValue(undefined),
@@ -20,10 +21,16 @@ describe('SeedManager', () => {
     beforeAll(async () => {
         fs.rmSync(testDataDir, { recursive: true, force: true });
         process.env.DATA_DIR = testDataDir;
+        // Lab runtime allows demo features; seed/clear are demo-only now that
+        // the force escape hatch has been removed (audit 2026-08).
+        process.env.ENTERPRISE_RUNTIME_MODE = 'lab';
+        setAppMode('demo');
         await initDatabase();
     });
 
     afterAll(() => {
+        setAppMode('production');
+        delete process.env.ENTERPRISE_RUNTIME_MODE;
         closeDatabase();
         fs.rmSync(testDataDir, { recursive: true, force: true });
     });
@@ -36,13 +43,22 @@ describe('SeedManager', () => {
         expect(typeof SeedManager.isSeeded()).toBe('boolean');
     });
 
-    it('seed() with force=true populates the database', async () => {
-        await expect(SeedManager.seed({ force: true } as any)).resolves.not.toThrow();
+    it('seed() populates the database in demo mode', async () => {
+        await expect(SeedManager.seed({})).resolves.not.toThrow();
     });
 
     it('seed() is idempotent', async () => {
-        await expect(SeedManager.seed({ force: true } as any)).resolves.not.toThrow();
-        await expect(SeedManager.seed({ force: true } as any)).resolves.not.toThrow();
+        await expect(SeedManager.seed({})).resolves.not.toThrow();
+        await expect(SeedManager.seed({})).resolves.not.toThrow();
+    });
+
+    it('seed() refuses in production even with force=true (escape hatch removed)', async () => {
+        setAppMode('production');
+        try {
+            await expect(SeedManager.seed({ force: true } as any)).rejects.toThrow('not allowed in production mode');
+        } finally {
+            setAppMode('demo');
+        }
     });
 
     it('status() returns an object', () => {
@@ -54,7 +70,16 @@ describe('SeedManager', () => {
         }
     });
 
-    it('clear() with force=true removes seeded data', async () => {
-        await expect(SeedManager.clear({ force: true } as any)).resolves.not.toThrow();
+    it('clear() removes seeded data in demo mode', async () => {
+        await expect(SeedManager.clear({})).resolves.not.toThrow();
+    });
+
+    it('clear() refuses in production even with force=true (escape hatch removed)', async () => {
+        setAppMode('production');
+        try {
+            await expect(SeedManager.clear({ force: true } as any)).rejects.toThrow('not allowed in production mode');
+        } finally {
+            setAppMode('demo');
+        }
     });
 });
