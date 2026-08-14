@@ -68,6 +68,19 @@ pub struct ActionOutcome {
     pub audit_event_ids: Vec<u64>,
 }
 
+/// Post-execution audit result. RS-002 (audit 2026-08): the previous
+/// `.ok()?` / `let _ =` silently dropped BOTH the outcome-append failure
+/// and the truncation-anchor persist failure — an executed action could
+/// vanish from the tamper-evident chain with the operator still seeing a
+/// clean success (worst exactly in the disk-full scenario the chain exists
+/// to detect). Errors are now surfaced to the caller, which must degrade
+/// the reported decision instead of passing silently.
+struct OutcomeAudit {
+    event_id: Option<u64>,
+    append_error: Option<String>,
+    anchor_error: Option<String>,
+}
+
 impl Runtime {
     pub fn load(config_path: &Path) -> Runtime {
         let (config, config_error) = match RescueConfig::load(config_path) {
@@ -217,25 +230,83 @@ impl Runtime {
         after: &str,
         decision: &str,
         reason: &str,
-    ) -> Option<u64> {
+    ) -> OutcomeAudit {
         let before = self
             .snapshot
             .last_bridge_state
             .clone()
             .unwrap_or_else(|| "unknown".to_string());
-        let rec = AuditLog::new(events)
-            .append(core_event(
-                actor, auth_method, command, target, &before, after, decision, reason, after,
-            ))
-            .ok()?;
-        // Update the truncation anchor after every append.
-        if let Some(snap_path) = self.snapshot_path() {
-            self.snapshot.last_event_hash = Some(rec.event_hash.clone());
-            self.snapshot.event_count = rec.core.event_id;
-            self.snapshot.updated_at_epoch_s = epoch_s();
-            let _ = store_snapshot(&snap_path, &self.snapshot);
+        let appended = AuditLog::new(events).append(core_event(
+            actor, auth_method, command, target, &before, after, decision, reason, after,
+        ));
+        match appended {
+            Err(e) => OutcomeAudit {
+                event_id: None,
+                append_error: Some(e.to_string()),
+                anchor_error: None,
+            },
+            Ok(rec) => {
+                // Update the truncation anchor after every append.
+                let mut anchor_error = None;
+                if let Some(snap_path) = self.snapshot_path() {
+                    self.snapshot.last_event_hash = Some(rec.event_hash.clone());
+                    self.snapshot.event_count = rec.core.event_id;
+                    self.snapshot.updated_at_epoch_s = epoch_s();
+                    if let Err(e) = store_snapshot(&snap_path, &self.snapshot) {
+                        anchor_error = Some(e.to_string());
+                    }
+                }
+                OutcomeAudit {
+                    event_id: Some(rec.core.event_id),
+                    append_error: None,
+                    anchor_error,
+                }
+            }
         }
-        Some(rec.core.event_id)
+    }
+
+    /// Fold an OutcomeAudit into a final ActionOutcome without ever hiding a
+    /// lost audit record: a failed outcome append downgrades the decision to
+    /// `error` (the action DID run — the operator must know its only
+    /// tamper-evident trace is missing); a failed anchor persist keeps the
+    /// decision but flags the degraded truncation detection in the reason.
+    fn finalize_outcome(
+        &self,
+        intent_id: u64,
+        audit: OutcomeAudit,
+        decision: &str,
+        reason: String,
+        appliance: Option<ApplianceStatus>,
+        exit_code: Option<i32>,
+    ) -> ActionOutcome {
+        let mut ids = vec![intent_id];
+        if let Some(id) = audit.event_id {
+            ids.push(id);
+        }
+        match audit.append_error {
+            Some(e) => ActionOutcome {
+                decision: "error".to_string(),
+                reason: format!(
+                    "audit_outcome_lost: decision={decision} reason={reason}; append failed: {e}"
+                ),
+                appliance,
+                exit_code,
+                audit_event_ids: ids,
+            },
+            None => {
+                let reason = match audit.anchor_error {
+                    Some(e) => format!("{reason}; audit_anchor_persist_failed: {e}"),
+                    None => reason,
+                };
+                ActionOutcome {
+                    decision: decision.to_string(),
+                    reason,
+                    appliance,
+                    exit_code,
+                    audit_event_ids: ids,
+                }
+            }
+        }
     }
 
     /// Safe-side isolate. Sends interlock_assert; reports confirmed state
@@ -281,7 +352,7 @@ impl Runtime {
                 status.detail.clone().unwrap_or_default()
             )
         };
-        let outcome_id = self.audit_outcome(
+        let outcome_audit = self.audit_outcome(
             &events,
             actor,
             auth_method,
@@ -291,13 +362,14 @@ impl Runtime {
             decision,
             &out_reason,
         );
-        ActionOutcome {
-            decision: decision.to_string(),
-            reason: out_reason,
-            appliance: Some(status),
-            exit_code: None,
-            audit_event_ids: [Some(intent_id), outcome_id].into_iter().flatten().collect(),
-        }
+        self.finalize_outcome(
+            intent_id,
+            outcome_audit,
+            decision,
+            out_reason,
+            Some(status),
+            None,
+        )
     }
 
     pub fn restart_primary(
@@ -327,7 +399,7 @@ impl Runtime {
         };
         match decision {
             RestartDecision::NotAllowlisted => {
-                let outcome_id = self.audit_outcome(
+                let outcome_audit = self.audit_outcome(
                     &events,
                     actor,
                     auth_method,
@@ -337,13 +409,14 @@ impl Runtime {
                     "denied",
                     "service_not_allowlisted",
                 );
-                ActionOutcome {
-                    decision: "denied".to_string(),
-                    reason: "service_not_allowlisted".to_string(),
-                    appliance: None,
-                    exit_code: None,
-                    audit_event_ids: [Some(intent_id), outcome_id].into_iter().flatten().collect(),
-                }
+                self.finalize_outcome(
+                    intent_id,
+                    outcome_audit,
+                    "denied",
+                    "service_not_allowlisted".to_string(),
+                    None,
+                    None,
+                )
             }
             RestartDecision::Allowed(argv) => {
                 let result = executor.execute(&argv);
@@ -352,7 +425,7 @@ impl Runtime {
                     Ok(c) => ("error".to_string(), format!("restart_exit_{c}"), Some(c)),
                     Err(e) => ("error".to_string(), format!("restart_spawn_failed: {e}"), None),
                 };
-                let outcome_id = self.audit_outcome(
+                let outcome_audit = self.audit_outcome(
                     &events,
                     actor,
                     auth_method,
@@ -362,13 +435,7 @@ impl Runtime {
                     &decision,
                     &reason,
                 );
-                ActionOutcome {
-                    decision,
-                    reason,
-                    appliance: None,
-                    exit_code: code,
-                    audit_event_ids: [Some(intent_id), outcome_id].into_iter().flatten().collect(),
-                }
+                self.finalize_outcome(intent_id, outcome_audit, &decision, reason, None, code)
             }
         }
     }
@@ -607,6 +674,65 @@ mod tests {
         let out = rt.isolate("op", "cli", "drill");
         assert_eq!(out.decision, "denied");
         assert!(out.reason.starts_with("audit_unwritable_action_refused"));
+    }
+
+    /// RS-002 (audit 2026-08): a post-execution outcome-append failure must
+    /// surface as decision=error — never a silent success — and must not
+    /// fabricate an outcome event id. The executor callback runs between the
+    /// audited intent and the outcome append, so it is the sabotage point.
+    #[test]
+    fn lost_outcome_audit_degrades_decision_to_error() {
+        let (root, mut rt) = setup("rs002-append", None);
+        let events = root.join("data").join(EVENTS_FILE);
+
+        struct SabotageExecutor {
+            events: std::path::PathBuf,
+        }
+        impl RestartExecutor for SabotageExecutor {
+            fn execute(&mut self, _argv: &[String]) -> Result<i32, String> {
+                // Action runs "successfully", then the audit log breaks
+                // (disk-full analogue) before the outcome append.
+                let _ = std::fs::remove_file(&self.events);
+                std::fs::create_dir_all(&self.events).unwrap();
+                Ok(0)
+            }
+        }
+
+        let mut exec = SabotageExecutor { events };
+        let out = rt.restart_primary("op", "cli", "backend", &mut exec);
+        assert_eq!(out.decision, "error");
+        assert!(out.reason.starts_with("audit_outcome_lost"), "got: {}", out.reason);
+        assert!(out.reason.contains("decision=allowed reason=restart_exit_0"));
+        assert!(out.reason.contains("append failed"));
+        // Only the intent id is real; the outcome event never existed.
+        assert_eq!(out.audit_event_ids, vec![1]);
+    }
+
+    /// RS-002: a failed truncation-anchor persist keeps the decision (the
+    /// outcome event IS in the chain) but flags the degraded truncation
+    /// detection in the reason instead of discarding the error.
+    #[test]
+    fn failed_anchor_persist_flags_degraded_truncation_detection() {
+        let (root, mut rt) = setup("rs002-anchor", None);
+        let snapshot = root.join("data").join(SNAPSHOT_FILE);
+
+        struct SabotageExecutor {
+            snapshot: std::path::PathBuf,
+        }
+        impl RestartExecutor for SabotageExecutor {
+            fn execute(&mut self, _argv: &[String]) -> Result<i32, String> {
+                let _ = std::fs::remove_file(&self.snapshot);
+                std::fs::create_dir_all(&self.snapshot).unwrap();
+                Ok(0)
+            }
+        }
+
+        let mut exec = SabotageExecutor { snapshot };
+        let out = rt.restart_primary("op", "cli", "backend", &mut exec);
+        assert_eq!(out.decision, "allowed");
+        assert!(out.reason.contains("audit_anchor_persist_failed"), "got: {}", out.reason);
+        // Both events really are in the chain.
+        assert_eq!(out.audit_event_ids, vec![1, 2]);
     }
 
     #[test]

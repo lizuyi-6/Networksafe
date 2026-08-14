@@ -39,6 +39,12 @@ static void process_rx_line(char *line) {
         } else if (strcmp(msg.command, "interlock_assert") == 0) {
             controller_assert_isolated();
         }
+    } else if (msg.type == MSG_TYPE_TIME_SYNC) {
+        /* FW-004: M1 wall-clock sync — expiry validation fails closed until
+         * at least one valid time_sync frame arrives. */
+        if (msg.time_valid) {
+            controller_update_time(msg.time_epoch_s);
+        }
     }
 }
 
@@ -64,22 +70,30 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     }
 }
 
+/* FW-009 (audit 2026-08): ISR-context work is deferred to the main loop via
+ * pending flags. The previous callbacks called controller_handle_estop() /
+ * controller_send_heartbeat() directly, which drive HAL_UART_Transmit with a
+ * 100 ms timeout INSIDE interrupt context — a reentrancy/robustness hazard
+ * (blocking ISR, potential HAL state corruption when an RX complete fires
+ * mid-transmit). ISRs now only set volatile flags; all serial I/O happens in
+ * thread mode. */
+static volatile bool g_estop_pending = false;
+static volatile bool g_heartbeat_due = false;
+
 /* Heartbeat timer callback (TIM6, every 5s) */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim == &htim6) {
-        controller_send_heartbeat();
+        g_heartbeat_due = true;
     }
     if (htim == &htim7) {
-        if (interlock_read_estop()) {
-            controller_handle_estop();
-        }
+        g_estop_pending = true; /* sampled e-stop poll timer */
     }
 }
 
 /* EXTI callback (E-stop button PC13) */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     if (GPIO_Pin == ESTOP_BUTTON_PIN) {
-        controller_handle_estop();
+        g_estop_pending = true;
     }
 }
 
@@ -104,7 +118,15 @@ void controller_main_loop(void) {
             controller_send_state_report();
             last_report = now;
         }
-        if (interlock_read_estop()) {
+        /* FW-009: drain ISR-pending work in thread mode. The e-stop handler
+         * also runs directly when the pin still reads pressed (belt and
+         * braces: the physical NC circuit already breaks the relay). */
+        if (g_heartbeat_due) {
+            g_heartbeat_due = false;
+            controller_send_heartbeat();
+        }
+        if (g_estop_pending || interlock_read_estop()) {
+            g_estop_pending = false;
             controller_handle_estop();
         }
     }

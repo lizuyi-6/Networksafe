@@ -123,6 +123,11 @@ const daemon = new GatewayDaemon({
     if (frame.type === 'apply_ruleset') {
       applyRuleset(frame.ruleset!);
     }
+    if (frame.type === 'time_sync') {
+      // FW-004: feed the M2 wall clock — the firmware fails expiry
+      // validation closed until it has seen one of these frames.
+      port.write(JSON.stringify({ type: 'time_sync', epochS: frame.epochS }) + '\n');
+    }
     if (frame.type === 'command') {
       // Send command to controller via serial. FW-001: the MAC-authenticated
       // grant context travels on the wire in the flat field layout the M2

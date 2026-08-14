@@ -75,6 +75,19 @@ void controller_set_policy_digest(const char *digest);
 bool controller_provision_serial_channel_key(const uint8_t key[GRANT_AUTH_KEY_BYTES]);
 bool controller_channel_key_provisioned(void);
 
+/* SECURITY FIX (audit 2026-08, FW-006): pluggable persistence for the
+ * monotonic-counter high-water mark. Without a store the mark is RAM-only
+ * and resets to 0 on power loss (replay window: the control-plane DB
+ * high-water and the channel MAC remain as independent defenses). With a
+ * store attached, the mark is loaded at attach time and SAVED after every
+ * successful release; a save failure revokes the release fail-closed. */
+typedef struct {
+    bool (*load)(uint32_t *out_counter);   /* return false when unavailable */
+    bool (*save)(uint32_t counter);
+} controller_counter_store_t;
+
+void controller_attach_counter_store(const controller_counter_store_t *store);
+
 /* Task 1: Receive and handle release request */
 grant_result_t controller_handle_release_request(const hardware_grant_t *grant);
 
@@ -127,8 +140,13 @@ bool controller_get_feedback_ok(void);
 /* Alert */
 void controller_send_alert(void);
 
-/* Update current time (called from RTC/1Hz tick) */
+/* Update wall clock from a trusted time source (M1 time_sync frame / RTC
+ * tick). Marks the clock synced — expiry validation fails closed until this
+ * has run at least once (FW-004). Large backwards rewinds are rejected. */
 void controller_update_time(uint32_t time_s);
+
+/* FW-004: whether any time sync has been accepted since boot. */
+bool controller_time_synced(void);
 
 /* Assert isolated (force fail-closed) */
 void controller_assert_isolated(void);

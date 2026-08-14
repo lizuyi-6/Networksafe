@@ -105,8 +105,57 @@
 - AG-B01 PoC 回归 5/5 PASS（本批未触碰 generate-bundle，回归确认无破坏）
 - `docker compose config` exit 0（临时 FASTPATH_AUTH_SECRET 下验证 backend build 段解析）；`bash -n deployment/production/deploy.sh` exit 0
 
+## Batch 4 — RS/FW 批（本 PR）
+
+### RS-002 — audit_outcome `.ok()?` 吞错（Medium，VERIFIED）
+- 修复（`rescue/src/runtime.rs`）：
+  - `audit_outcome` 返回 `OutcomeAudit`（event_id / append_error / anchor_error）而非 `Option<u64>`——outcome append 失败与截断锚持久化失败都不再被吞
+  - 新增 `finalize_outcome` 折叠规则：**append 失败 → decision 降级 `error`**（动作已执行，操作员必须知道其唯一防篡改痕迹缺失，reason 保留原 decision/reason + `audit_outcome_lost: append failed`）；**锚持久化失败 → decision 保持但 reason 追加 `audit_anchor_persist_failed`**（事件已在链上，仅截断检测降级）
+  - 三个调用点（isolate / restart-primary denied / restart-primary executed）全部切换
+- 证据：`cargo test` **53/53**（新增 2 回归：executor 内破坏 events 文件 → decision=error + reason 前缀 `audit_outcome_lost` + 伪造 id 不存在；破坏 snapshot 文件 → decision 仍 allowed + reason 含 `audit_anchor_persist_failed` + 双 id 真实在链）
+
+### RS-001 — run-drills.mjs 陈旧 feedback 语义（Medium/High）
+- 修复（`scripts/rescue/run-drills.mjs`）：DRILL-001b/SEC-005/SEC-005b/SEC-007 的 mock frame 从反转语义改为与固件/daemon/rescue runtime 三方一致的语义（feedbackOk=false=继电器开=物理隔离确认）；SEC-005 现为焊死触点场景（isolated+feedbackOk=true → 不确认），SEC-005b 现为缺 feedback 场景（feedbackOk=None → 不确认）
+- 证据：`cargo build --release` 后 `node scripts/rescue/run-drills.mjs` **12/12 PASS**——验证链恢复：drill 绿灯现在验证的是**新**二进制语义（此前 target/release 是 HEAD 旧版，绿灯验证陈旧语义）
+
+### FW-003 — `"expiresAt":"-1"` strtoul 回绕 UINT32_MAX 永不过期（High）
+- 修复（`firmware/.../serial_json.c`）：新增 `json_find_grant_uint` 严格解析（纯 ASCII 数字、[1, UINT32_MAX-1]、≤10 位、溢出拒绝）替代 strtoul——`-1`/`+5`/尾随垃圾/溢出/UINT32_MAX 哨兵全部按"字段缺失"处理 → 校验链 fail-closed 拒绝
+- 证据：test_controller 新增 `FW-003: negative/sentinel/overflow numbers parse as absent` 断言 6 组畸形输入全 0、边界值正常解析
+
+### FW-004 — g_current_time_s 恒 0 使过期检查形同虚设（High）
+- 修复（固件 + daemon + 部署 wrapper 三层）：
+  - `controller_tasks.c`：`g_time_synced` 门控——`controller_validate_expiry` 在从未收到时间同步时**恒 false**（未知时钟无法证明 grant 仍有效）；`controller_update_time` 拒绝大幅回拨（>60s，防 UART 重放 time_sync 复活过期窗口），小抖动容忍
+  - `serial_json.c/.h` + `main.c`：新 `time_sync` 帧类型（`{"type":"time_sync","epochS":N}`），epochS 用同一严格解析
+  - `gateway-daemon.ts`：`emitTimeSync()`（启动即发 + 随 watchdog 周期 + 每次 arm release 前）——M1→M2 时钟馈送闭环；`DaemonFrame.epochS` 字段
+  - 部署 wrapper `aetherguard-gateway-daemon.ts`：time_sync 帧写串口
+- 证据：固件新增 4 用例（未同步恒拒、大幅回拨拒+小抖动收、未同步时结构完好 grant 仍拒、time_sync 解析）；simulator `npm run sim` exit 0（4/4 PASS）+ 4 场景 exit 0
+
+### FW-006 — 高水位 RAM-only 断电复位（Medium）
+- 修复（`controller_tasks.c/.h`）：`controller_attach_counter_store`（load/save 函数指针对，生产由 SE/backup-register 后端实现）——attach 时载入（不降低已在内存中更高的标记）；成功 release 后 save，**save 失败撤销该 release 并回隔离**（宁失释放窗口不失安全标记）；无 store 保持 RAM-only 兼容（控制面 DB 高水位 + 串口 MAC 仍独立防线）
+- 证据：新增 2 用例——`FW-006: persisted high-water survives a power cycle`（双 boot 文件存储，跨"断电"重放同 counter 被拒、更大 counter 通过）；`failing save revokes the release`（save 失败 → DENIED + ISOLATED）。测试基建用文件级 static store（栈上 struct 挂全局会悬垂——本批实测崩溃后修正，测试 main 加 setvbuf 无缓冲定位崩溃点）
+
+### FW-008 — 解析器容错未文档化（Low）
+- 修复：`serial_json_parse` 头注释文档化 duplicate-key last-wins 残余（RFC 8259 未定义；MAC 绑定字段值，改 MAC 覆盖字段的重复键帧验签必败 fail-closed）
+
+### FW-009 — ISR 内 HAL_UART_Transmit（Low）
+- 修复（`main.c`）：TIM6/TIM7/EXTI 回调只置 volatile 标志（`g_heartbeat_due`/`g_estop_pending`），所有串口 I/O 移到主循环线程态；e-stop 保留主循环直采（双保险）
+
+### FW-010 — 硬编码占位 policy digest（Medium）
+- 修复（`controller_tasks.c`）：`controller_init` 不再 `strcpy` 占位串——本地 digest 与 channel key 同为制造/配对期供给的信任锚，未供给时空串永不匹配 → fail-closed（测试经 `controller_set_policy_digest` 显式供给）
+
+### FW-011 — 修复未提交（流程项）
+- 修复：本批全部固件改动随分支提交（此前 FW-001 修复 diff 长期滞留工作树）
+
+## 验证总账（Batch 4）
+- firmware host tests（gcc 直编，含 grant_auth.c）：**34 passed, 0 failed**（AGENTS.md/CLAUDE.md 同步 34 用例清单）
+- rescue：`cargo test` **53/53**；`cargo build --release` exit 0；drills **12/12**（新二进制）
+- simulator：`npm run sim` exit 0；`test:invalid-sig`/`counter-rollback`/`heartbeat-stale`/`estop` 全 exit 0
+- backend：typecheck clean；companion + final-defense 套件 27/27；`npm run test:all` 4 shards（见合并前验证）
+- 调试产物已清理（test_controller.exe / tc_a.exe / *.txt / *.out）
+
 ## 未修复项（后续批次）
 - RF-003/004/005 残余（连接上限等 fastpath 中低项）
-- FE-001/002/003（demo-mode rollback、OIDC origin check）、RS-002（audit_outcome `.ok()?` 吞错）、ML-001/004 等 ml/ 中低项、FW-002/003/004/006/008/011 固件协议项
+- FE-001/002/003（demo-mode rollback、OIDC origin check）
+- FW-005（challenge 16 槽环形窗口残余——设计权衡，后端 monotonic counter 是真正防重放锚）、FW-007（policyDigest 非常时比较——FW-001 已上 MAC，时序泄露无增量）、FW-002 残余（M1/M2 真实对接联调）
+- ML-001/002/003/004/005/007/008/009/011/012 + ML-GOV-1/2（ml/ 工作流治理项）
 - DP-001 运维跟进：FTP 凭证轮换 + git 历史清洗（BFG/filter-repo）+ secret-scan guard——非纯代码可完成
-- FW-002/003/004/006/008/011：固件协议字段失配与时钟持久化（需与 M1 真实对接联调）

@@ -39,12 +39,19 @@ export interface ControllerFrame {
 
 /** Frame the daemon emits to drive the appliance bridge / relay / audit bus. */
 export interface DaemonFrame {
-  type: 'apply_ruleset' | 'command';
+  type: 'apply_ruleset' | 'command' | 'time_sync';
   ruleset?: BridgeRuleset;
   command?: 'interlock_assert' | 'interlock_release' | 'hello';
   breakerTarget?: string;
   reason?: string;
   ts: number;
+  /**
+   * FW-004 (audit 2026-08): wall-clock sync for the M2 controller. The
+   * firmware fails expiry validation closed until it has seen at least one
+   * time_sync frame, and rejects large backwards rewinds — an expired grant
+   * cannot be revived by rewinding the controller clock.
+   */
+  epochS?: number;
   /**
    * SECURITY FIX (audit 2026-08, FW-001): grant context for the M1 -> M2
    * serial hop, authenticated with a channel MAC. The M2 firmware
@@ -179,6 +186,9 @@ export class GatewayDaemon extends EventEmitter {
     // Boot is fail-closed: assert isolated before anything else.
     this.assertIsolated('boot_default_isolated');
     this.startWatchdog();
+    // FW-004: seed the M2 wall clock immediately (the periodic refresh rides
+    // the watchdog interval).
+    this.emitTimeSync();
   }
 
   getBridgeState(): InterlockState {
@@ -266,6 +276,9 @@ export class GatewayDaemon extends EventEmitter {
     // Arm: signature verified, await controller + feedback confirmation.
     this.bridgeState = 'armed';
     this.releasePending = true;
+    // FW-004: fresh clock right before the release command so the M2 expiry
+    // check evaluates against current time, not the last periodic sync.
+    this.emitTimeSync();
     this.emitFrame({
       type: 'command',
       command: 'interlock_release',
@@ -331,8 +344,23 @@ export class GatewayDaemon extends EventEmitter {
 
   /** Watchdog loop: trigger #7 (controller heartbeat stale -> isolated). */
   private startWatchdog(): void {
-    this.watchdogTimer = setInterval(() => this.checkWatchdog(), Math.min(this.heartbeatStaleMs, 5_000));
+    this.watchdogTimer = setInterval(() => {
+      this.checkWatchdog();
+      // FW-004 (audit 2026-08): keep the M2 wall clock fed. The firmware
+      // fails expiry validation closed until a time_sync arrives, so this
+      // doubles as a liveness precondition for any release.
+      this.emitTimeSync();
+    }, Math.min(this.heartbeatStaleMs, 5_000));
     this.watchdogTimer.unref?.();
+  }
+
+  /** FW-004: send the M2 wall-clock sync frame. */
+  private emitTimeSync(): void {
+    this.emitFrame({
+      type: 'time_sync',
+      epochS: Math.floor(this.now() / 1000),
+      ts: this.now()
+    });
   }
 
   private checkWatchdog(): void {

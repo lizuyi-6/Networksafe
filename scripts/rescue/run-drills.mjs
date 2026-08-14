@@ -12,9 +12,15 @@
  *   DRILL-001  primary down -> status readable, isolate still executes
  *   DRILL-008  audit log unwritable -> action refused (fail-closed)
  *   SEC-001    wrong rescue auth -> denied with reason
- *   SEC-005    appliance feedback mismatch -> isolate NOT reported confirmed
- *   SEC-005b   isolated state with negative physical feedback -> fail-closed
+ *   SEC-005    appliance feedback mismatch (isolated + relay closed) -> isolate NOT reported confirmed
+ *   SEC-005b   isolated state with MISSING physical feedback -> fail-closed
  *   SEC-007    truncated local log -> resync refuses (anchor breaks)
+ *
+ * Feedback semantics (RS-001 fix, audit 2026-08): feedbackOk=false means the
+ * relay auxiliary contact reads OPEN — the physical confirmation of
+ * isolation. The mock frames below previously used the inverted (stale)
+ * semantics, so a --release rebuild would flip every drill red while the
+ * shipped binary quietly kept the old behavior.
  * Architecture assertions via cargo metadata:
  *   DRILL-002/003/006/007 (no Redis/DB/AI/WebSocket dependency)
  * NOT runnable here: physical appliance / serial drills (need hardware).
@@ -88,7 +94,8 @@ async function freshEnv(tag, extraConfig = {}) {
 
 // ---------- DRILL-001: primary down, rescue still reads status and isolates ----------
 {
-  const isolatedFrame = { type: 'interlock_result', interlockState: 'isolated', feedbackOk: true, secureElementPresent: true };
+  // feedbackOk=false: relay auxiliary contact OPEN = physically isolated.
+  const isolatedFrame = { type: 'interlock_result', interlockState: 'isolated', feedbackOk: false, secureElementPresent: true };
   const { server, port, socketErrors } = await mockAppliance(isolatedFrame);
   const env = await freshEnv('d001', {
     appliance_endpoint: `127.0.0.1:${port}`,
@@ -136,36 +143,43 @@ async function freshEnv(tag, extraConfig = {}) {
   }
 }
 
-// ---------- SEC-005: appliance feedback mismatch -> not reported confirmed ----------
+// ---------- SEC-005: feedback mismatch (isolated state, relay reads closed) -> not confirmed ----------
 {
-  const mismatchFrame = { type: 'interlock_result', interlockState: 'released', feedbackOk: false };
+  // Welded-contact failure mode: state claims isolated but feedbackOk=true
+  // means the relay auxiliary contact reads CLOSED — the bridge may still be
+  // released. Confirmation requires feedbackOk=false.
+  const mismatchFrame = { type: 'interlock_result', interlockState: 'isolated', feedbackOk: true };
   const { server, port, socketErrors } = await mockAppliance(mismatchFrame);
   const env = await freshEnv('s005', { appliance_endpoint: `127.0.0.1:${port}` });
   const iso = await run(['isolate', '--reason', 'sec-005', '--json', '--config', env.configPath]);
   await closeServer(server);
   const ok = iso.code === 4 && iso.json?.decision === 'error'
-    && iso.json?.appliance?.bridge_state !== 'isolated' && socketErrors.length === 0;
-record('SEC-005', ok, `exit=${iso.code} decision=${iso.json?.decision} bridgeState=${iso.json?.appliance?.bridge_state} socketErrors=${socketErrors.length} (expect 4/error/not-isolated/0 => no fake confirmation)`);
+    && iso.json?.appliance?.bridge_state === 'isolated'
+    && iso.json?.appliance?.feedback_ok === true
+    && String(iso.json?.reason).includes('feedback_ok=Some(true)')
+    && socketErrors.length === 0;
+  record('SEC-005', ok, `exit=${iso.code} decision=${iso.json?.decision} bridgeState=${iso.json?.appliance?.bridge_state} feedbackOk=${iso.json?.appliance?.feedback_ok} socketErrors=${socketErrors.length} (expect 4/error/isolated/true => no fake confirmation)`);
 }
 
-// ---------- SEC-005b: isolated state without positive feedback -> fail-closed ----------
+// ---------- SEC-005b: isolated state with MISSING physical feedback -> fail-closed ----------
 {
-  const negativeFeedbackFrame = { type: 'interlock_result', interlockState: 'isolated', feedbackOk: false };
-  const { server, port, socketErrors } = await mockAppliance(negativeFeedbackFrame);
+  const missingFeedbackFrame = { type: 'interlock_result', interlockState: 'isolated' };
+  const { server, port, socketErrors } = await mockAppliance(missingFeedbackFrame);
   const env = await freshEnv('s005b', { appliance_endpoint: `127.0.0.1:${port}` });
   const iso = await run(['isolate', '--reason', 'sec-005b', '--json', '--config', env.configPath]);
   await closeServer(server);
   const ok = iso.code === 4 && iso.json?.decision === 'error'
     && iso.json?.appliance?.bridge_state === 'isolated'
-    && iso.json?.appliance?.feedback_ok === false
-    && String(iso.json?.reason).includes('feedback_ok=Some(false)')
+    && iso.json?.appliance?.feedback_ok === null
+    && String(iso.json?.reason).includes('feedback_ok=None')
     && socketErrors.length === 0;
-  record('SEC-005b', ok, `exit=${iso.code} decision=${iso.json?.decision} bridgeState=${iso.json?.appliance?.bridge_state} feedbackOk=${iso.json?.appliance?.feedback_ok} reason=${iso.json?.reason} socketErrors=${socketErrors.length} (expect 4/error/isolated/false/reason-feedback-false/0)`);
+  record('SEC-005b', ok, `exit=${iso.code} decision=${iso.json?.decision} bridgeState=${iso.json?.appliance?.bridge_state} feedbackOk=${iso.json?.appliance?.feedback_ok} reason=${iso.json?.reason} socketErrors=${socketErrors.length} (expect 4/error/isolated/null/reason-feedback-none/0)`);
 }
 
 // ---------- SEC-007: truncated log -> resync refuses via anchor ----------
 {
-  const isolatedFrame = { type: 'interlock_result', interlockState: 'isolated', feedbackOk: true, secureElementPresent: true };
+  // feedbackOk=false: confirmed isolation (see DRILL-001 note).
+  const isolatedFrame = { type: 'interlock_result', interlockState: 'isolated', feedbackOk: false, secureElementPresent: true };
   const { server, port, socketErrors } = await mockAppliance(isolatedFrame);
   const env = await freshEnv('s007', { appliance_endpoint: `127.0.0.1:${port}` });
   // Generate two audited actions (4 chain events), then truncate the log.
