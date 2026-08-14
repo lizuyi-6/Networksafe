@@ -17,6 +17,12 @@ type HmacSha256 = Hmac<Sha256>;
 
 pub const CHALLENGE_TTL: Duration = Duration::from_secs(60);
 const KEY_LEN_BYTES: usize = 32;
+/// SECURITY (audit 2026-08, RS-005): pending challenges were only swept on
+/// the NEXT issue, so an unauthenticated flood of `GET /rescue/challenge`
+/// could grow the nonce map without bound inside one TTL window. Issue now
+/// refuses (fail-closed, callers return 503-equivalent) once this many
+/// unconsumed challenges are outstanding.
+const MAX_PENDING_CHALLENGES: usize = 1024;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AuthState {
@@ -68,9 +74,14 @@ impl Authenticator {
     }
 
     /// Issue a single-use challenge nonce (hex). Locked => None.
+    /// Over the pending cap => None as well (fail-closed; see
+    /// MAX_PENDING_CHALLENGES).
     pub fn issue_challenge(&mut self) -> Option<String> {
         self.key.as_ref()?;
         self.sweep_expired();
+        if self.pending.len() >= MAX_PENDING_CHALLENGES {
+            return None;
+        }
         let nonce = hex::encode(random_bytes());
         self.pending.insert(nonce.clone(), Instant::now());
         Some(nonce)
@@ -227,5 +238,17 @@ mod tests {
         assert!(provision_key(&fresh).is_ok());
         let written = std::fs::read_to_string(&fresh).unwrap();
         assert_eq!(hex::decode(written.trim()).unwrap().len(), 32);
+    }
+
+    #[test]
+    fn challenge_flood_is_capped() {
+        // RS-005: an unauthenticated flood of challenge requests must not
+        // grow the pending map without bound — issue returns None at the cap.
+        let p = key_file("flood", Some(KEY));
+        let mut auth = Authenticator::from_key_file(&p);
+        for _ in 0..MAX_PENDING_CHALLENGES {
+            assert!(auth.issue_challenge().is_some());
+        }
+        assert!(auth.issue_challenge().is_none());
     }
 }

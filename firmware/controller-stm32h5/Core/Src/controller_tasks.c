@@ -207,10 +207,30 @@ bool controller_validate_challenge(const char *challenge) {
     return true;
 }
 
-/* Task 3: validate policyDigest */
+/* Task 3: validate policyDigest.
+ * SECURITY FIX (audit 2026-08, FW-007): fixed-length constant-time
+ * comparison. The digest is not secret today (it is a public policy
+ * binding value), so strcmp's early-exit timing leaks no key material —
+ * but the comparison runs against a provisioned trust anchor and the
+ * discipline (AGENTS.md §4) is constant-time equality for security-critical
+ * string anchors. Both buffers are zero-padded to the full 64-byte field so
+ * the comparison length is independent of the digest content while the
+ * accepted-language stays exactly strcmp equality. */
 bool controller_validate_policy_digest(const char *digest) {
+    uint8_t a[64];
+    uint8_t b[64];
+    uint16_t i;
+
     if (digest[0] == '\0') return false;
-    return strcmp(digest, g_state.local_policy_digest) == 0;
+    if (g_state.local_policy_digest[0] == '\0') return false; /* FW-010: nothing provisioned */
+
+    memset(a, 0, sizeof(a));
+    memset(b, 0, sizeof(b));
+    for (i = 0; i < 63u && digest[i] != '\0'; i++) a[i] = (uint8_t)digest[i];
+    for (i = 0; i < 63u && g_state.local_policy_digest[i] != '\0'; i++) {
+        b[i] = (uint8_t)g_state.local_policy_digest[i];
+    }
+    return grant_auth_constant_time_equal(a, b, 64u);
 }
 
 /* Task 4: validate monotonic counter (strictly advance) */

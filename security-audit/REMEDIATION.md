@@ -153,9 +153,72 @@
 - backend：typecheck clean；companion + final-defense 套件 27/27；`npm run test:all` 4 shards（见合并前验证）
 - 调试产物已清理（test_controller.exe / tc_a.exe / *.txt / *.out）
 
+## Batch 5 — DP-002/FE/RS/RF/FW 混合批（本 PR）
+
+### DP-002 — FTP 明文传输（High）
+- 修复：
+  - `scripts/deploy_frontend.ps1` 重写：`AETHERGUARD_FTP_SERVER` 必须 `ftps://`（`ftp://` 硬拒 + 明确报错）；`FtpWebRequest` + `EnableSsl=$true` 显式强制（不依赖 scheme 推断）替代 `WebClient.UploadFile`；`AETHERGUARD_FRONTEND_DIST_DIR` 可覆盖源目录（原脚本硬编码 `c:\Users\Abraham\Desktop\...` 机器路径）；证书按机器信任库默认校验（无回调降级）
+  - `scripts/list_ftp.ps1` 同样 ftps-only + EnableSsl
+  - 删除 `frontend/deploy_frontend.cjs`（硬编码生产 IP `39.102.81.78` + root 登录 + 私钥路径的 SFTP 一次性脚本，无任何流水线引用）
+- 证据：PSParser tokenize 两脚本 0 解析错误；`git rm` 四文件 + 引用 grep 仅 FINDINGS/审计报告/过期 eslint 结果 JSON
+
+### FE-001/FE-003 — demo 开关硬编码 + 失败静默不回滚 + 客户端身份选数据源（Medium）
+- 修复（`frontend/src/config/demo-mode.ts` + `context/DemoContext.tsx`）：
+  - `canUseDemoMode()` 从硬编码 `true` 改为构建期 opt-in：`VITE_APP_MODE=demo` 或 `VITE_ENABLE_DEMO_MODE=true` 才可用；`getStoredDemoMode`/`setStoredDemoMode`/`setRuntimeDemoMode` 全部经门控——陈旧 localStorage 标志无法在禁用构建中复活 demo 模式（demo ON 时设备命令短路为模拟成功的操作员误导面从根关闭）。**FE-003 同根关闭**：生产构建中客户端（sessionStorage 身份 + localStorage 标志）不再能选择数据源，demo 数据源仅存在于显式 demo 构建
+  - `toggleDemoMode` 门控 no-op；后端模式切换失败不再 `.catch(()=>{})` 静默——保留本地离线 toggle（设计意图）但置 `backendModeSyncFailed` 状态 + console.warn，操作员可见后端仍在旧模式
+  - `.env.development` 文档化两个新 env
+- 证据：frontend `npm run build`（含 tsc）exit 0；credential/navigation/i18n hygiene 3/3 exit 0
+
+### FE-002 — OIDC redirect 无前端 origin 校验（Medium，纵深）
+- 修复（新增 `frontend/src/security/redirect-guard.ts` + Login/Settings 接线）：
+  - `isAllowedRedirectTarget()`：相对路径（同源）恒过；绝对 URL 必须 http(s) 且 origin 在 `VITE_TRUSTED_EXTERNAL_ORIGINS`（逗号分隔，无通配）或同源；协议白名单外/解析失败/未配置外部 IdP 一律拒
+  - `Login.tsx` authorizationUrl、`Settings.tsx` endSessionUrl 经守卫后再 `window.location.assign`；拒绝时 Login 报 toast、Settings 落回本地登出路径（登出仍完成）
+- 证据：build exit 0（类型层覆盖）；后端侧 allowlist（auth.routes.ts buildOidcRedirectTarget）保持第一道防线不变
+
+### FE-006 — 孤儿开发产物含硬编码凭据（Low）
+- 修复：删除 `frontend/sec落地页.html`（硬编码 admin@AetherGuard.io/password）、`frontend/append_api.js`（追加改写 api.ts）、`frontend/append_walkthrough.js`（写绝对机器路径）、`frontend/record_video.js`、`frontend/deploy_frontend.cjs`——五文件均无 import/pipeline 引用（grep 证实）
+- 证据：frontend build + 3 hygiene 脚本全过；check-repository-hygiene exit 0
+
+### RS-003 — appliance read_line 无行上限（Low）
+- 修复（`rescue/src/appliance.rs`）：`read_line` 包 `take(64KiB)`——滴水式无换行端点在读取期间即被截断，超限行返回 `InvalidData` 错误（调用方按 fail-closed 处理，绝不当作状态证据）
+- 证据：新增 2 用例——真实 socket 对 128KiB 无换行字节流断言 `InvalidData`；<64KiB 正常帧照常读取。cargo test 54/54
+
+### RS-004 — HTTP 头 cap 在整行返回后才检查（Low）
+- 修复（`rescue/src/http.rs`）：请求行与每个头行的 `read_line` 均包 `take(MAX_HEADER_BYTES+1)`——单行无限增长在读取期间即受界，超限 413
+- 证据：cargo test 54/54（既有请求解析用例无回归）
+
+### RS-005 — challenge nonce map 无上限（Low）
+- 修复（`rescue/src/auth.rs`）：`MAX_PENDING_CHALLENGES=1024`——`issue_challenge` 超限时返回 None（fail-closed），未认证 flood 无法在一个 TTL 窗口内无界增长
+- 证据：新增 `challenge_flood_is_capped`（发满 1024 后断言 None）
+
+### RS-004b（审计时间戳墙钟）— 记录为接受残余
+- hash 链不含时间戳（内容完整性不依赖时序），事件 `event_count` 序号已提供全序；墙钟仅影响取证排序展示。不改（引入单调源需改链结构，收益不成比例）
+
+### RF-003/004/005 残余 — accept 循环连接上限 + header 读超时（Medium/SUSPECTED）
+- 修复（`rust-fastpath/src/main.rs`）：
+  - `serve_tcp` 弃用 `axum::serve`（不暴露 header 超时/连接上限）改手动 accept 循环：`header_read_timeout=10s`（slowloris 头部滴流，keep-alive 每请求重新计时）+ `max_buf_size=64KiB`（单连接 hyper 读缓冲上界）
+  - `serve_unix` 同样补 header 超时 + buf 上界
+  - 两路径 `Semaphore(256)` 连接槽：满槽时新连接**拒绝**（fail-closed）而非全体降级
+  - `hyper/http1/TokioIo/Service` 导出从 `#[cfg(unix)]` 提升（serve_tcp 现也用）
+- 证据：cargo test 24/24、clippy -D warnings 0
+
+### FW-007 — policyDigest strcmp 非常时（Low）
+- 修复（`controller_tasks.c`）：`controller_validate_policy_digest` 双方零填充到 64 字节定长后走 `grant_auth_constant_time_equal`（FW-001 已有的常时比较）；语义与 strcmp 严格等价（含截断边界）
+- 证据：固件 host tests 34/34（全部既有 digest 用例无回归）
+
+## 验证总账（Batch 5）
+- firmware host tests（gcc 直编）：**34 passed, 0 failed**
+- rescue：`cargo test` **54/54**（+1 flood、+2 行上限）、`cargo clippy --all-targets -- -D warnings` 0
+- rust-fastpath：`cargo test` **24/24**、`cargo clippy -- -D warnings` 0
+- frontend：`npm run build`（tsc+vite）exit 0；credential-hygiene / navigation-hygiene / i18n 3/3 exit 0
+- guards 5/5 exit 0（hygiene/contract/fetch/route-db/rescue-no-release）
+- PS 脚本 tokenize 0 错误
+- backend 本批零文件改动（git diff 证实），test:all 照跑见 PR 描述
+
 ## 未修复项（后续批次）
-- RF-003/004/005 残余（连接上限等 fastpath 中低项）
-- FE-001/002/003（demo-mode rollback、OIDC origin check）
-- FW-005（challenge 16 槽环形窗口残余——设计权衡，后端 monotonic counter 是真正防重放锚）、FW-007（policyDigest 非常时比较——FW-001 已上 MAC，时序泄露无增量）、FW-002 残余（M1/M2 真实对接联调）
-- ML-001/002/003/004/005/007/008/009/011/012 + ML-GOV-1/2（ml/ 工作流治理项）
-- DP-001 运维跟进：FTP 凭证轮换 + git 历史清洗（BFG/filter-repo）+ secret-scan guard——非纯代码可完成
+- ML-001/002/003/004/005/007/008/009/011/012 + ML-010（ml/ 工作流项：requirements 锚定、audit 链 tip 锚、schema 失配、路径硬编码、cachePath containment 等）
+- ML-GOV-1（密封集入库——治理决策：移出仓库需 owner 拍板密封性 vs 可用性）、ML-GOV-2（保持 untracked，永不提交）
+- DP-001 运维跟进：FTP 凭证轮换 + git 历史清洗（BFG/filter-repo）+ secret-scan guard
+- DP-008/013/015（floating tag pin、容器 USER、installer-agent systemd 加固）
+- FW-002/005（M1/M2 真实对接联调；challenge 环形窗口设计权衡）
+- AG-X01（部署态无入站命令通道——架构项，实现监听者时须同步定义入站鉴权）

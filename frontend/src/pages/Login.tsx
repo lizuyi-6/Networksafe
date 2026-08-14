@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../components/Logo';
 import { COMPANY_NAME_CN, COMPANY_NAME_EN } from '../config/branding';
 import { fetchSystemCapabilities, login, loginWithOidc } from '../services/api';
+import { isAllowedRedirectTarget } from '../security/redirect-guard';
 
 type ToastState = {
     msg: string;
@@ -89,6 +90,13 @@ const Login = () => {
         setIsOidcLoading(true);
         try {
             const { authorizationUrl } = await loginWithOidc();
+            // FE-002: never redirect the operator to an arbitrary origin that
+            // a malformed/compromised backend response might carry.
+            if (!isAllowedRedirectTarget(authorizationUrl)) {
+                console.warn('Blocked OIDC redirect to untrusted target:', authorizationUrl);
+                showToast('OIDC redirect target is not trusted');
+                return;
+            }
             window.location.assign(authorizationUrl);
         } catch (error: any) {
             showToast(error?.message || 'OIDC login failed');

@@ -57,11 +57,23 @@ fn status_text(code: u16) -> &'static str {
 }
 
 /// Parse one request from the stream with hard size limits.
+///
+/// SECURITY (audit 2026-08, RS-004): every `read_line` is wrapped in
+/// `take(MAX_HEADER_BYTES + 1)` so a peer that drips an endless line without
+/// a newline cannot grow the read buffer unboundedly — the byte cap applies
+/// DURING the read, not only after the line completes.
 fn read_request(stream: &mut TcpStream) -> Result<Request, u16> {
     stream.set_read_timeout(Some(IO_TIMEOUT)).map_err(|_| 500u16)?;
     let mut reader = BufReader::new(stream.try_clone().map_err(|_| 500u16)?);
     let mut request_line = String::new();
-    reader.read_line(&mut request_line).map_err(|_| 400u16)?;
+    reader
+        .by_ref()
+        .take((MAX_HEADER_BYTES + 1) as u64)
+        .read_line(&mut request_line)
+        .map_err(|_| 400u16)?;
+    if request_line.len() > MAX_HEADER_BYTES {
+        return Err(413);
+    }
     let mut parts = request_line.split_whitespace();
     let method = parts.next().ok_or(400u16)?.to_string();
     let path = parts.next().ok_or(400u16)?.to_string();
@@ -70,7 +82,11 @@ fn read_request(stream: &mut TcpStream) -> Result<Request, u16> {
     let mut header_bytes = request_line.len();
     loop {
         let mut line = String::new();
-        reader.read_line(&mut line).map_err(|_| 400u16)?;
+        reader
+            .by_ref()
+            .take((MAX_HEADER_BYTES + 1) as u64)
+            .read_line(&mut line)
+            .map_err(|_| 400u16)?;
         header_bytes += line.len();
         if header_bytes > MAX_HEADER_BYTES {
             return Err(413);
