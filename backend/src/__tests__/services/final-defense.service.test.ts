@@ -199,7 +199,10 @@ describe('finalDefenseService', () => {
       status: 'online'
     });
 
-    const daemon = finalDefenseService.createGatewayDaemon(gatewayId);
+    // FW-001: the daemon requires the M1<->M2 serial channel key to arm.
+    const daemon = finalDefenseService.createGatewayDaemon(gatewayId, {
+      serialChannelKey: 'd4'.repeat(32)
+    });
     expect(daemon).not.toBeNull();
     try {
       // Daemon boots fail-closed (isolated / deny-forward ruleset).

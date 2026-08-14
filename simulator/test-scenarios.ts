@@ -13,13 +13,27 @@
  *   npm run test:estop             (controller_alert + release latch)
  */
 
-import { GatewayDaemon, DaemonFrame } from '../backend/src/companion/gateway-daemon';
+import { GatewayDaemon, DaemonFrame, buildSerialChannelMac } from '../backend/src/companion/gateway-daemon';
 import { MockSecureElement } from './m3-secure-element/mock-se';
 import { MockController } from './m2-controller/mock-controller';
 import { MockInterlock } from './m4-interlock/mock-interlock';
 import type { HardwareGrantEnvelope } from '../backend/src/security/hardware-grant';
 
 const trigger = (process.argv.find((a) => a.startsWith('--trigger=')) || '').split('=')[1] || '';
+
+// M1<->M2 channel MAC key (sim stand-in for the manufacturing-provisioned key)
+const SERIAL_CHANNEL_KEY_HEX = 'b2'.repeat(32);
+
+/** Compute the channel MAC exactly like the daemon does for the wire frame. */
+function macFor(grant: HardwareGrantEnvelope): string {
+  return buildSerialChannelMac(
+    SERIAL_CHANNEL_KEY_HEX,
+    String(grant.challenge || ''),
+    String(grant.policyDigest || ''),
+    grant.monotonicCounter,
+    Number(grant.expiresAt)
+  );
+}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -63,6 +77,7 @@ function buildHarness(opts: { heartbeatStaleMs?: number; controllerHeartbeatMs?:
   const se = new MockSecureElement({ deviceId: 'gw-scn-001' });
   const interlock = new MockInterlock();
   const controller = new MockController(se, interlock, opts.controllerHeartbeatMs ?? 1000);
+  controller.provisionChannelKey(SERIAL_CHANNEL_KEY_HEX);
   const reasons: string[] = [];
   const daemon = new GatewayDaemon({
     gatewayId: 'gw-scn-001',
@@ -71,6 +86,7 @@ function buildHarness(opts: { heartbeatStaleMs?: number; controllerHeartbeatMs?:
     policyDigest: 'policy-digest-baseline-v1',
     heartbeatStaleMs: opts.heartbeatStaleMs ?? 45_000,
     releaseTtlMs: 30_000,
+    serialChannelKey: SERIAL_CHANNEL_KEY_HEX,
     onFrame: (frame: DaemonFrame) => {
       if (frame.reason) reasons.push(String(frame.reason));
     }
@@ -121,11 +137,11 @@ async function scenarioCounterRollback(): Promise<boolean> {
   const counter = h.se.incrementMonotonicCounter();
   const first = buildSignedGrant(h.se, counter);
   const firstDaemon = h.daemon.requestRelease(first);
-  const firstResult = firstDaemon ? h.controller.handleReleaseRequest(first) : 'denied';
+  const firstResult = firstDaemon ? h.controller.handleReleaseRequest(first, macFor(first)) : 'denied';
 
   // Same counter again (replay / rollback), fresh challenge + valid signature.
   const rollback = buildSignedGrant(h.se, counter);
-  const controllerVerdict = h.controller.handleReleaseRequest(rollback);
+  const controllerVerdict = h.controller.handleReleaseRequest(rollback, macFor(rollback));
   const daemonVerdict = h.daemon.requestRelease(rollback);
 
   const checks: Array<[string, boolean]> = [
@@ -158,7 +174,7 @@ async function scenarioEstop(): Promise<boolean> {
   const counter = h.se.incrementMonotonicCounter();
   const grant = buildSignedGrant(h.se, counter);
   const daemonAccepted = h.daemon.requestRelease(grant);
-  const controllerReleased = daemonAccepted && h.controller.handleReleaseRequest(grant) === 'released';
+  const controllerReleased = daemonAccepted && h.controller.handleReleaseRequest(grant, macFor(grant)) === 'released';
   const released = controllerReleased && h.daemon.isReleased();
 
   h.controller.handleEstop();
@@ -166,13 +182,13 @@ async function scenarioEstop(): Promise<boolean> {
 
   // A fully valid fresh grant must be denied while the e-stop latch holds.
   const duringLatch = buildSignedGrant(h.se, h.se.incrementMonotonicCounter());
-  const latchVerdict = h.controller.handleReleaseRequest(duringLatch);
+  const latchVerdict = h.controller.handleReleaseRequest(duringLatch, macFor(duringLatch));
 
   // Explicit reset returns to isolated; only a fresh grant may release again.
   h.controller.clearEstop();
   const afterClear = buildSignedGrant(h.se, h.se.incrementMonotonicCounter());
   const afterClearDaemon = h.daemon.requestRelease(afterClear);
-  const afterClearVerdict = afterClearDaemon ? h.controller.handleReleaseRequest(afterClear) : 'denied';
+  const afterClearVerdict = afterClearDaemon ? h.controller.handleReleaseRequest(afterClear, macFor(afterClear)) : 'denied';
 
   const checks: Array<[string, boolean]> = [
     ['baseline release succeeds', released === true],

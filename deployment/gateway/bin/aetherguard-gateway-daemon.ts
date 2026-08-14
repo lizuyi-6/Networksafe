@@ -41,7 +41,7 @@ const ISOLATED_RULESET = '/etc/aetherguard/nftables/isolated_ruleset.nft';
 const RELEASED_RULESET = '/etc/aetherguard/nftables/released_ruleset.nft';
 
 // Load configuration
-const config: GatewayConfig = JSON.parse(readFileSync(CONFIG_PATH, 'utf-8'));
+const config: GatewayConfig & { serialChannelKeyHex?: string } = JSON.parse(readFileSync(CONFIG_PATH, 'utf-8'));
 const sePublicKeyPem = readFileSync(config.sePublicKeyPath, 'utf-8');
 
 console.log(`[Gateway Daemon] Starting: ${config.gatewayId}`);
@@ -59,6 +59,15 @@ function applyRuleset(ruleset: 'isolated_ruleset' | 'released_ruleset'): void {
   });
 }
 
+// FW-001: M1<->M2 serial channel MAC key (64-char hex). Provisioned at
+// manufacturing/pairing time; the M2 firmware refuses unauthenticated
+// interlock_release frames fail-closed.
+const serialChannelKey = process.env.SERIAL_CHANNEL_KEY_HEX || config.serialChannelKeyHex || '';
+if (!serialChannelKey) {
+  console.error('[Gateway Daemon] FATAL: SERIAL_CHANNEL_KEY_HEX (or serialChannelKeyHex in gateway.conf) is not set — the daemon cannot authenticate release frames to M2 (fail-closed).');
+  process.exit(1);
+}
+
 // Initialize daemon
 const daemon = new GatewayDaemon({
   gatewayId: config.gatewayId,
@@ -66,13 +75,28 @@ const daemon = new GatewayDaemon({
   breakerTarget: config.breakerTarget,
   heartbeatStaleMs: config.heartbeatStaleMs,
   releaseTtlMs: config.releaseTtlMs,
+  serialChannelKey,
   onFrame: (frame) => {
     if (frame.type === 'apply_ruleset') {
       applyRuleset(frame.ruleset!);
     }
     if (frame.type === 'command') {
-      // Send command to controller via serial
-      const msg = JSON.stringify({ type: 'command', command: frame.command, breakerTarget: frame.breakerTarget, ts: frame.ts });
+      // Send command to controller via serial. FW-001: the MAC-authenticated
+      // grant context travels on the wire in the flat field layout the M2
+      // firmware parser (serial_json.c) expects.
+      const msg = JSON.stringify({
+        type: 'command',
+        command: frame.command,
+        breakerTarget: frame.breakerTarget,
+        ts: frame.ts,
+        ...(frame.command === 'interlock_release' && frame.grant ? {
+          challenge: frame.grant.challenge,
+          policyDigest: frame.grant.policyDigest,
+          monotonicCounter: frame.grant.monotonicCounter,
+          expiresAt: frame.grant.expiresAtEpochS,
+          signature: frame.grant.signature
+        } : {})
+      });
       port.write(msg + '\n');
     }
   }

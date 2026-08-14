@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { verifyHardwareGrantSignature, type HardwareGrantEnvelope } from '../security/hardware-grant';
 import { normalizeInterlockState, type InterlockState } from '../security/final-defense-policy';
 import logger from '../utils/logger';
@@ -44,6 +45,62 @@ export interface DaemonFrame {
   breakerTarget?: string;
   reason?: string;
   ts: number;
+  /**
+   * SECURITY FIX (audit 2026-08, FW-001): grant context for the M1 -> M2
+   * serial hop, authenticated with a channel MAC. The M2 firmware
+   * (controller_tasks.c) refuses any interlock_release whose HMAC-SHA256
+   * over this canonical message does not verify — a UART attacker cannot
+   * forge a frame without the provisioned channel key.
+   */
+  grant?: SerialChannelGrantContext;
+}
+
+/**
+ * MAC-authenticated grant context serialized onto the M1 -> M2 serial line.
+ * `signature` is HMAC-SHA256 (hex) over `challenge|policyDigest|monotonicCounter|expiresAtEpochS`.
+ */
+export interface SerialChannelGrantContext {
+  challenge: string;
+  policyDigest: string;
+  monotonicCounter: number;
+  expiresAtEpochS: number;
+  signature: string;
+}
+
+/**
+ * Canonical M1<->M2 channel MAC construction. MUST stay byte-identical with
+ * the firmware implementation (Core/Src/grant_auth.c, grant_auth_build_message).
+ * Exported so the M2 simulator mock and tests verify with the same code path.
+ */
+export function buildSerialChannelMac(
+  channelKeyHex: string,
+  challenge: string,
+  policyDigest: string,
+  monotonicCounter: number,
+  expiresAtEpochS: number
+): string {
+  const key = Buffer.from(channelKeyHex, 'hex');
+  const message = `${challenge}|${policyDigest}|${monotonicCounter}|${expiresAtEpochS}`;
+  return createHmac('sha256', key).update(message, 'utf8').digest('hex');
+}
+
+/** Validate a channel MAC in constant time. */
+export function verifySerialChannelMac(
+  channelKeyHex: string,
+  context: { challenge: string; policyDigest: string; monotonicCounter: number; expiresAtEpochS: number; signature: string }
+): boolean {
+  const expected = Buffer.from(buildSerialChannelMac(
+    channelKeyHex,
+    context.challenge,
+    context.policyDigest,
+    context.monotonicCounter,
+    context.expiresAtEpochS
+  ), 'hex');
+  const presented = Buffer.from(context.signature || '', 'hex');
+  if (presented.length !== expected.length) {
+    return false;
+  }
+  return timingSafeEqual(expected, presented);
 }
 
 export interface GatewayDaemonOptions {
@@ -58,6 +115,13 @@ export interface GatewayDaemonOptions {
   releaseTtlMs?: number;
   /** Injected clock for deterministic tests; defaults to Date.now. */
   now?: () => number;
+  /**
+   * SECURITY FIX (audit 2026-08, FW-001): M1<->M2 serial channel MAC key
+   * (64-char hex, 32 bytes). Required for requestRelease — without a
+   * provisioned key the daemon refuses to arm (fail-closed), because the M2
+   * firmware would reject an unauthenticated frame anyway.
+   */
+  serialChannelKey?: string;
   /** Receives every frame the daemon emits (ruleset / command). Tests assert on this. */
   onFrame?: (frame: DaemonFrame) => void;
 }
@@ -82,6 +146,7 @@ export class GatewayDaemon extends EventEmitter {
   private readonly heartbeatStaleMs: number;
   private readonly releaseTtlMs: number;
   private readonly now: () => number;
+  private readonly serialChannelKey: string;
   private readonly emitFrame: (frame: DaemonFrame) => void;
 
   private bridgeState: InterlockState = 'isolated';
@@ -95,6 +160,7 @@ export class GatewayDaemon extends EventEmitter {
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
   private released = false;
   private releasePending = false;
+  private lastFailClosedReason: string | null = null;
 
   constructor(opts: GatewayDaemonOptions) {
     super();
@@ -108,6 +174,7 @@ export class GatewayDaemon extends EventEmitter {
     this.heartbeatStaleMs = opts.heartbeatStaleMs ?? DEFAULT_HEARTBEAT_STALE_MS;
     this.releaseTtlMs = normalizeReleaseTtlMs(opts.releaseTtlMs);
     this.now = opts.now ?? Date.now;
+    this.serialChannelKey = String(opts.serialChannelKey || '');
     this.emitFrame = opts.onFrame ?? ((f) => this.emit('frame', f));
     // Boot is fail-closed: assert isolated before anything else.
     this.assertIsolated('boot_default_isolated');
@@ -120,6 +187,11 @@ export class GatewayDaemon extends EventEmitter {
 
   isReleased(): boolean {
     return this.released;
+  }
+
+  /** Last fail-closed reason (test/telemetry accessor). */
+  getLastFailClosedReason(): string | null {
+    return this.lastFailClosedReason;
   }
 
   /**
@@ -168,6 +240,29 @@ export class GatewayDaemon extends EventEmitter {
     }
     this.monotonicHighWater = grant.monotonicCounter;
 
+    // SECURITY FIX (audit 2026-08, FW-001): the M1 -> M2 serial hop must be
+    // authenticated. Without a provisioned channel key the daemon refuses to
+    // arm — the M2 firmware would reject the frame fail-closed anyway, and
+    // emitting an unauthenticated release command would be a wire-format
+    // downgrade. MAC covers exactly the fields M2 re-validates.
+    if (!this.serialChannelKey || !/^[0-9a-fA-F]{64}$/.test(this.serialChannelKey)) {
+      this.failClosed('serial_channel_key_missing');
+      return false;
+    }
+    const macContext: SerialChannelGrantContext = {
+      challenge: String(grant.challenge || ''),
+      policyDigest: String(grant.policyDigest || ''),
+      monotonicCounter: grant.monotonicCounter,
+      expiresAtEpochS: expiresAt,
+      signature: buildSerialChannelMac(
+        this.serialChannelKey,
+        String(grant.challenge || ''),
+        String(grant.policyDigest || ''),
+        grant.monotonicCounter,
+        expiresAt
+      )
+    };
+
     // Arm: signature verified, await controller + feedback confirmation.
     this.bridgeState = 'armed';
     this.releasePending = true;
@@ -176,7 +271,8 @@ export class GatewayDaemon extends EventEmitter {
       command: 'interlock_release',
       breakerTarget: this.breakerTarget,
       reason: 'grant_verified_awaiting_feedback',
-      ts: this.now()
+      ts: this.now(),
+      grant: macContext
     });
     if (this.feedbackTimer) clearTimeout(this.feedbackTimer);
     const feedbackTimeoutMs = Math.min(this.releaseTtlMs, this.heartbeatStaleMs);
@@ -285,6 +381,7 @@ export class GatewayDaemon extends EventEmitter {
 
   private failClosed(reason: string): void {
     logger.warn('GatewayDaemon fail-closed', { gatewayId: this.gatewayId, reason });
+    this.lastFailClosedReason = reason;
     this.reassertIsolated(reason);
   }
 

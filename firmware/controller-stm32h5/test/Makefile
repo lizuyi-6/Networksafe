@@ -18,7 +18,8 @@ TEST_SRCS = \
 FW_SRCS = \
 	Core/Src/controller_tasks.c \
 	Core/Src/serial_json.c \
-	Core/Src/interlock_driver.c
+	Core/Src/interlock_driver.c \
+	Core/Src/grant_auth.c
 
 # Exclude main.c (has infinite loop) and se_driver.c (stub-only, not needed)
 # Note: se_driver.c references hi2c1 which is in test_stubs.c, but its functions
