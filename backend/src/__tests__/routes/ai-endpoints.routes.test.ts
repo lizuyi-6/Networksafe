@@ -276,5 +276,23 @@ describe('AI Endpoints Routes', () => {
 
       expect(response.status).toBe(200);
     });
+
+    // AG-B02 (audit 2026-08): the ollama allowPrivate path used to accept
+    // cloud instance-metadata IPs — an admin-configurable SSRF into cloud
+    // credentials. Metadata must be blocked even for ollama.
+    it('rejects cloud metadata endpoints even for ollama type', async () => {
+      for (const url of [
+        'http://169.254.169.254/latest/meta-data/',
+        'http://100.100.100.200/latest/meta-data/',
+        'http://metadata.google.internal/computeMetadata/v1/'
+      ]) {
+        const response = await request(app)
+          .post('/api/ai-endpoints/')
+          .send({ name: 'Meta', url, modelName: 'llama3', type: 'ollama' });
+
+        expect(response.status).toBe(400);
+        expect(mockCreateEndpoint).not.toHaveBeenCalled();
+      }
+    });
   });
 });

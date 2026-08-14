@@ -270,4 +270,120 @@ describe('Devices Routes', () => {
       expect(typeof codebook).toBe('object');
     });
   });
+
+  // ── AG-B03b: codebook admin gate + per-device tenant visibility ──────────
+
+  describe('AG-B03b security gates', () => {
+    function authenticateAs(role: string, tenantId: string): void {
+      (authenticate as jest.Mock).mockImplementationOnce((req: any, _res: any, next: any) => {
+        req.user = { userId: 'test-user', email: 'test@example.com', role, tenantId };
+        next();
+      });
+    }
+
+    it('POST /codebook route carries an authorization middleware layer (wiring pin)', () => {
+      // requireRole is captured when the router is BUILT (module import), so a
+      // call-history assertion is useless here. Pin the wiring structurally:
+      // the POST /codebook route must have [requireRole wrapper, handler].
+      const layer = (devicesRouter as any).stack.find(
+        (l: any) => l?.route?.path === '/codebook' && l.route.methods?.post
+      );
+      expect(layer).toBeDefined();
+      expect(layer.route.stack.length).toBe(2);
+    });
+
+    it('POST /codebook rejects a non-admin before touching the codebook (fresh router)', async () => {
+      // Rebuild the router with a rejecting requireRole to prove the gate is
+      // in the request path (the shared app captured the passthrough at import).
+      // doMock (not mockImplementation): resetModules re-runs mock factories,
+      // so the rejection must be baked into a factory registered BEFORE the
+      // fresh require.
+      jest.resetModules();
+      jest.doMock('../../middleware/auth.middleware', () => ({
+        authenticate: jest.fn((req: any, _res: any, next: any) => {
+          req.user = {
+            userId: 'test-user',
+            email: 'test@example.com',
+            role: 'tenant_viewer',
+            tenantId: 'tenant-001'
+          };
+          next();
+        }),
+        requireRole: jest.fn(() => (_req: any, res: any) => {
+          res.status(403).json({ success: false, error: 'backend.insufficient_permissions' });
+        }),
+        AuthenticatedRequest: jest.fn()
+      }));
+      const freshRouter = require('../../api/routes/devices.routes').default;
+      const freshApp = express();
+      freshApp.use(express.json());
+      freshApp.use('/api/devices', freshRouter);
+
+      const response = await request(freshApp)
+        .post('/api/devices/codebook')
+        .type('application/json')
+        .send({ entries: { E201: 'Must never land' } });
+
+      expect(response.status).toBe(403);
+      // The shared registry (original module instance) never saw the entry.
+      expect(getCodebook()['E201']).toBeUndefined();
+    });
+
+    it('tenant-bound device is invisible to another tenant (404) on /:id, /:id/events, /:id/config', async () => {
+      registerDevice({
+        deviceId: 'device-tenant-A',
+        tenantId: 'tenant-A',
+        version: '1.0.0',
+        chipModel: 'ESP32-WROOM-32',
+        flashSize: 4096,
+        freeHeap: 200000,
+        sdkVersion: '4.4.0',
+        mode: 'online'
+      });
+
+      authenticateAs('tenant_viewer', 'tenant-B');
+      expect((await request(app).get('/api/devices/device-tenant-A')).status).toBe(404);
+      authenticateAs('tenant_viewer', 'tenant-B');
+      expect((await request(app).get('/api/devices/device-tenant-A/events')).status).toBe(404);
+      authenticateAs('tenant_viewer', 'tenant-B');
+      expect((await request(app).get('/api/devices/device-tenant-A/config')).status).toBe(404);
+    });
+
+    it('tenant-bound device is visible to its own tenant and to a platform admin', async () => {
+      registerDevice({
+        deviceId: 'device-tenant-A2',
+        tenantId: 'tenant-A',
+        version: '1.0.0',
+        chipModel: 'ESP32-WROOM-32',
+        flashSize: 4096,
+        freeHeap: 200000,
+        sdkVersion: '4.4.0',
+        mode: 'online'
+      });
+
+      authenticateAs('tenant_viewer', 'tenant-A');
+      expect((await request(app).get('/api/devices/device-tenant-A2/events')).status).toBe(200);
+      authenticateAs('tenant_operator', 'tenant-A');
+      expect((await request(app).get('/api/devices/device-tenant-A2/config')).status).toBe(200);
+
+      // Platform admin ('admin' normalizes to platform_admin) sees everything.
+      authenticateAs('admin', 'platform');
+      expect((await request(app).get('/api/devices/device-tenant-A2')).status).toBe(200);
+    });
+
+    it('legacy device without tenantId stays visible to any authenticated tenant', async () => {
+      registerDevice({
+        deviceId: 'device-legacy',
+        version: '1.0.0',
+        chipModel: 'ESP32-WROOM-32',
+        flashSize: 4096,
+        freeHeap: 200000,
+        sdkVersion: '4.4.0',
+        mode: 'online'
+      });
+
+      authenticateAs('tenant_viewer', 'tenant-Z');
+      expect((await request(app).get('/api/devices/device-legacy/events')).status).toBe(200);
+    });
+  });
 });

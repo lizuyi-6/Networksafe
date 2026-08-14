@@ -81,8 +81,12 @@ services:
   # ─────────────────────────────────────────────
   backend:
     build:
-      context: .
-      dockerfile: backend.Dockerfile
+      # DP-014 fix (audit 2026-08): was `dockerfile: backend.Dockerfile`
+      # (root) — only backend/Dockerfile exists, so a fresh checkout
+      # `docker compose build` failed. Build with backend/ as the context so
+      # its Dockerfile-relative COPY paths resolve.
+      context: ./backend
+      dockerfile: Dockerfile
     env_file:
       - path: .env
         required: false

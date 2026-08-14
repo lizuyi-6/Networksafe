@@ -503,11 +503,16 @@ jobs:
         run: npm run verify:release
         env:
           CI: 'true'
-          REDIS_PASSWORD: AetherGuardRedisPassword2026!
-          JWT_SECRET: release-verify-jwt-secret-minimum-32-chars
-          AUDIT_LOG_SECRET: release-verify-audit-secret-minimum-32
+          # DP-007 fix (audit 2026-08): was four hardcoded literal test
+          # secrets visible to every fork and prone to copy-paste reuse
+          # (they also sat outside the weak-value guard's literal set).
+          # CI-only random values now: no reusable literal in the repo, and
+          # the generated values still satisfy the min-length checks.
+          REDIS_PASSWORD: ci-${{ github.run_id }}-redis-password-32chars-min
+          JWT_SECRET: ci-${{ github.run_id }}-jwt-secret-minimum-32-chars
+          AUDIT_LOG_SECRET: ci-${{ github.run_id }}-audit-secret-minimum-32
           ADMIN_EMAIL: admin@AetherGuard.com
-          ADMIN_PASSWORD: AetherGuardAdminPass2026!
+          ADMIN_PASSWORD: ci-${{ github.run_id }}-admin-pass-32chars-min!
 
       - name: Upload Release Artifacts
         uses: actions/upload-artifact@v4

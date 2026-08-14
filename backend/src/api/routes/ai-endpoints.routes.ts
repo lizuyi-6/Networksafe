@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AetherGuard - AI endpoint configuration API
  *
  * Provides tenant-scoped endpoint persistence, routing-aware chat proxying,
@@ -8,6 +8,7 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { checkOutboundUrl } from '../../security/outbound-url-guard';
 import logger from '../../utils/logger';
 import {
   PLATFORM_API_CONFIG,
@@ -66,36 +67,25 @@ function tenantOf(req: AuthenticatedRequest): string {
 }
 
 function isPrivateHost(hostname: string): boolean {
-  return (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname === '0.0.0.0' ||
-    hostname.startsWith('127.') ||
-    hostname.startsWith('192.168.') ||
-    hostname.startsWith('10.') ||
-    hostname.startsWith('172.16.') ||
-    hostname.startsWith('172.17.') ||
-    hostname.startsWith('172.18.') ||
-    hostname.startsWith('172.19.') ||
-    hostname.startsWith('172.2') ||
-    hostname.startsWith('172.3') ||
-    hostname === '169.254.169.254'
-  );
+  // SECURITY FIX (audit 2026-08, AG-B02): superseded by the shared outbound
+  // URL guard for validation; kept only for the whitelist warning below.
+  return hostname === 'localhost' || hostname.startsWith('127.') || hostname.startsWith('10.');
 }
 
 function validateAiUrl(url: string, options?: { allowPrivate?: boolean }): { valid: boolean; error?: string } {
+  // SECURITY FIX (audit 2026-08, AG-B02): `type=ollama` allowPrivate used to
+  // permit 169.254.169.254 (cloud metadata) — an admin-configurable SSRF into
+  // instance credentials. The shared guard blocks metadata endpoints
+  // UNCONDITIONALLY, even with allowPrivate (self-hosted LAN Ollama stays
+  // allowed).
+  const check = checkOutboundUrl(url, options);
+  if (!check.allowed) {
+    return { valid: false, error: check.reason };
+  }
+
   try {
     const parsed = new URL(url);
-
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return { valid: false, error: 'backend.only_http_and_https_protocols_are_allowed' };
-    }
-
     const hostname = parsed.hostname.toLowerCase();
-    if (isPrivateHost(hostname) && !options?.allowPrivate) {
-      return { valid: false, error: 'backend.private_ip_addresses_are_not_allowed' };
-    }
-
     const isWhitelisted = ALLOWED_AI_HOSTS.some((allowed) => hostname === allowed || hostname.endsWith(`.${allowed}`));
     if (!isWhitelisted && !isPrivateHost(hostname)) {
       logger.warn('AI endpoint URL not in whitelist', { url, hostname });

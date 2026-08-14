@@ -1,4 +1,4 @@
-﻿﻿﻿﻿/**
+/**
  * AetherGuard - ESP32 Device Management API
  *
  * REST API for ESP32 firmware gateway
@@ -8,6 +8,7 @@
 
 import { Router, Request, Response } from 'express';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { normalizeRole } from '../../security/permissions';
 import logger from '../../utils/logger';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import { securityOperationsService } from '../../services/security-operations.service';
@@ -23,6 +24,14 @@ router.use(authenticate);
 // Device storage (in-memory + can be extended to database)
 interface DeviceInfo {
     deviceId: string;
+    /**
+     * SECURITY FIX (audit 2026-08, AG-B03b): tenant that owns this device.
+     * Set at registration (device-gateway passes the authenticated tenant
+     * context). Legacy/emulator registrations without a tenant stay
+     * platform-visible for backwards compatibility; tenant-bound devices are
+     * only visible to their own tenant or platform admins.
+     */
+    tenantId?: string;
     version: string;
     chipModel: string;
     flashSize: number;
@@ -103,6 +112,23 @@ function safeAuditLog(payload: any): void {
     Promise.resolve(auditLogger.log(payload)).catch((error: any) => {
         logger.warn('Device audit log unavailable', { error: error?.message });
     });
+}
+
+/**
+ * SECURITY FIX (audit 2026-08, AG-B03b): tenant visibility for the legacy
+ * in-memory device tables. A device registered with a tenantId is visible
+ * only to that tenant or to platform admins; devices without a tenantId
+ * (legacy/emulator registrations) remain visible to all authenticated users.
+ */
+function canViewDevice(req: AuthenticatedRequest, device?: DeviceInfo): boolean {
+    const deviceTenant = device?.tenantId;
+    if (!deviceTenant) {
+        return true;
+    }
+    if (normalizeRole(req.user?.role) === 'platform_admin') {
+        return true;
+    }
+    return req.user?.tenantId === deviceTenant;
 }
 
 // Codebook
@@ -554,8 +580,11 @@ router.get('/codebook', (_req: Request, res: Response) => {
 /**
  * POST /api/devices/codebook
  * NOTE: This static route must be defined BEFORE /:id routes
+ * SECURITY FIX (audit 2026-08, AG-B03b): the codebook is a GLOBAL (platform
+ * level) mapping shared by every tenant — mutating it is admin-only now;
+ * previously any authenticated user could rewrite it.
  */
-router.post('/codebook', (req: Request, res: Response) => {
+router.post('/codebook', requireRole('admin'), (req: Request, res: Response) => {
     try {
         const { entries } = req.body;
 
@@ -632,10 +661,16 @@ router.post('/codebook', (req: Request, res: Response) => {
 
 /**
  * GET /api/devices/:id/events
+ * SECURITY FIX (audit 2026-08, AG-B03b): tenant filtering — a device bound to
+ * another tenant returns 404 (indistinguishable from non-existent).
  */
-router.get('/:id/events', (req: Request, res: Response) => {
+router.get('/:id/events', (req: AuthenticatedRequest, res: Response) => {
     try {
         const { id } = req.params;
+        const device = devices.get(id);
+        if (device && !canViewDevice(req, device)) {
+            return res.status(404).json({ success: false, error: 'backend.device_not_found' });
+        }
         const limitRaw = Number(req.query.limit || 100);
         const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(500, limitRaw)) : 100;
         const events = deviceEvents.get(id) || [];
@@ -651,10 +686,13 @@ router.get('/:id/events', (req: Request, res: Response) => {
     }
 });
 
-router.get('/:id/config', (req: Request, res: Response) => {
+router.get('/:id/config', (req: AuthenticatedRequest, res: Response) => {
     try {
         const device = devices.get(req.params.id);
         if (!device) {
+            return res.status(404).json({ success: false, error: 'backend.device_not_found' });
+        }
+        if (!canViewDevice(req, device)) {
             return res.status(404).json({ success: false, error: 'backend.device_not_found' });
         }
 
@@ -673,11 +711,18 @@ router.get('/:id/config', (req: Request, res: Response) => {
  * GET /api/devices/:id
  * Get single device details
  */
-router.get('/:id', (req: Request, res: Response) => {
+router.get('/:id', (req: AuthenticatedRequest, res: Response) => {
     try {
         const device = devices.get(req.params.id);
 
         if (!device) {
+            return res.status(404).json({ success: false, error: 'backend.device_not_found' });
+        }
+
+        // SECURITY FIX (audit 2026-08, AG-B03b): same tenant visibility rule
+        // as /:id/events and /:id/config — the detail view leaks the same
+        // registry row.
+        if (!canViewDevice(req, device)) {
             return res.status(404).json({ success: false, error: 'backend.device_not_found' });
         }
 

@@ -126,6 +126,38 @@ export function validateRuntimeEnvironment(): RuntimeEnvironmentReport {
       if (helperSecret && deviceSecret && helperSecret === deviceSecret) {
         errors.push('SERIAL_HELPER_SHARED_SECRET must be a distinct secret from DEVICE_COMMAND_SECRET.');
       }
+
+      // AG-B04 (audit 2026-08): optional per-helper named keys
+      // (`keyId:secret,keyId:secret`) for individually revocable appliance
+      // credentials. When present, every entry must meet the same strength
+      // bar and stay distinct from DEVICE_COMMAND_SECRET and the shared key.
+      const extraRaw = String(process.env.SERIAL_HELPER_EXTRA_SECRETS || '').trim();
+      if (extraRaw) {
+        const seenKeyIds = new Set<string>();
+        for (const rawEntry of extraRaw.split(',')) {
+          const entry = rawEntry.trim();
+          if (!entry) {
+            continue;
+          }
+          const separator = entry.indexOf(':');
+          if (separator <= 0 || separator >= entry.length - 1) {
+            errors.push('SERIAL_HELPER_EXTRA_SECRETS entries must use the keyId:secret format.');
+            continue;
+          }
+          const keyId = entry.slice(0, separator).trim();
+          const secret = entry.slice(separator + 1).trim();
+          if (seenKeyIds.has(keyId)) {
+            errors.push(`SERIAL_HELPER_EXTRA_SECRETS keyId "${keyId}" is duplicated.`);
+          }
+          seenKeyIds.add(keyId);
+          if (secret.length < 32) {
+            errors.push(`SERIAL_HELPER_EXTRA_SECRETS entry "${keyId}" must be at least 32 characters.`);
+          }
+          if (secret === deviceSecret || secret === helperSecret) {
+            errors.push(`SERIAL_HELPER_EXTRA_SECRETS entry "${keyId}" must be distinct from DEVICE_COMMAND_SECRET and SERIAL_HELPER_SHARED_SECRET.`);
+          }
+        }
+      }
     }
 
     if (String(process.env.APP_MODE || '').trim().toLowerCase() === 'demo') {

@@ -403,6 +403,9 @@ export class DeviceGateway {
 
         registerDevice({
             deviceId: device_id,
+            // AG-B03b: bind the registry row to the authenticated tenant so
+            // per-device reads can be tenant-filtered.
+            tenantId: tenantContext.tenantId,
             version: version || 'unknown',
             chipModel: chip_model || 'unknown',
             flashSize: flash_size || 0,
