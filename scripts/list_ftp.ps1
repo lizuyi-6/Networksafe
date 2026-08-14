@@ -1,6 +1,11 @@
-$ftpServer = "ftp://171.80.8.102/"
-$username = "ftp6627177"
-$password = "Li15227225280"
+# SECURITY: credentials must come from the environment, never hardcoded.
+$ftpServer = $env:AETHERGUARD_FTP_SERVER
+$username = $env:AETHERGUARD_FTP_USERNAME
+$password = $env:AETHERGUARD_FTP_PASSWORD
+if (-not $ftpServer -or -not $username -or -not $password) {
+    Write-Error "Missing AETHERGUARD_FTP_SERVER / AETHERGUARD_FTP_USERNAME / AETHERGUARD_FTP_PASSWORD environment variables."
+    exit 1
+}
 
 $request = [System.Net.WebRequest]::Create($ftpServer)
 $request.Method = [System.Net.WebRequestMethods+Ftp]::ListDirectory
