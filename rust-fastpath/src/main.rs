@@ -10,9 +10,7 @@ use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use chrono::{TimeZone, Utc};
 use hmac::{Hmac, Mac};
 use once_cell::sync::Lazy;
-#[cfg(unix)]
 use hyper::{server::conn::http1, service::service_fn};
-#[cfg(unix)]
 use hyper_util::rt::TokioIo;
 use parking_lot::Mutex;
 use regex::Regex;
@@ -36,6 +34,7 @@ use tower::Service;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use subtle::ConstantTimeEq;
+use tower::Service;
 use tracing::{info, warn};
 
 // ---------------------------------------------------------------------------
@@ -142,6 +141,16 @@ const DEFAULT_MAX_ACTIVE_ENTRIES: usize = 1_000_000;
 const MAX_BODY_BYTES: usize = 2 * 1024 * 1024;
 /// Per-request wall-clock budget.
 const REQUEST_TIMEOUT_SECS: u64 = 10;
+/// SECURITY FIX (audit 2026-08, RF-003/004/005 residual): slowloris and
+/// connection-exhaustion bounds for the raw accept loops. Each connection
+/// gets `HEADER_READ_TIMEOUT` to deliver a request head (pooled keep-alive
+/// connections are re-bounded per request), a bounded hyper read buffer, and
+/// the total number of concurrently served connections is capped — above the
+/// cap new connections are refused (fail-closed) instead of degrading the
+/// sidecar for everyone.
+const HEADER_READ_TIMEOUT_SECS: u64 = 10;
+const MAX_HTTP1_BUF_BYTES: usize = 64 * 1024;
+const MAX_CONCURRENT_CONNECTIONS: usize = 256;
 /// Minimum length of FASTPATH_AUTH_SECRET when authentication is enabled.
 pub const MIN_AUTH_SECRET_BYTES: usize = 16;
 
@@ -789,6 +798,8 @@ async fn main() {
 }
 
 async fn serve_tcp(app: Router, address: String) {
+    use tokio::sync::Semaphore;
+
     let parsed_addr = address
         .parse::<SocketAddr>()
         .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], 8081)));
@@ -797,7 +808,44 @@ async fn serve_tcp(app: Router, address: String) {
     let listener = tokio::net::TcpListener::bind(parsed_addr)
         .await
         .expect("bind listener");
-    axum::serve(listener, app).await.expect("serve fastpath");
+    // RF-003/004/005: bounded accept loop — see the constants block for the
+    // rationale. axum::serve does not expose header-read timeouts or a
+    // connection cap, so the loop is manual on both transports.
+    let conn_slots = Arc::new(Semaphore::new(MAX_CONCURRENT_CONNECTIONS));
+    loop {
+        let (stream, peer) = match listener.accept().await {
+            Ok(accepted) => accepted,
+            Err(error) => {
+                warn!("tcp fastpath accept failed: {}", error);
+                continue;
+            }
+        };
+        let permit = match conn_slots.clone().try_acquire_owned() {
+            Ok(permit) => permit,
+            Err(_) => {
+                warn!(
+                    "tcp fastpath connection limit reached ({}), refusing {}",
+                    MAX_CONCURRENT_CONNECTIONS, peer
+                );
+                drop(stream);
+                continue;
+            }
+        };
+        let tower_service = app.clone();
+        tokio::spawn(async move {
+            let io = TokioIo::new(stream);
+            let hyper_service = service_fn(move |request| tower_service.clone().call(request));
+            if let Err(error) = http1::Builder::new()
+                .header_read_timeout(std::time::Duration::from_secs(HEADER_READ_TIMEOUT_SECS))
+                .max_buf_size(MAX_HTTP1_BUF_BYTES)
+                .serve_connection(io, hyper_service)
+                .await
+            {
+                info!("tcp fastpath connection closed with error: {}", error);
+            }
+            drop(permit);
+        });
+    }
 }
 
 #[cfg(unix)]
@@ -818,6 +866,8 @@ async fn serve_unix(app: Router, socket_path: String) {
     let listener = UnixListener::bind(socket).expect("bind unix listener");
     let permissions = std::fs::Permissions::from_mode(0o660);
     std::fs::set_permissions(socket, permissions).expect("set unix socket permissions");
+    // RF-003/004/005: same bounds as the TCP loop (see serve_tcp).
+    let conn_slots = Arc::new(tokio::sync::Semaphore::new(MAX_CONCURRENT_CONNECTIONS));
     loop {
         let (stream, _) = match listener.accept().await {
             Ok(accepted) => accepted,
@@ -826,16 +876,30 @@ async fn serve_unix(app: Router, socket_path: String) {
                 continue;
             }
         };
+        let permit = match conn_slots.clone().try_acquire_owned() {
+            Ok(permit) => permit,
+            Err(_) => {
+                warn!(
+                    "unix fastpath connection limit reached ({}), refusing connection",
+                    MAX_CONCURRENT_CONNECTIONS
+                );
+                drop(stream);
+                continue;
+            }
+        };
         let tower_service = app.clone();
         tokio::spawn(async move {
             let io = TokioIo::new(stream);
             let hyper_service = service_fn(move |request| tower_service.clone().call(request));
             if let Err(error) = http1::Builder::new()
+                .header_read_timeout(std::time::Duration::from_secs(HEADER_READ_TIMEOUT_SECS))
+                .max_buf_size(MAX_HTTP1_BUF_BYTES)
                 .serve_connection(io, hyper_service)
                 .await
             {
                 info!("unix fastpath connection closed with error: {}", error);
             }
+            drop(permit);
         });
     }
 }

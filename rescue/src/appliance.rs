@@ -9,7 +9,7 @@
 //! guard `scripts/guards/check-rescue-no-release.mjs` enforces this.
 
 use serde::{Deserialize, Serialize};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
 use std::time::Duration;
 
@@ -122,10 +122,30 @@ impl ApplianceTransport for TcpTransport {
     }
 
     fn read_line(&mut self) -> std::io::Result<Option<String>> {
+        // SECURITY (audit 2026-08, RS-003): cap the bytes pulled into the
+        // line buffer DURING the read. A misbehaving appliance that drips an
+        // endless line without a newline used to grow `buf` without bound
+        // within the socket timeout; `take()` bounds it to
+        // MAX_FRAME_LINE_BYTES and the over-limit line surfaces as an error
+        // (which callers treat as fail-closed, never as evidence of state).
+        const MAX_FRAME_LINE_BYTES: u64 = 64 * 1024;
         let mut buf = String::new();
-        match self.reader.read_line(&mut buf) {
+        match self
+            .reader
+            .by_ref()
+            .take(MAX_FRAME_LINE_BYTES)
+            .read_line(&mut buf)
+        {
             Ok(0) => Ok(None),
-            Ok(_) => Ok(Some(buf.trim_end_matches(['\r', '\n']).to_string())),
+            Ok(_) => {
+                if buf.len() as u64 >= MAX_FRAME_LINE_BYTES && !buf.ends_with('\n') {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "appliance frame exceeds MAX_FRAME_LINE_BYTES",
+                    ));
+                }
+                Ok(Some(buf.trim_end_matches(['\r', '\n']).to_string()))
+            }
             Err(e) => Err(e),
         }
     }
@@ -299,5 +319,56 @@ mod tests {
         let assert_cmd = serde_json::to_string(&SafeCommand::InterlockAssert).unwrap();
         assert_eq!(hello, "\"hello\"");
         assert_eq!(assert_cmd, "\"interlock_assert\"");
+    }
+
+    #[test]
+    fn endless_frame_line_is_capped_not_buffered_forever() {
+        // RS-003: a peer dripping bytes with no newline must hit the line cap
+        // as an error (fail-closed), not grow the buffer until timeout.
+        use std::io::Write as _;
+        use std::net::TcpListener;
+
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        let mut transport = TcpTransport::connect(
+            &format!("{}:{}", addr.ip(), addr.port()),
+            Duration::from_secs(2),
+        )
+        .unwrap();
+        let (mut _server, _) = listener.accept().unwrap();
+
+        // 128 KiB of non-newline bytes > the 64 KiB cap.
+        _server.write_all(&vec![b'a'; 128 * 1024]).unwrap();
+        let result = transport.read_line();
+        match result {
+            Err(e) => assert_eq!(e.kind(), std::io::ErrorKind::InvalidData),
+            other => panic!("expected over-limit error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn framed_line_under_cap_still_reads_fine() {
+        use std::io::Write as _;
+        use std::net::TcpListener;
+
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        let mut transport = TcpTransport::connect(
+            &format!("{}:{}", addr.ip(), addr.port()),
+            Duration::from_secs(2),
+        )
+        .unwrap();
+        let (mut server, _) = listener.accept().unwrap();
+
+        server
+            .write_all(
+                br#"{"type":"state","interlockState":"isolated","feedbackOk":false}"#,
+            )
+            .unwrap();
+        server.write_all(b"\n").unwrap();
+        assert_eq!(
+            transport.read_line().unwrap().as_deref(),
+            Some(r#"{"type":"state","interlockState":"isolated","feedbackOk":false}"#)
+        );
     }
 }

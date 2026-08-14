@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getCurrentDemoUserKey, getStoredDemoMode, setRuntimeDemoMode, setStoredDemoMode } from '../config/demo-mode';
+import { canUseDemoMode, getCurrentDemoUserKey, getStoredDemoMode, setRuntimeDemoMode, setStoredDemoMode } from '../config/demo-mode';
 import { isPublicStandaloneRoute } from '../config/public-routes';
 import { fetchSystemMode, switchSystemMode } from '../services/api';
 
@@ -22,6 +22,13 @@ interface DemoContextType {
      * This ensures demo mode uses the same data pipeline as production
      */
     dataSource: DataSource;
+    /**
+     * FE-001 (audit 2026-08): true when the last backend mode switch failed.
+     * The local toggle is kept working offline (deliberate), but the operator
+     * must be able to SEE that the backend is still in the previous mode
+     * instead of a silent `.catch(() => {})`.
+     */
+    backendModeSyncFailed: boolean;
     refreshDemoState: () => Promise<void>;
 }
 
@@ -34,6 +41,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     const [attackSimEnabled, setAttackSimEnabled] = useState<boolean>(false);
     const [modeResolved, setModeResolved] = useState<boolean>(false);
     const [dataSource, setDataSource] = useState<DataSource>('api');
+    const [backendModeSyncFailed, setBackendModeSyncFailed] = useState<boolean>(false);
 
     const syncLocalDemoState = () => {
         const userKey = getCurrentDemoUserKey();
@@ -80,6 +88,9 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
     const toggleDemoMode = () => {
         if (isSwitchingDemoMode) return;
+        // FE-001: demo toggle is a build-time opt-in (canUseDemoMode). In a
+        // build without demo support the toggle is inert.
+        if (!canUseDemoMode()) return;
         setIsSwitchingDemoMode(true);
 
         const nextDemoMode = !isDemoMode;
@@ -93,9 +104,15 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
             .then(async () => {
                 try {
                     await switchSystemMode(nextDemoMode ? 'demo' : 'production');
+                    setBackendModeSyncFailed(false);
                     await refreshDemoState();
-                } catch {
-                    // Keep the local toggle working even when the backend mode switch is unavailable.
+                } catch (error) {
+                    // FE-001: keep the local toggle working offline (deliberate
+                    // design), but surface the backend sync failure instead of
+                    // swallowing it — the operator must know the backend is
+                    // still in the previous mode.
+                    setBackendModeSyncFailed(true);
+                    console.warn('Backend system-mode switch failed; local demo toggle applied, backend mode unchanged.', error);
                 }
             })
             .finally(() => {
@@ -111,6 +128,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
             attackSimEnabled,
             modeResolved,
             dataSource,
+            backendModeSyncFailed,
             refreshDemoState
         }}>
             {children}

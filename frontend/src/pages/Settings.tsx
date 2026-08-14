@@ -7,6 +7,7 @@ import ModelSelector from '../components/ModelSelector';
 import PlatformCapabilitySettings from '../components/PlatformCapabilitySettings';
 import { ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
 import { logout } from '../services/api';
+import { isAllowedRedirectTarget } from '../security/redirect-guard';
 import { setSessionUserIdentity } from '../services/session-cache';
 
 const Settings = () => {
@@ -22,8 +23,15 @@ const Settings = () => {
             const result = await logout();
             setSessionUserIdentity(null);
             if (result?.endSessionUrl) {
-                window.location.assign(result.endSessionUrl);
-                return;
+                // FE-002: endSessionUrl is backend-supplied — only follow it
+                // when it is a same-origin/allowlisted target. On mismatch we
+                // still complete the local logout below.
+                if (!isAllowedRedirectTarget(result.endSessionUrl)) {
+                    console.warn('Blocked OIDC end-session redirect to untrusted target:', result.endSessionUrl);
+                } else {
+                    window.location.assign(result.endSessionUrl);
+                    return;
+                }
             }
         } catch {
             // proceed with local cleanup even if server call fails
