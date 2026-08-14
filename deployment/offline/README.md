@@ -20,7 +20,8 @@ node scripts/release/                  tar -xzf aetherguard-offline-*.tar.gz
 | `.env.example` | 配置模板;安装器离线生成全部密钥 |
 | `install.sh` | 客户机安装器(见下) |
 | `manifest.json` | 版本、镜像清单、构建机架构、是否含 Docker 载荷 |
-| `SHA256SUMS` | 逐文件完整性清单,安装器强制校验(`--skip-verify` 可跳过但会显式警告) |
+| `SHA256SUMS` | 逐文件完整性清单,安装器强制校验;`--skip-verify` 单独使用会被**拒绝**,须同时传 `--accept-unverified` 显式自担风险 |
+| `SHA256SUMS.sig`(可选) | `--signing-key` 构建时产生的厂商签名;客户机 `install.sh --verify-key <公钥>` 先验签再验清单——防蓄意整包替换(2026-08 审计 DP-010) |
 | `docker/`(可选) | `--include-docker` 时:Docker 静态引擎 tgz + Compose v2 插件二进制,供无 Docker 客户机现场安装 |
 
 ## 构建机要求与命令
@@ -42,6 +43,10 @@ node scripts/release/build-offline-bundle.mjs --include-docker
 #   --arch x86_64|aarch64     仅决定下载哪个架构的 Docker 静态二进制
 #   --skip-pull               跳过第三方基础镜像 pull(用本地缓存)
 #   --keep-staging            保留 staging 目录便于检查
+#   --signing-key <私钥.pem>  对 SHA256SUMS 产生厂商签名(配套客户机 --verify-key;DP-010)
+#   --docker-engine-sha256 / --compose-plugin-sha256
+#                             下载摘要 pin,不匹配即中止(CI 应固定传入;DP-011;也可用环境变量
+#                             DOCKER_STATIC_TGZ_SHA256 / DOCKER_COMPOSE_PLUGIN_SHA256)
 ```
 
 产物:`dist/offline/aetherguard-offline-<版本>-<架构>.tar.gz`(+ 同名 `.sha256`)。`dist/` 已被 .gitignore 排除,产物不入库。
@@ -94,6 +99,6 @@ docker compose -f docker-compose.yml -f docker-compose.offline.yml down -v     #
 
 ## 安全说明
 
-- `SHA256SUMS` 只防**传输损坏与无意篡改**;防蓄意替换需在可信信道核对外层 `.tar.gz.sha256`(或后续引入签名,当前未实现)。
+- `SHA256SUMS` 只防**传输损坏与无意篡改**;防蓄意替换已实现厂商签名(2026-08 审计 DP-010):构建时 `--signing-key` 产生 `SHA256SUMS.sig`,公钥经**带外信道**(如企业内网/安全邮件)发给客户,安装时 `install.sh --verify-key <公钥.pem>` 先验签;带签名的包在无 `--verify-key` 时安装器直接拒绝。
 - 密钥全部在客户机现场随机生成,不在分发包内预置;`.env` 权限 600。
 - 三处密钥生成器(`scripts/setup.mjs`、`deployment/production/setup-env.sh`、本包 `install.sh`)的键列表必须同步演进;任一模板新增 `change_me` 键而生成器未跟上时,安装器会在"占位符残留"检查处硬失败而不是带弱密钥上线。

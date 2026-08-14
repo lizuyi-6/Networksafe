@@ -8,15 +8,27 @@
 # Docker Engine + Compose v2.24+.
 #
 # Usage (from the extracted bundle directory, as root):
-#   sudo bash install.sh [--origin http://<operator-host>:8080] [--skip-verify]
+#   sudo bash install.sh [--origin http://<operator-host>:8080]
+#                        [--verify-key /path/to/aetherguard-bundle-public.pem]
+#                        [--skip-verify --accept-unverified]
 #
 # What it does:
-#   1. Verifies SHA256SUMS (USB/transfer integrity)
+#   1. Verifies SHA256SUMS (USB/transfer integrity); when the bundle carries a
+#      vendor signature (SHA256SUMS.sig), verifies it with --verify-key FIRST
 #   2. Ensures Docker Engine + Compose v2 (installs bundled static build if absent)
 #   3. docker load images/images.tar
 #   4. Generates .env with random secrets (openssl if present, /dev/urandom fallback)
 #   5. docker compose up -d --no-build  (never builds, never pulls)
 #   6. Waits for backend container health and prints access info
+#
+# SECURITY (audit 2026-08, DP-010/DP-011):
+#   - Integrity verification is fail-closed: it cannot be silently skipped.
+#     --skip-verify now requires a SECOND explicit flag (--accept-unverified)
+#     and still aborts when used alone.
+#   - When SHA256SUMS.sig exists (bundle built with --signing-key), the
+#     installer requires --verify-key and verifies the vendor signature over
+#     SHA256SUMS before the per-file check — this is what defends against a
+#     deliberate bundle replacement, not just transfer corruption.
 #
 # Secret-generation key list mirrors deployment/production/setup-env.sh and
 # scripts/setup.mjs (GENERATED_KEYS) — keep the three in sync.
@@ -35,13 +47,17 @@ fail() { say "${RED}[ERROR]${RESET} $*" >&2; exit 1; }
 
 EXTRA_ORIGIN=""
 SKIP_VERIFY=0
+ACCEPT_UNVERIFIED=0
+VERIFY_KEY=""
 ENV_ONLY=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --origin)      EXTRA_ORIGIN="${2:-}"; shift 2 ;;
-    --skip-verify) SKIP_VERIFY=1; shift ;;
-    --env-only)    ENV_ONLY=1; shift ;;
-    *) fail "unknown option: $1 (supported: --origin <url>, --skip-verify, --env-only)" ;;
+    --origin)             EXTRA_ORIGIN="${2:-}"; shift 2 ;;
+    --skip-verify)        SKIP_VERIFY=1; shift ;;
+    --accept-unverified)  ACCEPT_UNVERIFIED=1; shift ;;
+    --verify-key)         VERIFY_KEY="${2:-}"; shift 2 ;;
+    --env-only)           ENV_ONLY=1; shift ;;
+    *) fail "unknown option: $1 (supported: --origin <url>, --verify-key <pem>, --skip-verify --accept-unverified, --env-only)" ;;
   esac
 done
 
@@ -50,16 +66,33 @@ done
 
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.offline.yml)
 
-# ─── 1. Integrity check ───────────────────────────────────────────────────────
+# ─── 1. Integrity check (fail-closed, DP-010/DP-011) ──────────────────────────
+if [[ "${SKIP_VERIFY}" -eq 1 && "${ACCEPT_UNVERIFIED}" -eq 0 ]]; then
+  fail "--skip-verify alone is refused: pass BOTH --skip-verify --accept-unverified to acknowledge an unverified install"
+fi
+
 if [[ "${SKIP_VERIFY}" -eq 1 ]]; then
-  warn "integrity verification SKIPPED by --skip-verify"
+  warn "integrity verification SKIPPED (--skip-verify --accept-unverified given) — you are installing UNVERIFIED code on this host"
 elif [[ -f SHA256SUMS ]]; then
+  # Vendor signature (when the bundle carries one) takes precedence: a
+  # signature failure means SHA256SUMS itself was replaced.
+  if [[ -f SHA256SUMS.sig ]]; then
+    [[ -n "${VERIFY_KEY}" && -f "${VERIFY_KEY}" ]] \
+      || fail "bundle is vendor-signed (SHA256SUMS.sig present) but --verify-key <public-pem> is missing/not found — refusing unverified install"
+    command -v openssl &>/dev/null || fail "openssl not found (required to verify the vendor signature)"
+    say "--> Verifying vendor signature over SHA256SUMS..."
+    openssl dgst -sha256 -verify "${VERIFY_KEY}" -signature SHA256SUMS.sig SHA256SUMS \
+      || fail "vendor signature verification FAILED — the bundle was replaced or is corrupt. Do not install."
+    ok "vendor signature verified"
+  elif [[ -n "${VERIFY_KEY}" ]]; then
+    fail "--verify-key given but the bundle carries no SHA256SUMS.sig — inconsistent bundle, refusing"
+  fi
   say "--> Verifying bundle integrity (SHA256SUMS)..."
   command -v sha256sum &>/dev/null || fail "sha256sum not found (coreutils required)"
   sha256sum -c SHA256SUMS --quiet || fail "integrity check FAILED — the bundle is corrupted or tampered with. Do not install."
   ok "integrity verified ($(wc -l < SHA256SUMS) files)"
 else
-  fail "SHA256SUMS missing from bundle (use --skip-verify only if you accept an unverified install)"
+  fail "SHA256SUMS missing from bundle (pass --skip-verify --accept-unverified only if you accept an unverified install)"
 fi
 
 # ─── Offline secret generation (no openssl required; usable via --env-only) ──
@@ -125,6 +158,7 @@ generate_env_file() {
     backfill_key "REDIS_PASSWORD"              "$(rand_hex 16)"
     backfill_key "DEVICE_COMMAND_SECRET"       "$(rand_hex 32)"
     backfill_key "SERIAL_HELPER_SHARED_SECRET" "${serial_val}"
+    backfill_key "FASTPATH_AUTH_SECRET"        "$(rand_hex 32)"
     backfill_key "POSTGRES_PASSWORD"           "${pg_val}"
     backfill_key "SHADOW_DATABASE_URL"         "${shadow_val}"
     backfill_key "S3_SECRET_KEY"               "$(rand_hex 16)"
@@ -162,6 +196,7 @@ generate_env_file() {
   replace_secret "REDIS_PASSWORD"              "$(rand_hex 16)"
   replace_secret "DEVICE_COMMAND_SECRET"       "${DEVICE_COMMAND_SECRET_VAL}"
   replace_secret "SERIAL_HELPER_SHARED_SECRET" "${SERIAL_HELPER_VAL}"
+  replace_secret "FASTPATH_AUTH_SECRET"        "$(rand_hex 32)"
   replace_secret "POSTGRES_PASSWORD"           "${POSTGRES_PASSWORD_VAL}"
   replace_secret "SHADOW_DATABASE_URL"         "postgres://aetherguard:${POSTGRES_PASSWORD_VAL}@postgres:5432/aetherguard"
   replace_secret "S3_SECRET_KEY"               "$(rand_hex 16)"

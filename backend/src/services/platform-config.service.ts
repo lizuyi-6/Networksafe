@@ -45,6 +45,46 @@ export interface NotificationSettings {
   channels: NotificationChannelConfig[];
 }
 
+/**
+ * SECURITY FIX (audit 2026-08, AG-B07): sentinel returned in place of secret
+ * values when a non-platform-admin reads the config. Chosen to be obviously
+ * non-secret and non-empty so UI forms still render a populated field.
+ */
+export const REDACTED_CONFIG_SECRET = '********';
+
+/**
+ * SECURITY FIX (audit 2026-08, AG-B07): return a deep copy of `config` with
+ * notification-channel secrets masked: every channel's `smtp.password` and
+ * every webhook `headers` value (webhook headers commonly carry bearer tokens
+ * / signing secrets, and the platform cannot know which keys are sensitive —
+ * mask all values, keep the keys so the channel shape stays renderable).
+ *
+ * The input is the service's cached live object, so this ALWAYS clones before
+ * masking — callers can mutate the result freely.
+ */
+export function redactPlatformConfigSecrets(config: PlatformConfig): PlatformConfig {
+  const copy = JSON.parse(JSON.stringify(config)) as PlatformConfig;
+  const channels = copy?.notifications?.channels;
+  if (Array.isArray(channels)) {
+    for (const channel of channels) {
+      if (!channel || typeof channel !== 'object') {
+        continue;
+      }
+      if (channel.smtp && typeof channel.smtp === 'object' && channel.smtp.password) {
+        channel.smtp.password = REDACTED_CONFIG_SECRET;
+      }
+      if (channel.headers && typeof channel.headers === 'object') {
+        for (const key of Object.keys(channel.headers)) {
+          if (channel.headers[key]) {
+            channel.headers[key] = REDACTED_CONFIG_SECRET;
+          }
+        }
+      }
+    }
+  }
+  return copy;
+}
+
 export interface AIRoutingSettings {
   mode: AIRoutingMode;
   preferredModelId: string | null;

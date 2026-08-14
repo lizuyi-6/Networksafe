@@ -53,6 +53,17 @@ const ARCH = flagValue('--arch', 'x86_64'); // for static-binary download only
 const INCLUDE_DOCKER = hasFlag('--include-docker');
 const SKIP_PULL = hasFlag('--skip-pull');
 const KEEP_STAGING = hasFlag('--keep-staging');
+// SECURITY (audit 2026-08, DP-011): optional digest pins for the downloaded
+// Docker static engine / Compose plugin. Set them in CI (env or flags) so a
+// MITM'd download cannot silently enter the bundle. Without a pin the build
+// still prints the computed digest for operator review and records it in
+// manifest.json; the customer host additionally verifies every staged file
+// against the signed SHA256SUMS.
+const DOCKER_STATIC_TGZ_SHA256 = flagValue('--docker-engine-sha256', process.env.DOCKER_STATIC_TGZ_SHA256 || '');
+const DOCKER_COMPOSE_PLUGIN_SHA256 = flagValue('--compose-plugin-sha256', process.env.DOCKER_COMPOSE_PLUGIN_SHA256 || '');
+// SECURITY (audit 2026-08, DP-010): optional detached vendor signature over
+// SHA256SUMS, verified on the customer host via install.sh --verify-key.
+const SIGNING_KEY = flagValue('--signing-key', process.env.AETHERGUARD_BUNDLE_SIGNING_KEY || '');
 
 const log = (m) => console.log(`[bundle] ${m}`);
 const die = (m) => {
@@ -173,11 +184,39 @@ if (INCLUDE_DOCKER) {
   sh('curl', [...CURL_FLAGS, '-o', enginePath, engineUrl]);
   log(`downloading Compose plugin v${COMPOSE_PLUGIN_VERSION}...`);
   sh('curl', [...CURL_FLAGS, '-o', composePath, composeUrl]);
+
+  // SECURITY (audit 2026-08, DP-011): verify the downloads against digest
+  // pins when provided (die on mismatch); always print + record the computed
+  // digests so the operator can pin them in CI afterwards.
+  const digestOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
+  const engineSha = digestOf(enginePath);
+  const composeSha = digestOf(composePath);
+  log(`docker engine sha256  : ${engineSha}`);
+  log(`compose plugin sha256 : ${composeSha}`);
+  if (DOCKER_STATIC_TGZ_SHA256) {
+    if (engineSha !== DOCKER_STATIC_TGZ_SHA256.toLowerCase()) {
+      die(`Docker static engine digest mismatch: got ${engineSha}, pin ${DOCKER_STATIC_TGZ_SHA256} — aborting (possible MITM/proxy tampering)`);
+    }
+    log('docker engine digest pin: VERIFIED');
+  } else {
+    log('NOTE: DOCKER_STATIC_TGZ_SHA256 pin not set — pin it in CI to make this check mandatory');
+  }
+  if (DOCKER_COMPOSE_PLUGIN_SHA256) {
+    if (composeSha !== DOCKER_COMPOSE_PLUGIN_SHA256.toLowerCase()) {
+      die(`Compose plugin digest mismatch: got ${composeSha}, pin ${DOCKER_COMPOSE_PLUGIN_SHA256} — aborting (possible MITM/proxy tampering)`);
+    }
+    log('compose plugin digest pin: VERIFIED');
+  } else {
+    log('NOTE: DOCKER_COMPOSE_PLUGIN_SHA256 pin not set — pin it in CI to make this check mandatory');
+  }
+
   dockerPayload = {
     engine: path.basename(enginePath),
     engineVersion: DOCKER_STATIC_VERSION,
+    engineSha256: engineSha,
     composePlugin: 'docker-compose',
     composeVersion: COMPOSE_PLUGIN_VERSION,
+    composeSha256: composeSha,
     arch: ARCH,
   };
 }
@@ -211,6 +250,17 @@ for (const file of walk(STAGING)) {
 }
 writeFileSync(path.join(STAGING, 'SHA256SUMS'), `${sums.sort((a, b) => a.localeCompare(b)).join('\n')}\n`);
 log(`SHA256SUMS written (${sums.length} files)`);
+
+// SECURITY (audit 2026-08, DP-010): detached vendor signature over SHA256SUMS.
+// The public key is distributed to customers out-of-band; install.sh verifies
+// the signature (openssl dgst -sha256 -verify) before trusting the manifest —
+// closing the "SHA256SUMS only defends transport corruption, not deliberate
+// replacement" gap (previously admitted in the offline README).
+if (SIGNING_KEY) {
+  if (!existsSync(SIGNING_KEY)) die(`--signing-key not found: ${SIGNING_KEY}`);
+  sh('openssl', ['dgst', '-sha256', '-sign', SIGNING_KEY, '-out', path.join(STAGING, 'SHA256SUMS.sig'), path.join(STAGING, 'SHA256SUMS')]);
+  log('SHA256SUMS.sig written (vendor signature; verify on site with --verify-key)');
+}
 
 // ─── 9. Final tarball ─────────────────────────────────────────────────────────
 log(`packing ${OUT_TARBALL} ...`);

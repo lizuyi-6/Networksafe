@@ -1,5 +1,6 @@
 import http from 'http';
 import https from 'https';
+import { createHmac } from 'crypto';
 import axios, { AxiosInstance } from 'axios';
 import { platformConfigService } from './platform-config.service';
 import logger from '../utils/logger';
@@ -8,6 +9,21 @@ import {
   HttpTrafficEvaluateResponse,
   HttpTrafficThreat
 } from './http-traffic-evaluator.service';
+
+/**
+ * SECURITY FIX (audit 2026-08, RF-001): build the `X-Fastpath-Auth` header the
+ * rust-fastpath middleware requires: `HMAC-SHA256 <hex>` where the MAC is
+ * computed over the exact request body string (empty string for body-less
+ * GETs) with the shared secret `FASTPATH_AUTH_SECRET`.
+ *
+ * Cross-language contract: the Rust side (main.rs FastpathAuth::compute_mac)
+ * pins RFC 4231 test case 2; this helper must produce the identical MAC for
+ * the same key/data (pinned in fastpath-client.auth.test.ts).
+ */
+export function buildFastpathAuthHeader(secret: string, bodyString: string): string {
+  const mac = createHmac('sha256', secret).update(bodyString, 'utf8').digest('hex');
+  return `HMAC-SHA256 ${mac}`;
+}
 
 export interface FastpathCheckRequest {
   tenantId?: string;
@@ -306,6 +322,31 @@ class FastpathClientService {
       httpAgent: this.httpAgent,
       httpsAgent: this.httpsAgent,
       validateStatus: () => true
+    });
+
+    // RF-001: sign every request with the shared secret when configured. The
+    // body is serialized HERE (before axios's transformRequest) so the MAC is
+    // computed over the exact wire bytes the fastpath verifies. The secret is
+    // read at request time so env changes apply without rebuilding clients.
+    client.interceptors.request.use((config) => {
+      const secret = String(process.env.FASTPATH_AUTH_SECRET || '').trim();
+      if (!secret) {
+        return config;
+      }
+      let bodyString = '';
+      if (config.data !== undefined && config.data !== null) {
+        if (typeof config.data === 'string') {
+          bodyString = config.data;
+        } else {
+          bodyString = JSON.stringify(config.data);
+          config.data = bodyString;
+        }
+        config.headers = config.headers || {};
+        config.headers['Content-Type'] = 'application/json';
+      }
+      config.headers = config.headers || {};
+      config.headers['X-Fastpath-Auth'] = buildFastpathAuthHeader(secret, bodyString);
+      return config;
     });
 
     this.clients.set(key, client);

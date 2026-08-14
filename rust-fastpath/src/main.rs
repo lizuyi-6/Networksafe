@@ -1,12 +1,14 @@
 use axum::{
-    extract::State,
+    extract::{DefaultBodyLimit, State},
     http::StatusCode,
-    response::IntoResponse,
+    middleware::{self, Next},
+    response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
 use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use chrono::{TimeZone, Utc};
+use hmac::{Hmac, Mac};
 use once_cell::sync::Lazy;
 #[cfg(unix)]
 use hyper::{server::conn::http1, service::service_fn};
@@ -16,6 +18,7 @@ use parking_lot::Mutex;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use sha2::Sha256;
 use std::{
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
     env,
@@ -32,6 +35,7 @@ use std::{
 use tower::Service;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
+use subtle::ConstantTimeEq;
 use tracing::{info, warn};
 
 // ---------------------------------------------------------------------------
@@ -118,11 +122,38 @@ mod protocols;
 const SHARD_COUNT: usize = 64;
 const CLEANUP_INTERVAL_SECS: u64 = 60;
 
+// ── SECURITY FIX (audit 2026-08, RF-001/RF-002) ─────────────────────────────
+// Hard resource bounds. Before these, an attacker (or a misbehaving tenant)
+// could grow the counter map without limit: `window_ms=u64::MAX` saturated
+// `reset_at_ms` to u64::MAX so the cleanup task NEVER reaped the entry
+// (CWE-770 unbounded memory), and unbounded tenant/key strings amplified each
+// entry. The API also had no authentication at all (CWE-306).
+
+/// Upper bound for a rate-limit window. 24h is far above any legitimate
+/// configuration; clamping here guarantees `reset_at_ms = now + window` never
+/// saturates, so the cleanup task always reaps expired entries.
+const MAX_WINDOW_MS: u64 = 24 * 60 * 60 * 1000;
+/// Upper bound for the namespaced counter key (`tenant:key`) in bytes.
+const MAX_NAMESPACED_KEY_BYTES: usize = 512;
+/// Default cap on total live counter entries (across all shards).
+const DEFAULT_MAX_ACTIVE_ENTRIES: usize = 1_000_000;
+/// Hard cap on request body size (the largest legitimate payloads are HTTP
+/// traffic evaluations, bounded by ~64KiB bodies before base64 inflation).
+const MAX_BODY_BYTES: usize = 2 * 1024 * 1024;
+/// Per-request wall-clock budget.
+const REQUEST_TIMEOUT_SECS: u64 = 10;
+/// Minimum length of FASTPATH_AUTH_SECRET when authentication is enabled.
+pub const MIN_AUTH_SECRET_BYTES: usize = 16;
+
 #[derive(Clone)]
 struct AppState {
     counters: Arc<Vec<Mutex<HashMap<String, CounterEntry>>>>,
     metrics: Arc<FastpathMetrics>,
     transport: TransportDetails,
+    /// RF-002: per-shard entry cap (total cap / SHARD_COUNT). Inserting a NEW
+    /// key into a full shard evicts the nearest-expiry entry instead of
+    /// growing the map without bound.
+    max_entries_per_shard: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -321,6 +352,7 @@ struct FastpathMetrics {
     last_cleanup_at_ms: AtomicU64,
     last_cleanup_removed: AtomicU64,
     last_flush_removed: AtomicU64,
+    evictions: AtomicU64,
 }
 
 #[derive(Debug, Serialize)]
@@ -343,6 +375,7 @@ struct MetricsSnapshot {
     last_cleanup_at: Option<String>,
     last_cleanup_removed: u64,
     last_flush_removed: u64,
+    evictions: u64,
 }
 
 impl FastpathMetrics {
@@ -364,6 +397,7 @@ impl FastpathMetrics {
             last_cleanup_at_ms: AtomicU64::new(0),
             last_cleanup_removed: AtomicU64::new(0),
             last_flush_removed: AtomicU64::new(0),
+            evictions: AtomicU64::new(0),
         }
     }
 
@@ -448,12 +482,22 @@ impl FastpathMetrics {
             },
             last_cleanup_removed: self.last_cleanup_removed.load(Ordering::Relaxed),
             last_flush_removed: self.last_flush_removed.load(Ordering::Relaxed),
+            evictions: self.evictions.load(Ordering::Relaxed),
         }
     }
 }
 
 impl AppState {
     fn new(transport: TransportDetails) -> Self {
+        let max_entries = env::var("FASTPATH_MAX_ENTRIES")
+            .ok()
+            .and_then(|value| value.trim().parse::<usize>().ok())
+            .filter(|value| *value > 0)
+            .unwrap_or(DEFAULT_MAX_ACTIVE_ENTRIES);
+        Self::with_limits(transport, max_entries)
+    }
+
+    fn with_limits(transport: TransportDetails, max_active_entries: usize) -> Self {
         let mut shards = Vec::with_capacity(SHARD_COUNT);
         for _ in 0..SHARD_COUNT {
             shards.push(Mutex::new(HashMap::new()));
@@ -464,6 +508,7 @@ impl AppState {
             counters: Arc::new(shards),
             metrics: Arc::new(FastpathMetrics::new(started_at_ms)),
             transport,
+            max_entries_per_shard: (max_active_entries / SHARD_COUNT).max(1),
         }
     }
 
@@ -539,6 +584,155 @@ impl AppState {
     }
 }
 
+// ── SECURITY FIX (audit 2026-08, RF-001): HMAC-SHA256 request authentication ─
+//
+// The fastpath API previously had NO authentication: any process that could
+// reach the unix socket (shared docker volume) or the TCP port could flush
+// the whole platform's rate-limit state (`/v1/batch/flush`) or forge verdicts
+// the backend trusts (`decisionSource="rust-fastpath"`). Every `/v1/*` route
+// now requires `X-Fastpath-Auth: HMAC-SHA256 <hex>` where the MAC is computed
+// over the raw request body with the shared secret `FASTPATH_AUTH_SECRET`
+// (mirrored in backend fastpath-client.service.ts — see its
+// buildFastpathAuthHeader). `/healthz` stays public for container health
+// probes; it exposes only counters, no tenant data.
+
+type HmacSha256 = Hmac<Sha256>;
+
+#[derive(Clone)]
+struct FastpathAuth {
+    secret: Arc<Vec<u8>>,
+}
+
+impl FastpathAuth {
+    fn from_secret(secret: String) -> Self {
+        Self {
+            secret: Arc::new(secret.into_bytes()),
+        }
+    }
+
+    fn compute_mac(&self, body: &[u8]) -> [u8; 32] {
+        let mut mac = <HmacSha256 as Mac>::new_from_slice(&self.secret)
+            .expect("HMAC accepts any key length");
+        mac.update(body);
+        mac.finalize().into_bytes().into()
+    }
+
+    /// Verify `X-Fastpath-Auth: HMAC-SHA256 <64 lowercase/uppercase hex>`
+    /// against the MAC over `body`, in constant time.
+    fn verify_header(&self, header_value: Option<&str>, body: &[u8]) -> bool {
+        let Some(header) = header_value else {
+            return false;
+        };
+        let Some(hex_part) = header.strip_prefix("HMAC-SHA256 ") else {
+            return false;
+        };
+        let hex_part = hex_part.trim();
+        if hex_part.len() != 64 {
+            return false;
+        }
+        let mut presented = [0u8; 32];
+        for (index, byte) in hex_part.bytes().enumerate() {
+            let nibble = match byte {
+                b'0'..=b'9' => byte - b'0',
+                b'a'..=b'f' => byte - b'a' + 10,
+                b'A'..=b'F' => byte - b'A' + 10,
+                _ => return false,
+            };
+            if index % 2 == 0 {
+                presented[index / 2] = nibble << 4;
+            } else {
+                presented[index / 2] |= nibble;
+            }
+        }
+        let expected = self.compute_mac(body);
+        // Constant-time comparison over the full 32 bytes.
+        let mut diff: u8 = 0;
+        for (a, b) in expected.iter().zip(presented.iter()) {
+            diff |= a.ct_eq(b).unwrap_u8() ^ 1;
+        }
+        diff == 0
+    }
+}
+
+fn unauthorized_response(reason: &'static str) -> Response {
+    (
+        StatusCode::UNAUTHORIZED,
+        Json(json!({ "error": "fastpath_unauthorized", "message": reason })),
+    )
+        .into_response()
+}
+
+async fn require_hmac_auth(
+    State(auth): State<FastpathAuth>,
+    request: axum::extract::Request,
+    next: Next,
+) -> Response {
+    let header = request
+        .headers()
+        .get("x-fastpath-auth")
+        .and_then(|value| value.to_str().ok())
+        .map(ToOwned::to_owned);
+    let (mut parts, body) = request.into_parts();
+    let bytes = match axum::body::to_bytes(body, MAX_BODY_BYTES).await {
+        Ok(bytes) => bytes,
+        Err(_) => {
+            return (
+                StatusCode::PAYLOAD_TOO_LARGE,
+                Json(json!({ "error": "fastpath_body_too_large" })),
+            )
+                .into_response()
+        }
+    };
+    if !auth.verify_header(header.as_deref(), &bytes) {
+        return unauthorized_response("missing or invalid X-Fastpath-Auth HMAC");
+    }
+    // Body was buffered for MAC verification — reconstruct the request.
+    parts.headers.remove("content-length");
+    let request = axum::extract::Request::from_parts(parts, axum::body::Body::from(bytes));
+    next.run(request).await
+}
+
+/// Wall-clock budget per request so a slow client cannot pin workers.
+async fn request_timeout(request: axum::extract::Request, next: Next) -> Response {
+    match tokio::time::timeout(Duration::from_secs(REQUEST_TIMEOUT_SECS), next.run(request)).await {
+        Ok(response) => response,
+        Err(_) => (
+            StatusCode::REQUEST_TIMEOUT,
+            Json(json!({ "error": "fastpath_request_timeout" })),
+        )
+            .into_response(),
+    }
+}
+
+/// RF-001/RF-002 hardening applied to the route table. `auth = None` builds an
+/// unauthenticated router (local development with FASTPATH_AUTH_DISABLED=1
+/// only — `main` refuses to serve this way on a network-reachable transport).
+fn build_router(state: AppState, auth: Option<FastpathAuth>) -> Router {
+    let protected = Router::new()
+        .route("/v1/rate/check", post(check_rate))
+        .route("/v1/socket/check", post(check_socket))
+        .route("/v1/traffic/http/evaluate", post(evaluate_http_traffic))
+        .route("/v1/protocols/manifests", get(protocol_manifests))
+        .route("/v1/protocols/policies", get(protocol_policies))
+        .route("/v1/protocols/evaluate", post(evaluate_protocol))
+        .route("/v1/batch/flush", post(flush));
+
+    let protected = match auth {
+        Some(auth) => protected.route_layer(middleware::from_fn_with_state(
+            auth,
+            require_hmac_auth,
+        )),
+        None => protected,
+    };
+
+    Router::new()
+        .route("/healthz", get(healthz))
+        .merge(protected)
+        .layer(middleware::from_fn(request_timeout))
+        .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
+        .with_state(state)
+}
+
 #[tokio::main]
 async fn main() {
     if env::args().any(|arg| arg == "self-check") {
@@ -556,6 +750,7 @@ async fn main() {
         .init();
 
     let transport = resolve_transport();
+    let auth = resolve_auth(&transport);
     let state = AppState::new(transport.clone());
     let cleanup_state = state.clone();
     tokio::spawn(async move {
@@ -573,16 +768,7 @@ async fn main() {
         }
     });
 
-    let app = Router::new()
-        .route("/healthz", get(healthz))
-        .route("/v1/rate/check", post(check_rate))
-        .route("/v1/socket/check", post(check_socket))
-        .route("/v1/traffic/http/evaluate", post(evaluate_http_traffic))
-        .route("/v1/protocols/manifests", get(protocol_manifests))
-        .route("/v1/protocols/policies", get(protocol_policies))
-        .route("/v1/protocols/evaluate", post(evaluate_protocol))
-        .route("/v1/batch/flush", post(flush))
-        .with_state(state);
+    let app = build_router(state, auth);
 
     #[cfg(unix)]
     {
@@ -706,23 +892,53 @@ async fn check_socket(
     check_with_route(state, input, "socket")
 }
 
-fn check_with_route(state: AppState, input: CheckRequest, route: &str) -> impl IntoResponse {
+fn check_with_route(state: AppState, input: CheckRequest, route: &str) -> Response {
     let now_ms = now_ms();
     let risk_flags = collect_risk_flags(&input);
     let tenant = input.tenant_id.unwrap_or_else(|| "global".to_string());
+
+    // RF-002: bound the map key and the window before touching the map.
+    // - An oversized tenant/key would let a single caller bloat memory.
+    // - window_ms = u64::MAX saturated reset_at_ms so cleanup NEVER reaped
+    //   the entry; clamping to 24h keeps every entry collectable.
+    if tenant.len() + 1 + input.key.len() > MAX_NAMESPACED_KEY_BYTES {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "error": "fastpath_key_too_large",
+                "message": format!("tenant+key exceeds {} bytes", MAX_NAMESPACED_KEY_BYTES)
+            })),
+        )
+            .into_response();
+    }
+    let window_ms = input.window_ms.min(MAX_WINDOW_MS);
+
     let namespaced_key = format!("{}:{}", tenant, input.key);
 
     let shard_index = state.shard_index(&namespaced_key);
     let mut counters = state.counters[shard_index].lock();
     let is_new_key = !counters.contains_key(&namespaced_key);
+    if is_new_key && counters.len() >= state.max_entries_per_shard {
+        // RF-002: shard is at capacity — evict the nearest-expiry entry rather
+        // than growing without bound. Expired entries have the smallest
+        // reset_at_ms, so they are evicted first by construction.
+        if let Some(victim) = counters
+            .iter()
+            .min_by_key(|(_, value)| value.reset_at_ms)
+            .map(|(key, _)| key.clone())
+        {
+            counters.remove(&victim);
+            state.metrics.evictions.fetch_add(1, Ordering::Relaxed);
+        }
+    }
     let entry = counters.entry(namespaced_key).or_insert_with(|| CounterEntry {
         count: 0,
-        reset_at_ms: now_ms.saturating_add(input.window_ms),
+        reset_at_ms: now_ms.saturating_add(window_ms),
     });
 
     if now_ms >= entry.reset_at_ms {
         entry.count = 0;
-        entry.reset_at_ms = now_ms.saturating_add(input.window_ms);
+        entry.reset_at_ms = now_ms.saturating_add(window_ms);
     }
 
     let allowed = entry.count < input.limit;
@@ -753,7 +969,7 @@ fn check_with_route(state: AppState, input: CheckRequest, route: &str) -> impl I
         risk_flags,
     };
 
-    (StatusCode::OK, Json(response))
+    (StatusCode::OK, Json(response)).into_response()
 }
 
 async fn flush(
@@ -1039,6 +1255,88 @@ fn collect_risk_flags(input: &CheckRequest) -> Vec<String> {
     risk_flags
 }
 
+fn is_loopback_host(host: &str) -> bool {
+    host == "127.0.0.1"
+        || host == "localhost"
+        || host == "::1"
+        || host.starts_with("127.")
+        || host == "[::1]"
+}
+
+/// SECURITY FIX (audit 2026-08, RF-001): resolve and validate the startup
+/// authentication posture (fail-closed, see `evaluate_auth_posture`).
+fn resolve_auth(transport: &TransportDetails) -> Option<FastpathAuth> {
+    match evaluate_auth_posture(transport) {
+        Ok(auth) => auth,
+        Err(reason) => {
+            eprintln!("fastpath: {} — refusing to start", reason);
+            std::process::exit(1);
+        }
+    }
+}
+
+/// Pure decision function for the startup auth/bind posture (unit-testable:
+/// reads env, never exits). See `resolve_auth` for the policy rationale.
+fn evaluate_auth_posture(transport: &TransportDetails) -> Result<Option<FastpathAuth>, String> {
+    let explicit_disable = env::var("FASTPATH_AUTH_DISABLED")
+        .map(|value| value.trim() == "1")
+        .unwrap_or(false);
+    let secret = env::var("FASTPATH_AUTH_SECRET")
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
+
+    let non_loopback_tcp = transport.mode == "tcp"
+        && transport
+            .tcp_address
+            .as_deref()
+            .and_then(|address| address.rsplit_once(':'))
+            .map(|(host, _)| !is_loopback_host(host))
+            .unwrap_or(false);
+    let allow_non_loopback = env::var("FASTPATH_TCP_ALLOW_NON_LOOPBACK")
+        .map(|value| value.trim() == "1")
+        .unwrap_or(false);
+
+    let auth = match (&secret, explicit_disable) {
+        (Some(secret), _) => {
+            if secret.len() < MIN_AUTH_SECRET_BYTES {
+                return Err(format!(
+                    "FASTPATH_AUTH_SECRET must be at least {} bytes, got {}",
+                    MIN_AUTH_SECRET_BYTES,
+                    secret.len()
+                ));
+            }
+            Some(FastpathAuth::from_secret(secret.clone()))
+        }
+        (None, true) => {
+            warn!("FASTPATH_AUTH_DISABLED=1: fastpath is serving WITHOUT request authentication — local development only");
+            None
+        }
+        (None, false) => {
+            return Err(
+                "FASTPATH_AUTH_SECRET is required (shared secret for HMAC request auth). \
+                 Set it to the same value as the backend, or set FASTPATH_AUTH_DISABLED=1 \
+                 explicitly for local development"
+                    .to_string(),
+            );
+        }
+    };
+
+    if non_loopback_tcp && (auth.is_none() || !allow_non_loopback) {
+        return Err(
+            "FASTPATH_TCP_HOST is not loopback and the API would be reachable from the \
+             network. Non-loopback binds require BOTH FASTPATH_AUTH_SECRET and \
+             FASTPATH_TCP_ALLOW_NON_LOOPBACK=1"
+                .to_string(),
+        );
+    }
+    if non_loopback_tcp {
+        warn!("fastpath serving on a non-loopback address with HMAC auth and explicit FASTPATH_TCP_ALLOW_NON_LOOPBACK=1");
+    }
+
+    Ok(auth)
+}
+
 fn resolve_transport() -> TransportDetails {
     #[cfg(unix)]
     {
@@ -1064,9 +1362,11 @@ fn resolve_transport() -> TransportDetails {
         .and_then(|value| value.parse::<u16>().ok())
         .unwrap_or(8081);
     let host = env::var("FASTPATH_TCP_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-    if host != "127.0.0.1" && host != "localhost" && !host.starts_with("127.") {
+    if !is_loopback_host(&host) {
+        // Enforcement (refuse-to-start unless explicitly acknowledged) happens
+        // in resolve_auth; keep a log line here for the transport resolution.
         warn!(
-            "FASTPATH_TCP_HOST={} is not loopback; the fastpath API has no auth and will be reachable from the network. Bind to loopback unless you have a network-isolation control (mTLS, firewall) in place.",
+            "FASTPATH_TCP_HOST={} is not loopback; startup will require FASTPATH_AUTH_SECRET + FASTPATH_TCP_ALLOW_NON_LOOPBACK=1",
             host
         );
     }
@@ -1311,6 +1611,268 @@ mod tests {
         match saved_port {
             Some(v) => env::set_var("PORT", v),
             None => env::remove_var("PORT"),
+        }
+    }
+
+    // ── RF-001: HMAC request authentication ─────────────────────────────────
+
+    fn test_transport_tcp(host: &str) -> TransportDetails {
+        TransportDetails {
+            mode: "tcp".to_string(),
+            socket_path: None,
+            tcp_address: Some(format!("{}:8081", host)),
+        }
+    }
+
+    async fn signed_request(
+        app: Router,
+        method: &str,
+        uri: &str,
+        body: Vec<u8>,
+        secret: &str,
+        header_override: Option<&str>,
+    ) -> axum::response::Response {
+        use axum::body::Body;
+        use tower::ServiceExt;
+
+        let auth = FastpathAuth::from_secret(secret.to_string());
+        let mac = auth.compute_mac(&body);
+        let hex: String = mac.iter().map(|byte| format!("{:02x}", byte)).collect();
+        let header = header_override
+            .map(ToOwned::to_owned)
+            .unwrap_or_else(|| format!("HMAC-SHA256 {}", hex));
+
+        let mut builder = axum::http::Request::builder().method(method).uri(uri);
+        if !body.is_empty() || method != "GET" {
+            builder = builder.header("content-type", "application/json");
+        }
+        let request = builder
+            .header("x-fastpath-auth", header)
+            .body(Body::from(body))
+            .expect("request");
+        app.oneshot(request).await.expect("response")
+    }
+
+    fn check_body(tenant: &str, key: &str, window_ms: u64) -> Vec<u8> {
+        serde_json::to_vec(&json!({
+            "tenantId": tenant,
+            "key": key,
+            "windowMs": window_ms,
+            "limit": 10
+        }))
+        .expect("body")
+    }
+
+    #[tokio::test]
+    async fn hmac_rfc4231_vector_pins_cross_language_mac() {
+        // RFC 4231 test case 2: key "Jefe", data "what do ya want for nothing?".
+        // The backend signs with the identical construction
+        // (fastpath-client buildFastpathAuthHeader); pinning the vector here
+        // proves both sides compute the same MAC.
+        let auth = FastpathAuth::from_secret("Jefe".to_string());
+        let mac = auth.compute_mac(b"what do ya want for nothing?");
+        let hex: String = mac.iter().map(|byte| format!("{:02x}", byte)).collect();
+        assert_eq!(
+            hex,
+            "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+        );
+    }
+
+    #[tokio::test]
+    async fn auth_rejects_missing_wrong_and_accepts_correct_mac() {
+        let state = AppState::new(test_transport_tcp("127.0.0.1"));
+        let secret = "unit-test-secret-0123456789";
+        let app = build_router(state, Some(FastpathAuth::from_secret(secret.to_string())));
+        let body = check_body("tenant-a", "key-a", 60_000);
+
+        // Missing header -> 401.
+        let response = signed_request(app.clone(), "POST", "/v1/rate/check", body.clone(), secret, Some(""))
+            .await;
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
+        // Wrong MAC -> 401.
+        let response = signed_request(
+            app.clone(),
+            "POST",
+            "/v1/rate/check",
+            body.clone(),
+            secret,
+            Some("HMAC-SHA256 ".to_string() + &"0".repeat(64)).as_deref(),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
+        // Tampered body (MAC computed over different bytes) -> 401.
+        let response = signed_request(
+            app.clone(),
+            "POST",
+            "/v1/rate/check",
+            check_body("tenant-a", "key-B", 60_000), // different body than signed
+            secret,
+            {
+                let auth = FastpathAuth::from_secret(secret.to_string());
+                let mac = auth.compute_mac(&body);
+                Some(format!("HMAC-SHA256 {}", mac.iter().map(|b| format!("{:02x}", b)).collect::<String>()))
+                    .as_deref()
+            },
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
+        // Correct MAC -> 200 with a well-formed check response.
+        let response = signed_request(app, "POST", "/v1/rate/check", body, secret, None).await;
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn healthz_stays_public_but_get_routes_require_auth() {
+        let state = AppState::new(test_transport_tcp("127.0.0.1"));
+        let secret = "unit-test-secret-0123456789";
+        let app = build_router(state, Some(FastpathAuth::from_secret(secret.to_string())));
+
+        // healthz: no header -> 200 (container health probe path).
+        use tower::ServiceExt;
+        let response = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("GET")
+                    .uri("/healthz")
+                    .body(axum::body::Body::empty())
+                    .expect("request"),
+            )
+            .await
+            .expect("response");
+        assert_eq!(response.status(), StatusCode::OK);
+
+        // GET /v1/protocols/manifests without header -> 401...
+        let response = signed_request(app.clone(), "GET", "/v1/protocols/manifests", Vec::new(), secret, Some(""))
+            .await;
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        // ...and with a correct MAC over the empty body -> 200.
+        let response = signed_request(app, "GET", "/v1/protocols/manifests", Vec::new(), secret, None).await;
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    // ── RF-002: bounded memory ───────────────────────────────────────────────
+
+    #[tokio::test]
+    async fn window_ms_is_clamped_so_cleanup_always_reaps() {
+        let state = AppState::new(test_transport_tcp("127.0.0.1"));
+        let app = build_router(state.clone(), None);
+        let body = check_body("tenant-a", "key-window", u64::MAX);
+
+        let response = signed_request(app, "POST", "/v1/rate/check", body, "unused", None).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), usize::MAX).await.expect("body");
+        let parsed: serde_json::Value = serde_json::from_slice(&body).expect("json");
+        let reset_at_ms = parsed.get("resetAtMs").and_then(|v| v.as_u64()).expect("resetAtMs");
+
+        // Clamped to now + MAX_WINDOW_MS — NOT u64::MAX (which the cleanup
+        // task could never reap, the pre-fix OOM).
+        let now = now_ms();
+        assert!(reset_at_ms <= now.saturating_add(MAX_WINDOW_MS), "reset_at_ms {} not clamped (now={})", reset_at_ms, now);
+        assert!(reset_at_ms > now, "reset must be in the future");
+
+        // And the entry is collectable by cleanup at the clamped horizon.
+        let summary = state.cleanup_expired(now.saturating_add(MAX_WINDOW_MS).saturating_add(1));
+        assert!(summary.after < summary.before || summary.before == 0, "entry must be reapable");
+    }
+
+    #[tokio::test]
+    async fn oversized_key_is_rejected_with_400() {
+        let state = AppState::new(test_transport_tcp("127.0.0.1"));
+        let app = build_router(state, None);
+        let body = check_body("tenant-a", &"k".repeat(MAX_NAMESPACED_KEY_BYTES), 60_000);
+
+        let response = signed_request(app, "POST", "/v1/rate/check", body, "unused", None).await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn shard_cap_evicts_nearest_expiry_instead_of_growing() {
+        // Per-shard cap of 1 (total SHARD_COUNT entries). Find two keys that
+        // hash into the SAME shard so the second insert must evict.
+        let state = AppState::with_limits(test_transport_tcp("127.0.0.1"), SHARD_COUNT);
+        let mut same_shard: Option<(String, String)> = None;
+        'outer: for outer in 0..200u32 {
+            for inner in (outer + 1)..200u32 {
+                let a = format!("key-{}", outer);
+                let b = format!("key-{}", inner);
+                if state.shard_index(&format!("tenant-a:{}", a)) == state.shard_index(&format!("tenant-a:{}", b)) {
+                    same_shard = Some((a, b));
+                    break 'outer;
+                }
+            }
+        }
+        let (key_a, key_b) = same_shard.expect("two keys sharing a shard");
+        assert_eq!(state.shard_index(&format!("tenant-a:{}", key_a)), state.shard_index(&format!("tenant-a:{}", key_b)));
+
+        // Insert A (long window) then B (longer window): B's insert evicts A
+        // because A expires sooner.
+        let response = check_with_route(
+            state.clone(),
+            serde_json::from_slice(&check_body("tenant-a", &key_a, 60_000)).expect("req"),
+            "rate",
+        );
+        assert_eq!(response.status(), StatusCode::OK);
+        let response = check_with_route(
+            state.clone(),
+            serde_json::from_slice(&check_body("tenant-a", &key_b, 120_000)).expect("req"),
+            "rate",
+        );
+        assert_eq!(response.status(), StatusCode::OK);
+
+        assert_eq!(state.active_entries(), 1, "shard must stay at its cap");
+        assert_eq!(state.metrics.evictions.load(Ordering::Relaxed), 1, "eviction must be counted");
+    }
+
+    // ── RF-001: startup posture ─────────────────────────────────────────────
+
+    #[test]
+    fn auth_posture_is_fail_closed() {
+        let saved = [
+            "FASTPATH_AUTH_SECRET",
+            "FASTPATH_AUTH_DISABLED",
+            "FASTPATH_TCP_ALLOW_NON_LOOPBACK",
+        ]
+        .map(|key| (key.to_string(), env::var(key).ok()));
+        for (key, _) in &saved {
+            env::remove_var(key);
+        }
+
+        // Loopback, no secret, no explicit opt-out -> refuse.
+        assert!(evaluate_auth_posture(&test_transport_tcp("127.0.0.1")).is_err());
+        // Loopback, explicit opt-out -> allowed with a warning (dev only).
+        env::set_var("FASTPATH_AUTH_DISABLED", "1");
+        assert!(evaluate_auth_posture(&test_transport_tcp("127.0.0.1")).is_ok());
+        // Short secret -> refuse.
+        env::remove_var("FASTPATH_AUTH_DISABLED");
+        env::set_var("FASTPATH_AUTH_SECRET", "short");
+        assert!(evaluate_auth_posture(&test_transport_tcp("127.0.0.1")).is_err());
+        // Valid secret on loopback -> ok.
+        env::set_var("FASTPATH_AUTH_SECRET", "0123456789abcdef0123456789abcdef");
+        assert!(evaluate_auth_posture(&test_transport_tcp("127.0.0.1")).is_ok());
+        // Non-loopback with secret but no explicit ack -> refuse.
+        assert!(evaluate_auth_posture(&test_transport_tcp("0.0.0.0")).is_err());
+        // Non-loopback with explicit ack AND secret -> ok.
+        env::set_var("FASTPATH_TCP_ALLOW_NON_LOOPBACK", "1");
+        assert!(evaluate_auth_posture(&test_transport_tcp("0.0.0.0")).is_ok());
+        // Non-loopback, auth disabled, ack set -> still refuse (auth required).
+        env::set_var("FASTPATH_AUTH_DISABLED", "1");
+        env::remove_var("FASTPATH_AUTH_SECRET");
+        assert!(evaluate_auth_posture(&test_transport_tcp("0.0.0.0")).is_err());
+        // IPv6 loopback is recognized.
+        env::remove_var("FASTPATH_AUTH_DISABLED");
+        env::remove_var("FASTPATH_TCP_ALLOW_NON_LOOPBACK");
+        env::set_var("FASTPATH_AUTH_SECRET", "0123456789abcdef0123456789abcdef");
+        assert!(evaluate_auth_posture(&test_transport_tcp("::1")).is_ok());
+
+        for (key, value) in saved {
+            match value {
+                Some(v) => env::set_var(&key, v),
+                None => env::remove_var(&key),
+            }
         }
     }
 }

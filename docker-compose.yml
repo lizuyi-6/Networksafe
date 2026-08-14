@@ -65,6 +65,7 @@ services:
       - FASTPATH_TRANSPORT=${FASTPATH_TRANSPORT:-unix}
       - FASTPATH_SOCKET_PATH=${FASTPATH_SOCKET_PATH:-/var/run/aetherguard-fastpath/aetherguard-fastpath.sock}
       - RUST_LOG=${FASTPATH_LOG_LEVEL:-info}
+      - FASTPATH_AUTH_SECRET=${FASTPATH_AUTH_SECRET:?FASTPATH_AUTH_SECRET is required}
     volumes:
       - fastpath_run:/var/run/aetherguard-fastpath
     healthcheck:
@@ -120,6 +121,7 @@ services:
       - FASTPATH_URL=${FASTPATH_URL:-http://fastpath:8081}
       - FASTPATH_TRANSPORT=${FASTPATH_TRANSPORT:-unix}
       - FASTPATH_SOCKET_PATH=${FASTPATH_SOCKET_PATH:-/var/run/aetherguard-fastpath/aetherguard-fastpath.sock}
+      - FASTPATH_AUTH_SECRET=${FASTPATH_AUTH_SECRET:?FASTPATH_AUTH_SECRET is required}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost,http://127.0.0.1}
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - AUDIT_LOG_SECRET=${AUDIT_LOG_SECRET:?AUDIT_LOG_SECRET is required}
