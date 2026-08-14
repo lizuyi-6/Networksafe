@@ -115,6 +115,7 @@ bool controller_estop_latched(void);
 interlock_state_t controller_get_state(void);
 void controller_set_state(interlock_state_t state);
 uint32_t controller_get_high_water_counter(void);
+bool controller_get_feedback_ok(void);
 
 /* Alert */
 void controller_send_alert(void);

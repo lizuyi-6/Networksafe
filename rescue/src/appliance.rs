@@ -51,6 +51,10 @@ pub struct ApplianceStatus {
     /// "isolated" | "released" | "armed" | "unknown"
     pub bridge_state: String,
     pub secure_element_present: Option<bool>,
+    /// Physical relay auxiliary-contact reading: true = relay CLOSED
+    /// (released), false = relay OPEN (isolated). Mirrors
+    /// interlock_read_feedback() in the firmware and the M1 daemon's
+    /// feedbackOk usage. Isolation confirmation requires Some(false).
     pub feedback_ok: Option<bool>,
     pub reachable: bool,
     pub detail: Option<String>,

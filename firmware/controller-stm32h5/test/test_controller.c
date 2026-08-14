@@ -260,6 +260,50 @@ static void test_counter_saturates_at_uint32_max(void) {
     TEST_END;
 }
 
+static void test_assert_isolated_reports_fresh_feedback(void) {
+    TEST("assert_isolated re-reads feedback (stale closed reading fixed)");
+    mock_reset();
+    controller_init();
+    controller_update_time(1000);
+    mock_set_feedback(true); /* relay physically closed */
+
+    /* A valid grant releases the interlock; feedback_ok becomes true. */
+    hardware_grant_t g;
+    memset(&g, 0, sizeof(g));
+    strcpy(g.challenge, "challenge-fresh-fb");
+    strcpy(g.policy_digest, "policy-digest-baseline-v1");
+    g.monotonic_counter = 1;
+    g.expires_at = 5000;
+    CHECK(controller_handle_release_request(&g) == GRANT_RESULT_RELEASED);
+    CHECK(controller_get_feedback_ok() == true); /* captured at release */
+
+    /* The relay physically opens (normal isolation). The assert must report
+     * the FRESH pin reading (open => false), not the stale true. */
+    mock_set_feedback(false);
+    controller_assert_isolated();
+    CHECK(controller_get_state() == INTERLOCK_STATE_ISOLATED);
+    CHECK(controller_get_feedback_ok() == false);
+
+    /* Welded-contact scenario: the relay stays physically closed even after
+     * the assert. The controller must REPORT that truth (feedback_ok == true
+     * alongside isolated) so consumers can refuse to confirm isolation. */
+    controller_handle_release_request(&g); /* counter replay: DENIED, harmless */
+    /* Drive a fresh release to close the relay again: */
+    mock_set_feedback(true); /* relay physically closed for the release */
+    hardware_grant_t g2;
+    memset(&g2, 0, sizeof(g2));
+    strcpy(g2.challenge, "challenge-fresh-fb-2");
+    strcpy(g2.policy_digest, "policy-digest-baseline-v1");
+    g2.monotonic_counter = 2;
+    g2.expires_at = 5000;
+    CHECK(controller_handle_release_request(&g2) == GRANT_RESULT_RELEASED);
+    mock_set_feedback(true); /* relay welded closed — pin stays high */
+    controller_assert_isolated();
+    CHECK(controller_get_state() == INTERLOCK_STATE_ISOLATED);
+    CHECK(controller_get_feedback_ok() == true); /* truthfully reported */
+    TEST_END;
+}
+
 static void test_challenge_ring_eviction_window(void) {
     TEST("challenge dedup window is 16 slots (documented bound)");
     mock_reset();
@@ -361,6 +405,7 @@ int main(void) {
     test_release_with_valid_grant();
     test_release_blocked_no_feedback();
     test_release_blocked_bad_policy();
+    test_assert_isolated_reports_fresh_feedback();
     printf("\n=== Results: %d passed, %d failed ===\n", tests_passed, tests_failed);
     return tests_failed > 0 ? 1 : 0;
 }

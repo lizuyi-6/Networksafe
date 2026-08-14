@@ -156,6 +156,10 @@ void controller_clear_estop(void) {
     g_state.state = INTERLOCK_STATE_ISOLATED;
     interlock_drive_relay(false);
     interlock_set_light(1, 0, 0, 0);
+    /* SECURITY FIX (audit 2026-08): report a fresh feedback reading, same as
+     * controller_assert_isolated — the state frame must reflect the relay
+     * actually open, not the stale closed reading from the prior release. */
+    g_state.feedback_ok = interlock_read_feedback();
     serial_json_send_state(g_state.state, g_state.feedback_ok, g_state.se_present);
 }
 
@@ -180,6 +184,19 @@ void controller_assert_isolated(void) {
     g_state.state = INTERLOCK_STATE_ISOLATED;
     interlock_drive_relay(false);
     interlock_set_light(1, 0, 0, 0);
+    /* SECURITY FIX (audit 2026-08): re-read the physical feedback pin AFTER
+     * opening the relay. The previous code reported the stale value captured
+     * during the last successful release (feedback_ok == true, relay closed),
+     * so an isolated report could claim the relay was still closed — the
+     * exact welded-contact failure this signal exists to catch. Consumers
+     * (rescue control plane) decide on isolation confirmation using this
+     * fresh reading. */
+    g_state.feedback_ok = interlock_read_feedback();
     serial_json_send_interlock_result(INTERLOCK_STATE_ISOLATED, g_state.feedback_ok);
+}
+
+/* Feedback accessor (host tests / telemetry) */
+bool controller_get_feedback_ok(void) {
+    return g_state.feedback_ok;
 }
 
