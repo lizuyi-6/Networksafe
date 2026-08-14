@@ -39,6 +39,13 @@ cp bin/aetherguard-gateway-daemon.ts /usr/local/lib/aetherguard-gateway/
 ln -sf /usr/local/lib/aetherguard-gateway/aetherguard-gateway-daemon.ts /usr/local/bin/aetherguard-gateway-daemon
 chmod +x /usr/local/bin/aetherguard-gateway-daemon
 
+# Install the fail-closed preflight check (DP-006): the systemd unit's
+# ExecStartPre references /usr/local/bin/aetherguard-gateway-preflight-check;
+# it applies isolated_ruleset and only exits 0 when isolation is verifiably
+# loaded, so systemd refuses to start the daemon without the safe baseline.
+cp bin/aetherguard-gateway-preflight-check.sh /usr/local/bin/aetherguard-gateway-preflight-check
+chmod 755 /usr/local/bin/aetherguard-gateway-preflight-check
+
 # Install configuration (user must edit)
 echo "[5/7] Installing configuration template..."
 if [ ! -f /etc/aetherguard/gateway.conf ]; then

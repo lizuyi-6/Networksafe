@@ -3,8 +3,9 @@ import { authenticate, requireRole, AuthenticatedRequest } from '../../middlewar
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import auditLogger from '../../security/audit-logger.service';
 import { notificationDispatcherService } from '../../services/notification-dispatcher.service';
-import { platformConfigService } from '../../services/platform-config.service';
+import { platformConfigService, redactPlatformConfigSecrets } from '../../services/platform-config.service';
 import { canUseModel, normalizePlan } from '../../utils/model-access';
+import { normalizeRole } from '../../security/permissions';
 
 const router = Router();
 
@@ -12,9 +13,21 @@ function tenantOf(req: AuthenticatedRequest): string {
   return req.user?.tenantId || 'global';
 }
 
+/**
+ * SECURITY FIX (audit 2026-08, AG-B07): GET /api/config previously returned
+ * smtp.password and webhook header secrets to ANY authenticated user. Only
+ * platform admins (the same role allowed to save config) get real secrets;
+ * every other role receives a redacted copy. This also fixes FE-005 (secrets
+ * materialized in browser memory for non-admin operators).
+ */
+function isAdminViewer(req: AuthenticatedRequest): boolean {
+  return normalizeRole(req.user?.role) === 'platform_admin';
+}
+
 router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
   try {
-    const config = await platformConfigService.getConfig(tenantOf(req));
+    const raw = await platformConfigService.getConfig(tenantOf(req));
+    const config = isAdminViewer(req) ? raw : redactPlatformConfigSecrets(raw);
     // Strip legacy sub-fields from edgeAuto.protocolDefaults before sending
     if (config?.edgeAuto?.protocolDefaults?.legacy) {
       const { legacy, ...rest } = config.edgeAuto.protocolDefaults;

@@ -18,10 +18,13 @@
 import { readFileSync } from 'fs';
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
-import { GatewayDaemon } from '../../backend/src/companion/gateway-daemon';
+import { GatewayDaemon, type BridgeRuleset } from '../../backend/src/companion/gateway-daemon';
 import type { ControllerFrame } from '../../backend/src/companion/gateway-daemon';
 import { spawn } from 'child_process';
 import axios from 'axios';
+
+// DP-005: assert isolation BEFORE anything else can request a release.
+applyRulesetSyncOnBoot();
 
 interface GatewayConfig {
   gatewayId: string;
@@ -49,14 +52,54 @@ console.log(`[Gateway Daemon] Backend: ${config.backendUrl}`);
 console.log(`[Gateway Daemon] Serial: ${config.serialPort} @ ${config.serialBaud}`);
 
 // Apply nftables ruleset
+//
+// SECURITY FIX (audit 2026-08, DP-005): applyRuleset used to be fire-and-forget
+// — a spawn error or non-zero nft exit left the PREVIOUS ruleset loaded. On a
+// fail-closed trigger while released, that meant the bridge stayed
+// forward-accept while the control plane believed it was isolated. Now:
+//   - boot applies the isolated ruleset SYNCHRONOUSLY and refuses to start if
+//     nft cannot assert isolation;
+//   - a failed ISOLATION apply at runtime escalates: log + exit(1) so systemd
+//     restarts the unit and ExecStartPre/ExecStopPost re-assert isolation;
+//   - a failed RELEASE apply leaves the bridge isolated (the safe state) and
+//     only logs.
+const NFT_BIN = '/usr/sbin/nft';
+
+function applyRulesetSyncOnBoot(): void {
+  const { spawnSync } = require('child_process') as typeof import('child_process');
+  const result = spawnSync(NFT_BIN, ['-f', ISOLATED_RULESET], { encoding: 'utf8' });
+  if (result.error || result.status !== 0) {
+    console.error(`[Gateway Daemon] FATAL: could not assert isolated_ruleset at boot (${result.error || `nft exit ${result.status}`}) — refusing to start`);
+    process.exit(1);
+  }
+  console.log('[Gateway Daemon] Boot: isolated_ruleset asserted (verified nft exit 0)');
+}
+
 function applyRuleset(ruleset: 'isolated_ruleset' | 'released_ruleset'): void {
   const path = ruleset === 'isolated_ruleset' ? ISOLATED_RULESET : RELEASED_RULESET;
   console.log(`[Gateway Daemon] Applying nftables: ${path}`);
   const proc = spawn('/usr/sbin/nft', ['-f', path]);
-  proc.on('error', (err) => console.error(`[Gateway Daemon] nftables error: ${err.message}`));
+  proc.on('error', (err) => onRulesetApplyFailure(ruleset, err.message));
   proc.on('exit', (code) => {
-    if (code !== 0) console.error(`[Gateway Daemon] nftables exit ${code}`);
+    if (code !== 0) {
+      onRulesetApplyFailure(ruleset, `nft exit ${code}`);
+    } else {
+      console.log(`[Gateway Daemon] nftables applied: ${ruleset}`);
+    }
   });
+}
+
+function onRulesetApplyFailure(ruleset: BridgeRuleset, reason: string): void {
+  if (ruleset === 'released_ruleset') {
+    // Release failed to load -> bridge stays isolated = the safe state.
+    console.error(`[Gateway Daemon] released_ruleset apply FAILED (${reason}); bridge stays isolated (fail-closed)`);
+    return;
+  }
+  // Isolation failed to load -> the previously loaded ruleset (possibly
+  // released) remains active. Escalate: die so systemd restarts us and
+  // ExecStartPre (preflight-check) + ExecStopPost re-assert isolation.
+  console.error(`[Gateway Daemon] FATAL: isolated_ruleset apply FAILED (${reason}); exiting for systemd-supervised isolation re-assert`);
+  process.exit(1);
 }
 
 // FW-001: M1<->M2 serial channel MAC key (64-char hex). Provisioned at

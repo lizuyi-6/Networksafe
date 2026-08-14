@@ -23,7 +23,9 @@ jest.mock('../../services/platform-config.service', () => ({
     getConfig: jest.fn(),
     saveConfig: jest.fn(),
     listNotificationDeliveries: jest.fn()
-  }
+  },
+  // Real implementation so the route's AG-B07 redaction is exercised, not a stub.
+  redactPlatformConfigSecrets: jest.requireActual('../../services/platform-config.service').redactPlatformConfigSecrets
 }));
 
 jest.mock('../../security/audit-logger.service', () => ({
@@ -137,5 +139,76 @@ describe('Config Routes', () => {
       eventType: 'platform_config_updated',
       details: expect.objectContaining({ preferredModelId: 'glm-5' })
     }));
+  });
+
+  // ── AG-B07: notification-channel secrets must not reach non-admins ───────
+
+  const SECRET_CHANNEL = {
+    id: 'ch-1',
+    name: 'ops-mail',
+    type: 'smtp',
+    enabled: true,
+    target: 'ops@example.com',
+    minimumSeverity: 'critical',
+    headers: { Authorization: 'Bearer real-secret-token', 'X-Hook-Secret': 'hook-signing-secret' },
+    smtp: { host: 'smtp.example.com', port: 587, secure: false, username: 'ops', password: 'real-smtp-password', from: 'ops@example.com' }
+  };
+
+  function authenticateAs(role: string): void {
+    const { authenticate } = require('../../middleware/auth.middleware');
+    (authenticate as jest.Mock).mockImplementationOnce((req: any, _res: any, next: any) => {
+      req.user = { userId: 'test-user', email: 'test@example.com', role, tenantId: 'tenant-001' };
+      next();
+    });
+  }
+
+  it('AG-B07: admin still receives real smtp.password and webhook headers', async () => {
+    (platformConfigService.getConfig as jest.Mock).mockResolvedValueOnce({
+      notifications: { enabled: true, dedupeWindowSeconds: 300, retryDelaysSeconds: [30], channels: [SECRET_CHANNEL] }
+    });
+    authenticateAs('admin');
+
+    const response = await request(app).get('/api/config');
+
+    expect(response.status).toBe(200);
+    const channel = response.body.data.notifications.channels[0];
+    expect(channel.smtp.password).toBe('real-smtp-password');
+    expect(channel.headers.Authorization).toBe('Bearer real-secret-token');
+  });
+
+  it('AG-B07: non-admin receives redacted smtp.password and webhook header values (keys kept)', async () => {
+    (platformConfigService.getConfig as jest.Mock).mockResolvedValueOnce({
+      notifications: { enabled: true, dedupeWindowSeconds: 300, retryDelaysSeconds: [30], channels: [SECRET_CHANNEL] }
+    });
+    authenticateAs('tenant_operator');
+
+    const response = await request(app).get('/api/config');
+
+    expect(response.status).toBe(200);
+    const channel = response.body.data.notifications.channels[0];
+    expect(channel.smtp.password).toBe('********');
+    expect(channel.headers.Authorization).toBe('********');
+    expect(channel.headers['X-Hook-Secret']).toBe('********');
+    // Non-secret channel metadata stays intact for UI rendering.
+    expect(channel.smtp.host).toBe('smtp.example.com');
+    expect(channel.type).toBe('smtp');
+  });
+
+  it('AG-B07: redaction never mutates the service cache (admin sees real secrets afterwards)', async () => {
+    const sharedCache = {
+      notifications: { enabled: true, dedupeWindowSeconds: 300, retryDelaysSeconds: [30], channels: [SECRET_CHANNEL] }
+    };
+    (platformConfigService.getConfig as jest.Mock).mockResolvedValue(sharedCache);
+
+    authenticateAs('tenant_operator');
+    const redacted = await request(app).get('/api/config');
+    expect(redacted.body.data.notifications.channels[0].smtp.password).toBe('********');
+
+    // Same cached object, now read by an admin: real secret must survive.
+    authenticateAs('admin');
+    const admin = await request(app).get('/api/config');
+    expect(admin.body.data.notifications.channels[0].smtp.password).toBe('real-smtp-password');
+    // And the in-memory cache object itself was never touched.
+    expect(sharedCache.notifications.channels[0].smtp.password).toBe('real-smtp-password');
   });
 });

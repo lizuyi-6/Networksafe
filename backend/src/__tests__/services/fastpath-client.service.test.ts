@@ -22,7 +22,10 @@ describe('FastpathClientService', () => {
     mockAxiosGet = jest.fn();
     mockAxiosCreate = jest.fn().mockReturnValue({
       get: mockAxiosGet,
-      post: mockAxiosPost
+      post: mockAxiosPost,
+      // RF-001: production code registers an HMAC-signing request interceptor
+      // on every client instance.
+      interceptors: { request: { use: jest.fn() } }
     });
     mockLoggerWarn = jest.fn();
     mockLoggerError = jest.fn();

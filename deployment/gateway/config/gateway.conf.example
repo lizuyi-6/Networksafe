@@ -8,5 +8,6 @@
   "serialBaud": 115200,
   "heartbeatStaleMs": 45000,
   "releaseTtlMs": 30000,
-  "statusReportIntervalMs": 10000
+  "statusReportIntervalMs": 10000,
+  "serialChannelKeyHex": "CHANGE_ME_64_HEX_CHARS_M1_M2_CHANNEL_MAC_KEY"
 }
