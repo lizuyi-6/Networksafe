@@ -5,6 +5,8 @@ import { GatewayDaemon } from '../../companion/gateway-daemon';
 const TEST_GATEWAY_ID = 'gw-1';
 const TEST_BREAKER_TARGET = 'server-lan-bridge';
 const TEST_POLICY_DIGEST = 'digest-a';
+// FW-001: M1<->M2 serial channel MAC key (64 hex chars = 32 bytes).
+const TEST_SERIAL_CHANNEL_KEY = 'c3'.repeat(32);
 
 // Deterministic injected clock so watchdog/staleness tests don't depend on real time.
 function makeClock() {
@@ -33,6 +35,7 @@ function signGrant(privateKeyPem: string, grant: Partial<HardwareGrantEnvelope> 
     policyDigest: TEST_POLICY_DIGEST,
     challenge: 'challenge-a',
     breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
     interlockAction: 'release',
     issuedAt: '1700000000',
     expiresAt: String(Math.floor(Date.now() / 1000) + 3600),
@@ -51,6 +54,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       now: clock.now,
       onFrame: (f) => frames.push(f)
@@ -72,6 +76,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       now: clock.now,
       onFrame: (f) => frames.push(f)
@@ -101,6 +106,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
@@ -121,6 +127,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
@@ -144,6 +151,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       heartbeatStaleMs: 45_000,
       now: clock.now
@@ -172,6 +180,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
@@ -195,6 +204,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
@@ -216,6 +226,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       now: clock.now
     });
@@ -240,6 +251,7 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
       gatewayId: 'gw-1',
       secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
       breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
       policyDigest: TEST_POLICY_DIGEST,
       releaseTtlMs: 50,
       now: clock.now
@@ -260,6 +272,67 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     } finally {
       daemon.shutdown();
       jest.useRealTimers();
+    }
+  });
+
+  // ── FW-001: M1<->M2 serial channel authentication ────────────────────────
+
+  it('FW-001: refuses to arm without a provisioned serial channel key (fail-closed)', () => {
+    const clock = makeClock();
+    const { publicKey, privateKey } = keyPair();
+    const daemon = new GatewayDaemon({
+      gatewayId: 'gw-1',
+      secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      breakerTarget: TEST_BREAKER_TARGET,
+      // serialChannelKey intentionally OMITTED
+      policyDigest: TEST_POLICY_DIGEST,
+      now: clock.now
+    });
+    try {
+      const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+      expect(daemon.requestRelease(signGrant(priv, { monotonicCounter: 1 }))).toBe(false);
+      expect(daemon.getBridgeState()).toBe('isolated');
+      // The fail-closed reason distinguishes the missing-key path from other denials.
+      expect(daemon.getLastFailClosedReason()).toBe('serial_channel_key_missing');
+    } finally {
+      daemon.shutdown();
+    }
+  });
+
+  it('FW-001: emits the interlock_release frame with a verifiable channel MAC over the exact wire fields', () => {
+    const clock = makeClock();
+    const frames: any[] = [];
+    const { publicKey, privateKey } = keyPair();
+    const daemon = new GatewayDaemon({
+      gatewayId: 'gw-1',
+      secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
+      policyDigest: TEST_POLICY_DIGEST,
+      now: clock.now,
+      onFrame: (f) => frames.push(f)
+    });
+    try {
+      const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+      const grant = signGrant(priv, { monotonicCounter: 7, challenge: 'challenge-mac' });
+      expect(daemon.requestRelease(grant)).toBe(true);
+
+      const releaseFrame = frames.find((f) => f.command === 'interlock_release' && f.grant);
+      expect(releaseFrame).toBeDefined();
+      expect(releaseFrame.grant.challenge).toBe('challenge-mac');
+      expect(releaseFrame.grant.policyDigest).toBe(TEST_POLICY_DIGEST);
+      expect(releaseFrame.grant.monotonicCounter).toBe(7);
+      expect(releaseFrame.grant.expiresAtEpochS).toBe(Number(grant.expiresAt));
+
+      // MAC is recomputable with the same canonical construction the firmware
+      // implements (grant_auth.c) — cross-checked via verifySerialChannelMac.
+      const { verifySerialChannelMac } = require('../../companion/gateway-daemon');
+      expect(verifySerialChannelMac(TEST_SERIAL_CHANNEL_KEY, releaseFrame.grant)).toBe(true);
+      // Tampering with any covered field invalidates the MAC.
+      expect(verifySerialChannelMac(TEST_SERIAL_CHANNEL_KEY, { ...releaseFrame.grant, monotonicCounter: 8 })).toBe(false);
+      expect(verifySerialChannelMac(TEST_SERIAL_CHANNEL_KEY, { ...releaseFrame.grant, challenge: 'evil' })).toBe(false);
+    } finally {
+      daemon.shutdown();
     }
   });
 });

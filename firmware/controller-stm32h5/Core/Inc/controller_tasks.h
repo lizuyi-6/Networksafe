@@ -68,6 +68,13 @@ typedef struct {
 void controller_init(void);
 void controller_set_policy_digest(const char *digest);
 
+/* SECURITY FIX (audit 2026-08, FW-001): M1<->M2 serial channel MAC key.
+ * Provisioning is required before ANY release request is accepted — with no
+ * key, controller_handle_release_request fails closed. See grant_auth.h. */
+#include "grant_auth.h"
+bool controller_provision_serial_channel_key(const uint8_t key[GRANT_AUTH_KEY_BYTES]);
+bool controller_channel_key_provisioned(void);
+
 /* Task 1: Receive and handle release request */
 grant_result_t controller_handle_release_request(const hardware_grant_t *grant);
 

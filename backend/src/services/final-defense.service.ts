@@ -708,6 +708,9 @@ class FinalDefenseService {
       secureElementPublicKeyPem: gate.publicKeyPem,
       breakerTarget: 'server-lan-transparent-bridge',
       policyDigest: status.policyDigest,
+      // FW-001: M1<->M2 serial channel MAC key — without it the daemon
+      // refuses to arm (the M2 firmware rejects unauthenticated frames).
+      serialChannelKey: process.env.SERIAL_CHANNEL_KEY_HEX,
       ...extra
     });
   }

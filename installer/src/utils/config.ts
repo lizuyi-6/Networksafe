@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
@@ -20,21 +21,35 @@ export interface AetherGuardConfig {
   redisPassword: string;
 }
 
+/**
+ * SECURITY FIX (audit 2026-08, DP-003): both generators previously used
+ * Math.random() — a predictable PRNG — for production secrets (JWT signing,
+ * audit-log signing, agent-secret encryption key/salt, device command
+ * signing, Redis password). Math.random() is seed-recoverable and never
+ * suitable for cryptographic material; an attacker who can observe enough
+ * output (or the PRNG state) could predict subsequently generated secrets.
+ * Both now draw from crypto.randomBytes, and the alphanumeric generator
+ * uses rejection sampling to avoid modulo bias.
+ */
 export function generateSecret(length = 32): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  // 256 % 62 === 8: reject the top 8 byte values so modulo mapping stays uniform.
+  const rejectionThreshold = 256 - (256 % chars.length);
+  const out: string[] = [];
+  while (out.length < length) {
+    const buf = crypto.randomBytes(length);
+    for (let i = 0; i < buf.length && out.length < length; i += 1) {
+      if (buf[i] >= rejectionThreshold) {
+        continue;
+      }
+      out.push(chars.charAt(buf[i] % chars.length));
+    }
   }
-  return result;
+  return out.join('');
 }
 
 export function generateHexSecret(length = 32): string {
-  const bytes = Buffer.alloc(length);
-  for (let i = 0; i < length; i++) {
-    bytes[i] = Math.floor(Math.random() * 256);
-  }
-  return bytes.toString('hex');
+  return crypto.randomBytes(length).toString('hex');
 }
 
 export function buildEnvContent(config: AetherGuardConfig): string {

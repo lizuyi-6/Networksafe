@@ -6,7 +6,7 @@
  * Runs the real GatewayDaemon code against mocked hardware.
  */
 
-import { GatewayDaemon } from '../backend/src/companion/gateway-daemon';
+import { GatewayDaemon, buildSerialChannelMac } from '../backend/src/companion/gateway-daemon';
 import { MockSecureElement } from './m3-secure-element/mock-se';
 import { MockController } from './m2-controller/mock-controller';
 import { MockInterlock } from './m4-interlock/mock-interlock';
@@ -17,10 +17,14 @@ console.log('  AetherGuard Gateway Appliance Simulator');
 console.log('  M1 Gateway Daemon + M2 Controller + M3 SE + M4 Interlock');
 console.log('═══════════════════════════════════════════════════════════\n');
 
+// M1<->M2 channel MAC key (sim stand-in for the manufacturing-provisioned key)
+const SERIAL_CHANNEL_KEY_HEX = 'a1'.repeat(32);
+
 // Initialize modules
 const se = new MockSecureElement({ deviceId: 'gw-sim-001' });
 const interlock = new MockInterlock();
 const controller = new MockController(se, interlock, 5000);
+controller.provisionChannelKey(SERIAL_CHANNEL_KEY_HEX);
 const policyDigest = 'policy-digest-baseline-v1';
 let daemonAcceptedGrant = false;
 let controllerReleased = false;
@@ -33,6 +37,7 @@ const daemon = new GatewayDaemon({
   policyDigest,
   heartbeatStaleMs: 45_000,
   releaseTtlMs: 30_000,
+  serialChannelKey: SERIAL_CHANNEL_KEY_HEX,
   onFrame: (frame) => {
     if (frame.type === 'apply_ruleset') {
       const icon = frame.ruleset === 'released_ruleset' ? '🟢' : '🔴';
@@ -80,10 +85,18 @@ setTimeout(() => {
   const signature = se.signGrant(grant);
   const signedGrant: HardwareGrantEnvelope = { ...grant, signature };
 
-  console.log('[t+2.1s] M1 → M2: command interlock_release\n');
+  console.log('[t+2.1s] M1 → M2: command interlock_release (channel-MAC authenticated)\n');
   daemonAcceptedGrant = daemon.requestRelease(signedGrant);
   if (daemonAcceptedGrant) {
-    controllerReleased = controller.handleReleaseRequest(signedGrant) === 'released';
+    // M1 computed the channel MAC over the exact wire fields; M2 verifies it.
+    const serialMac = buildSerialChannelMac(
+      SERIAL_CHANNEL_KEY_HEX,
+      String(grant.challenge || ''),
+      String(grant.policyDigest || ''),
+      grant.monotonicCounter,
+      Number(grant.expiresAt)
+    );
+    controllerReleased = controller.handleReleaseRequest(signedGrant, serialMac) === 'released';
     bridgeReleasedObserved = daemon.isReleased() && daemon.getBridgeState() === 'released';
   }
 }, 2000);

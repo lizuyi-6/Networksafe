@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { createHash, randomUUID } from 'crypto';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import { posix as pathPosix } from 'path';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
 import { InputValidator } from '../../security/input-validator';
@@ -567,7 +567,48 @@ function buildBundleFiles(serverType: DeploymentTarget, deploymentId: string, pr
   return files;
 }
 
+/**
+ * SECURITY FIX (audit 2026-08, AG-B01): bundle file paths are interpolated
+ * into shell `cat >"$TARGET_DIR/<path>"` lines. Containment: relative path,
+ * whitelisted charset, no traversal, no separators at the edges.
+ */
+function validateBundleFilePath(filePath: string): void {
+  if (
+    !/^[A-Za-z0-9._][A-Za-z0-9._/-]*$/.test(filePath)
+    || filePath.includes('..')
+    || filePath.endsWith('/')
+  ) {
+    throw new Error('backend.invalid_bundle_file_path');
+  }
+}
+
+/**
+ * SECURITY FIX (audit 2026-08, AG-B01): the heredoc marker was the
+ * predictable sequence `__AETHERGUARD_BUNDLE_<index>__`, so any profile
+ * field containing a newline plus that exact token terminated the heredoc
+ * early and smuggled attacker-controlled top-level shell lines into the
+ * self-extracting installer. The marker is now a per-bundle 128-bit random
+ * token that cannot be guessed by a request author, and generation
+ * fail-closes if the token ever collides with a content line (defense in
+ * depth — validation also rejects control characters at the profile level).
+ */
+function generateHeredocMarker(files: Array<{ content: string }>): string {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const candidate = `AGBUNDLE_${randomBytes(16).toString('hex').toUpperCase()}`;
+    const collision = files.some((file) => file.content.split('\n').includes(candidate));
+    if (!collision) {
+      return candidate;
+    }
+  }
+  throw new Error('backend.bundle_marker_generation_failed');
+}
+
 function renderSelfExtractingBundle(deploymentId: string, files: Array<{ path: string; content: string; executable?: boolean }>): string {
+  if (!DEPLOYMENT_ID_PATTERN.test(deploymentId)) {
+    // Interpolated into the TARGET_DIR default value — fail closed.
+    throw new Error('backend.invalid_deployment_id');
+  }
+  const marker = generateHeredocMarker(files);
   const lines = [
     '#!/usr/bin/env bash',
     'set -euo pipefail',
@@ -576,12 +617,12 @@ function renderSelfExtractingBundle(deploymentId: string, files: Array<{ path: s
     'mkdir -p "$TARGET_DIR"'
   ];
 
-  files.forEach((file, index) => {
+  files.forEach((file) => {
+    validateBundleFilePath(file.path);
     const dir = pathPosix.dirname(file.path);
     if (dir && dir !== '.') {
       lines.push(`mkdir -p "$TARGET_DIR/${dir}"`);
     }
-    const marker = `__AETHERGUARD_BUNDLE_${index}__`;
     lines.push(`cat >"$TARGET_DIR/${file.path}" <<'${marker}'`);
     lines.push(file.content);
     lines.push(marker);
@@ -629,6 +670,22 @@ function renderDeployment(serverType: DeploymentTarget, profile: any): { configT
   }
 }
 
+/**
+ * SECURITY FIX (audit 2026-08, AG-B01): profile string fields are embedded
+ * into rendered config files and — for deployment bundles — into quoted
+ * heredocs of a self-extracting shell script that runs as root on the
+ * target. A CR/LF (or other C0 control) in any of these fields enables
+ * heredoc-marker termination followed by attacker-controlled top-level
+ * shell lines, or config-directive injection. None of these fields
+ * legitimately contains control characters, so reject them outright.
+ */
+const CONTROL_CHAR_PATTERN = /[\u0000-\u001F\u007F]/;
+
+const PROFILE_STRING_FIELDS = ['serverName', 'upstream', 'namespace', 'image', 'apiKey'] as const;
+
+/** Deployment ids are interpolated into the bundle TARGET_DIR default. */
+const DEPLOYMENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+
 function validateProfile(profile: any): { ok: boolean; errors: string[] } {
   const errors: string[] = [];
   const port = Number(profile?.port);
@@ -637,6 +694,11 @@ function validateProfile(profile: any): { ok: boolean; errors: string[] } {
   if (!profile?.upstream || typeof profile.upstream !== 'string') errors.push('Invalid upstream');
   const rate = Number(profile?.rateLimit);
   if (!Number.isFinite(rate) || rate < 1 || rate > 100000) errors.push('Invalid rateLimit');
+  for (const field of PROFILE_STRING_FIELDS) {
+    if (typeof profile?.[field] === 'string' && CONTROL_CHAR_PATTERN.test(profile[field])) {
+      errors.push(`Invalid ${field}: control characters are not allowed`);
+    }
+  }
   return { ok: errors.length === 0, errors };
 }
 
@@ -961,6 +1023,16 @@ router.post('/generate-bundle', async (req: AuthenticatedRequest, res: Response)
     const validation = validateProfile(validatedProfile);
     if (!validation.ok) {
       return res.status(400).json({ success: false, error: 'backend.invalid_profile', details: validation.errors });
+    }
+
+    // SECURITY FIX (audit 2026-08, AG-B01): caller-supplied deploymentId is
+    // interpolated into the bundle TARGET_DIR default — reject unsafe ids
+    // at the boundary instead of failing (or worse) during render.
+    if (
+      deploymentId !== undefined && deploymentId !== null && String(deploymentId) !== ''
+      && !DEPLOYMENT_ID_PATTERN.test(String(deploymentId))
+    ) {
+      return res.status(400).json({ success: false, error: 'backend.invalid_deployment_id' });
     }
 
     const rendered = renderDeployment(serverType as DeploymentTarget, validatedProfile);

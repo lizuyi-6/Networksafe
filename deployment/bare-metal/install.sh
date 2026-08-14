@@ -656,8 +656,42 @@ build_fastpath() {
   fi
   log "installing rust toolchain + building fastpath (1 job for low-RAM hosts)"
   if [[ ! -x /root/.cargo/bin/rustup ]]; then
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-      | sh -s -- -y --profile minimal --default-toolchain 1.85.0
+    # SECURITY FIX (audit 2026-08, DP-012): never pipe sh.rustup.rs straight
+    # into a root shell. Download over HTTPS, then either (a) verify against
+    # RUSTUP_INIT_SHA256=<reviewed hash> (unattended; mismatch aborts), or
+    # (b) interactively review the printed sha256 + head of the script and
+    # confirm. The trust decision cannot be skipped.
+    local rustup_tmp rustup_actual
+    rustup_tmp="$(mktemp /tmp/rustup-init.XXXXXX.sh)"
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o "${rustup_tmp}"
+    rustup_actual="$(sha256sum "${rustup_tmp}" | awk '{print $1}')"
+    if [[ -n "${RUSTUP_INIT_SHA256:-}" ]]; then
+      if [[ "${rustup_actual}" != "${RUSTUP_INIT_SHA256}" ]]; then
+        rm -f "${rustup_tmp}"
+        die "sh.rustup.rs script failed sha256 verification (expected ${RUSTUP_INIT_SHA256}, got ${rustup_actual})."
+      fi
+      log "rustup script sha256 verified: ${rustup_actual}"
+    else
+      echo "----------------------------------------------------------------"
+      echo " Downloaded https://sh.rustup.rs"
+      echo " sha256: ${rustup_actual}"
+      echo " To run unattended, export RUSTUP_INIT_SHA256=<this hash> after review."
+      echo " First lines of the script:"
+      sed -n '1,12p' "${rustup_tmp}" | sed 's/^/   | /'
+      echo "----------------------------------------------------------------"
+      if [[ ! -t 0 ]]; then
+        rm -f "${rustup_tmp}"
+        die "not interactive and RUSTUP_INIT_SHA256 is not set — refusing to run an unreviewed script as root."
+      fi
+      local confirm
+      read -r -p " Review the script above, then type 'yes' to run it: " confirm
+      if [[ "${confirm}" != "yes" ]]; then
+        rm -f "${rustup_tmp}"
+        die "aborted by operator."
+      fi
+    fi
+    sh "${rustup_tmp}" -s -- -y --profile minimal --default-toolchain 1.85.0
+    rm -f "${rustup_tmp}"
   else
     /root/.cargo/bin/rustup toolchain install 1.85.0 --profile minimal
   fi

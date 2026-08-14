@@ -1,11 +1,16 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { createHash } from 'crypto';
+import { promisify } from 'util';
 import inquirer from 'inquirer';
 import { exec, execQuiet, checkCommand } from '../utils/exec';
 import { info, success, warn, error, header, spinner } from '../utils/logger';
 import { generateSecret, generateHexSecret, buildEnvContent, AetherGuardConfig } from '../utils/config';
 import { isLinux, getDistro, supportsNativeDeploy } from '../utils/platform';
 import { generateNginxConfig } from '../templates/nginx.conf';
+
+const readFileAsync = promisify(fs.readFile);
+const unlinkAsync = promisify(fs.unlink);
 
 const APP_NAME = 'AetherGuard';
 const PM2_NAME = 'AetherGuard-backend';
@@ -36,15 +41,74 @@ async function checkNodeVersion(): Promise<boolean> {
   return true;
 }
 
+/**
+ * SECURITY FIX (audit 2026-08, DP-012): never pipe a remote setup script
+ * straight into a root shell. Download over HTTPS, then either
+ *   (a) verify against a sha256 pin — export NODESOURCE_DEB_SHA256 /
+ *       NODESOURCE_RPM_SHA256 (unattended installs; mismatch aborts), or
+ *   (b) if no pin is set, print the sha256 + head of the script and require
+ *       interactive confirmation. The trust decision cannot be skipped.
+ */
+const NODESOURCE_SETUP_SCRIPTS: Record<'deb' | 'rpm', { url: string; env: string }> = {
+  deb: { url: 'https://deb.nodesource.com/setup_20.x', env: 'NODESOURCE_DEB_SHA256' },
+  rpm: { url: 'https://rpm.nodesource.com/setup_20.x', env: 'NODESOURCE_RPM_SHA256' }
+};
+
+async function runVerifiedSetupScript(kind: 'deb' | 'rpm'): Promise<void> {
+  const spec = NODESOURCE_SETUP_SCRIPTS[kind];
+  const expected = process.env[spec.env] || '';
+  const tmp = `/tmp/nodesource-setup-${kind}-${Date.now()}.sh`;
+  await exec('bash', ['-c', `curl -fsSL ${spec.url} -o ${tmp}`]);
+
+  const content = await readFileAsync(tmp);
+  const actual = createHash('sha256').update(content).digest('hex');
+  const cleanup = async (): Promise<void> => { await unlinkAsync(tmp).catch(() => undefined); };
+
+  if (expected) {
+    if (actual !== expected) {
+      await cleanup();
+      throw new Error(
+        `nodesource setup script failed sha256 verification ` +
+        `(expected ${expected}, got ${actual}). Refusing to run it as root.`
+      );
+    }
+    success(`nodesource script sha256 verified: ${actual}`);
+  } else {
+    console.log('----------------------------------------------------------------');
+    console.log(` Downloaded ${spec.url}`);
+    console.log(` sha256: ${actual}`);
+    console.log(` To run unattended, export ${spec.env}=<this hash> after review.`);
+    console.log(' First lines of the script:');
+    for (const line of content.toString('utf8').split('\n').slice(0, 12)) {
+      console.log(`   | ${line}`);
+    }
+    console.log('----------------------------------------------------------------');
+    const answer = await inquirer.prompt([{
+      type: 'input',
+      name: 'confirm',
+      message: '审阅上面的脚本后输入 yes 以 root 执行:'
+    }]);
+    if (answer.confirm !== 'yes') {
+      await cleanup();
+      throw new Error('aborted by operator.');
+    }
+  }
+  try {
+    await exec('bash', [tmp]);
+  } finally {
+    await cleanup();
+  }
+}
+
 async function installNodejs20(): Promise<void> {
   const s = spinner('安装 Node.js 20.x...');
   const distro = getDistro();
 
   if (distro === 'ubuntu' || distro === 'debian') {
-    await exec('bash', ['-c', 'curl -fsSL https://deb.nodesource.com/setup_20.x | bash -']);
+    await runVerifiedSetupScript('deb');
     await exec('apt-get', ['install', '-y', 'nodejs']);
   } else if (distro === 'centos' || distro === 'rhel' || distro === 'fedora') {
-    await exec('bash', ['-c', 'curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -']);
+    await runVerifiedSetupScript('rpm');
     await exec('yum', ['install', '-y', 'nodejs']);
   } else {
     s.fail('不支持的 Linux 发行版，请手动安装 Node.js 20.x');

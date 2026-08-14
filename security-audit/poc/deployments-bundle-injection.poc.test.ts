@@ -1,14 +1,23 @@
 /**
- * PoC — AG-B01: deployment bundle heredoc marker injection
- * Target: POST /api/deployments/generate-bundle (deployments.routes.ts:940)
+ * Regression test — AG-B01: deployment bundle heredoc marker injection
+ * Target: POST /api/deployments/generate-bundle (deployments.routes.ts)
  *
- * Claim: /generate-bundle does NOT invoke inputValidator.validateRequest
- * (unlike /generate at :645). validateProfile only checks non-empty strings
- * and numeric ranges, so profile.serverName may contain newlines and the
- * heredoc marker string used by renderSelfExtractingBundle. A newline +
- * '__AETHERGUARD_BUNDLE_0__' + payload inside serverName terminates the
- * heredoc of file #0 early, and the payload line becomes a TOP-LEVEL shell
- * command in the self-extracting installer executed as root on the target.
+ * Original finding (VERIFIED, PoC 2/2 PASS pre-fix): /generate-bundle did
+ * NOT invoke inputValidator.validateRequest (unlike /generate) and
+ * validateProfile only checked non-empty strings / numeric ranges, so
+ * profile.serverName could contain newlines plus the predictable heredoc
+ * marker string `__AETHERGUARD_BUNDLE_<index>__`. That terminated the
+ * heredoc early and smuggled attacker-controlled TOP-LEVEL shell lines
+ * into the self-extracting installer (runs as root on the target).
+ *
+ * Post-fix expectations:
+ * - Control characters in profile string fields are rejected (400) on
+ *   /generate-bundle AND /generate AND /save.
+ * - Heredoc markers are per-bundle 128-bit random tokens; a request author
+ *   cannot know or reproduce the marker, and generation fail-closes on any
+ *   collision with file content.
+ * - Caller-supplied deploymentId is validated before interpolation into
+ *   TARGET_DIR.
  *
  * Auth note: route requires admin (T7 malicious/duped operator). Auth is
  * mocked here because the vulnerability under test is the sink, not auth.
@@ -47,57 +56,81 @@ jest.mock('../../backend/src/services/command-dispatcher.service', () => ({
   commandDispatcherService: { dispatchDeviceCommand: jest.fn() }
 }));
 
-const MARKER = '__AETHERGUARD_BUNDLE_1__'; // buildBundleFiles puts the server config at index 1
-// file[1] of buildBundleFiles is the server config (nginx.conf) which embeds serverName
+// Legacy marker (pre-fix). Post-fix markers are random per bundle.
+const LEGACY_MARKER = '__AETHERGUARD_BUNDLE_1__';
 const PAYLOAD_LINE = 'echo PWNED_BUNDLE_MARKER_ESCAPE';
-const EVIL_SERVER_NAME = `api.example.com\n${MARKER}\n${PAYLOAD_LINE}\n#`;
+const EVIL_SERVER_NAME = `api.example.com\n${LEGACY_MARKER}\n${PAYLOAD_LINE}\n#`;
 
-describe('PoC AG-B01: generate-bundle heredoc marker injection', () => {
+const BASE_PROFILE = { serverName: 'api.example.com', port: 8080, upstream: 'http://backend:3005', rateLimit: 100 };
+
+describe('Regression AG-B01: generate-bundle heredoc marker injection (FIXED)', () => {
   const app = express();
   app.use(express.json());
   app.use('/api/deployments', deploymentsRouter);
 
-  test('A) /generate-bundle accepts newline+marker in serverName and emits payload as top-level shell line', async () => {
+  test('A) /generate-bundle now rejects newline+marker in serverName with 400 invalid_profile', async () => {
     const res = await request(app)
       .post('/api/deployments/generate-bundle')
-      .send({
-        serverType: 'nginx',
-        profile: { serverName: EVIL_SERVER_NAME, port: 8080, upstream: 'http://backend:3005', rateLimit: 100 }
-      });
+      .send({ serverType: 'nginx', profile: { ...BASE_PROFILE, serverName: EVIL_SERVER_NAME } });
 
-    // expect HTTP 200 — request accepted (no InputValidator on this route)
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toBe('backend.invalid_profile');
+  });
+
+  test('B) /generate still rejects the same payload (400)', async () => {
+    const res = await request(app)
+      .post('/api/deployments/generate')
+      .send({ serverType: 'nginx', profile: { ...BASE_PROFILE, serverName: EVIL_SERVER_NAME } });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('C) legitimate bundle uses a random heredoc marker that appears only as open/close pairs, never in content', async () => {
+    const res = await request(app)
+      .post('/api/deployments/generate-bundle')
+      .send({ serverType: 'nginx', profile: BASE_PROFILE });
+
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
 
     const script = Buffer.from(res.body.data.bundleBase64, 'base64').toString('utf8');
+    // Marker extraction: find the first heredoc opener `<<'AGBUNDLE_...'`
+    const openerMatch = script.match(/<<'(AGBUNDLE_[0-9A-F]{32})'/);
+    expect(openerMatch).not.toBeNull();
+    const marker = openerMatch![1];
+
     const lines = script.split('\n');
+    // Every marker line is either a heredoc opener or closer — count both.
+    const openers = lines.filter((l) => l.includes(`<<'${marker}'`)).length;
+    const closers = lines.filter((l) => l.trim() === marker).length;
+    expect(openers).toBeGreaterThan(0);
+    expect(closers).toBe(openers);
 
-    // locate the heredoc start for file #0
-    const catIdx = lines.findIndex((l) => l.includes(`<<'${MARKER}'`));
-    expect(catIdx).toBeGreaterThanOrEqual(0);
-
-    // find the FIRST standalone marker line after the heredoc start:
-    // if it is followed by our payload line, the heredoc was terminated early
-    const earlyMarkerIdx = lines.findIndex((l, i) => i > catIdx && l.trim() === MARKER);
-    expect(earlyMarkerIdx).toBeGreaterThan(catIdx);
-
-    // the line right after the early-terminated marker is attacker-controlled
-    expect(lines[earlyMarkerIdx + 1].trim()).toBe(PAYLOAD_LINE);
-
-    // and the early marker occurs BEFORE the genuine end-of-content marker
-    // (there is a second, genuine marker closer further down)
-    const genuineCloserIdx = lines.findIndex((l, i) => i > earlyMarkerIdx + 1 && l.trim() === MARKER);
-    expect(genuineCloserIdx).toBeGreaterThan(earlyMarkerIdx + 1);
+    // The legacy predictable marker must never appear.
+    expect(script).not.toContain(LEGACY_MARKER);
   });
 
-  test('B) /generate (with InputValidator) rejects the same payload — protection gap is route-specific', async () => {
+  test('D) unsafe caller-supplied deploymentId is rejected (command interpolation into TARGET_DIR)', async () => {
     const res = await request(app)
-      .post('/api/deployments/generate')
+      .post('/api/deployments/generate-bundle')
       .send({
         serverType: 'nginx',
-        profile: { serverName: EVIL_SERVER_NAME, port: 8080, upstream: 'http://backend:3005', rateLimit: 100 }
+        profile: BASE_PROFILE,
+        deploymentId: 'x"$(reboot)"'
       });
 
     expect(res.status).toBe(400);
+    expect(res.body.error).toBe('backend.invalid_deployment_id');
+  });
+
+  test('E) control chars in other profile string fields are rejected too', async () => {
+    for (const field of ['upstream', 'namespace', 'image', 'apiKey']) {
+      const res = await request(app)
+        .post('/api/deployments/generate-bundle')
+        .send({ serverType: 'nginx', profile: { ...BASE_PROFILE, [field]: `a\nb'${PAYLOAD_LINE}'` } });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('backend.invalid_profile');
+    }
   });
 });

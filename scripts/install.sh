@@ -26,6 +26,13 @@ if [[ ! -f "${PROJECT_ROOT}/docker-compose.yml" ]]; then
 fi
 
 # ─── 1. Docker Engine ─────────────────────────────────────────────────────────
+# SECURITY FIX (audit 2026-08, DP-012): never pipe a remote script straight
+# into a root shell. Download over HTTPS first, then either
+#   (a) verify it against a sha256 pin — export DOCKER_GET_SHA256=<reviewed
+#       hash> (unattended installs; mismatch aborts), or
+#   (b) if no pin is set, require an interactive review: the script's
+#       sha256 and first lines are printed and the operator must confirm.
+# There is no way to skip the trust decision.
 if ! command -v docker &>/dev/null; then
     if [[ "${EUID}" -ne 0 ]]; then
         echo "[ERROR] Docker is not installed and this script is not running as root." >&2
@@ -33,7 +40,38 @@ if ! command -v docker &>/dev/null; then
         exit 1
     fi
     echo "--> Installing Docker Engine (get.docker.com)..."
-    curl -fsSL https://get.docker.com | sh
+    GET_DOCKER_TMP="$(mktemp /tmp/get-docker.XXXXXX.sh)"
+    cleanup_get_docker() { rm -f "${GET_DOCKER_TMP}"; }
+    trap cleanup_get_docker EXIT
+    curl -fsSL https://get.docker.com -o "${GET_DOCKER_TMP}"
+    GET_DOCKER_ACTUAL="$(sha256sum "${GET_DOCKER_TMP}" | awk '{print $1}')"
+    if [[ -n "${DOCKER_GET_SHA256:-}" ]]; then
+        if [[ "${GET_DOCKER_ACTUAL}" != "${DOCKER_GET_SHA256}" ]]; then
+            echo "[ERROR] get.docker.com script failed sha256 verification — refusing to run it as root." >&2
+            echo "        expected: ${DOCKER_GET_SHA256}" >&2
+            echo "        actual:   ${GET_DOCKER_ACTUAL}" >&2
+            exit 1
+        fi
+        echo "[OK] sha256 verified: ${GET_DOCKER_ACTUAL}"
+    else
+        echo "----------------------------------------------------------------"
+        echo " Downloaded https://get.docker.com"
+        echo " sha256: ${GET_DOCKER_ACTUAL}"
+        echo " To run unattended, export DOCKER_GET_SHA256=<this hash> after review."
+        echo " First lines of the script:"
+        sed -n '1,12p' "${GET_DOCKER_TMP}" | sed 's/^/   | /'
+        echo "----------------------------------------------------------------"
+        if [[ ! -t 0 ]]; then
+            echo "[ERROR] Not interactive and DOCKER_GET_SHA256 is not set — refusing to run an unreviewed script as root." >&2
+            exit 1
+        fi
+        read -r -p " Review the script above, then type 'yes' to run it: " CONFIRM
+        if [[ "${CONFIRM}" != "yes" ]]; then
+            echo "[ERROR] Aborted by operator." >&2
+            exit 1
+        fi
+    fi
+    sh "${GET_DOCKER_TMP}"
     systemctl enable --now docker
 else
     echo "[OK] Docker already installed: $(docker --version)"

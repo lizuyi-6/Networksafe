@@ -12,12 +12,40 @@
 #include "controller_tasks.h"
 #include "interlock_driver.h"
 #include "serial_json.h"
+#include "grant_auth.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
 static int tests_passed = 0;
 static int tests_failed = 0;
+
+/* Fixed test channel key (host tests only — production provisions at
+ * manufacturing/pairing time). 32 bytes as required by grant_auth.h. */
+static const uint8_t TEST_CHANNEL_KEY[GRANT_AUTH_KEY_BYTES] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+};
+
+/* Provision the test key and compute the channel MAC exactly like M1 does
+ * (same canonical message construction). Uses the REAL grant_auth code path
+ * — an implementation consistent only with itself would prove nothing. */
+static void sign_test_grant(hardware_grant_t *g) {
+    char message[GRANT_AUTH_MAX_MESSAGE];
+    uint16_t len = grant_auth_build_message(message, sizeof(message),
+                                            g->challenge, g->policy_digest,
+                                            g->monotonic_counter, g->expires_at);
+    assert(len > 0);
+    grant_auth_hmac_sha256(TEST_CHANNEL_KEY, GRANT_AUTH_KEY_BYTES,
+                           (const uint8_t *)message, len, g->signature);
+    g->signature_len = GRANT_AUTH_MAC_BYTES;
+}
+
+static void provision_test_key(void) {
+    controller_provision_serial_channel_key(TEST_CHANNEL_KEY);
+}
 
 #define TEST(name) do { \
     printf("  [TEST] %-50s ", name); \
@@ -75,6 +103,7 @@ static void test_counter_advances_on_release(void) {
     TEST("successful release advances high_water (replay blocked)");
     mock_reset();
     controller_init();
+    provision_test_key();
     controller_update_time(1000);
     mock_set_feedback(true);
 
@@ -84,6 +113,7 @@ static void test_counter_advances_on_release(void) {
     strcpy(g1.policy_digest, "policy-digest-baseline-v1");
     g1.monotonic_counter = 1;
     g1.expires_at = 5000;
+    sign_test_grant(&g1);
     CHECK(controller_handle_release_request(&g1) == GRANT_RESULT_RELEASED);
     CHECK(controller_get_high_water_counter() == 1);  /* advanced */
 
@@ -94,6 +124,7 @@ static void test_counter_advances_on_release(void) {
     strcpy(g2.policy_digest, "policy-digest-baseline-v1");
     g2.monotonic_counter = 1;  /* same counter — replay */
     g2.expires_at = 5000;
+    sign_test_grant(&g2);
     CHECK(controller_handle_release_request(&g2) == GRANT_RESULT_DENIED);
 
     /* A strictly greater counter is accepted. */
@@ -103,6 +134,7 @@ static void test_counter_advances_on_release(void) {
     strcpy(g3.policy_digest, "policy-digest-baseline-v1");
     g3.monotonic_counter = 2;
     g3.expires_at = 5000;
+    sign_test_grant(&g3);
     CHECK(controller_handle_release_request(&g3) == GRANT_RESULT_RELEASED);
     CHECK(controller_get_high_water_counter() == 2);
     TEST_END;
@@ -132,6 +164,7 @@ static void test_release_with_valid_grant(void) {
     TEST("valid grant releases interlock when feedback OK");
     mock_reset();
     controller_init();
+    provision_test_key();
     controller_update_time(1000);
     mock_set_feedback(true); /* feedback confirms relay closed */
 
@@ -141,6 +174,7 @@ static void test_release_with_valid_grant(void) {
     strcpy(grant.policy_digest, "policy-digest-baseline-v1");
     grant.monotonic_counter = 1;
     grant.expires_at = 5000;
+    sign_test_grant(&grant);
 
     grant_result_t result = controller_handle_release_request(&grant);
     CHECK(result == GRANT_RESULT_RELEASED);
@@ -152,6 +186,7 @@ static void test_release_blocked_no_feedback(void) {
     TEST("release blocked when feedback mismatch (PRD task 9)");
     mock_reset();
     controller_init();
+    provision_test_key();
     controller_update_time(1000);
     mock_set_feedback(false); /* relay did not close */
 
@@ -161,6 +196,7 @@ static void test_release_blocked_no_feedback(void) {
     strcpy(grant.policy_digest, "policy-digest-baseline-v1");
     grant.monotonic_counter = 1;
     grant.expires_at = 5000;
+    sign_test_grant(&grant); /* MAC valid — denial must come from feedback */
 
     grant_result_t result = controller_handle_release_request(&grant);
     CHECK(result == GRANT_RESULT_DENIED);
@@ -172,6 +208,7 @@ static void test_release_blocked_bad_policy(void) {
     TEST("release blocked on policy mismatch");
     mock_reset();
     controller_init();
+    provision_test_key();
     controller_update_time(1000);
     mock_set_feedback(true);
 
@@ -181,6 +218,7 @@ static void test_release_blocked_bad_policy(void) {
     strcpy(grant.policy_digest, "WRONG-digest");
     grant.monotonic_counter = 1;
     grant.expires_at = 5000;
+    sign_test_grant(&grant);
 
     grant_result_t result = controller_handle_release_request(&grant);
     CHECK(result == GRANT_RESULT_DENIED);
@@ -191,6 +229,7 @@ static void test_estop_latch_blocks_release(void) {
     TEST("latched E-stop blocks release until cleared (ISO 13850)");
     mock_reset();
     controller_init();
+    provision_test_key();
     controller_update_time(1000);
     mock_set_feedback(true);
 
@@ -205,6 +244,7 @@ static void test_estop_latch_blocks_release(void) {
     strcpy(g.policy_digest, "policy-digest-baseline-v1");
     g.monotonic_counter = 1;
     g.expires_at = 5000;
+    sign_test_grant(&g);
     CHECK(controller_handle_release_request(&g) == GRANT_RESULT_DENIED);
     CHECK(controller_get_state() == INTERLOCK_STATE_FAULT);
 
@@ -220,6 +260,7 @@ static void test_estop_latch_blocks_release(void) {
     strcpy(g2.policy_digest, "policy-digest-baseline-v1");
     g2.monotonic_counter = 1;
     g2.expires_at = 5000;
+    sign_test_grant(&g2);
     CHECK(controller_handle_release_request(&g2) == GRANT_RESULT_RELEASED);
     TEST_END;
 }
@@ -228,6 +269,7 @@ static void test_counter_saturates_at_uint32_max(void) {
     TEST("counter at UINT32_MAX releases once then fails closed");
     mock_reset();
     controller_init();
+    provision_test_key();
     controller_update_time(1000);
     mock_set_feedback(true);
 
@@ -237,6 +279,7 @@ static void test_counter_saturates_at_uint32_max(void) {
     strcpy(g.policy_digest, "policy-digest-baseline-v1");
     g.monotonic_counter = 0xFFFFFFFFu;
     g.expires_at = 5000;
+    sign_test_grant(&g);
     CHECK(controller_handle_release_request(&g) == GRANT_RESULT_RELEASED);
     CHECK(controller_get_high_water_counter() == 0xFFFFFFFFu);
 
@@ -248,6 +291,7 @@ static void test_counter_saturates_at_uint32_max(void) {
     strcpy(g2.policy_digest, "policy-digest-baseline-v1");
     g2.monotonic_counter = 0; /* wraparound attempt */
     g2.expires_at = 5000;
+    sign_test_grant(&g2);
     CHECK(controller_handle_release_request(&g2) == GRANT_RESULT_DENIED);
 
     hardware_grant_t g3;
@@ -256,6 +300,7 @@ static void test_counter_saturates_at_uint32_max(void) {
     strcpy(g3.policy_digest, "policy-digest-baseline-v1");
     g3.monotonic_counter = 0xFFFFFFFFu; /* replay of the max itself */
     g3.expires_at = 5000;
+    sign_test_grant(&g3);
     CHECK(controller_handle_release_request(&g3) == GRANT_RESULT_DENIED);
     TEST_END;
 }
@@ -264,6 +309,7 @@ static void test_assert_isolated_reports_fresh_feedback(void) {
     TEST("assert_isolated re-reads feedback (stale closed reading fixed)");
     mock_reset();
     controller_init();
+    provision_test_key();
     controller_update_time(1000);
     mock_set_feedback(true); /* relay physically closed */
 
@@ -274,6 +320,7 @@ static void test_assert_isolated_reports_fresh_feedback(void) {
     strcpy(g.policy_digest, "policy-digest-baseline-v1");
     g.monotonic_counter = 1;
     g.expires_at = 5000;
+    sign_test_grant(&g);
     CHECK(controller_handle_release_request(&g) == GRANT_RESULT_RELEASED);
     CHECK(controller_get_feedback_ok() == true); /* captured at release */
 
@@ -296,11 +343,131 @@ static void test_assert_isolated_reports_fresh_feedback(void) {
     strcpy(g2.policy_digest, "policy-digest-baseline-v1");
     g2.monotonic_counter = 2;
     g2.expires_at = 5000;
+    sign_test_grant(&g2);
     CHECK(controller_handle_release_request(&g2) == GRANT_RESULT_RELEASED);
     mock_set_feedback(true); /* relay welded closed — pin stays high */
     controller_assert_isolated();
     CHECK(controller_get_state() == INTERLOCK_STATE_ISOLATED);
     CHECK(controller_get_feedback_ok() == true); /* truthfully reported */
+    TEST_END;
+}
+
+/* ── FW-001 regression: M1<->M2 serial channel authentication ────────── */
+
+static void test_grant_auth_rfc_vectors(void) {
+    /* The HMAC implementation must match OFFICIAL vectors, not merely be
+     * self-consistent: RFC 4231 test cases 1 & 2, and the FIPS 180-4
+     * SHA-256 vector for "abc". */
+    TEST("grant_auth: FIPS 180-4 SHA-256(\"abc\") vector");
+    {
+        uint8_t out[32];
+        static const uint8_t expected[32] = {
+            0xba,0x78,0x16,0xbf,0x8f,0x01,0xcf,0xea,0x41,0x41,0x40,0xde,0x5d,0xae,0x22,0x23,
+            0xb0,0x03,0x61,0xa3,0x96,0x17,0x7a,0x9c,0xb4,0x10,0xff,0x61,0xf2,0x00,0x15,0xad
+        };
+        grant_auth_sha256((const uint8_t *)"abc", 3, out);
+        CHECK(grant_auth_constant_time_equal(out, expected, 32) == true);
+    }
+    TEST_END;
+
+    TEST("grant_auth: RFC 4231 HMAC-SHA256 test case 1");
+    {
+        uint8_t key[20];
+        memset(key, 0x0b, sizeof(key));
+        uint8_t out[32];
+        static const uint8_t expected[32] = {
+            0xb0,0x34,0x4c,0x61,0xd8,0xdb,0x38,0x53,0x5c,0xa8,0xaf,0xce,0xaf,0x0b,0xf1,0x2b,
+            0x88,0x1d,0xc2,0x00,0xc9,0x83,0x3d,0xa7,0x26,0xe9,0x37,0x6c,0x2e,0x32,0xcf,0xf7
+        };
+        grant_auth_hmac_sha256(key, 20, (const uint8_t *)"Hi There", 8, out);
+        CHECK(grant_auth_constant_time_equal(out, expected, 32) == true);
+    }
+    TEST_END;
+
+    TEST("grant_auth: RFC 4231 HMAC-SHA256 test case 2");
+    {
+        uint8_t out[32];
+        static const uint8_t expected[32] = {
+            0x5b,0xdc,0xc1,0x46,0xbf,0x60,0x75,0x4e,0x6a,0x04,0x24,0x26,0x08,0x95,0x75,0xc7,
+            0x5a,0x00,0x3f,0x08,0x9d,0x27,0x39,0x83,0x9d,0xec,0x58,0xb9,0x64,0xec,0x38,0x43
+        };
+        grant_auth_hmac_sha256((const uint8_t *)"Jefe", 4,
+                               (const uint8_t *)"what do ya want for nothing?", 28, out);
+        CHECK(grant_auth_constant_time_equal(out, expected, 32) == true);
+    }
+    TEST_END;
+}
+
+static void test_release_denied_without_channel_key(void) {
+    /* THE core FW-001 regression: with no key provisioned, a structurally
+     * perfect grant (correct digest, counter, expiry, feedback OK, even a
+     * correctly computed MAC) is still DENIED. Previously such a frame —
+     * forgeable by anyone on the UART — released the relay. MUST run before
+     * any test calls provision_test_key(): key state starts unprovisioned at
+     * process start and provisioning survives controller_init(). main()
+     * enforces this ordering. */
+    TEST("FW-001: release DENIED when no channel key provisioned (fail-closed)");
+    mock_reset();
+    controller_init();
+    CHECK(controller_channel_key_provisioned() == false); /* precondition */
+    controller_update_time(1000);
+    mock_set_feedback(true);
+
+    hardware_grant_t grant;
+    memset(&grant, 0, sizeof(grant));
+    strcpy(grant.challenge, "challenge-nokey");
+    strcpy(grant.policy_digest, "policy-digest-baseline-v1");
+    grant.monotonic_counter = 1;
+    grant.expires_at = 5000;
+    sign_test_grant(&grant); /* even a CORRECT MAC must not help: no key */
+
+    CHECK(controller_handle_release_request(&grant) == GRANT_RESULT_DENIED);
+    CHECK(controller_get_state() == INTERLOCK_STATE_ISOLATED);
+    TEST_END;
+}
+
+static void test_release_denied_wrong_signature(void) {
+    TEST("FW-001: release DENIED on wrong MAC (forged signature)");
+    mock_reset();
+    controller_init();
+    provision_test_key();
+    controller_update_time(1000);
+    mock_set_feedback(true);
+
+    hardware_grant_t grant;
+    memset(&grant, 0, sizeof(grant));
+    strcpy(grant.challenge, "challenge-badmac");
+    strcpy(grant.policy_digest, "policy-digest-baseline-v1");
+    grant.monotonic_counter = 1;
+    grant.expires_at = 5000;
+    sign_test_grant(&grant);
+    grant.signature[0] ^= 0xFFu; /* corrupt one byte */
+    CHECK(controller_handle_release_request(&grant) == GRANT_RESULT_DENIED);
+    CHECK(controller_get_state() == INTERLOCK_STATE_ISOLATED);
+    TEST_END;
+}
+
+static void test_release_denied_tampered_field(void) {
+    /* Sign for counter=5, then swap in counter=6: MAC no longer binds the
+     * message. Proves the canonical message covers the counter (an attacker
+     * cannot replay a captured frame with a bumped counter). */
+    TEST("FW-001: MAC binds grant fields (tampered counter rejected)");
+    mock_reset();
+    controller_init();
+    provision_test_key();
+    controller_update_time(1000);
+    mock_set_feedback(true);
+
+    hardware_grant_t grant;
+    memset(&grant, 0, sizeof(grant));
+    strcpy(grant.challenge, "challenge-tamper");
+    strcpy(grant.policy_digest, "policy-digest-baseline-v1");
+    grant.monotonic_counter = 5;
+    grant.expires_at = 5000;
+    sign_test_grant(&grant);
+    grant.monotonic_counter = 6; /* bump after signing */
+    CHECK(controller_handle_release_request(&grant) == GRANT_RESULT_DENIED);
+    CHECK(controller_get_state() == INTERLOCK_STATE_ISOLATED);
     TEST_END;
 }
 
@@ -387,10 +554,44 @@ static void test_serial_json_parsing(void) {
     serial_json_parse("not json at all", &msg);
     CHECK(msg.type == MSG_TYPE_UNKNOWN);
     TEST_END;
+
+    TEST("serial_json: signature hex parses to 32 MAC bytes");
+    serial_json_parse(
+        "{\"type\":\"command\",\"command\":\"interlock_release\","
+        "\"challenge\":\"c-mac\",\"policyDigest\":\"d-mac\","
+        "\"monotonicCounter\":9,\"expiresAt\":4000,"
+        "\"signature\":\"00ff10ee20cc30aa40bb50996088707780669044a022b011c033d0f5e0a1\"}",
+        &msg);
+    /* 60 hex chars = 30 bytes (valid parse, non-32 length still parsed) */
+    CHECK(msg.grant.signature_len == 30);
+    CHECK(msg.grant.signature[0] == 0x00);
+    CHECK(msg.grant.signature[1] == 0xff);
+    CHECK(msg.grant.signature[2] == 0x10);
+    TEST_END;
+
+    TEST("serial_json: malformed signature yields signature_len 0 (fail-closed)");
+    serial_json_parse(
+        "{\"type\":\"command\",\"command\":\"interlock_release\","
+        "\"challenge\":\"c-mac2\",\"signature\":\"zz\"}", &msg);
+    CHECK(msg.grant.signature_len == 0);
+    serial_json_parse(
+        "{\"type\":\"command\",\"command\":\"interlock_release\","
+        "\"challenge\":\"c-mac3\",\"signature\":\"abc\"}", &msg); /* odd length */
+    CHECK(msg.grant.signature_len == 0);
+    serial_json_parse(
+        "{\"type\":\"command\",\"command\":\"interlock_release\","
+        "\"challenge\":\"c-mac4\"}", &msg); /* absent field */
+    CHECK(msg.grant.signature_len == 0);
+    TEST_END;
 }
 
 int main(void) {
     printf("\n=== M2 Controller Tasks Host Tests ===\n\n");
+    /* FW-001 ordering: the unprovisioned-key test MUST run before any test
+     * provisions the channel key (key state persists across controller_init
+     * within one process). */
+    test_release_denied_without_channel_key();
+    test_grant_auth_rfc_vectors();
     test_boot_isolated();
     test_challenge_dedup();
     test_serial_json_parsing();
@@ -405,6 +606,8 @@ int main(void) {
     test_release_with_valid_grant();
     test_release_blocked_no_feedback();
     test_release_blocked_bad_policy();
+    test_release_denied_wrong_signature();
+    test_release_denied_tampered_field();
     test_assert_isolated_reports_fresh_feedback();
     printf("\n=== Results: %d passed, %d failed ===\n", tests_passed, tests_failed);
     return tests_failed > 0 ? 1 : 0;

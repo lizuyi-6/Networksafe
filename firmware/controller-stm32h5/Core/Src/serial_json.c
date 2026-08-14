@@ -122,6 +122,34 @@ bool serial_json_parse(const char *line, parsed_message_t *out) {
             json_find_string(line, "policyDigest", out->grant.policy_digest, SERIAL_JSON_MAX_DIGEST);
             json_find_uint(line, "monotonicCounter", &out->grant.monotonic_counter);
             json_find_uint(line, "expiresAt", &out->grant.expires_at);
+            /* SECURITY FIX (audit 2026-08, FW-001): channel MAC. Parsed as
+             * hex; 32 bytes (64 hex chars) expected for HMAC-SHA256. A
+             * missing or malformed field leaves signature_len == 0, which
+             * controller_handle_release_request rejects fail-closed. */
+            char mac_hex[2 * 64 + 1];
+            if (json_find_string(line, "signature", mac_hex, sizeof(mac_hex))) {
+                uint16_t hex_len = (uint16_t)strlen(mac_hex);
+                if (hex_len > 0 && (hex_len & 1u) == 0u && hex_len / 2u <= sizeof(out->grant.signature)) {
+                    bool ok = true;
+                    for (uint16_t i = 0; i < hex_len; i++) {
+                        char c = mac_hex[i];
+                        bool hex_digit = (c >= '0' && c <= '9')
+                                      || (c >= 'a' && c <= 'f')
+                                      || (c >= 'A' && c <= 'F');
+                        if (!hex_digit) { ok = false; break; }
+                    }
+                    if (ok) {
+                        for (uint16_t i = 0; i < hex_len / 2u; i++) {
+                            char hex3[3] = { mac_hex[i * 2], mac_hex[i * 2 + 1], '\0' };
+                            out->grant.signature[i] = (uint8_t)strtoul(hex3, NULL, 16);
+                        }
+                        out->grant.signature_len = hex_len / 2u;
+                    } else {
+                        memset(out->grant.signature, 0, sizeof(out->grant.signature));
+                        out->grant.signature_len = 0;
+                    }
+                }
+            }
         }
         return true;
     }

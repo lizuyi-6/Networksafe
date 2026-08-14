@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import type { HardwareGrantEnvelope } from '../../backend/src/security/hardware-grant';
+import { verifySerialChannelMac } from '../../backend/src/companion/gateway-daemon';
 import type { InterlockState } from '../../backend/src/security/final-defense-policy';
 import { MockSecureElement } from '../m3-secure-element/mock-se';
 import { MockInterlock } from '../m4-interlock/mock-interlock';
@@ -38,6 +39,9 @@ export class MockController extends EventEmitter {
   private usedChallenges: Set<string> = new Set();
   private policyDigest: string = 'policy-digest-baseline-v1';
   private highWaterCounter: number = 0;
+  /** SECURITY FIX (audit 2026-08, FW-001): channel MAC key state — mirrors
+   * firmware controller_tasks.c: no key provisioned => ALL releases denied. */
+  private channelKeyHex: string | null = null;
 
   constructor(
     private se: MockSecureElement,
@@ -48,6 +52,11 @@ export class MockController extends EventEmitter {
     console.log('🟡 [M2 Controller] Initialized');
     this.startHeartbeat();
     this.emitFrame({ type: 'hello', ts: Date.now() });
+  }
+
+  /** Provision the M1<->M2 channel MAC key (mirrors firmware provisioning). */
+  provisionChannelKey(channelKeyHex: string): void {
+    this.channelKeyHex = channelKeyHex;
   }
 
   private startHeartbeat(): void {
@@ -61,7 +70,7 @@ export class MockController extends EventEmitter {
     }, this.heartbeatIntervalMs);
   }
 
-  handleReleaseRequest(grant: HardwareGrantEnvelope): 'released' | 'denied' {
+  handleReleaseRequest(grant: HardwareGrantEnvelope, serialMac?: string): 'released' | 'denied' {
     // Task 12 latch (mirrors firmware controller_tasks.c): a latched e-stop /
     // fault blocks release outright until explicitly cleared.
     if (this.state === 'fault' || this.interlock.isEstopPressed()) {
@@ -92,10 +101,29 @@ export class MockController extends EventEmitter {
       console.log('🟡 [M2 Controller] ❌ Grant expired');
       return 'denied';
     }
-    // Task 6: verify signature via SE
-    console.log('🟡 [M2 Controller] Verifying grant signature via M3 SE...');
-    // (In real hardware: send I2C command to SE, SE returns signature status)
-    // Here we simulate: the grant was already signed by the same SE in the flow
+    // Task 6 (ENFORCED, audit 2026-08 FW-001): the M1 -> M2 serial hop must
+    // carry a valid channel MAC — mirrors firmware grant_auth.c. No key
+    // provisioned => fail-closed deny (exactly like the firmware). A MAC
+    // mismatch means a forged/modified frame on the serial link.
+    if (!this.channelKeyHex) {
+      console.log('🟡 [M2 Controller] ❌ Channel key not provisioned (fail-closed)');
+      this.emitFrame({ type: 'alert', ts: Date.now() });
+      return 'denied';
+    }
+    const macOk = serialMac !== undefined
+      && verifySerialChannelMac(this.channelKeyHex, {
+        challenge: String(grant.challenge || ''),
+        policyDigest: String(grant.policyDigest || ''),
+        monotonicCounter: grant.monotonicCounter,
+        expiresAtEpochS: Number(grant.expiresAt),
+        signature: serialMac
+      });
+    if (!macOk) {
+      console.log('🟡 [M2 Controller] ❌ Serial channel MAC invalid (forged frame?)');
+      this.emitFrame({ type: 'alert', ts: Date.now() });
+      return 'denied';
+    }
+    console.log('🟡 [M2 Controller] Serial channel MAC verified');
 
     // Task 8: drive interlock
     this.interlock.driveRelay('release');
