@@ -24,7 +24,7 @@ from public_source_adapters import (  # noqa: E402
 from redact_sensitive_data import redact_network, redact_value  # noqa: E402
 
 
-def test_config(root: Path) -> dict:
+def make_config(root: Path) -> dict:
     return {
         "version": "v02-public-test",
         "seed": 7,
@@ -94,7 +94,7 @@ class PublicSourceAdapterTests(unittest.TestCase):
             }
             records, report = adapt_s_labs(
                 root,
-                test_config(root),
+                make_config(root),
                 source,
                 7,
                 smoke=False,
@@ -156,7 +156,7 @@ class PublicSourceAdapterTests(unittest.TestCase):
             }
             records, report = adapt_stripe_openapi(
                 root,
-                test_config(root),
+                make_config(root),
                 source,
                 7,
                 smoke=False,
@@ -214,7 +214,7 @@ tests:
             source["selection"] = {"maxByAttackFamily": {"sqli": 10}}
             records, report = adapt_owasp_crs(
                 root,
-                test_config(root),
+                make_config(root),
                 source,
                 7,
                 smoke=False,

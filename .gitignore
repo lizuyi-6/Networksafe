@@ -230,6 +230,10 @@ docs/video/**/*.jpg
 /ml/data/releases/*/_*/
 /ml/data/releases/*/*.py
 /ml/data/releases/*/supervisor-*.log
+# v0.3 audit integrity artifacts (ML-004): sealed tip snapshot + HMAC chain key
+# — runtime security artifacts, never commit (the key seals the audit chain).
+/ml/data/releases/*/audit.tip.json
+/ml/data/releases/*/audit-chain.key
 
 # Local render scratch (PPTX dumps) and editor state — never commit
 .arts/

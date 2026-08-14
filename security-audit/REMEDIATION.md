@@ -215,10 +215,64 @@
 - PS 脚本 tokenize 0 错误
 - backend 本批零文件改动（git diff 证实），test:all 照跑见 PR 描述
 
+## Batch 6 — ML 工作流批（本 PR）
+
+### ML-004 — audit.jsonl sha256 链无 tip 锚、截断仍 verify ok、撕裂写回落 GENESIS（Medium，VERIFIED-static）
+- 修复（`ml/data_pipeline/v03/audit.py` 重写）：
+  - **截断检测**：每次 append 后写密封 tip 快照 `audit.tip.json`（{count, tipHash, seal}，原子替换+fsync）——验证任意前缀不再自洽：载入时 count/tip 与快照不符即拒绝（含"截断到空但快照记得非零"）
+  - **整链重写检测**：快照带 `HMAC-SHA256("{count}:{tipHash}")` seal，密钥 `audit-chain.key`（CSPRNG 生成一次、0600、gitignored、永不提交）——本地进程重写整链后无法伪造 seal；密钥不可用时降级 unkeyed 快照（count+tip 仍强制）
+  - **resume 安全**：`_load_last_hash` 不再任意异常回落 GENESIS——撕裂的**最终行**修复（crash mid-write），非末行不可解析=真实损坏直接 raise；载入即跑全链验证，违规 fail-closed 拒绝启动
+  - `verify_with_snapshot()` 供 finalize/import 全量校验；`AuditIntegrityError` 新异常类型
+  - `finalize.py` 第 0 步调用之——**拒绝在审计链失败时写 manifest**（fail-closed），报告加 `auditChain` 字段
+  - `.gitignore` 增 `audit.tip.json`/`audit-chain.key`（密封密钥永不入库）
+- 证据：新增 10 用例 `test_v03_audit_security.py`——正常链过；尾截断/整链重写（自洽重算 hash）/伪造 seal/截断到空 全部构造时 fail-closed；撕裂尾行修复后 3 条完好；中部篡改 hash mismatch 拒绝。`py -3 -m pytest ml/data_pipeline/tests/` **46 passed**
+
+### ML-012 — 无全局 token 成本预算代码闸（Low/Info）
+- 修复（`provider.py`）：`ARK_TOTAL_TOKEN_BUDGET`（进程生命周期 prompt+completion 总额）——每次调用前 `_budget_check()` 拒绝发网络请求（抛 `TokenBudgetExceeded`，不可重试），成功调用后 `_budget_account()` 累计（线程锁）；orchestrator producer 每轮检查 `budget_exhausted()` 停止喂新 spec 并记 `budget_exhausted` 审计事件（run 可恢复地结束，链完整）；未设置=旧行为（流程约束）
+- 证据：`test_token_budget_gate`（100 预算 → 60+30 未尽 → 再 60 超限 → check 必抛；unset reload 后 unlimited）
+
+### ML-001 — v0.3 运行时依赖不在 requirements（Medium，VERIFIED-static）
+- 修复：`ml/requirements.txt` 增 `openai`、`datasketch`（注释标 ML-001）；`ml/requirements-lock.txt` 追加 pinned 集 `openai==2.21.0`、`datasketch==2.0.0` 及其未锁定依赖 `distro==1.9.0`/`jiter==0.13.0`/`pydantic==2.11.3`/`sniffio==1.3.1`（与已锁 anyio/httpx/tqdm/typing-extensions 闭包，版本=本机实测安装）
+- 证据：`py -3 -c "import openai, datasketch"` 实测 2.21.0/2.0.0；闭包比对 openai requires vs lock
+
+### ML-002 残余 — 数值 env 无校验可配出无界并发（Low）
+- 修复（`config.py`）：`_env_bounded_int(name, default, lo, hi)`——非整数硬错 SystemExit(2)，越界 clamp+警告；四个并发 env 全部上界（GENERATOR 64 / REVIEWER 96 / ADJUDICATOR 64 / MAX_INFLIGHT 128）。（值含 `=` 截断子项经复核不成立：解析本就 `split("=",1)`）
+- 证据：`test_env_bounded_int_clamps_and_rejects`（默认/合法/clamp 高低/非法串）
+
+### ML-007 — 两处硬编码机器路径（Low）
+- 修复：`monitor_run.py` `V03` 从 `Path(__file__)` 派生；`usage_logger.py` `_PROJECT_ROOT` 同样派生（原 `X:\repos\Networksafe` 字面量）
+- 证据：pytest 导入隐式编译；路径派生 `parents[2]`/`parents[3]` 与目录层级核对
+
+### ML-008 — fetch_public_sources cachePath 无 containment（Low，SUSPECTED）
+- 修复（`fetch_public_sources.py`）：新增 `ensure_within(base, candidate)`——resolve+`base + sep` 前缀比对（`cache-evil` 兄弟目录不可前缀绕过，AGENTS.md §1 自家规范）；`fetch_sources` 在任何 I/O 前对每个 `cachePath` 调用
+- 证据：`test_containment_accepts_inside_and_rejects_escape`（内含过；`../escape` 拒；兄弟 `cache-evil` 拒）
+
+### ML-010 — schema query 双形态失配 + 值类型静默无界（Medium，VERIFIED-static）
+- 修复：
+  - `ml/schemas/detection-input.schema.json`：`query.additionalProperties` 从平铺 `type:[string,number,boolean]+maxLength`（maxLength 对非 string 静默失效）改 `anyOf`（string 带 8192 上限，number/boolean 明确无字符串约束）+$comment 说明 v0.2 string 形态由校验层感知、对新数据 fail-closed
+  - `common.py validate_input`：`query` 改双形态校验——string（legacy ≤8192）或 object（≤100 键、键 str、值 string≤8192/number/boolean、bool 先于 int 判定）；原实现把 v0.3 object 记录一律 `query_invalid` 拒掉
+- 证据：pytest 46/46（含 test_v03_deterministic.py 的 query object/string 用例）
+
+### ML-011 — accountPrivilege/assetType 无 enum 与 planner 枚举失配（Low）
+- 决策（记录为设计澄清而非失配修复）：schema 保持 free-form + 长度上限——backend 运行时（security-detection-engine.ts）会把 live-context 值 truncate 到 80/120（若加 enum，运行时截断即违约）；planner 的 `_ACCOUNT_PRIV`/`_ASSET_TYPES` 闭集是生成侧不变量非跨契约约束。schema 加 `$comment` 固化该决策
+- 证据：backend `schema-parity.test.ts` 字段清单含此二字段（free-form），两端一致
+
+### 附带 — pytest 收集 bug
+- `test_public_sources.py` 顶层 `test_config(root: Path)` 签名被 pytest 误当测试函数（`fixture 'root' not found` ERROR）——改名 `make_config`，套件恢复 5/5
+
+### ML-003 / ML-GOV-2 — 保持现状（记录）
+- ML-003（usage_logger 写活动 SQLite DB）：env 门控默认关、仅 INSERT 隔离命名空间、fail-open——用户显式接受的成本追踪设计；风险已在文件头 SAFETY 块完整文档化
+- ML-GOV-2（sealed 目录 untracked `_validate-summary.json`）：维持 untracked、永不提交
+
+## 验证总账（Batch 6）
+- `py -3 -m pytest ml/data_pipeline/tests/`：**46 passed**（test_pipeline 26 + public_sources 5 + v03_deterministic 5 + 新 v03_audit_security 10）
+- 既有 v0.3 工作流零破坏：deterministic/reviewer 用例无回归
+- 密封路径零接触：仅改 `ml/data_pipeline/**` 源码 + `ml/schemas/detection-input.schema.json`（DO_NOT_READ 清单外）
+
 ## 未修复项（后续批次）
-- ML-001/002/003/004/005/007/008/009/011/012 + ML-010（ml/ 工作流项：requirements 锚定、audit 链 tip 锚、schema 失配、路径硬编码、cachePath containment 等）
-- ML-GOV-1（密封集入库——治理决策：移出仓库需 owner 拍板密封性 vs 可用性）、ML-GOV-2（保持 untracked，永不提交）
+- ML-005（specHash 无 key——生成侧防篡改锚，需与 audit-chain.key 统一密钥管理设计）、ML-009（v0.2 脱敏 regex 键形不全——历史产物兜底）
+- ML-GOV-1（密封集入库——治理决策：移出仓库需 owner 拍板密封性 vs 可用性）
 - DP-001 运维跟进：FTP 凭证轮换 + git 历史清洗（BFG/filter-repo）+ secret-scan guard
 - DP-008/013/015（floating tag pin、容器 USER、installer-agent systemd 加固）
 - FW-002/005（M1/M2 真实对接联调；challenge 环形窗口设计权衡）
-- AG-X01（部署态无入站命令通道——架构项，实现监听者时须同步定义入站鉴权）
+- AG-X01（部署态无入站命令通道——架构项）

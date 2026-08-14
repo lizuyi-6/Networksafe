@@ -70,7 +70,14 @@ describe('detection schema parity', () => {
     const query = schema.properties.query;
     expect(query.type).toBe('object');
     expect(query.maxProperties).toBe(100);
-    expect(Array.isArray(query.additionalProperties.type)).toBe(true);
-    expect(query.additionalProperties.type.sort()).toEqual(['boolean', 'number', 'string']);
+    // ML-010 (audit 2026-08): scalar types are declared via anyOf so the
+    // string-only maxLength actually applies to strings (the flat
+    // type-list form silently left number/boolean unbounded).
+    const variants = query.additionalProperties.anyOf as any[];
+    expect(Array.isArray(variants)).toBe(true);
+    const types = variants.map((v) => v.type).sort();
+    expect(types).toEqual(['boolean', 'number', 'string']);
+    const stringVariant = variants.find((v) => v.type === 'string');
+    expect(stringVariant.maxLength).toBe(8192);
   });
 });

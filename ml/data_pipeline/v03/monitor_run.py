@@ -12,7 +12,9 @@ from __future__ import annotations
 import sys, time, subprocess, json
 from pathlib import Path
 
-V03 = Path(r"X:\repos\Networksafe\ml\data\releases\v03")
+# SECURITY FIX (audit 2026-08, ML-007): was a hardcoded r"X:\repos\Networksafe\..." machine
+# path; derive from this file's location (ml/data_pipeline/v03/ -> ml/ -> releases dir).
+V03 = Path(__file__).resolve().parents[2] / "data" / "releases" / "v03"
 AUDIT = V03 / "audit.jsonl"
 STDERR = V03 / "run-full.stderr.log"
 STDOUT = V03 / "run-full.stdout.log"

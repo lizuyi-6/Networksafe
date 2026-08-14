@@ -28,6 +28,7 @@ from .dedup import ExactDeduper, NearDeduper
 from .audit import AuditLog
 from .generation_spec import GenerationSpec
 from . import quality_gates
+from .provider import budget_exhausted as provider_budget_exhausted
 
 PROMPT_VERSION = config.PROMPT_VERSION  # re-exported for backwards-compat imports
 _DATASET_VERSION = config.DATASET_VERSION
@@ -270,6 +271,14 @@ class Orchestrator:
 
         async def produce():
             for spec in specs:
+                # ML-012: once the global token budget is exhausted, stop feeding
+                # new specs. In-flight samples fail fast (provider raises before
+                # any network call) and land in the audit log as error events;
+                # the run ends resumably with the audit chain intact.
+                if provider_budget_exhausted():
+                    self.audit.append(event="budget_exhausted", message="producer stopped: "
+                                      "ARK_TOTAL_TOKEN_BUDGET reached")
+                    break
                 self.stats.planned += 1
                 if spec.sampleId in self._processed:
                     self.stats.skipped_done += 1

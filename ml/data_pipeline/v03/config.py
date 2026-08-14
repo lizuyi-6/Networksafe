@@ -39,11 +39,36 @@ SHARD_MAX = 10_000
 # caps keep token-budget and rate-limit pressure reasonable. Tunable via env. For the full
 # 300k run, raise GENERATOR_CONCURRENCY / ARK_MAX_INFLIGHT to scale throughput (bounded by the
 # Ark key's RPM limit - if 429s appear, lower these).
+#
+# SECURITY FIX (audit 2026-08, ML-002 residual): env-driven ints are now validated and
+# bounded — a typo'd or hostile value used to configure unbounded concurrency (e.g.
+# ARK_MAX_INFLIGHT=1000000 spawning a million tasks). Invalid values are a hard error;
+# out-of-range values clamp to the stated bound with a warning.
 import os as _os
-GENERATOR_CONCURRENCY = int(_os.environ.get("ARK_GENERATOR_CONCURRENCY", "12"))
-REVIEWER_CONCURRENCY = int(_os.environ.get("ARK_REVIEWER_CONCURRENCY", "24"))   # 2 per candidate
-ADJUDICATOR_CONCURRENCY = int(_os.environ.get("ARK_ADJUDICATOR_CONCURRENCY", "12"))
-MAX_INFLIGHT = int(_os.environ.get("ARK_MAX_INFLIGHT", "32"))
+import sys as _sys
+
+
+def _env_bounded_int(name: str, default: int, lo: int, hi: int) -> int:
+    raw = _os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return default
+    try:
+        value = int(raw.strip())
+    except ValueError:
+        print(f"config: {name} must be an integer, got {raw!r}", file=_sys.stderr)
+        raise SystemExit(2)
+    if value < lo or value > hi:
+        clamped = max(lo, min(hi, value))
+        print(f"config: {name}={value} out of range [{lo}, {hi}]; clamping to {clamped}",
+              file=_sys.stderr)
+        return clamped
+    return value
+
+
+GENERATOR_CONCURRENCY = _env_bounded_int("ARK_GENERATOR_CONCURRENCY", 12, 1, 64)
+REVIEWER_CONCURRENCY = _env_bounded_int("ARK_REVIEWER_CONCURRENCY", 24, 1, 96)   # 2 per candidate
+ADJUDICATOR_CONCURRENCY = _env_bounded_int("ARK_ADJUDICATOR_CONCURRENCY", 12, 1, 64)
+MAX_INFLIGHT = _env_bounded_int("ARK_MAX_INFLIGHT", 32, 1, 128)
 
 REVIEWERS_PER_CANDIDATE = 2  # mission §28: two blind reviewers
 

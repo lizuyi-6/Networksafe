@@ -24,11 +24,15 @@
       "maxLength": 2048
     },
     "query": {
+      "$comment": "v0.3 structured query contract (committed 59a61c5). Values are scalar; the legacy v0.2 string form is validated shape-aware by data_pipeline/common.py but is NOT schema-valid (fail-closed for new data). SECURITY FIX (audit 2026-08, ML-010): anyOf so maxLength applies to strings only - the previous flat type list silently left number/boolean values unbounded.",
       "type": "object",
       "maxProperties": 100,
       "additionalProperties": {
-        "type": ["string", "number", "boolean"],
-        "maxLength": 8192
+        "anyOf": [
+          {"type": "string", "maxLength": 8192},
+          {"type": "number"},
+          {"type": "boolean"}
+        ]
       }
     },
     "headers": {
@@ -53,11 +57,19 @@
         "recentFailureCount": {"type": "integer", "minimum": 0},
         "historicalRiskScore": {"type": "number", "minimum": 0, "maximum": 1},
         "authenticated": {"type": "boolean"},
-        "accountPrivilege": {"type": "string", "maxLength": 80},
+        "accountPrivilege": {
+          "$comment": "Deliberately free-form with a length bound (audit 2026-08, ML-011): the backend runtime (security-detection-engine.ts) truncates live-context values to 80 chars, which would violate the v0.3 spec_planner's closed generation set (_ACCOUNT_PRIV). The planner set is a generation-side invariant, not a cross-contract schema constraint.",
+          "type": "string",
+          "maxLength": 80
+        },
         "internalService": {"type": "boolean"},
         "endpointSensitivity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
         "openApiMatched": {"type": "boolean"},
-        "assetType": {"type": "string", "maxLength": 120},
+        "assetType": {
+          "$comment": "Same rationale as accountPrivilege (ML-011): bounded free-form for the backend mirror; the planner's _ASSET_TYPES set governs generation only.",
+          "type": "string",
+          "maxLength": 120
+        },
         "distinctUsernamesLastMinute": {"type": "integer", "minimum": 0},
         "sessionAgeSeconds": {"type": "integer", "minimum": 0},
         "geoConsistency": {"type": "boolean"},

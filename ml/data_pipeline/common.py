@@ -375,12 +375,40 @@ def validate_input(value: dict[str, Any]) -> list[str]:
         "EVENT",
     }:
         errors.append("method_invalid")
-    for field_name, maximum in (("path", 2048), ("query", 8192), ("body", 32768)):
+    for field_name, maximum in (("path", 2048), ("body", 32768)):
         field_value = value.get(field_name)
         if not isinstance(field_value, str) or (field_name == "path" and not field_value):
             errors.append(f"{field_name}_invalid")
         elif len(field_value) > maximum:
             errors.append(f"{field_name}_too_long")
+    # SECURITY FIX (audit 2026-08, ML-010): `query` is dual-shape and was validated
+    # as string-only, directly contradicting the committed v0.3 schema (object of
+    # scalars). Validate both shapes with their real bounds instead of silently
+    # rejecting every v0.3 record as `query_invalid` (or blessing an over-long one).
+    query_value = value.get("query")
+    if isinstance(query_value, str):
+        # legacy v0.2 producer form (public_source_adapters / generate_candidates)
+        if len(query_value) > 8192:
+            errors.append("query_too_long")
+    elif isinstance(query_value, dict):
+        if len(query_value) > 100:
+            errors.append("query_too_many_properties")
+        else:
+            for query_key, query_item in query_value.items():
+                if not isinstance(query_key, str):
+                    errors.append("query_key_invalid")
+                    break
+                if isinstance(query_item, str):
+                    if len(query_item) > 8192:
+                        errors.append("query_value_too_long")
+                        break
+                elif isinstance(query_item, bool):
+                    continue  # bool before int: bool is an int subclass
+                elif not isinstance(query_item, (int, float)):
+                    errors.append("query_value_invalid")
+                    break
+    else:
+        errors.append("query_invalid")
     headers = value.get("headers")
     if not isinstance(headers, dict) or len(headers) > 100:
         errors.append("headers_invalid")
