@@ -40,6 +40,7 @@ jest.mock('../../services/device-registry.service', () => ({
   updateDeviceStatus: jest.fn().mockResolvedValue({}),
   setDeviceOffline: jest.fn().mockResolvedValue({}),
   getCodebook: jest.fn().mockReturnValue({ codes: {} }),
+  getDeviceById: jest.fn(),
   addDeviceEvent: jest.fn().mockResolvedValue({}),
 }));
 

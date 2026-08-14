@@ -24,8 +24,12 @@
       "maxLength": 2048
     },
     "query": {
-      "type": "string",
-      "maxLength": 8192
+      "type": "object",
+      "maxProperties": 100,
+      "additionalProperties": {
+        "type": ["string", "number", "boolean"],
+        "maxLength": 8192
+      }
     },
     "headers": {
       "type": "object",

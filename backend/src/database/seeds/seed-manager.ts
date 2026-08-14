@@ -25,7 +25,9 @@ export interface SeedOptions {
   verbose?: boolean;
 
   /**
-   * Force seed even in production mode (DANGEROUS - use with caution)
+   * @deprecated SECURITY FIX (audit 2026-08): the force escape hatch has been
+   * removed — production mode always refuses seeding/clearing. The field is
+   * kept in the interface for source compatibility only and is ignored.
    */
   force?: boolean;
 }
@@ -122,18 +124,12 @@ export class SeedManager {
    * @throws Error if seeding is not allowed
    */
   public static async seed(options: SeedOptions = {}): Promise<void> {
-    const { force = false } = options;
-
-    // Check if seeding is allowed
-    if (!SeedManager.canSeed() && !force) {
+    // SECURITY FIX (audit 2026-08): no force escape hatch. Production mode
+    // always refuses; seeding is a demo-mode-only operation.
+    if (!SeedManager.canSeed()) {
       throw new Error(
-        'Seeding is not allowed in production mode. ' +
-        'Set APP_MODE=demo or use force=true (DANGEROUS).'
+        'Seeding is not allowed in production mode. Set APP_MODE=demo.'
       );
-    }
-
-    if (force && !isDemoMode()) {
-      logger.warn('⚠️  FORCE SEEDING IN PRODUCTION MODE - This should only be used for initial setup!');
     }
 
     logger.info('Starting database seeding...');
@@ -177,18 +173,15 @@ export class SeedManager {
    * @throws Error if clearing is not allowed
    */
   public static async clear(options: SeedOptions = {}): Promise<void> {
-    const { force = false, verbose = true } = options;
+    const { verbose = true } = options;
 
-    // Check if clearing is allowed
-    if (!SeedManager.canSeed() && !force) {
+    // SECURITY FIX (audit 2026-08): no force escape hatch. Production mode
+    // always refuses; clearing is a demo-mode-only operation, and the HTTP
+    // route additionally requires a single-use confirmation token.
+    if (!SeedManager.canSeed()) {
       throw new Error(
-        'Clearing seed data is not allowed in production mode. ' +
-        'Set APP_MODE=demo or use force=true (DANGEROUS).'
+        'Clearing seed data is not allowed in production mode.'
       );
-    }
-
-    if (force && !isDemoMode()) {
-      logger.warn('⚠️  FORCE CLEARING IN PRODUCTION MODE - This will delete all data!');
     }
 
     logger.info('Clearing seed data...');

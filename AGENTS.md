@@ -46,7 +46,7 @@ Firmware（STM32H563，需 ARM GCC toolchain；host-side 测试只需 gcc）：
 ```bash
 cd firmware/controller-stm32h5
 make -j$(nproc)                    # 产物 build/controller-stm32h5.elf/.bin/.hex（需 CubeMX 生成 HAL/Drivers，README.md 记录当前 .ioc 尚未初始化）
-make -f test/Makefile test         # host-side C 单测：mock_hal + controller_tasks/serial_json/interlock_driver，18 用例（含急停锁存、counter UINT32_MAX 饱和闭锁、challenge 16 槽环形窗口、serial_json RFC8259 空格/转义/键名防伪），gcc 编译无 STM32 依赖（test/Makefile 路径为父目录相对，须在 firmware/controller-stm32h5/ 根跑；cd test 会找不到 test/mock_hal.c）
+make -f test/Makefile test         # host-side C 单测：mock_hal + controller_tasks/serial_json/interlock_driver，18 用例（含急停锁存、counter UINT32_MAX 饱和闭锁、challenge 16 槽环形窗口、serial_json RFC8259 空格/转义/键名防伪），gcc 编译无 STM32 依赖（test/Makefile 路径为父目录相对，须在 firmware/controller-stm32h5/ 根跑；cd test 会找不到 test/mock_hal.c。Windows 无 make 时可直接 gcc：`gcc -Wall -Wextra -std=c11 -Itest -ICore/Inc -ICore/Src -o test_controller.exe test/mock_hal.c test/test_stubs.c test/test_controller.c Core/Src/controller_tasks.c Core/Src/serial_json.c Core/Src/interlock_driver.c`）
 ```
 
 Simulator（无额外依赖，复用 backend 的 ts-node）：
@@ -85,6 +85,7 @@ node scripts/guards/check-no-direct-api-fetch.mjs    # 前端每个后端调用�
 node scripts/guards/check-frontend-api-contract.mjs  # 前端每个 API 调用必须解析到已注册的后端路由
 node scripts/guards/check-repository-hygiene.mjs     # 阻止提交运行时 DB / 生成物 / QA 截图 / Playwright 状态
 node scripts/guards/check-rescue-no-release.mjs        # rescue 控制面源码级禁止 release 帧（ADR 2026-07-08-rescue-release-policy）
+node scripts/guards/check-training-leak-challenge-capture.mjs  # ml/ 训练产物不得泄漏 sealed challenge capture（只挡 committed 产物，不挡 runtime reads → 见 DO_NOT_READ.md）
 ```
 
 环境初始化与 Docker（跨平台可复现）：先 `node scripts/setup.mjs`（从 `.env.example` 生成根 `.env` 与 `backend/.env`，随机密钥、幂等不覆盖、`--install` 附带 npm install；bash 等价 `deployment/production/setup-env.sh`，两者生成键列表须保持同步），再 `docker compose up -d --build`（compose 文件用 include/env_file long syntax，需 Compose v2.24+，legacy `docker-compose` v1 二进制解析不了）。`deployment/production/docker-compose.prod.yml` 是 canonical 根 Compose 的兼容入口，不维护第二套拓扑。生产 Compose 仅发布 `127.0.0.1:8080` 的前端/API 反代入口，backend/Redis/Postgres/MinIO 仅在 Compose 网络可达；本地开发后端仍可直接监听 3005。登录凭据 = `.env` 的 `ADMIN_EMAIL`/`ADMIN_PASSWORD`（setup 生成并打印一次）。compose `:?` 硬保护 12 项：`REDIS_PASSWORD`/`JWT_SECRET`/`AUDIT_LOG_SECRET`/`ADMIN_PASSWORD`/`ENCRYPTION_KEY`/`ENCRYPTION_SALT`/`DEVICE_COMMAND_SECRET`/`SERIAL_HELPER_SHARED_SECRET`/`POSTGRES_PASSWORD`/`SHADOW_DATABASE_URL`/`S3_SECRET_KEY`/`DEVICE_API_KEYS`；`SERIAL_HELPER_SHARED_SECRET` 还必须 ≥32 字符且 ≠ `DEVICE_COMMAND_SECRET`（`runtime-env.ts:111` 硬拒）。生产 Compose 的 `ENABLE_ATTACK_SIM` 缺省为 false。占位值 `change_me*` 在生产被 `runtime-env.ts` WEAK_VALUE_PATTERNS 硬拒——直接 `cp .env.example .env` 起不来，必须走生成脚本；本地 dev 同样必需 `JWT_SECRET`+`AUDIT_LOG_SECRET`（缺任一 `npm run dev` 直接 fatal）。根 `deploy.sh` 已废弃（其产物被生产校验硬拒，脚本现直接报错退出），Linux 一键 Docker 安装用 `sudo bash scripts/install.sh`。离线客户机（air-gapped，甚至无 Docker）分发：在线构建机 `node scripts/release/build-offline-bundle.mjs [--include-docker]` 产自包含 tar.gz（docker save 全镜像 + SHA256SUMS + 可选 Docker 静态引擎），客户机解包后 `sudo bash install.sh` 零网络安装（load 镜像 + 现场生成密钥 + `docker-compose.offline.yml` 固定标签 `up -d --no-build`），三处密钥生成器（setup.mjs / setup-env.sh / 离线 install.sh）键列表须同步，详见 `deployment/offline/README.md`。
@@ -104,6 +105,7 @@ node scripts/guards/check-rescue-no-release.mjs        # rescue 控制面源码�
 | `rescue/` | 异构救援控制面 `ag-rescue`（Rust 单二进制，仅安全侧动作；ADR/runbook 见 `docs/adr/2026-07-08-*` 与 `docs/rescue/`） |
 | `hardware/enclosure/` | Gateway Appliance 3D 打 OpenSCAD 机箱（Phase 0.5 原型，非注塑量产件） |
 | `deployment/gateway/` | M1 Gateway Daemon 嵌入式部署包（systemd + nftables ruleset + install.sh） |
+| `ml/` | AetherArgus 离线安全判定模型与数据集（独立于后端 `ai-agents/` 运行时检测；QLoRA + 数据管线，当前未接入 `backend/src/`；详见下节） |
 | `deployment/` `docs/` | 生产脚本 / 架构·ADR·产品·就绪文档 |
 
 > Gateway Appliance 四模块分层（PRD §4，硬实现在 firmware/hardware/deployment，逻辑在 simulator 验证）：**M1 Gateway Daemon**（`backend/src/companion/gateway-daemon.ts`，部署态 `deployment/gateway/bin/aetherguard-gateway-daemon.ts` 包它）↔ **M2 STM32 控制器**（`firmware/controller-stm32h5/`）↔ **M3 Secure Element**（OPTIGA Trust M，I2C）↔ **M4 interlock 继电器+反馈**。串口协议 newline-delimited JSON，默认 USART3/115200。`simulator/` 用**真 M1 daemon + mock M2/M3/M4** 跑通同一控制环，9 种 fail-closed 触发可注入。
@@ -136,6 +138,36 @@ node scripts/guards/check-rescue-no-release.mjs        # rescue 控制面源码�
 ### AI Agent 检测管线
 
 `backend/src/ai-agents/` 七层多 agent 决策（L1 协同→L2 角色→L3 场景遍历→L4 能力→L5 辩论→L6 异构模型→L7 综合）。`services/detection-pipeline.service.ts` + `detection-engine.ts` 实现规则检测/攻击族分类/AI 升级/候选规则。检测启发式以**正常流量 0% 误报**为硬约束调参。数据集 harness `__tests__/dataset/dataset-evaluation.test.ts` 评估 `backend/test-data/aetherguard-security-dataset/` 克隆，缺失则自跳过。
+
+## AetherArgus 离线模型与数据集（ml/）
+
+`ml/` 是**独立于后端 `ai-agents/` 运行时检测**的离线 ML 工作流：QLoRA 微调 Qwen3-4B-Instruct，对标准化 HTTP 请求输出严格 JSON 安全判定（`verdict/confidence/attackFamily/severity/reasoning/evidence/recommendedAction`，契约见 `ml/schemas/detection-{input,output}.schema.json`）。**当前未接入 `backend/src/` 生产路由**（`ml/data_pipeline/README.md` 明示 "does not connect a model to backend/src/"）。权重/checkpoint/缓存/GGUF 全被 `.gitignore` 排除。
+
+### 两个阶段，勿混淆
+
+- **v0.2（已完成）**：完整数据 + QLoRA 训练 + 评估 + GGUF/Ollama。958/122/120 样本，verdict 准确率 0.2833->0.9000、正常 FPR 0.5152->0.0455（实测锚点见 `ml/README.md` §13：`ml/output/aetherargus-lora/training-summary.json`、`ml/reports/baseline-vs-lora.json`）。数据管线在 `ml/data_pipeline/`（`build_release.py`，19,052 样本，data-only），文档见 `ml/data_pipeline/README.md`。
+- **v0.3（进行中）**：**仅生成训练数据**。目标 300k accepted（245k floor / 500k stretch，pass-gate 245k）。管线源码在 `ml/data_pipeline/v03/`（tracked），产物在 `ml/data/releases/v03/`（gitignored：`*.jsonl`/`*.py`/`accepted/`/`rejected/`/`sealed/`/`_sched_*/` 等全排除，见 `.gitignore` L217-231）。
+
+### v0.3 硬约束（改 ml/ 前必读）
+
+- **只生成训练数据**：禁止 training/QLoRA/adapters/merging/quantization/GGUF/Ollama eval/baseline eval/closed-set eval/standalone eval；禁止新建 validation/test set；禁止修改 sealed test 或模型验收阈值（`ml/configs/aetherargus-v02-acceptance-gates.json` 8 项 locked 阈值）；`syntheticRatio=100%`、`humanReviewCount=0`。
+- **⚠️ sealed test 内容禁读（mission §58）**：`DO_NOT_READ.md`（repo root，v2，2026-08-07）是 canonical 密封测试注册表。任何 v0.3 generator/reviewer/adjudicator 子 agent prompt 必须内嵌其 "PASTE INTO AGENT PROMPTS" 块逐字。密封路径含 `ml/data/lan_challenge_capture/**`（含 `raw-private/` 凭据 `.id-salt`/`.test-creds.env`/`cookies.jar`）、`ml/data/releases/*/test-{closed,independent}.jsonl`、`ml/evaluation/lan_challenge/**`（33 git-tracked 文件，`few-shot-examples*.json` = 直接污染向量）、`ml/reports/lan-challenge-evaluation/{predictions,metrics,tables,figures,paper}/**`。状态不明默认不读。CI guard `check-training-leak-challenge-capture.mjs` **只挡 committed 产物泄漏，不挡 runtime file reads**--故 `DO_NOT_READ.md` 是进程控制，非可选。
+- **Ground truth 程序拥有**（immutable labels，非 LLM 决定）：spec planner -> immutable generation spec -> LLM request realizer -> 2 blind reviewers -> adjudicator -> dedup -> accept。`audit.jsonl` 是 tamper-evident sha256 链（首事件 `"prev":"GENESIS"`），为 resume 的 source of truth。
+- **凭据**：`ml/data_pipeline/v03/.env.local`（`ARK_API_KEY`）必须保持 gitignored，永不提交，key 只从 env 读。
+
+### v0.3 命令
+
+```bash
+cd ml/data_pipeline/v03
+py -3 run_full.py [max_inflight=32] [oversample=1.6] [target_scale=1.0]  # 全量，resumable from audit.jsonl；产物落 ml/data/releases/v03/
+py -3 finalize.py                # 完成后写 manifest + report
+py -3 run_smoke.py / run_smoke_diverse.py / run_smoke_targeted.py        # smoke
+py -3 run_scale_test.py                                                   # scale
+py -3 monitor_run.py                                                      # 监控
+# 后台 supervisor（gitignored runner，在产物目录）：cd ml/data/releases/v03 && py -3 supervisor.py
+```
+
+Python = `py -3`（3.12）。Provider：OpenCode Zen `deepseek-v4-flash`（`https://opencode.ai/zen/go/v1`，需 `/v1`，`extra_body={"thinking":{"type":"disabled"}}`），5h rolling usage budget 是绑定约束（provider 可换，见 memory）。
 
 ## 安全控制流不变量（改 `final-defense*` / `hardware-authorization*` / `companion/` / `device-control*` 前必读）
 

@@ -64,4 +64,13 @@ describe('detection schema parity', () => {
       'statusCodeHistory'
     ]);
   });
+
+  it('query stays the structured v0.3 object shape (drift here broke the engine contract once)', () => {
+    const schema = getDetectionInputSchema() as any;
+    const query = schema.properties.query;
+    expect(query.type).toBe('object');
+    expect(query.maxProperties).toBe(100);
+    expect(Array.isArray(query.additionalProperties.type)).toBe(true);
+    expect(query.additionalProperties.type.sort()).toEqual(['boolean', 'number', 'string']);
+  });
 });

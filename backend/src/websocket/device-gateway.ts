@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AetherGuard - Device WebSocket Gateway (Gateway Appliance / devices)
  *
  * Handles WebSocket connections for the AetherGuard Root-Resistant Gateway
@@ -40,6 +40,7 @@ import {
     updateDeviceFinalDefenseState,
     setDeviceOffline,
     getCodebook,
+    getDeviceById,
     addDeviceEvent,
 } from '../services/device-registry.service';
 import type {
@@ -348,6 +349,33 @@ export class DeviceGateway {
                 status: 'failure'
             });
             return;
+        }
+
+        // SECURITY FIX (audit 2026-08, Critical): registration authenticates
+        // only the shared static DEVICE_API_KEYS list, so a compromised or
+        // rogue appliance could claim another device's id and previously
+        // overwrote that device's provisioned public key — the verification
+        // anchor for grant signatures on both the hardware_gates table and
+        // the in-memory device registry. Once a key is provisioned for a
+        // device id, any register presenting a different key (or omitting
+        // the key) is refused BEFORE the socket can take over the channel.
+        const existingDevice = getDeviceById(device_id);
+        const existingDeviceKey = String(existingDevice?.physicalAuth?.publicKeyPem || '').trim();
+        const presentedKey = String(public_key_pem || '').trim();
+        if (existingDeviceKey && presentedKey !== existingDeviceKey) {
+            logger.warn('[DeviceGateway] Rejecting device register: public key already provisioned and differs', { device_id });
+            socket.emit('register_error', { error: 'backend.device_public_key_already_provisioned', reason: 'device_key_immutable' });
+            socket.disconnect();
+            return;
+        }
+        if (public_key_pem) {
+            const existingGate = hardwareAuthorizationService.getGate(device_id);
+            if (existingGate?.publicKeyPem && String(existingGate.publicKeyPem).trim() !== presentedKey) {
+                logger.warn('[DeviceGateway] Rejecting device register: hardware gate public key already provisioned and differs', { device_id });
+                socket.emit('register_error', { error: 'backend.gate_public_key_already_provisioned', reason: 'gate_key_immutable' });
+                socket.disconnect();
+                return;
+            }
         }
 
         socket.deviceId = device_id;

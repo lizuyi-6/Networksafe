@@ -238,8 +238,18 @@ impl Runtime {
         Some(rec.core.event_id)
     }
 
-    /// Safe-side isolate. Sends `interlock_assert`; reports confirmed state
-    /// only when both the normalized state and physical feedback prove isolation.
+    /// Safe-side isolate. Sends interlock_assert; reports confirmed state
+    /// only when both the normalized state and physical feedback prove the
+    /// relay is actually OPEN.
+    ///
+    /// Feedback semantics (aligned with interlock_driver.c and the M1 daemon):
+    /// feedbackOk == true means the relay auxiliary contact reads CLOSED —
+    /// i.e. the bridge is RELEASED. Isolation is therefore confirmed by
+    /// feedbackOk == Some(false) (relay open). The previous code required
+    /// Some(true) here, which reported "isolation confirmed" precisely in
+    /// the welded-contact failure mode the feedback exists to catch, and the
+    /// stale-feedback bug in the firmware assert path made that
+    /// false-positive reachable after every successful release.
     pub fn isolate(&mut self, actor: &str, auth_method: &str, reason: &str) -> ActionOutcome {
         let (events, intent_id) = match self.gate_action(actor, auth_method, "isolate", "appliance", reason) {
             Ok(v) => v,
@@ -256,7 +266,7 @@ impl Runtime {
             },
             None => ApplianceStatus::unknown("appliance_endpoint not configured"),
         };
-        let confirmed = status.bridge_state == "isolated" && status.feedback_ok == Some(true);
+        let confirmed = status.bridge_state == "isolated" && status.feedback_ok == Some(false);
         if confirmed {
             self.snapshot.last_bridge_state = Some("isolated".to_string());
         }
@@ -467,8 +477,10 @@ mod tests {
     }
 
     fn mock_appliance() -> (std::net::SocketAddr, std::thread::JoinHandle<Vec<String>>) {
+        // feedbackOk=false means the relay auxiliary contact reads OPEN — the
+        // physically correct confirmation of isolation (see isolate()).
         mock_appliance_with_frame(
-            r#"{"type":"interlock_result","interlockState":"isolated","feedbackOk":true,"secureElementPresent":true}"#,
+            r#"{"type":"interlock_result","interlockState":"isolated","feedbackOk":false,"secureElementPresent":true}"#,
         )
     }
 
@@ -505,7 +517,7 @@ mod tests {
         assert_eq!(out.reason, "interlock_assert_confirmed");
         let st = out.appliance.unwrap();
         assert_eq!(st.bridge_state, "isolated");
-        assert_eq!(st.feedback_ok, Some(true));
+        assert_eq!(st.feedback_ok, Some(false)); // relay open = physically isolated
         // Wire: exactly one frame, and it is interlock_assert.
         assert_eq!(sent.len(), 1);
         let frame: serde_json::Value = serde_json::from_str(&sent[0]).unwrap();
@@ -528,20 +540,23 @@ mod tests {
     }
 
     #[test]
-    fn isolate_with_isolated_state_but_negative_feedback_is_error() {
+    fn isolate_with_isolated_state_but_positive_feedback_is_error() {
+        // feedbackOk=true means the relay reads CLOSED — either the bridge is
+        // still released or the contact is welded. Either way isolation must
+        // NOT be confirmed (this is the failure mode the check exists for).
         let (addr, handle) = mock_appliance_with_frame(
-            r#"{"type":"interlock_result","interlockState":"isolated","feedbackOk":false}"#,
+            r#"{"type":"interlock_result","interlockState":"isolated","feedbackOk":true}"#,
         );
-        let (_root, mut rt) = setup("feedback-false", Some(addr.to_string()));
+        let (_root, mut rt) = setup("feedback-true", Some(addr.to_string()));
         let out = rt.isolate("op", "cli", "feedback_mismatch");
         handle.join().unwrap();
 
         assert_eq!(out.decision, "error");
         assert!(out.reason.contains("bridge_state=isolated"));
-        assert!(out.reason.contains("feedback_ok=Some(false)"));
+        assert!(out.reason.contains("feedback_ok=Some(true)"));
         let status = out.appliance.unwrap();
         assert_eq!(status.bridge_state, "isolated");
-        assert_eq!(status.feedback_ok, Some(false));
+        assert_eq!(status.feedback_ok, Some(true));
         assert_ne!(rt.snapshot.last_bridge_state.as_deref(), Some("isolated"));
     }
 
