@@ -43,7 +43,9 @@ log = logging.getLogger("v03.usage_logger")
 _DEFAULT_DB = str(Path.home() / ".local" / "share" / "opencode" / "opencode.db")
 _PROJECT_ID = "prj_aev03"
 _SESSION_ID = "ses_aev03"
-_PROJECT_ROOT = "X:/repos/Networksafe"  # vibe-usage uses basename -> "Networksafe"
+# SECURITY FIX (audit 2026-08, ML-007): was a hardcoded "X:/repos/Networksafe" machine
+# path; derive from this file's location (ml/data_pipeline/v03/ -> repo root).
+_PROJECT_ROOT = Path(__file__).resolve().parents[3].as_posix()
 _AGENT = "aetherargus-v03"
 
 _SHUTDOWN = object()  # queue sentinel

@@ -43,6 +43,65 @@ DEFAULT_ARK_MODEL = "glm-5.2"
 _RETRYABLE = (RateLimitError, APITimeoutError, APIConnectionError, InternalServerError, TimeoutError)
 
 
+# --- Global token budget gate (audit 2026-08, ML-012) -----------------------
+# The 5h rolling provider budget was a process constraint with no code gate; a
+# runaway wave (max_waves x oversample) could spend without any hard stop. Set
+# ARK_TOTAL_TOKEN_BUDGET (prompt+completion tokens, process lifetime) and every
+# provider call checks it BEFORE hitting the network; exhaustion raises
+# TokenBudgetExceeded, the orchestrator's producer stops feeding new specs, and
+# the run ends resumably (audit log intact; raise the env to continue).
+# Unset -> unlimited (legacy behaviour, still bounded by process discipline).
+import threading as _threading
+
+class TokenBudgetExceeded(RuntimeError):
+    """Hard stop: the configured ARK_TOTAL_TOKEN_BUDGET is exhausted."""
+
+_budget_total: int | None = None
+_budget_used = 0
+_budget_lock = _threading.Lock()
+_budget_announced = False
+
+
+def _init_budget() -> None:
+    global _budget_total
+    raw = os.environ.get("ARK_TOTAL_TOKEN_BUDGET", "").strip()
+    if not raw:
+        _budget_total = None
+        return
+    try:
+        _budget_total = int(raw)
+    except ValueError:
+        raise SystemExit(f"ARK_TOTAL_TOKEN_BUDGET must be an integer token count, got {raw!r}")
+    if _budget_total <= 0:
+        raise SystemExit(f"ARK_TOTAL_TOKEN_BUDGET must be positive, got {_budget_total}")
+
+
+_init_budget()
+
+
+def budget_exhausted() -> bool:
+    return _budget_total is not None and _budget_used >= _budget_total
+
+
+def _budget_check() -> None:
+    if budget_exhausted():
+        global _budget_announced
+        if not _budget_announced:
+            _budget_announced = True
+            log.critical("token budget exhausted: used=%d budget=%d (ARK_TOTAL_TOKEN_BUDGET); "
+                         "refusing further provider calls", _budget_used, _budget_total)
+        raise TokenBudgetExceeded(
+            f"token budget exhausted: used={_budget_used} budget={_budget_total}")
+
+
+def _budget_account(result: "ChatResult") -> None:
+    global _budget_used
+    if _budget_total is None:
+        return
+    with _budget_lock:
+        _budget_used += result.prompt_tokens + result.completion_tokens
+
+
 # --- Usage logger (mirrors token usage into opencode.db for `vibe-usage` cost tracking) ---
 # Env-gated via ARK_USAGE_LOG_OPENCODE_DB; lazy-init on first use so standalone/probe runs
 # that don't set the env pay only a single None-check per call. See usage_logger.py.
@@ -163,6 +222,9 @@ class LLMProvider:
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": user})
+        # ML-012: refuse before any network traffic once the budget is gone
+        # (raises through the retry loop - TokenBudgetExceeded is not retryable).
+        _budget_check()
         kwargs: dict[str, Any] = {
             "model": self.config.model,
             "messages": messages,
@@ -200,13 +262,15 @@ class LLMProvider:
                         usage=usage,
                         latency=latency,
                     )
-                return ChatResult(
+                result = ChatResult(
                     content=content,
                     usage=usage,
                     latency=latency,
                     model=getattr(resp, "model", self.config.model),
                     raw_message=msg.model_dump() if hasattr(msg, "model_dump") else {},
                 )
+                _budget_account(result)
+                return result
             except _RETRYABLE as e:
                 last_exc = e
                 # exponential backoff + full jitter (mission §44)

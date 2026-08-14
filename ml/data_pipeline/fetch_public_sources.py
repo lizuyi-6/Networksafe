@@ -36,6 +36,27 @@ def load_registry(root: Path, config: dict[str, Any]) -> dict[str, Any]:
     return registry
 
 
+def ensure_within(base: Path, candidate: Path) -> Path:
+    """SECURITY FIX (audit 2026-08, ML-008): containment check per AGENTS.md §1.
+
+    The registry is version-controlled and trusted, but the cachePath is data we
+    join into a filesystem path — hold it to the same defensive bar as any other
+    path join: the resolved target (symlink-aware) must stay inside the resolved
+    cache root, with the base compared as `base + sep` so a sibling like
+    ``cache-evil`` cannot prefix-match its way out.
+    """
+    resolved_base = base.resolve()
+    resolved_target = candidate.resolve()
+    base_prefix = resolved_base.as_posix().rstrip("/") + "/"
+    target_posix = resolved_target.as_posix()
+    if not target_posix.startswith(base_prefix):
+        raise ValueError(
+            f"artifact cachePath escapes the cache root: {candidate} -> {resolved_target} "
+            f"not within {resolved_base}"
+        )
+    return resolved_target
+
+
 def validate_cached_artifact(path: Path, artifact: dict[str, Any]) -> dict[str, Any]:
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -100,7 +121,8 @@ def fetch_sources(
     for source in accepted:
         source_id = str(source["id"])
         artifact = source["artifact"]
-        target = cache_root / str(artifact["cachePath"])
+        # ML-008: containment check BEFORE any path is used for I/O.
+        target = ensure_within(cache_root, cache_root / str(artifact["cachePath"]))
         if dry_run:
             results.append(
                 {

@@ -20,6 +20,19 @@ from . import config
 from .dedup import near_dedup_pass, ExactDeduper
 from . import quality_gates
 from . import quotas
+from .audit import AuditLog, AuditIntegrityError
+
+
+def _verify_audit_integrity(out_dir: Path) -> dict:
+    """ML-004 (audit 2026-08): finalize REFUSES to write a manifest over an audit
+    log that fails chain verification or whose sealed tip snapshot disagrees
+    (truncation / rewrite). Fail-closed: no manifest, exit code 2."""
+    audit = AuditLog(out_dir / "audit.jsonl")
+    ok, violations = audit.verify_with_snapshot()
+    if not ok:
+        raise AuditIntegrityError(
+            "audit integrity check failed; refusing to finalize: " + "; ".join(violations[:5]))
+    return {"chainEntries": audit.count()}
 
 
 def _load_records(accepted_dir: Path) -> list[dict]:
@@ -92,6 +105,8 @@ def _immutable_label_mismatches(records: list[dict]) -> int:
 
 def finalize(out_dir: Path | None = None) -> dict:
     out_dir = out_dir or config.RELEASES_DIR
+    # 0. audit chain + sealed-tip verification (fail-closed; ML-004)
+    audit_info = _verify_audit_integrity(out_dir)
     accepted_dir = out_dir / "accepted"
     records = _load_records(accepted_dir)
     pre_dedup = len(records)
@@ -111,6 +126,7 @@ def finalize(out_dir: Path | None = None) -> dict:
 
     report = {
         "datasetVersion": config.DATASET_VERSION,
+        "auditChain": audit_info,
         "acceptedCount": len(kept),
         "preDedupCount": pre_dedup,
         "removedByNearDedup": len(removed),
