@@ -10,7 +10,7 @@ import { resetDetectionSchemaCacheForTests, type DetectionInput, type DetectionO
 const VALID_INPUT: DetectionInput = {
   method: 'GET',
   path: '/products',
-  query: 'id=1',
+  query: { id: '1' },
   headers: { accept: 'application/json' },
   body: '',
   sourceContext: {

@@ -125,7 +125,7 @@ describe('safety invariants — behavioral', () => {
     const result = await engine.detect({
       method: 'POST',
       path: '/x',
-      query: '',
+      query: {},
       headers: {},
       body: '',
       sourceContext: { requestsLastMinute: 0, distinctPathsLastMinute: 0, recentFailureCount: 0 } as any,
@@ -148,7 +148,7 @@ describe('safety invariants — behavioral', () => {
     await expect(engine.detect({
       method: 'GET',
       path: '/',
-      query: '',
+      query: {},
       headers: {},
       body: '',
       sourceContext: { requestsLastMinute: 0, distinctPathsLastMinute: 0, recentFailureCount: 0 } as any,
@@ -172,7 +172,7 @@ describe('safety invariants — behavioral', () => {
     const result = await engine.detect({
       method: 'POST',
       path: '/',
-      query: '',
+      query: {},
       headers: {},
       body: '',
       sourceContext: { requestsLastMinute: 0, distinctPathsLastMinute: 0, recentFailureCount: 0 } as any,

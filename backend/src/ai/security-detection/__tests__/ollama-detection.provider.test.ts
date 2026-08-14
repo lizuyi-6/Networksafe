@@ -18,7 +18,7 @@ const CONTEXT = {
 const INPUT: DetectionInput = {
   method: 'GET',
   path: '/x',
-  query: '',
+  query: {},
   headers: {},
   body: '',
   sourceContext: { requestsLastMinute: 0, distinctPathsLastMinute: 0, recentFailureCount: 0 },

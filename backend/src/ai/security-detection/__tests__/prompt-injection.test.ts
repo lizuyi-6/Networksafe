@@ -38,7 +38,7 @@ function buildInjectionInput(injectedBody: string): Partial<DetectionInput> {
   return {
     method: 'POST',
     path: '/api/login',
-    query: '',
+    query: {},
     headers: { 'content-type': 'application/json' },
     body: injectedBody,
     sourceContext: { requestsLastMinute: 1, distinctPathsLastMinute: 1, recentFailureCount: 0 } as any,

@@ -30,7 +30,7 @@ const BASE_CONFIG: SecurityDetectionConfig = {
 const BASE_INPUT: Partial<DetectionInput> = {
   method: 'GET',
   path: '/products',
-  query: 'id=1',
+  query: { id: '1' },
   headers: { Accept: 'application/json' },
   body: '',
   sourceContext: {
@@ -93,15 +93,46 @@ describe('normalizeDetectionInput', () => {
     expect(Object.keys(normalized.headers).length).toBeLessThanOrEqual(BASE_CONFIG.maxHeaderCount);
   });
 
-  it('truncates body and query at byte limits', () => {
+  it('truncates query values at byte limits and caps property count', () => {
     const big = 'x'.repeat(4096);
+    const query: Record<string, unknown> = { big };
+    for (let i = 0; i < 200; i += 1) {
+      query[`k${i}`] = `v${i}`;
+    }
     const normalized = normalizeDetectionInput({
       ...BASE_INPUT,
-      query: big,
+      query,
       body: big
     }, BASE_CONFIG);
-    expect(Buffer.byteLength(normalized.query, 'utf8')).toBeLessThanOrEqual(BASE_CONFIG.maxQueryBytes);
+    expect(Object.keys(normalized.query).length).toBeLessThanOrEqual(100);
+    for (const value of Object.values(normalized.query)) {
+      if (typeof value === 'string') {
+        expect(Buffer.byteLength(value, 'utf8')).toBeLessThanOrEqual(BASE_CONFIG.maxQueryBytes);
+      }
+    }
     expect(Buffer.byteLength(normalized.body, 'utf8')).toBeLessThanOrEqual(BASE_CONFIG.maxBodyBytes);
+  });
+
+  it('parses legacy string queries into the structured object shape (first occurrence wins)', () => {
+    const normalized = normalizeDetectionInput({
+      ...BASE_INPUT,
+      query: 'a=1&b=two&b=second&flag&num=42'
+    }, BASE_CONFIG);
+    expect(normalized.query).toEqual({ a: '1', b: 'two', flag: '', num: '42' });
+  });
+
+  it('normalizes object queries keeping only scalar values', () => {
+    const normalized = normalizeDetectionInput({
+      ...BASE_INPUT,
+      query: {
+        s: 'text',
+        n: 3.5,
+        b: true,
+        obj: { nested: 'dropped' },
+        nil: null as any
+      } as any
+    }, BASE_CONFIG);
+    expect(normalized.query).toEqual({ s: 'text', n: 3.5, b: true, obj: '[object Object]', nil: '' });
   });
 
   it('drops extra sourceContext keys to satisfy additionalProperties=false', () => {

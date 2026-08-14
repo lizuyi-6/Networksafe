@@ -5,6 +5,7 @@ import type {
   DetectionInvocationResult,
   DetectionMethod,
   DetectionOutput,
+  DetectionQueryValue,
   DetectionSourceContext,
   RuleSignal
 } from './detection-contract';
@@ -56,8 +57,14 @@ const SENSITIVE_HEADER_NAMES: ReadonlySet<string> = new Set([
 
 const REDACTED = '[redacted]';
 
-export type RawDetectionInput = Omit<Partial<DetectionInput>, 'sourceContext'> & {
+export type RawDetectionInput = Omit<Partial<DetectionInput>, 'sourceContext' | 'query'> & {
   sourceContext?: Record<string, unknown> | DetectionSourceContext;
+  /**
+   * Legacy callers (traffic shadow queue) pass the raw query string; the v0.3
+   * detection-input schema expects a structured object. The normalizer accepts
+   * both and always emits the schema-valid object shape.
+   */
+  query?: unknown;
 };
 
 export interface DetectionExecutionContext {
@@ -219,6 +226,61 @@ function normalizeMethod(raw: unknown): DetectionMethod {
   return DETECTION_METHODS.includes(method) ? method : 'EVENT';
 }
 
+/** Mirror of ml/schemas/detection-input.schema.json query.maxProperties. */
+const MAX_QUERY_PROPERTIES = 100;
+/** Defense-in-depth key cap (schema constrains values, not keys). */
+const MAX_QUERY_KEY_BYTES = 256;
+
+/**
+ * Normalize the untrusted query into the structured object shape required by
+ * the v0.3 detection-input schema: at most 100 properties, scalar values.
+ * Legacy string queries ('a=1&b=two') are parsed with URLSearchParams —
+ * percent-decoding plus first-occurrence-wins on duplicate keys.
+ */
+function normalizeDetectionQuery(
+  raw: unknown,
+  maxValueBytes: number
+): Record<string, DetectionQueryValue> {
+  const out: Record<string, DetectionQueryValue> = {};
+  const addEntry = (rawKey: string, rawValue: unknown): void => {
+    const key = truncateUtf8(sanitizeUnicode(String(rawKey || '')), MAX_QUERY_KEY_BYTES);
+    if (!key || Object.prototype.hasOwnProperty.call(out, key)) {
+      return;
+    }
+    if (typeof rawValue === 'number') {
+      out[key] = Number.isFinite(rawValue) ? rawValue : String(rawValue);
+      return;
+    }
+    if (typeof rawValue === 'boolean') {
+      out[key] = rawValue;
+      return;
+    }
+    out[key] = truncateUtf8(sanitizeUnicode(String(rawValue ?? '')), maxValueBytes);
+  };
+
+  if (typeof raw === 'string') {
+    if (!raw) {
+      return out;
+    }
+    for (const [k, v] of new URLSearchParams(raw)) {
+      if (Object.keys(out).length >= MAX_QUERY_PROPERTIES) {
+        break;
+      }
+      addEntry(k, v);
+    }
+    return out;
+  }
+  if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) {
+    for (const [k, v] of Object.entries(raw)) {
+      if (Object.keys(out).length >= MAX_QUERY_PROPERTIES) {
+        break;
+      }
+      addEntry(k, v);
+    }
+  }
+  return out;
+}
+
 /**
  * Normalize untrusted caller input into a schema-valid DetectionInput.
  * Enforces size limits, header redaction, unicode safety, and the
@@ -231,7 +293,7 @@ export function normalizeDetectionInput(
   return {
     method: normalizeMethod(raw.method),
     path: truncateUtf8(sanitizeUnicode(String(raw.path || '/')), 2048) || '/',
-    query: truncateUtf8(sanitizeUnicode(String(raw.query || '')), config.maxQueryBytes),
+    query: normalizeDetectionQuery(raw.query, config.maxQueryBytes),
     headers: normalizeDetectionHeaders(
       (raw.headers || {}) as Record<string, unknown>,
       config.maxHeaderCount,

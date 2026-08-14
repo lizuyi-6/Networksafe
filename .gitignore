@@ -213,11 +213,25 @@ docs/video/**/*.jpg
 
 # IntelliJ headless inspector output (scripts/dev/run-idea-inspect.ps1)
 .idea-inspect-results/
-# AetherArgus v0.2 generated data artifacts (reproducible; manifests/reports stay tracked)
+# AetherArgus generated data artifacts (reproducible; manifests/reports stay tracked)
 /ml/data/candidates/
 /ml/data/review_queue/
 /ml/data/cache/
 /ml/data/releases/*/*.jsonl
 /ml/data/releases/*/sealed/
-/ml/data_pipeline/.state/
+# v0.3 sharded layout: accepted/rejected shards + run logs + state live one level deeper
+/ml/data/releases/*/accepted/
+/ml/data/releases/*/rejected/
+/ml/data/releases/*/.state/
+/ml/data/releases/*/run-full.*.log
+/ml/data/releases/*/scale_test/
+/ml/data/releases/*/smoke*/
+/ml/data/releases/*/_sched_*/
+/ml/data/releases/*/_*/
+/ml/data/releases/*/*.py
+/ml/data/releases/*/supervisor-*.log
+
+# Local render scratch (PPTX dumps) and editor state — never commit
+.arts/
+.cursor/
 

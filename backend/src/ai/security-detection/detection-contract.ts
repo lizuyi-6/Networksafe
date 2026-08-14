@@ -59,10 +59,13 @@ export interface DetectionSourceContext {
   statusCodeHistory?: number[];
 }
 
+export type DetectionQueryValue = string | number | boolean;
+
 export interface DetectionInput {
   method: DetectionMethod;
   path: string;
-  query: string;
+  /** Structured query per ml/schemas/detection-input.schema.json (v0.3): max 100 properties, scalar values. */
+  query: Record<string, DetectionQueryValue>;
   headers: Record<string, string>;
   body: string;
   sourceContext: DetectionSourceContext;
