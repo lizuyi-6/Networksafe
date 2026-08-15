@@ -316,3 +316,30 @@
 - FW-002（M1/M2 真实硬件对接联调——需实机）、FW-005（challenge 16 槽环形窗口 vs 重放拒绝集——设计权衡，后端 monotonic counter 是真正防重放锚，已有测试钉住窗口语义）
 - AG-X01（部署态无入站命令通道——架构项，实现监听者时须同步定义入站鉴权）
 - 至此 FINDINGS.md 中所有**代码可修**项均已修复并合并（Batch 1–8，PR #22–#28 + 本 PR）；以上遗留项均为治理决策、运维动作、实机联调或架构演进，非纯代码修复
+
+## Batch 9 — 审计教训固化：防回归 guard + 漏网清理（本 PR）
+
+### 动机
+审计指出的"guard 只管 MinIO"（DP-008 原文）与"加 secret-scan guard"（DP-001 修复步骤第 4 步）两条教训，此前只做了修复没做固化。本批把两类问题变成 CI 常驻防线。
+
+### 泛化镜像 pin guard（`scripts/guards/check-deployment-image-pins.mjs` 重写）
+- 原版只查 MinIO latest/parity——**泛化为全仓扫描**：git-tracked 的每个 Dockerfile `FROM` 与每个 `docker-compose*.yml` 的 `image:` 必须 `@sha256:<64hex>` digest-pin，或命中显式 allowlist（MinIO dated RELEASE tag、离线 bundle 本地 `aetherguard/*` 命名空间——均带注释理由）；MinIO parity 检查保留不变
+- **上线即抓到 Batch 7 漏网**：`deployment/production/frontend.Dockerfile`（`node:20-alpine`/`nginx:alpine` 双 floating tag、内嵌陈旧 nginx 配置、全仓零引用的孤儿文件）——已删除。这正是 guard 存在的意义：人手排查（Batch 7 的 `Get-ChildItem Dockerfile*` pattern 没匹配 `.Dockerfile` 后缀）会漏，机械扫描不会
+- 证据：删除前 guard 输出 2 violations 精确定位两行；删除后 `deployment_image_pins=passed (dockerfiles_scanned=4 compose_files_scanned=4)`
+
+### 新增 secret-scan guard（`scripts/guards/check-no-secrets.mjs`）
+- DP-001 泄漏形态驱动的 11 种高置信模式：9 种 provider key 值形（与 v0.3 `_SECRET_PATTERNS`/v0.2 redactor 同源）+ PEM 私钥块 + **URL 内嵌凭据**（`scheme://user:pass@host`——FTP 泄密原始形态）
+- **扫描面 = git-tracked + 未跟踪工作树文件**（自测暴露的盲区修正：初版只扫 tracked，种在工作树的泄密漏过；`git ls-files --others --exclude-standard` 补齐）
+- 豁免设计全部显式：测试/fixture 路径、docs/security-audit 历史报告（冻结证据文档）、两个已文档化 test-only 私钥路径（FINDINGS DP-004 已记录的治理项，按路径豁免——**新增私钥文件仍会触发**）、`change_me` 占位与 `$` 插值、printf `%s` 模板占位
+- **自测闭环**（本地实测）：种植 `ftp://deploy:S3cretP@ss2026@...` + `AKIA…` 假密钥 → guard exit 1 精确报出两行两类别；移除后 exit 0；CI 增加常驻自测步骤（种植→必须失败→清理→必须通过），假密钥字面量以 bash 拼接构造不落 tracked 文件
+- 全仓首扫结果：1523 文件扫描 0 违规（592 豁免/跳过）——确认现状干净
+
+### 接线
+- `package.json` `check:release-guards` 链加入 `check-no-secrets.mjs`（7 个 guard）——CI frontend-build job 的 `npm run check:release-guards`（ci.yml L478）自动带跑
+- `docs/architecture-layers.md` §5 guard 清单同步（含两条注释说明各自防什么）
+
+## 验证总账（Batch 9）
+- `npm run check:release-guards`：**7/7 exit 0**（route-db / no-direct-fetch / api-contract / hygiene / rescue-no-release / image-pins / no-secrets）
+- image-pins 泛化后全仓扫描：4 Dockerfile + 4 compose，0 floating tag（孤儿删除后）
+- no-secrets 全仓扫描：1523 files / 0 violations；种植自测：2 泄漏形态全捕获、移除后干净
+- `.env.example` 的 `change_me` 占位 URL、compose `$` 插值、printf 模板均正确豁免（误报为零）
