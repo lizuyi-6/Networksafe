@@ -1,0 +1,184 @@
+name: JCST Paper Build
+
+on:
+  pull_request:
+    paths:
+      - 'papers/AetherArgus-HTTP-Security/**'
+      - '.github/workflows/jcst-paper-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-jcst-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Compile anonymized JCST manuscript
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: papers/AetherArgus-HTTP-Security/jcst-submission/main.tex
+          work_in_root_file_dir: true
+          texlive_version: 2026
+          os: debian
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+
+      - name: Compile JCST title page
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: papers/AetherArgus-HTTP-Security/jcst-submission/title-page.tex
+          work_in_root_file_dir: true
+          texlive_version: 2026
+          os: debian
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+
+      - name: Check journal-name and positioning boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='papers/AetherArgus-HTTP-Security/jcst-submission'
+          if grep -RInE --exclude='README.md' \
+            'Journal of Information Security and Applications|Expert Systems [Ww]ith Applications|ESWA|JISA' \
+            "$root"; then
+            echo 'Stale journal name found in JCST submission package' >&2
+            exit 1
+          fi
+          if grep -RInE \
+            'novel (learning|model|architecture|QLoRA)|production[- ]ready' \
+            "$root/main.tex" "$root/sections"; then
+            echo 'Unsupported novelty or readiness wording found' >&2
+            exit 1
+          fi
+          grep -RFi '20.57' "$root/main.tex" "$root/sections"
+          grep -RFi 'unknown recall' "$root/main.tex" "$root/sections"
+          grep -RFi 'not' "$root/sections/conclusion.tex" | grep -Fi 'autonomous blocking'
+
+      - name: Upload compiled PDFs and logs
+        uses: actions/upload-artifact@v7
+        with:
+          name: aetherargus-jcst-pdfs
+          path: |
+            papers/AetherArgus-HTTP-Security/jcst-submission/main.pdf
+            papers/AetherArgus-HTTP-Security/jcst-submission/main.log
+            papers/AetherArgus-HTTP-Security/jcst-submission/title-page.pdf
+            papers/AetherArgus-HTTP-Security/jcst-submission/title-page.log
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Assemble editable JCST source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='jcst-source-package'
+          mkdir -p "$root/papers/AetherArgus-HTTP-Security"
+          mkdir -p "$root/ml/reports/lan-challenge-evaluation"
+
+          cp -R papers/AetherArgus-HTTP-Security/jcst-submission \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp -R papers/AetherArgus-HTTP-Security/sections \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp papers/AetherArgus-HTTP-Security/references.bib \
+            papers/AetherArgus-HTTP-Security/CLAIM-TO-EVIDENCE.md \
+            papers/AetherArgus-HTTP-Security/README.md \
+            "$root/papers/AetherArgus-HTTP-Security/"
+          cp -R ml/reports/lan-challenge-evaluation/figures \
+            "$root/ml/reports/lan-challenge-evaluation/"
+
+          find "$root" -type f \( -name '*.aux' -o -name '*.bbl' -o -name '*.blg' -o -name '*.fdb_latexmk' -o -name '*.fls' -o -name '*.log' -o -name '*.out' -o -name '*.pdf' \) -delete
+
+          cat > "$root/UPLOAD-NOTES.txt" <<'EOF'
+          JCST editable source package
+
+          Anonymized manuscript:
+          papers/AetherArgus-HTTP-Security/jcst-submission/main.tex
+
+          Separate title page:
+          papers/AetherArgus-HTTP-Security/jcst-submission/title-page.tex
+
+          Upload separately:
+          - cover letter;
+          - declarations, if requested separately;
+          - de-identified reviewer evidence archive.
+          EOF
+
+          zip -qr aetherargus-jcst-editable-source.zip "$root"
+
+      - name: Upload editable source package
+        uses: actions/upload-artifact@v7
+        with:
+          name: aetherargus-jcst-editable-source
+          path: aetherargus-jcst-editable-source.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Assemble de-identified reviewer evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='reviewer-package'
+          mkdir -p "$root/ml/data/lan_challenge_capture/adjudication"
+          mkdir -p "$root/ml/evaluation"
+          mkdir -p "$root/ml/reports"
+          mkdir -p "$root/papers/AetherArgus-HTTP-Security"
+
+          cp ml/data/lan_challenge_capture/model-inputs.jsonl \
+            "$root/ml/data/lan_challenge_capture/"
+          cp ml/data/lan_challenge_capture/adjudication/final-labels.jsonl \
+            "$root/ml/data/lan_challenge_capture/adjudication/"
+          cp ml/data/lan_challenge_capture/adjudication/final-labels-manifest.json \
+            "$root/ml/data/lan_challenge_capture/adjudication/"
+
+          if [ -f ml/data/lan_challenge_capture/adjudication/human-review/human-review-attestation.json ]; then
+            mkdir -p "$root/ml/data/lan_challenge_capture/adjudication/human-review"
+            cp ml/data/lan_challenge_capture/adjudication/human-review/human-review-attestation.json \
+              "$root/ml/data/lan_challenge_capture/adjudication/human-review/"
+          fi
+
+          cp -R ml/evaluation/lan_challenge "$root/ml/evaluation/"
+          cp -R ml/reports/lan-challenge-evaluation "$root/ml/reports/"
+          cp papers/AetherArgus-HTTP-Security/CLAIM-TO-EVIDENCE.md \
+            "$root/papers/AetherArgus-HTTP-Security/"
+
+          cat > "$root/README.md" <<'EOF'
+          # AetherArgus JCST reviewer evidence package
+
+          This archive contains de-identified model-visible challenge inputs,
+          frozen reference labels and manifests, evaluation programs, per-sample
+          predictions, aggregate metrics, statistical outputs, figures, tables,
+          reports, and the manuscript claim-to-evidence audit.
+
+          Deliberately excluded:
+          - raw LAN packet captures and operational logs;
+          - confidential human-review worksheets and reviewer identities;
+          - model weights, credentials, private keys, and unrelated production files.
+
+          Evidence baseline: 825fb95fb87a08d14e15e59078c7cf88beb9c5e8
+          Input SHA-256: c77f4949cbe1860f97219a83f0ee16de40740321a4d2f628d56f15069fe6b8c3
+          Label SHA-256: 13fd71f5507ec9bf6db74c38fafb073c76e9766c0e20e874452d3c62302ad8ad
+          EOF
+
+          if grep -RInaE 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' "$root"; then
+            echo 'Private-key material found in reviewer package' >&2
+            exit 1
+          fi
+
+          manifest_tmp="$(mktemp)"
+          (
+            cd "$root"
+            find . -type f -print0 | sort -z | xargs -0 sha256sum > "$manifest_tmp"
+          )
+          mv "$manifest_tmp" "$root/MANIFEST.sha256"
+          zip -qr aetherargus-jcst-reviewer-evidence.zip "$root"
+
+      - name: Upload reviewer evidence package
+        uses: actions/upload-artifact@v7
+        with:
+          name: aetherargus-jcst-reviewer-evidence
+          path: aetherargus-jcst-reviewer-evidence.zip
+          if-no-files-found: error
+          retention-days: 30

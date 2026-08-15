@@ -1,0 +1,5 @@
+A frozen 413-sample set prevents training and evaluation leakage.
+QLoRA improves attack recall but does not establish safe deployment.
+The model falsely flags 20.57% of safe requests as attacks.
+Unknown recall is zero across 107 insufficient-context requests.
+Message serialization changes 11 of 413 security verdicts.

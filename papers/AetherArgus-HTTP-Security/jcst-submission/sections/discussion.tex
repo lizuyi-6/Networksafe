@@ -1,0 +1,68 @@
+\section{Discussion and Threats to Validity}
+\label{sec:discussion}
+
+\subsection{Statistical Improvement Is Not Operational Readiness}
+The adapted model improves verdict macro-F1 and attack recall relative to the untuned base model, and the paired confidence interval for macro-F1 excludes zero. This establishes that task adaptation changes same-sample decisions in a favorable attack-oriented direction. It does not establish that the resulting system is safe to deploy as a blocking authority.
+
+The distinction is visible in the class-specific results. A safe false-positive rate of 20.57\% would impose substantial operational cost in a blocking or high-volume alerting system. Unknown recall of zero is more serious than an ordinary class imbalance: every insufficient-context case is forced into a substantive safe or attack judgment. The model therefore becomes more attack-sensitive while losing the ability to express that request-visible evidence is inadequate. For security decision support, this is a reliability failure rather than a cosmetic metric weakness.
+
+This interpretation is consistent with recent local-LLM traffic analysis, which found useful recognition of some language-based attack indicators but insufficient reliability across benign traffic, representations, and attack types~\citep{paukkeri2026local}. The present results extend that concern to an adapted request-level classifier: domain tuning can improve recall without solving false-positive cost or abstention.
+
+\subsection{What the Adapter Appears to Learn}
+The QLoRA adapter appears to strengthen associations between security vocabulary, suspicious request compositions, and attack-oriented verdicts. Attack recall rises markedly relative to zero-shot inference, and attack F1 improves. The training objective, however, rewards production of a concrete target sequence and valid schema; it does not independently reward calibrated refusal when context is missing. A plausible consequence is that the model learns that a complete response should contain a decisive verdict even when the reference class is unknown.
+
+This explanation remains an inference from behavior rather than a mechanistic claim. The study does not include activation analysis or causal representation probing. A stronger follow-up should train an explicit reject option, use contrastive pairs with sufficient and insufficient context, evaluate calibration, and separate verdict generation from uncertainty estimation.
+
+\subsection{Rules and Language Models Are Complementary}
+The frozen rules baseline and the adapted language model exhibit complementary error profiles. Rules produce low safe FPR but miss most attacks in the challenge set. The adapted model detects far more attacks but flags many safe requests. This supports a layered role rather than replacement:
+\begin{enumerate}
+    \item high-specificity rules handle known patterns with auditable behavior;
+    \item the compact model analyzes unresolved requests in shadow mode or as a second-stage triage signal;
+    \item disagreements and insufficient-context cases are escalated to policy logic or human review;
+    \item irreversible actions require an independent authorization mechanism.
+\end{enumerate}
+
+The empirical contribution is the identification of these operating points under the same request evidence. It would be misleading to summarize the result only as a model improvement, because the safety cost is concentrated in the safe and unknown classes.
+
+\subsection{Message Serialization Is Security-Relevant Configuration}
+Combining trusted policy and untrusted request content into one message changes 11 of 413 verdicts and increases safe false positives. When the serialized prompt bytes are held identical, the tested Transformers and Ollama paths agree on every verdict in the frozen set. These observations indicate that message boundaries, chat templates, and serialization are part of the security-critical model configuration.
+
+Weights, temperature, and nominal prompt text are therefore insufficient for reproducibility. A deployable evaluation record should version the exact message roles, template revision, serialized bytes or their digest, tokenizer, model artifact, and runtime. The 413-sample result does not establish universal cross-runtime equivalence, but it demonstrates that uncontrolled prompt construction can create variation that might otherwise be misattributed to quantization or serving software.
+
+\subsection{Reference Labels and Human Review}
+The frozen references were initially produced through dual-model annotation and independent model adjudication, followed by a model-visible-context audit. After evaluation, a confidential blind human review covered all 413 samples and produced no label changes. The unchanged label file means that the original predictions and paired statistics remain applicable, while the review reduces concern that obvious labeling errors explain the principal results.
+
+The review is not equivalent to a publicly reproducible human-annotation corpus. Reviewer identities, worksheets, and per-sample rationales are withheld, so external researchers cannot independently inspect the review process. The paper therefore avoids describing the labels as objective ground truth. The temporal order is also disclosed: human review occurred after the model runs and did not influence model selection or tuning.
+
+\subsection{Threats to Internal Validity}
+The research team developed the training corpus, prompt contract, and adapted model. Unobserved design choices may favor the adapted system. The challenge set was excluded from training, prompt selection, threshold selection, and model selection, and all principal systems receive the same model-visible input, which limits but does not eliminate this risk.
+
+The model was trained with one seed and one epoch. The reported confidence intervals quantify uncertainty over challenge samples, not training-run variance. Repeating training with multiple seeds is necessary before claiming optimization stability.
+
+The character n-gram baseline collapses toward the attack class and is not a strong conventional competitor. The rules engine is operationally informative but repository-specific. Future work should include independently maintained WAF or IDS baselines and stronger calibrated text classifiers.
+
+\subsection{Threats to Construct Validity}
+A three-class verdict compresses a complex security decision. Authorization and business-logic cases may depend on authenticated identity, object ownership, workflow history, tenant boundaries, or response evidence that is absent from the request. The unknown class represents this limitation, but the evaluated model fails to use it.
+
+Schema validity measures interface compliance rather than security correctness. Conversely, mapping parse failures to unknown can reward non-response. The study reports raw parse and schema outcomes so verdict metrics are not interpreted in isolation.
+
+Attack-family labels are secondary and may simplify multi-causal requests. A sample can combine prompt injection, authorization abuse, and protocol manipulation. Family-level macro-F1 is therefore not treated as the primary endpoint.
+
+\subsection{Threats to External Validity}
+The challenge set contains 413 authorized LAN samples curated for security evaluation. It is not prevalence-matched production traffic, so its accuracy and false-positive rates cannot be interpreted as universal deployment rates. Family-specific estimates are particularly uncertain for rare classes.
+
+The study evaluates one compact base-model family and one adaptation run. Results may not transfer to other tokenizers, model families, instruction-tuning recipes, or languages. The strongest claim is local: under the locked protocol, the adapted model improves attack-oriented classification over its specific prompting baselines while remaining unsuitable for autonomous blocking.
+
+Runtime measurements were collected on a single consumer-laptop GPU and across serving stacks with different timing boundaries. Artifact sizes are measured exactly, but latency should be remeasured on the intended deployment platform under a synchronized benchmark design.
+
+\subsection{Research Priorities}
+The observed failures define a focused next stage:
+\begin{itemize}
+    \item train and calibrate an explicit abstention mechanism using human-reviewed pairs with insufficient context;
+    \item optimize false-positive cost without sacrificing attack recall, including cost-sensitive objectives or a rule--model cascade;
+    \item repeat adaptation across multiple random seeds;
+    \item evaluate calibration, selective risk, and risk--coverage trade-offs;
+    \item expand testing with independently sourced, production-like authorized HTTP traffic;
+    \item compare with independently maintained security engines and stronger non-LLM classifiers;
+    \item test adaptive prompt-injection and evasion attacks against the complete serialization pipeline.
+\end{itemize}
