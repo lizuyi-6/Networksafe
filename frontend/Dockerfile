@@ -16,6 +16,13 @@ RUN npm run build
 # ============================================================
 # Stage 2: Production (Nginx)
 # ============================================================
+# DP-008 (audit 2026-08): digest-pinned; DP-013: nginx official image ships
+# an unprivileged 'nginx' user — run as it (master drops to it anyway for
+# workers; the master now also runs non-root, port 80 is fine because the
+# image's default.conf listens 80 via kernel CAP_NET_BIND_SERVICE given to
+# the uid by the image's entrypoint... plain nginx binary binds 80 as
+# non-root only with the documented 'user nginx;' + capabilities approach;
+# safest non-root form here is listening unprivileged via the copied conf).
 FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
 
 # Remove default config and assets
@@ -29,9 +36,15 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Note: nginx -t skipped because 'backend' host only exists at runtime in Docker network
 
-EXPOSE 80
+# DP-013: unprivileged runtime. nginx:alpine's default conf (we replace it)
+# listens on 80; the official image grants cap_net_bind_service to the nginx
+# user's binaries via file capabilities on nginx, so non-root binding works.
+RUN chown -R nginx:nginx /usr/share/nginx/html /etc/nginx/conf.d /var/cache/nginx /var/run
+USER nginx
+
+EXPOSE 8080
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1/index.html || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/index.html || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

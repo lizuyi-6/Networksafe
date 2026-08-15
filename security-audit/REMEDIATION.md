@@ -269,10 +269,33 @@
 - 既有 v0.3 工作流零破坏：deterministic/reviewer 用例无回归
 - 密封路径零接触：仅改 `ml/data_pipeline/**` 源码 + `ml/schemas/detection-input.schema.json`（DO_NOT_READ 清单外）
 
+## Batch 7 — DP-008/013/015 容器与 systemd 加固批（本 PR）
+
+### DP-008 — redis/postgres/fastpath 基镜像 floating tag（Medium）
+- 修复：
+  - `docker-compose.yml`：`redis:7-alpine`→`@sha256:e7723ff7…`、`postgres:16-alpine`→`@sha256:44c4ee98…`（digest 经 registry API 实测解析——本机 daemon 未运行，走 daoCloud pull-through 镜像的 /v2 manifest API + 匿名 bearer token；digest 与 Hub 一致，镜像为同一 manifest 的透传缓存）
+  - `rust-fastpath/Dockerfile`：`rust:1.85-bookworm`→`@sha256:e51d02650…`、`debian:bookworm-slim`→`@sha256:abd67ffc…`（backend/frontend Dockerfile 此前已 pin ✓，minio 以 RELEASE tag 锁定 ✓）
+- 证据：`docker compose config` exit 0（12 项 :? 环境临时值下），resolved image 行含 @sha256
+
+### DP-013 — nginx + fastpath 容器无 USER（Medium）
+- 修复：
+  - `rust-fastpath/Dockerfile`：非特权 `fastpath` 用户 + `USER fastpath`；unix socket 目录 0777（非特权 uid 需写；默认 bind 127.0.0.1 不受影响）
+  - `frontend/Dockerfile` + `nginx.conf`：runtime 阶段 chown（html/conf/cache/run）+ `USER nginx`；**监听 80→8080**（>1024 无需 bind cap）；compose 映射改 `127.0.0.1:8080→8080`（宿主入口不变，e2e/ALLOWED_ORIGINS 以宿主 8080 为准，零下游影响）；healthcheck 同步
+- 证据：compose config resolved `target: 8080 / published: "8080"`；guards 5/5
+
+### DP-015 — installer-agent systemd 零加固（Medium）
+- 修复（`deployment/production/aetherguard-agent@.service`）：对照 gateway unit 全套加固——`NoNewPrivileges`/`PrivateTmp`/`ProtectSystem=strict`（ReadWritePaths=/var/lib/aetherguard + ReadOnlyPaths=/etc/aetherguard）/`ProtectHome`/kernel 三护/`RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6`/`RestrictNamespaces`/`LockPersonality`/`RestrictRealtime`/`RestrictSUIDSGID`/`RemoveIPC`/`CapabilityBoundingSet=`（空）。`User=root` 保留原因注释（docker 组成员资格部署相关）——加固后 root wrapper 的可达面收窄为 docker socket 载体
+  - onboarding TLS pin 子项：agent 容器 `--network host` + SERVER_URL=127.0.0.1:3005（回环无 pin 面）；远程场景留待真实远程部署需求
+- 证据：unit 逐项对照 gateway unit；Windows 无 systemd-analyze，同构语法保证
+
+## 验证总账（Batch 7）
+- `docker compose config` exit 0（digest pin 解析、8080 映射、12 项 :? 校验全过）
+- guards 5/5 exit 0
+- digest 解析实测：6 镜像（redis/postgres/rust/debian/node20/nginx）经 mirror /v2 API 全部返回 docker-content-digest
+
 ## 未修复项（后续批次）
-- ML-005（specHash 无 key——生成侧防篡改锚，需与 audit-chain.key 统一密钥管理设计）、ML-009（v0.2 脱敏 regex 键形不全——历史产物兜底）
-- ML-GOV-1（密封集入库——治理决策：移出仓库需 owner 拍板密封性 vs 可用性）
+- ML-005（specHash 无 key）、ML-009（v0.2 脱敏 regex 键形不全——历史产物兜底）
+- ML-GOV-1（密封集入库——治理决策）
 - DP-001 运维跟进：FTP 凭证轮换 + git 历史清洗（BFG/filter-repo）+ secret-scan guard
-- DP-008/013/015（floating tag pin、容器 USER、installer-agent systemd 加固）
 - FW-002/005（M1/M2 真实对接联调；challenge 环形窗口设计权衡）
 - AG-X01（部署态无入站命令通道——架构项）
