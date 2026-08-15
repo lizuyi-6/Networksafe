@@ -221,8 +221,19 @@ static void test_release_denied_without_time_sync(void) {
 
 static const char *COUNTER_STORE_PATH(void) {
     static char path[256];
-    snprintf(path, sizeof(path), "%s%s", getenv("TEMP") ? getenv("TEMP") : "/tmp",
-             "\\ag-fw-counter-store-test.bin");
+    /* CI fix (audit follow-up): the naive "/tmp" fallback concatenated a
+     * backslash filename, which on Linux resolves to a file literally named
+     * `tmp\ag-...` in the ROOT directory — unwritable for the CI user, so the
+     * store save failed and FW-006's release was (correctly) revoked. Use the
+     * platform separator and an absolute /tmp path on POSIX. */
+#ifdef _WIN32
+    const char *tmp = getenv("TEMP");
+    if (tmp && tmp[0]) {
+        snprintf(path, sizeof(path), "%s\\ag-fw-counter-store-test.bin", tmp);
+        return path;
+    }
+#endif
+    snprintf(path, sizeof(path), "/tmp/ag-fw-counter-store-test.bin");
     return path;
 }
 

@@ -34,8 +34,18 @@ const defaultEnv = {
   DEVICE_API_KEYS: process.env.DEVICE_API_KEYS || 'device_key_release_verify_2026_secure',
   DEVICE_COMMAND_SECRET: process.env.DEVICE_COMMAND_SECRET || 'AetherGuardReleaseDeviceCommandSecret2026!',
   SERIAL_HELPER_SHARED_SECRET: process.env.SERIAL_HELPER_SHARED_SECRET || 'AetherGuardReleaseSerialHelperSecret2026!',
+  // docker-compose.yml guards FASTPATH_AUTH_SECRET with :? (P1 batch, PR #23);
+  // it was never added here, so `docker compose build fastpath` failed
+  // interpolation the first time release-verify actually reached it.
+  // CI-only literal (never a real credential); 41 chars clears the 32-min.
+  FASTPATH_AUTH_SECRET: process.env.FASTPATH_AUTH_SECRET || 'AetherGuardReleaseFastpathAuthSecret2026!',
   DEPLOYMENT_BUNDLE_SIGNING_SECRET: process.env.DEPLOYMENT_BUNDLE_SIGNING_SECRET || 'AetherGuardReleaseBundleSigningSecret2026!',
   AETHERGUARD_RUNTIME_MODE: process.env.AETHERGUARD_RUNTIME_MODE || 'prod-enterprise',
+  // FE-001: demo mode is build-time opt-in (frontend/Dockerfile ARG →
+  // compose build arg). Release verification must build WITH demo support so
+  // the e2e walkthrough can toggle and exercise demo pages; production builds
+  // keep the default OFF (unset → inert toggle).
+  VITE_ENABLE_DEMO_MODE: process.env.VITE_ENABLE_DEMO_MODE || 'true',
   // The backend's primary store is SQLite today; Postgres currently backs only the
   // audit shadow store (SHADOW_DATABASE_URL). DB_MODE stays 'postgres' so the
   // Postgres shadow path is still exercised, but the SQLite-primary store must be
@@ -142,6 +152,15 @@ async function collectDockerArtifacts() {
   await writeCommandOutput('compose-ps.jsonl', 'docker', ['compose', 'ps', '--format', 'json']);
   for (const service of ['backend', 'frontend', 'fastpath', 'redis', 'postgres', 'minio']) {
     await writeCommandOutput(`${service}.log`, 'docker', ['compose', 'logs', '--no-color', '--tail=300', service]);
+    // Per-probe healthcheck evidence (exit code + output of every attempt).
+    // This is what pinpoints connection-level probe failures that never show
+    // up in service logs — the exact blind spot behind the backend-unhealthy
+    // CI failure that container logs alone could not explain.
+    await writeCommandOutput(
+      `${service}.health.json`,
+      'docker',
+      ['inspect', '--format', '{{json .State.Health}}', `networksafe-${service}-1`],
+    );
   }
 }
 
@@ -262,6 +281,11 @@ async function runFirmwareChecks() {
     'Core/Src/controller_tasks.c',
     'Core/Src/serial_json.c',
     'Core/Src/interlock_driver.c',
+    // grant_auth.c provides the HMAC-SHA256 + constant-time-equal symbols
+    // controller_tasks.c links against (FW-001/FW-007); the Makefile and
+    // diagnose.mjs command lines both include it — this list was missing it,
+    // which only surfaced once every earlier CI job went green.
+    'Core/Src/grant_auth.c',
   ];
 
   try {

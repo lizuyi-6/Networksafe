@@ -936,7 +936,10 @@ const App = () => {
     return (
         <ThemeProvider defaultTheme="light" storageKey="aetherguard-theme-v2">
             <LiveModeProvider>
-                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                {/* react-router v7: the v6 `future` opt-in flags
+                    (v7_startTransition, v7_relativeSplatPath) became the
+                    default behavior and the prop was removed in v7. */}
+                <BrowserRouter>
                     <DemoProvider>
                         <LanguageProvider>
                             <WebSocketProvider>

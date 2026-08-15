@@ -338,6 +338,65 @@
 - `package.json` `check:release-guards` 链加入 `check-no-secrets.mjs`（7 个 guard）——CI frontend-build job 的 `npm run check:release-guards`（ci.yml L478）自动带跑
 - `docs/architecture-layers.md` §5 guard 清单同步（含两条注释说明各自防什么）
 
+## Batch 10 — CI 修复批（Linux-only 回归，本 PR）
+
+### 背景
+Batch 4/5 合并时未等 CI（本地 Windows 全绿即合并），留下两个 **Linux-only** 回归 + 一个供应链公告，master CI 自 PR #26 起持续红。教训：Windows 工作站验证不了 unix-gated 编译与 POSIX 路径语义，**CI 是权威门禁，合并前必须等绿**。
+
+### rust-fastpath E0252（`Service` 双定义）— Batch 5 引入
+- 病根：解 `#[cfg(unix)]` gate 时新增了 ungated `use tower::Service;`，但旧 gated 导入未删——Windows 上 gate 剥离后只剩一条（本地编译过），Linux 上两条并存 → E0252
+- 修复：删除残留的 gated 导入（`PermissionsExt` 的 gate 保留，本就该有）
+- 证据：`cargo check --target x86_64-unknown-linux-musl` **exit 0**（unix cfg 激活态下编译通过——Windows 本地 check 无法替代）+ 本机 check/clippy 0
+
+### 固件 FW-006 测试 3 败 — Batch 4 引入
+- 病根：`COUNTER_STORE_PATH()` 的 `/tmp` 回退拼接 **反斜杠**文件名——Linux 上解析为**根目录**下名为 `tmp\ag-…` 的文件，CI 用户无权写 `/` → store save 失败 → FW-006 正确地 fail-closed 拒释放（控制器行为是对的，测试路径是错的）
+- 修复：`#ifdef _WIN32` 用 `TEMP`+`\`，POSIX 用绝对 `/tmp/ag-…`（正斜杠）
+- 证据：Windows gcc 34/34；POSIX 分支为简单 snprintf 路径拼接（`/tmp` 全员可写），CI 复核
+
+### 前端 npm audit（react-router GHSA-337j-9hxr-rhxg + socket.io-parser GHSA-2m8v-j782-fhvr）
+- `react-router-dom` 6.30.4 → **7.18.2**（6.x 无补丁版；受影响面是 SSR hydration 反序列化，本应用为 Vite SPA 本不可达，但仍升级而非绕过审计）。用法面 10 个 import 全为 v7 稳定 API；唯一破坏点 `BrowserRouter` 的 `future` prop（v6 预选开关，v7 移除）已删
+- 顺带：`socket.io-parser` 4.2.7（npm audit fix 非破坏）；`brace-expansion` override 5.0.8→5.0.9（dev 链 eslint→minimatch）
+- 证据：`npm audit --omit=dev --audit-level=high` **0 vulnerabilities**（CI 同款命令）；全树 audit 0；build（tsc+vite）0；typecheck 0；i18n 8/8；credential/navigation hygiene 过
+
+### rust-fastpath 容器 healthcheck 不健康 — Batch 5 深层 bug（本批第二阶段发现）
+- 病根：hyper 1.x 的 `header_read_timeout` **必须同时安装 timer**，否则每个连接 panic（`timeout 'header_read_timeout' set, but no timer set`）→ 客户端收到 RST。Batch 5 手写 accept 循环设了超时没设 `.timer()`；单元测试不走这两条循环，Windows 测不了 unix 传输，直到 release-verify 首次端到端跑通才暴露
+- 修复：serve_tcp + serve_unix 两处 `.timer(hyper_util::rt::TokioTimer::new())`
+- 证据：本地 Docker（Linux engine）完整复现——修复前容器内 `self-check` exit 1（RST）+ 服务日志 panic；修复后 rebuild 镜像 self-check **exit 0**；`cargo check --target x86_64-unknown-linux-musl` 0、clippy 0、test 24/24
+
+### release-verify 两处集成缺口（随本批修复）
+- `verify-release.mjs` 固件源列表漏 `Core/Src/grant_auth.c`（Makefile/diagnose 均含）→ 链接失败 `ld returned 1`；补齐
+- `verify-release.mjs` `defaultEnv` 漏 `FASTPATH_AUTH_SECRET`（PR #23 加进 compose 的 `:?` 硬保护）→ `docker compose build fastpath` 插值失败；补 CI-only 字面量（41 字符 > 16 最小）
+- digest 双源交叉验证：daoCloud 与 docker.1ms.run 两个独立镜像源对 4 个 pin（redis/postgres/rust/debian）返回**完全一致**的 sha256——镜像源篡改场景需同时攻陷两源
+
+### backend 容器 healthcheck 不健康 — `localhost` 解析陷阱（本批第三阶段发现）
+- 病根：compose backend healthcheck 打 `http://localhost:3005/health/ready`，容器内 `localhost` 解析顺序为 `::1, 127.0.0.1`，而 node 绑 `0.0.0.0`（仅 IPv4）——本地 wget 靠 IPv4 回退侥幸通过（健康日志里每条都先有一次 `Connection refused`），CI runner 上 7 次探测全部连接层失败、backend 永不 healthy。frontend 的 healthcheck 一直用 `127.0.0.1`，唯独 backend 踩坑
+- 证据：CI backend.log 全程 0 条 `HEAD /health/ready`（app 明确活着——CPU 告警每 10s 一条）；unhealthy 时刻与 30s×5+start_period 的探测节奏精确吻合；本地容器实测 `[::1]:3005` Connection refused、`127.0.0.1` 200 OK
+- 修复：compose + backend/Dockerfile 两处 healthcheck 显式 `http://127.0.0.1:3005/health/ready`
+- 验证：本地全新卷 + CI 同款 env + CI 同款 `up -d --build --force-recreate` 七容器全起，backend Healthy（探测日志不再有 ::1 拒绝前缀）
+
+### rust-fastpath stale socket crash-loop（本批第三阶段顺带修复的生产缺陷）
+- 病根：非正常关机后卷里残留 socket 文件，启动代码 `let _ = remove_file()` 吞错 → `bind` EADDRINUse panic → restart 循环，sidecar 永远起不来（本地 docker kill 复现）
+- 修复：`serve_unix` 重写 stale-socket 处理——常见路径直接 bind；EADDRINUSE 时尝试删除并**显式报出删除错误**，重试一次；再失败说明有活跃监听者，panic 信息指明原因
+- 验证：`docker kill` 残留 socket → `docker start` → 直接绑定成功、healthy；musl target check 0、clippy 0、test 24/24
+
+### verify-release 诊断盲区（随本批补上）
+- 失败时只抓 compose ps + 服务日志，**没有逐次探测证据**（本次 backend 问题容器日志完全无法解释）。现在每个服务额外抓 `docker inspect --format '{{json .State.Health}}'` 到 `*.health.json`——下次任何 healthcheck 失败都有每次探测的 exit code + 输出
+
+### frontend 容器 crash-loop — nginx 非 root 两处缺口（本批第四阶段发现）
+- 病根一：DP-013 改 `USER nginx` 后，默认 pid 路径 `/run/nginx.pid` 不可写——alpine 里 `/var/run` 是 `/run` 的符号链接，Dockerfile 里 `chown /var/run` 落空 → nginx emerg `open() "/run/nginx.pid" failed (13: Permission denied)` → exit 1 crash-loop。修复：chown 真实路径 `/run`
+- 病根二：DP-013 把监听移到 8080（unprivileged），但 compose 的 frontend healthcheck 还打 80 端口 → 容器永远 unhealthy，release-verify 的 waitForComposeServices 超时。修复：compose healthcheck 改 `http://127.0.0.1:8080/index.html`（镜像级 HEALTHCHECK 本就是 8080）
+- 证据：CI 崩溃循环日志（pid emerg）+ compose-ps 显示 frontend `State: restarting`；本地修复后六服务全 healthy（探测日志 `127.0.0.1:8080 ... remote file exists`，HTTP 200）
+- 新诊断已发挥作用：本批加的 `*.health.json` 直接给出逐次探测输出，backend healthy 的判定与 frontend crash-loop 一次定位
+
+### release e2e walkthrough 挂 demo toggle — FE-001 与 CI 构建缺位（本批第五阶段）
+- 病根：FE-001 把 demo 模式改为 build-time opt-in（`canUseDemoMode()` 看 `VITE_ENABLE_DEMO_MODE`），但 release-verify 构建 frontend 镜像时没传该 env → 产物中 toggle 惰性 → walkthrough 点击后 `aria-pressed` 不变
+- 修复：`frontend/Dockerfile` builder stage 加 `ARG/ENV VITE_ENABLE_DEMO_MODE`（默认空 = 生产 demo-off，FE-001 语义不变）；compose `frontend.build.args` 透传；`verify-release.mjs` defaultEnv 设 `VITE_ENABLE_DEMO_MODE=true` 仅用于验证构建
+- 证据：本地 fresh stack + demo-on 构建 + env 对齐后 `npm --prefix e2e run test:release` **9 passed**（walkthrough 完整通过含 demo 页段）；CI 失败点（toggle aria-pressed false 不动）与惰性开关机制完全吻合
+- 插曲（本地调试，非代码缺陷）：多轮 env 未对齐的错误密码尝试触发 `account_locked` 暴力破解锁定——安全机制工作正常；重置卷后一次通过
+
+### 流程修正
+- 本批起：PR 合并前等 CI 全绿（此前 8 个 PR 均未等）。建议 owner 在 GitHub 分支保护里把 `CI Pipeline / *` 设为 required status check，从机制上堵住"手动合并绕过 CI"
+
 ## 验证总账（Batch 9）
 - `npm run check:release-guards`：**7/7 exit 0**（route-db / no-direct-fetch / api-contract / hygiene / rescue-no-release / image-pins / no-secrets）
 - image-pins 泛化后全仓扫描：4 Dockerfile + 4 compose，0 floating tag（孤儿删除后）
