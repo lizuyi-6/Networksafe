@@ -293,9 +293,26 @@
 - guards 5/5 exit 0
 - digest 解析实测：6 镜像（redis/postgres/rust/debian/node20/nginx）经 mirror /v2 API 全部返回 docker-content-digest
 
-## 未修复项（后续批次）
-- ML-005（specHash 无 key）、ML-009（v0.2 脱敏 regex 键形不全——历史产物兜底）
-- ML-GOV-1（密封集入库——治理决策）
-- DP-001 运维跟进：FTP 凭证轮换 + git 历史清洗（BFG/filter-repo）+ secret-scan guard
-- FW-002/005（M1/M2 真实对接联调；challenge 环形窗口设计权衡）
-- AG-X01（部署态无入站命令通道——架构项）
+## Batch 8 — ML-005/009 收尾批（本 PR）
+
+### ML-005 — specHash 无 key 且 generatorSeed 语义与文档矛盾（Low）
+- 修复（锚定而非改哈希——改 compute_hash 为 keyed 会使既有产物的 resume 全部 hash 失配，且无必要：链已 keyed）：
+  - **锚定**：`finalize.py` 新增 `_spechash_binding_violations(records, audit)`——每条 kept 记录 (a) 用内嵌 spec 重算 unkeyed hash 必须等于记录的 `specHash`（自洽）；(b) 必须等于 keyed+HMAC-sealed 链上该 sampleId 的 `accept` 事件记录的 `specHash`（keyed 锚）。**本机重写 shard 并重算 unkeyed hash 可过 (a) 但过不了 (b)**——没有 audit-chain.key 造不出匹配的链。违规 >0 时 finalize 拒写 manifest（fail-closed）；报告/输出加 `spechashBinding` 块。向后兼容：远古 accept 事件无 specHash 字段 → 不绑定不算违规
+  - `audit.py` 加 `events()` 生成器（链已在载入时验证过，安全重放事件载荷）
+  - **文档矛盾消除**：`generation_spec.py` `generatorSeed` 字段头补全两种派生公式的权威说明（A: `sha256(sid:verdict:family:gtype:i)[:16]`；B（pair 重连后）: `sha256(sampleId:verdict:attackFamily:difficulty)[:16]`，刻意不同公式防 pair 共种子）；`spec_planner.py:362` 的疑问式注释（"is not in the immutable hash core? it IS"）替换为陈述式事实
+- 证据：新增 4 用例——happy path 绑定 2/2；**改 payload+重算 unkeyed hash → 自洽 1/链绑 0/违规 1**（核心场景）；改 payload 不重算 → 自洽违规；远古事件 → 不绑不违规。pytest **52 passed**
+
+### ML-009 — v0.2 脱敏 regex 键形不全（Low）
+- 修复（`common.py SENSITIVE_PATTERNS`）：v0.2 脱敏器只有泛型 `password|secret|token|apiKey` 的 `k=v`/JSON-key 形——对**值即密**的 provider key（`AKIA…`/`ghp_…`/`sk-…` 等，密钥名不邻接）完全不触发。现镜像 v0.3 `_SECRET_PATTERNS` 的 12 种值形（aws_access/aws_secret/github/gitlab/slack/stripe_live/anthropic/openai/google_api/google_oauth/ark_key/private_key_block，长 specific 在前）——v0.2 redactor 不再单靠 v0.3 gate 兜底
+- 证据：新增 2 用例——9 种 provider key 值形全部 `[REDACTED:<name>]`；PEM 块整体脱除；泛型 `password=`/`"apiKey":` 旧形零回归。pytest 52/52
+
+## 验证总账（Batch 8）
+- `py -3 -m pytest ml/data_pipeline/tests/`：**52 passed**（batch 6 的 46 + 新 6：specHash 绑定 4 + redaction 2）
+- 密封路径零接触（仅 `ml/data_pipeline/**` 源码）
+
+## 未修复项（说明）
+- ML-GOV-1（密封集入库——治理决策：移出仓库需 owner 拍板密封性 vs 可用性）
+- DP-001 运维跟进：FTP 凭证轮换 + git 历史清洗（BFG/filter-repo）+ secret-scan guard——需 owner 在部署侧执行
+- FW-002（M1/M2 真实硬件对接联调——需实机）、FW-005（challenge 16 槽环形窗口 vs 重放拒绝集——设计权衡，后端 monotonic counter 是真正防重放锚，已有测试钉住窗口语义）
+- AG-X01（部署态无入站命令通道——架构项，实现监听者时须同步定义入站鉴权）
+- 至此 FINDINGS.md 中所有**代码可修**项均已修复并合并（Batch 1–8，PR #22–#28 + 本 PR）；以上遗留项均为治理决策、运维动作、实机联调或架构演进，非纯代码修复

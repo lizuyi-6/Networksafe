@@ -355,12 +355,15 @@ class SpecPlanner:
             b = replace(spec_a, sampleId=self._next_id("pair"),
                         endpointSensitivity=new_sens,
                         authenticated=not spec_a.authenticated)
-        # re-seed B so the generator realizes a distinct-but-aligned request
+        # re-seed B so the generator realizes a distinct-but-aligned request:
+        # B's seed is derived over its OWN (sampleId, verdict, attackFamily,
+        # difficulty) — a different formula from A's (sid, verdict, family,
+        # gtype, i) on purpose, so a pair never shares a generator seed.
+        # generatorSeed IS part of the immutable hash core (asdict includes
+        # it), so the recompute below keeps specHash over the seed in effect.
         b.generatorSeed = hashlib.sha256(
             f"{b.sampleId}:{b.verdict}:{b.attackFamily}:{b.difficulty}".encode("utf-8")
         ).hexdigest()[:16]
-        # generatorSeed is not in the immutable hash core? it IS (asdict includes it).
-        # Recompute hash so specHash reflects the new seed.
         b.specHash = b.compute_hash()
         return b
 

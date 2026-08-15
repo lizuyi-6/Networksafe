@@ -23,16 +23,65 @@ from . import quotas
 from .audit import AuditLog, AuditIntegrityError
 
 
-def _verify_audit_integrity(out_dir: Path) -> dict:
+def _verify_audit_integrity(out_dir: Path) -> tuple[dict, AuditLog]:
     """ML-004 (audit 2026-08): finalize REFUSES to write a manifest over an audit
     log that fails chain verification or whose sealed tip snapshot disagrees
-    (truncation / rewrite). Fail-closed: no manifest, exit code 2."""
+    (truncation / rewrite). Fail-closed: no manifest, exit code 2.
+    Returns (summary, live AuditLog) — the log is reused for the ML-005
+    specHash binding step (events already verified at load)."""
     audit = AuditLog(out_dir / "audit.jsonl")
     ok, violations = audit.verify_with_snapshot()
     if not ok:
         raise AuditIntegrityError(
             "audit integrity check failed; refusing to finalize: " + "; ".join(violations[:5]))
-    return {"chainEntries": audit.count()}
+    return {"chainEntries": audit.count()}, audit
+
+
+def _spechash_binding_violations(records: list[dict], audit: AuditLog) -> dict:
+    """ML-005 (audit 2026-08): specHash itself is an UNKEYED sha256, so a local
+    process that rewrites a spec in an accepted shard can freely recompute a
+    matching hash. Bind it to the KEYED, HMAC-sealed audit chain instead:
+    every kept record's specHash must (a) equal the hash recomputed from its
+    own embedded spec (self-consistency) and (b) equal the specHash the chain
+    recorded in that sample's accept event (keyed anchor). Rewriting shards
+    without the audit-chain key now fails finalize. Backward compatible:
+    ancient accept events without a specHash field simply don't bind."""
+    from .generation_spec import GenerationSpec
+
+    chain_accept: dict[str, str] = {}
+    for ev in audit.events():
+        if ev.get("event") == "accept" and ev.get("specHash"):
+            chain_accept[ev["sampleId"]] = ev["specHash"]
+
+    self_consistent = 0
+    chain_bound = 0
+    violations = 0
+    for r in records:
+        sid = r.get("sampleId")
+        recorded = r.get("specHash")
+        try:
+            spec = GenerationSpec.from_dict(r.get("spec") or {})
+            recomputed = spec.compute_hash()
+        except (ValueError, TypeError):
+            recomputed = None  # tampered/invalid spec payload
+        if recomputed is not None and recomputed == recorded:
+            self_consistent += 1
+        else:
+            violations += 1
+            continue
+        expected = chain_accept.get(sid)
+        if expected is not None and expected == recorded:
+            chain_bound += 1
+        elif expected is None:
+            pass  # ancient accept event without specHash: unbound, not a violation
+        else:
+            violations += 1
+    return {
+        "spechashChecked": len(records),
+        "spechashSelfConsistent": self_consistent,
+        "spechashChainBound": chain_bound,
+        "spechashViolations": violations,
+    }
 
 
 def _load_records(accepted_dir: Path) -> list[dict]:
@@ -106,7 +155,7 @@ def _immutable_label_mismatches(records: list[dict]) -> int:
 def finalize(out_dir: Path | None = None) -> dict:
     out_dir = out_dir or config.RELEASES_DIR
     # 0. audit chain + sealed-tip verification (fail-closed; ML-004)
-    audit_info = _verify_audit_integrity(out_dir)
+    audit_info, audit = _verify_audit_integrity(out_dir)
     accepted_dir = out_dir / "accepted"
     records = _load_records(accepted_dir)
     pre_dedup = len(records)
@@ -117,6 +166,12 @@ def finalize(out_dir: Path | None = None) -> dict:
     exact_dups = _exact_dup_count(kept)
     # 3. immutable-label verification (must be 0)
     label_mism = _immutable_label_mismatches(kept)
+    # 3b. specHash -> keyed-chain binding (ML-005; violations must be 0)
+    spechash = _spechash_binding_violations(kept, audit)
+    if spechash["spechashViolations"]:
+        raise AuditIntegrityError(
+            f"{spechash['spechashViolations']} accepted records fail specHash "
+            "self-consistency or keyed-chain binding; refusing to finalize")
     # 4. re-shard the kept set
     n_shards = _reshard(kept, accepted_dir)
     # 5. gate evaluation
@@ -132,6 +187,7 @@ def finalize(out_dir: Path | None = None) -> dict:
         "removedByNearDedup": len(removed),
         "exactDuplicates": exact_dups,
         "immutableLabelMismatches": label_mism,
+        "spechashBinding": spechash,
         "shardCount": n_shards,
         "gates": gates,
         "fileHashes": file_hashes,
@@ -158,6 +214,7 @@ def write_report_md(report: dict, out_dir: Path | None = None) -> Path:
         f"Shards: {report.get('shardCount')} (5k-10k samples each)",
         f"Exact duplicates: **{report.get('exactDuplicates')}** (must be 0)",
         f"Immutable-label mismatches: **{report.get('immutableLabelMismatches')}** (must be 0)",
+        f"specHash binding violations: **{report.get('spechashBinding', {}).get('spechashViolations')}** (must be 0; keyed-chain anchored)",
         "",
         "## Mission verdict lines (verbatim required by mission)",
         "",
@@ -204,6 +261,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Finalized: {report['acceptedCount']} accepted samples in {report['shardCount']} shards")
     print(f"  exact_duplicates: {report['exactDuplicates']} (must be 0)")
     print(f"  immutable_label_mismatches: {report['immutableLabelMismatches']} (must be 0)")
+    print(f"  spechash_binding_violations: {report['spechashBinding']['spechashViolations']} (must be 0)")
     print(f"  manifest: {mpath}")
     print(f"  report: {rpath}")
     return 0
