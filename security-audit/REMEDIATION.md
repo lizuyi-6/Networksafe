@@ -331,7 +331,7 @@
 - DP-001 泄漏形态驱动的 11 种高置信模式：9 种 provider key 值形（与 v0.3 `_SECRET_PATTERNS`/v0.2 redactor 同源）+ PEM 私钥块 + **URL 内嵌凭据**（`scheme://user:pass@host`——FTP 泄密原始形态）
 - **扫描面 = git-tracked + 未跟踪工作树文件**（自测暴露的盲区修正：初版只扫 tracked，种在工作树的泄密漏过；`git ls-files --others --exclude-standard` 补齐）
 - 豁免设计全部显式：测试/fixture 路径、docs/security-audit 历史报告（冻结证据文档）、两个已文档化 test-only 私钥路径（FINDINGS DP-004 已记录的治理项，按路径豁免——**新增私钥文件仍会触发**）、`change_me` 占位与 `$` 插值、printf `%s` 模板占位
-- **自测闭环**（本地实测）：种植 `ftp://deploy:S3cretP@ss2026@...` + `AKIA…` 假密钥 → guard exit 1 精确报出两行两类别；移除后 exit 0；CI 增加常驻自测步骤（种植→必须失败→清理→必须通过），假密钥字面量以 bash 拼接构造不落 tracked 文件
+- **自测闭环**（本地实测）：种植带内嵌凭据的假 FTP URL（deploy + 密码两段拼成，形如 scheme 冒号双斜杠 deploy 冒号 密码 艾特 host）+ `AKIA…` 假密钥 → guard exit 1 精确报出两行两类别；移除后 exit 0；CI 增加常驻自测步骤（种植→必须失败→清理→必须通过），假密钥字面量以 bash 拼接构造不落 tracked 文件——**完整字面量写进任何 tracked 文件（包括本台账）都会被自家 guard 报警：合并后首次全链复跑，guard 抓到的唯一"违规"就是本行初版里的自测样例字符串，恰证其有效**
 - 全仓首扫结果：1523 文件扫描 0 违规（592 豁免/跳过）——确认现状干净
 
 ### 接线
