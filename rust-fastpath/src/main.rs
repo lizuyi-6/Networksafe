@@ -30,8 +30,6 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 #[cfg(unix)]
-use tower::Service;
-#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use subtle::ConstantTimeEq;
 use tower::Service;
@@ -836,6 +834,11 @@ async fn serve_tcp(app: Router, address: String) {
             let io = TokioIo::new(stream);
             let hyper_service = service_fn(move |request| tower_service.clone().call(request));
             if let Err(error) = http1::Builder::new()
+                // header_read_timeout REQUIRES an installed timer in hyper 1.x —
+                // without one it panics per connection ("timeout set, but no
+                // timer set"), which nobody caught until release-verify first
+                // ran the container end-to-end (Batch 10 CI fix).
+                .timer(hyper_util::rt::TokioTimer::new())
                 .header_read_timeout(std::time::Duration::from_secs(HEADER_READ_TIMEOUT_SECS))
                 .max_buf_size(MAX_HTTP1_BUF_BYTES)
                 .serve_connection(io, hyper_service)
@@ -858,12 +861,37 @@ async fn serve_unix(app: Router, socket_path: String) {
         std::fs::create_dir_all(parent).expect("create unix socket directory");
     }
 
-    if socket.exists() {
-        let _ = std::fs::remove_file(socket);
-    }
-
     info!("starting rust-fastpath on unix socket {}", socket_path);
-    let listener = UnixListener::bind(socket).expect("bind unix listener");
+    // Stale-socket handling: after an unclean shutdown a leftover socket file
+    // makes bind() return AddrInUse forever, crash-looping the sidecar. The
+    // old code swallowed the remove_file error (`let _ =`), so a remove that
+    // failed (e.g. foreign-owned file on a persisted volume) surfaced only as
+    // an unexplained AddrInUse panic. Now: bind directly in the common case;
+    // on AddrInUse attempt one removal, surfacing its real error if it fails,
+    // then retry once; a second AddrInUse means a live listener owns the path.
+    let listener = match UnixListener::bind(socket) {
+        Ok(listener) => listener,
+        Err(bind_error) if bind_error.kind() == std::io::ErrorKind::AddrInUse => {
+            match std::fs::remove_file(socket) {
+                Ok(()) => {}
+                Err(remove_error) => {
+                    panic!(
+                        "unix socket {} is in use and the stale file cannot be removed: {}; \
+                         clear the file (or fix its ownership) and restart",
+                        socket_path, remove_error
+                    );
+                }
+            }
+            UnixListener::bind(socket).unwrap_or_else(|retry_error| {
+                panic!(
+                    "unix socket {} still in use after removing the stale file: {} \
+                     (another live listener may own the path)",
+                    socket_path, retry_error
+                );
+            })
+        }
+        Err(error) => panic!("bind unix listener: {}", error),
+    };
     let permissions = std::fs::Permissions::from_mode(0o660);
     std::fs::set_permissions(socket, permissions).expect("set unix socket permissions");
     // RF-003/004/005: same bounds as the TCP loop (see serve_tcp).
@@ -892,6 +920,8 @@ async fn serve_unix(app: Router, socket_path: String) {
             let io = TokioIo::new(stream);
             let hyper_service = service_fn(move |request| tower_service.clone().call(request));
             if let Err(error) = http1::Builder::new()
+                // See serve_tcp: the timer is mandatory for header_read_timeout.
+                .timer(hyper_util::rt::TokioTimer::new())
                 .header_read_timeout(std::time::Duration::from_secs(HEADER_READ_TIMEOUT_SECS))
                 .max_buf_size(MAX_HTTP1_BUF_BYTES)
                 .serve_connection(io, hyper_service)
