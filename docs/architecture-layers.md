@@ -80,6 +80,9 @@ node scripts/guards/check-no-direct-api-fetch.mjs
 node scripts/guards/check-frontend-api-contract.mjs
 node scripts/guards/check-repository-hygiene.mjs
 node scripts/guards/check-rescue-no-release.mjs
+node scripts/guards/check-deployment-image-pins.mjs   # 全仓 Dockerfile/compose 镜像必须 digest-pin（MinIO 例外清单见 guard 内注释）
+node scripts/guards/check-no-secrets.mjs             # 高置信密钥形态扫描（tracked + 未跟踪文件；DP-001 教训）
+node scripts/guards/check-training-leak-challenge-capture.mjs
 ```
 
 新增层级规则时：先在本文登记，再写 guard，最后才写业务代码。只有文档没有 guard 的规则视为"愿望"，不算层级。

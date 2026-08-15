@@ -477,6 +477,22 @@ jobs:
         working-directory: .
         run: npm run check:release-guards
 
+      - name: Self-test Secrets Guard (must catch a planted leak)
+        working-directory: .
+        run: |
+          # Plant inside the repo tree (the guard scans untracked files there),
+          # assert it FAILS, then remove it so the real guard run passes.
+          # Assembled from fragments so no secret-shaped literal appears in
+          # this file (which the guard itself scans).
+          ak="AKIA""IOSFODNN7""REALKEY"; pw="Hunter2""Secret2026"
+          printf 'ftp://deploy:%s@ftp.example.com/releases\n%s\n' "$pw" "$ak" > planted-secret-check.txt
+          if node scripts/guards/check-no-secrets.mjs > /dev/null 2>&1; then
+            echo "::error::secrets guard failed to detect a planted credential"; rm planted-secret-check.txt; exit 1
+          fi
+          rm planted-secret-check.txt
+          node scripts/guards/check-no-secrets.mjs > /dev/null
+          echo "secrets guard correctly flags planted leaks and passes clean"
+
   release-verify:
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-build, installer-build, rust-fastpath-check, rescue-check, gateway-safety-check, docker-build, security-scan, challenge-dataset-check]
