@@ -4,7 +4,9 @@ services:
   # Redis
   # ─────────────────────────────────────────────
   redis:
-    image: redis:7-alpine
+    # DP-008 (audit 2026-08): digest-pinned — floating tags let a registry
+    # compromise or tag mutation silently change the runtime image.
+    image: redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2
     command: >
       redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required} --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
@@ -42,7 +44,8 @@ services:
       "
 
   postgres:
-    image: postgres:16-alpine
+    # DP-008 (audit 2026-08): digest-pinned (see redis note).
+    image: postgres:16-alpine@sha256:44c4ee9810eff91f7eab4d822642e01115b1a9eccce4bcbdde7604752d68eac6
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-aetherguard}
       - POSTGRES_USER=${POSTGRES_USER:-aetherguard}
@@ -175,7 +178,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "${FRONTEND_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-8080}:80"
+      # DP-013: container listens 8080 unprivileged (nginx user, no bind cap)
+    - "${FRONTEND_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-8080}:8080"
     depends_on:
       backend:
         condition: service_healthy
