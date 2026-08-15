@@ -1,0 +1,13 @@
+TEST_START testId=a-usb-bridge-baseline runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:32:37Z stateBefore=isolated
+TEST_COMMAND release gate; victim ping -I agvictim0 10.99.0.1; victim TCP marker; capture on usb2
+<stdin>:54: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+released for 20s (leaseId=aa72d48976324642a955fabd37556f1e timer=ag-cat2-lease-aa72d48976324642a955fabd37556f1e)
+PING 10.99.0.1 (10.99.0.1) from 10.99.0.2 agvictim0: 56(84) bytes of data.
+64 bytes from 10.99.0.1: icmp_seq=1 ttl=64 time=1.20 ms
+64 bytes from 10.99.0.1: icmp_seq=2 ttl=64 time=1.49 ms
+
+--- 10.99.0.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 1.197/1.344/1.491/0.147 ms
+uplinkCapturedPackets=8 uplinkCapturedBytes=742 markerCount=2
+TEST_END testId=a-usb-bridge-baseline runId=20260802T083236Z-dc5e1e9fe4e7f429 status=PASSED exitCode=0 stateAfter=isolated reason=RELEASED_LOCAL_UPSTREAM_CONFIRMED cleanupSucceeded=true

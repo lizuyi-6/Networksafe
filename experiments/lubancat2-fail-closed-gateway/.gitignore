@@ -1,0 +1,24 @@
+# local environment configs (never commit real secrets/IPs)
+cat2/config/aetherguard-cat2.conf
+protected-host/config/protected-host.conf
+# authorization private keys - NEVER commit
+protocol/authorization/keys/*private*.pem
+protocol/authorization/keys/*.key
+!protocol/authorization/keys/*.pub
+!protocol/authorization/keys/*public*.pem
+# Raw captures stay local by default. Only allowlisted, audited primary
+# evidence pcaps from a specific campaign are committed, so a clean checkout
+# can reproduce validation without depending on developer-local ignored files.
+results/raw/**/*.pcap
+results/raw/**/*.pcapng
+# Audited primary-evidence pcaps for the current main campaign. Each entry was
+# content-audited (tcpdump + strings, no secrets/PII/public IPs); they carry
+# only synthetic RFC1918 marker traffic. Add new campaigns ONLY after a fresh
+# audit, never by widening the ignore above.
+!results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-uplink.pcap
+!results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-positive-control.pcap
+!results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-uplink.pcap
+!results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-after-expiry.pcap
+!results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-during.pcap
+!results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-positive-control.pcap
+!results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-post-failure.pcap

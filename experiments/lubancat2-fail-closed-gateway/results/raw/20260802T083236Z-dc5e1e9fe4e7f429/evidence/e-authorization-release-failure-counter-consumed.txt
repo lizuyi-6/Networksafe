@@ -1,0 +1,1 @@
+{"accepted": false, "reason": "gateway release failed rc=1; counter consumed; isolate rc=0"}

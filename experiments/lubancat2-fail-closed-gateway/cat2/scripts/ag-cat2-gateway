@@ -1,0 +1,1198 @@
+#!/bin/bash
+# ag-cat2-gateway - fail-closed bridge-membership gateway for LubanCat-2.
+#
+# A release is a serialized transaction. The gate is closed before an old
+# lease is removed, and it is not opened until the replacement timer and a
+# prepared lease record are both present. The final active state is committed
+# only after the open gate and exact timer are verified again.
+set -Eeuo pipefail
+
+PRODUCTION_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PATH=$PRODUCTION_PATH
+LOG_TAG=aetherguard-cat2
+AG_TEST_MODE=${AG_TEST_MODE:-0}
+
+if [[ "$AG_TEST_MODE" == "1" ]]; then
+    : "${AG_GATEWAY_CONFIG:?AG_GATEWAY_CONFIG is required in test mode}"
+    : "${AG_STATE_DIR:?AG_STATE_DIR is required in test mode}"
+    : "${AG_SYS_CLASS_NET:?AG_SYS_CLASS_NET is required in test mode}"
+    : "${AG_TEST_COMMAND_PATH:?AG_TEST_COMMAND_PATH is required in test mode}"
+    CONF=$AG_GATEWAY_CONFIG
+    STATE_DIR=$AG_STATE_DIR
+    SYS_CLASS_NET=$AG_SYS_CLASS_NET
+    PATH="$AG_TEST_COMMAND_PATH:$PRODUCTION_PATH"
+    GATEWAY_EXECUTABLE=${AG_GATEWAY_EXECUTABLE:-$0}
+else
+    CONF=/etc/aetherguard-cat2.conf
+    STATE_DIR=/run/aetherguard-cat2
+    SYS_CLASS_NET=/sys/class/net
+    GATEWAY_EXECUTABLE=/usr/local/sbin/ag-cat2-gateway
+fi
+
+CONFIG_SOURCE_PATH=$CONF
+CONFIG_SNAPSHOT_FILE=
+CONFIG_DIGEST=
+TRANSITION_LOCK_FILE=$STATE_DIR/transition.lock
+LEASE_STATE_FILE=$STATE_DIR/active-lease
+if [[ "$AG_TEST_MODE" == "1" ]]; then
+    OWNED_TOPOLOGY_FILE=${AG_OWNED_TOPOLOGY_FILE:-$STATE_DIR/owned-topology}
+else
+    OWNED_TOPOLOGY_FILE=/var/lib/aetherguard-cat2/owned-topology
+fi
+
+SERVER_IF=
+UPLINK_IF=
+BRIDGE_IF=br0
+DEFAULT_RELEASE_SECONDS=60
+MAX_RELEASE_SECONDS=600
+AG_GATEWAY_ID=cat2-gateway-01
+AG_AUTHZ_PUBKEY=/etc/aetherguard-cat2/authorizer-public.pem
+AG_COUNTER_FILE=/var/lib/aetherguard-cat2/authorizer-counter
+AG_COUNTER_LOCK_FILE=/var/lib/aetherguard-cat2/authorizer-counter.lock
+AG_MANAGEMENT_IF=usb0
+AG_MANAGEMENT_ADDRESS=192.168.100.2/24
+AG_ALLOW_TEST_FAILPOINTS=0
+
+ACTIVE_LEASE_ID=
+ACTIVE_TIMER_UNIT=
+ACTIVE_EXPIRY_EPOCH=
+ACTIVE_LEASE_PHASE=
+ACTIVE_SERVER_IF=
+ACTIVE_UPLINK_IF=
+ACTIVE_BRIDGE_IF=
+
+RECORDED_GATEWAY_ID=
+RECORDED_BRIDGE_IF=
+RECORDED_SERVER_IF=
+RECORDED_UPLINK_IF=
+RECORDED_CONFIG_DIGEST=
+
+RELEASE_CLEANUP_REQUIRED=0
+RELEASE_CANDIDATE_TIMER_UNIT=
+
+is_safe_identifier() {
+    [[ "$1" =~ ^[A-Za-z0-9_.:-]+$ ]]
+}
+
+is_safe_path() {
+    [[ "$1" == /* && "$1" != *$'\n'* && "$1" != *$'\r'* ]]
+}
+
+is_canonical_positive_integer() {
+    [[ "$1" =~ ^[1-9][0-9]*$ ]]
+}
+
+extract_emergency_server_interface() {
+    local candidate_interface=
+    if [[ -r "$LEASE_STATE_FILE" ]]; then
+        candidate_interface=$(sed -n 's/^serverInterface=\([A-Za-z0-9_.:-][A-Za-z0-9_.:-]*\)$/\1/p' "$LEASE_STATE_FILE" | sed -n '1p')
+    fi
+    if [[ -z "$candidate_interface" && -r "$CONFIG_SOURCE_PATH" ]]; then
+        candidate_interface=$(sed -n 's/^SERVER_IF=\([A-Za-z0-9_.:-][A-Za-z0-9_.:-]*\)$/\1/p' "$CONFIG_SOURCE_PATH" | sed -n '1p')
+    fi
+    printf '%s\n' "$candidate_interface"
+}
+
+emergency_isolate_without_config() {
+    local emergency_server_interface
+    emergency_server_interface=$(extract_emergency_server_interface)
+    if is_safe_identifier "$emergency_server_interface" && [[ -d "$SYS_CLASS_NET/$emergency_server_interface/brport" ]]; then
+        ip link set dev "$emergency_server_interface" nomaster >/dev/null 2>&1 || true
+    fi
+    logger -t "$LOG_TAG" -- "action=config uid=${SUDO_UID:-$(id -u)} result=fault fail_closed_attempted=true" 2>/dev/null || true
+}
+
+load_config() {
+    local config_line config_key config_value line_number=0
+    declare -A seen_config_keys=()
+    [[ -r "$CONFIG_SNAPSHOT_FILE" ]] || {
+        echo "FATAL: $CONFIG_SOURCE_PATH missing or unreadable" >&2
+        return 1
+    }
+
+    while IFS= read -r config_line || [[ -n "$config_line" ]]; do
+        line_number=$((line_number + 1))
+        [[ -z "$config_line" || "$config_line" =~ ^[[:space:]]*# ]] && continue
+        if [[ ! "$config_line" =~ ^([A-Z][A-Z0-9_]*)=([^[:space:]]+)$ ]]; then
+            echo "FATAL: invalid config syntax at $CONFIG_SOURCE_PATH:$line_number" >&2
+            return 1
+        fi
+        config_key=${BASH_REMATCH[1]}
+        config_value=${BASH_REMATCH[2]}
+        [[ -z "${seen_config_keys[$config_key]:-}" ]] || {
+            echo "FATAL: duplicate config key $config_key at $CONFIG_SOURCE_PATH:$line_number" >&2
+            return 1
+        }
+        seen_config_keys[$config_key]=1
+        case "$config_key" in
+            SERVER_IF|UPLINK_IF|BRIDGE_IF|AG_GATEWAY_ID|AG_MANAGEMENT_IF)
+                is_safe_identifier "$config_value" || return 1
+                printf -v "$config_key" '%s' "$config_value"
+                ;;
+            DEFAULT_RELEASE_SECONDS|MAX_RELEASE_SECONDS)
+                is_canonical_positive_integer "$config_value" || return 1
+                printf -v "$config_key" '%s' "$config_value"
+                ;;
+            AG_AUTHZ_PUBKEY|AG_COUNTER_FILE|AG_COUNTER_LOCK_FILE)
+                is_safe_path "$config_value" || return 1
+                printf -v "$config_key" '%s' "$config_value"
+                ;;
+            AG_MANAGEMENT_ADDRESS)
+                [[ "$config_value" =~ ^[0-9A-Fa-f:.]+/[0-9]{1,3}$ ]] || return 1
+                AG_MANAGEMENT_ADDRESS=$config_value
+                ;;
+            AG_ALLOW_TEST_FAILPOINTS)
+                [[ "$config_value" == "0" || "$config_value" == "1" ]] || return 1
+                AG_ALLOW_TEST_FAILPOINTS=$config_value
+                ;;
+            *)
+                echo "FATAL: unsupported config key $config_key at $CONFIG_SOURCE_PATH:$line_number" >&2
+                return 1
+                ;;
+        esac
+    done < "$CONFIG_SNAPSHOT_FILE"
+
+    is_safe_identifier "$SERVER_IF" || { echo "FATAL: SERVER_IF is missing or invalid" >&2; return 1; }
+    is_safe_identifier "$UPLINK_IF" || { echo "FATAL: UPLINK_IF is missing or invalid" >&2; return 1; }
+    [[ "$SERVER_IF" != "$UPLINK_IF" ]] || { echo "FATAL: SERVER_IF and UPLINK_IF must differ" >&2; return 1; }
+    (( DEFAULT_RELEASE_SECONDS >= 1 && DEFAULT_RELEASE_SECONDS <= MAX_RELEASE_SECONDS )) || return 1
+    (( MAX_RELEASE_SECONDS <= 86400 )) || { echo "FATAL: MAX_RELEASE_SECONDS exceeds safety limit" >&2; return 1; }
+
+    if [[ "$AG_TEST_MODE" == "1" ]]; then
+        [[ "$AG_ALLOW_TEST_FAILPOINTS" == "1" ]] || {
+            echo "FATAL: test mode requires AG_ALLOW_TEST_FAILPOINTS=1 in the local test config" >&2
+            return 1
+        }
+    elif [[ -n "${AG_TEST_FAILPOINT:-}" || -n "${AG_TEST_FAILPOINT_ACTION:-}" ]]; then
+        echo "FATAL: failpoints are disabled in production mode" >&2
+        return 1
+    fi
+}
+
+log_action() {
+    local action=$1
+    local details=$2
+    logger -t "$LOG_TAG" -- "action=$action uid=${SUDO_UID:-$(id -u)} $details" 2>/dev/null || true
+}
+
+acquire_transition_lock() {
+    exec 9>"$TRANSITION_LOCK_FILE"
+    flock -x 9
+}
+
+prepare_config_snapshot() {
+    CONFIG_SNAPSHOT_FILE=$(mktemp "$STATE_DIR/.gateway-config.XXXXXXXX") || return 1
+    chmod 0600 "$CONFIG_SNAPSHOT_FILE"
+    if ! cp -- "$CONFIG_SOURCE_PATH" "$CONFIG_SNAPSHOT_FILE"; then
+        rm -f "$CONFIG_SNAPSHOT_FILE"
+        CONFIG_SNAPSHOT_FILE=
+        return 1
+    fi
+    CONFIG_DIGEST=$(sha256sum "$CONFIG_SNAPSHOT_FILE" | awk '{print $1}')
+    [[ "$CONFIG_DIGEST" =~ ^[a-f0-9]{64}$ ]]
+}
+
+cleanup_config_snapshot() {
+    if [[ -n "$CONFIG_SNAPSHOT_FILE" ]]; then
+        rm -f "$CONFIG_SNAPSHOT_FILE"
+        CONFIG_SNAPSHOT_FILE=
+    fi
+}
+
+# Every invocation takes the same stable transition lock before it reads the
+# policy. The invalid-config emergency path therefore cannot race a release
+# that already loaded an older configuration and later reopens the gate.
+umask 077
+mkdir -p "$STATE_DIR"
+touch "$TRANSITION_LOCK_FILE"
+chmod 0600 "$TRANSITION_LOCK_FILE"
+acquire_transition_lock
+if ! prepare_config_snapshot || ! load_config; then
+    emergency_isolate_without_config
+    cleanup_config_snapshot
+    exit 2
+fi
+
+bridge_exists() {
+    ip link show dev "$BRIDGE_IF" >/dev/null 2>&1
+}
+
+interface_exists() {
+    [[ -d "$SYS_CLASS_NET/$1" ]]
+}
+
+management_interface_is_configured() {
+    local expected_management_address=${AG_MANAGEMENT_ADDRESS%/*}
+    interface_exists "$AG_MANAGEMENT_IF" || return 1
+    ip -o address show dev "$AG_MANAGEMENT_IF" 2>/dev/null \
+        | awk '{print $4}' \
+        | awk -F/ -v expected="$expected_management_address" '$1 == expected {found=1} END {exit !found}'
+}
+
+port_is_enslaved() {
+    [[ -d "$SYS_CLASS_NET/$1/brport" ]]
+}
+
+recorded_server_interface() {
+    local recorded_interface
+    [[ -r "$LEASE_STATE_FILE" ]] || return 1
+    recorded_interface=$(sed -n 's/^serverInterface=\([A-Za-z0-9_.:-][A-Za-z0-9_.:-]*\)$/\1/p' \
+        "$LEASE_STATE_FILE")
+    [[ -n "$recorded_interface" && "$recorded_interface" != *$'\n'* ]] || return 1
+    is_safe_identifier "$recorded_interface" || return 1
+    printf '%s\n' "$recorded_interface"
+}
+
+known_server_interfaces() {
+    local lease_server_interface=
+    lease_server_interface=$(recorded_server_interface 2>/dev/null || true)
+    [[ -z "$lease_server_interface" ]] || printf '%s\n' "$lease_server_interface"
+    [[ "$SERVER_IF" == "$lease_server_interface" ]] || printf '%s\n' "$SERVER_IF"
+}
+
+known_gate_is_open() {
+    local candidate_interface
+    while IFS= read -r candidate_interface; do
+        [[ -n "$candidate_interface" ]] || continue
+        port_is_enslaved "$candidate_interface" && return 0
+    done < <(known_server_interfaces)
+    return 1
+}
+
+close_known_gates() {
+    local candidate_interface close_failed=0
+    while IFS= read -r candidate_interface; do
+        [[ -n "$candidate_interface" ]] || continue
+        if port_is_enslaved "$candidate_interface"; then
+            ip link set dev "$candidate_interface" nomaster || close_failed=1
+        fi
+        port_is_enslaved "$candidate_interface" && close_failed=1
+    done < <(known_server_interfaces)
+    (( close_failed == 0 ))
+}
+
+port_is_enslaved_to_bridge() {
+    local interface_name=$1
+    local bridge_name=$2
+    local master_path="$SYS_CLASS_NET/$interface_name/master"
+    [[ -L "$master_path" || -e "$master_path" ]] || return 1
+    [[ "$(readlink -f "$master_path")" == "$(readlink -f "$SYS_CLASS_NET/$bridge_name")" ]]
+}
+
+bridge_members_are_exact() {
+    local expected_gate_state=$1
+    local interface_path interface_name master_path
+    local found_uplink=false found_server=false
+
+    for interface_path in "$SYS_CLASS_NET"/*; do
+        [[ -d "$interface_path" ]] || continue
+        interface_name=${interface_path##*/}
+        master_path="$interface_path/master"
+        [[ -L "$master_path" || -e "$master_path" ]] || continue
+        [[ "$(readlink -f "$master_path")" == "$(readlink -f "$SYS_CLASS_NET/$BRIDGE_IF")" ]] || continue
+        case "$interface_name" in
+            "$UPLINK_IF") found_uplink=true ;;
+            "$SERVER_IF") found_server=true ;;
+            *) return 1 ;;
+        esac
+    done
+
+    [[ "$found_uplink" == "true" ]] || return 1
+    if [[ "$expected_gate_state" == "open" ]]; then
+        [[ "$found_server" == "true" ]]
+    else
+        [[ "$found_server" == "false" ]]
+    fi
+}
+
+release_topology_is_safe() {
+    local expected_gate_state=$1
+    bridge_exists \
+        && interface_exists "$SERVER_IF" \
+        && interface_exists "$UPLINK_IF" \
+        && management_interface_is_configured \
+        && port_is_enslaved_to_bridge "$UPLINK_IF" "$BRIDGE_IF" \
+        && bridge_members_are_exact "$expected_gate_state"
+}
+
+bridge_member_interfaces() {
+    # Enumerate every interface enslaved to the dedicated data bridge. This is
+    # the authoritative membership scan: it is independent of volatile lease
+    # state and independent of the current SERVER_IF, so a rogue member or an
+    # old SERVER_IF left over from a config change cannot hide.
+    local interface_path interface_name master_path
+    bridge_exists || return 0
+    for interface_path in "$SYS_CLASS_NET"/*; do
+        [[ -d "$interface_path" ]] || continue
+        interface_name=${interface_path##*/}
+        master_path="$interface_path/master"
+        [[ -L "$master_path" || -e "$master_path" ]] || continue
+        [[ "$(readlink -f "$master_path")" == "$(readlink -f "$SYS_CLASS_NET/$BRIDGE_IF")" ]] || continue
+        printf '%s\n' "$interface_name"
+    done
+}
+
+enforce_exact_closed_topology() {
+    # For the dedicated data bridge the isolated member set must be exactly
+    # {UPLINK_IF}. Remove every other member (old SERVER_IF after a config
+    # change, a rogue dummy, the management interface if it ever leaked in).
+    # UPLINK_IF is always preserved. nomaster only detaches bridge membership;
+    # it never touches the interface IP, so a leaked usb0 keeps its management
+    # address. A removal failure or a post-cleanup non-exact topology is a
+    # fault: the caller must report fault, never isolated.
+    # When the data bridge itself is absent (boot state before the runtime USB
+    # transport creates agbr0/usb1/usb2) there is no forwarding path at all;
+    # that is trivially isolated and safe, so the enforcement short-circuits
+    # instead of faulting on a missing uplink port.
+    bridge_exists || return 0
+    local member_interface removal_failed=0
+    while IFS= read -r member_interface; do
+        [[ -n "$member_interface" ]] || continue
+        [[ "$member_interface" == "$UPLINK_IF" ]] && continue
+        ip link set dev "$member_interface" nomaster || removal_failed=1
+    done < <(bridge_member_interfaces)
+    bridge_members_are_exact closed || removal_failed=1
+    (( removal_failed == 0 ))
+}
+
+reset_recorded_topology() {
+    RECORDED_GATEWAY_ID=
+    RECORDED_BRIDGE_IF=
+    RECORDED_SERVER_IF=
+    RECORDED_UPLINK_IF=
+    RECORDED_CONFIG_DIGEST=
+}
+
+load_owned_topology() {
+    # Returns:
+    #   0 = a valid owned-topology record was loaded into RECORDED_* vars.
+    #   1 = no record exists (first boot / clean state).
+    #   2 = record exists but is malformed/symlinked/invalid -> fail-closed.
+    reset_recorded_topology
+    [[ -e "$OWNED_TOPOLOGY_FILE" ]] || return 1
+    local topology_stat
+    topology_stat=$(stat -c '%F' "$OWNED_TOPOLOGY_FILE" 2>/dev/null || printf 'missing\n')
+    [[ "$topology_stat" == "regular file" ]] || return 2
+    local topology_line topology_key topology_value
+    local seen_gateway=0 seen_bridge=0 seen_server=0 seen_uplink=0 seen_digest=0
+    declare -A seen_topology_keys=()
+    while IFS= read -r topology_line || [[ -n "$topology_line" ]]; do
+        [[ "$topology_line" =~ ^([A-Za-z][A-Za-z0-9]*)=(.*)$ ]] || return 2
+        topology_key=${BASH_REMATCH[1]}
+        topology_value=${BASH_REMATCH[2]}
+        [[ -z "${seen_topology_keys[$topology_key]:-}" ]] || return 2
+        seen_topology_keys[$topology_key]=1
+        case "$topology_key" in
+            gatewayId)
+                is_safe_identifier "$topology_value" || return 2
+                RECORDED_GATEWAY_ID=$topology_value; seen_gateway=$((seen_gateway + 1)) ;;
+            bridgeInterface)
+                is_safe_identifier "$topology_value" || return 2
+                RECORDED_BRIDGE_IF=$topology_value; seen_bridge=$((seen_bridge + 1)) ;;
+            serverInterface)
+                is_safe_identifier "$topology_value" || return 2
+                RECORDED_SERVER_IF=$topology_value; seen_server=$((seen_server + 1)) ;;
+            uplinkInterface)
+                is_safe_identifier "$topology_value" || return 2
+                RECORDED_UPLINK_IF=$topology_value; seen_uplink=$((seen_uplink + 1)) ;;
+            configDigest)
+                [[ "$topology_value" =~ ^[a-f0-9]{64}$ ]] || return 2
+                RECORDED_CONFIG_DIGEST=$topology_value; seen_digest=$((seen_digest + 1)) ;;
+            version)
+                is_canonical_positive_integer "$topology_value" || return 2 ;;
+            *) return 2 ;;
+        esac
+    done < "$OWNED_TOPOLOGY_FILE"
+    (( seen_gateway == 1 && seen_bridge == 1 && seen_server == 1 \
+        && seen_uplink == 1 && seen_digest == 1 )) || return 2
+}
+
+save_owned_topology() {
+    # Atomic, fsynced persistence. The directory is fsynced so the rename is
+    # durable. Mode 0600, root-owned in production. Regular non-symlink.
+    local topology_directory
+    topology_directory=$(dirname "$OWNED_TOPOLOGY_FILE")
+    mkdir -p "$topology_directory" || return 1
+    python3 - "$OWNED_TOPOLOGY_FILE" "$AG_GATEWAY_ID" "$BRIDGE_IF" "$SERVER_IF" \
+        "$UPLINK_IF" "$CONFIG_DIGEST" <<'PYEOF'
+import os
+import sys
+import tempfile
+
+(topology_path, gateway_id, bridge_interface, server_interface,
+ uplink_interface, config_digest) = sys.argv[1:7]
+topology_directory = os.path.dirname(topology_path)
+file_descriptor, temporary_path = tempfile.mkstemp(prefix=".owned-topology.", dir=topology_directory)
+try:
+    os.fchmod(file_descriptor, 0o600)
+    with os.fdopen(file_descriptor, "w") as topology_file:
+        topology_file.write("gatewayId=%s\n" % gateway_id)
+        topology_file.write("bridgeInterface=%s\n" % bridge_interface)
+        topology_file.write("serverInterface=%s\n" % server_interface)
+        topology_file.write("uplinkInterface=%s\n" % uplink_interface)
+        topology_file.write("configDigest=%s\n" % config_digest)
+        topology_file.write("version=1\n")
+        topology_file.flush()
+        os.fsync(topology_file.fileno())
+    os.replace(temporary_path, topology_path)
+    directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    directory_descriptor = os.open(topology_directory, directory_flags)
+    try:
+        os.fsync(directory_descriptor)
+    finally:
+        os.close(directory_descriptor)
+except Exception:
+    try:
+        os.unlink(temporary_path)
+    except OSError:
+        pass
+    raise
+PYEOF
+}
+
+remove_recorded_gate_interface() {
+    # Detach exactly one recorded gate interface from its (possibly old) bridge.
+    # This is surgical: it only touches the recorded server interface, never an
+    # arbitrary bridge, so a non-AetherGuard host network object is untouched.
+    local gate_interface=$1
+    [[ -n "$gate_interface" ]] || return 0
+    is_safe_identifier "$gate_interface" || return 0
+    [[ -d "$SYS_CLASS_NET/$gate_interface/brport" ]] || return 0
+    ip link set dev "$gate_interface" nomaster >/dev/null 2>&1 || true
+}
+
+reconcile_owned_topology_drift() {
+    # Fail-closed cleanup of configuration drift. Runs under the transition
+    # lock after the config snapshot is loaded. It (1) loads the previously
+    # recorded topology, (2) detaches an old recorded SERVER_IF that is no
+    # longer current, (3) forces the current data bridge to the exact closed
+    # member set {UPLINK_IF}, (4) verifies exactness, then (5) persists the new
+    # owned-topology. A malformed or symlinked record is treated as fail-closed
+    # and forces cleanup of the current bridge too.
+    local load_exit_code
+    load_exit_code=0
+    load_owned_topology || load_exit_code=$?
+
+    if [[ "$load_exit_code" == "2" ]]; then
+        log_action reconcile "result=fault reason=malformed_owned_topology action=fail_closed_cleanup"
+        if ! enforce_exact_closed_topology; then
+            return 1
+        fi
+        save_owned_topology || return 1
+        return 0
+    fi
+
+    if [[ "$load_exit_code" == "0" ]]; then
+        if [[ -n "$RECORDED_SERVER_IF" && "$RECORDED_SERVER_IF" != "$SERVER_IF" ]]; then
+            remove_recorded_gate_interface "$RECORDED_SERVER_IF"
+        fi
+        if [[ -n "$RECORDED_BRIDGE_IF" && "$RECORDED_BRIDGE_IF" != "$BRIDGE_IF" ]]; then
+            remove_recorded_gate_interface "$RECORDED_SERVER_IF"
+        fi
+    fi
+
+    if ! enforce_exact_closed_topology; then
+        return 1
+    fi
+    save_owned_topology || return 1
+    return 0
+}
+
+ensure_bridge() {
+    if ! bridge_exists; then
+        ip link add "$BRIDGE_IF" type bridge || return 1
+    fi
+    ip link set "$BRIDGE_IF" type bridge stp_state 0 2>/dev/null || true
+    ip link set dev "$BRIDGE_IF" up
+}
+
+gate_open() {
+    ensure_bridge || return 1
+    if port_is_enslaved "$SERVER_IF" && ! port_is_enslaved_to_bridge "$SERVER_IF" "$BRIDGE_IF"; then
+        ip link set dev "$SERVER_IF" nomaster || return 1
+    fi
+    if ! port_is_enslaved "$SERVER_IF"; then
+        ip link set dev "$SERVER_IF" up 2>/dev/null || true
+        ip link set dev "$SERVER_IF" master "$BRIDGE_IF" || return 1
+    fi
+    port_is_enslaved_to_bridge "$SERVER_IF" "$BRIDGE_IF"
+}
+
+gate_close() {
+    close_known_gates
+}
+
+kernel_gate_state() {
+    if port_is_enslaved "$SERVER_IF"; then
+        local bridge_port_state
+        bridge_port_state=$(bridge link show dev "$SERVER_IF" 2>/dev/null \
+            | sed -n 's/.*state \([a-z]*\).*/enslaved-\1/p' | sed -n '1p')
+        printf '%s\n' "${bridge_port_state:-enslaved-unknown}"
+    else
+        printf 'not-enslaved\n'
+    fi
+}
+
+lease_timer_names() {
+    systemctl list-units --type=timer --all --no-legend --no-pager 'ag-cat2-lease-*.timer' 2>/dev/null \
+        | awk '/^ag-cat2-lease-.*[.]timer/ {print $1}' || true
+}
+
+active_lease_timer_names() {
+    systemctl list-units --type=timer --state=active --no-legend --no-pager 'ag-cat2-lease-*.timer' 2>/dev/null \
+        | awk '/^ag-cat2-lease-.*[.]timer/ && $3 == "active" {print $1}' || true
+}
+
+active_lease_timer_count() {
+    active_lease_timer_names | awk 'NF {count += 1} END {print count + 0}'
+}
+
+lease_timer_is_active() {
+    local timer_unit=$1
+    systemctl is-active --quiet "${timer_unit}.timer" >/dev/null 2>&1
+}
+
+cancel_timer_unit() {
+    local timer_unit=$1
+    systemctl stop "${timer_unit}.timer" >/dev/null 2>&1 || true
+    ! lease_timer_is_active "$timer_unit"
+}
+
+cancel_all_lease_timers() {
+    local timer_name timer_unit cancellation_failed=0
+    while IFS= read -r timer_name; do
+        [[ -n "$timer_name" ]] || continue
+        timer_unit=${timer_name%.timer}
+        cancel_timer_unit "$timer_unit" || cancellation_failed=1
+    done < <(lease_timer_names)
+    (( cancellation_failed == 0 )) && [[ "$(active_lease_timer_count)" == "0" ]]
+}
+
+reset_active_lease_fields() {
+    ACTIVE_LEASE_ID=
+    ACTIVE_TIMER_UNIT=
+    ACTIVE_EXPIRY_EPOCH=
+    ACTIVE_LEASE_PHASE=
+    ACTIVE_SERVER_IF=
+    ACTIVE_UPLINK_IF=
+    ACTIVE_BRIDGE_IF=
+}
+
+read_lease_state() {
+    local state_line state_key state_value
+    local seen_lease_id=0 seen_timer_unit=0 seen_expiry=0 seen_phase=0
+    local seen_server=0 seen_uplink=0 seen_bridge=0
+    reset_active_lease_fields
+    [[ -r "$LEASE_STATE_FILE" ]] || return 1
+
+    while IFS= read -r state_line || [[ -n "$state_line" ]]; do
+        [[ "$state_line" =~ ^([A-Za-z][A-Za-z0-9]*)=(.*)$ ]] || return 2
+        state_key=${BASH_REMATCH[1]}
+        state_value=${BASH_REMATCH[2]}
+        case "$state_key" in
+            leaseId) ACTIVE_LEASE_ID=$state_value; seen_lease_id=$((seen_lease_id + 1)) ;;
+            timerUnit) ACTIVE_TIMER_UNIT=$state_value; seen_timer_unit=$((seen_timer_unit + 1)) ;;
+            expiresAtEpoch) ACTIVE_EXPIRY_EPOCH=$state_value; seen_expiry=$((seen_expiry + 1)) ;;
+            phase) ACTIVE_LEASE_PHASE=$state_value; seen_phase=$((seen_phase + 1)) ;;
+            serverInterface) ACTIVE_SERVER_IF=$state_value; seen_server=$((seen_server + 1)) ;;
+            uplinkInterface) ACTIVE_UPLINK_IF=$state_value; seen_uplink=$((seen_uplink + 1)) ;;
+            bridgeInterface) ACTIVE_BRIDGE_IF=$state_value; seen_bridge=$((seen_bridge + 1)) ;;
+            *) return 2 ;;
+        esac
+    done < "$LEASE_STATE_FILE"
+
+    (( seen_lease_id == 1 && seen_timer_unit == 1 && seen_expiry == 1 && seen_phase == 1 )) || return 2
+    (( seen_server == 1 && seen_uplink == 1 && seen_bridge == 1 )) || return 2
+    [[ "$ACTIVE_LEASE_ID" =~ ^[a-f0-9]{32}$ ]] || return 2
+    [[ "$ACTIVE_TIMER_UNIT" == "ag-cat2-lease-$ACTIVE_LEASE_ID" ]] || return 2
+    is_canonical_positive_integer "$ACTIVE_EXPIRY_EPOCH" || return 2
+    [[ "$ACTIVE_LEASE_PHASE" == "prepared" || "$ACTIVE_LEASE_PHASE" == "active" ]] || return 2
+    [[ "$ACTIVE_SERVER_IF" == "$SERVER_IF" && "$ACTIVE_UPLINK_IF" == "$UPLINK_IF" ]] || return 2
+    [[ "$ACTIVE_BRIDGE_IF" == "$BRIDGE_IF" ]] || return 2
+}
+
+write_lease_state() {
+    local lease_id=$1
+    local timer_unit=$2
+    local expiry_epoch=$3
+    local lease_phase=$4
+    python3 - "$LEASE_STATE_FILE" "$lease_id" "$timer_unit" "$expiry_epoch" "$lease_phase" \
+        "$SERVER_IF" "$UPLINK_IF" "$BRIDGE_IF" <<'PYEOF'
+import os
+import sys
+import tempfile
+
+(state_path, lease_id, timer_unit, expiry_epoch, lease_phase,
+ server_interface, uplink_interface, bridge_interface) = sys.argv[1:9]
+state_directory = os.path.dirname(state_path)
+file_descriptor, temporary_path = tempfile.mkstemp(prefix=".active-lease.", dir=state_directory)
+try:
+    os.fchmod(file_descriptor, 0o600)
+    with os.fdopen(file_descriptor, "w") as state_file:
+        state_file.write("leaseId=%s\n" % lease_id)
+        state_file.write("timerUnit=%s\n" % timer_unit)
+        state_file.write("expiresAtEpoch=%s\n" % expiry_epoch)
+        state_file.write("phase=%s\n" % lease_phase)
+        state_file.write("serverInterface=%s\n" % server_interface)
+        state_file.write("uplinkInterface=%s\n" % uplink_interface)
+        state_file.write("bridgeInterface=%s\n" % bridge_interface)
+        state_file.flush()
+        os.fsync(state_file.fileno())
+    os.replace(temporary_path, state_path)
+    directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    directory_descriptor = os.open(state_directory, directory_flags)
+    try:
+        os.fsync(directory_descriptor)
+    finally:
+        os.close(directory_descriptor)
+except Exception:
+    try:
+        os.close(file_descriptor)
+    except OSError:
+        pass
+    try:
+        os.unlink(temporary_path)
+    except OSError:
+        pass
+    raise
+PYEOF
+}
+
+clear_lease_state() {
+    rm -f "$LEASE_STATE_FILE"
+    rm -f "$STATE_DIR"/.active-lease.* 2>/dev/null || true
+    reset_active_lease_fields
+}
+
+generate_lease_id() {
+    local lease_id
+    if [[ -r /proc/sys/kernel/random/uuid ]]; then
+        lease_id=$(tr -d '-' < /proc/sys/kernel/random/uuid)
+    else
+        lease_id=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
+    fi
+    [[ "$lease_id" =~ ^[a-f0-9]{32}$ ]] || return 1
+    printf '%s\n' "$lease_id"
+}
+
+maybe_inject_failpoint() {
+    local failpoint_name=$1
+    [[ "${AG_TEST_FAILPOINT:-}" == "$failpoint_name" ]] || return 0
+    [[ "$AG_TEST_MODE" == "1" && "$AG_ALLOW_TEST_FAILPOINTS" == "1" ]] || return 97
+
+    if [[ -n "${AG_TEST_FAILPOINT_MARKER:-}" ]]; then
+        printf '%s\n' "$failpoint_name" > "$AG_TEST_FAILPOINT_MARKER"
+    fi
+    log_action release "result=injected-fault failpoint=$failpoint_name"
+    case "${AG_TEST_FAILPOINT_ACTION:-return}" in
+        return) return 97 ;;
+        kill) kill -KILL "$$" ;;
+        *) return 97 ;;
+    esac
+}
+
+emergency_release_cleanup() {
+    if (( RELEASE_CLEANUP_REQUIRED == 0 )); then
+        return
+    fi
+    set +e
+    if ! gate_close; then
+        # Never remove the last expiry bound while an interface is still open.
+        log_action release "result=fault step=unexpected_exit_close_failed safety=lease_preserved"
+        RELEASE_CLEANUP_REQUIRED=0
+        return
+    fi
+    if [[ -n "$RELEASE_CANDIDATE_TIMER_UNIT" ]]; then
+        cancel_timer_unit "$RELEASE_CANDIDATE_TIMER_UNIT"
+    fi
+    cancel_all_lease_timers
+    clear_lease_state
+    log_action release "result=fault step=unexpected_exit gate=$(kernel_gate_state)"
+    RELEASE_CLEANUP_REQUIRED=0
+}
+
+handle_process_exit() {
+    emergency_release_cleanup
+    cleanup_config_snapshot
+}
+
+handle_transition_signal() {
+    emergency_release_cleanup
+    exit 1
+}
+
+trap handle_process_exit EXIT
+trap handle_transition_signal HUP INT TERM
+
+abort_release_locked() {
+    local failure_step=$1
+    if ! gate_close; then
+        RELEASE_CLEANUP_REQUIRED=0
+        echo "FAULT: release transaction failed at $failure_step and gate close failed; existing expiry bound preserved" >&2
+        log_action release "result=fault step=${failure_step}_close_failed safety=lease_preserved gate=$(kernel_gate_state)"
+        return 1
+    fi
+    if [[ -n "$RELEASE_CANDIDATE_TIMER_UNIT" ]]; then
+        cancel_timer_unit "$RELEASE_CANDIDATE_TIMER_UNIT" || true
+    fi
+    cancel_all_lease_timers || true
+    clear_lease_state
+    RELEASE_CLEANUP_REQUIRED=0
+    echo "FAULT: release transaction aborted at $failure_step; gate forced isolated" >&2
+    log_action release "result=fault step=$failure_step gate=$(kernel_gate_state)"
+    return 1
+}
+
+validate_release_seconds() {
+    is_canonical_positive_integer "$1" && (( 10#$1 <= MAX_RELEASE_SECONDS ))
+}
+
+compute_effective_release_seconds() {
+    # This is the authoritative authorization-lifetime check. It is invoked
+    # after the global transition lock is held and the immutable config
+    # snapshot is loaded, so a verifier that computed remainingSeconds before
+    # the gateway contended for the lock cannot smuggle a stale lifetime
+    # through. requestedDurationSeconds bounds the lease; expiresAtEpoch bounds
+    # the signed authorization window. The gate is opened for the minimum.
+    local requested_duration_seconds=$1
+    local expires_at_epoch=$2
+    local current_epoch effective_seconds
+    current_epoch=$(date +%s)
+    if (( 10#$expires_at_epoch <= current_epoch )); then
+        log_action release "result=refused reason=authorization_expired_while_waiting_for_transition_lock expires_at=$expires_at_epoch now=$current_epoch"
+        echo "REFUSED: authorization expired while waiting for transition lock" >&2
+        return 1
+    fi
+    effective_seconds=$(( 10#$expires_at_epoch - current_epoch ))
+    (( effective_seconds > 10#$requested_duration_seconds )) && effective_seconds=$requested_duration_seconds
+    (( effective_seconds >= 1 )) || {
+        log_action release "result=refused reason=authorization_expired_while_waiting_for_transition_lock expires_at=$expires_at_epoch now=$current_epoch"
+        echo "REFUSED: authorization expired while waiting for transition lock" >&2
+        return 1
+    }
+    printf '%s\n' "$effective_seconds"
+}
+
+release_locked() {
+    local release_seconds=$1
+    local authorized_expires_at_epoch=${2:-}
+    local effective_release_seconds
+    local lease_id lease_timer_unit expiry_epoch
+
+    RELEASE_CLEANUP_REQUIRED=1
+    RELEASE_CANDIDATE_TIMER_UNIT=
+
+    if [[ -n "$authorized_expires_at_epoch" ]]; then
+        effective_release_seconds=$(compute_effective_release_seconds "$release_seconds" "$authorized_expires_at_epoch") \
+            || { RELEASE_CLEANUP_REQUIRED=0; return 1; }
+        release_seconds=$effective_release_seconds
+    fi
+
+    gate_close || { abort_release_locked gate_close; return 1; }
+    maybe_inject_failpoint after_gate_close || { abort_release_locked after_gate_close; return 1; }
+    release_topology_is_safe closed || { abort_release_locked topology_precheck; return 1; }
+
+    cancel_all_lease_timers || { abort_release_locked old_timer_cancel; return 1; }
+    clear_lease_state
+    maybe_inject_failpoint after_old_timer_cancel || { abort_release_locked after_old_timer_cancel; return 1; }
+
+    lease_id=$(generate_lease_id) || { abort_release_locked lease_id; return 1; }
+    lease_timer_unit="ag-cat2-lease-$lease_id"
+    RELEASE_CANDIDATE_TIMER_UNIT=$lease_timer_unit
+
+    if ! maybe_inject_failpoint timer_register_failure; then
+        abort_release_locked timer_register
+        return 1
+    fi
+    if ! systemd-run --unit="$lease_timer_unit" --on-active="${release_seconds}s" \
+        --timer-property=AccuracySec=1us --timer-property=WakeSystem=yes \
+        --property=Restart=on-failure --property=RestartSec=1s \
+        --property=StartLimitIntervalSec=0 \
+        --description="AetherGuard Cat2 lease expiry (${release_seconds}s, $lease_id)" \
+        --collect "$GATEWAY_EXECUTABLE" _expire "$lease_id" >/dev/null 2>&1; then
+        abort_release_locked timer_register
+        return 1
+    fi
+
+    maybe_inject_failpoint after_timer_register || { abort_release_locked after_timer_register; return 1; }
+    if ! maybe_inject_failpoint timer_visibility_failure; then
+        abort_release_locked timer_visibility
+        return 1
+    fi
+    lease_timer_is_active "$lease_timer_unit" || { abort_release_locked timer_visibility; return 1; }
+
+    expiry_epoch=$(( $(date +%s) + 10#$release_seconds ))
+    write_lease_state "$lease_id" "$lease_timer_unit" "$expiry_epoch" prepared \
+        || { abort_release_locked state_persist_prepared; return 1; }
+
+    maybe_inject_failpoint before_gate_open || { abort_release_locked before_gate_open; return 1; }
+    if ! maybe_inject_failpoint gate_open_failure; then
+        abort_release_locked gate_open
+        return 1
+    fi
+    gate_open || { abort_release_locked gate_open; return 1; }
+    maybe_inject_failpoint after_gate_open || { abort_release_locked after_gate_open; return 1; }
+
+    port_is_enslaved_to_bridge "$SERVER_IF" "$BRIDGE_IF" \
+        || { abort_release_locked gate_verify; return 1; }
+    release_topology_is_safe open \
+        || { abort_release_locked topology_reverify; return 1; }
+    lease_timer_is_active "$lease_timer_unit" \
+        || { abort_release_locked timer_reverify; return 1; }
+    read_lease_state && [[ "$ACTIVE_LEASE_ID" == "$lease_id" && "$ACTIVE_LEASE_PHASE" == "prepared" ]] \
+        || { abort_release_locked state_reverify; return 1; }
+
+    write_lease_state "$lease_id" "$lease_timer_unit" "$expiry_epoch" active \
+        || { abort_release_locked state_commit; return 1; }
+    lease_timer_is_active "$lease_timer_unit" \
+        || { abort_release_locked timer_post_commit; return 1; }
+
+    RELEASE_CLEANUP_REQUIRED=0
+    RELEASE_CANDIDATE_TIMER_UNIT=
+    log_action release "result=ok seconds=$release_seconds lease_id=$lease_id lease_unit=$lease_timer_unit server_if=$SERVER_IF uplink_if=$UPLINK_IF gate=$(kernel_gate_state)"
+    echo "released for ${release_seconds}s (leaseId=$lease_id timer=$lease_timer_unit)"
+}
+
+validate_authorized_release_context() {
+    local expected_policy_digest=$1
+    local expected_gateway_id=$2
+    local expected_server_interface=$3
+    local expected_uplink_interface=$4
+
+    [[ "$expected_policy_digest" =~ ^[a-f0-9]{64}$ ]] || return 1
+    is_safe_identifier "$expected_gateway_id" || return 1
+    is_safe_identifier "$expected_server_interface" || return 1
+    is_safe_identifier "$expected_uplink_interface" || return 1
+    [[ "$expected_policy_digest" == "$CONFIG_DIGEST" ]] \
+        && [[ "$expected_gateway_id" == "$AG_GATEWAY_ID" ]] \
+        && [[ "$expected_server_interface" == "$SERVER_IF" ]] \
+        && [[ "$expected_uplink_interface" == "$UPLINK_IF" ]]
+}
+
+isolate_locked() {
+    local cleanup_failed=0
+    if ! gate_close; then
+        log_action isolate "result=fault reason=gate_close_failed safety=lease_preserved"
+        return 1
+    fi
+    cancel_all_lease_timers || cleanup_failed=1
+    clear_lease_state
+    if (( cleanup_failed != 0 )) || known_gate_is_open; then
+        log_action isolate "result=fault server_if=$SERVER_IF gate=$(kernel_gate_state)"
+        return 1
+    fi
+    # Force the dedicated data bridge to the exact closed member set {UPLINK_IF}
+    # so a rogue member or an old SERVER_IF cannot keep forwarding while the
+    # gateway reports isolated.
+    if ! enforce_exact_closed_topology; then
+        log_action isolate "result=fault reason=exact_closed_topology_unreachable bridge=$BRIDGE_IF gate=$(kernel_gate_state)"
+        return 1
+    fi
+    save_owned_topology || {
+        log_action isolate "result=fault reason=owned_topology_persist_failed gate=$(kernel_gate_state)"
+        return 1
+    }
+    log_action isolate "result=ok server_if=$SERVER_IF gate=$(kernel_gate_state) members=exact_uplink"
+}
+
+expire_locked() {
+    local expiry_lease_id=$1
+    local state_read_exit_code=0
+
+    if read_lease_state; then
+        state_read_exit_code=0
+    else
+        state_read_exit_code=$?
+        if ! gate_close; then
+            log_action expire "result=fault reason=invalid_state_and_gate_close_failed lease_id=$expiry_lease_id state_rc=$state_read_exit_code safety=timer_state_preserved"
+            return 1
+        fi
+        cancel_all_lease_timers || true
+        clear_lease_state
+        log_action expire "result=fault reason=missing_or_invalid_state lease_id=$expiry_lease_id state_rc=$state_read_exit_code gate=$(kernel_gate_state)"
+        return 1
+    fi
+
+    if [[ "$expiry_lease_id" != "$ACTIVE_LEASE_ID" ]]; then
+        if [[ "$ACTIVE_LEASE_PHASE" == "active" ]] \
+            && (( ACTIVE_EXPIRY_EPOCH > $(date +%s) )) \
+            && lease_timer_is_active "$ACTIVE_TIMER_UNIT" \
+            && [[ "$(active_lease_timer_count)" == "1" ]] \
+            && release_topology_is_safe open; then
+            log_action expire "result=ignored reason=stale_lease_id lease_id=$expiry_lease_id active_lease_id=$ACTIVE_LEASE_ID"
+            return 0
+        fi
+        if ! gate_close; then
+            log_action expire "result=fault reason=stale_id_invalid_state_and_gate_close_failed lease_id=$expiry_lease_id safety=timer_state_preserved"
+            return 1
+        fi
+        cancel_all_lease_timers || true
+        clear_lease_state
+        log_action expire "result=fault reason=stale_id_with_invalid_active_state lease_id=$expiry_lease_id gate=$(kernel_gate_state)"
+        return 1
+    fi
+
+    if ! gate_close; then
+        log_action expire "result=fault reason=gate_close_failed lease_id=$expiry_lease_id gate=$(kernel_gate_state)"
+        return 1
+    fi
+    cancel_all_lease_timers || true
+    clear_lease_state
+    log_action expire "result=ok lease_id=$expiry_lease_id server_if=$SERVER_IF gate=$(kernel_gate_state)"
+}
+
+reconcile_locked() {
+    local fault_reason=unknown
+    local timer_count
+
+    if ! known_gate_is_open; then
+        cancel_all_lease_timers || fault_reason=timer_cleanup_failed
+        clear_lease_state
+        if [[ "$fault_reason" == "timer_cleanup_failed" ]]; then
+            log_action reconcile "result=fault reason=$fault_reason state=isolated"
+            return 1
+        fi
+        # Converge the dedicated data bridge to the exact closed member set
+        # {UPLINK_IF} and persist the owned topology. A rogue member or an old
+        # SERVER_IF left over from a config change is removed here; if it
+        # cannot be removed the reconcile is a fault, never an isolated ok.
+        if ! reconcile_owned_topology_drift; then
+            log_action reconcile "result=fault reason=exact_closed_topology_unreachable state=isolated bridge=$BRIDGE_IF"
+            return 1
+        fi
+        log_action reconcile "result=ok state=isolated server_if_present=$(interface_exists "$SERVER_IF" && echo true || echo false) members=exact_uplink"
+        return 0
+    fi
+
+    if ! port_is_enslaved_to_bridge "$SERVER_IF" "$BRIDGE_IF"; then
+        fault_reason=server_attached_to_wrong_bridge
+    elif ! release_topology_is_safe open; then
+        fault_reason=unexpected_or_incomplete_bridge_topology
+    elif ! read_lease_state; then
+        fault_reason=missing_or_invalid_lease_state
+    elif [[ "$ACTIVE_LEASE_PHASE" != "active" ]]; then
+        fault_reason=incomplete_lease_transition
+    elif (( ACTIVE_EXPIRY_EPOCH <= $(date +%s) )); then
+        fault_reason=lease_expired
+    elif ! lease_timer_is_active "$ACTIVE_TIMER_UNIT"; then
+        fault_reason=lease_timer_inactive
+    else
+        timer_count=$(active_lease_timer_count)
+        if [[ "$timer_count" == "1" ]]; then
+            log_action reconcile "result=ok state=released lease_id=$ACTIVE_LEASE_ID timer_unit=$ACTIVE_TIMER_UNIT"
+            return 0
+        fi
+        fault_reason=conflicting_active_lease_timers
+    fi
+
+    gate_close || {
+        log_action reconcile "result=fault reason=${fault_reason}_and_gate_close_failed gate=$(kernel_gate_state)"
+        return 1
+    }
+    cancel_all_lease_timers || true
+    clear_lease_state
+    if ! reconcile_owned_topology_drift; then
+        log_action reconcile "result=fault reason=${fault_reason}_and_exact_closed_topology_unreachable gate=$(kernel_gate_state)"
+        return 1
+    fi
+    log_action reconcile "result=fault reason=$fault_reason action=isolated gate=$(kernel_gate_state) members=exact_uplink"
+    return 1
+}
+
+verify_prerequisites_read_only() {
+    local verification_failures=0
+    bridge_exists || { echo "FAIL reason=BRIDGE_MISSING interface=$BRIDGE_IF"; verification_failures=$((verification_failures + 1)); }
+    interface_exists "$SERVER_IF" || { echo "FAIL reason=SERVER_INTERFACE_MISSING interface=$SERVER_IF"; verification_failures=$((verification_failures + 1)); }
+    port_is_enslaved_to_bridge "$UPLINK_IF" "$BRIDGE_IF" \
+        || { echo "FAIL reason=UPLINK_NOT_IN_CONFIGURED_BRIDGE interface=$UPLINK_IF bridge=$BRIDGE_IF"; verification_failures=$((verification_failures + 1)); }
+    management_interface_is_configured \
+        || { echo "FAIL reason=MANAGEMENT_ADDRESS_MISSING interface=$AG_MANAGEMENT_IF address=$AG_MANAGEMENT_ADDRESS"; verification_failures=$((verification_failures + 1)); }
+    (( verification_failures == 0 ))
+}
+
+verify_locked() {
+    local reconcile_exit_code=0
+    reconcile_locked || reconcile_exit_code=$?
+    if (( reconcile_exit_code != 0 )); then
+        echo "FAIL reason=RECONCILE_CLOSED_UNSAFE_STATE"
+        return 1
+    fi
+    verify_prerequisites_read_only || return 1
+    echo "verify: OK"
+}
+
+cmd_status() {
+    local state=isolated fault_reason=none kernel_state bridge_up=false management_present=false
+    local server_present=false uplink_present=false topology_ready=false lease_active=false
+    local lease_id= lease_phase= expiry_iso= timer_count state_read_exit_code=0
+
+    kernel_state=$(kernel_gate_state)
+    interface_exists "$SERVER_IF" && server_present=true
+    interface_exists "$UPLINK_IF" && uplink_present=true
+    bridge_exists && bridge_up=true
+    management_interface_is_configured && management_present=true
+    timer_count=$(active_lease_timer_count)
+
+    if release_topology_is_safe closed || release_topology_is_safe open; then
+        topology_ready=true
+    fi
+
+    if read_lease_state; then
+        lease_id=$ACTIVE_LEASE_ID
+        lease_phase=$ACTIVE_LEASE_PHASE
+        if lease_timer_is_active "$ACTIVE_TIMER_UNIT"; then
+            lease_active=true
+        fi
+        expiry_iso=$(date -u -d "@$ACTIVE_EXPIRY_EPOCH" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || true)
+    else
+        state_read_exit_code=$?
+    fi
+
+    if known_gate_is_open; then
+        state=fault
+        fault_reason=open_without_complete_valid_lease
+        if [[ "$state_read_exit_code" == "0" && "$lease_phase" == "active" && "$lease_active" == "true" ]] \
+            && [[ "$timer_count" == "1" ]] && (( ACTIVE_EXPIRY_EPOCH > $(date +%s) )) \
+            && release_topology_is_safe open; then
+            state=released
+            fault_reason=none
+        fi
+    elif [[ "$state_read_exit_code" == "2" ]]; then
+        fault_reason=malformed_stale_lease_state
+    fi
+
+    python3 - "$state" "$fault_reason" "$kernel_state" "$bridge_up" "$management_present" \
+        "$server_present" "$uplink_present" "$topology_ready" "$lease_active" "$lease_id" \
+        "$lease_phase" "$expiry_iso" "$timer_count" "$CONF" "$SERVER_IF" "$UPLINK_IF" \
+        "$BRIDGE_IF" "$AG_MANAGEMENT_IF" <<'PYEOF'
+import datetime
+import hashlib
+import json
+import sys
+
+(state, fault_reason, kernel_state, bridge_up, management_present,
+ server_present, uplink_present, topology_ready, lease_active, lease_id,
+ lease_phase, expiry_iso, timer_count, config_path, server_interface,
+ uplink_interface, bridge_interface, management_interface) = sys.argv[1:19]
+with open(config_path, "rb") as config_file:
+    policy_digest = hashlib.sha256(config_file.read()).hexdigest()
+document = {
+    "state": state,
+    "faultReason": None if fault_reason == "none" else fault_reason,
+    "serverInterface": server_interface,
+    "uplinkInterface": uplink_interface,
+    "bridgeInterface": bridge_interface,
+    "managementInterface": management_interface,
+    "serverInterfaceExists": server_present == "true",
+    "uplinkInterfaceExists": uplink_present == "true",
+    "serverGateKernel": kernel_state,
+    "releaseExpiresAt": expiry_iso or None,
+    "activeLeaseId": lease_id or None,
+    "leaseStatePhase": lease_phase or None,
+    "leaseTimerActive": lease_active == "true",
+    "activeLeaseTimerCount": int(timer_count),
+    "bridgeUp": bridge_up == "true",
+    "topologyReady": topology_ready == "true",
+    "managementAvailable": management_present == "true",
+    "policyDigest": policy_digest,
+    "gatePrimitive": "bridge-membership (kernel) + identified PID1 transient lease timer",
+    "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+}
+print(json.dumps(document, indent=2, sort_keys=True))
+PYEOF
+}
+
+cmd_diagnostics() {
+    echo "== date =="; date -u +%Y-%m-%dT%H:%M:%SZ
+    echo "== conf =="; sed -E '/(KEY|SECRET|PASS)/d' "$CONF"
+    echo "== ip -br link =="; ip -br link
+    echo "== ip -br addr =="; ip -br addr
+    echo "== bridge link =="; bridge link show 2>/dev/null || true
+    echo "== bridge fdb =="; bridge fdb show 2>/dev/null | sed -n '1,40p'
+    echo "== lease state =="; sed -n '1,20p' "$LEASE_STATE_FILE" 2>/dev/null || true
+    echo "== lease timers =="; systemctl list-timers --no-pager 'ag-cat2-lease-*.timer' 2>/dev/null || true
+    echo "== gateway service =="; systemctl --no-pager --full status aetherguard-cat2-gateway.service 2>/dev/null | sed -n '1,15p'
+    echo "== recent log =="; journalctl -t "$LOG_TAG" -n 30 --no-pager 2>/dev/null || true
+    echo "== routes =="; ip route
+    echo "== status =="; cmd_status
+}
+
+usage() {
+    echo "usage: $0 {status|isolate|release [1-$MAX_RELEASE_SECONDS]|release-authorized <requestedDurationSeconds> <expiresAtEpoch> <policyDigest> <gatewayId> <serverInterface> <uplinkInterface>|reconcile|verify|diagnostics}" >&2
+}
+
+command_name=${1:-}
+case "$command_name" in
+    status)
+        [[ "$#" == "1" ]] || { usage; exit 2; }
+        cmd_status
+        ;;
+    isolate)
+        [[ "$#" == "1" ]] || { usage; exit 2; }
+        isolate_locked
+        ;;
+    release)
+        [[ "$#" -le 2 ]] || { usage; exit 2; }
+        release_seconds=${2-$DEFAULT_RELEASE_SECONDS}
+        validate_release_seconds "$release_seconds" || {
+            echo "REFUSED: release seconds must be a canonical integer in [1, $MAX_RELEASE_SECONDS]" >&2
+            log_action release "result=refused reason=invalid_duration"
+            exit 2
+        }
+        release_locked "$release_seconds"
+        ;;
+    release-authorized)
+        # release-authorized <requestedDurationSeconds> <expiresAtEpoch> \
+        #                     <policyDigest> <gatewayId> \
+        #                     <serverInterface> <uplinkInterface>
+        # expiresAtEpoch is the absolute epoch from the signed payload. The
+        # gateway re-validates it against the kernel clock after the transition
+        # lock is held (see compute_effective_release_seconds), so a verifier
+        # that computed remainingSeconds before contending for the lock can no
+        # longer smuggle a stale lifetime past the gate.
+        [[ "$#" == "7" ]] || { usage; exit 2; }
+        release_seconds=$2
+        expires_at_epoch=$3
+        validate_release_seconds "$release_seconds" || {
+            echo "REFUSED: authorized release duration is invalid" >&2
+            log_action release "result=refused reason=invalid_duration"
+            exit 2
+        }
+        is_canonical_positive_integer "$expires_at_epoch" || {
+            echo "REFUSED: expiresAtEpoch must be a canonical positive integer" >&2
+            log_action release "result=refused reason=invalid_expires_at"
+            exit 2
+        }
+        if ! validate_authorized_release_context "$4" "$5" "$6" "$7"; then
+            gate_close || true
+            echo "REFUSED: signed authorization context does not match the locked config snapshot" >&2
+            log_action release "result=refused reason=authorization_context_mismatch"
+            exit 2
+        fi
+        release_locked "$release_seconds" "$expires_at_epoch"
+        ;;
+    reconcile)
+        [[ "$#" == "1" ]] || { usage; exit 2; }
+        reconcile_locked
+        ;;
+    verify)
+        [[ "$#" == "1" ]] || { usage; exit 2; }
+        verify_locked
+        ;;
+    diagnostics)
+        [[ "$#" == "1" ]] || { usage; exit 2; }
+        cmd_diagnostics
+        ;;
+    _expire)
+        [[ "$#" == "2" && "$2" =~ ^[a-f0-9]{32}$ ]] || { usage; exit 2; }
+        expire_locked "$2"
+        ;;
+    verify-prereq)
+        [[ "$#" == "1" ]] || { usage; exit 2; }
+        verify_prerequisites_read_only
+        ;;
+    *)
+        usage
+        exit 2
+        ;;
+esac

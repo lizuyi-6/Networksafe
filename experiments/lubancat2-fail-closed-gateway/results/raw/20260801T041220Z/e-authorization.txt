@@ -1,0 +1,44 @@
+# TEST E authorization 2026-08-01T04:12:20Z
+## case: valid authorization (expect RC=0, release happens)
+released for 60s (lease expires via PID1 timer ag-cat2-lease-1785557543712102846)
+{"accepted": true, "counter": 1, "releasedSeconds": 60, "note": "lease enforced by PID1 timer; see ag-cat2-gateway"}
+VERIFIER_RC=0
+## tamper cases (expect RC=2 reject for all)
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+{"accepted": false, "reason": "signature verification failed"}
+VERIFIER_RC=2
+## structural rejection cases (valid signature, bad semantics)
+over-duration: {"accepted": false, "reason": "duration out of range [1,600]"}
+over-duration: VERIFIER_RC=2
+## replay: reuse the previously-accepted authorization (expect RC=2)
+replay: {"accepted": false, "reason": "counter rollback or replay (counter=1 last=1)"}
+replay: VERIFIER_RC=2
+## counter rollback: sign with an old counter (expect RC=2)
+counter-rollback: {"accepted": false, "reason": "counter rollback or replay (counter=1 last=1)"}
+counter-rollback: VERIFIER_RC=2
+## expired authorization (issued 2h ago, duration 60s) (expect RC=2)
+expired: {"accepted": false, "reason": "authorization expired"}
+expired: VERIFIER_RC=2
+## future issuedAt (expect RC=2)
+future-issuedAt: {"accepted": false, "reason": "issuedAt is in the future"}
+future-issuedAt: VERIFIER_RC=2
+{
+  "state": "isolated",
+  "serverInterface": "eth0",
+  "uplinkInterface": "eth1",
+  "serverGateKernel": "not-enslaved",
+  "releaseExpiresAt": null,
+  "leaseTimerActive": false,
+  "bridgeUp": false,
+  "managementReachable": true,
+  "rulesetDigest": "de44c487850ab71b966453b814ccea82fce420b5a67acfa27e64bd9fb0830604",
+  "gatePrimitive": "bridge-membership (kernel) + PID1 lease timer (systemd transient)",
+  "timestamp": "2026-08-01T04:13:05Z"
+}

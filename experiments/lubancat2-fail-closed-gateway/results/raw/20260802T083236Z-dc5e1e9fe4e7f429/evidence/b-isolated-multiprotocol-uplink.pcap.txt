@@ -1,0 +1,1 @@
+reading from file /home/break/桌面/netsafe/Networksafe/experiments/lubancat2-fail-closed-gateway/results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-uplink.pcap, link-type EN10MB (Ethernet), snapshot length 262144

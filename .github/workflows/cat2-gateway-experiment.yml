@@ -1,0 +1,111 @@
+name: Cat2 Gateway Experiment
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  cat2-gateway-experiment-check:
+    # Hardware-free validation of the Cat2 fail-closed gateway experiment.
+    # Never SSHes the Cat2 board; only runs unit tests, shell regressions,
+    # syntax checks, a clean-checkout evidence validation and a no-private-key
+    # scan. A failure in any step fails the job (no || true masking, no skipped
+    # failures, no missing-pcap warnings).
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ./experiments/lubancat2-fail-closed-gateway
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tcpdump (pcap evidence recompute)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq tcpdump
+
+      - name: Install Python dependencies
+        run: python3 -m pip install --user -q jsonschema
+
+      - name: Shell syntax check (bash -n)
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r -d '' script_path; do
+            if ! bash -n "$script_path"; then
+              echo "syntax error: $script_path" >&2
+              fail=1
+            fi
+          done < <(find cat2 protected-host protocol tests lib scripts \
+                     -type f \( -name '*.sh' -o -name 'ag-cat2-gateway' -o -name 'ag-protected-host-*' \) -print0)
+          exit "$fail"
+
+      - name: Python compile check
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' script_path; do
+            python3 -m py_compile "$script_path"
+          done < <(find scripts protocol tests -name '*.py' -print0)
+
+      - name: Python unit tests
+        run: |
+          python3 -m unittest discover \
+            -s tests/unit \
+            -p 'test_*.py' \
+            -v
+
+      - name: Shell fail-closed regression
+        run: |
+          bash tests/unit/test-repeated-release-fail-closed.sh
+
+      - name: Clean-checkout evidence validation (git-tracked primary pcap)
+        run: |
+          python3 scripts/validate-results.py \
+            --run-id 20260802T083236Z-dc5e1e9fe4e7f429
+
+      - name: Verify all manifest primary-evidence pcaps are git-tracked
+        run: |
+          set -euo pipefail
+          missing=0
+          while IFS= read -r evidence_path; do
+            if ! git ls-files --error-unmatch "$evidence_path" >/dev/null 2>&1; then
+              echo "EVIDENCE_NOT_GIT_TRACKED: $evidence_path" >&2
+              missing=1
+            fi
+          done < <(python3 -c '
+          import json
+          with open("results/manifest.json", encoding="utf-8") as manifest_file:
+              manifest = json.load(manifest_file)
+          for entry in manifest["files"]:
+              if entry.get("primaryEvidence") and entry["path"].endswith(".pcap"):
+                  print(entry["path"])
+          ')
+          exit "$missing"
+
+      - name: No private key or secret committed in experiment
+        run: |
+          set -euo pipefail
+          # Scoped to this experiment so pre-existing repo fixtures outside
+          # the experiment (e.g. backend dev certs already on master) do not
+          # mask a newly leaked experiment key.
+          tracked_keys=$(git ls-files -- . | grep -Ei 'private.*\.pem|\.key$|(^|/)id_rsa$|(^|/)id_ed25519$|(^|/)id_ecdsa$' | grep -v 'authorizer-public' || true)
+          if [ -n "$tracked_keys" ]; then
+            printf '%s\n' "$tracked_keys"
+            echo "FATAL: private key material is tracked in the experiment" >&2
+            exit 1
+          fi
+          if git grep -n -E 'BEGIN (OPENSSH|RSA|EC|DSA|PGP) PRIVATE KEY' -- . ':!*.md'; then
+            echo "FATAL: private key PEM header found in tracked experiment files" >&2
+            exit 1
+          fi
+          echo "no private key material tracked in experiment"
+
+      - name: Summary and manifest consistency with result JSON
+        run: |
+          set -euo pipefail
+          python3 scripts/generate-evidence.py --run-id 20260802T083236Z-dc5e1e9fe4e7f429 >/dev/null
+          git diff --exit-code -- results/normalized/summary.json results/manifest.json results/SHA256SUMS

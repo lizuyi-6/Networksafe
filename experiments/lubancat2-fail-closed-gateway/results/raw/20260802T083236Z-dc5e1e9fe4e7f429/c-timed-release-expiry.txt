@@ -1,0 +1,21 @@
+TEST_START testId=c-timed-release-expiry runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:33:12Z stateBefore=isolated
+TEST_COMMAND release 6; probe from victim/agvictim0 with UPLINK capture; wait for PID1 expiry; repeat identical probe and capture
+<stdin>:54: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+released for 6s (leaseId=0a4e7342b0a84a9eb0e7e36569745f94 timer=ag-cat2-lease-0a4e7342b0a84a9eb0e7e36569745f94)
+PING 10.99.0.1 (10.99.0.1) from 10.99.0.2 agvictim0: 56(84) bytes of data.
+64 bytes from 10.99.0.1: icmp_seq=1 ttl=64 time=1.73 ms
+
+--- 10.99.0.1 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 1.728/1.728/1.728/0.000 ms
+uplinkCapturedPackets=6 uplinkCapturedBytes=527 markerCount=1
+PING 10.99.0.1 (10.99.0.1) from 10.99.0.2 agvictim0: 56(84) bytes of data.
+
+--- 10.99.0.1 ping statistics ---
+1 packets transmitted, 0 received, 100% packet loss, time 0ms
+
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+TimeoutError: timed out
+uplinkCapturedPackets=0 uplinkCapturedBytes=0 markerCount=0
+TEST_END testId=c-timed-release-expiry runId=20260802T083236Z-dc5e1e9fe4e7f429 status=PASSED exitCode=0 stateAfter=isolated reason=TIMED_RELEASE_AND_POST_EXPIRY_CAPTURE_CONFIRMED cleanupSucceeded=true

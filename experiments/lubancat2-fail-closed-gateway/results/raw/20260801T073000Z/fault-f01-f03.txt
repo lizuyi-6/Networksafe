@@ -1,0 +1,39 @@
+# FAULT F01/F02/F03 2026-08-01T07:29:22Z
+## F01: release 30, then kill -9 every ag helper, expect expiry STILL fires at ~30s
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+kex_exchange_identification: read: Connection reset by peer
+Connection reset by 192.168.100.2 port 22
+  state right after release: 
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+kex_exchange_identification: read: Connection reset by peer
+Connection reset by 192.168.100.2 port 22
+  state after kill -9:   (released is OK; PID1 timer owns expiry)
+  sleeping 33s...
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+  >>> state after lease window: isolated  (expect isolated)
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+Aug 01 15:29:22 lubancat aetherguard-cat2[17768]: action=release uid=0 result=ok seconds=30 lease_unit=ag-cat2-lease-1785569362753984554 server_if=usb1 uplink_if=usb2 gate=enslaved-forwarding
+Aug 01 15:29:56 lubancat aetherguard-cat2[17899]: action=expire uid=0 result=ok server_if=usb1 gate=not-enslaved
+## F02: release 25, then STOP the gateway service, expect expiry STILL fires
+kex_exchange_identification: read: Connection reset by peer
+Connection reset by 192.168.100.2 port 22
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+  state after release: isolated
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+service-stopped
+kex_exchange_identification: read: Connection reset by peer
+Connection reset by 192.168.100.2 port 22
+  state after stop:   (stop must NOT open or extend)
+  sleeping 28s...

@@ -1,0 +1,1 @@
+{"accepted": true, "counter": 7, "counterPersistedBeforeRelease": true, "note": "lease enforced by identified PID1 timer; see ag-cat2-gateway", "releasedSeconds": 20}

@@ -1,0 +1,56 @@
+{
+  "protocol": "aetherguard-cat2-fail-closed-gateway",
+  "version": 2,
+  "statusEnum": ["PASSED", "FAILED", "PARTIAL", "NOT_RUN", "BLOCKED"],
+  "evaluatedScope": {
+    "gateway": "physically separate LubanCat-2 SBC",
+    "dataPlane": "two logical USB RNDIS interfaces usb1 and usb2",
+    "protectedEndpoint": "single-path Linux network namespace victim/agvictim0",
+    "physicalEthernet": "NOT_RUN"
+  },
+  "gate": {
+    "primitive": "SERVER_IF bridge membership",
+    "transitionLock": "/run/aetherguard-cat2/transition.lock",
+    "leaseState": "/run/aetherguard-cat2/active-lease",
+    "releaseOrder": [
+      "gate_close",
+      "cancel_old_timer",
+      "clear_old_state",
+      "register_identified_timer",
+      "verify_timer_active",
+      "persist_prepared_lease",
+      "gate_open",
+      "verify_gate_and_timer",
+      "persist_active_lease"
+    ],
+    "reconcile": "closes any open state without one exact complete active lease"
+  },
+  "authorization": {
+    "algorithm": "ECDSA P-256 + SHA-256",
+    "canonicalJson": "project-defined UTF-8 sorted object keys compact separators no insignificant whitespace",
+    "counterLock": "/var/lib/aetherguard-cat2/authorizer-counter.lock",
+    "counterOrdering": "atomic file replace plus file and directory fsync before gateway release",
+    "releaseFailure": "counter remains consumed and gateway is forced isolated",
+    "hardwareAntiRollback": false
+  },
+  "requiredIsolationEvidence": [
+    "application probes fail from victim namespace",
+    "probe does not reach local upstream server",
+    "Cat2 UPLINK capture has zero victim packets and bytes",
+    "management remains available"
+  ],
+  "results": {
+    "perTest": "results/raw/<run-id>/<test-id>.txt and .json",
+    "schema": "schemas/test-result.schema.json",
+    "generator": "scripts/generate-evidence.py",
+    "validator": "scripts/validate-results.py"
+  },
+  "currentHardwareLimits": {
+    "f06": "PARTIAL unless persistent topology recovery and boot capture are rerun",
+    "f07": "NOT_RUN",
+    "powerCycle": "NOT_RUN without explicit user confirmation",
+    "performance": "NOT_RUN",
+    "vlanPhyGigabit": "NOT_RUN",
+    "independentPhysicalHost": "NOT_RUN"
+  }
+}

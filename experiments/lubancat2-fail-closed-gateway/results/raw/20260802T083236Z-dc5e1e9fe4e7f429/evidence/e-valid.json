@@ -1,0 +1,18 @@
+{
+  "payload": {
+    "version": 1,
+    "gatewayId": "cat2-gateway-01",
+    "action": "network_release",
+    "serverInterface": "usb1",
+    "uplinkInterface": "usb2",
+    "policyDigest": "e78767d513ec0d6d0cd4064210205cd627a3c0df08ebb29d8b096e6730804b55",
+    "nonce": "0e6a29c8f5f37b3b6697d20804a563f8",
+    "counter": 7,
+    "issuedAt": 1785659629,
+    "expiresAt": 1785659649,
+    "durationSeconds": 20
+  },
+  "canonicalSha256": "04c2cb9cf9dbee3836ac0143e9058569b5563c8a7b1378c6f440dbf0e26fced3",
+  "signatureAlgorithm": "ECDSA P-256 + SHA-256 (openssl dgst)",
+  "signatureBase64": "MEYCIQDtARUccTdgglfmlGVzj1fxpscJZaCGuYdGSmw5mUM9nAIhAMjwW6H5020G8MoTyk009dTHfeiCEYSwWInQ+pm/uzsf"
+}

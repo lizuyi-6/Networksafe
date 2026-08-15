@@ -1,0 +1,19 @@
+#!/bin/bash
+# The former whole-laptop bypass-disabling experiment is outside this USB run.
+set -Eeuo pipefail
+
+CONF=${AG_PROTECTED_CONF:-/etc/aetherguard-protected-host.conf}
+[[ -r "$CONF" ]] || {
+    echo "REFUSED reason=PHYSICAL_HOST_CONFIG_MISSING" >&2
+    exit 2
+}
+
+transport=$(awk -F= '$1 == "AG_TRANSPORT" {print $2}' "$CONF")
+if [[ "$transport" == "usb-rndis" ]]; then
+    echo "REFUSED reason=USE_USB_NAMESPACE_TOOLING path=transport/usb-rndis/host-setup.sh" >&2
+    exit 2
+fi
+
+echo "BLOCKED reason=INDEPENDENT_PHYSICAL_HOST_AND_CABLE_TEST_NOT_RUN" >&2
+echo "This script intentionally makes no WiFi, VPN, route, interface, or NetworkManager changes." >&2
+exit 5

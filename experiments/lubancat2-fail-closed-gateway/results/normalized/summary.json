@@ -1,0 +1,246 @@
+{
+  "claimBoundaries": {
+    "hardwareEnforcement": "NOT_CLAIMED: no relay, Secure Element, or Cat2-root resistance was evaluated",
+    "performance": "NOT_RUN unless dedicated measured results are present",
+    "physicalEthernet": "NOT_RUN unless a dedicated result says otherwise",
+    "physicalHostRoot": "NOT_RUN: the protected endpoint is a victim network namespace",
+    "reboot": "No persistent-topology claim unless dedicated reboot evidence is PASSED"
+  },
+  "counts": {
+    "BLOCKED": 0,
+    "FAILED": 0,
+    "NOT_RUN": 8,
+    "PARTIAL": 1,
+    "PASSED": 8
+  },
+  "evaluatedGatewayScope": "physically separate SBC gateway prototype using two logical USB RNDIS data interfaces",
+  "experiment": "aetherguard-cat2-fail-closed-gateway",
+  "gatewayCommits": [
+    "842b563d26336eef43f8bd278ce63aeaf56578f9"
+  ],
+  "generatedAt": "2026-08-02T08:34:36Z",
+  "protectedEndpointScope": "single-path Linux network namespace",
+  "sourceRunId": "20260802T083236Z-dc5e1e9fe4e7f429",
+  "tests": [
+    {
+      "category": "connectivity",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/a-usb-bridge-baseline.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-upstream-server.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-topology.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-uplink.pcap",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-uplink.pcap.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-released.observation.json"
+      ],
+      "exitCode": 0,
+      "reasonCode": "RELEASED_LOCAL_UPSTREAM_CONFIRMED",
+      "status": "PASSED",
+      "testId": "a-usb-bridge-baseline"
+    },
+    {
+      "category": "isolation",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/b-isolated-multiprotocol.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-positive-control-server.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-isolated-server.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-topology.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-positive-control.pcap",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-positive-control.pcap.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-positive-control.observation.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-uplink.pcap",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-uplink.pcap.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/b-isolated-multiprotocol-isolated.observation.json"
+      ],
+      "exitCode": 0,
+      "reasonCode": "ISOLATION_NO_UPLINK_ESCAPE",
+      "status": "PASSED",
+      "testId": "b-isolated-multiprotocol"
+    },
+    {
+      "category": "authorization",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/c-timed-release-expiry.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-during-server.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-topology.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-during.pcap",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-during.pcap.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-during-release.observation.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-after-server.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-after-expiry.pcap",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-after-expiry.pcap.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/c-timed-release-expiry-after-expiry.observation.json"
+      ],
+      "exitCode": 0,
+      "reasonCode": "TIMED_RELEASE_AND_POST_EXPIRY_CAPTURE_CONFIRMED",
+      "status": "PASSED",
+      "testId": "c-timed-release-expiry"
+    },
+    {
+      "category": "authorization",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/e-authorization-matrix.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-authorization-local-unit.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-valid.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-authorization-valid.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-authorization-replay.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-tampered-gateway-id.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-authorization-tampered-gateway-id.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-duration-boolean.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-authorization-duration-boolean.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-release-failure.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-authorization-release-failure-counter-consumed.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/e-authorization-failed-release-replay.txt"
+      ],
+      "exitCode": 0,
+      "reasonCode": "AUTHORIZATION_MATRIX_AND_COUNTER_ORDER_CONFIRMED",
+      "status": "PASSED",
+      "testId": "e-authorization-matrix"
+    },
+    {
+      "category": "topology",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/eth0-eth1-inline-gateway.txt"
+      ],
+      "exitCode": 4,
+      "reasonCode": "ETHERNET_CABLES_UNAVAILABLE",
+      "status": "NOT_RUN",
+      "testId": "eth0-eth1-inline-gateway"
+    },
+    {
+      "category": "performance",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/ethernet-gigabit-negotiation.txt"
+      ],
+      "exitCode": 4,
+      "reasonCode": "PHYSICAL_ETHERNET_NOT_AVAILABLE",
+      "status": "NOT_RUN",
+      "testId": "ethernet-gigabit-negotiation"
+    },
+    {
+      "category": "fault",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/ethernet-phy-link-flap.txt"
+      ],
+      "exitCode": 4,
+      "reasonCode": "PHYSICAL_ETHERNET_NOT_AVAILABLE",
+      "status": "NOT_RUN",
+      "testId": "ethernet-phy-link-flap"
+    },
+    {
+      "category": "topology",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/ethernet-vlan-forwarding.txt"
+      ],
+      "exitCode": 4,
+      "reasonCode": "PHYSICAL_ETHERNET_NOT_AVAILABLE",
+      "status": "NOT_RUN",
+      "testId": "ethernet-vlan-forwarding"
+    },
+    {
+      "category": "fault",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/f01-helper-crash-after-gate-open.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/f01-helper-crash-after-gate-open-status.json"
+      ],
+      "exitCode": 0,
+      "reasonCode": "HELPER_CRASH_RECONCILED_ISOLATED",
+      "status": "PASSED",
+      "testId": "f01-helper-crash-after-gate-open"
+    },
+    {
+      "category": "fault",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/f02-service-stop-lease-expiry.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/f02-service-stop-lease-expiry-status.json"
+      ],
+      "exitCode": 0,
+      "reasonCode": "SERVICE_STOP_DID_NOT_CANCEL_EXPIRY",
+      "status": "PASSED",
+      "testId": "f02-service-stop-lease-expiry"
+    },
+    {
+      "category": "fault",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/f03-service-restart-isolates.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/f03-service-restart-isolates-status.json"
+      ],
+      "exitCode": 0,
+      "reasonCode": "SERVICE_RESTART_FORCED_ISOLATION",
+      "status": "PASSED",
+      "testId": "f03-service-restart-isolates"
+    },
+    {
+      "category": "reboot",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/f06-post-reboot-topology.txt"
+      ],
+      "exitCode": 3,
+      "reasonCode": "REBOOT_REMOVED_RUNTIME_USB_TOPOLOGY",
+      "status": "PARTIAL",
+      "testId": "f06-post-reboot-topology"
+    },
+    {
+      "category": "reboot",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/f07-reboot-during-release.txt"
+      ],
+      "exitCode": 4,
+      "reasonCode": "USB_TOPOLOGY_PERSISTENCE_NOT_DEPLOYED",
+      "status": "NOT_RUN",
+      "testId": "f07-reboot-during-release"
+    },
+    {
+      "category": "reboot",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/f08-physical-power-cycle.txt"
+      ],
+      "exitCode": 4,
+      "reasonCode": "PHYSICAL_POWER_CYCLE_NOT_AUTHORIZED",
+      "status": "NOT_RUN",
+      "testId": "f08-physical-power-cycle"
+    },
+    {
+      "category": "isolation",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/independent-physical-host-root-attacker.txt"
+      ],
+      "exitCode": 4,
+      "reasonCode": "INDEPENDENT_PROTECTED_HOST_UNAVAILABLE",
+      "status": "NOT_RUN",
+      "testId": "independent-physical-host-root-attacker"
+    },
+    {
+      "category": "performance",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/perf-throughput-latency.txt"
+      ],
+      "exitCode": 4,
+      "reasonCode": "PERFORMANCE_PREREQUISITES_ABSENT",
+      "status": "NOT_RUN",
+      "testId": "perf-throughput-latency"
+    },
+    {
+      "category": "fault",
+      "evidenceFiles": [
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/repeated_release_timer_registration_failure_must_close_gate.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-topology.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-positive-control-server.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-positive-control.pcap",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-positive-control.pcap.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-positive-control.observation.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-status.json",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-post-failure-server.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-post-failure.pcap",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-post-failure.pcap.txt",
+        "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/repeated_release_timer_registration_failure_must_close_gate-post-failure.observation.json"
+      ],
+      "exitCode": 0,
+      "reasonCode": "REPEATED_RELEASE_TIMER_FAILURE_FAILS_CLOSED",
+      "status": "PASSED",
+      "testId": "repeated_release_timer_registration_failure_must_close_gate"
+    }
+  ],
+  "transports": [
+    "usb-rndis"
+  ]
+}

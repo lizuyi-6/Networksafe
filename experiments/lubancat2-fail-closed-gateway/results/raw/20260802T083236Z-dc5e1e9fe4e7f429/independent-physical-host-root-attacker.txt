@@ -1,0 +1,3 @@
+TEST_START testId=independent-physical-host-root-attacker runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:34:31Z stateBefore=isolated
+TEST_COMMAND NOT_RUN: independent compromised physical host
+TEST_END testId=independent-physical-host-root-attacker runId=20260802T083236Z-dc5e1e9fe4e7f429 status=NOT_RUN exitCode=4 stateAfter=isolated reason=INDEPENDENT_PROTECTED_HOST_UNAVAILABLE cleanupSucceeded=true

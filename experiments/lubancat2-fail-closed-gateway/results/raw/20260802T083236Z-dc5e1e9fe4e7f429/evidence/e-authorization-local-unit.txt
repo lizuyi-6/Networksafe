@@ -1,0 +1,21 @@
+test_concurrent_increasing_counters_serialize_in_order (__main__.AuthorizationProtocolTest.test_concurrent_increasing_counters_serialize_in_order) ... ok
+test_concurrent_submission_of_same_counter_accepts_only_one (__main__.AuthorizationProtocolTest.test_concurrent_submission_of_same_counter_accepts_only_one) ... ok
+test_counter_and_lock_aliases_are_rejected (__main__.AuthorizationProtocolTest.test_counter_and_lock_aliases_are_rejected) ... ok
+test_counter_replace_failure_prevents_gateway_release (__main__.AuthorizationProtocolTest.test_counter_replace_failure_prevents_gateway_release) ... ok
+test_directory_fsync_failure_returns_error_without_release (__main__.AuthorizationProtocolTest.test_directory_fsync_failure_returns_error_without_release) ... ok
+test_empty_invalid_and_modified_signatures_reject (__main__.AuthorizationProtocolTest.test_empty_invalid_and_modified_signatures_reject) ... ok
+test_expired_and_future_authorizations_reject (__main__.AuthorizationProtocolTest.test_expired_and_future_authorizations_reject) ... ok
+test_expiry_after_counter_persistence_consumes_without_release (__main__.AuthorizationProtocolTest.test_expiry_after_counter_persistence_consumes_without_release) ... ok
+test_golden_vector_canonical_bytes_and_digest (__main__.AuthorizationProtocolTest.test_golden_vector_canonical_bytes_and_digest) ... ok
+test_malformed_json_non_finite_values_and_duplicate_keys_reject (__main__.AuthorizationProtocolTest.test_malformed_json_non_finite_values_and_duplicate_keys_reject) ... ok
+test_release_failure_consumes_counter_and_forces_isolation (__main__.AuthorizationProtocolTest.test_release_failure_consumes_counter_and_forces_isolation) ... ok
+test_replay_equal_and_rollback_counters_reject (__main__.AuthorizationProtocolTest.test_replay_equal_and_rollback_counters_reject) ... ok
+test_signer_rejects_non_p256_private_key (__main__.AuthorizationProtocolTest.test_signer_rejects_non_p256_private_key) ... ok
+test_strict_integer_fields_reject_bool_float_string_and_out_of_range (__main__.AuthorizationProtocolTest.test_strict_integer_fields_reject_bool_float_string_and_out_of_range) ... ok
+test_tampering_each_bound_payload_field_breaks_signature (__main__.AuthorizationProtocolTest.test_tampering_each_bound_payload_field_breaks_signature) ... ok
+test_valid_authorization_persists_counter_before_release (__main__.AuthorizationProtocolTest.test_valid_authorization_persists_counter_before_release) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.524s
+
+OK

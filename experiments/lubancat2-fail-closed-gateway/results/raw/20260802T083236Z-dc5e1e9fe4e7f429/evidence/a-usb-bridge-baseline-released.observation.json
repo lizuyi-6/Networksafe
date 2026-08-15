@@ -1,0 +1,31 @@
+{
+  "capture": {
+    "byteCount": 742,
+    "exitCode": 124,
+    "interface": "usb2",
+    "markerCount": 2,
+    "packetCount": 8,
+    "pcapPath": "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-uplink.pcap",
+    "ready": true,
+    "textPath": "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-uplink.pcap.txt",
+    "uplinkInterface": "usb2"
+  },
+  "expectation": "RELEASED_REACHABLE",
+  "marker": "AGPROBE-20260802T083236Z-dc5e1e9fe4e7f429-a-usb-bridge-baseline-1785659558166886381",
+  "phase": "released",
+  "resultKind": "traffic-observation",
+  "runId": "20260802T083236Z-dc5e1e9fe4e7f429",
+  "schemaVersion": 1,
+  "server": {
+    "exitCode": 0,
+    "logPath": "results/raw/20260802T083236Z-dc5e1e9fe4e7f429/evidence/a-usb-bridge-baseline-upstream-server.txt",
+    "markerCount": 2,
+    "ready": true
+  },
+  "source": {
+    "interface": "agvictim0",
+    "mac": "02:11:11:11:11:01",
+    "namespace": "victim"
+  },
+  "testId": "a-usb-bridge-baseline"
+}

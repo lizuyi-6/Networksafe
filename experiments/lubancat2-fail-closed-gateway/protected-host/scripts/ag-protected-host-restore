@@ -1,0 +1,11 @@
+#!/bin/bash
+# Safe compatibility restore: never guesses which interfaces or profiles to alter.
+set -Eeuo pipefail
+
+while IFS= read -r timer_unit; do
+    [[ -n "$timer_unit" ]] || continue
+    systemctl stop "$timer_unit" >/dev/null 2>&1 || true
+done < <(systemctl list-units --type=timer --all --no-legend --no-pager \
+    'ag-protected-restore-*.timer' 2>/dev/null | awk '/^ag-protected-restore-.*[.]timer/ {print $1}')
+
+echo "No current physical-host experiment state is supported; no interface, route, VPN, WiFi, or NetworkManager profile was modified."

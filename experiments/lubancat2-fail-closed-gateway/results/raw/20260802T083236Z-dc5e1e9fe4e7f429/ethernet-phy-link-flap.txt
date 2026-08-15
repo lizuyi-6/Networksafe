@@ -1,0 +1,3 @@
+TEST_START testId=ethernet-phy-link-flap runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:34:29Z stateBefore=isolated
+TEST_COMMAND NOT_RUN: physical link flap
+TEST_END testId=ethernet-phy-link-flap runId=20260802T083236Z-dc5e1e9fe4e7f429 status=NOT_RUN exitCode=4 stateAfter=isolated reason=PHYSICAL_ETHERNET_NOT_AVAILABLE cleanupSucceeded=true

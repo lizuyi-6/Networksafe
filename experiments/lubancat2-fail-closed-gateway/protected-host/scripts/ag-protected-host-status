@@ -1,0 +1,70 @@
+#!/bin/bash
+# ag-protected-host-status - machine-readable status of the protected host.
+# Output: JSON on stdout. No configuration is changed by this command.
+set -Eeuo pipefail
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CONF=${AG_PROTECTED_CONF:-/etc/aetherguard-protected-host.conf}
+[[ -r "$CONF" ]] || { echo '{"error":"physical host config missing","experimentReady":false}'; exit 1; }
+PROTECTED_IF=$(awk -F= '$1 == "AG_PROTECTED_IF" {print $2}' "$CONF")
+TRANSPORT=$(awk -F= '$1 == "AG_TRANSPORT" {print $2}' "$CONF")
+[[ "$PROTECTED_IF" =~ ^[A-Za-z0-9_.:-]+$ ]] || { echo '{"error":"protected interface invalid","experimentReady":false}'; exit 1; }
+
+python3 - "$PROTECTED_IF" "$TRANSPORT" <<'PYEOF'
+import json, subprocess, sys
+protected_interface = sys.argv[1]
+transport = sys.argv[2]
+
+def run(cmd):
+    try:
+        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return ""
+
+links = json.loads(run(["ip", "-j", "link", "show"]) or "[]")
+addrs = json.loads(run(["ip", "-j", "addr", "show"]) or "[]")
+routes_v4 = run(["ip", "-j", "route", "show", "default"])
+routes_v6 = run(["ip", "-j", "-6", "route", "show", "default"])
+defaults = (json.loads(routes_v4) if routes_v4 else []) + (json.loads(routes_v6) if routes_v6 else [])
+
+addr_map = {}
+for a in addrs:
+    addr_map[a["ifname"]] = [i.get("local") for i in a.get("addr_info", [])]
+
+ifaces = []
+for link in links:
+    name = link["ifname"]
+    ifaces.append({
+        "name": name,
+        "mac": link.get("address"),
+        "operstate": link.get("operstate"),
+        "addresses": addr_map.get(name, []),
+    })
+
+wifi = run(["nmcli", "-t", "-f", "DEVICE,TYPE,STATE", "device"])
+wifi_active = False
+for wifi_line in wifi.splitlines():
+    wifi_fields = wifi_line.split(":")
+    if len(wifi_fields) > 2 and wifi_fields[1] == "wifi" and wifi_fields[2] in ("connected", "100"):
+        wifi_active = True
+tunnels = [i["name"] for i in ifaces if i["name"] not in ("lo", protected_interface)
+           and not i["name"].startswith(("wl", "en", "eth"))]
+
+protected_defaults = [r for r in defaults if r.get("dev") == protected_interface]
+bypass_defaults = [r.get("dev") for r in defaults if r.get("dev") != protected_interface]
+experiment_ready = transport == "ethernet" and bool(protected_defaults) and not bypass_defaults and not wifi_active and not tunnels
+
+print(json.dumps({
+    "hostname": run(["hostname"]),
+    "timestamp": subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"]).decode().strip(),
+    "interfaces": ifaces,
+    "defaultRoutes": defaults,
+    "transport": transport,
+    "protectedInterface": protected_interface,
+    "wifiActive": wifi_active,
+    "tunnelOrBypassInterfaces": tunnels,
+    "bypassDefaultRouteDevices": bypass_defaults,
+    "cat2NeighborObservation": run(["ip", "neigh", "show", "dev", protected_interface]).splitlines()[:5],
+    "dnsServers": [line.split()[1] for line in open("/etc/resolv.conf") if line.startswith("nameserver ")],
+    "experimentReady": experiment_ready,
+}, indent=2))
+PYEOF

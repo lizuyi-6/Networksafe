@@ -1,0 +1,60 @@
+{
+  "role": "cat2-gateway",
+  "collectedAt": "2026-08-01T03:41:14Z",
+  "collector": "ssh root@192.168.100.2 (usb0 logical RNDIS management)",
+  "hostname": "lubancat",
+  "identificationEvidence": {
+    "cpuinfoHardware": "EmbedFire LubanCat-2",
+    "soc": "Rockchip RK3568 (4x Cortex-A55)",
+    "architecture": "aarch64",
+    "note": "identified by /proc/cpuinfo Hardware field and aarch64 arch, not by hostname"
+  },
+  "os": "Debian GNU/Linux 10 (buster)",
+  "kernel": "4.19.232",
+  "kernelBuild": "#19 SMP Mon Jul 1 13:35:05 CST 2024",
+  "memoryTotal": "1.9Gi",
+  "networkManager": {
+    "NetworkManager": "active (manages usb0 via profile usb0-static; eth0/eth1 unmanaged, no profiles)",
+    "systemd-networkd": "reports active but manages nothing (no files in /etc/systemd/network)",
+    "networking-ifupdown": "reports active; /etc/network/interfaces only sources empty interfaces.d"
+  },
+  "nftables": {
+    "userspaceVersion": null,
+    "userspaceInstalled": false,
+    "kernelConfig": {
+      "CONFIG_NF_TABLES": "y",
+      "CONFIG_NF_TABLES_BRIDGE": "n (NOT BUILT - bridge-family nftables unavailable)",
+      "CONFIG_NF_TABLES_SET": "n (NOT BUILT - nft sets with timeouts unavailable)",
+      "CONFIG_NF_TABLES_INET": "y",
+      "CONFIG_NF_TABLES_NETDEV": "y",
+      "CONFIG_NF_TABLES_IPV4": "y",
+      "CONFIG_NF_TABLES_IPV6": "y",
+      "CONFIG_NF_TABLES_ARP": "n",
+      "CONFIG_BRIDGE": "y",
+      "CONFIG_BRIDGE_NETFILTER": "y",
+      "CONFIG_NET_CLS_BPF": "n (NOT BUILT - tc BPF classifiers unavailable)",
+      "CONFIG_BPF_SYSCALL": "y",
+      "CONFIG_BRIDGE_EBTABLES": "n (NOT BUILT - ebtables unavailable)"
+    },
+    "designConsequence": "no evaluated kernel-timer packet-gating primitive exists on this kernel; this prototype gates by SERVER_IF bridge membership and an identified PID1-scheduled lease expiry"
+  },
+  "iproute2Version": "iproute2-ss190107",
+  "python3Version": "3.7.3",
+  "interfaces": [
+    {"name": "eth0", "mac": "7a:6c:05:86:0a:2f", "driver": "st_gmac", "state": "DOWN/NO-CARRIER", "addresses": [], "physical": true},
+    {"name": "eth1", "mac": "7e:6c:05:86:0a:2f", "driver": "st_gmac", "state": "DOWN/NO-CARRIER", "addresses": [], "physical": true},
+    {"name": "usb0", "mac": "4a:d5:b5:43:01:90", "driver": "RNDIS gadget (USB)", "state": "UP", "addresses": ["192.168.100.2/24", "fe80::66d8:7f2:3d19:c2c6/64"], "physical": false, "role": "logical management lifeline outside agbr0; shares the composite USB gadget and MUST NOT be bridged or filtered"},
+    {"name": "lo", "mac": "00:00:00:00:00:00", "state": "UNKNOWN", "addresses": ["127.0.0.1/8"], "physical": false}
+  ],
+  "currentDefaultRoute": null,
+  "currentRoutes": ["192.168.100.0/24 dev usb0 src 192.168.100.2"],
+  "currentSshChannel": {
+    "peerAddress": "192.168.100.2",
+    "peerPort": 22,
+    "viaInterface": "usb0",
+    "clientAddress": "192.168.100.1",
+    "independentOfEthernetPorts": true
+  },
+  "repoCommitAtCollection": "9cbd9fadee4f7eeeafa93e0794af20f4847215b3",
+  "preExistingWorkload": "ReactorOS (reactor-edge-daemon :8000, reactor-os-chromium kiosk, reactor-sim-bridge) - production workload on this board; all gateway changes must not disturb usb0 or these services"
+}

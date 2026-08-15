@@ -1,0 +1,7 @@
+# TEST E authorization 2026-08-01T04:03:54Z
+## case: valid authorization (expect RC=0, release happens)
+scp: stat local "/tmp/ag-auth-valid.json": No such file or directory
+{"accepted": false, "reason": "malformed authorization document: [Errno 2] No such file or directory: '/tmp/auth-under-test.json'"}
+VERIFIER_RC=2
+## tamper cases (expect RC=2 reject for all)
+tests/authorization/test-e-authorization.sh: 行 33: name: 未绑定的变量

@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AetherGuard independently recomputable traffic observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "resultKind",
+    "schemaVersion",
+    "runId",
+    "testId",
+    "phase",
+    "expectation",
+    "marker",
+    "source",
+    "capture",
+    "server"
+  ],
+  "properties": {
+    "resultKind": {"const": "traffic-observation"},
+    "schemaVersion": {"const": 1},
+    "runId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "testId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "phase": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
+    "expectation": {"enum": ["RELEASED_REACHABLE", "ISOLATED_BLOCKED"]},
+    "marker": {"type": "string", "pattern": "^AGPROBE-[A-Za-z0-9_.-]+$", "maxLength": 512},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "interface", "mac"],
+      "properties": {
+        "namespace": {"const": "victim"},
+        "interface": {"const": "agvictim0"},
+        "mac": {"const": "02:11:11:11:11:01"}
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interface",
+        "uplinkInterface",
+        "ready",
+        "exitCode",
+        "packetCount",
+        "byteCount",
+        "markerCount",
+        "pcapPath",
+        "textPath"
+      ],
+      "properties": {
+        "interface": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]+$"},
+        "uplinkInterface": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]+$"},
+        "ready": {"type": "boolean"},
+        "exitCode": {"type": "integer", "minimum": 0, "maximum": 255},
+        "packetCount": {"type": "integer", "minimum": 0},
+        "byteCount": {"type": "integer", "minimum": 0},
+        "markerCount": {"type": "integer", "minimum": 0},
+        "pcapPath": {"type": "string", "minLength": 1},
+        "textPath": {"type": "string", "minLength": 1}
+      }
+    },
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ready", "exitCode", "markerCount", "logPath"],
+      "properties": {
+        "ready": {"type": "boolean"},
+        "exitCode": {"type": "integer", "minimum": 0, "maximum": 255},
+        "markerCount": {"type": "integer", "minimum": 0},
+        "logPath": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

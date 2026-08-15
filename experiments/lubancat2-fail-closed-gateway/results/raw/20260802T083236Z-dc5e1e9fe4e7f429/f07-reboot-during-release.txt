@@ -1,0 +1,3 @@
+TEST_START testId=f07-reboot-during-release runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:34:23Z stateBefore=isolated
+TEST_COMMAND NOT_RUN: reboot during active release
+TEST_END testId=f07-reboot-during-release runId=20260802T083236Z-dc5e1e9fe4e7f429 status=NOT_RUN exitCode=4 stateAfter=isolated reason=USB_TOPOLOGY_PERSISTENCE_NOT_DEPLOYED cleanupSucceeded=true

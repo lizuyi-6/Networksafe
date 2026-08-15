@@ -1,0 +1,22 @@
+{
+  "activeLeaseId": null,
+  "activeLeaseTimerCount": 0,
+  "bridgeInterface": "agbr0",
+  "bridgeUp": true,
+  "faultReason": null,
+  "gatePrimitive": "bridge-membership (kernel) + identified PID1 transient lease timer",
+  "leaseStatePhase": null,
+  "leaseTimerActive": false,
+  "managementAvailable": true,
+  "managementInterface": "usb0",
+  "policyDigest": "e78767d513ec0d6d0cd4064210205cd627a3c0df08ebb29d8b096e6730804b55",
+  "releaseExpiresAt": null,
+  "serverGateKernel": "not-enslaved",
+  "serverInterface": "usb1",
+  "serverInterfaceExists": true,
+  "state": "isolated",
+  "timestamp": "2026-08-02T08:33:58Z",
+  "topologyReady": true,
+  "uplinkInterface": "usb2",
+  "uplinkInterfaceExists": true
+}

@@ -1,0 +1,3 @@
+TEST_START testId=perf-throughput-latency runId=20260802T083236Z-dc5e1e9fe4e7f429 startedAt=2026-08-02T08:34:33Z stateBefore=isolated
+TEST_COMMAND NOT_RUN: requires independent iperf3 peer and physical Ethernet transport
+TEST_END testId=perf-throughput-latency runId=20260802T083236Z-dc5e1e9fe4e7f429 status=NOT_RUN exitCode=4 stateAfter=isolated reason=PERFORMANCE_PREREQUISITES_ABSENT cleanupSucceeded=true
