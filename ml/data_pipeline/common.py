@@ -109,6 +109,23 @@ SENSITIVE_PATTERNS = (
     ),
     (re.compile(r"(?i)Bearer\s+[A-Za-z0-9._~+/=-]{12,}"), "Bearer [REDACTED]"),
     (re.compile(r"[A-Za-z0-9._%+-]+@(?!example\.(?:com|org|invalid)\b)[A-Za-z0-9.-]+\.[A-Za-z]{2,}"), "user@example.com"),
+    # ML-009 (audit 2026-08): value-shape blind spot. The generic key=/"key": shapes
+    # above never fire on provider keys whose literal VALUE is the secret (no
+    # recognizable key name adjacent). Mirror the v0.3 deterministic-check
+    # _SECRET_PATTERNS here so the v0.2 redactor is not solely dependent on the
+    # v0.3 gate as a backstop. Order: most specific first.
+    (re.compile(r"-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----[A-Za-z0-9+/=\s]+?-----END [A-Za-z ]*PRIVATE KEY-----"), "[REDACTED:private_key]"),
+    (re.compile(r"\bark-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[0-9a-fA-Za-z]+\b"), "[REDACTED:ark_key]"),
+    (re.compile(r"\bAKIA[0-9A-Z]{16}\b"), "[REDACTED:aws_access_key]"),
+    (re.compile(r"(?i)\baws_secret_access_key\s*[=:]\s*[A-Za-z0-9/+=]{40}\b"), "aws_secret_access_key=[REDACTED:aws_secret]"),
+    (re.compile(r"\bgh[pousr]_[A-Za-z0-9]{36,}\b"), "[REDACTED:github_pat]"),
+    (re.compile(r"\bglpat-[A-Za-z0-9_-]{20,}\b"), "[REDACTED:gitlab_pat]"),
+    (re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b"), "[REDACTED:slack_token]"),
+    (re.compile(r"\b(?:sk|rk)_live_[A-Za-z0-9]{24,}\b"), "[REDACTED:stripe_live]"),
+    (re.compile(r"\bsk-ant-[A-Za-z0-9_-]{50,}\b"), "[REDACTED:anthropic_key]"),
+    (re.compile(r"\bsk-(?:proj-)?[A-Za-z0-9]{40,}\b"), "[REDACTED:openai_key]"),
+    (re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"), "[REDACTED:google_api]"),
+    (re.compile(r"(?i)\bya29\.[A-Za-z0-9_-]{20,}\b"), "[REDACTED:google_oauth]"),
 )
 
 

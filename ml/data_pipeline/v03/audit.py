@@ -313,5 +313,20 @@ class AuditLog:
                     n += 1
         return n
 
+    def events(self):
+        """Yield parsed event dicts in chain order.
+
+        ML-005 (audit 2026-08): consumers (finalize spec-hash binding) need the
+        event payloads, not just the tip. The chain was already verified at
+        load (fail-closed), so a plain ordered replay is safe here.
+        """
+        if not self.path.exists():
+            return
+        with self.path.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    yield json.loads(line)
+
 
 __all__ = ["AuditLog", "AuditIntegrityError"]

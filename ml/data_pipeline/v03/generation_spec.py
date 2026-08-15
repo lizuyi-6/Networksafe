@@ -141,6 +141,12 @@ class GenerationSpec:
     # constraints the generator must honor
     requiredSemanticProperties: list[str] = field(default_factory=list)
     forbiddenShortcuts: list[str] = field(default_factory=list)
+    # deterministic per-sample seed handed to the generator. A-specs derive it
+    # from (sampleId, verdict, attackFamily, generationType, i); pair B-specs
+    # RE-derive over (sampleId, verdict, attackFamily, difficulty) after
+    # pair-linking so B realizes a distinct-but-aligned request. Both formulas
+    # are fixed and seedless (reproducibility > secrecy). Part of the immutable
+    # hash core, so specHash always covers the seed actually used.
     generatorSeed: str = ""
     provenance: Provenance = field(default_factory=Provenance)
     # computed (NOT part of immutable hash)

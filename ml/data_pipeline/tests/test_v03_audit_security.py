@@ -4,7 +4,9 @@ Covers:
 - ML-004: audit chain truncation / rewrite detection (sealed tip snapshot +
   HMAC), torn-tail repair, fail-closed resume.
 - ML-002: bounded env ints in config.
+- ML-005: specHash keyed-chain binding at finalize.
 - ML-008: fetch_public_sources containment check.
+- ML-009: v0.2 redaction provider-key value shapes.
 - ML-012: provider token budget gate.
 
 Run: py -3 -m pytest ml/data_pipeline/tests/test_v03_audit_security.py -q
@@ -22,7 +24,9 @@ sys.path.insert(0, str(PIPELINE_DIR))
 sys.path.insert(0, str(PIPELINE_DIR / "v03"))
 
 from v03.audit import AuditLog, AuditIntegrityError  # noqa: E402
+from v03.generation_spec import GenerationSpec  # noqa: E402
 import fetch_public_sources  # noqa: E402
+from common import redact_text  # noqa: E402
 
 
 def _new_log(tmp: Path) -> AuditLog:
@@ -223,3 +227,107 @@ def test_token_budget_gate(monkeypatch):
     del os.environ["ARK_TOTAL_TOKEN_BUDGET"]
     importlib.reload(provider)
     assert provider._budget_total is None  # unset -> unlimited (legacy)
+
+
+# ---- ML-005: specHash keyed-chain binding --------------------------------------
+
+
+def _make_accepted_record(sid: str):
+    spec = GenerationSpec(sampleId=sid)
+    return spec, {
+        "sampleId": sid,
+        "specHash": spec.specHash,
+        "spec": spec.to_dict(),
+    }
+
+
+def test_spechash_binding_happy_path():
+    with tempfile.TemporaryDirectory() as d:
+        log = AuditLog(Path(d) / "audit.jsonl")
+        spec_a, rec_a = _make_accepted_record("sa1")
+        spec_b, rec_b = _make_accepted_record("sa2")
+        log.append(event="accept", sampleId="sa1", specHash=spec_a.specHash)
+        log.append(event="accept", sampleId="sa2", specHash=spec_b.specHash)
+
+        from v03 import finalize as fin
+        out = fin._spechash_binding_violations([rec_a, rec_b], log)
+        assert out["spechashViolations"] == 0
+        assert out["spechashChainBound"] == 2
+
+
+def test_spechash_rewrite_with_recomputed_unkeyed_hash_is_caught():
+    """The ML-005 core: rewriting a spec AND recomputing its (unkeyed) hash
+    stays self-consistent but cannot match the keyed, sealed chain."""
+    with tempfile.TemporaryDirectory() as d:
+        log = AuditLog(Path(d) / "audit.jsonl")
+        spec, rec = _make_accepted_record("sa1")
+        log.append(event="accept", sampleId="sa1", specHash=spec.specHash)
+
+        tampered_spec = GenerationSpec.from_dict(rec["spec"])
+        tampered_spec.targetHost = "evil.example.net"  # attacker edit
+        tampered_spec.specHash = tampered_spec.compute_hash()  # recompute unkeyed hash
+        rec["spec"] = tampered_spec.to_dict()
+        rec["specHash"] = tampered_spec.specHash
+
+        from v03 import finalize as fin
+        out = fin._spechash_binding_violations([rec], log)
+        assert out["spechashSelfConsistent"] == 1      # unkeyed hash matches...
+        assert out["spechashChainBound"] == 0          # ...but the chain disagrees
+        assert out["spechashViolations"] == 1
+
+
+def test_spechash_plain_payload_edit_without_recompute_is_caught():
+    with tempfile.TemporaryDirectory() as d:
+        log = AuditLog(Path(d) / "audit.jsonl")
+        spec, rec = _make_accepted_record("sa1")
+        log.append(event="accept", sampleId="sa1", specHash=spec.specHash)
+        rec["spec"]["targetHost"] = "evil.example.net"  # hash NOT recomputed
+
+        from v03 import finalize as fin
+        out = fin._spechash_binding_violations([rec], log)
+        assert out["spechashSelfConsistent"] == 0
+        assert out["spechashViolations"] == 1
+
+
+def test_spechash_ancient_accept_events_without_hash_do_not_bind():
+    with tempfile.TemporaryDirectory() as d:
+        log = AuditLog(Path(d) / "audit.jsonl")
+        spec, rec = _make_accepted_record("old1")
+        log.append(event="accept", sampleId="old1")  # no specHash field
+
+        from v03 import finalize as fin
+        out = fin._spechash_binding_violations([rec], log)
+        assert out["spechashViolations"] == 0  # backward compatible: unbound, not failed
+        assert out["spechashChainBound"] == 0
+
+
+# ---- ML-009: v0.2 redaction provider-key coverage -------------------------------
+
+
+def test_redact_covers_provider_key_value_shapes():
+    cases = [
+        ("AKIAIOSFODNN7EXAMPLE", "aws_access_key"),
+        ("ghp_" + "a" * 36, "github_pat"),
+        ("glpat-" + "x" * 24, "gitlab_pat"),
+        ("xoxb-" + "1234567890abcdef", "slack_token"),
+        ("sk_live_" + "a" * 24, "stripe_live"),
+        ("sk-ant-" + "b" * 50, "anthropic_key"),
+        ("sk-" + "c" * 40, "openai_key"),
+        ("AIza" + "d" * 35, "google_api"),
+        ("ya29." + "e" * 20, "google_oauth"),
+    ]
+    for secret, name in cases:
+        redacted, count = redact_text(f"leak: {secret} end")
+        assert f"[REDACTED:{name}]" in redacted, f"{name} not redacted: {redacted}"
+        assert count >= 1
+
+
+def test_redact_covers_private_key_block_and_legacy_shapes():
+    pk = "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA\n-----END RSA PRIVATE KEY-----"
+    redacted, count = redact_text(pk)
+    assert "[REDACTED:private_key]" in redacted and "MIIEow" not in redacted
+    # legacy generic shapes still work (no regression)
+    redacted, count = redact_text("password=hunter2")
+    assert redacted == "password=[REDACTED]" and count == 1
+    redacted, count = redact_text('{"apiKey": "abc"}')
+    assert redacted == '{"apiKey": "[REDACTED]"}' and count == 1
