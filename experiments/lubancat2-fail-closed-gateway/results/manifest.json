@@ -1,5 +1,5 @@
 {
-  "fileCount": 46,
+  "fileCount": 45,
   "files": [
     {
       "bytes": 6625,
@@ -258,14 +258,6 @@
       "sha256": "e6f5be6d10478dd60d8ee3e21127e3d918a1836d171023c9a9d0a05d5cb81ffa"
     },
     {
-      "bytes": 430,
-      "classification": "primary",
-      "note": "completed primary campaign",
-      "path": "results/raw/20250824T082729Z-8lctnuk7/independent-physical-host-attacker.txt",
-      "primaryEvidence": true,
-      "sha256": "a290bd2a93889614574da8f907a3dffe9f34af9f637fafb5e81b506d51257e36"
-    },
-    {
       "bytes": 1567,
       "classification": "primary",
       "note": "completed primary campaign",
@@ -298,12 +290,12 @@
       "sha256": "dda3832b7582899c72bff914d9042fb59d678c51d9fe7fe140528eb4afd9d2cc"
     },
     {
-      "bytes": 408,
+      "bytes": 409,
       "classification": "primary",
       "note": "completed primary campaign",
       "path": "results/raw/20250824T082729Z-8lctnuk7/perf-throughput-latency.txt",
       "primaryEvidence": true,
-      "sha256": "bde1cc4279599cb7b8a40b06d9693be4731a2775aa22c21a19ef82e681641c06"
+      "sha256": "ea686aeb1a80af06e4abc16f39cc9a38ebc48ba09070e3ca854d6027f4f0c98a"
     },
     {
       "bytes": 1648,
@@ -314,12 +306,12 @@
       "sha256": "34ad49eb405c250303a417ab72fbe5ed03503c103293b979db7acb7f12615501"
     },
     {
-      "bytes": 480,
+      "bytes": 605,
       "classification": "primary",
       "note": "completed primary campaign",
       "path": "results/raw/20250824T082729Z-8lctnuk7/repeated_release_timer_registration_failure_must_close_gate.txt",
       "primaryEvidence": true,
-      "sha256": "265274a5c228920b4b6b4db09a76c07e75e714c4d3a5bf3cab9603115a836976"
+      "sha256": "6a4d8129ffe5ba9217d28703b32283c50d994a709768eb79c02007713a73bc44"
     },
     {
       "bytes": 2989,
