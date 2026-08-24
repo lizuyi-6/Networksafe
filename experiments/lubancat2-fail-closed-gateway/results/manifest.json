@@ -1,5 +1,5 @@
 {
-  "fileCount": 45,
+  "fileCount": 49,
   "files": [
     {
       "bytes": 6625,
@@ -146,6 +146,38 @@
       "sha256": "d40cbd97d43b976b3a53d2b557fe4f69c256dbc8f73bb8c7616b86a0ad2e96a2"
     },
     {
+      "bytes": 124,
+      "classification": "primary",
+      "note": "completed primary campaign",
+      "path": "results/raw/20250824T082729Z-8lctnuk7/evidence/a-usb-bridge-baseline-upstream-server.txt",
+      "primaryEvidence": true,
+      "sha256": "e04f2737426457790ad16492f30d6bc6dfd0f2734591000a580e83c783394b00"
+    },
+    {
+      "bytes": 83,
+      "classification": "primary",
+      "note": "completed primary campaign",
+      "path": "results/raw/20250824T082729Z-8lctnuk7/evidence/b-isolated-multiprotocol-isolated-server.txt",
+      "primaryEvidence": true,
+      "sha256": "7d24af21e7b0a18e2003f9ef026466bf1ed7ca244cbe9dd86b793f73dd10ec44"
+    },
+    {
+      "bytes": 83,
+      "classification": "primary",
+      "note": "completed primary campaign",
+      "path": "results/raw/20250824T082729Z-8lctnuk7/evidence/b-isolated-multiprotocol-positive-control-server.txt",
+      "primaryEvidence": true,
+      "sha256": "0a3bd0caeb1b537d977e600924d2ade85f569a42bd0ff6a225c2c387c61e22a9"
+    },
+    {
+      "bytes": 86,
+      "classification": "primary",
+      "note": "completed primary campaign",
+      "path": "results/raw/20250824T082729Z-8lctnuk7/evidence/c-timed-release-expiry-during-server.txt",
+      "primaryEvidence": true,
+      "sha256": "a6fae21fb6a6953176ca7fb3932974d847ed917833c82c3f50886f36ce13854a"
+    },
+    {
       "bytes": 1532,
       "classification": "primary",
       "note": "completed primary campaign",
@@ -290,12 +322,12 @@
       "sha256": "dda3832b7582899c72bff914d9042fb59d678c51d9fe7fe140528eb4afd9d2cc"
     },
     {
-      "bytes": 409,
+      "bytes": 97,
       "classification": "primary",
       "note": "completed primary campaign",
       "path": "results/raw/20250824T082729Z-8lctnuk7/perf-throughput-latency.txt",
       "primaryEvidence": true,
-      "sha256": "ea686aeb1a80af06e4abc16f39cc9a38ebc48ba09070e3ca854d6027f4f0c98a"
+      "sha256": "36961ff0b55d2d8e74cd3c2370ec6dada65aea3894edda1ac0dee5fefd2c5b71"
     },
     {
       "bytes": 1648,
@@ -306,12 +338,12 @@
       "sha256": "34ad49eb405c250303a417ab72fbe5ed03503c103293b979db7acb7f12615501"
     },
     {
-      "bytes": 605,
+      "bytes": 96,
       "classification": "primary",
       "note": "completed primary campaign",
       "path": "results/raw/20250824T082729Z-8lctnuk7/repeated_release_timer_registration_failure_must_close_gate.txt",
       "primaryEvidence": true,
-      "sha256": "6a4d8129ffe5ba9217d28703b32283c50d994a709768eb79c02007713a73bc44"
+      "sha256": "6e42aa59b92f703d40f6ce4cffc7cc37b536e6c5e509ee613fcd78c09cd168d2"
     },
     {
       "bytes": 2989,
