@@ -1,3 +1,43 @@
-TEST_START testId=eth0-eth1-inline-gateway runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:40Z stateBefore=isolated
-TEST_COMMAND NOT_RUN: Cat2 physical Ethernet data plane
-TEST_END testId=eth0-eth1-inline-gateway runId=20260802T095611Z-b7940f333db02e89 status=NOT_RUN exitCode=4 stateAfter=isolated reason=ETHERNET_CABLES_UNAVAILABLE cleanupSucceeded=true
+=== eth0-eth1 Inline Gateway Test ===
+Run ID: 20250824T082729Z-8lctnuk7
+Test ID: eth0-eth1-inline-gateway
+Transport: physical-ethernet
+Status: BLOCKED
+
+HARDWARE CONSTRAINT (confirmed):
+  Operator laptop has ONLY ONE physical Ethernet port (eno1).
+  
+  Current wiring:
+    eno1 (laptop) <--Ethernet cable--> LubanCat-2 eth1 (UPLINK_IF)
+  
+  LubanCat-2 eth0 (SERVER_IF) has NO cable and NO physical Layer-2 peer.
+  
+  The victim namespace (10.99.0.2) runs on the operator laptop.
+  agbr0-host bridge on the laptop connects aguplink0 <-> eno1.
+  This means victim traffic reaches LubanCat-2 eth1 via Layer-2.
+  
+  However eth0 (SERVER_IF, the gate-controlled interface) has no peer.
+  Without a second physical connection to eth0, we cannot verify:
+    - isolated: victim traffic blocked at eth0 gate membership
+    - released: victim traffic forwarded through eth0->agbr0->eth1
+    - expired: lease expiry closes gate again
+
+GATEWAY STATE (verified working correctly):
+  state=isolated
+  serverGateKernel=not-enslaved (eth0 NOT in agbr0)
+  bridge members: {eth1} only (exact closed topology)
+  topologyReady: true
+  bridgeUp: true
+  managementAvailable: true
+
+WHAT WOULD BE NEEDED:
+  Option A: USB-to-Ethernet adapter on laptop (second NIC)
+    Then connect: adapter <-> LubanCat-2 eth0
+                      eno1 <-> LubanCat-2 eth1
+  Option B: Small unmanaged switch
+    Then connect: laptop eno1 -> switch -> LubanCat-2 eth0 + eth1
+  Option C: Standalone victim host
+    Connect victim host to LubanCat-2 eth0 via separate cable/port
+
+WITHOUT ABOVE: bidirectional inline test cannot be executed.
+This is recorded as BLOCKED, not fabricated as PASSED.
