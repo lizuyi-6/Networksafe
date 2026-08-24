@@ -1,0 +1,4 @@
+TEST_START testId=a-usb-bridge-baseline runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:12Z stateBefore=isolated
+TEST_COMMAND release gate; victim ping -I agvictim0 10.99.0.1; victim TCP marker; capture on usb2
+Cannot open network namespace "victim": No such file or directory
+TEST_END testId=a-usb-bridge-baseline runId=20260802T095611Z-b7940f333db02e89 status=FAILED exitCode=255 stateAfter=isolated reason=UNHANDLED_TEST_EXIT cleanupSucceeded=true

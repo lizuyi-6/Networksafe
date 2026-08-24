@@ -1,0 +1,4 @@
+TEST_START testId=f02-service-stop-lease-expiry runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:29Z stateBefore=isolated
+TEST_COMMAND release 6; stop aetherguard-cat2-gateway.service; wait for identified PID1 timer; require isolated
+FAULT: release transaction aborted at topology_precheck; gate forced isolated
+TEST_END testId=f02-service-stop-lease-expiry runId=20260802T095611Z-b7940f333db02e89 status=FAILED exitCode=1 stateAfter=isolated reason=UNHANDLED_TEST_EXIT cleanupSucceeded=true

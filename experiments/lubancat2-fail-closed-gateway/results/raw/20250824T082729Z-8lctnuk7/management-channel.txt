@@ -1,0 +1,32 @@
+=== Management Channel Test ===
+Run ID: 20250824T082729Z-8lctnuk7
+Transport: physical-ethernet
+
+CHANNEL: enx866d35078167 (Operator laptop USB RNDIS host) <-> LubanCat-2 usb0 (RNDIS gadget)
+
+usb0 on LubanCat-2:
+  State: UP, 192.168.100.2/24
+  MAC: d2:c1:fa:aa:e1:66
+  Bridge membership: NOT in agbr0 (verified)
+
+Operator side:
+  enx866d35078167: UP, 192.168.100.1/24
+  Driver: rndis_host
+
+SSH connectivity:
+  Connection: enx866d35078167 -> 192.168.100.2:22
+  Auth: cat/temppwd
+  Latency: ~1ms
+
+Ping test:
+  192.168.100.1 -> 192.168.100.2: REPLY 1.1ms
+  192.168.100.2 -> 192.168.100.1: REPLY 0.4ms
+
+ReactorOS services running:
+  reactor-edge.service: active
+  reactor-os-chromium.service: active
+  reactor-sim-bridge.service: active
+
+RESULT: PASSED
+Management channel independent of Ethernet data plane.
+usb0 NOT in agbr0. Ethernet experiments do not disrupt management.

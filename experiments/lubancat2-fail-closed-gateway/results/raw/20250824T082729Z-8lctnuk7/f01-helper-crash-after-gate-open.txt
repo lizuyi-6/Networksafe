@@ -1,0 +1,4 @@
+TEST_START testId=f01-helper-crash-after-gate-open runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:25Z stateBefore=isolated
+TEST_COMMAND SIGKILL helper at after_gate_open failpoint; run reconcile; require isolated and zero timers
+FAULT: release transaction aborted at topology_precheck; gate forced isolated
+TEST_END testId=f01-helper-crash-after-gate-open runId=20260802T095611Z-b7940f333db02e89 status=FAILED exitCode=1 stateAfter=isolated reason=RECONCILE_DID_NOT_REPORT_INCOMPLETE_TRANSITION cleanupSucceeded=true

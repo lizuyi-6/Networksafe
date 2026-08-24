@@ -1,0 +1,3 @@
+TEST_START testId=f06-post-reboot-topology runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:36Z stateBefore=isolated
+TEST_COMMAND PARTIAL historical observation only; no reboot in the fixed run
+TEST_END testId=f06-post-reboot-topology runId=20260802T095611Z-b7940f333db02e89 status=PARTIAL exitCode=3 stateAfter=isolated reason=REBOOT_REMOVED_RUNTIME_USB_TOPOLOGY cleanupSucceeded=true

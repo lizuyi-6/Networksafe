@@ -1,0 +1,3 @@
+TEST_START testId=eth0-eth1-inline-gateway runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:40Z stateBefore=isolated
+TEST_COMMAND NOT_RUN: Cat2 physical Ethernet data plane
+TEST_END testId=eth0-eth1-inline-gateway runId=20260802T095611Z-b7940f333db02e89 status=NOT_RUN exitCode=4 stateAfter=isolated reason=ETHERNET_CABLES_UNAVAILABLE cleanupSucceeded=true

@@ -1,0 +1,3 @@
+TEST_START testId=e-authorization-matrix runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:22Z stateBefore=isolated
+TEST_COMMAND run strict local authorization suite; run valid, tampered, replay, strict-bool, and release-failure-counter-consumption cases on Cat2
+TEST_END testId=e-authorization-matrix runId=20260802T095611Z-b7940f333db02e89 status=BLOCKED exitCode=5 stateAfter=isolated reason=PRIVATE_KEY_MISSING cleanupSucceeded=true

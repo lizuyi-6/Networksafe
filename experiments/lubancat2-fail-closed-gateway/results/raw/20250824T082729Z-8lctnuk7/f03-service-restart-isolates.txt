@@ -1,0 +1,4 @@
+TEST_START testId=f03-service-restart-isolates runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:32Z stateBefore=isolated
+TEST_COMMAND release 20; restart aetherguard-cat2-gateway.service; require immediate isolated and zero timers
+FAULT: release transaction aborted at topology_precheck; gate forced isolated
+TEST_END testId=f03-service-restart-isolates runId=20260802T095611Z-b7940f333db02e89 status=FAILED exitCode=1 stateAfter=isolated reason=UNHANDLED_TEST_EXIT cleanupSucceeded=true

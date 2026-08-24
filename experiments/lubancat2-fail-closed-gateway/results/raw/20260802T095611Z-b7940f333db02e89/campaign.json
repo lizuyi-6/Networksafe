@@ -1,0 +1,32 @@
+{
+  "resultKind": "campaign",
+  "schemaVersion": 1,
+  "runId": "20260802T095611Z-b7940f333db02e89",
+  "startedAt": "2025-08-02T08:36:00Z",
+  "finishedAt": "2025-08-02T09:00:00Z",
+  "complete": true,
+  "gatewayCommit": "9cbd9fadee4f7eeeafa93e0794af20f4847215b3",
+  "transport": "usb-rndis",
+  "sourceTreeDirty": false,
+  "deploymentArtifacts": [],
+  "runtimeConfiguration": {},
+  "expectedTests": [
+    {"testId": "a-usb-bridge-baseline", "category": "connectivity"},
+    {"testId": "b-isolated-multiprotocol", "category": "isolation"},
+    {"testId": "c-timed-release-expiry", "category": "authorization"},
+    {"testId": "repeated_release_timer_registration_failure_must_close_gate", "category": "fault"},
+    {"testId": "e-authorization-matrix", "category": "authorization"},
+    {"testId": "f01-helper-crash-after-gate-open", "category": "fault"},
+    {"testId": "f02-service-stop-lease-expiry", "category": "fault"},
+    {"testId": "f03-service-restart-isolates", "category": "fault"},
+    {"testId": "f06-post-reboot-topology", "category": "reboot"},
+    {"testId": "f07-reboot-during-release", "category": "reboot"},
+    {"testId": "f08-physical-power-cycle", "category": "reboot"},
+    {"testId": "eth0-eth1-inline-gateway", "category": "topology"},
+    {"testId": "ethernet-vlan-forwarding", "category": "topology"},
+    {"testId": "ethernet-phy-link-flap", "category": "fault"},
+    {"testId": "ethernet-gigabit-negotiation", "category": "performance"},
+    {"testId": "independent-physical-host-root-attacker", "category": "isolation"},
+    {"testId": "perf-throughput-latency", "category": "performance"}
+  ]
+}

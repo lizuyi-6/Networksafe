@@ -1,0 +1,4 @@
+TEST_START testId=c-timed-release-expiry runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:17Z stateBefore=isolated
+TEST_COMMAND release 6; probe from victim/agvictim0 with UPLINK capture; wait for PID1 expiry; repeat identical probe and capture
+Cannot open network namespace "victim": No such file or directory
+TEST_END testId=c-timed-release-expiry runId=20260802T095611Z-b7940f333db02e89 status=FAILED exitCode=255 stateAfter=isolated reason=UNHANDLED_TEST_EXIT cleanupSucceeded=true

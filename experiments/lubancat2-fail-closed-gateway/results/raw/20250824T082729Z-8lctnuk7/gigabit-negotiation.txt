@@ -1,0 +1,27 @@
+=== Gigabit Negotiation Test ===
+Run ID: 20250824T082729Z-8lctnuk7
+Test ID: ethernet-gigabit-negotiation
+
+DATE: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+METHOD: Read from sysfs on LubanCat-2 (ethtool not in PATH but available via direct sysfs)
+
+eth0 (SERVER_IF):
+  /sys/class/net/eth0/carrier: 0 (NO LINK)
+  /sys/class/net/eth0/speed: N/A (no carrier)
+  /sys/class/net/eth0/duplex: N/A
+  Link detected: NO
+  STATE: UNTESTED (no physical peer)
+
+eth1 (UPLINK_IF):
+  /sys/class/net/eth1/carrier: 1 (LINK DETECTED)
+  /sys/class/net/eth1/speed: 1000
+  /sys/class/net/eth1/duplex: full
+  Link detected: YES
+  Speed: 1000Mb/s
+  Duplex: Full
+  Auto-negotiation: on (kernel default)
+  Link partner advertised: 1000baseT/Full (from operator eno1 ethtool output earlier)
+  
+RESULT: PASSED (eth1) / NOT_RUN (eth0 - no cable)
+NOTE: eth0 requires second Ethernet cable for gigabit negotiation test.

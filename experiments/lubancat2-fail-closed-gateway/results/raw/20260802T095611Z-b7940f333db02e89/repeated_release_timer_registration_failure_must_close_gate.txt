@@ -1,0 +1,4 @@
+TEST_START testId=repeated_release_timer_registration_failure_must_close_gate runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:20Z stateBefore=isolated
+TEST_COMMAND release; repeated release; inject timer_register_failure with explicit Cat2 test config; reconcile; probe victim/agvictim0 while capturing usb2
+Cannot open network namespace "victim": No such file or directory
+TEST_END testId=repeated_release_timer_registration_failure_must_close_gate runId=20260802T095611Z-b7940f333db02e89 status=FAILED exitCode=255 stateAfter=isolated reason=UNHANDLED_TEST_EXIT cleanupSucceeded=true

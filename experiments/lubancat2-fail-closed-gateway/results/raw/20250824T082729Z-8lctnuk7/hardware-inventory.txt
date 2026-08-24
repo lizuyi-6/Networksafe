@@ -1,0 +1,31 @@
+=== LubanCat-2 Hardware Inventory ===
+Run ID: 20250824T082729Z-8lctnuk7
+Transport: physical-ethernet (experimental, single-cable)
+Commit: 98cce20ebd74274714991fe5ecf166171ea07e35
+
+INTERFACES:
+  eth0: DOWN, NO-CARRIER, MAC=7a:6c:05:86:0a:2f, driver=st_gmac, CARRIER=0
+  eth1: UP, CARRIER=1, MAC=7e:6c:05:86:0a:2f, driver=st_gmac, SPEED=1000Mb/s, DUPLEX=full
+  usb0: UP, 192.168.100.2/24, MAC=d2:c1:fa:aa:e1:66 (management, NOT in agbr0)
+
+PHY STATUS:
+  eth0: Link detected=NO (no physical peer connected)
+  eth1: Link detected=YES, Speed=1000Mb/s, Duplex=Full, Auto-negotiation=on
+
+BRIDGE (agbr0):
+  status=UP, members={eth1}, eth0 isolated (not enslaved)
+  STP: 802.1D active
+
+GATEWAY:
+  state=isolated, topologyReady=true, bridgeUp=true
+  serverGateKernel=not-enslaved, managementAvailable=true
+
+MANAGEMENT CHANNEL:
+  usb0: 192.168.100.2/24, SSH reachable via enx866d35078167 (RNDIS host)
+  Ping 192.168.100.1: REPLY (1.1ms)
+  SSH auth: cat/temppwd
+
+HARDWARE LIMITATION:
+  Only ONE Ethernet cable connecting LubanCat-2 eth1 to operator eno1.
+  eth0 has no physical Layer-2 peer (CARRIER=0).
+  Full inline bidirectional gateway test requires SECOND cable or second victim host.

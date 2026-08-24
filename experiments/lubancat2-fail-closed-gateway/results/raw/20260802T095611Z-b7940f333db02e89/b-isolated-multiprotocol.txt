@@ -1,0 +1,4 @@
+TEST_START testId=b-isolated-multiprotocol runId=20260802T095611Z-b7940f333db02e89 startedAt=2026-08-02T09:56:14Z stateBefore=isolated
+TEST_COMMAND isolate; capture usb2; run ARP/IPv4/IPv6/TCP/UDP/DNS/broadcast/multicast/raw probes from netns victim interface agvictim0
+Cannot open network namespace "victim": No such file or directory
+TEST_END testId=b-isolated-multiprotocol runId=20260802T095611Z-b7940f333db02e89 status=FAILED exitCode=255 stateAfter=isolated reason=UNHANDLED_TEST_EXIT cleanupSucceeded=true

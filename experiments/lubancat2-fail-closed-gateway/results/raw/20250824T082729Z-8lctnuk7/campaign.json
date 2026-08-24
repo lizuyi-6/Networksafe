@@ -1,0 +1,95 @@
+{
+  "complete": true,
+  "deploymentArtifacts": [
+    {
+      "name": "gateway",
+      "remotePath": "/usr/local/sbin/ag-cat2-gateway",
+      "repositoryPath": "experiments/lubancat2-fail-closed-gateway/cat2/scripts/ag-cat2-gateway",
+      "sha256": "d8cc7be6c503896201bc2c1af095abf58973e59fa12a58c963cfdb9c7e2c947a"
+    }
+  ],
+  "expectedTests": [
+    {
+      "category": "connectivity",
+      "testId": "a-usb-bridge-baseline"
+    },
+    {
+      "category": "isolation",
+      "testId": "b-isolated-multiprotocol"
+    },
+    {
+      "category": "authorization",
+      "testId": "c-timed-release-expiry"
+    },
+    {
+      "category": "fault",
+      "testId": "repeated_release_timer_registration_failure_must_close_gate"
+    },
+    {
+      "category": "authorization",
+      "testId": "e-authorization-matrix"
+    },
+    {
+      "category": "fault",
+      "testId": "f01-helper-crash-after-gate-open"
+    },
+    {
+      "category": "fault",
+      "testId": "f02-service-stop-lease-expiry"
+    },
+    {
+      "category": "fault",
+      "testId": "f03-service-restart-isolates"
+    },
+    {
+      "category": "reboot",
+      "testId": "f06-post-reboot-topology"
+    },
+    {
+      "category": "reboot",
+      "testId": "f07-reboot-during-release"
+    },
+    {
+      "category": "reboot",
+      "testId": "f08-physical-power-cycle"
+    },
+    {
+      "category": "topology",
+      "testId": "eth0-eth1-inline-gateway"
+    },
+    {
+      "category": "topology",
+      "testId": "ethernet-vlan-forwarding"
+    },
+    {
+      "category": "fault",
+      "testId": "ethernet-phy-link-flap"
+    },
+    {
+      "category": "performance",
+      "testId": "ethernet-gigabit-negotiation"
+    },
+    {
+      "category": "isolation",
+      "testId": "independent-physical-host-root-attacker"
+    },
+    {
+      "category": "performance",
+      "testId": "perf-throughput-latency"
+    }
+  ],
+  "finishedAt": "2025-08-24T08:30:00Z",
+  "gatewayCommit": "98cce20ebd74274714991fe5ecf166171ea07e35",
+  "resultKind": "campaign",
+  "runId": "20250824T082729Z-8lctnuk7",
+  "runtimeConfiguration": {
+    "gatewayConfigPath": "/etc/aetherguard-cat2.conf",
+    "gatewayConfigSha256": "2bff1ac55b4cf8d19df34337aab7600bbee04a69821ce757291e177bf2abaf04",
+    "testConfigPath": "/root/aetherguard-cat2-test.conf",
+    "testConfigSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "schemaVersion": 1,
+  "sourceTreeDirty": false,
+  "startedAt": "2025-08-24T08:15:00Z",
+  "transport": "physical-ethernet"
+}
