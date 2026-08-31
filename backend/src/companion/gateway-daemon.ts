@@ -110,6 +110,33 @@ export function verifySerialChannelMac(
   return timingSafeEqual(expected, presented);
 }
 
+/**
+ * N2-1 (audit 2026-08): the control plane signs and stores `expiresAt` as an
+ * ISO-8601 string (isoPlusMs), while the M1→M2 wire and the firmware
+ * (serial_json.c FW-003 strict unsigned parse) require epoch SECONDS. The
+ * old `Number(grant.expiresAt)` turned the ISO string into NaN and failed
+ * every real grant closed at `grant_expired`. Canonicalize at this boundary:
+ * accept epoch-seconds (number or numeric string) or ISO-8601, return integer
+ * seconds, or null when unparseable. Internal storage stays ISO; the wire
+ * stays epoch seconds.
+ */
+export function expiresAtToEpochSeconds(value: string | number): number | null {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value < 0) return null;
+    return Math.floor(value);
+  }
+  const raw = String(value ?? '').trim();
+  if (raw === '') return null;
+  if (/^\d+$/.test(raw)) {
+    const asInt = Number(raw);
+    if (!Number.isSafeInteger(asInt)) return null;
+    return asInt;
+  }
+  const parsedMs = Date.parse(raw);
+  if (!Number.isFinite(parsedMs)) return null;
+  return Math.floor(parsedMs / 1000);
+}
+
 export interface GatewayDaemonOptions {
   gatewayId: string;
   /** Provisioned Secure Element public key (PEM). Grant signatures verify against it. */
@@ -238,8 +265,8 @@ export class GatewayDaemon extends EventEmitter {
       return false;
     }
     const nowSec = Math.floor(this.now() / 1000);
-    const expiresAt = Number(grant.expiresAt);
-    if (!Number.isFinite(expiresAt) || nowSec >= expiresAt) {
+    const expiresAt = expiresAtToEpochSeconds(grant.expiresAt);
+    if (expiresAt === null || nowSec >= expiresAt) {
       this.failClosed('grant_expired');
       return false;
     }

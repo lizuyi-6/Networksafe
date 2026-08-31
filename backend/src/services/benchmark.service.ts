@@ -20,6 +20,10 @@ import { postgresShadowStoreService } from './postgres-shadow-store.service';
 import enhancedRateLimiter from '../security/enhanced-rate-limiter.service';
 import { socketRateLimitService } from './socket-rate-limit.service';
 import {
+  assertOutboundUrlAllowedResolvedPinned,
+  createPinnedDnsContext
+} from '../security/outbound-url-guard';
+import {
   httpTrafficBenchmarkFixtures,
   HttpTrafficBenchmarkFixture,
   httpTrafficEvaluatorService,
@@ -759,6 +763,18 @@ class BenchmarkService {
       headers.Authorization = `Bearer ${endpoint.apiKey}`;
     }
 
+    // SECURITY (audit 2026-08, N5-6): benchmark hot-path probes POST to the
+    // same operator-configured AI endpoint URLs as the production invoker
+    // (ai-endpoints.routes.ts invokeEndpoint) — enforce the identical
+    // outbound guard here: metadata endpoints always refused, ollama local
+    // endpoints may be private, validated addresses pinned into the request
+    // agents, redirects never followed. Without this a benchmark run could
+    // reach targets the production path would refuse (SSRF bypass).
+    const resolved = await assertOutboundUrlAllowedResolvedPinned(endpoint.url, {
+      allowPrivate: endpoint.type === 'ollama'
+    });
+    const pinned = createPinnedDnsContext(resolved);
+
     if (endpoint.type === 'ollama') {
       const base = endpoint.url.replace(/\/$/, '');
       const url = base.endsWith('/api/generate') ? base : `${base}/api/generate`;
@@ -768,8 +784,10 @@ class BenchmarkService {
         stream: false
       }, {
         timeout: endpoint.timeout,
-        httpAgent: HTTP_AGENT,
-        httpsAgent: HTTPS_AGENT,
+        maxRedirects: 0,
+        lookup: pinned.lookup,
+        httpAgent: pinned.httpAgent,
+        httpsAgent: pinned.httpsAgent,
         validateStatus: () => true
       });
 
@@ -787,8 +805,10 @@ class BenchmarkService {
     }, {
       timeout: endpoint.timeout,
       headers,
-      httpAgent: HTTP_AGENT,
-      httpsAgent: HTTPS_AGENT,
+      maxRedirects: 0,
+      lookup: pinned.lookup,
+      httpAgent: pinned.httpAgent,
+      httpsAgent: pinned.httpsAgent,
       validateStatus: () => true
     });
 

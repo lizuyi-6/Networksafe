@@ -1,7 +1,7 @@
 import axios from 'axios';
 import nodemailer from 'nodemailer';
 import auditLogger from '../security/audit-logger.service';
-import { assertOutboundUrlAllowed } from '../security/outbound-url-guard';
+import { assertOutboundHostAllowedResolved, assertOutboundUrlAllowedResolvedPinned, createPinnedDnsContext } from '../security/outbound-url-guard';
 import logger from '../utils/logger';
 import type { AlertRecord } from './security-operations.service';
 import {
@@ -336,9 +336,14 @@ class NotificationDispatcherService {
     // path). Cloud metadata endpoints are blocked unconditionally; private /
     // loopback targets require ALLOW_PRIVATE_WEBHOOKS=1 (explicit
     // acknowledgment for internal notification servers, default off).
+    // The validated addresses are pinned into the request agents so a DNS
+    // rebinding race cannot split validation from connection (R2-F002
+    // follow-up).
     const allowPrivate = String(process.env.ALLOW_PRIVATE_WEBHOOKS || '').trim() === '1';
+    let pinned: ReturnType<typeof createPinnedDnsContext>;
     try {
-      assertOutboundUrlAllowed(channel.target, { allowPrivate });
+      const resolved = await assertOutboundUrlAllowedResolvedPinned(channel.target, { allowPrivate });
+      pinned = createPinnedDnsContext(resolved);
     } catch (error: any) {
       logger.warn('Blocked webhook delivery to forbidden target', {
         target: channel.target,
@@ -349,6 +354,13 @@ class NotificationDispatcherService {
 
     const response = await axios.post(channel.target, payload, {
       timeout: 10000,
+      // SECURITY FIX (R2-F002): never follow redirects on webhook delivery -
+      // a 302 from an allowed host must not be able to bounce the POST into a
+      // blocked target (cloud metadata / private ranges).
+      maxRedirects: 0,
+      lookup: pinned.lookup,
+      httpAgent: pinned.httpAgent,
+      httpsAgent: pinned.httpsAgent,
       headers: {
         'Content-Type': 'application/json',
         ...channel.headers
@@ -356,7 +368,12 @@ class NotificationDispatcherService {
       validateStatus: () => true
     });
 
-    if (response.status >= 400) {
+    // SECURITY (R2-F002 follow-up): maxRedirects: 0 turns any 3xx into "the
+    // redirect was refused, the POST never reached the configured target".
+    // Treating that as success (status < 400) recorded deliveries as 'sent'
+    // that never arrived — a 302 from an allowed host must fail the delivery
+    // (fail-closed: the external state did NOT change).
+    if (response.status >= 300) {
       throw new Error(`Webhook delivery failed with status ${response.status}`);
     }
 
@@ -369,6 +386,25 @@ class NotificationDispatcherService {
   private async sendSmtp(channel: NotificationChannelConfig, payload: Record<string, any>): Promise<Record<string, any>> {
     if (!channel.smtp.host || !channel.smtp.from || !channel.target) {
       throw new Error('backend.smtp_configuration_incomplete');
+    }
+
+    // SECURITY (audit 2026-08, N5-6): the SMTP relay host is
+    // operator-configured and the dispatcher opens a raw TCP/TLS session to
+    // it — enforce the same AG-B02 invariant as the webhook path: cloud
+    // metadata endpoints are always blocked; private/loopback relays require
+    // ALLOW_PRIVATE_SMTP=1 (internal mail hubs are common, but the operator
+    // must opt in explicitly). Every resolved A/AAAA address is validated.
+    // nodemailer does not accept a pinned lookup, so this shares the
+    // validate-then-connect model used by the scanner probes.
+    const allowPrivateRelay = String(process.env.ALLOW_PRIVATE_SMTP || '').trim() === '1';
+    try {
+      await assertOutboundHostAllowedResolved(channel.smtp.host, { allowPrivate: allowPrivateRelay });
+    } catch (error: any) {
+      logger.warn('Blocked SMTP delivery to forbidden relay host', {
+        host: channel.smtp.host,
+        reason: error?.message
+      });
+      throw new Error(error?.message || 'backend.smtp_relay_blocked');
     }
 
     const transporter = nodemailer.createTransport({

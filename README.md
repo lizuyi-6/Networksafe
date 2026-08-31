@@ -153,6 +153,17 @@ The external product statement is conditional. “完全最后防线” is only 
 
 ## Root-Resistant Final Defense
 
+> **Evidence status (2026-08 security audit): EXPERIMENTAL.** The canonical
+> `deployment/gateway` data plane has not passed Linux namespace/L2-bridge
+> integration gates, systemd-VM gates, or hardware-in-the-loop campaigns.
+> Gateway status is a three-level evidence model — `reported` (self-report),
+> `verified` (reserved: signed control-channel verification), `attested`
+> (reserved: server-verified hardware attestation quote). Only `attested`
+> can drive "Root-Resistant Active"; the attestation verifier is **not yet
+> implemented**, so high-risk root-resistant actions stay fail-closed and
+> self-reported fields can never restore `active`. See
+> `docs/security-audit/2026-08-remediation-matrix.md`.
+
 Root-resistant mode assumes the protected server OS, local agent, local companion, scripts, and host logs may be fully controlled by an attacker with root. In that threat model, the trusted boundary is no longer the host companion. It is the **AetherGuard Root-Resistant Gateway Appliance**:
 
 - Dual 1GbE RJ45 transparent L2 bridge with `SERVER`, `LAN/WAN`, and independent `MGMT` ports; cellular is an optional management path.
@@ -198,7 +209,7 @@ Validated in the current production baseline:
 - Route DB access guard.
 - Frontend direct API fetch guard.
 - Focused Jest coverage for hardware grant signing, Final Defense service policy checks, companion denial of untrusted scripts, deployment run, and device control paths.
-- UI status model for root-resistant “Final Defense Active” only when an external AetherGuard Root-Resistant Gateway Appliance reports secure element, matching policy digest, firmware attestation, linked data ports, independent management path, and healthy bridge state.
+- UI status model for root-resistant “Final Defense Active” only when an external AetherGuard Root-Resistant Gateway Appliance reports secure element, matching policy digest, firmware attestation, linked data ports, independent management path, and healthy bridge state. As of the 2026-08 audit this status additionally requires the server-side `attested` verification level, which is not yet reachable — see the Root-Resistant evidence-status note above.
 
 Not yet validated in this workspace:
 

@@ -6,12 +6,32 @@ SERIAL_HELPER_DEVICE="${SERIAL_HELPER_DEVICE:-/dev/ttyUSB0}"
 SERIAL_HELPER_BAUD="${SERIAL_HELPER_BAUD:-115200}"
 SERIAL_HELPER_REOPEN_DELAY="${SERIAL_HELPER_REOPEN_DELAY:-2}"
 
-DEFAULT_BACKUP_CMD='ts=$(date +%Y%m%d%H%M%S); backup_dir=/tmp/aetherguard_backup_$ts; mkdir -p "$backup_dir" && tar -czf "$backup_dir/etc_aetherguard.tgz" /etc/AetherGuard /etc/hosts 2>/dev/null'
-DEFAULT_REMOVE_CMD='rm -rf /opt/AetherGuard'
+# NOTE (audit 2026-08, N1-4): the AG:REQ USB-TTL protocol is archived — the
+# Gateway Appliance line speaks newline-delimited JSON (see
+# deployments.routes.ts). This helper remains for legacy bare-metal rescue and
+# its BACKUP/REMOVE actions are hardened below:
+#   - backups land in a PERSISTENT dir (/var/backups/aetherguard), named by
+#     timestamp + content sha256, never overwriting an earlier backup;
+#   - the archive is verified readable before AG:OK is reported;
+#   - REMOVE refuses to run unless a fresh verified backup exists
+#     (AETHERGUARD_REMOVE_FORCE=1 is the explicit operator escape hatch) —
+#     previously `rm -rf` executed with no backup-ordering guarantee, and the
+#     /tmp backup vanished on reboot.
+AETHERGUARD_BACKUP_DIR="${AETHERGUARD_BACKUP_DIR:-/var/backups/aetherguard}"
+AETHERGUARD_REMOVE_MAX_BACKUP_AGE_S="${AETHERGUARD_REMOVE_MAX_BACKUP_AGE_S:-3600}"
+DEFAULT_BACKUP_CMD='ts=$(date +%Y%m%d%H%M%S); mkdir -p "'"$AETHERGUARD_BACKUP_DIR"'" && tar -czf "'"$AETHERGUARD_BACKUP_DIR"'/.stage_$ts.tgz" /etc/AetherGuard /etc/hosts 2>/dev/null; rc=$?; [ $rc -eq 0 ] || exit $rc; sha=$(sha256sum "'"$AETHERGUARD_BACKUP_DIR"'/.stage_$ts.tgz" | cut -d" " -f1); tar -tzf "'"$AETHERGUARD_BACKUP_DIR"'/.stage_$ts.tgz" >/dev/null 2>&1 || exit 1; mv "'"$AETHERGUARD_BACKUP_DIR"'/.stage_$ts.tgz" "'"$AETHERGUARD_BACKUP_DIR"'/etc_aetherguard_${ts}_$sha.tgz"; printf "%s" "'"$AETHERGUARD_BACKUP_DIR"'/etc_aetherguard_${ts}_$sha.tgz" > "'"$AETHERGUARD_BACKUP_DIR"'/latest"'
+DEFAULT_REMOVE_CMD='set -e; latest="'"$AETHERGUARD_BACKUP_DIR"'/latest"; [ -s "$latest" ] || { echo "no verified backup recorded — run BACKUP first (or set AETHERGUARD_REMOVE_FORCE=1)"; exit 3; }; backup=$(cat "$latest"); [ -f "$backup" ] || { echo "recorded backup missing: $backup"; exit 3; }; age=$(( $(date +%s) - $(stat -c %Y "$backup") )); [ "$age" -le '"$AETHERGUARD_REMOVE_MAX_BACKUP_AGE_S"' ] || { echo "backup too old (${age}s > '"$AETHERGUARD_REMOVE_MAX_BACKUP_AGE_S"'s) — re-run BACKUP first"; exit 3; }; tar -tzf "$backup" >/dev/null 2>&1 || { echo "backup archive unreadable: $backup"; exit 3; }; rm -rf /opt/AetherGuard'
 
 AETHERGUARD_BACKUP_CMD="${AETHERGUARD_BACKUP_CMD:-$DEFAULT_BACKUP_CMD}"
 AETHERGUARD_INSTALL_CMD="${AETHERGUARD_INSTALL_CMD:-}"
-AETHERGUARD_REMOVE_CMD="${AETHERGUARD_REMOVE_CMD:-$DEFAULT_REMOVE_CMD}"
+if [[ "${AETHERGUARD_REMOVE_FORCE:-0}" == "1" ]]; then
+  # Explicit operator escape hatch: destructive remove WITHOUT the fresh-backup
+  # guard. Must be set deliberately in the helper's environment, never by a
+  # request line.
+  AETHERGUARD_REMOVE_CMD="${AETHERGUARD_REMOVE_CMD:-rm -rf /opt/AetherGuard}"
+else
+  AETHERGUARD_REMOVE_CMD="${AETHERGUARD_REMOVE_CMD:-$DEFAULT_REMOVE_CMD}"
+fi
 
 log() {
   printf '[serial-helper] %s\n' "$*" >&2

@@ -19,6 +19,7 @@ const makefileContract = [
   'Core/Src/controller_tasks.c',
   'Core/Src/serial_json.c',
   'Core/Src/interlock_driver.c',
+  'Core/Src/grant_auth.c',
 ];
 
 for (const fragment of makefileContract) {
@@ -44,6 +45,7 @@ const compilerArguments = [
   'Core/Src/controller_tasks.c',
   'Core/Src/serial_json.c',
   'Core/Src/interlock_driver.c',
+  'Core/Src/grant_auth.c',
 ];
 
 const compile = spawnSync('gcc', compilerArguments, {

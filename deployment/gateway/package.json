@@ -1,0 +1,27 @@
+{
+  "name": "@aetherguard/gateway-daemon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AetherGuard Gateway Appliance M1 daemon — standalone deployment package (AUD-05-1). Status claims from this daemon are 'reported' (self-report) only; see docs/security-audit/2026-08-remediation-matrix.md.",
+  "license": "UNLICENSED",
+  "bin": {
+    "aetherguard-gateway-daemon": "dist/deployment/gateway/bin/aetherguard-gateway-daemon.js"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/deployment/gateway/bin/aetherguard-gateway-daemon.js --config /etc/aetherguard/gateway.conf"
+  },
+  "dependencies": {
+    "@serialport/parser-readline": "12.0.0",
+    "axios": "1.18.1",
+    "serialport": "12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.10",
+    "typescript": "5.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

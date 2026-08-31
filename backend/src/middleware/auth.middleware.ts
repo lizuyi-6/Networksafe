@@ -11,6 +11,7 @@ import { randomUUID } from 'crypto';
 import crypto from 'crypto';
 import logger from '../utils/logger';
 import redisService from '../security/redis.service';
+import { tokenKeyDigest } from '../security/redis-token-keys';
 import EnvValidator from '../security/env-validator.service';
 import { resolveRequestTenantContext, TenantContext } from '../core/tenant/tenant-context';
 import {
@@ -178,7 +179,7 @@ export async function verifyTokenAsyncDetailed(token: string): Promise<TokenVeri
 
     if (isRedisAvailable) {
         try {
-            const isBlacklisted = await redisService.exists(`token:blacklist:${token}`);
+            const isBlacklisted = await redisService.exists(`token:blacklist:${tokenKeyDigest(token)}`);
             if (isBlacklisted) {
                 logger.warn('Attempted use of blacklisted token');
                 return { user: null, failureReason: 'blacklisted_token' };
@@ -284,7 +285,7 @@ export function verifyRefreshToken(token: string): { userId: string; sessionId?:
 const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
 const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
-const isHttpsRequest = (req: Request): boolean => {
+export const isHttpsRequest = (req: Request): boolean => {
     const forwardedProto = req.headers['x-forwarded-proto'];
     const proto = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto;
     return req.secure || proto === 'https';

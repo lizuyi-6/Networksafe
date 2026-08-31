@@ -37,6 +37,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { AttackStatusProvider, useAttackStatus } from './context/AttackStatusContext';
 import { LiveModeProvider, useLiveMode } from './context/LiveModeContext';
+import { StepUpProvider, StepUpDialog } from './context/StepUpContext';
 import Logo from './components/Logo';
 import { requireInternalRoute } from './utils/internal-navigation';
 import {
@@ -942,13 +943,16 @@ const App = () => {
                 <BrowserRouter>
                     <DemoProvider>
                         <LanguageProvider>
-                            <WebSocketProvider>
+                            <StepUpProvider>
+                                <WebSocketProvider>
                                 <AttackStatusProvider>
                                     <Layout>
                                         <AnimatedRoutes />
                                     </Layout>
+                                    <StepUpDialog />
                                 </AttackStatusProvider>
-                            </WebSocketProvider>
+                                </WebSocketProvider>
+                            </StepUpProvider>
                         </LanguageProvider>
                     </DemoProvider>
                 </BrowserRouter>

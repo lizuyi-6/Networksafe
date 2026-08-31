@@ -9,6 +9,7 @@ import { ConsolePage, ConsolePanel } from '../components/ConsolePrimitives';
 import { logout } from '../services/api';
 import { isAllowedRedirectTarget } from '../security/redirect-guard';
 import { setSessionUserIdentity } from '../services/session-cache';
+import PasskeySettings from '../components/PasskeySettings';
 
 const Settings = () => {
     const { t } = useLanguage();
@@ -45,6 +46,7 @@ const Settings = () => {
             <PlatformCapabilitySettings endpointVersion={endpointVersion} />
             <ModelSelector />
             <AIEndpointSettings onChanged={() => setEndpointVersion((value) => value + 1)} />
+            <PasskeySettings />
 
             <ConsolePanel title={t('settings.other')} subtitle={t('settings.otherSubtitle')} className="max-w-[1200px]">
                 <div className="space-y-4">

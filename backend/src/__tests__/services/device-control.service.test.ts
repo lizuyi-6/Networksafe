@@ -304,4 +304,77 @@ describe('deviceControlService physical confirmation', () => {
     expect(row.status).toBe('rejected');
     expect(JSON.parse(row.result_json).reason).toBe('session_expired');
   });
+
+  // SECURITY (audit 2026-08, AUD-07-1): firmware artifacts are content-addressed
+  // and immutable; OTA is tenant-scoped and binds the payload digest.
+  describe('firmware content addressing (AUD-07-1)', () => {
+    const upload = (overrides: Record<string, any> = {}) => deviceControlService.uploadFirmware({
+      tenantId: 'tenant-firmware-test',
+      fileName: 'fw.bin',
+      version: `1.0.${Date.now() % 100000}`,
+      channel: 'stable',
+      contentBase64: Buffer.from('firmware-bytes-canary').toString('base64'),
+      actorId: 'tester',
+      ...overrides
+    });
+
+    it('stores the artifact content-addressed and records its sha256', async () => {
+      const firmware = await upload();
+      const expectedDigest = require('crypto').createHash('sha256')
+        .update(Buffer.from('firmware-bytes-canary')).digest('hex');
+
+      expect(firmware.sha256).toBe(expectedDigest);
+      expect(firmware.artifactRef).toContain(`sha256/${expectedDigest}`);
+    });
+
+    it('is idempotent for identical content (same digest, no duplicate bytes)', async () => {
+      const first = await upload({ version: `2.0.${Date.now() % 100000}` });
+      const second = await upload({ version: `2.1.${Date.now() % 100000}` });
+      // Same bytes → same digest → the SAME content-addressed artifact is
+      // reused; each logical version still anchors to it.
+      expect(second.sha256).toBe(first.sha256);
+      expect(second.artifactRef).toBe(first.artifactRef);
+    });
+
+    it('refuses replacing an existing logical version with different bytes', async () => {
+      const version = `3.0.${Date.now() % 100000}`;
+      await upload({ version });
+      await expect(upload({
+        version,
+        contentBase64: Buffer.from('tampered-firmware-bytes').toString('base64')
+      })).rejects.toThrow('backend.firmware_version_immutable');
+    });
+
+    it('refuses flashing another tenant\'s firmware via OTA', async () => {
+      const firmware = await upload({ tenantId: 'tenant-firmware-owner' });
+      await expect(deviceControlService.triggerOta({
+        tenantId: 'tenant-firmware-intruder',
+        deviceId: uniqueDeviceId('ota'),
+        firmwareId: firmware.id,
+        actorId: 'tester'
+      })).rejects.toThrow('backend.firmware_tenant_mismatch');
+    });
+
+    it('binds the sha256 digest into the OTA dispatch payload', async () => {
+      const firmware = await upload({ tenantId: 'tenant-firmware-ota' });
+      let forwarded: any = null;
+      deviceControlService.setGatewayEmitter((_deviceId, frame, payload) => {
+        void frame;
+        forwarded = payload;
+        return true;
+      });
+
+      try {
+        await deviceControlService.triggerOta({
+          tenantId: 'tenant-firmware-ota',
+          deviceId: uniqueDeviceId('ota'),
+          firmwareId: firmware.id,
+          actorId: 'tester'
+        });
+        expect(forwarded?.sha256).toBe(firmware.sha256);
+      } finally {
+        deviceControlService.setGatewayEmitter(null);
+      }
+    });
+  });
 });

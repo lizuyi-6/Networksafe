@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import { postgresShadowStoreService } from './postgres-shadow-store.service';
 import logger from '../utils/logger';
+import { encryptSecret, decryptSecret, isSealedSecret } from '../security/secret-encryption';
 import type { DetectionChannel } from './detection-engine';
 
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
@@ -51,6 +52,84 @@ export interface NotificationSettings {
  * non-secret and non-empty so UI forms still render a populated field.
  */
 export const REDACTED_CONFIG_SECRET = '********';
+
+/**
+ * N5-2 (audit 2026-08): notification-channel secrets (smtp.password, every
+ * webhook header value) are stored as envelope-encrypted `enc1:` values in
+ * `notifications_json` — never plaintext at rest. Sealing happens on write;
+ * opening happens on read, server-side only. A masked sentinel round-tripped
+ * from the UI form is restored to the CURRENT secret before sealing so a
+ * config save cannot clobber real credentials with '********'.
+ */
+function sealNotificationSecretsForStorage(
+  next: NotificationSettings,
+  current: NotificationSettings
+): NotificationSettings {
+  const copy = JSON.parse(JSON.stringify(next ?? { channels: [] })) as NotificationSettings;
+  const channels = Array.isArray(copy.channels) ? copy.channels : [];
+  const currentChannels = Array.isArray(current?.channels) ? current.channels : [];
+  for (const channel of channels) {
+    if (!channel || typeof channel !== 'object') {
+      continue;
+    }
+    const currentChannel = currentChannels.find((c) => c && c.id === channel.id);
+    if (channel.smtp && typeof channel.smtp === 'object') {
+      if (channel.smtp.password === REDACTED_CONFIG_SECRET && currentChannel?.smtp?.password) {
+        channel.smtp.password = String(currentChannel.smtp.password);
+      }
+      if (typeof channel.smtp.password === 'string' && channel.smtp.password) {
+        channel.smtp.password = isSealedSecret(channel.smtp.password)
+          ? channel.smtp.password
+          : encryptSecret(channel.smtp.password);
+      }
+    }
+    if (channel.headers && typeof channel.headers === 'object') {
+      for (const key of Object.keys(channel.headers)) {
+        if (channel.headers[key] === REDACTED_CONFIG_SECRET && currentChannel?.headers?.[key]) {
+          channel.headers[key] = String(currentChannel.headers[key]);
+        }
+        if (typeof channel.headers[key] === 'string' && channel.headers[key]) {
+          channel.headers[key] = isSealedSecret(channel.headers[key])
+            ? channel.headers[key]
+            : encryptSecret(channel.headers[key]);
+        }
+      }
+    }
+  }
+  return copy;
+}
+
+/**
+ * N5-2: open `enc1:` secrets after reading `notifications_json`. A value
+ * that fails to decrypt stays sealed — the dispatcher then fails visibly
+ * (auth error) instead of silently sending an empty secret.
+ */
+function openNotificationSecretsFromStorage(notifications: NotificationSettings): NotificationSettings {
+  const copy = JSON.parse(JSON.stringify(notifications ?? { channels: [] })) as NotificationSettings;
+  for (const channel of Array.isArray(copy.channels) ? copy.channels : []) {
+    if (!channel || typeof channel !== 'object') {
+      continue;
+    }
+    if (typeof channel.smtp?.password === 'string' && isSealedSecret(channel.smtp.password)) {
+      const opened = decryptSecret(channel.smtp.password);
+      if (opened !== null) {
+        channel.smtp.password = opened;
+      }
+    }
+    if (channel.headers && typeof channel.headers === 'object') {
+      for (const key of Object.keys(channel.headers)) {
+        const value = channel.headers[key];
+        if (typeof value === 'string' && isSealedSecret(value)) {
+          const opened = decryptSecret(value);
+          if (opened !== null) {
+            channel.headers[key] = opened;
+          }
+        }
+      }
+    }
+  }
+  return copy;
+}
 
 /**
  * SECURITY FIX (audit 2026-08, AG-B07): return a deep copy of `config` with
@@ -873,7 +952,7 @@ class PlatformConfigService {
         requestsPerMinute: Number(row.rate_limit_requests_per_minute || defaults.rateLimit.requestsPerMinute),
         windowSeconds: Number(row.rate_limit_window_seconds || defaults.rateLimit.windowSeconds)
       },
-      notifications: parseJson(row.notifications_json, defaults.notifications),
+      notifications: openNotificationSecretsFromStorage(parseJson(row.notifications_json, defaults.notifications)),
       aiRouting: parseJson(row.ai_routing_json, defaults.aiRouting),
       privacyMode: normalizePrivacyMode(row.privacy_mode, defaults.privacyMode),
       auditArchive: parseJson(row.audit_archive_json, defaults.auditArchive),
@@ -890,6 +969,9 @@ class PlatformConfigService {
     this.assertPrepared();
     const current = await this.getConfig(tenantId);
     const merged = normalizePlatformConfig(rawConfig, current);
+    // N5-2: seal channel secrets for at-rest storage (sentinel values from
+    // the masked UI form are restored to the current secret first).
+    const notificationsForStorage = sealNotificationSecretsForStorage(merged.notifications, current.notifications);
     const now = new Date().toISOString();
     const existing = postgresShadowStoreService.canServeReads()
       ? await postgresShadowStoreService.queryOne<any>(`
@@ -913,7 +995,7 @@ class PlatformConfigService {
       anti_bot_block_duration: merged.antiBot.blockDuration,
       rate_limit_requests_per_minute: merged.rateLimit.requestsPerMinute,
       rate_limit_window_seconds: merged.rateLimit.windowSeconds,
-      notifications_json: JSON.stringify(merged.notifications),
+      notifications_json: JSON.stringify(notificationsForStorage),
       ai_routing_json: JSON.stringify(merged.aiRouting),
       privacy_mode: merged.privacyMode,
       audit_archive_json: JSON.stringify(merged.auditArchive),

@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, timingSafeEqual } from 'crypto';
 import { getDatabase } from '../config/database';
 import {
   BridgeState,
@@ -56,6 +56,17 @@ export interface RootResistantGatewayStatus {
   gatewayProtectionMode: 'external_network_gateway';
   gatewayId: string;
   tenantId: string;
+  /**
+   * SECURITY (audit 2026-08, batch 0): evidence levels for gateway claims.
+   * - 'reported': every field below was self-reported by the gateway.
+   * - 'verified': reserved for reports whose identity/signature/nonce were
+   *   cryptographically verified by the control plane (batch 5/6 control
+   *   channel). No production code path sets it yet.
+   * - 'attested': hardware attestation quote verified server-side (batch 6).
+   * Only 'attested' may drive Root-Resistant Active. Self-reported
+   * attestation timestamps can NEVER raise this level.
+   */
+  verificationLevel: 'reported' | 'verified' | 'attested';
   policyDigest?: string;
   reportedPolicyDigest?: string;
   firmwareDigest?: string;
@@ -69,6 +80,12 @@ export interface RootResistantGatewayStatus {
   lastAttestationAt?: string;
   isolationReason?: string;
   lastError?: string;
+  /** N2-4: last accepted report's per-boot identity (replay guard anchor). */
+  reportBootId?: string;
+  /** N2-4: last accepted report's monotonic sequence within that boot. */
+  reportSequence?: number;
+  /** N3-3: helper credential key id this gateway's status channel is bound to. */
+  boundHelperKeyId?: string;
   active: boolean;
   degradedReasons: string[];
   createdAt: string;
@@ -88,6 +105,14 @@ function parseJson<T>(value: any, fallback: T): T {
 
 function asBoolean(value: any): boolean {
   return value === true || value === 1 || value === '1' || value === 'true';
+}
+
+/** Length-independent timing-safe string equality (empty never equals). */
+function timingSafeEqualString(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) {
+    return false;
+  }
+  return timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
 }
 
 function isoNow(): string {
@@ -208,8 +233,12 @@ class FinalDefenseService {
         gateway_online INTEGER NOT NULL DEFAULT 0,
         last_heartbeat_at TEXT,
         last_attestation_at TEXT,
+        attestation_level TEXT NOT NULL DEFAULT 'reported',
         isolation_reason TEXT,
         last_error TEXT,
+        report_boot_id TEXT,
+        report_sequence INTEGER,
+        bound_helper_key_id TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -218,6 +247,34 @@ class FinalDefenseService {
       CREATE INDEX IF NOT EXISTS idx_root_resistant_gateways_state
         ON root_resistant_gateways(tenant_id, bridge_state, updated_at DESC);
     `);
+
+    // Migration for databases created before attestation_level existed.
+    const gatewayColumns = getDatabase().prepare(
+      `PRAGMA table_info(root_resistant_gateways)`
+    ).all() as Array<{ name: string }>;
+    if (!gatewayColumns.some((column) => column.name === 'attestation_level')) {
+      getDatabase().prepare(
+        `ALTER TABLE root_resistant_gateways ADD COLUMN attestation_level TEXT NOT NULL DEFAULT 'reported'`
+      ).run();
+    }
+    // N2-4 (audit 2026-08): report replay guard columns.
+    if (!gatewayColumns.some((column) => column.name === 'report_boot_id')) {
+      getDatabase().prepare(
+        `ALTER TABLE root_resistant_gateways ADD COLUMN report_boot_id TEXT`
+      ).run();
+    }
+    if (!gatewayColumns.some((column) => column.name === 'report_sequence')) {
+      getDatabase().prepare(
+        `ALTER TABLE root_resistant_gateways ADD COLUMN report_sequence INTEGER`
+      ).run();
+    }
+    // N3-3 (audit 2026-08): TOFU binding of a gateway's status channel to the
+    // helper credential that first reported for it.
+    if (!gatewayColumns.some((column) => column.name === 'bound_helper_key_id')) {
+      getDatabase().prepare(
+        `ALTER TABLE root_resistant_gateways ADD COLUMN bound_helper_key_id TEXT`
+      ).run();
+    }
 
     this.schemaReady = true;
   }
@@ -243,15 +300,7 @@ class FinalDefenseService {
     status?: FinalDefensePolicyStatus;
     policyId?: string;
     createdAt?: string;
-    /**
-     * SECURITY (V12.26): optimistic-concurrency guard. When supplied on
-     * an UPDATE (i.e. policyId is set and a row already exists), the
-     * caller asserts it knows the CURRENT stored digest. If the stored
-     * digest no longer matches (another writer updated the policy in
-     * the meantime), the upsert is refused with `policy_digest_conflict`
-     * so the caller re-reads and retries instead of silently clobbering
-     * the intervening change.
-     */
+    /** Current digest is required when updating an existing policy. */
     expectedPolicyDigest?: string;
   }): FinalDefensePolicyRecord {
     this.assertPrepared();
@@ -263,19 +312,33 @@ class FinalDefenseService {
     const releaseTtlMsInput = Number.isFinite(requestedReleaseTtlMs) ? requestedReleaseTtlMs : 120_000;
     const releaseTtlMs = Math.max(5_000, Math.min(releaseTtlMsInput, 15 * 60_000));
 
-    // SECURITY (V12.26): if this is an update AND the caller supplied an
-    // expected digest, verify the stored row still matches. A mismatch
-    // means another writer won the race — refuse rather than overwrite.
-    if (input.policyId && typeof input.expectedPolicyDigest === 'string') {
-      const existing = this.getPolicy(input.policyId);
-      if (existing && existing.policyDigest !== input.expectedPolicyDigest) {
-        throw new Error(
-          `policy_digest_conflict: expected ${input.expectedPolicyDigest}, `
-          + `stored ${existing.policyDigest}`
-        );
-      }
+    const existingPolicy = input.policyId ? this.getPolicy(input.policyId) : null;
+    if (input.policyId && !existingPolicy) {
+      throw new Error('backend.final_defense_policy_not_found');
+    }
+    if (existingPolicy && existingPolicy.tenantId !== input.tenantId) {
+      throw new Error('backend.final_defense_policy_tenant_mismatch');
+    }
+    if (existingPolicy && typeof input.expectedPolicyDigest !== 'string') {
+      throw new Error('backend.final_defense_policy_digest_required');
+    }
+    if (existingPolicy && existingPolicy.policyDigest !== input.expectedPolicyDigest) {
+      throw new Error(`policy_digest_conflict: expected ${input.expectedPolicyDigest}, stored ${existingPolicy.policyDigest}`);
     }
 
+    // A companion status row is the server-side ownership anchor. A policy
+    // cannot be created or moved to a different tenant by self-declaring IDs.
+    const provisionedStatus = this.getStatus(input.companionId);
+    if (provisionedStatus && provisionedStatus.tenantId !== input.tenantId) {
+      throw new Error('backend.final_defense_companion_tenant_mismatch');
+    }
+    if (provisionedStatus && provisionedStatus.gateId !== input.gateId) {
+      throw new Error('backend.final_defense_gate_mismatch');
+    }
+    const gate = hardwareAuthorizationService.getGate(input.gateId);
+    if (gate && gate.tenantId !== input.tenantId) {
+      throw new Error('backend.final_defense_gate_tenant_mismatch');
+    }
     const policyDigest = computeFinalDefensePolicyDigest({
       policyId,
       tenantId: input.tenantId,
@@ -294,7 +357,6 @@ class FinalDefenseService {
         allowed_actions_json, breaker_target, release_ttl_ms, status, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(policy_id) DO UPDATE SET
-        tenant_id = excluded.tenant_id,
         companion_id = excluded.companion_id,
         gate_id = excluded.gate_id,
         policy_digest = excluded.policy_digest,
@@ -320,6 +382,17 @@ class FinalDefenseService {
     return this.getPolicy(policyId) as FinalDefensePolicyRecord;
   }
 
+  getPolicyForTenant(tenantId: string, policyId: string): FinalDefensePolicyRecord | null {
+    this.assertPrepared();
+    const row = getDatabase().prepare(`
+      SELECT *
+      FROM final_defense_policies
+      WHERE tenant_id = ? AND policy_id = ?
+      LIMIT 1
+    `).get(tenantId, policyId) as any;
+    return row ? this.mapPolicy(row) : null;
+  }
+
   getPolicy(policyId: string): FinalDefensePolicyRecord | null {
     this.assertPrepared();
     const row = getDatabase().prepare(`
@@ -331,15 +404,15 @@ class FinalDefenseService {
     return row ? this.mapPolicy(row) : null;
   }
 
-  getActivePolicyForCompanion(companionId: string): FinalDefensePolicyRecord | null {
+  getActivePolicyForCompanion(tenantId: string, companionId: string): FinalDefensePolicyRecord | null {
     this.assertPrepared();
     const row = getDatabase().prepare(`
       SELECT *
       FROM final_defense_policies
-      WHERE companion_id = ? AND status = 'active'
+      WHERE tenant_id = ? AND companion_id = ? AND status = 'active'
       ORDER BY updated_at DESC
       LIMIT 1
-    `).get(companionId) as any;
+    `).get(tenantId, companionId) as any;
     return row ? this.mapPolicy(row) : null;
   }
 
@@ -370,8 +443,8 @@ class FinalDefenseService {
     this.assertPrepared();
     const now = isoNow();
     const policy = input.policyId
-      ? this.getPolicy(input.policyId)
-      : this.getActivePolicyForCompanion(input.companionId);
+      ? this.getPolicyForTenant(input.tenantId, input.policyId)
+      : this.getActivePolicyForCompanion(input.tenantId, input.companionId);
     const policyDigest = policy?.policyDigest || null;
 
     getDatabase().prepare(`
@@ -452,9 +525,18 @@ class FinalDefenseService {
     lanPortLink?: boolean;
     mgmtPath?: string;
     secureElementPresent?: boolean;
-    lastAttestationAt?: string;
     isolationReason?: string;
     lastError?: string;
+    /** N2-4: monotonic report sequence within one appliance boot. */
+    sequence?: number;
+    /** N2-4: random per-boot identity; a reboot resets the sequence space. */
+    bootId?: string;
+    /**
+     * N3-3: authenticated helper credential key id. Trust-on-first-use:
+     * the first credential to report for a gateway binds the status channel;
+     * any other credential is rejected from then on.
+     */
+    helperKeyId?: string;
   }): RootResistantGatewayStatus {
     this.assertPrepared();
     const now = isoNow();
@@ -462,17 +544,63 @@ class FinalDefenseService {
     const policyDigest = input.policyDigest || existing?.policyDigest || null;
     const reportedPolicyDigest = input.reportedPolicyDigest || existing?.reportedPolicyDigest || null;
     const firmwareDigest = input.firmwareDigest || existing?.firmwareDigest || null;
-    const lastAttestationAt = input.lastAttestationAt || existing?.lastAttestationAt || null;
+
+    // SECURITY (audit 2026-08, batch 0): last_attestation_at /
+    // attestation_level are server-owned attestation records. Reports can
+    // no longer supply or overwrite them; ON CONFLICT preserves whatever
+    // level the server recorded. Until batch 6 implements quote
+    // verification there is no path to 'attested'.
+    // Tenant ownership is also server-owned: a status report can never
+    // rebind an existing gateway to a different tenant.
+    if (existing && existing.tenantId !== input.tenantId) {
+      throw new Error('backend.root_gateway_tenant_mismatch');
+    }
+
+    // N2-4 (audit 2026-08): replay guard. A captured status report must not
+    // be re-postable to mask a REAL state change (e.g. replaying an old
+    // "isolated" report over a live "released" one, or flooding the
+    // heartbeat). Within one bootId the sequence must strictly advance; a
+    // NEW bootId restarts the sequence space (appliance reboot). Reports
+    // without sequence/bootId (legacy/simulator self-report) are still
+    // accepted — they can only ever hold 'reported' level anyway.
+    let nextSequence: number | null = null;
+    if (input.bootId !== undefined || input.sequence !== undefined) {
+      if (typeof input.bootId !== 'string' || !/^[0-9a-fA-F-]{8,64}$/.test(input.bootId)
+        || typeof input.sequence !== 'number' || !Number.isInteger(input.sequence) || input.sequence < 1) {
+        throw new Error('backend.root_gateway_status_sequence_invalid');
+      }
+      const storedBootId = existing?.reportBootId ?? null;
+      const storedSequence = existing?.reportSequence ?? null;
+      if (storedBootId === input.bootId) {
+        if (storedSequence !== null && input.sequence <= storedSequence) {
+          throw new Error('backend.root_gateway_status_replay');
+        }
+      }
+      nextSequence = input.sequence;
+    }
+
+    // N3-3 (audit 2026-08): the status channel is bound (trust-on-first-use)
+    // to the helper credential that first reported for this gateway. Any
+    // OTHER credential presenting reports for the same gatewayId — e.g.
+    // appliance A's key spoofing appliance B's status — is rejected.
+    const boundHelperKeyId = existing?.boundHelperKeyId ?? null;
+    let nextBoundHelperKeyId = boundHelperKeyId;
+    if (boundHelperKeyId) {
+      if (!input.helperKeyId || !timingSafeEqualString(input.helperKeyId, boundHelperKeyId)) {
+        throw new Error('backend.root_gateway_helper_key_mismatch');
+      }
+    } else if (input.helperKeyId) {
+      nextBoundHelperKeyId = input.helperKeyId;
+    }
 
     getDatabase().prepare(`
       INSERT INTO root_resistant_gateways (
         gateway_id, tenant_id, policy_digest, reported_policy_digest, firmware_digest,
         bridge_state, server_port_link, lan_port_link, mgmt_path, secure_element_present,
-        gateway_online, last_heartbeat_at, last_attestation_at, isolation_reason, last_error,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)
+        gateway_online, last_heartbeat_at, last_attestation_at, attestation_level,
+        isolation_reason, last_error, report_boot_id, report_sequence, bound_helper_key_id, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'reported', ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(gateway_id) DO UPDATE SET
-        tenant_id = excluded.tenant_id,
         policy_digest = excluded.policy_digest,
         reported_policy_digest = excluded.reported_policy_digest,
         firmware_digest = excluded.firmware_digest,
@@ -483,9 +611,12 @@ class FinalDefenseService {
         secure_element_present = excluded.secure_element_present,
         gateway_online = 1,
         last_heartbeat_at = excluded.last_heartbeat_at,
-        last_attestation_at = excluded.last_attestation_at,
+        attestation_level = root_resistant_gateways.attestation_level,
         isolation_reason = excluded.isolation_reason,
         last_error = excluded.last_error,
+        report_boot_id = excluded.report_boot_id,
+        report_sequence = excluded.report_sequence,
+        bound_helper_key_id = excluded.bound_helper_key_id,
         updated_at = excluded.updated_at
     `).run(
       input.gatewayId,
@@ -499,9 +630,12 @@ class FinalDefenseService {
       normalizeGatewayMgmtPath(input.mgmtPath),
       input.secureElementPresent ? 1 : 0,
       now,
-      lastAttestationAt,
+      existing?.lastAttestationAt || null,
       input.isolationReason || null,
       input.lastError || null,
+      input.bootId ?? existing?.reportBootId ?? null,
+      nextSequence ?? existing?.reportSequence ?? null,
+      nextBoundHelperKeyId,
       existing?.createdAt || now,
       now
     );
@@ -551,27 +685,45 @@ class FinalDefenseService {
       };
     }
 
-    const policy = this.getActivePolicyForCompanion(input.companionId);
-    if (!policy) {
+    const policy = this.getActivePolicyForCompanion(input.tenantId, input.companionId);
+    if (!policy || policy.tenantId !== input.tenantId) {
       return {
         success: false,
-        message: 'Final Defense policy is not active for this companion.',
-        reason: 'final_defense_policy_unavailable'
+        message: 'Final Defense policy is not active for this tenant and companion.',
+        reason: 'final_defense_policy_tenant_mismatch'
       };
     }
 
-    const allowed = policy.allowedActions.find((action) => action.commandType === input.commandType);
+    const status = this.getStatus(input.companionId);
+    if (status && (status.tenantId !== input.tenantId || status.gateId !== policy.gateId)) {
+      return {
+        success: false,
+        message: 'Final Defense companion and gate are not bound to this tenant.',
+        reason: 'final_defense_binding_mismatch'
+      };
+    }
+
+    const gate = hardwareAuthorizationService.getGate(policy.gateId);
+    if (!gate || gate.tenantId !== input.tenantId) {
+      return {
+        success: false,
+        message: 'Final Defense hardware gate is not bound to this tenant.',
+        reason: 'final_defense_gate_tenant_mismatch'
+      };
+    }
+
+    const allowed = policy.allowedActions.find((action) => normalizeGatewayAction(action.commandType) === normalizedCommand);
     if (!allowed) {
       return {
         success: false,
-        message: `Command ${input.commandType} is not allowed by the local Final Defense policy.`,
+        message: `Command ${normalizedCommand} is not allowed by the local Final Defense policy.`,
         reason: 'final_defense_action_not_allowed',
         policy
       };
     }
 
     const challenge = input.challenge || randomUUID();
-    const interlockAction = input.commandType === 'interlock_assert'
+    const interlockAction = normalizedCommand === 'interlock_assert'
       ? 'interlock_assert'
       : 'interlock_release';
 
@@ -579,7 +731,7 @@ class FinalDefenseService {
       tenantId: input.tenantId,
       scope: 'device',
       targetId: input.companionId,
-      commandType: input.commandType,
+      commandType: normalizedCommand,
       gateId: policy.gateId,
       payload: {
         ...(input.payload || {}),
@@ -766,7 +918,8 @@ class FinalDefenseService {
     if (!row.firmware_digest) {
       reasons.push('firmware_digest_missing');
     }
-    if (!row.last_attestation_at) {
+    // Server-owned attestation level, not a self-reported timestamp.
+    if (this.gatewayAttestationLevel(row) !== 'attested') {
       reasons.push('attestation_missing');
     }
     if (!asBoolean(row.server_port_link)) {
@@ -833,12 +986,18 @@ class FinalDefenseService {
     };
   }
 
+  private gatewayAttestationLevel(row: any): 'reported' | 'verified' | 'attested' {
+    const level = String(row.attestation_level || 'reported');
+    return level === 'attested' ? 'attested' : level === 'verified' ? 'verified' : 'reported';
+  }
+
   private mapRootResistantGateway(row: any): RootResistantGatewayStatus {
     const degradedReasons = this.rootResistantGatewayDegradedReasons(row);
     return {
       gatewayProtectionMode: 'external_network_gateway',
       gatewayId: String(row.gateway_id),
       tenantId: String(row.tenant_id),
+      verificationLevel: this.gatewayAttestationLevel(row),
       policyDigest: row.policy_digest || undefined,
       reportedPolicyDigest: row.reported_policy_digest || undefined,
       firmwareDigest: row.firmware_digest || undefined,
@@ -852,6 +1011,9 @@ class FinalDefenseService {
       lastAttestationAt: row.last_attestation_at || undefined,
       isolationReason: row.isolation_reason || undefined,
       lastError: row.last_error || undefined,
+      reportBootId: row.report_boot_id || undefined,
+      reportSequence: row.report_sequence === null || row.report_sequence === undefined ? undefined : Number(row.report_sequence),
+      boundHelperKeyId: row.bound_helper_key_id || undefined,
       active: degradedReasons.length === 0,
       degradedReasons,
       createdAt: String(row.created_at),

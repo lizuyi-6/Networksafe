@@ -957,7 +957,7 @@
     "invalid_url_format": "Invalid URL format",
     "server_type_required": "Server type is required",
     "unsupported_deployment_target": "Unsupported deployment target",
-    "invalid_profile": "Invalid profile configuration",
+    "invalid_profile": "Invalid profile",
     "failed_to_generate_bundle": "Failed to generate deployment bundle",
     "device_gateway_unavailable": "Device gateway unavailable",
     "no_esp32_connected": "No hardware device connected",
@@ -1025,7 +1025,6 @@
     "password_change_failed": "Password change failed",
     "password_session_revocation_failed": "Existing sessions could not be revoked after the password change",
     "configuration_saved": "Configuration saved",
-    "invalid_profile": "Invalid profile",
     "servertype_must_be_nginx_or_apache": "serverType must be nginx or apache",
     "configtext_and_envsnippet_are_required": "configText and envSnippet are required",
     "deployment_profile_not_found": "Deployment profile not found",
@@ -1161,7 +1160,22 @@
     "liveRefreshDesc": "When enabled, dashboards and monitors auto-poll for the latest data",
     "logout": "Log Out",
     "logoutDesc": "Clear current session and return to login page",
-    "loggingOut": "Logging out..."
+    "loggingOut": "Logging out...",
+    "passkeysTitle": "Passkeys",
+    "passkeysSubtitle": "Hardware-backed re-authentication for high-risk operations.",
+    "passkeysDescription": "Register a Passkey to approve sensitive control-plane actions. Current password is required to add or remove a credential.",
+    "noPasskeys": "No Passkeys registered.",
+    "unnamedPasskey": "Unnamed Passkey",
+    "passkeyDevice": "Passkey device",
+    "currentPassword": "Current password",
+    "passkeyName": "Passkey name (optional)",
+    "addPasskey": "Add Passkey",
+    "passkeyAdded": "Passkey registered.",
+    "passkeyRemoved": "Passkey removed.",
+    "passkeyPasswordRequired": "Enter your current password first.",
+    "passkeyLoadFailed": "Unable to load Passkeys.",
+    "passkeyRegistrationFailed": "Passkey registration failed.",
+    "passkeyRemovalFailed": "Passkey removal failed."
   },
   "sites": {
     "title": "Title",
@@ -1845,5 +1859,15 @@
     "partner": "Partner",
     "upgradeRequired": "Upgrade required",
     "retry": "Retry"
+  },
+  "stepup": {
+    "title": "Passkey verification required",
+    "description": "This high-risk operation requires a fresh Passkey assertion.",
+    "enrollRequiredTitle": "Passkey enrollment required",
+    "enrollRequiredDescription": "Register a Passkey in Settings before performing high-risk operations.",
+    "goToSecurity": "Open Passkey settings",
+    "usePasskey": "Use Passkey",
+    "authenticating": "Authenticating…",
+    "authenticationFailed": "Passkey verification failed."
   }
 }

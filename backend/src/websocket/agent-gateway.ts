@@ -17,6 +17,10 @@ import logger from '../utils/logger';
 import { AgentStatus, ThreatAlert } from '../agent';
 import { verifyTokenAsyncDetailed, AuthenticatedRequest } from '../middleware/auth.middleware';
 import agentAuthService from '../security/agent-auth.service';
+import {
+  verifyInboundEnvelope,
+  INBOUND_ENVELOPE_TEST_SECRET
+} from '../security/inbound-envelope';
 import commandSigningService from '../security/command-signing.service';
 import auditLogger from '../security/audit-logger.service';
 import { getTrafficStats } from '../services/traffic-stats.service';
@@ -46,6 +50,16 @@ import {
   validateDashboardAgentCommandPayload,
   validateDashboardIpCommandPayload
 } from './socket-payload-validator';
+import { normalizeRole } from '../security/permissions';
+
+// SECURITY (audit 2026-08, P0): per-message authorization for dashboard
+// commands. The REST routes for scan/block/unblock are requireRole('admin');
+// the WebSocket handlers previously only checked tenant access, so a
+// viewer/auditor could do over WS what REST rejects. Mirror the REST role
+// contract exactly — authentication and tenant match are NOT permissions.
+function isDashboardAgentCommandAuthorized(user: { role?: string } | undefined): boolean {
+  return normalizeRole(user?.role) === 'platform_admin';
+}
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
@@ -287,18 +301,135 @@ function containsShellMetacharacters(input: string): boolean {
   return dangerousChars.test(input);
 }
 
+function extractCookieNames(cookieHeader: string | undefined): string[] {
+  if (!cookieHeader) {
+    return [];
+  }
+  return cookieHeader
+    .split(';')
+    .map((pair) => pair.split('=')[0]?.trim() || '')
+    .filter((name) => Boolean(name))
+    .slice(0, 20);
+}
+
+/**
+ * SECURITY (R2-F001): never persist raw cookie values into the audit trail.
+ * A dashboard client that still carries a live refreshToken cookie (the
+ * 24h-7d window after the accessToken cookie expires) but no accessToken
+ * used to leak the full refresh token JWT via this audit entry.
+ *
+ * The audit key deliberately avoids the substring "cookie": recursiveSanitize
+ * redacts any field whose name contains it (REDACT_FIELDS 'cookie'), which
+ * would blank the presence/name diagnostics this structure exists for. The
+ * payload is value-free (names only, capped at 20) so nothing secret can
+ * leak through the renamed key.
+ */
+function auditCookiePresence(cookieHeader: string | undefined): { present: boolean; cookieNames: string[] } {
+  return {
+    present: Boolean(cookieHeader),
+    cookieNames: extractCookieNames(cookieHeader)
+  };
+}
+
+/**
+ * SECURITY (audit 2026-08, AUD-03-4): inbound envelope enforcement for
+ * HIGH-severity agent events. Returns the verified payload body, or null
+ * after emitting an error + writing a tamper-evident rejection audit.
+ * Wire shape: `{ envelope: {...}, ...payload }` — the digest is computed
+ * over the payload WITHOUT the envelope field.
+ */
+async function enforceAgentInboundEnvelope(
+    socket: Socket,
+    agentId: string,
+    eventType: string,
+    data: any
+): Promise<Record<string, any> | null> {
+    if (!data || typeof data !== 'object' || !data.envelope) {
+        try {
+            await auditLogger.log({
+                eventType: 'inbound_envelope_rejected',
+                category: 'agent',
+                severity: 'warning',
+                actor: { type: 'agent', id: agentId },
+                action: eventType,
+                details: { reason: 'envelope_missing', eventType },
+                status: 'failure'
+            });
+        } catch {
+            // rejection audit is non-blocking
+        }
+        socket.emit('error', { message: 'backend.inbound_envelope_required', reason: 'envelope_missing' });
+        return null;
+    }
+    const { envelope, ...body } = data;
+    const secret = isTestRuntime()
+        ? INBOUND_ENVELOPE_TEST_SECRET
+        : agentAuthService.getAgentSecretKey(agentId);
+    const verification = await verifyInboundEnvelope(body, envelope, {
+        secret,
+        expectedEventType: eventType,
+        expectedSessionId: socket.id
+    });
+    if (!verification.ok) {
+        try {
+            await auditLogger.log({
+                eventType: 'inbound_envelope_rejected',
+                category: 'agent',
+                severity: verification.reason === 'nonce_replay' ? 'critical' : 'warning',
+                actor: { type: 'agent', id: agentId },
+                action: eventType,
+                details: { reason: verification.reason, eventType },
+                status: 'failure'
+            });
+        } catch {
+            // rejection audit is non-blocking
+        }
+        socket.emit('error', { message: 'backend.inbound_envelope_rejected', reason: verification.reason });
+        return null;
+    }
+    return body;
+}
+
 interface ConnectedAgent {
   socketId: string;
   agentId: string;
   hostname: string;
   platform: string;
   tenantId: string;
+  /**
+   * SECURITY (audit 2026-08, batch 3): server-side connection generation.
+   * Every successful (re)connection for the same agentId produces a new
+   * generation; the superseded socket is explicitly disconnected. Handlers
+   * must verify socket ownership (socketId === registry entry) before any
+   * state mutation, and disconnect must only clean up when the departing
+   * socket still owns the registry entry.
+   */
+  generation: number;
   registration?: any;
   authenticated: boolean;
   lastHeartbeat: Date;
   status: AgentStatus | null;
+  /** AUD-08-1: telemetry provenance — last accepted monotonic event seq. */
+  lastTelemetrySeq?: number;
   isSynthetic?: boolean;
   commandHandler?: (command: { type: string; payload?: any; userId?: string; metadata?: any }) => boolean;
+}
+
+/**
+ * AUD-08-1: telemetry provenance. Agent-reported telemetry carries
+ * `sourceTrust: 'agent_reported'` end-to-end so downstream consumers never
+ * mistake self-reported signals for control-plane-verified facts, and a
+ * monotonic per-agent sequence (`seq`) demotes regression/replayed
+ * telemetry instead of letting it overwrite newer state.
+ */
+function telemetrySeqClaim(data: any): number | undefined {
+  const seq = data?.seq;
+  return typeof seq === 'number' && Number.isInteger(seq) && seq >= 0 ? seq : undefined;
+}
+
+function isStaleTelemetrySeq(agent: ConnectedAgent | undefined, seq: number | undefined): boolean {
+  if (seq === undefined || !agent) return false;
+  return agent.lastTelemetrySeq !== undefined && seq <= agent.lastTelemetrySeq;
 }
 
 interface DashboardClient {
@@ -310,6 +441,9 @@ interface DashboardClient {
 export class AgentGateway {
   private io: SocketIOServer<AgentClientToServerEvents, AgentServerToClientEvents>;
   private agents: Map<string, ConnectedAgent> = new Map();
+  // SECURITY (audit 2026-08, batch 3): monotonic server-side connection
+  // generation counter, bumped on every (re)connection of the same agent.
+  private connectionGeneration = 0;
   private dashboardClients: Map<string, DashboardClient> = new Map();
   private heartbeatSweepTimer: ReturnType<typeof setInterval>;
   private sessionRevalidationTimers = new Set<ReturnType<typeof setInterval>>();
@@ -500,7 +634,7 @@ export class AgentGateway {
             severity: 'warning',
             actor: { type: 'user', id: 'unknown', ip: clientIp },
             action: 'connect',
-            details: { reason: 'No token provided', cookies: socket.handshake.headers.cookie },
+            details: { reason: 'No token provided', handshakeCookieAudit: auditCookiePresence(socket.handshake.headers.cookie) },
             status: 'failure'
           });
           return next(new Error('backend.authentication_token_required'));
@@ -603,19 +737,60 @@ export class AgentGateway {
       return;
     }
 
-    // Store connected agent
+    // SECURITY (audit 2026-08, batch 3): a new authenticated connection for
+    // an already-connected agent SUPERSEDES the old one. The registry entry
+    // is swapped to the new socket FIRST (so the old socket's disconnect
+    // handler observes stale ownership and leaves the entry alone), and the
+    // superseded socket is then force-disconnected with an audit trail — a
+    // stale socket can never keep mutating the agent's registry entry or
+    // intercept commands after a replacement connection is live.
+    const existing = this.agents.get(agent.agentId);
+    if (existing && !existing.isSynthetic && existing.socketId !== socket.id) {
+      this.connectionGeneration += 1;
+      const supersededGeneration = this.connectionGeneration;
+      logger.warn('Agent connection superseded by a newer authenticated connection', {
+        agentId: agent.agentId,
+        oldSocketId: existing.socketId,
+        newSocketId: socket.id,
+        generation: supersededGeneration
+      });
+      void Promise.resolve()
+        .then(() => auditLogger.logAgent({
+          action: 'connection_superseded',
+          agentId: agent.agentId,
+          success: true,
+          details: { oldSocketId: existing.socketId, newSocketId: socket.id, generation: supersededGeneration }
+        }))
+        .catch((auditError: any) => {
+          logger.error('Audit log failed on agent connection supersede (non-blocking)', {
+            error: auditError?.message,
+            agentId: agent.agentId
+          });
+        });
+    }
+
+    this.connectionGeneration += 1;
     const connectedAgent: ConnectedAgent = {
       socketId: socket.id,
       agentId: agent.agentId,
       hostname: agent.hostname,
       platform: agent.platform,
       tenantId: tenantContext.tenantId,
+      generation: this.connectionGeneration,
       authenticated: true,
       lastHeartbeat: new Date(),
       status: null
     };
 
     this.agents.set(agent.agentId, connectedAgent);
+
+    // Force-disconnect the superseded socket only AFTER the registry swap.
+    const supersededSocket = existing && existing.socketId !== socket.id
+      ? this.io.sockets.sockets.get(existing.socketId)
+      : undefined;
+    if (supersededSocket) {
+      supersededSocket.disconnect(true);
+    }
     if (isTestRuntime()) {
       this.testOnlineCounter += 1;
     }
@@ -639,6 +814,8 @@ export class AgentGateway {
 
     // Legacy registration event used by tests and older agents.
     socket.on('agent:register', (registration: any) => {
+      // Batch 3: superseded sockets are inert.
+      if (!this.isCurrentAgentSocket(socket, agent.agentId)) return;
       const connectedAgent = this.agents.get(agent.agentId);
       if (!connectedAgent) return;
       const validatedRegistration = validateAgentRegisterPayload(registration);
@@ -663,6 +840,8 @@ export class AgentGateway {
     // SECURITY FIX CVE-2026-201: Validate heartbeat comes from authenticated agent
     socket.on('agent:heartbeat', async (status: AgentStatus) => {
       if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:heartbeat', tenantContext.tenantId))) return;
+      // Batch 3: superseded sockets are inert.
+      if (!this.isCurrentAgentSocket(socket, agent.agentId)) return;
       const validatedStatus = validateAgentHeartbeatPayload(status);
       if (!validatedStatus) {
         socket.emit('error', { message: 'backend.invalid_agent_heartbeat_payload', reason: 'invalid_payload' });
@@ -691,9 +870,25 @@ export class AgentGateway {
       }
 
       const connectedAgent = this.agents.get(agent.agentId);
+      const seqClaim = telemetrySeqClaim(validatedStatus as any);
+      if (isStaleTelemetrySeq(connectedAgent, seqClaim)) {
+        await auditLogger.log({
+          eventType: 'telemetry_sequence_regression',
+          category: 'agent',
+          severity: 'warning',
+          actor: { type: 'agent', id: agent.agentId },
+          action: 'heartbeat',
+          details: { claimedSeq: seqClaim, lastSeq: connectedAgent?.lastTelemetrySeq },
+          status: 'failure'
+        });
+        return;
+      }
       if (connectedAgent) {
         connectedAgent.lastHeartbeat = new Date();
         connectedAgent.status = validatedStatus as AgentStatus;
+        if (seqClaim !== undefined) {
+          connectedAgent.lastTelemetrySeq = seqClaim;
+        }
 
         // Update last seen in database
         if (!isTestRuntime()) {
@@ -704,6 +899,7 @@ export class AgentGateway {
       this.broadcastToDashboards('agent:status', {
         ...validatedStatus,
         agentId: agent.agentId,
+        sourceTrust: 'agent_reported',
         tenantId: connectedAgent?.tenantId || tenantContext.tenantId
       }, { tenantId: connectedAgent?.tenantId || tenantContext.tenantId });
     });
@@ -711,6 +907,8 @@ export class AgentGateway {
     // Traffic stats handler (added for real data loop)
     socket.on('agent:traffic_stats', async (data: { agentId: string, stats: any, timestamp: string }) => {
       if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:traffic_stats', tenantContext.tenantId))) return;
+      // Batch 3: superseded sockets are inert.
+      if (!this.isCurrentAgentSocket(socket, agent.agentId)) return;
       if (data?.agentId && data.agentId !== agent.agentId) return;
 
       const globalStats = getTrafficStats();
@@ -822,9 +1020,14 @@ export class AgentGateway {
       }, { tenantId: tenantContext.tenantId });
     });
 
-    socket.on('agent:review_sample', async (data: { sample?: Record<string, any>; timestamp?: string }) => {
+    socket.on('agent:review_sample', async (data: any) => {
       if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:review_sample', tenantContext.tenantId))) return;
-      const sample = data?.sample;
+      // Batch 3: superseded sockets are inert.
+      if (!this.isCurrentAgentSocket(socket, agent.agentId)) return;
+      // AUD-03-4: envelope-verified HIGH event.
+      const body = await enforceAgentInboundEnvelope(socket, agent.agentId, 'agent:review_sample', data);
+      if (!body) return;
+      const sample = (body as any).sample;
       if (!sample || typeof sample !== 'object') {
         socket.emit('error', { message: 'backend.invalid_review_sample_payload', reason: 'invalid_payload' });
         return;
@@ -883,19 +1086,22 @@ export class AgentGateway {
     // Scan result handler
     socket.on('agent:scan_result', async (data: any) => {
       if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:scan_result', tenantContext.tenantId))) return;
+      // AUD-03-4: envelope-verified HIGH event.
+      const body = await enforceAgentInboundEnvelope(socket, agent.agentId, 'agent:scan_result', data);
+      if (!body) return;
       await auditLogger.log({
         eventType: 'scan_completed',
         category: 'agent',
         severity: 'info',
         actor: { type: 'agent', id: agent.agentId },
         action: 'scan_result',
-        details: data,
+        details: body,
         status: 'success'
       });
 
       this.broadcastToDashboards('scan:result', {
         agentId: agent.agentId,
-        ...data,
+        ...body,
         tenantId: tenantContext.tenantId
       }, { tenantId: tenantContext.tenantId });
     });
@@ -911,17 +1117,26 @@ export class AgentGateway {
     });
 
     socket.on('agent:command_ack', async (data: any) => {
+      // N4-1: a superseded socket (its connection was replaced by a newer
+      // authenticated one) must not mutate command state or broadcast.
+      if (!this.isCurrentAgentSocket(socket, agent.agentId)) return;
       if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:command_ack', tenantContext.tenantId))) return;
+      // N4-2: the dashboard "completed" broadcast and the success audit may
+      // only fire when the dispatcher actually ACCEPTED the transition
+      // (running -> completed). A rejected ack (replay, mismatched tenant/
+      // target, wrong prior state) is audited as a warning and never
+      // reported to dashboards as completion.
+      const accepted = commandDispatcherService.handleAgentCommandAck(agent.agentId, tenantContext.tenantId, data || {});
       await auditLogger.log({
         eventType: 'command_ack',
         category: 'agent',
-        severity: 'info',
+        severity: accepted ? 'info' : 'warning',
         actor: { type: 'agent', id: agent.agentId },
         action: 'command_ack',
-        details: data || {},
-        status: 'success'
+        details: { accepted, ...(data || {}) },
+        status: accepted ? 'success' : 'failure'
       });
-      commandDispatcherService.handleAgentCommandAck(agent.agentId, tenantContext.tenantId, data || {});
+      if (!accepted) return;
       this.broadcastToDashboards('agent:command:ack', {
         agentId: agent.agentId,
         ...data,
@@ -930,17 +1145,20 @@ export class AgentGateway {
     });
 
     socket.on('agent:command_failed', async (data: any) => {
+      // N4-1: same ownership guard as command_ack.
+      if (!this.isCurrentAgentSocket(socket, agent.agentId)) return;
       if (!(await enforceAgentEventRateLimit(socket, agent.agentId, 'agent:command_failed', tenantContext.tenantId))) return;
+      const accepted = commandDispatcherService.handleAgentCommandFailure(agent.agentId, tenantContext.tenantId, data || {});
       await auditLogger.log({
         eventType: 'command_failed',
         category: 'agent',
-        severity: 'warning',
+        severity: accepted ? 'warning' : 'warning',
         actor: { type: 'agent', id: agent.agentId },
         action: 'command_failed',
-        details: data || {},
-        status: 'failure'
+        details: { accepted, ...(data || {}) },
+        status: accepted ? 'failure' : 'failure'
       });
-      commandDispatcherService.handleAgentCommandFailure(agent.agentId, tenantContext.tenantId, data || {});
+      if (!accepted) return;
       this.broadcastToDashboards('agent:command:failed', {
         agentId: agent.agentId,
         ...data,
@@ -977,6 +1195,21 @@ export class AgentGateway {
       const payload = validateDashboardAgentCommandPayload(data);
       if (!payload) {
         socket.emit('error', { message: 'backend.invalid_agent_command_payload', reason: 'invalid_payload' });
+        return;
+      }
+
+      if (!isDashboardAgentCommandAuthorized(user)) {
+        socket.emit('error', { message: 'backend.insufficient_permissions', reason: 'forbidden' });
+        await auditLogger.log({
+          eventType: 'ws_command_denied',
+          category: 'command',
+          severity: 'warning',
+          actor: { type: 'user', id: user.userId },
+          action: 'scan',
+          target: { type: 'agent', id: payload.agentId },
+          details: { reason: 'role_not_permitted', channel: 'websocket' },
+          status: 'failure'
+        });
         return;
       }
 
@@ -1046,6 +1279,21 @@ export class AgentGateway {
       const payload = validateDashboardIpCommandPayload(data);
       if (!payload) {
         socket.emit('error', { message: 'backend.invalid_agent_command_payload', reason: 'invalid_payload' });
+        return;
+      }
+
+      if (!isDashboardAgentCommandAuthorized(user)) {
+        socket.emit('error', { message: 'backend.insufficient_permissions', reason: 'forbidden' });
+        await auditLogger.log({
+          eventType: 'ws_command_denied',
+          category: 'firewall',
+          severity: 'warning',
+          actor: { type: 'user', id: user.userId },
+          action: 'block_ip',
+          target: { type: 'agent', id: payload.agentId },
+          details: { reason: 'role_not_permitted', channel: 'websocket' },
+          status: 'failure'
+        });
         return;
       }
 
@@ -1145,6 +1393,21 @@ export class AgentGateway {
       const payload = validateDashboardIpCommandPayload(data);
       if (!payload) {
         socket.emit('error', { message: 'backend.invalid_agent_command_payload', reason: 'invalid_payload' });
+        return;
+      }
+
+      if (!isDashboardAgentCommandAuthorized(user)) {
+        socket.emit('error', { message: 'backend.insufficient_permissions', reason: 'forbidden' });
+        await auditLogger.log({
+          eventType: 'ws_command_denied',
+          category: 'firewall',
+          severity: 'warning',
+          actor: { type: 'user', id: user.userId },
+          action: 'unblock_ip',
+          target: { type: 'agent', id: payload.agentId },
+          details: { reason: 'role_not_permitted', channel: 'websocket' },
+          status: 'failure'
+        });
         return;
       }
 
@@ -1478,6 +1741,16 @@ export class AgentGateway {
   }
 
   /**
+   * SECURITY (audit 2026-08, batch 3): socket ownership check for agent
+   * event handlers. After a superseding connection takes over the registry
+   * entry, any frame from the OLD socket must be inert — handlers verify
+   * the emitting socket still owns the entry before mutating shared state.
+   */
+  private isCurrentAgentSocket(socket: Socket, agentId: string): boolean {
+    return this.agents.get(agentId)?.socketId === socket.id;
+  }
+
+  /**
    * Handle disconnect
    */
   private handleDisconnect(socket: Socket): void {
@@ -1487,6 +1760,19 @@ export class AgentGateway {
       const agent = socket.data.agent;
       const tenantContext = socket.data.tenantContext as TenantContext | undefined;
       if (agent && tenantContext) {
+        // SECURITY (audit 2026-08, batch 3): only the socket that still
+        // OWNS the registry entry may clean it up. A stale socket losing a
+        // supersede race must not delete the new connection's entry or
+        // broadcast agent:offline for a live agent.
+        if (!this.isCurrentAgentSocket(socket, agent.agentId)) {
+          logger.info('Stale agent socket disconnected after supersede; registry entry left intact', {
+            agentId: agent.agentId,
+            socketId: socket.id,
+            currentSocketId: this.agents.get(agent.agentId)?.socketId
+          });
+          return;
+        }
+
         this.agents.delete(agent.agentId);
         this.broadcastAgentListUpdates(tenantContext.tenantId);
 
@@ -1625,6 +1911,7 @@ export class AgentGateway {
       hostname: input.hostname,
       platform: input.platform,
       tenantId: input.tenantId || existing?.tenantId || PLATFORM_TENANT_ID,
+      generation: (existing?.generation ?? this.connectionGeneration) + 1,
       registration: input.registration ?? existing?.registration,
       authenticated: true,
       lastHeartbeat: input.lastHeartbeat || existing?.lastHeartbeat || new Date(),

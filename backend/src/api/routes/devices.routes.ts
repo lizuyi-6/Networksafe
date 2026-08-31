@@ -8,6 +8,7 @@
 
 import { Router, Request, Response } from 'express';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { requireStepUpScope } from '../../middleware/step-up.middleware';
 import { normalizeRole } from '../../security/permissions';
 import logger from '../../utils/logger';
 import { sendError, sendSuccess } from '../../core/http/api-response';
@@ -101,11 +102,18 @@ function resolveActorTenantId(req?: AuthenticatedRequest): string {
         return PLATFORM_TENANT_ID;
     }
 
+    // SECURITY (audit 2026-08, AUD-02-5): the platform tenant is reserved
+    // for platform admins. A requester without a resolvable tenant is
+    // refused instead of silently acting on platform scope.
     const context = resolveRequestTenantContext(req, {
-        allowAdminPlatformFallback: req.user?.role === 'admin'
+        allowAdminPlatformFallback: normalizeRole(req.user?.role) === 'platform_admin'
     });
 
-    return context?.tenantId || req.user?.tenantId || PLATFORM_TENANT_ID;
+    const tenantId = context?.tenantId || req.user?.tenantId;
+    if (!tenantId) {
+        throw new Error('backend.tenant_context_required');
+    }
+    return tenantId;
 }
 
 function safeAuditLog(payload: any): void {
@@ -523,9 +531,15 @@ function summarizeSecurity(device: DeviceInfo) {
  * GET /api/devices
  * Get all ESP32 device list
  */
-router.get('/', (_req: Request, res: Response) => {
+router.get('/', authenticate, (req: AuthenticatedRequest, res: Response) => {
     try {
-        const deviceList = Array.from(devices.values()).map(device => ({
+        // SECURITY (audit 2026-08, AUD-02-5): the list was previously
+        // UNAUTHENTICATED and unfiltered — every caller saw every device.
+        // Now authentication + per-device tenant visibility apply.
+        const platformViewer = normalizeRole(req.user?.role) === 'platform_admin';
+        const deviceList = Array.from(devices.values())
+            .filter((device) => platformViewer || canViewDevice(req as AuthenticatedRequest, device))
+            .map(device => ({
             ...(() => {
                 const config = ensureDeviceConfig(device);
                 try {
@@ -763,7 +777,7 @@ router.get('/:id', (req: AuthenticatedRequest, res: Response) => {
  * Send command to device
  * SECURITY FIX: Require admin role for command execution
  */
-router.post('/:id/cmd', requireRole('admin'), (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/cmd', requireRole('admin'), requireStepUpScope({ action: 'device.command' }), (req: AuthenticatedRequest, res: Response) => {
     (async () => {
         try {
         const { id } = req.params;

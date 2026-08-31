@@ -336,3 +336,76 @@ describe('GatewayDaemon fail-closed bridge enforcement', () => {
     }
   });
 });
+
+describe('N2-1 grant wire time contract (ISO internal / epoch wire)', () => {
+  const { expiresAtToEpochSeconds } = require('../../companion/gateway-daemon');
+
+  it('expiresAtToEpochSeconds converts ISO-8601, epoch numbers and epoch strings', () => {
+    expect(expiresAtToEpochSeconds('2023-11-14T22:13:20.000Z')).toBe(1_700_000_000);
+    expect(expiresAtToEpochSeconds(1_700_000_000)).toBe(1_700_000_000);
+    expect(expiresAtToEpochSeconds(1_700_000_000.9)).toBe(1_700_000_000);
+    expect(expiresAtToEpochSeconds('1700000000')).toBe(1_700_000_000);
+  });
+
+  it('expiresAtToEpochSeconds rejects unparseable / negative input (fail-closed)', () => {
+    expect(expiresAtToEpochSeconds('not-a-date')).toBeNull();
+    expect(expiresAtToEpochSeconds('')).toBeNull();
+    expect(expiresAtToEpochSeconds(-1)).toBeNull();
+    expect(expiresAtToEpochSeconds(Number.NaN)).toBeNull();
+    expect(expiresAtToEpochSeconds('99999999999999999999')).toBeNull();
+  });
+
+  it('accepts a control-plane grant whose expiresAt is an ISO string (the real format) and carries epoch seconds on the wire', () => {
+    const clock = makeClock();
+    const frames: any[] = [];
+    const { publicKey, privateKey } = keyPair();
+    const daemon = new GatewayDaemon({
+      gatewayId: 'gw-1',
+      secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
+      policyDigest: TEST_POLICY_DIGEST,
+      now: clock.now,
+      onFrame: (f) => frames.push(f)
+    });
+    try {
+      const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+      // isoPlusMs produces e.g. 2023-11-14T23:13:20.000Z for clock+3600s.
+      const isoExpiresAt = new Date(1_700_000_000_000 + 3_600_000).toISOString();
+      const grant = signGrant(priv, { monotonicCounter: 9, challenge: 'challenge-iso', expiresAt: isoExpiresAt });
+      // Old code: Number(ISO) -> NaN -> every real grant failed closed as
+      // grant_expired. Now the boundary canonicalizes ISO -> epoch seconds.
+      expect(daemon.requestRelease(grant)).toBe(true);
+
+      const releaseFrame = frames.find((f) => f.command === 'interlock_release' && f.grant);
+      expect(releaseFrame).toBeDefined();
+      expect(releaseFrame.grant.expiresAtEpochS).toBe(1_700_003_600);
+      expect(expiresAtToEpochSeconds(isoExpiresAt)).toBe(1_700_003_600);
+    } finally {
+      daemon.shutdown();
+    }
+  });
+
+  it('rejects an ISO grant that is already expired (expiry semantics unchanged)', () => {
+    const clock = makeClock();
+    const { publicKey, privateKey } = keyPair();
+    const daemon = new GatewayDaemon({
+      gatewayId: 'gw-1',
+      secureElementPublicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      breakerTarget: TEST_BREAKER_TARGET,
+      serialChannelKey: TEST_SERIAL_CHANNEL_KEY,
+      policyDigest: TEST_POLICY_DIGEST,
+      now: clock.now,
+      onFrame: () => undefined
+    });
+    try {
+      const priv = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+      const expiredIso = new Date(1_700_000_000_000 - 60_000).toISOString();
+      const grant = signGrant(priv, { monotonicCounter: 10, expiresAt: expiredIso });
+      expect(daemon.requestRelease(grant)).toBe(false);
+      expect(daemon.getLastFailClosedReason()).toBe('grant_expired');
+    } finally {
+      daemon.shutdown();
+    }
+  });
+});

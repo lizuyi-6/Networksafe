@@ -1,84 +1,61 @@
 #!/usr/sbin/nft -f
 #
-# AetherGuard Gateway Appliance: Released Ruleset
+# AetherGuard Gateway Appliance: Released Ruleset (AUD-04-1)
 #
-# Applied when bridge state is 'released' (temporary release window active).
-# SERVER <-> LAN/WAN forwarding is ALLOWED for the duration of the release window.
-# MGMT port remains reachable for appliance management.
+# Applied ONLY after the full hardware grant chain (M2 signature, counter,
+# policyDigest, interlock feedback). SERVER<->LANWAN transparent L2 bridge
+# forwarding is permitted for the release window; the appliance auto-reverts
+# to isolated_ruleset.nft on expiry or any fail-closed trigger.
 #
-# This ruleset is applied by the Gateway Daemon ONLY when:
-# - Hardware grant signature verified (SE public key)
-# - Monotonic counter advanced (no rollback)
-# - Grant not expired
-# - policyDigest matches local signed policy
-# - Controller confirmed interlock released
-# - Feedback auxiliary contact confirms relay closed
+# Same AUD-04-1 structure as the isolated file: own tables, no flush,
+# atomic replace prologue, bridge-family data plane, MGMT strictly separate.
 #
-# Auto-reasserts to isolated_ruleset.nft when:
-# - Release window expires (default 30s, configurable)
-# - Any fail-closed trigger (PRD §4.4)
-#
-
-flush ruleset
-
-# Define interfaces (adjust to actual interface names on deployment)
 define SERVER = eth0
 define LANWAN = eth1
 define MGMT = eth2
 
-table inet filter {
-  chain input {
-    type filter hook input priority filter; policy drop;
+table bridge aetherguard
+delete table bridge aetherguard
 
-    # Allow loopback
-    iif lo accept
+table bridge aetherguard {
+    chain forward {
+        type filter hook forward priority filter; policy drop;
 
-    # Allow established/related
-    ct state established,related accept
+        # RELEASED: only the explicit SERVER<->LANWAN port pair may forward.
+        # Accepting by port pair (not blanket policy accept) covers ARP,
+        # IPv4, IPv6 ND, non-IP EtherTypes, broadcast and multicast between
+        # exactly the two data ports — a transparent L2 bridge.
+        iifname "$SERVER" oifname "$LANWAN" counter accept
+        iifname "$LANWAN" oifname "$SERVER" counter accept
 
-    # Allow MGMT port (appliance management)
-    iif $MGMT accept
-
-    # Allow ICMP
-    ip protocol icmp accept
-    ip6 nexthdr icmpv6 accept
-
-    # Log and drop everything else
-    log prefix "INPUT-DROP: "
-    drop
-  }
-
-  chain forward {
-    type filter hook forward priority filter; policy accept;
-
-    # RELEASED: Allow SERVER <-> LAN/WAN transparent L2 bridge forwarding
-    # This is the core release behavior.
-    iif $SERVER oif $LANWAN accept
-    iif $LANWAN oif $SERVER accept
-
-    # Allow MGMT <-> any
-    iif $MGMT accept
-    oif $MGMT accept
-
-    # Allow established/related
-    ct state established,related accept
-
-    # Log any dropped forward (should not happen in released state)
-    log prefix "FORWARD-DROP: "
-    drop
-  }
-
-  chain output {
-    type filter hook output priority filter; policy accept;
-  }
+        # Any other port pairing (e.g. a rogue fourth port, mgmt leaking
+        # into the bridge) is dropped and counted.
+        counter drop
+    }
 }
 
-# Optional: Add connection tracking limits or rate limiting here
-# to prevent the protected server from abusing the release window.
-# Example:
-# table inet limiter {
-#   chain forward {
-#     type filter hook forward priority filter + 10;
-#     iif $SERVER oif $LANWAN limit rate over 1000 mbytes/second drop
-#   }
-# }
+table inet aetherguard_mgmt
+delete table inet aetherguard_mgmt
+
+table inet aetherguard_mgmt {
+    chain input {
+        type filter hook input priority filter; policy drop;
+        iif "lo" accept
+        ct state established,related accept
+        iifname "$MGMT" accept
+        ip protocol icmp accept
+        ip6 nexthdr ipv6-icmp accept
+        counter drop
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+        # Released authorizes the L2 bridge only — routed mgmt<->data
+        # forwarding stays forbidden in every state.
+        counter drop
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}

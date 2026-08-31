@@ -44,6 +44,17 @@ jest.mock('../../services/device-registry.service', () => ({
   addDeviceEvent: jest.fn().mockResolvedValue({}),
 }));
 
+// N3-2: handleRegister consults hardwareAuthorizationService.getGate on every
+// registration (tenant attribution); stub the module so no DB is needed.
+jest.mock('../../services/hardware-authorization.service', () => ({
+  hardwareAuthorizationService: {
+    getGate: jest.fn().mockReturnValue(undefined),
+    enrollGate: jest.fn(),
+    markGateOffline: jest.fn(),
+    handlePhysicalConfirmationAck: jest.fn(),
+  },
+}));
+
 // Mock socket rate limit service
 jest.mock('../../services/socket-rate-limit.service', () => ({
   socketRateLimitService: {

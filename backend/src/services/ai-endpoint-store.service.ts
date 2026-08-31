@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { encryptSecret, decryptSecret, isSealedSecret } from '../security/secret-encryption';
 import { getDatabase } from '../config/database';
 import { postgresShadowStoreService } from './postgres-shadow-store.service';
 
@@ -26,6 +27,22 @@ export interface AIEndpointRecord {
   updatedBy?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * AUD-07-5: api_key values are sealed (AES-256-GCM envelope) before they
+ * touch the database. Sealing an already-sealed value is a no-op so update
+ * paths that re-persist an existing key never double-encrypt.
+ */
+function sealApiKey(value: string): string {
+  if (!value || isSealedSecret(value)) return value;
+  return encryptSecret(value);
+}
+
+function openApiKey(value: string): string {
+  if (!value) return '';
+  const opened = decryptSecret(value);
+  return opened ?? value; // legacy plaintext rows keep working until rotation
 }
 
 const DEFAULT_ENDPOINT: Omit<AIEndpointRecord, 'tenantId' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'> = {
@@ -179,7 +196,7 @@ class AIEndpointStoreService {
       name: DEFAULT_ENDPOINT.name,
       url: DEFAULT_ENDPOINT.url,
       model_name: DEFAULT_ENDPOINT.modelName,
-      api_key: DEFAULT_ENDPOINT.apiKey,
+      api_key: sealApiKey(DEFAULT_ENDPOINT.apiKey),
       enabled: 1,
       priority: DEFAULT_ENDPOINT.priority,
       timeout: DEFAULT_ENDPOINT.timeout,
@@ -300,7 +317,7 @@ class AIEndpointStoreService {
       name: normalizeString(payload.name, 'Custom Endpoint'),
       url: normalizeString(payload.url, ''),
       model_name: normalizeString(payload.modelName, 'default'),
-      api_key: normalizeString(payload.apiKey, ''),
+      api_key: sealApiKey(normalizeString(payload.apiKey, '')),
       enabled: normalizeBoolean(payload.enabled, true) ? 1 : 0,
       priority: normalizeNumber(payload.priority, 10, 1, 10000),
       timeout: normalizeNumber(payload.timeout, 15000, 1000, 120000),
@@ -403,7 +420,7 @@ class AIEndpointStoreService {
       name: updated.name,
       url: updated.url,
       model_name: updated.modelName,
-      api_key: updated.apiKey,
+      api_key: sealApiKey(updated.apiKey),
       enabled: updated.enabled ? 1 : 0,
       priority: updated.priority,
       timeout: updated.timeout,
@@ -530,7 +547,7 @@ class AIEndpointStoreService {
       name: row.name,
       url: row.url,
       modelName: row.model_name,
-      apiKey: row.api_key || '',
+      apiKey: openApiKey(row.api_key || ''),
       enabled: Boolean(row.enabled),
       priority: Number(row.priority || 10),
       timeout: Number(row.timeout || 15000),

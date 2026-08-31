@@ -7,14 +7,67 @@
 import { Request, Response, NextFunction } from 'express';
 import { BugInvestigationTeam } from '../../ai-agents/investigation';
 import { InvestigationService } from '../../services/investigation.service';
+import { isPlatformAdminRole } from '../../security/permissions';
 
+/**
+ * SECURITY (audit 2026-08, AUD-02-5): investigations are tenant-owned.
+ * Ownership is recorded at creation and enforced on every read/cancel;
+ * unknown ownership (legacy/persisted rows predating this fix) is visible
+ * only to platform-level requesters. Tenant-scoped requesters get 404 —
+ * indistinguishable from a missing id, so ownership cannot be probed.
+ */
 export class InvestigationController {
   private investigationTeam: BugInvestigationTeam;
   private investigationService: InvestigationService;
+  private investigationTenants: Map<string, string | null> = new Map();
 
   constructor() {
     this.investigationTeam = BugInvestigationTeam.getInstance();
     this.investigationService = new InvestigationService();
+  }
+
+  private requesterTenantId(req: Request): string | null {
+    const user = (req as Request & { user?: { tenantId?: string } }).user;
+    return user?.tenantId ?? null;
+  }
+
+  private isPlatformRequester(req: Request): boolean {
+    const user = (req as Request & { user?: { role?: string } }).user;
+    return isPlatformAdminRole(user?.role);
+  }
+
+  private async canAccessInvestigation(req: Request, investigationId: string): Promise<boolean> {
+    if (this.isPlatformRequester(req)) {
+      return true;
+    }
+    // N3-4: ownership resolves from the in-process map first (active
+    // investigations), then from the persisted owner_tenant_id — a restart
+    // no longer silently reverts every investigation to platform-only
+    // visibility. Unknown ownership fails closed for tenant-scoped
+    // requesters.
+    const owner = await this.resolveOwner(investigationId);
+    if (owner === undefined) {
+      return false;
+    }
+    return owner === this.requesterTenantId(req);
+  }
+
+  private async resolveOwner(investigationId: string): Promise<string | null | undefined> {
+    if (this.investigationTenants.has(investigationId)) {
+      return this.investigationTenants.get(investigationId) ?? null;
+    }
+    try {
+      return await this.investigationService.getOwnerTenantId(investigationId);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private sendNotFound(res: Response): void {
+    res.status(404).json({
+      success: false,
+      error: 'backend.investigation_not_found'
+    });
   }
 
   /**
@@ -62,6 +115,11 @@ export class InvestigationController {
       console.log(`[InvestigationController] Starting investigation for bug ${bugReport.id}`);
       const result = await this.investigationTeam.investigate(bugReport, context);
 
+      // AUD-02-5: record the owning tenant for object-level access control.
+      // N3-4: also persist it — the in-process map dies with the process.
+      const ownerTenantId = this.requesterTenantId(req);
+      this.investigationTenants.set(result.investigationId, ownerTenantId);
+
       // Save investigation to database
       await this.investigationService.saveInvestigation({
         investigationId: result.investigationId,
@@ -70,7 +128,8 @@ export class InvestigationController {
         context,
         result,
         createdAt: new Date(),
-        status: 'completed'
+        status: 'completed',
+        ownerTenantId
       });
 
       res.status(200).json({
@@ -95,13 +154,15 @@ export class InvestigationController {
     try {
       const { investigationId } = req.params;
 
+      if (!(await this.canAccessInvestigation(req, investigationId))) {
+        this.sendNotFound(res);
+        return;
+      }
+
       const status = this.investigationTeam.getInvestigationStatus(investigationId);
 
       if (!status || status.status === 'not_found') {
-        res.status(404).json({
-          success: false,
-          error: 'backend.investigation_not_found'
-        });
+        this.sendNotFound(res);
         return;
       }
 
@@ -122,6 +183,12 @@ export class InvestigationController {
     try {
       const { investigationId } = req.params;
 
+      // AUD-02-5: object-level tenant guard (404, indistinguishable).
+      if (!(await this.canAccessInvestigation(req, investigationId))) {
+        this.sendNotFound(res);
+        return;
+      }
+
       // Try to get from database first
       const savedResult = await this.investigationService.getInvestigation(investigationId);
 
@@ -137,10 +204,7 @@ export class InvestigationController {
       const status = this.investigationTeam.getInvestigationStatus(investigationId);
 
       if (!status || status.status === 'not_found') {
-        res.status(404).json({
-          success: false,
-          error: 'backend.investigation_not_found'
-        });
+        this.sendNotFound(res);
         return;
       }
 
@@ -171,7 +235,19 @@ export class InvestigationController {
    */
   public getActiveInvestigations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const investigations = this.investigationTeam.getActiveInvestigations();
+      // AUD-02-5: tenant-scoped listing. Platform requesters see all;
+      // tenant requesters only investigations owned by their tenant
+      // (unknown ownership is hidden, not leaked).
+      const platform = this.isPlatformRequester(req);
+      const requesterTenant = this.requesterTenantId(req);
+      const all = this.investigationTeam.getActiveInvestigations() as Array<Record<string, any>>;
+      const investigations = all.filter((item) => {
+        const id = String(item?.investigationId ?? item?.id ?? '');
+        if (!this.investigationTenants.has(id)) {
+          return platform;
+        }
+        return platform || this.investigationTenants.get(id) === requesterTenant;
+      });
 
       res.status(200).json({
         success: true,
@@ -207,6 +283,12 @@ export class InvestigationController {
   public cancelInvestigation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { investigationId } = req.params;
+
+      // AUD-02-5: object-level tenant guard (404, indistinguishable).
+      if (!(await this.canAccessInvestigation(req, investigationId))) {
+        this.sendNotFound(res);
+        return;
+      }
 
       const result = this.investigationTeam.cancelInvestigation(investigationId);
 
@@ -256,11 +338,29 @@ export class InvestigationController {
         category: category as string
       });
 
+      // AUD-02-5: tenant-scoped history. Rows whose ownership is unknown to
+      // this controller instance (persisted before ownership tracking) are
+      // platform-only; tenant requesters only see rows they own.
+      const platform = this.isPlatformRequester(req);
+      const requesterTenant = this.requesterTenantId(req);
+      // N3-4: history rows carry persisted ownership; the in-process map is
+      // only a fast path. Legacy rows without an owner stay platform-only.
+      const rows = (history.investigations as Array<Record<string, any>>).filter((row) => {
+        if (platform) {
+          return true;
+        }
+        const id = String(row?.investigationId ?? row?.id ?? '');
+        const owner = this.investigationTenants.has(id)
+          ? (this.investigationTenants.get(id) ?? null)
+          : (row?.ownerTenantId === undefined ? null : row?.ownerTenantId ?? null);
+        return owner !== null && owner === requesterTenant;
+      });
+
       res.status(200).json({
         success: true,
-        data: history.investigations,
+        data: rows,
         pagination: {
-          total: history.total,
+          total: rows.length,
           limit: Number(limit),
           offset: Number(offset)
         }

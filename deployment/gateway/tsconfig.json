@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "dist",
+    "rootDir": "../..",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "declaration": false,
+    "noUnusedLocals": false,
+    "noImplicitOverride": true
+  },
+  "include": [
+    "bin/**/*.ts",
+    "../../backend/src/companion/gateway-daemon.ts",
+    "../../backend/src/security/hardware-grant.ts",
+    "../../backend/src/security/final-defense-policy.ts",
+    "../../backend/src/utils/logger.ts",
+    "../../backend/src/utils/log-sanitizer.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

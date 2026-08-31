@@ -14,6 +14,7 @@ describe('NotificationDispatcherService', () => {
   let mockNodemailerSendMail: jest.Mock;
   let mockLoggerWarn: jest.Mock;
   let mockAuditLog: jest.Mock;
+  let mockAssertOutboundUrlAllowedResolvedPinned: jest.Mock;
   let dispatcherService: any;
 
   beforeEach(() => {
@@ -28,6 +29,7 @@ describe('NotificationDispatcherService', () => {
     mockNodemailerSendMail = jest.fn();
     mockLoggerWarn = jest.fn();
     mockAuditLog = jest.fn().mockResolvedValue(undefined);
+    mockAssertOutboundUrlAllowedResolvedPinned = jest.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
 
     jest.doMock('../../config/database', () => ({
       getDatabase: jest.fn(() => ({ prepare: jest.fn(), exec: jest.fn() }))
@@ -61,6 +63,18 @@ describe('NotificationDispatcherService', () => {
       post: mockAxiosPost,
       default: { post: mockAxiosPost }
     }));
+
+    // R2-F002: the dispatcher now resolve-validates + pins webhook targets
+    // before fetching. Mock only the async pinned assertion (keep the real
+    // literal checks) so tests stay hermetic (no DNS in Jest).
+    jest.doMock('../../security/outbound-url-guard', () => {
+      const actual = jest.requireActual('../../security/outbound-url-guard');
+      return {
+        __esModule: true,
+        ...actual,
+        assertOutboundUrlAllowedResolvedPinned: mockAssertOutboundUrlAllowedResolvedPinned
+      };
+    });
 
     jest.doMock('nodemailer', () => ({
       createTransport: jest.fn(() => ({
@@ -262,12 +276,41 @@ describe('NotificationDispatcherService', () => {
       );
     });
 
+    // R2-F002 follow-up: the resolved guard must run (and pin) before any
+    // outbound POST — deleting the call must fail this test.
+    it('resolve-validates and pins the webhook target before posting', async () => {
+      mockAxiosPost.mockResolvedValue({ status: 200, data: 'ok' });
+
+      await (dispatcherService as any).send(sampleChannel, { title: 'Test' });
+
+      expect(mockAssertOutboundUrlAllowedResolvedPinned).toHaveBeenCalledTimes(1);
+      expect(mockAssertOutboundUrlAllowedResolvedPinned).toHaveBeenCalledWith(
+        'https://hooks.slack.com/services/test',
+        { allowPrivate: false }
+      );
+      const axiosOptions = mockAxiosPost.mock.calls[0][2];
+      expect(axiosOptions.maxRedirects).toBe(0);
+      expect(typeof axiosOptions.lookup).toBe('function');
+      expect(axiosOptions.httpAgent).toBeDefined();
+      expect(axiosOptions.httpsAgent).toBeDefined();
+    });
+
     it('throws on webhook failure', async () => {
       mockAxiosPost.mockResolvedValue({ status: 500, data: 'Server Error' });
 
       await expect(
         (dispatcherService as any).send(sampleChannel, { title: 'Test' })
       ).rejects.toThrow('Webhook delivery failed with status 500');
+    });
+
+    // R2-F002 follow-up: maxRedirects:0 turns a refused redirect into "the
+    // POST never reached the target" — that must NOT be recorded as sent.
+    it('treats a refused 3xx redirect as delivery failure (fail-closed)', async () => {
+      mockAxiosPost.mockResolvedValue({ status: 302, data: '' });
+
+      await expect(
+        (dispatcherService as any).send(sampleChannel, { title: 'Test' })
+      ).rejects.toThrow('Webhook delivery failed with status 302');
     });
   });
 
@@ -395,6 +438,71 @@ describe('NotificationDispatcherService', () => {
         expect.objectContaining({ status: 'failed' })
       );
       expect(result.status).toBe('failed');
+    });
+  });
+
+  describe('sendSmtp relay guard (N5-6)', () => {
+    const smtpChannel = (host: string) => ({
+      ...sampleChannel,
+      id: 'smtp-001',
+      type: 'smtp' as const,
+      target: 'ops@example.com',
+      smtp: { host, port: 587, secure: false, username: 'u', password: 'p', from: 'alerts@example.com' }
+    });
+    const payload = {
+      alertId: 'alert-001',
+      severity: 'high',
+      title: 't',
+      source: 's',
+      type: 'security',
+      message: 'm'
+    };
+    let savedEnv: string | undefined;
+
+    beforeEach(() => {
+      savedEnv = process.env.ALLOW_PRIVATE_SMTP;
+      delete process.env.ALLOW_PRIVATE_SMTP;
+      mockNodemailerSendMail.mockResolvedValue({ messageId: 'm-1', accepted: ['ops@example.com'], rejected: [] });
+    });
+
+    afterEach(() => {
+      if (savedEnv === undefined) {
+        delete process.env.ALLOW_PRIVATE_SMTP;
+      } else {
+        process.env.ALLOW_PRIVATE_SMTP = savedEnv;
+      }
+    });
+
+    it('blocks cloud-metadata relay hosts unconditionally (AG-B02)', async () => {
+      process.env.ALLOW_PRIVATE_SMTP = '1'; // metadata stays blocked even with the private opt-in
+      await expect((dispatcherService as any).sendSmtp(smtpChannel('169.254.169.254'), payload)).rejects.toThrow(
+        'backend.cloud_metadata_endpoints_are_blocked'
+      );
+      expect(mockNodemailerSendMail).not.toHaveBeenCalled();
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
+        'Blocked SMTP delivery to forbidden relay host',
+        expect.objectContaining({ host: '169.254.169.254' })
+      );
+    });
+
+    it('blocks private relay hosts unless ALLOW_PRIVATE_SMTP=1', async () => {
+      await expect((dispatcherService as any).sendSmtp(smtpChannel('10.0.0.25'), payload)).rejects.toThrow(
+        'backend.private_ip_addresses_are_not_allowed'
+      );
+      expect(mockNodemailerSendMail).not.toHaveBeenCalled();
+    });
+
+    it('allows an internal relay when ALLOW_PRIVATE_SMTP=1 is set explicitly', async () => {
+      process.env.ALLOW_PRIVATE_SMTP = '1';
+      const result = await (dispatcherService as any).sendSmtp(smtpChannel('10.0.0.25'), payload);
+      expect(mockNodemailerSendMail).toHaveBeenCalledTimes(1);
+      expect(result.messageId).toBe('m-1');
+    });
+
+    it('allows a public literal relay host', async () => {
+      const result = await (dispatcherService as any).sendSmtp(smtpChannel('203.0.113.10'), payload);
+      expect(mockNodemailerSendMail).toHaveBeenCalledTimes(1);
+      expect(result.messageId).toBe('m-1');
     });
   });
 });

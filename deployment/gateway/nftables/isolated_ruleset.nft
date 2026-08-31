@@ -1,70 +1,71 @@
 #!/usr/sbin/nft -f
 #
-# AetherGuard Gateway Appliance: Isolated Ruleset
+# AetherGuard Gateway Appliance: Isolated Ruleset (AUD-04-1)
 #
-# Applied when bridge state is 'isolated' (default fail-closed).
-# SERVER <-> LAN/WAN forwarding is BLOCKED.
-# MGMT port remains reachable for appliance management.
+# Data plane is a TRANSPARENT L2 BRIDGE (PRD §3/§4): frames between the
+# SERVER and LAN/WAN bridge ports are filtered in the nft BRIDGE family at
+# the bridge forward hook — not the L3 inet forward hook. Isolated is the
+# fail-closed default: bridged frames are dropped.
 #
-# This ruleset is applied by the Gateway Daemon on:
-# - Boot (default isolated)
-# - Any fail-closed trigger (PRD §4.4: invalid sig, counter rollback,
-#   heartbeat stale, feedback mismatch, SE unavailable, etc.)
-# - Release window expiry
-# - Emergency stop
+# AUD-04-1 fixes vs the old file:
+#   - NO `flush ruleset` (that nuked every other table on the appliance).
+#     Atomic replace uses the canonical declare/delete/recreate prologue,
+#     touching ONLY our own tables.
+#   - Own tables (`bridge aetherguard`, `inet aetherguard_mgmt`) — other
+#     software's tables are untouched.
+#   - MGMT is NOT a bridge port. Appliance management lives in a separate
+#     minimal inet table; MGMT→SERVER/LANWAN forwarding is explicitly
+#     dropped, so a compromised mgmt path cannot reach protected segments.
 #
-
-flush ruleset
-
-# Define interfaces (adjust to actual interface names on deployment)
+# Interface names: adjust these defines to the deployment's port names
+# (the preflight check verifies they exist).
 define SERVER = eth0
 define LANWAN = eth1
 define MGMT = eth2
 
-table inet filter {
-  chain input {
-    type filter hook input priority filter; policy drop;
+# --- atomic replace prologue (create-if-missing, then delete, then recreate)
+table bridge aetherguard
+delete table bridge aetherguard
 
-    # Allow loopback
-    iif lo accept
+table bridge aetherguard {
+    chain forward {
+        type filter hook forward priority filter; policy drop;
 
-    # Allow established/related
-    ct state established,related accept
+        # ISOLATED: the SERVER<->LANWAN bridge is shut. Every bridged frame
+        # (ARP, IPv4, IPv6 ND, non-IP EtherTypes, broadcast, multicast)
+        # between the two data ports is dropped — fail-closed.
+        iifname "$SERVER" oifname "$LANWAN" counter drop
+        iifname "$LANWAN" oifname "$SERVER" counter drop
 
-    # Allow MGMT port (appliance management, SSH, gateway daemon API)
-    iif $MGMT accept
-
-    # Allow ICMP (ping for diagnostics)
-    ip protocol icmp accept
-    ip6 nexthdr icmpv6 accept
-
-    # Log and drop everything else
-    log prefix "INPUT-DROP: "
-    drop
-  }
-
-  chain forward {
-    type filter hook forward priority filter; policy drop;
-
-    # ISOLATED: Block SERVER <-> LAN/WAN forwarding
-    # This is the core fail-closed enforcement.
-    iif $SERVER oif $LANWAN drop
-    iif $LANWAN oif $SERVER drop
-
-    # Allow MGMT <-> any (appliance can reach backend control plane)
-    iif $MGMT accept
-    oif $MGMT accept
-
-    # Log blocked attempts
-    log prefix "FORWARD-ISOLATED: "
-    drop
-  }
-
-  chain output {
-    type filter hook output priority filter; policy accept;
-    # Gateway daemon and system utilities can send traffic
-  }
+        # Anything else bridged through us (should not exist) is dropped
+        # and counted for the readback gate.
+        counter drop
+    }
 }
 
-# No NAT, no bridge netfilter in isolated mode.
-# The protected server is network-isolated from LAN/WAN.
+# Appliance management plane — separate from the L2 bridge data plane.
+table inet aetherguard_mgmt
+delete table inet aetherguard_mgmt
+
+table inet aetherguard_mgmt {
+    chain input {
+        type filter hook input priority filter; policy drop;
+        iif "lo" accept
+        ct state established,related accept
+        iifname "$MGMT" accept
+        ip protocol icmp accept
+        ip6 nexthdr ipv6-icmp accept
+        counter drop
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+        # The appliance must never route between mgmt and the protected
+        # segments, nor between them and anything else.
+        counter drop
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}

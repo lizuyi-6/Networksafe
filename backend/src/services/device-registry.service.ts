@@ -5,6 +5,7 @@
  * Extracted from devices.routes.ts – no Express/Router dependency.
  */
 
+import crypto from 'crypto';
 import logger from '../utils/logger';
 import { securityOperationsService } from './security-operations.service';
 import { commandDispatcherService } from './command-dispatcher.service';
@@ -71,10 +72,15 @@ export interface DeviceCommandRecord {
     id: string;
     deviceId: string;
     command: string;
-    status: 'queued' | 'completed' | 'failed';
+    // SECURITY (audit 2026-08, AUD-07-2): delivery != completion. A command
+    // is only 'delivered' once the transport accepted it; terminal states
+    // ('completed'/'failed') require a signed device ack; 'timed_out' is
+    // set by the ack-timeout sweep.
+    status: 'queued' | 'delivered' | 'completed' | 'failed' | 'timed_out';
     message: string;
     executedBy: string;
     createdAt: string;
+    deliveredAt?: string;
     completedAt?: string;
     params?: Record<string, any>;
 }
@@ -377,15 +383,18 @@ export async function executeDeviceCommandInternal(input: {
     }
 
     const now = new Date().toISOString();
+    // AUD-07-2: transport acceptance is DELIVERY. The command only reaches
+    // a terminal state when the device sends a signed ack (or the ack
+    // times out) — socket.emit() must never mean 'completed'.
     const record: DeviceCommandRecord = {
         id: input.actionId || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
         deviceId: input.deviceId,
         command: input.command,
-        status: 'completed',
-        message: `Command "${input.command}" executed successfully on ${input.deviceId}`,
+        status: 'delivered',
+        message: `Command "${input.command}" delivered to ${input.deviceId}; awaiting device ack`,
         executedBy: input.actorEmail || input.actorId || 'unknown',
         createdAt: now,
-        completedAt: now,
+        deliveredAt: now,
         params: input.params || {}
     };
 
@@ -533,7 +542,138 @@ export function setDeviceConfig(deviceId: string, config: DeviceConfig): void {
 }
 
 export function getDeviceCommandHistoryPublic(deviceId: string, limit = 10): DeviceCommandRecord[] {
+    sweepTimedOutDeviceCommands();
     return getDeviceCommandHistory(deviceId, limit);
+}
+
+// ---- AUD-07-2: signed device command acks ----
+
+const DEVICE_COMMAND_ACK_TIMEOUT_MS = 5 * 60_000;
+
+function findDeviceCommandRecord(deviceId: string, commandId: string): DeviceCommandRecord | undefined {
+    return (deviceCommands.get(deviceId) || []).find((record) => record.id === commandId);
+}
+
+function canonicalAckMessage(input: { deviceId: string; commandId: string; command: string; status: string; timestamp: number; nonce: string }): string {
+    return JSON.stringify({
+        commandId: input.commandId,
+        deviceId: input.deviceId,
+        command: input.command,
+        status: input.status,
+        timestamp: input.timestamp,
+        nonce: input.nonce
+    });
+}
+
+/**
+ * Verify a device command ack's HMAC. The device signs the canonical ack
+ * body with DEVICE_COMMAND_SECRET — the same provisioning secret the
+ * server uses to sign outbound commands — over a shape bound to the
+ * command identity, so a captured ack cannot be replayed for another
+ * command (nonce + timestamp bound, status bound).
+ */
+export function verifyDeviceCommandAckSignature(input: {
+    deviceId: string;
+    commandId: string;
+    command: string;
+    status: string;
+    timestamp: number;
+    nonce: string;
+    signature: string;
+}): boolean {
+    const secret = String(process.env.DEVICE_COMMAND_SECRET || '').trim();
+    if (!secret || secret.length < 32) {
+        // Fail closed: an unprovisioned runtime cannot complete commands.
+        return false;
+    }
+    const expected = crypto
+        .createHmac('sha256', secret)
+        .update(canonicalAckMessage(input))
+        .digest('hex');
+    const presented = String(input.signature || '').toLowerCase();
+    if (presented.length !== expected.length) {
+        return false;
+    }
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(presented));
+}
+
+/**
+ * Transition a DELIVERED command to a terminal state using a verified
+ * device ack. Only 'completed' | 'failed' are accepted as ack outcomes;
+ * anything else fails closed without mutating the record.
+ */
+export function applyDeviceCommandAck(input: {
+    deviceId: string;
+    commandId: string;
+    status: 'completed' | 'failed';
+    timestamp: number;
+    nonce: string;
+    signature: string;
+    message?: string;
+}): { applied: boolean; reason?: string } {
+    const record = findDeviceCommandRecord(input.deviceId, input.commandId);
+    if (!record) {
+        return { applied: false, reason: 'command_not_found' };
+    }
+    if (record.status !== 'delivered') {
+        return { applied: false, reason: `invalid_transition_from_${record.status}` };
+    }
+    if (!Number.isFinite(input.timestamp) || Math.abs(Date.now() - input.timestamp) > DEVICE_COMMAND_ACK_TIMEOUT_MS) {
+        return { applied: false, reason: 'ack_timestamp_out_of_window' };
+    }
+    if (!input.nonce || String(input.nonce).length < 8) {
+        return { applied: false, reason: 'ack_nonce_required' };
+    }
+    const verified = verifyDeviceCommandAckSignature({
+        deviceId: input.deviceId,
+        commandId: input.commandId,
+        command: record.command,
+        status: input.status,
+        timestamp: input.timestamp,
+        nonce: input.nonce,
+        signature: input.signature
+    });
+    if (!verified) {
+        logger.warn('[DeviceRegistry] Device command ack signature verification failed', {
+            deviceId: input.deviceId,
+            commandId: input.commandId.slice(0, 8)
+        });
+        return { applied: false, reason: 'invalid_ack_signature' };
+    }
+
+    record.status = input.status;
+    record.completedAt = new Date().toISOString();
+    record.message = input.message || (
+        input.status === 'completed'
+            ? `Command "${record.command}" acknowledged complete by device ${input.deviceId}`
+            : `Command "${record.command}" failed on device ${input.deviceId}`
+    );
+    return { applied: true };
+}
+
+/**
+ * Lazy sweep: delivered commands whose ack never arrived inside the window
+ * become 'timed_out' so a silently dropped command is never mistaken for a
+ * completed one.
+ */
+export function sweepTimedOutDeviceCommands(nowMs: number = Date.now()): number {
+    let swept = 0;
+    for (const [deviceId, rows] of deviceCommands) {
+        for (const record of rows) {
+            if (record.status !== 'delivered' || !record.deliveredAt) {
+                continue;
+            }
+            const deliveredMs = new Date(record.deliveredAt).getTime();
+            if (Number.isFinite(deliveredMs) && nowMs - deliveredMs > DEVICE_COMMAND_ACK_TIMEOUT_MS) {
+                record.status = 'timed_out';
+                record.completedAt = new Date(nowMs).toISOString();
+                record.message = `Command "${record.command}" delivered but no device ack arrived within ${DEVICE_COMMAND_ACK_TIMEOUT_MS / 1000}s`;
+                swept += 1;
+                void deviceId;
+            }
+        }
+    }
+    return swept;
 }
 
 export function deleteDevice(deviceId: string): boolean {

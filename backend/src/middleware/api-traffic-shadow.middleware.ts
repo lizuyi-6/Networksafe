@@ -11,6 +11,9 @@ import {
 } from '../core/tenant/tenant-context';
 import logger from '../utils/logger';
 import { recordApiRequest } from '../services/api-request-tracker.service';
+import {
+  sanitizeIncomingRequest
+} from '../security/detection-secret-boundary';
 
 function normalizeHeaderValue(value: unknown): string {
   if (Array.isArray(value)) {
@@ -202,12 +205,20 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
   fastpathTrafficShadowService.submitFromRequest(req);
 
   try {
-    const headers = normalizeHeaders(req.headers as Record<string, unknown>);
-    const rawUrl = req.originalUrl || req.url || '/';
-    const rawBody = resolveRequestBody(req);
+    // Build one sanitized request view before any detector, shadow queue, or
+    // persisted snapshot can observe request headers/body values.
+    const safeRequest = sanitizeIncomingRequest(req);
+    const headers = safeRequest.headers;
+    const rawUrl = safeRequest.url;
+    const rawBody = safeRequest.body;
     const urlShape = resolveUrlShape(rawUrl);
-    const bodyShape = resolveNormalizedBody(req, headers, rawBody);
+    const bodyShape = resolveNormalizedBody(
+      { ...req, body: rawBody } as Request,
+      headers,
+      rawBody
+    );
     const tenantId = resolveTenantId(req);
+    const requestId = headers['x-request-id'] || randomUUID();
     const rawPayload = [
       rawUrl,
       urlShape.decodedPath,
@@ -221,9 +232,9 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
     const decision = await detectionPipelineService.evaluateRequest({
       tenantId,
       channel: 'http_api',
-      requestId: String(req.headers['x-request-id'] || randomUUID()),
+      requestId,
       timestamp: new Date().toISOString(),
-      sourceIp: String(req.ip || req.socket?.remoteAddress || '').trim(),
+      sourceIp: safeRequest.sourceIp,
       method: req.method,
       path: rawUrl,
       decodedPath: urlShape.decodedPath,
@@ -250,7 +261,7 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
     // never throws, never mutates the formal decision above.
     try {
       securityDetectionShadowService.submit({
-        requestId: String(req.headers['x-request-id'] || randomUUID()),
+        requestId,
         snapshot: {
           method: req.method,
           path: rawUrl,
@@ -275,7 +286,7 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
       const settings = await detectionPipelineService.getSettings(tenantId);
       if (!settings.ruleFirstEnabled) {
         logger.debug('Detection pipeline would block, but rule-first blocking is disabled; allowing request', {
-          path: req.originalUrl || req.url,
+          path: rawUrl,
           matchedRuleIds: decision.matchedRuleIds
         });
         next();
@@ -303,7 +314,7 @@ export async function apiTrafficShadowMiddleware(req: Request, res: Response, ne
     next();
   } catch (error: any) {
     logger.error('HTTP detection pipeline failed, blocking request fail-closed', {
-      path: req.originalUrl || req.url,
+      path: sanitizeIncomingRequest(req).url,
       error: error?.message
     });
     res.status(503).json({

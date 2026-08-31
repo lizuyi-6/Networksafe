@@ -15,7 +15,16 @@
 
 #define SERIAL_JSON_MAX_LINE 512
 #define SERIAL_JSON_MAX_CHALLENGE 64
-#define SERIAL_JSON_MAX_DIGEST 64
+/*
+ * N2-2 (audit 2026-08): the policy digest is a 64-char SHA-256 hex string.
+ * json_find_string writes at most out_len-1 payload bytes + NUL, so a 64
+ * buffer silently truncated the digest to 63 chars — the M1 channel MAC
+ * (computed over the full 64-char digest) then NEVER verified, and the
+ * digest anchor silently bound only a 63-char prefix. 65 = 64 + NUL.
+ */
+#define SERIAL_JSON_MAX_DIGEST 65
+_Static_assert(SERIAL_JSON_MAX_DIGEST == CONTROLLER_POLICY_DIGEST_LEN,
+               "serial_json and controller digest buffers must hold the same 64-char digest");
 
 /* Incoming message types (Gateway → Controller) */
 typedef enum {

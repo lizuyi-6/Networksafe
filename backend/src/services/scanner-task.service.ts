@@ -4,6 +4,7 @@ import net from 'net';
 import tls from 'tls';
 import logger from '../utils/logger';
 import { getDatabase } from '../config/database';
+import { isMetadataAddress } from '../security/outbound-url-guard';
 import { getAgentGateway } from './agent-system.service';
 import { getDeviceList } from './device-registry.service';
 import { OptimizationEngine } from '../scanner/optimization-engine';
@@ -1001,9 +1002,41 @@ class ScannerTaskService {
     const tenantId = input.tenantId;
     const runId = randomUUID();
 
+    /**
+     * N5-6 (audit 2026-08): cloud metadata endpoints are an ABSOLUTE
+     * exclusion for every target kind — a scan task is an SSRF primitive
+     * when the control plane itself can be pointed at its own IMDS. Private
+     * ranges stay scannable (that is the product), but metadata never is.
+     * Literal targets are rejected here; DNS-resolved names are re-checked
+     * at egress (assertResolvedTargetNotMetadata).
+     */
+    const isMetadataLiteral = (kind: ScanTargetKind, value: string): boolean => {
+      if (kind === 'url') {
+        try {
+          return isMetadataAddress(new URL(value).hostname);
+        } catch {
+          return false;
+        }
+      }
+      if (kind === 'cidr') {
+        try {
+          return expandIpv4Cidr(value).some((address) => isMetadataAddress(address));
+        } catch {
+          return false;
+        }
+      }
+      if (kind === 'ip' || kind === 'domain' || kind === 'host') {
+        return isMetadataAddress(value);
+      }
+      return false;
+    };
+
     const push = (kind: ScanTargetKind, rawValue: string, label?: string, metadata?: Record<string, any>) => {
       const trimmed = String(rawValue || '').trim();
       if (!trimmed) return;
+      if (isMetadataLiteral(kind, trimmed)) {
+        throw new Error('backend.scan_target_metadata_blocked');
+      }
       const normalizedValue = kind === 'url'
         ? (() => {
             try {
@@ -1212,21 +1245,67 @@ class ScannerTaskService {
     }
   }
 
-  private async fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      return await fetch(url, {
-        method: 'GET',
-        redirect: 'follow',
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'AetherGuard-Scanner/1.0'
-        }
-      });
-    } finally {
-      clearTimeout(timer);
+  /**
+   * N5-6: DNS answers can point at the control plane's own IMDS even when
+   * the requested name looked benign. Every network egress in this service
+   * resolves the host first and refuses metadata addresses. Returns the
+   * validated addresses (callers may connect to them directly).
+   */
+  private async assertResolvedTargetNotMetadata(host: string): Promise<string[]> {
+    const hostname = String(host || '').trim().toLowerCase().replace(/^\[|\]$/g, '');
+    if (isMetadataAddress(hostname)) {
+      throw new Error('backend.scan_target_metadata_blocked');
     }
+    const literal = /^[0-9.]+$/.test(hostname) || hostname.includes(':');
+    if (literal) {
+      return [hostname];
+    }
+    const addresses = await this.resolveDomainAddresses(hostname);
+    if (addresses.some((address) => isMetadataAddress(address))) {
+      throw new Error('backend.scan_target_metadata_blocked');
+    }
+    return addresses;
+  }
+
+  private async fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+    // N5-6: validate the hop host BEFORE fetching, follow redirects manually
+    // (each hop re-validated) — `redirect: 'follow'` would let a public URL
+    // bounce the control plane into its own metadata endpoint.
+    const MAX_REDIRECTS = 3;
+    let currentUrl = url;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+      const parsed = new URL(currentUrl);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error('backend.scan_target_protocol_blocked');
+      }
+      await this.assertResolvedTargetNotMetadata(parsed.hostname);
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      let response: Response;
+      try {
+        response = await fetch(currentUrl, {
+          method: hop === 0 ? 'GET' : 'GET',
+          redirect: 'manual',
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'AetherGuard-Scanner/1.0'
+          }
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        const location = response.headers.get('location');
+        if (!location || hop === MAX_REDIRECTS) {
+          return response;
+        }
+        currentUrl = new URL(location, currentUrl).toString();
+        continue;
+      }
+      return response;
+    }
+    throw new Error('backend.scan_target_too_many_redirects');
   }
 
   private async resolveDomainAddresses(hostname: string): Promise<string[]> {
@@ -1239,6 +1318,12 @@ class ScannerTaskService {
   }
 
   private async inspectTlsEndpoint(host: string, port: number, servername?: string): Promise<Record<string, any> | null> {
+    // N5-6: resolve-and-check before the TLS handshake.
+    try {
+      await this.assertResolvedTargetNotMetadata(host);
+    } catch {
+      return null;
+    }
     return new Promise((resolve) => {
       const socket = tls.connect(
         {
@@ -1276,6 +1361,12 @@ class ScannerTaskService {
   }
 
   private async probePorts(host: string, ports: number[], timeoutMs: number): Promise<Array<{ port: number; banner?: string }>> {
+    // N5-6: resolve-and-check before any TCP connect.
+    try {
+      await this.assertResolvedTargetNotMetadata(host);
+    } catch {
+      return [];
+    }
     const probes = ports.map((port) => new Promise<{ port: number; banner?: string } | null>((resolve) => {
       let settled = false;
       const socket = new net.Socket();

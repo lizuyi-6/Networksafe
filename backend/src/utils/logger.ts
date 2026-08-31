@@ -1,7 +1,7 @@
 // Logger Utility
 // SECURITY FIX RISK-003: Integrated log sanitization to prevent sensitive data leakage
 
-import { sanitize } from './log-sanitizer';
+import { sanitize, sanitizeString } from './log-sanitizer';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 const LOG_LEVEL_ORDER: Record<LogLevel, number> = {
@@ -20,8 +20,10 @@ class Logger {
   private logLevel: LogLevel;
 
   constructor() {
-    // Can be disabled via environment variable for debugging
-    if (process.env.DISABLE_LOG_SANITIZATION === 'true') {
+    // Can be disabled via environment variable for debugging — but NEVER in
+    // production (N5-4): a prod misconfiguration must not turn the log
+    // stream into a credential firehose.
+    if (process.env.DISABLE_LOG_SANITIZATION === 'true' && process.env.NODE_ENV !== 'production') {
       this.enableSanitization = false;
     }
 
@@ -49,8 +51,13 @@ class Logger {
       ? sanitize(context)
       : context;
 
+    // N5-4: the message STRING is a credential channel too (error messages
+    // frequently embed tokens/headers verbatim) — sanitize it like the
+    // context object instead of interpolating it raw.
+    const sanitizedMessage = this.enableSanitization ? sanitizeString(message) : message;
+
     const contextStr = sanitizedContext ? ` ${JSON.stringify(sanitizedContext)}` : '';
-    return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
+    return `[${timestamp}] [${level.toUpperCase()}] ${sanitizedMessage}${contextStr}`;
   }
 
   debug(message: string, context?: LogContext): void {

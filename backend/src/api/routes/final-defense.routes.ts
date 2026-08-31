@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';
 import { authenticate, AuthenticatedRequest, requirePermission } from '../../middleware/auth.middleware';
+import { requireStepUpScope } from '../../middleware/step-up.middleware';
 import { authenticateHelperRequest } from '../../middleware/helper-auth.middleware';
 import { finalDefenseService } from '../../services/final-defense.service';
 import { FinalDefenseAllowedAction, FinalDefensePolicyStatus } from '../../security/final-defense-policy';
@@ -177,21 +178,32 @@ router.post('/gateways/status/report', authenticateHelperRequest, async (req: Au
       lanPortLink: strictBoolean(req.body?.lanPortLink)!,
       mgmtPath: nonEmptyString(req.body?.mgmtPath) || undefined,
       secureElementPresent: strictBoolean(req.body?.secureElementPresent)!,
-      lastAttestationAt: nonEmptyString(req.body?.lastAttestationAt) || undefined,
+      // SECURITY (audit 2026-08, batch 0): lastAttestationAt is no longer
+      // accepted from report bodies — attestation records are server-owned
+      // and can only be written by the (batch 6) quote verifier.
       isolationReason: nonEmptyString(req.body?.isolationReason) || undefined,
-      lastError: nonEmptyString(req.body?.lastError) || undefined
+      lastError: nonEmptyString(req.body?.lastError) || undefined,
+      // N2-4: replay guard inputs (optional; enforced strictly when present).
+      bootId: nonEmptyString(req.body?.bootId) || undefined,
+      sequence: Number.isInteger(req.body?.sequence) ? req.body.sequence : undefined,
+      // N3-3: bind the status channel to the authenticated helper credential
+      // (TOFU on first report; mismatched credentials are rejected below).
+      helperKeyId: nonEmptyString((req as AuthenticatedRequest & { helperKeyId?: string }).helperKeyId) || undefined
     });
 
     return sendSuccess(res, { gateway }, { legacy: { gateway } });
   } catch (error: any) {
-    return sendError(res, 500, {
-      code: 'ROOT_GATEWAY_STATUS_REPORT_FAILED',
+    const replay = error?.message === 'backend.root_gateway_status_replay';
+    const invalid = error?.message === 'backend.root_gateway_status_sequence_invalid';
+    const keyMismatch = error?.message === 'backend.root_gateway_helper_key_mismatch';
+    return sendError(res, replay || invalid ? 400 : keyMismatch ? 403 : 500, {
+      code: replay ? 'ROOT_GATEWAY_STATUS_REPLAY' : invalid ? 'ROOT_GATEWAY_STATUS_SEQUENCE_INVALID' : keyMismatch ? 'ROOT_GATEWAY_HELPER_KEY_MISMATCH' : 'ROOT_GATEWAY_STATUS_REPORT_FAILED',
       message: error?.message || 'backend.root_gateway_status_report_failed'
     });
   }
 });
 
-router.post('/policies', authenticate, requirePermission('final_defense.manage'), async (req: AuthenticatedRequest, res) => {
+router.post('/policies', authenticate, requirePermission('final_defense.manage'), requireStepUpScope({ action: 'final_defense.policy' }), async (req: AuthenticatedRequest, res) => {
   try {
     const companionId = nonEmptyString(req.body?.companionId);
     const gateId = nonEmptyString(req.body?.gateId);
@@ -216,7 +228,8 @@ router.post('/policies', authenticate, requirePermission('final_defense.manage')
       releaseTtlMs: Number.isFinite(Number(req.body?.releaseTtlMs)) ? Number(req.body?.releaseTtlMs) : undefined,
       status,
       policyId: nonEmptyString(req.body?.policyId) || undefined,
-      createdAt: nonEmptyString(req.body?.createdAt) || undefined
+      createdAt: nonEmptyString(req.body?.createdAt) || undefined,
+      expectedPolicyDigest: nonEmptyString(req.body?.expectedPolicyDigest) || undefined
     });
 
     return sendSuccess(res, { policy }, { legacy: { policy } }, 201);
@@ -228,7 +241,7 @@ router.post('/policies', authenticate, requirePermission('final_defense.manage')
   }
 });
 
-router.post('/gateways/actions', authenticate, requirePermission('final_defense.execute'), async (req: AuthenticatedRequest, res) => {
+router.post('/gateways/actions', authenticate, requirePermission('final_defense.execute'), requireStepUpScope({ action: 'final_defense.action' }), async (req: AuthenticatedRequest, res) => {
   try {
     const gatewayId = nonEmptyString(req.body?.gatewayId);
     const action = nonEmptyString(req.body?.action);
@@ -278,7 +291,7 @@ router.post('/gateways/actions', authenticate, requirePermission('final_defense.
   }
 });
 
-router.post('/actions', authenticate, requirePermission('final_defense.execute'), async (req: AuthenticatedRequest, res) => {
+router.post('/actions', authenticate, requirePermission('final_defense.execute'), requireStepUpScope({ action: 'final_defense.action' }), async (req: AuthenticatedRequest, res) => {
   try {
     const companionId = nonEmptyString(req.body?.companionId);
     const commandType = nonEmptyString(req.body?.commandType);

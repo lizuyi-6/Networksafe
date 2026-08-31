@@ -21,6 +21,13 @@ export interface InvestigationRecord {
   result?: InvestigationResult;
   createdAt: Date;
   status: 'in_progress' | 'completed' | 'failed' | 'cancelled';
+  /**
+   * N3-4 (audit 2026-08): owning tenant. Persisted so ownership survives a
+   * restart (previously in-process only — after a reboot every investigation
+   * silently fell back to platform-only visibility). Null = legacy row
+   * persisted before ownership tracking; undefined = not loaded.
+   */
+  ownerTenantId?: string | null;
 }
 
 type RawRow = Record<string, unknown>;
@@ -54,9 +61,22 @@ export class InvestigationService {
         result TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         status TEXT NOT NULL,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        owner_tenant_id TEXT
       )
     `);
+
+    // N3-4: migration for databases created before owner_tenant_id existed.
+    // Same raw-handle API style as the rest of this service.
+    const pragmaStmt = db.prepare('PRAGMA table_info(investigations)');
+    const existingColumns: string[] = [];
+    while (pragmaStmt.step()) {
+      existingColumns.push(String((pragmaStmt.getAsObject() as RawRow).name));
+    }
+    pragmaStmt.free();
+    if (existingColumns.length > 0 && !existingColumns.includes('owner_tenant_id')) {
+      db.run('ALTER TABLE investigations ADD COLUMN owner_tenant_id TEXT');
+    }
 
     db.run(`
       CREATE INDEX IF NOT EXISTS idx_investigations_created_at
@@ -92,8 +112,8 @@ export class InvestigationService {
     db.run(
       `
       INSERT OR REPLACE INTO investigations
-      (investigation_id, bug_report_id, bug_report, context, result, created_at, status, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      (investigation_id, bug_report_id, bug_report, context, result, created_at, status, updated_at, owner_tenant_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
       `,
       [
         data.investigationId,
@@ -102,7 +122,8 @@ export class InvestigationService {
         JSON.stringify(data.context),
         data.result ? JSON.stringify(data.result) : null,
         data.createdAt.toISOString(),
-        data.status
+        data.status,
+        data.ownerTenantId ?? null
       ]
     );
 
@@ -209,8 +230,28 @@ export class InvestigationService {
       context,
       result,
       createdAt: new Date(String(row.created_at || new Date().toISOString())),
-      status: this.parseStatus(row.status)
+      status: this.parseStatus(row.status),
+      ownerTenantId: row.owner_tenant_id === undefined ? undefined : (row.owner_tenant_id as string | null)
     };
+  }
+
+  /**
+   * N3-4: persisted owner tenant of an investigation.
+   * - string: the owning tenant
+   * - null: legacy row persisted before ownership tracking (platform-only)
+   * - undefined: no such row
+   */
+  public async getOwnerTenantId(investigationId: string): Promise<string | null | undefined> {
+    await this.ensureInitialized();
+    const db = this.getDb();
+    const stmt = db.prepare('SELECT owner_tenant_id FROM investigations WHERE investigation_id = ? LIMIT 1');
+    stmt.bind([investigationId]);
+    const row = stmt.step() ? (stmt.getAsObject() as RawRow) : null;
+    stmt.free();
+    if (!row) {
+      return undefined;
+    }
+    return row.owner_tenant_id === null || row.owner_tenant_id === undefined ? null : String(row.owner_tenant_id);
   }
 
   private parseStatus(status: unknown): 'in_progress' | 'completed' | 'failed' | 'cancelled' {

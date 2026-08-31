@@ -4,16 +4,17 @@ import { uuidv4 } from '../../utils/uuid';
 import { authenticate, AuthenticatedRequest, requireRole } from '../../middleware/auth.middleware';
 import { requirePlanQuota } from '../../middleware/plan.middleware';
 import { sendError, sendSuccess } from '../../core/http/api-response';
+import { isPlatformAdminRole } from '../../security/permissions';
 import agentAuthService from '../../security/agent-auth.service';
 import auditLogger from '../../security/audit-logger.service';
 import logger from '../../utils/logger';
 import {
-  getAgentOnboardingCodeByHash,
   getLatestAgentRegistration,
   listAgentOnboardingCodes,
   saveAgentCredentialAudit,
   saveAgentOnboardingCode
 } from '../../modules/agent-onboarding/agent-onboarding.repository';
+import { agentOnboardingService } from '../../modules/agent-onboarding/agent-onboarding.service';
 
 const router = Router();
 
@@ -147,6 +148,9 @@ router.post('/exchange', async (req: AuthenticatedRequest, res: Response) => {
     const hostname = String(req.body?.hostname || '').trim();
     const platform = String(req.body?.platform || '').trim();
     const mac = typeof req.body?.mac === 'string' ? req.body.mac : undefined;
+    // AUD-03-2: formalized contract — a code with expected tags can only be
+    // exchanged by an agent presenting all of them.
+    const tags = Array.isArray(req.body?.tags) ? req.body.tags : undefined;
 
     if (!onboardingCode || !hostname || !platform) {
       return sendError(res, 400, {
@@ -155,59 +159,32 @@ router.post('/exchange', async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    const row = await getAgentOnboardingCodeByHash(hashCode(onboardingCode));
-
-    if (!row) {
-      return sendError(res, 404, {
-        code: 'ONBOARDING_CODE_NOT_FOUND',
-        message: 'backend.onboarding_code_not_found'
-      });
-    }
-    if (row.status !== 'active') {
-      return sendError(res, 409, {
-        code: 'ONBOARDING_CODE_INACTIVE',
-        message: 'backend.onboarding_code_is_not_active'
-      });
-    }
-    if (new Date(row.expires_at).getTime() <= Date.now()) {
-      await saveAgentOnboardingCode({ ...row, status: 'expired' });
-      return sendError(res, 410, {
-        code: 'ONBOARDING_CODE_EXPIRED',
-        message: 'backend.onboarding_code_expired'
-      });
-    }
-    if (Number(row.used_count || 0) >= Number(row.max_uses || 1)) {
-      await saveAgentOnboardingCode({ ...row, status: 'used' });
-      return sendError(res, 409, {
-        code: 'ONBOARDING_CODE_USED',
-        message: 'backend.onboarding_code_already_used'
-      });
-    }
-    if (row.expected_hostname && row.expected_hostname !== hostname) {
-      return sendError(res, 409, {
-        code: 'ONBOARDING_POLICY_MISMATCH',
-        message: 'backend.hostname_does_not_match_onboarding_policy'
-      });
-    }
-
-    const registration = agentAuthService.registerAgent({
+    const result = await agentOnboardingService.exchangeOnboardingCode({
+      rawCode: onboardingCode,
       hostname,
       platform,
       mac,
-      tenantId: row.tenant_id || undefined
+      tags
     });
+
+    if (!result.ok) {
+      const failureResponses: Record<string, { status: number; code: string; message: string }> = {
+        code_not_found: { status: 404, code: 'ONBOARDING_CODE_NOT_FOUND', message: 'backend.onboarding_code_not_found' },
+        code_inactive: { status: 409, code: 'ONBOARDING_CODE_INACTIVE', message: 'backend.onboarding_code_is_not_active' },
+        code_expired: { status: 410, code: 'ONBOARDING_CODE_EXPIRED', message: 'backend.onboarding_code_expired' },
+        code_used: { status: 409, code: 'ONBOARDING_CODE_USED', message: 'backend.onboarding_code_already_used' },
+        hostname_mismatch: { status: 409, code: 'ONBOARDING_POLICY_MISMATCH', message: 'backend.hostname_does_not_match_onboarding_policy' },
+        tags_mismatch: { status: 409, code: 'ONBOARDING_POLICY_MISMATCH', message: 'backend.agent_tags_do_not_match_onboarding_policy' },
+        registration_failed: { status: 500, code: 'ONBOARDING_EXCHANGE_FAILED', message: 'backend.failed_to_exchange_onboarding_code' }
+      };
+      const failure = failureResponses[result.reason] || failureResponses.registration_failed;
+      return sendError(res, failure.status, { code: failure.code, message: failure.message });
+    }
+
+    const { registration, codeRow } = result;
     mirrorLatestAgentRegistration(registration.agentId);
 
-    const usedAt = nowIso();
-    const nextUsedCount = Number(row.used_count || 0) + 1;
-    const status = nextUsedCount >= Number(row.max_uses || 1) ? 'used' : 'active';
-    await saveAgentOnboardingCode({
-      ...row,
-      used_count: nextUsedCount,
-      used_at: usedAt,
-      used_by_agent_id: registration.agentId,
-      status
-    });
+    const usedAt = codeRow.used_at || new Date().toISOString();
 
     await saveAgentCredentialAudit({
       id: uuidv4(),
@@ -215,19 +192,19 @@ router.post('/exchange', async (req: AuthenticatedRequest, res: Response) => {
       action: 'issued',
       operator_id: null,
       reason: 'onboarding_exchange',
-      metadata_json: JSON.stringify({ onboardingCodeId: row.id, hostname, platform }),
+      metadata_json: JSON.stringify({ onboardingCodeId: codeRow.id, hostname, platform }),
       created_at: usedAt
     });
 
     await auditLogger.log({
-      tenantId: row.tenant_id || undefined,
+      tenantId: codeRow.tenant_id || undefined,
       eventType: 'agent_onboarding_exchange_completed',
       category: 'agent',
       severity: 'info',
       actor: { type: 'agent', id: registration.agentId, ip: req.ip },
       action: 'exchange_onboarding_code',
       target: { type: 'agent', id: registration.agentId },
-      details: { onboardingCodeId: row.id, hostname, platform },
+      details: { onboardingCodeId: codeRow.id, hostname, platform },
       status: 'success'
     });
 
@@ -275,7 +252,14 @@ router.get('/agents', authenticate, requireRole('admin', 'tenant'), (req: Authen
 router.post('/revoke/:agentId', authenticate, requireRole('admin', 'tenant'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const agentId = req.params.agentId;
-    const ok = agentAuthService.revokeAgent(agentId);
+    // SECURITY (audit 2026-08, P0): tenant actors may only revoke agents that
+    // belong to their own tenant. Platform admins revoke cross-tenant via the
+    // explicit null-tenant override; unknown and foreign agent IDs both return
+    // 404 so the endpoint cannot be used to enumerate agents.
+    const platformOverride = isPlatformAdminRole(req.user?.role);
+    const ok = agentAuthService.revokeAgent(agentId, {
+      tenantId: platformOverride ? null : req.user?.tenantId
+    });
     if (!ok) {
       return sendError(res, 404, {
         code: 'AGENT_NOT_FOUND',

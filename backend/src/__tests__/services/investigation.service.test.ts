@@ -9,14 +9,40 @@ import { initDatabase, closeDatabase } from '../../config/database';
 
 // Mock the database module
 jest.mock('../../config/database', () => {
+  // Minimal in-memory state: remember INSERT params so ownership-persistence
+  // assertions can read them back through SELECT owner_tenant_id.
+  const state: { lastInsertParams: any[] | null } = { lastInsertParams: null };
   const mockDb = {
-    run: jest.fn(),
-    prepare: jest.fn(() => ({
-      bind: jest.fn(),
-      step: jest.fn(() => false),
-      getAsObject: jest.fn(() => null),
-      free: jest.fn()
-    }))
+    run: jest.fn((sql: string, params?: any[]) => {
+      if (/INSERT/i.test(sql) && params) {
+        state.lastInsertParams = params;
+      }
+    }),
+    prepare: jest.fn((sql: string) => {
+      let boundId: any = undefined;
+      return {
+        bind: jest.fn((params?: any[]) => {
+          boundId = Array.isArray(params) ? params[0] : undefined;
+        }),
+        step: jest.fn(() => {
+          if (/SELECT owner_tenant_id/i.test(sql)
+            && state.lastInsertParams
+            && boundId === state.lastInsertParams[0]) {
+            return true; // one row for the inserted id only
+          }
+          return false;
+        }),
+        getAsObject: jest.fn(() => {
+          if (/SELECT owner_tenant_id/i.test(sql) && state.lastInsertParams) {
+            // saveInvestigation binds [id, bugReportId, bugReport, context,
+            // result, createdAt, status, ownerTenantId] — owner is index 7.
+            return { owner_tenant_id: state.lastInsertParams[7] ?? null };
+          }
+          return null;
+        }),
+        free: jest.fn()
+      };
+    })
   };
 
   return {
@@ -176,6 +202,40 @@ describe('InvestigationService', () => {
     it('should close the service without error', () => {
       service.close();
       expect(true).toBe(true);
+    });
+  });
+
+  describe('N3-4 owner tenant persistence', () => {
+    it('persists ownerTenantId and reads it back (ownership survives restarts)', async () => {
+      const id = `inv-owner-${Date.now()}`;
+      const record = {
+        investigationId: id,
+        bugReportId: `bug-${id}`,
+        bugReport: {
+          id: `bug-${id}`,
+          title: 'Owner persistence',
+          description: 'N3-4',
+          severity: 'low',
+          category: 'functional',
+          status: 'open',
+          reporter: 'test-user',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        context: { bugReportId: `bug-${id}`, environment: { os: 'linux' } },
+        createdAt: new Date(),
+        status: 'completed',
+        ownerTenantId: 'tenant-owner-x'
+      } as unknown as InvestigationRecord;
+
+      await service.saveInvestigation(record);
+
+      // Read back through a FRESH service instance: the persisted row (not an
+      // in-process map) must carry the owner.
+      const fresh = new InvestigationService();
+      await expect(fresh.getOwnerTenantId(id)).resolves.toBe('tenant-owner-x');
+      // Unknown id: undefined (no row). Legacy rows (owner NULL) read as null.
+      await expect(fresh.getOwnerTenantId('does-not-exist')).resolves.toBeUndefined();
     });
   });
 });

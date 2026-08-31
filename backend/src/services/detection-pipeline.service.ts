@@ -31,6 +31,7 @@ import {
   collectInvalidMatcherPatterns,
   matcherDeclaresCriteria
 } from './detection-engine';
+import { sanitizeDetectionRequestForAnalysis, sanitizeDetectionRequestSnapshot } from '../security/detection-secret-boundary';
 
 type CandidateStatus = 'pending' | 'approved' | 'rejected';
 type DetectionAsyncReviewStatus = 'queued' | 'running' | 'completed' | 'failed';
@@ -335,7 +336,7 @@ function aiVerdictToSeverity(aiResult: DetectionAIResult): DetectionSeverity {
 }
 
 function serializeRequestSnapshot(request: DetectionRequest): Record<string, any> {
-  return {
+  return sanitizeDetectionRequestSnapshot({
     tenantId: request.tenantId,
     channel: request.channel,
     requestId: request.requestId,
@@ -356,7 +357,7 @@ function serializeRequestSnapshot(request: DetectionRequest): Record<string, any
     rawPayload: request.rawPayload || '',
     protocol: request.protocol,
     metadata: request.metadata || {}
-  };
+  });
 }
 
 class DetectionPipelineService {
@@ -1382,6 +1383,11 @@ class DetectionPipelineService {
 
   async evaluateRequest(request: DetectionRequest, options: EvaluateOptions = {}): Promise<DetectionDecision> {
     this.assertPrepared();
+    // The detector must never pass raw request material to an AI provider or
+    // persist it through an evidence/candidate path. Keep the tenant and
+    // deterministic control fields, but replace all request content with the
+    // shared boundary representation before any rule/AI work begins.
+    request = sanitizeDetectionRequestForAnalysis(request) as DetectionRequest;
     const startedAt = Date.now();
     const anonymousRuleOnly = request.tenantId === ANONYMOUS_TENANT_ID;
     const forceAiReview = options.forceAiReview === true && !anonymousRuleOnly;

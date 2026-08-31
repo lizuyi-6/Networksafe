@@ -1,267 +1,162 @@
 /**
- * REDTEAM SECURITY TEST — WebSocket event authentication (D10 · R4-w2 · V12.24)
+ * REDTEAM SECURITY TEST — Inbound envelope authentication (AUD-03-4)
  * =============================================================================
  *
- * Background:
- * Before V12.24 only `agent:traffic_stats` was HMAC-verified. A compromised or
- * malicious agent/device could send unsigned high-severity events:
+ * The previous version of this file MIRRORED the verification logic in the
+ * test and asserted against the mirror while the real handlers never called
+ * any verifier — the exact "fake coverage" the 2026-08 audit flagged. That
+ * mirror is deleted.
  *
- *   agent-gateway:
- *     - agent:scan_result  → DB write + broadcast  [was: unsigned, now: HMAC]
- *
- *   device-gateway:
- *     - data              → DB write + broadcast  [was: unsigned, now: HMAC]
- *     - alert             → audit log + DB write  [was: unsigned, now: HMAC]
- *     - unknown_error     → audit log + DB write  [was: unsigned, now: HMAC]
- *     - ota_status        → service call + broadcast [was: unsigned, now: HMAC]
- *     - physical_confirmation_ack → hardware grant dispatch [was: unsigned, now: HMAC]
- *
- * This test demonstrates that unsigned/forged payloads are rejected by the
- * verification functions that the handlers now call at entry.
- *
- * Test runtime (NODE_ENV=test + ALLOW_TEST_RUNTIME=true) bypasses the actual
- * gateway handlers, so we test the verification logic directly — the same
- * approach used by agent-gateway.traffic-stats.test.ts.
+ * This version imports THE production verifier
+ * (`backend/src/security/inbound-envelope.ts`) that the real Agent/Device
+ * WebSocket handlers now call at entry (agent-gateway: agent:scan_result,
+ * agent:review_sample; device-gateway: data, alert, unknown_error,
+ * ota_status) and attacks it: unsigned, forged, replayed, cross-bound,
+ * stale, and digest-tampered envelopes must all fail with the expected
+ * reason.
  */
 
 import crypto from 'crypto';
+import {
+    verifyInboundEnvelope,
+    buildSignedEnvelope,
+    digestPayload,
+    INBOUND_ENVELOPE_TEST_SECRET,
+} from '../../security/inbound-envelope';
 
-// ---------------------------------------------------------------------------
-// Helper: mirror the exact signing/verification logic under test
-// ---------------------------------------------------------------------------
+jest.mock('../../utils/logger', () => ({
+    __esModule: true,
+    default: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+}));
 
-/** Sign a device-gateway payload (mirrors verifyDeviceMessage in device-gateway.ts) */
-function signDevicePayload(payload: Record<string, unknown>, secretKey: string): {
-  payload: Record<string, unknown>;
-  signature: string;
-} {
-  const { signature: _omit, ...rest } = payload;
-  const message = JSON.stringify(rest);
-  const signature = crypto.createHmac('sha256', secretKey).update(message).digest('hex');
-  return { payload: { ...rest, signature }, signature };
+jest.mock('../../security/redis.service', () => ({
+    __esModule: true,
+    default: {
+        exists: jest.fn().mockResolvedValue(false),
+        set: jest.fn().mockResolvedValue('OK'),
+    }
+}));
+
+const SECRET = INBOUND_ENVELOPE_TEST_SECRET;
+const SESSION = 'attacker-socket-1';
+
+async function verifyWith(payload: unknown, envelope: unknown, overrides: Record<string, any> = {}) {
+    return verifyInboundEnvelope(payload, envelope, {
+        secret: SECRET,
+        expectedEventType: 'data',
+        expectedSessionId: SESSION,
+        ...overrides,
+    });
 }
 
-/** Reject-or-accept decision — mirrors device-gateway.ts without test bypass */
-function verifyDeviceMessageResult(
-  payload: any,
-  secretKey: string | null
-): boolean {
-  if (!secretKey) return false;
-  const signature = typeof payload?.signature === 'string' ? payload.signature : '';
-  if (!signature) return false;
-  const { signature: _omit, ...rest } = payload || {};
-  const message = JSON.stringify(rest);
-  const expected = crypto.createHmac('sha256', secretKey).update(message).digest('hex');
-  try {
-    return crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'));
-  } catch {
-    return false;
-  }
-}
-
-/** Sign an agent-gateway payload (mirrors verifyAgentMessage in agent-gateway.ts) */
-function signAgentPayload(payload: Record<string, unknown>, secretKey: string): {
-  payload: Record<string, unknown>;
-  signature: string;
-} {
-  const { signature: _omit, ...rest } = payload;
-  // Use canonical JSON (same as server-side)
-  const message = JSON.stringify(rest); // simplified for test
-  const signature = crypto.createHmac('sha256', secretKey).update(message).digest('hex');
-  return { payload: { ...rest, signature }, signature };
-}
-
-/** Reject-or-accept decision — mirrors agent-gateway.ts without test bypass */
-function verifyAgentMessageResult(
-  payload: any,
-  secretKey: string | null
-): boolean {
-  if (!secretKey) return false;
-  const signature = typeof payload?.signature === 'string' ? payload.signature : '';
-  if (!signature) return false;
-  const { signature: _omit, ...rest } = payload || {};
-  const message = JSON.stringify(rest);
-  const expected = crypto.createHmac('sha256', secretKey).update(message).digest('hex');
-  try {
-    return crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'));
-  } catch {
-    return false;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Tests: device-gateway events (data, alert, unknown_error, ota_status,
-//       physical_confirmation_ack)
-// ---------------------------------------------------------------------------
-describe('REDTEAM WebSocket event auth — device-gateway events (R4-w2 · V12.24)', () => {
-  const SECRET = 'test-device-shared-secret-32-chars-ok';
-
-  describe('data event', () => {
-    it('accepts a correctly signed payload', () => {
-      const { payload } = signDevicePayload({ foo: 'bar', timestamp: '2026-06-06T00:00:00Z' }, SECRET);
-      expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
+describe('REDTEAM inbound envelope auth — real production verifier (AUD-03-4)', () => {
+    it('accepts a correctly signed envelope', async () => {
+        const payload = { sensor: 'temp', value: 23.5 };
+        const { envelope, payload: body } = buildSignedEnvelope(SECRET, payload, {
+            eventType: 'data',
+            sessionId: SESSION,
+        });
+        const result = await verifyWith(body, envelope);
+        expect(result).toEqual({ ok: true, payloadDigest: digestPayload(payload) });
     });
 
-    it('rejects a payload with no signature field', () => {
-      const { payload } = signDevicePayload({ foo: 'bar' }, SECRET);
-      delete (payload as any).signature;
-      expect(verifyDeviceMessageResult(payload, SECRET)).toBe(false);
+    it('rejects a missing envelope and a malformed envelope', async () => {
+        expect((await verifyWith({ a: 1 }, undefined)).ok).toBe(false);
+        const malformed = await verifyWith({ a: 1 }, { eventType: 'data' });
+        expect(malformed).toEqual({ ok: false, reason: 'malformed_envelope' });
     });
 
-    it('rejects a payload signed with the wrong key (forged)', () => {
-      const { payload } = signDevicePayload({ foo: 'bar' }, SECRET);
-      // Replace with a signature made using the wrong key
-      const forged = crypto.createHmac('sha256', 'attacker-key-32-chars-xxxxxxxxxx').update(JSON.stringify({ foo: 'bar' })).digest('hex');
-      (payload as any).signature = forged;
-      expect(verifyDeviceMessageResult(payload, SECRET)).toBe(false);
+    it('fails closed when no secret is available', async () => {
+        const { envelope, payload } = buildSignedEnvelope(SECRET, { a: 1 }, {
+            eventType: 'data', sessionId: SESSION,
+        });
+        const result = await verifyWith(payload, envelope, { secret: null });
+        expect(result).toEqual({ ok: false, reason: 'no_secret' });
     });
 
-    it('rejects a payload whose signature is tampered with after signing', () => {
-      const { payload } = signDevicePayload({ foo: 'bar' }, SECRET);
-      (payload as any).signature = (payload.signature as string).replace(/^./, '0');
-      expect(verifyDeviceMessageResult(payload, SECRET)).toBe(false);
-    });
-  });
-
-  describe('alert event', () => {
-    it('accepts a correctly signed alert payload', () => {
-      const { payload } = signDevicePayload(
-        { alert_type: 'intrusion', message: 'SQL injection attempt', timestamp: '2026-06-06T00:00:00Z' },
-        SECRET
-      );
-      expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
+    it('rejects an UNSIGNED payload (no envelope at all)', async () => {
+        // The pre-audit failure mode: a bare payload with no envelope field.
+        const result = await verifyWith({ alert_type: 'intrusion' }, undefined);
+        expect(result.ok).toBe(false);
     });
 
-    it('rejects an unsigned alert payload', () => {
-      expect(verifyDeviceMessageResult({ alert_type: 'intrusion', message: 'boom' }, SECRET)).toBe(false);
-    });
-  });
-
-  describe('unknown_error event', () => {
-    it('accepts a correctly signed error payload', () => {
-      const { payload } = signDevicePayload(
-        { message: 'memory fault', timestamp: '2026-06-06T00:00:00Z' },
-        SECRET
-      );
-      expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
+    it('rejects a WRONG-KEY signature', async () => {
+        const attackerSigned = buildSignedEnvelope('attacker-key-not-the-secret!!', { a: 1 }, {
+            eventType: 'data', sessionId: SESSION,
+        });
+        const result = await verifyWith(attackerSigned.payload, attackerSigned.envelope);
+        expect(result).toEqual({ ok: false, reason: 'invalid_signature' });
     });
 
-    it('rejects an unsigned error payload', () => {
-      expect(verifyDeviceMessageResult({ message: 'segfault' }, SECRET)).toBe(false);
-    });
-  });
-
-  describe('ota_status event', () => {
-    it('accepts a correctly signed ota_status payload', () => {
-      const { payload } = signDevicePayload(
-        { progress: 75, status: 'downloading', timestamp: '2026-06-06T00:00:00Z' },
-        SECRET
-      );
-      expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
+    it('rejects a TAMPERED payload (digest mismatch)', async () => {
+        const { envelope, payload } = buildSignedEnvelope(SECRET, { a: 1, role: 'guest' }, {
+            eventType: 'data', sessionId: SESSION,
+        });
+        const tampered = { a: 1, role: 'admin' };
+        const result = await verifyWith(tampered, envelope);
+        expect(result).toEqual({ ok: false, reason: 'payload_digest_mismatch' });
     });
 
-    it('rejects an unsigned ota_status payload', () => {
-      expect(verifyDeviceMessageResult({ progress: 50, status: 'downloading' }, SECRET)).toBe(false);
-    });
-  });
-
-  describe('physical_confirmation_ack event', () => {
-    it('accepts a correctly signed ack payload', () => {
-      const { payload } = signDevicePayload(
-        { confirmed: true, intentId: 'intent-123', timestamp: '2026-06-06T00:00:00Z' },
-        SECRET
-      );
-      expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
+    it('rejects a TAMPERED signature', async () => {
+        const { envelope, payload } = buildSignedEnvelope(SECRET, { a: 1 }, {
+            eventType: 'data', sessionId: SESSION,
+        });
+        const forged = {
+            ...envelope,
+            signature: crypto.createHash('sha256').update('forged').digest('hex'),
+        };
+        const result = await verifyWith(payload, forged);
+        expect(result).toEqual({ ok: false, reason: 'invalid_signature' });
     });
 
-    it('rejects an unsigned ack payload', () => {
-      expect(verifyDeviceMessageResult({ confirmed: true, intentId: 'intent-999' }, SECRET)).toBe(false);
+    it('rejects a STALE timestamp outside the freshness window', async () => {
+        const { envelope, payload } = buildSignedEnvelope(SECRET, { a: 1 }, {
+            eventType: 'data',
+            sessionId: SESSION,
+            timestamp: Date.now() - 10 * 60_000,
+        });
+        const result = await verifyWith(payload, envelope);
+        expect(result).toEqual({ ok: false, reason: 'timestamp_out_of_window' });
     });
-  });
 
-  describe('null / non-object payloads', () => {
-    it('rejects null', () => {
-      expect(verifyDeviceMessageResult(null, SECRET)).toBe(false);
+    it('rejects an envelope bound to a DIFFERENT session (socket takeover)', async () => {
+        // An envelope captured from socket A must not verify on socket B.
+        const victimSession = 'victim-socket-2';
+        const { envelope, payload } = buildSignedEnvelope(SECRET, { a: 1 }, {
+            eventType: 'data',
+            sessionId: victimSession,
+        });
+        const result = await verifyWith(payload, envelope);
+        expect(result).toEqual({ ok: false, reason: 'session_mismatch' });
     });
 
-    it('rejects a plain string', () => {
-      expect(verifyDeviceMessageResult('not an object', SECRET)).toBe(false);
+    it('rejects an event-type mismatch', async () => {
+        const { envelope, payload } = buildSignedEnvelope(SECRET, { a: 1 }, {
+            eventType: 'heartbeat',
+            sessionId: SESSION,
+        });
+        const result = await verifyWith(payload, envelope);
+        expect(result).toEqual({ ok: false, reason: 'event_type_mismatch' });
     });
-  });
-});
 
-// ---------------------------------------------------------------------------
-// Tests: agent-gateway — agent:scan_result
-// ---------------------------------------------------------------------------
-describe('REDTEAM WebSocket event auth — agent-gateway agent:scan_result (R4-w2 · V12.24)', () => {
-  const SECRET = 'test-agent-shared-secret-32-chars-ok';
+    it('rejects a REPLAYED envelope (nonce single-use)', async () => {
+        const { envelope, payload } = buildSignedEnvelope(SECRET, { cmd: 'unlock' }, {
+            eventType: 'data',
+            sessionId: SESSION,
+            nonce: `replay-test-${Date.now()}-aaaa`,
+        });
+        const first = await verifyWith(payload, envelope);
+        expect(first.ok).toBe(true);
+        const second = await verifyWith(payload, envelope);
+        expect(second).toEqual({ ok: false, reason: 'nonce_replay' });
+    });
 
-  it('accepts a correctly signed scan_result payload', () => {
-    const { payload } = signAgentPayload(
-      { scanId: 'scan-001', vulnerabilities: 3, timestamp: '2026-06-06T00:00:00Z' },
-      SECRET
-    );
-    expect(verifyAgentMessageResult(payload, SECRET)).toBe(true);
-  });
-
-  it('rejects a scan_result payload with no signature field', () => {
-    const { payload } = signAgentPayload({ scanId: 'scan-001' }, SECRET);
-    delete (payload as any).signature;
-    expect(verifyAgentMessageResult(payload, SECRET)).toBe(false);
-  });
-
-  it('rejects a scan_result payload signed with the wrong key (forged)', () => {
-    const { payload } = signAgentPayload({ scanId: 'scan-001' }, SECRET);
-    const forged = crypto.createHmac('sha256', 'attacker-key-32-chars-xxxxxxxxxx')
-      .update(JSON.stringify({ scanId: 'scan-001' }))
-      .digest('hex');
-    (payload as any).signature = forged;
-    expect(verifyAgentMessageResult(payload, SECRET)).toBe(false);
-  });
-
-  it('rejects a scan_result payload whose signature is tampered with', () => {
-    const { payload } = signAgentPayload({ scanId: 'scan-001' }, SECRET);
-    (payload as any).signature = (payload.signature as string).replace(/^./, 'a');
-    expect(verifyAgentMessageResult(payload, SECRET)).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Summary assertion: events that MUST have HMAC after this fix
-// ---------------------------------------------------------------------------
-describe('REDTEAM event auth coverage: all HIGH/CRITICAL handlers now require HMAC', () => {
-  const SECRET = 'coveragetest-secret-32-chars-abcdef';
-
-  const AGENT_EVENTS = ['agent:scan_result'];
-  const DEVICE_EVENTS = ['data', 'alert', 'unknown_error', 'ota_status', 'physical_confirmation_ack'];
-
-  it('agent:scan_result is signable and verifiable', () => {
-    const { payload } = signAgentPayload({ scanId: 'x' }, SECRET);
-    expect(verifyAgentMessageResult(payload, SECRET)).toBe(true);
-  });
-
-  it('device:data is signable and verifiable', () => {
-    const { payload } = signDevicePayload({ raw: 'test' }, SECRET);
-    expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
-  });
-
-  it('device:alert is signable and verifiable', () => {
-    const { payload } = signDevicePayload({ alert_type: 'test' }, SECRET);
-    expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
-  });
-
-  it('device:unknown_error is signable and verifiable', () => {
-    const { payload } = signDevicePayload({ message: 'test' }, SECRET);
-    expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
-  });
-
-  it('device:ota_status is signable and verifiable', () => {
-    const { payload } = signDevicePayload({ status: 'done' }, SECRET);
-    expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
-  });
-
-  it('device:physical_confirmation_ack is signable and verifiable', () => {
-    const { payload } = signDevicePayload({ confirmed: true }, SECRET);
-    expect(verifyDeviceMessageResult(payload, SECRET)).toBe(true);
-  });
+    it('digest is canonical: key order does not change validity', async () => {
+        const { envelope, payload } = buildSignedEnvelope(SECRET, { b: 2, a: 1 }, {
+            eventType: 'data', sessionId: SESSION,
+        });
+        const reordered = { a: 1, b: 2 };
+        const result = await verifyWith(reordered, envelope);
+        expect(result.ok).toBe(true);
+    });
 });

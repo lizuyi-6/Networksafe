@@ -12,6 +12,11 @@
  * deployment; webhooks to internal servers require an env acknowledgment).
  */
 
+import { promises as dnsPromises } from 'dns';
+import * as http from 'http';
+import * as https from 'https';
+import type { LookupAddressEntry } from 'axios';
+
 export interface OutboundUrlCheck {
   allowed: boolean;
   reason?: string;
@@ -99,6 +104,27 @@ function isMetadataHost(hostname: string): boolean {
 }
 
 /**
+ * N5-6: exported metadata-endpoint predicate so NON-HTTP egress paths
+ * (scanner TCP/TLS probes, SMTP relays) can enforce the same AG-B02
+ * invariant. Accepts a hostname or literal IP (no brackets, no scheme).
+ */
+export function isMetadataAddress(hostOrAddress: string): boolean {
+  const value = String(hostOrAddress || '').trim().toLowerCase().replace(/^\[|\]$/g, '');
+  if (!value) {
+    return false;
+  }
+  // URL-form input ("http://169.254.169.254/...") is reduced to its host.
+  if (/^[a-z][a-z0-9+.-]*:\/\//.test(value)) {
+    try {
+      return isMetadataHost(new URL(value).hostname);
+    } catch {
+      return false;
+    }
+  }
+  return isMetadataHost(value);
+}
+
+/**
  * Validate an operator-configured outbound URL.
  *
  * - ALWAYS blocks non-http(s) protocols and cloud-metadata endpoints
@@ -117,7 +143,7 @@ export function checkOutboundUrl(url: string, options?: { allowPrivate?: boolean
     return { allowed: false, reason: 'backend.only_http_and_https_protocols_are_allowed' };
   }
 
-  const hostname = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  const hostname = normalizeResolvedAddress(parsed.hostname);
 
   // Cloud metadata is never reachable — even with allowPrivate (AG-B02).
   if (isMetadataHost(hostname)) {
@@ -143,4 +169,246 @@ export function assertOutboundUrlAllowed(url: string, options?: { allowPrivate?:
   if (!check.allowed) {
     throw new Error(check.reason || 'backend.outbound_url_blocked');
   }
+}
+
+export interface ResolvedAddress {
+  address: string;
+  family?: number;
+}
+
+export type OutboundDnsResolver = (hostname: string) => Promise<ResolvedAddress[]>;
+
+/**
+ * Collapse an IPv4-mapped IPv6 address (::ffff:a.b.c.d) to its dotted-quad
+ * IPv4 form. Node's URL parser and dns.lookup both normalize mapped literals
+ * to HEX form (`[::ffff:169.254.169.254]` -> hostname `::ffff:a9fe:a9fe`),
+ * so the dotted-only strip used to let the hex variant slip past every
+ * literal check below (R2-F002 follow-up: reproduced bypass, fixed here).
+ * Returns null when the address is not an IPv4-mapped IPv6 literal.
+ */
+function mappedIpv6ToIpv4(address: string): string | null {
+  const m = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(address);
+  if (!m) {
+    return null;
+  }
+  const hi = parseInt(m[1], 16);
+  const lo = parseInt(m[2], 16);
+  if (!Number.isFinite(hi) || !Number.isFinite(lo)) {
+    return null;
+  }
+  return `${hi >> 8}.${hi & 0xff}.${lo >> 8}.${lo & 0xff}`;
+}
+
+function normalizeResolvedAddress(address: string): string {
+  let normalized = address.toLowerCase().replace(/^\[|\]$/g, '');
+  // Collapse IPv4-mapped IPv6 (::ffff:169.254.169.254 AND its hex form
+  // ::ffff:a9fe:a9fe) to its IPv4 form so the literal checks below cannot
+  // be bypassed by the mapped representation.
+  if (normalized.startsWith('::ffff:')) {
+    normalized = mappedIpv6ToIpv4(normalized) || normalized.slice('::ffff:'.length);
+  }
+  return normalized;
+}
+
+/**
+ * SECURITY (R2-F002): literal-only hostname checks let a DNS name whose A
+ * record points at a cloud-metadata / private IP slip past the guard. Resolve
+ * the hostname first and validate EVERY resolved address:
+ * - metadata endpoints are rejected unconditionally (AG-B02 invariant);
+ * - private/loopback addresses are rejected unless allowPrivate is set.
+ * `resolver` is injectable for offline regression tests.
+ */
+export async function assertOutboundUrlAllowedResolved(
+  url: string,
+  options?: { allowPrivate?: boolean; resolver?: OutboundDnsResolver }
+): Promise<void> {
+  await resolveValidateOutboundHost(url, options);
+}
+
+/**
+ * Validate-and-pin variant of assertOutboundUrlAllowedResolved: identical
+ * checks, but returns THE SAME address list that was validated so the caller
+ * can pin its request agents onto exactly these peers (createPinnedDnsContext)
+ * instead of letting axios re-resolve the hostname (DNS rebinding TOCTOU).
+ * Single resolution: validation and the returned list cannot diverge.
+ */
+export async function assertOutboundUrlAllowedResolvedPinned(
+  url: string,
+  options?: { allowPrivate?: boolean; resolver?: OutboundDnsResolver }
+): Promise<ResolvedAddress[]> {
+  return resolveValidateOutboundHost(url, options);
+}
+
+/** Validate one resolved address against the metadata/private rules. */
+function assertResolvedAddressAllowed(address: string, options?: { allowPrivate?: boolean }): void {
+  const normalized = normalizeResolvedAddress(address);
+  if (isMetadataHost(normalized)) {
+    throw new Error('backend.cloud_metadata_endpoints_are_blocked');
+  }
+  const isPrivate =
+    normalized === 'localhost'
+    || normalized === '0.0.0.0'
+    || isPrivateIpv4(normalized)
+    || isPrivateIpv6(normalized);
+  if (isPrivate && !options?.allowPrivate) {
+    throw new Error('backend.private_ip_addresses_are_not_allowed');
+  }
+}
+
+const defaultOutboundResolver: OutboundDnsResolver = async (hostname) => {
+  const results = await dnsPromises.lookup(hostname, { all: true });
+  return results.map((r) => ({ address: r.address, family: r.family }));
+};
+
+/** One resolution, full validation, return the approved peer set. */
+async function resolveValidateOutboundHost(
+  url: string,
+  options?: { allowPrivate?: boolean; resolver?: OutboundDnsResolver }
+): Promise<ResolvedAddress[]> {
+  // Literal checks first (protocol, known metadata hostnames, literal IPs).
+  assertOutboundUrlAllowed(url, options);
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error('backend.invalid_url_format');
+  }
+  const hostname = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+
+  const lookup = options?.resolver || defaultOutboundResolver;
+
+  let addresses: ResolvedAddress[];
+  try {
+    addresses = await lookup(hostname);
+  } catch {
+    throw new Error('backend.outbound_target_unresolvable');
+  }
+  if (!Array.isArray(addresses) || addresses.length === 0) {
+    throw new Error('backend.outbound_target_unresolvable');
+  }
+
+  for (const { address } of addresses) {
+    assertResolvedAddressAllowed(String(address), options);
+  }
+
+  return addresses;
+}
+
+/**
+ * SECURITY (audit 2026-08, N5-6): bare-host variant for NON-HTTP egress
+ * (SMTP relay hosts, raw TCP/TLS probes) where the target is a hostname or
+ * literal IP with no URL scheme. Identical rules: metadata endpoints are
+ * rejected unconditionally (AG-B02), every resolved address is validated,
+ * and private/loopback requires `allowPrivate`. Returns the validated peer
+ * set so the caller may pin its connection when the transport allows it.
+ */
+export async function assertOutboundHostAllowedResolved(
+  host: string,
+  options?: { allowPrivate?: boolean; resolver?: OutboundDnsResolver }
+): Promise<ResolvedAddress[]> {
+  const normalized = String(host || '').trim().toLowerCase().replace(/^\[|\]$/g, '');
+  if (!normalized) {
+    throw new Error('backend.outbound_target_unresolvable');
+  }
+  // Literal fast path: nothing to resolve; the address itself is validated.
+  if (isIpv4Literal(normalized) || normalized.includes(':')) {
+    assertResolvedAddressAllowed(normalized, options);
+    return [{ address: normalized, family: normalized.includes(':') ? 6 : 4 }];
+  }
+  // Known metadata hostnames are refused before any lookup.
+  assertResolvedAddressAllowed(normalized, options);
+
+  const lookup = options?.resolver || defaultOutboundResolver;
+  let addresses: ResolvedAddress[];
+  try {
+    addresses = await lookup(normalized);
+  } catch {
+    throw new Error('backend.outbound_target_unresolvable');
+  }
+  if (!Array.isArray(addresses) || addresses.length === 0) {
+    throw new Error('backend.outbound_target_unresolvable');
+  }
+  for (const { address } of addresses) {
+    assertResolvedAddressAllowed(String(address), options);
+  }
+  return addresses;
+}
+
+/**
+ * SECURITY (R2-F002 follow-up): close the validate/connect TOCTOU window.
+ * assertOutboundUrlAllowedResolved validates one DNS answer, but axios then
+ * resolves the hostname AGAIN — an attacker controlling authoritative DNS
+ * (low TTL) can return a clean address to the guard and a metadata/private
+ * address to the connect. This agent pins the validated answer: every socket
+ * the request opens uses exactly the addresses the guard approved.
+ *
+ * Usage: pass `lookup` + `httpAgent`/`httpsAgent` from this factory into the
+ * axios call alongside maxRedirects: 0.
+ */
+export interface PinnedDnsContext {
+  /** Validated addresses; every connection is forced onto one of these. */
+  addresses: ResolvedAddress[];
+  /**
+   * Custom lookup for axios/http.request options — returns ONLY pinned
+   * answers. SECURITY (audit 2026-08, AUD-07-4): honors the Node lookup
+   * contract — with `all: true` the callback receives the full pinned
+   * array; with `all: false` (the net.connect default) it receives the
+   * SINGLE-address form `(err, address, family)`. Returning the array in
+   * the single-address form made Node read `array.family` (undefined) and
+   * `array.address` (an array), so sockets could target garbage instead of
+   * the validated peers.
+   */
+  // The callback params are intentionally wide (`any`): this function is
+  // handed BOTH to axios' declared `lookup` option (whose callback type is
+  // narrower than the runtime contract) and to node's http.Agent. The
+  // RUNTIME contract is node's LookupFunction: `all: true` receives the
+  // pinned array, `all: false` receives the single-address form
+  // (err, addressString, family) — see createPinnedDnsContext below.
+  lookup: (
+    hostname: string,
+    options: object,
+    callback: (err: NodeJS.ErrnoException | null, address: any, family?: any) => void
+  ) => void;
+  httpAgent: http.Agent;
+  httpsAgent: https.Agent;
+}
+
+export function createPinnedDnsContext(addresses: ResolvedAddress[]): PinnedDnsContext {
+  const pinned: LookupAddressEntry[] = addresses.map((a) => ({
+    address: a.address,
+    family: (a.family === 6 ? 6 : 4) as 4 | 6
+  }));
+  const lookup: PinnedDnsContext['lookup'] = (_hostname: string, options: object, callback) => {
+    // Ignore the requested hostname entirely: after validation, the only
+    // acceptable peers are the validated ones. Re-resolution (rebinding)
+    // never reaches the network stack.
+    const wantsAll = Boolean((options as { all?: boolean } | undefined)?.all);
+    const requestedFamilyRaw = (options as { family?: number | string } | undefined)?.family;
+    const requestedFamily = requestedFamilyRaw === 6 || requestedFamilyRaw === 'IPv6' ? 6
+      : requestedFamilyRaw === 4 || requestedFamilyRaw === 'IPv4' ? 4
+        : undefined;
+    process.nextTick(() => {
+      if (wantsAll) {
+        callback(null, pinned);
+        return;
+      }
+      // Single-address contract: prefer the pinned answer matching the
+      // requested family, else the first validated peer.
+      const chosen = pinned.find((a) => a.family === requestedFamily) || pinned[0];
+      if (!chosen) {
+        callback(new Error('backend.outbound_target_unresolvable'), '');
+        return;
+      }
+      // Single-address contract: (err, addressString, family) — node's net
+      // layer treats this value as the remote address.
+      callback(null, chosen.address, chosen.family);
+    });
+  };
+  return {
+    addresses: pinned,
+    lookup,
+    httpAgent: new http.Agent({ lookup } as http.AgentOptions),
+    httpsAgent: new https.Agent({ lookup } as https.AgentOptions)
+  };
 }

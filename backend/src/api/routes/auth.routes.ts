@@ -19,6 +19,7 @@ import {
 } from '../../middleware/auth.middleware';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import authSecurityService from '../../security/auth-security.service';
+import { tokenKeyDigest } from '../../security/redis-token-keys';
 import redisService from '../../security/redis.service';
 import auditLogger from '../../security/audit-logger.service';
 import logger from '../../utils/logger';
@@ -44,6 +45,31 @@ import {
 import { getRuntimeProfile } from '../../config/platform-runtime';
 import { oidcAuthService } from '../../services/oidc-auth.service';
 import { buildAllowedOrigins } from '../../bootstrap/allowed-origins';
+import {
+    generateRegistrationOptions,
+    verifyRegistrationResponse,
+    generateAuthenticationOptions,
+    verifyAuthenticationResponse
+} from '@simplewebauthn/server';
+import type {
+    AuthenticationResponseJSON,
+    RegistrationResponseJSON,
+    WebAuthnCredential
+} from '@simplewebauthn/server';
+import { webauthnService } from '../../services/webauthn.service';
+import stepUpService from '../../security/step-up.service';
+import {
+    resolveWebAuthnExpectedOrigin,
+    resolveWebAuthnRpId,
+    getWebAuthnRpName,
+    isWebAuthnConfigured,
+    getStepUpTokenTtlSeconds
+} from '../../config/stepup';
+import {
+    STEPUP_COOKIE_NAME,
+    buildStepUpCookieOptions,
+    clearStepUpCookieOptions
+} from '../../middleware/step-up.middleware';
 
 const router = Router();
 const isTestEnv = isTestRuntime();
@@ -552,6 +578,359 @@ router.post('/login', authRateLimitMiddleware, async (req: AuthenticatedRequest,
     }
 });
 
+function requireWebAuthnConfig(): { rpID: string; expectedOrigin: string } {
+    const rpID = resolveWebAuthnRpId();
+    const expectedOrigin = resolveWebAuthnExpectedOrigin();
+    if (!rpID || !expectedOrigin || !isWebAuthnConfigured()) {
+        throw new Error('WebAuthn is not configured');
+    }
+    return { rpID, expectedOrigin };
+}
+
+async function getUserForCurrentPassword(req: AuthenticatedRequest): Promise<any | null> {
+    const currentPassword = req.body?.currentPassword;
+    if (typeof currentPassword !== 'string' || currentPassword.length === 0 || !req.user?.userId) {
+        return null;
+    }
+    const user = await findAuthUserById(req.user.userId) as any;
+    if (!user || user.status !== 'active' || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+        return null;
+    }
+    return user;
+}
+
+function credentialTransports(record: import('../../services/webauthn.service').WebAuthnCredentialRecord): any[] | undefined {
+    if (!record.transports) {
+        return undefined;
+    }
+    try {
+        const parsed = JSON.parse(record.transports);
+        return Array.isArray(parsed) ? parsed : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+function toWebAuthnCredential(record: import('../../services/webauthn.service').WebAuthnCredentialRecord): WebAuthnCredential {
+    return {
+        id: record.id,
+        publicKey: Buffer.from(record.public_key, 'base64url'),
+        counter: record.counter,
+        transports: credentialTransports(record)
+    };
+}
+
+/**
+ * WebAuthn / Passkey ceremonies.
+ *
+ * Registration deliberately requires the current password on BOTH options and
+ * verify. A stolen authenticated session must not be able to register the
+ * attacker's Passkey and permanently establish a new trusted factor.
+ */
+router.post('/webauthn/register/options', authenticate, authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const user = await getUserForCurrentPassword(req);
+        if (!user) {
+            return sendError(res, 403, {
+                code: 'WEBAUTHN_REGISTRATION_REAUTH_REQUIRED',
+                message: 'backend.webauthn_registration_current_password_required'
+            });
+        }
+        const { rpID } = requireWebAuthnConfig();
+        const sessionId = req.user!.sessionId;
+        if (!sessionId) {
+            return sendError(res, 401, { code: 'SESSION_INVALID', message: 'backend.session_invalid' });
+        }
+        const existing = webauthnService.listByUser(user.id);
+        const options = await generateRegistrationOptions({
+            rpName: getWebAuthnRpName(),
+            rpID,
+            userName: user.email,
+            userID: Buffer.from(user.id),
+            userDisplayName: user.username,
+            attestationType: 'none',
+            excludeCredentials: existing.map((credential) => ({
+                id: credential.id,
+                transports: credentialTransports(credential)
+            })),
+            authenticatorSelection: {
+                residentKey: 'preferred',
+                userVerification: 'required'
+            }
+        });
+        await stepUpService.storeRegistrationChallenge(user.id, sessionId, options.challenge);
+        return sendSuccess(res, options);
+    } catch (error: any) {
+        logger.warn('WebAuthn registration options failed', { error: error?.message });
+        return sendError(res, 503, {
+            code: 'WEBAUTHN_UNAVAILABLE',
+            message: 'backend.webauthn_unavailable'
+        });
+    }
+});
+
+router.post('/webauthn/register/verify', authenticate, authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const user = await getUserForCurrentPassword(req);
+        if (!user) {
+            return sendError(res, 403, {
+                code: 'WEBAUTHN_REGISTRATION_REAUTH_REQUIRED',
+                message: 'backend.webauthn_registration_current_password_required'
+            });
+        }
+        const { rpID, expectedOrigin } = requireWebAuthnConfig();
+        const sessionId = req.user!.sessionId;
+        const response = req.body?.response as RegistrationResponseJSON | undefined;
+        if (!sessionId || !response || typeof response !== 'object') {
+            return sendError(res, 400, {
+                code: 'WEBAUTHN_RESPONSE_INVALID',
+                message: 'backend.webauthn_response_invalid'
+            });
+        }
+        const expectedChallenge = await stepUpService.consumeRegistrationChallenge(user.id, sessionId);
+        if (!expectedChallenge) {
+            return sendError(res, 401, {
+                code: 'WEBAUTHN_CHALLENGE_INVALID',
+                message: 'backend.webauthn_challenge_invalid'
+            });
+        }
+        const verification = await verifyRegistrationResponse({
+            response,
+            expectedChallenge,
+            expectedOrigin,
+            expectedRPID: rpID,
+            requireUserVerification: true
+        });
+        if (!verification.verified || !verification.registrationInfo) {
+            return sendError(res, 401, {
+                code: 'WEBAUTHN_VERIFICATION_FAILED',
+                message: 'backend.webauthn_verification_failed'
+            });
+        }
+        const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
+        const existing = webauthnService.getCredential(credential.id);
+        if (existing && existing.user_id !== user.id) {
+            return sendError(res, 409, {
+                code: 'WEBAUTHN_CREDENTIAL_ALREADY_BOUND',
+                message: 'backend.webauthn_credential_already_bound'
+            });
+        }
+        webauthnService.saveCredential({
+            id: credential.id,
+            userId: user.id,
+            name: typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 120) : undefined,
+            publicKey: Buffer.from(credential.publicKey).toString('base64url'),
+            counter: credential.counter,
+            transports: credential.transports,
+            backedUp: credentialBackedUp,
+            deviceType: credentialDeviceType
+        });
+        await auditLogger.log({
+            tenantId: user.tenant_id || req.user?.tenantId,
+            eventType: 'webauthn_credential_registered',
+            category: 'auth',
+            severity: 'warning',
+            actor: { type: 'user', id: user.id, email: user.email, ip: clientIpFromRequest(req) },
+            target: { type: 'user', id: user.id },
+            action: 'webauthn_credential_registered',
+            details: { credentialId: credential.id.slice(0, 12) },
+            status: 'success'
+        });
+        return sendSuccess(res, { credentialId: credential.id });
+    } catch (error: any) {
+        logger.warn('WebAuthn registration verification failed', { error: error?.message });
+        return sendError(res, 401, {
+            code: 'WEBAUTHN_VERIFICATION_FAILED',
+            message: 'backend.webauthn_verification_failed'
+        });
+    }
+});
+
+router.post('/webauthn/stepup/options', authenticate, authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const user = req.user!;
+        const { rpID } = requireWebAuthnConfig();
+        if (!user.sessionId) {
+            return sendError(res, 401, { code: 'SESSION_INVALID', message: 'backend.session_invalid' });
+        }
+        const credentials = webauthnService.listByUser(user.userId);
+        if (credentials.length === 0) {
+            return sendError(res, 403, {
+                code: 'STEPUP_ENROLL_REQUIRED',
+                message: 'backend.stepup_enroll_required'
+            });
+        }
+        const options = await generateAuthenticationOptions({
+            rpID,
+            allowCredentials: credentials.map((credential) => ({
+                id: credential.id,
+                transports: credentialTransports(credential)
+            })),
+            userVerification: 'required'
+        });
+        await stepUpService.storeChallenge(user.userId, user.sessionId, options.challenge);
+        return sendSuccess(res, options);
+    } catch (error: any) {
+        logger.warn('WebAuthn step-up options failed', { error: error?.message });
+        return sendError(res, 503, {
+            code: 'WEBAUTHN_UNAVAILABLE',
+            message: 'backend.webauthn_unavailable'
+        });
+    }
+});
+
+router.post('/webauthn/stepup/verify', authenticate, authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    const user = req.user!;
+    const response = req.body?.response as AuthenticationResponseJSON | undefined;
+    try {
+        const { rpID, expectedOrigin } = requireWebAuthnConfig();
+        if (!user.sessionId || !response || typeof response !== 'object') {
+            return sendError(res, 400, {
+                code: 'WEBAUTHN_RESPONSE_INVALID',
+                message: 'backend.webauthn_response_invalid'
+            });
+        }
+        const expectedChallenge = await stepUpService.consumeChallenge(user.userId, user.sessionId);
+        if (!expectedChallenge) {
+            return sendError(res, 401, {
+                code: 'WEBAUTHN_CHALLENGE_INVALID',
+                message: 'backend.webauthn_challenge_invalid'
+            });
+        }
+        const credentialRecord = webauthnService.getCredential(String(response.id || ''));
+        if (!credentialRecord || credentialRecord.user_id !== user.userId) {
+            return sendError(res, 401, {
+                code: 'WEBAUTHN_CREDENTIAL_INVALID',
+                message: 'backend.webauthn_credential_invalid'
+            });
+        }
+        const verification = await verifyAuthenticationResponse({
+            response,
+            expectedChallenge,
+            expectedOrigin,
+            expectedRPID: rpID,
+            credential: toWebAuthnCredential(credentialRecord),
+            requireUserVerification: true,
+            advancedFIDOConfig: { userVerification: 'required' }
+        });
+        if (!verification.verified) {
+            return sendError(res, 401, {
+                code: 'WEBAUTHN_VERIFICATION_FAILED',
+                message: 'backend.webauthn_verification_failed'
+            });
+        }
+        const newCounter = verification.authenticationInfo.newCounter;
+        if (newCounter < credentialRecord.counter || (credentialRecord.counter > 0 && newCounter === credentialRecord.counter)) {
+            // A counter rollback/replay is a compromised authenticator signal;
+            // revoke the credential rather than accepting a weaker assertion.
+            webauthnService.deleteCredential(user.userId, credentialRecord.id);
+            await auditLogger.log({
+                tenantId: user.tenantId,
+                eventType: 'webauthn_counter_rollback',
+                category: 'auth',
+                severity: 'critical',
+                actor: { type: 'user', id: user.userId, email: user.email, ip: clientIpFromRequest(req) },
+                target: { type: 'user', id: user.userId },
+                action: 'webauthn_counter_rollback',
+                details: { credentialId: credentialRecord.id.slice(0, 12), previousCounter: credentialRecord.counter, newCounter },
+                status: 'failure'
+            });
+            return sendError(res, 401, {
+                code: 'WEBAUTHN_COUNTER_ROLLBACK',
+                message: 'backend.webauthn_counter_rollback'
+            });
+        }
+        webauthnService.updateCounter(credentialRecord.id, newCounter);
+        // AUD-07-3: the ceremony may bind the token to the operation it was
+        // performed for (action/target from the request) — scoped tokens are
+        // only accepted by routes declaring the same scope.
+        const stepUpToken = await stepUpService.issueToken(user.userId, user.sessionId, {
+            ip: clientIpFromRequest(req),
+            userAgent: String(req.headers['user-agent'] || '')
+        }, {
+            action: typeof req.body?.action === 'string' ? req.body.action : undefined,
+            target: typeof req.body?.target === 'string' ? req.body.target : undefined
+        });
+        res.cookie(STEPUP_COOKIE_NAME, stepUpToken, buildStepUpCookieOptions(req));
+        await auditLogger.log({
+            tenantId: user.tenantId,
+            eventType: 'stepup_passed',
+            category: 'auth',
+            severity: 'info',
+            actor: { type: 'user', id: user.userId, email: user.email, ip: clientIpFromRequest(req) },
+            target: { type: 'user', id: user.userId },
+            action: 'stepup_passed',
+            details: { credentialId: credentialRecord.id.slice(0, 12) },
+            status: 'success'
+        });
+        return sendSuccess(res, { expiresIn: getStepUpTokenTtlSeconds() });
+    } catch (error: any) {
+        const counterFailure = /counter/i.test(String(error?.message || ''));
+        if (counterFailure && response?.id) {
+            const credentialRecord = webauthnService.getCredential(String(response.id));
+            if (credentialRecord && credentialRecord.user_id === user.userId) {
+                webauthnService.deleteCredential(user.userId, credentialRecord.id);
+            }
+        }
+        logger.warn('WebAuthn step-up verification failed', { error: error?.message });
+        return sendError(res, 401, {
+            code: counterFailure ? 'WEBAUTHN_COUNTER_ROLLBACK' : 'WEBAUTHN_VERIFICATION_FAILED',
+            message: counterFailure ? 'backend.webauthn_counter_rollback' : 'backend.webauthn_verification_failed'
+        });
+    }
+});
+
+router.get('/webauthn/credentials', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const credentials = webauthnService.listByUser(req.user!.userId).map((credential) => ({
+            id: credential.id,
+            name: credential.name,
+            counter: credential.counter,
+            transports: credentialTransports(credential),
+            backedUp: Boolean(credential.backed_up),
+            deviceType: credential.device_type,
+            createdAt: credential.created_at,
+            lastUsedAt: credential.last_used_at
+        }));
+        return sendSuccess(res, { credentials });
+    } catch (error: any) {
+        logger.warn('WebAuthn credential listing failed', { error: error?.message });
+        return sendError(res, 503, { code: 'WEBAUTHN_UNAVAILABLE', message: 'backend.webauthn_unavailable' });
+    }
+});
+
+router.delete('/webauthn/credentials/:credentialId', authenticate, authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const user = await getUserForCurrentPassword(req);
+        if (!user) {
+            return sendError(res, 403, {
+                code: 'WEBAUTHN_REGISTRATION_REAUTH_REQUIRED',
+                message: 'backend.webauthn_registration_current_password_required'
+            });
+        }
+        const deleted = webauthnService.deleteCredential(user.id, String(req.params.credentialId));
+        if (!deleted) {
+            return sendError(res, 404, { code: 'WEBAUTHN_CREDENTIAL_NOT_FOUND', message: 'backend.webauthn_credential_not_found' });
+        }
+        await auditLogger.log({
+            tenantId: user.tenant_id || req.user?.tenantId,
+            eventType: 'webauthn_credential_deleted',
+            category: 'auth',
+            severity: 'warning',
+            actor: { type: 'user', id: user.id, email: user.email, ip: clientIpFromRequest(req) },
+            target: { type: 'user', id: user.id },
+            action: 'webauthn_credential_deleted',
+            details: { credentialId: String(req.params.credentialId).slice(0, 12) },
+            status: 'success'
+        });
+        res.clearCookie(STEPUP_COOKIE_NAME, clearStepUpCookieOptions(req));
+        return sendSuccess(res, { deleted: true });
+    } catch (error: any) {
+        logger.warn('WebAuthn credential deletion failed', { error: error?.message });
+        return sendError(res, 503, { code: 'WEBAUTHN_UNAVAILABLE', message: 'backend.webauthn_unavailable' });
+    }
+});
+
 router.get('/oidc/login', authRateLimitMiddleware, async (_req: AuthenticatedRequest, res: Response) => {
     try {
         if (!oidcAuthService.isConfigured()) {
@@ -654,6 +1033,7 @@ router.post('/oidc/logout', authenticate, async (req: AuthenticatedRequest, res:
 
         res.clearCookie('accessToken', { path: '/' });
         res.clearCookie('refreshToken', { path: '/' });
+        res.clearCookie(STEPUP_COOKIE_NAME, clearStepUpCookieOptions(req));
         res.clearCookie('oidcState', buildOidcTemporaryCookieClearOptions(req));
 
         if (!sessionRevoked) {
@@ -690,6 +1070,7 @@ router.post('/oidc/logout', authenticate, async (req: AuthenticatedRequest, res:
         logger.error('OIDC logout error', { error: error?.message });
         res.clearCookie('accessToken', { path: '/' });
         res.clearCookie('refreshToken', { path: '/' });
+        res.clearCookie(STEPUP_COOKIE_NAME, clearStepUpCookieOptions(req));
         res.clearCookie('oidcState', buildOidcTemporaryCookieClearOptions(req));
         return sendError(res, 503, {
             code: 'LOGOUT_REVOCATION_FAILED',
@@ -699,13 +1080,6 @@ router.post('/oidc/logout', authenticate, async (req: AuthenticatedRequest, res:
     }
 });
 
-/**
- * POST /api/auth/refresh
- * Refresh access token using refresh token
- * SECURITY FIX CVE-2026-009: Only accept refresh token from httpOnly cookie
- * SECURITY FIX RISK-001: Added rate limiting
- * SECURITY FIX: Added refresh token blacklist check to prevent reuse of revoked tokens
- */
 router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
         // SECURITY FIX CVE-2026-009: refresh credentials never cross the JavaScript-readable body boundary.
@@ -775,7 +1149,7 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
         }
 
         try {
-            if (await redisService.existsStrict(`refresh:blacklist:${refreshToken}`)) {
+            if (await redisService.existsStrict(`refresh:blacklist:${tokenKeyDigest(refreshToken)}`)) {
                 logger.warn('Attempted use of blacklisted refresh token');
                 return sendError(res, 401, {
                     code: 'TOKEN_REVOKED',
@@ -784,7 +1158,9 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
             }
 
             const consumed = await redisService.setIfAbsentStrict(
-                `refresh:used:${refreshToken}`,
+                // N5-1 (audit 2026-08): the keyed digest, never the raw bearer
+                // token — Redis keyspace must not contain reusable credentials.
+                `refresh:used:${tokenKeyDigest(refreshToken)}`,
                 '1',
                 refreshTtl
             );
@@ -797,7 +1173,7 @@ router.post('/refresh', authRateLimitMiddleware, async (req: AuthenticatedReques
                         message: 'backend.refresh_session_revocation_failed'
                     });
                 }
-                await redisService.setStrict(`refresh:blacklist:${refreshToken}`, '1', refreshTtl);
+                await redisService.setStrict(`refresh:blacklist:${tokenKeyDigest(refreshToken)}`, '1', refreshTtl);
                 return sendError(res, 401, {
                     code: 'TOKEN_INVALIDATED',
                     message: 'backend.refresh_token_replay_detected'
@@ -874,7 +1250,9 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
             const decoded = jwt.decode(token) as jwt.JwtPayload;
             const ttl = decoded?.exp ? Math.max(0, decoded.exp - Math.floor(Date.now() / 1000)) : 86400;
             if (ttl > 0) {
-                await redisService.set(`token:blacklist:${token}`, '1', ttl);
+                // SECURITY (audit 2026-08, AUD-01-2): never place a raw bearer token in
+                // the Redis keyspace — blacklist keys are keyed by an HMAC digest.
+                await redisService.set(`token:blacklist:${tokenKeyDigest(token)}`, '1', ttl);
             }
             // Detect legacy token (no sessionId claim) — defense in depth
             tokenSessionId = typeof decoded?.sessionId === 'string' ? decoded.sessionId : undefined;
@@ -887,7 +1265,7 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
             const refreshDecoded = jwt.decode(refreshToken) as jwt.JwtPayload;
             const refreshTtl = refreshDecoded?.exp ? Math.max(0, refreshDecoded.exp - Math.floor(Date.now() / 1000)) : 7 * 86400;
             if (refreshTtl > 0) {
-                await redisService.set(`refresh:blacklist:${refreshToken}`, '1', refreshTtl);
+                await redisService.set(`refresh:blacklist:${tokenKeyDigest(refreshToken)}`, '1', refreshTtl);
             }
         }
 
@@ -921,6 +1299,7 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
         // SECURITY FIX: Clear httpOnly cookies
         res.clearCookie('accessToken', { path: '/' });
         res.clearCookie('refreshToken', { path: '/' });
+        res.clearCookie(STEPUP_COOKIE_NAME, clearStepUpCookieOptions(req));
 
         logger.info(`User logged out: ${req.user?.email}`);
 
@@ -969,6 +1348,7 @@ router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Resp
         logger.error('Logout error', { error: error.message });
         res.clearCookie('accessToken', { path: '/' });
         res.clearCookie('refreshToken', { path: '/' });
+        res.clearCookie(STEPUP_COOKIE_NAME, clearStepUpCookieOptions(req));
         return sendError(res, 503, {
             code: 'LOGOUT_REVOCATION_FAILED',
             message: 'backend.logout_revocation_failed',
@@ -1052,6 +1432,7 @@ router.put('/password', authenticate, async (req: AuthenticatedRequest, res: Res
 
         res.clearCookie('accessToken', { path: '/' });
         res.clearCookie('refreshToken', { path: '/' });
+        res.clearCookie(STEPUP_COOKIE_NAME, clearStepUpCookieOptions(req));
 
         logger.info(`Password changed for user: ${req.user?.email}`);
         await auditLogger.log({
