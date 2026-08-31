@@ -16,12 +16,33 @@ Do not print the Fusion proxy assembly directly. Use the STL files in this direc
 | `rear-din-clip.stl` | 205 x 64 mm |
 
 The front-panel STL files are already oriented flat: back face on the bed, raised details facing up.
+All seven exported STL files are translated/rotated so their lowest point is
+`Z=0`; `validate-print-bed.py` rejects a part that is non-manifold,
+disconnected, larger than 220 x 220 mm in XY, or not resting on the build
+plane.
 
 ## Export STLs
 
 ```powershell
 cd X:\repos\Networksafe\hardware\enclosure\printable
 .\export-printable.ps1
+```
+
+For a Blender catalog view of the seven verified STL meshes:
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background --python-exit-code 3 --python .\aetherguard-print-pack-blender.py
+```
+
+This writes the ignored review artifacts `aetherguard-print-pack-review.blend`
+and `aetherguard-print-pack-preview.png`. The seven individual STL files—not a
+combined export from the review scene—are the slicer inputs.
+
+Validate that the saved Blender scene still contains exactly those seven
+bed-sized, Z=0 slicer meshes and no extra manufacturing meshes:
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background .\aetherguard-print-pack-review.blend --python-exit-code 3 --python .\validate-blender-print-pack.py
 ```
 
 Or export one part:
