@@ -46,7 +46,7 @@ Firmware（STM32H563，需 ARM GCC toolchain；host-side 测试只需 gcc）：
 ```bash
 cd firmware/controller-stm32h5
 make -j$(nproc)                    # 产物 build/controller-stm32h5.elf/.bin/.hex（需 CubeMX 生成 HAL/Drivers，README.md 记录当前 .ioc 尚未初始化）
-make -f test/Makefile test         # host-side C 单测：mock_hal + controller_tasks/serial_json/interlock_driver/grant_auth，34 用例（含急停锁存、counter UINT32_MAX 饱和闭锁、challenge 16 槽环形窗口、serial_json RFC8259 空格/转义/键名防伪、FW-001 无密钥 fail-closed、FW-003 严格数字解析、FW-004 无时间同步拒绝+时钟回拨防护、FW-006 高水位持久化），gcc 编译无 STM32 依赖（test/Makefile 路径为父目录相对，须在 firmware/controller-stm32h5/ 根跑；cd test 会找不到 test/mock_hal.c。Windows 无 make 时可直接 gcc：`gcc -Wall -Wextra -std=c11 -Itest -ICore/Inc -ICore/Src -o test_controller.exe test/mock_hal.c test/test_stubs.c test/test_controller.c Core/Src/controller_tasks.c Core/Src/serial_json.c Core/Src/interlock_driver.c Core/Src/grant_auth.c`）
+make -f test/Makefile test         # host-side C 单测：mock_hal + controller_tasks/serial_json/interlock_driver/grant_auth，34 用例（含急停锁存、counter UINT32_MAX 饱和闭锁、challenge 16 槽环形窗口、serial_json RFC8259 空格/转义/键名防伪、FW-001 无密钥 fail-closed、FW-003 严格数字解析、FW-004 无时间同步拒绝+时钟回拨防护、FW-006 高水位持久化），gcc 编译无 STM32 依赖（test/Makefile 路径为父目录相对，须在 firmware/controller-stm32h5/ 根跑；cd test 会找不到 test/mock_hal.c。跨平台等价入口：仓库根 `node scripts/dev/run-firmware-host-tests.mjs` = `npm run check:firmware-host`；Windows 无 make 时也可直接 gcc：`gcc -Wall -Wextra -std=c11 -Itest -ICore/Inc -ICore/Src -o test_controller.exe test/mock_hal.c test/test_stubs.c test/test_controller.c Core/Src/controller_tasks.c Core/Src/serial_json.c Core/Src/interlock_driver.c Core/Src/grant_auth.c`）
 ```
 
 Simulator（无额外依赖，复用 backend 的 ts-node）：
@@ -65,7 +65,7 @@ Rescue（异构救援控制面，std-only + 7 crate，离线可构建）：
 
 ```bash
 cd rescue
-cargo test                       # 49 用例：链篡改/截断、auth 重放、allowlist、mock appliance
+cargo test                       # 56 用例：链篡改/截断、auth 重放、allowlist、mock appliance
 cargo clippy --all-targets -- -D warnings
 cargo build --release            # 产物 target/release/ag-rescue
 node ../scripts/rescue/run-drills.mjs   # 从仓库根也可：故障演练 11 断言（需先 build --release）
@@ -77,7 +77,18 @@ AI 助手一键诊断（从仓库根；`--tests` 加全量测试集，`--json` �
 node scripts/ai/diagnose.mjs [--tests] [--json]
 ```
 
-Release guard 脚本（从仓库根）：
+仓库根聚合命令（根 `package.json`，与 CI 同源；单项失败再用上面的焦点命令缩小）：
+
+```bash
+npm run check:quick            # 结构契约 + 8 个 release guard + 前后端 typecheck/lint + installer 审计构建
+npm run check:all              # 全量：上述 + challenge-dataset 自检 + 前后端全测试 + rust-fastpath + rescue(+drills) + gateway 安全链
+npm run check:release-guards   # 一键跑下面 8 个 release guard
+npm run check:gateway-safety   # = simulator 全链（check:gateway-simulator）+ 固件 host 测试（check:firmware-host）
+npm run diagnose               # = node scripts/ai/diagnose.mjs --json
+npm run db:up && npm run db:check   # 本地 Postgres（JetBrains overlay compose）
+```
+
+Release guard 脚本（从仓库根；前 8 个由 `npm run check:release-guards` 聚合）：
 
 ```bash
 node scripts/guards/check-route-db-access.mjs        # route handler 必须经 services/repositories，不得直连 DB
@@ -85,10 +96,19 @@ node scripts/guards/check-no-direct-api-fetch.mjs    # 前端每个后端调用�
 node scripts/guards/check-frontend-api-contract.mjs  # 前端每个 API 调用必须解析到已注册的后端路由
 node scripts/guards/check-repository-hygiene.mjs     # 阻止提交运行时 DB / 生成物 / QA 截图 / Playwright 状态
 node scripts/guards/check-rescue-no-release.mjs        # rescue 控制面源码级禁止 release 帧（ADR 2026-07-08-rescue-release-policy）
+node scripts/guards/check-deployment-image-pins.mjs    # 部署 Dockerfile/Compose 镜像引用必须固定版本（2026-08 审计后新增）
+node scripts/guards/check-no-secrets.mjs               # 全仓密钥扫描，allowlist 记录在 guard 自身 ledger（2026-08 审计后新增）
 node scripts/guards/check-training-leak-challenge-capture.mjs  # ml/ 训练产物不得泄漏 sealed challenge capture（只挡 committed 产物，不挡 runtime reads → 见 DO_NOT_READ.md）
+node scripts/guards/check-project-structure.mjs      # IDE/manifest/结构契约（不在 check:release-guards 内，= npm run check:project-structure）
 ```
 
-环境初始化与 Docker（跨平台可复现）：先 `node scripts/setup.mjs`（从 `.env.example` 生成根 `.env` 与 `backend/.env`，随机密钥、幂等不覆盖、`--install` 附带 npm install；bash 等价 `deployment/production/setup-env.sh`，两者生成键列表须保持同步），再 `docker compose up -d --build`（compose 文件用 include/env_file long syntax，需 Compose v2.24+，legacy `docker-compose` v1 二进制解析不了）。`deployment/production/docker-compose.prod.yml` 是 canonical 根 Compose 的兼容入口，不维护第二套拓扑。生产 Compose 仅发布 `127.0.0.1:8080` 的前端/API 反代入口，backend/Redis/Postgres/MinIO 仅在 Compose 网络可达；本地开发后端仍可直接监听 3005。登录凭据 = `.env` 的 `ADMIN_EMAIL`/`ADMIN_PASSWORD`（setup 生成并打印一次）。compose `:?` 硬保护 12 项：`REDIS_PASSWORD`/`JWT_SECRET`/`AUDIT_LOG_SECRET`/`ADMIN_PASSWORD`/`ENCRYPTION_KEY`/`ENCRYPTION_SALT`/`DEVICE_COMMAND_SECRET`/`SERIAL_HELPER_SHARED_SECRET`/`POSTGRES_PASSWORD`/`SHADOW_DATABASE_URL`/`S3_SECRET_KEY`/`DEVICE_API_KEYS`；`SERIAL_HELPER_SHARED_SECRET` 还必须 ≥32 字符且 ≠ `DEVICE_COMMAND_SECRET`（`runtime-env.ts:111` 硬拒）。生产 Compose 的 `ENABLE_ATTACK_SIM` 缺省为 false。占位值 `change_me*` 在生产被 `runtime-env.ts` WEAK_VALUE_PATTERNS 硬拒——直接 `cp .env.example .env` 起不来，必须走生成脚本；本地 dev 同样必需 `JWT_SECRET`+`AUDIT_LOG_SECRET`（缺任一 `npm run dev` 直接 fatal）。根 `deploy.sh` 已废弃（其产物被生产校验硬拒，脚本现直接报错退出），Linux 一键 Docker 安装用 `sudo bash scripts/install.sh`。离线客户机（air-gapped，甚至无 Docker）分发：在线构建机 `node scripts/release/build-offline-bundle.mjs [--include-docker]` 产自包含 tar.gz（docker save 全镜像 + SHA256SUMS + 可选 Docker 静态引擎），客户机解包后 `sudo bash install.sh` 零网络安装（load 镜像 + 现场生成密钥 + `docker-compose.offline.yml` 固定标签 `up -d --no-build`），三处密钥生成器（setup.mjs / setup-env.sh / 离线 install.sh）键列表须同步，详见 `deployment/offline/README.md`。
+E2E（Playwright，`baseURL` 默认 `http://127.0.0.1:8080`，需服务已起）：
+
+```bash
+cd e2e && npm run test:release   # smoke / dev-login / site-walkthrough / visual-smoke（chromium）
+```
+
+环境初始化与 Docker（跨平台可复现）：先 `node scripts/setup.mjs`（从 `.env.example` 生成根 `.env` 与 `backend/.env`，随机密钥、幂等不覆盖、`--install` 附带 backend/frontend npm install、`--all` 连 simulator/e2e 一起装；bash 等价 `deployment/production/setup-env.sh`，两者生成键列表须保持同步），再 `docker compose up -d --build`（compose 文件用 include/env_file long syntax，需 Compose v2.24+，legacy `docker-compose` v1 二进制解析不了）。`deployment/production/docker-compose.prod.yml` 是 canonical 根 Compose 的兼容入口，不维护第二套拓扑。生产 Compose 仅发布 `127.0.0.1:8080` 的前端/API 反代入口，backend/Redis/Postgres/MinIO 仅在 Compose 网络可达；本地开发后端仍可直接监听 3005。登录凭据 = `.env` 的 `ADMIN_EMAIL`/`ADMIN_PASSWORD`（setup 生成并打印一次）。compose `:?` 硬保护 12 项：`REDIS_PASSWORD`/`JWT_SECRET`/`AUDIT_LOG_SECRET`/`ADMIN_PASSWORD`/`ENCRYPTION_KEY`/`ENCRYPTION_SALT`/`DEVICE_COMMAND_SECRET`/`SERIAL_HELPER_SHARED_SECRET`/`POSTGRES_PASSWORD`/`SHADOW_DATABASE_URL`/`S3_SECRET_KEY`/`DEVICE_API_KEYS`；`SERIAL_HELPER_SHARED_SECRET` 还必须 ≥32 字符且 ≠ `DEVICE_COMMAND_SECRET`（`bootstrap/runtime-env.ts:123-127` 硬拒）。生产 Compose 的 `ENABLE_ATTACK_SIM` 缺省为 false。占位值 `change_me*` 在生产被 `runtime-env.ts` WEAK_VALUE_PATTERNS 硬拒——直接 `cp .env.example .env` 起不来，必须走生成脚本；本地 dev 同样必需 `JWT_SECRET`+`AUDIT_LOG_SECRET`（缺任一 `npm run dev` 直接 fatal）。根 `deploy.sh` 已废弃（其产物被生产校验硬拒，脚本现直接报错退出），Linux 一键 Docker 安装用 `sudo bash scripts/install.sh`。离线客户机（air-gapped，甚至无 Docker）分发：在线构建机 `node scripts/release/build-offline-bundle.mjs [--include-docker]` 产自包含 tar.gz（docker save 全镜像 + SHA256SUMS + 可选 Docker 静态引擎），客户机解包后 `sudo bash install.sh` 零网络安装（load 镜像 + 现场生成密钥 + `docker-compose.offline.yml` 固定标签 `up -d --no-build`），三处密钥生成器（setup.mjs / setup-env.sh / 离线 install.sh）键列表须同步，详见 `deployment/offline/README.md`。
 
 ## 架构
 
@@ -105,6 +125,9 @@ node scripts/guards/check-training-leak-challenge-capture.mjs  # ml/ 训练产�
 | `rescue/` | 异构救援控制面 `ag-rescue`（Rust 单二进制，仅安全侧动作；ADR/runbook 见 `docs/adr/2026-07-08-*` 与 `docs/rescue/`） |
 | `hardware/enclosure/` | Gateway Appliance 3D 打 OpenSCAD 机箱（Phase 0.5 原型，非注塑量产件） |
 | `deployment/gateway/` | M1 Gateway Daemon 嵌入式部署包（systemd + nftables ruleset + install.sh） |
+| `installer/` | `aetherguard-cli` npm 包——面向客户的 CLI 一键安装工具（独立 tsc 构建；`npm run check:installer` 审计+构建） |
+| `experiments/` | 真机实验线。`lubancat2-fail-closed-gateway/`：LubanCat2 SBC + 双 USB RNDIS 接口的 fail-closed gateway 原型——引用其结果前必读目录内 `CLAIM-BOUNDARIES.md` |
+| `papers/` | 论文与投稿材料（AetherArgus-HTTP-Security、hardware-final-defense、JCST-debate、SCI-main；投稿真实性指南见目录内） |
 | `ml/` | AetherArgus 离线安全判定模型与数据集（独立于后端 `ai-agents/` 运行时检测；QLoRA + 数据管线，当前未接入 `backend/src/`；详见下节） |
 | `deployment/` `docs/` | 生产脚本 / 架构·ADR·产品·就绪文档 |
 
@@ -173,16 +196,18 @@ Python = `py -3`（3.12）。Provider：OpenCode Zen `deepseek-v4-flash`（`http
 
 这是本项目最易踩坑、且需跨多个服务才能看懂的核心设计——工业现场异常下"不确定就 fail-closed 主动断桥"。所有路径为 `backend/src/` 下相对。
 
-- **policyDigest 是端到端绑定锚，跨 4 个服务且逐字 ===**。同一 digest：control-plane 在 `services/final-defense.service.ts` 算 → 同时写 `payload.policyDigest` 与 `hardwareContext.policyDigest`（两份）→ 进 `hardware_confirmation_sessions.summary` → `validateGrantPayload` 与 session summary 比对（`services/hardware-authorization.service.ts:607`）→ companion `validateLocalPolicyGrant` 与 `policy.policyDigest` 比对（`companion/serial-device-companion.ts:83`）→ `services/device-control.service.ts:527` 与 stored `hardwareContext.policyDigest` 比对。任一处 !== 即 fail-closed。digest 输入经 `policyDigestInput`（`security/final-defense-policy.ts:71`）规范化（trim/Number/Boolean coerce），"看起来一样的 JSON"算出的 digest 可能不同——**必须用 `computeFinalDefensePolicyDigest`，不能手算**。
-- **monotonic counter 有三套独立高水位，互不共享，各自严格 `>`**：control-plane DB 列 `hardware_gates.last_monotonic_counter`（`hardware-authorization.service.ts:131`，持久）、appliance daemon 内存 `monotonicHighWater`（`companion/gateway-daemon.ts:81`，进程级）、companion `SerialDeviceCompanion.lastCounter`（`serial-device-companion.ts:115`，进程级）。counter 虽存 INTEGER 列，落库前 `Number.isInteger` 校验（`hardware-authorization.service.ts:503`）防 `Number(1.5)` 被列四舍五入后蒙混。回滚即 `non_increasing_monotonic_counter` / `monotonic_counter_rollback`（`gateway-daemon.ts:135`）/ `counter_replay_or_rollback`（`serial-device-companion.ts:98`），三处各自 fail-closed。
-- **interlock 状态归一化**：`normalizeInterlockState`（`security/final-defense-policy.ts:43`）trim+lowercase；**legacy `asserted` → `isolated`**（`:45`，不是 armed！模型极易误读）；未知值 → `'unknown'`，而 `unknown` 在 `rootResistantGatewayDegradedReasons`（`final-defense.service.ts:725`）被当降级理由 `interlock_unknown` 使 `active=false`。bridge 状态共用同一归一化（`normalizeBridgeState`）。
-- **fail-closed 不是"拒绝请求"，是"主动断桥 + 发 interlock_assert"**。`failClosed`（`gateway-daemon.ts:223`）= `assertIsolated`（`released=false`/`bridgeState='isolated'`/`applyRuleset('isolated_ruleset')`）+ 发 `{command:'interlock_assert'}` 帧驱动物理继电器。一次校验失败的副作用是**物理拓扑改变**（SERVER↔LAN/WAN 桥断开），不是仅一个 HTTP 错误。control-plane 侧 `rejectSession`（`hardware-authorization.service.ts:669`）另写 tamper-evident 审计，`invalid_signature`/`monotonic_counter_rollback`/`policy_digest_mismatch` 升 `severity:'critical'`。
-- **release 是暂态，必自动回 isolated**。`releaseTtlMs` 在 final-defense 被 clamp 到 `[5_000, 15*60_000]`（`:254`），appliance 默认 30s（`gateway-daemon.ts:65`），到期 `assertIsolated('release_window_expired')`（`:152`）；companion 侧 `releaseInterlock` 同样 `setTimeout(assertInterlock, releaseTtlMs)`（`:273`）。没有显式 re-assert 的 release 必然回 isolated——"释放是异常，隔离是常态"。
-- **isolated 保留 appliance 自身 MGMT 通道**。`dedicated_mgmt`/`cellular` 不计入降级（`final-defense.service.ts:764`），fail-closed 后仍可远程恢复 appliance；阻断的仅 server↔lan 业务桥。把 isolated 误解为"断所有链路"会写出无法恢复的恢复逻辑。
-- **device-control 下发路径本身没有 clamp/estop/限幅**（`grep 'clamp|estop|emergency|throttle'` 0 命中）。安全全外移到硬件授权确认：`createPhysicalConfirmation` 强制 `hardwareContext.policyDigest`+`breakerTarget` 非空（`device-control.service.ts:351`，缺即抛 `backend.hardware_context_*_required`），`handlePhysicalConfirmationAck` 逐字段 === + 严格布尔 `payload.confirmed===true`（`:541`，防 `Boolean('false')` 真值陷阱）+ 签名验证，全过才 `dispatchConfirmedDeviceCommand`。**不要在 device-control 找限幅——它只 dispatch。**
-- **grant 签名有 legacy fallback 但仅在无 extended fields 时触发**（`security/hardware-grant.ts:104`）。带 `policyDigest`/`challenge`/`breakerTarget`/`interlockAction` 任一字段的 grant，签名验不过直接 false，不退 legacy 11 字段消息。**升级不可逆**——一旦 grant 携带 Final Defense 上下文，就再不能用旧签名格式通过。签名算法默认 `ECDSA_P256_SHA256`（`hardware-authorization.service.ts:221`），验签 `verifyHardwareGrantSignature`（`hardware-grant.ts:88`）用各 gate 注册时存的 `public_key_pem`。
-- **companion 本地 fail-closed 独立于上报通道**（`serial-device-companion.ts:362` reportStatus 注释）：上报失败不会放开 interlock。本地策略从 `FINAL_DEFENSE_POLICY_FILE`（默认 `/etc/aetherguard/final-defense-policy.json`）读，`loadLocalPolicy`（`:39`）重算 digest 比对 + 可选 HMAC 签名验（`timingSafeEqual` 防时序）。
-- **M2 STM32 固件侧镜像同一套校验**（`firmware/controller-stm32h5/Core/Src/controller_tasks.c:36` `controller_handle_release_request`）：challenge 去重（`controller_validate_challenge` `:83`，16 槽环形 buffer，`strcmp` 重用即拒 `:86`）、policyDigest `strcmp` 严格相等（`controller_validate_policy_digest` `:95`，空串拒）、counter `counter > high_water_counter`（`controller_validate_counter` `:101`）、expiry `expires_at > g_current_time_s`（`:107`）、SE present + feedback OK 才 `INTERLOCK_STATE_RELEASED`，任一失败 `serial_json_send_alert()` + `DENIED`；`controller_assert_isolated`（`:157`）= 状态置 isolated + relay off。**release 成功分支推进高水位**（`:76` `g_state.high_water_counter = grant->monotonic_counter;`，工作树未提交）——与后端三套高水位"严格 `>`"语义对齐；host 测试 `test_counter_advances_on_release`（`test/test_controller.c:73`）断言释放后 `controller_get_high_water_counter()` 推进、重放同 counter 被拒（gcc 直编 test/Makefile 同源命令实跑 18 passed/0 failed）。此前"成功释放不推进 high_water、同一 counter 可重复释放"的缺口已闭合。**e-stop 现为锁存语义**：release 请求入口先查 `estop_pressed || state==FAULT` 即拒，`controller_clear_estop()` 显式复位仅回到 ISOLATED（ISO 13850——松开按钮不得自行恢复），host 测试 `test_estop_latch_blocks_release` 断言锁存期间合法 grant 被拒；simulator `mock-controller.ts` 已对齐同一门控与 feedback-mismatch 拒绝语义。改 `controller_tasks.c` 校验分支属安全路径，须按门禁置顶给证据，**不能当"参数微调"**；行号随未提交编辑会漂移，以函数名+分支条件为准。该固件当前 .ioc/CubeMX 代码未生成，`make` 在无 HAL 源时不可构建；仅 `test/` 下的 host-side gcc 测试可跑。
+- **policyDigest 是端到端绑定锚，跨 4 个服务且逐字 ===**。同一 digest：control-plane 在 `services/final-defense.service.ts` 算 → 同时写 `payload.policyDigest` 与 `hardwareContext.policyDigest`（两份）→ 进 `hardware_confirmation_sessions.summary` → `validateGrantPayload` 与 session summary 比对（`services/hardware-authorization.service.ts:632`）→ companion `validateLocalPolicyGrant` 与 `policy.policyDigest` 比对（`companion/serial-device-companion.ts:101`）→ `services/device-control.service.ts:572` 与 stored `hardwareContext.policyDigest` 比对。任一处 !== 即 fail-closed。digest 输入经 `policyDigestInput`（`security/final-defense-policy.ts:71`）规范化（trim/Number/Boolean coerce），"看起来一样的 JSON"算出的 digest 可能不同——**必须用 `computeFinalDefensePolicyDigest`，不能手算**。
+- **monotonic counter 有三套独立高水位，互不共享，各自严格 `>`**：control-plane DB 列 `hardware_gates.last_monotonic_counter`（`hardware-authorization.service.ts:134`，持久）、appliance daemon 内存 `monotonicHighWater`（`companion/gateway-daemon.ts:164`，进程级）、companion `SerialDeviceCompanion.lastCounter`（`serial-device-companion.ts:164`，进程级）。counter 虽存 INTEGER 列，落库前 `Number.isInteger` 校验（`hardware-authorization.service.ts:527`）防 `Number(1.5)` 被列四舍五入后蒙混。回滚即 `non_increasing_monotonic_counter`（`hardware-authorization.service.ts:651`）/ `monotonic_counter_rollback`（`gateway-daemon.ts:248`）/ `counter_replay_or_rollback`（`serial-device-companion.ts:143`），三处各自 fail-closed。
+- **interlock 状态归一化**：`normalizeInterlockState`（`security/final-defense-policy.ts:43`）trim+lowercase；**legacy `asserted` → `isolated`**（`:45`，不是 armed！模型极易误读）；未知值 → `'unknown'`，而 `unknown` 在 `rootResistantGatewayDegradedReasons`（`final-defense.service.ts:752`）被当降级理由 `interlock_unknown` 使 `active=false`。bridge 状态共用同一归一化（`normalizeBridgeState`）。
+- **fail-closed 不是"拒绝请求"，是"主动断桥 + 发 interlock_assert"**。`failClosed`（`gateway-daemon.ts:410`）经 `reassertIsolated`（`:416`）= `assertIsolated`（`:394`，`released=false`/`bridgeState='isolated'`/`applyRuleset('isolated_ruleset')`）+ 发 `{command:'interlock_assert'}` 帧（`:418`）驱动物理继电器。一次校验失败的副作用是**物理拓扑改变**（SERVER↔LAN/WAN 桥断开），不是仅一个 HTTP 错误。control-plane 侧 `rejectSession`（`hardware-authorization.service.ts:718`）另写 tamper-evident 审计，`invalid_signature`/`monotonic_counter_rollback`/`policy_digest_mismatch` 升 `severity:'critical'`。
+- **release 是暂态，必自动回 isolated**。`releaseTtlMs` 在 final-defense 被 clamp 到 `[5_000, 15*60_000]`（`:264`），appliance 默认 30s（`gateway-daemon.ts:137`），到期 `reassertIsolated('release_window_expired')`（`:390`）；companion 侧 `releaseInterlock` 同样 `setTimeout(assertInterlock, releaseTtlMs)`（`:324`，reason `release_ttl_expired`）。没有显式 re-assert 的 release 必然回 isolated——"释放是异常，隔离是常态"。
+- **isolated 保留 appliance 自身 MGMT 通道**。`dedicated_mgmt`/`cellular` 不计入降级（`independentMgmtPath`，`final-defense.service.ts:142`），fail-closed 后仍可远程恢复 appliance；阻断的仅 server↔lan 业务桥。把 isolated 误解为"断所有链路"会写出无法恢复的恢复逻辑。
+- **device-control 下发路径本身没有 clamp/estop/限幅**（`grep 'clamp|estop|emergency|throttle'` 0 命中）。安全全外移到硬件授权确认：`createPhysicalConfirmation` 强制 `hardwareContext.policyDigest`+`breakerTarget` 非空（`device-control.service.ts:351`，缺即抛 `backend.hardware_context_*_required`），`handlePhysicalConfirmationAck` 逐字段 === + 严格布尔 `payload.confirmed===true`（`:611`，防 `Boolean('false')` 真值陷阱）+ 签名验证，全过才 `dispatchConfirmedDeviceCommand`。**不要在 device-control 找限幅——它只 dispatch。**
+- **grant 签名有 legacy fallback 但仅在无 extended fields 时触发**（`security/hardware-grant.ts:134`，extended 判定 `hasExtendedGrantFields` `:88`）。带 `policyDigest`/`challenge`/`breakerTarget`/`interlockAction` 任一字段的 grant，签名验不过直接 false，不退 legacy 11 字段消息。**升级不可逆**——一旦 grant 携带 Final Defense 上下文，就再不能用旧签名格式通过。签名算法默认 `ECDSA_P256_SHA256`（`hardware-authorization.service.ts:239`），验签 `verifyHardwareGrantSignature`（`hardware-grant.ts:108`）用各 gate 注册时存的 `public_key_pem`。
+- **companion 本地 fail-closed 独立于上报通道**（`serial-device-companion.ts:387` reportStatus 注释）：上报失败不会放开 interlock。本地策略从 `FINAL_DEFENSE_POLICY_FILE`（默认 `/etc/aetherguard/final-defense-policy.json`）读，`loadLocalPolicy`（`:40`）重算 digest 比对 + 可选 HMAC 签名验（`timingSafeEqual` 防时序）。
+- **M2 STM32 固件侧镜像同一套校验**（`firmware/controller-stm32h5/Core/Src/controller_tasks.c:99` `controller_handle_release_request`）：challenge 去重（`controller_validate_challenge` `:199`，16 槽环形 buffer，重用即拒）、policyDigest 常时比较严格相等（`controller_validate_policy_digest` `:219`，空串拒）、counter `counter > high_water_counter`（`controller_validate_counter` `:237`）、expiry（`controller_validate_expiry` `:243`，无时间同步即拒）、SE present + feedback OK 才 `INTERLOCK_STATE_RELEASED`，任一失败 `serial_json_send_alert()` + `DENIED`；`controller_assert_isolated`（`:324`）= 状态置 isolated + relay off。**release 成功分支推进高水位**（`:182` `g_state.high_water_counter = grant->monotonic_counter;`）——与后端三套高水位"严格 `>`"语义对齐；host 测试 `test_counter_advances_on_release` 断言释放后 `controller_get_high_water_counter()` 推进、重放同 counter 被拒（host 套件 2026-08-19 实跑 34 passed/0 failed）。此前"成功释放不推进 high_water、同一 counter 可重复释放"的缺口已闭合。**e-stop 现为锁存语义**：release 请求入口先查 `estop_pressed || state==FAULT` 即拒，`controller_clear_estop()` 显式复位仅回到 ISOLATED（ISO 13850——松开按钮不得自行恢复），host 测试 `test_estop_latch_blocks_release` 断言锁存期间合法 grant 被拒；simulator `mock-controller.ts` 已对齐同一门控与 feedback-mismatch 拒绝语义。改 `controller_tasks.c` 校验分支属安全路径，须按门禁置顶给证据，**不能当"参数微调"**；行号随未提交编辑会漂移，以函数名+分支条件为准。该固件当前 .ioc/CubeMX 代码未生成，`make` 在无 HAL 源时不可构建；仅 `test/` 下的 host-side gcc 测试可跑。
+
+- **控制面 step-up 再认证**（ADR `docs/adr/2026-08-29-stepup-webauthn-risk-elevation.md`）：`auth:session:{sessionId}` 登录设备的 IP/UA 与当前请求不匹配时记 `session_risk_elevated` 并吊销旧 step-up token；`STEPUP_ENFORCEMENT=on` 时核心高危端点必须按 `authenticate` → 原有角色/权限守卫 → `requireStepUp` 排序，未注册凭据返回 `STEPUP_ENROLL_REQUIRED`，无新鲜 Passkey 断言返回 `STEPUP_REQUIRED`。Passkey 只加强控制面入口，设备危险动作仍须经过 Hardware Gate 全链；生产 Redis 不可用时 step-up 状态 fail-closed，开关默认 `off`。
 
 ## 安全编码与防御性编程规范（代码变更必读）
 
@@ -216,6 +241,6 @@ Python = `py -3`（3.12）。Provider：OpenCode Zen `deepseek-v4-flash`（`http
 - **`DISABLE_REDIS` 生产不得开启**（限流降级到内存 fallback 仅限非生产）。
 - **Demo/pitch 路由**（如 `/aetherguard-deck`）默认禁用，仅 `VITE_ENABLE_PITCH_ROUTES=true` 本地 demo 构建启用。
 - **sql.js 运行中改 SQLite 文件会被覆盖**（见数据库节）——停 backend 再改，或走 API/service。
-- **不要提交生成物**：运行时 DB、KiCad scratch/router 交换文件、probe 报告、生成 PPTX、归档硬件中间产物、QA 截图、Playwright-MCP 状态（`check-repository-hygiene.mjs` 强制）。`hardware/enclosure/` 下的 `.stl`/`.png` 是已纳入版本库的渲染产物——改 `.scad` 后重渲染的产物可覆盖同名文件，但不要新增散落渲染文件；`hardware/enclosure/.gitignore` 已排除中间产物。
+- **不要提交生成物**：运行时 DB、KiCad scratch/router 交换文件、probe 报告、生成 PPTX、归档硬件中间产物、QA 截图、Playwright-MCP 状态、外部审计工具输出（如根目录 `aether-report.*`）（`check-repository-hygiene.mjs` 强制）。`hardware/enclosure/` 下的 `.stl`/`.png` 是已纳入版本库的渲染产物——改 `.scad` 后重渲染的产物可覆盖同名文件，但不要新增散落渲染文件；`hardware/enclosure/.gitignore` 已排除中间产物。
 - 涉及"完全最后防线"对外口径时，工程限定词以本文档 `项目定位` / `安全控制流不变量` 为准，README 的产品 framing 不替代这里的工程限定。
 - `AGENTS.md` 是 OpenCode 的 twin；项目知识与硬件/product framing 须与本文档保持同步。

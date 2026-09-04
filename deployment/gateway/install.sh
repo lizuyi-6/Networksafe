@@ -32,12 +32,29 @@ cp nftables/isolated_ruleset.nft /etc/aetherguard/nftables/
 cp nftables/released_ruleset.nft /etc/aetherguard/nftables/
 chmod 644 /etc/aetherguard/nftables/*.nft
 
-# Install gateway daemon binary
+# Install gateway daemon (AUD-05-1)
+# The old flow ran `npm install --prefix ...` in a directory WITHOUT a
+# package.json (a silent no-op) and symlinked systemd to the raw .ts entry —
+# which never even compiled (its backend import depth was wrong). The new
+# flow: the BUILD MACHINE runs `npm ci && npm run build` in this package and
+# ships `dist/` + `node_modules/`; the target machine copies the compiled
+# artifact and NEVER executes a .ts file.
 echo "[4/7] Installing gateway daemon..."
-npm install --production --prefix /usr/local/lib/aetherguard-gateway
-cp bin/aetherguard-gateway-daemon.ts /usr/local/lib/aetherguard-gateway/
-ln -sf /usr/local/lib/aetherguard-gateway/aetherguard-gateway-daemon.ts /usr/local/bin/aetherguard-gateway-daemon
-chmod +x /usr/local/bin/aetherguard-gateway-daemon
+INSTALL_ROOT=/usr/local/lib/aetherguard-gateway
+mkdir -p "$INSTALL_ROOT"
+[ -f dist/deployment/gateway/bin/aetherguard-gateway-daemon.js ] || {
+  echo "Error: prebuilt artifact missing. On the build machine run:"
+  echo "  cd deployment/gateway && npm ci && npm run build"
+  exit 1
+}
+[ -d node_modules ] || {
+  echo "Error: node_modules missing. On the build machine run:"
+  echo "  cd deployment/gateway && npm ci && npm run build"
+  exit 1
+}
+cp -r dist "$INSTALL_ROOT/"
+cp -r node_modules "$INSTALL_ROOT/"
+cp package.json package-lock.json "$INSTALL_ROOT/"
 
 # Install the fail-closed preflight check (DP-006): the systemd unit's
 # ExecStartPre references /usr/local/bin/aetherguard-gateway-preflight-check;

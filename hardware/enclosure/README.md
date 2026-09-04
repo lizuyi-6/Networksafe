@@ -90,6 +90,25 @@ openscad -D SERVICE_PREVIEW=true --imgsize 1600,1100 `
   -o assembly-service.png assembly.scad
 ```
 
+### Blender presentation scene
+
+`aetherguard-blender-scene.py` assembles the three manufacturing STL meshes in
+Blender and adds materials, operator-control proxies, studio lighting, and a
+hero camera. The script writes `aetherguard-enclosure.blend` and
+`aetherguard-enclosure-blender.png`; both outputs are generated artifacts and
+are ignored by Git.
+
+Run the script from Blender's Python Console:
+
+```python
+script_path = r"X:\repos\Networksafe\hardware\enclosure\aetherguard-blender-scene.py"; exec(compile(open(script_path, encoding="utf-8").read(), script_path, "exec"), {"__file__": script_path, "__name__": "__main__"})
+```
+
+Only collection `01_Manufacturing_Geometry` is sourced from the OpenSCAD STL
+exports. Collections `02_Visual_Controls_Not_For_Manufacture` and
+`03_Visual_Graphics` are presentation-only and must not be exported for
+fabrication.
+
 ## Prototype Print Guidance
 
 - Layer height: 0.2 mm

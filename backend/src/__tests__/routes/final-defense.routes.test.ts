@@ -341,6 +341,11 @@ describe('Final Defense Routes (smoke)', () => {
       expect(finalDefenseService.reportRootResistantGatewayStatus).not.toHaveBeenCalledWith(
         expect.objectContaining({ tenantId: 'tenant-from-body-attacker' })
       );
+      // SECURITY (audit 2026-08, batch 0): self-reported attestation timestamps
+      // must never reach the service — attestation is server-owned.
+      expect(finalDefenseService.reportRootResistantGatewayStatus).not.toHaveBeenCalledWith(
+        expect.objectContaining({ lastAttestationAt: expect.anything() })
+      );
     });
 
     it('rejects string booleans in gateway link status reports', async () => {

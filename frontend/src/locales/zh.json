@@ -959,7 +959,7 @@
     "endpoint_not_found": "未找到端点",
     "server_type_required": "需要指定服务器类型",
     "unsupported_deployment_target": "不支持的部署目标",
-    "invalid_profile": "配置无效",
+    "invalid_profile": "无效的配置",
     "failed_to_generate_bundle": "生成部署包失败",
     "device_gateway_unavailable": "设备网关不可用",
     "no_esp32_connected": "没有硬件设备连接",
@@ -991,7 +991,6 @@
     "failed_to_publish_announcement": "发布公告失败",
     "failed_to_archive_announcement": "归档公告失败",
     "cannot_delete_default_endpoint": "无法删除默认端点",
-    "server_type_required": "需要指定服务器类型",
     "alert_not_found": "未找到警报",
     "not_found": "未找到",
     "red_team_agent_analyzing_for_potential_bypasses": "红队智能体正在分析潜在绕过方案...",
@@ -1026,7 +1025,6 @@
     "password_change_failed": "密码修改失败",
     "password_session_revocation_failed": "密码修改后无法撤销现有会话",
     "configuration_saved": "配置已保存",
-    "invalid_profile": "无效的配置",
     "servertype_must_be_nginx_or_apache": "服务器类型必须是 nginx 或 apache",
     "configtext_and_envsnippet_are_required": "需要提供配置文本和环境变量片段",
     "deployment_profile_not_found": "未找到部署配置",
@@ -1132,7 +1130,22 @@
     "liveRefreshDesc": "启用后，仪表盘和监控页面将自动轮询最新数据",
     "logout": "退出登录",
     "logoutDesc": "清除当前会话并返回登录页面",
-    "loggingOut": "正在退出..."
+    "loggingOut": "正在退出...",
+    "passkeysTitle": "通行密钥",
+    "passkeysSubtitle": "为高风险操作提供硬件支持的重新认证。",
+    "passkeysDescription": "注册通行密钥以批准敏感的控制面操作。添加或删除凭据都需要当前密码。",
+    "noPasskeys": "尚未注册通行密钥。",
+    "unnamedPasskey": "未命名通行密钥",
+    "passkeyDevice": "通行密钥设备",
+    "currentPassword": "当前密码",
+    "passkeyName": "通行密钥名称（可选）",
+    "addPasskey": "添加通行密钥",
+    "passkeyAdded": "通行密钥已注册。",
+    "passkeyRemoved": "通行密钥已删除。",
+    "passkeyPasswordRequired": "请先输入当前密码。",
+    "passkeyLoadFailed": "无法加载通行密钥。",
+    "passkeyRegistrationFailed": "通行密钥注册失败。",
+    "passkeyRemovalFailed": "通行密钥删除失败。"
   },
   "sites": {
     "title": "站点管理",
@@ -1820,5 +1833,15 @@
     "partner": "合作伙伴",
     "upgradeRequired": "需要升级",
     "retry": "重试"
+  },
+  "stepup": {
+    "title": "需要通行密钥验证",
+    "description": "此高风险操作需要新鲜的通行密钥断言。",
+    "enrollRequiredTitle": "需要注册通行密钥",
+    "enrollRequiredDescription": "请先在系统设置中注册通行密钥，然后再执行高风险操作。",
+    "goToSecurity": "打开通行密钥设置",
+    "usePasskey": "使用通行密钥",
+    "authenticating": "验证中…",
+    "authenticationFailed": "通行密钥验证失败。"
   }
 }

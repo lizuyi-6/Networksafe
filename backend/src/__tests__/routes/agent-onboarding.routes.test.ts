@@ -57,6 +57,15 @@ jest.mock('../../security/agent-auth.service', () => ({
   }
 }));
 
+// Mock the onboarding service (the route delegates consumption to it).
+const mockExchangeOnboarding = jest.fn();
+jest.mock('../../modules/agent-onboarding/agent-onboarding.service', () => ({
+  __esModule: true,
+  agentOnboardingService: {
+    exchangeOnboardingCode: (...args: any[]) => mockExchangeOnboarding(...args)
+  }
+}));
+
 // Mock audit logger
 jest.mock('../../security/audit-logger.service', () => ({
   __esModule: true,
@@ -192,24 +201,23 @@ describe('Agent Onboarding Routes', () => {
   });
 
   describe('POST /exchange', () => {
+    const mockExchange = mockExchangeOnboarding as jest.Mock;
+
     it('exchanges valid onboarding code', async () => {
-      const future = new Date(Date.now() + 3600 * 1000).toISOString();
-      mockGetOnboardingCodeByHash.mockResolvedValue({
-        id: 'code-001',
-        code_hash: 'hash123',
-        tenant_id: 'tenant-001',
-        status: 'active',
-        expires_at: future,
-        max_uses: 1,
-        used_count: 0,
-        expected_hostname: null
+      mockExchange.mockResolvedValue({
+        ok: true,
+        registration: {
+          agentId: 'agent-001',
+          apiKey: 'ak_test_agent_001',
+          secretKey: 'sk_test_secret'
+        },
+        codeRow: {
+          id: 'code-001',
+          tenant_id: 'tenant-001',
+          status: 'used',
+          used_at: new Date().toISOString()
+        }
       });
-      mockRegisterAgent.mockReturnValue({
-        agentId: 'agent-001',
-        apiKey: 'ak_test_agent_001',
-        secretKey: 'sk_test_secret'
-      });
-      mockSaveOnboardingCode.mockResolvedValue(undefined);
 
       const response = await request(app)
         .post('/api/agent-onboarding/exchange')
@@ -220,6 +228,11 @@ describe('Agent Onboarding Routes', () => {
       expect(response.body.data.agentId).toBe('agent-001');
       expect(response.body.data.apiKey).toBeDefined();
       expect(response.body.data.secretKey).toBeDefined();
+      // AUD-03-2: the route must delegate consumption to the service.
+      expect(mockExchange).toHaveBeenCalledWith(expect.objectContaining({
+        hostname: 'web-server',
+        platform: 'linux'
+      }));
     });
 
     it('returns 400 when fields missing', async () => {
@@ -229,10 +242,11 @@ describe('Agent Onboarding Routes', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.code).toBe('VALIDATION_ERROR');
+      expect(mockExchange).not.toHaveBeenCalled();
     });
 
     it('returns 404 when code not found', async () => {
-      mockGetOnboardingCodeByHash.mockResolvedValue(null);
+      mockExchange.mockResolvedValue({ ok: false, reason: 'code_not_found' });
 
       const response = await request(app)
         .post('/api/agent-onboarding/exchange')
@@ -243,13 +257,7 @@ describe('Agent Onboarding Routes', () => {
     });
 
     it('returns 409 when code inactive', async () => {
-      mockGetOnboardingCodeByHash.mockResolvedValue({
-        id: 'code-001',
-        status: 'revoked',
-        expires_at: new Date(Date.now() + 3600 * 1000).toISOString(),
-        max_uses: 1,
-        used_count: 0
-      });
+      mockExchange.mockResolvedValue({ ok: false, reason: 'code_inactive' });
 
       const response = await request(app)
         .post('/api/agent-onboarding/exchange')
@@ -260,13 +268,7 @@ describe('Agent Onboarding Routes', () => {
     });
 
     it('returns 410 when code expired', async () => {
-      mockGetOnboardingCodeByHash.mockResolvedValue({
-        id: 'code-001',
-        status: 'active',
-        expires_at: new Date(Date.now() - 1000).toISOString(),
-        max_uses: 1,
-        used_count: 0
-      });
+      mockExchange.mockResolvedValue({ ok: false, reason: 'code_expired' });
 
       const response = await request(app)
         .post('/api/agent-onboarding/exchange')
@@ -277,13 +279,7 @@ describe('Agent Onboarding Routes', () => {
     });
 
     it('returns 409 when code already used', async () => {
-      mockGetOnboardingCodeByHash.mockResolvedValue({
-        id: 'code-001',
-        status: 'active',
-        expires_at: new Date(Date.now() + 3600 * 1000).toISOString(),
-        max_uses: 1,
-        used_count: 1
-      });
+      mockExchange.mockResolvedValue({ ok: false, reason: 'code_used' });
 
       const response = await request(app)
         .post('/api/agent-onboarding/exchange')
@@ -294,44 +290,25 @@ describe('Agent Onboarding Routes', () => {
     });
 
     it('returns 409 when hostname does not match expected', async () => {
-      mockGetOnboardingCodeByHash.mockResolvedValue({
-        id: 'code-001',
-        status: 'active',
-        expires_at: new Date(Date.now() + 3600 * 1000).toISOString(),
-        max_uses: 1,
-        used_count: 0,
-        expected_hostname: 'expected-server'
-      });
+      mockExchange.mockResolvedValue({ ok: false, reason: 'hostname_mismatch' });
 
       const response = await request(app)
         .post('/api/agent-onboarding/exchange')
-        .send({ onboardingCode: 'fgob_mismatch', hostname: 'wrong-server', platform: 'linux' });
+        .send({ onboardingCode: 'fgob_host', hostname: 'wrong-host', platform: 'linux' });
 
       expect(response.status).toBe(409);
       expect(response.body.code).toBe('ONBOARDING_POLICY_MISMATCH');
     });
-  });
 
-  describe('GET /agents', () => {
-    it('returns registered agents', async () => {
-      mockListAgents.mockReturnValue([
-        { agentId: 'agent-001', hostname: 'web-1', tenantId: 'tenant-001' },
-        { agentId: 'agent-002', hostname: 'web-2', tenantId: 'tenant-001' }
-      ]);
+    it('returns 409 when agent tags do not satisfy the code expected tags (AUD-03-2)', async () => {
+      mockExchange.mockResolvedValue({ ok: false, reason: 'tags_mismatch' });
 
-      const response = await request(app).get('/api/agent-onboarding/agents');
+      const response = await request(app)
+        .post('/api/agent-onboarding/exchange')
+        .send({ onboardingCode: 'fgob_tags', hostname: 'server', platform: 'linux', tags: ['wrong'] });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.length).toBe(2);
-    });
-
-    it('returns 500 on error', async () => {
-      mockListAgents.mockImplementation(() => { throw new Error('DB error'); });
-
-      const response = await request(app).get('/api/agent-onboarding/agents');
-
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(409);
+      expect(response.body.code).toBe('ONBOARDING_POLICY_MISMATCH');
     });
   });
 

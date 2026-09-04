@@ -67,6 +67,27 @@ jest.mock('../services/detection-pipeline.service', () => {
 
 // Import the mocked module for test-specific behavior
 import { detectionPipelineService } from '../services/detection-pipeline.service';
+import { commandDispatcherService } from '../services/command-dispatcher.service';
+import {
+  buildSignedEnvelope,
+  INBOUND_ENVELOPE_TEST_SECRET
+} from '../security/inbound-envelope';
+
+// AUD-03-4: HIGH-severity agent events require a signed inbound envelope.
+// Tests sign with the deterministic test-runtime secret bound to the live
+// agent socket id.
+function signAgentEvent(eventType: string, payload: any, socketId: string): any {
+  const { envelope, payload: body } = buildSignedEnvelope(
+    INBOUND_ENVELOPE_TEST_SECRET,
+    payload,
+    {
+      eventType,
+      sessionId: socketId,
+      nonce: `agent-test-nonce-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    }
+  );
+  return { ...body, envelope };
+}
 import type { DetectionDecision } from '../services/detection-pipeline.service';
 import auditLogger from '../security/audit-logger.service';
 
@@ -380,6 +401,35 @@ describe('AgentGateway', () => {
             });
         });
 
+        it('denies request:scan for a viewer-role dashboard user (per-message RBAC)', (done) => {
+            jest.mocked(auditLogger.logCommand).mockClear();
+            let scanReceived = false;
+
+            agentSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId: 'rbac-viewer-agent' }
+            });
+            agentSocket.on('command', (command) => {
+                if (command.type === 'scan') scanReceived = true;
+            });
+            agentSocket.on('connect', () => {
+                dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                    auth: { type: 'dashboard', role: 'viewer' }
+                });
+                dashboardSocket.on('error', (error: any) => {
+                    if (error.reason !== 'forbidden') return;
+                    expect(error.message).toBe('backend.insufficient_permissions');
+                    setTimeout(() => {
+                        expect(scanReceived).toBe(false);
+                        expect(auditLogger.logCommand).not.toHaveBeenCalled();
+                        done();
+                    }, 25);
+                });
+                dashboardSocket.on('connect', () => {
+                    dashboardSocket.emit('request:scan', { agentId: 'rbac-viewer-agent' });
+                });
+            });
+        });
+
         it('does not emit a command when fail-closed pre-dispatch audit fails', (done) => {
             process.env.AUDIT_LOG_FAIL_CLOSED = 'true';
             jest.mocked(auditLogger.log).mockRejectedValueOnce(new Error('shadow unavailable'));
@@ -607,8 +657,57 @@ describe('AgentGateway', () => {
         });
     });
 
-    describe('sendSignedCommand return values', () => {
-        it('returns false when sending command to non-existent agent', () => {
+    // SECURITY (audit 2026-08, batch 3): server-side connection generations.
+    describe('agent connection generations', () => {
+        it('supersedes the old socket when the same agent connects twice', async () => {
+            const agentId = `gen-agent-${Date.now()}`;
+
+            const waitFor = (socket: any, event: string) => new Promise<void>((resolve) => {
+                socket.once(event, () => resolve());
+            });
+
+            const firstSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId },
+                forceNew: true
+            });
+            let firstDisconnectReason: string | null = null;
+            firstSocket.on('disconnect', (reason: string) => {
+                firstDisconnectReason = reason;
+            });
+
+            await waitFor(firstSocket, 'connect');
+
+            const secondSocket = SocketIOClient(`http://localhost:${PORT}`, {
+                auth: { type: 'agent', agentId },
+                forceNew: true
+            });
+            await waitFor(secondSocket, 'connect');
+
+            // Give the server-side supersede (audit + force disconnect) a
+            // moment to propagate.
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            try {
+                // The registry entry must be owned by the NEW socket.
+                const entry = gateway.getAgent(agentId);
+                expect(entry?.socketId).toBe(secondSocket.id);
+
+                // The superseded socket was force-disconnected by the server.
+                expect(['io server disconnect', 'transport close']).toContain(firstDisconnectReason);
+
+                // The stale socket's disconnect must NOT have removed the new
+                // connection's registry entry (disconnect ownership check).
+                const after = gateway.getAgent(agentId);
+                expect(after).toBeDefined();
+                expect(after?.socketId).toBe(secondSocket.id);
+            } finally {
+                firstSocket.close();
+                secondSocket.close();
+            }
+        });
+    });
+
+    describe('sendSignedCommand return values', () => {        it('returns false when sending command to non-existent agent', () => {
             const result = gateway.sendCommandToAgent('non-existent-agent', { type: 'scan' });
             expect(result).toBe(false);
         });
@@ -711,9 +810,9 @@ describe('AgentGateway', () => {
                         done();
                     });
 
-                    // Emit malicious review sample
+                    // Emit malicious review sample (AUD-03-4: signed envelope)
                     setTimeout(() => {
-                        agentSocket.emit('agent:review_sample', {
+                        const payload = {
                             sample: {
                                 requestId: 'review-001',
                                 sourceIp: '10.0.0.1',
@@ -723,7 +822,8 @@ describe('AgentGateway', () => {
                                 matchedRuleIds: ['rule-1'],
                                 decisionSource: 'agent-local'
                             }
-                        });
+                        };
+                        agentSocket.emit('agent:review_sample', signAgentEvent('agent:review_sample', payload, agentSocket.id));
                     }, 100);
                 });
             });
@@ -754,9 +854,9 @@ describe('AgentGateway', () => {
                         threatDetected = true;
                     });
 
-                    // Emit non-malicious review sample (low risk score)
+                    // Emit non-malicious review sample (low risk score, signed)
                     setTimeout(() => {
-                        agentSocket.emit('agent:review_sample', {
+                        agentSocket.emit('agent:review_sample', signAgentEvent('agent:review_sample', {
                             sample: {
                                 requestId: 'review-002',
                                 sourceIp: '10.0.0.5',
@@ -766,7 +866,7 @@ describe('AgentGateway', () => {
                                 matchedRuleIds: [],
                                 decisionSource: 'agent-local'
                             }
-                        });
+                        }, agentSocket.id));
 
                         // Wait and verify threat:detected was NOT called
                         setTimeout(() => {
@@ -997,10 +1097,10 @@ describe('AgentGateway', () => {
                     });
 
                     setTimeout(() => {
-                        agentSocket.emit('agent:scan_result', {
+                        agentSocket.emit('agent:scan_result', signAgentEvent('agent:scan_result', {
                             scanId: 'scan-001',
                             vulnerabilities: []
-                        });
+                        }, agentSocket.id));
                     }, 100);
                 });
             });
@@ -1037,6 +1137,11 @@ describe('AgentGateway', () => {
 
     describe('agent:command_ack and agent:command_failed', () => {
         it('broadcasts command ack to dashboard', (done) => {
+            // N4-2: the gateway only broadcasts when the dispatcher ACCEPTS
+            // the running->completed transition; this test covers the accept
+            // path (the reject path is covered by
+            // websocket/agent-gateway.command-ack-gate.test.ts).
+            (commandDispatcherService.handleAgentCommandAck as jest.Mock).mockReturnValue(true);
             dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
                 auth: { type: 'dashboard' }
             });
@@ -1062,6 +1167,8 @@ describe('AgentGateway', () => {
         });
 
         it('broadcasts command failure to dashboard', (done) => {
+            // N4-2: same accept-gated broadcast for the failure path.
+            (commandDispatcherService.handleAgentCommandFailure as jest.Mock).mockReturnValue(true);
             dashboardSocket = SocketIOClient(`http://localhost:${PORT}`, {
                 auth: { type: 'dashboard' }
             });

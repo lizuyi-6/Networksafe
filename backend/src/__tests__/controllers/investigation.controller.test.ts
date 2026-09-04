@@ -5,6 +5,11 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
+
+// Minimal user shapes for tenant-scoped access tests (AUD-02-5).
+function userWith(tenantId: string | null, role = 'viewer') {
+    return { user: { userId: 'u1', role, tenantId } };
+}
 import { InvestigationController } from '../../api/controllers/investigation.controller';
 import { BugInvestigationTeam } from '../../ai-agents/investigation';
 import { InvestigationService } from '../../services/investigation.service';
@@ -61,7 +66,9 @@ describe('InvestigationController', () => {
     controller = new InvestigationController();
     mockJson = jest.fn();
     mockStatus = jest.fn(() => ({ json: mockJson }));
-    mockRequest = {};
+    // Legacy tests exercise the platform super-set; the AUD-02-5 tests
+    // override with tenant-scoped viewers.
+    mockRequest = { user: { userId: 'admin-1', role: 'platform_admin' } } as any;
     mockResponse = {
       json: mockJson,
       status: mockStatus
@@ -329,6 +336,94 @@ describe('InvestigationController', () => {
       const callArg = mockJson.mock.calls[0][0];
       expect(callArg.success).toBe(true);
       expect(callArg.pagination).toBeDefined();
+    });
+  });
+
+  // SECURITY (audit 2026-08, AUD-02-5): investigations are tenant-owned.
+  // Ownership is recorded at start; cross-tenant reads/cancels are 404
+  // (indistinguishable from missing); platform requesters see everything;
+  // active/history listings are tenant-filtered.
+  describe('cross-tenant object-level access (AUD-02-5)', () => {
+    function withUser(tenantId: string | null, role = 'viewer') {
+      (mockRequest as any).user = tenantId === null && role === 'platform_admin'
+        ? { userId: 'admin-1', role: 'platform_admin' }
+        : { userId: 'u1', role, tenantId };
+    }
+
+    beforeEach(() => {
+      mockRequest.body = {
+        title: 'Bug',
+        description: 'Desc',
+        severity: 'high',
+        category: 'runtime'
+      };
+    });
+
+    it('records the requester tenant as owner at start', async () => {
+      withUser('tenant-A');
+      await controller.startInvestigation(mockRequest as Request, mockResponse as Response, mockNext);
+      expect(mockStatus).toHaveBeenCalledWith(200);
+
+      // Owner can read.
+      const team = BugInvestigationTeam.getInstance() as any;
+      team.getInvestigationStatus.mockReturnValue({ investigationId: 'inv-001', status: 'completed' });
+      mockRequest.params = { investigationId: 'inv-001' };
+      await controller.getInvestigationStatus(mockRequest as Request, mockResponse as Response, mockNext);
+      expect(mockStatus).toHaveBeenLastCalledWith(200);
+    });
+
+    it('returns 404 (not 403) to a different tenant — ownership not probeable', async () => {
+      withUser('tenant-A');
+      await controller.startInvestigation(mockRequest as Request, mockResponse as Response, mockNext);
+
+      withUser('tenant-B');
+      mockRequest.params = { investigationId: 'inv-001' };
+      await controller.getInvestigationStatus(mockRequest as Request, mockResponse as Response, mockNext);
+      expect(mockStatus).toHaveBeenLastCalledWith(404);
+    });
+
+    it('lets a platform requester read any tenant investigation', async () => {
+      withUser('tenant-A');
+      await controller.startInvestigation(mockRequest as Request, mockResponse as Response, mockNext);
+
+      withUser(null, 'platform_admin');
+      mockRequest.params = { investigationId: 'inv-001' };
+      const team = BugInvestigationTeam.getInstance() as any;
+      team.getInvestigationStatus.mockReturnValue({ investigationId: 'inv-001', status: 'completed' });
+      await controller.getInvestigationStatus(mockRequest as Request, mockResponse as Response, mockNext);
+      expect(mockStatus).toHaveBeenLastCalledWith(200);
+    });
+
+    it('blocks cross-tenant cancel with 404 and does not cancel', async () => {
+      withUser('tenant-A');
+      await controller.startInvestigation(mockRequest as Request, mockResponse as Response, mockNext);
+
+      withUser('tenant-B');
+      mockRequest.params = { investigationId: 'inv-001' };
+      await controller.cancelInvestigation(mockRequest as Request, mockResponse as Response, mockNext);
+      expect(mockStatus).toHaveBeenLastCalledWith(404);
+      const team = BugInvestigationTeam.getInstance() as any;
+      expect(team.cancelInvestigation).not.toHaveBeenCalled();
+    });
+
+    it('filters the active list to the requester tenant', async () => {
+      const team = BugInvestigationTeam.getInstance() as any;
+      team.getActiveInvestigations.mockReturnValue([
+        { investigationId: 'inv-owned' },
+        { investigationId: 'inv-foreign' },
+        { investigationId: 'inv-legacy' }
+      ]);
+
+      withUser('tenant-A');
+      await controller.startInvestigation(mockRequest as Request, mockResponse as Response, mockNext);
+
+      mockTeam.getActiveInvestigations.mockReturnValue([
+        { investigationId: 'inv-001' },
+        { investigationId: 'inv-foreign' }
+      ]);
+      await controller.getActiveInvestigations(mockRequest as Request, mockResponse as Response, mockNext);
+      const payload = mockJson.mock.calls[mockJson.mock.calls.length - 1][0];
+      expect(payload.data).toEqual([{ investigationId: 'inv-001' }]);
     });
   });
 });

@@ -252,6 +252,109 @@ describe('platformConfigService.getConfig', () => {
     expect(reloaded.aiRouting.fallbackAllowed).toBe(true);
     expect(reloaded.aiRouting.redactionEnabled).toBe(false);
   });
+
+  it('N5-2: seals notification channel secrets at rest and opens them on read', async () => {
+    let storedRow: Record<string, any> | undefined;
+    mockExec.mockImplementation((sql: string) => {
+      if (sql.includes('CREATE TABLE')) return;
+      if (sql.includes('CREATE INDEX')) return;
+      if (sql.includes('ALTER TABLE')) return;
+    });
+    mockPrepare.mockImplementation((sql: string) => {
+      if (sql.includes('SELECT created_at')) {
+        return { get: jest.fn(() => storedRow ? { created_at: storedRow.created_at } : undefined) };
+      }
+      if (sql.includes('SELECT *') && sql.includes('FROM platform_config')) {
+        return { get: jest.fn(() => storedRow) };
+      }
+      if (sql.includes('INSERT INTO platform_config')) {
+        return {
+          run: jest.fn((...args: any[]) => {
+            storedRow = {
+              tenant_id: args[0],
+              anti_bot_enabled: args[1],
+              anti_bot_request_threshold: args[2],
+              anti_bot_fast_request_threshold: args[3],
+              anti_bot_block_duration: args[4],
+              rate_limit_requests_per_minute: args[5],
+              rate_limit_window_seconds: args[6],
+              notifications_json: args[7],
+              ai_routing_json: args[8],
+              privacy_mode: args[9],
+              audit_archive_json: args[10],
+              fastpath_json: args[11],
+              detection_pipeline_json: args[12],
+              deployment_defaults_json: args[13],
+              device_gateway_json: args[14],
+              updated_by: args[15],
+              updated_at: args[16],
+              created_at: args[17]
+            };
+          })
+        };
+      }
+      return { get: jest.fn(), run: jest.fn(), all: jest.fn().mockReturnValue([]) };
+    });
+
+    const ORIGINAL = {
+      key: process.env.ENCRYPTION_KEY,
+      salt: process.env.ENCRYPTION_SALT
+    };
+    process.env.ENCRYPTION_KEY = 'test-encryption-key-32-bytes-ok!';
+    process.env.ENCRYPTION_SALT = 'test-salt-value';
+    try {
+      await platformConfigService.saveConfig(
+        'tenant-notif-seal',
+        {
+          notifications: {
+            enabled: true,
+            dedupeWindowSeconds: 60,
+            retryDelaysSeconds: [10],
+            channels: [
+              {
+                id: 'ch-1',
+                name: 'Ops webhook',
+                type: 'webhook',
+                enabled: true,
+                target: 'https://hooks.example.test/x',
+                minimumSeverity: 'high',
+                headers: { Authorization: 'Bearer super-secret-token' },
+                smtp: {
+                  host: 'smtp.example.test',
+                  port: 465,
+                  secure: true,
+                  username: 'ops',
+                  password: 'super-secret-smtp-password',
+                  from: 'ops@example.test'
+                }
+              }
+            ]
+          }
+        } as any,
+        'admin-001'
+      );
+
+      // At rest: sealed envelopes, never the plaintext secret.
+      const stored = JSON.parse(storedRow?.notifications_json || '{}');
+      const channel = stored.channels[0];
+      expect(channel.smtp.password).toMatch(/^enc1:/);
+      expect(channel.smtp.password).not.toContain('super-secret-smtp-password');
+      expect(channel.headers.Authorization).toMatch(/^enc1:/);
+      expect(channel.headers.Authorization).not.toContain('super-secret-token');
+
+      // On read (fresh cache): opened plaintext, server-side only.
+      (platformConfigService as any).configCache.clear();
+      const reloaded = await platformConfigService.getConfig('tenant-notif-seal');
+      const reloadedChannel = reloaded.notifications.channels[0];
+      expect(reloadedChannel.smtp.password).toBe('super-secret-smtp-password');
+      expect(reloadedChannel.headers.Authorization).toBe('Bearer super-secret-token');
+    } finally {
+      if (ORIGINAL.key === undefined) delete process.env.ENCRYPTION_KEY;
+      else process.env.ENCRYPTION_KEY = ORIGINAL.key;
+      if (ORIGINAL.salt === undefined) delete process.env.ENCRYPTION_SALT;
+      else process.env.ENCRYPTION_SALT = ORIGINAL.salt;
+    }
+  });
 });
 
 describe('SeverityLevel type', () => {

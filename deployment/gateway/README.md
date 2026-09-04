@@ -1,5 +1,12 @@
 # AetherGuard Gateway Appliance Deployment
 
+> **EXPERIMENTAL (2026-08 security audit).** This deployment package is not
+> release-ready: the nftables data plane does not yet implement the PRD's
+> transparent L2 bridge family, and the package has not passed Linux
+> namespace bridge gates, systemd-VM gates, or hardware-in-the-loop
+> campaigns. Treat every status claim from this daemon as `reported`
+> (self-report) only. See `docs/security-audit/2026-08-remediation-matrix.md`.
+
 Gateway Daemon (M1) deployment package for Protectli Vault / industrial gateways.
 
 ## Prerequisites

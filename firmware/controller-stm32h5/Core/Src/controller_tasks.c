@@ -91,8 +91,9 @@ void controller_attach_counter_store(const controller_counter_store_t *store) {
 }
 
 void controller_set_policy_digest(const char *digest) {
-    strncpy(g_state.local_policy_digest, digest, 63);
-    g_state.local_policy_digest[63] = '\0';
+    /* N2-2: full 64-char digest (was 63 — silently truncated the anchor). */
+    strncpy(g_state.local_policy_digest, digest, CONTROLLER_POLICY_DIGEST_LEN - 1u);
+    g_state.local_policy_digest[CONTROLLER_POLICY_DIGEST_LEN - 1u] = '\0';
 }
 
 /* Task 1: Handle release request */
@@ -217,8 +218,8 @@ bool controller_validate_challenge(const char *challenge) {
  * the comparison length is independent of the digest content while the
  * accepted-language stays exactly strcmp equality. */
 bool controller_validate_policy_digest(const char *digest) {
-    uint8_t a[64];
-    uint8_t b[64];
+    uint8_t a[CONTROLLER_POLICY_DIGEST_LEN];
+    uint8_t b[CONTROLLER_POLICY_DIGEST_LEN];
     uint16_t i;
 
     if (digest[0] == '\0') return false;
@@ -226,11 +227,14 @@ bool controller_validate_policy_digest(const char *digest) {
 
     memset(a, 0, sizeof(a));
     memset(b, 0, sizeof(b));
-    for (i = 0; i < 63u && digest[i] != '\0'; i++) a[i] = (uint8_t)digest[i];
-    for (i = 0; i < 63u && g_state.local_policy_digest[i] != '\0'; i++) {
+    /* N2-2: compare the FULL 64-char digest (was 63). */
+    for (i = 0; i < CONTROLLER_POLICY_DIGEST_LEN - 1u && digest[i] != '\0'; i++) {
+        a[i] = (uint8_t)digest[i];
+    }
+    for (i = 0; i < CONTROLLER_POLICY_DIGEST_LEN - 1u && g_state.local_policy_digest[i] != '\0'; i++) {
         b[i] = (uint8_t)g_state.local_policy_digest[i];
     }
-    return grant_auth_constant_time_equal(a, b, 64u);
+    return grant_auth_constant_time_equal(a, b, sizeof(a));
 }
 
 /* Task 4: validate monotonic counter (strictly advance) */

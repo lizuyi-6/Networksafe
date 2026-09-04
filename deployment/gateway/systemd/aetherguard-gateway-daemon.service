@@ -5,13 +5,15 @@ After=network-online.target nftables.service
 Wants=network-online.target
 ConditionPathExists=/etc/aetherguard/gateway.conf
 ConditionPathExists=/etc/aetherguard/se-public-key.pem
+# AUD-05-1: the unit executes the COMPILED artifact, not a symlinked .ts.
+ConditionPathExists=/usr/local/lib/aetherguard-gateway/dist/deployment/gateway/bin/aetherguard-gateway-daemon.js
 
 [Service]
 Type=simple
 User=aetherguard
 Group=aetherguard
 ExecStartPre=/usr/local/bin/aetherguard-gateway-preflight-check
-ExecStart=/usr/local/bin/aetherguard-gateway-daemon --config /etc/aetherguard/gateway.conf
+ExecStart=/usr/bin/node /usr/local/lib/aetherguard-gateway/dist/deployment/gateway/bin/aetherguard-gateway-daemon.js --config /etc/aetherguard/gateway.conf
 Restart=on-failure
 RestartSec=5s
 TimeoutStartSec=30s

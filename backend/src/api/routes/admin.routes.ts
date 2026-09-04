@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { requireStepUpScope } from '../../middleware/step-up.middleware';
 import bcrypt from 'bcryptjs';
 import { uuidv4 } from '../../utils/uuid';
 import crypto from 'crypto';
@@ -230,7 +231,7 @@ router.get('/benchmarks/:id/report', authenticate, requireRole('admin'), async (
     }
 });
 
-router.post('/devices/firmware', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/devices/firmware', authenticate, requireRole('admin'), requireStepUpScope({ action: 'firmware.upload' }), async (req: AuthenticatedRequest, res) => {
     try {
         const tenantId = resolveTenantOrPlatform(req);
         const fileName = String(req.body?.fileName || '').trim();
@@ -261,7 +262,7 @@ router.post('/devices/firmware', authenticate, requireRole('admin'), async (req:
     }
 });
 
-router.post('/devices/:id/ota', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/devices/:id/ota', authenticate, requireRole('admin'), requireStepUpScope({ action: 'firmware.ota' }), async (req: AuthenticatedRequest, res) => {
     try {
         const device = getDeviceById(req.params.id);
         if (!device) {
@@ -312,7 +313,7 @@ router.post('/devices/:id/ota', authenticate, requireRole('admin'), async (req: 
     }
 });
 
-router.post('/devices/:id/confirm-required-action', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/devices/:id/confirm-required-action', authenticate, requireRole('admin'), requireStepUpScope({ action: 'device.confirm_action' }), async (req: AuthenticatedRequest, res) => {
     try {
         const device = getDeviceById(req.params.id);
         if (!device) {
@@ -550,7 +551,7 @@ router.get('/api-keys', authenticate, requireRole('admin'), async (req: Authenti
     }
 });
 
-router.post('/api-keys', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/api-keys', authenticate, requireRole('admin'), requireStepUpScope({ action: 'api_key.create' }), async (req: AuthenticatedRequest, res) => {
     try {
         const userId = req.user?.userId;
         const tenantId = req.user?.tenantId || null;
@@ -607,7 +608,7 @@ router.post('/api-keys', authenticate, requireRole('admin'), async (req: Authent
     }
 });
 
-router.delete('/api-keys/:id', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.delete('/api-keys/:id', authenticate, requireRole('admin'), requireStepUpScope({ action: 'api_key.delete' }), async (req: AuthenticatedRequest, res) => {
     try {
         const { id } = req.params;
         await deleteAdminApiKey(id);
@@ -672,7 +673,7 @@ router.put('/users/:id/plan', authenticate, requireRole('admin'), async (req: Au
     }
 });
 
-router.put('/users/:id/role', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.put('/users/:id/role', authenticate, requireRole('admin'), requireStepUpScope({ action: 'user.role_change' }), async (req: AuthenticatedRequest, res) => {
     try {
         const { id } = req.params;
         const { role } = req.body;
@@ -720,7 +721,7 @@ router.put('/users/:id/role', authenticate, requireRole('admin'), async (req: Au
     }
 });
 
-router.put('/users/:id/status', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.put('/users/:id/status', authenticate, requireRole('admin'), requireStepUpScope({ action: 'user.status_change' }), async (req: AuthenticatedRequest, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
@@ -774,7 +775,7 @@ router.put('/users/:id/status', authenticate, requireRole('admin'), async (req: 
 // Batch Operations
 // ============================================================
 
-router.post('/users/batch', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/users/batch', authenticate, requireRole('admin'), requireStepUpScope({ action: 'user.batch_create' }), async (req: AuthenticatedRequest, res) => {
     try {
         const { userIds, action, value } = req.body;
 
@@ -887,7 +888,7 @@ router.get('/users/:id/login-history', authenticate, requireRole('admin'), async
     }
 });
 
-router.post('/users/:id/reset-password', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/users/:id/reset-password', authenticate, requireRole('admin'), requireStepUpScope({ action: 'user.reset_password' }), async (req: AuthenticatedRequest, res) => {
     try {
         const { id } = req.params;
 

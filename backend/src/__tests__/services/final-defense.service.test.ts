@@ -104,20 +104,25 @@ describe('finalDefenseService', () => {
 
   it('requires an external network gateway for root-resistant active status', () => {
     const tenantId = `tenant-root-gateway-${Date.now()}`;
-    const attestedAt = new Date().toISOString();
+    // sql.js persists rows across runs; these IDs anchor the new
+    // tenant/binding ownership checks in upsertPolicy, so they must be
+    // unique per run to avoid colliding with rows from a previous run's
+    // different tenant.
+    const companionId = `root-companion-only-${Date.now()}`;
+    const gateId = `root-companion-gate-${Date.now()}`;
 
     const policy = finalDefenseService.upsertPolicy({
       tenantId,
-      companionId: 'root-companion-only',
-      gateId: 'root-companion-gate',
+      companionId,
+      gateId,
       breakerTarget: 'mgmt-uplink',
       releaseTtlMs: 30_000,
       allowedActions: [{ commandType: 'host_remove', requiresInterlockRelease: true }]
     });
     const companionStatus = finalDefenseService.reportStatus({
       tenantId,
-      companionId: 'root-companion-only',
-      gateId: 'root-companion-gate',
+      companionId,
+      gateId,
       policyId: policy.policyId,
       policyDigest: policy.policyDigest,
       breakerTarget: 'mgmt-uplink',
@@ -132,7 +137,7 @@ describe('finalDefenseService', () => {
 
     const degradedGateway = finalDefenseService.reportRootResistantGatewayStatus({
       tenantId,
-      gatewayId: 'external-gateway-degraded',
+      gatewayId: `external-gateway-degraded-${Date.now()}`,
       policyDigest: 'digest-a',
       reportedPolicyDigest: 'digest-b',
       bridgeState: 'fault',
@@ -154,11 +159,10 @@ describe('finalDefenseService', () => {
 
     const activeGateway = finalDefenseService.reportRootResistantGatewayStatus({
       tenantId,
-      gatewayId: 'external-gateway-active',
+      gatewayId: `external-gateway-active-${Date.now()}`,
       policyDigest: 'digest-root-active',
       reportedPolicyDigest: 'digest-root-active',
       firmwareDigest: 'firmware-root-active',
-      lastAttestationAt: attestedAt,
       bridgeState: 'isolated',
       serverPortLink: true,
       lanPortLink: true,
@@ -166,9 +170,14 @@ describe('finalDefenseService', () => {
       secureElementPresent: true
     });
 
-    expect(activeGateway.active).toBe(true);
-    expect(activeGateway.gatewayProtectionMode).toBe('external_network_gateway');
-    expect(activeGateway.degradedReasons).toEqual([]);
+    // SECURITY (audit 2026-08, batch 0): every field above is SELF-REPORTED.
+    // Attestation is server-owned and batch 6 (quote verification) has not
+    // landed, so a fully green self-report must stay DEGRADED, never active.
+    expect(activeGateway.active).toBe(false);
+    expect(activeGateway.verificationLevel).toBe('reported');
+    expect(activeGateway.degradedReasons).toEqual(expect.arrayContaining([
+      'attestation_missing'
+    ]));
   });
 
   it('creates an appliance GatewayDaemon bound to a registered gateway\'s SE key', () => {
@@ -185,7 +194,6 @@ describe('finalDefenseService', () => {
       policyDigest: 'digest-daemon',
       reportedPolicyDigest: 'digest-daemon',
       firmwareDigest: 'firmware-daemon',
-      lastAttestationAt: new Date().toISOString(),
       bridgeState: 'isolated',
       serverPortLink: true,
       lanPortLink: true,
@@ -243,14 +251,14 @@ describe('finalDefenseService', () => {
 
   it('marks a gateway stale at the PRD-mandated 45s controller-heartbeat threshold (not 90s)', () => {
     const tenantId = `tenant-root-stale-${Date.now()}`;
+    const gatewayId = `gateway-heartbeat-stale-${Date.now()}`;
     // Register an otherwise-healthy gateway so the only variable is heartbeat age.
     finalDefenseService.reportRootResistantGatewayStatus({
       tenantId,
-      gatewayId: 'gateway-heartbeat-stale',
+      gatewayId,
       policyDigest: 'digest-stale',
       reportedPolicyDigest: 'digest-stale',
       firmwareDigest: 'firmware-stale',
-      lastAttestationAt: new Date().toISOString(),
       bridgeState: 'isolated',
       serverPortLink: true,
       lanPortLink: true,
@@ -258,9 +266,17 @@ describe('finalDefenseService', () => {
       secureElementPresent: true
     });
 
-    const fresh = finalDefenseService.listRootResistantGateways(tenantId).find(g => g.gatewayId === 'gateway-heartbeat-stale');
+    const findGateway = () => finalDefenseService
+      .listRootResistantGateways(tenantId)
+      .find((g) => g.gatewayId === gatewayId);
+
+    // Fresh heartbeat, fully green self-report: still NOT active, because
+    // attestation is server-owned and 'reported' can never drive active
+    // (batch 0). The gateway_stale reason, however, must be absent.
+    const fresh = findGateway();
     expect(fresh?.gatewayOnline).toBe(true);
-    expect(fresh?.active).toBe(true);
+    expect(fresh?.active).toBe(false);
+    expect(fresh?.degradedReasons).not.toContain('gateway_stale');
 
     // Backdate the heartbeat to 50s ago — beyond the PRD §4.4 trigger-#7 45s
     // threshold but well inside the old (incorrect) 90s window. A compliant
@@ -268,9 +284,9 @@ describe('finalDefenseService', () => {
     const { getDatabase } = require('../../config/database');
     const staleHeartbeat = new Date(Date.now() - 50_000).toISOString();
     getDatabase().prepare(`UPDATE root_resistant_gateways SET last_heartbeat_at = ? WHERE gateway_id = ?`)
-      .run(staleHeartbeat, 'gateway-heartbeat-stale');
+      .run(staleHeartbeat, gatewayId);
 
-    const staleStatus = finalDefenseService.listRootResistantGateways(tenantId).find(g => g.gatewayId === 'gateway-heartbeat-stale');
+    const staleStatus = findGateway();
     expect(staleStatus?.gatewayOnline).toBe(false);
     expect(staleStatus?.degradedReasons).toEqual(expect.arrayContaining(['gateway_stale']));
     expect(staleStatus?.active).toBe(false);
@@ -278,13 +294,13 @@ describe('finalDefenseService', () => {
 
   it('treats an unparseable heartbeat timestamp as stale, not fresh (fail-closed)', () => {
     const tenantId = `tenant-root-badhb-${Date.now()}`;
+    const gatewayId = `gateway-badhb-${Date.now()}`;
     finalDefenseService.reportRootResistantGatewayStatus({
       tenantId,
-      gatewayId: 'gateway-badhb',
+      gatewayId,
       policyDigest: 'digest-badhb',
       reportedPolicyDigest: 'digest-badhb',
       firmwareDigest: 'firmware-badhb',
-      lastAttestationAt: new Date().toISOString(),
       bridgeState: 'isolated',
       serverPortLink: true,
       lanPortLink: true,
@@ -297,9 +313,9 @@ describe('finalDefenseService', () => {
     // this gateway as fresh/online.
     const { getDatabase } = require('../../config/database');
     getDatabase().prepare(`UPDATE root_resistant_gateways SET last_heartbeat_at = ? WHERE gateway_id = ?`)
-      .run('not-a-timestamp', 'gateway-badhb');
+      .run('not-a-timestamp', gatewayId);
 
-    const status = finalDefenseService.listRootResistantGateways(tenantId).find(g => g.gatewayId === 'gateway-badhb');
+    const status = finalDefenseService.listRootResistantGateways(tenantId).find(g => g.gatewayId === gatewayId);
     expect(status?.gatewayOnline).toBe(false);
     expect(status?.degradedReasons).toEqual(expect.arrayContaining(['gateway_stale']));
     expect(status?.active).toBe(false);
@@ -337,19 +353,97 @@ describe('finalDefenseService', () => {
     expect(blocked.success).toBe(false);
     expect(blocked.reason).toBe('root_resistant_gateway_unavailable');
 
-    finalDefenseService.reportRootResistantGatewayStatus({
+    // SECURITY (audit 2026-08, batch 0): a fully green SELF-REPORTED gateway
+    // status must not unblock high-risk actions. Attestation is server-owned
+    // (batch 6 quote verification); until then root-resistant actions stay
+    // fail-closed regardless of what the gateway reports about itself.
+    const reported = finalDefenseService.reportRootResistantGatewayStatus({
       tenantId,
       gatewayId: gateId,
       policyDigest: 'digest-root-action',
       reportedPolicyDigest: 'digest-root-action',
       firmwareDigest: 'firmware-root-action',
-      lastAttestationAt: new Date().toISOString(),
       bridgeState: 'armed',
       serverPortLink: true,
       lanPortLink: true,
       mgmtPath: 'cellular',
       secureElementPresent: true
     });
+    expect(reported.active).toBe(false);
+    expect(reported.verificationLevel).toBe('reported');
+    expect(reported.degradedReasons).toContain('attestation_missing');
+
+    const stillBlocked = await finalDefenseService.requestAction({
+      tenantId,
+      companionId,
+      commandType: 'host_remove',
+      actorId: 'tester'
+    });
+
+    expect(stillBlocked.success).toBe(false);
+    expect(stillBlocked.reason).toBe('root_resistant_gateway_unavailable');
+  });
+
+  it('unblocks root-resistant actions only from a server-owned attested record', async () => {
+    const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+    const tenantId = `tenant-root-action-attested-${Date.now()}`;
+    const companionId = `companion-root-attested-${Date.now()}`;
+    const gateId = `gate-root-attested-${Date.now()}`;
+
+    finalDefenseService.upsertPolicy({
+      tenantId,
+      companionId,
+      gateId,
+      breakerTarget: 'server-lan-transparent-bridge',
+      releaseTtlMs: 30_000,
+      allowedActions: [{ commandType: 'host_remove', requiresInterlockRelease: true }]
+    });
+    hardwareAuthorizationService.enrollGate({
+      tenantId,
+      gateId,
+      publicKeyPem: keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      algorithm: 'ECDSA_P256_SHA256',
+      status: 'online'
+    });
+
+    finalDefenseService.reportRootResistantGatewayStatus({
+      tenantId,
+      gatewayId: gateId,
+      policyDigest: 'digest-root-attested',
+      reportedPolicyDigest: 'digest-root-attested',
+      firmwareDigest: 'firmware-root-attested',
+      bridgeState: 'armed',
+      serverPortLink: true,
+      lanPortLink: true,
+      mgmtPath: 'cellular',
+      secureElementPresent: true
+    });
+
+    // Simulate the batch-6 attestation verifier by writing the server-owned
+    // attestation record directly (the only writer allowed to do this).
+    const { getDatabase } = require('../../config/database');
+    getDatabase().prepare(`
+      UPDATE root_resistant_gateways
+      SET attestation_level = 'attested', last_attestation_at = ?
+      WHERE gateway_id = ?
+    `).run(new Date().toISOString(), gateId);
+
+    // A subsequent self-report must PRESERVE the attested level (reports
+    // cannot overwrite server-owned attestation state).
+    const preserved = finalDefenseService.reportRootResistantGatewayStatus({
+      tenantId,
+      gatewayId: gateId,
+      policyDigest: 'digest-root-attested',
+      reportedPolicyDigest: 'digest-root-attested',
+      firmwareDigest: 'firmware-root-attested',
+      bridgeState: 'armed',
+      serverPortLink: true,
+      lanPortLink: true,
+      mgmtPath: 'cellular',
+      secureElementPresent: true
+    });
+    expect(preserved.verificationLevel).toBe('attested');
+    expect(preserved.active).toBe(true);
 
     const allowedRaw = await finalDefenseService.requestAction({
       tenantId,
@@ -380,13 +474,20 @@ describe('finalDefenseService', () => {
       policyDigest: 'digest-root-release',
       reportedPolicyDigest: 'digest-root-release',
       firmwareDigest: 'firmware-root-release',
-      lastAttestationAt: new Date().toISOString(),
       bridgeState: 'isolated',
       serverPortLink: true,
       lanPortLink: true,
       mgmtPath: 'dedicated_mgmt',
       secureElementPresent: true
     });
+
+    // Server-owned attestation record (batch-6 verifier seam).
+    const { getDatabase } = require('../../config/database');
+    getDatabase().prepare(`
+      UPDATE root_resistant_gateways
+      SET attestation_level = 'attested', last_attestation_at = ?
+      WHERE gateway_id = ?
+    `).run(new Date().toISOString(), gatewayId);
 
     const requestRaw = await finalDefenseService.requestGatewayAction({
       tenantId,
@@ -484,5 +585,238 @@ describe('finalDefenseService', () => {
 
     expect(ack.confirmed).toBe(true);
     expect(ack.grant?.grant.policyDigest).toBe(policy.policyDigest);
+  });
+
+  // SECURITY (audit 2026-08, P0): policies/companions/gates are tenant-owned.
+  // Self-declared IDs must never let one tenant touch another tenant's
+  // Final Defense objects.
+  describe('tenant ownership guards', () => {
+    it('refuses a cross-tenant policy update even with the current digest', () => {
+      const runTag = Date.now();
+      const tenantA = `tenant-fd-owner-${runTag}`;
+      const companionId = `companion-fd-owner-${runTag}`;
+      const gateId = `gate-fd-owner-${runTag}`;
+
+      const policy = finalDefenseService.upsertPolicy({
+        tenantId: tenantA,
+        companionId,
+        gateId,
+        breakerTarget: 'mgmt-uplink',
+        releaseTtlMs: 30_000,
+        allowedActions: [{ commandType: 'interlock_release', requiresInterlockRelease: true }]
+      });
+
+      expect(() => finalDefenseService.upsertPolicy({
+        tenantId: `tenant-fd-intruder-${runTag}`,
+        companionId,
+        gateId,
+        policyId: policy.policyId,
+        expectedPolicyDigest: policy.policyDigest,
+        breakerTarget: 'mgmt-uplink',
+        releaseTtlMs: 30_000,
+        allowedActions: [{ commandType: 'interlock_release', requiresInterlockRelease: true }]
+      })).toThrow(/tenant_mismatch/);
+    });
+
+    it('refuses re-provisioning a companion reported by another tenant', () => {
+      const runTag = Date.now();
+      const tenantA = `tenant-fd-squat-a-${runTag}`;
+      const companionId = `companion-fd-squat-${runTag}`;
+      const gateId = `gate-fd-squat-${runTag}`;
+
+      const policy = finalDefenseService.upsertPolicy({
+        tenantId: tenantA,
+        companionId,
+        gateId,
+        breakerTarget: 'mgmt-uplink',
+        releaseTtlMs: 30_000,
+        allowedActions: [{ commandType: 'interlock_release', requiresInterlockRelease: true }]
+      });
+      // reportStatus is the server-side ownership anchor for the companion.
+      finalDefenseService.reportStatus({
+        tenantId: tenantA,
+        companionId,
+        gateId,
+        policyId: policy.policyId,
+        policyDigest: policy.policyDigest,
+        breakerTarget: 'mgmt-uplink',
+        interlockState: 'isolated',
+        externalPowerPresent: true,
+        secureElementPresent: true,
+        feedbackOk: true
+      });
+
+      expect(() => finalDefenseService.upsertPolicy({
+        tenantId: `tenant-fd-squat-b-${runTag}`,
+        companionId,
+        gateId,
+        breakerTarget: 'mgmt-uplink',
+        releaseTtlMs: 30_000,
+        allowedActions: [{ commandType: 'interlock_release', requiresInterlockRelease: true }]
+      })).toThrow(/companion_tenant_mismatch/);
+    });
+
+    it('refuses a status report that would rebind a gateway to another tenant', () => {
+      const runTag = Date.now();
+      const tenantA = `tenant-fd-gw-a-${runTag}`;
+      const gatewayId = `gateway-fd-gw-${runTag}`;
+
+      finalDefenseService.reportRootResistantGatewayStatus({
+        tenantId: tenantA,
+        gatewayId,
+        policyDigest: 'digest-gw',
+        reportedPolicyDigest: 'digest-gw',
+        bridgeState: 'isolated',
+        serverPortLink: true,
+        lanPortLink: true,
+        mgmtPath: 'dedicated_mgmt',
+        secureElementPresent: true
+      });
+
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({
+        tenantId: `tenant-fd-gw-b-${runTag}`,
+        gatewayId,
+        bridgeState: 'isolated',
+        serverPortLink: true,
+        lanPortLink: true,
+        mgmtPath: 'dedicated_mgmt',
+        secureElementPresent: true
+      })).toThrow(/root_gateway_tenant_mismatch/);
+
+      // The original ownership is untouched.
+      const gateway = finalDefenseService.getRootResistantGatewayStatus(gatewayId);
+      expect(gateway?.tenantId).toBe(tenantA);
+    });
+
+    it('returns a tenant-scoped failure when another tenant requests an action', async () => {
+      const runTag = Date.now();
+      const tenantA = `tenant-fd-action-${runTag}`;
+      const companionId = `companion-fd-action-${runTag}`;
+      const gateId = `gate-fd-action-${runTag}`;
+
+      finalDefenseService.upsertPolicy({
+        tenantId: tenantA,
+        companionId,
+        gateId,
+        breakerTarget: 'mgmt-uplink',
+        releaseTtlMs: 30_000,
+        allowedActions: [{ commandType: 'interlock_release', requiresInterlockRelease: true }]
+      });
+
+      const result = await finalDefenseService.requestAction({
+        tenantId: `tenant-fd-action-other-${runTag}`,
+        companionId,
+        commandType: 'interlock_release',
+        actorId: 'tester'
+      });
+
+      expect(result.success).toBe(false);
+      expect((result as { reason?: string }).reason).toBe('final_defense_policy_tenant_mismatch');
+    });
+  });
+
+  describe('N2-4 gateway status report replay guard', () => {
+    it('rejects sequence regression within one boot and accepts a new boot', () => {
+      const runTag = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+      const tenantId = `tenant-fd-replay-${runTag}`;
+      const gatewayId = `gw-replay-${runTag}`;
+      const bootA = 'a'.repeat(16);
+      const bootB = 'b'.repeat(16);
+      const base = {
+        tenantId,
+        gatewayId,
+        bridgeState: 'isolated',
+        serverPortLink: true,
+        lanPortLink: true,
+        mgmtPath: 'dedicated_mgmt',
+        secureElementPresent: true
+      } as const;
+
+      // Boot A: strictly advancing sequences accepted.
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: bootA, sequence: 1 })).not.toThrow();
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: bootA, sequence: 2 })).not.toThrow();
+
+      // Replay of an already-seen (or older) report within the same boot is rejected.
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: bootA, sequence: 2 }))
+        .toThrow('backend.root_gateway_status_replay');
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: bootA, sequence: 1 }))
+        .toThrow('backend.root_gateway_status_replay');
+
+      // A captured "isolated" report cannot mask a later "released" state.
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: bootA, sequence: 3, bridgeState: 'released' }))
+        .not.toThrow();
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: bootA, sequence: 3, bridgeState: 'isolated' }))
+        .toThrow('backend.root_gateway_status_replay');
+
+      // New boot restarts the sequence space (appliance reboot).
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: bootB, sequence: 1 })).not.toThrow();
+      expect(finalDefenseService.getRootResistantGatewayStatus(gatewayId)?.reportBootId).toBe(bootB);
+      expect(finalDefenseService.getRootResistantGatewayStatus(gatewayId)?.reportSequence).toBe(1);
+    });
+
+    it('rejects malformed sequence/bootId pairs (fail-closed)', () => {
+      const runTag = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+      const base = {
+        tenantId: `tenant-fd-replay-invalid-${runTag}`,
+        gatewayId: `gw-replay-invalid-${runTag}`,
+        bridgeState: 'isolated',
+        serverPortLink: true,
+        lanPortLink: true,
+        mgmtPath: 'dedicated_mgmt',
+        secureElementPresent: true
+      } as const;
+
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: 'c'.repeat(16), sequence: 0 }))
+        .toThrow('backend.root_gateway_status_sequence_invalid');
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: 'c'.repeat(16), sequence: 1.5 }))
+        .toThrow('backend.root_gateway_status_sequence_invalid');
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: 'c'.repeat(16) }))
+        .toThrow('backend.root_gateway_status_sequence_invalid');
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, bootId: 'short', sequence: 1 }))
+        .toThrow('backend.root_gateway_status_sequence_invalid');
+    });
+
+    it('still accepts legacy reports without sequence/bootId (self-report only)', () => {
+      const runTag = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+      const gatewayId = `gw-replay-legacy-${runTag}`;
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({
+        tenantId: `tenant-fd-replay-legacy-${runTag}`,
+        gatewayId,
+        bridgeState: 'isolated',
+        serverPortLink: true,
+        lanPortLink: true,
+        mgmtPath: 'dedicated_mgmt',
+        secureElementPresent: true
+      })).not.toThrow();
+      expect(finalDefenseService.getRootResistantGatewayStatus(gatewayId)?.verificationLevel).toBe('reported');
+    });
+
+    it('N3-3: binds the status channel to the first helper credential and rejects any other (TOFU)', () => {
+      const runTag = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+      const gatewayId = `gw-helper-bind-${runTag}`;
+      const base = {
+        tenantId: `tenant-fd-helper-bind-${runTag}`,
+        gatewayId,
+        bridgeState: 'isolated',
+        serverPortLink: true,
+        lanPortLink: true,
+        mgmtPath: 'dedicated_mgmt',
+        secureElementPresent: true
+      } as const;
+
+      // First report binds the channel to helper key gw-key-a.
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, helperKeyId: 'gw-key-a' })).not.toThrow();
+      expect(finalDefenseService.getRootResistantGatewayStatus(gatewayId)?.boundHelperKeyId).toBe('gw-key-a');
+
+      // A different appliance's credential cannot spoof this gateway's status.
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, helperKeyId: 'gw-key-b' }))
+        .toThrow('backend.root_gateway_helper_key_mismatch');
+      // Anonymous reports are equally rejected once a binding exists.
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base }))
+        .toThrow('backend.root_gateway_helper_key_mismatch');
+
+      // The bound key keeps working.
+      expect(() => finalDefenseService.reportRootResistantGatewayStatus({ ...base, helperKeyId: 'gw-key-a' })).not.toThrow();
+    });
   });
 });

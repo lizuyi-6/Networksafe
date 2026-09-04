@@ -8,7 +8,7 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
-import { checkOutboundUrl } from '../../security/outbound-url-guard';
+import { assertOutboundUrlAllowedResolvedPinned, checkOutboundUrl, createPinnedDnsContext } from '../../security/outbound-url-guard';
 import logger from '../../utils/logger';
 import {
   PLATFORM_API_CONFIG,
@@ -138,6 +138,18 @@ function localEndpointRequestUrl(endpoint: AIEndpointRecord): string {
 }
 
 async function invokeEndpoint(endpoint: AIEndpointRecord, messages: ChatMessage[]): Promise<{ content: string; latency: number; raw: any }> {
+  // SECURITY FIX (R2-F002): resolve the endpoint hostname before invoking and
+  // validate every resolved address (metadata endpoints always refused; the
+  // literal-only save-time check could be bypassed by a DNS name whose A
+  // record points at 169.254.169.254). Redirects are never followed below.
+  // SECURITY (R2-F002 follow-up): the validated addresses are pinned into the
+  // request agents so a DNS rebinding race (clean answer to the guard,
+  // metadata answer to the connect) cannot split validation from connection.
+  const resolved = await assertOutboundUrlAllowedResolvedPinned(endpoint.url, {
+    allowPrivate: endpoint.type === 'ollama'
+  });
+  const pinned = createPinnedDnsContext(resolved);
+
   const startedAt = Date.now();
 
   try {
@@ -158,7 +170,11 @@ async function invokeEndpoint(endpoint: AIEndpointRecord, messages: ChatMessage[
               stream: false
             },
         {
-          timeout: endpoint.timeout
+          timeout: endpoint.timeout,
+          maxRedirects: 0,
+          lookup: pinned.lookup,
+          httpAgent: pinned.httpAgent,
+          httpsAgent: pinned.httpsAgent
         }
       );
 
@@ -179,6 +195,10 @@ async function invokeEndpoint(endpoint: AIEndpointRecord, messages: ChatMessage[
       },
       {
         timeout: endpoint.timeout,
+        maxRedirects: 0,
+        lookup: pinned.lookup,
+        httpAgent: pinned.httpAgent,
+        httpsAgent: pinned.httpsAgent,
         headers: {
           'Content-Type': 'application/json',
           ...(endpoint.apiKey ? { Authorization: `Bearer ${endpoint.apiKey}` } : {})
@@ -605,7 +625,11 @@ router.get('/sync-config', requireRole('admin'), async (req: AuthenticatedReques
         url: endpoint.url,
         model: endpoint.modelName,
         purpose: endpoint.purpose,
-        key: config.deviceGateway.syncMaskApiKeys && endpoint.apiKey ? `***${endpoint.apiKey.slice(-4)}` : endpoint.apiKey
+        // SECURITY (audit 2026-08, AUD-07-5): GET must NEVER return the raw
+        // API key. The previous `syncMaskApiKeys` config gate allowed the
+        // plaintext key to be served to any authenticated caller when the
+        // flag was off — masking is now unconditional (write-only secret).
+        key: endpoint.apiKey ? `***${endpoint.apiKey.slice(-4)}` : ''
       })),
       deviceGateway: config.deviceGateway
     });

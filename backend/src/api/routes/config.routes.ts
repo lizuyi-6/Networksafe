@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate, requireRole, AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { requireStepUpScope } from '../../middleware/step-up.middleware';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import auditLogger from '../../security/audit-logger.service';
 import { notificationDispatcherService } from '../../services/notification-dispatcher.service';
@@ -42,7 +43,7 @@ router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
   }
 });
 
-router.post('/', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/', authenticate, requireRole('admin'), requireStepUpScope({ action: 'system.config_change' }), async (req: AuthenticatedRequest, res) => {
   try {
     const tenantId = tenantOf(req);
     const preferredModelId = req.body?.aiRouting?.preferredModelId;

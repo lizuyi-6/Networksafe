@@ -464,4 +464,49 @@ describe('DetectionPipelineService', () => {
       expect(event!.aiHeuristicDegraded).toBe(true);
     });
   });
+
+  // SECURITY (audit 2026-08, P0): credential canary through the real
+  // pipeline + real persistence. Every canary value must be redacted
+  // before it reaches sec_detection_events.request_snapshot_json.
+  describe('evaluateRequest — secret boundary canary', () => {
+    it('persists no raw credential values into sec_detection_events snapshots', async () => {
+      const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYW5hcnkifQ.CANARY-SIGNATURE';
+      const cookieSession = 'CANARY-SESSION-VALUE';
+      const cookieRemember = 'CANARY-REMEMBER-VALUE';
+      const password = 'CANARY-PASSWORD-VALUE';
+      const apiKeyQuery = 'CANARY-KEY-IN-QUERY';
+
+      const request = buildRequest({
+        method: 'POST',
+        path: '/api/login',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          authorization: `Bearer ${jwt}`,
+          cookie: `session=${cookieSession}; remember=${cookieRemember}`
+        },
+        body: `username=alice&password=${encodeURIComponent(password)}`,
+        query: `next=/dashboard&api_key=${apiKeyQuery}`,
+        decodedQuery: `next=/dashboard&api_key=${apiKeyQuery}`
+      });
+
+      const decision = await detectionPipelineService.evaluateRequest(request);
+      expect(decision.verdict).toBeDefined();
+
+      const row = getDatabase().prepare(`
+        SELECT request_snapshot_json
+        FROM sec_detection_events
+        WHERE request_id = ?
+      `).get(request.requestId) as { request_snapshot_json: string } | undefined;
+      expect(row).toBeDefined();
+
+      const snapshot = String(row!.request_snapshot_json);
+      for (const canary of [jwt, cookieSession, cookieRemember, password, apiKeyQuery]) {
+        expect(snapshot).not.toContain(canary);
+      }
+      // The security-relevant signal survives: sensitive fields are marked,
+      // not silently dropped.
+      expect(snapshot).toContain('password=');
+      expect(snapshot).toContain('***REDACTED***');
+    });
+  });
 });

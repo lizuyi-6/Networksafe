@@ -643,13 +643,24 @@ export class DatabaseManager {
     return wrapStatement(this.db.prepare(sql), useSqlJs);
   }
 
+  private transactionDepth = 0;
+
   /**
-   * Run a transaction
+   * Run a transaction.
+   * Re-entrant (AUD-03-2): nested transaction() calls join the enclosing
+   * transaction instead of issuing a nested BEGIN (sql.js cannot nest).
+   * Only the outermost boundary commits; an inner failure throws and the
+   * outermost rollback undoes the whole unit. better-sqlite3's native
+   * transaction already nests via savepoints.
    */
   public transaction<T>(fn: () => T): T {
     if (!this.db) throw new Error('Database not connected');
     if (useSqlJs) {
+      if (this.transactionDepth > 0) {
+        return fn();
+      }
       this.exec('BEGIN');
+      this.transactionDepth += 1;
       try {
         const result = fn();
         this.exec('COMMIT');
@@ -661,6 +672,8 @@ export class DatabaseManager {
           // Ignore rollback failure and rethrow original error
         }
         throw error;
+      } finally {
+        this.transactionDepth -= 1;
       }
     }
     return (this.db as BetterSqliteDatabase).transaction(fn)();

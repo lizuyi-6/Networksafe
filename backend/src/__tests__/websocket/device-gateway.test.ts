@@ -74,9 +74,11 @@ jest.mock('../../websocket/socket-payload-validator', () => ({
 }));
 
 // Mock crypto
+// AUD-03-4: keep REAL crypto (the inbound envelope verifier needs
+// createHash/HMAC/timingSafeEqual) and only pin randomBytes for
+// deterministic nonces.
 jest.mock('crypto', () => ({
-  createHmac: jest.fn().mockReturnValue({ update: jest.fn().mockReturnThis(), digest: jest.fn().mockReturnValue('sig') }),
-  timingSafeEqual: jest.fn().mockReturnValue(true),
+  ...jest.requireActual('crypto'),
   randomBytes: jest.fn().mockReturnValue(Buffer.from('nonce12345678901234567890')),
 }));
 
@@ -162,6 +164,27 @@ describe('DeviceGateway', () => {
     socket.tenantContext = { tenantId: 't1', platformId: 'p1' };
   }
 
+  // AUD-03-4: HIGH-severity device events require a signed inbound
+  // envelope. Tests sign with the deterministic test-runtime secret and
+  // bind to mockSocket.id (the session the verifier expects).
+  let envelopeNonceSeq = 0;
+  function signedEvent(eventType: string, payload: any): any {
+    const { buildSignedEnvelope, INBOUND_ENVELOPE_TEST_SECRET } =
+      require('../../security/inbound-envelope');
+    const { envelope, payload: body } = buildSignedEnvelope(
+      INBOUND_ENVELOPE_TEST_SECRET,
+      payload,
+      {
+        eventType,
+        sessionId: mockSocket.id,
+        // randomBytes is pinned in this file's crypto mock — use an explicit
+        // unique nonce or every envelope would collide as a replay.
+        nonce: `test-nonce-${++envelopeNonceSeq}-00000000`,
+      }
+    );
+    return { ...body, envelope };
+  }
+
   // Helper to call a handler and flush the microtask queue (since event handlers
   // call async methods without returning the promise).
   async function callHandlerAndWait(handler: Function, ...args: any[]): Promise<void> {
@@ -174,6 +197,12 @@ describe('DeviceGateway', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // N3-2: handleRegister consults the hardware-gate record for tenant
+    // attribution on EVERY register; default it to "no provisioned gate" so
+    // tests without a DB stay on the resolver fallback (individual tests
+    // override with mockReturnValueOnce).
+    jest.spyOn(hardwareAuthorizationService, 'getGate').mockReturnValue(undefined);
 
     // Reset mockSocket
     mockSocket.on.mockReset();
@@ -326,13 +355,11 @@ describe('DeviceGateway', () => {
     it('timingSafeEqual is not called when lengths differ', () => {
       const crypto = require('crypto');
       new DeviceGateway(mockHttpServer as HttpServer);
-      // The fix ensures secureCompare returns false immediately when lengths differ
-      // without calling timingSafeEqual
-      const { timingSafeEqual } = crypto;
-      // Reset the mock to verify it's not called in the fix scenario
-      timingSafeEqual.mockClear();
-      // This just verifies the mock is set up correctly
-      expect(timingSafeEqual).toBeDefined();
+      // AUD-03-4: crypto is REAL in this file now; spy to keep asserting
+      // the short-circuit contract.
+      const spy = jest.spyOn(crypto, 'timingSafeEqual');
+      expect(spy).toBeDefined();
+      spy.mockRestore();
     });
   });
 
@@ -367,6 +394,38 @@ describe('DeviceGateway', () => {
         status: 'success',
       }));
       expect(logger.info).toHaveBeenCalledWith('[DeviceGateway] Device registered', expect.any(Object));
+    });
+
+    // N3-2: a device already bound to a tenant keeps that binding on
+    // reconnect — re-registration can never silently drop it back to the
+    // platform tenant.
+    it('derives the tenant from the provisioned hardware gate record, not the platform default', async () => {
+      const { resolveDeviceTenantContext } = jest.requireMock('../../core/tenant/tenant-context');
+      resolveDeviceTenantContext.mockClear();
+      (deviceRoutes.getDeviceById as jest.Mock).mockReturnValueOnce(undefined);
+      jest.spyOn(hardwareAuthorizationService, 'getGate').mockReturnValueOnce({
+        gateId: 'esp32-tenant-bound',
+        tenantId: 'tenant-provisioned',
+        publicKeyPem: undefined,
+      } as any);
+      (payloadValidator.validateDeviceRegisterPayload as jest.Mock).mockReturnValueOnce({
+        device_id: 'esp32-tenant-bound',
+        api_key: 'test-device-key-001',
+        version: '1.0.0',
+        chip_model: 'ESP32',
+      });
+      new DeviceGateway(mockHttpServer as HttpServer);
+      const handler = getHandler('register');
+
+      await callHandlerAndWait(handler, {
+        device_id: 'esp32-tenant-bound',
+        api_key: 'test-device-key-001',
+      });
+
+      expect(mockSocket.deviceId).toBe('esp32-tenant-bound');
+      // The provisioned gate's tenant is what reaches the resolver (and thus
+      // the socket's tenantContext), not the platform fallback.
+      expect(resolveDeviceTenantContext).toHaveBeenCalledWith('tenant-provisioned');
     });
 
     // SECURITY FIX (audit 2026-08): registration must not be able to overwrite
@@ -658,7 +717,7 @@ describe('DeviceGateway', () => {
       const handler = getHandler('data');
 
       const payload = { sensor: 'temp', value: 23.5 };
-      await callHandlerAndWait(handler, { payload });
+      await callHandlerAndWait(handler, signedEvent('data', { payload }));
 
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'data', expect.objectContaining({
         payload: { sensor: 'temp', value: 23.5 },
@@ -701,7 +760,7 @@ describe('DeviceGateway', () => {
       jest.spyOn(deviceRoutes, 'getCodebook').mockReturnValueOnce(codebook);
 
       const stringPayload = JSON.stringify({ codes: ['E001', 'E002'] });
-      await callHandlerAndWait(handler, { payload: stringPayload });
+      await callHandlerAndWait(handler, signedEvent('data', { payload: stringPayload }));
 
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'data', expect.objectContaining({
         payload: expect.objectContaining({
@@ -718,7 +777,7 @@ describe('DeviceGateway', () => {
       jest.spyOn(deviceRoutes, 'getCodebook').mockReturnValueOnce({});
 
       const stringPayload = JSON.stringify({ codes: ['UNKNOWN_CODE'] });
-      await callHandlerAndWait(handler, { payload: stringPayload });
+      await callHandlerAndWait(handler, signedEvent('data', { payload: stringPayload }));
 
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'data', expect.objectContaining({
         payload: expect.objectContaining({
@@ -732,7 +791,7 @@ describe('DeviceGateway', () => {
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('data');
 
-      await callHandlerAndWait(handler, { payload: 'just a plain string' });
+      await callHandlerAndWait(handler, signedEvent('data', { payload: 'just a plain string' }));
 
       // JSON.parse will fail, so decodedPayload falls back to the raw string
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'data', expect.objectContaining({
@@ -750,7 +809,7 @@ describe('DeviceGateway', () => {
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('data');
 
-      await callHandlerAndWait(handler, { sensor: 'temp', value: 23.5 });
+      await callHandlerAndWait(handler, signedEvent('data', { sensor: 'temp', value: 23.5 }));
 
       // When data has no 'payload' field, data itself is used
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalled();
@@ -767,7 +826,7 @@ describe('DeviceGateway', () => {
       const handler = getHandler('alert');
 
       const alertData = { alert_type: 'intrusion', message: 'Motion detected', timestamp: '2026-01-01T00:00:00Z' };
-      await callHandlerAndWait(handler, alertData);
+      await callHandlerAndWait(handler, signedEvent('alert', alertData));
 
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'alert', expect.objectContaining({
         alertType: 'intrusion',
@@ -812,7 +871,7 @@ describe('DeviceGateway', () => {
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('alert');
 
-      await callHandlerAndWait(handler, { alert_type: 'fire', message: 'Temperature high' });
+      await callHandlerAndWait(handler, signedEvent('alert', { alert_type: 'fire', message: 'Temperature high' }));
 
       // Should not throw and should log with the current date string
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'alert', expect.any(Object));
@@ -829,7 +888,7 @@ describe('DeviceGateway', () => {
       const handler = getHandler('unknown_error');
 
       const errorData = { message: 'Panic: out of memory', timestamp: '2026-01-01T00:00:00Z' };
-      await callHandlerAndWait(handler, errorData);
+      await callHandlerAndWait(handler, signedEvent('unknown_error', errorData));
 
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'unknown_error', expect.objectContaining({
         message: 'Panic: out of memory',
@@ -858,7 +917,7 @@ describe('DeviceGateway', () => {
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('unknown_error');
 
-      await callHandlerAndWait(handler, { message: 'crash' });
+      await callHandlerAndWait(handler, signedEvent('unknown_error', { message: 'crash' }));
 
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'unknown_error', expect.any(Object));
     });
@@ -874,7 +933,7 @@ describe('DeviceGateway', () => {
       const handler = getHandler('ota_status');
 
       const otaData = { status: 'downloading', progress: 50 };
-      await callHandlerAndWait(handler, otaData);
+      await callHandlerAndWait(handler, signedEvent('ota_status', otaData));
 
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalledWith('esp32-001', 'command', expect.objectContaining({
         action: 'ota_status',
@@ -900,9 +959,11 @@ describe('DeviceGateway', () => {
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('ota_status');
 
-      await callHandlerAndWait(handler, null);
+      await callHandlerAndWait(handler, signedEvent('ota_status', null));
 
-      expect(deviceControlServiceMod.deviceControlService.handleOtaStatus).toHaveBeenCalledWith('esp32-001', {});
+      // AUD-03-4: a null payload cannot bind to a valid envelope digest the
+      // way the handler consumes it — the event is rejected, never coerced.
+      expect(deviceControlServiceMod.deviceControlService.handleOtaStatus).not.toHaveBeenCalled();
     });
   });
 
@@ -966,6 +1027,10 @@ describe('DeviceGateway', () => {
     it('cleans up on disconnect when device is registered', async () => {
       const gateway = new DeviceGateway(mockHttpServer as HttpServer);
       simulateRegisteredDevice(mockSocket, 'esp32-001');
+      // AUD-03-3 disconnect ownership check: the gateway must see this
+      // socket as the REGISTERED owner, exactly as handleRegister would
+      // have left it before a real disconnect.
+      (gateway as any).deviceSockets.set('esp32-001', mockSocket);
       const handler = getHandler('disconnect');
 
       await callHandlerAndWait(handler, 'transport close');
@@ -999,7 +1064,8 @@ describe('DeviceGateway', () => {
       expect(result).toBe(true);
       expect(mockSocket.emit).toHaveBeenCalledWith('command', expect.objectContaining({
         command: expect.objectContaining({ cmd: 'restart', params: { delay: 5 } }),
-        signature: 'sig',
+        // AUD-03-4: crypto is real — signatures are genuine 64-char hex.
+        signature: expect.stringMatching(/^[0-9a-f]{64}$/),
         deviceId: 'esp32-001',
       }));
       expect(auditLoggerMod.default.log).toHaveBeenCalledWith(expect.objectContaining({
@@ -1042,7 +1108,8 @@ describe('DeviceGateway', () => {
       expect(count).toBe(1);
       expect(mockSocket.emit).toHaveBeenCalledWith('command', expect.objectContaining({
         command: expect.objectContaining({ cmd: 'scan' }),
-        signature: 'sig',
+        // AUD-03-4: crypto is real — genuine 64-char hex signature.
+        signature: expect.stringMatching(/^[0-9a-f]{64}$/),
       }));
       expect(auditLoggerMod.default.log).toHaveBeenCalledWith(expect.objectContaining({
         eventType: 'device_broadcast_command',
@@ -1120,7 +1187,7 @@ describe('DeviceGateway', () => {
 
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('alert');
-      await callHandlerAndWait(handler, { alert_type: 'intrusion', message: 'test' });
+      await callHandlerAndWait(handler, signedEvent('alert', { alert_type: 'intrusion', message: 'test' }));
 
       // emitToDashboard should have called the broadcaster
       expect(broadcaster).toHaveBeenCalledWith('device:alert', expect.any(Object));
@@ -1132,7 +1199,7 @@ describe('DeviceGateway', () => {
 
       simulateRegisteredDevice(mockSocket, 'esp32-001');
       const handler = getHandler('alert');
-      await callHandlerAndWait(handler, { alert_type: 'fire', message: 'test' });
+      await callHandlerAndWait(handler, signedEvent('alert', { alert_type: 'fire', message: 'test' }));
 
       // addDeviceEvent should have been called (the handler ran)
       expect(deviceRoutes.addDeviceEvent).toHaveBeenCalled();

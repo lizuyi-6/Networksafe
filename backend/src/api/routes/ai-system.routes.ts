@@ -19,10 +19,37 @@ import {
     getAgentGateway as getSharedAgentGateway,
     getAgentSystem as getSharedAgentSystem
 } from '../../services/agent-system.service';
-import { PLATFORM_TENANT_ID } from '../../core/tenant/tenant-context';
+import {
+    PLATFORM_TENANT_ID,
+    resolveRequestTenantContext
+} from '../../core/tenant/tenant-context';
+import { isPlatformAdminRole } from '../../security/permissions';
 import { sendSuccess, sendError } from '../../core/http/api-response';
 
 const router = Router();
+
+// SECURITY (audit 2026-08, AUD-02-5): object-level tenant resolution with NO
+// silent platform fallback. A requester whose tenant cannot be resolved and
+// who is not a platform admin is refused (403) instead of being silently
+// mapped onto the platform tenant.
+function resolveAiSystemTenantId(req: Request, res: Response): string | null {
+    const context = resolveRequestTenantContext(req as any, {
+        allowAdminPlatformFallback: isPlatformAdminRole((req as any).user?.role)
+    });
+    const tenantId = context?.tenantId || (req as any).user?.tenantId || null;
+    if (!tenantId) {
+        sendError(res, 403, {
+            code: 'TENANT_CONTEXT_REQUIRED',
+            message: 'backend.tenant_context_required'
+        });
+        return null;
+    }
+    return tenantId;
+}
+
+function isPlatformRequester(req: Request): boolean {
+    return isPlatformAdminRole((req as any).user?.role);
+}
 
 // ============================================
 // Multi-Agent System Dashboard Endpoints
@@ -46,11 +73,14 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
         const system = getSharedAgentSystem() || getAgentSystem();
         const gateway = getSharedAgentGateway() || agentGateway;
         if (!system || !system.isInitialized()) {
-            const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
+            const tenantId = resolveAiSystemTenantId(req, res);
+            if (!tenantId) return;
+            const platform = isPlatformRequester(req);
             const opsSummary = await securityOperationsService.getDashboardSummaryView(tenantId);
             const asyncReview = await detectionPipelineService.getAsyncReviewStats(tenantId);
             const detectionSummary = await detectionPipelineService.getSummary(tenantId);
-            const runtimeAgents = gateway?.getAgentList?.() || [];
+            const runtimeAgents = (gateway?.getAgentList?.() || [])
+                .filter((agent: any) => platform || agent.tenantId === tenantId);
             return res.json({
                 orchestrator: {
                     activeTasks: opsSummary.runningScans + opsSummary.pendingActions + opsSummary.activeAlerts,
@@ -108,12 +138,15 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
         const rawStats = system.getStats();
         const probeReport = system.getProbeReport();
         const health = system.getHealthStatus();
-        const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
+        const tenantId = resolveAiSystemTenantId(req, res);
+        if (!tenantId) return;
+        const platform = isPlatformRequester(req);
         const opsSummary = await securityOperationsService.getDashboardSummaryView(tenantId);
         const asyncReview = await detectionPipelineService.getAsyncReviewStats(tenantId);
         const detectionSummary = await detectionPipelineService.getSummary(tenantId);
         const threatPatterns = await securityOperationsService.summarizeThreatsView(tenantId);
-        const runtimeAgents = gateway?.getAgentList?.() || [];
+        const runtimeAgents = (gateway?.getAgentList?.() || [])
+            .filter((agent: any) => platform || agent.tenantId === tenantId);
         const registeredAgentsCount = agentAuthService
             .listAgents()
             .filter((agent) => agent.status === 'approved' || agent.status === 'pending')
@@ -216,7 +249,8 @@ router.get('/agents/stats', authenticate, async (req: Request, res: Response) =>
 router.get('/agents/topology', authenticate, async (req: Request, res: Response) => {
     try {
         const system = getSharedAgentSystem() || getAgentSystem();
-        const tenantId = (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID;
+        const tenantId = resolveAiSystemTenantId(req, res);
+        if (!tenantId) return;
         const cfg = system?.getConfig();
         const L = cfg?.layers;
         const layers = L ? [
@@ -303,7 +337,7 @@ router.post('/evaluation/owasp', authenticate, async (req: Request, res: Respons
     try {
         const report = await owaspWebEvaluationService.evaluate({
             datasetRoot: typeof req.body?.datasetRoot === 'string' ? req.body.datasetRoot : undefined,
-            tenantId: (req as any).tenantContext?.tenantId || (req as any).user?.tenantId || PLATFORM_TENANT_ID
+            tenantId: resolveAiSystemTenantId(req, res) ?? undefined
         });
 
         res.json(report);

@@ -82,6 +82,11 @@ async function respondWithHealthSnapshot(
 
 export function createControlPlaneApp(options: CreateControlPlaneAppOptions): express.Express {
   const app = express();
+  // Trust exactly one configured reverse-proxy hop when explicitly enabled.
+  // The default remains fail-safe (no forwarded-header trust), so an exposed
+  // backend cannot let clients forge the IP used by rate limiting and the
+  // step-up risk signal.
+  app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
   const allowedOrigins = buildAllowedOrigins();
 
   app.use(cors({
@@ -130,9 +135,50 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
     }
   };
 
-  app.use(express.json({ limit: '25mb', verify: captureRawBody }));
+  // SECURITY (audit 2026-08, AUD-08-1): tiered body limits. The global
+  // JSON cap drops to 1mb; only the firmware-upload route mounts a larger
+  // parser (base64 artifact payloads). Everything else — auth, config,
+  // detection ingest — refuses oversized bodies instead of paying for a
+  // 25mb parse on every request.
+  const FIRMWARE_UPLOAD_LIMIT = '30mb';
+  app.use('/api/admin/devices/firmware', express.json({ limit: FIRMWARE_UPLOAD_LIMIT, verify: captureRawBody }));
+
+  app.use(express.json({ limit: '1mb', verify: captureRawBody }));
   app.use(express.urlencoded({ extended: true, limit: '1mb', verify: captureRawBody }));
   app.use(express.text({ type: 'text/*', limit: '1mb', verify: captureRawBody }));
+
+  // SECURITY (audit 2026-08, AUD-08-1): Origin gate for cookie-credentialed
+  // state-changing requests (CSRF defense-in-depth on top of SameSite).
+  // A browser ALWAYS sends Origin on cross-site writes; `origin: null`
+  // (sandboxed/file:) and any origin outside the allowlist are rejected.
+  // Non-browser clients (no Origin header) pass — they do not carry
+  // ambient cookie authority by construction.
+  app.use((req, res, next) => {
+    if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
+      next();
+      return;
+    }
+    const hasCookies = Boolean(req.headers.cookie);
+    const origin = req.headers.origin;
+    if (!hasCookies || !origin) {
+      next();
+      return;
+    }
+    const allowed = buildAllowedOrigins();
+    if (allowed.includes('*') || allowed.includes(origin)) {
+      next();
+      return;
+    }
+    logger.warn('Blocked state-changing request with disallowed Origin', {
+      origin,
+      method: req.method,
+      path: req.path
+    });
+    res.status(403).json({
+      success: false,
+      error: 'backend.origin_not_allowed'
+    });
+  });
 
   // SECURITY (R6 V1.6): Walk parsed body / query / params for prototype-
   // pollution keys (`__proto__`, `constructor`, `prototype`). Catches the
@@ -305,6 +351,15 @@ export function createControlPlaneApp(options: CreateControlPlaneAppOptions): ex
   app.use('/api', apiRouter);
 
   app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    // AUD-08-1: body-parser overflows surface as 413 (Payload Too Large),
+    // not a misleading 500.
+    if (err?.type === 'entity.too.large' || err?.statusCode === 413) {
+      sendError(res, 413, {
+        code: 'backend.payload_too_large',
+        message: 'backend.payload_too_large'
+      });
+      return;
+    }
     logger.error('Unhandled error', { error: err.message, stack: err.stack });
     sendError(res, 500, {
       code: 'backend.internal_server_error',

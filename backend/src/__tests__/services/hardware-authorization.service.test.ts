@@ -191,6 +191,52 @@ describe('hardwareAuthorizationService', () => {
     expect(dispatch.status).toBe('completed');
   });
 
+  // SECURITY (audit 2026-08, batch 3): a consumed session/counter can never
+  // produce a second grant — replay of the same ACK must fail closed.
+  it('rejects a replayed ack and never creates a second grant', async () => {
+    const context = await createHardwareRequest({ gatePrefix: 'gate-replay', devicePrefix: 'device-replay' });
+    expect(context.request.success).toBe(true);
+
+    const ackPayload = signAck({ ...context, payload: context.payload });
+    const first = await hardwareAuthorizationService.handlePhysicalConfirmationAck(context.gateId, ackPayload);
+    expect(first.confirmed).toBe(true);
+
+    const replay = await hardwareAuthorizationService.handlePhysicalConfirmationAck(context.gateId, ackPayload);
+    expect(replay.confirmed).toBe(false);
+    expect(replay.reason).toBe('session_already_consumed');
+
+    const grants = getDatabase().prepare(
+      `SELECT COUNT(*) AS count FROM hardware_grants WHERE gate_id = ? AND monotonic_counter = ?`
+    ).get(context.gateId, 1) as { count: number };
+    expect(Number(grants.count)).toBe(1);
+  });
+
+  it('keeps exactly one grant when two acks race on the same session', async () => {
+    const context = await createHardwareRequest({ gatePrefix: 'gate-race', devicePrefix: 'device-race' });
+    expect(context.request.success).toBe(true);
+
+    const ackPayload = signAck({ ...context, payload: context.payload });
+    const [a, b] = await Promise.all([
+      hardwareAuthorizationService.handlePhysicalConfirmationAck(context.gateId, ackPayload),
+      hardwareAuthorizationService.handlePhysicalConfirmationAck(context.gateId, ackPayload)
+    ]);
+
+    const confirmedResults = [a, b].filter((result) => result.confirmed);
+    const rejectedResults = [a, b].filter((result) => !result.confirmed);
+    expect(confirmedResults).toHaveLength(1);
+    expect(rejectedResults).toHaveLength(1);
+    expect(['session_already_consumed', 'monotonic_counter_replay']).toContain(rejectedResults[0].reason);
+
+    const grants = getDatabase().prepare(
+      `SELECT COUNT(*) AS count FROM hardware_grants WHERE gate_id = ? AND monotonic_counter = ?`
+    ).get(context.gateId, 1) as { count: number };
+    expect(Number(grants.count)).toBe(1);
+
+    // The high-water mark must reflect exactly one advancing ack.
+    const gate = hardwareAuthorizationService.getGate(context.gateId);
+    expect(gate?.lastMonotonicCounter).toBe(1);
+  });
+
   it('flushes the database synchronously after a confirmed ack advances the monotonic counter', async () => {
     const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
     const gateId = `gate-flush-${Date.now()}`;
@@ -472,7 +518,11 @@ describe('hardwareAuthorizationService', () => {
       )).rejects.toThrow('backend.hardware_rejection_audit_failed');
 
       const session = hardwareAuthorizationService.getConfirmationSession(requestContext.request.session!.sessionId);
-      expect(session?.status).toBe('pending');
+      // Batch 3: the ack first atomically claims the session
+      // (pending -> claiming). When rejection auditing fails, no terminal
+      // state is persisted — the session stays in the transitional
+      // 'claiming' state and expires; it is never marked rejected/confirmed.
+      expect(session?.status).toBe('claiming');
       const intent = hardwareAuthorizationService.getIntent(requestContext.request.intent.actionId);
       expect(intent?.status).toBe('pending_hardware_confirmation');
     } finally {
@@ -514,6 +564,37 @@ describe('hardwareAuthorizationService', () => {
     // The stored key is unchanged.
     const gate = hardwareAuthorizationService.getGate(gateId);
     expect(gate?.publicKeyPem).toBe(firstPem);
+  });
+
+  it('N3-1: refuses to rebind an enrolled gate to a different tenant (tenant ownership immutable)', () => {
+    const keyPair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+    const gateId = `gate-tenant-immutable-${Date.now()}`;
+    const pem = keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+
+    hardwareAuthorizationService.enrollGate({
+      tenantId: 'tenant-owner',
+      gateId,
+      publicKeyPem: pem,
+      status: 'online'
+    });
+
+    // Same gate id, DIFFERENT tenant: the ON CONFLICT path previously
+    // silently rewrote tenant_id; now it must fail closed.
+    expect(() => hardwareAuthorizationService.enrollGate({
+      tenantId: 'tenant-attacker',
+      gateId,
+      publicKeyPem: pem,
+      status: 'online'
+    })).toThrow('backend.hardware_gate_tenant_immutable');
+
+    // The original owner keeps the gate and can still re-enroll idempotently.
+    expect(() => hardwareAuthorizationService.enrollGate({
+      tenantId: 'tenant-owner',
+      gateId,
+      publicKeyPem: pem,
+      status: 'online'
+    })).not.toThrow();
+    expect(hardwareAuthorizationService.getGate(gateId)?.tenantId).toBe('tenant-owner');
   });
 
   it('rejects unsupported gate algorithms and non-P-256 public keys during enrollment', () => {

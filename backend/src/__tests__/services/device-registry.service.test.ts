@@ -24,6 +24,8 @@ import {
   hasDevice,
   setDevice,
   setDeviceCommandTransport,
+  applyDeviceCommandAck,
+  sweepTimedOutDeviceCommands,
   type DeviceInfo
 } from '../../services/device-registry.service';
 import { commandDispatcherService } from '../../services/command-dispatcher.service';
@@ -342,7 +344,8 @@ describe('DeviceRegistryService', () => {
       const history = getDeviceCommandHistoryPublic(device.deviceId, 10);
       expect(history.length).toBeGreaterThan(0);
       expect(history[0].command).toBe('collect');
-      expect(history[0].status).toBe('completed');
+      // AUD-07-2: transport acceptance is DELIVERY, not completion.
+      expect(history[0].status).toBe('delivered');
     });
 
     it('updates freeHeap when collect command is executed', async () => {
@@ -513,4 +516,173 @@ describe('DeviceRegistryService', () => {
   // NOTE: setDeviceAdapter is called at module load time (device-registry.service.ts ~line 547).
   // Its wiring is implicitly verified by all the executeDeviceCommandInternal tests above,
   // which exercise the full command flow through the dispatcher adapter.
+
+  // SECURITY (audit 2026-08, AUD-07-2): delivery != completion. Terminal
+  // states require a signed device ack; missing acks time out.
+  describe('device command ack state machine (AUD-07-2)', () => {
+    const ORIGINAL_SECRET = process.env.DEVICE_COMMAND_SECRET;
+
+    beforeAll(() => {
+      process.env.DEVICE_COMMAND_SECRET = 'device-command-ack-secret-32-chars-min!!';
+    });
+
+    afterAll(() => {
+      process.env.DEVICE_COMMAND_SECRET = ORIGINAL_SECRET;
+    });
+
+    async function deliverCommand(deviceId: string, actionId: string) {
+      const result = await executeDeviceCommandInternal({
+        deviceId,
+        command: 'reboot',
+        actorId: 'actor-ack',
+        actionId
+      });
+      return result;
+    }
+
+    function signAck(input: { deviceId: string; commandId: string; command: string; status: string; timestamp: number; nonce: string }): string {
+      const crypto = require('crypto');
+      const message = JSON.stringify({
+        commandId: input.commandId,
+        deviceId: input.deviceId,
+        command: input.command,
+        status: input.status,
+        timestamp: input.timestamp,
+        nonce: input.nonce
+      });
+      return crypto.createHmac('sha256', process.env.DEVICE_COMMAND_SECRET).update(message).digest('hex');
+    }
+
+    it('marks a transport-accepted command as delivered, never completed', async () => {
+      setDeviceCommandTransport(async () => true);
+      const device = makeDeviceInfo({ isOnline: true });
+      registerDevice(device);
+
+      const result = await deliverCommand(device.deviceId, `ack-test-1-${Date.now()}`);
+      expect(result.success).toBe(true);
+
+      const history = getDeviceCommandHistoryPublic(device.deviceId, 5);
+      const record = history.find((item) => item.id === result.record?.id);
+      expect(record?.status).toBe('delivered');
+      expect(record?.deliveredAt).toBeDefined();
+      expect(record?.completedAt).toBeUndefined();
+    });
+
+    it('reaches completed only through a valid signed ack', async () => {
+      setDeviceCommandTransport(async () => true);
+      const device = makeDeviceInfo({ isOnline: true });
+      registerDevice(device);
+
+      const actionId = `ack-test-2-${Date.now()}`;
+      await deliverCommand(device.deviceId, actionId);
+
+      const timestamp = Date.now();
+      const nonce = `nonce-${Date.now()}`;
+      const applied = applyDeviceCommandAck({
+        deviceId: device.deviceId,
+        commandId: actionId,
+        status: 'completed',
+        timestamp,
+        nonce,
+        signature: signAck({
+          deviceId: device.deviceId,
+          commandId: actionId,
+          command: 'reboot',
+          status: 'completed',
+          timestamp,
+          nonce
+        })
+      });
+      expect(applied.applied).toBe(true);
+
+      const record = getDeviceCommandHistoryPublic(device.deviceId, 5)
+        .find((item) => item.id === actionId);
+      expect(record?.status).toBe('completed');
+      expect(record?.completedAt).toBeDefined();
+    });
+
+    it('rejects an ack with a bad signature and keeps the record delivered', async () => {
+      setDeviceCommandTransport(async () => true);
+      const device = makeDeviceInfo({ isOnline: true });
+      registerDevice(device);
+
+      const actionId = `ack-test-3-${Date.now()}`;
+      await deliverCommand(device.deviceId, actionId);
+
+      const applied = applyDeviceCommandAck({
+        deviceId: device.deviceId,
+        commandId: actionId,
+        status: 'completed',
+        timestamp: Date.now(),
+        nonce: `nonce-${Date.now()}`,
+        signature: 'deadbeef'.repeat(8)
+      });
+      expect(applied.applied).toBe(false);
+      expect(applied.reason).toBe('invalid_ack_signature');
+
+      const record = getDeviceCommandHistoryPublic(device.deviceId, 5)
+        .find((item) => item.id === actionId);
+      expect(record?.status).toBe('delivered');
+    });
+
+    it('rejects a second ack for an already-terminal command', async () => {
+      setDeviceCommandTransport(async () => true);
+      const device = makeDeviceInfo({ isOnline: true });
+      registerDevice(device);
+
+      const actionId = `ack-test-4-${Date.now()}`;
+      await deliverCommand(device.deviceId, actionId);
+
+      const buildAck = (status: 'completed' | 'failed') => ({
+        deviceId: device.deviceId,
+        commandId: actionId,
+        status,
+        timestamp: Date.now(),
+        nonce: `nonce-${Date.now()}-${status}`
+      });
+      const first = buildAck('completed');
+      expect(applyDeviceCommandAck({ ...first, signature: signAck({ ...first, command: 'reboot' }) }).applied).toBe(true);
+      const second = buildAck('failed');
+      const result = applyDeviceCommandAck({ ...second, signature: signAck({ ...second, command: 'reboot' }) });
+      expect(result.applied).toBe(false);
+      expect(result.reason).toBe('invalid_transition_from_completed');
+    });
+
+    it('marks delivered commands timed_out after the ack window', async () => {
+      setDeviceCommandTransport(async () => true);
+      const device = makeDeviceInfo({ isOnline: true });
+      registerDevice(device);
+
+      const actionId = `ack-test-5-${Date.now()}`;
+      await deliverCommand(device.deviceId, actionId);
+
+      // Sweep with a clock past the ack window.
+      sweepTimedOutDeviceCommands(Date.now() + 6 * 60_000);
+
+      const record = getDeviceCommandHistoryPublic(device.deviceId, 5)
+        .find((item) => item.id === actionId);
+      expect(record?.status).toBe('timed_out');
+
+      // A late ack can no longer complete a timed-out command.
+      const timestamp = Date.now();
+      const nonce = `nonce-late-${Date.now()}`;
+      const result = applyDeviceCommandAck({
+        deviceId: device.deviceId,
+        commandId: actionId,
+        status: 'completed',
+        timestamp,
+        nonce,
+        signature: signAck({
+          deviceId: device.deviceId,
+          commandId: actionId,
+          command: 'reboot',
+          status: 'completed',
+          timestamp,
+          nonce
+        })
+      });
+      expect(result.applied).toBe(false);
+      expect(result.reason).toBe('invalid_transition_from_timed_out');
+    });
+  });
 });

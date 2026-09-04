@@ -3,6 +3,7 @@
  * SECURE FIX: Tamper-evident logging for all security events
  */
 
+import crypto from 'crypto';
 import { uuidv4 } from '../utils/uuid';
 import logger from '../utils/logger';
 import { getDatabase } from '../config/database';
@@ -448,7 +449,7 @@ export class AuditLogger {
    * Convenience method: Log agent event
    */
   async logAgent(event: {
-    action: 'connect' | 'disconnect' | 'register' | 'revoke' | 'command_received';
+    action: 'connect' | 'disconnect' | 'register' | 'revoke' | 'command_received' | 'connection_superseded';
     agentId: string;
     ip?: string;
     success: boolean;
@@ -820,6 +821,102 @@ export class AuditLogger {
    * SECURITY FIX CVE-2026-104: Export audit logs to backup file
    * Creates a tamper-evident backup with integrity checksum
    */
+  /**
+   * AUD-08-1: the canonical signing payload for backup verification.
+   * Export and verification MUST derive the checksum from the SAME
+   * canonical serialization — the backup JSON with the `checksum` field
+   * removed, serialized with fixed 2-space indentation and insertion key
+   * order. Never re-derive it ad hoc in a verifier.
+   */
+  static computeBackupChecksum(backupWithoutChecksum: Record<string, unknown>): string {
+    const cryptoMod = require('crypto');
+    const canonical = JSON.stringify(backupWithoutChecksum, null, 2);
+    return cryptoMod.createHash('sha256').update(canonical).digest('hex');
+  }
+
+  /**
+   * AUD-08-1: verify a backup file produced by exportBackup. Signature
+   * failure / record-count mismatch MUST return valid:false — never throw
+   * a success-looking result.
+   *
+   * N5-5: the whole-file checksum is KEYLESS SHA-256 — an attacker with
+   * write access to the backup can tamper and recompute it. For v1.1
+   * backups (which carry every signed field) each record's HMAC signature
+   * is verified against the audit secret; a single invalid or missing
+   * record signature fails the whole verification. Legacy v1.0 backups
+   * dropped tenant_id/actor_email from the export, so their records cannot
+   * be re-verified — those fall back to checksum-only and the response
+   * says so explicitly.
+   */
+  async verifyBackupFile(filePath: string): Promise<{
+    valid: boolean;
+    reason?: string;
+    recordCount?: number;
+    perRecordVerified?: boolean;
+    invalidRecordIds?: string[];
+  }> {
+    try {
+      const fs = require('fs').promises;
+      const raw = await fs.readFile(filePath, 'utf8');
+      const parsed = JSON.parse(raw) as Record<string, any>;
+      if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.logs)) {
+        return { valid: false, reason: 'malformed_backup' };
+      }
+      const { checksum, ...withoutChecksum } = parsed;
+      if (!checksum || typeof checksum !== 'string') {
+        return { valid: false, reason: 'missing_checksum' };
+      }
+      const expected = AuditLogger.computeBackupChecksum(withoutChecksum);
+      if (expected.length !== checksum.length
+        || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(String(checksum)))) {
+        return { valid: false, reason: 'checksum_mismatch' };
+      }
+      if (Number(withoutChecksum.recordCount) !== parsed.logs.length) {
+        return { valid: false, reason: 'record_count_mismatch', recordCount: parsed.logs.length };
+      }
+
+      const version = String(withoutChecksum.version || '1.0');
+      if (version !== '1.1') {
+        return {
+          valid: true,
+          recordCount: parsed.logs.length,
+          perRecordVerified: false,
+          reason: 'legacy_format_no_per_record_signatures'
+        };
+      }
+
+      const invalidRecordIds: string[] = [];
+      for (const record of parsed.logs) {
+        const recordSignature = String(record?.signature || '');
+        if (!/^[0-9a-f]{64}$/.test(recordSignature)) {
+          invalidRecordIds.push(String(record?.id || 'unknown'));
+          continue;
+        }
+        const payload = this.signingPayloadFromRow(record);
+        const expectedRecord = require('crypto')
+          .createHmac('sha256', this.auditSecret)
+          .update(payload)
+          .digest('hex');
+        if (expectedRecord.length !== recordSignature.length
+          || !crypto.timingSafeEqual(Buffer.from(expectedRecord), Buffer.from(recordSignature))) {
+          invalidRecordIds.push(String(record?.id || 'unknown'));
+        }
+      }
+      if (invalidRecordIds.length > 0) {
+        return {
+          valid: false,
+          reason: 'record_signature_invalid',
+          recordCount: parsed.logs.length,
+          perRecordVerified: true,
+          invalidRecordIds: invalidRecordIds.slice(0, 20)
+        };
+      }
+      return { valid: true, recordCount: parsed.logs.length, perRecordVerified: true };
+    } catch (error: any) {
+      return { valid: false, reason: error?.message || 'verify_failed' };
+    }
+  }
+
   async exportBackup(outputPath?: string): Promise<{
     success: boolean;
     filePath?: string;
@@ -854,16 +951,22 @@ export class AuditLogger {
         checksum?: string;
       } = {
         exportedAt: new Date().toISOString(),
-        version: '1.0',
+        // N5-5: 1.1 exports carry tenant_id + actor_email per record — the
+        // remaining signed fields — so verifyBackupFile can verify EVERY
+        // record's HMAC, not just the (keyless, self-recomputable) whole-file
+        // checksum.
+        version: '1.1',
         recordCount: logs.length,
         logs: logs.map(log => ({
           id: log.id,
           timestamp: log.timestamp,
+          tenant_id: log.tenant_id ?? null,
           event_type: log.event_type,
           category: log.category,
           severity: log.severity,
           actor_type: log.actor_type,
           actor_id: log.actor_id,
+          actor_email: log.actor_email ?? null,
           actor_ip: log.actor_ip,
           action: log.action,
           target_type: log.target_type,
@@ -877,8 +980,9 @@ export class AuditLogger {
       // Serialize to JSON
       const backupJson = JSON.stringify(backup, null, 2);
 
-      // Calculate checksum of entire backup
-      const checksum = crypto.createHash('sha256').update(backupJson).digest('hex');
+      // AUD-08-1: canonical checksum via the SHARED computation — verifiers
+      // call computeBackupChecksum on the checksum-stripped payload.
+      const checksum = AuditLogger.computeBackupChecksum(backup);
 
       // Add checksum to backup metadata
       backup.checksum = checksum;

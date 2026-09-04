@@ -359,20 +359,42 @@ export class AgentAuthService {
   }
 
   /**
-   * Revoke agent credentials
+   * Revoke agent credentials.
+   *
+   * SECURITY (audit 2026-08, P0): revocation is tenant-scoped. A caller must
+   * pass the tenant that owns the agent; only a platform-level actor (null
+   * tenantId override) may revoke across tenants. Returns whether an owned
+   * agent row was found — unknown IDs and cross-tenant IDs are
+   * indistinguishable to the caller (both false → HTTP 404).
    */
-  revokeAgent(agentId: string): boolean {
+  revokeAgent(agentId: string, options: { tenantId?: string | null } = {}): boolean {
     const db = getDatabase();
-    db.prepare(`
-      UPDATE agent_registrations
-      SET status = 'revoked'
+    const row = db.prepare(`
+      SELECT agent_id, tenant_id, status
+      FROM agent_registrations
       WHERE agent_id = ?
-    `).run(agentId);
+      LIMIT 1
+    `).get(agentId) as { agent_id?: string; tenant_id?: string | null; status?: string } | undefined;
 
-    // Clear cache
-    redisService.del(`agent:auth:${agentId}`);
+    if (!row) {
+      return false;
+    }
+    if (options.tenantId && String(row.tenant_id || '') !== String(options.tenantId)) {
+      return false;
+    }
 
-    logger.warn(`Agent revoked: ${agentId}`);
+    if (row.status !== 'revoked') {
+      db.prepare(`
+        UPDATE agent_registrations
+        SET status = 'revoked'
+        WHERE agent_id = ? AND tenant_id IS ?
+      `).run(agentId, row.tenant_id ?? null);
+
+      // Clear cache so warm entries cannot keep serving the revoked key.
+      redisService.del(`agent:auth:${agentId}`);
+      logger.warn(`Agent revoked: ${agentId}`);
+    }
+
     return true;
   }
 

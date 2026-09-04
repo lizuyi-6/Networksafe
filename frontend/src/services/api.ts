@@ -113,7 +113,9 @@ const applyDemoJitter = () => {
 let sessionExpiredNotified = false;
 let automaticSessionRefreshEnabled = true;
 export const SESSION_EXPIRED_EVENT = 'aetherguard:session-expired';
+export const STEPUP_REQUIRED_EVENT = 'aetherguard:stepup-required';
 const SESSION_REFRESH_TIMEOUT_MS = 5_000;
+const STEPUP_UI_TIMEOUT_MS = 120_000;
 
 const notifySessionExpired = () => {
     automaticSessionRefreshEnabled = false;
@@ -153,6 +155,39 @@ const createSessionRefreshUnavailableError = () => {
 };
 
 const createRequestAbortError = () => new DOMException('The request was aborted', 'AbortError');
+
+let stepUpWaiters: Array<(result: boolean) => void> = [];
+let stepUpInFlight = false;
+
+export const resolveStepUpRequest = (succeeded: boolean): void => {
+    const waiters = stepUpWaiters;
+    stepUpWaiters = [];
+    stepUpInFlight = false;
+    waiters.forEach((resolve) => resolve(succeeded));
+};
+
+export const waitForStepUp = (reason: 'required' | 'enroll_required' = 'required'): Promise<boolean> => new Promise((resolve) => {
+    stepUpWaiters.push(resolve);
+    if (stepUpInFlight) {
+        return;
+    }
+    stepUpInFlight = true;
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(STEPUP_REQUIRED_EVENT, { detail: { reason } }));
+    } else {
+        resolveStepUpRequest(false);
+        return;
+    }
+    setTimeout(() => {
+        if (stepUpInFlight) {
+            resolveStepUpRequest(false);
+        }
+    }, STEPUP_UI_TIMEOUT_MS);
+});
+
+const stepUpReasonFromPayload = (payload: any): 'required' | 'enroll_required' => (
+    payload?.code === 'STEPUP_ENROLL_REQUIRED' ? 'enroll_required' : 'required'
+);
 
 const isDefinitiveRefreshRejection = (status: number): boolean => (
     status >= 400
@@ -261,6 +296,43 @@ const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
     return fetchWithAutoRefresh(url, options);
 };
 
+const isStepUpResponse = (response: Response, payload: any): boolean => (
+    response.status === 403
+    && (payload?.code === 'STEPUP_REQUIRED' || payload?.code === 'STEPUP_ENROLL_REQUIRED')
+);
+
+/**
+ * Run one high-risk request and, when the control plane asks for step-up,
+ * pause behind the global Passkey dialog and retry exactly once. The caller
+ * supplies a fresh request factory because a Request body may be consumed.
+ */
+export const withStepUpRetry = async <T>(
+    request: () => Promise<Response>,
+    parse: (response: Response) => Promise<T>
+): Promise<T> => {
+    const response = await request();
+    if (response.ok) {
+        return parse(response);
+    }
+
+    const payload = await response.clone().json().catch(() => null);
+    if (!isStepUpResponse(response, payload)) {
+        throw new Error(extractErrorMessage(payload, `FG-API-${response.status}`));
+    }
+
+    const completed = await waitForStepUp(stepUpReasonFromPayload(payload));
+    if (!completed) {
+        throw new Error(extractErrorMessage(payload, `FG-STEPUP-${response.status}`));
+    }
+
+    const retry = await request();
+    if (!retry.ok) {
+        const retryPayload = await retry.json().catch(() => null);
+        throw new Error(extractErrorMessage(retryPayload, `FG-STEPUP-RETRY-${retry.status}`));
+    }
+    return parse(retry);
+};
+
 type ApiEnvelope<T> = {
     success?: boolean;
     data?: T;
@@ -320,6 +392,85 @@ export interface ApiReadiness {
     blockers: string[];
 }
 
+// --- WebAuthn / Step-Up API ---
+
+export interface WebAuthnCredentialSummary {
+    id: string;
+    name: string | null;
+    counter: number;
+    transports?: string[];
+    backedUp: boolean;
+    deviceType: string | null;
+    createdAt: string;
+    lastUsedAt: string | null;
+}
+
+export const fetchWebAuthnCredentials = async (): Promise<WebAuthnCredentialSummary[]> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/webauthn/credentials`);
+    if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(extractErrorMessage(payload, `FG-WEBAUTHN-CREDENTIALS-${response.status}`));
+    }
+    const data = await readJson<{ credentials: WebAuthnCredentialSummary[] }>(response);
+    return data.credentials || [];
+};
+
+export const getWebAuthnRegistrationOptions = async (currentPassword: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/webauthn/register/options`, {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword })
+    });
+    if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(extractErrorMessage(payload, `FG-WEBAUTHN-REGISTER-OPTIONS-${response.status}`));
+    }
+    return readJson<any>(response);
+};
+
+export const verifyWebAuthnRegistration = async (currentPassword: string, responsePayload: unknown, name?: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/webauthn/register/verify`, {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, response: responsePayload, name })
+    });
+    if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(extractErrorMessage(payload, `FG-WEBAUTHN-REGISTER-VERIFY-${response.status}`));
+    }
+    return readJson<{ credentialId: string }>(response);
+};
+
+export const getWebAuthnStepUpOptions = async () => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/webauthn/stepup/options`, { method: 'POST' });
+    if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(extractErrorMessage(payload, `FG-WEBAUTHN-STEPUP-OPTIONS-${response.status}`));
+    }
+    return readJson<any>(response);
+};
+
+export const verifyWebAuthnStepUp = async (responsePayload: unknown) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/webauthn/stepup/verify`, {
+        method: 'POST',
+        body: JSON.stringify({ response: responsePayload })
+    });
+    if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(extractErrorMessage(payload, `FG-WEBAUTHN-STEPUP-VERIFY-${response.status}`));
+    }
+    return readJson<{ expiresIn: number }>(response);
+};
+
+export const deleteWebAuthnCredential = async (credentialId: string, currentPassword: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/auth/webauthn/credentials/${encodeURIComponent(credentialId)}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ currentPassword })
+    });
+    if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(extractErrorMessage(payload, `FG-WEBAUTHN-CREDENTIAL-DELETE-${response.status}`));
+    }
+    return readJson<{ deleted: boolean }>(response);
+};
 export const fetchCurrentUserSession = async (signal?: AbortSignal): Promise<CurrentUserSession | null> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`, { signal });
     const payload = await response.json().catch(() => null) as any;
@@ -893,25 +1044,17 @@ export const switchSystemMode = async (appMode: SystemMode, options?: {
     seedDemoData?: boolean;
     clearExisting?: boolean;
 }) => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/system/mode`, {
-        method: 'POST',
-        body: JSON.stringify({
-            appMode,
-            seedDemoData: options?.seedDemoData ?? false,
-            clearExisting: options?.clearExisting ?? false
-        })
-    });
-    if (!response.ok) {
-        let message = `FG-SYSTEM-MODE-SWITCH-${response.status}`;
-        try {
-            const data = await response.json();
-            message = data?.message || data?.error || message;
-        } catch {
-            // ignore parse error
-        }
-        throw new Error(message);
-    }
-    return readJson<SystemModeResponse & { seeded?: boolean }>(response);
+    return withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/system/mode`, {
+            method: 'POST',
+            body: JSON.stringify({
+                appMode,
+                seedDemoData: options?.seedDemoData ?? false,
+                clearExisting: options?.clearExisting ?? false
+            })
+        }),
+        (result) => readJson<SystemModeResponse & { seeded?: boolean }>(result)
+    );
 };
 
 // --- API Functions ---
@@ -1418,15 +1561,13 @@ export const savePlatformConfig = async (payload: PlatformConfigResponse) => {
         return { success: true, config: payload };
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/config`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    });
-    if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data?.error || `FG-CONFIG-SAVE-${response.status}`);
-    }
-    return readJson<{ success: boolean; config?: PlatformConfigResponse; message?: string }>(response);
+    return withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/config`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        }),
+        (result) => readJson<{ success: boolean; config?: PlatformConfigResponse; message?: string }>(result)
+    );
 };
 
 export const savePreferredAIModel = async (modelId: string) => {
@@ -1436,15 +1577,13 @@ export const savePreferredAIModel = async (modelId: string) => {
         return { success: true, config };
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/config`, {
-        method: 'POST',
-        body: JSON.stringify({ aiRouting: { preferredModelId: modelId } })
-    });
-    if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data?.message || `FG-AI-MODEL-SELECTION-${response.status}`);
-    }
-    return readJson<{ success: boolean; config?: PlatformConfigResponse; message?: string }>(response);
+    return withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/config`, {
+            method: 'POST',
+            body: JSON.stringify({ aiRouting: { preferredModelId: modelId } })
+        }),
+        (result) => readJson<{ success: boolean; config?: PlatformConfigResponse; message?: string }>(result)
+    );
 };
 
 export const fetchNotificationDeliveries = async (limit: number = 20): Promise<NotificationDelivery[]> => {
@@ -2383,15 +2522,14 @@ export const createAdminApiKey = async (name: string) => {
         return createDemoAdminApiKey(name);
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/api-keys`, {
-        method: 'POST',
-        body: JSON.stringify({ name })
-    });
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || `FG-ADMIN-APIKEYS-CREATE-${response.status}`);
-    }
-    return response.json();
+    const response = await withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/admin/api-keys`, {
+            method: 'POST',
+            body: JSON.stringify({ name })
+        }),
+        (result) => result.json()
+    );
+    return response;
 };
 
 export const deleteAdminApiKey = async (id: string) => {
@@ -2399,14 +2537,11 @@ export const deleteAdminApiKey = async (id: string) => {
         return deleteDemoAdminApiKey(id);
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/api-keys/${id}`, {
-        method: 'DELETE'
-    });
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || `FG-ADMIN-APIKEYS-DELETE-${response.status}`);
-    }
-    return response.json();
+    const response = await withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/admin/api-keys/${id}`, { method: 'DELETE' }),
+        (result) => result.json()
+    );
+    return response;
 };
 
 // --- Dashboard / Agents / Devices ---
@@ -2687,14 +2822,13 @@ export const batchUpdateUsers = async (payload: {
     action: 'suspend' | 'activate' | 'setPlan' | 'setRole';
     value?: string;
 }) => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/batch`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    });
-    const data = await response.json().catch(() => ({})) as any;
-    if (!response.ok) {
-        throw new Error(extractErrorMessage(data, i18n.t('api.batch_update_failed')));
-    }
+    const data = await withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/admin/users/batch`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        }),
+        (result) => result.json()
+    );
     return data;
 };
 
@@ -2716,13 +2850,12 @@ export const fetchUserLoginHistory = async (userId: string, limit: number = 50, 
 
 // Reset user password
 export const resetUserPassword = async (userId: string) => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/reset-password`, {
-        method: 'POST'
-    });
-    const data = await response.json().catch(() => ({})) as any;
-    if (!response.ok) {
-        throw new Error(extractErrorMessage(data, i18n.t('api.failed_to_reset_password')));
-    }
+    const data = await withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/reset-password`, {
+            method: 'POST'
+        }),
+        (result) => result.json()
+    );
     return data;
 };
 
@@ -3154,19 +3287,18 @@ export const sendDeviceCommand = async (deviceId: string, command: string): Prom
         return sendDemoDeviceCommand(deviceId, command);
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/commands/intents`, {
-        method: 'POST',
-        body: JSON.stringify({
-            scope: 'device',
-            targetId: deviceId,
-            commandType: command,
-            payload: {}
-        })
-    });
-    if (!response.ok) {
-        throw new Error(`FG-DEVICE-CMD-${response.status}`);
-    }
-    return response.json();
+    return withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/commands/intents`, {
+            method: 'POST',
+            body: JSON.stringify({
+                scope: 'device',
+                targetId: deviceId,
+                commandType: command,
+                payload: {}
+            })
+        }),
+        (result) => result.json()
+    );
 };
 
 export const fetchHardwareConfirmation = async (sessionId: string) => {
@@ -3256,14 +3388,13 @@ export const createFinalDefensePolicy = async (payload: {
     status?: FinalDefensePolicyRecord['status'];
     policyId?: string;
 }) => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/policies`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    });
-    if (!response.ok) {
-        throw new Error(`FG-FINAL-DEFENSE-POLICY-${response.status}`);
-    }
-    return readJson<{ policy: FinalDefensePolicyRecord }>(response);
+    return withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/final-defense/policies`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        }),
+        (result) => readJson<{ policy: FinalDefensePolicyRecord }>(result)
+    );
 };
 
 export const requestFinalDefenseAction = async (payload: {
@@ -3272,14 +3403,13 @@ export const requestFinalDefenseAction = async (payload: {
     payload?: Record<string, any>;
     challenge?: string;
 }) => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/actions`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    });
-    if (!response.ok) {
-        throw new Error(`FG-FINAL-DEFENSE-ACTION-${response.status}`);
-    }
-    return readJson<ActionResponse>(response);
+    return withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/final-defense/actions`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        }),
+        (result) => readJson<ActionResponse>(result)
+    );
 };
 
 export const requestRootResistantGatewayAction = async (payload: {
@@ -3288,14 +3418,13 @@ export const requestRootResistantGatewayAction = async (payload: {
     payload?: Record<string, any>;
     challenge?: string;
 }) => {
-    const response = await fetchWithCredentials(`${API_BASE_URL}/final-defense/gateways/actions`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    });
-    if (!response.ok) {
-        throw new Error(`FG-ROOT-GATEWAY-ACTION-${response.status}`);
-    }
-    return readJson<ActionResponse>(response);
+    return withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/final-defense/gateways/actions`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        }),
+        (result) => readJson<ActionResponse>(result)
+    );
 };
 
 export const enrollHardwareGate = async (payload: {
@@ -3388,12 +3517,14 @@ export const updateAdminUserRole = async (userId: string, role: string) => {
         return updateDemoAdminUser(userId, { role: role as 'admin' | 'tenant' | 'viewer' });
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/role`, {
-        method: 'PUT',
-        body: JSON.stringify({ role })
-    });
-    if (!response.ok) throw new Error(i18n.t('api.failed_to_update_role'));
-    return response.json();
+    const data = await withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/role`, {
+            method: 'PUT',
+            body: JSON.stringify({ role })
+        }),
+        (result) => result.json()
+    );
+    return data;
 };
 
 export const updateAdminUserStatus = async (userId: string, status: string) => {
@@ -3401,10 +3532,12 @@ export const updateAdminUserStatus = async (userId: string, status: string) => {
         return updateDemoAdminUser(userId, { status: status as 'active' | 'suspended' });
     }
 
-    const response = await fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/status`, {
-        method: 'PUT',
-        body: JSON.stringify({ status })
-    });
-    if (!response.ok) throw new Error(i18n.t('api.failed_to_update_status'));
-    return response.json();
+    const data = await withStepUpRetry(
+        () => fetchWithCredentials(`${API_BASE_URL}/admin/users/${userId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status })
+        }),
+        (result) => result.json()
+    );
+    return data;
 };

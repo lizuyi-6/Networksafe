@@ -35,7 +35,7 @@ class GenerationResult:
 
 
 class Generator:
-    def __init__(self, provider: LLMProvider | None = None, max_attempts: int = 2):
+    def __init__(self, provider: LLMProvider | None = None, max_attempts: int = 3):
         self.provider = provider or LLMProvider(load_provider_config(config.ROLE_GENERATOR))
         self.max_attempts = max_attempts
         self._prompt = load_prompt(_PROMPT_NAME)
@@ -43,9 +43,10 @@ class Generator:
     async def generate(self, spec: GenerationSpec) -> GenerationResult:
         spec_dict = spec.to_dict()
         user = json.dumps(spec_dict, ensure_ascii=False)
-        # thinking is disabled (provider config) -> no reasoning headroom needed; budget for
-        # the realized request + output JSON. Long-context samples still get headroom.
-        max_tok = min(6000, max(2048, int(spec.targetLengthTokens) + 1500))
+        # reasoning_effort=high (StepFun step-3.7-flash, mandatory 2026-08-20): reasoning folds
+        # into completion_tokens (measured ~4.4k reasoning + ~1-3k content on the realizer prompt).
+        # Budget = reasoning headroom + realized request + output JSON; long-context samples scale.
+        max_tok = min(16384, max(12288, int(spec.targetLengthTokens) + 8192))
 
         last_candidate: dict | None = None
         last_check = CheckResult.fail("not_run")
@@ -54,9 +55,25 @@ class Generator:
 
         for attempt in range(1, self.max_attempts + 1):
             temp = 0.2 + 0.15 * (attempt - 1)
+            # Corrective retry (2026-08-20, step-3.7-flash switch): a blind retry repeats the same
+            # systematic violation (observed: forbidden_target:120.0.0.0 on 4/5 smoke specs at both
+            # low and high effort). Feed the machine-readable det_check reasons back so the model
+            # can fix exactly those violations. Ground truth is untouched (labels stay program-owned);
+            # this only improves realization fidelity. Attempt count is recorded in the audit log.
+            user_msg = user
+            if (attempt > 1 and last_check is not None and not last_check.ok
+                    and last_check.reasons and last_check.reasons != ["not_run"]):
+                user_msg = user + (
+                    "\n\nREGENERATION REQUIRED. Your previous attempt failed deterministic "
+                    "validation with: " + "; ".join(last_check.reasons) + ". Fix exactly these "
+                    "violations and nothing else. Reminder: 'forbidden_target' means a non-allowlisted "
+                    "IPv4/host appeared in the request - use ONLY the allowlisted ranges "
+                    "(192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24, RFC1918, 169.254.169.254) and "
+                    "copy spec.targetHost verbatim."
+                )
             try:
                 result = await self.provider.chat(
-                    system=self._prompt, user=user,
+                    system=self._prompt, user=user_msg,
                     max_tokens=max_tok, temperature=temp, response_format_json=True,
                 )
             except Exception as e:

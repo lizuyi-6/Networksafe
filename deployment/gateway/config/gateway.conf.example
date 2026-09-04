@@ -9,5 +9,11 @@
   "heartbeatStaleMs": 45000,
   "releaseTtlMs": 30000,
   "statusReportIntervalMs": 10000,
+  "helperKeyId": "gw-CHANGEME",
+  "helperSecret": "CHANGE_ME_per_gateway_secret_min_32_chars",
+  "policyDigest": "CHANGE_ME_64_HEX_CHARS_final_defense_policy_sha256_digest",
+  "serverPortLink": false,
+  "lanPortLink": false,
+  "mgmtPath": "dedicated_mgmt",
   "serialChannelKeyHex": "CHANGE_ME_64_HEX_CHARS_M1_M2_CHANNEL_MAC_KEY"
 }

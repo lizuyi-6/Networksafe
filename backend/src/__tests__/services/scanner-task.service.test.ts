@@ -473,4 +473,56 @@ describe('ScannerTaskService', () => {
       expect(task.enginePolicy).toBe('opt_then_nuclei');
     });
   });
+
+  describe('metadata target guard (N5-6)', () => {
+    it('rejects cloud metadata IP literals in targets.ips', async () => {
+      await expect(
+        scannerTaskService.createTask({
+          tenantId: 'tenant-metadata-guard',
+          createdBy: 'user-001',
+          targets: { urls: [], ips: ['169.254.169.254'] }
+        })
+      ).rejects.toThrow('backend.scan_target_metadata_blocked');
+    });
+
+    it('rejects CIDR ranges containing the metadata address', async () => {
+      await expect(
+        scannerTaskService.createTask({
+          tenantId: 'tenant-metadata-guard',
+          createdBy: 'user-001',
+          targets: { urls: [], cidrs: ['169.254.169.254/32'] }
+        })
+      ).rejects.toThrow('backend.scan_target_metadata_blocked');
+    });
+
+    it('rejects metadata URLs in targets.urls', async () => {
+      await expect(
+        scannerTaskService.createTask({
+          tenantId: 'tenant-metadata-guard',
+          createdBy: 'user-001',
+          targets: { urls: ['http://169.254.169.254/latest/meta-data'] }
+        })
+      ).rejects.toThrow('backend.scan_target_metadata_blocked');
+    });
+
+    it('rejects metadata domains in targets.domains', async () => {
+      await expect(
+        scannerTaskService.createTask({
+          tenantId: 'tenant-metadata-guard',
+          createdBy: 'user-001',
+          targets: { urls: [], domains: ['metadata.google.internal'] }
+        })
+      ).rejects.toThrow('backend.scan_target_metadata_blocked');
+    });
+
+    it('still accepts private RFC1918 scan targets (product feature)', async () => {
+      const task = await scannerTaskService.createTask({
+        tenantId: 'tenant-private-scan',
+        createdBy: 'user-001',
+        targets: { urls: [], ips: ['10.10.10.10'] }
+      });
+      expect(task.id).toBeDefined();
+      expect(task.status).toBe('pending');
+    });
+  });
 });

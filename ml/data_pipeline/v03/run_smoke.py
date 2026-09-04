@@ -20,14 +20,31 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+
+def _load_env_local() -> None:
+    env_file = Path(__file__).resolve().parent / ".env.local"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip())
+
+
+# MUST load .env.local BEFORE importing config: config.py reads ARK_GENERATOR_CONCURRENCY etc.
+# at module-import time. Same single-source-of-truth contract as run_full.py.
+_load_env_local()
+
 from ml.data_pipeline.v03.orchestrator import Orchestrator
 from ml.data_pipeline.v03.spec_planner import SpecPlanner
 from ml.data_pipeline.v03 import config
 
 
 async def main() -> int:
-    if not os.environ.get("ARK_API_KEY"):
-        print("ERROR: ARK_API_KEY not set in environment (mission §43). Set it before running.", file=sys.stderr)
+    if not (os.environ.get("ARK_API_KEY") or os.environ.get("STEPFUN_API_KEY")):
+        print("ERROR: ARK_API_KEY/STEPFUN_API_KEY not set in environment (mission §43). Set it before running.", file=sys.stderr)
         return 2
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 5
     specs = list(SpecPlanner())[:n]

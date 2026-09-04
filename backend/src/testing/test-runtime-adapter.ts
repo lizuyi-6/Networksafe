@@ -90,7 +90,9 @@ export function wsTestDashboardUserAdapter(auth: Record<string, any>) {
     userId: auth.userId || 'test-user',
     email: 'test@AetherGuard.local',
     username: 'Test User',
-    role: 'admin' as const,
+    // Tests may inject a lower-privileged role (e.g. 'viewer') to exercise
+    // per-message RBAC denials; defaults to the historical 'admin'.
+    role: (auth.role || 'admin') as 'admin',
     tenantId: auth.tenantId || 'test-tenant'
   };
 }

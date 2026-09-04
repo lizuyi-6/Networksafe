@@ -116,6 +116,15 @@ services:
       - ENABLE_DEV_LOGIN_PRESETS=${ENABLE_DEV_LOGIN_PRESETS:-false}
       - ENABLE_RUNTIME_EMULATOR=${ENABLE_RUNTIME_EMULATOR:-false}
       - SQLITE_FALLBACK_ENABLED=${SQLITE_FALLBACK_ENABLED:-false}
+      # Step-up Passkey is opt-in: set STEPUP_ENFORCEMENT=on only after every
+      # privileged operator has enrolled a credential in Settings. High-risk
+      # requests remain on the legacy path while this is false.
+      - STEPUP_ENFORCEMENT=${STEPUP_ENFORCEMENT:-off}
+      - WEBAUTHN_RP_ID=${WEBAUTHN_RP_ID:-}
+      - WEBAUTHN_EXPECTED_ORIGIN=${WEBAUTHN_EXPECTED_ORIGIN:-}
+      - WEBAUTHN_RP_NAME=${WEBAUTHN_RP_NAME:-AetherGuard}
+      - STEPUP_TOKEN_TTL_SECONDS=${STEPUP_TOKEN_TTL_SECONDS:-300}
+      - STEPUP_CHALLENGE_TTL_SECONDS=${STEPUP_CHALLENGE_TTL_SECONDS:-120}
       - DATABASE_URL=${DATABASE_URL:-}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       - SHADOW_DATABASE_URL=${SHADOW_DATABASE_URL:?SHADOW_DATABASE_URL is required}

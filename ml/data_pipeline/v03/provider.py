@@ -132,7 +132,10 @@ class ProviderConfig:
     model: str
     timeout: float = 90.0
     max_retries: int = 6
-    thinking: str = "disabled"  # "disabled" (reasoning off, fast/cheap) | "enabled" | "auto"
+    thinking: str = "disabled"  # "disabled" (reasoning off, fast/cheap) | "enabled" | "auto" | "omit"
+    # OpenAI-protocol reasoning intensity (StepFun step-3.7-flash: low|medium|high).
+    # "" = do not send. When set, takes precedence over the thinking switch.
+    reasoning_effort: str = ""
 
 
 def _env(name: str, default: str = "") -> str:
@@ -152,10 +155,14 @@ def load_provider_config(role: str) -> ProviderConfig:
     "disabled" (reasoning_content omitted, content populates with ~100-500 tokens). Override
     per role via ARK_THINKING_<ROLE> or globally via ARK_THINKING.
     """
-    api_key = os.environ.get("ARK_API_KEY", "")
+    # Key fallback chain (mission §43: keys only from env, never config files). ARK_API_KEY is
+    # canonical; STEPFUN_API_KEY is the local StepFun user-scope env var used when the provider is
+    # switched to api.stepfun.com (2026-08-20 switch to step-3.7-flash).
+    api_key = os.environ.get("ARK_API_KEY", "") or os.environ.get("STEPFUN_API_KEY", "")
     if not api_key:
         raise RuntimeError(
-            "ARK_API_KEY env var not set. Provider unavailable (mission §43: API keys only from env). "
+            "ARK_API_KEY (or STEPFUN_API_KEY) env var not set. Provider unavailable "
+            "(mission §43: API keys only from env). "
             "Set it in your shell before launching the orchestrator."
         )
     base_url = _env("ARK_BASE_URL", DEFAULT_ARK_BASE_URL)
@@ -164,11 +171,17 @@ def load_provider_config(role: str) -> ProviderConfig:
     timeout = float(_env("ARK_TIMEOUT", "90"))
     max_retries = int(_env("ARK_MAX_RETRIES", "6"))
     thinking = _env(f"ARK_THINKING_{role.upper()}", _env("ARK_THINKING", "disabled"))
-    if thinking not in ("disabled", "enabled", "auto"):
+    if thinking not in ("disabled", "enabled", "auto", "omit"):
         thinking = "disabled"
+    # "omit": send NO thinking field at all. Required for endpoints that reject unknown
+    # extra_body params (StepFun /v1); also the right default for non-reasoning flash models.
+    reasoning_effort = _env(f"ARK_REASONING_EFFORT_{role.upper()}", _env("ARK_REASONING_EFFORT", ""))
+    if reasoning_effort not in ("", "low", "medium", "high"):
+        reasoning_effort = ""
     return ProviderConfig(
         role=role, base_url=base_url, api_key=api_key, model=model,
         timeout=timeout, max_retries=max_retries, thinking=thinking,
+        reasoning_effort=reasoning_effort,
     )
 
 
@@ -230,10 +243,18 @@ class LLMProvider:
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
+        }
+        extra: dict[str, Any] = {}
+        if self.config.reasoning_effort:
+            # OpenAI-protocol three-tier reasoning intensity (StepFun step-3.7-flash).
+            # Mission 2026-08-20: highest tier "high" is mandatory for this pipeline.
+            extra["reasoning_effort"] = self.config.reasoning_effort
+        elif self.config.thinking != "omit":
             # glm-5.2 reasoning control (mission §34/scale). "disabled" turns off reasoning_content
             # so content populates within a small token budget (verified: reasoning_len=0, content ok).
-            "extra_body": {"thinking": {"type": self.config.thinking}},
-        }
+            extra["thinking"] = {"type": self.config.thinking}
+        if extra:
+            kwargs["extra_body"] = extra
         if response_format_json:
             # OpenAI-compatible JSON mode. Ark may or may not honor it; caller parses defensively.
             kwargs["response_format"] = {"type": "json_object"}

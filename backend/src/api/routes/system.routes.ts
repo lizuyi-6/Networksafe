@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate, AuthenticatedRequest, optionalAuth, requireRole } from '../../middleware/auth.middleware';
+import { requireStepUpScope } from '../../middleware/step-up.middleware';
 import { getAppMode, setAppMode, isDemoMode, isAttackSimulatorEnabled, AppMode } from '../../config/app-mode';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import logger from '../../utils/logger';
@@ -35,7 +36,7 @@ router.get('/mode', optionalAuth, (req: AuthenticatedRequest, res) => {
   return sendSuccess(res, payload, { legacy: payload });
 });
 
-router.post('/mode', authenticate, requireRole('admin'), async (req: AuthenticatedRequest, res) => {
+router.post('/mode', authenticate, requireRole('admin'), requireStepUpScope({ action: 'system.mode_change' }), async (req: AuthenticatedRequest, res) => {
   const { appMode, seedDemoData = false, clearExisting = false } = req.body || {};
   const targetMode = appMode as AppMode;
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate, AuthenticatedRequest, requirePermission, requireRole } from '../../middleware/auth.middleware';
+import { requireStepUpScope } from '../../middleware/step-up.middleware';
 import { sendError, sendSuccess } from '../../core/http/api-response';
 import { PLATFORM_TENANT_ID, resolveRequestTenantContext } from '../../core/tenant/tenant-context';
 import { authenticateHelperRequest } from '../../middleware/helper-auth.middleware';
@@ -16,7 +17,7 @@ function tenantOf(req: AuthenticatedRequest): string {
   })?.tenantId || req.user?.tenantId || PLATFORM_TENANT_ID;
 }
 
-router.post('/commands/intents', authenticate, requirePermission('deployment.run.create'), async (req: AuthenticatedRequest, res) => {
+router.post('/commands/intents', authenticate, requirePermission('deployment.run.create'), requireStepUpScope({ action: 'hardware.intent_create' }), async (req: AuthenticatedRequest, res) => {
   try {
     const scope = String(req.body?.scope || '').trim();
     const targetId = String(req.body?.targetId || '').trim();

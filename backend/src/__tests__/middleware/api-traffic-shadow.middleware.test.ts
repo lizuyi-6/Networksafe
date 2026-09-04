@@ -262,11 +262,13 @@ describe('apiTrafficShadowMiddleware', () => {
     expect(detectionPipelineService.evaluateRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         requestId: 'form-encoded-1',
-        body: 'username=%27+or+1%3D1&password=test',
-        normalizedBody: "username=' or 1=1&password=test",
-        parsedBody: "username=' or 1=1\n' or 1=1\npassword=test\ntest"
+        body: 'username=%27+or+1%3D1&password=***REDACTED***',
+        normalizedBody: "username=' or 1=1&password=***REDACTED***",
+        parsedBody: expect.stringContaining('password=***REDACTED***')
       })
     );
+    const evaluated = (detectionPipelineService.evaluateRequest as jest.Mock).mock.calls[0][0];
+    expect(evaluated.body).not.toContain('password=test');
   });
 
   it('skips requests when sample rate is zero', async () => {

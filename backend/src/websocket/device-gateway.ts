@@ -42,7 +42,12 @@ import {
     getCodebook,
     getDeviceById,
     addDeviceEvent,
+    applyDeviceCommandAck,
 } from '../services/device-registry.service';
+import {
+    verifyInboundEnvelope,
+    INBOUND_ENVELOPE_TEST_SECRET,
+} from '../security/inbound-envelope';
 import type {
     DeviceClientToServerEvents,
     DeviceServerToClientEvents,
@@ -52,6 +57,7 @@ import {
     validateDeviceRegisterPayload,
 } from './socket-payload-validator';
 import { allowGatewayDestructiveCommands } from '../config/enterprise-runtime';
+import { isTestRuntime } from '../testing/test-runtime-adapter';
 import { requiresPhysicalConfirmation } from '../security/command-risk-policy';
 import { normalizeInterlockState } from '../security/final-defense-policy';
 
@@ -273,6 +279,14 @@ export class DeviceGateway {
                 this.handlePhysicalConfirmationAck(socket, data);
             });
 
+            // SECURITY (audit 2026-08, AUD-07-2): signed device command acks.
+            // A command only reaches a terminal state through this event —
+            // HMAC-verified and socket-ownership-checked.
+            socket.on('device_command_ack', async (data: any) => {
+                if (!(await checkDeviceRateLimit(socket.deviceId || socket.id, socket, socket.tenantContext?.tenantId || PLATFORM_TENANT_ID))) return;
+                this.handleDeviceCommandAck(socket, data);
+            });
+
             socket.on('codebook_sync', () => {
                 this.handleCodebookSync(socket);
             });
@@ -284,7 +298,6 @@ export class DeviceGateway {
     }
 
     private async handleRegister(socket: DeviceSocket, data: any) {
-        const tenantContext = resolveDeviceTenantContext();
         const payload = validateDeviceRegisterPayload(data);
         if (!payload) {
             socket.emit('register_error', { error: 'backend.invalid_device_registration_payload', reason: 'invalid_payload' });
@@ -310,6 +323,21 @@ export class DeviceGateway {
             external_power_present,
             feedback_ok,
         } = payload;
+
+        // N3-2 (audit 2026-08): tenant attribution for a KNOWN device comes
+        // from its provisioned records — hardware gate first (DB anchor),
+        // then the registry row. The platform tenant is only a first-contact
+        // fallback for a completely unknown device; a device already bound to
+        // a tenant can never silently drop back to platform scope by simply
+        // re-registering.
+        const existingDeviceForTenant = getDeviceById(device_id);
+        const existingGateForTenant = hardwareAuthorizationService.getGate(device_id);
+        const provisionedTenantId = existingGateForTenant?.tenantId || existingDeviceForTenant?.tenantId;
+        const tenantContext = resolveDeviceTenantContext(
+            provisionedTenantId && provisionedTenantId !== PLATFORM_TENANT_ID
+                ? provisionedTenantId
+                : undefined
+        );
 
         if (!(await checkSocketRateLimit(socket, tenantContext.tenantId))) {
             socket.emit('register_error', { error: 'backend.rate_limit_exceeded', reason: 'rate_limit_exceeded' });
@@ -359,7 +387,7 @@ export class DeviceGateway {
         // the in-memory device registry. Once a key is provisioned for a
         // device id, any register presenting a different key (or omitting
         // the key) is refused BEFORE the socket can take over the channel.
-        const existingDevice = getDeviceById(device_id);
+        const existingDevice = existingDeviceForTenant;
         const existingDeviceKey = String(existingDevice?.physicalAuth?.publicKeyPem || '').trim();
         const presentedKey = String(public_key_pem || '').trim();
         if (existingDeviceKey && presentedKey !== existingDeviceKey) {
@@ -369,7 +397,7 @@ export class DeviceGateway {
             return;
         }
         if (public_key_pem) {
-            const existingGate = hardwareAuthorizationService.getGate(device_id);
+            const existingGate = existingGateForTenant;
             if (existingGate?.publicKeyPem && String(existingGate.publicKeyPem).trim() !== presentedKey) {
                 logger.warn('[DeviceGateway] Rejecting device register: hardware gate public key already provisioned and differs', { device_id });
                 socket.emit('register_error', { error: 'backend.gate_public_key_already_provisioned', reason: 'gate_key_immutable' });
@@ -380,7 +408,42 @@ export class DeviceGateway {
 
         socket.deviceId = device_id;
         socket.tenantContext = tenantContext;
+
+        // SECURITY (audit 2026-08, batch 3): connection generations. A new
+        // authenticated registration for an already-connected device
+        // SUPERSEDES the old socket. The registry is swapped to the new
+        // socket FIRST (so the old socket's disconnect handler observes
+        // stale ownership and leaves the entry/state alone), then the
+        // superseded socket is force-disconnected with an audit trail.
+        const existingSocket = this.deviceSockets.get(device_id);
+        const superseded = existingSocket && existingSocket.id !== socket.id ? existingSocket : undefined;
+
         this.deviceSockets.set(device_id, socket);
+
+        if (superseded) {
+            logger.warn('[DeviceGateway] Device connection superseded by a newer authenticated connection', {
+                device_id,
+                oldSocketId: superseded.id,
+                newSocketId: socket.id,
+            });
+            void Promise.resolve()
+                .then(() => auditLogger.log({
+                    eventType: 'device_connection_superseded',
+                    category: 'agent',
+                    severity: 'warning',
+                    actor: { type: 'agent', id: device_id },
+                    action: 'connect',
+                    details: { oldSocketId: superseded.id, newSocketId: socket.id },
+                    status: 'success',
+                }))
+                .catch((auditError: any) => {
+                    logger.error('[DeviceGateway] Audit log failed on device supersede (non-blocking)', {
+                        error: auditError?.message,
+                        device_id,
+                    });
+                });
+            superseded.disconnect(true);
+        }
 
         if (public_key_pem) {
             socket.hardwareGateId = device_id;
@@ -521,7 +584,10 @@ export class DeviceGateway {
             return;
         }
 
-        const payload = data?.payload ?? data ?? {};
+        // AUD-03-4: envelope-verified HIGH event.
+        const verified = await this.enforceDeviceInboundEnvelope(socket, 'data', data);
+        if (!verified) return;
+        const payload = verified.payload ?? verified ?? {};
         const timestamp = data?.timestamp;
 
         let decodedPayload: any = payload;
@@ -586,7 +652,10 @@ export class DeviceGateway {
             return;
         }
 
-        const { alert_type, message, timestamp } = data;
+        // AUD-03-4: envelope-verified HIGH event.
+        const verified = await this.enforceDeviceInboundEnvelope(socket, 'alert', data);
+        if (!verified) return;
+        const { alert_type, message, timestamp } = verified;
 
         logger.warn('[DeviceGateway] Alert from device', {
             deviceId: socket.deviceId,
@@ -618,7 +687,10 @@ export class DeviceGateway {
         if (!socket.deviceId) return;
         const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
 
-        const { message, timestamp } = data;
+        // AUD-03-4: envelope-verified HIGH event.
+        const verified = await this.enforceDeviceInboundEnvelope(socket, 'unknown_error', data);
+        if (!verified) return;
+        const { message, timestamp } = verified;
 
         logger.error('[DeviceGateway] Unknown error from device', {
             deviceId: socket.deviceId,
@@ -647,11 +719,14 @@ export class DeviceGateway {
     private async handleOtaStatus(socket: DeviceSocket, data: any) {
         if (!socket.deviceId) return;
         const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
+        // AUD-03-4: envelope-verified HIGH event.
+        const verified = await this.enforceDeviceInboundEnvelope(socket, 'ota_status', data);
+        if (!verified) return;
         addDeviceEvent(socket.deviceId, 'command', {
             action: 'ota_status',
-            ...data
+            ...verified
         });
-        await deviceControlService.handleOtaStatus(socket.deviceId, data || {});
+        await deviceControlService.handleOtaStatus(socket.deviceId, verified || {});
         this.emitToDashboard('device:ota_status', {
             deviceId: socket.deviceId,
             ...data,
@@ -713,13 +788,139 @@ export class DeviceGateway {
         });
     }
 
+    /**
+     * SECURITY (audit 2026-08, AUD-03-4): inbound envelope enforcement for
+     * HIGH-severity device events. Wire shape: `{ envelope: {...}, ...payload }`.
+     * Returns the verified payload body, or null after emit + rejection audit.
+     */
+    private async enforceDeviceInboundEnvelope(
+        socket: DeviceSocket,
+        eventType: string,
+        data: any,
+    ): Promise<Record<string, any> | null> {
+        const deviceId = socket.deviceId;
+        if (!deviceId) return null;
+        if (!data || typeof data !== 'object' || !data.envelope) {
+            void Promise.resolve().then(() => auditLogger.log({
+                eventType: 'inbound_envelope_rejected',
+                category: 'agent',
+                severity: 'warning',
+                actor: { type: 'agent', id: deviceId },
+                action: eventType,
+                details: { reason: 'envelope_missing', eventType },
+                status: 'failure',
+            })).catch(() => undefined);
+            socket.emit('error', { error: 'backend.inbound_envelope_required', reason: 'envelope_missing' });
+            return null;
+        }
+        const { envelope, ...body } = data;
+        const secret = isTestRuntime() ? INBOUND_ENVELOPE_TEST_SECRET : this.getDeviceSecretKey(deviceId);
+        const verification = await verifyInboundEnvelope(body, envelope, {
+            secret,
+            expectedEventType: eventType,
+            expectedSessionId: socket.id,
+        });
+        if (!verification.ok) {
+            if (process.env.NODE_ENV === 'test') {
+                // eslint-disable-next-line no-console
+                console.error('DBG envelope reject:', verification.reason, eventType, socket.id);
+            }
+            void Promise.resolve().then(() => auditLogger.log({
+                eventType: 'inbound_envelope_rejected',
+                category: 'agent',
+                severity: verification.reason === 'nonce_replay' ? 'critical' : 'warning',
+                actor: { type: 'agent', id: deviceId },
+                action: eventType,
+                details: { reason: verification.reason, eventType },
+                status: 'failure',
+            })).catch(() => undefined);
+            socket.emit('error', { error: 'backend.inbound_envelope_rejected', reason: verification.reason });
+            return null;
+        }
+        return body;
+    }
+
     private handleCodebookSync(socket: DeviceSocket) {
         socket.emit('codebook_sync', { codebook: getCodebook() });
         logger.info('[DeviceGateway] Codebook synced', { deviceId: socket.deviceId });
     }
 
+    /**
+     * SECURITY (audit 2026-08, AUD-07-2): intake for signed device command
+     * acks. Fails closed on: unregistered socket, device/record mismatch,
+     * missing signature fields, or an invalid HMAC — and every rejection is
+     * audited so forged ack attempts are tamper-evident.
+     */
+    private handleDeviceCommandAck(socket: DeviceSocket, data: any): void {
+        const deviceId = socket.deviceId;
+        if (!deviceId) {
+            socket.emit('error', { error: 'backend.device_not_registered', reason: 'not_registered' });
+            return;
+        }
+        const commandId = String(data?.commandId || '').trim();
+        const status = String(data?.status || '').trim();
+        const timestamp = Number(data?.timestamp);
+        const nonce = String(data?.nonce || '').trim();
+        const signature = String(data?.signature || '').trim();
+
+        if (!commandId || (status !== 'completed' && status !== 'failed')
+            || !Number.isFinite(timestamp) || !nonce || !signature) {
+            socket.emit('error', { error: 'backend.invalid_device_command_ack', reason: 'invalid_payload' });
+            return;
+        }
+
+        const result = applyDeviceCommandAck({
+            deviceId,
+            commandId,
+            status,
+            timestamp,
+            nonce,
+            signature,
+            message: typeof data?.message === 'string' ? data.message.slice(0, 200) : undefined
+        });
+
+        if (!result.applied) {
+            logger.warn('[DeviceGateway] Device command ack rejected', {
+                deviceId,
+                commandId: commandId.slice(0, 8),
+                reason: result.reason,
+            });
+            void Promise.resolve()
+                .then(() => auditLogger.log({
+                    eventType: 'device_command_ack_rejected',
+                    category: 'command',
+                    severity: result.reason === 'invalid_ack_signature' ? 'warning' : 'info',
+                    actor: { type: 'agent', id: deviceId },
+                    action: 'device_command_ack',
+                    details: { commandId: commandId.slice(0, 8), reason: result.reason },
+                    status: 'failure',
+                }))
+                .catch(() => undefined);
+            socket.emit('error', { error: 'backend.device_command_ack_rejected', reason: result.reason });
+            return;
+        }
+
+        logger.info('[DeviceGateway] Device command ack applied', {
+            deviceId,
+            commandId: commandId.slice(0, 8),
+            status,
+        });
+    }
+
     private async handleDisconnect(socket: DeviceSocket, reason: string) {
         if (socket.deviceId) {
+            // SECURITY (audit 2026-08, batch 3): only the socket that still
+            // OWNS the registry entry may clean it up. A stale socket losing
+            // a supersede race must not mark a live device/gate offline.
+            if (this.deviceSockets.get(socket.deviceId) !== socket) {
+                logger.info('[DeviceGateway] Stale device socket disconnected after supersede; state left intact', {
+                    deviceId: socket.deviceId,
+                    socketId: socket.id,
+                    currentSocketId: this.deviceSockets.get(socket.deviceId)?.id,
+                });
+                return;
+            }
+
             const tenantId = socket.tenantContext?.tenantId || PLATFORM_TENANT_ID;
             this.deviceSockets.delete(socket.deviceId);
             setDeviceOffline(socket.deviceId);

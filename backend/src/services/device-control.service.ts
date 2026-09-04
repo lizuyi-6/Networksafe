@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { getDatabase } from '../config/database';
 import { artifactStoreService } from './artifact-store.service';
 import auditLogger from '../security/audit-logger.service';
@@ -13,6 +13,8 @@ export interface DeviceFirmwareRecord {
   fileName: string;
   version: string;
   channel: string;
+  /** SECURITY (audit 2026-08, AUD-07-1): content digest of the artifact. */
+  sha256: string;
   artifactRef: string;
   artifactLocation: string;
   sizeBytes: number;
@@ -93,6 +95,9 @@ class DeviceControlService {
         file_name TEXT NOT NULL,
         version TEXT NOT NULL,
         channel TEXT NOT NULL,
+        -- SECURITY (audit 2026-08, AUD-07-1): content digest (content-addressed
+        -- artifact; same digest = same bytes, a version's bytes are immutable).
+        sha256 TEXT,
         artifact_ref TEXT NOT NULL,
         artifact_location TEXT NOT NULL,
         size_bytes INTEGER NOT NULL DEFAULT 0,
@@ -147,6 +152,15 @@ class DeviceControlService {
       }
     }
 
+    // AUD-07-1 soft-migration: content digest column on legacy firmware rows.
+    try {
+      getDatabase().exec('ALTER TABLE device_firmware ADD COLUMN sha256 TEXT');
+    } catch (e: any) {
+      if (!(e.message && e.message.includes('duplicate column name'))) {
+        logger.warn('device_firmware sha256 migration skipped', { error: e.message });
+      }
+    }
+
     this.schemaReady = true;
   }
 
@@ -178,12 +192,49 @@ class DeviceControlService {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     const buffer = Buffer.from(input.contentBase64, 'base64');
-    const artifact = await artifactStoreService.writeBinary(
-      'devices/firmware',
-      `${input.channel}/${input.version}-${input.fileName}`,
-      buffer,
-      'application/octet-stream'
-    );
+    // SECURITY (audit 2026-08, AUD-07-1): firmware artifacts are
+    // content-addressed. The stored object lives at a digest location, the
+    // same logical version can never swap its bytes, and an identical
+    // upload is idempotent.
+    const sha256 = createHash('sha256').update(buffer).digest('hex');
+
+    const sameVersion = getDatabase().prepare(`
+      SELECT id, sha256
+      FROM device_firmware
+      WHERE tenant_id = ? AND channel = ? AND version = ?
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).get(input.tenantId, input.channel, input.version) as { id?: string; sha256?: string | null } | undefined;
+    if (sameVersion?.sha256 && sameVersion.sha256 !== sha256) {
+      // Same logical version with different bytes = artifact replacement.
+      // That is exactly the supply-chain swap the digest store exists to
+      // prevent.
+      throw new Error('backend.firmware_version_immutable');
+    }
+    const identical = getDatabase().prepare(`
+      SELECT id, artifact_ref, artifact_location FROM device_firmware WHERE tenant_id = ? AND sha256 = ? LIMIT 1
+    `).get(input.tenantId, sha256) as { id?: string; artifact_ref?: string; artifact_location?: string } | undefined;
+
+    // Identical content already stored for this tenant: REUSE the existing
+    // content-addressed artifact (no duplicate bytes) but still record the
+    // new logical version's metadata row — every (tenant, channel, version)
+    // must be anchored to its digest, otherwise a later upload could swap
+    // the bytes of an unanchored version.
+    let artifactRef: string;
+    let artifactLocation: string;
+    if (identical?.artifact_ref && identical?.artifact_location) {
+      artifactRef = identical.artifact_ref;
+      artifactLocation = identical.artifact_location;
+    } else {
+      const artifact = await artifactStoreService.writeBinary(
+        'devices/firmware/sha256',
+        sha256,
+        buffer,
+        'application/octet-stream'
+      );
+      artifactRef = artifact.artifactRef;
+      artifactLocation = artifact.location;
+    }
 
     const row = {
       id,
@@ -191,8 +242,9 @@ class DeviceControlService {
       file_name: input.fileName,
       version: input.version,
       channel: input.channel,
-      artifact_ref: artifact.artifactRef,
-      artifact_location: artifact.location,
+      sha256,
+      artifact_ref: artifactRef,
+      artifact_location: artifactLocation,
       size_bytes: buffer.length,
       notes: input.notes || null,
       created_by: input.actorEmail || input.actorId,
@@ -201,14 +253,15 @@ class DeviceControlService {
 
     getDatabase().prepare(`
       INSERT INTO device_firmware (
-        id, tenant_id, file_name, version, channel, artifact_ref, artifact_location, size_bytes, notes, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, tenant_id, file_name, version, channel, sha256, artifact_ref, artifact_location, size_bytes, notes, created_by, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       row.id,
       row.tenant_id,
       row.file_name,
       row.version,
       row.channel,
+      row.sha256,
       row.artifact_ref,
       row.artifact_location,
       row.size_bytes,
@@ -229,8 +282,9 @@ class DeviceControlService {
         fileName: input.fileName,
         version: input.version,
         channel: input.channel,
+        sha256,
         sizeBytes: buffer.length,
-        artifactRef: artifact.artifactRef
+        artifactRef
       },
       status: 'success'
     });
@@ -251,6 +305,11 @@ class DeviceControlService {
     if (!firmware) {
       throw new Error('backend.firmware_not_found');
     }
+    // AUD-07-1: OTA is tenant-scoped — the firmware's tenant must match the
+    // actor tenant, otherwise a tenant could flash another tenant's artifact.
+    if (firmware.tenantId !== input.tenantId) {
+      throw new Error('backend.firmware_tenant_mismatch');
+    }
     if (!this.gatewayEmitter) {
       throw new Error('backend.device_gateway_unavailable');
     }
@@ -262,6 +321,7 @@ class DeviceControlService {
       firmwareId: firmware.id,
       version: firmware.version,
       channel: firmware.channel,
+      sha256: firmware.sha256,
       artifactRef: firmware.artifactRef,
       artifactLocation: firmware.artifactLocation,
       fileName: firmware.fileName
@@ -713,6 +773,7 @@ class DeviceControlService {
       fileName: row.file_name,
       version: row.version,
       channel: row.channel,
+      sha256: row.sha256 || '',
       artifactRef: row.artifact_ref,
       artifactLocation: row.artifact_location,
       sizeBytes: Number(row.size_bytes || 0),

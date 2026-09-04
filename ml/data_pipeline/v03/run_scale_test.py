@@ -17,11 +17,6 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from ml.data_pipeline.v03.orchestrator import Orchestrator
-from ml.data_pipeline.v03.spec_planner import SpecPlanner
-from ml.data_pipeline.v03.scheduler import DeficitScheduler
-from ml.data_pipeline.v03 import config
-
 
 def _load_env_local() -> None:
     env_file = Path(__file__).resolve().parent / ".env.local"
@@ -35,10 +30,20 @@ def _load_env_local() -> None:
         os.environ.setdefault(k.strip(), v.strip())
 
 
+# MUST load .env.local BEFORE importing config: config.py reads ARK_GENERATOR_CONCURRENCY etc.
+# at module-import time. Same single-source-of-truth contract as run_full.py.
+_load_env_local()
+
+from ml.data_pipeline.v03.orchestrator import Orchestrator
+from ml.data_pipeline.v03.spec_planner import SpecPlanner
+from ml.data_pipeline.v03.scheduler import DeficitScheduler
+from ml.data_pipeline.v03 import config
+
+
 async def main() -> int:
     _load_env_local()
-    if not os.environ.get("ARK_API_KEY"):
-        print("ERROR: ARK_API_KEY not set", file=sys.stderr); return 2
+    if not (os.environ.get("ARK_API_KEY") or os.environ.get("STEPFUN_API_KEY")):
+        print("ERROR: ARK_API_KEY/STEPFUN_API_KEY not set", file=sys.stderr); return 2
     scale = float(sys.argv[1]) if len(sys.argv) > 1 else 0.02
     max_inflight = int(sys.argv[2]) if len(sys.argv) > 2 else 16
 

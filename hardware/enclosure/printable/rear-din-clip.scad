@@ -28,5 +28,8 @@ module screw_on_rear_din_clip() {
     }
 }
 
-rotate([0, 0, 0])
-    screw_on_rear_din_clip();
+// Lay the 205 x 64 mm backing plate on the bed. The rigid transform moves the
+// complete carrier to a non-negative 205 x 64 x 16 mm bounding box.
+translate([102.5, 32, 8])
+    rotate([90, 0, 0])
+        screw_on_rear_din_clip();

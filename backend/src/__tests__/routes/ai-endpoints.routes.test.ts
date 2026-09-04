@@ -31,6 +31,19 @@ jest.mock('axios', () => ({
   default: { post: (...args: any[]) => mockAxiosPost(...args) }
 }));
 
+// R2-F002: chat invocations resolve-validate + pin the endpoint hostname
+// before fetching. Mock only the async pinned assertion (keep the real
+// literal checks used by save-time validation tests) so tests stay hermetic.
+jest.mock('../../security/outbound-url-guard', () => {
+  const actual = jest.requireActual('../../security/outbound-url-guard');
+  return {
+    __esModule: true,
+    ...actual,
+    assertOutboundUrlAllowedResolved: jest.fn().mockResolvedValue(undefined),
+    assertOutboundUrlAllowedResolvedPinned: jest.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }])
+  };
+});
+
 // Mock ai-endpoint-store.service
 const mockGetEndpoint = jest.fn();
 const mockListEnabledEndpoints = jest.fn();

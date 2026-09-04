@@ -43,9 +43,15 @@ typedef enum {
 } grant_result_t;
 
 /* Hardware grant structure (subset needed for validation) */
+/* N2-2 (audit 2026-08): the policy digest is a 64-char SHA-256 hex string;
+ * [64] buffers truncated it to 63 chars (strncpy/json parse margins), which
+ * both weakened the anchor and made the M1 channel MAC — computed over the
+ * full 64-char digest — impossible to verify. Kept in lockstep with
+ * SERIAL_JSON_MAX_DIGEST via _Static_assert in serial_json.h. */
+#define CONTROLLER_POLICY_DIGEST_LEN 65u
 typedef struct {
     char challenge[64];
-    char policy_digest[64];
+    char policy_digest[CONTROLLER_POLICY_DIGEST_LEN];
     uint32_t monotonic_counter;
     uint32_t expires_at;        // Unix timestamp (seconds)
     uint8_t signature[64];
@@ -57,7 +63,7 @@ typedef struct {
     interlock_state_t state;
     char used_challenges[16][64];  // Ring buffer of recent challenges
     uint8_t challenge_index;
-    char local_policy_digest[64];
+    char local_policy_digest[CONTROLLER_POLICY_DIGEST_LEN]; /* full 64-char digest anchor */
     uint32_t high_water_counter;
     bool se_present;
     bool feedback_ok;

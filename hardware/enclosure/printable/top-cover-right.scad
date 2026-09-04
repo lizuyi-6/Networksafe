@@ -5,7 +5,8 @@ include <printable-common.scad>
 $fn = 48;
 
 module printable_top_cover_right() {
-    translate([-PANEL_W / 2, 0, 0])
+    // Match the left half's print datum: underside skirt rests at Z=0.
+    translate([-PANEL_W / 2, 0, 3])
         difference() {
             intersection() {
                 top_cover();

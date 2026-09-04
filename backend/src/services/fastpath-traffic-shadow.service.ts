@@ -9,6 +9,7 @@ import {
   normalizeThreatSignatures
 } from './http-traffic-evaluator.service';
 import { platformConfigService } from './platform-config.service';
+import { sanitizeIncomingRequest, sanitizeDetectionText, type SafeIncomingRequest } from '../security/detection-secret-boundary';
 
 interface PendingSnapshot {
   tenantId: string;
@@ -114,34 +115,27 @@ function fallbackBodyBytes(req: Request): Buffer {
 }
 
 function buildSnapshot(req: Request): PendingSnapshot | null {
-  const contentType = String(req.headers['content-type'] || '').trim();
+  const safe = sanitizeIncomingRequest(req);
+  const contentType = safe.contentType;
   if (isSkippedRequest(req, contentType)) {
     return null;
   }
 
-  if (contentType && !isTextualContentType(contentType)) {
-    return {
-      tenantId: (req as any).user?.tenantId || 'global',
-      requestId: String(req.headers['x-request-id'] || randomUUID()),
-      method: req.method,
-      url: req.originalUrl || req.url || '/',
-      httpVersion: normalizeHttpVersion(req.httpVersion),
-      headers: normalizeHeaders(req.headers as Record<string, unknown>),
-      rawBody: Buffer.alloc(0),
-      sourceIp: resolveSourceIp(req),
-      contentType
-    };
-  }
+  const rawBody = isTextualContentType(contentType)
+    ? Buffer.from(safe.body, 'utf8')
+    : Buffer.alloc(0);
+  const requestId = safe.headers['x-request-id'] || String(req.headers['x-request-id'] || randomUUID());
+  const tenantId = String((req as any).user?.tenantId || 'global');
 
   return {
-    tenantId: (req as any).user?.tenantId || 'global',
-    requestId: String(req.headers['x-request-id'] || randomUUID()),
+    tenantId,
+    requestId,
     method: req.method,
-    url: req.originalUrl || req.url || '/',
+    url: safe.url,
     httpVersion: normalizeHttpVersion(req.httpVersion),
-    headers: normalizeHeaders(req.headers as Record<string, unknown>),
-    rawBody: fallbackBodyBytes(req),
-    sourceIp: resolveSourceIp(req),
+    headers: safe.headers,
+    rawBody,
+    sourceIp: safe.sourceIp,
     contentType
   };
 }

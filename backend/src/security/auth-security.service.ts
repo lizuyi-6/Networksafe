@@ -29,7 +29,7 @@ export class AuthSecurityService {
 
   private loginAttemptsFallback: Map<string, LoginAttempt[]> = new Map();
   private lockedAccountsFallback: Map<string, { reason: string; lockedAt: string }> = new Map();
-  private sessionsFallback: Map<string, string> = new Map();
+  private sessionsFallback: Map<string, { userId: string; deviceInfo: Record<string, unknown> }> = new Map();
   private concurrentSessionsFallback: Map<string, Set<string>> = new Map();
 
   private readonly PASSWORD_POLICY: PasswordPolicy = {
@@ -389,8 +389,8 @@ export class AuthSecurityService {
   public async validateSessionStrict(userId: string, sessionId: string): Promise<boolean> {
     try {
       if (!redisService.isAvailable()) {
-        const storedUserId = this.sessionsFallback.get(sessionId);
-        return storedUserId === userId;
+        const storedSession = this.sessionsFallback.get(sessionId);
+        return storedSession?.userId === userId;
       }
 
       const key = `auth:session:${sessionId}`;
@@ -415,8 +415,8 @@ export class AuthSecurityService {
     try {
       if (!redisService.isAvailable()) {
         // Find and remove by userId (any session for this user)
-        for (const [sid, uid] of this.sessionsFallback.entries()) {
-          if (uid === userId) this.sessionsFallback.delete(sid);
+        for (const [sid, entry] of this.sessionsFallback.entries()) {
+          if (entry.userId === userId) this.sessionsFallback.delete(sid);
         }
         if (this.concurrentSessionsFallback.has(userId)) {
           this.concurrentSessionsFallback.delete(userId);
@@ -465,7 +465,7 @@ export class AuthSecurityService {
           this.concurrentSessionsFallback.set(userId, new Set());
         }
         this.concurrentSessionsFallback.get(userId)!.add(sessionId);
-        this.sessionsFallback.set(sessionId, userId);
+        this.sessionsFallback.set(sessionId, { userId, deviceInfo });
         return;
       }
 
@@ -487,6 +487,13 @@ export class AuthSecurityService {
     } catch (error) {
       logger.error('Error adding session', { error, userId });
     }
+  }
+
+  public async getFallbackSessionDeviceInfo(sessionId: string): Promise<Record<string, unknown> | null> {
+    if (redisService.isAvailable()) {
+      return null;
+    }
+    return this.sessionsFallback.get(sessionId)?.deviceInfo || null;
   }
 
   public async removeSession(userId: string, sessionId: string): Promise<boolean> {

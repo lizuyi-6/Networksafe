@@ -615,7 +615,7 @@ class DeploymentRunService {
   }
 
   private resolveFinalDefensePolicyForRun(run: DeploymentRunRecord, commandType: string): FinalDefensePolicyRecord {
-    const policy = finalDefenseService.getActivePolicyForCompanion(run.helperId);
+    const policy = finalDefenseService.getActivePolicyForCompanion(run.tenantId, run.helperId);
     if (!policy || policy.tenantId !== run.tenantId) {
       throw new Error('backend.deployment_run_final_defense_policy_required');
     }

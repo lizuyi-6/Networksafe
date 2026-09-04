@@ -676,6 +676,59 @@ static void test_release_denied_tampered_field(void) {
     TEST_END;
 }
 
+/* N2-2 (audit 2026-08): a REAL policy digest is a 64-char SHA-256 hex
+ * string. The old [64] buffers (json parse margin 63, strncpy margin 63)
+ * truncated it to 63 chars: the M1 channel MAC — computed over the full
+ * 64-char digest — could NEVER verify, and two digests sharing a 63-char
+ * prefix compared EQUAL. These cases use full-length digests end to end. */
+#define FULL_DIGEST_64  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+#define SIBLING_DIGEST_64 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab"
+
+static void test_policy_digest_full_length(void) {
+    parsed_message_t msg;
+    char wire[512];
+
+    TEST("N2-2: wire policyDigest keeps all 64 hex chars (was 63-char truncation)");
+    snprintf(wire, sizeof(wire),
+        "{\"type\":\"command\",\"command\":\"interlock_release\","
+        "\"challenge\":\"c-64\",\"policyDigest\":\"%s\","
+        "\"monotonicCounter\":3,\"expiresAt\":7000}",
+        FULL_DIGEST_64);
+    serial_json_parse(wire, &msg);
+    CHECK(msg.type == MSG_TYPE_COMMAND);
+    CHECK(strlen(msg.grant.policy_digest) == 64);
+    CHECK(strcmp(msg.grant.policy_digest, FULL_DIGEST_64) == 0);
+    TEST_END;
+
+    TEST("N2-2: 63-prefix sibling digest is DISTINCT (old code compared equal)");
+    mock_reset();
+    controller_init();
+    controller_set_policy_digest(FULL_DIGEST_64);
+    CHECK(controller_validate_policy_digest(FULL_DIGEST_64) == true);
+    CHECK(controller_validate_policy_digest(SIBLING_DIGEST_64) == false);
+    CHECK(controller_validate_policy_digest(TEST_POLICY_DIGEST) == false);
+    TEST_END;
+
+    TEST("N2-2: full 64-char digest release verifies MAC end to end");
+    mock_reset();
+    controller_init();
+    provision_test_key();
+    controller_set_policy_digest(FULL_DIGEST_64);
+    controller_update_time(1000);
+    mock_set_feedback(true);
+
+    hardware_grant_t grant;
+    memset(&grant, 0, sizeof(grant));
+    strcpy(grant.challenge, "challenge-64");
+    strcpy(grant.policy_digest, FULL_DIGEST_64);
+    grant.monotonic_counter = 4;
+    grant.expires_at = 5000;
+    sign_test_grant(&grant); /* MAC over the FULL 64-char digest, like M1 */
+    CHECK(controller_handle_release_request(&grant) == GRANT_RESULT_RELEASED);
+    CHECK(controller_get_state() == INTERLOCK_STATE_RELEASED);
+    TEST_END;
+}
+
 static void test_challenge_ring_eviction_window(void) {
     TEST("challenge dedup window is 16 slots (documented bound)");
     mock_reset();
@@ -868,6 +921,7 @@ int main(void) {
     test_release_blocked_bad_policy();
     test_release_denied_wrong_signature();
     test_release_denied_tampered_field();
+    test_policy_digest_full_length();
     test_assert_isolated_reports_fresh_feedback();
     printf("\n=== Results: %d passed, %d failed ===\n", tests_passed, tests_failed);
     return tests_failed > 0 ? 1 : 0;

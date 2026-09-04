@@ -190,8 +190,38 @@ class HardwareAuthorizationService {
         created_at TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_hardware_grants_action ON hardware_grants(action_id);
-      CREATE INDEX IF NOT EXISTS idx_hardware_grants_gate_counter ON hardware_grants(gate_id, monotonic_counter);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_hardware_grants_gate_counter ON hardware_grants(gate_id, monotonic_counter);
     `);
+
+    // SECURITY (audit 2026-08, batch 3): upgrade legacy (gate_id,
+    // monotonic_counter) indexes to UNIQUE. A database created before this
+    // constraint carries a NON-unique index under the same name, which
+    // CREATE UNIQUE INDEX IF NOT EXISTS would silently keep. Deduplicate
+    // any legacy double-consumption (keeping the earliest grant — the
+    // first dispatch is the one that physically happened), then recreate
+    // the index as UNIQUE.
+    const grantsIndexes = getDatabase().prepare(
+      `PRAGMA index_list(hardware_grants)`
+    ).all() as Array<{ name?: string; unique?: number | bigint }>;
+    const gateCounterIndex = grantsIndexes.find(
+      (index) => index.name === 'idx_hardware_grants_gate_counter'
+    );
+    if (!gateCounterIndex) {
+      getDatabase().prepare(
+        `CREATE UNIQUE INDEX idx_hardware_grants_gate_counter ON hardware_grants(gate_id, monotonic_counter)`
+      ).run();
+    } else if (!Number(gateCounterIndex.unique)) {
+      getDatabase().prepare(`DROP INDEX idx_hardware_grants_gate_counter`).run();
+      getDatabase().prepare(`
+        DELETE FROM hardware_grants
+        WHERE rowid NOT IN (
+          SELECT MIN(rowid) FROM hardware_grants GROUP BY gate_id, monotonic_counter
+        )
+      `).run();
+      getDatabase().prepare(
+        `CREATE UNIQUE INDEX idx_hardware_grants_gate_counter ON hardware_grants(gate_id, monotonic_counter)`
+      ).run();
+    }
 
     this.schemaReady = true;
   }
@@ -234,6 +264,28 @@ class HardwareAuthorizationService {
       throw new Error('backend.hardware_gate_public_key_immutable');
     }
 
+    // N3-1 (audit 2026-08): tenant ownership is IMMUTABLE through enrollment.
+    // A gate provisioned for tenant A must never be rebindable to tenant B by
+    // a re-enroll call (the SQL below also stops carrying tenant_id in the
+    // ON CONFLICT update as defense in depth).
+    if (existing && existing.tenantId !== input.tenantId) {
+      void auditLogger.log({
+        tenantId: existing.tenantId,
+        eventType: 'hardware_gate_tenant_rebind_rejected',
+        category: 'auth',
+        severity: 'critical',
+        actor: { type: 'system', id: 'hardware-authorization-service' },
+        action: 'enroll_gate',
+        target: { type: 'device', id: input.gateId },
+        details: {
+          provisionedTenantId: existing.tenantId,
+          attemptedTenantId: input.tenantId
+        },
+        status: 'failure'
+      }).catch(() => undefined);
+      throw new Error('backend.hardware_gate_tenant_immutable');
+    }
+
     const status = input.status || existing?.status || 'enrolled';
     const displayName = input.displayName || existing?.displayName || input.gateId;
     const algorithm = input.algorithm || existing?.algorithm || 'ECDSA_P256_SHA256';
@@ -254,7 +306,6 @@ class HardwareAuthorizationService {
         last_monotonic_counter, metadata_json, created_at, updated_at, last_seen_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(gate_id) DO UPDATE SET
-        tenant_id = excluded.tenant_id,
         display_name = excluded.display_name,
         public_key_pem = excluded.public_key_pem,
         algorithm = excluded.algorithm,
@@ -508,10 +559,37 @@ class HardwareAuthorizationService {
     if (!session?.intent) {
       return { handled: false, confirmed: false, reason: 'session_not_found' };
     }
+    // Narrow once for use across the async claim/commit flow below.
+    const intent = session.intent;
+
+    // SECURITY (audit 2026-08, batch 3): atomically claim the session
+    // BEFORE any validation work. Only one ACK can move it
+    // pending -> claiming; any later ACK for the same session is a replay
+    // and is rejected without touching the session row. This ordering also
+    // guarantees a validation-time rejection can never clobber a session
+    // that is being confirmed or already confirmed.
+    const claimedAt = new Date().toISOString();
+    const grantId = randomUUID();
+    getDatabase().prepare(`
+      UPDATE hardware_confirmation_sessions
+      SET status = 'claiming', result_json = ?, updated_at = ?
+      WHERE session_id = ? AND status = 'pending'
+    `).run(JSON.stringify({ claimedAt, grantId }), claimedAt, sessionId);
+
+    const claimedRow = getDatabase().prepare(`
+      SELECT status, result_json
+      FROM hardware_confirmation_sessions
+      WHERE session_id = ?
+    `).get(sessionId) as { status?: string; result_json?: string | null } | undefined;
+    const claimedGrantId = parseJson<{ grantId?: string }>(claimedRow?.result_json || '', {})?.grantId;
+    if (!claimedRow || claimedRow.status !== 'claiming' || claimedGrantId !== grantId) {
+      await this.auditRejection(sessionId, intent.actionId, 'session_already_consumed', payload);
+      return { handled: true, confirmed: false, reason: 'session_already_consumed', session };
+    }
 
     const gate = this.getGate(gateId);
     if (!gate || gate.gateId !== session.gateId) {
-      await this.rejectSession(sessionId, session.intent.actionId, 'gate_mismatch', payload);
+      await this.rejectSession(sessionId, intent.actionId, 'gate_mismatch', payload);
       return { handled: true, confirmed: false, reason: 'gate_mismatch', session };
     }
 
@@ -568,37 +646,97 @@ class HardwareAuthorizationService {
       return { handled: true, confirmed: false, reason: 'invalid_signature', session };
     }
 
+    // SECURITY (audit 2026-08, batch 3): the commit path is atomic and
+    // single-shot. Grant insert, gate high-water advance, session confirm,
+    // and intent update commit together or not at all, inside ONE
+    // transaction with two anti-replay guards:
+    //   1. CAS — the confirmation session can move pending -> confirmed
+    //      exactly once. A concurrent duplicate ACK loses the race (the
+    //      read-back grantId no longer matches) and is treated as a replay;
+    //   2. UNIQUE (gate_id, monotonic_counter) on hardware_grants — even
+    //      across processes sharing the store, one counter can only ever
+    //      produce one grant;
+    //   3. CAS — the gate high-water advances only from a lower value
+    //      (`last_monotonic_counter < counter`), so a stale ACK can never
+    //      roll the anti-replay watermark back.
+    // The db wrapper does not surface affected-row counts, so each CAS is
+    // verified by reading the row back inside the same transaction.
     const now = new Date().toISOString();
-    const grantId = randomUUID();
     const grantJson = JSON.stringify(grant);
-    getDatabase().prepare(`
-      INSERT INTO hardware_grants (
-        grant_id, session_id, action_id, tenant_id, gate_id, payload_hash,
-        issued_at, expires_at, monotonic_counter, signature, grant_json, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      grantId,
-      sessionId,
-      session.intent.actionId,
-      session.intent.tenantId,
-      gateId,
-      session.intent.payloadHash,
-      issuedAt,
-      expiresAt,
-      monotonicCounter,
-      signature,
-      grantJson,
-      now
-    );
+    const sessionResultJson = JSON.stringify({ ack: payload, grantId, verified: true });
 
-    getDatabase().prepare(`
-      UPDATE hardware_gates
-      SET last_monotonic_counter = ?, status = 'online', updated_at = ?, last_seen_at = ?
-      WHERE gate_id = ?
-    `).run(monotonicCounter, now, now, gateId);
+    let committed = false;
+    try {
+      committed = getDatabase().transaction(() => {
+        getDatabase().prepare(`
+          UPDATE hardware_confirmation_sessions
+          SET status = 'confirmed', result_json = ?, updated_at = ?
+          WHERE session_id = ? AND status = 'claiming'
+        `).run(sessionResultJson, now, sessionId);
 
-    this.updateSession(sessionId, 'confirmed', { ack: payload, grantId, verified: true });
-    this.updateIntent(session.intent.actionId, 'hardware_confirmed', { grantId }, grantId);
+        const confirmedRow = getDatabase().prepare(`
+          SELECT status, result_json
+          FROM hardware_confirmation_sessions
+          WHERE session_id = ?
+        `).get(sessionId) as { status?: string; result_json?: string | null } | undefined;
+        const confirmedGrantId = parseJson<{ grantId?: string }>(confirmedRow?.result_json || '', {})?.grantId;
+        if (!confirmedRow || confirmedRow.status !== 'confirmed' || confirmedGrantId !== grantId) {
+          // Lost the race: another ACK already consumed this session.
+          return false;
+        }
+
+        getDatabase().prepare(`
+          INSERT INTO hardware_grants (
+            grant_id, session_id, action_id, tenant_id, gate_id, payload_hash,
+            issued_at, expires_at, monotonic_counter, signature, grant_json, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          grantId,
+          sessionId,
+          intent.actionId,
+          intent.tenantId,
+          gateId,
+          intent.payloadHash,
+          issuedAt,
+          expiresAt,
+          monotonicCounter,
+          signature,
+          grantJson,
+          now
+        );
+
+        getDatabase().prepare(`
+          UPDATE hardware_gates
+          SET last_monotonic_counter = ?, status = 'online', updated_at = ?, last_seen_at = ?
+          WHERE gate_id = ? AND last_monotonic_counter < ?
+        `).run(monotonicCounter, now, now, gateId, monotonicCounter);
+
+        const advancedRow = getDatabase().prepare(`
+          SELECT last_monotonic_counter
+          FROM hardware_gates
+          WHERE gate_id = ?
+        `).get(gateId) as { last_monotonic_counter?: number | string } | undefined;
+        if (!advancedRow || Number(advancedRow.last_monotonic_counter) !== monotonicCounter) {
+          throw new Error('hardware_gate_high_water_conflict');
+        }
+
+        this.updateIntent(intent.actionId, 'hardware_confirmed', { grantId }, grantId);
+        return true;
+      });
+    } catch (error: any) {
+      // UNIQUE (gate_id, monotonic_counter) violation: a grant for this
+      // counter already exists — this ACK is a replay. Fail closed.
+      await this.auditRejection(sessionId, session.intent.actionId, 'monotonic_counter_replay', payload);
+      return { handled: true, confirmed: false, reason: 'monotonic_counter_replay', session };
+    }
+
+    if (!committed) {
+      // Do NOT rejectSession(): the session was already confirmed by the
+      // winning ACK and its row must stay intact. Only the replay attempt
+      // is audited.
+      await this.auditRejection(sessionId, session.intent.actionId, 'session_already_consumed', payload);
+      return { handled: true, confirmed: false, reason: 'session_already_consumed', session };
+    }
 
     // Force a synchronous flush of the anti-replay high-water mark. Under the
     // sql.js backend the database lives in process memory and is persisted on
@@ -767,10 +905,14 @@ class HardwareAuthorizationService {
   }
 
   private updateSession(sessionId: string, status: string, result?: Record<string, any>): void {
+    // SECURITY (audit 2026-08, batch 3): only a session still in a
+    // transitional state may be overwritten. A 'confirmed' session is
+    // immutable here — rejection paths can never rewrite a committed ack
+    // (the ack transaction is the only writer of 'confirmed').
     getDatabase().prepare(`
       UPDATE hardware_confirmation_sessions
       SET status = ?, result_json = ?, updated_at = ?
-      WHERE session_id = ?
+      WHERE session_id = ? AND status IN ('pending', 'claiming')
     `).run(status, result ? JSON.stringify(result) : null, new Date().toISOString(), sessionId);
   }
 
