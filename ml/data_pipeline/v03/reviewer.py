@@ -29,7 +29,9 @@ class Reviewer:
         try:
             result = await self.provider.chat(
                 system=self._prompt, user=user,
-                max_tokens=1024, temperature=0.1, response_format_json=True,
+                # reasoning_effort=high folds hidden reasoning into completion_tokens;
+                # short verdict JSON (~80 tok) + reasoning headroom.
+                max_tokens=12288, temperature=0.1, response_format_json=True,
             )
         except Exception as e:
             return {"error": f"provider_error:{type(e).__name__}", "detail": str(e)[:200]}

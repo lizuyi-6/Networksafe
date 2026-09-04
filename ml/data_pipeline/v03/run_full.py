@@ -47,8 +47,8 @@ from ml.data_pipeline.v03 import config, finalize
 
 async def main() -> int:
     _load_env_local()
-    if not os.environ.get("ARK_API_KEY"):
-        print("ERROR: ARK_API_KEY not set (load .env.local or export it)", file=sys.stderr)
+    if not (os.environ.get("ARK_API_KEY") or os.environ.get("STEPFUN_API_KEY")):
+        print("ERROR: ARK_API_KEY/STEPFUN_API_KEY not set (load .env.local or export it)", file=sys.stderr)
         return 2
     max_inflight = int(sys.argv[1]) if len(sys.argv) > 1 else 32
     oversample = float(sys.argv[2]) if len(sys.argv) > 2 else 1.6

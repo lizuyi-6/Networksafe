@@ -75,7 +75,9 @@ class Adjudicator:
         try:
             result = await self.provider.chat(
                 system=self._prompt, user=user,
-                max_tokens=512, temperature=0.0, response_format_json=True,
+                # reasoning_effort=high folds hidden reasoning into completion_tokens;
+                # decision JSON (~120 tok) + reasoning headroom.
+                max_tokens=12288, temperature=0.0, response_format_json=True,
             )
         except Exception as e:
             # On provider failure, fail safe: MANUAL_REVIEW (do not auto-accept)
