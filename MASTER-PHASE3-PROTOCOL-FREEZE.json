@@ -1,0 +1,190 @@
+{
+  "artifact": "PHASE3-PROTOCOL-FREEZE",
+  "frozen_at": "2026-09-27T00:27:09Z",
+  "release": {
+    "id": "asw-v0.1",
+    "dir_node": "/data/datasets/releases/asw-v0.1",
+    "dir_local": "aether-security-world/releases/asw-v0.1",
+    "release_manifest_sha256": "21534309e560536de870b5a5bde09b4433ba534cae9a670ed905702f8b8a2b04",
+    "production_contract_sha256": "a0bcf582ad5a872416fc7403cd5ef056f5f743ce9125ff73ced726b95af6837e",
+    "audit": "physical counts + referential integrity 23/23 PASS (MASTER-ASW-AUDIT.json); 3 audit-md hash drift documented (MASTER-ASW-AUDIT-DRIFT-RECORD.json), zero data-anchor drift"
+  },
+  "renderer": {
+    "id": "RENDERER-V1",
+    "views": {
+      "m1": "request only (episode-independent)",
+      "m2/m3": "CURRENT_TIME + REQUEST + TIMELINE + EVIDENCE (model_visible fields only)"
+    },
+    "value_truncation_chars": 600,
+    "target_contract": "{\"attack_family\": <family|none>, \"verdict\": <attack|safe|insufficient_evidence>} (sort_keys compact JSON)",
+    "leakage_audit": "60902 episodes x 2 views real-data audit: 0 blockers (MASTER-PHASE3-DRY-RUN.json); note: the critical-evidence-loss column is only meaningful for evidence-bearing views (m2/m3)"
+  },
+  "context_freeze": {
+    "m1_ordinary_sft": {
+      "ctx": 2048,
+      "basis": "train m1 total P99=1861 max=2116; zero-sup exclusions <=32 (Run B precedent); truncation_rate @2048 = 0.001"
+    },
+    "m2_stateful_sft": {
+      "ctx": 4096,
+      "basis": "train m2 total P99=2481 max=2973; @4096 truncation=0, zero-sup=0, critical evidence loss=0/28603"
+    },
+    "m3_stateful_counterfactual": {
+      "ctx": 4096,
+      "basis": "same view as m2"
+    },
+    "source": "context-audit-final.json (node, frozen tokenizer)"
+  },
+  "methods": {
+    "m1-ordinary-sft": {
+      "view": "m1",
+      "sampler": "seeded group shuffle, no pairing",
+      "objective": "SFT only"
+    },
+    "m2-stateful-sft": {
+      "view": "m2",
+      "sampler": "seeded group shuffle, no pairing",
+      "objective": "SFT only"
+    },
+    "m3-stateful-counterfactual": {
+      "view": "m2",
+      "sampler": "family-aware: same-(cf,world) group members packed contiguously within one optimizer window (plan_batches, seed 20260921)",
+      "objective": "SFT + 0.5 * CFC",
+      "cfc": {
+        "lambda": 0.5,
+        "L_flip": "hinge margin 0.3 on the 3-class verdict distribution at the target verdict-value first-token position, applied ONLY to (base, critical) pairs whose observable_decision flips; mixed-base groups excluded",
+        "L_inv": "MSE between verdict distributions of (base, irrelevant) same-group pairs",
+        "mixed_base_caliber": "group with any critical episode whose violated_invariants symmetric-difference vs base != 1; train release measured: 0 groups (11160/11160 critical episodes |delta|==1, 216 decision flips)"
+      }
+    }
+  },
+  "training_config_shared": {
+    "base_model": "/data/models/Qwen3.8-27B",
+    "train_split": "episodes/train only (43229; no dev/OOD split is ever loaded for training)",
+    "epoch": 1,
+    "effective_batch": 4,
+    "lr": 0.0001,
+    "warmup": 100,
+    "weight_decay": 0.0,
+    "grad_clip": 1.0,
+    "seed": 20260921,
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "bias": "none",
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "in_proj_qkv",
+        "in_proj_z",
+        "in_proj_b",
+        "in_proj_a",
+        "out_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ]
+    },
+    "grad_checkpointing": true,
+    "label_masking": "prompt masked (-100); supervision = serialized target + <|im_end|>",
+    "zero_supervision": "excluded + recorded (Run B precedent); runtime gate hard-fails on any remaining",
+    "nan_inf": "hard stop + TRAINING-FAILURE.json"
+  },
+  "checkpoint_policy": {
+    "selection_split": "iid-dev ONLY (OOD splits raise by policy code)",
+    "candidates": "every 1000 steps + final",
+    "stage_a_subset": {
+      "n": 1000,
+      "seed": 20260921,
+      "stratification": "(variant_type, observable_decision, attack_family)"
+    },
+    "primary_metric": "P1_observable_decision_macro_f1 (schema-valid subset)",
+    "tie_chain": [
+      "P1 >= best - 0.001",
+      "P2_critical_pair_correctness",
+      "P3_counterfactual_family_consistency",
+      "P4_evidence_sufficiency_accuracy",
+      "earlier checkpoint"
+    ],
+    "forbidden": "weighted aggregate scores"
+  },
+  "evaluation_decode": {
+    "do_sample": false,
+    "max_new_tokens": 96,
+    "batch": 16,
+    "padding_side": "left",
+    "truncation_max_length": 2048,
+    "enable_thinking": false,
+    "parser": "strip fence + first brace-balanced JSON object (frozen extractor)"
+  },
+  "bootstrap": {
+    "cluster": "world_id (attack_family variant supported)",
+    "resamples": [
+      2000,
+      5000,
+      10000
+    ],
+    "seed": 20260921,
+    "paired": true,
+    "row_bootstrap": "forbidden as primary CI"
+  },
+  "environment": {
+    "container": "qwen38-spark-opt:25.09-py3-v2",
+    "image_id": "sha256:c0ddbaaae4fb62922d297ef5f543dbba18690978e16d69727296fb4d63f1666e",
+    "base": "nvcr.io/nvidia/pytorch:25.09-py3 (CUDA 13.0.1)",
+    "torch": "2.9.0a0+50eac811a6.nv25.09",
+    "transformers": "5.8.1",
+    "peft": "0.21.0",
+    "causal_conv1d": "1.7.0 (source-built aarch64)",
+    "flash_linear_attention": "0.5.2",
+    "host": "DGX Spark GB10, driver 580.126.09, aarch64",
+    "fast_path": "available in container (causal_conv1d + fla present)"
+  },
+  "data_policy": {
+    "usage": "train=param_update, iid-dev=checkpoint_selection, world-ood/mechanism-ood/generator-ood=final_evaluation_only, workflow-ood=unsupported",
+    "generator_ood_sealed_this_run": true,
+    "enforcement": "contract.assert_split_allowed raises SplitPolicyError"
+  },
+  "code_hashes": {
+    "phase3/__init__.py": "4e95b6a07f214dcae0511c28b8048dcf5af8646f4eb5f078d0c06ba573c2b081",
+    "phase3/bootstrap.py": "57603cc0114a4e237ea27f0b633c40760573000beaf1dc5b279cd65aaacd0837",
+    "phase3/context_audit.py": "43b81a044a20362e23468371b320608d56abc26d960b7e0652ddf66bd61c99a6",
+    "phase3/contract.py": "db0086244bd2fc8c6313434545ab30b643ef5cf8a2b16ebaea93ab3901535873",
+    "phase3/dry_run.py": "f66456c5549eb979abc5e3e42d7ac3db5e0b5f3e3f08806464895d3e01ea4109",
+    "phase3/dummy_models.py": "ab51d0dda38d37ce945e17cc0417e5f48ea42818ff283e058257e857f6ecb223",
+    "phase3/loader.py": "2190133a22bccbf4dc10ad76b923b3be84e36caace0dc3dd35024026db697607",
+    "phase3/metrics.py": "efda29cca8322b9b5df796c9bf84fd396410b07317d167baeecf89002d928e78",
+    "phase3/renderer.py": "490fa8b2f476226abae58711f35059c750f2d01d5917ef343c1758a4e03f4a7f",
+    "phase3/sampler.py": "c8ab9942e4eb181b30afed12c4e3ca211c3cbb1e5299c64e1eda8549ccb1645b",
+    "train_phase3.py": "64c25d1145a64117010de4ceccb41712f7c26d9adeb05b72759b10331b108ad5",
+    "eval_phase3.py": "0dafb806bab3b50572349dfc64dbada98335a6b629e13c4bfef7b7c3f6a0a11e"
+  },
+  "dry_run": {
+    "artifact": "MASTER-PHASE3-DRY-RUN.json",
+    "all_pass": true,
+    "dummies": [
+      "always-safe",
+      "always-attack",
+      "always-insufficient",
+      "random",
+      "oracle-echo"
+    ]
+  },
+  "tests": {
+    "suite": "aether-security-world tests/phase3",
+    "passed": 47,
+    "failed": 0
+  },
+  "commitment": "Frozen before M1 launch. No ctx/lambda/margin/policy changes after seeing model results; M1/M2/M3 use this identical config except their pre-registered method differences.",
+  "amendments": [
+    {
+      "at": "2026-09-27T05:40:00Z",
+      "what": "train_phase3.py: added missing 'import sys' (smoke gate failed with NameError before any training step)",
+      "why": "pre-launch crash fix; no training/evaluation result was observed before this amendment",
+      "old_hash": "758142f2d71546d2f10547df5a327944a3fa256463870565e413cf1fdaff3165",
+      "new_hash": "64c25d1145a64117010de4ceccb41712f7c26d9adeb05b72759b10331b108ad5"
+    }
+  ]
+}

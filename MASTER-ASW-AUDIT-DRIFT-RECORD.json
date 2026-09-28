@@ -1,0 +1,44 @@
+{
+  "artifact": "ASW-v0.1-AUDIT-DOC-DRIFT-RECORD",
+  "generated_at": "2026-09-26T23:19:16Z",
+  "finding": "release-manifest.files carries stale hashes for audit .md documents that were re-exported after the manifest was built (manifest 2026-09-26T22:29:51+08:00, audits 2026-09-26T22:31:29+08:00).",
+  "classification": "AUDIT_DOC_ONLY_DRIFT - no data artifact affected",
+  "drifted_files": [
+    {
+      "path": "audits/counterfactual.md",
+      "manifest_hash": "93c2da488119e082c8429fc602b2f1c677b77605fdeca9f2316314e250a68f89",
+      "disk_hash": "2f462741a1f1a58214304b23aa5719e36c7b406e072eae0b84bd1ed6e02a6b7d"
+    },
+    {
+      "path": "audits/dedup.md",
+      "manifest_hash": "064c365f5379828308b2aa56ba8e6d2753e5dd6b966f1059ff1baf8fb05e9024",
+      "disk_hash": "c1602d371266f7e80aa73235039d4c0c993c8dd5629e706f55e9a9c6df56356c"
+    },
+    {
+      "path": "audits/split-leakage.md",
+      "manifest_hash": "532994a5f1946afcfff3751782478a2f3b6ad595a8dfe7304276c5a2caa5c357",
+      "disk_hash": "f8c6acfdddb770e811dd2911259cb710a7cad7d18a0e5cfe267733785cd5e141"
+    }
+  ],
+  "authoritative_sha256sums_match_disk": true,
+  "data_anchors_match_manifest": {
+    "episodes/train.jsonl": true,
+    "episodes/iid-dev.jsonl": true,
+    "episodes/world-ood.jsonl": true,
+    "episodes/mechanism-ood.jsonl": true,
+    "episodes/generator-ood.jsonl": true,
+    "episodes/workflow-ood.jsonl": true,
+    "worlds/train-source-worlds.jsonl": true,
+    "worlds/generator-ood-worlds.jsonl": true,
+    "manifests/production-contract.json": true
+  },
+  "disposition": "Release bytes untouched (frozen). The stale audit-doc hashes inside release-manifest.files are superseded by SHA256SUMS.txt / manifests/hashes.txt, which were generated after the audit re-export and match disk. Referential integrity, physical counts, freeze anchors: all PASS (see MASTER-ASW-AUDIT.json).",
+  "audit_doc_files_in_sha256sums_but_not_in_manifest_files": [
+    "ASW-RELEASE-FREEZE.json",
+    "ASW-RELEASE-FREEZE.sha256",
+    "audits/coverage.md",
+    "audits/generator-ood.md",
+    "audits/token-economy.md",
+    "manifests/release-manifest.json"
+  ]
+}

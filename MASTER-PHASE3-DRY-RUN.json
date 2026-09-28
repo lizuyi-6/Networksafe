@@ -1,0 +1,135 @@
+{
+  "dry_run": true,
+  "started": "2026-09-26T23:47:10Z",
+  "leakage_audit": {
+    "train:m1-ordinary-sft": {
+      "n": 43229,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "train:m2-stateful-sft": {
+      "n": 43229,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "iid-dev:m1-ordinary-sft": {
+      "n": 5346,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "iid-dev:m2-stateful-sft": {
+      "n": 5346,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "world-ood:m1-ordinary-sft": {
+      "n": 5502,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "world-ood:m2-stateful-sft": {
+      "n": 5502,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "mechanism-ood:m1-ordinary-sft": {
+      "n": 293,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "mechanism-ood:m2-stateful-sft": {
+      "n": 293,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "generator-ood:m1-ordinary-sft": {
+      "n": 6532,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    },
+    "generator-ood:m2-stateful-sft": {
+      "n": 6532,
+      "prompts_with_blockers": 0,
+      "blocker": true,
+      "offenders": []
+    }
+  },
+  "dummy_pipeline_iid_dev": {
+    "n_samples": 5346,
+    "n_worlds": 50,
+    "results": {
+      "always-safe": {
+        "accuracy": 0.1008,
+        "P1": 0.0611,
+        "P4": 0.7247,
+        "attack_recall": 0.0,
+        "safe_fpr": 0.0,
+        "bootstrap_accuracy_ci95": [
+          0.0402,
+          0.1751
+        ]
+      },
+      "always-attack": {
+        "accuracy": 0.6238,
+        "P1": 0.2561,
+        "P4": 0.7247,
+        "attack_recall": 1.0,
+        "safe_fpr": 1.0,
+        "bootstrap_accuracy_ci95": [
+          0.541,
+          0.7022
+        ]
+      },
+      "always-insufficient": {
+        "accuracy": 0.2753,
+        "P1": 0.1439,
+        "P4": 0.2753,
+        "attack_recall": 0.0,
+        "safe_fpr": 0.0,
+        "bootstrap_accuracy_ci95": [
+          0.2324,
+          0.3277
+        ]
+      },
+      "random": {
+        "accuracy": 0.3313,
+        "P1": 0.2924,
+        "P4": 0.5744,
+        "attack_recall": 0.3397,
+        "safe_fpr": 0.3377,
+        "bootstrap_accuracy_ci95": [
+          0.3192,
+          0.344
+        ]
+      },
+      "oracle-echo (pipeline test only)": {
+        "accuracy": 1.0,
+        "P1": 1.0,
+        "P4": 1.0,
+        "attack_recall": 1.0,
+        "safe_fpr": 0.0,
+        "bootstrap_accuracy_ci95": [
+          1.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "oracle_echo_sanity": {
+    "P1": 1.0,
+    "pass": true,
+    "note": "Oracle Echo must score P1=1.0; pipeline-only, never a baseline"
+  },
+  "all_pass": true,
+  "seconds": 681.3,
+  "finished": "2026-09-26T23:58:31Z"
+}

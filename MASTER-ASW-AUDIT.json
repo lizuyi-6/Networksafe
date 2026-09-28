@@ -1,0 +1,181 @@
+{
+  "checks": [
+    {
+      "check": "episodes/train.jsonl line count == 43229",
+      "pass": true,
+      "detail": {
+        "physical": 43229,
+        "expected": 43229
+      }
+    },
+    {
+      "check": "episodes/iid-dev.jsonl line count == 5346",
+      "pass": true,
+      "detail": {
+        "physical": 5346,
+        "expected": 5346
+      }
+    },
+    {
+      "check": "episodes/world-ood.jsonl line count == 5502",
+      "pass": true,
+      "detail": {
+        "physical": 5502,
+        "expected": 5502
+      }
+    },
+    {
+      "check": "episodes/workflow-ood.jsonl line count == 0",
+      "pass": true,
+      "detail": {
+        "physical": 0,
+        "expected": 0
+      }
+    },
+    {
+      "check": "episodes/mechanism-ood.jsonl line count == 293",
+      "pass": true,
+      "detail": {
+        "physical": 293,
+        "expected": 293
+      }
+    },
+    {
+      "check": "episodes/generator-ood.jsonl line count == 6532",
+      "pass": true,
+      "detail": {
+        "physical": 6532,
+        "expected": 6532
+      }
+    },
+    {
+      "check": "production total == 54370",
+      "pass": true,
+      "detail": 54370
+    },
+    {
+      "check": "packaged total == 60902",
+      "pass": true,
+      "detail": 60902
+    },
+    {
+      "check": "worlds/train-source-worlds.jsonl line count == 502",
+      "pass": true,
+      "detail": {
+        "physical": 502,
+        "expected": 502
+      }
+    },
+    {
+      "check": "worlds/generator-ood-worlds.jsonl line count == 60",
+      "pass": true,
+      "detail": {
+        "physical": 60,
+        "expected": 60
+      }
+    },
+    {
+      "check": "production/generator-OOD world id sets disjoint",
+      "pass": true,
+      "detail": {
+        "overlap": 0
+      }
+    },
+    {
+      "check": "every production episode.world_id in production worlds",
+      "pass": true,
+      "detail": {}
+    },
+    {
+      "check": "every generator-OOD episode.world_id in generator-OOD worlds",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "check": "episode_id globally unique (no cross-split conflict)",
+      "pass": true,
+      "detail": {
+        "dups": 0,
+        "sample": []
+      }
+    },
+    {
+      "check": "SHA256SUMS.txt verify (all release files)",
+      "pass": true,
+      "detail": {
+        "ok": 18,
+        "bad": 0,
+        "bad_files": []
+      }
+    },
+    {
+      "check": "ASW-RELEASE-FREEZE.json episode_counts match physical",
+      "pass": true,
+      "detail": {
+        "generator_ood": 6532,
+        "iid_dev": 5346,
+        "mechanism_ood": 293,
+        "train": 43229,
+        "workflow_ood": 0,
+        "world_ood": 5502
+      }
+    },
+    {
+      "check": "ASW-RELEASE-FREEZE.json episode_total/total match physical",
+      "pass": true,
+      "detail": 60902
+    },
+    {
+      "check": "ASW-RELEASE-FREEZE.json world_counts match physical",
+      "pass": true,
+      "detail": {
+        "generator_ood": 60,
+        "production_accepted": 502
+      }
+    },
+    {
+      "check": "freeze.production_contract_sha256 == disk",
+      "pass": true,
+      "detail": "a0bcf582ad5a872416fc7403cd5ef056f5f743ce9125ff73ced726b95af6837e"
+    },
+    {
+      "check": "freeze.release_manifest_sha256 == disk",
+      "pass": true,
+      "detail": "21534309e560536de870b5a5bde09b4433ba534cae9a670ed905702f8b8a2b04"
+    },
+    {
+      "check": "release-manifest.files hashes match disk",
+      "pass": false,
+      "detail": {
+        "n": 12,
+        "bad": [
+          "audits/counterfactual.md",
+          "audits/dedup.md",
+          "audits/split-leakage.md"
+        ]
+      }
+    },
+    {
+      "check": "release-manifest episode counts match physical",
+      "pass": true,
+      "detail": {
+        "manifest": {
+          "generator_ood": 6532,
+          "iid_dev": 5346,
+          "mechanism_ood": 293,
+          "train": 43229,
+          "workflow_ood": 0,
+          "world_ood": 5502
+        }
+      }
+    },
+    {
+      "check": "workflow-OOD unsupported_in_asw_v0.1 (0 lines)",
+      "pass": true,
+      "detail": "by contract"
+    }
+  ],
+  "started_at": "2026-09-26T23:16:02Z",
+  "finished_at": "2026-09-26T23:16:58Z",
+  "all_pass": false
+}
