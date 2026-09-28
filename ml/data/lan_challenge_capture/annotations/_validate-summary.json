@@ -1,0 +1,44 @@
+{
+  "sampleCount": 413,
+  "verdictDistribution": {
+    "safe": 257,
+    "unknown": 46,
+    "attack": 110
+  },
+  "attackFamilyDistribution": {
+    "none": 257,
+    "unknown": 19,
+    "authorization": 7,
+    "sqli": 23,
+    "xss": 10,
+    "command_injection": 8,
+    "path_traversal": 9,
+    "ssrf": 6,
+    "idor_bola": 6,
+    "business_logic": 2,
+    "file_upload": 2,
+    "csrf": 1,
+    "cors": 1,
+    "prompt_injection": 56,
+    "authentication": 6
+  },
+  "confidenceDistribution": {
+    "2": 46,
+    "3": 34,
+    "4": 297,
+    "5": 36
+  },
+  "actionDistribution": {
+    "allow": 141,
+    "monitor": 116,
+    "challenge": 46,
+    "block": 101,
+    "isolate": 9
+  },
+  "expertReviewCount": 214,
+  "duplicateSampleIdCount": 0,
+  "missingSampleIdCount": 0,
+  "evidenceCitesOwnPath": 413,
+  "quotedFragmentsVerified": 266,
+  "schemaErrorCount": 0
+}
