@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-27T12:47:26.918Z",
+  "generatedAt": "2026-09-18T07:09:45.294Z",
   "evaluationBoundary": "Tracked synthetic corpus evaluated by the local heuristic pipeline and input validator; not production traffic, end-to-end network latency, or an external product comparison.",
   "hardPassThresholdEnforced": false,
   "samples": 4500,
@@ -10,8 +10,8 @@
   "FP": 0,
   "overallDetectionRate": 0.6396969696969697,
   "overallFpr": 0,
-  "medianLatencyMs": 0.575185,
-  "p95LatencyMs": 1.612131,
+  "medianLatencyMs": 2.4696,
+  "p95LatencyMs": 12.1753,
   "perDataset": {
     "full_test_dataset": {
       "total": 1300,
@@ -23,8 +23,8 @@
       "true_negatives": 200,
       "detection_rate": 0.89,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.821261,
-      "p95_latency_ms": 2.08856
+      "median_latency_ms": 4.16466,
+      "p95_latency_ms": 18.5206
     },
     "complete_dataset": {
       "total": 1050,
@@ -36,8 +36,8 @@
       "true_negatives": 500,
       "detection_rate": 0.5945454545454546,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.593547,
-      "p95_latency_ms": 1.527438
+      "median_latency_ms": 2.8431,
+      "p95_latency_ms": 7.2976
     },
     "advanced_dataset": {
       "total": 1150,
@@ -49,8 +49,8 @@
       "true_negatives": 500,
       "detection_rate": 0.4,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.549028,
-      "p95_latency_ms": 1.036374
+      "median_latency_ms": 2.3159,
+      "p95_latency_ms": 4.8218
     },
     "zeroday_dataset": {
       "total": 1000,
@@ -62,8 +62,8 @@
       "true_negatives": 0,
       "detection_rate": 0.545,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.380765,
-      "p95_latency_ms": 1.124902
+      "median_latency_ms": 1.6241,
+      "p95_latency_ms": 3.9208
     }
   },
   "perType": {
@@ -77,8 +77,8 @@
       "true_negatives": 0,
       "detection_rate": 0.64,
       "false_positive_rate": 0,
-      "median_latency_ms": 1.384257,
-      "p95_latency_ms": 3.268828
+      "median_latency_ms": 1.6196,
+      "p95_latency_ms": 5.2502
     },
     "xss": {
       "total": 200,
@@ -90,8 +90,8 @@
       "true_negatives": 0,
       "detection_rate": 0.98,
       "false_positive_rate": 0,
-      "median_latency_ms": 1.479175,
-      "p95_latency_ms": 2.240392
+      "median_latency_ms": 12.0872,
+      "p95_latency_ms": 25.2368
     },
     "command_injection": {
       "total": 200,
@@ -103,8 +103,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 1.283135,
-      "p95_latency_ms": 2.041547
+      "median_latency_ms": 9.6634,
+      "p95_latency_ms": 19.301
     },
     "path_traversal": {
       "total": 150,
@@ -116,8 +116,8 @@
       "true_negatives": 0,
       "detection_rate": 0.7,
       "false_positive_rate": 0,
-      "median_latency_ms": 1.204346,
-      "p95_latency_ms": 1.796102
+      "median_latency_ms": 9.2543,
+      "p95_latency_ms": 20.4082
     },
     "brute_force": {
       "total": 150,
@@ -129,8 +129,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.5854424,
-      "p95_latency_ms": 0.783223
+      "median_latency_ms": 5.46534,
+      "p95_latency_ms": 9.01434
     },
     "ddos": {
       "total": 100,
@@ -142,8 +142,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.2470996,
-      "p95_latency_ms": 0.26550440000000003
+      "median_latency_ms": 1.7310000000000003,
+      "p95_latency_ms": 2.40948
     },
     "port_scan": {
       "total": 100,
@@ -155,8 +155,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.4525008,
-      "p95_latency_ms": 0.5145284
+      "median_latency_ms": 2.6151600000000004,
+      "p95_latency_ms": 4.241560000000001
     },
     "normal": {
       "total": 1200,
@@ -168,8 +168,8 @@
       "true_negatives": 1200,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.582002,
-      "p95_latency_ms": 0.9789
+      "median_latency_ms": 2.776,
+      "p95_latency_ms": 5.6586
     },
     "xxe": {
       "total": 100,
@@ -181,8 +181,8 @@
       "true_negatives": 0,
       "detection_rate": 0.79,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.469132,
-      "p95_latency_ms": 1.570397
+      "median_latency_ms": 2.7326,
+      "p95_latency_ms": 8.7161
     },
     "ssrf": {
       "total": 100,
@@ -194,8 +194,8 @@
       "true_negatives": 0,
       "detection_rate": 0.2,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.496315,
-      "p95_latency_ms": 0.652962
+      "median_latency_ms": 2.4593,
+      "p95_latency_ms": 4.2179
     },
     "deserialization": {
       "total": 100,
@@ -207,8 +207,8 @@
       "true_negatives": 0,
       "detection_rate": 0.54,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.964795,
-      "p95_latency_ms": 1.435328
+      "median_latency_ms": 2.4898,
+      "p95_latency_ms": 7.4092
     },
     "file_upload": {
       "total": 100,
@@ -220,8 +220,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 1.184379,
-      "p95_latency_ms": 2.816773
+      "median_latency_ms": 2.732,
+      "p95_latency_ms": 9.4657
     },
     "jwt_attack": {
       "total": 100,
@@ -233,8 +233,8 @@
       "true_negatives": 0,
       "detection_rate": 0.24,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.660164,
-      "p95_latency_ms": 1.264526
+      "median_latency_ms": 3.3388,
+      "p95_latency_ms": 6.9721
     },
     "ldap_injection": {
       "total": 50,
@@ -246,8 +246,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.812841,
-      "p95_latency_ms": 1.011777
+      "median_latency_ms": 3.5683,
+      "p95_latency_ms": 6.773
     },
     "http_smuggling": {
       "total": 100,
@@ -259,8 +259,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.410321,
-      "p95_latency_ms": 0.46031
+      "median_latency_ms": 1.8234,
+      "p95_latency_ms": 3.3563
     },
     "ssti": {
       "total": 100,
@@ -272,8 +272,8 @@
       "true_negatives": 0,
       "detection_rate": 0.46,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.359074,
-      "p95_latency_ms": 1.320015
+      "median_latency_ms": 1.6776,
+      "p95_latency_ms": 4.6347
     },
     "oauth_bypass": {
       "total": 100,
@@ -285,8 +285,8 @@
       "true_negatives": 0,
       "detection_rate": 0.33,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.541499,
-      "p95_latency_ms": 1.21355
+      "median_latency_ms": 2.3731,
+      "p95_latency_ms": 4.5111
     },
     "api_abuse": {
       "total": 100,
@@ -298,8 +298,8 @@
       "true_negatives": 0,
       "detection_rate": 0.27,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.488822,
-      "p95_latency_ms": 0.973585
+      "median_latency_ms": 2.3439,
+      "p95_latency_ms": 5.6325
     },
     "websocket_attack": {
       "total": 50,
@@ -311,8 +311,8 @@
       "true_negatives": 0,
       "detection_rate": 0.3,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.308989,
-      "p95_latency_ms": 0.647441
+      "median_latency_ms": 1.6625,
+      "p95_latency_ms": 3.5225
     },
     "cache_poison": {
       "total": 50,
@@ -324,8 +324,8 @@
       "true_negatives": 0,
       "detection_rate": 0.18,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.501192,
-      "p95_latency_ms": 1.007998
+      "median_latency_ms": 2.4506,
+      "p95_latency_ms": 3.6474
     },
     "encoding_bypass": {
       "total": 100,
@@ -337,8 +337,8 @@
       "true_negatives": 0,
       "detection_rate": 0.13,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.5109,
-      "p95_latency_ms": 1.363921
+      "median_latency_ms": 2.4941,
+      "p95_latency_ms": 5.6697
     },
     "protocol_pollution": {
       "total": 50,
@@ -350,8 +350,8 @@
       "true_negatives": 0,
       "detection_rate": 0.34,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.477061,
-      "p95_latency_ms": 0.800839
+      "median_latency_ms": 1.7141,
+      "p95_latency_ms": 3.4325
     },
     "log4j_injection": {
       "total": 100,
@@ -363,8 +363,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.516687,
-      "p95_latency_ms": 0.908022
+      "median_latency_ms": 1.7021,
+      "p95_latency_ms": 2.5796
     },
     "spring4shell": {
       "total": 100,
@@ -376,8 +376,8 @@
       "true_negatives": 0,
       "detection_rate": 0.75,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.345121,
-      "p95_latency_ms": 0.654601
+      "median_latency_ms": 1.3112,
+      "p95_latency_ms": 2.6672
     },
     "text4shell": {
       "total": 100,
@@ -389,8 +389,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.928923,
-      "p95_latency_ms": 1.599079
+      "median_latency_ms": 2.4696,
+      "p95_latency_ms": 6.4243
     },
     "prototype_pollution": {
       "total": 100,
@@ -402,8 +402,8 @@
       "true_negatives": 0,
       "detection_rate": 0.18,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.309823,
-      "p95_latency_ms": 1.018945
+      "median_latency_ms": 1.1336,
+      "p95_latency_ms": 2.231
     },
     "http_smuggling_advanced": {
       "total": 100,
@@ -415,8 +415,8 @@
       "true_negatives": 0,
       "detection_rate": 1,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.376634,
-      "p95_latency_ms": 0.420434
+      "median_latency_ms": 1.4651,
+      "p95_latency_ms": 2.154
     },
     "type_confusion": {
       "total": 100,
@@ -428,8 +428,8 @@
       "true_negatives": 0,
       "detection_rate": 0.11,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.475026,
-      "p95_latency_ms": 0.906526
+      "median_latency_ms": 1.7736,
+      "p95_latency_ms": 2.8703
     },
     "redos": {
       "total": 100,
@@ -441,8 +441,8 @@
       "true_negatives": 0,
       "detection_rate": 0.2,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.608002,
-      "p95_latency_ms": 0.919644
+      "median_latency_ms": 2.4825,
+      "p95_latency_ms": 4.1792
     },
     "unicode_homoglyph": {
       "total": 100,
@@ -454,8 +454,8 @@
       "true_negatives": 0,
       "detection_rate": 0.06,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.480351,
-      "p95_latency_ms": 0.978925
+      "median_latency_ms": 2.131,
+      "p95_latency_ms": 3.5258
     },
     "graphql_injection": {
       "total": 100,
@@ -467,8 +467,8 @@
       "true_negatives": 0,
       "detection_rate": 0.36,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.320454,
-      "p95_latency_ms": 0.655903
+      "median_latency_ms": 1.2461,
+      "p95_latency_ms": 2.5417
     },
     "nosql_injection_advanced": {
       "total": 100,
@@ -480,8 +480,8 @@
       "true_negatives": 0,
       "detection_rate": 0.79,
       "false_positive_rate": 0,
-      "median_latency_ms": 0.306945,
-      "p95_latency_ms": 0.341852
+      "median_latency_ms": 1.1413,
+      "p95_latency_ms": 1.8142
     }
   },
   "fpSamples": [],
