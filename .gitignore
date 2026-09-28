@@ -112,6 +112,10 @@ yarn-error.log*
 /deployment/frontend/
 /output/
 /outputs/
+/tools/revideo-aetherguard-60s/output/
+/tools/revideo-aetherguard-60s/public/assets/
+/tools/revideo-aetherguard-60s/public/fonts/
+/tools/revideo-aetherguard-60s/public/audio/
 /docs/generated/
 /hardware/kicad/**/scratch/
 /hardware/kicad/**/reports/probe-*
@@ -238,4 +242,27 @@ docs/video/**/*.jpg
 # Local render scratch (PPTX dumps) and editor state — never commit
 .arts/
 .cursor/
+
+# ZCode agent workspace state
+/.zcode/
+
+# Step-audit run logs and external audit tool output (aether-report.*) — never commit
+/.step-audit/
+/aether-report.json
+/aether-report.md
+
+# Windows accidental `> nul` redirect artifacts
+/nul
+
+# Backup HMAC / tamper-verification fixtures written on each test run
+/backend/test-data/backup-record-hmac-*
+/backend/test-data/backup-verify-*
+
+# Demo video media bytes (scripts, narration source and segment timing stay tracked)
+/video-assets/*
+!/video-assets/README.md
+!/video-assets/narration.md
+!/video-assets/narration-v2.md
+!/video-assets/segments.json
+!/video-assets/segments-normal.json
 
