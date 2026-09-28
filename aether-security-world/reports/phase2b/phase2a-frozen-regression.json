@@ -1,0 +1,1271 @@
+{
+  "considered": 103,
+  "recompiled": 103,
+  "rejected": 0,
+  "rows": [
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-001"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-002"
+    },
+    {
+      "attack_family": "cross_workflow_token_reuse",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-CF-001"
+    },
+    {
+      "attack_family": "stale_ownership_cache",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 20,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-TB-001"
+    },
+    {
+      "attack_family": "cross_account_session_misuse",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-TB-002"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-100"
+    },
+    {
+      "attack_family": "cross_workflow_token_reuse",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-CF-100"
+    },
+    {
+      "attack_family": "cache_invalidation_failure",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 4,
+      "episodes": 20,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-CD-100"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-101"
+    },
+    {
+      "attack_family": "cross_account_session_misuse",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-TB-100"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-201"
+    },
+    {
+      "attack_family": "cross_workflow_token_reuse",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-CF-200"
+    },
+    {
+      "attack_family": "state_machine_confusion",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 14,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-CF-201"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 4,
+      "episodes": 20,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-202"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 4,
+      "episodes": 20,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-300"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-301"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-MT-302"
+    },
+    {
+      "attack_family": "one_time_token_reuse",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WF-001"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-001"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-SES-001"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WF-100"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 19,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-100"
+    },
+    {
+      "attack_family": "cross_account_session_misuse",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-TB-200"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 19,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-200"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-SES-200"
+    },
+    {
+      "attack_family": "inconsistent_replicas",
+      "base_labels": [
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-CD-200"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-300"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WF-200"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 19,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-400"
+    },
+    {
+      "attack_family": "one_time_token_reuse",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-TKN-101"
+    },
+    {
+      "attack_family": "invalid_state_transition",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WFL-301"
+    },
+    {
+      "attack_family": "cross_workflow_token_reuse",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-CFR-401"
+    },
+    {
+      "attack_family": "state_machine_confusion",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 14,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WFR-501"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-501"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-SES-501"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-502"
+    },
+    {
+      "attack_family": "inconsistent_replicas",
+      "base_labels": [
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-TB-501"
+    },
+    {
+      "attack_family": "stale_object_reference",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-600"
+    },
+    {
+      "attack_family": "one_time_token_reuse",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-601"
+    },
+    {
+      "attack_family": "session_after_password_reset",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-602"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-603"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-604"
+    },
+    {
+      "attack_family": "state_machine_confusion",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 14,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WFR-100"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-700"
+    },
+    {
+      "attack_family": "cross_resource_token_reuse",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-CFR-500"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WF-300"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-801"
+    },
+    {
+      "attack_family": "race_sensitive_state",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-803"
+    },
+    {
+      "attack_family": "idor_bola",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-901"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-903"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-SES-901"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WF-901"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-101"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-SES-101"
+    },
+    {
+      "attack_family": "stale_ownership_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-102"
+    },
+    {
+      "attack_family": "race_sensitive_state",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WF-102"
+    },
+    {
+      "attack_family": "idor_bola",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-103"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-104"
+    },
+    {
+      "attack_family": "invalid_state_transition",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-010"
+    },
+    {
+      "attack_family": "race_sensitive_state",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-014"
+    },
+    {
+      "attack_family": "idor_bola",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-011"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-012"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-SES-002"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-WF-002"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 19,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-013"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-003"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-004"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-005"
+    },
+    {
+      "attack_family": "irreversible_state_reversal",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-006"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-002"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-007"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-008"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 19,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-009"
+    },
+    {
+      "attack_family": "race_sensitive_state",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-015"
+    },
+    {
+      "attack_family": "invalid_state_transition",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-016"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-017"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-018"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 19,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-020"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-021"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-022"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-023"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-024"
+    },
+    {
+      "attack_family": "irreversible_state_reversal",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-025"
+    },
+    {
+      "attack_family": "revoked_session_reuse",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-201"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 19,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-203"
+    },
+    {
+      "attack_family": "cross_account_session_misuse",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-204"
+    },
+    {
+      "attack_family": "race_sensitive_state",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-205"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 3,
+      "episodes": 17,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-019"
+    },
+    {
+      "attack_family": "idor_bola",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-026"
+    },
+    {
+      "attack_family": "race_sensitive_state",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-029"
+    },
+    {
+      "attack_family": "invalid_state_transition",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-027"
+    },
+    {
+      "attack_family": "idor_bola",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-030"
+    },
+    {
+      "attack_family": "inconsistent_revocation_state",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-032"
+    },
+    {
+      "attack_family": "stale_ownership_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-202"
+    },
+    {
+      "attack_family": "inconsistent_revocation_state",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-206"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-031"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-033"
+    },
+    {
+      "attack_family": "inconsistent_revocation_state",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 20,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-105"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-207"
+    },
+    {
+      "attack_family": "idor_bola",
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-034"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-035"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 18,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-036"
+    },
+    {
+      "attack_family": "race_sensitive_state",
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "counterfactual_outcomes": 2,
+      "episodes": 16,
+      "ok": true,
+      "semantic_equivalent": true,
+      "skeleton_id": "SK-AUTH-037"
+    }
+  ],
+  "semantic_equivalent": 103,
+  "source": "worlds\\skeletons\\accepted\\provider-run-002.jsonl.v05-run"
+}

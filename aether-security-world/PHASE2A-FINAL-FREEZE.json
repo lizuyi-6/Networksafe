@@ -1,0 +1,193 @@
+{
+  "architecture": "LLM → Semantic Skeleton → Deterministic Compiler → ASW world-spec → existing gates → Oracle",
+  "artifact": "PHASE2A-FINAL-FREEZE",
+  "components": {
+    "compiler": {
+      "description": "确定性编译器",
+      "path": "semantic_skeleton/compiler/compiler.py",
+      "sha256": "c724fb3a5e49a7a77f4700ccc3f54a32e69c5781e967d92c1ac777bbc04239b6"
+    },
+    "compiler_archetypes": {
+      "description": "不变量原型库",
+      "path": "semantic_skeleton/compiler/archetypes.py",
+      "sha256": "ee38802160a41c3909c433ba51b3516a696c2e4afe5c1cd166953d7103116b08"
+    },
+    "compiler_errors": {
+      "description": "失败分类词表",
+      "path": "semantic_skeleton/compiler/errors.py",
+      "sha256": "06a6641bd224e47f3bfea0cb0987d43b456952c54705e8ed81759a73f731dafd"
+    },
+    "compiler_plan": {
+      "description": "WorldPlan 与槽解析",
+      "path": "semantic_skeleton/compiler/plan.py",
+      "sha256": "159b6f69daae65903afe3edf82ffde67ec97bad2a29b030df0b4f1a1de1ac1fb"
+    },
+    "config": {
+      "description": "Phase 2A 配置（含租户轴白名单）",
+      "path": "configs/phase2a.json",
+      "sha256": "f6cd44129bcd31f298236f95d828dc1005ab2a091aa187159094d3cfed7827ac"
+    },
+    "counterfactual_verifier": {
+      "description": "先验复核器",
+      "path": "semantic_skeleton/validators/verify.py",
+      "sha256": "9eda032b96675bd10acee2ad8a05f3d537edd848199b40f7a803c729be8cdf3c"
+    },
+    "coverage_controller": {
+      "description": "覆盖控制器（含 least-used 调度）",
+      "path": "semantic_skeleton/coverage.py",
+      "sha256": "7b51aa629c6bc5be461c6c1ab886ed1a8a06935cdfaea764e9165aa59527fe51"
+    },
+    "fingerprint": {
+      "description": "语义指纹实现",
+      "path": "semantic_skeleton/fingerprint.py",
+      "sha256": "149814c47d7df3140ab9f0aa7ac296dc37a601bf468ff4d2e129523267d7214b"
+    },
+    "mechanism_registry": {
+      "description": "机制族注册表",
+      "path": "semantic_skeleton/mechanisms.py",
+      "sha256": "12ff2b406cbee43d3e39c521d7749d475ea87eba1663bdfad30912a30091ff19"
+    },
+    "ontology": {
+      "description": "语义事实本体",
+      "path": "semantic_skeleton/ontology.py",
+      "sha256": "03c6785fa3480aa6a1352df047266e5483919d6ff96f20fbc4708ef12ca5d1c0"
+    },
+    "oracle": {
+      "description": "Oracle（两趟判决）",
+      "path": "security_world/oracle/oracle.py",
+      "sha256": "f4ac410cba1376a3a79a7db43d9e8b19a3382bd31a5cef6f08376c8c9bd69971"
+    },
+    "prompt": {
+      "description": "generator prompt（v0.6，冻结）",
+      "path": "semantic_skeleton/prompts/v0.6.md",
+      "sha256": "1c891e4b6f51911d93f8c7bd86e9526147dcfcc5a59dc18b4623a4db3d2234bc"
+    },
+    "provider_client": {
+      "description": "加固版 provider 客户端",
+      "path": "semantic_skeleton/generator/live.py",
+      "sha256": "52cee112842016f8649d7d2427885aed83616f93d803e01d30d05d320d007517"
+    },
+    "skeleton_gate": {
+      "description": "§17 禁止字段扫描",
+      "path": "semantic_skeleton/skeleton.py",
+      "sha256": "937473c04ae139d5932ad98bee81c3ce4b9f1bf82bf29d67536722b304bd9a8d"
+    },
+    "skeleton_schema": {
+      "description": "语义骨架 schema",
+      "path": "semantic_skeleton/schemas/semantic-skeleton.schema.json",
+      "sha256": "82bc9516e089f9b37bd1f56b97da79d6faa83e020b74d4dac545a00196a3874d"
+    }
+  },
+  "confirmation_run": {
+    "audit": "reports\\phase2a\\go-no-go-confirmation.json",
+    "run_id": "provider-run-003"
+  },
+  "frozen_at_wallclock": "2026-09-26T00:47:50Z",
+  "go_gate": {
+    "criteria": [
+      {
+        "actual": 100,
+        "criterion": "accepted >= 100",
+        "passed": true
+      },
+      {
+        "actual": "0.8130",
+        "criterion": "acceptance rate >= 70%",
+        "passed": true
+      },
+      {
+        "actual": "0.0000（0/123）",
+        "criterion": "schema/shape generation failure < 10% raw",
+        "passed": true
+      },
+      {
+        "actual": "0.0650",
+        "criterion": "compiler failure < 10% raw",
+        "passed": true
+      },
+      {
+        "actual": 0,
+        "criterion": "oracle failure = 0",
+        "passed": true
+      },
+      {
+        "actual": 0,
+        "criterion": "internal compiler error = 0",
+        "passed": true
+      },
+      {
+        "actual": 0,
+        "criterion": "critical intervention correctness = 100%",
+        "passed": true
+      },
+      {
+        "actual": 0,
+        "criterion": "irrelevant invariance = 100%",
+        "passed": true
+      },
+      {
+        "actual": 0,
+        "criterion": "evidence masking world_truth preserved = 100%",
+        "passed": true
+      },
+      {
+        "actual": 0,
+        "criterion": "leakage findings = 0",
+        "passed": true
+      },
+      {
+        "actual": "0.0400",
+        "criterion": "largest structural cluster < 10%",
+        "passed": true
+      },
+      {
+        "actual": 29,
+        "criterion": "multi_tenant >= 8",
+        "passed": true
+      },
+      {
+        "actual": "45.021",
+        "criterion": "accepted / 100k output tokens > 2",
+        "passed": true
+      },
+      {
+        "actual": 0,
+        "criterion": "provider 无未解决的系统性挂死",
+        "passed": true
+      }
+    ],
+    "go": true,
+    "passed": 14,
+    "source": "reports\\phase2a\\go-no-go-confirmation.json",
+    "total": 14
+  },
+  "next_phase_blocked": "GO 后按 brief §14 STOP：不自动进入 500-world production。production budget / generator-OOD pilot / release split strategy / episode expansion scale / ASW v0.x freeze policy 需单独决定。",
+  "phase": "2A",
+  "run_contract": {
+    "compiler_version": "0.2.0",
+    "config_sha256": "f6cd44129bcd31f298236f95d828dc1005ab2a091aa187159094d3cfed7827ac",
+    "prompt_sha256": "1c891e4b6f51911d93f8c7bd86e9526147dcfcc5a59dc18b4623a4db3d2234bc",
+    "prompt_version": "0.6",
+    "run_id": "provider-run-002",
+    "skeleton_schema_bundle_sha256": "7a7ac9068824aa553d215585b0376b9f51a3b8bc03313caa5fa8c48ac567d8ec"
+  },
+  "status": "PHASE_2A_PRODUCTION_READY",
+  "tests": {
+    "legacy_suite": {
+      "exit_code": 0,
+      "passed": true,
+      "paths": [
+        "tests"
+      ],
+      "summary": "1229 passed in 396.73s (0:06:36)"
+    },
+    "phase2a_suite": {
+      "exit_code": 0,
+      "passed": true,
+      "paths": [
+        "semantic_skeleton/tests"
+      ],
+      "summary": "163 passed in 1.60s"
+    }
+  }
+}

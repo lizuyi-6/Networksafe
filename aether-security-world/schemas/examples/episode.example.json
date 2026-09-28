@@ -1,0 +1,228 @@
+{
+  "schema_version": "0.1",
+  "episode_id": "EP-000001-000",
+  "world_id": "W-000001",
+  "world_family_id": "WF-219f32eaf37d",
+  "counterfactual_family_id": "CF-402700a04353",
+  "variant_type": "base",
+  "split": "test",
+  "action": {
+    "action_id": "ACTN-000001-000",
+    "operation": "read",
+    "actor": "ACT-003",
+    "resource": "RES-001",
+    "session": "SES-003",
+    "token": null,
+    "workflow_instance": null,
+    "flow_id": "FLOW-READ",
+    "at": "2026-09-20T08:00:00Z",
+    "parameters": {},
+    "request": {
+      "method": "GET",
+      "path": "/api/orders/183",
+      "headers": {
+        "Host": "api.northwind.example.invalid",
+        "User-Agent": "Mozilla/5.0 (synthetic-client)",
+        "X-Tenant-Id": "TEN-001",
+        "X-Request-Id": "req-000001-000"
+      }
+    }
+  },
+  "timeline": [
+    {
+      "event_id": "EVT-000", "t_index": 0, "at": "2026-09-19T08:00:00Z",
+      "event_type": "login", "actor_id": "ACT-001",
+      "summary": "Alice authenticates with password + MFA and receives session SES-001.",
+      "emitted_evidence": ["EV-AUTH-003"], "causal_tag": "relevant",
+      "endpoint": { "method": "POST", "path": "/api/sessions" }, "outcome": "success"
+    },
+    {
+      "event_id": "EVT-001", "t_index": 1, "at": "2026-09-19T08:30:00Z",
+      "event_type": "workflow_transition", "actor_id": "ACT-002",
+      "summary": "Bob's order RES-001 transitions created -> paid.",
+      "state_before": { "workflow_states": { "WFI-001": { "current_state": "created" } }, "resource_states": { "RES-001": { "state": "created", "owner": "ACT-002" } } },
+      "state_after": { "workflow_states": { "WFI-001": { "current_state": "paid" } }, "resource_states": { "RES-001": { "state": "paid", "owner": "ACT-002" } } },
+      "emitted_evidence": ["EV-OWN-001", "EV-TENANT-RES"], "causal_tag": "relevant", "outcome": "success"
+    },
+    {
+      "event_id": "EVT-002", "t_index": 2, "at": "2026-09-19T09:00:00Z",
+      "event_type": "password_reset", "actor_id": "ACT-001",
+      "summary": "Alice resets her password; session SES-002 is revoked.",
+      "state_before": { "session_states": { "SES-002": { "valid": true, "revoked": false, "privilege_version": 0 } } },
+      "state_after": { "session_states": { "SES-002": { "valid": false, "revoked": true, "privilege_version": 0 } } },
+      "causal_tag": "relevant", "outcome": "success"
+    },
+    {
+      "event_id": "EVT-003", "t_index": 3, "at": "2026-09-20T08:00:00Z",
+      "event_type": "request", "actor_id": "ACT-003",
+      "summary": "Mallory reads order 183 on session SES-003, which was revoked after an abuse report.",
+      "causal_tag": "relevant",
+      "endpoint": { "method": "GET", "path": "/api/orders/183" }, "outcome": "unknown"
+    }
+  ],
+  "current_event": {
+    "event_id": "EVT-003", "t_index": 3, "at": "2026-09-20T08:00:00Z",
+    "event_type": "request", "actor_id": "ACT-003",
+    "summary": "Mallory reads order 183 on session SES-003, which was revoked after an abuse report.",
+    "causal_tag": "relevant",
+    "endpoint": { "method": "GET", "path": "/api/orders/183" }, "outcome": "unknown"
+  },
+  "observation": {
+    "model_visible": {
+      "renderer": "http_request",
+      "current_time": "2026-09-20T08:00:00Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/orders/183",
+        "query": {},
+        "headers": {
+          "Host": "api.northwind.example.invalid",
+          "User-Agent": "Mozilla/5.0 (synthetic-client)",
+          "X-Tenant-Id": "TEN-001",
+          "X-Request-Id": "req-000001-000"
+        },
+        "body": null,
+        "rendered_text": "GET /api/orders/183 HTTP/1.1\nHost: api.northwind.example.invalid\nUser-Agent: Mozilla/5.0 (synthetic-client)\nX-Tenant-Id: TEN-001\nX-Request-Id: req-000001-000\n"
+      },
+      "evidence": [
+        { "evidence_id": "EV-AUTH-003", "type": "session_record", "asserts_ref": "session.SES-003.principal", "value": "ACT-003", "source": "auth.northwind.example.invalid", "provenance": "system_of_record", "timestamp": "2026-09-19T08:00:05Z" },
+        { "evidence_id": "EV-OWN-001", "type": "ownership_record", "asserts_ref": "resource.RES-001.owner", "value": "ACT-002", "source": "order_db", "provenance": "system_of_record", "timestamp": "2026-09-19T08:30:00Z" },
+        { "evidence_id": "EV-ROLE-003", "type": "service_metadata", "asserts_ref": "actor.ACT-003.roles", "value": ["ROLE-CUSTOMER"], "source": "iam_db", "provenance": "system_of_record", "timestamp": "2026-09-19T08:00:00Z" },
+        { "evidence_id": "EV-TENANT-003", "type": "service_metadata", "asserts_ref": "actor.ACT-003.tenant", "value": "TEN-002", "source": "iam_db", "provenance": "system_of_record", "timestamp": "2026-09-19T08:00:00Z" },
+        { "evidence_id": "EV-TENANT-RES", "type": "service_metadata", "asserts_ref": "resource.RES-001.tenant", "value": "TEN-001", "source": "order_db", "provenance": "system_of_record", "timestamp": "2026-09-19T08:30:00Z" },
+        { "evidence_id": "EV-PV-003", "type": "service_metadata", "asserts_ref": "actor.ACT-003.privilege_version", "value": 0, "source": "iam_db", "provenance": "system_of_record", "timestamp": "2026-09-19T08:00:00Z" },
+        { "evidence_id": "EV-PVS-003", "type": "session_record", "asserts_ref": "session.SES-003.privilege_snapshot.privilege_version", "value": 0, "source": "auth.northwind.example.invalid", "provenance": "system_of_record", "timestamp": "2026-09-19T08:00:05Z" },
+        { "evidence_id": "EV-SESS-VALID-003", "type": "session_record", "asserts_ref": "session.SES-003.valid", "value": false, "source": "auth.northwind.example.invalid", "provenance": "system_of_record", "timestamp": "2026-09-19T09:30:00Z" },
+        { "evidence_id": "EV-SESS-003", "type": "session_record", "asserts_ref": "session.SES-003.revoked", "value": true, "source": "auth.northwind.example.invalid", "provenance": "system_of_record", "timestamp": "2026-09-19T09:30:00Z" },
+        { "evidence_id": "EV-CLIENT-001", "type": "http_header", "asserts_ref": "actor.ACT-003.tenant", "value": "TEN-001", "source": "user_supplied_header:X-Tenant-Id", "provenance": "client_supplied", "timestamp": "2026-09-20T08:00:00Z" }
+      ],
+      "timeline": [
+        { "event_id": "EVT-000", "t_index": 0, "at": "2026-09-19T08:00:00Z", "event_type": "login", "actor_id": "ACT-001", "summary": "Alice authenticates with password + MFA and receives session SES-001.", "endpoint": { "method": "POST", "path": "/api/sessions" }, "outcome": "success", "emitted_evidence": ["EV-AUTH-003"] },
+        { "event_id": "EVT-001", "t_index": 1, "at": "2026-09-19T08:30:00Z", "event_type": "workflow_transition", "actor_id": "ACT-002", "summary": "Bob's order RES-001 transitions created -> paid.", "outcome": "success", "emitted_evidence": ["EV-OWN-001", "EV-TENANT-RES"] },
+        { "event_id": "EVT-002", "t_index": 2, "at": "2026-09-19T09:00:00Z", "event_type": "password_reset", "actor_id": "ACT-001", "summary": "Alice resets her password; session SES-002 is revoked.", "outcome": "success", "emitted_evidence": [] },
+        { "event_id": "EVT-003", "t_index": 3, "at": "2026-09-20T08:00:00Z", "event_type": "request", "actor_id": "ACT-003", "summary": "Mallory reads order 183 on session SES-003, which was revoked after an abuse report.", "endpoint": { "method": "GET", "path": "/api/orders/183" }, "outcome": "unknown", "emitted_evidence": [] }
+      ]
+    },
+    "decision_metadata": {
+      "evidence_classification": [
+        { "evidence_id": "EV-AUTH-003", "type": "session_record", "asserts_ref": "session.SES-003.principal", "value": "ACT-003", "source": "auth.northwind.example.invalid", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T08:00:05Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true },
+        { "evidence_id": "EV-OWN-001", "type": "ownership_record", "asserts_ref": "resource.RES-001.owner", "value": "ACT-002", "source": "order_db", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T08:30:00Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true },
+        { "evidence_id": "EV-ROLE-003", "type": "service_metadata", "asserts_ref": "actor.ACT-003.roles", "value": ["ROLE-CUSTOMER"], "source": "iam_db", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T08:00:00Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true },
+        { "evidence_id": "EV-TENANT-003", "type": "service_metadata", "asserts_ref": "actor.ACT-003.tenant", "value": "TEN-002", "source": "iam_db", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T08:00:00Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true, "contradicts": ["EV-CLIENT-001"] },
+        { "evidence_id": "EV-TENANT-RES", "type": "service_metadata", "asserts_ref": "resource.RES-001.tenant", "value": "TEN-001", "source": "order_db", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T08:30:00Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true },
+        { "evidence_id": "EV-PV-003", "type": "service_metadata", "asserts_ref": "actor.ACT-003.privilege_version", "value": 0, "source": "iam_db", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T08:00:00Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true },
+        { "evidence_id": "EV-PVS-003", "type": "session_record", "asserts_ref": "session.SES-003.privilege_snapshot.privilege_version", "value": 0, "source": "auth.northwind.example.invalid", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T08:00:05Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true },
+        { "evidence_id": "EV-SESS-VALID-003", "type": "session_record", "asserts_ref": "session.SES-003.valid", "value": false, "source": "auth.northwind.example.invalid", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T09:30:00Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true },
+        { "evidence_id": "EV-SESS-003", "type": "session_record", "asserts_ref": "session.SES-003.revoked", "value": true, "source": "auth.northwind.example.invalid", "provenance": "system_of_record", "trust_level": "trusted", "timestamp": "2026-09-19T09:30:00Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": true },
+        { "evidence_id": "EV-CLIENT-001", "type": "http_header", "asserts_ref": "actor.ACT-003.tenant", "value": "TEN-001", "source": "user_supplied_header:X-Tenant-Id", "provenance": "client_supplied", "trust_level": "untrusted", "timestamp": "2026-09-20T08:00:00Z", "freshness": "fresh", "attacker_controllable": true, "visible_in_observation": true, "contradicts": ["EV-TENANT-003"] },
+        { "evidence_id": "EV-SUM-001", "type": "derived_summary", "asserts_ref": "resource.RES-001.owner", "value": "ACT-003", "source": "heuristic_classifier", "provenance": "heuristic_classifier", "trust_level": "derived", "timestamp": "2026-09-20T08:00:00Z", "freshness": "fresh", "attacker_controllable": false, "visible_in_observation": false, "contradicts": ["EV-OWN-001"] }
+      ],
+      "hidden_evidence_ids": ["EV-SUM-001"],
+      "evidence_availability_level": "complete",
+      "relevant_history": ["EVT-000", "EVT-001", "EVT-002", "EVT-003"],
+      "irrelevant_history": [],
+      "causal_tags": { "EVT-000": "relevant", "EVT-001": "relevant", "EVT-002": "relevant", "EVT-003": "relevant" }
+    }
+  },
+  "oracle_output": {
+    "schema_version": "0.1",
+    "world_truth": "attack",
+    "observable_decision": "attack",
+    "violated_invariants": ["INV-OWNERSHIP-001", "INV-TENANT-ISOLATION-001", "INV-SESSION-REVOCATION-001"],
+    "satisfied_invariants": ["INV-PRIVILEGE-VERSION-001"],
+    "skipped_invariants": [
+      { "invariant_id": "INV-TOKEN-LINEAGE-001", "reason": "out_of_scope" },
+      { "invariant_id": "INV-ONE-TIME-TOKEN-001", "reason": "out_of_scope" },
+      { "invariant_id": "INV-WORKFLOW-TRANSITION-001", "reason": "out_of_scope" }
+    ],
+    "required_evidence": [
+      { "evidence_id": "EV-ROLE-003", "decision_fact": "actor.ACT-003.roles", "asserts_ref": "actor.ACT-003.roles", "observable": true, "trust_level": "trusted" },
+      { "evidence_id": "EV-TENANT-003", "decision_fact": "actor.ACT-003.tenant", "asserts_ref": "actor.ACT-003.tenant", "observable": true, "trust_level": "trusted", "contradicted": true },
+      { "evidence_id": "EV-CLIENT-001", "decision_fact": "actor.ACT-003.tenant", "asserts_ref": "actor.ACT-003.tenant", "observable": true, "trust_level": "untrusted", "contradicted": true },
+      { "evidence_id": "EV-TENANT-RES", "decision_fact": "resource.RES-001.tenant", "asserts_ref": "resource.RES-001.tenant", "observable": true, "trust_level": "trusted" },
+      { "evidence_id": "EV-OWN-001", "decision_fact": "resource.RES-001.owner", "asserts_ref": "resource.RES-001.owner", "observable": true, "trust_level": "trusted" },
+      { "evidence_id": "EV-PV-003", "decision_fact": "actor.ACT-003.privilege_version", "asserts_ref": "actor.ACT-003.privilege_version", "observable": true, "trust_level": "trusted" },
+      { "evidence_id": "EV-PVS-003", "decision_fact": "session.SES-003.privilege_snapshot.privilege_version", "asserts_ref": "session.SES-003.privilege_snapshot.privilege_version", "observable": true, "trust_level": "trusted" },
+      { "evidence_id": "EV-SESS-VALID-003", "decision_fact": "session.SES-003.valid", "asserts_ref": "session.SES-003.valid", "observable": true, "trust_level": "trusted" },
+      { "evidence_id": "EV-SESS-003", "decision_fact": "session.SES-003.revoked", "asserts_ref": "session.SES-003.revoked", "observable": true, "trust_level": "trusted" }
+    ],
+    "missing_evidence": [],
+    "decision_trace": [
+      { "step": 0, "rule": "policy.match", "operands": { "operation": "read", "resource_type": "order" }, "result": ["POL-ORDER-READ-OWNER", "POL-ORDER-READ-SUPPORT", "POL-DEFAULT-DENY"] },
+      { "step": 1, "rule": "policy.evaluate", "operands": { "policy_id": "POL-ORDER-READ-OWNER", "ref": "action.actor.actor_id vs action.resource.owner" }, "result": "condition_false" },
+      { "step": 2, "rule": "policy.evaluate", "operands": { "policy_id": "POL-ORDER-READ-SUPPORT", "ref": "action.actor.roles" }, "result": "condition_false" },
+      { "step": 3, "rule": "policy.default", "operands": { "policy_id": "POL-DEFAULT-DENY", "is_default_rule": true }, "result": "deny" },
+      { "step": 4, "rule": "invariant.evaluate", "operands": { "invariant_id": "INV-OWNERSHIP-001", "applies_to": ["read"] }, "result": "violated" },
+      { "step": 5, "rule": "invariant.evaluate", "operands": { "invariant_id": "INV-TENANT-ISOLATION-001", "applies_to": ["read", "refund"] }, "result": "violated" },
+      { "step": 6, "rule": "invariant.evaluate", "operands": { "invariant_id": "INV-SESSION-REVOCATION-001", "applies_to": ["read", "refund"] }, "result": "violated" },
+      { "step": 7, "rule": "invariant.evaluate", "operands": { "invariant_id": "INV-PRIVILEGE-VERSION-001", "applies_to": ["read", "refund"] }, "result": "satisfied" },
+      { "step": 8, "rule": "invariant.skip", "operands": { "invariant_id": "INV-TOKEN-LINEAGE-001", "reason": "out_of_scope" }, "result": "skipped_out_of_scope" },
+      { "step": 9, "rule": "invariant.skip", "operands": { "invariant_id": "INV-ONE-TIME-TOKEN-001", "reason": "out_of_scope" }, "result": "skipped_out_of_scope" },
+      { "step": 10, "rule": "invariant.skip", "operands": { "invariant_id": "INV-WORKFLOW-TRANSITION-001", "reason": "out_of_scope" }, "result": "skipped_out_of_scope" },
+      { "step": 11, "rule": "verdict.aggregate", "operands": { "deny_from_default_rule": true, "violated_invariants": 3 }, "result": "attack" },
+      {
+        "step": 12, "rule": "evidence.sufficiency",
+        "operands": {
+          "consulted_facts": [
+            "actor.ACT-003.roles", "actor.ACT-003.tenant", "resource.RES-001.tenant", "resource.RES-001.owner",
+            "actor.ACT-003.privilege_version", "session.SES-003.privilege_snapshot.privilege_version",
+            "session.SES-003.valid", "session.SES-003.revoked"
+          ]
+        },
+        "result": "sufficient"
+      },
+      { "step": 13, "rule": "verdict.observable", "operands": { "sufficient": true, "established_values_used": true }, "result": "attack" }
+    ],
+    "evidence_view_id": "b7c1d2e3f4a5061728394a5b6c7d8e9f00112233445566778899aabbccddeeff",
+    "oracle_version": "0.1.0",
+    "notes": "REVISION 1: every consulted fact is a canonical ID-view key that appears verbatim in evidence.asserts_ref, so the sufficiency step is mechanically checkable against the fixture. consulted_facts is the DYNAMIC set actually read during evaluation - short-circuited branches are excluded - which is why actor.ACT-001.tenant (the only untrusted-only fact in the world) is not listed and the verdict is attack rather than insufficient_evidence."
+  },
+  "provenance": {
+    "created_at": "2026-09-20T08:00:00Z",
+    "pipeline_version": "0.1.0",
+    "generator_provenance": {
+      "model": "human",
+      "model_version": "n/a",
+      "prompt_version": "n/a",
+      "prompt_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "validation_summary": [
+      { "gate": "G1_schema", "passed": true, "detail": "world, action, episode, oracle_output validated" },
+      { "gate": "G2_reference_integrity", "passed": true, "detail": "all ids resolve; state_history monotonic; roles resolve to role_id" },
+      { "gate": "G3_policy_executability", "passed": true, "detail": "all ref paths resolve; no vacuous policy; attack_family idor_bola reachable" },
+      { "gate": "G4_oracle_determinism", "passed": true, "detail": "3/3 runs byte-identical" },
+      { "gate": "G5_counterfactual_consistency", "passed": true, "detail": "AXIS-001 owner intervention flips verdict to safe" },
+      { "gate": "G6_irrelevant_invariance", "passed": true, "detail": "User-Agent change holds verdict; diff_worlds().changed_paths == ()" },
+      { "gate": "G7_evidence_sufficiency", "passed": true, "detail": "insufficient variants hide >=1 consulted fact" },
+      { "gate": "G8_leakage_audit", "passed": true, "detail": "no group key value straddles splits in any of the 8 strategies" },
+      { "gate": "G9_duplicate_audit", "passed": true, "detail": "exact+normalized+structural dedup, 0 collisions" },
+      { "gate": "G10_distribution_summary", "passed": true, "detail": "report only" },
+      { "gate": "G11_surface_label_independence", "passed": true, "detail": "UA / X-Request-Id / header order / trace id / timestamp format vs verdict MI below threshold" }
+    ]
+  },
+  "split_assignments": [
+    { "strategy": "iid", "group_key": "counterfactual_family_id", "split": "test" },
+    { "strategy": "world_ood", "group_key": "world_family_id", "split": "test" },
+    { "strategy": "app_ood", "group_key": "app_domain", "split": "test" },
+    { "strategy": "workflow_ood", "group_key": "workflow_template_hash", "split": "test" },
+    { "strategy": "policy_ood", "group_key": "policy_graph_hash", "split": "test" },
+    { "strategy": "attack_ood", "group_key": "attack_family", "split": "test" },
+    { "strategy": "evidence_ood", "group_key": "semantic_scenario_signature", "split": "test" },
+    { "strategy": "generator_ood", "group_key": "generator_id", "split": "test" }
+  ],
+  "group_keys": {
+    "$comment": "REVISION 2: the twelve derived group-key values stamped at assembly time (design 10.1). Computed by security_world.model.episode_group_keys over this episode and world.example.json - the same pure functions that drive split assignment and the leakage audit, so the three cannot drift. Gate 2 asserts presence and (world permitting) re-derivation equality.",
+    "counterfactual_family_id": "CF-402700a04353",
+    "world_family_id": "WF-219f32eaf37d",
+    "policy_graph_hash": "844f758498b94bf5daf5c577518be86bcb6b630c07b06168221fef90009cc11e",
+    "workflow_template_hash": "d0c343eb6db93034c9e9a9bdf53dcc5f41a79ad0d1f4a0ad40c895c5d6c3dfbd",
+    "attack_family": "idor_bola",
+    "semantic_scenario_signature": "00ea361b975c67a92038099817ef1dec06b156d78a9fce44e5f4f419a5d2331f",
+    "app_domain": "e-commerce",
+    "generator_id": "human@n/a",
+    "generator_model_family": "human",
+    "policy_family_id": "PF-844f758498b9",
+    "workflow_family_id": "WFF-d0c343eb6db9",
+    "invariant_family_id": "IF-f15c60733806"
+  }
+}

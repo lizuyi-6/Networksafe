@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aether-security-world"
+version = "0.1.0"
+description = "Executable stateful security data factory: structured worlds, deterministic oracle, counterfactual expansion, leakage-controlled releases."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary - internal research" }
+
+# Runtime dependencies are deliberately tiny. The whole point of this project is
+# that ground truth is computed by a small amount of auditable Python; every extra
+# dependency is another place where a hidden non-determinism (dict ordering, hash
+# randomization, thread scheduling) could creep into a label.
+dependencies = [
+  "jsonschema>=4.26",
+  "referencing>=0.35",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "hypothesis>=6.100",
+]
+
+[tool.setuptools]
+# REVISION 1: was a hand-written ["security_world"], which omitted every subpackage
+# (model/policy/invariants/workflows/evidence/oracle/expansion/validation/release)
+# and the top-level `generation` package - a wheel built from it would silently ship
+# none of the engine.
+# REVISION 2 (generation layer, Agent E): `generation` itself is a package with
+# subpackages (prompts/step5/parser/provenance/stats), so they are listed explicitly too
+# - the same bug the revision-1 note describes, one level down. The fixture builder under
+# generation/fixtures/synthetic/ is a dev tool run from the source tree and is
+# deliberately NOT listed (nothing imports it).
+packages = [
+  "security_world",
+  "security_world.model",
+  "security_world.policy",
+  "security_world.invariants",
+  "security_world.workflows",
+  "security_world.evidence",
+  "security_world.oracle",
+  "security_world.expansion",
+  "security_world.validation",
+  "security_world.release",
+  "generation",
+  "generation.prompts",
+  "generation.step5",
+  "generation.parser",
+  "generation.provenance",
+  "generation.stats",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.3"
+# REVISION 1: testpaths pointed at a directory that does not exist yet. With
+# filterwarnings=["error"] below, pytest escalates PytestConfigWarning and exits 1
+# during collection, which the first subagent would read as a broken harness rather
+# than an empty suite. `--co -q` on an empty tree now reports exit code 5 with a
+# clear message; see design §18.
+# REVISION 3 (Phase 2B-0, brief §4): testpaths listed only `tests`, so a bare
+# `pytest` collected the 1229 legacy tests and silently skipped ALL 163
+# semantic-skeleton tests in `semantic_skeleton/tests/` - a green run that never
+# executed the Phase 2A suite (measured: two separate invocations were needed to
+# see 1229 + 163). `semantic_skeleton/tests` is now a first-class testpath, and
+# `scripts/check_test_collection.py` fails the build if either suite ever drops
+# to zero collected tests.
+testpaths = ["tests", "semantic_skeleton/tests"]
+# pythonpath=["."] 让 `import security_world` / `import generation` 在**未安装**
+# （无 pip install -e）的 checkout 里也能工作：本项目的测试就是契约，不能要求
+# 先构建 wheel。rootdir 即 aether-security-world/（conftest.py 所在处）。
+pythonpath = ["."]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "unit: deterministic single-behaviour tests",
+  "property: hypothesis property-based tests",
+  "metamorphic: metamorphic relation tests (must-change / must-not-change)",
+  "gate: data-quality gate tests (G1..G10)",
+  "slow: takes more than ~5s; excluded from the fast loop",
+]
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

@@ -1,0 +1,2493 @@
+{
+  "attack_family_preserved": 43,
+  "compiled": 60,
+  "extracted": 60,
+  "mean_invariant_category_overlap": 0.85,
+  "oracle_compiles": 60,
+  "phase1_accepted_considered": 69,
+  "rows": [
+    {
+      "attack_family": {
+        "phase1": "idor_bola",
+        "phase2a": "idor_bola",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "ownership_boundary_crossing",
+      "oracle_compiles": true,
+      "world_id": "W-ECOM-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "one_time_token_reuse",
+        "phase2a": "one_time_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "one_time_token_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-SCHOOL-004"
+    },
+    {
+      "attack_family": {
+        "phase1": "invalid_state_transition",
+        "phase2a": "invalid_state_transition",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "owner",
+          "state"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "invalid_state_transition",
+      "oracle_compiles": true,
+      "world_id": "W-finance-003"
+    },
+    {
+      "attack_family": {
+        "phase1": "horizontal_privesc",
+        "phase2a": "horizontal_privesc",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "principal",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "horizontal_peer_access",
+      "oracle_compiles": true,
+      "world_id": "W-cloud-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "invalid_state_transition",
+        "phase2a": "invalid_state_transition",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "owner",
+          "state"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authorization",
+          "ownership",
+          "resource_state",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "invalid_state_transition",
+      "oracle_compiles": true,
+      "world_id": "W-LOG-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "revoked_session_reuse",
+        "phase2a": "revoked_session_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "revoked",
+          "used"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "ownership",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-HR-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "cross_workflow_token_reuse",
+        "phase2a": "cross_workflow_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "flow_id",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "flow_id"
+        ]
+      },
+      "critical_fields_overlap": [
+        "flow_id"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "cross_flow_isolation"
+        ],
+        "phase2a": [
+          "token_lineage"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "token_reused_across_flow",
+      "oracle_compiles": true,
+      "world_id": "W-crm-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "inconsistent_revocation_state",
+        "phase2a": "revoked_session_reuse",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "privilege_version",
+          "revoked"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-IAM-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "workflow_bypass",
+        "phase2a": "workflow_bypass",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "roles"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "workflow_state_bypass",
+      "oracle_compiles": true,
+      "world_id": "W-CODE-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "invalid_state_transition",
+        "phase2a": "invalid_state_transition",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "revoked"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "session_revocation",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "invalid_state_transition",
+      "oracle_compiles": true,
+      "world_id": "W-industrial-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "idor_bola",
+        "phase2a": "idor_bola",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "revoked"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "ownership_boundary_crossing",
+      "oracle_compiles": true,
+      "world_id": "W-api-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "invalid_state_transition",
+        "phase2a": "invalid_state_transition",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "authentication_state",
+          "current_state",
+          "roles"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authentication_state",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "invalid_state_transition",
+      "oracle_compiles": true,
+      "world_id": "W-iot-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "repeated_operation",
+        "phase2a": "repeated_operation",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "authentication_state",
+          "roles",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authentication_state",
+          "one_time_token"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "repeated_operation",
+      "oracle_compiles": true,
+      "world_id": "W-pm-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "one_time_token_reuse",
+        "phase2a": "one_time_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "one_time_token_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-content-otr-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "scope_mismatch",
+        "phase2a": "scope_mismatch",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "revoked",
+          "scope"
+        ],
+        "phase2a": [
+          "scope"
+        ]
+      },
+      "critical_fields_overlap": [
+        "scope"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "session_revocation",
+          "token_scope"
+        ],
+        "phase2a": [
+          "token_scope"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "token_scope"
+      ],
+      "mechanism_family": "token_scope_overreach",
+      "oracle_compiles": true,
+      "world_id": "W-sub-scope-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "stale_session_privilege",
+        "phase2a": "stale_session_privilege",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_snapshot.privilege_version",
+          "privilege_version",
+          "revoked",
+          "state"
+        ],
+        "phase2a": [
+          "privilege_snapshot.privilege_version"
+        ]
+      },
+      "critical_fields_overlap": [
+        "privilege_snapshot.privilege_version"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "privilege_version",
+          "resource_state",
+          "session_revocation",
+          "token_scope"
+        ],
+        "phase2a": [
+          "privilege_version"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "privilege_version"
+      ],
+      "mechanism_family": "session_privilege_snapshot_stale",
+      "oracle_compiles": true,
+      "world_id": "W-saas-002"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-cloud-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "inconsistent_revocation_state",
+        "phase2a": "stale_authorization",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 3,
+      "critical_fields": {
+        "phase1": [
+          "privilege_snapshot.privilege_version",
+          "privilege_version",
+          "revoked"
+        ],
+        "phase2a": [
+          "privilege_snapshot.privilege_version",
+          "privilege_version"
+        ]
+      },
+      "critical_fields_overlap": [
+        "privilege_snapshot.privilege_version",
+        "privilege_version"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "privilege_version",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "privilege_version"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "privilege_version"
+      ],
+      "mechanism_family": "privilege_version_drift",
+      "oracle_compiles": true,
+      "world_id": "W-msg-revoke-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "idor_bola",
+        "phase2a": "idor_bola",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "authentication_state",
+          "owner"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authentication_state",
+          "ownership"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "ownership_boundary_crossing",
+      "oracle_compiles": true,
+      "world_id": "W-shop-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "stale_object_reference",
+        "phase2a": "workflow_bypass",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "owner",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "workflow_state_bypass",
+      "oracle_compiles": true,
+      "world_id": "W-school-stale-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "revoked_session_reuse",
+        "phase2a": "revoked_session_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "owner",
+          "privilege_snapshot.privilege_version",
+          "privilege_version",
+          "revoked"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "privilege_version",
+          "session_revocation",
+          "tenant_isolation",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-finance-revoked-002"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-care-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "race_sensitive_state",
+        "phase2a": "tenant_mismatch",
+        "same": false
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "revoked",
+          "scope",
+          "state"
+        ],
+        "phase2a": [
+          "scope"
+        ]
+      },
+      "critical_fields_overlap": [
+        "scope"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "resource_state",
+          "session_revocation",
+          "token_scope"
+        ],
+        "phase2a": [
+          "token_scope"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "token_scope"
+      ],
+      "mechanism_family": "delegated_tenant_access",
+      "oracle_compiles": true,
+      "world_id": "W-101-devops-race"
+    },
+    {
+      "attack_family": {
+        "phase1": "stale_object_reference",
+        "phase2a": "horizontal_privesc",
+        "same": false
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "state"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "resource_state"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "horizontal_peer_access",
+      "oracle_compiles": true,
+      "world_id": "W-201-hr-stale-reference"
+    },
+    {
+      "attack_family": {
+        "phase1": "cross_workflow_token_reuse",
+        "phase2a": "cross_workflow_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "flow_id",
+          "scope"
+        ],
+        "phase2a": [
+          "flow_id"
+        ]
+      },
+      "critical_fields_overlap": [
+        "flow_id"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "cross_flow_isolation"
+        ],
+        "phase2a": [
+          "token_lineage"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "token_reused_across_flow",
+      "oracle_compiles": true,
+      "world_id": "W-code-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "inconsistent_revocation_state",
+        "phase2a": "revoked_session_reuse",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "revoked",
+          "valid"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-ticket-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "vertical_privesc",
+        "phase2a": "workflow_bypass",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "roles"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "workflow_state_bypass",
+      "oracle_compiles": true,
+      "world_id": "W-iam-vertical-201"
+    },
+    {
+      "attack_family": {
+        "phase1": "invalid_state_transition",
+        "phase2a": "workflow_bypass",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "privilege_version",
+          "state"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "privilege_version",
+          "resource_state"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "workflow_state_bypass",
+      "oracle_compiles": true,
+      "world_id": "W-logistics-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "one_time_token_reuse",
+        "phase2a": "one_time_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "scope",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "one_time_token_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-crm-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "race_sensitive_state",
+        "phase2a": "race_sensitive_state",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "session_revocation",
+          "tenant_isolation",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "race_sensitive_state",
+      "oracle_compiles": true,
+      "world_id": "W-IOT-RACE-001"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-CON-STALE-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "revoked_session_reuse",
+        "phase2a": "revoked_session_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "revoked",
+          "state"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-IND-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "cross_workflow_token_reuse",
+        "phase2a": "cross_workflow_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "flow_id",
+          "owner",
+          "revoked"
+        ],
+        "phase2a": [
+          "flow_id"
+        ]
+      },
+      "critical_fields_overlap": [
+        "flow_id"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "cross_flow_isolation",
+          "ownership",
+          "session_revocation",
+          "tenant_isolation",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "token_lineage"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "token_reused_across_flow",
+      "oracle_compiles": true,
+      "world_id": "W-api-mkt-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "inconsistent_revocation_state",
+        "phase2a": "revoked_session_reuse",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "revoked",
+          "valid"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-PM-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "horizontal_privesc",
+        "phase2a": "horizontal_privesc",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_snapshot.privilege_version"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "horizontal_peer_access",
+      "oracle_compiles": true,
+      "world_id": "W-messaging-horizontal-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "repeated_operation",
+        "phase2a": "repeated_operation",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "state",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "resource_state"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "repeated_operation",
+      "oracle_compiles": true,
+      "world_id": "W-cloudstore-repeat-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "one_time_token_reuse",
+        "phase2a": "one_time_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "scope",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "token_scope"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "one_time_token_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-w2-sub-reset"
+    },
+    {
+      "attack_family": {
+        "phase1": "revoked_session_reuse",
+        "phase2a": "revoked_session_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "revoked"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-ecom-revoked-101"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-saas-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "stale_permission_cache",
+        "phase2a": "horizontal_privesc",
+        "same": false
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_snapshot.privilege_version",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "privilege_version",
+          "session_revocation",
+          "tenant_isolation"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "horizontal_peer_access",
+      "oracle_compiles": true,
+      "world_id": "W-FINSTALE-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "idor_bola",
+        "phase2a": "idor_bola",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "authentication_state",
+          "owner"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authentication_state",
+          "ownership"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "ownership_boundary_crossing",
+      "oracle_compiles": true,
+      "world_id": "W-school-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "repeated_operation",
+        "phase2a": "repeated_operation",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "revoked",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "session_revocation",
+          "token_scope"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "repeated_operation",
+      "oracle_compiles": true,
+      "world_id": "W-logistics-complex-101"
+    },
+    {
+      "attack_family": {
+        "phase1": "one_time_token_reuse",
+        "phase2a": "one_time_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "revoked",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "ownership",
+          "session_revocation",
+          "tenant_isolation"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "one_time_token_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-ticketing-771"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-devops-ssrf-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "stale_object_reference",
+        "phase2a": "workflow_bypass",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "privilege_version",
+          "state"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "resource_state"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "workflow_state_bypass",
+      "oracle_compiles": true,
+      "world_id": "W-health-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "revoked_session_reuse",
+        "phase2a": "revoked_session_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "privilege_version",
+          "revoked"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "privilege_version",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-HR-REVOCATION-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "cross_workflow_token_reuse",
+        "phase2a": "cross_workflow_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "flow_id",
+          "owner",
+          "revoked",
+          "scope",
+          "used"
+        ],
+        "phase2a": [
+          "flow_id"
+        ]
+      },
+      "critical_fields_overlap": [
+        "flow_id"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authorization",
+          "cross_flow_isolation",
+          "one_time_token",
+          "session_revocation",
+          "token_scope",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "token_lineage"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "token_reused_across_flow",
+      "oracle_compiles": true,
+      "world_id": "W-codeforge-001"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-CRM-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "horizontal_privesc",
+        "phase2a": "horizontal_privesc",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "owner",
+          "roles"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "horizontal_peer_access",
+      "oracle_compiles": true,
+      "world_id": "W-iam-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "repeated_operation",
+        "phase2a": "repeated_operation",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "state",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "resource_state"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "repeated_operation",
+      "oracle_compiles": true,
+      "world_id": "W-API-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "one_time_token_reuse",
+        "phase2a": "one_time_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "state",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "ownership",
+          "resource_state"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "one_time_token_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-messaging-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "stale_object_reference",
+        "phase2a": "workflow_bypass",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "state"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "resource_state"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "workflow_state_bypass",
+      "oracle_compiles": true,
+      "world_id": "W-project-stale-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "revoked_session_reuse",
+        "phase2a": "revoked_session_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "revoked",
+          "state"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "resource_state",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-subscription-002"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-content-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "unsafe_deserialization",
+        "phase2a": "revoked_session_reuse",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "revoked",
+          "state",
+          "used"
+        ],
+        "phase2a": [
+          "revoked"
+        ]
+      },
+      "critical_fields_overlap": [
+        "revoked"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "resource_state",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "session_revocation"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "session_revocation"
+      ],
+      "mechanism_family": "revoked_session_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-industrial-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "prompt_injection",
+        "phase2a": "workflow_bypass",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "workflow_state_bypass",
+      "oracle_compiles": true,
+      "world_id": "W-ecom-prompt-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "cross_workflow_token_reuse",
+        "phase2a": "cross_workflow_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "flow_id",
+          "used"
+        ],
+        "phase2a": [
+          "flow_id"
+        ]
+      },
+      "critical_fields_overlap": [
+        "flow_id"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "cross_flow_isolation",
+          "one_time_token"
+        ],
+        "phase2a": [
+          "token_lineage"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "token_reused_across_flow",
+      "oracle_compiles": true,
+      "world_id": "W-school-token-001"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-cloud-storage-revocation-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "idor_bola",
+        "phase2a": "idor_bola",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "state"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "ownership_boundary_crossing",
+      "oracle_compiles": true,
+      "world_id": "W-ticket-idor-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "invalid_state_transition",
+        "phase2a": "invalid_state_transition",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "state"
+        ],
+        "phase2a": [
+          "current_state"
+        ]
+      },
+      "critical_fields_overlap": [
+        "current_state"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "resource_state",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "workflow_transition"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "workflow_transition"
+      ],
+      "mechanism_family": "invalid_state_transition",
+      "oracle_compiles": true,
+      "world_id": "W-IOT-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "one_time_token_reuse",
+        "phase2a": "one_time_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "state",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "ownership",
+          "resource_state"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "one_time_token_reuse",
+      "oracle_compiles": true,
+      "world_id": "W-health-one-time-token-001"
+    },
+    {
+      "extracted": false,
+      "world_id": "W-saas-stale-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "race_sensitive_state",
+        "phase2a": "race_sensitive_state",
+        "same": true
+      },
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "current_state",
+          "revoked",
+          "used"
+        ],
+        "phase2a": [
+          "used"
+        ]
+      },
+      "critical_fields_overlap": [
+        "used"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "one_time_token",
+          "session_revocation",
+          "workflow_transition"
+        ],
+        "phase2a": [
+          "one_time_token"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "one_time_token"
+      ],
+      "mechanism_family": "race_sensitive_state",
+      "oracle_compiles": true,
+      "world_id": "W-finance-race-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "ssrf",
+        "phase2a": "horizontal_privesc",
+        "same": false
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_snapshot.privilege_version"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "privilege_version",
+          "tenant_isolation"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "horizontal_peer_access",
+      "oracle_compiles": true,
+      "world_id": "W-devops-ssrf-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "stale_session_privilege",
+        "phase2a": "stale_session_privilege",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_snapshot.privilege_version",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "privilege_snapshot.privilege_version"
+        ]
+      },
+      "critical_fields_overlap": [
+        "privilege_snapshot.privilege_version"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "ownership",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "privilege_version"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "privilege_version"
+      ],
+      "mechanism_family": "session_privilege_snapshot_stale",
+      "oracle_compiles": true,
+      "world_id": "W-hr-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "cross_workflow_token_reuse",
+        "phase2a": "cross_workflow_token_reuse",
+        "same": true
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "flow_id",
+          "owner",
+          "revoked"
+        ],
+        "phase2a": [
+          "flow_id"
+        ]
+      },
+      "critical_fields_overlap": [
+        "flow_id"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authorization",
+          "cross_flow_isolation",
+          "one_time_token"
+        ],
+        "phase2a": [
+          "token_lineage"
+        ]
+      },
+      "invariant_categories_overlap": [],
+      "mechanism_family": "token_reused_across_flow",
+      "oracle_compiles": true,
+      "world_id": "W-CODE-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "stale_permission_cache",
+        "phase2a": "stale_authorization",
+        "same": false
+      },
+      "base_labels": [
+        "attack"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 3,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_snapshot.privilege_version",
+          "privilege_version",
+          "valid"
+        ],
+        "phase2a": [
+          "privilege_snapshot.privilege_version",
+          "privilege_version"
+        ]
+      },
+      "critical_fields_overlap": [
+        "privilege_snapshot.privilege_version",
+        "privilege_version"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "privilege_version",
+          "session_revocation"
+        ],
+        "phase2a": [
+          "privilege_version"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "privilege_version"
+      ],
+      "mechanism_family": "privilege_version_drift",
+      "oracle_compiles": true,
+      "world_id": "W-iam-002"
+    },
+    {
+      "attack_family": {
+        "phase1": "ssrf",
+        "phase2a": "horizontal_privesc",
+        "same": false
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_version",
+          "roles"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authentication_state",
+          "ownership"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "horizontal_peer_access",
+      "oracle_compiles": true,
+      "world_id": "W-IND-SSRF-001"
+    },
+    {
+      "attack_family": {
+        "phase1": "horizontal_privesc",
+        "phase2a": "horizontal_privesc",
+        "same": true
+      },
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "compiled": true,
+      "counterfactual_outcomes": 2,
+      "critical_fields": {
+        "phase1": [
+          "owner",
+          "privilege_version"
+        ],
+        "phase2a": [
+          "owner"
+        ]
+      },
+      "critical_fields_overlap": [
+        "owner"
+      ],
+      "extracted": true,
+      "invariant_categories": {
+        "phase1": [
+          "authentication_state",
+          "ownership"
+        ],
+        "phase2a": [
+          "ownership"
+        ]
+      },
+      "invariant_categories_overlap": [
+        "ownership"
+      ],
+      "mechanism_family": "horizontal_peer_access",
+      "oracle_compiles": true,
+      "world_id": "W-LOG-HORIZ-002"
+    }
+  ]
+}

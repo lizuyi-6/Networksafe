@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/asw/action.schema.json",
+  "title": "Aether Security World - Action v0.1",
+  "description": "REVISION 1 (new file). The Action is the oracle's PRIMARY INPUT, and it had no schema and was absent from every release artefact - which meant a third party holding a frozen release could not rebuild the oracle's input and therefore could not independently recompute world_truth or observable_decision. Every field here is an ID reference into the world, so an episode plus its world fully determines the verdict. `session`, `token` and `workflow_instance` are nullable on purpose: an unbound subject is what makes 'revoked session reuse', 'cross-flow token reuse' and 'workflow bypass' representable, and an unbound subject makes the corresponding invariant skipped_out_of_scope rather than silently satisfied.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "action_id",
+    "operation",
+    "actor",
+    "flow_id",
+    "at"
+  ],
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "action_id": {
+      "type": "string",
+      "pattern": "^ACTN-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "operation": {
+      "$comment": "Must match an operation declared in world.application.endpoints (Gate 2). This is what policy.action.operation and invariant.applies_to are matched against.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "actor": {
+      "$comment": "The principal performing the action. Required: there is no anonymous action in Phase 1 (an unauthenticated request is modelled as an actor with authentication_state='unauthenticated').",
+      "type": "string",
+      "pattern": "^ACT-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "resource": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^RES-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "session": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^SES-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "token": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^TOK-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "workflow_instance": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^WFI-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "flow_id": {
+      "$comment": "The flow the action is executing in. Compared against token.flow_id by the token-lineage invariant; this is what makes cross-workflow token reuse detectable.",
+      "type": "string",
+      "pattern": "^FLOW-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "at": {
+      "description": "VirtualClock timestamp of the action.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?Z$"
+    },
+    "parameters": {
+      "$comment": "Structured action inputs. Payload-class attacks are represented here as structured tainted inputs, never as strings the oracle parses: see design §8.5.",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "request": {
+      "$comment": "The request surface. Only these fields may be projected by a renderer into observation.model_visible.request (design §5.2 renderer allowlist).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "binding_note": {
+      "type": "string",
+      "maxLength": 512
+    }
+  }
+}

@@ -1,0 +1,73 @@
+# Aether Security World — generated artefacts are never committed.
+# Mirrors the ml/ convention in the parent repo: source is tracked, data is not.
+# Rationale: a dataset release is a frozen artefact with its own manifest and
+# sha256 index; committing the bytes would make every dataset change a code diff.
+
+# --- generated datasets -------------------------------------------------------
+# Phase 1.5 / Phase 2A 的 provider 产物：raw 帧里带完整模型输出文本，checkpoint 同。
+# worlds/handcrafted/ 是**源**（23 个参考世界），不在此列。
+/datasets/
+/worlds/generated/
+/worlds/raw/
+/worlds/accepted/
+/worlds/rejected/
+/worlds/quarantine/
+/worlds/revalidated/
+/worlds/skeletons/
+/worlds/compiled/
+/generation/fixtures/recorded/
+/generation/fixtures/live/
+/logs/
+
+# --- provider provenance / checkpoints（同样带完整输出文本）--------------------
+/provenance/
+
+# --- run state ----------------------------------------------------------------
+/state/*-progress.json
+/state/*-coverage.json
+/state/*-frozen-snapshot.json
+/state/phase2a-run.lock
+
+# --- python -------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# --- local secrets (LLM provider keys; never commit) --------------------------
+.env
+.env.local
+*.key
+
+# --- scratch: one-off local drafts (REVISION 2, task B) -----------------------
+# Temporary patch/analysis scripts that were used during corpus bring-up. They are
+# NOT part of the package: keeping them out of the tree root stops them from being
+# imported or collected as tests, and gitignoring them stops one-off bytes from
+# entering history. Delete the directory when its contents stop being useful.
+/scratch/
+
+# --- dataset payloads: frozen by hash (SHA256SUMS / manifests), bytes stay local
+# Releases track manifests, audits and freeze records only — same convention as
+# the header comment: committing dataset bytes turns every regen into a code diff.
+/releases-staging/
+/releases/**/episodes/
+/releases/**/worlds/
+# provider-run world payloads mirror the top-level raw/accepted/compiled layout;
+# handcrafted/ stays tracked (it is the 23-world reference source).
+/worlds/production/
+/worlds/ood/
+/worlds/invalidated-runs/
+/worlds/revalidated*/
+
+# --- editors / OS -------------------------------------------------------------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

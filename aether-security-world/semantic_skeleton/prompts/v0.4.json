@@ -1,0 +1,7 @@
+{
+  "mechanism_families": 46,
+  "output_format": "jsonl",
+  "prompt_sha256": "5ef3b16cd89c044604d6aaea3570009f5db293bd455e19c763691e0be5599ad3",
+  "prompt_version": "0.4",
+  "semantic_facts": 65
+}

@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/asw/oracle-output.schema.json",
+  "title": "Aether Security World - Oracle Output v0.1",
+  "description": "The deterministic verdict for one episode. REVISION 1: `required_evidence[].decision_fact` now carries the canonical fact key the oracle computed the closure over, so 'what the decision needed' has exactly one owner (the oracle) and is directly comparable with evidence.asserts_ref. `skipped_invariants` records out-of-scope invariants so that satisfied ∪ violated ∪ skipped == all invariants is checkable. `evidence_view_id` is redefined as sha256(world_id, action_id, visible evidence) - the old definition (hash of the visible set alone) made an unsatisfiable promise, because observable_decision is a function of (world, action, evidence view), not of the evidence view alone.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "world_truth",
+    "observable_decision",
+    "violated_invariants",
+    "satisfied_invariants",
+    "skipped_invariants",
+    "required_evidence",
+    "missing_evidence",
+    "decision_trace",
+    "evidence_view_id",
+    "oracle_version"
+  ],
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "0.1"
+    },
+    "world_truth": {
+      "$comment": "Computed over the FULL world state. REVISION 1 aggregation rule: attack iff (a) a NON-default policy rule denied the action, or (b) at least one invariant was violated. Severity no longer participates - it is an author-writable enum and using it handed label authority to whoever wrote the world. ATTACK_CATEGORIES is engine-private and equals the full category list: a violated security invariant is an attack by definition.",
+      "type": "string",
+      "enum": [
+        "safe",
+        "attack",
+        "unauthorized"
+      ]
+    },
+    "observable_decision": {
+      "$comment": "Computed over the VISIBLE evidence only, using the established fact values rather than world truth. When a decision-critical fact cannot be established from evidence in TRUSTED_ESTABLISHES = {trusted, semi_trusted}, this is insufficient_evidence even if world_truth is attack. 'unauthorized' (default-deny only, no invariant violated) stays observable as unauthorized.",
+      "type": "string",
+      "enum": [
+        "safe",
+        "attack",
+        "insufficient_evidence",
+        "unauthorized"
+      ]
+    },
+    "violated_invariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "satisfied_invariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "skipped_invariants": {
+      "$comment": "REVISION 1: invariants out of scope for this action's operation, or in scope but with an unbound subject. Recorded, never silently dropped and never counted as satisfied. Assertion: violated ∪ satisfied ∪ skipped == every invariant id in the world.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "invariant_id",
+          "reason"
+        ],
+        "properties": {
+          "invariant_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "out_of_scope",
+              "unbound_subject"
+            ]
+          }
+        }
+      }
+    },
+    "required_evidence": {
+      "description": "Every evidence item the computed decision closure needed, keyed by the canonical fact key. `decision_fact` is what makes this comparable with evidence.asserts_ref.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence_id",
+          "decision_fact",
+          "asserts_ref",
+          "observable",
+          "trust_level"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "string"
+          },
+          "decision_fact": {
+            "$comment": "REVISION 2: the canonical ID-view path BNF (design §4.3) - the same pattern as evidence.asserts_ref, so the two are byte-comparable (D3). One path grammar, one notation (task A3).",
+            "type": "string",
+            "pattern": "^(actor|resource|session|token|workflow|workflow_instance|cache|service|credential|role)\\.[A-Za-z0-9][A-Za-z0-9._-]{0,62}(\\.[A-Za-z0-9_]+)+$"
+          },
+          "asserts_ref": {
+            "$comment": "REVISION 2: the canonical ID-view path BNF (design §4.3) - identical to evidence.schema.json and episode.schema.json evidence_observation (task A3).",
+            "type": "string",
+            "pattern": "^(actor|resource|session|token|workflow|workflow_instance|cache|service|credential|role)\\.[A-Za-z0-9][A-Za-z0-9._-]{0,62}(\\.[A-Za-z0-9_]+)+$"
+          },
+          "observable": {
+            "type": "boolean"
+          },
+          "trust_level": {
+            "type": "string",
+            "enum": [
+              "trusted",
+              "semi_trusted",
+              "untrusted",
+              "derived"
+            ]
+          },
+          "contradicted": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "missing_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decision_fact",
+          "reason"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decision_fact": {
+            "$comment": "REVISION 2: the canonical ID-view path BNF (design §4.3), identical to required_evidence[].decision_fact above (task A3).",
+            "type": "string",
+            "pattern": "^(actor|resource|session|token|workflow|workflow_instance|cache|service|credential|role)\\.[A-Za-z0-9][A-Za-z0-9._-]{0,62}(\\.[A-Za-z0-9_]+)+$"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_rendered",
+              "attacker_controlled_only",
+              "contradictory",
+              "stale",
+              "untrusted_source",
+              "derived_only"
+            ]
+          }
+        }
+      }
+    },
+    "decision_trace": {
+      "description": "Ordered machine execution record of the rule evaluation that produced the verdicts. Each entry names the rule, the operands and the result. Reproducible by re-running the same rules; contains no natural-language reasoning. `evidence.sufficiency` operands carry `consulted_facts`: the refs actually read during evaluation (short-circuited branches excluded).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "step",
+          "rule",
+          "result"
+        ],
+        "properties": {
+          "step": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rule": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "operands": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "result": {
+            "type": [
+              "string",
+              "boolean",
+              "number",
+              "null",
+              "array",
+              "object"
+            ]
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "evidence_view_id": {
+      "$comment": "REVISION 1: sha256 over (world_id, action_id, canonical visible evidence set). The determinism guarantee is 'same (world, action, evidence view) => same output', NOT 'same evidence view => same output' - two worlds can share a visible evidence set and still differ.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "oracle_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

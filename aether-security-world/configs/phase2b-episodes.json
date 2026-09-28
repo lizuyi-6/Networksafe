@@ -1,0 +1,35 @@
+{
+  "$comment": "Phase 2B 的正式 episode 生产计划（brief §33-§41）。这份文件会被 production contract freeze 哈希（brief §20 的 episode expansion config hash）。surface 分配原则见 analysis/phase2b_expand.py 的 DEFAULT_PLAN 注释：承载判决的家族给满 (renderer × style)，承载证据可见性的家族只给 renderer。",
+  "plan_version": "1.0",
+  "phase": "2B",
+  "renderers": [
+    "http_request",
+    "structured_state",
+    "reverse_proxy_log",
+    "application_log",
+    "audit_log",
+    "api_gateway_record",
+    "multi_event_trace",
+    "mixed_evidence_bundle"
+  ],
+  "styles": [
+    "rest",
+    "graphql",
+    "rpc"
+  ],
+  "full_surface_families": [
+    "base",
+    "critical_intervention"
+  ],
+  "trust_provenance_variants_per_world": 3,
+  "trust_provenance_renderer": "http_request",
+  "expected_episodes_per_world": {
+    "$comment": "Phase 2A  confirmation run 的 100 个世界上实测：448/4 = 112.0。500 worlds ⇒ ≈56k episodes，落在 brief §34 的 40k–60k 区间内。",
+    "measured_on": "worlds/skeletons/accepted/provider-run-003.jsonl",
+    "measured_worlds": 4,
+    "measured_episodes": 448,
+    "episodes_per_world": 112.0
+  },
+  "worlds_source": "worlds/production/accepted/provider-run-production-001.jsonl",
+  "config": "configs/phase2a.json"
+}

@@ -1,0 +1,99 @@
+{
+  "schema_version": "0.1",
+  "world_truth": "attack",
+  "observable_decision": "attack",
+  "violated_invariants": [
+    "INV-OWNERSHIP-001",
+    "INV-TENANT-ISOLATION-001",
+    "INV-SESSION-REVOCATION-001"
+  ],
+  "satisfied_invariants": [
+    "INV-PRIVILEGE-VERSION-001"
+  ],
+  "skipped_invariants": [
+    {
+      "invariant_id": "INV-TOKEN-LINEAGE-001",
+      "reason": "out_of_scope"
+    },
+    {
+      "invariant_id": "INV-ONE-TIME-TOKEN-001",
+      "reason": "out_of_scope"
+    },
+    {
+      "invariant_id": "INV-WORKFLOW-TRANSITION-001",
+      "reason": "out_of_scope"
+    }
+  ],
+  "required_evidence": [
+    {
+      "evidence_id": "EV-ROLE-003",
+      "decision_fact": "actor.ACT-003.roles",
+      "asserts_ref": "actor.ACT-003.roles",
+      "observable": true,
+      "trust_level": "trusted"
+    },
+    {
+      "evidence_id": "EV-TENANT-003",
+      "decision_fact": "actor.ACT-003.tenant",
+      "asserts_ref": "actor.ACT-003.tenant",
+      "observable": true,
+      "trust_level": "trusted",
+      "contradicted": true
+    },
+    {
+      "evidence_id": "EV-CLIENT-001",
+      "decision_fact": "actor.ACT-003.tenant",
+      "asserts_ref": "actor.ACT-003.tenant",
+      "observable": true,
+      "trust_level": "untrusted",
+      "contradicted": true
+    },
+    {
+      "evidence_id": "EV-TENANT-RES",
+      "decision_fact": "resource.RES-001.tenant",
+      "asserts_ref": "resource.RES-001.tenant",
+      "observable": true,
+      "trust_level": "trusted"
+    },
+    {
+      "evidence_id": "EV-OWN-001",
+      "decision_fact": "resource.RES-001.owner",
+      "asserts_ref": "resource.RES-001.owner",
+      "observable": true,
+      "trust_level": "trusted"
+    },
+    {
+      "evidence_id": "EV-PV-003",
+      "decision_fact": "actor.ACT-003.privilege_version",
+      "asserts_ref": "actor.ACT-003.privilege_version",
+      "observable": true,
+      "trust_level": "trusted"
+    },
+    {
+      "evidence_id": "EV-PVS-003",
+      "decision_fact": "session.SES-003.privilege_snapshot.privilege_version",
+      "asserts_ref": "session.SES-003.privilege_snapshot.privilege_version",
+      "observable": true,
+      "trust_level": "trusted"
+    },
+    {
+      "evidence_id": "EV-SESS-VALID-003",
+      "decision_fact": "session.SES-003.valid",
+      "asserts_ref": "session.SES-003.valid",
+      "observable": true,
+      "trust_level": "trusted"
+    },
+    {
+      "evidence_id": "EV-SESS-003",
+      "decision_fact": "session.SES-003.revoked",
+      "asserts_ref": "session.SES-003.revoked",
+      "observable": true,
+      "trust_level": "trusted"
+    }
+  ],
+  "missing_evidence": [],
+  "decision_trace": [],
+  "evidence_view_id": "b7c1d2e3f4a5061728394a5b6c7d8e9f00112233445566778899aabbccddeeff",
+  "oracle_version": "0.1.0",
+  "notes": "REVISION 1: every consulted fact is a canonical ID-view key that appears verbatim in evidence.asserts_ref, so the sufficiency step is mechanically checkable against the fixture. consulted_facts is the DYNAMIC set actually read during evaluation - short-circuited branches are excluded - which is why actor.ACT-001.tenant (the only untrusted-only fact in the world) is not listed and the verdict is attack rather than insufficient_evidence."
+}

@@ -1,0 +1,7 @@
+{
+  "examples": "hand-written for this family and compile-verified by the builder",
+  "family": "clean-room specification-sheet family (NOT the v0.6/v0.7 rules-list family)",
+  "prompt_sha256": "3cc4b39f00f343d2a2ad7af83b3fd0eefbf125a25662c728c5f0219cb3524c36",
+  "prompt_version": "ood-pilot-v2",
+  "why": "Phase 2B brief §13: the OOD generator gets the same contract but none of Step's historical outputs, failure examples or language templates"
+}

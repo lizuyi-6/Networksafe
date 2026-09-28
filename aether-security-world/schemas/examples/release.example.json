@@ -1,0 +1,99 @@
+{
+  "$comment": "REVISION 1: split_statistics.strategy is now world_ood paired with group_key world_family_id, per design §10.3 (it previously said world_ood + counterfactual_family_id, which is the iid pairing). split_assignments carries all eight strategies so brief §16 is reproducible from the release.",
+  "schema_version": "0.1",
+  "release_id": "ASW-v0.1",
+  "frozen_at": "2026-09-20T00:00:00Z",
+  "git_commit": "0df82c2",
+  "git_dirty": false,
+  "schema_versions": {
+    "world": "0.1",
+    "world_spec": "0.1",
+    "episode": "0.1",
+    "evidence": "0.1",
+    "policy": "0.1",
+    "oracle_output": "0.1",
+    "release": "0.1",
+    "action": "0.1"
+  },
+  "generator_prompt_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+  "generator_models": [
+    { "model": "human", "model_version": "n/a", "world_count": 24, "output_tokens": 0, "valid_worlds_per_1k_tokens": 0, "provider": "replay" },
+    { "model": "step-5-pre", "model_version": "2026-09", "world_count": 0, "output_tokens": 0, "valid_worlds_per_1k_tokens": 0, "provider": "replay" }
+  ],
+  "source_world_count": 24,
+  "expanded_episode_count": 240,
+  "sample_count": 240,
+  "class_distribution": { "safe": 96, "attack": 96, "insufficient_evidence": 48 },
+  "world_truth_distribution": { "safe": 120, "attack": 108, "unauthorized": 12 },
+  "attack_family_distribution": { "idor_bola": 60, "revoked_session_reuse": 36, "token_replay": 24, "workflow_bypass": 24, "benign": 96 },
+  "attack_family_reachability": [
+    { "attack_family": "idor_bola", "declared_worlds": 6, "reachable_samples": 60 },
+    { "attack_family": "revoked_session_reuse", "declared_worlds": 4, "reachable_samples": 36 },
+    { "attack_family": "token_replay", "declared_worlds": 3, "reachable_samples": 24 },
+    { "attack_family": "workflow_bypass", "declared_worlds": 3, "reachable_samples": 24 }
+  ],
+  "invariant_distribution": {
+    "INV-OWNERSHIP-001": 240,
+    "INV-TENANT-ISOLATION-001": 200,
+    "INV-SESSION-REVOCATION-001": 200,
+    "INV-PRIVILEGE-VERSION-001": 180,
+    "INV-TOKEN-LINEAGE-001": 120,
+    "INV-ONE-TIME-TOKEN-001": 120,
+    "INV-WORKFLOW-TRANSITION-001": 120
+  },
+  "app_distribution": { "e-commerce": 60, "saas": 48, "hr_system": 36, "iam_system": 36, "ticketing": 24, "logistics": 36 },
+  "workflow_distribution": { "WFL-ORDER": 60, "WFL-REFUND": 60, "WFL-TICKET": 60, "WFL-ONBOARDING": 60 },
+  "evidence_distribution": { "trusted": 512, "semi_trusted": 128, "untrusted": 96, "derived": 48 },
+  "episode_length_distribution": { "2": 40, "3": 60, "4": 80, "5": 40, "6": 20 },
+  "counterfactual_family_count": 24,
+  "average_variants_per_world": 10.0,
+  "split_statistics": {
+    "strategy": "world_ood",
+    "group_key": "world_family_id",
+    "counts": { "train": 168, "validation": 24, "test": 48 },
+    "group_overlap_audit": []
+  },
+  "split_assignments": [
+    { "strategy": "iid", "group_key": "counterfactual_family_id", "counts": { "train": 192, "validation": 24, "test": 24 }, "group_overlap_audit": [] },
+    { "strategy": "world_ood", "group_key": "world_family_id", "counts": { "train": 168, "validation": 24, "test": 48 }, "group_overlap_audit": [] },
+    { "strategy": "app_ood", "group_key": "app_domain", "counts": { "train": 168, "validation": 24, "test": 48 }, "group_overlap_audit": [] },
+    { "strategy": "workflow_ood", "group_key": "workflow_template_hash", "counts": { "train": 168, "validation": 24, "test": 48 }, "group_overlap_audit": [] },
+    { "strategy": "policy_ood", "group_key": "policy_graph_hash", "counts": { "train": 168, "validation": 24, "test": 48 }, "group_overlap_audit": [] },
+    { "strategy": "attack_ood", "group_key": "attack_family", "counts": { "train": 168, "validation": 24, "test": 48 }, "group_overlap_audit": [] },
+    { "strategy": "evidence_ood", "group_key": "semantic_scenario_signature", "counts": { "train": 168, "validation": 24, "test": 48 }, "group_overlap_audit": [] },
+    { "strategy": "generator_ood", "group_key": "generator_id", "counts": { "train": 168, "validation": 24, "test": 48 }, "group_overlap_audit": [] }
+  ],
+  "rejected_count": 12,
+  "rejection_reasons": {
+    "G3_policy_vacuous": 3,
+    "G3_attack_family_unreachable": 2,
+    "G5_counterfactual_mismatch": 5,
+    "G7_insufficient_unproven": 2
+  },
+  "duplicate_rate": 0.0,
+  "dedup_strategy_counts": { "exact": 240, "normalized": 240, "structural": 240 },
+  "validation_summary": [
+    { "gate": "G1_schema", "checked": 240, "passed": 240, "failed": 0 },
+    { "gate": "G2_reference_integrity", "checked": 240, "passed": 240, "failed": 0 },
+    { "gate": "G3_policy_executability", "checked": 240, "passed": 235, "failed": 5 },
+    { "gate": "G4_oracle_determinism", "checked": 240, "passed": 240, "failed": 0 },
+    { "gate": "G5_counterfactual_consistency", "checked": 72, "passed": 72, "failed": 5 },
+    { "gate": "G6_irrelevant_invariance", "checked": 72, "passed": 72, "failed": 0 },
+    { "gate": "G7_evidence_sufficiency", "checked": 72, "passed": 72, "failed": 2 },
+    { "gate": "G8_leakage_audit", "checked": 240, "passed": 240, "failed": 0 },
+    { "gate": "G9_duplicate_audit", "checked": 240, "passed": 240, "failed": 0 },
+    { "gate": "G10_distribution_summary", "checked": 240, "passed": 240, "failed": 0 },
+    { "gate": "G11_surface_label_independence", "checked": 240, "passed": 240, "failed": 0 }
+  ],
+  "step5_token_usage": {
+    "output_tokens": 0,
+    "input_tokens": 0,
+    "calls": 0,
+    "accepted_unique_worlds_per_1k_output_tokens": 0
+  },
+  "file_sha256": [
+    { "path": "episodes.jsonl", "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "bytes": 1048576, "records": 240 },
+    { "path": "worlds.jsonl", "sha256": "3333333333333333333333333333333333333333333333333333333333333333", "bytes": 524288, "records": 24 },
+    { "path": "splits.jsonl", "sha256": "4444444444444444444444444444444444444444444444444444444444444444", "bytes": 32768, "records": 1920 }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "evidence_id": "EV-AUTH-003",
+  "type": "session_record",
+  "asserts_ref": "session.SES-003.principal",
+  "value": "ACT-003",
+  "source": "auth.northwind.example.invalid",
+  "provenance": "system_of_record",
+  "trust_level": "mostly_trusted",
+  "timestamp": "2026-09-19T08:00:05Z",
+  "freshness": "fresh",
+  "attacker_controllable": false,
+  "visible_in_observation": true
+}

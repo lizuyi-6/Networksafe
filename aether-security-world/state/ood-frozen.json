@@ -1,0 +1,34 @@
+{
+  "canonical_id_scheme": "asw-canonical-skeleton-id/v1",
+  "compiler_version": "0.3.0",
+  "config_path": "configs/phase2a.json",
+  "config_sha256": "f6cd44129bcd31f298236f95d828dc1005ab2a091aa187159094d3cfed7827ac",
+  "contract": "ood",
+  "generator_note": "same vendor as the training generator; different model. Report must state this limitation explicitly (brief §11).",
+  "invariant_archetype_count": 27,
+  "mechanism_family_count": 46,
+  "mechanism_registry_version": "0.1",
+  "model_default": "step-3.7-flash",
+  "not_for": [
+    "training",
+    "benchmark",
+    "500-world production corpus"
+  ],
+  "ontology_fact_count": 65,
+  "ontology_version": "0.1",
+  "phase": "2B",
+  "prompt_family": "clean-room specification-sheet (not the v0.6/v0.7 family)",
+  "prompt_output_format": "jsonl",
+  "prompt_sha256": "3cc4b39f00f343d2a2ad7af83b3fd0eefbf125a25662c728c5f0219cb3524c36",
+  "prompt_version": "ood-pilot-v2",
+  "provider_base_url_host": "api.stepfun.com/step_plan/v1",
+  "purpose": "ENGINEERING OOD PILOT - representation robustness probe",
+  "run_id": "provider-ood-pilot-001",
+  "skeleton_schema_bundle_sha256": "116cf26b365b51ca063d025a927008d09bb916405e8385a6be55f8d57781a6c4",
+  "skeleton_schema_files": [
+    {
+      "file": "semantic-skeleton.schema.json",
+      "sha256": "c9978eda34df03db314fe48b283e5c5b08e5417737e8e0bbe66f1a8f65dcd685"
+    }
+  ]
+}

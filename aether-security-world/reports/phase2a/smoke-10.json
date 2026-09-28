@@ -1,0 +1,160 @@
+{
+  "compiler": {
+    "failures": {
+      "UNKNOWN_SEMANTIC_TYPE": 2
+    },
+    "internal_compiler_errors": 0,
+    "total_failures": 2
+  },
+  "counterfactual": {
+    "contradictions": [],
+    "downgrade": 0,
+    "flip": 39,
+    "flip_rate": 0.975,
+    "invariance_rate": 0.025,
+    "invariant": 1,
+    "total": 40
+  },
+  "counts": {
+    "acceptance_rate": 0.9,
+    "accepted": 18,
+    "quarantined": 0,
+    "raw_skeletons": 20,
+    "rejected": 2
+  },
+  "coverage": {
+    "attack_families": {
+      "cache_invalidation_failure": 1,
+      "cross_account_session_misuse": 2,
+      "cross_resource_token_reuse": 2,
+      "cross_workflow_token_reuse": 1,
+      "horizontal_privesc": 1,
+      "inconsistent_replicas": 1,
+      "stale_ownership_cache": 1,
+      "tenant_isolation_violation": 7,
+      "tenant_mismatch": 1,
+      "token_lineage_confusion": 1
+    },
+    "complexity": {
+      "complex": 5,
+      "medium": 7,
+      "simple": 3,
+      "very_complex": 3
+    },
+    "distinct_attack_families": 10,
+    "distinct_mechanisms": 13,
+    "domains": {
+      "api_marketplace": 3,
+      "cloud_storage": 3,
+      "code_hosting": 1,
+      "crm": 1,
+      "devops_platform": 1,
+      "finance_workflow": 1,
+      "iam_system": 2,
+      "saas": 3,
+      "subscription_system": 1,
+      "ticketing": 2
+    },
+    "labels": {
+      "authorization": 3,
+      "cache_distributed": 8,
+      "cross_flow_reuse": 5,
+      "multi_tenant": 9,
+      "session": 2,
+      "token": 5,
+      "trust_boundary": 7
+    },
+    "mechanism_families": {
+      "boundary_crossing_without_required_assertion": 1,
+      "cache_invalidation_failure": 1,
+      "cross_service_tenant_propagation_delay": 3,
+      "cross_tenant_cache": 2,
+      "delegated_tenant_access": 1,
+      "derived_summary_overrides_system_of_record": 1,
+      "horizontal_peer_access": 1,
+      "replica_divergence": 1,
+      "resource_tenant_mismatch": 2,
+      "session_reused_across_flow": 1,
+      "token_bound_to_other_resource": 2,
+      "token_lineage_confusion": 1,
+      "token_reused_across_flow": 1
+    },
+    "quotas": {
+      "authorization": 8,
+      "cache_distributed": 8,
+      "cross_flow_reuse": 8,
+      "multi_tenant": 8,
+      "session": 8,
+      "temporal_history": 8,
+      "token": 8,
+      "trust_boundary": 8,
+      "workflow": 10
+    },
+    "shortfalls": {
+      "authorization": {
+        "have": 3,
+        "target": 8
+      },
+      "cross_flow_reuse": {
+        "have": 5,
+        "target": 8
+      },
+      "session": {
+        "have": 2,
+        "target": 8
+      },
+      "temporal_history": {
+        "have": 0,
+        "target": 8
+      },
+      "token": {
+        "have": 5,
+        "target": 8
+      },
+      "trust_boundary": {
+        "have": 7,
+        "target": 8
+      },
+      "workflow": {
+        "have": 0,
+        "target": 10
+      }
+    }
+  },
+  "dedup": {
+    "largest_semantic_share": 0.05555555555555555,
+    "largest_structural_share": 0.1111111111111111,
+    "semantic_clusters": 18,
+    "semantic_templates_over_10pct": 0,
+    "structural_clusters": 15,
+    "templates_over_10pct": 3
+  },
+  "oracle": {
+    "failures": 0,
+    "verify_failures": 0
+  },
+  "provider": {
+    "calls": 4,
+    "finish_reasons": {
+      "stop": 4
+    },
+    "latency_s": 399.639,
+    "provider_errors": 0,
+    "retries": 1,
+    "usage_missing_calls": 0
+  },
+  "schema": {
+    "details": [],
+    "failures": 0
+  },
+  "token_economy": {
+    "accepted_per_100k_output": 46.57541335679355,
+    "accepted_per_1m_input": 600.3401927759063,
+    "accepted_per_provider_hour": 162.14633706920495,
+    "improvement_factor": 79.75242013149581,
+    "input_tokens": 29983,
+    "output_tokens": 38647,
+    "output_tokens_per_accepted_world": 2147.0555555555557,
+    "phase1_accepted_per_100k_output": 0.584
+  }
+}

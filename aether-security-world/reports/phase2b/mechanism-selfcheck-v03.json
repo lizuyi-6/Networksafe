@@ -1,0 +1,707 @@
+{
+  "failed": 0,
+  "mechanisms": 46,
+  "passed": 46,
+  "rows": [
+    {
+      "attack_family": "cross_account_session_misuse",
+      "axes": 2,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "boundary_crossing_without_required_assertion",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-c4f4e40e7c75"
+    },
+    {
+      "attack_family": "cache_invalidation_failure",
+      "axes": 4,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 20,
+      "error": "",
+      "family": "cache_invalidation_failure",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-b9ee0104a3bf"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "axes": 4,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 20,
+      "error": "",
+      "family": "cached_authorization_cross_tenant_reuse",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-c77031b35177"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "axes": 2,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "cross_service_tenant_propagation_delay",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-676740dc31b3"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "axes": 2,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "cross_tenant_cache",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-bfb9658e298c"
+    },
+    {
+      "attack_family": "tenant_mismatch",
+      "axes": 2,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 12,
+      "error": "",
+      "family": "delegated_tenant_access",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-1650c86928f5"
+    },
+    {
+      "attack_family": "stale_ownership_cache",
+      "axes": 2,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 20,
+      "error": "",
+      "family": "derived_summary_overrides_system_of_record",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-5eb2c19740f1"
+    },
+    {
+      "attack_family": "inconsistent_replicas",
+      "axes": 2,
+      "base_labels": [
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "eventual_consistency_read_before_write_visible",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-78b45265d67d"
+    },
+    {
+      "attack_family": "stale_object_reference",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "expiry_window_violation",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-a241caff9a28"
+    },
+    {
+      "attack_family": "horizontal_privesc",
+      "axes": 2,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "horizontal_peer_access",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-59c9b020785c"
+    },
+    {
+      "attack_family": "invalid_state_transition",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "invalid_state_transition",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-449e5d67a446"
+    },
+    {
+      "attack_family": "irreversible_state_reversal",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "irreversible_state_reversal",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-f769a2963a7a"
+    },
+    {
+      "attack_family": "one_time_token_reuse",
+      "axes": 2,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "one_time_token_reuse",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-032b2b2e743d"
+    },
+    {
+      "attack_family": "stale_ownership_cache",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "owner_cache_lag",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-182be391cbdf"
+    },
+    {
+      "attack_family": "idor_bola",
+      "axes": 2,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "ownership_boundary_crossing",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-6a2cb3e491aa"
+    },
+    {
+      "attack_family": "stale_permission_cache",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "permission_cache_staleness",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-2835be9564f6"
+    },
+    {
+      "attack_family": "session_after_account_disable",
+      "axes": 3,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 17,
+      "error": "",
+      "family": "post_disable_session",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-cff5b277d1b6"
+    },
+    {
+      "attack_family": "session_after_password_reset",
+      "axes": 2,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "post_password_reset_session",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-f056baf77658"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "axes": 3,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 19,
+      "error": "",
+      "family": "privilege_version_drift",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-1a3313c79b91"
+    },
+    {
+      "attack_family": "race_sensitive_state",
+      "axes": 2,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "race_sensitive_state",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-1326ddbcb4e5"
+    },
+    {
+      "attack_family": "repeated_operation",
+      "axes": 2,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "repeated_operation",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-5b1216cf2f79"
+    },
+    {
+      "attack_family": "inconsistent_replicas",
+      "axes": 2,
+      "base_labels": [
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "replica_divergence",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-9f82389d435a"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "axes": 3,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 17,
+      "error": "",
+      "family": "resource_tenant_mismatch",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-a108ff6a7bff"
+    },
+    {
+      "attack_family": "stale_authorization",
+      "axes": 2,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "revocation_after_issue",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-410041cb5d94"
+    },
+    {
+      "attack_family": "inconsistent_revocation_state",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "revocation_not_propagated",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-647da03873a0"
+    },
+    {
+      "attack_family": "revoked_session_reuse",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "revoked_session_reuse",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-82128ef41357"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "axes": 3,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 17,
+      "error": "",
+      "family": "service_account_tenant_crossover",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-4d2ac3b9edb0"
+    },
+    {
+      "attack_family": "cross_account_session_misuse",
+      "axes": 2,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "session_principal_swap",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-800479de3607"
+    },
+    {
+      "attack_family": "stale_session_privilege",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "session_privilege_snapshot_stale",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-ae85b4103ddb"
+    },
+    {
+      "attack_family": "cross_account_session_misuse",
+      "axes": 2,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "session_reused_across_flow",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-79b99a054ddc"
+    },
+    {
+      "attack_family": "skipping_required_step",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "skipping_required_step",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-4de0ec550c85"
+    },
+    {
+      "attack_family": "stale_object_reference",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 14,
+      "error": "",
+      "family": "stale_snapshot_read",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-d4ee4f6f8340"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "axes": 3,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 19,
+      "error": "",
+      "family": "stale_tenant_context",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-11acfe37de85"
+    },
+    {
+      "attack_family": "tenant_mismatch",
+      "axes": 2,
+      "base_labels": [
+        "attack",
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "tenant_identifier_collision",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-f3da10b962b7"
+    },
+    {
+      "attack_family": "tenant_isolation_violation",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "tenant_switch_stale_session",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-9c281afed2b9"
+    },
+    {
+      "attack_family": "audience_mismatch",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "token_audience_mismatch",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-a97c2a302a80"
+    },
+    {
+      "attack_family": "cross_resource_token_reuse",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "token_bound_to_other_resource",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-d4a361b2cc41"
+    },
+    {
+      "attack_family": "token_lineage_confusion",
+      "axes": 2,
+      "base_labels": [
+        "safe"
+      ],
+      "contradictions": 0,
+      "episodes": 12,
+      "error": "",
+      "family": "token_lineage_confusion",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-8b30ab0067ed"
+    },
+    {
+      "attack_family": "privilege_version_mismatch",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "token_privilege_version_stale",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-468d8469de03"
+    },
+    {
+      "attack_family": "cross_workflow_token_reuse",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "token_reused_across_flow",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-419406350339"
+    },
+    {
+      "attack_family": "scope_mismatch",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "token_scope_overreach",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-f32a1a7a3c69"
+    },
+    {
+      "attack_family": "tenant_mismatch",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "token_tenant_mismatch",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-43f08d977d85"
+    },
+    {
+      "attack_family": "tenant_mismatch",
+      "axes": 3,
+      "base_labels": [
+        "insufficient_evidence"
+      ],
+      "contradictions": 0,
+      "episodes": 20,
+      "error": "",
+      "family": "untrusted_source_establishes_decisive_fact",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-cd423ed60eb5"
+    },
+    {
+      "attack_family": "vertical_privesc",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 16,
+      "error": "",
+      "family": "vertical_privilege_escalation",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-8f0787f9fba5"
+    },
+    {
+      "attack_family": "state_machine_confusion",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 14,
+      "error": "",
+      "family": "workflow_instance_reused_across_flow",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-ab216271facf"
+    },
+    {
+      "attack_family": "workflow_bypass",
+      "axes": 2,
+      "base_labels": [
+        "attack"
+      ],
+      "contradictions": 0,
+      "episodes": 18,
+      "error": "",
+      "family": "workflow_state_bypass",
+      "ok": true,
+      "probes": 2,
+      "stage": "verify",
+      "world_id": "W-b6b10d701bf4"
+    }
+  ]
+}

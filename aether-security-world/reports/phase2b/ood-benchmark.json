@@ -1,0 +1,170 @@
+{
+  "accepted": 60,
+  "compiler": {
+    "compile_failure_codes": {
+      "HISTORY_INCONSISTENT": 8,
+      "MISSING_CRITICAL_FACT": 1,
+      "UNKNOWN_SEMANTIC_TYPE": 7,
+      "UNSUPPORTED_INVARIANT": 5
+    },
+    "compile_failures": 21,
+    "compile_success_rate": 0.75,
+    "contradictory_expectations": 3,
+    "internal_compiler_errors": 0,
+    "verify_failures": 0
+  },
+  "dedup": {
+    "largest_structural_share": 0.05,
+    "semantic_clusters": 60,
+    "semantic_duplicates": 0,
+    "semantic_near_duplicate_quarantined": 0,
+    "structural_clusters": 46,
+    "templates_over_10pct": 0
+  },
+  "diversity": {
+    "complexity": {
+      "complex": 12,
+      "medium": 25,
+      "simple": 12,
+      "very_complex": 11
+    },
+    "coverage_labels": {
+      "authorization": 13,
+      "cache_distributed": 16,
+      "cross_flow_reuse": 10,
+      "multi_tenant": 15,
+      "session": 11,
+      "temporal_history": 12,
+      "token": 15,
+      "trust_boundary": 11,
+      "workflow": 14
+    },
+    "distinct_mechanism_families": 36,
+    "domains": {
+      "api_marketplace": 5,
+      "cloud_storage": 8,
+      "code_hosting": 1,
+      "crm": 1,
+      "devops_platform": 2,
+      "e-commerce": 1,
+      "finance_workflow": 10,
+      "healthcare_workflow": 5,
+      "hr_system": 1,
+      "iam_system": 9,
+      "iot_management": 1,
+      "project_management": 6,
+      "saas": 9,
+      "ticketing": 1
+    },
+    "mechanism_families": {
+      "boundary_crossing_without_required_assertion": 2,
+      "cache_invalidation_failure": 1,
+      "cached_authorization_cross_tenant_reuse": 2,
+      "cross_service_tenant_propagation_delay": 3,
+      "cross_tenant_cache": 2,
+      "delegated_tenant_access": 1,
+      "derived_summary_overrides_system_of_record": 2,
+      "eventual_consistency_read_before_write_visible": 1,
+      "expiry_window_violation": 1,
+      "horizontal_peer_access": 5,
+      "invalid_state_transition": 2,
+      "irreversible_state_reversal": 1,
+      "one_time_token_reuse": 1,
+      "owner_cache_lag": 1,
+      "ownership_boundary_crossing": 1,
+      "permission_cache_staleness": 2,
+      "post_disable_session": 3,
+      "post_password_reset_session": 3,
+      "privilege_version_drift": 1,
+      "race_sensitive_state": 3,
+      "repeated_operation": 1,
+      "replica_divergence": 1,
+      "resource_tenant_mismatch": 1,
+      "revocation_after_issue": 1,
+      "revoked_session_reuse": 1,
+      "session_reused_across_flow": 1,
+      "skipping_required_step": 2,
+      "stale_tenant_context": 1,
+      "token_audience_mismatch": 1,
+      "token_bound_to_other_resource": 1,
+      "token_lineage_confusion": 1,
+      "token_privilege_version_stale": 1,
+      "token_reused_across_flow": 3,
+      "token_scope_overreach": 1,
+      "vertical_privilege_escalation": 1,
+      "workflow_instance_reused_across_flow": 4
+    }
+  },
+  "economy": {
+    "accepted_per_100k_output_tokens": 22.167,
+    "accepted_rate": 0.7143
+  },
+  "generator": "provider-ood-benchmark-001",
+  "input_tokens": 162323,
+  "ontology": {
+    "distinct_facts_used": 55,
+    "unknown_facts_in_accepted": []
+  },
+  "oracle": {
+    "base_labels": {
+      "attack": 45,
+      "insufficient_evidence": 12,
+      "safe": 18
+    },
+    "critical_mismatch_count": 2,
+    "critical_mismatches": [
+      {
+        "kind": "flip_expected_but_invariant",
+        "variable": "session.SES-3F7DEB95.valid",
+        "world_id": "W-e4c51b0326c4"
+      },
+      {
+        "kind": "flip_expected_but_invariant",
+        "variable": "session.SES-84C93E2C.valid",
+        "world_id": "W-be71809c16bf"
+      }
+    ],
+    "critical_ok": 64,
+    "critical_total": 66,
+    "episode_count": 549,
+    "episode_level_reexpansion": true,
+    "irrelevant_mismatch_count": 0,
+    "irrelevant_mismatches": [],
+    "irrelevant_ok": 142,
+    "irrelevant_total": 142,
+    "leakage_findings": 0,
+    "leakage_samples": [],
+    "masked_mismatch_count": 0,
+    "masked_mismatches": [],
+    "masked_ok": 281,
+    "masked_total": 281,
+    "oracle_failures": 0,
+    "reexpansion_failures": []
+  },
+  "output_tokens": 270669,
+  "parse": {
+    "frame_failures": 0,
+    "frame_success_rate": 1.0,
+    "parse_failures_total": 0
+  },
+  "provider_batches": 18,
+  "provider_claimed_id_reuse": 0,
+  "provider_errors": 0,
+  "quarantine_reasons": {},
+  "quarantined": 0,
+  "raw_skeletons": 84,
+  "rejected": 24,
+  "rejection_reasons": {
+    "compile_error": 21,
+    "contradictory_expectation": 3,
+    "element_skeleton_rejected": 6
+  },
+  "retries": 4,
+  "run_id": "provider-ood-benchmark-001",
+  "schema": {
+    "element_schema_failures": 6,
+    "other_schema_rejects": 6,
+    "schema_success_rate": 0.9286,
+    "unknown_mechanism_rejects": 0
+  }
+}

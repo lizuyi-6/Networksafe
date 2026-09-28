@@ -1,0 +1,71 @@
+{
+  "accepted": 38,
+  "complexity": {
+    "complex": 12,
+    "medium": 11,
+    "simple": 7,
+    "very_complex": 8
+  },
+  "domains": {
+    "api_marketplace": 2,
+    "cloud_storage": 3,
+    "code_hosting": 1,
+    "content_platform": 1,
+    "devops_platform": 2,
+    "e-commerce": 1,
+    "finance_workflow": 6,
+    "hr_system": 1,
+    "iam_system": 4,
+    "logistics": 2,
+    "project_management": 1,
+    "saas": 6,
+    "school_system": 3,
+    "subscription_system": 2,
+    "ticketing": 3
+  },
+  "families": {
+    "boundary_crossing_without_required_assertion": 3,
+    "cached_authorization_cross_tenant_reuse": 2,
+    "cross_service_tenant_propagation_delay": 1,
+    "cross_tenant_cache": 2,
+    "delegated_tenant_access": 1,
+    "derived_summary_overrides_system_of_record": 2,
+    "expiry_window_violation": 1,
+    "horizontal_peer_access": 3,
+    "invalid_state_transition": 2,
+    "ownership_boundary_crossing": 1,
+    "permission_cache_staleness": 2,
+    "post_disable_session": 1,
+    "privilege_version_drift": 1,
+    "race_sensitive_state": 3,
+    "resource_tenant_mismatch": 3,
+    "revocation_after_issue": 1,
+    "session_reused_across_flow": 4,
+    "token_audience_mismatch": 1,
+    "token_bound_to_other_resource": 1,
+    "token_lineage_confusion": 1,
+    "workflow_instance_reused_across_flow": 2
+  },
+  "labels": {
+    "authorization": 8,
+    "cache_distributed": 9,
+    "cross_flow_reuse": 8,
+    "multi_tenant": 12,
+    "session": 9,
+    "temporal_history": 6,
+    "token": 8,
+    "trust_boundary": 8,
+    "workflow": 7
+  },
+  "stalls": {
+    "authorization": 0,
+    "cache_distributed": 0,
+    "cross_flow_reuse": 0,
+    "multi_tenant": 0,
+    "session": 0,
+    "temporal_history": 5,
+    "token": 0,
+    "trust_boundary": 0,
+    "workflow": 5
+  }
+}

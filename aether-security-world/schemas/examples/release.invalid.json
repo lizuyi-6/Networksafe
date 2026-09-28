@@ -1,0 +1,214 @@
+{
+  "schema_version": "0.1",
+  "release_id": "ASW-v1.0-bad",
+  "frozen_at": "2026-09-20T00:00:00Z",
+  "git_commit": "0df82c2",
+  "git_dirty": false,
+  "schema_versions": {
+    "world": "0.1",
+    "episode": "0.1",
+    "evidence": "0.1",
+    "policy": "0.1",
+    "oracle_output": "0.1",
+    "release": "0.1"
+  },
+  "generator_prompt_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+  "generator_models": [
+    {
+      "model": "step-5-pre",
+      "model_version": "2026-09",
+      "world_count": 0,
+      "output_tokens": 0,
+      "valid_worlds_per_1k_tokens": 0
+    },
+    {
+      "model": "human",
+      "model_version": "n/a",
+      "world_count": 24,
+      "output_tokens": 0,
+      "valid_worlds_per_1k_tokens": 0
+    }
+  ],
+  "source_world_count": 24,
+  "expanded_episode_count": 240,
+  "sample_count": 240,
+  "class_distribution": {
+    "safe": 96,
+    "attack": 96,
+    "insufficient_evidence": 48
+  },
+  "world_truth_distribution": {
+    "safe": 120,
+    "attack": 120
+  },
+  "attack_family_distribution": {
+    "idor_bola": 60,
+    "revoked_session_reuse": 36,
+    "token_replay": 24,
+    "workflow_bypass": 24,
+    "benign": 96
+  },
+  "invariant_distribution": {
+    "INV-OWNERSHIP-001": 240,
+    "INV-SESSION-REVOCATION-001": 200,
+    "INV-PRIVILEGE-VERSION-001": 180,
+    "INV-TOKEN-LINEAGE-001": 160,
+    "INV-WORKFLOW-TRANSITION-001": 120
+  },
+  "app_distribution": {
+    "e-commerce": 60,
+    "saas": 48,
+    "hr_system": 36,
+    "iam_system": 36,
+    "ticketing": 24,
+    "logistics": 36
+  },
+  "workflow_distribution": {
+    "WF-ORDER": 60,
+    "WF-REFUND": 60,
+    "WF-TICKET": 60,
+    "WF-ONBOARDING": 60
+  },
+  "evidence_distribution": {
+    "trusted": 512,
+    "semi_trusted": 128,
+    "untrusted": 96,
+    "derived": 48
+  },
+  "episode_length_distribution": {
+    "2": 40,
+    "3": 60,
+    "4": 80,
+    "5": 40,
+    "6": 20
+  },
+  "counterfactual_family_count": 24,
+  "average_variants_per_world": 10.0,
+  "split_statistics": {
+    "strategy": "world_ood",
+    "group_key": "counterfactual_family_id",
+    "counts": {
+      "train": 168,
+      "validation": 24,
+      "test": 48
+    },
+    "group_overlap_audit": [
+      {
+        "group_key": "counterfactual_family_id",
+        "value": "CF-402700a04353",
+        "splits": [
+          "train",
+          "test"
+        ]
+      }
+    ]
+  },
+  "rejected_count": 12,
+  "rejection_reasons": {
+    "G3_policy_vacuous": 3,
+    "G5_counterfactual_mismatch": 5,
+    "G7_insufficient_unproven": 4
+  },
+  "duplicate_rate": 0.0,
+  "dedup_strategy_counts": {
+    "exact": 240,
+    "normalized": 240,
+    "structural": 240
+  },
+  "validation_summary": [
+    {
+      "gate": "G1_schema",
+      "checked": 240,
+      "passed": 240,
+      "failed": 0
+    },
+    {
+      "gate": "G2_reference_integrity",
+      "checked": 240,
+      "passed": 240,
+      "failed": 0
+    },
+    {
+      "gate": "G3_policy_executability",
+      "checked": 240,
+      "passed": 240,
+      "failed": 3
+    },
+    {
+      "gate": "G4_oracle_determinism",
+      "checked": 240,
+      "passed": 240,
+      "failed": 0
+    },
+    {
+      "gate": "G5_counterfactual_consistency",
+      "checked": 72,
+      "passed": 72,
+      "failed": 5
+    },
+    {
+      "gate": "G6_irrelevant_invariance",
+      "checked": 72,
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "gate": "G7_evidence_sufficiency",
+      "checked": 48,
+      "passed": 48,
+      "failed": 4
+    },
+    {
+      "gate": "G8_leakage_audit",
+      "checked": 240,
+      "passed": 240,
+      "failed": 0
+    },
+    {
+      "gate": "G9_duplicate_audit",
+      "checked": 240,
+      "passed": 240,
+      "failed": 0
+    }
+  ],
+  "step5_token_usage": {
+    "output_tokens": 0,
+    "input_tokens": 0,
+    "calls": 0,
+    "accepted_unique_worlds_per_1k_output_tokens": 0
+  },
+  "file_sha256": [
+    {
+      "path": "episodes.jsonl",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "bytes": 1048576,
+      "records": 240
+    },
+    {
+      "path": "worlds.jsonl",
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "bytes": 524288,
+      "records": 24
+    }
+  ],
+  "split_assignments": [
+    {
+      "strategy": "world_ood",
+      "group_key": "world_family_id",
+      "counts": {
+        "train": 1,
+        "test": 1
+      },
+      "group_overlap_audit": [
+        {
+          "group_key": "world_family_id",
+          "value": "WF-219f32eaf37d",
+          "splits": [
+            "train",
+            "test"
+          ]
+        }
+      ]
+    }
+  ]
+}

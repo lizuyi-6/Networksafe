@@ -1,0 +1,29 @@
+{
+  "artifact": "ASW-RELEASE-FREEZE",
+  "dedup": {
+    "distinct_semantic_fingerprints": 502,
+    "exact_duplicates": 0,
+    "normalized_duplicates": 454,
+    "semantic_duplicates": 0
+  },
+  "episode_counts": {
+    "generator_ood": 6532,
+    "iid_dev": 5346,
+    "mechanism_ood": 293,
+    "train": 43229,
+    "workflow_ood": 0,
+    "world_ood": 5502
+  },
+  "episode_total": 60902,
+  "frozen_at_wallclock": "2026-09-26T14:29:51Z",
+  "production_contract_sha256": "a0bcf582ad5a872416fc7403cd5ef056f5f743ce9125ff73ced726b95af6837e",
+  "reading_policy": "模型实验只能读取本 frozen release；禁止训练脚本读取 raw provider outputs / quarantine / development corpus / Phase 2A GO worlds（brief §58）。",
+  "release_manifest_sha256": "21534309e560536de870b5a5bde09b4433ba534cae9a670ed905702f8b8a2b04",
+  "release_version": "asw-v0.1",
+  "split_leakage_conflicts": 0,
+  "status": "ASW_RELEASE_FROZEN",
+  "world_counts": {
+    "generator_ood": 60,
+    "production_accepted": 502
+  }
+}

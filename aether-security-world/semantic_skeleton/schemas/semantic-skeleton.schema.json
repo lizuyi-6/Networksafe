@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/asw/semantic-skeleton.schema.json",
+  "title": "Aether Security World - Semantic Skeleton v0.1",
+  "description": "The ONLY thing the LLM writes in Phase 2A. It expresses security semantics (which facts matter, how history unfolds, which invariants must hold, how the failure works, what evidence is needed). It deliberately does NOT express the runtime object graph: no entity IDs, no canonical fact paths, no policy AST, no resource_states, no evidence IDs, no verdict, no attack label, no split assignment. All of that is produced by the deterministic compiler (semantic_skeleton/compiler/). Rationale (Phase 1 measurement): LLM-suited for security semantics, LLM-unsuited for stable hand-written low-level JSON graphs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "skeleton_id",
+    "domain",
+    "scenario_summary",
+    "mechanism_family",
+    "complexity",
+    "actor_types",
+    "resource_types",
+    "service_types",
+    "security_goal",
+    "critical_facts",
+    "history",
+    "security_invariants",
+    "failure_mechanism",
+    "required_evidence",
+    "irrelevant_facts",
+    "counterfactuals",
+    "evidence_masking_targets",
+    "trust_relationships"
+  ],
+  "properties": {
+    "$comment": { "type": "string" },
+    "skeleton_id": {
+      "type": "string",
+      "pattern": "^SK-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+      "maxLength": 67,
+      "description": "Author-side handle only. The compiler OVERWRITES the derived world_id; this id never reaches the compiled world as an identifier."
+    },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "e-commerce", "cloud_storage", "saas", "school_system", "finance_workflow", "ticketing",
+        "logistics", "healthcare_workflow", "hr_system", "devops_platform", "code_hosting", "crm",
+        "iam_system", "iot_management", "industrial_management", "api_marketplace", "content_platform",
+        "messaging", "project_management", "subscription_system"
+      ]
+    },
+    "scenario_summary": { "type": "string", "minLength": 10, "maxLength": 600 },
+    "mechanism_family": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]{2,63}$",
+      "description": "Must be a key of the mechanism registry (semantic_skeleton/mechanisms.py). An unknown family is UNKNOWN_MECHANISM, not a compile-time guess."
+    },
+    "complexity": { "type": "string", "enum": ["simple", "medium", "complex", "very_complex"] },
+    "actor_types": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 48, "pattern": "^[a-z][a-z0-9_]{2,47}$" },
+      "minItems": 1,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "description": "Semantic role names (semantic_skeleton/vocabularies.py), NOT schema actor_type enums and NOT entity IDs."
+    },
+    "resource_types": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 48, "pattern": "^[a-z][a-z0-9_]{2,47}$" },
+      "minItems": 1,
+      "maxItems": 6,
+      "uniqueItems": true
+    },
+    "service_types": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 48, "pattern": "^[a-z][a-z0-9_]{2,47}$" },
+      "minItems": 1,
+      "maxItems": 6,
+      "uniqueItems": true
+    },
+    "security_goal": { "type": "string", "minLength": 10, "maxLength": 600 },
+    "critical_facts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+      "minItems": 1,
+      "maxItems": 24,
+      "uniqueItems": true,
+      "description": "Semantic fact names from the ontology (semantic_skeleton/ontology.py). NOT canonical fact paths - the FactPathCompiler derives those."
+    },
+    "history": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 10, "maxLength": 300 },
+      "minItems": 2,
+      "maxItems": 14,
+      "description": "High-level ordered narrative. No timestamps, no state IDs, no fact references - the HistoryCompiler derives snapshots and events deterministically."
+    },
+    "security_invariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "rule"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9_]{2,63}$",
+            "description": "Invariant archetype key (semantic_skeleton/compiler/archetypes.py). The archetype, not the prose, is what gets compiled."
+          },
+          "rule": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 400,
+            "description": "Natural-language statement of the property. Carried into the compiled description verbatim; NEVER parsed for truth."
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 6
+    },
+    "failure_mechanism": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 600,
+      "description": "1-3 sentences on how the security property is defeated. No attack tutorial."
+    },
+    "required_evidence": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "description": "Evidence CONCEPTS (semantic fact names). The EvidenceCompiler assigns evidence IDs, fact paths and trust levels."
+    },
+    "optional_evidence": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+      "maxItems": 16,
+      "uniqueItems": true
+    },
+    "untrusted_evidence": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+      "maxItems": 16,
+      "uniqueItems": true
+    },
+    "irrelevant_facts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+      "minItems": 2,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "description": "Semantic facts whose perturbation must not change the verdict. They must NOT overlap critical_facts (compiler rejects the overlap)."
+    },
+    "counterfactuals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target_fact", "change", "semantic_expectation"],
+        "properties": {
+          "target_fact": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9_]{2,63}$"
+          },
+          "change": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9_]{2,63}$",
+            "description": "A change KIND from the mechanism's counterfactual strategy, not a literal value."
+          },
+          "semantic_expectation": {
+            "type": "string",
+            "enum": [
+              "violation_removed", "violation_created", "verdict_flip",
+              "verdict_invariant", "observable_downgrade"
+            ],
+            "description": "A PRIOR ONLY. The compiler/oracle re-derives the final classification from the oracle trace; a contradictory prior is rejected, never silently accepted (Phase 2A section 35-36)."
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "evidence_masking_targets": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+      "minItems": 1,
+      "maxItems": 12,
+      "uniqueItems": true
+    },
+    "trust_relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "about"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9_]{2,63}$"
+          },
+          "about": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9_]{2,63}$",
+            "description": "The semantic fact or semantic type this relationship is about."
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "new_semantic_fact_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "meaning", "why_required"],
+        "properties": {
+          "name": { "type": "string", "minLength": 3, "maxLength": 64 },
+          "meaning": { "type": "string", "minLength": 10, "maxLength": 300 },
+          "why_required": { "type": "string", "minLength": 10, "maxLength": 300 }
+        }
+      },
+      "maxItems": 6,
+      "description": "A fact outside the ontology. Its presence QUARANTINES the skeleton until a human/agent extends the ontology + compiler + tests. The production schema is never widened silently."
+    },
+    "notes_for_compiler": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 300 },
+      "maxItems": 8,
+      "description": "Free notes. RECORDED but NEVER read by the compiler: nothing here may influence the compiled world, otherwise prose becomes a hidden truth channel."
+    }
+  }
+}

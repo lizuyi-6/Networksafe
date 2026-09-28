@@ -1,0 +1,149 @@
+{
+  "accepted": 40,
+  "compiler": {
+    "compile_failure_codes": {
+      "HISTORY_INCONSISTENT": 14,
+      "UNKNOWN_SEMANTIC_TYPE": 18,
+      "UNSUPPORTED_INVARIANT": 10
+    },
+    "compile_failures": 42,
+    "compile_success_rate": 0.494,
+    "contradictory_expectations": 1,
+    "internal_compiler_errors": 0,
+    "verify_failures": 0
+  },
+  "dedup": {
+    "largest_structural_share": 0.125,
+    "semantic_clusters": 40,
+    "semantic_duplicates": 0,
+    "semantic_near_duplicate_quarantined": 0,
+    "structural_clusters": 28,
+    "templates_over_10pct": 1
+  },
+  "diversity": {
+    "complexity": {
+      "complex": 9,
+      "medium": 13,
+      "simple": 7,
+      "very_complex": 11
+    },
+    "coverage_labels": {
+      "authorization": 7,
+      "cache_distributed": 8,
+      "cross_flow_reuse": 10,
+      "multi_tenant": 12,
+      "session": 11,
+      "temporal_history": 7,
+      "token": 9,
+      "trust_boundary": 13,
+      "workflow": 3
+    },
+    "distinct_mechanism_families": 23,
+    "domains": {
+      "api_marketplace": 1,
+      "cloud_storage": 5,
+      "code_hosting": 1,
+      "crm": 2,
+      "devops_platform": 2,
+      "finance_workflow": 9,
+      "hr_system": 3,
+      "iam_system": 6,
+      "project_management": 4,
+      "saas": 4,
+      "school_system": 2,
+      "subscription_system": 1
+    },
+    "mechanism_families": {
+      "boundary_crossing_without_required_assertion": 3,
+      "cache_invalidation_failure": 1,
+      "cross_service_tenant_propagation_delay": 1,
+      "cross_tenant_cache": 1,
+      "delegated_tenant_access": 1,
+      "derived_summary_overrides_system_of_record": 1,
+      "eventual_consistency_read_before_write_visible": 3,
+      "expiry_window_violation": 1,
+      "horizontal_peer_access": 5,
+      "invalid_state_transition": 1,
+      "one_time_token_reuse": 1,
+      "post_disable_session": 1,
+      "post_password_reset_session": 2,
+      "privilege_version_drift": 1,
+      "replica_divergence": 1,
+      "resource_tenant_mismatch": 3,
+      "service_account_tenant_crossover": 1,
+      "session_reused_across_flow": 5,
+      "token_audience_mismatch": 2,
+      "token_bound_to_other_resource": 1,
+      "token_lineage_confusion": 1,
+      "token_reused_across_flow": 2,
+      "workflow_instance_reused_across_flow": 1
+    }
+  },
+  "economy": {
+    "accepted_per_100k_output_tokens": 16.57,
+    "accepted_rate": 0.4819
+  },
+  "generator": "provider-ood-pilot-001",
+  "input_tokens": 152212,
+  "ontology": {
+    "distinct_facts_used": 43,
+    "unknown_facts_in_accepted": []
+  },
+  "oracle": {
+    "base_labels": {
+      "attack": 31,
+      "insufficient_evidence": 4,
+      "safe": 19
+    },
+    "critical_mismatch_count": 1,
+    "critical_mismatches": [
+      {
+        "kind": "flip_expected_but_invariant",
+        "variable": "session.SES-584E6770.valid",
+        "world_id": "W-3ebe4724bfae"
+      }
+    ],
+    "critical_ok": 44,
+    "critical_total": 45,
+    "episode_count": 370,
+    "episode_level_reexpansion": true,
+    "irrelevant_mismatch_count": 0,
+    "irrelevant_mismatches": [],
+    "irrelevant_ok": 94,
+    "irrelevant_total": 94,
+    "leakage_findings": 0,
+    "leakage_samples": [],
+    "masked_mismatch_count": 0,
+    "masked_mismatches": [],
+    "masked_ok": 191,
+    "masked_total": 191,
+    "oracle_failures": 0,
+    "reexpansion_failures": []
+  },
+  "output_tokens": 241393,
+  "parse": {
+    "frame_failures": 0,
+    "frame_success_rate": 1.0,
+    "parse_failures_total": 0
+  },
+  "provider_batches": 17,
+  "provider_claimed_id_reuse": 0,
+  "provider_errors": 0,
+  "quarantine_reasons": {},
+  "quarantined": 0,
+  "raw_skeletons": 83,
+  "rejected": 43,
+  "rejection_reasons": {
+    "compile_error": 42,
+    "contradictory_expectation": 1,
+    "element_skeleton_rejected": 2
+  },
+  "retries": 3,
+  "run_id": "provider-ood-pilot-001",
+  "schema": {
+    "element_schema_failures": 2,
+    "other_schema_rejects": 2,
+    "schema_success_rate": 0.9759,
+    "unknown_mechanism_rejects": 0
+  }
+}

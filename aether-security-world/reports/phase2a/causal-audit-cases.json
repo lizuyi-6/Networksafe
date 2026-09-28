@@ -1,0 +1,880 @@
+[
+  {
+    "attack_family": "repeated_operation",
+    "classifications": [
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'token.TOK-201.used'：声明 verdict_flip，实际 verdict_changed=True"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'actor.ACT-101.roles'：声明 verdict_invariant，实际 verdict_changed=False"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'actor.ACT-101.authentication_state'：声明 verdict_invariant，实际 verdict_changed=False"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'actor.ACT-101.roles'：声明 verdict_invariant，实际 verdict_changed=False"
+      },
+      {
+        "category": "generator_mislabeled_critical_fact",
+        "confidence": "high",
+        "evidence": "轴 'actor.ACT-101.authentication_state' 出现在 critical_state_variables=True，且干预后 violated_invariants 增加 ['INV-TASK-AUTH-001']、consulted_facts 增加 []，判决随之翻转；generator 却声明 expected_effect=verdict_invariant"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'token.TOK-201.used'：声明 verdict_flip，实际 verdict_changed=True"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'actor.ACT-101.roles'：声明 verdict_invariant，实际 verdict_changed=False"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'actor.ACT-101.authentication_state'：声明 verdict_invariant，实际 verdict_changed=False"
+      }
+    ],
+    "declared_axes": [
+      {
+        "after": false,
+        "axis_id": "AXIS-101",
+        "before": true,
+        "expected_effect": "verdict_flip",
+        "kind": "critical",
+        "variable": "token.TOK-201.used"
+      },
+      {
+        "after": [
+          "ROLE-VIEWER"
+        ],
+        "axis_id": "AXIS-102",
+        "before": [
+          "ROLE-MEMBER"
+        ],
+        "expected_effect": "verdict_invariant",
+        "kind": "critical",
+        "variable": "actor.ACT-101.roles"
+      },
+      {
+        "after": "mfa_pending",
+        "axis_id": "AXIS-103",
+        "before": "authenticated",
+        "expected_effect": "verdict_invariant",
+        "kind": "critical",
+        "variable": "actor.ACT-101.authentication_state"
+      },
+      {
+        "after": "trace-b",
+        "axis_id": "AXIS-104",
+        "before": "trace-a",
+        "expected_effect": "verdict_invariant",
+        "kind": "irrelevant",
+        "variable": "observation.rendering.trace_id"
+      }
+    ],
+    "declared_critical_state_variables": [
+      "token.TOK-201.used",
+      "actor.ACT-101.roles",
+      "actor.ACT-101.authentication_state"
+    ],
+    "findings": [
+      {
+        "action_id": "ACTN-AUDIT-1",
+        "after": false,
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "before": true,
+        "changed_world_paths": [
+          "token.TOK-201.used"
+        ],
+        "consulted_delta": [
+          "token.TOK-201.scope"
+        ],
+        "declared_expected_effect": "verdict_flip",
+        "declared_kind": "critical",
+        "episode_id": "EP-6d850fa48d1e89ad-http_request",
+        "invariant_delta": [],
+        "operation": "create_task",
+        "probe_index": 1,
+        "variable": "token.TOK-201.used",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.scope",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": null,
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001",
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [],
+          "world_truth": "safe"
+        },
+        "verdict_changed": true
+      },
+      {
+        "action_id": "ACTN-AUDIT-1",
+        "after": [
+          "ROLE-VIEWER"
+        ],
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "before": [
+          "ROLE-MEMBER"
+        ],
+        "changed_world_paths": [
+          "actor.ACT-101.roles"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-41bee52bfa68b972-http_request",
+        "invariant_delta": [],
+        "operation": "create_task",
+        "probe_index": 1,
+        "variable": "actor.ACT-101.roles",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "verdict_changed": false
+      },
+      {
+        "action_id": "ACTN-AUDIT-1",
+        "after": "mfa_pending",
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "before": "authenticated",
+        "changed_world_paths": [
+          "actor.ACT-101.authentication_state"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-6a655e59ec73a9a8-http_request",
+        "invariant_delta": [
+          "INV-TASK-AUTH-001"
+        ],
+        "operation": "create_task",
+        "probe_index": 1,
+        "variable": "actor.ACT-101.authentication_state",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-AUTH-001",
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "verdict_changed": false
+      },
+      {
+        "action_id": "ACTN-AUDIT-2",
+        "after": [
+          "ROLE-VIEWER"
+        ],
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles"
+          ],
+          "observable_decision": "safe",
+          "policy_decision": null,
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "violated_invariants": [],
+          "world_truth": "safe"
+        },
+        "before": [
+          "ROLE-MEMBER"
+        ],
+        "changed_world_paths": [
+          "actor.ACT-101.roles"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-df02729bdfd36f02-http_request",
+        "invariant_delta": [],
+        "operation": "read_task",
+        "probe_index": 2,
+        "variable": "actor.ACT-101.roles",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles"
+          ],
+          "observable_decision": "safe",
+          "policy_decision": null,
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "violated_invariants": [],
+          "world_truth": "safe"
+        },
+        "verdict_changed": false
+      },
+      {
+        "action_id": "ACTN-AUDIT-2",
+        "after": "mfa_pending",
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles"
+          ],
+          "observable_decision": "safe",
+          "policy_decision": null,
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "violated_invariants": [],
+          "world_truth": "safe"
+        },
+        "before": "authenticated",
+        "changed_world_paths": [
+          "actor.ACT-101.authentication_state"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-a1961a0563c5fac2-http_request",
+        "invariant_delta": [
+          "INV-TASK-AUTH-001"
+        ],
+        "operation": "read_task",
+        "probe_index": 2,
+        "variable": "actor.ACT-101.authentication_state",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles"
+          ],
+          "observable_decision": "safe",
+          "policy_decision": null,
+          "satisfied_invariants": [],
+          "skipped_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "violated_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "world_truth": "attack"
+        },
+        "verdict_changed": true
+      },
+      {
+        "action_id": "ACTN-AUDIT-3",
+        "after": false,
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "before": true,
+        "changed_world_paths": [
+          "token.TOK-201.used"
+        ],
+        "consulted_delta": [
+          "token.TOK-201.scope"
+        ],
+        "declared_expected_effect": "verdict_flip",
+        "declared_kind": "critical",
+        "episode_id": "EP-c73fb8ae617276f7-http_request",
+        "invariant_delta": [],
+        "operation": "create_task",
+        "probe_index": 3,
+        "variable": "token.TOK-201.used",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.scope",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": null,
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001",
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [],
+          "world_truth": "safe"
+        },
+        "verdict_changed": true
+      },
+      {
+        "action_id": "ACTN-AUDIT-3",
+        "after": [
+          "ROLE-VIEWER"
+        ],
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "before": [
+          "ROLE-MEMBER"
+        ],
+        "changed_world_paths": [
+          "actor.ACT-101.roles"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-efd6744cecf07869-http_request",
+        "invariant_delta": [],
+        "operation": "create_task",
+        "probe_index": 3,
+        "variable": "actor.ACT-101.roles",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "verdict_changed": false
+      },
+      {
+        "action_id": "ACTN-AUDIT-3",
+        "after": "mfa_pending",
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-TASK-AUTH-001"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "before": "authenticated",
+        "changed_world_paths": [
+          "actor.ACT-101.authentication_state"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-565d0bf8369c3511-http_request",
+        "invariant_delta": [
+          "INV-TASK-AUTH-001"
+        ],
+        "operation": "create_task",
+        "probe_index": 3,
+        "variable": "actor.ACT-101.authentication_state",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-101.authentication_state",
+            "actor.ACT-101.roles",
+            "token.TOK-201.used"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-TASK-AUTH-001",
+            "INV-TASK-IDEMPOTENCY-001"
+          ],
+          "world_truth": "attack"
+        },
+        "verdict_changed": false
+      }
+    ],
+    "world_id": "W-pm-001"
+  },
+  {
+    "attack_family": "race_sensitive_state",
+    "classifications": [
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'token.TOK-IOT-001.used'：声明 verdict_flip，实际 verdict_changed=True"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'workflow_instance.WFI-IOT-001.current_state'：声明 verdict_invariant，实际 verdict_changed=False"
+      },
+      {
+        "category": "generator_mislabeled_critical_fact",
+        "confidence": "high",
+        "evidence": "轴 'workflow_instance.WFI-IOT-001.current_state' 出现在 critical_state_variables=True，且干预后 violated_invariants 增加 ['INV-IOT-WF-STATE']、consulted_facts 增加 []，判决随之翻转；generator 却声明 expected_effect=verdict_invariant"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'token.TOK-IOT-001.used'：声明 verdict_flip，实际 verdict_changed=True"
+      },
+      {
+        "category": "consistent",
+        "confidence": "high",
+        "evidence": "轴 'workflow_instance.WFI-IOT-001.current_state'：声明 verdict_invariant，实际 verdict_changed=False"
+      }
+    ],
+    "declared_axes": [
+      {
+        "after": false,
+        "axis_id": "AXIS-IOT-001",
+        "before": true,
+        "expected_effect": "verdict_flip",
+        "kind": "critical",
+        "rationale": "The transition policy and the one-time token invariant both read this path; the base value is true and the base invariant is violated.",
+        "variable": "token.TOK-IOT-001.used"
+      },
+      {
+        "after": "deploying",
+        "axis_id": "AXIS-IOT-002",
+        "before": "approved",
+        "expected_effect": "verdict_invariant",
+        "kind": "critical",
+        "rationale": "The transition policy reads this path, but the one-time token invariant remains violated when only the workflow state changes.",
+        "variable": "workflow_instance.WFI-IOT-001.current_state"
+      }
+    ],
+    "declared_critical_state_variables": [
+      "token.TOK-IOT-001.used",
+      "workflow_instance.WFI-IOT-001.current_state"
+    ],
+    "findings": [
+      {
+        "action_id": "ACTN-AUDIT-1",
+        "after": false,
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "token.TOK-IOT-001.used",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-TENANT",
+            "INV-IOT-WF-STATE"
+          ],
+          "skipped_invariants": [
+            "INV-IOT-SESSION-LIVE"
+          ],
+          "violated_invariants": [
+            "INV-IOT-ONE-TIME"
+          ],
+          "world_truth": "attack"
+        },
+        "before": true,
+        "changed_world_paths": [
+          "token.TOK-IOT-001.used"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_flip",
+        "declared_kind": "critical",
+        "episode_id": "EP-3c84618e098fcd9a-http_request",
+        "invariant_delta": [],
+        "operation": "transition",
+        "probe_index": 1,
+        "variable": "token.TOK-IOT-001.used",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "token.TOK-IOT-001.used",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-ONE-TIME",
+            "INV-IOT-TENANT",
+            "INV-IOT-WF-STATE"
+          ],
+          "skipped_invariants": [
+            "INV-IOT-SESSION-LIVE"
+          ],
+          "violated_invariants": [],
+          "world_truth": "unauthorized"
+        },
+        "verdict_changed": true
+      },
+      {
+        "action_id": "ACTN-AUDIT-1",
+        "after": "deploying",
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "token.TOK-IOT-001.used",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-TENANT",
+            "INV-IOT-WF-STATE"
+          ],
+          "skipped_invariants": [
+            "INV-IOT-SESSION-LIVE"
+          ],
+          "violated_invariants": [
+            "INV-IOT-ONE-TIME"
+          ],
+          "world_truth": "attack"
+        },
+        "before": "approved",
+        "changed_world_paths": [
+          "workflow_instance.WFI-IOT-001.current_state"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-78fb0039331b07a8-http_request",
+        "invariant_delta": [
+          "INV-IOT-WF-STATE"
+        ],
+        "operation": "transition",
+        "probe_index": 1,
+        "variable": "workflow_instance.WFI-IOT-001.current_state",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "token.TOK-IOT-001.used",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-TENANT"
+          ],
+          "skipped_invariants": [
+            "INV-IOT-SESSION-LIVE"
+          ],
+          "violated_invariants": [
+            "INV-IOT-ONE-TIME",
+            "INV-IOT-WF-STATE"
+          ],
+          "world_truth": "attack"
+        },
+        "verdict_changed": false
+      },
+      {
+        "action_id": "ACTN-AUDIT-2",
+        "after": "deploying",
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "unauthorized",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-TENANT",
+            "INV-IOT-WF-STATE"
+          ],
+          "skipped_invariants": [
+            "INV-IOT-ONE-TIME",
+            "INV-IOT-SESSION-LIVE"
+          ],
+          "violated_invariants": [],
+          "world_truth": "unauthorized"
+        },
+        "before": "approved",
+        "changed_world_paths": [
+          "workflow_instance.WFI-IOT-001.current_state"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-ddff70ccb4623253-http_request",
+        "invariant_delta": [
+          "INV-IOT-WF-STATE"
+        ],
+        "operation": "transition",
+        "probe_index": 2,
+        "variable": "workflow_instance.WFI-IOT-001.current_state",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "unauthorized",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-TENANT"
+          ],
+          "skipped_invariants": [
+            "INV-IOT-ONE-TIME",
+            "INV-IOT-SESSION-LIVE"
+          ],
+          "violated_invariants": [
+            "INV-IOT-WF-STATE"
+          ],
+          "world_truth": "attack"
+        },
+        "verdict_changed": true
+      },
+      {
+        "action_id": "ACTN-AUDIT-3",
+        "after": false,
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "session.SES-IOT-002.revoked",
+            "token.TOK-IOT-001.used",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-SESSION-LIVE",
+            "INV-IOT-TENANT",
+            "INV-IOT-WF-STATE"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-IOT-ONE-TIME"
+          ],
+          "world_truth": "attack"
+        },
+        "before": true,
+        "changed_world_paths": [
+          "token.TOK-IOT-001.used"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_flip",
+        "declared_kind": "critical",
+        "episode_id": "EP-cd0d3d1020422111-http_request",
+        "invariant_delta": [],
+        "operation": "transition",
+        "probe_index": 3,
+        "variable": "token.TOK-IOT-001.used",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "session.SES-IOT-002.revoked",
+            "token.TOK-IOT-001.used",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": null,
+          "satisfied_invariants": [
+            "INV-IOT-ONE-TIME",
+            "INV-IOT-SESSION-LIVE",
+            "INV-IOT-TENANT",
+            "INV-IOT-WF-STATE"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [],
+          "world_truth": "safe"
+        },
+        "verdict_changed": true
+      },
+      {
+        "action_id": "ACTN-AUDIT-3",
+        "after": "deploying",
+        "base": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "session.SES-IOT-002.revoked",
+            "token.TOK-IOT-001.used",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-SESSION-LIVE",
+            "INV-IOT-TENANT",
+            "INV-IOT-WF-STATE"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-IOT-ONE-TIME"
+          ],
+          "world_truth": "attack"
+        },
+        "before": "approved",
+        "changed_world_paths": [
+          "workflow_instance.WFI-IOT-001.current_state"
+        ],
+        "consulted_delta": [],
+        "declared_expected_effect": "verdict_invariant",
+        "declared_kind": "critical",
+        "episode_id": "EP-b3db970cd70da1ee-http_request",
+        "invariant_delta": [
+          "INV-IOT-WF-STATE"
+        ],
+        "operation": "transition",
+        "probe_index": 3,
+        "variable": "workflow_instance.WFI-IOT-001.current_state",
+        "variant": {
+          "consulted_facts": [
+            "actor.ACT-IOT-003.roles",
+            "actor.ACT-IOT-003.tenant",
+            "resource.RES-IOT-001.tenant",
+            "session.SES-IOT-002.revoked",
+            "token.TOK-IOT-001.used",
+            "workflow_instance.WFI-IOT-001.current_state"
+          ],
+          "observable_decision": "attack",
+          "policy_decision": "deny",
+          "satisfied_invariants": [
+            "INV-IOT-SESSION-LIVE",
+            "INV-IOT-TENANT"
+          ],
+          "skipped_invariants": [],
+          "violated_invariants": [
+            "INV-IOT-ONE-TIME",
+            "INV-IOT-WF-STATE"
+          ],
+          "world_truth": "attack"
+        },
+        "verdict_changed": false
+      }
+    ],
+    "world_id": "W-IOT-RACE-001"
+  }
+]

@@ -1,0 +1,1231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/asw/world.schema.json",
+  "title": "Aether Security World - World v0.1",
+  "description": "A structured, executable security world: the ONLY source of ground truth. The oracle evaluates policies/invariants against it and never against rendered text. REVISION 1 changes: (a) `metadata` (which allowed attack_family and free-text notes, and with additionalProperties:true even allowed a literal `verdict` key) is REMOVED - the declared attack family now lives on the spec side as a hypothesis and in the release manifest as a measured distribution; (b) `workflow_id` prefix changed from `WF-` to `WFL-` because `WF-` was already the world_family_id namespace; (c) `world_family_id` is required and constrained to a derived hash form; (d) `cache_entry.cached_subject` uses the canonical path BNF so a cache-consistency invariant can actually resolve it; (e) `compile` provenance records what the compiler did.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "world_id",
+    "world_family_id",
+    "application_domain",
+    "seed",
+    "provenance",
+    "application",
+    "actors",
+    "resources",
+    "workflows",
+    "roles",
+    "policies",
+    "invariants",
+    "state_history",
+    "current_state",
+    "evidence"
+  ],
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "0.1"
+    },
+    "world_id": {
+      "type": "string",
+      "pattern": "^W-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "world_family_id": {
+      "$comment": "DERIVED by compile_spec as 'WF-' + stable_hash(world structural skeleton with identifiers abstracted to types). Never authored: an author-writable family id let a generator collapse every world into one leakage group or scatter one world's surface variants across splits (revision 1).",
+      "type": "string",
+      "pattern": "^WF-[0-9a-f]{12,64}$"
+    },
+    "application_domain": {
+      "type": "string",
+      "enum": [
+        "e-commerce",
+        "cloud_storage",
+        "saas",
+        "school_system",
+        "finance_workflow",
+        "ticketing",
+        "logistics",
+        "healthcare_workflow",
+        "hr_system",
+        "devops_platform",
+        "code_hosting",
+        "crm",
+        "iam_system",
+        "iot_management",
+        "industrial_management",
+        "api_marketplace",
+        "content_platform",
+        "messaging",
+        "project_management",
+        "subscription_system"
+      ]
+    },
+    "seed": {
+      "$comment": "Single integer determining every stochastic choice in this world and its expansions. Same seed => byte-identical artefact (Gate 4).",
+      "type": "integer",
+      "minimum": 0
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "generator_model",
+        "generator_model_version",
+        "prompt_version",
+        "prompt_hash",
+        "generation_timestamp"
+      ],
+      "properties": {
+        "origin": {
+          "type": "string",
+          "enum": [
+            "handcrafted",
+            "step5_seed",
+            "programmatic_mutation"
+          ]
+        },
+        "generator_model": {
+          "type": "string"
+        },
+        "generator_model_version": {
+          "type": "string"
+        },
+        "prompt_version": {
+          "type": "string"
+        },
+        "prompt_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "generation_timestamp": {
+          "$comment": "VirtualClock-derived, not wall clock (design §8.1).",
+          "type": "string"
+        },
+        "raw_generation_id": {
+          "type": "string"
+        },
+        "decoding_parameters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "validation_outcome": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "rejected",
+            "pending"
+          ]
+        }
+      }
+    },
+    "compile": {
+      "$comment": "REVISION 1: what the compiler did to produce this instance from the spec. Makes the spec -> instance step auditable instead of implicit.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compiler_version",
+        "source_spec_id"
+      ],
+      "properties": {
+        "compiler_version": {
+          "type": "string"
+        },
+        "source_spec_id": {
+          "type": "string"
+        },
+        "derived_world_family_id": {
+          "type": "boolean",
+          "default": true
+        },
+        "dropped_hypothesis_fields": {
+          "$comment": "Fields the compiler deliberately did NOT carry into the instance, because they are AI/human hypotheses rather than state. Listed explicitly so the drop is auditable.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "method",
+              "operation"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE",
+                  "HEAD",
+                  "OPTIONS"
+                ]
+              },
+              "operation": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "resource_type": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "auth_required": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role_id",
+          "name",
+          "privileges"
+        ],
+        "properties": {
+          "role_id": {
+            "type": "string",
+            "pattern": "^ROLE-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "privileges": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 512
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "actors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/actor"
+      },
+      "minItems": 1
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/resource"
+      },
+      "minItems": 1
+    },
+    "sessions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/session"
+      },
+      "minItems": 0
+    },
+    "tokens": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/token"
+      },
+      "minItems": 0
+    },
+    "credentials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/credential"
+      },
+      "minItems": 0
+    },
+    "workflows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/workflow"
+      },
+      "minItems": 1
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/service"
+      },
+      "minItems": 0
+    },
+    "caches": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/cache_entry"
+      },
+      "minItems": 0
+    },
+    "trust_boundaries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/trust_boundary"
+      },
+      "minItems": 0
+    },
+    "policies": {
+      "$ref": "policy.schema.json#/properties/policies"
+    },
+    "invariants": {
+      "$ref": "policy.schema.json#/properties/invariants"
+    },
+    "state_history": {
+      "$comment": "Ordered snapshots, oldest first. REVISION 1: monotonicity is NOT expressible in JSON Schema, so Gate 2 enforces state_history[i].at <= state_history[i+1].at and current_state.at >= max(history.at); both golden fixtures were non-monotonic before this revision.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/state_snapshot"
+      },
+      "minItems": 1
+    },
+    "current_state": {
+      "$ref": "#/$defs/state_snapshot"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "evidence.schema.json"
+      },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor_id",
+        "actor_type",
+        "identity",
+        "roles",
+        "tenant",
+        "authentication_state"
+      ],
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "pattern": "^ACT-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "actor_type": {
+          "type": "string",
+          "enum": [
+            "user",
+            "administrator",
+            "support_agent",
+            "merchant",
+            "service_account",
+            "attacker_controlled_account",
+            "anonymous_principal",
+            "backend_service"
+          ]
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity_id"
+          ],
+          "properties": {
+            "identity_id": {
+              "type": "string",
+              "pattern": "^ID-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+            },
+            "email": {
+              "type": "string",
+              "maxLength": 254
+            },
+            "verified": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "roles": {
+          "$comment": "REVISION 1: items are ROLE IDs, not role names. Previously the two reference fixtures disagreed - policy.example.json compared against the literal 'support_agent' (a name) while world.example.json compared against 'ROLE-SUPPORT' (an id) - so the same policy was silently false under one convention. compile_spec now asserts every entry resolves to a roles[].role_id (Gate 2 dangling_ref), and the schema pattern pins the id form.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^ROLE-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "uniqueItems": true
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "tenant": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^TEN-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "privileges": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "authentication_state": {
+          "type": "string",
+          "enum": [
+            "unauthenticated",
+            "authenticated",
+            "mfa_pending",
+            "mfa_complete",
+            "disabled",
+            "locked",
+            "password_reset_pending"
+          ]
+        },
+        "privilege_version": {
+          "$comment": "Bumped on any role/privilege change. The privilege-version invariant compares a session's snapshot against this live value, which is how stale-authorization samples are manufactured deterministically.",
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_id",
+        "resource_type",
+        "owner",
+        "sensitivity",
+        "state"
+      ],
+      "properties": {
+        "resource_id": {
+          "type": "string",
+          "pattern": "^RES-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "resource_type": {
+          "type": "string",
+          "enum": [
+            "file",
+            "order",
+            "invoice",
+            "message",
+            "ticket",
+            "secret",
+            "api_key",
+            "user_profile",
+            "database_record",
+            "cloud_resource"
+          ]
+        },
+        "display_name": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "owner": {
+          "$comment": "The single ground-truth owner; the ownership invariant compares action.actor against this.",
+          "type": "string",
+          "pattern": "^ACT-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "tenant": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^TEN-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "acl": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "grantee",
+              "permissions"
+            ],
+            "properties": {
+              "grantee": {
+                "type": "string"
+              },
+              "grantee_type": {
+                "type": "string",
+                "enum": [
+                  "actor",
+                  "role",
+                  "group",
+                  "tenant",
+                  "public"
+                ]
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ]
+        },
+        "state": {
+          "$comment": "Resource-local lifecycle state, independent of any workflow instance.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session_id",
+        "principal",
+        "created_at",
+        "authenticated_at",
+        "auth_strength",
+        "valid",
+        "revoked",
+        "expires_at",
+        "privilege_snapshot",
+        "flow_id"
+      ],
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "pattern": "^SES-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "principal": {
+          "type": "string",
+          "pattern": "^ACT-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "authenticated_at": {
+          "type": "string"
+        },
+        "auth_strength": {
+          "type": "string",
+          "enum": [
+            "none",
+            "password",
+            "password_mfa",
+            "passkey",
+            "hardware_token",
+            "service_credential"
+          ]
+        },
+        "valid": {
+          "type": "boolean"
+        },
+        "revoked": {
+          "type": "boolean"
+        },
+        "revoked_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revocation_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128
+        },
+        "expires_at": {
+          "type": "string"
+        },
+        "privilege_snapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "roles",
+            "privileges",
+            "privilege_version"
+          ],
+          "properties": {
+            "roles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "privileges": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "privilege_version": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "flow_id": {
+          "type": "string",
+          "pattern": "^FLOW-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "bound_to": {
+          "$comment": "Session binding target, e.g. {device_id, ip_cidr, user_agent_hash}.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        }
+      }
+    },
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "token_id",
+        "issuer",
+        "subject",
+        "audience",
+        "scope",
+        "created_at",
+        "expires_at",
+        "one_time",
+        "used",
+        "parent_token",
+        "flow_id",
+        "privilege_version"
+      ],
+      "properties": {
+        "token_id": {
+          "type": "string",
+          "pattern": "^TOK-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "token_type": {
+          "type": "string",
+          "enum": [
+            "access",
+            "refresh",
+            "id",
+            "one_time_code",
+            "reset_token",
+            "invitation",
+            "csrf",
+            "api_key",
+            "session_binding"
+          ]
+        },
+        "issuer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "subject": {
+          "type": "string",
+          "pattern": "^ACT-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "audience": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "string"
+        },
+        "one_time": {
+          "type": "boolean"
+        },
+        "used": {
+          "type": "boolean"
+        },
+        "used_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parent_token": {
+          "$comment": "null for root tokens. The lineage invariant walks this chain; a cycle is a compile error.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^TOK-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "flow_id": {
+          "type": "string",
+          "pattern": "^FLOW-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "privilege_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bound_resource": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^RES-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        }
+      }
+    },
+    "credential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credential_id",
+        "credential_type",
+        "holder",
+        "status"
+      ],
+      "properties": {
+        "credential_id": {
+          "type": "string",
+          "pattern": "^CRED-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "credential_type": {
+          "type": "string",
+          "enum": [
+            "password",
+            "passkey",
+            "totp_secret",
+            "api_key",
+            "client_secret",
+            "signing_key"
+          ]
+        },
+        "holder": {
+          "type": "string",
+          "pattern": "^ACT-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "rotated",
+            "revoked",
+            "compromised",
+            "expired"
+          ]
+        },
+        "rotated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workflow_id",
+        "name",
+        "states",
+        "initial_state",
+        "transitions",
+        "instances"
+      ],
+      "properties": {
+        "workflow_id": {
+          "$comment": "REVISION 1: prefix WFL- (was WF-, which collided with the world_family_id namespace).",
+          "type": "string",
+          "pattern": "^WFL-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "uniqueItems": true
+        },
+        "initial_state": {
+          "type": "string"
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from_state",
+              "to_state"
+            ],
+            "properties": {
+              "from_state": {
+                "type": "string"
+              },
+              "to_state": {
+                "type": "string"
+              },
+              "condition": {
+                "$ref": "policy.schema.json#/$defs/expr"
+              },
+              "required_privileges": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "reversible": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          },
+          "minItems": 1
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "instance_id",
+              "resource_id",
+              "current_state"
+            ],
+            "properties": {
+              "instance_id": {
+                "type": "string",
+                "pattern": "^WFI-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+              },
+              "resource_id": {
+                "type": "string",
+                "pattern": "^RES-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+              },
+              "current_state": {
+                "type": "string"
+              },
+              "history": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "from_state",
+                    "to_state",
+                    "at",
+                    "actor_id"
+                  ],
+                  "properties": {
+                    "from_state": {
+                      "type": "string"
+                    },
+                    "to_state": {
+                      "type": "string"
+                    },
+                    "at": {
+                      "type": "string"
+                    },
+                    "actor_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "service_id",
+        "service_type"
+      ],
+      "properties": {
+        "service_id": {
+          "type": "string",
+          "pattern": "^SVC-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "service_type": {
+          "type": "string",
+          "enum": [
+            "database",
+            "cache",
+            "queue",
+            "object_store",
+            "auth_provider",
+            "payment_gateway",
+            "llm_service",
+            "webhook"
+          ]
+        },
+        "trust_boundary": {
+          "type": "string"
+        },
+        "consistency_model": {
+          "type": "string",
+          "enum": [
+            "strong",
+            "eventual",
+            "read_your_writes",
+            "causal"
+          ]
+        },
+        "sinks": {
+          "$comment": "REVISION 1: the declared sink model for traditional payload classes. A payload is an attack iff a structured tainted input reaches a sink with parameterized=false and no sanitizer on the path - never because the payload text looks dangerous (design §8.5, R8).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sink_id",
+              "kind",
+              "parameterized"
+            ],
+            "properties": {
+              "sink_id": {
+                "type": "string",
+                "pattern": "^SINK-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "sql",
+                  "shell",
+                  "path",
+                  "html",
+                  "ssrf",
+                  "deserialization",
+                  "llm_prompt"
+                ]
+              },
+              "parameterized": {
+                "type": "boolean"
+              },
+              "sanitized": {
+                "type": "boolean",
+                "default": false
+              },
+              "reachable_from": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "cache_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cache_id",
+        "cached_subject",
+        "cached_value",
+        "source_of_truth",
+        "fresh"
+      ],
+      "properties": {
+        "cache_id": {
+          "type": "string",
+          "pattern": "^CACHE-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "cached_subject": {
+          "$comment": "REVISION 1: canonical ID-view path (e.g. 'actor.ACT-001.privilege_version'). Previously the reference fixtures used the bare form 'ACT-001.privilege_version', which does not resolve under the path grammar - so a cache-consistency invariant had nothing to compare against.",
+          "type": "string",
+          "pattern": "^(actor|resource|session|token|workflow|workflow_instance|cache|service|credential|role)\\.[A-Za-z0-9][A-Za-z0-9._-]{0,62}(\\.[A-Za-z0-9_]+)+$",
+          "maxLength": 256
+        },
+        "cached_value": {},
+        "source_of_truth": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "fresh": {
+          "type": "boolean"
+        },
+        "ttl_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "populated_at": {
+          "type": "string"
+        }
+      }
+    },
+    "trust_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boundary_id",
+        "inside",
+        "outside"
+      ],
+      "properties": {
+        "boundary_id": {
+          "type": "string",
+          "pattern": "^TB-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "inside": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "outside": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "crossing_requires": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "state_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "at",
+        "label"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string",
+          "pattern": "^SNAP-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "at": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "actor_states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "authentication_state",
+              "privilege_version"
+            ],
+            "properties": {
+              "authentication_state": {
+                "type": "string"
+              },
+              "privilege_version": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "roles": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "session_states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "valid",
+              "revoked",
+              "privilege_version"
+            ],
+            "properties": {
+              "valid": {
+                "type": "boolean"
+              },
+              "revoked": {
+                "type": "boolean"
+              },
+              "privilege_version": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "token_states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "used",
+              "valid"
+            ],
+            "properties": {
+              "used": {
+                "type": "boolean"
+              },
+              "valid": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "workflow_states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "current_state"
+            ],
+            "properties": {
+              "current_state": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "resource_states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "state",
+              "owner"
+            ],
+            "properties": {
+              "state": {
+                "type": "string"
+              },
+              "owner": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "free_form": {
+          "$comment": "Additional per-world state that engines may read only through explicit ref paths declared in policies/invariants. No engine may guess at keys here.",
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

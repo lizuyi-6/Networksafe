@@ -1,0 +1,8 @@
+{
+  "delta": "ID ownership only (vs frozen v0.6); compiler-side vocabulary extension is tracked separately",
+  "derived_from": "semantic_skeleton/prompts/v0.6.md (PHASE2A-FINAL-FREEZE, frozen)",
+  "derived_from_sha256": "1c891e4b6f51911d93f8c7bd86e9526147dcfcc5a59dc18b4623a4db3d2234bc",
+  "output_format": "jsonl",
+  "prompt_sha256": "49458a042a64401f39048851dcf5b181d631304e57834a3e0b2aa8a3a4a7276e",
+  "prompt_version": "0.7"
+}

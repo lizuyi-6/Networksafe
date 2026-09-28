@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/asw/world-spec.schema.json",
+  "title": "Aether Security World - World Seed Specification v0.1",
+  "description": "The human/AI-authored SEED for a world. A spec is a hypothesis-bearing document: it may declare which variables should matter, which should not, and what counterfactual effect is expected. None of that is a label. REVISION 1 changes: (a) `world_family_id` and `required_evidence`/`potentially_missing_evidence` were REMOVED - the family id is derived by the compiler and the required-fact set is computed by the oracle, so neither is author-writable; (b) `state_history`, `current_state` and `evidence` were ADDED so a spec fully determines its instance and compile_spec has a real worked example to satisfy; (c) `attack_family` moved here from WorldInstance.metadata; (d) `critical_state_variables` and `irrelevant_state_variables` now carry path patterns, so a 'critical' axis cannot point at a cosmetic observation field and an 'irrelevant' axis cannot point at world state; (e) `episode_templates[].events[]` gained `binds` so a decision action can declare which session/token/workflow instance it rides.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "world_id",
+    "application_domain",
+    "seed",
+    "provenance",
+    "application",
+    "roles",
+    "actors",
+    "resources",
+    "workflows",
+    "policies",
+    "invariants",
+    "state_history",
+    "current_state",
+    "evidence",
+    "critical_state_variables",
+    "irrelevant_state_variables",
+    "attack_family",
+    "hypotheses",
+    "episode_templates"
+  ],
+  "properties": {
+    "$comment": { "type": "string" },
+    "schema_version": { "const": "0.1" },
+    "world_id": { "type": "string", "pattern": "^W-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+    "application_domain": {
+      "type": "string",
+      "enum": [
+        "e-commerce", "cloud_storage", "saas", "school_system", "finance_workflow", "ticketing",
+        "logistics", "healthcare_workflow", "hr_system", "devops_platform", "code_hosting", "crm",
+        "iam_system", "iot_management", "industrial_management", "api_marketplace", "content_platform",
+        "messaging", "project_management", "subscription_system"
+      ]
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "generator_model", "generator_model_version", "prompt_version", "prompt_hash", "generation_timestamp"],
+      "properties": {
+        "origin": { "type": "string", "enum": ["handcrafted", "step5_seed", "programmatic_mutation"] },
+        "generator_model": { "type": "string" },
+        "generator_model_version": { "type": "string" },
+        "prompt_version": { "type": "string" },
+        "prompt_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "generation_timestamp": { "type": "string" },
+        "raw_generation_id": { "type": "string" },
+        "decoding_parameters": { "type": "object", "additionalProperties": true },
+        "validation_outcome": { "type": "string", "enum": ["accepted", "rejected", "pending"] }
+      }
+    },
+    "attack_family": {
+      "$comment": "REVISION 1: moved here from WorldInstance.metadata. On the SPEC side this is a HYPOTHESIS ('this world is meant to exercise idor_bola'), falsifiable by Gate 3 and by release.attack_family_reachability. It is absent from the WorldInstance so no renderer can project it into an observation.",
+      "type": "string",
+      "enum": [
+        "idor_bola", "horizontal_privesc", "vertical_privesc", "tenant_isolation_violation",
+        "stale_authorization", "revoked_session_reuse", "stale_session_privilege",
+        "cross_account_session_misuse", "session_after_password_reset", "session_after_account_disable",
+        "token_replay", "one_time_token_reuse", "cross_workflow_token_reuse", "cross_resource_token_reuse",
+        "scope_mismatch", "audience_mismatch", "privilege_version_mismatch", "token_lineage_confusion",
+        "workflow_bypass", "invalid_state_transition", "repeated_operation", "skipping_required_step",
+        "irreversible_state_reversal", "state_machine_confusion", "stale_permission_cache",
+        "inconsistent_revocation_state", "stale_ownership_cache", "cache_invalidation_failure",
+        "inconsistent_replicas", "owner_mismatch", "tenant_mismatch", "resource_state_violation",
+        "race_sensitive_state", "stale_object_reference", "sql_injection", "command_injection",
+        "path_traversal", "xss", "ssrf", "unsafe_deserialization", "prompt_injection", "benign"
+      ]
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "method", "operation"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1, "maxLength": 512 },
+              "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] },
+              "operation": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "resource_type": { "type": "string", "maxLength": 64 },
+              "auth_required": { "type": "boolean", "default": true }
+            }
+          }
+        }
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role_id", "name", "privileges"],
+        "properties": {
+          "role_id": { "type": "string", "pattern": "^ROLE-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "privileges": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "description": { "type": "string", "maxLength": 512 }
+        }
+      },
+      "minItems": 1
+    },
+    "actors": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/actor" }, "minItems": 1 },
+    "resources": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/resource" }, "minItems": 1 },
+    "sessions": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/session" }, "minItems": 0 },
+    "tokens": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/token" }, "minItems": 0 },
+    "credentials": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/credential" }, "minItems": 0 },
+    "workflows": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/workflow" }, "minItems": 1 },
+    "services": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/service" }, "minItems": 0 },
+    "caches": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/cache_entry" }, "minItems": 0 },
+    "trust_boundaries": { "type": "array", "items": { "$ref": "world.schema.json#/$defs/trust_boundary" }, "minItems": 0 },
+    "policies": { "$ref": "policy.schema.json#/properties/policies" },
+    "invariants": { "$ref": "policy.schema.json#/properties/invariants" },
+    "state_history": {
+      "$comment": "REVISION 1: explicit on the spec too. Phase 1 has no event->snapshot inverter (design §4.4), so the author states history and Gate 2 checks monotonicity and agreement with current_state.",
+      "type": "array",
+      "items": { "$ref": "world.schema.json#/$defs/state_snapshot" },
+      "minItems": 1
+    },
+    "current_state": { "$ref": "world.schema.json#/$defs/state_snapshot" },
+    "evidence": {
+      "$comment": "REVISION 1: the evidence catalog lives on the spec, so a spec fully determines its instance. `visible_in_observation` here is the authoritative flag (design §6).",
+      "type": "array",
+      "items": { "$ref": "evidence.schema.json" },
+      "minItems": 1
+    },
+    "critical_state_variables": {
+      "$comment": "REVISION 1: constrained to canonical ID-view STATE paths. A critical axis may not point at an observation-surface or cosmetic field - the counterfactual engine intervenes on world state and must leave the request bytes untouched. REVISION 2: the pattern is now BYTE-IDENTICAL to the canonical BNF in security_world/model/refs.py (all ten entity types including workflow and role; previously this was a second, narrower notation that silently rejected `workflow.*` / `role.*` axes - task A3).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(actor|resource|session|token|workflow|workflow_instance|cache|service|credential|role)\\.[A-Za-z0-9][A-Za-z0-9._-]{0,62}(\\.[A-Za-z0-9_]+)+$",
+        "maxLength": 256
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "irrelevant_state_variables": {
+      "$comment": "REVISION 1: constrained to observation-surface paths ONLY. An irrelevant axis must leave the world state untouched (design §9.2: diff_worlds(base, variant).changed_paths == ()). 'display_name.case' used to sit here, but display_name is an entity field, so perturbing it changed world state and made Gate 6 unsatisfiable; it is now the render-time-only axis 'observation.rendering.display_name_case'.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^observation\\.(request|rendering)\\.[A-Za-z0-9_][A-Za-z0-9._-]{0,120}$",
+        "maxLength": 160
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "hypotheses": {
+      "$comment": "REVISION 1: renamed from the two loose fields and grouped, so the boundary between 'what the author guessed' and 'what the program computed' is one obvious block. compile_spec DROPS this entire block when producing the WorldInstance (recorded in compile.dropped_hypothesis_fields), so no hypothesis can reach a release artefact.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attack_opportunities", "expected_counterfactual_axes"],
+      "properties": {
+        "attack_opportunities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["opportunity_id", "attack_family", "target_operation", "hypothesized_verdict"],
+            "properties": {
+              "opportunity_id": { "type": "string", "pattern": "^OPP-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+              "attack_family": { "type": "string" },
+              "target_operation": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "hypothesized_verdict": { "type": "string", "enum": ["safe", "attack", "insufficient_evidence", "unauthorized"] },
+              "state_preconditions": { "type": "array", "items": { "$ref": "policy.schema.json#/$defs/expr" } },
+              "rationale": { "type": "string", "maxLength": 1024 }
+            }
+          },
+          "minItems": 1
+        },
+        "expected_counterfactual_axes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["axis_id", "variable", "kind", "before", "after", "expected_effect"],
+            "properties": {
+              "axis_id": { "type": "string", "pattern": "^AXIS-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+              "variable": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "kind": { "type": "string", "enum": ["critical", "irrelevant"] },
+              "before": {},
+              "after": {},
+              "expected_effect": { "type": "string", "enum": ["verdict_flip", "verdict_invariant", "observable_downgrade"] },
+              "rationale": { "type": "string", "maxLength": 1024 }
+            }
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "episode_templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["template_id", "events", "decision_event_index"],
+        "properties": {
+          "template_id": { "type": "string", "pattern": "^TPL-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+          "decision_event_index": { "type": "integer", "minimum": 0 },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["event_type", "actor_id", "t_offset_ms"],
+              "properties": {
+                "event_type": {
+                  "type": "string",
+                  "enum": [
+                    "login", "logout", "mfa_challenge", "resource_created", "resource_updated",
+                    "permission_changed", "role_changed", "token_issued", "token_used", "token_revoked",
+                    "privilege_downgraded", "password_reset", "account_disabled", "account_enabled",
+                    "session_revoked", "workflow_transition", "cache_populated", "cache_invalidated",
+                    "sensitive_operation", "request", "other"
+                  ]
+                },
+                "actor_id": { "type": "string", "pattern": "^ACT-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                "t_offset_ms": { "type": "integer", "minimum": 0 },
+                "binds": {
+                  "$comment": "REVISION 1: which entities this event's action rides. Without it, 'revoked session reuse' and 'cross-flow token reuse' are unrepresentable - the reference world gives one actor two sessions (one valid, one revoked) and the binding could only be guessed.",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "session_id": { "type": "string", "pattern": "^SES-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "token_id": { "type": "string", "pattern": "^TOK-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "workflow_instance_id": { "type": "string", "pattern": "^WFI-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "resource_id": { "type": "string", "pattern": "^RES-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "operation": { "type": "string", "maxLength": 64 },
+                    "flow_id": { "type": "string", "pattern": "^FLOW-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" }
+                  }
+                },
+                "emits_evidence": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+                "causal_tag": { "type": "string", "enum": ["relevant", "irrelevant"], "default": "relevant" },
+                "summary": { "type": "string", "maxLength": 512 }
+              }
+            },
+            "minItems": 1
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "notes": { "type": "string", "maxLength": 4096 }
+  }
+}

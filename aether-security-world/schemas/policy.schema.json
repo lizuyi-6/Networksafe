@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/asw/policy.schema.json",
+  "title": "Aether Security World - Policy / Invariant DSL AST v0.1",
+  "description": "Security Policy and Invariant expression AST. Deliberately small and closed: no arbitrary code execution, no imports, no unbounded loops, no reads of the evidence view by value. Every node is a pure function of (world, action) so the oracle stays deterministic and unit-testable. Revision 1: the `evidence_view.<id>.*` ref view was REMOVED (it let a policy read an untrusted/derived evidence value straight into a condition, breaking the 'trusted_evidence_exists is the only one-way bridge' invariant); `trusted_evidence_exists` was renamed `establishing_evidence_exists` with the establishing set fixed at {trusted, semi_trusted} to match configs/default.json.",
+  "$defs": {
+    "expr": {
+      "$comment": "Discriminated union on `op`. `ref` paths resolve against THREE views only (revision 1: was four): (1) ID view '<entity_type>.<id>.<field...>' with entity_type in {actor, resource, session, token, workflow, workflow_instance, cache, service, credential, role}; (2) ACTION-BINDING view 'action.actor.*', 'action.resource.*', 'action.session.*', 'action.token.*', 'action.workflow_instance.*', 'action.parameters.*', 'action.request.*', where the segment after 'action.' is the entity the action names - compile_spec EXPANDS these to instance paths so that decision_facts() and evidence.asserts_ref share one key space; (3) context: 'current_flow.flow_id', 'current_time'. The evidence view is reachable ONLY through the establishing_evidence_exists op, never by value. Every path resolves at compile time (Gate 2): an unresolvable path is a build error, never a silent null at oracle time. The resolver is pure - no path may mutate state.",
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["op", "value"], "properties": { "op": { "const": "lit" }, "value": {} } },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "path"],
+          "properties": {
+            "op": { "const": "ref" },
+            "path": {
+              "type": "string", "minLength": 1, "maxLength": 256,
+              "pattern": "^(action\\.(actor|resource|session|token|workflow_instance|parameters|request)\\.[A-Za-z0-9_][A-Za-z0-9._-]*|(actor|resource|session|token|workflow|workflow_instance|cache|service|credential|role)\\.[A-Za-z0-9][A-Za-z0-9._-]{0,62}(\\.[A-Za-z0-9_]+)+|current_flow\\.[A-Za-z0-9_]+|current_time)$"
+            },
+            "on_missing": { "type": "string", "enum": ["error", "unknown"], "default": "error" }
+          }
+        },
+        { "type": "object", "additionalProperties": false, "required": ["op", "args"], "properties": { "op": { "enum": ["eq", "ne", "lt", "le", "gt", "ge"] }, "args": { "$ref": "#/$defs/two_args" } } },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "args"],
+          "properties": {
+            "op": { "enum": ["in", "not_in"] },
+            "args": { "type": "array", "items": { "$ref": "#/$defs/expr" }, "minItems": 2, "maxItems": 2 }
+          }
+        },
+        { "type": "object", "additionalProperties": false, "required": ["op", "args"], "properties": { "op": { "enum": ["contains", "not_contains"] }, "args": { "$ref": "#/$defs/two_args" } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "args"], "properties": { "op": { "enum": ["subset_of", "intersects", "disjoint"] }, "args": { "$ref": "#/$defs/two_args" } } },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "args"],
+          "properties": { "op": { "enum": ["and", "or"] }, "args": { "type": "array", "items": { "$ref": "#/$defs/expr" }, "minItems": 1, "maxItems": 16 } }
+        },
+        { "type": "object", "additionalProperties": false, "required": ["op", "args"], "properties": { "op": { "const": "not" }, "args": { "$ref": "#/$defs/one_arg" } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "args"], "properties": { "op": { "const": "is_empty" }, "args": { "$ref": "#/$defs/one_arg" } } },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "args"],
+          "properties": { "op": { "enum": ["before", "after", "within"] }, "args": { "type": "array", "items": { "$ref": "#/$defs/expr" }, "minItems": 2, "maxItems": 3 } },
+          "$comment": "before(t1,t2)/after(t1,t2) compare VirtualClock timestamps; within(t1,t2,window_ms) requires 0 <= t2-t1 <= window_ms."
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "args"],
+          "properties": { "op": { "enum": ["state_is", "transition_allowed"] }, "args": { "$ref": "#/$defs/two_args" } },
+          "$comment": "REVISION 1: both take exactly TWO arguments (the schema enforces two_args). state_is(workflow_instance_ref, 'PAID') checks the instance's current_state; transition_allowed(workflow_instance_ref, 'PAID') checks whether the transition from that instance's CURRENT state to the given state exists in the declared machine - the from_state is read from the binding, not passed as a third argument. Both evaluate against the declared workflow state machine, NEVER against string similarity."
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "args"],
+          "properties": { "op": { "enum": ["lineage_depth", "lineage_root"] }, "args": { "$ref": "#/$defs/one_arg" } },
+          "$comment": "lineage_depth(token_ref) = number of ancestors up the parent_token chain; lineage_root(token_ref) = the flow_id of the root ancestor. Cycles are rejected at compile time (a token cannot be its own ancestor), so these are total functions."
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "args"],
+          "properties": {
+            "op": { "const": "establishing_evidence_exists" },
+            "args": { "type": "array", "items": { "type": "string", "pattern": "^(actor|resource|session|token|workflow|workflow_instance|cache|service|credential|role)\\.[A-Za-z0-9][A-Za-z0-9._-]{0,62}(\\.[A-Za-z0-9_]+)+$" }, "minItems": 1, "maxItems": 1 }
+          },
+          "$comment": "REVISION 1: renamed from trusted_evidence_exists and the establishing set is now explicitly {trusted, semi_trusted} = configs/default.json evidence_masking.trusted_establishes. establishing_evidence_exists(fact_key) = at least one VISIBLE evidence item asserting that canonical fact key with trust_level in the establishing set. This is the ONLY bridge from the evidence view into the decision view, and it is deliberately one-way: it can turn a verdict into insufficient_evidence, never into attack."
+        }
+      ]
+    },
+    "one_arg": { "type": "array", "items": { "$ref": "#/$defs/expr" }, "minItems": 1, "maxItems": 1 },
+    "two_args": { "type": "array", "items": { "$ref": "#/$defs/expr" }, "minItems": 2, "maxItems": 2 },
+    "policy_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_id", "action", "effect", "condition"],
+      "properties": {
+        "policy_id": { "type": "string", "pattern": "^POL-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+        "description": { "type": "string", "maxLength": 512 },
+        "action": {
+          "$comment": "The action pattern this rule governs. `resource_type` may be omitted to mean 'any'; operation '*' matches every operation.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation"],
+          "properties": {
+            "operation": { "type": "string", "minLength": 1, "maxLength": 64 },
+            "resource_type": { "type": ["string", "null"], "maxLength": 64 }
+          }
+        },
+        "effect": { "type": "string", "enum": ["allow", "deny"] },
+        "condition": { "$ref": "#/$defs/expr" },
+        "priority": {
+          "$comment": "Higher wins; ties broken by policy_id ascending (deterministic, never by evaluation order). The closed-world default-deny rule conventionally uses a negative priority so every substantive rule is evaluated first.",
+          "type": "integer", "minimum": -1000, "maximum": 1000, "default": 0
+        },
+        "is_default_rule": {
+          "$comment": "REVISION 1: marks the closed-world fallback. world_truth=attack requires a deny from a NON-default rule or a violated invariant - a default-deny hit alone yields 'unauthorized', never 'attack' (design §8.2). Without this flag an author who forgets one allow rule could mass-produce attack labels with no security semantics.",
+          "type": "boolean", "default": false
+        },
+        "requires_fresh": {
+          "$comment": "When true, a decision-critical fact established only from stale/expired evidence does NOT count as established and the oracle must return insufficient_evidence. This is the knob that makes 'stale permission cache' a first-class sample class rather than an accident.",
+          "type": "boolean", "default": false
+        },
+        "rationale": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "invariant": {
+      "$comment": "Invariants are the only producers of world_truth. `expr` must be a total predicate over the declared world for the operations listed in applies_to; it is evaluated by the same evaluator as policies, with no side effects. REVISION 1: applies_to=['*'] means 'evaluate against whatever the action actually binds' - if the action binds no session/token/workflow_instance the invariant is recorded skipped_out_of_scope WITH a trace entry, never silently satisfied. The old wording ('must be total over every action, checked statically') was undecidable because the world's action set does not exist at compile time.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["invariant_id", "category", "expr", "severity", "applies_to"],
+      "properties": {
+        "invariant_id": { "type": "string", "pattern": "^INV-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+        "category": {
+          "type": "string",
+          "enum": [
+            "ownership", "authorization", "tenant_isolation", "session_binding", "session_revocation",
+            "token_scope", "token_lineage", "one_time_token", "workflow_transition", "replay",
+            "privilege_version", "cache_consistency", "authentication_state", "trust_boundary",
+            "resource_state", "temporal", "cross_flow_isolation", "cross_user_isolation",
+            "cross_tenant_isolation", "state_freshness"
+          ]
+        },
+        "expr": { "$ref": "#/$defs/expr" },
+        "severity": {
+          "$comment": "REVISION 1: REPORT-ONLY triage field. It does NOT participate in the world_truth aggregation. Previously world_truth=attack required a 'critical' violation, which handed label authority to an author-writable enum: marking an invariant 'high' silently downgraded its violations to non-attacks. The aggregation rule is now category-independent: ANY violated invariant is an attack (design §8.2, ATTACK_CATEGORIES = all 20).",
+          "type": "string", "enum": ["critical", "high", "medium", "low"]
+        },
+        "applies_to": {
+          "$comment": "Operation names this invariant governs; ['*'] means every operation. An operation not listed => skipped_out_of_scope (recorded in the trace, counted in neither satisfied nor violated). With ['*'], evaluation happens against the action's ACTUAL bindings: an unbound subject yields skipped_out_of_scope, never a silent true.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "minItems": 1, "uniqueItems": true, "default": ["*"]
+        },
+        "description": { "type": "string", "maxLength": 512 },
+        "expected_violation_when": {
+          "$comment": "Optional human/AI-authored hypothesis about when this invariant breaks. Used ONLY as a test oracle for the invariant's own unit tests and for the diversity audit. It can never contribute a label to a dataset sample: labels come from evaluating `expr`, not from this field.",
+          "type": "string", "maxLength": 512
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["policies", "invariants"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "schema_version": { "const": "0.1" },
+    "policies": { "type": "array", "items": { "$ref": "#/$defs/policy_rule" }, "minItems": 1 },
+    "invariants": { "type": "array", "items": { "$ref": "#/$defs/invariant" }, "minItems": 1 }
+  }
+}

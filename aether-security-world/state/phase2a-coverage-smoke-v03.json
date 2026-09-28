@@ -1,0 +1,51 @@
+{
+  "accepted": 18,
+  "complexity": {
+    "complex": 5,
+    "medium": 7,
+    "simple": 3,
+    "very_complex": 3
+  },
+  "domains": {
+    "api_marketplace": 3,
+    "cloud_storage": 3,
+    "code_hosting": 1,
+    "crm": 1,
+    "devops_platform": 1,
+    "finance_workflow": 1,
+    "iam_system": 2,
+    "saas": 3,
+    "subscription_system": 1,
+    "ticketing": 2
+  },
+  "families": {
+    "boundary_crossing_without_required_assertion": 1,
+    "cache_invalidation_failure": 1,
+    "cross_service_tenant_propagation_delay": 3,
+    "cross_tenant_cache": 2,
+    "delegated_tenant_access": 1,
+    "derived_summary_overrides_system_of_record": 1,
+    "horizontal_peer_access": 1,
+    "replica_divergence": 1,
+    "resource_tenant_mismatch": 2,
+    "session_reused_across_flow": 1,
+    "token_bound_to_other_resource": 2,
+    "token_lineage_confusion": 1,
+    "token_reused_across_flow": 1
+  },
+  "labels": {
+    "authorization": 3,
+    "cache_distributed": 8,
+    "cross_flow_reuse": 5,
+    "multi_tenant": 9,
+    "session": 2,
+    "token": 5,
+    "trust_boundary": 7
+  },
+  "stalls": {
+    "cache_distributed": 0,
+    "cross_flow_reuse": 0,
+    "multi_tenant": 0,
+    "trust_boundary": 0
+  }
+}

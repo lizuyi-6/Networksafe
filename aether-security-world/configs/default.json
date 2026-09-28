@@ -1,0 +1,264 @@
+{
+  "$comment": "Phase 1 default configuration. Every stochastic choice in the factory is derived from `seed`; nothing here may depend on wall-clock time, environment, or thread scheduling. REVISION 1: removed a duplicated `$comment` key inside `generation` (the second silently overwrote the first).",
+  "config_version": "0.1",
+  "seed": 20260920,
+  "expansion": {
+    "variants_per_world": {
+      "base": 1,
+      "critical_intervention": 3,
+      "irrelevant_perturbation": 3,
+      "evidence_masked": 6
+    },
+    "critical_intervention_axes_per_world": 3,
+    "irrelevant_perturbations_per_world": 3,
+    "irrelevant_axes": [
+      "observation.request.headers.User-Agent",
+      "observation.request.headers.X-Request-Id",
+      "observation.rendering.header_order",
+      "observation.rendering.trace_id",
+      "observation.rendering.timestamp_format",
+      "observation.rendering.display_name_case"
+    ],
+    "critical_axes_whitelist": [
+      "resource.*.owner",
+      "resource.*.state",
+      "actor.*.roles",
+      "actor.*.privileges",
+      "actor.*.authentication_state",
+      "actor.*.privilege_version",
+      "session.*.revoked",
+      "session.*.valid",
+      "session.*.principal",
+      "session.*.privilege_snapshot.privilege_version",
+      "token.*.used",
+      "token.*.one_time",
+      "token.*.flow_id",
+      "token.*.parent_token",
+      "token.*.scope",
+      "workflow_instance.*.current_state",
+      "cache.*.cached_value",
+      "cache.*.fresh"
+    ],
+    "$comment_axes": "REVISION 1: irrelevant_axes are observation-surface paths ONLY (matching the world-spec pattern ^observation\\.(request|rendering)\\..*). 'display_name.case' was removed because display_name is an entity field, so perturbing it changed world state and made Gate 6 unsatisfiable; it is now the render-time-only axis 'observation.rendering.display_name_case'. compile_spec asserts set(critical_state_variables) matches this whitelist and that no critical axis is an observation path. REVISION 1.5 (provider smoke): added 'resource.*.state' — resource_state is one of the 20 invariant categories (order paid vs refunded decides refund verdicts), so resource state is a legitimate critical axis; the first real batches lost worlds to this omission. REVISION 1.6 (provider smoke round 2): added 'session.*.principal' (cross-account session misuse is the session_binding/cross_user_isolation failure mode) and 'token.*.one_time' (one-time token reuse is its own invariant category); both were lost to whitelist omissions in real batches."
+  },
+  "evidence_masking": {
+    "levels": [
+      "complete",
+      "partially_missing",
+      "minimally_sufficient",
+      "insufficient",
+      "contradictory",
+      "stale",
+      "attacker_controlled"
+    ],
+    "per_world_level_quota": {
+      "complete": 1,
+      "minimally_sufficient": 1,
+      "insufficient": 1,
+      "contradictory": 1,
+      "stale": 1,
+      "attacker_controlled": 1
+    },
+    "decoy_masking_per_world": 1,
+    "trusted_establishes": ["trusted", "semi_trusted"],
+    "insufficient_when": ["not_rendered", "attacker_controlled_only", "contradictory", "stale", "untrusted_source", "derived_only"],
+    "level_to_hidden_set": {
+      "$comment": "REVISION 1: the level -> hidden-set mapping is now explicit, so test_masking_levels.py has a deterministic target. H(f) = the set of VISIBLE evidence items asserting fact f.",
+      "complete": "every evidence item with visible_in_observation=true is rendered",
+      "partially_missing": ">=1 non-consulted evidence item is hidden; every consulted fact keeps >=1 visible establishing item",
+      "minimally_sufficient": "every consulted fact keeps exactly one visible establishing item; all others hidden",
+      "insufficient": ">=1 consulted fact has H(f) == empty",
+      "contradictory": ">=1 consulted fact has >=2 visible items with different values, at least one of them establishing",
+      "stale": ">=1 consulted fact's only visible establishing item has freshness in {stale, expired} and an in-scope policy has requires_fresh=true",
+      "attacker_controlled": ">=1 consulted fact's only visible items have attacker_controllable=true and none is in trusted_establishes"
+    }
+  },
+  "oracle": {
+    "version": "0.1.0",
+    "determinism_runs": 3,
+    "default_effect_when_no_policy_matches": "deny",
+    "attack_requires": {
+      "$comment": "REVISION 1: the world_truth aggregation rule, made independent of author input. A default-deny hit alone yields 'unauthorized', never 'attack'.",
+      "any_of": [
+        "deny_from_non_default_policy_rule",
+        "at_least_one_violated_invariant"
+      ],
+      "severity_participates": false,
+      "attack_categories_source": "engine_private_constant"
+    },
+    "evidence_bridge_op": "establishing_evidence_exists",
+    "evidence_bridge_trust_set": ["trusted", "semi_trusted"],
+    "evidence_bridge_is_one_way": true
+  },
+  "leakage_control": {
+    "default_strategy": "world_ood",
+    "strategies": ["iid", "world_ood", "app_ood", "workflow_ood", "policy_ood", "attack_ood", "evidence_ood", "generator_ood"],
+    "group_keys": [
+      "counterfactual_family_id",
+      "world_family_id",
+      "policy_graph_hash",
+      "workflow_template_hash",
+      "attack_family",
+      "semantic_scenario_signature",
+      "app_domain",
+      "generator_id",
+      "generator_model_family",
+      "policy_family_id",
+      "workflow_family_id",
+      "invariant_family_id"
+    ],
+    "strategy_to_group_key": {
+      "iid": "counterfactual_family_id",
+      "world_ood": "world_family_id",
+      "app_ood": "app_domain",
+      "workflow_ood": "workflow_template_hash",
+      "policy_ood": "policy_graph_hash",
+      "attack_ood": "attack_family",
+      "evidence_ood": "semantic_scenario_signature",
+      "generator_ood": "generator_id"
+    },
+    "group_key_purposes": {
+      "$comment": "REVISION 2 (task A7): every group key and its purpose, including the four new keys. The eight leave-key-out strategies hold out exactly one key each (strategy_to_group_key above); the new keys are additional grouping dimensions that tighten union-find components and give the audit family-level views. generator_model_family is deliberately NOT a ninth strategy in Phase 1: adding strategies would change episode.split_assignments' eight-row contract (G8 asserts exactly eight rows), so it is an audit/aggregation dimension now and a candidate strategy when a second generator family actually exists.",
+      "counterfactual_family_id": "iid holdout: same counterfactual family must share one split (I-3).",
+      "world_family_id": "world_ood holdout: same world structure (identifier-abstracted) must share one split.",
+      "app_domain": "app_ood holdout: unseen application domains go to test.",
+      "workflow_template_hash": "workflow_ood holdout: unseen workflow state-machine shapes go to test.",
+      "policy_graph_hash": "policy_ood holdout: unseen policy graphs go to test.",
+      "attack_family": "attack_ood holdout: unseen attack families go to test.",
+      "semantic_scenario_signature": "evidence_ood holdout: unseen scenario shapes go to test.",
+      "generator_id": "generator_ood holdout: unseen generator (model@version) goes to test.",
+      "generator_model_family": "REVISION 2: generator model FAMILY (provider/家族名, e.g. 'deepseek' from 'deepseek-v4-flash@2026-08-01'). Aggregates generator_id across versions so an audit can ask 'does this whole generator family leak?' instead of 'does this exact version leak?'. Degenerate (single value 'handcrafted') on the handcrafted corpus - dropped from union-find with an explicit warning, never silently merged.",
+      "policy_family_id": "REVISION 2: 'PF-' + policy_graph_hash[:12] - the short, human-readable form of the policy-graph dimension. Strictly 1:1 with policy_graph_hash, so it tightens nothing on its own; it exists so manifests and reviews can name a policy family without pasting 64 hex chars.",
+      "workflow_family_id": "REVISION 2: 'WFF-' + workflow_template_hash[:12] - short form of the workflow-template dimension, 1:1 with workflow_template_hash.",
+      "invariant_family_id": "REVISION 2: 'IF-' + sha256(invariant-set skeleton)[:12] - a NEW dimension (no hash twin): two worlds whose invariant sets abstract to the same shape share a family, so 'same invariants, different entities' worlds cannot straddle a split via a dimension nobody was watching."
+    },
+    "split_ratios": { "train": 0.8, "validation": 0.1, "test": 0.1 },
+    "min_groups_per_split": 50,
+    "dedup": ["exact", "normalized", "structural"],
+    "family_scoped_dedup": {
+      "$comment": "REVISION 1: exact dedup runs WITHIN a counterfactual family, never across families. Header-order and other irrelevant perturbations legitimately produce distinct bytes inside a family and must not be folded away; cross-family byte equality is what dedup is for.",
+      "scope": "counterfactual_family_id"
+    },
+    "semantic_similarity": {
+      "enabled": false,
+      "$comment": "NOT IMPLEMENTED in Phase 1. Enabled only after the embedding backend is chosen; it must never silently relax the exact/normalized/structural gates."
+    }
+  },
+  "quality_gates": {
+    "hard_fail": [
+      "G1_schema",
+      "G2_reference_integrity",
+      "G3_policy_executability",
+      "G4_oracle_determinism",
+      "G5_counterfactual_consistency",
+      "G6_irrelevant_invariance",
+      "G7_evidence_sufficiency",
+      "G8_leakage_audit",
+      "G9_duplicate_audit",
+      "G11_surface_label_independence",
+      "G12_lexical_label_leakage"
+    ],
+    "report_only": ["G10_distribution_summary"],
+    "G6_semantics": {
+      "$comment": "REVISION 1: G6 is explicitly a MECHANICAL diff check (diff_worlds(base, variant).changed_paths == ()), which cannot fail by construction. The informative check - that no label-correlated noise entered the rendered surface - is G11 and is a hard gate.",
+      "kind": "mechanical_diff",
+      "can_fail_independently": false
+    },
+    "G11_surface_label_independence": {
+      "$comment_scale": "REVISION 3 (21-world deep review P1-7): min_samples 200 -> 64. 200 was calibrated for the full handcrafted corpus (373 episodes in one renderer); the first real provider run produced 104 episodes (8 accepted worlds x ~13 variants), so at milestone-1 scale the gate never ran - and 'never ran' must not be reported as 'passed' (the honest fallback, kept) nor as 'failed'. 64 is the scale-equivalent floor: 8 worlds x 8 episodes, i.e. the smallest milestone batch that still gives the Miller-Madow-corrected estimator enough samples to separate a real surface leak from small-sample bias, while staying far below the point where one family's knob features could dominate the estimate. The threshold is a SAMPLE-FLOOR, not a tolerance: below it the gate reports checked=False ('samples N < min_samples M, G11 did not run'), never a pass. Revisit when the corpus passes ~600 episodes in one renderer.",
+      "features": [
+        "observation.request.headers.User-Agent",
+        "observation.request.headers.X-Request-Id",
+        "observation.rendering.header_order",
+        "observation.rendering.trace_id",
+        "observation.rendering.timestamp_format"
+      ],
+      "metric": "mutual_information_bits",
+      "max_bits": 0.01,
+      "min_samples": 64
+    },
+    "G12_lexical_label_leakage": {
+      "$comment": "REVISION 2 (task A1): the lexical twin of G11. G11 is statistical (mutual information); G12 is deterministic - if a verdict-revealing word appears anywhere in observation.model_visible (including request.rendered_text), a model can solve the sample by string matching instead of security reasoning. decision_metadata is exempt (those words belong to the oracle/gate side; the model-visible boundary is enforced separately by conftest.model_visible_boundary and G2). No min_samples: a single leaked sample is enough to matter. REVISION 3 (21-world deep review P0-2): matching is now per IDENTIFIER SEGMENT (split on -._/@, exact segment match) instead of 'word not glued to .@_'. The old rule let the answer through as ACT-L2-ATTACKER, SES-L2-ATTACK.valid and 'Compromised CI service session starts.' (104 episodes, 0 hits). attacker/attacks/compromised join the list for the same reason: an entity id or event summary that names the attacker IS the label. The reserved-domain exemption (RFC 2606 *.example.invalid host slugs and act-001@example.invalid mailboxes, which the whole synthetic corpus uses) is explicit and bounded - see security_world/validation/lexical.py; it is NOT a narrowing of the vocabulary.",
+      "markers": [
+        "malicious",
+        "unauthorized",
+        "attack",
+        "attacker",
+        "attacks",
+        "suspicious",
+        "invalid",
+        "violation",
+        "exploit",
+        "exploitation",
+        "forbidden",
+        "blocked",
+        "denied",
+        "benign",
+        "idor",
+        "injection",
+        "malware",
+        "compromised"
+      ]
+    }
+  },
+  "generation": {
+    "provider": "replay",
+    "$comment": "Phase 1: provider is ALWAYS 'replay' (recorded fixture). A live provider is a Phase 2 capability requiring explicit opt-in plus an audit record; no network call may ever be made by a test.",
+    "batch_sizes_to_probe": [1, 2, 4, 8],
+    "max_output_tokens_per_call": 8192,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "target_scale_v01": 500,
+    "$comment_scale": "500-world capability is built in Phase 1 but NOT executed at scale; scale runs are a separate, separately-budgeted activity."
+  },
+  "rendering": {
+    "default_renderer": "http_request",
+    "renderers": [
+      "structured_state",
+      "http_request",
+      "reverse_proxy_log",
+      "application_log",
+      "audit_log",
+      "api_gateway_record",
+      "multi_event_trace",
+      "mixed_evidence_bundle"
+    ],
+    "projection_allowlist": {
+      "$comment": "REVISION 1: an explicit per-renderer allowlist. A renderer may project only entity/state fields; it may NEVER project world.metadata (removed from the schema entirely), provenance, seed, policies, invariants, hypotheses, or any oracle output. Enforced by test_renderer_projection_allowlist.",
+      "world_side_allowed": [
+        "actors", "resources", "sessions", "tokens", "credentials", "workflows",
+        "services", "caches", "trust_boundaries", "state_history", "current_state", "roles"
+      ],
+      "world_side_forbidden": [
+        "provenance", "compile", "seed", "policies", "invariants", "world_family_id",
+        "application_domain", "evidence"
+      ],
+      "forbidden_value_patterns": [
+        "^idor_bola$", "^horizontal_privesc$", "^vertical_privesc$", "^tenant_isolation_violation$",
+        "^stale_authorization$", "^revoked_session_reuse$", "^stale_session_privilege$",
+        "^cross_account_session_misuse$", "^session_after_password_reset$", "^session_after_account_disable$",
+        "^token_replay$", "^one_time_token_reuse$", "^cross_workflow_token_reuse$", "^cross_resource_token_reuse$",
+        "^scope_mismatch$", "^audience_mismatch$", "^privilege_version_mismatch$", "^token_lineage_confusion$",
+        "^workflow_bypass$", "^invalid_state_transition$", "^repeated_operation$", "^skipping_required_step$",
+        "^irreversible_state_reversal$", "^state_machine_confusion$", "^stale_permission_cache$",
+        "^inconsistent_revocation_state$", "^stale_ownership_cache$", "^cache_invalidation_failure$",
+        "^inconsistent_replicas$", "^owner_mismatch$", "^tenant_mismatch$", "^resource_state_violation$",
+        "^race_sensitive_state$", "^stale_object_reference$", "^sql_injection$", "^command_injection$",
+        "^path_traversal$", "^xss$", "^ssrf$", "^unsafe_deserialization$", "^prompt_injection$", "^benign$"
+      ],
+      "forbidden_id_prefixes": ["POL-", "INV-", "OPP-", "AXIS-"]
+    }
+  },
+  "gate2_invariants": {
+    "$comment": "REVISION 1: Gate 2 checks that JSON Schema cannot express.",
+    "state_history_monotonic": true,
+    "timeline_monotonic_with_t_index": true,
+    "current_state_at_ge_max_history_at": true,
+    "actor_roles_subset_of_declared_role_ids": true,
+    "applies_to_operations_exist_in_endpoints": true,
+    "critical_axes_match_whitelist": true,
+    "no_critical_axis_is_observation_path": true,
+    "family_ids_are_derived_not_authored": true,
+    "evidence_visibility_projection_consistent": true
+  }
+}

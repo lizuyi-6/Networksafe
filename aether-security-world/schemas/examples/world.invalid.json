@@ -1,0 +1,221 @@
+{
+  "schema_version": "0.1",
+  "world_id": "W-BAD-003",
+  "application_domain": "e-commerce",
+  "seed": 11,
+  "ground_truth": "attack",
+  "provenance": {
+    "origin": "step5_seed",
+    "generator_model": "step-5-pre",
+    "generator_model_version": "2026-09",
+    "prompt_version": "0.1",
+    "prompt_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+    "generation_timestamp": "2026-09-20T00:00:00Z"
+  },
+  "application": {
+    "name": "BrokenStore",
+    "description": "A deliberately invalid world used only as a negative schema fixture. It carries a literal ground_truth field, which the WorldInstance schema forbids by construction."
+  },
+  "roles": [
+    {
+      "role_id": "ROLE-CUSTOMER",
+      "name": "customer",
+      "privileges": [
+        "order.read.own"
+      ]
+    }
+  ],
+  "actors": [
+    {
+      "actor_id": "ACT-001",
+      "actor_type": "user",
+      "identity": {
+        "identity_id": "ID-001"
+      },
+      "roles": [
+        "ROLE-CUSTOMER"
+      ],
+      "tenant": "TEN-001",
+      "authentication_state": "authenticated",
+      "privilege_version": 0
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "RES-001",
+      "resource_type": "order",
+      "owner": "ACT-001",
+      "sensitivity": "internal",
+      "state": "paid"
+    }
+  ],
+  "sessions": [
+    {
+      "session_id": "SES-001",
+      "principal": "ACT-001",
+      "created_at": "2026-09-19T08:00:00Z",
+      "authenticated_at": "2026-09-19T08:00:05Z",
+      "auth_strength": "password",
+      "valid": true,
+      "revoked": false,
+      "expires_at": "2026-09-20T08:00:05Z",
+      "privilege_snapshot": {
+        "roles": [
+          "ROLE-CUSTOMER"
+        ],
+        "privileges": [
+          "order.read.own"
+        ],
+        "privilege_version": 0
+      },
+      "flow_id": "FLOW-READ"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "WFL-ORDER",
+      "name": "Order lifecycle",
+      "states": [
+        "created",
+        "paid"
+      ],
+      "initial_state": "created",
+      "transitions": [
+        {
+          "from_state": "created",
+          "to_state": "paid"
+        }
+      ],
+      "instances": [
+        {
+          "instance_id": "WFI-001",
+          "resource_id": "RES-001",
+          "current_state": "paid"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "policy_id": "POL-READ-OWNER",
+      "action": {
+        "operation": "read",
+        "resource_type": "order"
+      },
+      "effect": "allow",
+      "condition": {
+        "op": "eq",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.actor.actor_id"
+          },
+          {
+            "op": "ref",
+            "path": "action.resource.owner"
+          }
+        ]
+      },
+      "priority": 100
+    }
+  ],
+  "invariants": [
+    {
+      "invariant_id": "INV-OWNERSHIP-001",
+      "category": "ownership",
+      "applies_to": [
+        "*"
+      ],
+      "severity": "critical",
+      "expr": {
+        "op": "eq",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.actor.actor_id"
+          },
+          {
+            "op": "ref",
+            "path": "action.resource.owner"
+          }
+        ]
+      }
+    }
+  ],
+  "state_history": [
+    {
+      "snapshot_id": "SNAP-000",
+      "at": "2026-09-19T08:00:00Z",
+      "label": "T0",
+      "actor_states": {
+        "ACT-001": {
+          "authentication_state": "authenticated",
+          "privilege_version": 0
+        }
+      },
+      "session_states": {
+        "SES-001": {
+          "valid": true,
+          "revoked": false,
+          "privilege_version": 0
+        }
+      },
+      "workflow_states": {
+        "WFI-001": {
+          "current_state": "paid"
+        }
+      },
+      "resource_states": {
+        "RES-001": {
+          "state": "paid",
+          "owner": "ACT-001"
+        }
+      }
+    }
+  ],
+  "current_state": {
+    "snapshot_id": "SNAP-001",
+    "at": "2026-09-20T08:00:00Z",
+    "label": "T1",
+    "actor_states": {
+      "ACT-001": {
+        "authentication_state": "authenticated",
+        "privilege_version": 0
+      }
+    },
+    "session_states": {
+      "SES-001": {
+        "valid": true,
+        "revoked": false,
+        "privilege_version": 0
+      }
+    },
+    "workflow_states": {
+      "WFI-001": {
+        "current_state": "paid"
+      }
+    },
+    "resource_states": {
+      "RES-001": {
+        "state": "paid",
+        "owner": "ACT-001"
+      }
+    }
+  },
+  "evidence": [
+    {
+      "evidence_id": "EV-BAD-001",
+      "type": "ownership_record",
+      "asserts_ref": "resource.RES-001.owner",
+      "value": "ACT-001",
+      "source": "order_db",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T08:00:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    }
+  ],
+  "world_family_id": "WF-219f32eaf37d"
+}

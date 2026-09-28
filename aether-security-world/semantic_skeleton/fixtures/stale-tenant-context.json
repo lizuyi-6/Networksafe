@@ -1,0 +1,63 @@
+{
+  "$comment": "Phase 2A canonical fixture (brief section 18). A multi-tenant stale-authorization-cache world. This is a FIXTURE for compiler tests, not a template for the provider: the provider must not mechanically imitate this business.",
+  "skeleton_id": "SK-FIXTURE-001",
+  "domain": "saas",
+  "scenario_summary": "A user changes active tenant while a downstream billing service retains a stale authorization context, so the billing decision is evaluated against the previous tenant.",
+  "mechanism_family": "stale_tenant_context",
+  "complexity": "medium",
+  "actor_types": ["ordinary_user", "api_gateway", "billing_service"],
+  "resource_types": ["billing_record", "tenant_context", "authorization_cache"],
+  "service_types": ["identity_service", "billing_service"],
+  "security_goal": "A billing resource may only be accessed under the caller's current authenticated tenant context.",
+  "critical_facts": [
+    "authenticated_tenant",
+    "cached_tenant",
+    "resource_tenant"
+  ],
+  "history": [
+    "user authenticates in the previous tenant",
+    "user switches active context to the current tenant",
+    "identity layer commits the current tenant as active",
+    "billing service still holds the previous tenant-context cache",
+    "user requests a billing record owned by the current tenant"
+  ],
+  "security_invariants": [
+    {
+      "type": "tenant_isolation",
+      "rule": "the tenant used for authorization must equal the caller's current authenticated tenant"
+    }
+  ],
+  "failure_mechanism": "Billing authorization consults a cached tenant context that predates the tenant switch, so the decision is evaluated against the previous tenant.",
+  "required_evidence": [
+    "authenticated_tenant",
+    "cached_tenant",
+    "resource_tenant"
+  ],
+  "optional_evidence": ["current_role"],
+  "untrusted_evidence": ["cached_tenant"],
+  "irrelevant_facts": ["request_trace_id", "display_locale"],
+  "counterfactuals": [
+    {
+      "target_fact": "cached_tenant",
+      "change": "switch_tenant",
+      "semantic_expectation": "violation_removed"
+    },
+    {
+      "target_fact": "authenticated_tenant",
+      "change": "switch_tenant",
+      "semantic_expectation": "verdict_flip"
+    },
+    {
+      "target_fact": "request_trace_id",
+      "change": "change_cosmetic",
+      "semantic_expectation": "verdict_invariant"
+    }
+  ],
+  "evidence_masking_targets": ["cached_tenant", "resource_tenant"],
+  "trust_relationships": [
+    {"kind": "authoritative_for", "about": "authenticated_tenant"},
+    {"kind": "derived_and_freshness_sensitive", "about": "cached_tenant"},
+    {"kind": "untrusted", "about": "cached_tenant"}
+  ],
+  "notes_for_compiler": []
+}

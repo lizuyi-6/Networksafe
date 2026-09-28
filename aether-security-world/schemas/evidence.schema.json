@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aetherguard.local/schemas/asw/evidence.schema.json",
+  "title": "Aether Security World - Evidence Item v0.1",
+  "description": "One unit of evidence: a CLAIM ABOUT a world-state path, carrying provenance and trust metadata. This document is the AUTHOR-FACING form (what a world author or the AI seed generator writes) AND the ORACLE-FACING form (what the oracle classifies). Revision 1: `required_for_decision` was REMOVED from this schema - 'which facts the decision needs' is computed exclusively by the oracle from the ref closure of the in-scope policy/invariant set (see oracle-output.schema.json required_evidence[].decision_fact). Having it author-writable created three competing owners of the same fact and let a spec understate what a decision depends on.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidence_id",
+    "type",
+    "asserts_ref",
+    "value",
+    "source",
+    "provenance",
+    "trust_level",
+    "freshness",
+    "attacker_controllable",
+    "visible_in_observation"
+  ],
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "evidence_id": {
+      "type": "string",
+      "pattern": "^EV-[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "identity_claim",
+        "ownership_record",
+        "policy_document",
+        "session_record",
+        "token_claim",
+        "audit_log_entry",
+        "cache_entry",
+        "log_line",
+        "http_header",
+        "http_parameter",
+        "request_body_field",
+        "service_metadata",
+        "derived_summary",
+        "classifier_output",
+        "human_attestation"
+      ]
+    },
+    "asserts_ref": {
+      "$comment": "REVISION 1 (finding: three path syntaxes). The canonical fact key this item is evidence about. Grammar is the single ID-view BNF defined in design §4.3: <entity_type>.<entity_id>.<field...> where entity_type in {actor, resource, session, token, workflow, workflow_instance, cache, service, credential, role}. Example: 'resource.RES-001.owner', 'actor.ACT-003.privilege_version', 'session.SES-003.privilege_snapshot.privilege_version'. Action-binding views ('action.resource.owner') are NEVER stored here: compile_spec expands them to instance paths, and the oracle compares only canonical keys. A path that does not resolve in the compiled world is a Gate 2 build error.",
+      "type": "string",
+      "pattern": "^(actor|resource|session|token|workflow|workflow_instance|cache|service|credential|role)\\.[A-Za-z0-9][A-Za-z0-9._-]{0,62}(\\.[A-Za-z0-9_]+)+$",
+      "maxLength": 256
+    },
+    "value": {
+      "$comment": "The asserted value. May be null (claim of absence) or a composite object/array.",
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "provenance": {
+      "type": "string",
+      "enum": [
+        "system_of_record",
+        "replicated_cache",
+        "client_supplied",
+        "log_pipeline",
+        "llm_derived",
+        "heuristic_classifier",
+        "human_attested"
+      ]
+    },
+    "trust_level": {
+      "$comment": "trusted = system_of_record / signed auth state / deterministic DB state; semi_trusted = application logs / service metadata; untrusted = HTTP parameters, user-controlled headers, submitted text; derived = LLM summary / generated explanation / heuristic classifier output. REVISION 1: the establishing set is exactly TRUSTED_ESTABLISHES = {trusted, semi_trusted}, identical to configs/default.json evidence_masking.trusted_establishes. untrusted/derived evidence may only corroborate or contradict. NOTE this is the ORACLE's classification and is NOT part of the model-visible observation (design §5) - the model sees `provenance` and must infer trust, which is the actual skill being trained.",
+      "type": "string",
+      "enum": [
+        "trusted",
+        "semi_trusted",
+        "untrusted",
+        "derived"
+      ]
+    },
+    "timestamp": {
+      "description": "VirtualClock value, never wall clock in the data path.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?Z$"
+    },
+    "freshness": {
+      "type": "string",
+      "enum": [
+        "fresh",
+        "stale",
+        "expired",
+        "unknown"
+      ]
+    },
+    "attacker_controllable": {
+      "$comment": "Independent of trust_level: a log line poisoned by injection is semi_trusted AND attacker_controllable. Oracle-facing only; not model-visible.",
+      "type": "boolean"
+    },
+    "visible_in_observation": {
+      "$comment": "AUTHORITATIVE visibility flag (revision 1: single source of truth). world.evidence[].visible_in_observation is authoritative; EvidenceView and episode.observation.model_visible.evidence are projections of it, and Gate 2 asserts they agree.",
+      "type": "boolean"
+    },
+    "contradicts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 512
+    }
+  }
+}

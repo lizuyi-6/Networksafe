@@ -1,0 +1,1080 @@
+{
+  "schema_version": "0.1",
+  "world_id": "W-000001",
+  "world_family_id": "WF-219f32eaf37d",
+  "application_domain": "e-commerce",
+  "seed": 20260920,
+  "provenance": {
+    "origin": "handcrafted",
+    "generator_model": "human",
+    "generator_model_version": "n/a",
+    "prompt_version": "n/a",
+    "prompt_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "generation_timestamp": "2026-09-20T00:00:00Z",
+    "validation_outcome": "accepted"
+  },
+  "compile": {
+    "compiler_version": "0.1.0",
+    "source_spec_id": "W-000001",
+    "derived_world_family_id": true,
+    "dropped_hypothesis_fields": [
+      "hypotheses",
+      "attack_family"
+    ],
+    "reason_codes": []
+  },
+  "application": {
+    "name": "Northwind Storefront API",
+    "description": "A synthetic e-commerce order API. Customers read their own orders and request refunds; support agents may read any order inside their tenant.",
+    "endpoints": [
+      {
+        "path": "/api/orders/{order_id}",
+        "method": "GET",
+        "operation": "read",
+        "resource_type": "order",
+        "auth_required": true
+      },
+      {
+        "path": "/api/orders/{order_id}/refund",
+        "method": "POST",
+        "operation": "refund",
+        "resource_type": "order",
+        "auth_required": true
+      }
+    ]
+  },
+  "roles": [
+    {
+      "role_id": "ROLE-CUSTOMER",
+      "name": "customer",
+      "privileges": [
+        "order.read.own",
+        "order.refund.own"
+      ]
+    },
+    {
+      "role_id": "ROLE-SUPPORT",
+      "name": "support_agent",
+      "privileges": [
+        "order.read.tenant",
+        "order.refund.tenant"
+      ]
+    }
+  ],
+  "actors": [
+    {
+      "actor_id": "ACT-001",
+      "actor_type": "user",
+      "display_name": "Alice",
+      "identity": {
+        "identity_id": "ID-001",
+        "email": "alice@example.invalid",
+        "verified": true
+      },
+      "roles": [
+        "ROLE-CUSTOMER"
+      ],
+      "tenant": "TEN-001",
+      "privileges": [
+        "order.read.own",
+        "order.refund.own"
+      ],
+      "authentication_state": "authenticated",
+      "privilege_version": 2
+    },
+    {
+      "actor_id": "ACT-002",
+      "actor_type": "user",
+      "display_name": "Bob",
+      "identity": {
+        "identity_id": "ID-002",
+        "email": "bob@example.invalid",
+        "verified": true
+      },
+      "roles": [
+        "ROLE-CUSTOMER"
+      ],
+      "tenant": "TEN-001",
+      "privileges": [
+        "order.read.own",
+        "order.refund.own"
+      ],
+      "authentication_state": "authenticated",
+      "privilege_version": 0
+    },
+    {
+      "actor_id": "ACT-003",
+      "actor_type": "attacker_controlled_account",
+      "display_name": "Mallory",
+      "identity": {
+        "identity_id": "ID-003",
+        "email": "mallory@example.invalid",
+        "verified": true
+      },
+      "roles": [
+        "ROLE-CUSTOMER"
+      ],
+      "tenant": "TEN-002",
+      "privileges": [
+        "order.read.own",
+        "order.refund.own"
+      ],
+      "authentication_state": "authenticated",
+      "privilege_version": 0
+    },
+    {
+      "actor_id": "ACT-004",
+      "actor_type": "support_agent",
+      "display_name": "Dana",
+      "identity": {
+        "identity_id": "ID-004",
+        "email": "dana@example.invalid",
+        "verified": true
+      },
+      "roles": [
+        "ROLE-SUPPORT"
+      ],
+      "tenant": "TEN-001",
+      "privileges": [
+        "order.read.tenant",
+        "order.refund.tenant"
+      ],
+      "authentication_state": "authenticated",
+      "privilege_version": 0
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "RES-001",
+      "resource_type": "order",
+      "display_name": "Order 183",
+      "owner": "ACT-002",
+      "tenant": "TEN-001",
+      "acl": [
+        {
+          "grantee": "ROLE-SUPPORT",
+          "grantee_type": "role",
+          "permissions": [
+            "read"
+          ]
+        }
+      ],
+      "sensitivity": "confidential",
+      "state": "paid",
+      "attributes": {
+        "total_cents": 129900,
+        "currency": "USD"
+      }
+    },
+    {
+      "resource_id": "RES-002",
+      "resource_type": "file",
+      "display_name": "Invoice 77",
+      "owner": "ACT-002",
+      "tenant": "TEN-001",
+      "sensitivity": "internal",
+      "state": "active"
+    }
+  ],
+  "sessions": [
+    {
+      "session_id": "SES-001",
+      "principal": "ACT-001",
+      "created_at": "2026-09-19T08:00:00Z",
+      "authenticated_at": "2026-09-19T08:00:05Z",
+      "auth_strength": "password_mfa",
+      "valid": true,
+      "revoked": false,
+      "expires_at": "2026-09-20T08:00:05Z",
+      "privilege_snapshot": {
+        "roles": [
+          "ROLE-CUSTOMER"
+        ],
+        "privileges": [
+          "order.read.own"
+        ],
+        "privilege_version": 2
+      },
+      "flow_id": "FLOW-READ",
+      "bound_to": {
+        "device_id": "DEV-1",
+        "ip_cidr": "203.0.113.0/24"
+      }
+    },
+    {
+      "session_id": "SES-002",
+      "principal": "ACT-001",
+      "created_at": "2026-09-18T08:00:00Z",
+      "authenticated_at": "2026-09-18T08:00:05Z",
+      "auth_strength": "password",
+      "valid": false,
+      "revoked": true,
+      "revoked_at": "2026-09-19T09:00:00Z",
+      "revocation_reason": "password_reset",
+      "expires_at": "2026-09-19T08:00:05Z",
+      "privilege_snapshot": {
+        "roles": [
+          "ROLE-CUSTOMER"
+        ],
+        "privileges": [
+          "order.read.own"
+        ],
+        "privilege_version": 0
+      },
+      "flow_id": "FLOW-READ"
+    },
+    {
+      "session_id": "SES-003",
+      "principal": "ACT-003",
+      "created_at": "2026-09-19T08:00:00Z",
+      "authenticated_at": "2026-09-19T08:00:05Z",
+      "auth_strength": "password",
+      "valid": false,
+      "revoked": true,
+      "revoked_at": "2026-09-19T09:30:00Z",
+      "revocation_reason": "abuse_report",
+      "expires_at": "2026-09-20T08:00:05Z",
+      "privilege_snapshot": {
+        "roles": [
+          "ROLE-CUSTOMER"
+        ],
+        "privileges": [
+          "order.read.own"
+        ],
+        "privilege_version": 0
+      },
+      "flow_id": "FLOW-READ"
+    }
+  ],
+  "tokens": [
+    {
+      "token_id": "TOK-001",
+      "token_type": "one_time_code",
+      "issuer": "auth.northwind.example.invalid",
+      "subject": "ACT-001",
+      "audience": [
+        "refund-api"
+      ],
+      "scope": [
+        "order.refund.own"
+      ],
+      "created_at": "2026-09-19T10:00:00Z",
+      "expires_at": "2026-09-19T10:10:00Z",
+      "one_time": true,
+      "used": false,
+      "parent_token": null,
+      "flow_id": "FLOW-REFUND",
+      "privilege_version": 2
+    },
+    {
+      "token_id": "TOK-002",
+      "token_type": "one_time_code",
+      "issuer": "auth.northwind.example.invalid",
+      "subject": "ACT-001",
+      "audience": [
+        "profile-api"
+      ],
+      "scope": [
+        "profile.read"
+      ],
+      "created_at": "2026-09-19T10:00:00Z",
+      "expires_at": "2026-09-19T10:10:00Z",
+      "one_time": true,
+      "used": false,
+      "parent_token": "TOK-001",
+      "flow_id": "FLOW-PROFILE",
+      "privilege_version": 2
+    }
+  ],
+  "credentials": [
+    {
+      "credential_id": "CRED-001",
+      "credential_type": "password",
+      "holder": "ACT-001",
+      "status": "active"
+    },
+    {
+      "credential_id": "CRED-002",
+      "credential_type": "passkey",
+      "holder": "ACT-002",
+      "status": "active"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "WFL-ORDER",
+      "name": "Order lifecycle",
+      "states": [
+        "created",
+        "paid",
+        "refund_pending",
+        "refunded"
+      ],
+      "initial_state": "created",
+      "transitions": [
+        {
+          "from_state": "created",
+          "to_state": "paid"
+        },
+        {
+          "from_state": "paid",
+          "to_state": "refund_pending"
+        },
+        {
+          "from_state": "refund_pending",
+          "to_state": "refunded",
+          "reversible": false
+        }
+      ],
+      "instances": [
+        {
+          "instance_id": "WFI-001",
+          "resource_id": "RES-001",
+          "current_state": "paid",
+          "history": [
+            {
+              "from_state": "created",
+              "to_state": "paid",
+              "at": "2026-09-19T08:30:00Z",
+              "actor_id": "ACT-002"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "service_id": "SVC-DB",
+      "service_type": "database",
+      "trust_boundary": "TB-CORE",
+      "consistency_model": "strong"
+    },
+    {
+      "service_id": "SVC-CACHE",
+      "service_type": "cache",
+      "trust_boundary": "TB-CORE",
+      "consistency_model": "eventual"
+    }
+  ],
+  "caches": [
+    {
+      "cache_id": "CACHE-PERM-001",
+      "cached_subject": "actor.ACT-001.privilege_version",
+      "cached_value": 2,
+      "source_of_truth": "SVC-DB",
+      "fresh": true,
+      "ttl_seconds": 300,
+      "populated_at": "2026-09-20T07:55:00Z"
+    },
+    {
+      "cache_id": "CACHE-PERM-002",
+      "cached_subject": "actor.ACT-003.privilege_version",
+      "cached_value": 0,
+      "source_of_truth": "SVC-DB",
+      "fresh": false,
+      "ttl_seconds": 300,
+      "populated_at": "2026-09-19T07:55:00Z"
+    }
+  ],
+  "trust_boundaries": [
+    {
+      "boundary_id": "TB-EDGE",
+      "name": "Public edge",
+      "inside": [
+        "api-gateway"
+      ],
+      "outside": [
+        "internet"
+      ],
+      "crossing_requires": [
+        "session"
+      ]
+    },
+    {
+      "boundary_id": "TB-CORE",
+      "name": "Core services",
+      "inside": [
+        "SVC-DB",
+        "SVC-CACHE"
+      ],
+      "outside": [
+        "api-gateway"
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "policy_id": "POL-ORDER-READ-OWNER",
+      "description": "Reading an order requires the caller to be its owner.",
+      "action": {
+        "operation": "read",
+        "resource_type": "order"
+      },
+      "effect": "allow",
+      "condition": {
+        "op": "eq",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.actor.actor_id"
+          },
+          {
+            "op": "ref",
+            "path": "action.resource.owner"
+          }
+        ]
+      },
+      "priority": 100
+    },
+    {
+      "policy_id": "POL-ORDER-READ-SUPPORT",
+      "description": "Support agents may read any order in their tenant.",
+      "action": {
+        "operation": "read",
+        "resource_type": "order"
+      },
+      "effect": "allow",
+      "condition": {
+        "op": "and",
+        "args": [
+          {
+            "op": "in",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.roles"
+              },
+              {
+                "op": "lit",
+                "value": [
+                  "ROLE-SUPPORT"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.tenant"
+              },
+              {
+                "op": "ref",
+                "path": "action.resource.tenant"
+              }
+            ]
+          }
+        ]
+      },
+      "priority": 50
+    },
+    {
+      "policy_id": "POL-DEFAULT-DENY",
+      "description": "Closed-world default deny. Flagged is_default_rule so a default-deny hit alone can never produce an attack label (design §8.2).",
+      "action": {
+        "operation": "*"
+      },
+      "effect": "deny",
+      "condition": {
+        "op": "lit",
+        "value": true
+      },
+      "priority": -1,
+      "is_default_rule": true
+    }
+  ],
+  "invariants": [
+    {
+      "invariant_id": "INV-OWNERSHIP-001",
+      "category": "ownership",
+      "applies_to": [
+        "read"
+      ],
+      "severity": "critical",
+      "description": "A resource read must be by its owner or a same-tenant support agent.",
+      "expr": {
+        "op": "or",
+        "args": [
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.actor_id"
+              },
+              {
+                "op": "ref",
+                "path": "action.resource.owner"
+              }
+            ]
+          },
+          {
+            "op": "and",
+            "args": [
+              {
+                "op": "in",
+                "args": [
+                  {
+                    "op": "ref",
+                    "path": "action.actor.roles"
+                  },
+                  {
+                    "op": "lit",
+                    "value": [
+                      "ROLE-SUPPORT"
+                    ]
+                  }
+                ]
+              },
+              {
+                "op": "eq",
+                "args": [
+                  {
+                    "op": "ref",
+                    "path": "action.actor.tenant"
+                  },
+                  {
+                    "op": "ref",
+                    "path": "action.resource.tenant"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "invariant_id": "INV-TENANT-ISOLATION-001",
+      "category": "tenant_isolation",
+      "applies_to": [
+        "read",
+        "refund"
+      ],
+      "severity": "critical",
+      "description": "An actor may not touch a resource in another tenant.",
+      "expr": {
+        "op": "or",
+        "args": [
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.tenant"
+              },
+              {
+                "op": "ref",
+                "path": "action.resource.tenant"
+              }
+            ]
+          },
+          {
+            "op": "is_empty",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.tenant"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "invariant_id": "INV-SESSION-REVOCATION-001",
+      "category": "session_revocation",
+      "applies_to": [
+        "read",
+        "refund"
+      ],
+      "severity": "critical",
+      "description": "No sensitive operation may ride a revoked or invalid session.",
+      "expr": {
+        "op": "and",
+        "args": [
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.session.valid"
+              },
+              {
+                "op": "lit",
+                "value": true
+              }
+            ]
+          },
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.session.revoked"
+              },
+              {
+                "op": "lit",
+                "value": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "invariant_id": "INV-PRIVILEGE-VERSION-001",
+      "category": "privilege_version",
+      "applies_to": [
+        "read",
+        "refund"
+      ],
+      "severity": "high",
+      "description": "A session's privilege snapshot must match the actor's live privilege version.",
+      "expr": {
+        "op": "eq",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.session.privilege_snapshot.privilege_version"
+          },
+          {
+            "op": "ref",
+            "path": "action.actor.privilege_version"
+          }
+        ]
+      }
+    },
+    {
+      "invariant_id": "INV-TOKEN-LINEAGE-001",
+      "category": "token_lineage",
+      "applies_to": [
+        "refund"
+      ],
+      "severity": "critical",
+      "description": "A token may only be used inside the flow that issued it.",
+      "expr": {
+        "op": "eq",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.token.flow_id"
+          },
+          {
+            "op": "ref",
+            "path": "current_flow.flow_id"
+          }
+        ]
+      }
+    },
+    {
+      "invariant_id": "INV-ONE-TIME-TOKEN-001",
+      "category": "one_time_token",
+      "applies_to": [
+        "refund"
+      ],
+      "severity": "critical",
+      "description": "A one-time token must not have been used before.",
+      "expr": {
+        "op": "or",
+        "args": [
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.token.one_time"
+              },
+              {
+                "op": "lit",
+                "value": false
+              }
+            ]
+          },
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.token.used"
+              },
+              {
+                "op": "lit",
+                "value": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "invariant_id": "INV-WORKFLOW-TRANSITION-001",
+      "category": "workflow_transition",
+      "applies_to": [
+        "refund"
+      ],
+      "severity": "critical",
+      "description": "Refund requires the order workflow to be in 'paid'.",
+      "expr": {
+        "op": "state_is",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.workflow_instance.current_state"
+          },
+          {
+            "op": "lit",
+            "value": "paid"
+          }
+        ]
+      }
+    }
+  ],
+  "state_history": [
+    {
+      "snapshot_id": "SNAP-000",
+      "at": "2026-09-19T07:00:00Z",
+      "label": "T-1 before any event",
+      "actor_states": {
+        "ACT-001": {
+          "authentication_state": "authenticated",
+          "privilege_version": 0,
+          "roles": [
+            "ROLE-CUSTOMER"
+          ]
+        }
+      },
+      "session_states": {
+        "SES-001": {
+          "valid": true,
+          "revoked": false,
+          "privilege_version": 0
+        }
+      },
+      "token_states": {
+        "TOK-001": {
+          "used": false,
+          "valid": true
+        },
+        "TOK-002": {
+          "used": false,
+          "valid": true
+        }
+      },
+      "workflow_states": {
+        "WFI-001": {
+          "current_state": "created"
+        }
+      },
+      "resource_states": {
+        "RES-001": {
+          "state": "created",
+          "owner": "ACT-002"
+        }
+      }
+    },
+    {
+      "snapshot_id": "SNAP-001",
+      "at": "2026-09-19T08:30:00Z",
+      "label": "T1 order created and paid",
+      "actor_states": {
+        "ACT-001": {
+          "authentication_state": "authenticated",
+          "privilege_version": 2,
+          "roles": [
+            "ROLE-CUSTOMER"
+          ]
+        }
+      },
+      "session_states": {
+        "SES-001": {
+          "valid": true,
+          "revoked": false,
+          "privilege_version": 2
+        }
+      },
+      "token_states": {
+        "TOK-001": {
+          "used": false,
+          "valid": true
+        },
+        "TOK-002": {
+          "used": false,
+          "valid": true
+        }
+      },
+      "workflow_states": {
+        "WFI-001": {
+          "current_state": "paid"
+        }
+      },
+      "resource_states": {
+        "RES-001": {
+          "state": "paid",
+          "owner": "ACT-002"
+        }
+      }
+    },
+    {
+      "snapshot_id": "SNAP-002",
+      "at": "2026-09-19T09:00:00Z",
+      "label": "T2 password reset revokes the stale session",
+      "actor_states": {
+        "ACT-001": {
+          "authentication_state": "authenticated",
+          "privilege_version": 2,
+          "roles": [
+            "ROLE-CUSTOMER"
+          ]
+        }
+      },
+      "session_states": {
+        "SES-001": {
+          "valid": true,
+          "revoked": false,
+          "privilege_version": 2
+        },
+        "SES-002": {
+          "valid": false,
+          "revoked": true,
+          "privilege_version": 0
+        }
+      },
+      "token_states": {
+        "TOK-001": {
+          "used": false,
+          "valid": true
+        },
+        "TOK-002": {
+          "used": false,
+          "valid": true
+        }
+      },
+      "workflow_states": {
+        "WFI-001": {
+          "current_state": "paid"
+        }
+      },
+      "resource_states": {
+        "RES-001": {
+          "state": "paid",
+          "owner": "ACT-002"
+        }
+      }
+    }
+  ],
+  "current_state": {
+    "snapshot_id": "SNAP-003",
+    "at": "2026-09-20T08:00:00Z",
+    "label": "T3 current",
+    "actor_states": {
+      "ACT-001": {
+        "authentication_state": "authenticated",
+        "privilege_version": 2,
+        "roles": [
+          "ROLE-CUSTOMER"
+        ]
+      },
+      "ACT-003": {
+        "authentication_state": "authenticated",
+        "privilege_version": 0,
+        "roles": [
+          "ROLE-CUSTOMER"
+        ]
+      }
+    },
+    "session_states": {
+      "SES-001": {
+        "valid": true,
+        "revoked": false,
+        "privilege_version": 2
+      },
+      "SES-002": {
+        "valid": false,
+        "revoked": true,
+        "privilege_version": 0
+      },
+      "SES-003": {
+        "valid": false,
+        "revoked": true,
+        "privilege_version": 0
+      }
+    },
+    "token_states": {
+      "TOK-001": {
+        "used": false,
+        "valid": true
+      },
+      "TOK-002": {
+        "used": false,
+        "valid": true
+      }
+    },
+    "workflow_states": {
+      "WFI-001": {
+        "current_state": "paid"
+      }
+    },
+    "resource_states": {
+      "RES-001": {
+        "state": "paid",
+        "owner": "ACT-002"
+      }
+    }
+  },
+  "evidence": [
+    {
+      "evidence_id": "EV-AUTH-003",
+      "type": "session_record",
+      "asserts_ref": "session.SES-003.principal",
+      "value": "ACT-003",
+      "source": "auth.northwind.example.invalid",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T08:00:05Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-OWN-001",
+      "type": "ownership_record",
+      "asserts_ref": "resource.RES-001.owner",
+      "value": "ACT-002",
+      "source": "order_db",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T08:30:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-ROLE-003",
+      "type": "service_metadata",
+      "asserts_ref": "actor.ACT-003.roles",
+      "value": [
+        "ROLE-CUSTOMER"
+      ],
+      "source": "iam_db",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T08:00:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-TENANT-003",
+      "type": "service_metadata",
+      "asserts_ref": "actor.ACT-003.tenant",
+      "value": "TEN-002",
+      "source": "iam_db",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T08:00:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-TENANT-RES",
+      "type": "service_metadata",
+      "asserts_ref": "resource.RES-001.tenant",
+      "value": "TEN-001",
+      "source": "order_db",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T08:30:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-PV-003",
+      "type": "service_metadata",
+      "asserts_ref": "actor.ACT-003.privilege_version",
+      "value": 0,
+      "source": "iam_db",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T08:00:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-PVS-003",
+      "type": "session_record",
+      "asserts_ref": "session.SES-003.privilege_snapshot.privilege_version",
+      "value": 0,
+      "source": "auth.northwind.example.invalid",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T08:00:05Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-SESS-VALID-003",
+      "type": "session_record",
+      "asserts_ref": "session.SES-003.valid",
+      "value": false,
+      "source": "auth.northwind.example.invalid",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T09:30:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-SESS-003",
+      "type": "session_record",
+      "asserts_ref": "session.SES-003.revoked",
+      "value": true,
+      "source": "auth.northwind.example.invalid",
+      "provenance": "system_of_record",
+      "trust_level": "trusted",
+      "timestamp": "2026-09-19T09:30:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": true
+    },
+    {
+      "evidence_id": "EV-CLIENT-001",
+      "type": "http_header",
+      "asserts_ref": "actor.ACT-003.tenant",
+      "value": "TEN-001",
+      "source": "user_supplied_header:X-Tenant-Id",
+      "provenance": "client_supplied",
+      "trust_level": "untrusted",
+      "timestamp": "2026-09-20T08:00:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": true,
+      "visible_in_observation": true,
+      "contradicts": [
+        "EV-TENANT-003"
+      ]
+    },
+    {
+      "evidence_id": "EV-SUM-001",
+      "type": "derived_summary",
+      "asserts_ref": "resource.RES-001.owner",
+      "value": "ACT-003",
+      "source": "heuristic_classifier",
+      "provenance": "heuristic_classifier",
+      "trust_level": "derived",
+      "timestamp": "2026-09-20T08:00:00Z",
+      "freshness": "fresh",
+      "attacker_controllable": false,
+      "visible_in_observation": false,
+      "contradicts": [
+        "EV-OWN-001"
+      ]
+    }
+  ]
+}

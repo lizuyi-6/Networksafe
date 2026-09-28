@@ -1,0 +1,366 @@
+{
+  "$comment": "Reference fixture: a policy+invariant bundle for an e-commerce order API. Every policy here is executable by the Phase 1 evaluator and is covered by unit tests named after the ids below.",
+  "policies": [
+    {
+      "policy_id": "POL-ORDER-READ-OWNER",
+      "description": "Reading an order requires the caller to be its owner (BOLA/IDOR guard).",
+      "action": {
+        "operation": "read",
+        "resource_type": "order"
+      },
+      "effect": "allow",
+      "condition": {
+        "op": "eq",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.actor.actor_id"
+          },
+          {
+            "op": "ref",
+            "path": "action.resource.owner"
+          }
+        ]
+      },
+      "priority": 100,
+      "rationale": "owner_only read"
+    },
+    {
+      "policy_id": "POL-ORDER-READ-SUPPORT",
+      "description": "Support agents may read any order in their tenant.",
+      "action": {
+        "operation": "read",
+        "resource_type": "order"
+      },
+      "effect": "allow",
+      "condition": {
+        "op": "and",
+        "args": [
+          {
+            "op": "in",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.roles"
+              },
+              {
+                "op": "lit",
+                "value": [
+                  "support_agent"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.tenant"
+              },
+              {
+                "op": "ref",
+                "path": "action.resource.tenant"
+              }
+            ]
+          }
+        ]
+      },
+      "priority": 50
+    },
+    {
+      "policy_id": "POL-REFUND-ORDER",
+      "description": "Refund requires owner + paid state + valid unused refund token + fresh session privilege snapshot.",
+      "action": {
+        "operation": "refund",
+        "resource_type": "order"
+      },
+      "effect": "allow",
+      "condition": {
+        "op": "and",
+        "args": [
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.actor_id"
+              },
+              {
+                "op": "ref",
+                "path": "action.resource.owner"
+              }
+            ]
+          },
+          {
+            "op": "state_is",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.workflow_instance.current_state"
+              },
+              {
+                "op": "lit",
+                "value": "paid"
+              }
+            ]
+          },
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.token.used"
+              },
+              {
+                "op": "lit",
+                "value": false
+              }
+            ]
+          },
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.session.privilege_snapshot.privilege_version"
+              },
+              {
+                "op": "ref",
+                "path": "action.actor.privilege_version"
+              }
+            ]
+          }
+        ]
+      },
+      "priority": 100
+    },
+    {
+      "policy_id": "POL-DEFAULT-DENY",
+      "description": "Closed-world default: no matching allow means deny.",
+      "action": {
+        "operation": "*"
+      },
+      "effect": "deny",
+      "condition": {
+        "op": "lit",
+        "value": true
+      },
+      "priority": -1
+    }
+  ],
+  "invariants": [
+    {
+      "invariant_id": "INV-OWNERSHIP-001",
+      "category": "ownership",
+      "applies_to": [
+        "*"
+      ],
+      "severity": "critical",
+      "description": "A resource read must be performed by its owner or by a same-tenant support agent.",
+      "expr": {
+        "op": "or",
+        "args": [
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.actor.actor_id"
+              },
+              {
+                "op": "ref",
+                "path": "action.resource.owner"
+              }
+            ]
+          },
+          {
+            "op": "and",
+            "args": [
+              {
+                "op": "in",
+                "args": [
+                  {
+                    "op": "ref",
+                    "path": "action.actor.roles"
+                  },
+                  {
+                    "op": "lit",
+                    "value": [
+                      "support_agent"
+                    ]
+                  }
+                ]
+              },
+              {
+                "op": "eq",
+                "args": [
+                  {
+                    "op": "ref",
+                    "path": "action.actor.tenant"
+                  },
+                  {
+                    "op": "ref",
+                    "path": "action.resource.tenant"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected_violation_when": "action.actor != action.resource.owner and actor lacks support_agent role"
+    },
+    {
+      "invariant_id": "INV-SESSION-REVOCATION-001",
+      "category": "session_revocation",
+      "applies_to": [
+        "*"
+      ],
+      "severity": "critical",
+      "description": "No sensitive operation may ride a revoked or invalid session.",
+      "expr": {
+        "op": "and",
+        "args": [
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.session.valid"
+              },
+              {
+                "op": "lit",
+                "value": true
+              }
+            ]
+          },
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.session.revoked"
+              },
+              {
+                "op": "lit",
+                "value": false
+              }
+            ]
+          }
+        ]
+      },
+      "expected_violation_when": "session.revoked == true or session.valid == false"
+    },
+    {
+      "invariant_id": "INV-PRIVILEGE-VERSION-001",
+      "category": "privilege_version",
+      "applies_to": [
+        "*"
+      ],
+      "severity": "high",
+      "description": "A session's privilege snapshot must match the actor's live privilege version.",
+      "expr": {
+        "op": "eq",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.session.privilege_snapshot.privilege_version"
+          },
+          {
+            "op": "ref",
+            "path": "action.actor.privilege_version"
+          }
+        ]
+      },
+      "expected_violation_when": "actor.privilege_version was bumped after session creation"
+    },
+    {
+      "invariant_id": "INV-TOKEN-LINEAGE-001",
+      "category": "token_lineage",
+      "applies_to": [
+        "*"
+      ],
+      "severity": "critical",
+      "description": "A token may only be used inside the flow that issued it.",
+      "expr": {
+        "op": "eq",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.token.flow_id"
+          },
+          {
+            "op": "ref",
+            "path": "current_flow.flow_id"
+          }
+        ]
+      },
+      "expected_violation_when": "token minted for FLOW-A is presented to FLOW-B"
+    },
+    {
+      "invariant_id": "INV-ONE-TIME-TOKEN-001",
+      "category": "one_time_token",
+      "applies_to": [
+        "*"
+      ],
+      "severity": "critical",
+      "description": "A one-time token must not have been used before.",
+      "expr": {
+        "op": "or",
+        "args": [
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.token.one_time"
+              },
+              {
+                "op": "lit",
+                "value": false
+              }
+            ]
+          },
+          {
+            "op": "eq",
+            "args": [
+              {
+                "op": "ref",
+                "path": "action.token.used"
+              },
+              {
+                "op": "lit",
+                "value": false
+              }
+            ]
+          }
+        ]
+      },
+      "expected_violation_when": "one_time == true and used == true"
+    },
+    {
+      "invariant_id": "INV-WORKFLOW-TRANSITION-001",
+      "category": "workflow_transition",
+      "applies_to": [
+        "refund"
+      ],
+      "severity": "critical",
+      "description": "Refund requires the order workflow to be in 'paid', never 'refunded'.",
+      "expr": {
+        "op": "state_is",
+        "args": [
+          {
+            "op": "ref",
+            "path": "action.workflow_instance.current_state"
+          },
+          {
+            "op": "lit",
+            "value": "paid"
+          }
+        ]
+      },
+      "expected_violation_when": "workflow_instance.current_state != 'paid'"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "recorded_at": "2026-09-20T00:00:00Z",
+  "provider": "replay",
+  "model": "step5-pre-replay-synthetic",
+  "model_version": "synthetic-0.1",
+  "prompt_version": "0.1",
+  "prompt_hash": "3cfddb6da9603408b5c338ee5822ce0523a8c9395b3cd390973aec74f63a3ed4",
+  "prompt_sha256": "3cfddb6da9603408b5c338ee5822ce0523a8c9395b3cd390973aec74f63a3ed4",
+  "batch_size": 1,
+  "decoding_parameters": {
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "max_output_tokens": 8192
+  },
+  "output_text": "[\n{\"world_id\": \"W-1000\", \"application_domain\": \n]",
+  "output_tokens": 12,
+  "input_tokens": 900,
+  "raw_generation_id": "synthetic-0001-illegal",
+  "notes": "one element replaced by an unterminated fragment; no partial salvage is allowed. Synthetic recording authored by generation/fixtures/synthetic/build_fixtures.py; output_tokens is len(text)//4 because no tokenizer exists offline."
+}

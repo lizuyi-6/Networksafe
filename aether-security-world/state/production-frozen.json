@@ -1,0 +1,31 @@
+{
+  "canonical_id_scheme": "asw-canonical-skeleton-id/v1",
+  "compiler_version": "0.3.0",
+  "config_path": "configs/phase2a.json",
+  "config_sha256": "f6cd44129bcd31f298236f95d828dc1005ab2a091aa187159094d3cfed7827ac",
+  "contract": "production",
+  "invariant_archetype_count": 27,
+  "mechanism_family_count": 46,
+  "mechanism_registry_version": "0.1",
+  "model_default": "step-5-preview",
+  "ontology_fact_count": 65,
+  "ontology_version": "0.1",
+  "phase": "2B",
+  "prompt_derived_from": {
+    "delta": "ID ownership only",
+    "path": "semantic_skeleton/prompts/v0.6.md",
+    "sha256": "1c891e4b6f51911d93f8c7bd86e9526147dcfcc5a59dc18b4623a4db3d2234bc"
+  },
+  "prompt_output_format": "jsonl",
+  "prompt_sha256": "49458a042a64401f39048851dcf5b181d631304e57834a3e0b2aa8a3a4a7276e",
+  "prompt_version": "0.7",
+  "provider_base_url_host": "api.stepfun.com/step_plan/v1",
+  "run_id": "provider-run-production-002",
+  "skeleton_schema_bundle_sha256": "116cf26b365b51ca063d025a927008d09bb916405e8385a6be55f8d57781a6c4",
+  "skeleton_schema_files": [
+    {
+      "file": "semantic-skeleton.schema.json",
+      "sha256": "c9978eda34df03db314fe48b283e5c5b08e5417737e8e0bbe66f1a8f65dcd685"
+    }
+  ]
+}

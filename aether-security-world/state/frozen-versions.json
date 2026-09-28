@@ -1,0 +1,54 @@
+{
+  "compiler_version": "0.1.0",
+  "config_sha256": "f96cac4fd01a73454817e621d46a33920e06d6d1b205b5fabb2d97b3bc6dc4fc",
+  "config_version": "0.1",
+  "frozen_at_wallclock": "2026-09-22T07:13:04Z",
+  "git_commit": "0df82c25805433235719e84ae559fd2b501a4cd5",
+  "model_default": "step-5-preview",
+  "normalizer_version": "0.1.0",
+  "oracle_version": "0.1.0",
+  "parser_version": "0.1.0",
+  "prompt_default_batch_size": 2,
+  "prompt_hash": "b63cd50c4c895aeecf20a749ad16a5c51df9395e8a0189cbb9d66bf63baffdaf",
+  "prompt_output_format": "json_array",
+  "prompt_sha256": "3494a7eebac0488f54131a7a2ec5de701c9f02bfb33c6f46900acc57233c795a",
+  "prompt_version": "0.12",
+  "provider": "stepfun-live",
+  "provider_base_url_host": "api.stepfun.com/step_plan/v1",
+  "run_id": "provider-run-001",
+  "schema_bundle_sha256": "dc9c9be8b96e94b1cce6ead47eff654d4b09c84a280c417fd6afa79d5d8fa102",
+  "schema_files": [
+    {
+      "file": "action.schema.json",
+      "sha256": "3087835650e8adfd01a81a6724a027c2fa5035b3642b90ae18681f34928248a9"
+    },
+    {
+      "file": "episode.schema.json",
+      "sha256": "84907e73cb8118d6f701a3fb7fbf01ae5e53ea345cc77f4711470fd5cc494133"
+    },
+    {
+      "file": "evidence.schema.json",
+      "sha256": "3f6e0a948cc5436838171f2dbcdebc2cef25d63ded7be74ac31376523ceea696"
+    },
+    {
+      "file": "oracle-output.schema.json",
+      "sha256": "a3abd1e9deb59392b1a573c0abc7b5af5e687e67ec93ca70ef957f936661ff05"
+    },
+    {
+      "file": "policy.schema.json",
+      "sha256": "7718849efc15b7e3212dcdf5d8af60dd81a503b7c6b2bf1c0f693d3dfc5a6a52"
+    },
+    {
+      "file": "release.schema.json",
+      "sha256": "a3464342fd01cf93f9e341c7aa55dd7291ff44d01c809e2d58b92b8804b5b782"
+    },
+    {
+      "file": "world-spec.schema.json",
+      "sha256": "4c64850ddce90346e4bdf903918ba797402d09302dd2dac569365e6258c44583"
+    },
+    {
+      "file": "world.schema.json",
+      "sha256": "abc411e975c9c65f2e0bbfa1ca4070d23fec699ecfda804f4dbeb84fef4e3a58"
+    }
+  ]
+}

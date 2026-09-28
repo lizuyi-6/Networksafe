@@ -1,0 +1,159 @@
+{
+  "compiler": {
+    "failures": {
+      "HISTORY_INCONSISTENT": 3,
+      "UNKNOWN_SEMANTIC_TYPE": 1
+    },
+    "internal_compiler_errors": 0,
+    "total_failures": 4
+  },
+  "counterfactual": {
+    "contradictions": [],
+    "downgrade": 0,
+    "flip": 131,
+    "flip_rate": 0.9562043795620438,
+    "invariance_rate": 0.043795620437956206,
+    "invariant": 6,
+    "total": 137
+  },
+  "counts": {
+    "acceptance_rate": 0.7692307692307693,
+    "accepted": 60,
+    "quarantined": 12,
+    "raw_skeletons": 78,
+    "rejected": 6
+  },
+  "coverage": {
+    "attack_families": {
+      "cache_invalidation_failure": 1,
+      "cross_account_session_misuse": 3,
+      "cross_resource_token_reuse": 1,
+      "cross_workflow_token_reuse": 4,
+      "horizontal_privesc": 4,
+      "idor_bola": 2,
+      "inconsistent_replicas": 2,
+      "invalid_state_transition": 2,
+      "one_time_token_reuse": 3,
+      "race_sensitive_state": 3,
+      "session_after_account_disable": 6,
+      "session_after_password_reset": 1,
+      "skipping_required_step": 5,
+      "stale_authorization": 4,
+      "stale_object_reference": 1,
+      "stale_ownership_cache": 2,
+      "stale_permission_cache": 4,
+      "state_machine_confusion": 3,
+      "tenant_isolation_violation": 9
+    },
+    "complexity": {
+      "complex": 17,
+      "medium": 17,
+      "simple": 13,
+      "very_complex": 13
+    },
+    "distinct_attack_families": 19,
+    "distinct_mechanisms": 24,
+    "domains": {
+      "api_marketplace": 7,
+      "cloud_storage": 6,
+      "code_hosting": 1,
+      "content_platform": 1,
+      "crm": 2,
+      "devops_platform": 2,
+      "finance_workflow": 6,
+      "hr_system": 4,
+      "iam_system": 5,
+      "industrial_management": 1,
+      "logistics": 1,
+      "project_management": 4,
+      "saas": 9,
+      "school_system": 4,
+      "ticketing": 7
+    },
+    "labels": {
+      "authorization": 15,
+      "cache_distributed": 16,
+      "cross_flow_reuse": 8,
+      "multi_tenant": 13,
+      "session": 11,
+      "temporal_history": 11,
+      "token": 12,
+      "trust_boundary": 8,
+      "workflow": 16
+    },
+    "mechanism_families": {
+      "boundary_crossing_without_required_assertion": 3,
+      "cache_invalidation_failure": 1,
+      "cached_authorization_cross_tenant_reuse": 2,
+      "cross_service_tenant_propagation_delay": 2,
+      "cross_tenant_cache": 3,
+      "derived_summary_overrides_system_of_record": 1,
+      "eventual_consistency_read_before_write_visible": 2,
+      "expiry_window_violation": 1,
+      "horizontal_peer_access": 4,
+      "invalid_state_transition": 2,
+      "one_time_token_reuse": 3,
+      "owner_cache_lag": 1,
+      "ownership_boundary_crossing": 2,
+      "permission_cache_staleness": 4,
+      "post_disable_session": 6,
+      "post_password_reset_session": 1,
+      "privilege_version_drift": 3,
+      "race_sensitive_state": 3,
+      "resource_tenant_mismatch": 2,
+      "revocation_after_issue": 1,
+      "skipping_required_step": 5,
+      "token_bound_to_other_resource": 1,
+      "token_reused_across_flow": 4,
+      "workflow_instance_reused_across_flow": 3
+    },
+    "quotas": {
+      "authorization": 8,
+      "cache_distributed": 8,
+      "cross_flow_reuse": 8,
+      "multi_tenant": 8,
+      "session": 8,
+      "temporal_history": 8,
+      "token": 8,
+      "trust_boundary": 8,
+      "workflow": 10
+    },
+    "shortfalls": {}
+  },
+  "dedup": {
+    "largest_semantic_share": 0.016666666666666666,
+    "largest_structural_share": 0.08333333333333333,
+    "semantic_clusters": 60,
+    "semantic_templates_over_10pct": 0,
+    "structural_clusters": 36,
+    "templates_over_10pct": 0
+  },
+  "oracle": {
+    "failures": 0,
+    "verify_failures": 0
+  },
+  "provider": {
+    "calls": 16,
+    "finish_reasons": {
+      "stop": 16
+    },
+    "latency_s": 1163.609,
+    "provider_errors": 0,
+    "retries": 2,
+    "usage_missing_calls": 0
+  },
+  "schema": {
+    "details": [],
+    "failures": 0
+  },
+  "token_economy": {
+    "accepted_per_100k_output": 39.311781740987776,
+    "accepted_per_1m_input": 400.7025651642547,
+    "accepted_per_provider_hour": 185.62936519054082,
+    "improvement_factor": 67.31469476196537,
+    "input_tokens": 149737,
+    "output_tokens": 152626,
+    "output_tokens_per_accepted_world": 2543.766666666667,
+    "phase1_accepted_per_100k_output": 0.584
+  }
+}
