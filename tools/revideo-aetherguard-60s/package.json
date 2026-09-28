@@ -1,0 +1,34 @@
+{
+  "name": "@aetherguard/revideo-60s",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare-assets": "node scripts/prepare-assets.mjs",
+    "narration": "node scripts/build-narration.mjs",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "render:smoke": "npm run build && node dist/render.js --smoke",
+    "render:preview": "npm run build && node dist/render.js --preview",
+    "render": "npm run build && node dist/render.js",
+    "finalize": "node scripts/finalize.mjs",
+    "qa": "node scripts/qa.mjs",
+    "all": "npm run prepare-assets && npm run narration && npm run render:smoke && npm run render:preview && npm run render && npm run finalize && npm run qa"
+  },
+  "dependencies": {
+    "@revideo/2d": "0.11.0",
+    "@revideo/core": "0.11.0",
+    "@revideo/renderer": "0.11.0"
+  },
+  "devDependencies": {
+    "@revideo/cli": "0.11.0",
+    "@revideo/ui": "0.11.0",
+    "@revideo/vite-plugin": "0.11.0",
+    "@types/node": "22.19.19",
+    "typescript": "5.5.4",
+    "vite": "8.1.2"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

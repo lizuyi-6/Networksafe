@@ -26,6 +26,7 @@
     "build:ppt:xiongcai:hd-components": "node scripts/generate-aetherguard-xiongcai-final-hd-deck.mjs",
     "build:ppt:xiongcai:components": "node scripts/generate-aetherguard-xiongcai-final-deck.mjs",
     "build:video:demo": "node scripts/video/build-aetherguard-demo-video.mjs",
+    "build:video:revideo": "npm --prefix tools/revideo-aetherguard-60s run all",
     "verify:release": "node scripts/release/verify-release.mjs",
     "replay:dataset:safe": "node scripts/dev/security_dataset_replay_safe.js"
   },

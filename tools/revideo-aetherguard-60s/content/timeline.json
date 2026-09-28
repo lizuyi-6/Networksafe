@@ -1,0 +1,71 @@
+{
+  "durationSec": 60,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "segments": [
+    {
+      "id": "breach",
+      "startSec": 0,
+      "endSec": 6,
+      "kicker": "THREAT MODEL",
+      "headline": "当服务器取得最高权限",
+      "caption": "主机内的代理、防火墙和日志，可能同时落入失陷的信任域。",
+      "voiceover": "攻击者拿到最高权限时，主机内的代理、防火墙和日志，可能同时失守。"
+    },
+    {
+      "id": "boundary",
+      "startSec": 6,
+      "endSec": 14,
+      "kicker": "TRUST BOUNDARY",
+      "headline": "把最终授权边界移出服务器",
+      "caption": "检测、响应、审计，与服务器外的控制边界组成防御链。",
+      "voiceover": "它不替代防火墙、EDR 或堡垒机，而是把检测、响应、审计，与服务器外的授权边界连成防御链。"
+    },
+    {
+      "id": "evidence",
+      "startSec": 14,
+      "endSec": 23,
+      "kicker": "CONTROL PLANE",
+      "headline": "风险与证据，进入同一视图",
+      "caption": "统一呈现流量、事件、告警、设备与处置状态。",
+      "voiceover": "分布式 Agent 汇聚流量和事件，控制台统一呈现告警、设备与处置状态，让风险与证据进入同一视图。"
+    },
+    {
+      "id": "agents",
+      "startSec": 23,
+      "endSec": 33,
+      "kicker": "ASSISTED DECISION",
+      "headline": "让判断过程可以被检查",
+      "caption": "角色分析、冲突辩论、案例综合与审计链。",
+      "voiceover": "七层多智能体架构组织角色分析、冲突辩论与案例综合，让判断过程更可检查、更可追溯。"
+    },
+    {
+      "id": "appliance",
+      "startSec": 33,
+      "endSec": 45,
+      "kicker": "GATEWAY APPLIANCE",
+      "headline": "关键释放权，交给外置网关",
+      "caption": "SERVER、LAN/WAN 与独立 MGMT 三平面；当前为工业硬件原型。",
+      "voiceover": "外置 Gateway Appliance 的设计，把关键网络释放权移出服务器。网关、安全控制器、安全芯片和硬件联锁，共同约束释放请求。"
+    },
+    {
+      "id": "failclosed",
+      "startSec": 45,
+      "endSec": 53,
+      "kicker": "FAIL-CLOSED",
+      "headline": "任一校验失败，保持隔离",
+      "caption": "签名、challenge、有效期、计数器和 feedback 必须全部通过。",
+      "voiceover": "签名、挑战、有效期、计数器和反馈必须全部通过。任一失败，链路保持隔离，管理通道用于恢复。"
+    },
+    {
+      "id": "outro",
+      "startSec": 53,
+      "endSec": 60,
+      "kicker": "AETHERGUARD",
+      "headline": "把最后的授权边界\n推向服务器之外",
+      "caption": "仅覆盖实际接入网关的受控网络链路。",
+      "voiceover": "AetherGuard，把最后的授权边界推向服务器之外。当前为工业硬件原型，仅覆盖受控接入链路。"
+    }
+  ]
+}
