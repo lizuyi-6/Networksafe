@@ -6,15 +6,16 @@
  */
 
 import express from 'express';
+import antiBotMiddleware from '../backend/src/security/anti-bot.middleware';
+import authSecurityService from '../backend/src/security/auth-security.service';
+import { rateLimitMiddleware } from '../backend/src/security/ratelimit.middleware';
 import {
-  antiBotMiddleware,
-  rateLimitMiddleware,
   concurrencyLimit,
   performanceMonitor,
-  authSecurityService,
   startMemoryMonitoring,
-  startCPUMonitoring
-} from '../src';
+  startCPUMonitoring,
+  stopMonitoring
+} from '../backend/src/security/concurrency.middleware';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Apply security middleware
 app.use(antiBotMiddleware.protect);
+app.use(rateLimitMiddleware);
 app.use(performanceMonitor);
 app.use(concurrencyLimit);
 
@@ -68,7 +70,7 @@ app.post('/api/login', async (req, res) => {
     const success = await authenticateUser(email, password);
 
     // Record login attempt
-    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
     await authSecurityService.recordLoginAttempt(email, ip, success);
 
     if (!success) {
@@ -171,7 +173,13 @@ async function authenticateUser(email: string, password: string): Promise<boolea
   return true;
 }
 
-async function createUser(userData: any): Promise<void> {
+interface NewUser {
+  email: string;
+  username: string;
+  password: string;
+}
+
+async function createUser(userData: NewUser): Promise<void> {
   // Your user creation logic here
 }
 
@@ -180,8 +188,8 @@ startMemoryMonitoring();
 startCPUMonitoring();
 
 // Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const PORT = Number(process.env.PORT) || 3000;
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
@@ -189,8 +197,6 @@ app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM signal received: closing HTTP server');
-  // Stop monitoring
-  const { stopMonitoring } = await import('../src');
   stopMonitoring();
-  process.exit(0);
+  server.close(() => process.exit(0));
 });
